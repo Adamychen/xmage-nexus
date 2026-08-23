@@ -223,13 +223,22 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
               </section>
 
               <section className="wiki-section">
-                <h3>⚡ La Pila (The Stack) y Prioridad</h3>
+                <h3>⚡ La Pila (The Stack) y Prioridad Avanzada</h3>
                 <div className="wiki-stack-card">
                   <p>
                     <strong>Estructura LIFO (Last In, First Out):</strong> El último hechizo o habilidad que entra a la pila es el primero en resolverse.
                   </p>
                   <p>
                     Cuando lanzas un hechizo o activas una habilidad, ambos jugadores deben <strong>pasar prioridad en secuencia</strong> para que el objeto superior de la pila se resuelva.
+                  </p>
+                  <p>
+                    <strong>⚡ Retención de Prioridad (Hold Priority):</strong> Por defecto, el juego asume que cedes el paso al rival tras lanzar un hechizo. Si mantienes pulsado <code>Ctrl</code> (o <code>Cmd</code> en Mac) o activas la casilla <em>⚡ Retener prioridad</em>, recibirás la prioridad inmediatamente tras el lanzamiento para responder a tu propio hechizo antes de que el rival pueda actuar (ej. combo <em>Infernal Tutor</em> + <em>Lion's Eye Diamond</em> o duplicar con <em>Fork</em>).
+                  </p>
+                  <p>
+                    <strong>🔄 Orden de Disparos Simultáneos (APNAP):</strong> Si varias habilidades se disparan a la vez (ej. entran dos criaturas que disparan habilidades de entrada), el jugador activo elige el orden en que entran a la pila, y luego el jugador no activo. La última en colocarse resolverá primero.
+                  </p>
+                  <p>
+                    <strong>🌪️ Tormenta y Copias (Storm & Copies):</strong> Cuando se copian hechizos en la pila, las copias se colocan directamente en la pila sin ser lanzadas y el juego te permite re-elegir nuevos objetivos para cada una.
                   </p>
                 </div>
               </section>
@@ -245,6 +254,14 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                   <div className="shortcut-info">
                     <strong>Pasar Prioridad / Resolver</strong>
                     <p>Resuelve el objeto superior de la pila o pasa al siguiente paso/fase del turno.</p>
+                  </div>
+                </div>
+
+                <div className="shortcut-card">
+                  <span className="shortcut-key">Ctrl / Cmd + Click</span>
+                  <div className="shortcut-info">
+                    <strong>Retener Prioridad (Hold Priority)</strong>
+                    <p>Lanza un hechizo o activa una habilidad reteniendo la prioridad para responderte a ti mismo.</p>
                   </div>
                 </div>
 

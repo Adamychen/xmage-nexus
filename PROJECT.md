@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-23 (Complex Casting Costs Suite: Phyrexian Mana, Kicker, Split Cards, Adventures/MDFCs & Convoke)
+> Last updated: 2026-08-23 (Advanced Stack & Priority Suite: Hold Priority, APNAP Trigger Stacking, Storm Spells & Wiki Integration)
 
 ---
 
@@ -179,6 +179,7 @@ web/
 
 | Date | Step | Description | Verification |
 |---|---|---|---|
+| 2026-08-23 | F2/F3 | Advanced Stack & Priority Suite (Block B): implemented `holdPriority` setting and UI toggle in `GameScreen` with `Ctrl`/`Cmd` key support; connected `HOLD_PRIORITY`/`UNHOLD_PRIORITY` actions via WebSocket; updated `HelpWikiModal` with full Stack, Priority, APNAP trigger ordering, and Storm rules; created deterministic scenario & Playwright E2E covering (1) Hold Priority response loop with *Infernal Tutor* + *Lion's Eye Diamond*, (2) APNAP simultaneous trigger stacking (*Soul Warden* + *Impact Tremors*), and (3) Storm count copies with re-targeting (*Grapeshot*) | vitest 306/306 ✅; typecheck ✅; e2e stack-priority 1/1 ✅ (3.1s) |
 | 2026-08-23 | UI/Polish | Resource Piles Top Card Rendering & Hover Preview: upgraded `ResourceBar` to display the HD card artwork of the top card in Graveyard, Exile, and Cross-Zone (Ray stack) with count badge and mini-lightning icon; added full hover card preview & Scryfall resolution on resource stacks; updated `CardSlot` data-attributes | vitest 306/306 ✅; typecheck ✅; e2e cross-zone 2/2 ✅ |
 | 2026-08-23 | F2/F3 | Complex Casting Costs Suite & E2E Validation: implemented Phyrexian mana symbols (`{U/P}`, `{W/P}`, etc. with $\Phi$ icon badges and gradients), hybrid mana badges, Convoke/Improvise board tapping guidance in `mana-prompt-bar`, and dedicated E2E test scenario covering (1) Phyrexian life payment with live 20→18 HUD life update, (2) Kicker confirmation with 4-damage resolution to opponent (20→16), (3) Split cards (Fire // Ice) modal choice, (4) Adventure/MDFC (Bonecrusher Giant // Stomp) choice, and (5) Convoke creature tapping on the battlefield | vitest 303/303 ✅; typecheck ✅; e2e complex-costs 1/1 ✅ (5.8s) |
 | 2026-08-22 | F2/F3 | Comprehensive MTG Interactions Suite & Visual Showcase: built E2E test scenario covering `GAME_ASK` (Shockland binary prompts), `GAME_CHOOSE_COLOR` (mana color picker), `GAME_CHOOSE_PILE` (Fact or Fiction split piles), `CardGrid` (Demonic Tutor search with Scryfall HD art), `LibraryOrderDialog` (Scry 3 Top/Bottom order), and Command Zone Commander Tax (+2 badge & cast); updated `GAME_ASK` fallback and added `skipAsks` flag to `HumanHelper` | vitest 286/286 ✅; typecheck ✅; e2e interactions 1/1 ✅ (5.7s) |

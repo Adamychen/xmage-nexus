@@ -53,8 +53,11 @@ export default function GameScreen() {
     if (!result.ok) setStoreError(result.error ?? 'No se pudo enviar el objetivo')
   }
 
-  const onPlayableClick = async (id: string) => {
+  const onPlayableClick = async (id: string, e?: React.MouseEvent) => {
     if (!gameId) return
+    if (e?.ctrlKey || e?.metaKey || e?.shiftKey) {
+      await cmds.sendPlayerAction('HOLD_PRIORITY', gameId)
+    }
     const result = await cmds.sendPlayerUUID(id, gameId)
     if (!result.ok) setStoreError(result.error ?? 'No se pudo jugar la carta')
   }
@@ -153,6 +156,18 @@ export default function GameScreen() {
           )}
         </div>
         <div className="game-controls">
+          <label className={`toggle hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`} title="Retener prioridad al lanzar hechizos o activar habilidades (o mantén Ctrl/Cmd al hacer clic)">
+            <input
+              type="checkbox"
+              checked={settings.holdPriority}
+              onChange={(e) => {
+                const val = e.target.checked
+                setSetting('holdPriority', val)
+                if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
+              }}
+            />
+            ⚡ Retener prioridad
+          </label>
           <label className="toggle">
             <input
               type="checkbox"

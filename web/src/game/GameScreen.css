@@ -91,6 +91,24 @@
   height: 14px;
 }
 
+.hold-priority-toggle {
+  color: #ffb03a;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 176, 58, 0.08);
+  border: 1px solid rgba(255, 176, 58, 0.2);
+  transition: all 0.15s ease;
+}
+
+.hold-priority-toggle.is-active,
+.hold-priority-toggle:hover {
+  color: #ffd27a;
+  background: rgba(255, 176, 58, 0.2);
+  border-color: rgba(255, 176, 58, 0.5);
+  box-shadow: 0 0 8px rgba(255, 176, 58, 0.25);
+}
+
 .game-body {
   position: relative;
   display: grid;
