@@ -272,6 +272,7 @@ web/
 | 2026-08-22 | Feature/UX | Fullscreen Web Mode (in-game sidebar & lobby top bar), Real-time Dynamic Priority Chess Clocks (`useTickingTimer`, hours formatting `1:55:08`), and Automated Extraction of 267 MTG Keywords from XMage rules engine | vitest 302/302 ✅; typecheck ✅; build ✅; Playwright e2e ✅ |
 | 2026-08-24 | Feature/Fix | Priority & Stack Suite (Bloque B): Hold Priority toggle with Ctrl+Click, APNAP trigger ordering, Storm copy cascade stack view & Ability Tiles | vitest 307/307 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
 | 2026-08-24 | Fix/UI | Battlefield Card Polish: Eliminated boolean-coercion text node "0" on undamaged creatures, vertical tab cascade for auras/attachments, top-left sickness badge relocation, and removed dead targeting overlay | vitest 309/309 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
+| 2026-08-24 | Fix/UI | Modal & Arrow Layering: React Portal for `PileOverlay` (z-index 100), elevated feedback/grid backdrops (z-index 90), defeat overlay over arrows (z-index 30 vs 28), and filtered defeated player arrows | vitest 309/309 ✅; typecheck ✅; build ✅ |
 
 ---
 

@@ -94,9 +94,9 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  z-index: 15;
-  background: rgba(10, 12, 24, 0.45);
-  backdrop-filter: blur(2px);
+  z-index: 30;
+  background: rgba(10, 12, 24, 0.65);
+  backdrop-filter: blur(4px);
 }
 
 .zone-defeated-card {

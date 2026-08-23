@@ -44,7 +44,26 @@ export default function CombatArrowsOverlay({
     const boardRect = boardEl.getBoundingClientRect()
     const newArrows: ArrowItem[] = []
 
+    const defeatedPlayerIds = new Set(
+      (game.players ?? [])
+        .filter((p) => p.life <= 0 || p.hasLeft || (p as any).lost)
+        .map((p) => p.playerId)
+    )
+
+    const isDefeatedOrLost = (id: string): boolean => {
+      if (defeatedPlayerIds.has(id)) return true
+      for (const p of game.players ?? []) {
+        if (defeatedPlayerIds.has(p.playerId)) {
+          if (id in (p.battlefield ?? {}) || id in (p.graveyard ?? {}) || id in (p.exile ?? {})) {
+            return true
+          }
+        }
+      }
+      return false
+    }
+
     const getCenter = (id: string): { x: number; y: number } | null => {
+      if (isDefeatedOrLost(id)) return null
       const cardEl = boardEl.querySelector(`[data-card-id="${id}"]`) || document.querySelector(`[data-card-id="${id}"]`)
       if (cardEl) {
         const rect = cardEl.getBoundingClientRect()

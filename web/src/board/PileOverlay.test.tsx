@@ -44,7 +44,7 @@ describe('PileOverlay', () => {
       },
     }
 
-    const { getByText, container } = render(
+    const { getByText } = render(
       <PileOverlay
         title="Biblioteca de Jugador"
         cards={cards}
@@ -54,7 +54,7 @@ describe('PileOverlay', () => {
     )
 
     expect(getByText('Biblioteca de Jugador (3 cartas)')).not.toBeNull()
-    expect(container.textContent).toContain('1 carta revelada · #1 es la carta superior (Top)')
+    expect(document.body.textContent).toContain('1 carta revelada · #1 es la carta superior (Top)')
 
     // Check position badges
     expect(getByText('★ #1 TOP')).not.toBeNull()
@@ -63,7 +63,7 @@ describe('PileOverlay', () => {
 
     // Top card shows name, face-down cards show back image
     expect(getByText('Delver of Secrets')).not.toBeNull()
-    const backImages = container.querySelectorAll('img[src="https://cards.scryfall.io/back.png"]')
+    const backImages = document.body.querySelectorAll('img[src="https://cards.scryfall.io/back.png"]')
     expect(backImages.length).toBeGreaterThanOrEqual(2)
   })
 

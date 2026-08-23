@@ -241,12 +241,13 @@
 .feedback-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 90;
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgb(4 6 16 / 62%);
-  pointer-events: none;
+  background: rgb(4 6 16 / 68%);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
 }
 
 .feedback-dialog {

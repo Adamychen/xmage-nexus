@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import FloatingCardPreview from './FloatingCardPreview'
@@ -47,7 +48,7 @@ export default function PileOverlay({
 
   const knownCount = entries.filter(([, c]) => !c.faceDown).length
 
-  return (
+  return createPortal(
     <div className="pile-overlay-backdrop" onClick={onClose}>
       <div className={`pile-overlay ${isLibrary ? 'library-overlay' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
@@ -101,6 +102,7 @@ export default function PileOverlay({
         anchorRect={hoverRect}
         fixedSide="left"
       />
-    </div>
+    </div>,
+    document.body
   )
 }
