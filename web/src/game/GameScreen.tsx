@@ -264,6 +264,8 @@ export default function GameScreen() {
                 targetIds={new Set(targetIds)}
                 onResolveClick={onResolveClick}
                 canResolve={canPass}
+                players={game?.players}
+                myPlayerId={me?.playerId}
               />
             ) : rightTab === 'log' ? (
               <ActionFeed />

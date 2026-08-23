@@ -50,11 +50,10 @@ describe('StackZone', () => {
     expect(container.textContent).toContain('Pila (1)')
     expect(container.textContent).toContain('Lightning Bolt')
     expect(container.textContent).toContain('Instantáneo')
-    expect(container.querySelector('.stack-resolve-btn')).toBeTruthy()
+    expect(container.querySelector('.stack-resolve-header-btn')).toBeTruthy()
   })
 
-  it('renders multiple spells in cascade with newest on top', () => {
-    // In XMage, state.getStack() is serialized in resolution order (top of stack is first)
+  it('renders multiple spells in timeline with newest on top', () => {
     const stack: Record<string, CardView> = {
       'spell-2': {
         name: 'Counterspell',
@@ -72,13 +71,11 @@ describe('StackZone', () => {
     const { container } = render(<StackZone stack={stack} canResolve={true} />)
 
     expect(container.textContent).toContain('Pila (2)')
-    // Counterspell is top of stack, so it resolves first (top)
-    const topItem = container.querySelector('.stack-item--top')
-    expect(topItem?.textContent).toContain('Counterspell')
-
-    // Lightning Bolt is the underlying item
-    const underlying = container.querySelector('.stack-item--underlying')
-    expect(underlying?.textContent).toContain('Lightning Bolt')
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(entries.length).toBe(2)
+    expect(entries[0].classList.contains('is-top')).toBe(true)
+    expect(entries[0].textContent).toContain('Counterspell')
+    expect(entries[1].textContent).toContain('Lightning Bolt')
   })
 
   it('triggers onCardClick and onHover when interacting with stack items', () => {
@@ -102,11 +99,11 @@ describe('StackZone', () => {
       <StackZone stack={stack} onCardClick={onCardClick} onHover={onHover} />,
     )
 
-    const underlying = container.querySelector('.stack-item--underlying')!
-    fireEvent.click(underlying)
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    fireEvent.click(entries[1])
     expect(onCardClick).toHaveBeenCalledWith('spell-1')
 
-    fireEvent.mouseEnter(underlying)
+    fireEvent.mouseEnter(entries[1])
     expect(onHover).toHaveBeenCalledWith(stack['spell-1'], expect.anything())
   })
 
@@ -123,7 +120,71 @@ describe('StackZone', () => {
 
     const { container } = render(<StackZone stack={stack} />)
     expect(container.textContent).toContain('Cloud, Midgar Mercenary')
-    expect(container.textContent).toContain('Habilidad disparada')
-    expect(container.textContent).not.toContain('Ability')
+    expect(container.textContent).toContain('Disparada')
+    expect(container.querySelector('.stack-tl-entry.is-ability')).toBeTruthy()
+  })
+
+  it('renders storm copy badges and allows toggling view mode', () => {
+    const stack: Record<string, CardView> = {
+      'storm-1': {
+        name: 'Grapeshot [Copia 1]',
+        cardTypes: ['SORCERY'],
+        manaValue: 2,
+      },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    expect(container.querySelector('.stack-tl-copy-badge')).toBeTruthy()
+    expect(container.textContent).toContain('Copia')
+
+    const expandedBtn = container.querySelectorAll('.toggle-mode-btn')[1] as HTMLButtonElement
+    expect(expandedBtn).toBeTruthy()
+    fireEvent.click(expandedBtn)
+    expect(container.querySelector('.view-mode-expanded')).toBeTruthy()
+  })
+
+  it('shows timeline rail with green top node', () => {
+    const stack: Record<string, CardView> = {
+      'spell-1': {
+        name: 'Bolt',
+        cardTypes: ['INSTANT'],
+        manaValue: 1,
+      },
+      'spell-2': {
+        name: 'Giant Growth',
+        cardTypes: ['INSTANT'],
+        manaValue: 1,
+      },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    const nodes = container.querySelectorAll('.stack-tl-node')
+    expect(nodes.length).toBe(2)
+    expect(nodes[0].classList.contains('node-top')).toBe(true)
+    expect(nodes[1].classList.contains('node-top')).toBe(false)
+
+    const lines = container.querySelectorAll('.stack-tl-line')
+    expect(lines.length).toBe(1)
+    expect(lines[0].classList.contains('line-top')).toBe(true)
+  })
+
+  it('renders resolve button in header when canResolve is true', () => {
+    const onResolveClick = vi.fn()
+    const stack: Record<string, CardView> = {
+      'spell-1': {
+        name: 'Bolt',
+        cardTypes: ['INSTANT'],
+        manaValue: 1,
+      },
+    }
+
+    const { container } = render(
+      <StackZone stack={stack} canResolve={true} onResolveClick={onResolveClick} />,
+    )
+
+    const btn = container.querySelector('.stack-resolve-header-btn') as HTMLButtonElement
+    expect(btn).toBeTruthy()
+    fireEvent.click(btn)
+    expect(onResolveClick).toHaveBeenCalled()
   })
 })

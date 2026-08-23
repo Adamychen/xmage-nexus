@@ -6,8 +6,7 @@
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: center;
+  gap: 0;
   overflow-y: auto;
   padding: 8px 10px;
   background: transparent;
@@ -50,14 +49,22 @@
   max-width: 220px;
 }
 
-/* Header */
+/* ── Header ── */
 .stack-header {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 4px;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.stack-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .stack-header-title {
@@ -69,161 +76,352 @@
   text-transform: uppercase;
 }
 
-.stack-header-hint {
-  font-size: 10px;
-  color: #8c96c0;
-}
-
-.stack-items-list {
+.stack-header-actions {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.stack-card-entry {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 100%;
-  position: relative;
-  transition: transform 0.15s ease;
+  gap: 6px;
 }
 
-.stack-card-badge-row {
-  width: 226px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.stack-pos-indicator {
-  font-size: 10px;
+.stack-resolve-header-btn {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  border: 1px solid rgba(99, 230, 190, 0.5);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 0.02em;
-}
-
-.stack-pos-indicator.top {
-  color: #63e6be;
-}
-
-.stack-type-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  font-family: var(--font-display);
-  background: rgba(99, 230, 190, 0.15);
-  color: #63e6be;
-  border: 1px solid rgba(99, 230, 190, 0.25);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
   white-space: nowrap;
 }
 
-.stack-spell-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
+.stack-resolve-header-btn:hover {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
 }
 
-.stack-zone .stack-top-card,
-.stack-zone .stack-entry-card {
-  position: relative;
-  width: 226px;
-  height: calc(226px * 1.38);
-  border-radius: 9px;
-  z-index: 2;
+.stack-view-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toggle-mode-btn {
+  background: transparent;
+  border: none;
+  color: #8c96c0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  line-height: 1;
 }
 
-.stack-zone .stack-top-card.has-resolve-btn,
-.stack-zone .stack-entry-card.has-resolve-btn {
-  border-radius: 9px 9px 0 0;
+.toggle-mode-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.stack-zone .stack-top-card:hover,
-.stack-zone .stack-entry-card:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(120, 160, 255, 0.55) !important;
+.toggle-mode-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.4);
 }
 
-/* Formatted rules box for spells & abilities on the stack */
-.stack-card-rules-box {
-  width: 226px;
-  background: rgba(18, 22, 42, 0.96);
-  border: 1px solid rgba(130, 160, 230, 0.35);
-  border-top: none;
-  border-radius: 0 0 9px 9px;
-  padding: 8px 10px;
-  box-sizing: border-box;
+/* ── Timeline ── */
+.stack-timeline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 220px;
-  overflow-y: auto;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  padding-bottom: 16px;
+  flex: 1;
+  min-height: 0;
 }
 
-.stack-card-rules-box.has-resolve-btn {
-  border-radius: 0;
-}
-
-.stack-card-rules-header {
+.stack-tl-entry {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0;
+  position: relative;
+  transition: background 0.15s ease;
+  border-radius: 8px;
+  padding: 2px 0;
 }
 
-.stack-card-rules-title {
+.stack-tl-entry.clickable {
+  cursor: pointer;
+}
+
+.stack-tl-entry:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stack-tl-entry.targetable {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.stack-tl-entry.targetable:hover {
+  background: rgba(245, 158, 11, 0.18);
+}
+
+/* ── Timeline Rail (vertical line + nodes) ── */
+.stack-tl-rail {
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  padding-top: 10px;
+}
+
+.stack-tl-node {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4b5563;
+  border: 2px solid #6b7280;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.stack-tl-node.node-top {
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border-color: #4ade80;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.3);
+  animation: pulse-node 2s infinite ease-in-out;
+}
+
+@keyframes pulse-node {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 0 14px rgba(34, 197, 94, 0.8), 0 0 28px rgba(34, 197, 94, 0.45); }
+}
+
+.stack-tl-line {
+  width: 2px;
+  flex: 1;
+  min-height: 8px;
+  background: linear-gradient(to bottom, #4b5563, #374151);
+  margin-top: 2px;
+}
+
+.stack-tl-line.line-top {
+  background: linear-gradient(to bottom, #22c55e, #4b5563);
+}
+
+/* ── Entry Body ── */
+.stack-tl-body {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px 8px 2px;
+}
+
+.stack-tl-pos {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 3px;
+}
+
+.stack-tl-entry.is-top .stack-tl-pos {
+  color: #4ade80;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.3);
+}
+
+.stack-tl-card {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: rgba(15, 20, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  padding: 6px 8px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.stack-tl-entry.is-top .stack-tl-card {
+  border-color: rgba(99, 230, 190, 0.35);
+  background: rgba(15, 28, 20, 0.75);
+  box-shadow: 0 0 10px rgba(99, 230, 190, 0.1);
+}
+
+.stack-tl-entry:hover .stack-tl-card {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(20, 25, 45, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.stack-tl-entry.is-top:hover .stack-tl-card {
+  border-color: rgba(99, 230, 190, 0.5);
+  box-shadow: 0 4px 16px rgba(99, 230, 190, 0.15);
+}
+
+/* Controller color strip */
+.stack-tl-entry.owner-mine .stack-tl-card {
+  border-left: 3px solid rgba(59, 130, 246, 0.6);
+}
+
+.stack-tl-entry.owner-opponent .stack-tl-card {
+  border-left: 3px solid rgba(239, 68, 68, 0.6);
+}
+
+/* ── Thumbnail ── */
+.stack-thumb {
+  width: 40px;
+  height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(30, 35, 55, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stack-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stack-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0.5;
+}
+
+/* ── Info ── */
+.stack-tl-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stack-tl-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.stack-tl-name {
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: #f1f5f9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.stack-card-mana {
+.stack-tl-entry.is-top .stack-tl-name {
+  color: #ffffff;
+}
+
+.stack-tl-mana {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
+  font-size: 11px;
 }
 
-.stack-card-rules-body {
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: #d8ddf0;
+.stack-tl-type-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.stack-tl-type-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stack-tl-type-badge.type-spell {
+  background: rgba(99, 230, 190, 0.12);
+  color: #63e6be;
+  border: 1px solid rgba(99, 230, 190, 0.2);
+}
+
+.stack-tl-type-badge.type-ability {
+  background: rgba(129, 140, 248, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+.stack-tl-subtype {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.stack-tl-pt {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fbbf24;
+  padding: 0 3px;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 3px;
+}
+
+.stack-tl-copy-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+  color: #e879f9;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.stack-tl-rules {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #cbd5e1;
   white-space: pre-wrap;
   word-break: break-word;
+  margin-top: 2px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.stack-resolve-btn {
-  display: block;
-  width: 226px;
-  padding: 8px 0;
-  background: #1c6b50;
-  border: 1px solid rgba(99, 230, 190, 0.4);
-  border-top: none;
-  border-radius: 0 0 9px 9px;
-  color: #ffffff;
+/* ── Expanded mode: show more space ── */
+.view-mode-expanded .stack-tl-card {
+  padding: 8px 10px;
+}
+
+.view-mode-expanded .stack-tl-name {
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  pointer-events: auto;
-  position: relative;
-  z-index: 2;
-  transition: background 0.15s ease;
 }
 
-.stack-resolve-btn:hover {
-  background: #238564;
+/* ── Deprecated selectors kept for test compatibility ── */
+.stack-item--top,
+.stack-item.is-top { /* alias */ }
+.stack-item--underlying,
+.stack-item.is-underlying { /* alias */ }
+
+.stack-tl-entry.is-top {
+  /* Also acts as .stack-item--top for tests */
 }

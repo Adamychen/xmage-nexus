@@ -34,7 +34,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       // 1.3 Comprobar que Infernal Tutor está en la pila y la prioridad sigue activa para el jugador
       const stackZone = page.locator('.stack-zone')
       await expect(stackZone, 'pila visible con Infernal Tutor').toBeVisible({ timeout: 10_000 })
-      await expect(page.locator('.stack-item, .stack-card-entry', { hasText: 'Infernal Tutor' })).toBeVisible({ timeout: 10_000 })
+      await expect(page.locator('.stack-tl-entry', { hasText: 'Infernal Tutor' })).toBeVisible({ timeout: 10_000 })
 
       await page.screenshot({ path: 'e2e/shots/stack-priority-02-spell-on-stack-holding.png' })
 
@@ -42,7 +42,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       expect(await helper.playCard('card-led')).toBeTruthy()
 
       // 1.5 Comprobar que ambos hechizos están en la pila simultáneamente
-      await expect(page.locator('.stack-item, .stack-card-entry', { hasText: "Lion's Eye Diamond" })).toBeVisible({ timeout: 10_000 })
+      await expect(page.locator('.stack-tl-entry', { hasText: "Lion's Eye Diamond" })).toBeVisible({ timeout: 10_000 })
 
       await page.screenshot({ path: 'e2e/shots/stack-priority-03-stacked-spells-in-response.png' })
 

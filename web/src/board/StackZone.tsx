@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react'
-import type { CardView } from '../net/types'
-import { getSourceCardName, isAbilityCard } from '../cards/cardImages'
-import CardSlot from './CardSlot'
+import { useCallback, useEffect, useState } from 'react'
+import type { CardView, PlayerView } from '../net/types'
+import { awaitImageUrl, isAbilityCard, cardName } from '../cards/cardImages'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import './StackZone.css'
@@ -13,41 +12,108 @@ interface StackZoneProps {
   targetIds?: Set<string>
   onResolveClick?: () => void
   canResolve?: boolean
+  players?: PlayerView[]
+  myPlayerId?: string | null
 }
 
 function isStackAbility(card: CardView): boolean {
-  return isAbilityCard(card)
+  if (isAbilityCard(card)) return true
+  const types = card.cardTypes ?? []
+  return types.some((t) => typeof t === 'string' && /ability/i.test(t))
+}
+
+function isCopyCard(card: CardView): boolean {
+  const name = card.name ?? ''
+  const disp = card.displayName ?? ''
+  return name.includes('[Copia') || name.includes('[Copy') || disp.includes('[Copia') || (card as any).isCopy === true
 }
 
 function stackTypeLabel(card: CardView): string {
   if (isStackAbility(card)) {
     const at = card.abilityType ?? ''
-    if (at === 'Triggered' || at === 'Triggered Mana') return '🔔 Habilidad disparada'
-    if (at === 'Activated' || at === 'Mana') return '⚡ Habilidad activada'
-    if (at === 'Static') return '🛡️ Habilidad estática'
-    if (at === 'Loyalty') return '👑 Habilidad de lealtad'
-    return '⚡ Habilidad'
+    if (at === 'Triggered' || at === 'Triggered Mana') return 'Disparada'
+    if (at === 'Activated' || at === 'Mana') return 'Activada'
+    if (at === 'Static') return 'Estática'
+    if (at === 'Loyalty') return 'Lealtad'
+    return 'Habilidad'
   }
   const types = card.cardTypes ?? []
-  const supers = card.superTypes ?? []
-  const subs = Array.isArray(card.subTypes)
-    ? card.subTypes.flatMap((v: unknown) => typeof v === 'string' ? [v] : typeof v === 'object' && v ? Object.keys(v as Record<string, unknown>) : [])
-    : []
-
-  if (types.includes('CREATURE')) return `${supers.includes('LEGENDARY') ? 'Legendario — ' : ''}Criatura${subs.length ? ` (${subs.join(' ')})` : ''}`
   if (types.includes('INSTANT')) return 'Instantáneo'
   if (types.includes('SORCERY')) return 'Conjuro'
-  if (types.includes('ENCHANTMENT')) return `Encantamiento${subs.length ? ` (${subs.join(' ')})` : ''}`
-  if (types.includes('ARTIFACT')) return `Artefacto${subs.length ? ` (${subs.join(' ')})` : ''}`
+  if (types.includes('CREATURE')) return 'Criatura'
+  if (types.includes('ENCHANTMENT')) return 'Encantamiento'
+  if (types.includes('ARTIFACT')) return 'Artefacto'
   if (types.includes('PLANESWALKER')) return 'Planeswalker'
   if (types.includes('LAND')) return 'Tierra'
   return 'Hechizo'
+}
+
+function stackSubtype(card: CardView): string | null {
+  if (isStackAbility(card)) return null
+  const types = card.cardTypes ?? []
+  const subs = Array.isArray(card.subTypes)
+    ? card.subTypes.flatMap((v: unknown) => (typeof v === 'string' ? [v] : typeof v === 'object' && v ? Object.keys(v as Record<string, unknown>) : []))
+    : []
+  const isCreature = types.includes('CREATURE')
+  if (isCreature && subs.length) return subs.join(' ')
+  if (isCreature && card.power != null && card.toughness != null) return `${card.power}/${card.toughness}`
+  return null
 }
 
 function stackRulesText(card: CardView): string | null {
   const rules = card.rules ?? []
   if (rules.length) return rules.join('\n')
   return null
+}
+
+function resolveOwnership(
+  _card: CardView,
+  _id: string,
+  players?: PlayerView[],
+  myPlayerId?: string | null,
+): 'mine' | 'opponent' | 'unknown' {
+  if (!players || !myPlayerId) return 'unknown'
+  return 'unknown'
+}
+
+function StackThumbnail({ card }: { card: CardView }) {
+  const [imgUrl, setImgUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isStackAbility(card)) {
+      const src = card.sourceCard || card.ability
+      if (src) {
+        let cancelled = false
+        awaitImageUrl(src).then((url) => {
+          if (!cancelled) setImgUrl(toSmall(url))
+        })
+        return () => { cancelled = true }
+      }
+      return
+    }
+    let cancelled = false
+    awaitImageUrl(card).then((url) => {
+      if (!cancelled) setImgUrl(toSmall(url))
+    })
+    return () => { cancelled = true }
+  }, [card.expansionSetCode, card.cardNumber, card.name, card.displayName])
+
+  return (
+    <div className="stack-thumb">
+      {imgUrl ? (
+        <img src={imgUrl} alt="" className="stack-thumb-img" draggable={false} />
+      ) : (
+        <div className="stack-thumb-placeholder">
+          {isStackAbility(card) ? '⚡' : '🂠'}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function toSmall(url: string | null): string | null {
+  if (!url) return null
+  return url.replace('/normal/', '/small/')
 }
 
 export default function StackZone({
@@ -57,9 +123,12 @@ export default function StackZone({
   targetIds = new Set(),
   onResolveClick,
   canResolve = false,
+  players,
+  myPlayerId,
 }: StackZoneProps) {
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
+  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
 
   const handleHover = useCallback(
     (card: CardView | null, rect?: DOMRect) => {
@@ -84,104 +153,125 @@ export default function StackZone({
     )
   }
 
-  // XMage serializes state.getStack() in resolution order (top/newest item is first)
   const ordered = entries
 
   return (
-    <div className="stack-zone">
+    <div className={`stack-zone view-mode-${viewMode}`}>
       <div className="stack-header">
-        <span className="stack-header-title">Pila ({ordered.length})</span>
-        <span className="stack-header-hint">Resuelve de arriba a abajo</span>
+        <div className="stack-header-left">
+          <span className="stack-header-title">Pila ({ordered.length})</span>
+        </div>
+        <div className="stack-header-actions">
+          {canResolve && (
+            <button
+              type="button"
+              className="stack-resolve-header-btn"
+              onClick={onResolveClick}
+            >
+              ⚡ Resolver
+            </button>
+          )}
+          <div className="stack-view-toggle">
+            <button
+              type="button"
+              className={`toggle-mode-btn ${viewMode === 'compact' ? 'active' : ''}`}
+              title="Vista compacta con timeline"
+              onClick={() => setViewMode('compact')}
+            >
+              ▤
+            </button>
+            <button
+              type="button"
+              className={`toggle-mode-btn ${viewMode === 'expanded' ? 'active' : ''}`}
+              title="Vista expandida con cartas"
+              onClick={() => setViewMode('expanded')}
+            >
+              ▦
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="stack-items-list">
+      <div className="stack-timeline">
         {ordered.map(([id, card], idx) => {
           const isTop = idx === 0
+          const isLast = idx === ordered.length - 1
           const isAbility = isStackAbility(card)
-          const sourceName = isAbility ? getSourceCardName(card) : card.name
+          const isCopy = isCopyCard(card)
           const typeLabel = stackTypeLabel(card)
-          const rulesText = stackRulesText(card) || card.rules?.join('\n') || (isAbility ? 'Efecto de habilidad en la pila.' : null)
+          const subtype = stackSubtype(card)
+          const rulesText = stackRulesText(card)
           const manaCost = (card.manaCostLeftStr ?? []).join('')
           const isTargetable = targetIds.has(id)
-          const showResolve = isTop && canResolve
+          const ownership = resolveOwnership(card, id, players, myPlayerId)
+          const ptLine = !isAbility && card.power != null && card.toughness != null
+            ? `${card.power}/${card.toughness}`
+            : null
 
           return (
             <div
               key={id}
               data-card-id={id}
               className={[
-                'stack-item',
-                'stack-card-entry',
-                isTop ? 'stack-item--top is-top' : 'stack-item--underlying is-underlying',
+                'stack-tl-entry',
+                isTop ? 'is-top' : '',
+                isAbility ? 'is-ability' : 'is-spell',
+                isCopy ? 'is-copy' : '',
                 isTargetable ? 'targetable' : '',
                 onCardClick ? 'clickable' : '',
+                `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
               onClick={onCardClick ? () => onCardClick(id) : undefined}
               onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={() => handleHover(null)}
-              style={{ zIndex: ordered.length - idx }}
             >
-              {/* Header badge with position and type */}
-              <div className="stack-top-badge-row stack-card-badge-row">
-                <span className={`stack-top-indicator stack-pos-indicator ${isTop ? 'top' : ''}`}>
-                  {isTop ? '▶ #1 Siguiente en resolver' : `#${idx + 1}`}
-                </span>
-                <span className="stack-type-badge">{typeLabel}</span>
+              {/* Timeline node + connector */}
+              <div className="stack-tl-rail">
+                <div className={`stack-tl-node ${isTop ? 'node-top' : ''}`} />
+                {!isLast && <div className={`stack-tl-line ${isTop ? 'line-top' : ''}`} />}
               </div>
 
-              {/* Large Card Display */}
-              <div className="stack-spell-wrapper">
-                <CardSlot
-                  cardId={id}
-                  card={card}
-                  onClick={onCardClick ? () => onCardClick(id) : undefined}
-                  onHover={handleHover}
-                  isTarget={isTargetable}
-                  className={`stack-top-card stack-entry-card${showResolve && !rulesText ? ' has-resolve-btn' : ''}`}
-                />
+              {/* Card content */}
+              <div className="stack-tl-body">
+                {/* Position indicator */}
+                <div className="stack-tl-pos">
+                  {isTop ? '▶ #1' : `#${idx + 1}`}
+                </div>
 
-                {/* Rules & Description Box */}
-                {rulesText && (
-                  <div className={`stack-card-rules-box${showResolve ? ' has-resolve-btn' : ''}`}>
-                    <div className="stack-card-rules-header">
-                      <span className="stack-card-rules-title">{sourceName}</span>
+                <div className="stack-tl-card">
+                  {viewMode === 'compact' && <StackThumbnail card={card} />}
+
+                  <div className="stack-tl-info">
+                    <div className="stack-tl-name-row">
+                      <span className="stack-tl-name">{cardName(card)}</span>
                       {manaCost && (
-                        <span className="stack-card-mana">
+                        <span className="stack-tl-mana">
                           <FormattedText text={manaCost} />
                         </span>
                       )}
                     </div>
-                    <div className="stack-card-rules-body">
-                      <FormattedText text={rulesText} />
+                    <div className="stack-tl-type-row">
+                      <span className={`stack-tl-type-badge ${isAbility ? 'type-ability' : 'type-spell'}`}>
+                        {isAbility ? (typeLabel.includes('Disparada') ? '🔔' : '⚡') : ''} {typeLabel}
+                      </span>
+                      {subtype && <span className="stack-tl-subtype">{subtype}</span>}
+                      {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
+                      {isCopy && <span className="stack-tl-copy-badge">✨ Copia</span>}
                     </div>
+                    {rulesText && viewMode === 'expanded' && (
+                      <div className="stack-tl-rules">
+                        <FormattedText text={rulesText} />
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {/* Resolve Action Button for Top Item */}
-                {showResolve && (
-                  <button
-                    type="button"
-                    className="stack-resolve-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onResolveClick?.()
-                    }}
-                  >
-                    ⚡ Resolver
-                  </button>
-                )}
+                </div>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Floating Card Preview on hover */}
-      <FloatingCardPreview
-        card={hoverCard}
-        anchorRect={hoverRect}
-        fixedSide="left"
-      />
+      <FloatingCardPreview card={hoverCard} anchorRect={hoverRect} fixedSide="left" />
     </div>
   )
 }
