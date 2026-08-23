@@ -99,7 +99,7 @@ export default function FeedbackDialog() {
           <span className="action-prompt-msg">
             <FormattedText text={prompt.message} />
           </span>
-          <span className="action-prompt-hint">Haz clic en tus fuentes de maná del tablero</span>
+          <span className="action-prompt-hint">Haz clic en tus fuentes de maná, criaturas (Convoke) o artefactos (Improvise)</span>
         </div>
         <div className="action-prompt-actions">
           {prompt.playerId && poolMana(game).map((mana) => (

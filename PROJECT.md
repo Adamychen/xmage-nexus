@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-22 (Fullscreen Browser Mode, Real-Time Priority Chess Clocks & 267 Engine-Extracted MTG Keywords)
+> Last updated: 2026-08-23 (Complex Casting Costs Suite: Phyrexian Mana, Kicker, Split Cards, Adventures/MDFCs & Convoke)
 
 ---
 
@@ -179,6 +179,8 @@ web/
 
 | Date | Step | Description | Verification |
 |---|---|---|---|
+| 2026-08-23 | UI/Polish | Resource Piles Top Card Rendering & Hover Preview: upgraded `ResourceBar` to display the HD card artwork of the top card in Graveyard, Exile, and Cross-Zone (Ray stack) with count badge and mini-lightning icon; added full hover card preview & Scryfall resolution on resource stacks; updated `CardSlot` data-attributes | vitest 306/306 ✅; typecheck ✅; e2e cross-zone 2/2 ✅ |
+| 2026-08-23 | F2/F3 | Complex Casting Costs Suite & E2E Validation: implemented Phyrexian mana symbols (`{U/P}`, `{W/P}`, etc. with $\Phi$ icon badges and gradients), hybrid mana badges, Convoke/Improvise board tapping guidance in `mana-prompt-bar`, and dedicated E2E test scenario covering (1) Phyrexian life payment with live 20→18 HUD life update, (2) Kicker confirmation with 4-damage resolution to opponent (20→16), (3) Split cards (Fire // Ice) modal choice, (4) Adventure/MDFC (Bonecrusher Giant // Stomp) choice, and (5) Convoke creature tapping on the battlefield | vitest 303/303 ✅; typecheck ✅; e2e complex-costs 1/1 ✅ (5.8s) |
 | 2026-08-22 | F2/F3 | Comprehensive MTG Interactions Suite & Visual Showcase: built E2E test scenario covering `GAME_ASK` (Shockland binary prompts), `GAME_CHOOSE_COLOR` (mana color picker), `GAME_CHOOSE_PILE` (Fact or Fiction split piles), `CardGrid` (Demonic Tutor search with Scryfall HD art), `LibraryOrderDialog` (Scry 3 Top/Bottom order), and Command Zone Commander Tax (+2 badge & cast); updated `GAME_ASK` fallback and added `skipAsks` flag to `HumanHelper` | vitest 286/286 ✅; typecheck ✅; e2e interactions 1/1 ✅ (5.7s) |
 | 2026-08-22 | F2/F3 | Universal Playable Objects Audit & Mana Floating: audited and unified `canPlayObjects` resolution across all zones (Hand, Battlefield lands & activated abilities, Command Zone commanders & companions, Graveyard, Exile, Library top card); fixed land tapping during regular priority to float mana before casting spells | vitest 286/286 ✅; typecheck ✅; e2e combat 4/4 ✅ |
 | 2026-08-22 | F2/F3 | Combat Visuals & Mechanics Polish: multi-blocker arrows convergence, damage assignment ordering (`LibraryOrderDialog` in blocker mode), numeric damage distribution, 90° tapping rotation on attack with Vigilance exception handling, vertical blocker orientation, and automated E2E screenshots | vitest 285/285 ✅; typecheck ✅; e2e combat 4/4 ✅ |

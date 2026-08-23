@@ -145,7 +145,15 @@ export function ManaBadge({ symbol }: { symbol: string }) {
   let className = 'mana-badge'
   let label = sym
 
-  if (sym === 'R') className += ' mana-r'
+  if (sym.endsWith('/P') || sym === 'P') {
+    const baseColor = sym.replace('/P', '').toLowerCase()
+    className += ` mana-phyrexian mana-p mana-${baseColor || 'c'}`
+    label = 'Φ'
+  } else if (sym.includes('/')) {
+    const [c1, c2] = sym.split('/')
+    className += ` mana-hybrid mana-${c1.toLowerCase()}-${c2.toLowerCase()}`
+    label = `${c1}/${c2}`
+  } else if (sym === 'R') className += ' mana-r'
   else if (sym === 'U') className += ' mana-u'
   else if (sym === 'W') className += ' mana-w'
   else if (sym === 'B') className += ' mana-b'

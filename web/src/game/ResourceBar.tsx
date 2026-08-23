@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import type { PlayerView } from '../net/types'
+import type { CardView, PlayerView } from '../net/types'
 import PileOverlay from '../board/PileOverlay'
 import CrossZoneOverlay from '../board/CrossZoneOverlay'
 import { crossZoneCounts } from '../board/crossZone'
@@ -24,17 +24,33 @@ interface ResourceBarProps {
   compact?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
+  onCardHover?: (card: any, rect?: DOMRect) => void
 }
 
-export default function ResourceBar({ player, side, compact = false, crossZonePlayables, onPlayCrossZone }: ResourceBarProps) {
+function extractCards(cardsView: unknown): CardView[] {
+  if (!cardsView || typeof cardsView !== 'object') return []
+  if (Array.isArray(cardsView)) return cardsView.filter(Boolean) as CardView[]
+  return Object.values(cardsView).filter(Boolean) as CardView[]
+}
+
+export default function ResourceBar({ player, side, compact = false, crossZonePlayables, onPlayCrossZone, onCardHover }: ResourceBarProps) {
   const [manaOpen, setManaOpen] = useState(false)
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const pool = player.manaPool ?? {}
   const manaTotal = MANA_COLORS.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
-  const graveyardCount = Object.keys(player.graveyard ?? {}).length
-  const exileCount = Object.keys(player.exile ?? {}).length
+
+  const graveyardCards = useMemo(() => extractCards(player.graveyard), [player.graveyard])
+  const graveyardCount = graveyardCards.length
+  const topGraveyardCard = useMemo(() => (graveyardCards.length > 0 ? graveyardCards[graveyardCards.length - 1] : null), [graveyardCards])
+
+  const exileCards = useMemo(() => extractCards(player.exile), [player.exile])
+  const exileCount = exileCards.length
+  const topExileCard = useMemo(() => (exileCards.length > 0 ? exileCards[exileCards.length - 1] : null), [exileCards])
+
   const crossZone = crossZonePlayables ?? []
   const counts = useMemo(() => crossZoneCounts(crossZone), [crossZone])
+  const topCrossZoneCard = useMemo(() => (crossZone.length > 0 ? crossZone[0].card : null), [crossZone])
+
   const playableByZone = useMemo(() => {
     const map: Record<string, Set<string>> = {}
     for (const p of crossZone) {
@@ -106,6 +122,8 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
           className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}`}
           title={player.topCard ? `Biblioteca: ${player.libraryCount} cartas (Superior: ${player.topCard.name}) · Clic para ver` : `Biblioteca: ${player.libraryCount} cartas · Clic para ver`}
           onClick={() => setOpenPile('library')}
+          onMouseEnter={(e) => player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())}
+          onMouseLeave={() => onCardHover?.(null)}
         >
           {player.topCard ? (
             <CardSlot card={player.topCard} className="library-top-card" />
@@ -115,47 +133,71 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
           <span className="stack-count">{player.libraryCount}</span>
           {player.topCard && <span className="top-card-badge" title="Carta superior revelada">👁️</span>}
         </button>
+
         <button
           type="button"
-          className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}`}
-          title={`Cementerio: ${graveyardCount}${counts.graveyard > 0 ? ` (${counts.graveyard} jugable${counts.graveyard > 1 ? 's' : ''})` : ''}`}
+          className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : ''}`}
+          title={topGraveyardCard ? `Cementerio: ${graveyardCount} cartas (Superior: ${topGraveyardCard.name || topGraveyardCard.displayName}) · Clic para ver` : `Cementerio: 0 cartas · Clic para ver`}
           onClick={() => setOpenPile('graveyard')}
+          onMouseEnter={(e) => topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())}
+          onMouseLeave={() => onCardHover?.(null)}
         >
-          <div className="stack-card-back graveyard-back">
-            <span className="stack-mark">&#9760;</span>
-          </div>
+          {topGraveyardCard ? (
+            <CardSlot card={topGraveyardCard} className="graveyard-top-card" />
+          ) : (
+            <div className="stack-card-back graveyard-back">
+              <span className="stack-mark">&#9760;</span>
+            </div>
+          )}
           <span className="stack-count">{graveyardCount}</span>
           {counts.graveyard > 0 && <span className="playable-badge">{counts.graveyard}</span>}
         </button>
-          <button
-           type="button"
-           className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}`}
-           title={`Exilio: ${exileCount}${counts.exile > 0 ? ` (${counts.exile} jugable${counts.exile > 1 ? 's' : ''})` : ''}`}
-           onClick={() => setOpenPile('exile')}
-          >
+
+        <button
+          type="button"
+          className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : ''}`}
+          title={topExileCard ? `Exilio: ${exileCount} cartas (Superior: ${topExileCard.name || topExileCard.displayName}) · Clic para ver` : `Exilio: 0 cartas · Clic para ver`}
+          onClick={() => setOpenPile('exile')}
+          onMouseEnter={(e) => topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())}
+          onMouseLeave={() => onCardHover?.(null)}
+        >
+          {topExileCard ? (
+            <CardSlot card={topExileCard} className="exile-top-card" />
+          ) : (
             <div className="stack-card-back exile-back">
               <span className="stack-mark">&#9784;</span>
             </div>
-            <span className="stack-count">{exileCount}</span>
-            {counts.exile > 0 && <span className="playable-badge">{counts.exile}</span>}
-          </button>
-          {side === 'my' && (
-            <button
-              type="button"
-              className={`resource-stack ray-stack clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''}`}
-              title={`Lanzar desde otra zona: ${crossZone.length}`}
-              onClick={() => setOpenPile('crosszone')}
-            >
+          )}
+          <span className="stack-count">{exileCount}</span>
+          {counts.exile > 0 && <span className="playable-badge">{counts.exile}</span>}
+        </button>
+
+        {side === 'my' && (
+          <button
+            type="button"
+            className={`resource-stack ray-stack clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''} ${topCrossZoneCard ? 'has-card-img' : ''}`}
+            title={`Lanzar desde otra zona: ${crossZone.length} cartas disponibles · Clic para ver`}
+            onClick={() => setOpenPile('crosszone')}
+            onMouseEnter={(e) => topCrossZoneCard && onCardHover?.(topCrossZoneCard, e.currentTarget.getBoundingClientRect())}
+            onMouseLeave={() => onCardHover?.(null)}
+          >
+            {topCrossZoneCard ? (
+              <>
+                <CardSlot card={topCrossZoneCard} className="ray-top-card" />
+                <div className="ray-mini-badge" title="Lanzable desde otra zona">⚡</div>
+              </>
+            ) : (
               <div className="stack-card-back ray-back">
                 <svg className="ray-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
                 </svg>
               </div>
-              <span className="stack-count">{crossZone.length}</span>
-              {crossZone.length > 0 && <span className="playable-badge">{crossZone.length}</span>}
-            </button>
-          )}
+            )}
+            <span className="stack-count">{crossZone.length}</span>
+            {crossZone.length > 0 && <span className="playable-badge">{crossZone.length}</span>}
+          </button>
+        )}
       </div>
 
         {openPile === 'library' && (

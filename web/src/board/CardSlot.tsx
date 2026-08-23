@@ -136,7 +136,9 @@ export default function CardSlot({
   return (
     <div
       ref={slotRef}
-      data-card-id={cardId}
+      data-card-id={cardId ?? effectiveId}
+      data-card-name={cardName(card)}
+      title={cardName(card)}
       className={[
         'card-slot',
         tapped ? 'tapped' : '',

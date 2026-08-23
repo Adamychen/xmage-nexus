@@ -30,7 +30,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
         </div>
         <div className="pile-overlay-scroll">
           {playables.map(({ id, card, zone }) => (
-             <div key={id} className="cross-zone-entry">
+             <div key={id} className="cross-zone-entry" data-card-id={id} data-card-name={card.name || card.displayName}>
                <CardSlot cardId={id} card={card} className="pile-card" onClick={() => onPlay(id)} onHover={undefined} />
                <span className="cross-zone-source">{zone}</span>
              </div>

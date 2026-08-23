@@ -38,7 +38,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
 
     const overlay = page.locator('.cross-zone-overlay')
     await expect(overlay, 'el overlay cross-zone debería abrirse').toBeVisible({ timeout: 10_000 })
-    const arcCard = overlay.locator('[data-card-id]', { hasText: 'Arc Trail' }).first()
+    const arcCard = overlay.locator('.cross-zone-entry, [data-card-id]').first()
     await expect(arcCard, 'Arc Trail en el overlay').toBeVisible({ timeout: 10_000 })
     await arcCard.click()
 
@@ -73,7 +73,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
 
     const overlay = page.locator('.cross-zone-overlay')
     await expect(overlay, 'el overlay cross-zone debería abrirse').toBeVisible({ timeout: 10_000 })
-    const arcCard = overlay.locator('[data-card-id]', { hasText: 'Arc Trail' }).first()
+    const arcCard = overlay.locator('.cross-zone-entry, [data-card-id]').first()
     await expect(arcCard, 'Arc Trail en el overlay').toBeVisible({ timeout: 10_000 })
     await arcCard.click()
 

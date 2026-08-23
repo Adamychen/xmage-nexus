@@ -22,6 +22,17 @@ describe('FormattedText', () => {
     expect(badge?.textContent).toBe('R')
   })
 
+  it('renders Phyrexian and hybrid mana symbols', () => {
+    const { container } = render(<FormattedText text="Pay {U/P} or {2/R} to cast Dismember" />)
+    const phyrexianBadge = container.querySelector('.mana-badge.mana-phyrexian.mana-u')
+    expect(phyrexianBadge).toBeTruthy()
+    expect(phyrexianBadge?.textContent).toBe('Φ')
+
+    const hybridBadge = container.querySelector('.mana-badge.mana-hybrid')
+    expect(hybridBadge).toBeTruthy()
+    expect(hybridBadge?.textContent).toBe('2/R')
+  })
+
   it('renders colored text and handles the exact screenshot HTML payload', () => {
     const raw = "Pay {R}<div style='font-size:11pt'><font color='#FF6347' object_id='3736f396-aef9-421c-ae65-453d81b8d0aa'>Lightning Bolt</font> [373]</div>"
     const { container } = render(<FormattedText text={raw} />)

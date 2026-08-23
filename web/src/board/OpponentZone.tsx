@@ -118,7 +118,7 @@ export default function OpponentZone({
           targetIds={targetIds}
           compact
         />
-        <ResourceBar player={player} side="opp" compact />
+        <ResourceBar player={player} side="opp" compact onCardHover={onCardHover} />
       </div>
 
       {/* Row 2: Lands + Others */}

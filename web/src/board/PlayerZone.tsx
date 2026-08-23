@@ -272,6 +272,7 @@ export default function PlayerZone({
           compact
           crossZonePlayables={crossZonePlayables}
           onPlayCrossZone={onPlayCrossZone}
+          onCardHover={onCardHover}
         />
       </div>
     </div>
