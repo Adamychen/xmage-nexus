@@ -3,12 +3,15 @@ import type { FeedbackPrompt } from '../game/feedback'
 import type { PhaseStops } from '../net/commands'
 import { loadConn, type ConnectionInfo } from './persistence'
 
+export type LogChannel = 'game' | 'chat' | 'system'
+
 export interface LogEntry {
   id: number
   time: number
   from: string
   text: string
   gameId?: string
+  channel?: LogChannel
 }
 
 export interface CombatState {
@@ -113,8 +116,9 @@ export function getState(): AppState {
   return _state
 }
 
-export function addLog(from: string, text: string, gameId?: string) {
-  setState({ log: [..._state.log, { id: ++logSeq, time: Date.now(), from, text, gameId }].slice(-300) })
+export function addLog(from: string, text: string, gameId?: string, channel?: LogChannel) {
+  const ch: LogChannel = channel ?? (from === 'partida' ? 'game' : 'system')
+  setState({ log: [..._state.log, { id: ++logSeq, time: Date.now(), from, text, gameId, channel: ch }].slice(-300) })
 }
 
 export { listeners }

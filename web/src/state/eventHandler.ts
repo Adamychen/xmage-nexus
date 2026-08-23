@@ -1,5 +1,6 @@
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, GameEndInfo, ProxyMessage } from '../net/types'
+import { parseGameEvent } from '../game/gameEventParser'
 import { parseFeedback } from '../game/feedback'
 import { getState, setState, addLog } from './state'
 import type { SideboardCard, SideboardScreenState } from './state'
@@ -81,7 +82,17 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
         break
       }
       setState({ chatMessages: [...s.chatMessages, m].slice(-300) })
-      addLog(m.username, m.message, objectId ?? undefined)
+      // Route by XMage messageType (already forwarded by the proxy inside the
+      // ChatMessage payload). GAME -> game log, TALK -> chat, STATUS/USER_INFO
+      // -> system noise. Fall back to content heuristics when messageType is
+      // absent (e.g. the fake test server).
+      const mt = m.messageType
+      let channel: 'game' | 'chat' | 'system'
+      if (mt === 'GAME') channel = 'game'
+      else if (mt === 'TALK') channel = 'chat'
+      else if (mt) channel = 'system'
+      else channel = parseGameEvent(m.message) ? 'game' : (m.username ? 'chat' : 'system')
+      addLog(m.username, m.message, objectId ?? undefined, channel)
       break
     }
     case 'SHOW_USERMESSAGE':

@@ -40,6 +40,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
     for (let i = 0; i < log.length; i++) {
       const entry = log[i]
+      if ((entry.channel ?? 'game') !== 'game') continue
       const key = `${entry.time}-${entry.text}`
       if (seenRaw.has(key)) continue
       seenRaw.add(key)
@@ -117,9 +118,8 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
           )
         ) : (
           <div className="action-feed-raw-list">
-            {log.slice(-100).map((entry, i) => (
+            {log.slice(-100).filter((e) => (e.channel ?? 'game') === 'game').map((entry, i) => (
               <div key={entry.id ?? i} className="game-log-entry">
-                {entry.from && <span className="game-log-player">{entry.from}</span>}
                 <span className="game-log-text">
                   <FormattedText text={entry.text} onHover={handleCardHover} />
                 </span>

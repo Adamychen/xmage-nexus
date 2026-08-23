@@ -192,7 +192,7 @@ These are the core events the web client must handle. Every event has:
 | Event | Data | When |
 |---|---|---|
 | `JOINED_TABLE` | `{tableId, tableName}` | Joined a table |
-| `CHATMESSAGE` | `{chatId, username, message}` | Chat message |
+| `CHATMESSAGE` | `{chatId, username, message, messageType}` | Chat / game-log / status message. `messageType` is the XMage `ChatMessage.MessageType` (`GAME` = game log, `TALK` = player chat, `STATUS`/`USER_INFO` = system noise, `WHISPER_FROM`/`WHISPER_TO` = private). The proxy forwards the whole `ChatMessage` payload as-is. |
 | `SERVER_MESSAGE` | (string or object) | Server announcement |
 | `WATCHGAME` | `{gameId}` | Watching a game |
 

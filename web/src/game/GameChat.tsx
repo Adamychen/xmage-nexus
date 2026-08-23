@@ -29,13 +29,15 @@ export default function GameChat() {
     setHoverRect(rect ?? null)
   }, [])
 
-  // Only show real player/user chat messages in the Chat tab (not engine inform lines like "Upkeep - Waiting for...")
+  // Only show real player/user chat messages in the Chat tab (not engine inform
+  // lines, lobby join/leave, or game-log lines — those are routed to other channels).
   const chatEntries = useMemo(() => {
     return log.filter((e) => {
-      if (!e.from || e.from === 'partida' || e.from === 'servidor' || e.from === 'error') {
-        return false
-      }
-      return true
+      if (e.channel === 'chat') return true
+      if (e.channel) return false
+      // Legacy entries without a channel: keep anything that isn't a known
+      // game/system source (best-effort fallback for older sessions).
+      return !!e.from && !['partida', 'servidor', 'error', 'conexión', 'mesa', 'tú'].includes(e.from)
     })
   }, [log])
 
