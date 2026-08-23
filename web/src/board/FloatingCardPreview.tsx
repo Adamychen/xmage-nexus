@@ -12,9 +12,9 @@ interface FloatingCardPreviewProps {
   fixedSide?: 'left' | 'right' | 'auto'
 }
 
-const PREVIEW_WIDTH = 270
-const PREVIEW_HEIGHT = 378
-const KEYWORDS_WIDTH = 230
+const PREVIEW_WIDTH = 320
+const PREVIEW_HEIGHT = 448
+const KEYWORDS_WIDTH = 240
 
 export default function FloatingCardPreview({
   card,

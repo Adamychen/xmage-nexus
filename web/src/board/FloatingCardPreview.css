@@ -21,14 +21,14 @@
 
 .floating-card-main {
   position: relative;
-  width: 270px;
-  height: 378px;
+  width: 320px;
+  height: 448px;
   flex-shrink: 0;
 }
 
 .floating-card-keywords {
-  width: 220px;
-  max-height: 378px;
+  width: 240px;
+  max-height: 448px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

@@ -40,10 +40,14 @@
 
 .pz-bottom-row > .player-info-bar {
   flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 0;
 }
 
 .pz-bottom-row > .resource-bar {
   flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 0;
 }
 
 .pz-commander {

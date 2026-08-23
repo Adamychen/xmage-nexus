@@ -27,7 +27,7 @@
 }
 
 .oz-top-row {
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   overflow: visible;
   position: relative;
@@ -36,14 +36,19 @@
 
 .oz-top-row > .player-info-bar {
   flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0;
 }
 
 .oz-top-row > .resource-bar {
   flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0;
 }
 
 .opponent-zone .player-info-bar {
-  align-self: center;
+  align-self: flex-start;
+  margin-top: 0;
 }
 
 .opponent-zone .hand-zone {
