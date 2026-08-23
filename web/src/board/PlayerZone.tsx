@@ -4,7 +4,7 @@ import CardSlot from './CardSlot'
 import HandZone from './HandZone'
 import ResourceBar from '../game/ResourceBar'
 import PlayerInfoBar from '../game/PlayerInfoBar'
-import CommandZone from './CommandZone'
+import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
@@ -111,6 +111,10 @@ export default function PlayerZone({
     return {}
   }, [hand, handCount, givenHand.length, player.playerId])
 
+  const hasCommander = useMemo(() => {
+    return hasCommandObjects(player, helperEmblems, 'my')
+  }, [player, helperEmblems])
+
   const { cardW, ref: zoneRef } = useZoneScale()
 
   return (
@@ -136,18 +140,20 @@ export default function PlayerZone({
 
       {/* Row 1: Commander + Creatures */}
       <div className="pz-row pz-creatures-row">
-        <div className="pz-commander">
-          <CommandZone
-            player={player}
-            side="my"
-            onCardClick={onCardClick}
-            onHover={onCardHover}
-            playableIds={playableIds}
-            targetIds={targetIds}
-            helperEmblems={helperEmblems}
-          />
-        </div>
-        <div className="pz-band creatures-band">
+        {hasCommander && (
+          <div className="pz-commander">
+            <CommandZone
+              player={player}
+              side="my"
+              onCardClick={onCardClick}
+              onHover={onCardHover}
+              playableIds={playableIds}
+              targetIds={targetIds}
+              helperEmblems={helperEmblems}
+            />
+          </div>
+        )}
+        <div className={`pz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
           {creatures.map(([id, perm]) => {
             const isSelectable = combatSelectableSet.has(id)
             const isChosen = combatChosenSet.has(id)
@@ -176,7 +182,7 @@ export default function PlayerZone({
                           isTarget={targetIds.has(attId)}
                           isPlayable={playableIds.has(attId)}
                           className="attachment-subcard"
-                          style={{ left: `calc(var(--card-w, 100px) * ${(ai + 1) * 0.58})` }}
+                          style={{ top: `calc(-1 * ${(ai + 1) * 18}px)` }}
                         />
                       )
                     })}

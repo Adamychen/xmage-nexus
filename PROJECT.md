@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-23 (Advanced Stack & Priority Suite: Hold Priority, APNAP Trigger Stacking, Storm Spells & Wiki Integration)
+> Last updated: 2026-08-24 (Responsive Battlefield Polish: Conditional CommandZone Collapse, Safe-Center Tap Overflow Fix & Distinct Permanent Counter Badges)
 
 ---
 
@@ -179,6 +179,7 @@ web/
 
 | Date | Step | Description | Verification |
 |---|---|---|---|
+| 2026-08-24 | UI/Fix | Responsive Battlefield & Rotation Geometry Polish: (1) resolved left-edge card clipping/disappearing on tap by upgrading flex bands to `justify-content: safe center` with padding boundaries; (2) implemented conditional Command Zone collapsing in `PlayerZone` and `OpponentZone` via `hasCommandObjects` to free full 100% row width for creatures when no commander is in the zone; (3) expanded `CardSlot` to render distinct counter badges for Shield (🛡️), Stun (⚡), Oil (🛢️), Finality (⏳), +1/+1 and -1/-1 | vitest 309/309 ✅; typecheck ✅; build ✅; e2e 23/23 ✅ (7.4m) |
 | 2026-08-23 | F2/F3 | Advanced Stack & Priority Suite (Block B): implemented `holdPriority` setting and UI toggle in `GameScreen` with `Ctrl`/`Cmd` key support; connected `HOLD_PRIORITY`/`UNHOLD_PRIORITY` actions via WebSocket; updated `HelpWikiModal` with full Stack, Priority, APNAP trigger ordering, and Storm rules; created deterministic scenario & Playwright E2E covering (1) Hold Priority response loop with *Infernal Tutor* + *Lion's Eye Diamond*, (2) APNAP simultaneous trigger stacking (*Soul Warden* + *Impact Tremors*), and (3) Storm count copies with re-targeting (*Grapeshot*) | vitest 306/306 ✅; typecheck ✅; e2e stack-priority 1/1 ✅ (3.1s) |
 | 2026-08-23 | UI/Polish | Resource Piles Top Card Rendering & Hover Preview: upgraded `ResourceBar` to display the HD card artwork of the top card in Graveyard, Exile, and Cross-Zone (Ray stack) with count badge and mini-lightning icon; added full hover card preview & Scryfall resolution on resource stacks; updated `CardSlot` data-attributes | vitest 306/306 ✅; typecheck ✅; e2e cross-zone 2/2 ✅ |
 | 2026-08-23 | F2/F3 | Complex Casting Costs Suite & E2E Validation: implemented Phyrexian mana symbols (`{U/P}`, `{W/P}`, etc. with $\Phi$ icon badges and gradients), hybrid mana badges, Convoke/Improvise board tapping guidance in `mana-prompt-bar`, and dedicated E2E test scenario covering (1) Phyrexian life payment with live 20→18 HUD life update, (2) Kicker confirmation with 4-damage resolution to opponent (20→16), (3) Split cards (Fire // Ice) modal choice, (4) Adventure/MDFC (Bonecrusher Giant // Stomp) choice, and (5) Convoke creature tapping on the battlefield | vitest 303/303 ✅; typecheck ✅; e2e complex-costs 1/1 ✅ (5.8s) |
@@ -269,6 +270,8 @@ web/
 | 2026-08-21 | Feature/UX | Advanced Table Creation Dialog with categorized tabs (General, Clocks & Rules, Security & Passwords, Bot Seats with Custom Decks) | vitest 230/230 ✅; typecheck ✅; build ✅; java ✅; Playwright e2e ✅ |
 | 2026-08-22 | Feature/UX | MTG Keywords Hover Tooltips (Arena-style) & In-Client Rules Wiki Modal: dynamic rule parsing, bilingual glossary with live search, turn phases guide, keyboard shortcuts reference | vitest 293/293 ✅; typecheck ✅; build ✅; Playwright e2e ✅ |
 | 2026-08-22 | Feature/UX | Fullscreen Web Mode (in-game sidebar & lobby top bar), Real-time Dynamic Priority Chess Clocks (`useTickingTimer`, hours formatting `1:55:08`), and Automated Extraction of 267 MTG Keywords from XMage rules engine | vitest 302/302 ✅; typecheck ✅; build ✅; Playwright e2e ✅ |
+| 2026-08-24 | Feature/Fix | Priority & Stack Suite (Bloque B): Hold Priority toggle with Ctrl+Click, APNAP trigger ordering, Storm copy cascade stack view & Ability Tiles | vitest 307/307 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
+| 2026-08-24 | Fix/UI | Battlefield Card Polish: Eliminated boolean-coercion text node "0" on undamaged creatures, vertical tab cascade for auras/attachments, top-left sickness badge relocation, and removed dead targeting overlay | vitest 309/309 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
 
 ---
 

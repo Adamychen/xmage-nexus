@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
-import TargetingOverlay from './TargetingOverlay'
 import FloatingCardPreview from './FloatingCardPreview'
 import { useSceneBridge } from './sceneBridge'
 import type { CrossZonePlayable } from './crossZone'
@@ -72,7 +71,6 @@ export default function GameBoard({
   targetIds = [],
   chosenTargetIds = [],
   onTargetClick,
-  targetSourceId,
   playableIds = [],
   onPlayableClick,
   onCardHover,
@@ -164,20 +162,6 @@ export default function GameBoard({
     return {}
   }, [isSpectator, oppBottom, game?.watchedHands, game?.opponentHands])
 
-  const allTargetCards = useMemo(() => {
-    const map: Record<string, { id: string; x: number; y: number }> = {}
-    if (!game) return map
-    for (const p of game.players ?? []) {
-      for (const [id] of Object.entries(p.battlefield ?? {})) {
-        map[id] = { id, x: 0, y: 0 }
-      }
-    }
-    for (const [id] of Object.entries(game.myHand ?? {})) {
-      map[id] = { id, x: 0, y: 0 }
-    }
-    return map
-  }, [game])
-
   const currentOpp = useMemo(() => {
     if (topOpps.length <= 1) return topOpps[0]
     if (focusedOpponentId) {
@@ -218,12 +202,6 @@ export default function GameBoard({
         crossZonePlayables={isSpectator ? [] : crossZonePlayables}
         onPlayCrossZone={onPlayCrossZone}
         helperEmblems={game?.myHelperEmblems}
-      />
-      <TargetingOverlay
-        sourceId={targetSourceId}
-        targetIds={targetIds}
-        chosenIds={chosenTargetIds}
-        cards={allTargetCards}
       />
       <FloatingCardPreview
         card={floatingCard}

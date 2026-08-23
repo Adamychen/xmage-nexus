@@ -1,9 +1,10 @@
+import { useMemo } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import HandZone from './HandZone'
 import ResourceBar from '../game/ResourceBar'
 import PlayerInfoBar from '../game/PlayerInfoBar'
-import CommandZone from './CommandZone'
+import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { hasVigilance } from '../cards/cardImages'
 import './OpponentZone.css'
@@ -77,6 +78,10 @@ export default function OpponentZone({
   const creatures = permanents.filter(([id, p]) => permanentKind(p) === 'creatures' && !attachedIds.has(id))
   const others = permanents.filter(([id, p]) => permanentKind(p) === 'other' && !attachedIds.has(id))
   const lands = permanents.filter(([id, p]) => permanentKind(p) === 'lands' && !attachedIds.has(id))
+
+  const hasCommander = useMemo(() => {
+    return hasCommandObjects(player, undefined, 'opp')
+  }, [player])
 
   const { cardW, ref: zoneRef } = useZoneScale()
   const isDefeated = player.hasLeft === true || player.life <= 0
@@ -153,16 +158,18 @@ export default function OpponentZone({
 
       {/* Row 3: Commander + Creatures (at bottom) */}
       <div className="oz-row oz-creatures-row">
-        <div className="oz-commander">
-          <CommandZone
-            player={player}
-            side="opp"
-            onCardClick={onCardClick}
-            onHover={onCardHover}
-            targetIds={targetIds}
-          />
-        </div>
-        <div className="oz-band creatures-band">
+        {hasCommander && (
+          <div className="oz-commander">
+            <CommandZone
+              player={player}
+              side="opp"
+              onCardClick={onCardClick}
+              onHover={onCardHover}
+              targetIds={targetIds}
+            />
+          </div>
+        )}
+        <div className={`oz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
           {creatures.map(([id, perm]) => {
             const isAttacking = (perm as any).attacking === true
             const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
@@ -188,7 +195,7 @@ export default function OpponentZone({
                           onHover={onCardHover}
                           isTarget={targetIds.has(attId)}
                           className="attachment-subcard"
-                          style={{ left: `calc(var(--card-w, 100px) * ${(ai + 1) * 0.58})` }}
+                          style={{ top: `calc(-1 * ${(ai + 1) * 18}px)` }}
                         />
                       )
                     })}

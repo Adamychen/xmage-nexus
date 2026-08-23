@@ -117,7 +117,6 @@ export default function CardSlot({
 
   const perm = card as PermanentView
   const counters = card.counters ?? []
-  const totalCounters = counters.reduce((a, c) => a + c.count, 0)
 
   // Strict Type Checks
   const types = (card.cardTypes ?? []).map((t) => String(t).toLowerCase())
@@ -138,7 +137,6 @@ export default function CardSlot({
       ref={slotRef}
       data-card-id={cardId ?? effectiveId}
       data-card-name={cardName(card)}
-      title={cardName(card)}
       className={[
         'card-slot',
         tapped ? 'tapped' : '',
@@ -191,13 +189,60 @@ export default function CardSlot({
         </div>
       )}
 
-      {/* +1/+1 and generic Counters */}
-      {showCounters && totalCounters > 0 && (
-        <div className="counter-badge">+{totalCounters}</div>
+      {/* Card Counters Container */}
+      {showCounters && counters.length > 0 && (
+        <div className="card-counters-wrap">
+          {counters.map((c, ci) => {
+            const n = c.name.toLowerCase()
+            let icon = ''
+            let customClass = ''
+            let label = ''
+
+            if (n.includes('+1/+1') || n === 'p1p1') {
+              label = `+${c.count}`
+              customClass = 'p1p1'
+            } else if (n.includes('-1/-1') || n === 'm1m1') {
+              label = `-${c.count}`
+              customClass = 'm1m1'
+            } else if (n.includes('shield')) {
+              icon = '🛡️'
+              label = c.count > 1 ? `${c.count}` : ''
+              customClass = 'shield'
+            } else if (n.includes('stun')) {
+              icon = '⚡'
+              label = c.count > 1 ? `${c.count}` : ''
+              customClass = 'stun'
+            } else if (n.includes('oil')) {
+              icon = '🛢️'
+              label = `${c.count}`
+              customClass = 'oil'
+            } else if (n.includes('finality')) {
+              icon = '⏳'
+              customClass = 'finality'
+            } else if (n.includes('lore')) {
+              icon = '📖'
+              label = `${c.count}`
+              customClass = 'lore'
+            } else {
+              label = `+${c.count}`
+            }
+
+            return (
+              <div
+                key={ci}
+                className={`counter-badge ${customClass}`}
+                title={`${c.name}: ${c.count}`}
+              >
+                {icon && <span className="counter-icon-symbol">{icon}</span>}
+                {label && <span className="counter-text-val">{label}</span>}
+              </div>
+            )
+          })}
+        </div>
       )}
 
       {/* Accumulated Combat Damage (Creatures & Planeswalkers only) */}
-      {showDamage && isRealCreature && perm.damage && perm.damage > 0 && (
+      {showDamage && isRealCreature && (perm.damage ?? 0) > 0 && (
         <div className="damage-badge">{perm.damage}</div>
       )}
 

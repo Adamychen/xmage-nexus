@@ -50,7 +50,7 @@ const REMINDER_TOKEN_NAMES = new Set([
   'designation',
 ])
 
-function parseCommandList(
+export function parseCommandList(
   commandList: unknown[] | Record<string, unknown> | undefined,
   helperCards?: Record<string, CardView>
 ): CommandObject[] {
@@ -133,6 +133,19 @@ function parseCommandList(
   }
 
   return items
+}
+
+export function hasCommandObjects(
+  player: PlayerView | undefined,
+  helperEmblems?: Record<string, CardView>,
+  side?: 'my' | 'opp'
+): boolean {
+  if (!player) return false
+  const items = parseCommandList(player.commandList, {
+    ...(player.helperCards ?? {}),
+    ...(side === 'my' ? (helperEmblems ?? {}) : {}),
+  })
+  return items.length > 0
 }
 
 export default function CommandZone({
