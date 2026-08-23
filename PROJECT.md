@@ -273,6 +273,7 @@ web/
 | 2026-08-24 | Feature/Fix | Priority & Stack Suite (Bloque B): Hold Priority toggle with Ctrl+Click, APNAP trigger ordering, Storm copy cascade stack view & Ability Tiles | vitest 307/307 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
 | 2026-08-24 | Fix/UI | Battlefield Card Polish: Eliminated boolean-coercion text node "0" on undamaged creatures, vertical tab cascade for auras/attachments, top-left sickness badge relocation, and removed dead targeting overlay | vitest 309/309 ✅; typecheck ✅; Playwright E2E 23/23 ✅ |
 | 2026-08-24 | Fix/UI | Modal & Arrow Layering: React Portal for `PileOverlay` (z-index 100), elevated feedback/grid backdrops (z-index 90), defeat overlay over arrows (z-index 30 vs 28), and filtered defeated player arrows | vitest 309/309 ✅; typecheck ✅; build ✅ |
+| 2026-08-24 | Feature/UX | Stack Player Identification: Controller Ribbons with avatar, controller name, color-coded badges (cyan `[👤 Tú]` vs red `[🤖 Opponent]`) and left border accents across compact/expanded views | vitest 310/310 ✅; typecheck ✅; build ✅ |
 
 ---
 

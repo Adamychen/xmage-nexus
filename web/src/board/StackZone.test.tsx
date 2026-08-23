@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
-import type { CardView } from '../net/types'
+import type { CardView, PlayerView } from '../net/types'
 
 vi.mock('../cards/cardImages', () => ({
   awaitImageUrl: vi.fn().mockResolvedValue('https://img.test/card.jpg'),
@@ -186,5 +186,50 @@ describe('StackZone', () => {
     expect(btn).toBeTruthy()
     fireEvent.click(btn)
     expect(onResolveClick).toHaveBeenCalled()
+  })
+
+  it('renders controller pill distinguishing human player vs opponent', () => {
+    const players: PlayerView[] = [
+      {
+        playerId: 'p-human',
+        name: 'Mage Web',
+        life: 20,
+        controlled: true,
+        isHuman: true,
+      } as PlayerView,
+      {
+        playerId: 'p-opp',
+        name: 'SimBot',
+        life: 20,
+        controlled: false,
+        isHuman: false,
+      } as PlayerView,
+    ]
+
+    const stack: Record<string, CardView> = {
+      'spell-mine': {
+        name: 'Lightning Bolt',
+        cardTypes: ['INSTANT'],
+        manaValue: 1,
+        controllerId: 'p-human',
+      } as any,
+      'spell-opp': {
+        name: 'Counterspell',
+        cardTypes: ['INSTANT'],
+        manaValue: 2,
+        controllerId: 'p-opp',
+      } as any,
+    }
+
+    const { container } = render(
+      <StackZone stack={stack} players={players} myPlayerId="p-human" />,
+    )
+
+    const pills = container.querySelectorAll('.stack-controller-pill')
+    expect(pills.length).toBe(2)
+    expect(pills[0].classList.contains('is-me')).toBe(true)
+    expect(pills[0].textContent).toContain('Tú')
+    expect(pills[1].classList.contains('is-opp')).toBe(true)
+    expect(pills[1].textContent).toContain('SimBot')
   })
 })

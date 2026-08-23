@@ -66,14 +66,78 @@ function stackRulesText(card: CardView): string | null {
   return null
 }
 
-function resolveOwnership(
-  _card: CardView,
-  _id: string,
+interface ControllerInfo {
+  id?: string
+  name: string
+  isMe: boolean
+  isOpponent: boolean
+  avatarIcon: string
+}
+
+function getControllerInfo(
+  card: CardView,
+  id: string,
   players?: PlayerView[],
   myPlayerId?: string | null,
-): 'mine' | 'opponent' | 'unknown' {
-  if (!players || !myPlayerId) return 'unknown'
-  return 'unknown'
+): ControllerInfo {
+  const ctrlId = (card as any).controllerId || (card as any).ownerId || (card as any).controller || (card as any).owner || card.parentId
+
+  const me = players?.find((p) => p.controlled || (myPlayerId && p.playerId === myPlayerId))
+
+  if (ctrlId && typeof ctrlId === 'string') {
+    if (me && (ctrlId === me.playerId || ctrlId === myPlayerId || ctrlId === me.name)) {
+      return {
+        id: ctrlId,
+        name: 'Tú',
+        isMe: true,
+        isOpponent: false,
+        avatarIcon: '👤',
+      }
+    }
+    const matchedPlayer = players?.find((p) => p.playerId === ctrlId || p.name === ctrlId)
+    if (matchedPlayer) {
+      const isMe = matchedPlayer.controlled || (myPlayerId && matchedPlayer.playerId === myPlayerId)
+      return {
+        id: ctrlId,
+        name: isMe ? 'Tú' : matchedPlayer.name,
+        isMe: !!isMe,
+        isOpponent: !isMe,
+        avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
+      }
+    }
+  }
+
+  // Check if the card/ability is in myHand/myGraveyard/myBattlefield
+  if (me && (id in (me.battlefield ?? {}) || id in (me.graveyard ?? {}))) {
+    return {
+      name: 'Tú',
+      isMe: true,
+      isOpponent: false,
+      avatarIcon: '👤',
+    }
+  }
+
+  // Check other players' zones
+  if (players) {
+    for (const p of players) {
+      if (id in (p.battlefield ?? {}) || id in (p.graveyard ?? {})) {
+        const isMe = p.controlled || (myPlayerId && p.playerId === myPlayerId)
+        return {
+          name: isMe ? 'Tú' : p.name,
+          isMe: !!isMe,
+          isOpponent: !isMe,
+          avatarIcon: isMe ? '👤' : (p.isHuman ? '👤' : '🤖'),
+        }
+      }
+    }
+  }
+
+  return {
+    name: 'Tú',
+    isMe: true,
+    isOpponent: false,
+    avatarIcon: '👤',
+  }
 }
 
 function StackThumbnail({ card }: { card: CardView }) {
@@ -203,7 +267,8 @@ export default function StackZone({
           const rulesText = stackRulesText(card)
           const manaCost = (card.manaCostLeftStr ?? []).join('')
           const isTargetable = targetIds.has(id)
-          const ownership = resolveOwnership(card, id, players, myPlayerId)
+          const ctrlInfo = getControllerInfo(card, id, players, myPlayerId)
+          const ownership = ctrlInfo.isMe ? 'mine' : 'opponent'
           const ptLine = !isAbility && card.power != null && card.toughness != null
             ? `${card.power}/${card.toughness}`
             : null
@@ -233,9 +298,15 @@ export default function StackZone({
 
               {/* Card content */}
               <div className="stack-tl-body">
-                {/* Position indicator */}
-                <div className="stack-tl-pos">
-                  {isTop ? '▶ #1' : `#${idx + 1}`}
+                {/* Position and Controller ribbon */}
+                <div className="stack-tl-pos-row">
+                  <span className="stack-tl-pos">
+                    {isTop ? '▶ #1' : `#${idx + 1}`}
+                  </span>
+                  <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`Controlador: ${ctrlInfo.name}`}>
+                    <span className="ctrl-icon">{ctrlInfo.avatarIcon}</span>
+                    <span className="ctrl-name">{ctrlInfo.name}</span>
+                  </span>
                 </div>
 
                 <div className="stack-tl-card">
