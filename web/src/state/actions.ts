@@ -33,6 +33,16 @@ export function setWatchingTable(table: import('../net/types').TableView | null)
   }
 }
 
+/**
+ * Concede la partida como jugador (envía PlayerAction.CONCEDE para que el
+ * servidor registre la derrota y termine la partida) y vuelve al lobby.
+ * En modo espectador no hay concede: usar `returnToLobby`.
+ */
+export async function concedeGame(gameId: string) {
+  await cmds.sendPlayerAction('CONCEDE', gameId)
+  returnToLobby()
+}
+
 export function returnToLobby() {
   const s = getState()
   const gameId = s.gameId

@@ -123,7 +123,7 @@ export const initialState: AppState = {
   },
   log: [],
   events: [],
-  settings: { autoKeepMulligan: true, autoPass: false, holdPriority: false },
+  settings: { autoKeepMulligan: false, autoPass: false, holdPriority: false },
   error: null,
 }
 

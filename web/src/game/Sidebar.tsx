@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useGame, returnToLobby } from '../state/store'
+import { useGame, returnToLobby, concedeGame, useStore } from '../state/store'
 import { useFullscreen } from '../utils/fullscreen'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import HelpWikiModal from './HelpWikiModal'
@@ -24,6 +24,7 @@ function TurnTimer({ secs, isTicking = false, label }: { secs: number; isTicking
 
 export default function Sidebar() {
   const game = useGame()
+  const gameId = useStore((s) => s.gameId)
   const [showHelp, setShowHelp] = useState(false)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
@@ -41,14 +42,18 @@ export default function Sidebar() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const handle = (id: string) => {
+  const handle = async (id: string) => {
     switch (id) {
       case 'exit': {
         const msg = me
           ? '¿Seguro que quieres conceder la partida y volver al lobby?'
           : '¿Dejar de espectar y volver al lobby?'
         if (confirm(msg)) {
-          returnToLobby()
+          if (me && gameId) {
+            await concedeGame(gameId)
+          } else {
+            returnToLobby()
+          }
         }
         break
       }

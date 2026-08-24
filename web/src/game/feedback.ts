@@ -51,6 +51,10 @@ export interface FeedbackPrompt {
   special?: boolean
   /** Raw card data for visual card grid (when cardsView1 has many cards). */
   cards?: FeedbackCard[]
+  /** Verdadero para el ask de mulligan (Keep/Mulligan) — UI dedicada. */
+  isMulligan?: boolean
+  /** Verdadero para el GAME_TARGET de London (poner cartas al fondo) — UI dedicada. */
+  isMulliganLondon?: boolean
 }
 
 type JsonRecord = Record<string, unknown>
@@ -108,11 +112,12 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
               { id: 'yes', label: 'Sí', value: 'true' },
               { id: 'no', label: 'No', value: 'false' },
             ]
-      return prompt(method, gameId, isMulligan ? 'Mulligan' : 'Confirmación', message, 'boolean', choices, bounds)
+      return prompt(method, gameId, isMulligan ? 'Mulligan' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan)
     }
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)
-      return prompt(method, gameId, 'Elige objetivo', message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards)
+      const isMulliganLondon = /^select a card to put on the bottom of (your|the) library/i.test(message)
+      return prompt(method, gameId, 'Elige objetivo', message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon)
     }
     case 'GAME_SELECT_CARDS':
     case 'GAME_SELECT_TARGETS':
@@ -213,8 +218,10 @@ function prompt(
   chosenTargets?: string[],
   special?: boolean,
   cards?: FeedbackCard[],
+  isMulligan?: boolean,
+  isMulliganLondon?: boolean,
 ): FeedbackPrompt {
-  return { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards }
+  return { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon }
 }
 
 function asRecord(value: unknown): JsonRecord {

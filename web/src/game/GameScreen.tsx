@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import * as cmds from '../net/commands'
-import { returnToLobby, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
@@ -189,13 +189,17 @@ export default function GameScreen() {
           <button
             type="button"
             className="leave-game-btn"
-            onClick={() => {
+            onClick={async () => {
               const isPlayer = !!me
               const msg = isPlayer
                 ? '¿Seguro que quieres conceder la partida y volver al lobby?'
                 : '¿Dejar de espectar y volver al lobby?'
               if (confirm(msg)) {
-                returnToLobby()
+                if (isPlayer && gameId) {
+                  await concedeGame(gameId)
+                } else {
+                  returnToLobby()
+                }
               }
             }}
             title={me ? 'Conceder la partida y volver al lobby' : 'Volver al lobby'}

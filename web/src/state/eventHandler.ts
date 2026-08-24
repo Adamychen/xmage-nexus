@@ -285,7 +285,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       const d = data as { message?: string; options?: { targets?: unknown }; gameId?: string } | null
       const question = d?.message ?? ''
       const currentGameId = objectId ?? d?.gameId ?? s.gameId
-      if (s.settings.autoKeepMulligan && /starting player/i.test(question) && currentGameId) {
+      const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
+      if ((s.settings.autoKeepMulligan || isSpectator) && /starting player/i.test(question) && currentGameId) {
         const first = targetFirstId(data)
         if (first) {
           void cmds.sendPlayerUUID(first, currentGameId)
@@ -301,7 +302,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       const d = data as { question?: string; message?: string; options?: unknown[]; gameId?: string } | null
       const question = d?.question ?? d?.message ?? ''
       const currentGameId = objectId ?? d?.gameId ?? s.gameId
-      if (s.settings.autoKeepMulligan && /mulligan|keep your hand|keep hand/i.test(question)) {
+      const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
+      if ((s.settings.autoKeepMulligan || isSpectator) && /mulligan|keep your hand|keep hand/i.test(question)) {
         if (currentGameId) void cmds.sendPlayerBoolean(false, currentGameId)
         setState({ feedback: null })
         addLog('tú', 'mulligan: mantener (auto)')

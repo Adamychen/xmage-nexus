@@ -179,6 +179,8 @@ export interface StartGameOptions extends CreateTableOptions {
   /** El helper no toca las ventanas de combate (el humano las ejerce por la UI). */
   skipCombat?: boolean
   skipAsks?: boolean
+  /** Desactiva el auto-keep del mulligan para ejercitar la ventana de mulligan en E2E. */
+  autoKeepMulligan?: boolean
 }
 
 /** Monta la partida (login → mesa → Sim → arranque), arranca el HumanHelper
@@ -190,6 +192,17 @@ export async function startGame(page: Page, opts: StartGameOptions = {}): Promis
   const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
   installCapture(page, buffers, opts.maxFrames)
   await login(page, username, { retryLobby: true })
+  if (opts.autoKeepMulligan !== false) {
+    await page.evaluate(() => {
+      const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
+      store?.setSetting?.('autoKeepMulligan', true)
+    })
+  } else {
+    await page.evaluate(() => {
+      const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
+      store?.setSetting?.('autoKeepMulligan', false)
+    })
+  }
   const tableName = opts.tableName ?? `${username}-t`
   await createTable(page, tableName, opts)
   await waitTableReady(page, tableName)

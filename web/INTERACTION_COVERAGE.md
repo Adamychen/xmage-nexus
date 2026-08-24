@@ -150,8 +150,8 @@ blueprint de `ROADMAP.md` §7. Leyenda: ✅ = sí · ⚠️ = parcial · ❌ = n
 ### M. Miscelánea
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Concede / rendirse | ❌ | ❌ | sin UI dedicada | 2026-08-24 |
-| Mulligan / Keep (auto) | ✅ | ✅ | `autoKeepMulligan` en `feedback`/`eventHandler` | 2026-08-24 |
+| Concede / rendirse | ✅ | ✅ | `concedeGame` en `actions.ts` + `concede.spec.ts` (fake) + `concede.test.ts` | 2026-08-24 |
+| Mulligan / Keep (auto) | ✅ | ✅ | UI dedicada `MulliganDialog` (`isMulligan`/`isMulliganLondon` en `feedback.ts`); E2E `mulligan.spec.ts` (fake) ejercita la ventana con mano en abanico + London-bottom (`shots/mulligan-01-window.png`) | 2026-08-24 |
 | Sideboard (Bo3 / Bo5) | ✅ | ✅ | `SIDEBOARD` + `best-of-3.spec.ts` / `best-of-5.spec.ts` | 2026-08-24 |
 | Replay viewer | ❌ | ❌ | Slice C (ver Tabla A) | 2026-08-24 |
 

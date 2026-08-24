@@ -5,6 +5,7 @@ import type { FeedbackOption, FeedbackPrompt } from './feedback'
 import CardGrid from './CardGrid'
 import FormattedText from './FormattedText'
 import LibraryOrderDialog from './LibraryOrderDialog'
+import MulliganDialog from './MulliganDialog'
 
 const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
 
@@ -59,6 +60,11 @@ export default function FeedbackDialog() {
   // ── Scry / Surveil / Reorder dialog (GAME_CHOOSE_CARDS_ORDER or mode === 'order')
   if (prompt.mode === 'order' || prompt.method === 'GAME_CHOOSE_CARDS_ORDER') {
     return <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
+  }
+
+  // ── Mulligan: diálogo dedicado (Keep/Mulligan y London-bottom)
+  if (prompt.isMulligan || prompt.isMulliganLondon) {
+    return <MulliganDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
   // ── GAME_TARGET con cardsView1: grid de cartas (tutores, scry, descarte, etc.)
