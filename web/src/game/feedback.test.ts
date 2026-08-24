@@ -237,4 +237,52 @@ describe('parseFeedback', () => {
     expect(parseFeedback('GAME_CHOOSE_STRING', 'game-7', { message: 'Name a card', options: ['Bolt', 'Swords'] }))?.toMatchObject({ mode: 'string' })
     expect(parseFeedback('GAME_CHOOSE_BETWEEN', 'game-7', { message: 'Choose', options: { a: 'A', b: 'B' } }))?.toMatchObject({ mode: 'string' })
   })
+
+  it('maps GAME_SELECT_PLAYER to uuid with player labels from the GameView', () => {
+    const prompt = parseFeedback('GAME_SELECT_PLAYER', 'game-8', {
+      message: 'Choose a player',
+      targets: ['player-2'],
+      options: { possibleTargets: ['player-2'] },
+      gameView: { players: [{ playerId: 'player-2', name: 'Bob' }] },
+    })
+    expect(prompt?.mode).toBe('uuid')
+    expect(prompt?.options).toEqual([{ id: 'player-2', label: 'Bob', value: 'player-2' }])
+  })
+
+  it('maps GAME_TARGET_AMOUNT to an integer prompt with bounds', () => {
+    const prompt = parseFeedback('GAME_TARGET_AMOUNT', 'game-9', {
+      message: 'Distribute the damage',
+      min: 1,
+      max: 5,
+    })
+    expect(prompt).toMatchObject({ mode: 'integer', min: 1, max: 5 })
+  })
+
+  it('maps GAME_PLAY_XMANA to a boolean (Confirmar/Cancelar)', () => {
+    const prompt = parseFeedback('GAME_PLAY_XMANA', 'game-10', { message: 'Pay X mana?' })
+    expect(prompt?.mode).toBe('boolean')
+    expect(prompt?.options.map((option) => option.value)).toEqual(['true', 'false'])
+  })
+
+  it('maps GAME_SELECT_CARDS to uuid options from cardsView1 with bounds', () => {
+    const prompt = parseFeedback('GAME_SELECT_CARDS', 'game-11', {
+      message: 'Select up to two cards',
+      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' }, 'c-b': { id: 'c-b', name: 'Island' } },
+      min: 1,
+      max: 2,
+    })
+    expect(prompt?.mode).toBe('uuid')
+    expect(prompt?.min).toBe(1)
+    expect(prompt?.max).toBe(2)
+    expect(prompt?.options).toEqual([
+      { id: 'c-a', label: 'Mountain', value: 'c-a' },
+      { id: 'c-b', label: 'Island', value: 'c-b' },
+    ])
+  })
+
+  it('maps GAME_CHOOSE_STRING without options to a string prompt (free text)', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_STRING', 'game-12', { message: 'Name a card' })
+    expect(prompt?.mode).toBe('string')
+    expect(prompt?.options).toEqual([])
+  })
 })

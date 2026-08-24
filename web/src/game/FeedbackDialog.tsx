@@ -24,12 +24,14 @@ export default function FeedbackDialog() {
   const [amount, setAmount] = useState(0)
   const [selected, setSelected] = useState<string[]>([])
   const [multiAmounts, setMultiAmounts] = useState<Record<string, number>>({})
+  const [textValue, setTextValue] = useState('')
 
   useEffect(() => {
     setBusy(false)
     setAmount(prompt?.min ?? 0)
     setSelected([])
     setMultiAmounts(Object.fromEntries((prompt?.items ?? []).map((item) => [item.id, item.defaultValue ?? item.min])))
+    setTextValue('')
   }, [prompt?.method, prompt?.gameId])
 
   if (!prompt) return null
@@ -196,6 +198,25 @@ export default function FeedbackDialog() {
         <div className="feedback-kicker">{prompt.method}</div>
         <h2 id="feedback-title"><FormattedText text={prompt.title} /></h2>
         <p><FormattedText text={prompt.message} /></p>
+
+        {prompt.mode === 'string' && (
+          <div className="feedback-string-input">
+            <input
+              aria-label="Texto libre"
+              type="text"
+              value={textValue}
+              placeholder="Escribe un nombre…"
+              onChange={(event) => setTextValue(event.target.value)}
+            />
+            <button
+              className="primary"
+              disabled={busy || textValue.trim() === ''}
+              onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')}
+            >
+              Enviar
+            </button>
+          </div>
+        )}
 
         {prompt.mode === 'integer' && (
           <div className="feedback-amount">

@@ -318,20 +318,14 @@
   pointer-events: none;
 }
 
-/* Attached Auras & Equipment: Vertical Tab Stack (Cascada Superior) */
+/* Attached Auras & Equipment: Horizontal Right Fan (MTGO / Paper style) */
 .card-attachment-group {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-  width: var(--card-w, 100px);
   height: calc(var(--card-w, 100px) * 1.4);
-  margin-top: 18px;
 }
-
-.card-attachment-group.has-2 { margin-top: 36px; }
-.card-attachment-group.has-3 { margin-top: 54px; }
-.card-attachment-group.has-4 { margin-top: 72px; }
 
 .attachments-list {
   position: absolute;
@@ -345,14 +339,14 @@
 
 .attachment-subcard {
   position: absolute !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: calc(var(--card-w, 100px) * 1.4) !important;
+  top: 0 !important;
+  width: var(--card-w, 100px) !important;
+  height: 100% !important;
   pointer-events: auto;
   opacity: 0.95;
-  border-radius: 7px 7px 0 0;
-  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.6);
-  border-top: 2px solid rgba(255, 208, 112, 0.85);
+  border-radius: 7px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5);
+  border-right: 2px solid rgba(255, 208, 112, 0.85);
   transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1),
               opacity 0.18s ease,
               box-shadow 0.18s ease;
@@ -362,8 +356,8 @@
 .attachment-subcard:hover {
   opacity: 1;
   z-index: 30;
-  transform: translateY(-16px) scale(1.05) !important;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 208, 112, 0.6);
+  transform: translateY(-8px) scale(1.04) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 208, 112, 0.6);
 }
 
 /* Kamigawa Flip Card rotation (180deg) */

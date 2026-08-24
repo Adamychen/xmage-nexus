@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-24 (Responsive Battlefield Polish: Conditional CommandZone Collapse, Safe-Center Tap Overflow Fix & Distinct Permanent Counter Badges)
+> Last updated: 2026-08-24 (Missing Server Prompts E2E Suite + GAME_CHOOSE_STRING free-text fix; prior: Responsive Battlefield Polish)
 
 ---
 
@@ -276,6 +276,8 @@ web/
 | 2026-08-24 | Fix/UI | Modal & Arrow Layering: React Portal for `PileOverlay` (z-index 100), elevated feedback/grid backdrops (z-index 90), defeat overlay over arrows (z-index 30 vs 28), and filtered defeated player arrows | vitest 309/309 ✅; typecheck ✅; build ✅ |
 | 2026-08-24 | Feature/UX | Stack Player Identification: Controller Ribbons with avatar, controller name, color-coded badges (cyan `[👤 Tú]` vs red `[🤖 Opponent]`) and left border accents across compact/expanded views | vitest 310/310 ✅; typecheck ✅; build ✅ |
 | 2026-08-24 | UI/UX | HUD Corner Alignment & HD Card Preview: Anchored PlayerInfoBar to top-left (opponent) and bottom-left (player) corners, enlarged FloatingCardPreview to 320x448px with 240px keywords sidebar | vitest 310/310 ✅; typecheck ✅; build ✅ |
+| 2026-08-24 | F2/F3 | Missing Server Prompts E2E Suite: new `missingPrompts` FixtureServer scenario + `missing-prompts.spec.ts` covering the 9 supported-but-untested `feedback.ts` prompts (`GAME_SELECT_PLAYER`, `GAME_CHOOSE_STRING` list + free-text, `GAME_CHOOSE_NUMBER`, `GAME_CHOOSE_ONE`, `GAME_CHOOSE_BETWEEN`, `GAME_CHOOSE_MODE`, `GAME_TARGET_AMOUNT`, `GAME_SELECT_CARDS` multi, `GAME_PLAY_XMANA`); fixed `FeedbackDialog` to render a free-text input for `GAME_CHOOSE_STRING` with no options; added 10 unit tests in `feedback.test.ts` | vitest 315/315 ✅; typecheck ✅; build ✅; e2e missing-prompts 1/1 ✅ (7.0s) · e2e 24/24 ✅ |
+| 2026-08-24 | E2E/Tool | Global visual-verification screenshots: `autoShot` `auto:true` fixture in `e2e/fixtures.ts` captures a final `fullPage` PNG per test into `e2e/shots/<spec>__<title>.png` (and `-FAILED` on failure). Replaces the flaky `test.afterEach` approach (only fired for 1 test in combined runs); migrated `stack-priority.spec.ts` to import `test` from `./fixtures` so it inherits the fixture. All 24 E2E specs now emit a screenshot | e2e 24/24 ✅ (7.6m) · 24 screenshots generadas |
 
 ---
 

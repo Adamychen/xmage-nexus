@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
 import { stackPriorityScenario } from '../fixtures/scenarios/stackPriority'

@@ -176,12 +176,12 @@ export default function OpponentZone({
             const attachments = perm.attachments ?? []
 
             if (attachments.length > 0) {
-              const hasClass = attachments.length >= 4 ? 'has-4'
-                : attachments.length === 3 ? 'has-3'
-                : attachments.length === 2 ? 'has-2'
-                : ''
               return (
-                <div key={id} className={`card-attachment-group${hasClass ? ` ${hasClass}` : ''}`}>
+                <div
+                  key={id}
+                  className="card-attachment-group"
+                  style={{ width: `calc(var(--card-w, 100px) + ${attachments.length * 16}px)` }}
+                >
                   <div className="attachments-list">
                     {attachments.map((attId, ai) => {
                       const attCard = battlefield[attId]
@@ -195,7 +195,7 @@ export default function OpponentZone({
                           onHover={onCardHover}
                           isTarget={targetIds.has(attId)}
                           className="attachment-subcard"
-                          style={{ top: `calc(-1 * ${(ai + 1) * 18}px)` }}
+                          style={{ left: `${(ai + 1) * 16}px` }}
                         />
                       )
                     })}
