@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import FloatingCardPreview from './FloatingCardPreview'
 import { useSceneBridge } from './sceneBridge'
 import type { CrossZonePlayable } from './crossZone'
+import { useStore, isBlockingModal } from '../state/store'
 import './GameBoard.css'
 
 interface GameBoardProps {
@@ -112,6 +113,18 @@ export default function GameBoard({
   const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
   const hoverTimeoutRef = useRef<number | null>(null)
+
+  const modalOpen = useStore(isBlockingModal)
+  useEffect(() => {
+    if (modalOpen) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+        hoverTimeoutRef.current = null
+      }
+      setFloatingCard(null)
+      setAnchorRect(null)
+    }
+  }, [modalOpen])
 
   const handleCardHover = useCallback(
     (card: CardView | PermanentView | null, rect?: DOMRect) => {

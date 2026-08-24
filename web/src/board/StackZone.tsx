@@ -3,6 +3,7 @@ import type { CardView, PlayerView } from '../net/types'
 import { awaitImageUrl, isAbilityCard, cardName } from '../cards/cardImages'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
+import { useStore, isBlockingModal } from '../state/store'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -175,6 +176,14 @@ export default function StackZone({
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
+
+  const modalOpen = useStore(isBlockingModal)
+  useEffect(() => {
+    if (modalOpen) {
+      setHoverCard(null)
+      setHoverRect(null)
+    }
+  }, [modalOpen])
 
   const handleHover = useCallback(
     (card: CardView | null, rect?: DOMRect) => {
