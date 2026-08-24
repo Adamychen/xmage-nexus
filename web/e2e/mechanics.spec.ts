@@ -78,6 +78,24 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       const monarchShot = await page.locator('.game-right-panel').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-05-monarch-tab.png'), monarchShot)
 
+      // 7. Implemented-but-previously-untested mechanics coverage
+      // Planeswalker loyalty badge
+      await expect(page.locator('.loyalty-badge').first()).toBeVisible()
+      // Battle defense badge
+      await expect(page.locator('.defense-badge').first()).toBeVisible()
+      // Token rendering on the battlefield
+      await expect(page.locator('.card-slot[data-card-name="Treasure Token"]').first()).toBeVisible()
+      // Emblem (opponent command zone)
+      await expect(page.locator('.emblem-slot').first()).toBeVisible()
+      // Commander zone
+      await expect(page.locator('.commander-slot').first()).toBeVisible()
+      // Attached aura/equipment (opponent creature with attachment)
+      await expect(page.locator('.opponent-zone .attachment-subcard').first()).toBeVisible()
+      // Revealed / known hand (opponent)
+      await expect(page.locator('.opponent-zone [data-card-name="Shock"]').first()).toBeVisible()
+      // Revealed top of library (scry/mill support)
+      await expect(page.locator('.library-stack.has-top-revealed').first()).toBeVisible()
+
       // Full board screenshot with the Mechanics Tray open
       const finalFullShot = await page.screenshot({ fullPage: true })
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-06-full-showcase.png'), finalFullShot)

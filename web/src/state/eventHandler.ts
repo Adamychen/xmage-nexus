@@ -1,7 +1,8 @@
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, GameEndInfo, ProxyMessage } from '../net/types'
 import { parseGameEvent } from '../game/gameEventParser'
-import { parseFeedback } from '../game/feedback'
+import { parseFeedback, feedbackCards } from '../game/feedback'
+import type { FeedbackCard } from '../game/feedback'
 import { getState, setState, addLog } from './state'
 import type { SideboardCard, SideboardScreenState } from './state'
 import { awaitCardMeta } from '../cards/cardImages'
@@ -309,6 +310,60 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
         if (feedback) setState({ feedback })
         addLog('partida', `¿${question || 'pregunta'}?`)
       }
+      break
+    }
+    case 'USER_REQUEST_DIALOG': {
+      const d = data as {
+        title?: string
+        message?: string
+        gameId?: string
+        button1Text?: string
+        button1Action?: string
+        button2Text?: string
+        button2Action?: string
+        button3Text?: string
+        button3Action?: string
+      } | null
+      const gameId = objectId ?? d?.gameId ?? s.gameId ?? undefined
+      const buttons: { text: string; action: string }[] = []
+      if (d?.button1Text && d?.button1Action) buttons.push({ text: d.button1Text, action: d.button1Action })
+      if (d?.button2Text && d?.button2Action) buttons.push({ text: d.button2Text, action: d.button2Action })
+      if (d?.button3Text && d?.button3Action) buttons.push({ text: d.button3Text, action: d.button3Action })
+      setState({ userRequest: { title: d?.title ?? 'Solicitud', message: d?.message ?? '', gameId, buttons } })
+      addLog('partida', `Solicitud del servidor: ${d?.title ?? ''}`)
+      break
+    }
+    case 'GAME_ERROR': {
+      const d = data as { message?: string } | string | null
+      const text = typeof d === 'string' ? d : (d?.message ?? JSON.stringify(d))
+      if (text) {
+        setState({ error: text })
+        addLog('error', text, objectId ?? undefined)
+      }
+      break
+    }
+    case 'VIEW_LIMITED_DECK': {
+      const d = data as { deck?: { cards?: unknown }; cards?: unknown; currentTableId?: string; parentTableId?: string; time?: number } | null
+      const view = (d?.deck?.cards ?? d?.cards) as Record<string, unknown> | undefined
+      const cards = feedbackCards({ cardsView1: view }) ?? []
+      setState({ viewer: { title: 'Mazo limitado', cards } })
+      addLog('partida', 'Viendo mazo limitado')
+      break
+    }
+    case 'VIEW_SIDEBOARD': {
+      const d = data as { gameId?: string; playerId?: string } | null
+      const g = getState().game
+      const player = g?.players?.find((p) => String(p.playerId) === String(d?.playerId))
+      const view = (player?.sideboard ?? {}) as Record<string, unknown>
+      const cards: FeedbackCard[] = feedbackCards({ cardsView1: view }) ?? []
+      setState({ viewer: { title: 'Sideboard', cards } })
+      addLog('partida', 'Viendo sideboard')
+      break
+    }
+    case 'GAME_REDRAW_GUI': {
+      // El cliente oficial usa esto para forzar un redibujado; el tablero ya
+      // reacciona a GAME_UPDATE, así que solo se registra.
+      addLog('partida', 'Redibujar GUI')
       break
     }
     default:

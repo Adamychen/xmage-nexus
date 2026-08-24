@@ -1,5 +1,5 @@
 import type { ChatMessageEvent, DeckCardEntry, DeckJson, GameEndInfo, GameView, LobbyEnvelope, TableView } from '../net/types'
-import type { FeedbackPrompt } from '../game/feedback'
+import type { FeedbackPrompt, FeedbackCard } from '../game/feedback'
 import type { PhaseStops } from '../net/commands'
 import { loadConn, type ConnectionInfo } from './persistence'
 
@@ -40,6 +40,26 @@ export interface SideboardScreenState {
   limited: boolean
 }
 
+/** A button of a generic server request dialog (USER_REQUEST_DIALOG). */
+export interface UserRequestButton {
+  text: string
+  action: string
+}
+
+/** State for the generic user-request dialog (server-driven buttons → PlayerAction). */
+export interface UserRequestView {
+  title: string
+  message: string
+  gameId?: string
+  buttons: UserRequestButton[]
+}
+
+/** State for read-only card viewers (VIEW_LIMITED_DECK / VIEW_SIDEBOARD). */
+export interface CardViewerState {
+  title: string
+  cards: FeedbackCard[]
+}
+
 export interface AppState {
   phase: 'idle' | 'connecting' | 'lobby' | 'spectating_pending' | 'game'
   conn: ConnectionInfo | null
@@ -61,6 +81,8 @@ export interface AppState {
   feedback: FeedbackPrompt | null
   sideboard: DeckCardEntry[]
   sideboardScreen: SideboardScreenState | null
+  userRequest: UserRequestView | null
+  viewer: CardViewerState | null
   phaseStops: PhaseStops
   log: LogEntry[]
   events: { method: string; time: number }[]
@@ -93,6 +115,8 @@ export const initialState: AppState = {
   feedback: null,
   sideboard: [],
   sideboardScreen: null,
+  userRequest: null,
+  viewer: null,
   phaseStops: {
     yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
     opponentTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },

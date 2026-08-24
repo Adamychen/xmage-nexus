@@ -4,6 +4,8 @@ import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import * as cmds from '../net/commands'
 import { returnToLobby, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
+import UserRequestDialog from './UserRequestDialog'
+import LimitedDeckDialog from './LimitedDeckDialog'
 import SideboardScreen from './SideboardScreen'
 import Sidebar from './Sidebar'
 import GameChat from './GameChat'
@@ -295,6 +297,8 @@ export default function GameScreen() {
         />
       </div>
       <FeedbackDialog />
+      <UserRequestDialog />
+      <LimitedDeckDialog />
       <SideboardScreen />
     </div>
   )

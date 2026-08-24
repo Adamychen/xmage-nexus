@@ -14,7 +14,7 @@ import { resolveInteger } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
-test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre), CHOOSE_NUMBER, CHOOSE_ONE, CHOOSE_BETWEEN, CHOOSE_MODE, TARGET_AMOUNT, SELECT_CARDS, PLAY_XMANA @prompts', async ({ page }) => {
+test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre), CHOOSE_NUMBER, CHOOSE_ONE, CHOOSE_BETWEEN, CHOOSE_MODE, CHOOSE_CARDS, TARGET_PLAYER, TARGET_AMOUNT, SELECT_CARDS, PLAY_XMANA, USER_REQUEST_DIALOG @prompts', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => missingPromptsScenario(), async () => {
@@ -76,11 +76,25 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     await step('GAME_CHOOSE_MODE')
     await options().first().click()
 
-    // 8. GAME_TARGET_AMOUNT (integer, dividir daño)
+    // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1)
+    await step('GAME_CHOOSE_CARDS')
+    await options().first().click()
+    expect(
+      parseSent(sentOf(page)).some(
+        (s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === 'c-a',
+      ),
+      'GAME_CHOOSE_CARDS debería enviar sendPlayerUUID con la carta elegida',
+    ).toBeTruthy()
+
+    // 9. GAME_TARGET_PLAYER (uuid, eligir jugador)
+    await step('GAME_TARGET_PLAYER')
+    await options().filter({ hasText: SIM_NAME }).first().click()
+
+    // 10. GAME_TARGET_AMOUNT (integer, dividir daño)
     await step('GAME_TARGET_AMOUNT')
     await resolveInteger(page, 2, 'TARGET_AMOUNT')
 
-    // 9. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2)
+    // 11. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2)
     await step('GAME_SELECT_CARDS')
     await options().nth(0).click()
     await options().nth(1).click()
@@ -90,9 +104,19 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
       'GAME_SELECT_CARDS debería enviar al menos 2 sendPlayerUUID',
     ).toBeTruthy()
 
-    // 10. GAME_PLAY_XMANA (boolean)
+    // 12. GAME_PLAY_XMANA (boolean)
     await step('GAME_PLAY_XMANA')
     await dialog.getByRole('button', { name: /Confirmar|sí|yes/i }).click()
+
+    // 13. USER_REQUEST_DIALOG (botones -> sendPlayerAction)
+    await step('USER_REQUEST_DIALOG')
+    await dialog.getByRole('button', { name: /Rebobinar/i }).click()
+    expect(
+      parseSent(sentOf(page)).some(
+        (s) => s.action === 'sendPlayerAction' && String(s.args?.action) === 'ROLLBACK_TURN',
+      ),
+      'USER_REQUEST_DIALOG debería enviar sendPlayerAction con la acción del botón pulsado',
+    ).toBeTruthy()
 
     // fin: GAME_SELECT de prioridad
     await waitFrameAt(page, (f) => f.method === 'GAME_SELECT', 'GAME_SELECT final', 15_000, cursor)

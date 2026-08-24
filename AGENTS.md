@@ -6,7 +6,10 @@ client (`web`, React 19 + TypeScript + PixiJS 8 + Vite).
 
 **Master document: `PROJECT.md`** — source of truth for status, phases and
 lessons. Update it when finishing a task (phases, lessons, quality table,
-dated log) and record the date in the header.
+dated log) and record the date in the header. Also keep the interaction
+coverage matrix `web/INTERACTION_COVERAGE.md` in sync (mark implemented/tested
++ test ref + date per callback/interaction); the guard `callbackCoverage.test.ts`
+enforces that every server callback has a handler or is listed as planned.
 
 **Contributor docs:**
 - `Mage.Proxy/README.md` — proxy architecture, full protocol reference (all events/actions), serialization rules, type system

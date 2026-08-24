@@ -1,5 +1,5 @@
 import type { Scenario } from '../fake'
-import { makeGameView, makePermanent, makePlayer } from '../../src/__fixtures__/gameViews'
+import { makeGameView, makePermanent, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
 
 export function mechanicsScenario(): Scenario {
@@ -54,7 +54,32 @@ export function mechanicsScenario(): Scenario {
             controlled: true,
             cardTypes: ['Land'],
           }),
+          pw1: makePermanent({
+            id: 'pw1',
+            name: 'Jace, the Mind Sculptor',
+            parentId: 'pw1',
+            controlled: true,
+            cardTypes: ['Planeswalker'],
+            loyalty: '3',
+          }),
+          treasure1: makePermanent({
+            id: 'treasure1',
+            name: 'Treasure Token',
+            parentId: 'treasure1',
+            controlled: true,
+            cardTypes: ['Treasure'],
+            isToken: true,
+          }),
+          battle1: makePermanent({
+            id: 'battle1',
+            name: 'Invasion of Zendikar',
+            parentId: 'battle1',
+            controlled: true,
+            cardTypes: ['Battle'],
+            defense: '4',
+          }),
         },
+        topCard: makeCard({ name: 'Island', cardTypes: ['Land'] }),
       }),
       makePlayer({
         playerId: SIM_PLAYER_ID,
@@ -63,6 +88,18 @@ export function mechanicsScenario(): Scenario {
         isHuman: false,
         life: 20,
         initiative: true,
+        handCount: 1,
+        commandList: [
+          {
+            id: 'emblem-1',
+            name: 'Emblem - Ember of Xenagos',
+          },
+          {
+            id: 'cmd-1',
+            name: 'Atraxa, Praetors’ Voice',
+            isCommander: true,
+          },
+        ],
         battlefield: {
           oppLand1: makePermanent({
             id: 'oppLand1',
@@ -70,8 +107,29 @@ export function mechanicsScenario(): Scenario {
             parentId: 'oppLand1',
             cardTypes: ['Land'],
           }),
+          simcreature: makePermanent({
+            id: 'simcreature',
+            name: 'Grizzly Bears',
+            parentId: 'simcreature',
+            cardTypes: ['Creature'],
+            attachments: ['aura1'],
+          }),
+          aura1: makePermanent({
+            id: 'aura1',
+            name: 'Rancor',
+            parentId: 'aura1',
+            cardTypes: ['Enchantment', 'Aura'],
+            attachedTo: 'simcreature',
+          }),
         },
       }),
+    ],
+    revealed: [
+      {
+        cards: {
+          'rev-1': makeCard({ name: 'Shock', cardTypes: ['Instant'], manaValue: 1, expansionSetCode: 'TST', cardNumber: '1' }),
+        },
+      },
     ],
   })
 

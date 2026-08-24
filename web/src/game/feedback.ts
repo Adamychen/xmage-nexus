@@ -114,9 +114,9 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       const cards = feedbackCards(data)
       return prompt(method, gameId, 'Elige objetivo', message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards)
     }
-    case 'GAME_SELECT':
     case 'GAME_SELECT_CARDS':
-    case 'GAME_SELECT_TARGETS': {
+    case 'GAME_SELECT_TARGETS':
+    case 'GAME_CHOOSE_CARDS': {
       const cards = feedbackCards(data)
       return prompt(method, gameId, 'Selecciona cartas', message, 'uuid', cardOptions(data.cardsView1 ?? data.options), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
     }
@@ -188,7 +188,8 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_TARGET_AMOUNT': {
       return prompt(method, gameId, 'Elige cantidad para objetivo', message, 'integer', [], bounds)
     }
-    case 'GAME_SELECT_PLAYER': {
+    case 'GAME_SELECT_PLAYER':
+    case 'GAME_TARGET_PLAYER': {
       const players = targetOptions(data)
       return prompt(method, gameId, 'Elige jugador', message, 'uuid', players, bounds)
     }
@@ -349,7 +350,7 @@ function cardSummary(value: unknown, fallback: string): string {
   return cards.length ? `${fallback}: ${cards.length} cartas` : fallback
 }
 
-function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {
+export function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {
   const raw = data.cardsView1
   if (!raw || typeof raw !== 'object') return undefined
   const entries = Object.entries(asRecord(raw))

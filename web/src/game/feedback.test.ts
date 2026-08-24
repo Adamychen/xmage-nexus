@@ -249,6 +249,17 @@ describe('parseFeedback', () => {
     expect(prompt?.options).toEqual([{ id: 'player-2', label: 'Bob', value: 'player-2' }])
   })
 
+  it('maps GAME_TARGET_PLAYER to uuid with player labels from the GameView', () => {
+    const prompt = parseFeedback('GAME_TARGET_PLAYER', 'game-8', {
+      message: 'Choose a player',
+      targets: ['player-2'],
+      options: { possibleTargets: ['player-2'] },
+      gameView: { players: [{ playerId: 'player-2', name: 'Bob' }] },
+    })
+    expect(prompt?.mode).toBe('uuid')
+    expect(prompt?.options).toEqual([{ id: 'player-2', label: 'Bob', value: 'player-2' }])
+  })
+
   it('maps GAME_TARGET_AMOUNT to an integer prompt with bounds', () => {
     const prompt = parseFeedback('GAME_TARGET_AMOUNT', 'game-9', {
       message: 'Distribute the damage',
@@ -280,9 +291,34 @@ describe('parseFeedback', () => {
     ])
   })
 
+  it('maps GAME_CHOOSE_CARDS to uuid options from cardsView1 with bounds', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CARDS', 'game-13', {
+      message: 'Choose two cards',
+      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' }, 'c-b': { id: 'c-b', name: 'Island' } },
+      min: 1,
+      max: 2,
+    })
+    expect(prompt?.mode).toBe('uuid')
+    expect(prompt?.min).toBe(1)
+    expect(prompt?.max).toBe(2)
+    expect(prompt?.options).toEqual([
+      { id: 'c-a', label: 'Mountain', value: 'c-a' },
+      { id: 'c-b', label: 'Island', value: 'c-b' },
+    ])
+  })
+
   it('maps GAME_CHOOSE_STRING without options to a string prompt (free text)', () => {
     const prompt = parseFeedback('GAME_CHOOSE_STRING', 'game-12', { message: 'Name a card' })
     expect(prompt?.mode).toBe('string')
     expect(prompt?.options).toEqual([])
+  })
+
+  it('maps GAME_CHOOSE_CARDS_ORDER to an order prompt (library reorder / scry)', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CARDS_ORDER', 'game-14', {
+      message: 'Reorder the top cards of your library',
+      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' }, 'c-b': { id: 'c-b', name: 'Island' } },
+    })
+    expect(prompt?.mode).toBe('order')
+    expect(prompt?.options?.map((o) => o.value)).toEqual(['c-a', 'c-b'])
   })
 })

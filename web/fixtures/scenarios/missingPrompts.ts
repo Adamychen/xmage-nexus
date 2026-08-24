@@ -1,6 +1,6 @@
 /**
- * Escenario del FixtureServer para cubrir los 9 tipos de prompt del servidor
- * soportados en feedback.ts pero SIN test E2E previo:
+ * Escenario del FixtureServer para cubrir los prompts del servidor soportados en
+ * feedback.ts pero SIN test E2E previo:
  *   1. GAME_SELECT_PLAYER        (uuid, eligir jugador)
  *   2. GAME_CHOOSE_STRING         (string, lista de opciones)
  *   3. GAME_CHOOSE_STRING         (string, texto libre SIN opciones)
@@ -8,9 +8,12 @@
  *   5. GAME_CHOOSE_ONE            (string + options)
  *   6. GAME_CHOOSE_BETWEEN        (string + options)
  *   7. GAME_CHOOSE_MODE           (uuid + choices)
- *   8. GAME_TARGET_AMOUNT         (integer, dividir daño)
- *   9. GAME_SELECT_CARDS          (uuid + cardsView1, multi-selección)
- *  10. GAME_PLAY_XMANA            (boolean)
+ *   8. GAME_CHOOSE_CARDS          (uuid + cardsView1, selección)
+ *   9. GAME_TARGET_PLAYER         (uuid, eligir jugador)
+ *  10. GAME_TARGET_AMOUNT         (integer, dividir daño)
+ *  11. GAME_SELECT_CARDS          (uuid + cardsView1, multi-selección)
+ *  12. GAME_PLAY_XMANA            (boolean)
+ *  13. USER_REQUEST_DIALOG        (botones -> sendPlayerAction)
  *
  * Máquina de estados lineal: cada respuesta del cliente avanza al siguiente
  * prompt. El flujo termina con GAME_UPDATE + GAME_SELECT.
@@ -25,8 +28,9 @@ import {
 
 type Stage =
   | 'select_player' | 'choose_string' | 'choose_string_free' | 'choose_number'
-  | 'choose_one' | 'choose_between' | 'choose_mode' | 'target_amount'
-  | 'select_cards' | 'xmana' | 'finished'
+  | 'choose_one' | 'choose_between' | 'choose_mode' | 'choose_cards'
+  | 'target_player' | 'target_amount' | 'select_cards' | 'xmana'
+  | 'user_request' | 'finished'
 
 export function missingPromptsScenario(): Scenario {
   const gameId = GAME_ID
@@ -117,6 +121,24 @@ export function missingPromptsScenario(): Scenario {
       gameView: getGameView(),
     })
   }
+  const toChooseCards = () => {
+    stage = 'choose_cards'
+    emit('GAME_CHOOSE_CARDS', {
+      message: 'Choose a card',
+      cardsView1: selectCards,
+      min: 1, max: 1,
+      gameView: getGameView(),
+    })
+  }
+  const toTargetPlayer = () => {
+    stage = 'target_player'
+    emit('GAME_TARGET_PLAYER', {
+      message: 'Choose a player',
+      targets: [SIM_PLAYER_ID],
+      options: { possibleTargets: [SIM_PLAYER_ID] },
+      gameView: getGameView(),
+    })
+  }
   const toTargetAmount = () => {
     stage = 'target_amount'
     emit('GAME_TARGET_AMOUNT', { message: 'Distribute the damage (total 2)', min: 1, max: 5, gameView: getGameView() })
@@ -131,10 +153,22 @@ export function missingPromptsScenario(): Scenario {
       gameView: getGameView(),
     })
   }
-  const toXMana = () => {
-    stage = 'xmana'
-    emit('GAME_PLAY_XMANA', { message: 'Pay X mana?', gameView: getGameView() })
-  }
+    const toXMana = () => {
+      stage = 'xmana'
+      emit('GAME_PLAY_XMANA', { message: 'Pay X mana?', gameView: getGameView() })
+    }
+    const toUserRequest = () => {
+      stage = 'user_request'
+      emit('USER_REQUEST_DIALOG', {
+        title: 'Confirmar acción',
+        message: '¿Qué quieres hacer?',
+        button1Text: 'Rebobinar turno',
+        button1Action: 'ROLLBACK_TURN',
+        button2Text: 'Detener al final del turno',
+        button2Action: 'STOP_UNTIL_END_OF_TURN',
+        gameId,
+      })
+    }
   const finish = () => {
     stage = 'finished'
     emit('GAME_UPDATE', { gameView: getGameView() })
@@ -168,7 +202,9 @@ export function missingPromptsScenario(): Scenario {
         case 'sendPlayerUUID': {
           conn.ok(requestId, action, {})
           if (stage === 'select_player') toChooseString()
-          else if (stage === 'choose_mode') toTargetAmount()
+          else if (stage === 'choose_mode') toChooseCards()
+          else if (stage === 'choose_cards') toTargetPlayer()
+          else if (stage === 'target_player') toTargetAmount()
           else if (stage === 'select_cards') {
             cardsCount++
             if (cardsCount >= 2) toXMana()
@@ -191,7 +227,12 @@ export function missingPromptsScenario(): Scenario {
         }
         case 'sendPlayerBoolean': {
           conn.ok(requestId, action, {})
-          if (stage === 'xmana') finish()
+          if (stage === 'xmana') toUserRequest()
+          break
+        }
+        case 'sendPlayerAction': {
+          conn.ok(requestId, action, {})
+          if (stage === 'user_request') finish()
           break
         }
         default:
