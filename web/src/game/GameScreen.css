@@ -109,6 +109,37 @@
   box-shadow: 0 0 8px rgba(255, 176, 58, 0.25);
 }
 
+.layout-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  color: #6b759a;
+  background: rgba(124, 92, 255, 0.06);
+  border: 1px solid rgba(124, 92, 255, 0.2);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.layout-toggle-btn:hover {
+  color: #c8d0ea;
+  background: rgba(124, 92, 255, 0.15);
+  border-color: rgba(124, 92, 255, 0.4);
+}
+
+.layout-toggle-btn.is-active {
+  color: #a78bfa;
+  background: rgba(124, 92, 255, 0.22);
+  border-color: rgba(124, 92, 255, 0.6);
+  box-shadow: 0 0 8px rgba(124, 92, 255, 0.3);
+}
+
 .game-body {
   position: relative;
   display: grid;
@@ -269,6 +300,77 @@
 .feedback-dialog p {
   color: var(--text-dim);
   white-space: pre-wrap;
+}
+
+/* ── Starting Player Dialog ─────────────────────────────────── */
+.starting-player-dialog {
+  width: min(640px, 96vw);
+  text-align: center;
+}
+
+.starting-player-options {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.starting-player-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 28px;
+  min-width: 160px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.14) 0%, rgba(60, 40, 120, 0.22) 100%);
+  border: 1.5px solid rgba(124, 92, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  color: #e8ecf6;
+}
+
+.starting-player-btn:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.03);
+  border-color: rgba(124, 92, 255, 0.75);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.28) 0%, rgba(80, 50, 160, 0.38) 100%);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(124, 92, 255, 0.25);
+}
+
+.starting-player-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sp-avatar {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
+
+.sp-name {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: #fff;
+  word-break: break-word;
+  text-align: center;
+}
+
+.sp-action {
+  font-size: 11px;
+  color: #a78bfa;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.starting-player-btn:hover .sp-action {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .feedback-kicker {

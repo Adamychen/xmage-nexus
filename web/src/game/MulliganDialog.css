@@ -3,76 +3,120 @@
   inset: 0;
   z-index: 60;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 10, 20, 0.72);
-  backdrop-filter: blur(3px);
+  background: rgba(8, 10, 20, 0.80);
+  backdrop-filter: blur(5px);
   padding: 24px;
+  gap: 0;
 }
 
 .mulligan-dialog {
-  width: min(880px, 96vw);
-  max-height: 92vh;
+  width: min(1100px, 96vw);
+  max-height: 90vh;
   overflow: auto;
   background: linear-gradient(180deg, #1b2236 0%, #141a2b 100%);
   border: 1px solid #38436b;
-  border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
-  padding: 22px 26px 26px;
+  border-radius: 18px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(124, 92, 255, 0.1);
+  padding: 24px 28px 28px;
   color: #e8ecf6;
   text-align: center;
 }
 
 .mulligan-kicker {
-  font-size: 12px;
-  letter-spacing: 0.22em;
+  font-size: 11px;
+  letter-spacing: 0.24em;
   font-weight: 700;
   color: #ffb454;
   margin-bottom: 6px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
 }
 
 .mulligan-dialog h2 {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   font-size: 22px;
+  color: #fff;
 }
 
 .mulligan-msg {
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   color: #b9c2da;
   font-size: 14px;
+  line-height: 1.5;
 }
 
-.mulligan-hand {
+/* ── Full-size card grid ─────────────────────────────────────── */
+.mulligan-hand-grid {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  min-height: 150px;
-  margin: 4px 0 10px;
+  gap: 12px;
+  padding: 8px 4px 12px;
 }
 
-.mulligan-hand .hand-zone {
-  justify-content: center;
-}
-
-.mulligan-london .mulligan-hand .hand-card-slot {
+.mulligan-card-wrap {
+  position: relative;
   cursor: pointer;
-  transition: transform 0.12s ease, filter 0.12s ease;
+  flex-shrink: 0;
+  --card-w: 120px;
 }
 
-.mulligan-london .mulligan-hand .hand-card-slot:hover {
-  transform: translateY(-8px);
+/* Scale up for small hands (≤4 cards) */
+.mulligan-hand-grid:has(.mulligan-card-wrap:nth-child(n+1):nth-child(-n+4)) .mulligan-card-wrap {
+  --card-w: 140px;
 }
 
-.mulligan-london .hand-card.is-target {
-  outline: 3px solid #ffb454;
-  outline-offset: 2px;
-  box-shadow: 0 0 18px rgba(255, 180, 84, 0.6);
-  border-radius: 8px;
+.mulligan-card-wrap .card-slot {
+  width: var(--card-w, 120px);
+  height: calc(var(--card-w, 120px) * 1.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.mulligan-card-wrap:hover .card-slot {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
+  z-index: 10;
+}
+
+/* Selection highlight (London mode) */
+.mulligan-card-wrap.is-selected .card-slot {
+  box-shadow: 0 0 0 3px #ffb454, 0 12px 32px rgba(255, 180, 84, 0.5);
+}
+
+.mulligan-card-wrap.is-selected:hover .card-slot {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: 0 0 0 3px #ffb454, 0 18px 40px rgba(255, 180, 84, 0.55);
+}
+
+.mulligan-card-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffb454;
+  color: #1a0f00;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ── Counter and actions ─────────────────────────────────────── */
 .mulligan-counter {
   font-size: 13px;
   color: #9fb0d6;
-  margin: 6px 0 14px;
+  margin: 6px 0 16px;
+  min-height: 20px;
 }
 
 .mulligan-actions {
@@ -85,40 +129,47 @@
 .mulligan-actions button {
   font-size: 16px;
   font-weight: 700;
-  padding: 12px 22px;
+  padding: 13px 28px;
   border-radius: 12px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s ease, filter 0.1s ease;
+  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
 }
 
 .mulligan-actions button:hover:not(:disabled) {
   transform: translateY(-2px);
-  filter: brightness(1.08);
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
 .mulligan-actions button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .mulligan-keep {
   background: linear-gradient(180deg, #2fbf71 0%, #229c5a 100%);
   color: #06210f;
+  box-shadow: 0 4px 14px rgba(47, 191, 113, 0.3);
 }
 
 .mulligan-mulligan {
   background: linear-gradient(180deg, #ffb454 0%, #e8902f 100%);
   color: #2a1700;
+  box-shadow: 0 4px 14px rgba(255, 180, 84, 0.3);
 }
 
 .mulligan-actions .primary {
   background: linear-gradient(180deg, #5b8cff 0%, #3f6ae0 100%);
   color: #fff;
+  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
 }
 
 .mulligan-actions .cancel-btn {
   background: transparent;
   border-color: #5a668c;
   color: #c2cbe6;
+  box-shadow: none;
 }

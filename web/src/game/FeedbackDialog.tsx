@@ -67,6 +67,33 @@ export default function FeedbackDialog() {
     return <MulliganDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
+  // ── Decisión de quién empieza: diálogo dedicado
+  if (prompt.isStartingPlayer) {
+    return (
+      <div className="feedback-backdrop" role="presentation">
+        <section className="feedback-dialog starting-player-dialog" role="dialog" aria-modal="true" aria-labelledby="sp-title">
+          <div className="feedback-kicker">⚔️ INICIO DE PARTIDA</div>
+          <h2 id="sp-title">¿Quién empieza?</h2>
+          <p><FormattedText text={prompt.message} /></p>
+          <div className="starting-player-options">
+            {prompt.options.map((option) => (
+              <button
+                key={option.id}
+                className="starting-player-btn"
+                disabled={busy}
+                onClick={() => void send(() => sendValue(prompt, option.value), 'No se pudo enviar la selección')}
+              >
+                <span className="sp-avatar">🧙</span>
+                <span className="sp-name"><FormattedText text={option.label} /></span>
+                <span className="sp-action">Empieza primero →</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+    )
+  }
+
   // ── GAME_TARGET con cardsView1: grid de cartas (tutores, scry, descarte, etc.)
   const hasCardGrid = prompt.cards && prompt.cards.length > 0
   if (prompt.method === 'GAME_TARGET' && hasCardGrid) {

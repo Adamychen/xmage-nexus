@@ -16,6 +16,7 @@ interface OpponentZoneProps {
   targetIds?: Set<string>
   revealedCards?: Record<string, CardView>
   compactPod?: boolean
+  mirrored?: boolean
 }
 
 function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
@@ -32,6 +33,7 @@ export default function OpponentZone({
   targetIds = new Set(),
   revealedCards,
   compactPod = false,
+  mirrored = false,
 }: OpponentZoneProps) {
   if (!player) return <div className={`opponent-zone empty ${compactPod ? 'compact-pod' : ''}`} />
 
@@ -88,9 +90,9 @@ export default function OpponentZone({
 
   return (
     <div
-      className={`opponent-zone ${compactPod ? 'compact-pod' : ''} ${isDefeated ? 'is-defeated' : ''}`}
+      className={`opponent-zone ${compactPod ? 'compact-pod' : ''} ${mirrored ? 'mirrored' : ''} ${isDefeated ? 'is-defeated' : ''}`}
       ref={zoneRef}
-      style={{ '--card-w': `${cardW}px` } as React.CSSProperties}
+      style={{ '--card-w': `${cardW}px`, ...(mirrored ? { gridTemplateRows: '1fr 1fr auto' } : {}) } as React.CSSProperties}
     >
       {/* Defeated / Left status overlay */}
       {isDefeated && (
@@ -107,115 +109,33 @@ export default function OpponentZone({
         </div>
       )}
 
-      {/* Row 1: Unified row [life | hand | mana | deck | G | X] (at top) */}
-      <div className="oz-row oz-top-row">
-        <PlayerInfoBar
-          player={player}
-          side="opp"
-          onClick={onCardClick ? () => onCardClick(player.playerId) : undefined}
-          isTarget={targetIds.has(player.playerId)}
-          onHover={onCardHover}
-        />
-        <HandZone
-          cards={handCards}
-          onCardClick={onCardClick}
-          onHover={onCardHover}
-          targetIds={targetIds}
-          compact
-        />
-        <ResourceBar player={player} side="opp" compact onCardHover={onCardHover} />
-      </div>
+      {(() => {
+      {/* Row 1: Unified row [life | hand | mana | deck | G | X] (at top in normal mode) */}
+      const topRow = (
+        <div className="oz-row oz-top-row" key="oz-top">
+          <PlayerInfoBar
+            player={player}
+            side="opp"
+            onClick={onCardClick ? () => onCardClick(player.playerId) : undefined}
+            isTarget={targetIds.has(player.playerId)}
+            onHover={onCardHover}
+          />
+          <HandZone
+            cards={handCards}
+            onCardClick={onCardClick}
+            onHover={onCardHover}
+            targetIds={targetIds}
+            compact
+          />
+          <ResourceBar player={player} side="opp" compact onCardHover={onCardHover} />
+        </div>
+      )
 
       {/* Row 2: Lands + Others */}
-      <div className="oz-row oz-permanents-row">
-        <div className="oz-band permanents-band">
-          {lands.map(([id, perm]) => (
-            <CardSlot
-              key={id}
-              cardId={id}
-              card={perm}
-              onClick={onCardClick ? () => onCardClick(id) : undefined}
-              onHover={onCardHover}
-              isTarget={targetIds.has(id)}
-              tapped={perm.tapped === true}
-              showCounters
-            />
-          ))}
-          {others.map(([id, perm]) => (
-            <CardSlot
-              key={id}
-              cardId={id}
-              card={perm}
-              onClick={onCardClick ? () => onCardClick(id) : undefined}
-              onHover={onCardHover}
-              isTarget={targetIds.has(id)}
-              tapped={perm.tapped === true}
-              showCounters
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Row 3: Commander + Creatures (at bottom) */}
-      <div className="oz-row oz-creatures-row">
-        {hasCommander && (
-          <div className="oz-commander">
-            <CommandZone
-              player={player}
-              side="opp"
-              onCardClick={onCardClick}
-              onHover={onCardHover}
-              targetIds={targetIds}
-            />
-          </div>
-        )}
-        <div className={`oz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
-          {creatures.map(([id, perm]) => {
-            const isAttacking = (perm as any).attacking === true
-            const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
-            const attachments = perm.attachments ?? []
-
-            if (attachments.length > 0) {
-              return (
-                <div
-                  key={id}
-                  className="card-attachment-group"
-                  style={{ width: `calc(var(--card-w, 100px) + ${attachments.length * 16}px)` }}
-                >
-                  <div className="attachments-list">
-                    {attachments.map((attId, ai) => {
-                      const attCard = battlefield[attId]
-                      if (!attCard) return null
-                      return (
-                        <CardSlot
-                          key={attId}
-                          cardId={attId}
-                          card={attCard}
-                          onClick={onCardClick ? () => onCardClick(attId) : undefined}
-                          onHover={onCardHover}
-                          isTarget={targetIds.has(attId)}
-                          className="attachment-subcard"
-                          style={{ left: `${(ai + 1) * 16}px` }}
-                        />
-                      )
-                    })}
-                  </div>
-                  <CardSlot
-                    cardId={id}
-                    card={perm}
-                    onClick={onCardClick ? () => onCardClick(id) : undefined}
-                    onHover={onCardHover}
-                    isTarget={targetIds.has(id)}
-                    tapped={isTapped}
-                    showPt
-                    showCounters
-                    showDamage
-                  />
-                </div>
-              )
-            }
-
-            return (
+      const permanentsRow = (
+        <div className="oz-row oz-permanents-row" key="oz-perm">
+          <div className="oz-band permanents-band">
+            {lands.map(([id, perm]) => (
               <CardSlot
                 key={id}
                 cardId={id}
@@ -223,15 +143,107 @@ export default function OpponentZone({
                 onClick={onCardClick ? () => onCardClick(id) : undefined}
                 onHover={onCardHover}
                 isTarget={targetIds.has(id)}
-                tapped={isTapped}
-                showPt
+                tapped={perm.tapped === true}
                 showCounters
-                showDamage
               />
-            )
-          })}
+            ))}
+            {others.map(([id, perm]) => (
+              <CardSlot
+                key={id}
+                cardId={id}
+                card={perm}
+                onClick={onCardClick ? () => onCardClick(id) : undefined}
+                onHover={onCardHover}
+                isTarget={targetIds.has(id)}
+                tapped={perm.tapped === true}
+                showCounters
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )
+
+      {/* Row 3: Commander + Creatures (at bottom in normal mode) */}
+      const creaturesRow = (
+        <div className="oz-row oz-creatures-row" key="oz-creatures">
+          {hasCommander && (
+            <div className="oz-commander">
+              <CommandZone
+                player={player}
+                side="opp"
+                onCardClick={onCardClick}
+                onHover={onCardHover}
+                targetIds={targetIds}
+              />
+            </div>
+          )}
+          <div className={`oz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
+            {creatures.map(([id, perm]) => {
+              const isAttacking = (perm as any).attacking === true
+              const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
+              const attachments = perm.attachments ?? []
+
+              if (attachments.length > 0) {
+                return (
+                  <div
+                    key={id}
+                    className="card-attachment-group"
+                    style={{ width: `calc(var(--card-w, 100px) + ${attachments.length * 16}px)` }}
+                  >
+                    <div className="attachments-list">
+                      {attachments.map((attId, ai) => {
+                        const attCard = battlefield[attId]
+                        if (!attCard) return null
+                        return (
+                          <CardSlot
+                            key={attId}
+                            cardId={attId}
+                            card={attCard}
+                            onClick={onCardClick ? () => onCardClick(attId) : undefined}
+                            onHover={onCardHover}
+                            isTarget={targetIds.has(attId)}
+                            className="attachment-subcard"
+                            style={{ left: `${(ai + 1) * 16}px` }}
+                          />
+                        )
+                      })}
+                    </div>
+                    <CardSlot
+                      cardId={id}
+                      card={perm}
+                      onClick={onCardClick ? () => onCardClick(id) : undefined}
+                      onHover={onCardHover}
+                      isTarget={targetIds.has(id)}
+                      tapped={isTapped}
+                      showPt
+                      showCounters
+                      showDamage
+                    />
+                  </div>
+                )
+              }
+
+              return (
+                <CardSlot
+                  key={id}
+                  cardId={id}
+                  card={perm}
+                  onClick={onCardClick ? () => onCardClick(id) : undefined}
+                  onHover={onCardHover}
+                  isTarget={targetIds.has(id)}
+                  tapped={isTapped}
+                  showPt
+                  showCounters
+                  showDamage
+                />
+              )
+            })}
+          </div>
+        </div>
+      )
+
+      return mirrored ? [creaturesRow, permanentsRow, topRow] : [topRow, permanentsRow, creaturesRow]
+      })()}
     </div>
   )
 }

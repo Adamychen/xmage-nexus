@@ -55,6 +55,8 @@ export interface FeedbackPrompt {
   isMulligan?: boolean
   /** Verdadero para el GAME_TARGET de London (poner cartas al fondo) — UI dedicada. */
   isMulliganLondon?: boolean
+  /** Verdadero para el ask de quién empieza la partida — UI dedicada. */
+  isStartingPlayer?: boolean
 }
 
 type JsonRecord = Record<string, unknown>
@@ -100,6 +102,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     }
     case 'GAME_ASK': {
       const isMulligan = /mulligan|keep your hand|keep hand/i.test(message)
+      const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
       const options = optionEntries(data.options)
       const choices = options.length
         ? options.map((option, index) => ({ ...option, value: booleanValue(option.label, index) || option.value }))
@@ -112,7 +115,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
               { id: 'yes', label: 'Sí', value: 'true' },
               { id: 'no', label: 'No', value: 'false' },
             ]
-      return prompt(method, gameId, isMulligan ? 'Mulligan' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan)
+      return prompt(method, gameId, isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan, undefined, isStartingPlayer)
     }
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)
@@ -196,7 +199,8 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_SELECT_PLAYER':
     case 'GAME_TARGET_PLAYER': {
       const players = targetOptions(data)
-      return prompt(method, gameId, 'Elige jugador', message, 'uuid', players, bounds)
+      const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
+      return prompt(method, gameId, isStartingPlayer ? '¿Quién empieza?' : 'Elige jugador', message, 'uuid', players, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, isStartingPlayer)
     }
     default:
       return null
@@ -220,8 +224,9 @@ function prompt(
   cards?: FeedbackCard[],
   isMulligan?: boolean,
   isMulliganLondon?: boolean,
+  isStartingPlayer?: boolean,
 ): FeedbackPrompt {
-  return { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon }
+  return { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
 }
 
 function asRecord(value: unknown): JsonRecord {

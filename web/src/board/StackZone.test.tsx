@@ -232,4 +232,26 @@ describe('StackZone', () => {
     expect(pills[1].classList.contains('is-opp')).toBe(true)
     expect(pills[1].textContent).toContain('SimBot')
   })
+
+  it('no labels an unknown controller as "Tú" when spectating', () => {
+    const players: PlayerView[] = [
+      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
+    ]
+
+    const stack: Record<string, CardView> = {
+      'spell-unknown': {
+        name: 'Mystic Remora',
+        cardTypes: ['ENCHANTMENT'],
+        manaValue: 2,
+      } as any,
+    }
+
+    const { container } = render(<StackZone stack={stack} players={players} />)
+
+    const pill = container.querySelector('.stack-controller-pill')
+    expect(pill).not.toBeNull()
+    expect(pill!.classList.contains('is-me')).toBe(false)
+    expect(pill!.textContent).not.toContain('Tú')
+    expect(pill!.textContent).toContain('Desconocido')
+  })
 })

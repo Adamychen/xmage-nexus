@@ -90,6 +90,7 @@ export interface AppState {
     autoKeepMulligan: boolean
     autoPass: boolean
     holdPriority: boolean
+    boardLayout: 'standard' | 'pod'
   }
   error: string | null
 }
@@ -123,7 +124,7 @@ export const initialState: AppState = {
   },
   log: [],
   events: [],
-  settings: { autoKeepMulligan: false, autoPass: false, holdPriority: false },
+  settings: { autoKeepMulligan: false, autoPass: false, holdPriority: false, boardLayout: 'standard' },
   error: null,
 }
 

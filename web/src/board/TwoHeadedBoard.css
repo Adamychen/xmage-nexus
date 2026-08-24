@@ -1,0 +1,146 @@
+/* ── Pod board root ─────────────────────────────────────────── */
+.pod-board {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #151930 0%, #0d1022 55%, #080a16 100%);
+  overflow: hidden;
+  --card-w: 80px;
+}
+
+/* ── Rows ───────────────────────────────────────────────────── */
+.pod-row {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Opponents on top are flipped (info bar at top) — already done by OpponentZone */
+.pod-row--top {
+  flex: 0 0 46%;
+}
+
+.pod-row--bottom {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* ── Cells ──────────────────────────────────────────────────── */
+.pod-cell {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* My cell gets a very subtle green glow at the bottom edge */
+.pod-cell--me::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(40, 200, 120, 0.07) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pod-cell--me > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Vertical column divider ────────────────────────────────── */
+.pod-col-divider {
+  width: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(124, 92, 255, 0.18) 15%,
+    rgba(255, 208, 112, 0.4) 50%,
+    rgba(124, 92, 255, 0.18) 85%,
+    transparent 100%
+  );
+}
+
+/* ── Horizontal board divider ───────────────────────────────── */
+.pod-board-divider {
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 92, 255, 0.12) 20%,
+    rgba(255, 208, 112, 0.32) 50%,
+    rgba(124, 92, 255, 0.12) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(124, 92, 255, 0.12);
+  position: relative;
+}
+
+.pod-divider-diamond {
+  font-size: 9px;
+  color: #ffd070;
+  text-shadow: 0 0 8px rgba(255, 208, 112, 0.8);
+  line-height: 1;
+}
+
+/* Decorative labels flanking the diamond */
+.pod-board-divider::before,
+.pod-board-divider::after {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(140, 150, 192, 0.4);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.pod-board-divider::before {
+  content: 'Oponentes';
+  left: 14px;
+}
+
+.pod-board-divider::after {
+  content: 'Tu lado';
+  right: 14px;
+}
+
+/* In spectator mode hide the "Tu lado" label */
+.pod-board.spectator .pod-board-divider::before {
+  content: 'Fila 1';
+}
+
+.pod-board.spectator .pod-board-divider::after {
+  content: 'Fila 2';
+}
+
+/* ── Responsive card scaling ────────────────────────────────── */
+/* Each half is ~50% height and ~50% width → cards need to be smaller */
+.pod-row .opponent-zone,
+.pod-row .player-zone {
+  height: 100%;
+}
+
+/* GameBoard CSS overrides the opponent/player zone flex sizing;
+   in pod mode we let the cell's flex handle it instead */
+.pod-board .opponent-zone {
+  flex: unset;
+}
+
+.pod-board .player-zone {
+  flex: unset;
+}

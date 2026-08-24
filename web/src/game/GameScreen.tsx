@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
+import TwoHeadedBoard from '../board/TwoHeadedBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import * as cmds from '../net/commands'
 import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore } from '../state/store'
@@ -186,6 +187,16 @@ export default function GameScreen() {
             />
             Auto-pass
           </label>
+          {opps.length >= 1 && (
+            <button
+              type="button"
+              className={`layout-toggle-btn ${settings.boardLayout === 'pod' ? 'is-active' : ''}`}
+              title={settings.boardLayout === 'pod' ? 'Cambiar a layout estándar (un oponente a la vez)' : `Ver todos los tableros en cuadrícula (${opps.length + 1} jugadores)`}
+              onClick={() => setSetting('boardLayout', settings.boardLayout === 'pod' ? 'standard' : 'pod')}
+            >
+              {settings.boardLayout === 'pod' ? '⊞ Pod ✓' : '⊞ Pod'}
+            </button>
+          )}
           <button
             type="button"
             className="leave-game-btn"
@@ -211,22 +222,40 @@ export default function GameScreen() {
       <div className="game-body" ref={gameBodyRef}>
         <Sidebar />
         <div className="board-wrap">
-          <GameBoard
-            game={game}
-            targetIds={targetIds}
-            chosenTargetIds={chosenTargetIds}
-            onTargetClick={onTargetClick}
-            targetSourceId={targetSourceId}
-            playableIds={playableIds}
-            onPlayableClick={onPlayableClick}
-            combatSelectable={combat?.selectable ?? []}
-            combatMode={combat?.mode ?? null}
-            combatChosen={combat?.chosen ?? []}
-            onCombatClick={onCombatClick}
-            crossZonePlayables={crossZone}
-            onPlayCrossZone={onPlayableClick}
-            focusedOpponentId={currentOpp?.playerId}
-          />
+          {settings.boardLayout === 'pod' ? (
+            <TwoHeadedBoard
+              game={game}
+              targetIds={targetIds}
+              chosenTargetIds={chosenTargetIds}
+              onTargetClick={onTargetClick}
+              targetSourceId={targetSourceId}
+              playableIds={playableIds}
+              onPlayableClick={onPlayableClick}
+              combatSelectable={combat?.selectable ?? []}
+              combatMode={combat?.mode ?? null}
+              combatChosen={combat?.chosen ?? []}
+              onCombatClick={onCombatClick}
+              crossZonePlayables={crossZone}
+              onPlayCrossZone={onPlayableClick}
+            />
+          ) : (
+            <GameBoard
+              game={game}
+              targetIds={targetIds}
+              chosenTargetIds={chosenTargetIds}
+              onTargetClick={onTargetClick}
+              targetSourceId={targetSourceId}
+              playableIds={playableIds}
+              onPlayableClick={onPlayableClick}
+              combatSelectable={combat?.selectable ?? []}
+              combatMode={combat?.mode ?? null}
+              combatChosen={combat?.chosen ?? []}
+              onCombatClick={onCombatClick}
+              crossZonePlayables={crossZone}
+              onPlayCrossZone={onPlayableClick}
+              focusedOpponentId={currentOpp?.playerId}
+            />
+          )}
         </div>
         <div className="game-right-panel">
           <div className="right-panel-tabs">

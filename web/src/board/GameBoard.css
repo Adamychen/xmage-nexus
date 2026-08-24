@@ -9,6 +9,19 @@
   --card-w: 100px;
 }
 
+.game-board > .opponent-zone {
+  flex: 0 0 42%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-board > .player-zone {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
 .board-divider {
   height: 2px;
   background: linear-gradient(90deg,

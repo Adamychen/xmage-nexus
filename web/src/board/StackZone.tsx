@@ -85,46 +85,27 @@ function getControllerInfo(
   const me = players?.find((p) => p.controlled || (myPlayerId && p.playerId === myPlayerId))
 
   if (ctrlId && typeof ctrlId === 'string') {
-    if (me && (ctrlId === me.playerId || ctrlId === myPlayerId || ctrlId === me.name)) {
-      return {
-        id: ctrlId,
-        name: 'Tú',
-        isMe: true,
-        isOpponent: false,
-        avatarIcon: '👤',
-      }
-    }
     const matchedPlayer = players?.find((p) => p.playerId === ctrlId || p.name === ctrlId)
     if (matchedPlayer) {
-      const isMe = matchedPlayer.controlled || (myPlayerId && matchedPlayer.playerId === myPlayerId)
+      const isMe = !!me && (matchedPlayer.controlled || (myPlayerId != null && matchedPlayer.playerId === myPlayerId))
       return {
         id: ctrlId,
         name: isMe ? 'Tú' : matchedPlayer.name,
-        isMe: !!isMe,
+        isMe,
         isOpponent: !isMe,
         avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
       }
     }
   }
 
-  // Check if the card/ability is in myHand/myGraveyard/myBattlefield
-  if (me && (id in (me.battlefield ?? {}) || id in (me.graveyard ?? {}))) {
-    return {
-      name: 'Tú',
-      isMe: true,
-      isOpponent: false,
-      avatarIcon: '👤',
-    }
-  }
-
-  // Check other players' zones
+  // Check if the card/ability is in a player's zones
   if (players) {
     for (const p of players) {
       if (id in (p.battlefield ?? {}) || id in (p.graveyard ?? {})) {
-        const isMe = p.controlled || (myPlayerId && p.playerId === myPlayerId)
+        const isMe = !!me && (p.controlled || (myPlayerId != null && p.playerId === myPlayerId))
         return {
           name: isMe ? 'Tú' : p.name,
-          isMe: !!isMe,
+          isMe,
           isOpponent: !isMe,
           avatarIcon: isMe ? '👤' : (p.isHuman ? '👤' : '🤖'),
         }
@@ -132,11 +113,12 @@ function getControllerInfo(
     }
   }
 
+  // Unknown controller — never label a spectator (no `me`) as "Tú".
   return {
-    name: 'Tú',
-    isMe: true,
-    isOpponent: false,
-    avatarIcon: '👤',
+    name: me ? 'Tú' : 'Desconocido',
+    isMe: false,
+    isOpponent: !me,
+    avatarIcon: me ? '👤' : '❓',
   }
 }
 

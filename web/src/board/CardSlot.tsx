@@ -49,6 +49,18 @@ export default function CardSlot({
     const el = slotRef.current
     if (!el || !effectiveId) return
 
+    let rafId: number | null = null
+    let timerId: ReturnType<typeof setTimeout> | null = null
+
+    const resetStyles = () => {
+      if (el) {
+        el.style.transform = ''
+        el.style.transition = ''
+        el.style.zIndex = ''
+        el.style.boxShadow = ''
+      }
+    }
+
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
       if (el.closest('.feedback-dialog, .library-order-dialog, .card-grid, .mechanics-tray')) {
@@ -74,30 +86,33 @@ export default function CardSlot({
             el.style.zIndex = '60'
             el.style.boxShadow = '0 16px 36px rgba(0, 0, 0, 0.85), 0 0 16px rgba(255, 208, 112, 0.35)'
 
-            const raf = requestAnimationFrame(() => {
+            rafId = requestAnimationFrame(() => {
+              rafId = null
               el.style.transition = 'transform 460ms cubic-bezier(0.19, 1, 0.22, 1), box-shadow 460ms ease'
               el.style.transform = ''
               el.style.boxShadow = ''
 
-              const timer = setTimeout(() => {
-                if (el) {
-                  el.style.transition = ''
-                  el.style.transform = ''
-                  el.style.zIndex = ''
-                  el.style.boxShadow = ''
-                }
+              timerId = setTimeout(() => {
+                timerId = null
+                resetStyles()
               }, 480)
-
-              return () => clearTimeout(timer)
             })
-
-            return () => cancelAnimationFrame(raf)
           }
         }
       }
     }
 
     return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+        rafId = null
+        resetStyles()
+      }
+      if (timerId !== null) {
+        clearTimeout(timerId)
+        timerId = null
+        resetStyles()
+      }
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
         const zoneClass = zone ? zone.className.split(' ')[0] : ''

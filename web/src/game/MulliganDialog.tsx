@@ -3,8 +3,9 @@ import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
 import { useStore } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
-import HandZone from '../board/HandZone'
 import FormattedText from './FormattedText'
+import CardSlot from '../board/CardSlot'
+import FloatingCardPreview from '../board/FloatingCardPreview'
 import './MulliganDialog.css'
 
 interface MulliganDialogProps {
@@ -17,18 +18,22 @@ interface MulliganDialogProps {
 export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganDialogProps) {
   const game = useStore((s) => s.game)
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
-  const handIds = Object.keys(hand)
+  const handEntries = Object.entries(hand)
   const isLondon = prompt.isMulliganLondon === true
   const [selected, setSelected] = useState<string[]>([])
   const [bottomCount, setBottomCount] = useState(0)
+  const [hoveredCard, setHoveredCard] = useState<CardView | null>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
   const keep = () => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), 'No se pudo mantener la mano')
   const mulligan = () => void send(() => cmds.sendPlayerBoolean(true, prompt.gameId), 'No se pudo hacer mulligan')
 
   const toggle = (id: string) => {
-    setSelected((current) => current.includes(id)
-      ? current.filter((value) => value !== id)
-      : current.length < prompt.max ? [...current, id] : current)
+    setSelected((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : current.length < prompt.max ? [...current, id] : current,
+    )
   }
 
   const pickOne = (id: string) => {
@@ -48,35 +53,56 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     setBottomCount((count) => count + selected.length)
   }
 
+  const handleHover = (card: CardView | null, rect?: DOMRect) => {
+    setHoveredCard(card)
+    setAnchorRect(rect ?? null)
+  }
+
+  const cardCount = handEntries.length
+  const needToBottom = isLondon
+    ? prompt.max > 1
+      ? `Selecciona ${prompt.min}–${prompt.max} cartas para poner al fondo`
+      : `Haz clic en una carta para ponerla al fondo (${bottomCount} puestas)`
+    : null
+
   if (isLondon) {
     const handleCardClick = prompt.max > 1 ? toggle : pickOne
     return (
       <div className="mulligan-backdrop" role="presentation">
         <section className="mulligan-dialog mulligan-london" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
           <div className="mulligan-kicker">MULLIGAN DE LONDRES</div>
-          <h2 id="mulligan-title">
-            <FormattedText text={prompt.title === 'Elige objetivo' ? 'Pon cartas al fondo' : prompt.title} />
-          </h2>
+          <h2 id="mulligan-title">Pon cartas al fondo de tu biblioteca</h2>
           <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
-          {handIds.length > 0 && (
-            <div className="mulligan-hand">
-              <HandZone
-                cards={hand}
-                onCardClick={handleCardClick}
-                targetIds={new Set(selected)}
-                compact
-              />
+
+          {cardCount > 0 && (
+            <div className="mulligan-hand-grid">
+              {handEntries.map(([id, card]) => (
+                <div
+                  key={id}
+                  className={`mulligan-card-wrap ${selected.includes(id) ? 'is-selected' : ''}`}
+                  onClick={() => handleCardClick(id)}
+                >
+                  <CardSlot
+                    cardId={id}
+                    card={card}
+                    isPlayable={false}
+                    isTarget={selected.includes(id)}
+                    onHover={handleHover}
+                  />
+                  {selected.includes(id) && (
+                    <div className="mulligan-card-badge">#{selected.indexOf(id) + 1}</div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-          <div className="mulligan-counter">
-            {prompt.max > 1
-              ? `Seleccionadas: ${selected.length}${prompt.min ? ` / mín ${prompt.min}` : ''}`
-              : `Cartas puestas al fondo: ${bottomCount}`}
-          </div>
+
+          <div className="mulligan-counter">{needToBottom}</div>
+
           <div className="mulligan-actions">
             {prompt.max > 1 && (
               <button className="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
-                Confirmar ({selected.length})
+                Confirmar ({selected.length} / {prompt.min})
               </button>
             )}
             {prompt.required === false && (
@@ -84,6 +110,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             )}
           </div>
         </section>
+        <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} />
       </div>
     )
   }
@@ -94,20 +121,32 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
         <div className="mulligan-kicker">MULLIGAN</div>
         <h2 id="mulligan-title"><FormattedText text={prompt.title} /></h2>
         <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
-        {handIds.length > 0 && (
-          <div className="mulligan-hand">
-            <HandZone cards={hand} compact />
+
+        {cardCount > 0 && (
+          <div className="mulligan-hand-grid">
+            {handEntries.map(([id, card]) => (
+              <div key={id} className="mulligan-card-wrap">
+                <CardSlot
+                  cardId={id}
+                  card={card}
+                  isPlayable={false}
+                  onHover={handleHover}
+                />
+              </div>
+            ))}
           </div>
         )}
+
         <div className="mulligan-actions">
           <button className="mulligan-keep" disabled={busy} onClick={keep}>
-            ✋ Mantener mano{handIds.length ? ` (${handIds.length})` : ''}
+            ✋ Mantener ({cardCount})
           </button>
           <button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
             🔄 Mulligan
           </button>
         </div>
       </section>
+      <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} />
     </div>
   )
 }
