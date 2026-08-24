@@ -7,6 +7,7 @@ import { getState, setState, addLog } from './state'
 import type { SideboardCard, SideboardScreenState } from './state'
 import { awaitCardMeta } from '../cards/cardImages'
 import { saveActiveGame, clearActiveGame } from './persistence'
+import { attributeStackControllers } from '../game/stackAttribution'
 import {
   gameViewFrom, isOlderThanCurrentGame, consolidatePlayables, combatFromSelect,
   isCombatStep, combatChosenFrom, emptyCombat, targetFirstId,
@@ -62,7 +63,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame && !isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)) {
-    setState({ game: embeddedGame, phase: 'game', watchingTable: null, gameId: objectId ?? s.gameId })
+    const sameGame = !!objectId && objectId === s.gameId
+    setState({ game: attributeStackControllers(sameGame ? s.game : null, embeddedGame), phase: 'game', watchingTable: null, gameId: objectId ?? s.gameId })
   }
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {
     setState({ events: [...s.events, { method, time: Date.now() }].slice(-12) })

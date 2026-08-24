@@ -130,9 +130,11 @@
     },
     "CardView": {
       "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "parentId": { "type": "string" },
+        "properties": {
+          "id": { "type": "string" },
+          "parentId": { "type": "string" },
+          "controllerId": { "type": "string" },
+          "controllerName": { "type": "string" },
         "name": { "type": "string" },
         "displayName": { "type": "string" },
         "displayFullName": { "type": "string" },

@@ -66,6 +66,35 @@ describe('handleMessage', () => {
     expect(getState().gameId).toBe('g-inform')
   })
 
+  it('attributes a new stack spell to the previous frame priority player across GAME_UPDATEs', () => {
+    const alice = makePlayer({ playerId: 'p-a', name: 'Alice' })
+    const before = makeGameView({ players: [alice], priorityPlayerName: 'Alice', stack: {} })
+    const after = makeGameView({
+      players: [alice],
+      priorityPlayerName: 'Alice',
+      stack: { 's-1': makeCard({ name: 'Lightning Bolt', mageObjectType: 'SPELL', id: 's-1' }) },
+    })
+
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-watch', data: before })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 2, objectId: 'g-watch', data: after })
+
+    expect(getState().game?.stack?.['s-1']?.controllerName).toBe('Alice')
+  })
+
+  it('starts stack attribution fresh on GAME_INIT of another game', () => {
+    const alice = makePlayer({ playerId: 'p-a', name: 'Alice' })
+    const gameOne = makeGameView({ players: [alice], priorityPlayerName: 'Alice', stack: {} })
+    const spell = makeCard({ name: 'Bolt', mageObjectType: 'SPELL', id: 's-x' })
+    const gameTwo = makeGameView({ players: [alice], priorityPlayerName: '', stack: { 's-x': spell } })
+
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-one', data: gameOne })
+    handleMessage({ type: 'disconnected' })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 2, objectId: 'g-two', data: gameTwo })
+
+    expect(getState().gameId).toBe('g-two')
+    expect(getState().game?.stack?.['s-x']?.controllerName).toBeUndefined()
+  })
+
   it('does not create a blocking feedback dialog for GAME_SELECT priority', () => {
     handleMessage({
       type: 'event',

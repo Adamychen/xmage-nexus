@@ -254,4 +254,50 @@ describe('StackZone', () => {
     expect(pill!.textContent).not.toContain('Tú')
     expect(pill!.textContent).toContain('Desconocido')
   })
+
+  it('attributes a watched spell to its controller via controllerId (no "Tú" for spectators)', () => {
+    const players: PlayerView[] = [
+      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
+    ]
+
+    const stack: Record<string, CardView> = {
+      'spell-watched': {
+        name: 'Counterspell',
+        cardTypes: ['INSTANT'],
+        manaValue: 2,
+        controllerId: 'p-opp',
+      } as any,
+    }
+
+    const { container } = render(<StackZone stack={stack} players={players} />)
+
+    const pill = container.querySelector('.stack-controller-pill')
+    expect(pill).not.toBeNull()
+    expect(pill!.classList.contains('is-me')).toBe(false)
+    expect(pill!.classList.contains('is-opp')).toBe(true)
+    expect(pill!.textContent).toContain('SimBot')
+    expect(pill!.textContent).not.toContain('Tú')
+  })
+
+  it('falls back to sourceCard.controllerId for stack abilities (no "Desconocido")', () => {
+    const players: PlayerView[] = [
+      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
+    ]
+
+    const stack: Record<string, CardView> = {
+      'ability-watched': {
+        name: 'Ability',
+        sourceCard: { controllerId: 'p-opp', controllerName: 'SimBot' },
+      } as any,
+    }
+
+    const { container } = render(<StackZone stack={stack} players={players} />)
+
+    const pill = container.querySelector('.stack-controller-pill')
+    expect(pill).not.toBeNull()
+    expect(pill!.classList.contains('is-me')).toBe(false)
+    expect(pill!.classList.contains('is-opp')).toBe(true)
+    expect(pill!.textContent).toContain('SimBot')
+    expect(pill!.textContent).not.toContain('Desconocido')
+  })
 })

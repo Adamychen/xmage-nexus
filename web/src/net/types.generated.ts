@@ -74,6 +74,8 @@ export interface PlayerView {
 export interface CardView {
   id?: string
   parentId?: string
+  controllerId?: string
+  controllerName?: string
   name: string
   displayName?: string
   displayFullName?: string

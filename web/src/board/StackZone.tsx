@@ -81,10 +81,11 @@ function getControllerInfo(
   players?: PlayerView[],
   myPlayerId?: string | null,
 ): ControllerInfo {
-  const ctrlId = (card as any).controllerId || (card as any).ownerId || (card as any).controller || (card as any).owner || card.parentId
+  const ctrlId = card.controllerId ?? card.sourceCard?.controllerId
+  const ctrlName = card.controllerName ?? card.sourceCard?.controllerName
+  const me = players?.find((p) => p.controlled || (myPlayerId != null && p.playerId === myPlayerId))
 
-  const me = players?.find((p) => p.controlled || (myPlayerId && p.playerId === myPlayerId))
-
+  // 1) Match by controller id (player uuid) — works for both your own game and watched games
   if (ctrlId && typeof ctrlId === 'string') {
     const matchedPlayer = players?.find((p) => p.playerId === ctrlId || p.name === ctrlId)
     if (matchedPlayer) {
@@ -99,7 +100,28 @@ function getControllerInfo(
     }
   }
 
-  // Check if the card/ability is in a player's zones
+  // 2) Match by controller name directly
+  if (ctrlName && typeof ctrlName === 'string') {
+    const matchedPlayer = players?.find((p) => p.name === ctrlName)
+    if (matchedPlayer) {
+      const isMe = !!me && (matchedPlayer.controlled || (myPlayerId != null && matchedPlayer.playerId === myPlayerId))
+      return {
+        name: isMe ? 'Tú' : matchedPlayer.name,
+        isMe,
+        isOpponent: !isMe,
+        avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
+      }
+    }
+    // Controller name known but not in the player list (e.g. watcher without full roster) — show it
+    return {
+      name: ctrlName,
+      isMe: false,
+      isOpponent: true,
+      avatarIcon: '🤖',
+    }
+  }
+
+  // 3) Fallback: card/ability sitting in a player's zone
   if (players) {
     for (const p of players) {
       if (id in (p.battlefield ?? {}) || id in (p.graveyard ?? {})) {
@@ -114,7 +136,7 @@ function getControllerInfo(
     }
   }
 
-  // Unknown controller — never label a spectator (no `me`) as "Tú".
+  // 4) Last resort — never label a spectator (no `me`) as "Tú".
   return {
     name: me ? 'Tú' : 'Desconocido',
     isMe: false,
