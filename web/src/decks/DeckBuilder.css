@@ -1,41 +1,332 @@
-.deck-builder { min-height: 100vh; background: #080c10; color: #e6eaf0; display: flex; flex-direction: column; }
-.deck-builder.loading { padding: 40px; color: #8a9ab0; }
-.deck-builder-top {
-  position: sticky; top: 0; z-index: 5;
-  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
-  background: rgba(10,14,18,0.97); border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); flex-wrap: wrap;
+/* MTG Arena Deck Builder Global Layout */
+.deck-builder {
+  min-height: 100vh;
+  height: 100vh;
+  background: #080c10 radial-gradient(circle at 50% 20%, #151d27 0%, #080b0f 100%);
+  color: #e6eaf0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
-.builder-back { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #d6dce6; border-radius: 999px; padding: 7px 12px; cursor: pointer; font-weight: 600; }
-.builder-name {
-  flex: 1; min-width: 180px; background: #0f1419; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 9px 12px; color: #f0ede4; font-weight: 700; font-size: 1rem;
-}
-.builder-format { background: #141a21; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 7px 12px; color: #d6dce6; }
-.builder-count { font-weight: 800; letter-spacing: 0.04em; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
-.builder-count.ok { color: #7ee0a0; border-color: rgba(126,224,160,0.35); background: rgba(126,224,160,0.10); }
-.builder-count.bad { color: #ffb4a8; border-color: rgba(255,120,100,0.35); background: rgba(255,120,100,0.10); }
-.builder-save { font-size: 0.76rem; color: #8a9ab0; min-width: 92px; }
-.builder-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
-.builder-act { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #d6dce6; border-radius: 999px; padding: 7px 12px; font-weight: 600; cursor: pointer; font-size: 0.78rem; }
-.builder-act.primary { background: #2a5bd7; color: white; border-color: transparent; }
-.builder-act.is-equipped { background: #1a8a4a; }
-.builder-done { background: linear-gradient(135deg, #ffb84d 0%, #ff8a2a 100%); color: #111; border: none; border-radius: 999px; padding: 10px 18px; font-weight: 900; cursor: pointer; }
 
-.deck-builder-body {
-  display: grid; grid-template-columns: 460px 1fr; gap: 16px; padding: 16px; flex: 1; min-height: 0; max-width: 1480px; width: 100%; margin: 0 auto;
+.deck-builder.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.1rem;
+  color: #a0aec0;
 }
-@media (max-width: 980px) { .deck-builder-body { grid-template-columns: 1fr; } }
-.builder-left { background: #0f1419; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; min-height: 420px; max-height: calc(100vh - 80px); overflow: hidden; }
-.builder-right { background: #0f1419; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-height: 420px; }
-.builder-curve { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px 12px; }
-.curve-title { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 800; color: #8a9ab0; }
-.curve-chart { margin-top: 8px; }
-.curve-bars { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; align-items: end; }
-.curve-bar-col { display: grid; justify-items: center; gap: 4px; }
-.curve-bar-track { width: 100%; height: 64px; background: rgba(255,255,255,0.04); border-radius: 6px; display: flex; align-items: end; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
-.curve-bar-fill { width: 100%; background: linear-gradient(to top, #2a5bd7, #5ab3ff); border-radius: 6px 6px 0 0; transition: height 300ms ease; min-height: 2px; }
-.curve-label { font-size: 0.68rem; font-weight: 800; color: #a8b4c2; }
-.curve-count { font-size: 0.66rem; color: #d6dce6; min-height: 12px; }
-.builder-import-mini { display: flex; gap: 8px; }
-.builder-import-mini textarea { flex: 1; background: #0a0e13; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 10px; color: #e6eaf0; font-family: ui-monospace, monospace; font-size: 0.78rem; resize: vertical; }
-.mini-add-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #d6dce6; border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer; white-space: nowrap; align-self: center; }
-.builder-warn { background: rgba(255,120,100,0.10); border: 1px solid rgba(255,120,100,0.30); color: #ffb4a8; padding: 8px 10px; border-radius: 10px; font-size: 0.78rem; }
+
+/* MTG Arena Top Navigation Bar */
+.arena-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 48px;
+  min-height: 48px;
+  background: rgba(10, 14, 18, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.arena-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.arena-nav-back {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e0;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 120ms ease;
+}
+
+.arena-nav-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.arena-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.arena-nav-item {
+  color: #718096;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 4px;
+  position: relative;
+  cursor: default;
+}
+
+.arena-nav-item.active {
+  color: #f6ad55;
+}
+
+.arena-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dd6b20, #f6ad55);
+  box-shadow: 0 0 8px rgba(246, 173, 85, 0.8);
+  border-radius: 3px 3px 0 0;
+}
+
+.arena-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.builder-save-badge {
+  font-size: 0.75rem;
+  color: #68d391;
+  font-weight: 600;
+}
+
+/* Main Split View */
+.deck-builder-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 12px;
+  padding: 12px 16px;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 48px);
+  max-width: 1920px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1600px) {
+  .deck-builder-body {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .deck-builder-body {
+    grid-template-columns: 1fr 300px;
+  }
+}
+
+/* Left Collection Panel */
+.builder-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+  border-radius: 8px;
+}
+
+.builder-left.is-drag-over {
+  box-shadow: inset 0 0 24px rgba(245, 101, 101, 0.4), 0 0 20px rgba(245, 101, 101, 0.5);
+}
+
+.arena-remove-drop-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(26, 12, 12, 0.95);
+  border: 2px dashed #f56565;
+  border-radius: 999px;
+  color: #feb2b2;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(245, 101, 101, 0.6);
+  pointer-events: none;
+  animation: arena-remove-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes arena-remove-pulse {
+  from { transform: translateX(-50%) scale(0.96); opacity: 0.9; }
+  to { transform: translateX(-50%) scale(1.02); opacity: 1; }
+}
+
+/* Right Deck Panel */
+.builder-right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* Deck Actions Footer */
+.builder-deck-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: #11161d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.builder-action-btns-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.builder-act {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.72rem;
+  text-align: center;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.builder-act:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.builder-act.primary {
+  background: #2b6cb0;
+  border-color: #3182ce;
+  color: #ffffff;
+}
+
+.builder-act.is-equipped {
+  background: #276749;
+  border-color: #38a169;
+}
+
+/* MTG Arena Signature Big Done Button */
+.builder-done {
+  width: 100%;
+  background: linear-gradient(180deg, #ffa834 0%, #ff7300 50%, #e65100 100%);
+  color: #111111;
+  border: 1px solid #ffd180;
+  border-radius: 999px;
+  padding: 10px 0;
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 115, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 150ms ease;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.builder-done:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 115, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  filter: brightness(1.1);
+}
+
+.builder-done:active {
+  transform: translateY(1px);
+}
+
+/* Mini Import Area */
+.builder-import-mini {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.builder-import-mini textarea {
+  flex: 1;
+  background: #080c10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px 6px;
+  color: #cbd5e0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  resize: none;
+}
+
+.mini-add-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mini-add-btn:hover {
+  background: #3182ce;
+  color: #ffffff;
+}
+
+/* Floating Card Preview on Hover */
+.arena-floating-preview {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.9), 0 0 16px rgba(236, 201, 75, 0.5);
+  border: 2px solid rgba(236, 201, 75, 0.6);
+  background: #111;
+  width: 250px;
+  aspect-ratio: 2.5 / 3.5;
+  transition: opacity 100ms ease;
+  animation: arena-preview-pop 120ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.arena-floating-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes arena-preview-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

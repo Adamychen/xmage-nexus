@@ -32,6 +32,23 @@ test.describe('Decks Gallery', () => {
       await page.locator('#mini-import').fill('4 [LEA:292] Mountain')
       await page.getByRole('button', { name: '+ Añadir al mazo' }).click()
       await expect(page.getByText('Mountain')).toBeVisible({ timeout: 3000 })
+      await expect(page.locator('.arena-card-strip')).toBeVisible({ timeout: 3000 })
+      await expect(page.locator('.strip-name', { hasText: 'Mountain' })).toBeVisible()
+
+      // Layout toggle between vertical and horizontal
+      await page.locator('.deck-header-layout-btn').click()
+      await expect(page.locator('.arena-deck-cols-layout')).toBeVisible({ timeout: 2000 })
+      await page.locator('.deck-header-layout-btn').click()
+      await expect(page.locator('.arena-deck-list-scroll')).toBeVisible({ timeout: 2000 })
+
+      // Mana filter orbs in search bar
+      await expect(page.locator('.mana-orb-btn')).toHaveCount(6)
+      await page.locator('.mana-orb-btn.orb-r').click()
+      await expect(page.locator('.mana-orb-btn.orb-r')).toHaveClass(/active/)
+      
+      // Done button saves and returns to gallery
+      await page.getByRole('button', { name: /Done/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
   test('import .dck text creates deck in gallery @decks', async ({ page }) => {

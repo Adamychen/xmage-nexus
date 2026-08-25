@@ -10,6 +10,7 @@ export interface ScryfallSearchCard {
   type_line: string
   colors: string[]
   color_identity: string[]
+  legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
   image_uris?: { small: string; normal: string; art_crop: string }
   card_faces?: { image_uris?: { small: string; normal: string; art_crop: string }; mana_cost?: string; type_line?: string }[]
 }

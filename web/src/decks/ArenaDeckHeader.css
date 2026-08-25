@@ -1,0 +1,197 @@
+.arena-deck-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #141b24;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 2px solid #2d3748;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.deck-header-bg-art {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 20%;
+  opacity: 0.28;
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+.deck-header-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 20, 28, 0.95) 0%,
+    rgba(15, 20, 28, 0.85) 50%,
+    rgba(15, 20, 28, 0.95) 100%
+  );
+  pointer-events: none;
+}
+
+.deck-header-cover-box {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.deck-header-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deck-header-cover-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #2b6cb0, #2c5282);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-header-info {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1;
+}
+
+.deck-header-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-header-name-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 2px 4px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  transition: all 150ms ease;
+}
+
+.deck-header-name-input:hover,
+.deck-header-name-input:focus {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.deck-header-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.deck-header-count {
+  font-weight: 700;
+  color: #a0aec0;
+}
+
+.deck-header-count.valid {
+  color: #68d391;
+}
+
+.deck-header-count.invalid {
+  color: #f6ad55;
+}
+
+.deck-header-format-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e0;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Mini Mana Curve in Header */
+.deck-header-curve {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 34px;
+  padding: 0 6px;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.mini-curve-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.mini-curve-bar {
+  width: 5px;
+  background: linear-gradient(180deg, #ecc94b 0%, #dd6b20 100%);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  transition: height 200ms ease;
+}
+
+.mini-curve-label {
+  font-size: 0.58rem;
+  color: #718096;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Layout switch button */
+.deck-header-layout-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #e2e8f0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  flex-shrink: 0;
+  transition: all 120ms ease;
+}
+
+.deck-header-layout-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #ecc94b;
+  color: #f6e05e;
+}
+
+.deck-header-layout-btn.active {
+  background: rgba(236, 201, 75, 0.2);
+  border-color: #ecc94b;
+  color: #ecc94b;
+}

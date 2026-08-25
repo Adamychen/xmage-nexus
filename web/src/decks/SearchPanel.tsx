@@ -1,54 +1,107 @@
-import { useState } from 'react'
-import { useScryfallSearch, scryfallCardImage } from './scryfallSearch'
+import { useState, useMemo } from 'react'
 import type { ScryfallSearchCard } from './scryfallSearch'
+import { useScryfallSearch } from './scryfallSearch'
+import { ArenaFilterBar } from './ArenaFilterBar'
+import { ArenaCardGrid } from './ArenaCardGrid'
+import type { DeckFormat } from './types'
+import { FORMAT_CONFIGS } from './formatRules'
 import './SearchPanel.css'
 
-export default function SearchPanel({ onAdd }: { onAdd: (card: ScryfallSearchCard) => void }) {
-  const [query, setQuery] = useState('t:creature')
-  const [cmcFilter, setCmcFilter] = useState<number | null>(null)
+export default function SearchPanel({
+  onAdd,
+  countMap = new Map(),
+  format = 'Freeform',
+  onHover,
+  onLeave,
+}: {
+  onAdd: (card: ScryfallSearchCard) => void
+  countMap?: Map<string, number>
+  format?: DeckFormat
+  onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
+  onLeave?: () => void
+}) {
+  const [rawQuery, setRawQuery] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
-  const { result, loading, error } = useScryfallSearch(query)
+  const [cmcFilter, setCmcFilter] = useState<number | null>(null)
+  const [typeFilter, setTypeFilter] = useState<string | null>(null)
+
+  const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
+
+  // Construct query string for Scryfall
+  const scryfallQuery = useMemo(() => {
+    const parts: string[] = []
+    if (rawQuery.trim()) {
+      parts.push(rawQuery.trim())
+    } else {
+      // Default query when empty: popular staples
+      parts.push('game:paper -t:basic')
+    }
+
+    if (config.scryfallKey) {
+      parts.push(`f:${config.scryfallKey}`)
+    }
+
+    if (colorFilter.size > 0) {
+      if (colorFilter.has('C')) {
+        parts.push('c:c')
+      } else {
+        parts.push(`c<=${[...colorFilter].join('').toLowerCase()}`)
+      }
+    }
+
+    if (typeFilter) {
+      parts.push(`t:${typeFilter.toLowerCase()}`)
+    }
+
+    if (cmcFilter !== null) {
+      if (cmcFilter >= 7) parts.push('cmc>=7')
+      else parts.push(`cmc=${cmcFilter}`)
+    }
+
+    return parts.join(' ')
+  }, [rawQuery, colorFilter, typeFilter, cmcFilter])
+
+  const { result, loading, error } = useScryfallSearch(scryfallQuery)
 
   const toggleColor = (c: string) => {
     const next = new Set(colorFilter)
-    if (next.has(c)) next.delete(c); else next.add(c)
+    if (next.has(c)) next.delete(c)
+    else next.add(c)
     setColorFilter(next)
   }
 
-  let cards = result?.data ?? []
-  if (cmcFilter !== null) cards = cards.filter((c) => (cmcFilter === 7 ? c.cmc >= 7 : c.cmc === cmcFilter))
-  if (colorFilter.size > 0) {
-    cards = cards.filter((c) => [...colorFilter].every((col) => c.color_identity.includes(col)))
+  const handleReset = () => {
+    setRawQuery('')
+    setColorFilter(new Set())
+    setCmcFilter(null)
+    setTypeFilter(null)
   }
 
+  const cards = result?.data ?? []
+
   return (
-    <div className="search-panel">
-      <div className="search-panel-head">
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder='Buscar: t:creature c:red cmc<=3 o:"haste"' className="search-input" />
-        <div className="search-chips">
-          <span className="search-chip-label">CMC</span>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
-            <button key={n} type="button" className={`cmc-chip ${cmcFilter === n ? 'active' : ''}`} onClick={() => setCmcFilter(cmcFilter === n ? null : n)}>{n === 7 ? '7+' : n}</button>
-          ))}
-          <span className="search-chip-sep" />
-          {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
-            <button key={c} type="button" className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''} pip-${c.toLowerCase()}`} onClick={() => toggleColor(c)}>{c}</button>
-          ))}
-        </div>
-      </div>
-      {loading && <div className="search-status">Buscando en Scryfall…</div>}
-      {error && <div className="search-status error">{error}</div>}
-      {result && <div className="search-status muted">{result.total_cards ?? cards.length} resultados {result.has_more ? '· página 1' : ''}</div>}
-      <div className="search-grid">
-        {cards.map((card) => (
-          <div key={card.id} className="search-card" onClick={() => onAdd(card)} title={`${card.name} — clic para añadir`}>
-            <img src={scryfallCardImage(card) ?? ''} alt={card.name} loading="lazy" />
-            <span className="search-card-name">{card.name}</span>
-            <span className="search-card-add">+ Añadir</span>
-          </div>
-        ))}
-        {cards.length === 0 && !loading && <div className="search-empty">Sin resultados. Prueba <code>t:instant c:blue</code> o <code>o:flying cmc=2</code>.</div>}
-      </div>
+    <div className="arena-search-panel">
+      <ArenaFilterBar
+        query={rawQuery}
+        onQueryChange={setRawQuery}
+        colorFilter={colorFilter}
+        onToggleColor={toggleColor}
+        cmcFilter={cmcFilter}
+        onCmcChange={setCmcFilter}
+        typeFilter={typeFilter}
+        onTypeChange={setTypeFilter}
+        onReset={handleReset}
+      />
+      <ArenaCardGrid
+        cards={cards}
+        loading={loading}
+        error={error}
+        totalCards={result?.total_cards}
+        countMap={countMap}
+        onAdd={onAdd}
+        onHover={onHover}
+        onLeave={onLeave}
+      />
     </div>
   )
 }

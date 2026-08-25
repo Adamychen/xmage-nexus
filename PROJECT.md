@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-25 (contract anti-drift closed; **proxy multi-tenant**: cada WebSocket = su propia sesión XMage; **detector reverse-drift de mecánicas** (`mechanicsCoverage.test.ts` + oráculo `view-schema.mjs` desde `mage.view.*`) — los únicos campos sin modelar eran 16 de datos/ayuda de render, ya añadidos; **tercer guard engine→view** (`engineViewCoverage.test.ts` + `engine-view-schema.mjs`) rastrea estado del motor no serializado en `mage.view.*`; `goad` se muestra vía `cardIcons`/`rules` (no es gap de campo), y `harnessed`/`monstrous`/`renowned`/targeting de jugador son gaps reales de emisión server)
+> Last updated: 2026-08-26 (MTG Arena Deck Builder overhaul: Arena Card Strips with art crop backgrounds, 3D floating drag & drop with glowing drop zones, mini mana curve in header tile, comprehensive format rules engine supporting 11 formats with Scryfall legality & copy limits validation)
 
 ---
 

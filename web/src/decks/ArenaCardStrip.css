@@ -1,0 +1,218 @@
+.arena-card-strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  min-height: 38px;
+  background: #121820;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 120ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.arena-card-strip:hover {
+  border-color: rgba(255, 200, 100, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 180, 50, 0.25);
+  transform: translateX(-2px);
+  z-index: 2;
+}
+
+.arena-card-strip.is-commander {
+  border: 1px solid #d4af37;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(20, 24, 30, 0.95) 40%);
+}
+
+.arena-card-strip.is-cover {
+  border-color: #ffb84d;
+}
+
+.arena-card-strip.has-issue {
+  border-color: #f56565;
+  box-shadow: 0 0 6px rgba(245, 101, 101, 0.4);
+}
+
+.strip-issue-badge {
+  font-size: 0.85rem;
+  margin-right: 4px;
+  z-index: 1;
+  filter: drop-shadow(0 0 4px rgba(245, 101, 101, 0.8));
+}
+
+/* Background Card Art Crop with gradient */
+.strip-bg-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 75%;
+  background-size: cover;
+  background-position: center 25%;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.arena-card-strip:hover .strip-bg-art {
+  opacity: 1;
+}
+
+.strip-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 14, 18, 0.98) 0%,
+    rgba(10, 14, 18, 0.88) 35%,
+    rgba(10, 14, 18, 0.45) 70%,
+    rgba(10, 14, 18, 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+/* Color indicator on the left border */
+.strip-color-bar {
+  width: 4px;
+  height: 100%;
+  flex-shrink: 0;
+  background: #4a5568;
+}
+.strip-color-bar.color-w { background: #f6e05e; }
+.strip-color-bar.color-u { background: #3182ce; }
+.strip-color-bar.color-b { background: #4a423e; }
+.strip-color-bar.color-r { background: #e53e3e; }
+.strip-color-bar.color-g { background: #38a169; }
+.strip-color-bar.color-multi { background: linear-gradient(180deg, #ecc94b, #d69e2e); }
+.strip-color-bar.color-colorless { background: #a0aec0; }
+
+/* Quantity Badge (1x, 4x, etc.) */
+.strip-qty {
+  width: 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.45);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  z-index: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-qty.commander-badge {
+  color: #f6e05e;
+  font-size: 1rem;
+}
+
+/* Card Name */
+.strip-name {
+  flex: 1;
+  padding: 0 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
+  z-index: 1;
+  letter-spacing: -0.01em;
+}
+
+/* Mana Cost display */
+.strip-mana {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.mana-cost-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mana-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mana-symbol.sym-generic {
+  background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 60%, #6b7280 100%);
+  color: #111;
+  font-weight: 900;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+/* Hover Quick Action Buttons */
+.strip-actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  background: linear-gradient(90deg, transparent 0%, rgba(10, 14, 18, 0.95) 25%);
+  z-index: 3;
+}
+
+.arena-card-strip:hover .strip-actions {
+  display: flex;
+}
+
+.strip-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(25, 32, 42, 0.85);
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 100ms ease;
+}
+
+.strip-btn:hover {
+  background: #3182ce;
+  border-color: #63b3ed;
+  color: #ffffff;
+}
+
+.strip-btn.danger:hover {
+  background: #e53e3e;
+  border-color: #feb2b2;
+}
+
+.strip-btn.star {
+  color: #a0aec0;
+}
+
+.strip-btn.star.active {
+  color: #ecc94b;
+  border-color: #ecc94b;
+  background: rgba(236, 201, 75, 0.2);
+}

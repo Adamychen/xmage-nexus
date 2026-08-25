@@ -3,6 +3,7 @@ import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { MAX_DECKS, makeDeckId } from './types'
+import { ALL_FORMATS } from './formatRules'
 import { parseAnyDeck, exportDck, exportArena } from './parseDck'
 import { DECKS } from '../lobby/decks'
 import './DecksGallery.css'
@@ -205,8 +206,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         <div className="decks-filters">
           <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
             <option>All Decks</option>
-            <option>Freeform</option>
-            <option>Commander</option>
+            {ALL_FORMATS.map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
             <option>Favoritos</option>
           </select>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
