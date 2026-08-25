@@ -1,0 +1,94 @@
+name: Dashboard Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "web/**"
+      - "Mage.Proxy/**"
+      - "scripts/**"
+      - "site/**"
+      - "pom.xml"
+      - ".github/workflows/pages.yml"
+  schedule:
+    # Nightly: incluye el suite de integración con el stack real.
+    - cron: "23 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: npm ci
+        working-directory: web
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate dashboard (lightweight layers)
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/dashboard-ci.mjs
+
+      - name: Build stack (nightly only)
+        if: github.event_name == 'schedule'
+        run: node scripts/build.mjs
+
+      - name: Start local stack (nightly only)
+        if: github.event_name == 'schedule'
+        run: node scripts/dev.mjs start
+
+      - name: Integration (real stack, nightly only)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        run: node scripts/integration-report.mjs
+
+      - name: Stop local stack (nightly only)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        run: node scripts/dev.mjs stop
+
+      - name: Regenerate with integration results (nightly only)
+        if: github.event_name == 'schedule'
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/gen-dashboard.mjs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>XMage Nexus — Project Status</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div>
+          <h1 id="proj-name">XMage Nexus</h1>
+          <p id="proj-tagline" class="muted"></p>
+        </div>
+        <div class="meta">
+          <span id="generated" class="muted"></span>
+          <a id="commit" class="badge" href="#" target="_blank" rel="noopener">commit</a>
+          <a id="repo" class="badge" href="#" target="_blank" rel="noopener">repo</a>
+        </div>
+      </header>
+
+      <section>
+        <h2>Test &amp; CI Status</h2>
+        <div id="layers" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Coverage</h2>
+        <div id="coverage" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Roadmap — Phases</h2>
+        <div id="phases" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Anti-Drift Guards</h2>
+        <div id="guards" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Engine&rarr;View Gaps <span id="gaps-total" class="muted"></span></h2>
+        <div class="scroll">
+          <table id="gaps">
+            <thead>
+              <tr><th>Mechanic</th><th>Field</th><th>View</th><th>Status</th><th>Via</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reverse-Drift Coverage <span id="rev-total" class="muted"></span></h2>
+        <div id="reverse" class="grid"></div>
+      </section>
+
+      <section>
+        <h2>Feature Parity Matrix</h2>
+        <div class="scroll">
+          <table id="features">
+            <thead>
+              <tr><th>Category</th><th>Feature</th><th>Official XMage</th><th>XMage Nexus</th><th>Phase</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="muted">
+        <span id="stack"></span>
+      </footer>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

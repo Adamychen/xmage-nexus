@@ -207,3 +207,16 @@ test window).
   `node_modules/`, `target/`.
 - No comments in code unless requested.
 - Do not commit unless explicitly requested.
+
+## Status dashboard (GitHub Pages)
+
+`site/` is a zero-build static dashboard (HTML/CSS/JS) that renders `site/status.json`
+(test layers, coverage, roadmap phases, feature-parity matrix, anti-drift guards).
+
+- Generator: `scripts/gen-dashboard.mjs` (merges `site/content.json` + test artefacts).
+- CI orchestrator: `scripts/dashboard-ci.mjs` (unit+coverage, typecheck, build, fake-e2e, proxy java).
+- Nightly real-stack: `scripts/integration-report.mjs` (self-test/human-test/e2e-real → `reports/integration-result.json`).
+- Published by `.github/workflows/pages.yml` (push = lightweight layers; nightly cron = also integration).
+  Pages **source must be "GitHub Actions"** (Settings → Pages).
+- `site/content.json` is the dashboard's canonical roadmap/feature/guard source — keep it in sync
+  with `ROADMAP.md` / `PROJECT.md` when phases or the feature matrix change.

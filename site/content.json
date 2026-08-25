@@ -1,0 +1,70 @@
+{
+  "project": {
+    "name": "XMage Nexus",
+    "tagline": "Modern, Arena-grade web client for XMage (React 19 + PixiJS 8 + WebSocket proxy).",
+    "version": "0.1.0",
+    "repo": "Adamychen/xmage-nexus",
+    "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS + PixiJS 8"
+  },
+  "coverageThresholds": {
+    "lines": 70,
+    "functions": 70,
+    "branches": 55,
+    "statements": 70
+  },
+  "phases": [
+    { "id": 0, "name": "XMage Proxy (bridge)", "status": "done", "date": "2026-08-08", "desc": "Java 17 proxy, WebSocket gateway, cycle-safe JSON serializer, multi-tenant sessions." },
+    { "id": 1, "name": "Web Client: login + lobby + board", "status": "done", "date": "2026-08-08", "desc": "React 19 + Vite + PixiJS 8, lobby, chat, live tables/users, HD card cache, 1v1 board + spectator." },
+    { "id": 2, "name": "Full Interaction", "status": "done", "date": "2026-08-15", "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters." },
+    { "id": 2.5, "name": "1v1 Competitive Parity", "status": "in-progress", "date": "", "desc": "Card selection modals, phase stops/shortcuts, sideboarding, match clocks, DFCs/Sagas." },
+    { "id": 3, "name": "Visual Polish, Audio & Deck Builder", "status": "pending", "date": "", "desc": "Web Audio engine, VFX/particles, in-app deck builder, customization." },
+    { "id": 4, "name": "Desktop Packaging (Tauri)", "status": "pending", "date": "", "desc": "Tauri wrapper, embedded one-click proxy + JRE, auto-updater." },
+    { "id": 5, "name": "Advanced Formats & Tournaments", "status": "pending", "date": "", "desc": "4-Player Commander/EDH, Booster Draft & Sealed, Swiss/SE brackets." }
+  ],
+  "features": [
+    { "category": "Connectivity & Lobby", "feature": "Connect Local / Custom / Public Server", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Connectivity & Lobby", "feature": "Real-time Table & User Broadcasts", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Connectivity & Lobby", "feature": "Room & Match Chat", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Connectivity & Lobby", "feature": "1v1 Table Creation (Human/AI)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Connectivity & Lobby", "feature": "Table Filters & Private Messaging", "official": "yes", "nexus": "no", "phase": "Phase 3" },
+    { "category": "Connectivity & Lobby", "feature": "Match Clocks / Visible Timers", "official": "yes", "nexus": "partial", "phase": "Phase 2.5" },
+    { "category": "Deck Management", "feature": "Predefined / JSON Deck Loading", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Deck Management", "feature": "Full In-App Deck Builder (Scryfall)", "official": "yes", "nexus": "no", "phase": "Phase 3" },
+    { "category": "Deck Management", "feature": "Text / Arena / Standard Import & Export", "official": "yes", "nexus": "no", "phase": "Phase 3" },
+    { "category": "In-Game Board", "feature": "Hand, Battlefield (HD Art)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Board", "feature": "Stack, Library, Graveyard, Exile", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Board", "feature": "Tap Rotations, Life Totals, Counters", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Board", "feature": "Graveyard / Exile Inspector Overlays", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Board", "feature": "Double-Faced Cards (DFC/MDFC/Sagas)", "official": "yes", "nexus": "partial", "phase": "Phase 2.5" },
+    { "category": "In-Game Rules & Prompts", "feature": "Priority & Turn Passing (GAME_SELECT)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Mana Payment (tap + color pool)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Visual Targeting (animated arrows/glow)", "official": "partial", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Complex Spells (X-costs, Modals, Multi-target)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Interactive Combat (attack/block)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Card Selection Lists (Tutors, Scry, Reveal)", "official": "yes", "nexus": "no", "phase": "Phase 2.5" },
+    { "category": "In-Game Rules & Prompts", "feature": "Phase Stops & Shortcuts (F4/F9/Space)", "official": "yes", "nexus": "no", "phase": "Phase 2.5" },
+    { "category": "In-Game Rules & Prompts", "feature": "Sideboarding Screen (Bo3)", "official": "yes", "nexus": "no", "phase": "Phase 2.5" },
+    { "category": "In-Game Rules & Prompts", "feature": "Multi-blocker Damage Assignment", "official": "yes", "nexus": "partial", "phase": "Phase 2.5" },
+    { "category": "Presentation & Audio", "feature": "Sound Effects", "official": "yes", "nexus": "no", "phase": "Phase 3" },
+    { "category": "Presentation & Audio", "feature": "VFX & Animations", "official": "no", "nexus": "partial", "phase": "Phase 3" },
+    { "category": "Distribution", "feature": "Desktop & Web Deployment", "official": "no", "nexus": "partial", "phase": "Phase 4" },
+    { "category": "Advanced Formats", "feature": "4-Player Commander / EDH", "official": "yes", "nexus": "no", "phase": "Phase 5" },
+    { "category": "Advanced Formats", "feature": "Booster Draft & Sealed", "official": "yes", "nexus": "no", "phase": "Phase 5" }
+  ],
+  "guards": [
+    { "name": "callbackCoverage", "status": "pass", "desc": "Every server callback has a client handler or is listed as planned.", "note": "Guard: web/src/state/callbackCoverage.test.ts" },
+    { "name": "mechanicsCoverage", "status": "pass", "desc": "Every mage.view.* field the server can emit is modeled in contract.schema.json / types.generated.ts (reverse-drift).", "note": "Guard: web/src/state/mechanicsCoverage.test.ts + scripts/view-schema.mjs" },
+    { "name": "engineViewCoverage", "status": "pass", "desc": "Engine state in mage.game.* not copied into mage.view.* DTOs is tracked against a baseline.", "note": "Known gaps: harnessed / monstrous / renowned / player-targeting. goad shown via cardIcons/rules (not a gap). Guard: web/src/state/engineViewCoverage.test.ts + scripts/engine-view-schema.mjs" }
+  ],
+  "displayGaps": {
+    "PermanentView": {
+      "goadingPlayers": { "mechanic": "Goad", "shown": true, "via": "cardIcons (OTHER_HAS_RESTRICTIONS) + rules" },
+      "harnessed": { "mechanic": "Harnessed", "shown": false, "via": "no emitido en mage.view.*" },
+      "monstrous": { "mechanic": "Monstrous", "shown": false, "via": "no emitido en mage.view.*" },
+      "renowned": { "mechanic": "Renowned", "shown": false, "via": "no emitido en mage.view.*" }
+    },
+    "PlayerView": {
+      "abilities": { "mechanic": "Player abilities / targeting", "shown": false, "via": "no emitido en mage.view.*" }
+    }
+  }
+}
