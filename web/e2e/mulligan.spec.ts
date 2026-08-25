@@ -44,8 +44,8 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
     // el ask llegó al cliente (frame GAME_ASK)
     expect(parseFrames(framesOf(page)).some((f) => f.method === 'GAME_ASK' && /mulligan/i.test(String(f.data?.question ?? '')))).toBeTruthy()
 
-    // elegir "Keep hand" (boolean=false)
-    await page.getByRole('button', { name: /Mantener mano/i }).click()
+    // elegir "Keep hand" (boolean=false); la UI dedicada pinta "✋ Mantener (N)"
+    await page.locator('.mulligan-dialog').getByRole('button', { name: /Mantener/ }).click()
 
     // el cliente envió sendPlayerBoolean(false) y la partida continúa (GAME_SELECT)
     await expect
