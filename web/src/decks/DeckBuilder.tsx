@@ -4,7 +4,7 @@ import type { DeckV2 } from './types'
 import { deckMainCount, deckSideCount } from './types'
 import { exportDck, exportArena, parseAnyDeck } from './parseDck'
 import type { ScryfallSearchCard } from './scryfallSearch'
-import { scryfallCardArtCrop, scryfallCardImage } from './scryfallSearch'
+import { scryfallCardArtCrop, scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import SearchPanel from './SearchPanel'
 import DeckListPanel from './DeckListPanel'
 import { ArenaDeckHeader } from './ArenaDeckHeader'
@@ -25,7 +25,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [layout, setLayout] = useState<'vertical' | 'horizontal'>('vertical')
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [hoverPreview, setHoverPreview] = useState<{ url: string; x: number; y: number } | null>(null)
+  const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
 
   const storage = useMemo(() => getDeckStorage(), [])
@@ -106,6 +106,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           const meta: CardStripMeta = {
             artCropUrl: data.image_uris?.art_crop ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null,
             imageUrl: data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null,
+            backImageUrl: data.card_faces?.[1]?.image_uris?.normal ?? null,
             manaCost: data.mana_cost ?? data.card_faces?.[0]?.mana_cost ?? '',
             cmc: data.cmc ?? 0,
             typeLine: data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
@@ -146,6 +147,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     const meta: CardStripMeta = {
       artCropUrl: scryfallCardArtCrop(card),
       imageUrl: scryfallCardImage(card),
+      backImageUrl: scryfallCardBackImage(card),
       manaCost: card.mana_cost ?? '',
       cmc: card.cmc ?? 0,
       typeLine: card.type_line ?? '',
@@ -241,41 +243,53 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     schedulePersist({ ...deck, coverCard: c })
   }
 
-  // Hover floating card preview handler
+  // Hover floating card preview handler (supports dual-faced / transform cards)
   const handleHoverCard = (
     card: DeckCard | ScryfallSearchCard,
     meta?: CardStripMeta,
     rect?: DOMRect
   ) => {
     let img: string | null = meta?.imageUrl ?? null
+    let backImg: string | null = meta?.backImageUrl ?? null
+
     if (!img) {
       if ('image_uris' in card || 'card_faces' in card) {
-        img = scryfallCardImage(card as ScryfallSearchCard)
+        const sc = card as ScryfallSearchCard
+        img = scryfallCardImage(sc)
+        backImg = scryfallCardBackImage(sc)
       } else {
         const dc = card as DeckCard
-        img = metaMap.get(`${dc.setCode}/${dc.cardNumber}`)?.imageUrl ??
-          metaMap.get(dc.cardName.toLowerCase())?.imageUrl ?? null
+        const m = metaMap.get(`${dc.setCode}/${dc.cardNumber}`) ?? metaMap.get(dc.cardName.toLowerCase())
+        img = m?.imageUrl ?? null
+        backImg = m?.backImageUrl ?? null
       }
     }
 
     if (!img) return
 
+    const previewWidth = backImg ? 520 : 255
     let x = 0
     let y = 0
     if (rect) {
       // Place preview to the left of the deck strip or beside the grid card
       if (rect.left > window.innerWidth / 2) {
-        x = Math.max(10, rect.left - 270)
+        x = Math.max(10, rect.left - previewWidth - 15)
       } else {
-        x = Math.min(window.innerWidth - 270, rect.right + 15)
+        x = Math.min(window.innerWidth - previewWidth - 15, rect.right + 15)
       }
-      y = Math.max(50, Math.min(window.innerHeight - 380, rect.top - 40))
+      y = Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40))
     } else {
-      x = window.innerWidth / 2 - 130
+      x = window.innerWidth / 2 - previewWidth / 2
       y = window.innerHeight / 2 - 180
     }
 
-    setHoverPreview({ url: img, x, y })
+    setHoverPreview({
+      url: img,
+      backUrl: backImg,
+      x,
+      y,
+      name: 'name' in card ? card.name : (card as DeckCard).cardName,
+    })
   }
 
   const handleLeaveCard = () => {
@@ -516,10 +530,19 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       {/* Floating Card Image Preview on Hover */}
       {hoverPreview && (
         <div
-          className="arena-floating-preview"
+          className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
-          <img src={hoverPreview.url} alt="Previsualización de carta" />
+          <div className="preview-face-card">
+            {hoverPreview.backUrl && <span className="preview-face-label">Anverso</span>}
+            <img src={hoverPreview.url} alt={hoverPreview.name ?? 'Anverso'} />
+          </div>
+          {hoverPreview.backUrl && (
+            <div className="preview-face-card">
+              <span className="preview-face-label">Reverso / Transformación</span>
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (Reverso)`} />
+            </div>
+          )}
         </div>
       )}
     </div>

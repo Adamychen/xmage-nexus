@@ -61,7 +61,7 @@ export default function SearchPanel({
     return parts.join(' ')
   }, [rawQuery, colorFilter, typeFilter, cmcFilter])
 
-  const { result, loading, error } = useScryfallSearch(scryfallQuery)
+  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery)
 
   const toggleColor = (c: string) => {
     const next = new Set(colorFilter)
@@ -77,8 +77,6 @@ export default function SearchPanel({
     setTypeFilter(null)
   }
 
-  const cards = result?.data ?? []
-
   return (
     <div className="arena-search-panel">
       <ArenaFilterBar
@@ -91,14 +89,18 @@ export default function SearchPanel({
         typeFilter={typeFilter}
         onTypeChange={setTypeFilter}
         onReset={handleReset}
+        loading={loading}
       />
       <ArenaCardGrid
         cards={cards}
         loading={loading}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
         error={error}
-        totalCards={result?.total_cards}
+        totalCards={totalCards}
         countMap={countMap}
         onAdd={onAdd}
+        onLoadMore={loadMore}
         onHover={onHover}
         onLeave={onLeave}
       />

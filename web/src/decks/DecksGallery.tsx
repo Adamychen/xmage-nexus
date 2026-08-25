@@ -6,6 +6,8 @@ import { MAX_DECKS, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { parseAnyDeck, exportDck, exportArena } from './parseDck'
 import { DECKS } from '../lobby/decks'
+import { DeckBrowser } from './DeckBrowser'
+import type { MetaDeckItem } from './metaDeckCatalog'
 import './DecksGallery.css'
 
 function preconToV2(): DeckV2[] {
@@ -23,6 +25,7 @@ function preconToV2(): DeckV2[] {
 }
 
 export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void }) {
+  const [mainView, setMainView] = useState<'my-decks' | 'browser'>('my-decks')
   const [decks, setDecks] = useState<DeckV2[]>([])
   const [search, setSearch] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
@@ -132,6 +135,24 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     onEdit(empty.id)
   }
 
+  const handleCloneFromBrowser = async (d: MetaDeckItem | DeckV2) => {
+    const v2: DeckV2 = {
+      id: makeDeckId(),
+      name: d.name,
+      format: d.format,
+      cards: d.cards,
+      sideboard: d.sideboard,
+      colors: d.colors,
+      coverCard: d.coverCard ?? d.cards[0],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+    await storage.put(v2)
+    await load()
+    setSelectedId(v2.id)
+  }
+
   const handleImport = async () => {
     setImportError(null)
     if (!importText.trim()) { setImportError('Pega una lista.'); return }
@@ -153,8 +174,11 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       await load()
       setSelectedId(v2.id)
       setShowImport(false)
-      setImportText(''); setImportName('')
-    } finally { setBusy(false) }
+      setImportText('')
+      setImportName('')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -164,6 +188,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     setSelectedId(null)
     await load()
   }
+
   const handleClone = async () => {
     if (!selected) return
     const clone: DeckV2 = { ...selected, id: makeDeckId(), name: `${selected.name} Copia`, createdAt: Date.now(), updatedAt: Date.now(), source: 'custom' as const }
@@ -171,10 +196,10 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await load()
     setSelectedId(clone.id)
   }
-  const handleExport = async (fmt: 'dck' | 'arena') => {
+
+  const handleExport = (fmt: 'dck' | 'arena') => {
     if (!selected) return
     const text = fmt === 'dck' ? exportDck(selected) : exportArena(selected)
-    try { await navigator.clipboard.writeText(text) } catch {}
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -183,6 +208,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     document.body.appendChild(a); a.click(); a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 2000)
   }
+
   const handleFavorite = async () => {
     if (!selected || selected.source === 'precon') return
     const upd: DeckV2 = { ...selected, favorite: !selected.favorite, updatedAt: Date.now() }
@@ -190,6 +216,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await load()
     setSelectedId(upd.id)
   }
+
   const handleFile = async (f: File) => {
     const text = await f.text()
     const name = f.name.replace(/\.(dck|txt|cod|dec)$/i, '')
@@ -203,62 +230,95 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     <div className="decks-gallery">
       <header className="decks-gallery-top">
         <h1 className="decks-title">DECKS</h1>
-        <div className="decks-filters">
-          <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
-            <option>All Decks</option>
-            {ALL_FORMATS.map((f) => (
-              <option key={f} value={f}>{f}</option>
-            ))}
-            <option>Favoritos</option>
-          </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
-            <option value="updated">Last Modified</option>
-            <option value="name">Nombre A–Z</option>
-            <option value="size">Tamaño</option>
-          </select>
-          <div className="decks-search-wrap">
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="decks-search" />
-            {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
-          </div>
-          <div className="decks-mana-filter">
-            {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
-              <button key={c} type="button" className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''} pip-${c.toLowerCase()}`} onClick={() => toggleColor(c)} title={c}>{c}</button>
-            ))}
-          </div>
+
+        <div className="gallery-view-tabs">
+          <button
+            type="button"
+            className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
+            onClick={() => setMainView('my-decks')}
+          >
+            📦 Mis Mazos ({customCount})
+          </button>
+          <button
+            type="button"
+            className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
+            onClick={() => setMainView('browser')}
+          >
+            🌍 Explorar Mazos (Deck Browser)
+          </button>
         </div>
-        <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
+
+        {mainView === 'my-decks' && (
+          <>
+            <div className="decks-filters">
+              <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
+                <option>All Decks</option>
+                {ALL_FORMATS.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+                <option>Favoritos</option>
+              </select>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
+                <option value="updated">Last Modified</option>
+                <option value="name">Nombre A–Z</option>
+                <option value="size">Tamaño</option>
+              </select>
+              <div className="decks-search-wrap">
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="decks-search" />
+                {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
+              </div>
+              <div className="decks-mana-filter">
+                {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
+                  <button key={c} type="button" className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''} pip-${c.toLowerCase()}`} onClick={() => toggleColor(c)} title={c}>{c}</button>
+                ))}
+              </div>
+            </div>
+            <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
+          </>
+        )}
       </header>
 
-      <div className="decks-grid" onDragOver={(e) => e.preventDefault()} onDrop={async (e) => {
-        e.preventDefault()
-        const f = e.dataTransfer.files?.[0]
-        if (f) await handleFile(f)
-      }}>
-        <DeckBoxCreate onClick={handleCreate} />
-        {filtered.map((d) => (
-          <DeckBox key={d.id} deck={d} selected={selectedId === d.id} onSelect={() => setSelectedId(d.id)} />
-        ))}
-      </div>
+      {mainView === 'my-decks' ? (
+        <>
+          <div className="decks-grid" onDragOver={(e) => e.preventDefault()} onDrop={async (e) => {
+            e.preventDefault()
+            const f = e.dataTransfer.files?.[0]
+            if (f) await handleFile(f)
+          }}>
+            <DeckBoxCreate onClick={handleCreate} />
+            {filtered.map((d) => (
+              <DeckBox key={d.id} deck={d} selected={selectedId === d.id} onSelect={() => setSelectedId(d.id)} />
+            ))}
+          </div>
 
-      <footer className="decks-footer">
-        <div className="decks-footer-left">
-          <label className="decks-footer-btn">
-            IMPORT
-            <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
-              const f = e.target.files?.[0]
-              if (f) await handleFile(f)
-              e.currentTarget.value = ''
-            }} />
-          </label>
-          <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>IMPORT TEXT</button>
-          <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>EXPORT .DCK</button>
-          <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>EXPORT ARENA</button>
-          <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>CLONE</button>
-          <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>DELETE</button>
-          <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ FAVORITE</button>
+          <footer className="decks-footer">
+            <div className="decks-footer-left">
+              <label className="decks-footer-btn">
+                IMPORT
+                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  if (f) await handleFile(f)
+                  e.currentTarget.value = ''
+                }} />
+              </label>
+              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>IMPORT TEXT</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>EXPORT .DCK</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>EXPORT ARENA</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>CLONE</button>
+              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>DELETE</button>
+              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ FAVORITE</button>
+            </div>
+            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>Edit Deck</button>
+          </footer>
+        </>
+      ) : (
+        <div style={{ padding: '20px 24px', flex: 1, minHeight: 'calc(100vh - 120px)' }}>
+          <DeckBrowser
+            onCloneDeck={handleCloneFromBrowser}
+            onOpenBuilder={(deckId) => onEdit(deckId)}
+          />
         </div>
-        <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>Edit Deck</button>
-      </footer>
+      )}
 
       {showImport && (
         <div className="overlay" onClick={() => setShowImport(false)}>

@@ -7,6 +7,7 @@ import './ArenaCardStrip.css'
 export interface CardStripMeta {
   artCropUrl?: string | null
   imageUrl?: string | null
+  backImageUrl?: string | null
   manaCost?: string
   cmc?: number
   typeLine?: string

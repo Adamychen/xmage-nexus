@@ -1,0 +1,279 @@
+.deck-browser-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.browser-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.browser-tab-btn {
+  background: transparent;
+  border: none;
+  color: #718096;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.browser-tab-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.browser-tab-btn.active {
+  color: #111;
+  background: linear-gradient(135deg, #ffa834 0%, #ff7300 100%);
+  box-shadow: 0 2px 10px rgba(255, 115, 0, 0.35);
+}
+
+/* Filters Bar */
+.browser-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.browser-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 400px;
+}
+
+.browser-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 14px;
+  background: #0f141c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 150ms ease;
+}
+
+.browser-search-input:focus {
+  border-color: #ecc94b;
+  box-shadow: 0 0 8px rgba(236, 201, 75, 0.3);
+}
+
+.browser-select {
+  background: #0f141c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Decks Grid */
+.browser-decks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+/* Individual Deck Card */
+.browser-deck-card {
+  position: relative;
+  background: #111722;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+}
+
+.browser-deck-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(236, 201, 75, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 12px rgba(236, 201, 75, 0.2);
+}
+
+.browser-deck-art-header {
+  position: relative;
+  height: 110px;
+  background-size: cover;
+  background-position: center 25%;
+  background-color: #1a2230;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+}
+
+.browser-deck-art-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(17, 23, 34, 1) 0%, rgba(17, 23, 34, 0.4) 60%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.browser-deck-badges-overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.browser-deck-format-chip {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #ecc94b;
+  color: #f6e05e;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.browser-deck-arch-chip {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #4299e1;
+  color: #63b3ed;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.browser-deck-content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.browser-deck-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-deck-desc {
+  font-size: 0.76rem;
+  color: #a0aec0;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.browser-deck-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.browser-deck-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 120ms ease;
+}
+
+.browser-deck-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.browser-deck-btn.primary {
+  background: linear-gradient(180deg, #ffa834 0%, #ff7300 100%);
+  color: #111;
+  border-color: #ffd180;
+}
+
+/* URL Import View */
+.browser-url-import-view {
+  background: #0f141c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  margin: 20px auto;
+}
+
+.url-import-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.url-import-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #080c10;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.url-import-textarea {
+  width: 100%;
+  height: 160px;
+  padding: 10px 14px;
+  background: #080c10;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  resize: vertical;
+}
+
+.url-import-submit-btn {
+  background: linear-gradient(180deg, #ffa834 0%, #ff7300 100%);
+  color: #111;
+  border: 1px solid #ffd180;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-weight: 900;
+  font-size: 0.9rem;
+  cursor: pointer;
+  align-self: flex-start;
+  box-shadow: 0 4px 14px rgba(255, 115, 0, 0.4);
+}

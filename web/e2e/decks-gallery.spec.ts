@@ -70,4 +70,37 @@ test.describe('Decks Gallery', () => {
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })
   })
+
+  test('explores online & meta decks catalog in Deck Browser @decks', async ({ page }) => {
+    await withFakeServer(null as never, async () => {
+      await page.goto('/')
+      const username = `deck3_${Date.now()}`
+      await page.getByPlaceholder('Usuario').fill(username)
+      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+
+      // Switch to Deck Browser tab
+      await page.getByRole('button', { name: /Explorar Mazos/i }).click()
+      await expect(page.locator('.deck-browser-container')).toBeVisible({ timeout: 5000 })
+      await expect(page.locator('.browser-deck-card').first()).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText('Izzet Murktide')).toBeVisible()
+
+      // Inspect a deck modal
+      await page.locator('.browser-deck-card', { hasText: 'Izzet Murktide' }).click()
+      await expect(page.locator('.deck-inspector-modal')).toBeVisible({ timeout: 3000 })
+      await expect(page.locator('.inspector-format-badge', { hasText: 'Modern' })).toBeVisible()
+      await expect(page.getByRole('button', { name: /Copiar a Mis Mazos/i })).toBeVisible()
+
+      // Close modal
+      await page.locator('.inspector-close-btn').click()
+      await expect(page.locator('.deck-inspector-modal')).not.toBeVisible()
+
+      // Switch to URL import sub-tab
+      await page.getByRole('button', { name: /Importar por URL/i }).click()
+      await expect(page.locator('.browser-url-import-view')).toBeVisible()
+    })
+  })
 })

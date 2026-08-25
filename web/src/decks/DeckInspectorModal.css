@@ -1,0 +1,184 @@
+.deck-inspector-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.deck-inspector-modal {
+  background: #11161f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(236, 201, 75, 0.2);
+  overflow: hidden;
+  animation: inspector-pop 150ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes inspector-pop {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.deck-inspector-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(20, 26, 36, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.deck-inspector-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deck-inspector-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0;
+}
+
+.deck-inspector-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inspector-format-badge {
+  background: rgba(236, 201, 75, 0.15);
+  border: 1px solid #ecc94b;
+  color: #f6e05e;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.inspector-archetype-badge {
+  background: rgba(66, 153, 225, 0.15);
+  border: 1px solid #4299e1;
+  color: #63b3ed;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.inspector-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #a0aec0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 120ms ease;
+}
+
+.inspector-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.deck-inspector-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .deck-inspector-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inspector-cards-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 55vh;
+}
+
+.inspector-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.inspector-desc {
+  font-size: 0.82rem;
+  color: #cbd5e0;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.deck-inspector-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(10, 14, 20, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.inspector-copy-btn {
+  background: linear-gradient(180deg, #ffa834 0%, #ff7300 100%);
+  color: #111111;
+  border: 1px solid #ffd180;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-weight: 900;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 115, 0, 0.4);
+  transition: all 120ms ease;
+}
+
+.inspector-copy-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.inspector-edit-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.inspector-edit-btn:hover {
+  background: #3182ce;
+  border-color: #63b3ed;
+  color: #fff;
+}

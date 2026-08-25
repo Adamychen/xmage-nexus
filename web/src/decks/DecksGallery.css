@@ -28,6 +28,35 @@
   color: #f0ede4;
   text-shadow: 0 2px 12px rgba(0,0,0,0.6);
 }
+.gallery-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gallery-view-tab {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.gallery-view-tab:hover {
+  color: #fff;
+}
+.gallery-view-tab.active {
+  background: linear-gradient(180deg, #ffa834 0%, #ff7300 100%);
+  color: #111;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(255, 115, 0, 0.35);
+}
 .decks-filters {
   display: flex;
   align-items: center;

@@ -14,6 +14,7 @@ export function ArenaFilterBar({
   typeFilter,
   onTypeChange,
   onReset,
+  loading = false,
 }: {
   query: string
   onQueryChange: (q: string) => void
@@ -24,6 +25,7 @@ export function ArenaFilterBar({
   typeFilter: string | null
   onTypeChange: (type: string | null) => void
   onReset: () => void
+  loading?: boolean
 }) {
   const hasActiveFilters = query.trim() !== '' || colorFilter.size > 0 || cmcFilter !== null || typeFilter !== null
 
@@ -39,7 +41,8 @@ export function ArenaFilterBar({
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Buscar cartas..."
           />
-          {query && (
+          {loading && <div className="arena-grid-spinner small" style={{ marginRight: 6 }} />}
+          {query && !loading && (
             <button
               type="button"
               className="arena-search-clear"

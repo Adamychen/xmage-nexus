@@ -39,7 +39,12 @@ export async function searchScryfall(query: string, page = 1): Promise<ScryfallS
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal })
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    })
     if (res.status === 404) return { data: [], has_more: false }
     if (!res.ok) throw new Error(`Scryfall ${res.status}`)
     const data = (await res.json()) as ScryfallSearchResult
@@ -50,15 +55,22 @@ export async function searchScryfall(query: string, page = 1): Promise<ScryfallS
 }
 
 export function useScryfallSearch(query: string, debounceMs = 350) {
-  const [result, setResult] = useState<ScryfallSearchResult | null>(null)
+  const [cards, setCards] = useState<ScryfallSearchCard[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [totalCards, setTotalCards] = useState<number | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const queryRef = useRef(query)
+  const pageRef = useRef(1)
 
   useEffect(() => {
     queryRef.current = query
+    pageRef.current = 1
     if (!query.trim()) {
-      setResult(null)
+      setCards([])
+      setHasMore(false)
+      setTotalCards(undefined)
       setError(null)
       setLoading(false)
       return
@@ -68,7 +80,12 @@ export function useScryfallSearch(query: string, debounceMs = 350) {
       setError(null)
       try {
         const r = await searchScryfall(queryRef.current, 1)
-        if (queryRef.current === query) setResult(r)
+        if (queryRef.current === query) {
+          setCards(r.data)
+          setHasMore(r.has_more)
+          setTotalCards(r.total_cards)
+          pageRef.current = 1
+        }
       } catch (e) {
         if (queryRef.current === query) setError((e as Error).message)
       } finally {
@@ -78,13 +95,37 @@ export function useScryfallSearch(query: string, debounceMs = 350) {
     return () => clearTimeout(t)
   }, [query, debounceMs])
 
-  return { result, loading, error }
+  const loadMore = async () => {
+    if (loading || loadingMore || !hasMore) return
+    const nextPage = pageRef.current + 1
+    setLoadingMore(true)
+    try {
+      const r = await searchScryfall(queryRef.current, nextPage)
+      if (queryRef.current === query) {
+        setCards((prev) => [...prev, ...r.data])
+        setHasMore(r.has_more)
+        pageRef.current = nextPage
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  return { cards, loading, loadingMore, hasMore, totalCards, error, loadMore }
 }
 
 export function scryfallCardImage(card: ScryfallSearchCard): string | null {
   if (card.image_uris?.normal) return card.image_uris.normal
   if (card.image_uris?.small) return card.image_uris.small
   if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
+  return null
+}
+export function scryfallCardBackImage(card: ScryfallSearchCard): string | null {
+  if (card.card_faces && card.card_faces.length > 1) {
+    return card.card_faces[1].image_uris?.normal ?? card.card_faces[1].image_uris?.small ?? null
+  }
   return null
 }
 export function scryfallCardArtCrop(card: ScryfallSearchCard): string | null {
