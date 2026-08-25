@@ -196,7 +196,17 @@
         "canAttack": { "type": "boolean" },
         "canBlock": { "type": "boolean" },
         "inViewerOnly": { "type": "boolean" },
-        "cardIcons": { "type": "array", "items": {} },
+        "cardIcons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cardIconType": { "type": "string" },
+              "text": { "type": "string" },
+              "hint": { "type": "string" }
+            }
+          }
+        },
         "originalPower": { "type": ["string", "null"] },
         "originalToughness": { "type": ["string", "null"] },
         "originalColorIdentity": { "type": ["string", "null"] },

@@ -94,31 +94,37 @@ function collectFields(name, accumulator, seen = new Set()) {
   if (parsed.superclass) collectFields(parsed.superclass, accumulator, seen)
 }
 
-function fieldsFor(className) {
+export function fieldsFor(className) {
   const set = new Set()
   collectFields(className, set)
   return [...set].sort()
 }
 
-const cardFields = fieldsFor('PermanentView')      // permanents are cards; includes the CardView chain
-const playerFields = fieldsFor('PlayerView')
-const gameViewFields = fieldsFor('GameView')
+export { ROOTS }
 
-const out = {
-  meta: {
-    generatedAt: new Date().toISOString(),
-    note: 'Exhaustive serializable instance fields of the XMage view classes (oracle for mechanics reverse-drift). Derived from JsonUtil reflection rules.',
-    sources: ROOTS.map((r) => r.replace(resolve(here, '..') + '/', '')),
-  },
-  cardFields,
-  playerFields,
-  gameViewFields,
+function main() {
+  const cardFields = fieldsFor('PermanentView')      // permanents are cards; includes the CardView chain
+  const playerFields = fieldsFor('PlayerView')
+  const gameViewFields = fieldsFor('GameView')
+
+  const out = {
+    meta: {
+      generatedAt: new Date().toISOString(),
+      note: 'Exhaustive serializable instance fields of the XMage view classes (oracle for mechanics reverse-drift). Derived from JsonUtil reflection rules.',
+      sources: ROOTS.map((r) => r.replace(resolve(here, '..') + '/', '')),
+    },
+    cardFields,
+    playerFields,
+    gameViewFields,
+  }
+
+  const outPath = resolve(here, '../web/fixtures/server-view-schema.json')
+  mkdirSync(dirname(outPath), { recursive: true })
+  writeFileSync(outPath, JSON.stringify(out, null, 2))
+  console.log(`Wrote ${outPath}`)
+  console.log(`  card/permanent fields : ${cardFields.length}`)
+  console.log(`  player fields        : ${playerFields.length}`)
+  console.log(`  gameView fields      : ${gameViewFields.length}`)
 }
 
-const outPath = resolve(here, '../web/fixtures/server-view-schema.json')
-mkdirSync(dirname(outPath), { recursive: true })
-writeFileSync(outPath, JSON.stringify(out, null, 2))
-console.log(`Wrote ${outPath}`)
-console.log(`  card/permanent fields : ${cardFields.length}`)
-console.log(`  player fields        : ${playerFields.length}`)
-console.log(`  gameView fields      : ${gameViewFields.length}`)
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()

@@ -131,7 +131,11 @@ export interface CardView {
   canAttack?: boolean
   canBlock?: boolean
   inViewerOnly?: boolean
-  cardIcons?: unknown[]
+  cardIcons?: {
+    cardIconType?: string
+    text?: string
+    hint?: string
+  }[]
   originalPower?: string | null
   originalToughness?: string | null
   originalColorIdentity?: string | null

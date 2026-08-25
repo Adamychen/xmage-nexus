@@ -15,7 +15,14 @@ second guard, `web/src/state/mechanicsCoverage.test.ts` (backed by
 from the XMage `mage.view.*` classes via the `JsonUtil` reflection rules),
 verifies that **every field the server can emit is modeled** in
 `contract.schema.json` / `types.generated.ts` — surfacing unmodeled game-state
-(reverse-drift) automatically, without a hand-maintained mechanic list.
+(reverse-drift) automatically, without a hand-maintained mechanic list. A
+**third guard**, `web/src/state/engineViewCoverage.test.ts` (backed by
+`scripts/engine-view-schema.mjs`), catches the inverse gap: engine state in
+`mage.game.*` that is **not** copied into the `mage.view.*` DTOs (so no remote
+client can ever show it — e.g. `goad` reaches the client via `cardIcons`/`rules`,
+but `harnessed`/`monstrous`/`renowned`/player-targeting do not). It compares the
+engine→view gap against a committed baseline and fails on any change, forcing a
+triage. See `web/INTERACTION_COVERAGE.md`.
 
 **Contributor docs:**
 - `Mage.Proxy/README.md` — proxy architecture, full protocol reference (all events/actions), serialization rules, type system

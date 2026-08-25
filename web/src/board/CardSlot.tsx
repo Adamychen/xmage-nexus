@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
+import CardIcons from './CardIcons'
 import './CardSlot.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
@@ -294,6 +295,9 @@ export default function CardSlot({
           {perm.transformed ? '🌙' : '☀️'}
         </div>
       )}
+
+      {/* Card restriction / ability icons (e.g. Goad, must/can't attack, keywords) */}
+      <CardIcons icons={card.cardIcons} />
     </div>
   )
 }
