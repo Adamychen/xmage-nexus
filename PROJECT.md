@@ -128,7 +128,7 @@ web/
     │   ├── LobbyScreen.tsx         — Tables, users, room chat, create table
     │   └── CreateTableDialog.tsx   — Game type, format, AI count
     ├── cards/
-    │   └── cardImages.ts           — Scryfall (set + number) with IndexedDB cache & placeholder
+    │   └── cardImages.ts           — Scryfall (set + number) with memory LRU + 75ms throttle, Accept + 429 Retry-After; IndexedDB 24h cache planned Phase 3
     ├── board/
     │   ├── BoardView.tsx           — Mounts Pixi.Application (WebGL) within React
     │   ├── BoardScene.ts           — Orchestrates: snapshot → sprites; zones, tap, counters

@@ -256,6 +256,9 @@ export default function LoginScreen() {
             <span>Conectar</span>
           )}
         </button>
+        <div className="login-attribution">
+          Card images courtesy of <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a> · Not affiliated with Wizards of the Coast
+        </div>
       </form>
 
       {showAvatarPicker && (

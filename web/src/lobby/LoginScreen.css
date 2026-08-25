@@ -413,6 +413,23 @@
 }
 
 
+.login-attribution {
+  font-size: 10.5px;
+  color: #7a82a8;
+  text-align: center;
+  line-height: 1.4;
+  padding-top: 2px;
+}
+
+.login-attribution a {
+  color: #8ea0ff;
+  text-decoration: none;
+}
+
+.login-attribution a:hover {
+  text-decoration: underline;
+}
+
 .connecting-splash {
   align-items: center;
   text-align: center;

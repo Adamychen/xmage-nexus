@@ -54,6 +54,9 @@ export default function App() {
         <LoginScreen />
       )}
       <GameEndDialog />
+      <footer className="app-attribution">
+        Card images courtesy of <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a> · Not affiliated with Wizards of the Coast
+      </footer>
     </>
   )
 }

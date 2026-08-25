@@ -24,7 +24,7 @@ describe('card image cache', () => {
 
     const first = awaitImageUrl(card)
     const second = awaitImageUrl(card)
-    await Promise.resolve()
+    await new Promise((r) => setTimeout(r, 10))
     expect(fetchMock).toHaveBeenCalledTimes(1)
     resolveFetch?.({ ok: true, status: 200, json: async () => ({ image_uris: { normal: 'https://img.test/forest.jpg' } }) })
 
@@ -198,6 +198,49 @@ describe('ability image and metadata resolution', () => {
   it('builds named Scryfall key for cards with only a name (e.g. from action feed)', () => {
     const feedCard = { name: 'Lightning Bolt' } as CardView
     expect(cardKey(feedCard)).toBe('named:Lightning Bolt')
+  })
+})
+
+describe('Scryfall compliance', () => {
+  beforeEach(() => {
+    resetCardImageCache()
+    vi.restoreAllMocks()
+  })
+
+  it('sends Accept header and throttles ~75ms between Scryfall requests', async () => {
+    const a = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView
+    const b = { name: 'Counterspell', expansionSetCode: 'MMQ', cardNumber: '67' } as CardView
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => ({ image_uris: { normal: 'https://img.test/x.jpg' }, name: 'x' }),
+      headers: { get: () => null },
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const t0 = Date.now()
+    await awaitImageUrl(a)
+    await awaitImageUrl(b)
+    const elapsed = Date.now() - t0
+    expect(elapsed).toBeGreaterThanOrEqual(70)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    for (const [, opts] of fetchMock.mock.calls) {
+      expect((opts as RequestInit).headers).toMatchObject({ Accept: 'application/json' })
+    }
+  })
+
+  it('retries after 429 using Retry-After header', async () => {
+    const card429 = { name: 'Forest', expansionSetCode: 'LEA', cardNumber: '299' } as CardView
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 429, headers: { get: (k: string) => k === 'Retry-After' ? '0' : null } } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true, status: 200,
+        json: async () => ({ image_uris: { normal: 'https://img.test/forest429.jpg' }, name: 'Forest' }),
+        headers: { get: () => null },
+      } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(awaitImageUrl(card429)).resolves.toBe('https://img.test/forest429.jpg')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
 
