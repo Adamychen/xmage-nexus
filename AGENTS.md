@@ -9,7 +9,13 @@ lessons. Update it when finishing a task (phases, lessons, quality table,
 dated log) and record the date in the header. Also keep the interaction
 coverage matrix `web/INTERACTION_COVERAGE.md` in sync (mark implemented/tested
 + test ref + date per callback/interaction); the guard `callbackCoverage.test.ts`
-enforces that every server callback has a handler or is listed as planned.
+enforces that every server callback has a handler or is listed as planned. A
+second guard, `web/src/state/mechanicsCoverage.test.ts` (backed by
+`scripts/view-schema.mjs`, which extracts the exhaustive serializable field set
+from the XMage `mage.view.*` classes via the `JsonUtil` reflection rules),
+verifies that **every field the server can emit is modeled** in
+`contract.schema.json` / `types.generated.ts` — surfacing unmodeled game-state
+(reverse-drift) automatically, without a hand-maintained mechanic list.
 
 **Contributor docs:**
 - `Mage.Proxy/README.md` — proxy architecture, full protocol reference (all events/actions), serialization rules, type system
@@ -32,12 +38,16 @@ enforces that every server callback has a handler or is listed as planned.
   If the remote server changes release (strict version check `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`),
   the proxy won't connect: the fork must be updated (fetch upstream + merge) and everything rebuilt.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
-  Notes: (a) **anonymous login to `beta.xmage.today` is intermittent and NOT fixed in-repo** —
-  the fatal `Can't receive server state before other data` / `connectStart=false` originates in the
-  *remote* XMage server's handshake (server-side; the proxy has **no** handshake buffer — the
-  `2026-08-17` "RESOLVED" note in `ROADMAP.md` is inaccurate). Treat beta as best-effort only.
-  (b) the web login uses a SINGLE host for both the proxy WS and the target server → to play
-  against remote servers from the browser those fields must be split (pending, Phase 3).
+  Note: **anonymous login to `beta.xmage.today` is intermittent** — the fatal
+  `Can't receive server state before other data` / `connectStart=false` originates in the *remote*
+  XMage server's handshake (server-side). The proxy has **no** handshake buffer and cannot fix it;
+  treat beta as best-effort only. (The local server `localhost:17171` is the reliable oracle for
+  real-protocol CI — see `ROADMAP.md` §Phase 0, which already documents this correctly.)
+- **Web login already separates Proxy and XMage Server**: `LoginScreen` has independent fields for the
+  proxy WS (`Proxy` host/port) and the target server (`XMage Server` host/port). No host-split work remains.
+  Because the proxy is now **multi-tenant** (see below and `Mage.Proxy/README.md`), a single deployed
+  proxy + static web serves many users: each player points the **Proxy** field at the shared proxy and
+  the **XMage Server** field at the target server → zero-install, server-side play.
 
 ### Real-protocol validation harness (anti-drift)
 The goal is a client that works against `beta.xmage.today`, but beta is flaky. So the **oracle for
@@ -75,6 +85,24 @@ This repo has three independent concerns, each developable on its own:
   `Mage.Proxy/AGENTS.md`.
 - **XMage fork (`Mage.*`)** — the rules engine. Large; only rebuilt when the
   XMage version changes or the test-mode patches need adjusting.
+
+## Multi-tenant proxy (one process, many users)
+
+`Mage.Proxy` is **multi-tenant**: every browser WebSocket owns its own XMage
+session (`SessionImpl`). A single proxy process serves many independent players
+at once (see `Mage.Proxy/README.md` "Connection & Session").
+
+- **Same account, multiple windows** (normal + incógnito, or several tabs): a
+  second connection with the same `host|username` **attaches** to the existing
+  session — one session shared across windows (`ProxyClient.isSameSession` /
+  `Gateway.attach`). This is what lets two browser contexts (e.g. normal +
+  incógnito) share one account on one proxy.
+- **Different accounts**: isolated sessions; server→client events for a session
+  reach only that session's connections (`Gateway.byConn` / `byAccount`).
+- **Deployment**: host the static `web` build + one `Mage.Proxy` instance. Each
+  user sets the **Proxy** field to that instance and the **XMage Server** field
+  to the target server. No per-user proxy is needed — zero-install, server-side
+  play is already possible today.
 
 Real-mode E2E (against a live proxy + server) reuses a prebuilt
 `mage-proxy-*.jar` (`build.mjs proxy` once); web developers never run Maven.
@@ -114,7 +142,7 @@ proxy adds/changes fields, the schema test fails and is regenerated with the rec
 against that state (and the DOM), NOT against canvas pixels (byte-diffs were
 the source of flakes).
 
-**Known bugs in the real stack (2026-08-16, detected by real mode)**:
+**Resolved issues (historical context — all RESOLVED, kept for reference)**:
 1. **The AI-vs-AI demo NO LONGER FREEZES (RESOLVED)**: `SimPlayer.tryCast` was sending
    the Bolt UUID even when its untapped lands were ISLANDs; the server correctly
    rejected the cast (`canPay` doesn't cover {R}) and the game re-granted

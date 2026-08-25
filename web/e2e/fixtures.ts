@@ -2,7 +2,7 @@
  * Fixtures de Playwright con el backend dual.
  * - fake: el FixtureServer se arranca con `{ fakeServer }` (full-flow usa el
  *   fixture; los specs de partida humana lo arrancan explícitamente con su
- *   escenario, `FakeServer.start(port, escenario())`). Usa puerto 8788 (dedicado).
+ *   escenario, `FakeServer.start(port, escenario())`). Usa puerto 8789 (dedicado).
  * - real: fakeServer es null (usa el stack: server + proxy + vite, puerto 8787).
  */
 

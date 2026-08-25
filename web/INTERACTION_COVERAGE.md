@@ -68,6 +68,22 @@ Enumeración exhaustiva de mecánicas de MTG que el cliente debe soportar, con e
 real auditado en `web/src` (componentes/handlers) y los specs E2E. Cruza con el
 blueprint de `ROADMAP.md` §7. Leyenda: ✅ = sí · ⚠️ = parcial · ❌ = no.
 
+**Cobertura automática de campos (reverse-drift):** `web/src/state/mechanicsCoverage.test.ts`
+difumina el oráculo `web/fixtures/server-view-schema.json` (generado por
+`scripts/view-schema.mjs` desde las clases `mage.view.*` del server) contra los
+campos modelados en `contract.schema.json`. Cualquier campo que el server *puede*
+emitir y el cliente no modela hace fallar el test. Ejecutado en CI como parte de
+`unit`. Tras esto, los únicos campos de carta no modelados eran 16 de datos/ayuda
+de render (split-cards, selección, arte) — ya añadidos al contrato y tipos.
+
+**Gap de exposición server (no detectable por el cliente):** algunas mecánicas
+existen en el motor XMage pero **no se serializan** en las clases `mage.view.*`
+que el proxy reenvía, así que el cliente ni recibe el estado. El detector
+reverse-drift NO las captura (no hay campo que emitir) y requieren que el
+server/proxy exponga el estado. Ejemplo conocido: **`goad`/`goaded`** — el motor
+lleva `goadingPlayers` en `PermanentImpl`, pero `mage.view.PermanentView` no lo
+expone, por lo que ni el proxy ni el cliente ven que una criatura está goaded.
+
 ### A. Morfologías de carta
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
@@ -99,6 +115,7 @@ blueprint de `ROADMAP.md` §7. Leyenda: ✅ = sí · ⚠️ = parcial · ❌ = n
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Flying / Deathtouch / Trample / Haste / etc. | ✅ | ⚠️ | `keywordExtractor` + `FloatingCardPreview`; sin spec dedicada | 2026-08-24 |
+| Goad (estado "goaded" en criatura) | ❌ | — | Server no expone `goadingPlayers` en `mage.view` (gap de exposición server, ver nota al inicio); el cliente no recibe el estado | 2026-08-25 |
 
 ### E. Información revelada / Known cards
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

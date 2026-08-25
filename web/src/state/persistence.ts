@@ -1,7 +1,7 @@
 export interface ConnectionInfo {
   /** Host del proxy WebSocket (ws://wsHost:proxyPort). */
   wsHost: string
-  /** Puerto WS del proxy (8787=real, 8788=fake E2E). */
+  /** Puerto WS del proxy (8787=real, 8789=fake E2E). */
   proxyPort: number
   /** Host del servidor XMage destino (distinto del proxy permite jugar contra
    *  servers remotos con el proxy local). */

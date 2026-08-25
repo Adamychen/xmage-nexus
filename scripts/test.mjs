@@ -172,7 +172,7 @@ async function main() {
             break
           }
         }
-        // el e2e por defecto corre en FAKE (FixtureServer) en puerto 8788.
+        // el e2e por defecto corre en FAKE (FixtureServer) en puerto 8789.
         // No se toca el proxy (puerto 8787) — ambos pueden correr simultáneamente.
         res = run(binName('npx'), ['playwright', 'test'], { cwd: WEB_DIR })
         break

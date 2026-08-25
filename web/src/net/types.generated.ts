@@ -137,6 +137,22 @@ export interface CardView {
   originalColorIdentity?: string | null
   originalIsCopy?: boolean
   sourceCard?: CardView
+  artRect?: number[]
+  gameObject?: Record<string, unknown>
+  isChoosable?: boolean
+  isDoubleFacedCard?: boolean
+  isSelected?: boolean
+  leftSplitCostsStr?: string[]
+  leftSplitName?: string
+  leftSplitRules?: string[]
+  leftSplitTypeLine?: string
+  original?: Record<string, unknown>
+  playableStats?: Record<string, unknown>
+  rightSplitCostsStr?: string[]
+  rightSplitName?: string
+  rightSplitRules?: string[]
+  rightSplitTypeLine?: string
+  usesVariousArt?: boolean
 }
 
 export interface PermanentView extends CardView {
