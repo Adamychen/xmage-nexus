@@ -1,3 +1,5 @@
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,8 +17,8 @@ test.describe('Mutate mechanic (real recorded frame)', { tag: '@mutate-recorded'
     await withFakeServer(() => replayRecordedScenario('mutate.json', 'Mutate Recorded (real frame)'), async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mutr',
-        tableName: 'Mutate Recorded (real frame)',
-        deck: 'Mage Web advanced',
+        tableName: TABLE.mutateRecorded,
+        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

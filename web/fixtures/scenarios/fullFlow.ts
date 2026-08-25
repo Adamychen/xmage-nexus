@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para full-flow.spec.ts: demo "IA vs IA"
  * (espectador). La partida avanza con un timeline determinista (fases por
@@ -61,7 +62,7 @@ function demoTable(): TableView {
     tableId: TABLE_ID,
     gameType: 'Two Player Duel',
     deckType: 'Constructed - Modern',
-    tableName: 'Demo IA vs IA',
+    tableName: TABLE.fullFlowDemo,
     controllerName: 'demo',
     additionalInfoShort: '2/2',
     additionalInfoFull: '',
@@ -138,7 +139,7 @@ export function fullFlowScenario(options: FullFlowOptions = {}): Scenario {
           conn.ok(requestId, action, {})
           // el servidor llama al callback watchGame del watcher tras un instante
           setTimeout(() => {
-            conn.event('WATCHGAME', { gameId: GAME_ID, tableName: 'Demo IA vs IA' }, GAME_ID)
+            conn.event('WATCHGAME', { gameId: GAME_ID, tableName: TABLE.fullFlowDemo }, GAME_ID)
           }, 300)
           break
         case 'watchGame':

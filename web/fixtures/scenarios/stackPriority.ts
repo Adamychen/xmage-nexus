@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para probar las mecánicas de Pila y Prioridad Avanzada (Bloque B):
  * 1. Hold Priority: Lanzar Infernal Tutor y retener prioridad para responder en la pila con Lion's Eye Diamond.
@@ -286,7 +287,7 @@ export function stackPriorityScenario(): Scenario {
 
   return makeBaseScenario({
     tableId,
-    tableName: 'stack-priority-test',
+    tableName: TABLE.stackPriority,
     gameId,
     getGameView,
     selectMessage: 'Prioridad en Fase Principal (M1) — Lanza Infernal Tutor con prioridad retenida:',

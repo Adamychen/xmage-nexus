@@ -1,3 +1,5 @@
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,8 +18,8 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
     await withFakeServer(mechanicsScenario, async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mech',
-        tableName: 'Mechanics & Reminder Showcase',
-        deck: 'Mage Web advanced',
+        tableName: TABLE.mechanics,
+        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

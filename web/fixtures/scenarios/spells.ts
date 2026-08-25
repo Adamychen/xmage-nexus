@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenarios del FixtureServer para spells.spec.ts: un guion por hechizo
  * (Blaze, Arc Trail, Boros Charm, Walking Ballista). Cada escenario tiene las
@@ -19,7 +20,7 @@ function spellsConfig(kind: SpellsKind): ConstructorParameters<typeof HumanGame>
   switch (kind) {
     case 'blaze':
       return {
-        tableName: 'blaze-test',
+        tableName: TABLE.spellsBlaze,
         lands: [{ name: 'Mountain', count: 3 }],
         hand: ['Blaze', 'Mountain', 'Mountain', 'Mountain'],
         playable: ['Blaze'],
@@ -32,7 +33,7 @@ function spellsConfig(kind: SpellsKind): ConstructorParameters<typeof HumanGame>
       }
     case 'arc':
       return {
-        tableName: 'arc-test',
+        tableName: TABLE.spellsArc,
         lands: [{ name: 'Mountain', count: 2 }],
         hand: ['Arc Trail', 'Mountain', 'Mountain'],
         playable: ['Arc Trail'],
@@ -47,7 +48,7 @@ function spellsConfig(kind: SpellsKind): ConstructorParameters<typeof HumanGame>
       }
     case 'boros':
       return {
-        tableName: 'boros-test',
+        tableName: TABLE.spellsBoros,
         lands: [
           { name: 'Mountain', count: 1 },
           { name: 'Plains', count: 1 },
@@ -70,7 +71,7 @@ function spellsConfig(kind: SpellsKind): ConstructorParameters<typeof HumanGame>
       }
     case 'ballista':
       return {
-        tableName: 'ballista-test',
+        tableName: TABLE.spellsBallista,
         lands: [{ name: 'Mountain', count: 8 }],
         hand: ['Walking Ballista'],
         playable: ['Walking Ballista'],

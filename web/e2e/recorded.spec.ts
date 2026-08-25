@@ -1,3 +1,4 @@
+import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,7 +21,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         const { pageErrors } = await startGame(page, {
           prefix: `rec-${entry.mechanic}`,
           tableName: REPLAY_TABLE_NAME,
-          deck: 'Mage Web advanced',
+          deck: DECK.advanced,
         })
 
         expect(pageErrors).toEqual([])

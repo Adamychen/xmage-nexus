@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para cross-zone.spec.ts: el "ray" de XMage.
  * La carta vive en el cementerio (o exilio) y el jugador la lanza desde ahí
@@ -17,7 +18,7 @@ function crossZoneConfig(kind: CrossZoneKind): ConstructorParameters<typeof Huma
   switch (kind) {
     case 'exile-cast':
       return {
-        tableName: 'cz-exile-test',
+        tableName: TABLE.crossZoneExile,
         lands: [{ name: 'Mountain', count: 2 }],
         hand: ['Mountain', 'Mountain'],
         crossZone: [{ name: 'Arc Trail', zone: 'exile' }],
@@ -30,7 +31,7 @@ function crossZoneConfig(kind: CrossZoneKind): ConstructorParameters<typeof Huma
     case 'graveyard-cast':
     default:
       return {
-        tableName: 'cz-test',
+        tableName: TABLE.crossZone,
         lands: [{ name: 'Mountain', count: 2 }],
         hand: ['Mountain', 'Mountain'],
         crossZone: [{ name: 'Arc Trail', zone: 'graveyard' }],

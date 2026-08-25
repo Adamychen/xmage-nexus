@@ -1,10 +1,12 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import type { Page } from '@playwright/test'
 import { combatHumanAttackScenario, combatHumanBlockScenario } from '../fixtures/scenarios/combatHuman'
 import { withFakeServer } from './support/fake-backend'
@@ -75,9 +77,9 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
   await withFakeServer(() => combatHumanAttackScenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'cba',
-      tableName: 'combat-human-attack',
-      deck: 'Mage Web combat human',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.combatHumanAttack,
+      deck: DECK.combatHuman,
+      simDeck: DECK.aiLands,
       skipCombat: true,
     })
 
@@ -137,9 +139,9 @@ test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace da
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'cbb',
-      tableName: 'combat-human-block',
-      deck: 'Mage Web combat human',
-      simDeck: 'Mage Web block sim',
+      tableName: TABLE.combatHumanBlock,
+      deck: DECK.combatHuman,
+      simDeck: DECK.blockSim,
       skipCombat: true,
     })
 

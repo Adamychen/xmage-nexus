@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Best-of-3 (first to 2 wins): el flujo es idéntico al Bo2 existente pero
  * el match se decide en la partida 3 (1-1 → game 3). Verifica que el marcador
@@ -6,8 +9,7 @@
 
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import { bestOf3Scenario } from '../fixtures/scenarios/bestOf3'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -64,9 +66,9 @@ test('best-of-3: el match se decide en game 3 (1-1 antes)', { tag: '@fullflow' }
   await withFakeServer(() => bestOf3Scenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'bo3',
-      tableName: 'best-of-3-test',
-      deck: 'Mage Web bolt',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.bestOf3,
+      deck: DECK.bolt,
+      simDeck: DECK.aiLands,
       winsNeeded: 2,
     })
 

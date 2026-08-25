@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Match best-of-N (winsNeeded > 1, cierre 1v1 real): tras cada partida llega
  * END_GAME_INFO (resumen + marcador), el servidor pide el mazo con SIDEBOARD y
@@ -11,8 +14,7 @@
 
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import { bestOfNScenario } from '../fixtures/scenarios/bestOfN'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -90,9 +92,9 @@ test('match best-of-N: END_GAME_INFO + SIDEBOARD + submitDeck + siguiente partid
   await withFakeServer(() => bestOfNScenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'bon',
-      tableName: 'best-of-n-test',
-      deck: 'Mage Web bolt',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.bestOfN,
+      deck: DECK.bolt,
+      simDeck: DECK.aiLands,
       winsNeeded: 2,
     })
 

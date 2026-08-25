@@ -36,6 +36,9 @@ jobs:
       - name: npm ci
         working-directory: web
         run: npm ci
+      - name: Validate generated zod schema is in sync with contract
+        working-directory: web
+        run: npm run gen-zod:validate
       - name: Unit tests (vitest)
         working-directory: web
         run: npm run test

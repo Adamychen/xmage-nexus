@@ -18,7 +18,10 @@
     "test:e2e:targeting": "playwright test --grep \"@targeting\"",
     "test:e2e:combat": "playwright test --grep \"@combat\"",
     "test:e2e:fullflow": "playwright test --grep \"@fullflow\"",
-    "gen-types": "node ../../scripts/gen-types.mjs"
+    "gen-types": "node ../scripts/gen-types.mjs",
+    "gen-zod": "node ../scripts/gen-zod.mjs",
+    "gen-zod:validate": "node ../scripts/gen-zod.mjs --validate",
+    "gen": "npm run gen-types && npm run gen-zod"
   },
   "dependencies": {
     "pixi.js": "^8.19.0",

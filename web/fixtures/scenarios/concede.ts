@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 import { HumanGame } from './humanGame'
 import { GAME_ID, SIM_NAME } from '../humanGameConstants'
 
@@ -9,7 +10,7 @@ import { GAME_ID, SIM_NAME } from '../humanGameConstants'
  */
 export function concedeScenario(): ReturnType<HumanGame['scenario']> {
   const game = new HumanGame({
-    tableName: 'concede-test',
+    tableName: TABLE.concede,
     lands: [{ name: 'Mountain', count: 7 }],
     hand: ['Mountain', 'Mountain', 'Mountain', 'Mountain'],
     playable: [],

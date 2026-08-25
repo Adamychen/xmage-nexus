@@ -1,8 +1,9 @@
+import { TABLE } from '../table-names'
 import { HumanGame, SIM_PLAYER_ID } from './humanGame'
 
 export function humanLosesScenario() {
   const game = new HumanGame({
-    tableName: 'sim-wins-test',
+    tableName: TABLE.defeatSimWins,
     lands: [{ name: 'Mountain', count: 7 }],
     hand: ['Lightning Bolt', 'Lightning Bolt', 'Lightning Bolt', 'Lightning Bolt', 'Mountain', 'Mountain', 'Mountain', 'Mountain'],
     playable: ['Lightning Bolt'],

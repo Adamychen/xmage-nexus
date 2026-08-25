@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 import { makeBaseScenario } from '../fake'
 import { makeGameView, makePermanent, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
@@ -135,7 +136,7 @@ export function mechanicsScenario(): Scenario {
 
   return makeBaseScenario({
     tableId: TABLE_ID,
-    tableName: 'Mechanics & Reminder Showcase',
+    tableName: TABLE.mechanics,
     gameId: GAME_ID,
     gameView,
   })

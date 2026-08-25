@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario determinista del FixtureServer para combate con múltiples bloqueadores:
  * 1. Humano ataca con Colossal Dreadmaw (6/6).
@@ -116,7 +117,7 @@ export function combatMultiBlockScenario(): Scenario {
 
   return makeBaseScenario({
     tableId,
-    tableName: 'combat-multi-block',
+    tableName: TABLE.combatMultiBlock,
     gameId,
     getGameView: () => getGameView(),
     onConnect: track,

@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para chat.spec.ts: login, chat de sala y
  * chat en partida. Emite CHATMESSAGE cuando el cliente envía mensajes.
@@ -29,7 +30,7 @@ function demoTable(): TableView {
     tableId: TABLE_ID,
     gameType: 'Two Player Duel',
     deckType: 'Constructed - Modern',
-    tableName: 'Chat Test',
+    tableName: TABLE.chat,
     controllerName: 'player-1',
     additionalInfoShort: '1/2',
     additionalInfoFull: '',
@@ -97,7 +98,7 @@ export function chatScenario(): Scenario {
         case 'watchTable':
           conn.ok(requestId, action, {})
           setTimeout(() => {
-            conn.event('WATCHGAME', { gameId: GAME_ID, tableName: 'Chat Test' }, GAME_ID)
+            conn.event('WATCHGAME', { gameId: GAME_ID, tableName: TABLE.chat }, GAME_ID)
           }, 300)
           break
         case 'watchGame':

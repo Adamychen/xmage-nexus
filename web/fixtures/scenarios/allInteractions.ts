@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para probar todas las interacciones interactivas de MTG:
  * 1. GAME_ASK (Pregunta binaria Sí/No, ej. Shockland)
@@ -138,7 +139,7 @@ export function allInteractionsScenario(): Scenario {
 
   return makeBaseScenario({
     tableId,
-    tableName: 'all-interactions-test',
+    tableName: TABLE.allInteractions,
     gameId,
     getGameView,
     onStartMatch: (conn) => {

@@ -1,3 +1,5 @@
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,8 +17,8 @@ test.describe('Mutate mechanic (protocol-faithful)', { tag: '@mutate' }, () => {
     await withFakeServer(mutateScenario, async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mut',
-        tableName: 'Mutate Showcase',
-        deck: 'Mage Web advanced',
+        tableName: TABLE.mutate,
+        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

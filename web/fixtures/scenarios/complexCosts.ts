@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para probar las mecánicas de costes complejos de MTG:
  * 1. Maná Pirexiano ({U/P}): Pagar 2 vidas con GAME_ASK y reducir vidas de 20 a 18.
@@ -189,7 +190,7 @@ export function complexCostsScenario(): Scenario {
 
   return makeBaseScenario({
     tableId,
-    tableName: 'complex-costs-test',
+    tableName: TABLE.complexCosts,
     gameId,
     getGameView,
     onStartMatch: (conn) => {

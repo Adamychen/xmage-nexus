@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 import type { Scenario } from '../fake'
 import { makeGameView, makePlayer, makePermanent, makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
@@ -89,7 +90,7 @@ export function mulliganScenario(): Scenario {
     onConnect: (conn) => {
       conn.raw({ type: 'connected', message: 'Proxy ready.' })
       conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table('Mulligan Showcase')])
+      conn.lobby([table(TABLE.mulliganShowcase)])
     },
     onAction: (conn, action, args, requestId) => {
       switch (action) {
@@ -98,11 +99,11 @@ export function mulliganScenario(): Scenario {
           break
         case 'createTable':
           conn.ok(requestId, action, { tableId: TABLE_ID })
-          conn.lobby([table(String((args as { name?: string })?.name ?? 'Mulligan Showcase'))])
+          conn.lobby([table(String((args as { name?: string })?.name ?? TABLE.mulliganShowcase))])
           break
         case 'startMatch':
           conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: 'Mulligan Showcase' }, GAME_ID)
+          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: TABLE.mulliganShowcase }, GAME_ID)
           conn.broadcast('GAME_INIT', { gameView }, GAME_ID)
           // ventana de mulligan (el cliente, con auto-keep off, la pinta)
           conn.broadcast(

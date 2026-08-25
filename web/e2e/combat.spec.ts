@@ -1,3 +1,5 @@
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import type { Page } from '@playwright/test'
 import { controlledPlayer, framesOf, lastGameView, opponentBattlefield, parseFrames } from './support/frames'
@@ -43,11 +45,11 @@ test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño
   await withFakeServer(() => combatScenario(), async () => {
     const { frames, pageErrors } = await startGame(page, {
       prefix: 'cb',
-      tableName: 'combat-test',
+      tableName: TABLE.combat,
       // mazo humano solo tierras: la partida no avanza sola (nada que lanzar) y el
       // Sim (tierras + Raging Goblin) ataca; el helper pasa las prioridades
-      deck: 'Mage Web lands',
-      simDeck: 'Mage Web combat sim',
+      deck: DECK.lands,
+      simDeck: DECK.combatSim,
     })
     void frames
 

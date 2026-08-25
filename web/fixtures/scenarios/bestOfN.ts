@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para best-of-n.spec.ts: match al mejor de 2 (el
  * humano gana 2 partidas seguidas quemando al Sim con Lightning Bolts — 7 bolts
@@ -10,7 +11,7 @@ import { HumanGame, SIM_PLAYER_ID } from './humanGame'
 
 export function bestOfNScenario() {
   const game = new HumanGame({
-    tableName: 'best-of-n-test',
+    tableName: TABLE.bestOfN,
     lands: [{ name: 'Mountain', count: 7 }],
     hand: ['Lightning Bolt', 'Lightning Bolt', 'Lightning Bolt', 'Mountain'],
     playable: ['Lightning Bolt'],

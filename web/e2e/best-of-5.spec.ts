@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Best-of-5 (first to 3 wins): sweep 3-0 del humano. Verifica que tras la
  * victoria en game 3 (wins=3, winsNeeded=3) el match termina directamente
@@ -6,8 +9,7 @@
 
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import { bestOf5Scenario } from '../fixtures/scenarios/bestOf5'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -64,9 +66,9 @@ test('best-of-5: sweep 3-0, match terminado en game 3 sin SIDEBOARD extra', { ta
   await withFakeServer(() => bestOf5Scenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'bo5',
-      tableName: 'best-of-5-test',
-      deck: 'Mage Web bolt',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.bestOf5,
+      deck: DECK.bolt,
+      simDeck: DECK.aiLands,
       winsNeeded: 3,
     })
 

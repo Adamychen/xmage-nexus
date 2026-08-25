@@ -7,6 +7,9 @@
  */
 
 import { z } from 'zod'
+import { gameViewSchema } from './schema.generated'
+
+export { gameViewSchema }
 
 export const resultSchema = z.object({
   type: z.literal('result'),
@@ -44,24 +47,8 @@ export const infoSchema = z.object({
   message: z.string(),
 })
 
-/** Campos del GameView que el cliente consume (turn/phase/step/myHand/stack/
- *  players). La vista real tiene más campos; aquí solo lo que es crítico. */
-export const gameViewSchema = z.object({
-  priorityTime: z.number(),
-  turn: z.number(),
-  phase: z.string(),
-  step: z.string(),
-  activePlayerId: z.string(),
-  activePlayerName: z.string(),
-  priorityPlayerName: z.string(),
-  players: z.array(z.record(z.string(), z.unknown())).nullish(),
-  myHand: z.record(z.string(), z.unknown()).optional(),
-  stack: z.record(z.string(), z.unknown()).nullish(),
-  myPlayerId: z.union([z.string(), z.null()]).optional(),
-  canPlayObjects: z.record(z.string(), z.unknown()).nullish(),
-})
-
-/** Evento de partida: el payload debe traer el gameView (directo o en data). */
+/** Evento de partida: el payload debe traer el gameView (directo o en data).
+ *  (gameViewSchema se genera desde el contrato en ./schema.generated.ts.) */
 export const gameEventSchema = z.object({
   method: z.string().startsWith('GAME_'),
   objectId: z.union([z.string(), z.null()]).optional(),

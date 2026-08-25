@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Mulligan (Keep + Mulligan London): con auto-keep desactivado, la ventana de
  * mulligan (FeedbackDialog con GAME_ASK) debe aparecer y poderse ejercitar.
@@ -12,8 +15,7 @@ import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer.')
+fakeOnly()
 import { mulliganScenario, MULLIGAN_HAND_IDS } from '../fixtures/scenarios/mulligan'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -26,9 +28,9 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'mull',
-      tableName: 'mulligan-test',
-      deck: 'Mage Web lands',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.mulligan,
+      deck: DECK.lands,
+      simDeck: DECK.aiLands,
       autoKeepMulligan: false,
     })
 
@@ -61,9 +63,9 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'mull2',
-      tableName: 'mulligan-test',
-      deck: 'Mage Web lands',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.mulligan,
+      deck: DECK.lands,
+      simDeck: DECK.aiLands,
       autoKeepMulligan: false,
     })
 

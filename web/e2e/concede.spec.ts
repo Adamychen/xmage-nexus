@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Concede real: el botón "Conceder" del jugador envía PlayerAction.CONCEDE al
  * servidor (no solo abandona la pantalla) y la partida termina correctamente,
@@ -6,8 +9,7 @@
 
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer.')
+fakeOnly()
 import { concedeScenario } from '../fixtures/scenarios/concede'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -17,9 +19,9 @@ test('concede: el humano envía CONCEDE y vuelve al lobby', { tag: '@fullflow' }
   await withFakeServer(() => concedeScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'concede',
-      tableName: 'concede-test',
-      deck: 'Mage Web lands',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.concede,
+      deck: DECK.lands,
+      simDeck: DECK.aiLands,
     })
 
     // aceptar el confirm() de "¿Seguro que quieres conceder...?"

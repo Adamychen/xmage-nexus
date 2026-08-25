@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 import type { Scenario } from '../fake'
 import { makeBaseScenario } from '../fake'
 import { makeGameView, makePermanent, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
@@ -111,7 +112,7 @@ export function mutateScenario(): Scenario {
 
   return makeBaseScenario({
     tableId: TABLE_ID,
-    tableName: 'Mutate Showcase',
+    tableName: TABLE.mutate,
     gameId: GAME_ID,
     gameView,
     onSendPlayerUUID: (conn, uuid) => {

@@ -1,7 +1,8 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer.')
+fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,7 +21,7 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
   await withFakeServer(() => missingPromptsScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'pr',
-      tableName: 'missing-prompts-test',
+      tableName: TABLE.missingPrompts,
       skipAsks: true,
     })
 

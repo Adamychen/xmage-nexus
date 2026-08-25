@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenario del FixtureServer para cubrir los prompts del servidor soportados en
  * feedback.ts pero SIN test E2E previo:
@@ -170,7 +171,7 @@ export function missingPromptsScenario(): Scenario {
 
   return makeBaseScenario({
     tableId,
-    tableName: 'missing-prompts-test',
+    tableName: TABLE.missingPrompts,
     gameId,
     getGameView,
     onConnect: track,

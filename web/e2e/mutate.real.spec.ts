@@ -1,3 +1,4 @@
+import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
 import * as fs from 'node:fs'
@@ -43,8 +44,8 @@ test(
     const { frames, pageErrors, helper } = await startGame(page, {
       prefix: 'mut',
       tableName: 'mutate-real',
-      deck: 'Mage Web mutate',
-      simDeck: 'Mage Web AI lands',
+      deck: DECK.mutate,
+      simDeck: DECK.aiLands,
       deckType: 'Constructed - Pioneer',
     })
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])

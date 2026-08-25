@@ -1,3 +1,6 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 /**
  * Derrota del humano (el Sim gana 2-0): el humano lanza Bolts pero no hacen
  * daño (simWinsGame: [1, 2]), el match termina 0-2 y el diálogo dice
@@ -7,8 +10,7 @@
 
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import { humanLosesScenario } from '../fixtures/scenarios/humanLosesGame2'
 import { SIM_NAME } from '../fixtures/scenarios/humanGame'
 import { withFakeServer } from './support/fake-backend'
@@ -52,9 +54,9 @@ test('derrota: el Sim gana 2-0 y el match termina con "won the match"', { tag: '
   await withFakeServer(() => humanLosesScenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'defeat',
-      tableName: 'sim-wins-test',
-      deck: 'Mage Web bolt',
-      simDeck: 'Mage Web AI lands',
+      tableName: TABLE.defeatSimWins,
+      deck: DECK.bolt,
+      simDeck: DECK.aiLands,
       winsNeeded: 2,
     })
 

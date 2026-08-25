@@ -1,3 +1,4 @@
+import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
 import { cleanupUser } from './cleanup'
 import { login } from './support/start-game'
@@ -58,7 +59,7 @@ chatTest(
   'game chat: send and receive messages while watching a game',
   { tag: '@chat' },
   async ({ page, chatServer }) => {
-    test.skip(!FAKE_MODE, 'Solo fake: especta la mesa "Chat Test" del escenario chatScenario')
+fakeOnly()
     void chatServer
     const username = `gc-${String(Date.now()).slice(-10)}`
     cleanupUser(username)
@@ -99,7 +100,7 @@ chatTest(
   'game chat: quick reaction appears in chat',
   { tag: '@chat' },
   async ({ page, chatServer }) => {
-    test.skip(!FAKE_MODE, 'Solo fake: especta la mesa "Chat Test" del escenario chatScenario')
+fakeOnly()
     void chatServer
     const username = `qr-${String(Date.now()).slice(-10)}`
     cleanupUser(username)

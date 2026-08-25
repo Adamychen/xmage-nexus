@@ -1,3 +1,4 @@
+import { TABLE } from '../table-names'
 /**
  * Escenarios del FixtureServer para combat-human.spec.ts: el HUMANO declara
  * atacantes y bloqueadores por la UI (el mini-motor emite los GAME_SELECT de
@@ -8,7 +9,7 @@ import { HumanGame } from './humanGame'
 
 export function combatHumanAttackScenario() {
   const game = new HumanGame({
-    tableName: 'combat-human-attack',
+    tableName: TABLE.combatHumanAttack,
     hand: ['Mountain', 'Mountain', 'Mountain', 'Mountain', 'Mountain', 'Mountain'],
     myBattle: ['Raging Goblin'],
     humanAttack: true,
@@ -19,7 +20,7 @@ export function combatHumanAttackScenario() {
 
 export function combatHumanBlockScenario() {
   const game = new HumanGame({
-    tableName: 'combat-human-block',
+    tableName: TABLE.combatHumanBlock,
     hand: ['Mountain', 'Mountain', 'Mountain', 'Mountain', 'Mountain', 'Mountain'],
     myBattle: ['Raging Goblin'],
     simBattle: ['Raging Goblin'],

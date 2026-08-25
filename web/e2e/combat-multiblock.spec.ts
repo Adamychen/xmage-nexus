@@ -1,3 +1,5 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,9 +9,7 @@ import { combatMultiBlockScenario } from '../fixtures/scenarios/combatMultiBlock
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
 import { sceneClick, waitSceneCombat } from './support/scene'
-
-test.skip(!FAKE_MODE, 'Solo fake: reproduce el flujo determinista de asignación de daño con múltiples bloqueadores.')
-
+fakeOnly()
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
 test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden de asignación de daño y distribución de daño @combat', async ({ page }) => {
@@ -18,7 +18,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
   await withFakeServer(() => combatMultiBlockScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'cmb',
-      tableName: 'combat-multi-block',
+      tableName: TABLE.combatMultiBlock,
       skipCombat: true,
     })
 

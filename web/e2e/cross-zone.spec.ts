@@ -1,7 +1,8 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer (ventanas de prioridad/mazo scripteado). En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.')
+fakeOnly()
 import { crossZoneScenario } from '../fixtures/scenarios/crossZone'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
@@ -20,7 +21,7 @@ import { crossZoneInScene } from './support/scene'
 test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
   test('Arc Trail desde el cementerio: clic en el rayo, selección en overlay y resolución', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('graveyard-cast'), async () => {
-    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'cz', tableName: 'cz-test' })
+    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'cz', tableName: TABLE.crossZone })
     const board = page.locator('.game-board')
 
      // esperar la mano inicial (mulligan auto-keep)
@@ -61,7 +62,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
 
   test('Arc Trail desde exilio: mismo flujo con la carta en exilio', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('exile-cast'), async () => {
-    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'czx', tableName: 'cz-exile-test' })
+    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'czx', tableName: TABLE.crossZoneExile })
     const board = page.locator('.game-board')
 
     const arcId = await waitCrossZonePlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 0 })

@@ -1,3 +1,4 @@
+import { TABLE } from '../fixtures/table-names'
 import { expect, test } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
@@ -11,7 +12,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
     await withFakeServer(() => stackPriorityScenario(), async () => {
       const { pageErrors, helper } = await startGame(page, {
         prefix: 'stk',
-        tableName: 'stack-priority-test',
+        tableName: TABLE.stackPriority,
       })
 
       const board = page.locator('.game-board')

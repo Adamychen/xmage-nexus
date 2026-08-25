@@ -1,7 +1,9 @@
+import { fakeOnly } from './support/fake-mode'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
-
-test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServer.')
+fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -18,9 +20,9 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
   await withFakeServer(() => allInteractionsScenario(), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'int',
-      tableName: 'all-interactions-test',
-      deck: 'Mage Web advanced',
-      simDeck: 'Mage Web advanced',
+      tableName: TABLE.allInteractions,
+      deck: DECK.advanced,
+      simDeck: DECK.advanced,
       skipAsks: true,
     })
 
