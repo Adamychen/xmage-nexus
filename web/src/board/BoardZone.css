@@ -144,55 +144,47 @@
 
 /* ── Hand Zone in Top vs Bottom row ──────────────────────────────── */
 /* Top zone: hand cards hang down into the board */
-.zone-top .hand-zone,
-.opponent-zone:not(.mirrored) .hand-zone {
-  align-items: flex-start;
+.zone-top .hand-zone {
+  align-items: flex-start !important;
   height: 100%;
 }
 
-.zone-top .hand-card-slot,
-.opponent-zone:not(.mirrored) .hand-card-slot {
-  align-items: flex-start;
+.zone-top .hand-card-slot {
+  align-items: flex-start !important;
   height: 100%;
 }
 
-.zone-top .hand-card-slot .hand-card,
-.opponent-zone:not(.mirrored) .hand-card-slot .hand-card {
-  transform-origin: top center;
+.zone-top .hand-card-slot .hand-card {
+  transform-origin: top center !important;
 }
 
-.zone-top .hand-card-slot:hover .hand-card,
-.opponent-zone:not(.mirrored) .hand-card-slot:hover .hand-card {
-  transform: translateY(18px) scale(1.06);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95);
+.zone-top .hand-card-slot:hover .hand-card {
+  transform: translateY(18px) scale(1.06) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95) !important;
 }
 
 /* Bottom zone: hand cards rise up into the board */
 .zone-bottom .hand-zone,
-.player-zone .hand-zone,
-.opponent-zone.mirrored .hand-zone {
-  align-items: flex-end;
+.player-zone .hand-zone {
+  align-items: flex-end !important;
   height: 100%;
 }
 
 .zone-bottom .hand-card-slot,
-.player-zone .hand-card-slot,
-.opponent-zone.mirrored .hand-card-slot {
-  align-items: flex-end;
+.player-zone .hand-card-slot {
+  align-items: flex-end !important;
   height: 100%;
 }
 
 .zone-bottom .hand-card-slot .hand-card,
-.player-zone .hand-card-slot .hand-card,
-.opponent-zone.mirrored .hand-card-slot .hand-card {
-  transform-origin: bottom center;
+.player-zone .hand-card-slot .hand-card {
+  transform-origin: bottom center !important;
 }
 
 .zone-bottom .hand-card-slot:hover .hand-card,
-.player-zone .hand-card-slot:hover .hand-card,
-.opponent-zone.mirrored .hand-card-slot:hover .hand-card {
-  transform: translateY(-24px) scale(1.06);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95);
+.player-zone .hand-card-slot:hover .hand-card {
+  transform: translateY(-24px) scale(1.06) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95) !important;
 }
 
 /* ── Permanent / Creature Bands ──────────────────────────────────── */

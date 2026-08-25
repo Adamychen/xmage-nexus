@@ -375,7 +375,8 @@ export default function BoardZone({
 
   const zoneClasses = [
     'board-zone',
-    isTop ? 'zone-top opponent-zone' : (effectiveControlled ? 'zone-bottom player-zone' : 'zone-bottom opponent-zone mirrored'),
+    isTop ? 'zone-top opponent-zone' : 'zone-bottom player-zone',
+    mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
     isDefeated ? 'is-defeated' : '',
     className,
