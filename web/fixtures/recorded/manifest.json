@@ -1,0 +1,14 @@
+[
+  {
+    "file": "mutate.json",
+    "mechanic": "mutate",
+    "assert": "hasMutatedPermanent",
+    "note": "Elvish Mystic + Gemrazer apilados vía mutate (mutateView con 2 partes)."
+  },
+  {
+    "file": "creature.json",
+    "mechanic": "creature",
+    "assert": "hasNonMutatedCreature",
+    "note": "Criatura normal en el battlefield del humano (sin mutate)."
+  }
+]

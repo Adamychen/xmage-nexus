@@ -32,10 +32,36 @@ enforces that every server callback has a handler or is listed as planned.
   If the remote server changes release (strict version check `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`),
   the proxy won't connect: the fork must be updated (fetch upstream + merge) and everything rebuilt.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
-  Notes: (a) ~~anonymous login to beta.xmage.today is intermittent~~ **RESOLVED (2026-08-17)**
-  with the handshake buffer in `ProxyClient`; (b) the web login uses a SINGLE host for both the
-  proxy WS and the target server → to play against remote servers from the browser those
-  fields must be split (pending, Phase 3).
+  Notes: (a) **anonymous login to `beta.xmage.today` is intermittent and NOT fixed in-repo** —
+  the fatal `Can't receive server state before other data` / `connectStart=false` originates in the
+  *remote* XMage server's handshake (server-side; the proxy has **no** handshake buffer — the
+  `2026-08-17` "RESOLVED" note in `ROADMAP.md` is inaccurate). Treat beta as best-effort only.
+  (b) the web login uses a SINGLE host for both the proxy WS and the target server → to play
+  against remote servers from the browser those fields must be split (pending, Phase 3).
+
+### Real-protocol validation harness (anti-drift)
+The goal is a client that works against `beta.xmage.today`, but beta is flaky. So the **oracle for
+"real protocol" in CI is the local XMage server** (`node scripts/ctl.mjs restart all` →
+`localhost:17171`, same 1.4.61-V1 fork). The recorder captures real frames and the fake-mode tests
+replay them, giving drift detection without depending on beta:
+
+- `scripts/rec-lib.mjs` + `scripts/record.mjs <mechanic|all>` — a single WS recorder that drives a
+  real game (HUMAN+SIM, `skipInitShuffling`) and dumps the first `GAME_UPDATE` matching a driver's
+  `captureWhen` predicate to `web/fixtures/recorded/<mechanic>.json`
+  (`{recordedAt, gameId, gameView}`). Add a mechanic by registering a driver in `record.mjs`
+  (deck + `onSelect` script + `captureWhen`); the boilerplate (connect, table, mulligan, mana via
+  `sendPlayerUUID` of an untapped source, capture) is shared.
+- `web/fixtures/recorded/manifest.json` — lists each frame + its invariant (`hasMutatedPermanent`,
+  `hasNonMutatedCreature`, …).
+- `web/fixtures/recorded.test.ts` — vitest that validates every frame's `gameView` against the
+  contract schema (`gameViewFromAndValidate`) and asserts its invariant. Runs with no Java/stack.
+- `web/fixtures/scenarios/replay-recorded.ts` + `web/e2e/recorded.spec.ts` — replays each recorded
+  frame in the `FakeServer` and asserts the web renders it (no `pageErrors`, board paints,
+  mechanic-specific DOM). Run with `npx playwright test recorded.spec.ts`.
+
+Workflow: after changing the proxy/web, regenerate golden frames with `record.mjs all` against the
+local server, commit `web/fixtures/recorded/*.json`, and let CI validate + replay them.
+
 
 ## Working model & isolation
 
