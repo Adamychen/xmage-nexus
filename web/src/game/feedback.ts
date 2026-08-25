@@ -57,6 +57,12 @@ export interface FeedbackPrompt {
   isMulliganLondon?: boolean
   /** Verdadero para el ask de quién empieza la partida — UI dedicada. */
   isStartingPlayer?: boolean
+  /** Verdadero para votación (Voting) — UI dedicada. */
+  isVoting?: boolean
+  /** Verdadero para habilidad de planeswalker — UI dedicada. */
+  isPlaneswalkerAbility?: boolean
+  /** Delta de lealtad por opción en habilidad de planeswalker (ej +2,-3). */
+  loyaltyDeltas?: (number | null)[]
 }
 
 type JsonRecord = Record<string, unknown>
@@ -103,6 +109,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_ASK': {
       const isMulligan = /mulligan|keep your hand|keep hand/i.test(message)
       const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
+      const isVoting = /vote|voting|voted|votar|votación|council|will of the council/i.test(message) || /vote/i.test(stringValue(data.question) ?? '')
       const options = optionEntries(data.options)
       const choices = options.length
         ? options.map((option, index) => ({ ...option, value: booleanValue(option.label, index) || option.value }))
@@ -115,7 +122,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
               { id: 'yes', label: 'Sí', value: 'true' },
               { id: 'no', label: 'No', value: 'false' },
             ]
-      return prompt(method, gameId, isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan, undefined, isStartingPlayer)
+      return prompt(method, gameId, isVoting ? 'Votación' : isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan, undefined, isStartingPlayer, isVoting)
     }
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)
@@ -132,7 +139,13 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     }
     case 'GAME_CHOOSE_ABILITY': {
       const abilities = asRecord(raw)
-      return prompt(method, gameId, 'Elige habilidad', stringValue(abilities.message) ?? message, 'uuid', optionEntries(abilities.choices), bounds)
+      const opts = optionEntries(abilities.choices)
+      const isPW = opts.some((o) => /^([+-]?\d+)\s*:/.test(o.label)) || /planeswalker|lealtad|loyalty/i.test(message)
+      const deltas = isPW ? opts.map((o) => {
+        const m = /^([+-]?\d+)\s*:/.exec(o.label)
+        return m ? parseInt(m[1], 10) : null
+      }) : undefined
+      return prompt(method, gameId, isPW ? 'Habilidad de Planeswalker' : 'Elige habilidad', stringValue(abilities.message) ?? message, 'uuid', opts, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
     }
     case 'GAME_CHOOSE_CHOICE': {
       const choice = asRecord(data.choice)
@@ -227,8 +240,16 @@ function prompt(
   isMulligan?: boolean,
   isMulliganLondon?: boolean,
   isStartingPlayer?: boolean,
+  isVoting?: boolean,
+  loyaltyDeltas?: (number | null)[],
+  isPlaneswalkerAbility?: boolean,
 ): FeedbackPrompt {
-  return { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
+  const fp: FeedbackPrompt = { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
+  if (isVoting) fp.isVoting = true
+  if (isPlaneswalkerAbility) fp.isPlaneswalkerAbility = true
+  if (loyaltyDeltas) fp.loyaltyDeltas = loyaltyDeltas
+  if (isPlaneswalkerAbility && loyaltyDeltas) fp.isPlaneswalkerAbility = true
+  return fp
 }
 
 function asRecord(value: unknown): JsonRecord {

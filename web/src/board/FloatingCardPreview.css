@@ -199,6 +199,20 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
 }
 
+.floating-card-loyalty {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(20, 24, 50, 0.95);
+  border: 1.5px solid #a855f7;
+  color: #c084fc;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+
 .floating-card-counters {
   position: absolute;
   top: 8px;

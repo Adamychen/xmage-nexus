@@ -137,6 +137,33 @@ describe('FloatingCardPreview', () => {
     expect(container.textContent).toContain('+2 contadores')
   })
 
+  it('renders keyword boxes for Flying/Deathtouch and loyalty for planeswalkers', () => {
+    const kwCard: CardView = {
+      name: 'Atraxa',
+      manaValue: 4,
+      rules: ['Flying, vigilance, deathtouch, lifelink, trample'],
+    }
+    const kwAnchor = { left: 200, top: 200, right: 290, bottom: 326, width: 90, height: 126 } as DOMRect
+    const { container: kwContainer } = render(
+      <FloatingCardPreview card={kwCard} anchorRect={kwAnchor} boardRect={dummyBoardRect} />,
+    )
+    expect(kwContainer.querySelector('.floating-card-keywords')).not.toBeNull()
+    expect(kwContainer.textContent).toContain('Volar')
+    expect(kwContainer.textContent).toContain('Toque mortal')
+
+    const pwCard: PermanentView = {
+      name: 'Jace, the Mind Sculptor',
+      manaValue: 4,
+      cardTypes: ['Planeswalker'],
+      loyalty: '3',
+    }
+    const { container: pwContainer } = render(
+      <FloatingCardPreview card={pwCard} anchorRect={kwAnchor} boardRect={dummyBoardRect} />,
+    )
+    expect(pwContainer.querySelector('.floating-card-loyalty')).not.toBeNull()
+    expect(pwContainer.textContent).toContain('3')
+  })
+
   it('renders flip badge for double-faced cards and toggles face on Shift key', async () => {
     const tdfcCard: CardView = {
       name: 'Delver of Secrets',

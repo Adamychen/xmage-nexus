@@ -138,8 +138,8 @@ Lista actual (de `engine-view-gap.json`):
 ### D. Keyword badges
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Flying / Deathtouch / Trample / Haste / etc. | ✅ | ⚠️ | `keywordExtractor` + `FloatingCardPreview`; sin spec dedicada | 2026-08-24 |
-| Goad (estado "goaded" en criatura) | ✅ | ✅ | `CardIcons.tsx` renderiza `cardIcons.OTHER_HAS_RESTRICTIONS` (texto "Goaded by X (must attack)" vía `rules`+icono); badge de restricción en `CardSlot` | 2026-08-25 |
+| Flying / Deathtouch / Trample / Haste / etc. | ✅ | ✅ | `CardSlot` badges `.keyword-badges` + `FloatingCardPreview` hover `.floating-card-keywords`; `keywordExtractor.test.ts` + `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `keywords.spec.ts` (`@keywords`) / `mechanics.ts` `Keyword Beast` | 2026-08-26 |
+| Goad (estado "goaded" en criatura) | ✅ | ✅ | `CardIcons.tsx` renderiza `cardIcons.OTHER_HAS_RESTRICTIONS` (texto "Goaded by X (must attack)" vía `rules`+icono); badge de restricción en `CardSlot` + `keywords.spec.ts` | 2026-08-25 |
 
 ### E. Información revelada / Known cards
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -167,8 +167,8 @@ Lista actual (de `engine-view-gap.json`):
 ### I. Elecciones modales / Voting
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| `GAME_CHOOSE_MODE` / `_ONE` / `_CHOICE` / `_ABILITY` / `_PILE` | ✅ | ⚠️ | `feedback.test.ts` (ability/pile/choice) + `complex-costs`; voting sin spec dedicada | 2026-08-24 |
-| Voting (Council's judgment, Fact or Fiction) | ⚠️ | ❌ | vía `GAME_CHOOSE_ONE`; sin spec dedicada | 2026-08-24 |
+| `GAME_CHOOSE_MODE` / `_ONE` / `_CHOICE` / `_ABILITY` / `_PILE` | ✅ | ✅ | `VotingDialog.tsx` + `feedback.test.ts` (ability/pile/choice) + `missing-prompts.spec.ts` + `voting.spec.ts` (`@voting`) `GAME_ASK` con `isVoting` + `complex-costs.spec.ts` | 2026-08-26 |
+| Voting (Council's judgment, Fact or Fiction) | ✅ | ✅ | `VotingDialog.tsx` dedicado (`🗳️ VOTACIÓN`, step `1/2`, `GAME_ASK` `isVoting` → `boolean`); `feedback.test.ts` (`isVoting`) + `VotingDialog.test.tsx` + `voting.spec.ts` (`@voting`) `fixtures/scenarios/voting.ts` | 2026-08-26 |
 
 ### J. Biblioteca
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -181,8 +181,8 @@ Lista actual (de `engine-view-gap.json`):
 ### K. Planeswalkers
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Lealtad (render de badge) | ✅ | ✅ | `mechanics.spec.ts` (`.loyalty-badge`) | 2026-08-24 |
-| Activar habilidad de planeswalker | ⚠️ | ⚠️ | vía `GAME_CHOOSE_ABILITY`; sin UI dedicada | 2026-08-24 |
+| Lealtad (render de badge) | ✅ | ✅ | `CardSlot` `.loyalty-badge` + `FloatingCardPreview` `.floating-card-loyalty`; `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `mechanics.spec.ts` (`.loyalty-badge`) | 2026-08-26 |
+| Activar habilidad de planeswalker | ✅ | ✅ | `PlaneswalkerAbilityDialog.tsx` dedicado (`✨ PLANESWALKER`, `+2/-3` con `loyaltyDeltas`, `isPlaneswalkerAbility`→`uuid`); `feedback.test.ts` (`loyaltyDeltas`) + `PlaneswalkerAbilityDialog.test.tsx` + `planeswalker.spec.ts` (`@planeswalker`) `fixtures/scenarios/planeswalker.ts` | 2026-08-26 |
 
 ### L. Modos de juego
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

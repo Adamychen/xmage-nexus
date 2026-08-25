@@ -6,6 +6,8 @@ import CardGrid from './CardGrid'
 import FormattedText from './FormattedText'
 import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
+import VotingDialog from './VotingDialog'
+import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
 
 const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
 
@@ -65,6 +67,16 @@ export default function FeedbackDialog() {
   // ── Mulligan: diálogo dedicado (Keep/Mulligan y London-bottom)
   if (prompt.isMulligan || prompt.isMulliganLondon) {
     return <MulliganDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
+  }
+
+  // ── Voting: diálogo dedicado
+  if (prompt.isVoting) {
+    return <VotingDialog prompt={prompt} send={send} busy={busy} />
+  }
+
+  // ── Planeswalker: diálogo dedicado
+  if (prompt.isPlaneswalkerAbility) {
+    return <PlaneswalkerAbilityDialog prompt={prompt} send={send} busy={busy} />
   }
 
   // ── Decisión de quién empieza: diálogo dedicado

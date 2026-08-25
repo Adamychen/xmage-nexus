@@ -63,6 +63,17 @@ export function mechanicsScenario(): Scenario {
             cardTypes: ['Planeswalker'],
             loyalty: '3',
           }),
+          keywordBeast: makePermanent({
+            id: 'keywordBeast',
+            name: 'Keyword Beast',
+            parentId: 'keywordBeast',
+            controlled: true,
+            cardTypes: ['Creature'],
+            power: '4',
+            toughness: '4',
+            rules: ['Flying, deathtouch, trample, haste'],
+            cardIcons: [{ cardIconType: 'OTHER_HAS_RESTRICTIONS', hint: 'Goaded by Bob (must attack)', text: '⚠' } as unknown as Record<string, unknown>],
+          } as any),
           treasure1: makePermanent({
             id: 'treasure1',
             name: 'Treasure Token',

@@ -331,4 +331,31 @@ describe('parseFeedback', () => {
     expect(prompt?.mode).toBe('order')
     expect(prompt?.options?.map((o) => o.value)).toEqual(['c-a', 'c-b'])
   })
+
+  it('routes voting GAME_ASK to VotingDialog', () => {
+    const prompt = parseFeedback('GAME_ASK', 'game-20', {
+      message: 'Vote, step 1 of 2',
+      options: { yes: 'Strength', no: 'Numbers' },
+    })
+    expect(prompt?.isVoting).toBe(true)
+    expect(prompt?.title).toBe('Votación')
+  })
+
+  it('routes planeswalker GAME_CHOOSE_ABILITY to dedicated dialog with loyalty deltas', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_ABILITY', 'game-21', {
+      message: 'Activate a loyalty ability',
+      choices: { a1: '+2: Scry 1', a2: '-3: Draw 2', a3: '-8: Ultimate' },
+    })
+    expect(prompt?.isPlaneswalkerAbility).toBe(true)
+    expect(prompt?.loyaltyDeltas).toEqual([2, -3, -8])
+    expect(prompt?.title).toBe('Habilidad de Planeswalker')
+  })
+
+  it('does not misroute non-planeswalker ability', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_ABILITY', 'game-22', {
+      message: 'Choose an ability',
+      choices: { a1: 'Triggered ability' },
+    })
+    expect(prompt?.isPlaneswalkerAbility).toBeUndefined()
+  })
 })

@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
+import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import './CardSlot.css'
 
@@ -147,6 +148,11 @@ export default function CardSlot({
   const defenseVal = perm.defense ? parseInt(String(perm.defense), 10) : 0
 
   const hasSummoningSickness = isRealCreature && !tapped && perm.summoningSickness === true
+
+  const keywordBadges = useMemo(() => {
+    const kws = extractKeywordsFromCard(card)
+    return kws.filter((k) => ['combat', 'evasion', 'protection'].includes(k.category)).slice(0, 4)
+  }, [card.rules, (card as unknown as { abilities?: unknown }).abilities, card.name])
 
   return (
     <div
@@ -298,6 +304,17 @@ export default function CardSlot({
 
       {/* Card restriction / ability icons (e.g. Goad, must/can't attack, keywords) */}
       <CardIcons icons={card.cardIcons} />
+
+      {/* Keyword badges (Flying/Deathtouch/Trample/Haste etc.) — compact, top-right under mutate badge */}
+      {keywordBadges.length > 0 && (
+        <div className="keyword-badges" aria-label="keywords">
+          {keywordBadges.map((kw) => (
+            <span key={kw.id} className={`keyword-badge cat-${kw.category}`} title={`${kw.name} — ${kw.summary}`}>
+              {kw.icon}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

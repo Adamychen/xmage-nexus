@@ -40,4 +40,6 @@ export const TABLE = {
   mulliganShowcase: 'Mulligan Showcase',
   stackPriority: 'stack-priority-test',
   thoughtseize: 'thoughtseize-test',
+  voting: 'voting-test',
+  planeswalker: 'planeswalker-test',
 } as const

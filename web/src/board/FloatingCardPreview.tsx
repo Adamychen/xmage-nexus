@@ -219,6 +219,13 @@ export default function FloatingCardPreview({
             </div>
           )}
 
+          {/* Loyalty Badge (Planeswalkers) */}
+          {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
+            <div className="floating-card-loyalty" title={`Lealtad: ${perm.loyalty}`}>
+              🛡️ {perm.loyalty}
+            </div>
+          )}
+
           {/* Counters Badge */}
           {activeCard.counters && activeCard.counters.length > 0 && (
             <div className="floating-card-counters">
