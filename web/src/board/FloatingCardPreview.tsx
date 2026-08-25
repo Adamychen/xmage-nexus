@@ -51,7 +51,7 @@ export default function FloatingCardPreview({
     const shouldShowBack = isTransformedOnField ? !showBackFace : showBackFace
 
     if (!shouldShowBack) {
-      return { ...card, isFrontFace: true, isSecondCardFace: false } as CardView | PermanentView
+      return { ...card, isFrontFace: true, isSecondCardFace: false } as unknown as CardView | PermanentView
     }
     if (card.secondCardFace) {
       return {
@@ -59,7 +59,7 @@ export default function FloatingCardPreview({
         isSecondCardFace: true,
         expansionSetCode: card.secondCardFace.expansionSetCode || card.expansionSetCode,
         cardNumber: card.secondCardFace.cardNumber || card.cardNumber,
-      } as CardView | PermanentView
+      } as unknown as CardView | PermanentView
     }
     if (card.alternateName) {
       return {
@@ -67,9 +67,9 @@ export default function FloatingCardPreview({
         name: card.alternateName,
         displayName: card.alternateName,
         isSecondCardFace: true,
-      } as CardView | PermanentView
+      } as unknown as CardView | PermanentView
     }
-    return { ...card, isSecondCardFace: true } as CardView | PermanentView
+    return { ...card, isSecondCardFace: true } as unknown as CardView | PermanentView
   }, [card, showBackFace])
 
   useEffect(() => {

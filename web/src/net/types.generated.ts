@@ -107,7 +107,6 @@ export interface CardView {
   abilityType?: string
   isToken?: boolean
   ability?: CardView
-  sourceCard?: CardView
   imageFileName?: string
   imageNumber?: number
   expansionSetCode?: string
@@ -137,9 +136,7 @@ export interface CardView {
   originalToughness?: string | null
   originalColorIdentity?: string | null
   originalIsCopy?: boolean
-  isSecondCardFace?: boolean
-  isFrontFace?: boolean
-  isBackFace?: boolean
+  sourceCard?: CardView
 }
 
 export interface PermanentView extends CardView {
@@ -164,9 +161,9 @@ export interface PermanentView extends CardView {
   mutateView?: MutateView
 }
 
-export type CardsView = Record<string, CardView>
-
 export type MutateView = Record<string, CardView>
+
+export type CardsView = Record<string, CardView>
 
 export interface SimpleCardView {
   id: string
@@ -255,7 +252,6 @@ export interface RoomUsersView {
 export interface UsersView {
   flagName: string
   userName: string
-  avatarId?: number
   matchHistory: string
   matchQuitRatio: number
   tourneyHistory: string
@@ -265,6 +261,7 @@ export interface UsersView {
   generalRating: number
   constructedRating: number
   limitedRating: number
+  avatarId?: number
 }
 
 export interface UserView {

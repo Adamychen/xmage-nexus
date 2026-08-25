@@ -31,12 +31,12 @@ export default function CardPreview({ card, onClose }: Props) {
 
   const activeCard: CardView | null =
     selectedFaceIndex === 1 && card?.secondCardFace
-      ? {
+      ? ({
           ...card.secondCardFace,
           isSecondCardFace: true,
           expansionSetCode: card.secondCardFace.expansionSetCode || card.expansionSetCode,
-          cardNumber: card.secondCardFace.cardNumber || card.cardNumber,
-        }
+          cardNumber: card.secondCardFace.cardNumber || card.expansionSetCode,
+        } as CardView)
       : card
 
   useEffect(() => {

@@ -200,7 +200,8 @@
         "originalPower": { "type": ["string", "null"] },
         "originalToughness": { "type": ["string", "null"] },
         "originalColorIdentity": { "type": ["string", "null"] },
-        "originalIsCopy": { "type": "boolean" }
+        "originalIsCopy": { "type": "boolean" },
+        "sourceCard": { "$ref": "#/definitions/CardView" }
       },
       "required": ["name", "manaValue"]
     },
@@ -369,7 +370,8 @@
         "infoPing": { "type": "string" },
         "generalRating": { "type": "number" },
         "constructedRating": { "type": "number" },
-        "limitedRating": { "type": "number" }
+        "limitedRating": { "type": "number" },
+        "avatarId": { "type": "number" }
       },
       "required": [
         "flagName", "userName", "matchHistory", "matchQuitRatio",

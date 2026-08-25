@@ -39,6 +39,9 @@ jobs:
       - name: Validate generated zod schema is in sync with contract
         working-directory: web
         run: npm run gen-zod:validate
+      - name: Validate generated TS types are in sync with contract
+        working-directory: web
+        run: npm run gen-types -- --validate
       - name: Unit tests (vitest)
         working-directory: web
         run: npm run test
