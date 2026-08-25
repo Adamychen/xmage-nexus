@@ -21,6 +21,7 @@
     "gen-types": "node ../scripts/gen-types.mjs",
     "gen-zod": "node ../scripts/gen-zod.mjs",
     "gen-zod:validate": "node ../scripts/gen-zod.mjs --validate",
+    "gen-types:validate": "node ../scripts/gen-types.mjs --validate",
     "gen": "npm run gen-types && npm run gen-zod"
   },
   "dependencies": {
