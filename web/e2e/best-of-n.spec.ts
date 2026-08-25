@@ -16,8 +16,8 @@ test.skip(!FAKE_MODE, 'Solo fake: depende del guion determinista del FixtureServ
 import { bestOfNScenario } from '../fixtures/scenarios/bestOfN'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
-import { framesOf, lastGameView, nextManaSource, opponentPlayer, parseFrames, parsedLen, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
-import { targetOpponent, waitPlayable, dumpE2E } from './support/game-screen'
+import { framesOf, lastGameView, opponentPlayer, parseFrames, parsedLen, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
+import { targetOpponent, waitPlayable, dumpE2E, payMana } from './support/game-screen'
 import type { HumanHelper } from './wshelper'
 
 /** Marca el fin de una partida (GAME_OVER + END_GAME_INFO del match). */
@@ -75,7 +75,7 @@ async function castBolt(page: import('@playwright/test').Page, helper: HumanHelp
     }
     await targetOpponent(page, undefined as never, 'Bolt', helper)
     try {
-      await payManaFast(page, helper, castAt)
+      await payMana(page, helper, castAt)
       return true
     } catch (e) {
       if (attempt === 2) throw e
@@ -84,39 +84,6 @@ async function castBolt(page: import('@playwright/test').Page, helper: HumanHelp
     }
   }
   return false
-}
-
-/** Pago de maná por WS sin verificación del diálogo: el bucle de 7+ bolts por
- *  partida es demasiado rápido para el render del diálogo en el fake (el check
- *  por bolt era un flake). El render de "Pagar maná" ya lo cubren los specs de
- *  spells/targeting con UNA sola interacción. El cursor es ESTRICTO (sin
- *  lookback): un ask viejo ya pagado re-matcheado dejaría sin fuente. */
-async function payManaFast(page: import('@playwright/test').Page, helper: HumanHelper, fromIndex: number): Promise<void> {
-  let cursor = fromIndex
-  for (let i = 0; i < 6; i++) {
-    const { frame: mana, index: manaIndex } = await waitFrameAt(
-      page,
-      (f) => f.method === 'GAME_PLAY_MANA',
-      `GAME_PLAY_MANA (${i})`,
-      10_000,
-      cursor,
-    )
-    cursor = manaIndex + 1
-    let sourceId: string | null = null
-    for (let attempt = 0; attempt < 20 && !sourceId; attempt++) {
-      sourceId = nextManaSource(lastGameView(parseFrames(framesOf(page))), null)
-      if (!sourceId) await page.waitForTimeout(150)
-    }
-    if (!sourceId) throw new Error(`sin fuente de maná para "${String(mana.data?.message ?? '').slice(0, 40)}"`)
-    expect(await helper.playCard(sourceId), `pago de maná por WS (intento ${i})`).toBeTruthy()
-    try {
-      const next = await waitFrameAt(page, (f) => f.method === 'GAME_PLAY_MANA', `siguiente ask (${i})`, 5_000, cursor)
-      cursor = next.index
-    } catch {
-      return
-    }
-  }
-  throw new Error('no se pudo pagar el maná del Bolt')
 }
 
 test('match best-of-N: END_GAME_INFO + SIDEBOARD + submitDeck + siguiente partida, y fin del match', { tag: '@fullflow' }, async ({ page }) => {

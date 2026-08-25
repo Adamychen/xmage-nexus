@@ -7,7 +7,8 @@
  * 5. Resolución de daño de combate.
  */
 
-import type { FakeConn, Scenario } from '../fake'
+import type { FakeConn } from '../fake'
+import { makeBaseScenario } from '../fake'
 import { makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PermanentView } from '../../src/net/types'
 import {
@@ -109,180 +110,137 @@ export function combatMultiBlockScenario(): Scenario {
     if (activeConn) activeConn.broadcast(method, data, gameId)
   }
 
-  const table = {
-    tableId: TABLE_ID,
-    tableName: 'combat-multi-block',
-    gameType: 'Two Player Duel',
-    deckType: 'Constructed - Modern',
-    controllerName: 'e2e',
-    additionalInfoShort: '2/2',
-    additionalInfoFull: '',
-    createTime: Date.now(),
-    tableState: 'READY_TO_START',
-    skillLevel: 'Casual',
-    tableStateText: 'Lista',
-    seatsInfo: '2/2',
-    isTournament: false,
-    seats: [
-      { playerName: HUMAN_NAME, seatIndex: 0, playerType: 'HUMAN' },
-      { playerName: SIM_NAME, seatIndex: 1, playerType: 'SIM' },
-    ],
-    games: [GAME_ID],
-    quitRatio: '100',
-    minimumRating: '0',
-    limited: false,
+  const track = (conn: FakeConn): void => {
+    activeConn = conn
   }
 
-  return {
-    onConnect: (conn) => {
-      conn.raw({ type: 'connected', message: 'Proxy ready.' })
-      conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table])
-      activeConn = conn
+  return makeBaseScenario({
+    tableId,
+    tableName: 'combat-multi-block',
+    gameId,
+    getGameView: () => getGameView(),
+    onConnect: track,
+    onStartMatch: (conn) => {
+      track(conn)
+      conn.broadcast(
+        'GAME_SELECT',
+        {
+          message: 'Select attackers',
+          options: { possibleAttackers: [myAttacker.parentId!], specialButton: 'All attack' },
+          gameView: getGameView(),
+        },
+        GAME_ID,
+      )
     },
-    onAction: (conn, action, args, requestId) => {
-      activeConn = conn
-      switch (action) {
-        case 'connect':
-        case 'createTable':
-        case 'joinGame':
-        case 'watchTable':
-        case 'watchGame':
-          conn.ok(requestId, action, { tableId: TABLE_ID })
-          conn.lobby([table])
-          break
-        case 'startMatch': {
-          conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: 'combat-multi-block' }, GAME_ID)
-          conn.broadcast('GAME_INIT', { gameView: getGameView() }, GAME_ID)
-          conn.broadcast(
-            'GAME_SELECT',
-            {
-              message: 'Select attackers',
-              options: { possibleAttackers: [myAttacker.parentId!], specialButton: 'All attack' },
-              gameView: getGameView(),
+    onSendPlayerUUID: (conn) => {
+      track(conn)
+      // Declaring Colossal Dreadmaw as attacker (taps because no vigilance)
+      myAttacker.tapped = true
+      const combatGroups = [{ attackers: { [myAttacker.parentId!]: {} } }]
+      conn.broadcast('GAME_UPDATE', { gameView: getGameView(combatGroups) }, GAME_ID)
+      conn.broadcast(
+        'GAME_SELECT',
+        {
+          message: 'Select attackers',
+          options: { possibleAttackers: [myAttacker.parentId!], specialButton: 'All attack' },
+          gameView: getGameView(combatGroups),
+        },
+        GAME_ID,
+      )
+    },
+    onSendPlayerBoolean: (conn) => {
+      track(conn)
+      if (stage === 'attack') {
+        // Confirm attackers -> Sim declares 2 blockers on Colossal Dreadmaw!
+        stage = 'blocked'
+        const multiBlockCombat = [
+          {
+            attackers: { [myAttacker.parentId!]: {} },
+            blockers: {
+              [simBlocker1.parentId!]: {},
+              [simBlocker2.parentId!]: {},
             },
-            GAME_ID
-          )
-          break
-        }
-        case 'sendPlayerUUID': {
-          conn.ok(requestId, action, {})
-          // Declaring Colossal Dreadmaw as attacker (taps because no vigilance)
-          myAttacker.tapped = true
-          const combatGroups = [{ attackers: { [myAttacker.parentId!]: {} } }]
-          conn.broadcast('GAME_UPDATE', { gameView: getGameView(combatGroups) }, GAME_ID)
-          conn.broadcast(
-            'GAME_SELECT',
-            {
-              message: 'Select attackers',
-              options: { possibleAttackers: [myAttacker.parentId!], specialButton: 'All attack' },
-              gameView: getGameView(combatGroups),
-            },
-            GAME_ID
-          )
-          break
-        }
-        case 'sendPlayerBoolean': {
-          conn.ok(requestId, action, {})
-          if (stage === 'attack') {
-            // Confirm attackers -> Sim declares 2 blockers on Colossal Dreadmaw!
-            stage = 'blocked'
-            const multiBlockCombat = [
-              {
-                attackers: { [myAttacker.parentId!]: {} },
-                blockers: {
-                  [simBlocker1.parentId!]: {},
-                  [simBlocker2.parentId!]: {},
-                },
-                defenderId: SIM_PLAYER_ID,
-              },
-            ]
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView(multiBlockCombat) }, GAME_ID)
+            defenderId: SIM_PLAYER_ID,
+          },
+        ]
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView(multiBlockCombat) }, GAME_ID)
 
-            // Next: Server asks attacker to order the blockers (Damage Assignment Order)
-            stage = 'order'
-            setTimeout(() => {
-              conn.broadcast(
-                'GAME_CHOOSE_CARDS_ORDER',
+        // Next: Server asks attacker to order the blockers (Damage Assignment Order)
+        stage = 'order'
+        setTimeout(() => {
+          conn.broadcast(
+            'GAME_CHOOSE_CARDS_ORDER',
+            {
+              message: 'Order blockers for Colossal Dreadmaw',
+              title: 'Order Blockers',
+              options: [
+                { id: simBlocker1.parentId!, label: 'Grizzly Bears', value: simBlocker1.parentId! },
+                { id: simBlocker2.parentId!, label: 'Raging Goblin', value: simBlocker2.parentId! },
+              ],
+              cardsView1: [
                 {
-                  message: 'Order blockers for Colossal Dreadmaw',
-                  title: 'Order Blockers',
-                  options: [
-                    { id: simBlocker1.parentId!, label: 'Grizzly Bears', value: simBlocker1.parentId! },
-                    { id: simBlocker2.parentId!, label: 'Raging Goblin', value: simBlocker2.parentId! },
-                  ],
-                  cardsView1: [
-                    {
-                      id: simBlocker1.parentId!,
-                      name: 'Grizzly Bears',
-                      displayName: 'Grizzly Bears',
-                      power: '2',
-                      toughness: '2',
-                      cardTypes: ['Creature'],
-                      manaCost: ['{1}', '{G}'],
-                    },
-                    {
-                      id: simBlocker2.parentId!,
-                      name: 'Raging Goblin',
-                      displayName: 'Raging Goblin',
-                      power: '1',
-                      toughness: '1',
-                      cardTypes: ['Creature'],
-                      manaCost: ['{R}'],
-                    },
-                  ],
-                  gameView: getGameView(multiBlockCombat),
+                  id: simBlocker1.parentId!,
+                  name: 'Grizzly Bears',
+                  displayName: 'Grizzly Bears',
+                  power: '2',
+                  toughness: '2',
+                  cardTypes: ['Creature'],
+                  manaCost: ['{1}', '{G}'],
                 },
-                GAME_ID
-              )
-            }, 1200)
-          }
-          break
-        }
-        case 'sendPlayerString': {
-          conn.ok(requestId, action, {})
-          if (stage === 'order') {
-            // Blocker order confirmed -> Prompt for damage distribution
-            stage = 'damage'
-            const multiBlockCombat = [
-              {
-                attackers: { [myAttacker.parentId!]: {} },
-                blockers: {
-                  [simBlocker1.parentId!]: {},
-                  [simBlocker2.parentId!]: {},
+                {
+                  id: simBlocker2.parentId!,
+                  name: 'Raging Goblin',
+                  displayName: 'Raging Goblin',
+                  power: '1',
+                  toughness: '1',
+                  cardTypes: ['Creature'],
+                  manaCost: ['{R}'],
                 },
-                defenderId: SIM_PLAYER_ID,
-              },
-            ]
-            conn.broadcast(
-              'GAME_GET_MULTI_AMOUNT',
-              {
-                message: 'Asigna el daño de combate de Colossal Dreadmaw (6 puntos)',
-                messages: [
-                  { id: simBlocker1.parentId!, message: 'Daño a Grizzly Bears (mínimo 2 letal)', min: 2, max: 5, defaultValue: 2 },
-                  { id: simBlocker2.parentId!, message: 'Daño a Raging Goblin (restante)', min: 1, max: 4, defaultValue: 4 },
-                ],
-                gameView: getGameView(multiBlockCombat),
-              },
-              GAME_ID
-            )
-          } else if (stage === 'damage') {
-            // Damage amounts sent -> Resolve combat damage and cleanup blockers
-            stage = 'resolved'
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView([]) }, GAME_ID)
-            conn.broadcast(
-              'GAME_INFORM',
-              { message: 'Colossal Dreadmaw asigna 2 de daño a Grizzly Bears y 4 de daño a Raging Goblin. Ambos bloqueadores mueren.' },
-              GAME_ID
-            )
-          }
-          break
-        }
-        default:
-          conn.ok(requestId, action, {})
-          break
+              ],
+              gameView: getGameView(multiBlockCombat),
+            },
+            GAME_ID,
+          )
+        }, 1200)
       }
     },
-  }
+    onSendPlayerString: (conn) => {
+      track(conn)
+      if (stage === 'order') {
+        // Blocker order confirmed -> Prompt for damage distribution
+        stage = 'damage'
+        const multiBlockCombat = [
+          {
+            attackers: { [myAttacker.parentId!]: {} },
+            blockers: {
+              [simBlocker1.parentId!]: {},
+              [simBlocker2.parentId!]: {},
+            },
+            defenderId: SIM_PLAYER_ID,
+          },
+        ]
+        conn.broadcast(
+          'GAME_GET_MULTI_AMOUNT',
+          {
+            message: 'Asigna el daño de combate de Colossal Dreadmaw (6 puntos)',
+            messages: [
+              { id: simBlocker1.parentId!, message: 'Daño a Grizzly Bears (mínimo 2 letal)', min: 2, max: 5, defaultValue: 2 },
+              { id: simBlocker2.parentId!, message: 'Daño a Raging Goblin (restante)', min: 1, max: 4, defaultValue: 4 },
+            ],
+            gameView: getGameView(multiBlockCombat),
+          },
+          GAME_ID,
+        )
+      } else if (stage === 'damage') {
+        // Damage amounts sent -> Resolve combat damage and cleanup blockers
+        stage = 'resolved'
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView([]) }, GAME_ID)
+        conn.broadcast(
+          'GAME_INFORM',
+          { message: 'Colossal Dreadmaw asigna 2 de daño a Grizzly Bears y 4 de daño a Raging Goblin. Ambos bloqueadores mueren.' },
+          GAME_ID,
+        )
+      }
+    },
+  })
 }

@@ -9,7 +9,7 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws'
-import type { RoomUsersView, TableView, UserView } from '../src/net/types'
+import type { GameView, RoomUsersView, SeatView, TableView, UserView } from '../src/net/types'
 
 let nextConnId = 1
 
@@ -53,6 +53,174 @@ export const DEFAULT_RESULTS: Record<string, unknown> = {
   ],
   getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD'],
   getDeckTypes: ['Constructed - Modern'],
+}
+
+/**
+ * Construye el literal de `TableView` que reutilizan todos los escenarios
+ * (antes se copiaba ~25 campos en cada archivo de `fixtures/scenarios/*`).
+ */
+export interface MakeTableOptions {
+  tableId: string
+  tableName: string
+  gameId: string
+  gameType?: string
+  deckType?: string
+  controllerName?: string
+  seats?: SeatView[]
+}
+
+export function makeTable(opts: MakeTableOptions): TableView {
+  const seats = opts.seats ?? [
+    { playerName: 'e2e', seatIndex: 0, playerType: 'HUMAN' },
+    { playerName: 'sim', seatIndex: 1, playerType: 'SIM' },
+  ]
+  return {
+    tableId: opts.tableId,
+    gameType: opts.gameType ?? 'Two Player Duel',
+    deckType: opts.deckType ?? 'Constructed - Modern',
+    tableName: opts.tableName,
+    controllerName: opts.controllerName ?? 'e2e',
+    additionalInfoShort: '2/2',
+    additionalInfoFull: '',
+    createTime: Date.now(),
+    tableState: 'READY_TO_START',
+    skillLevel: 'Casual',
+    tableStateText: 'Lista',
+    seatsInfo: '2/2',
+    isTournament: false,
+    seats,
+    games: [opts.gameId],
+    quitRatio: '100',
+    minimumRating: '0',
+    limited: false,
+    rated: false,
+    passworded: false,
+    spectatorsAllowed: false,
+  }
+}
+
+export interface BaseScenarioActionContext {
+  args: Record<string, unknown>
+  /** Última conexión activa; útil para broadcasts diferidos (setTimeout). */
+  activeConn: FakeConn | null
+}
+
+/**
+ * Escenario base que implementa el ciclo canónico del proxy:
+ * `connected`/`info` + lobby en `onConnect`, y el switch
+ * `connect`/`createTable`/`joinGame`/`watch*`/`startMatch`/`sendPlayer*`
+ * en `onAction`. Los escenarios con lógica propia pasan callbacks
+ * (`onSendPlayerUUID`, `onStartMatch`, `onExtra`, …) y el resto del
+ * boilerplate desaparece de cada archivo.
+ */
+export interface BaseScenarioOptions {
+  tableId: string
+  tableName: string
+  gameId: string
+  gameView?: GameView
+  getGameView?: () => GameView
+  selectMessage?: string
+  onConnect?: (conn: FakeConn) => void
+  onStartMatch?: (conn: FakeConn) => void
+  onSendPlayerUUID?: (conn: FakeConn, uuid: string, ctx: BaseScenarioActionContext) => void
+  onSendPlayerAction?: (conn: FakeConn, value: string, ctx: BaseScenarioActionContext) => void
+  onSendPlayerBoolean?: (conn: FakeConn, ctx: BaseScenarioActionContext) => void
+  onSendPlayerInteger?: (conn: FakeConn, value: number, ctx: BaseScenarioActionContext) => void
+  onSendPlayerString?: (conn: FakeConn, value: string, ctx: BaseScenarioActionContext) => void
+  onExtra?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
+}
+
+const argString = (args: Record<string, unknown>, ...keys: string[]): string => {
+  for (const k of keys) {
+    const v = args[k]
+    if (v !== undefined && v !== null) return String(v)
+  }
+  if (args[0] !== undefined && args[0] !== null) return String(args[0])
+  return ''
+}
+
+export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
+  const table = makeTable({ tableId: opts.tableId, tableName: opts.tableName, gameId: opts.gameId })
+  const getGv = opts.getGameView ?? (() => opts.gameView as GameView)
+  const selectMessage = opts.selectMessage ?? 'Main 1: Cast spells or activate abilities'
+  let activeConn: FakeConn | null = null
+
+  return {
+    onConnect: (conn) => {
+      activeConn = conn
+      conn.raw({ type: 'connected', message: 'Proxy ready.' })
+      conn.raw({ type: 'info', message: 'Proxy ready.' })
+      conn.lobby([table])
+      opts.onConnect?.(conn)
+    },
+    onAction: (conn, action, args, requestId) => {
+      activeConn = conn
+      const gv = () => getGv()
+      const ctx = (): BaseScenarioActionContext => ({ args, activeConn })
+      switch (action) {
+        case 'connect':
+        case 'createTable':
+        case 'joinGame':
+        case 'watchTable':
+        case 'watchGame':
+          conn.ok(requestId, action, { tableId: table.tableId })
+          conn.lobby([table])
+          return
+        case 'startMatch': {
+          conn.ok(requestId, action, {})
+          conn.broadcast('START_GAME', { gameId: opts.gameId, tableName: table.tableName }, opts.gameId)
+          conn.broadcast('GAME_INIT', { gameView: gv() }, opts.gameId)
+          if (opts.onStartMatch) {
+            // El escenario controla por completo el primer prompt (GAME_ASK,
+            // GAME_SELECT_PLAYER, GAME_SELECT de atacantes, …). No emitimos el
+            // GAME_SELECT por defecto para no duplicar prompts.
+            opts.onStartMatch(conn)
+          } else {
+            conn.broadcast(
+              'GAME_SELECT',
+              { message: selectMessage, options: { specialButton: 'Pass' }, gameView: gv() },
+              opts.gameId,
+            )
+          }
+          return
+        }
+        case 'sendPlayerUUID': {
+          conn.ok(requestId, action, {})
+          if (opts.onSendPlayerUUID) opts.onSendPlayerUUID(conn, argString(args, 'value', 'uuid'), ctx())
+          else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        case 'sendPlayerAction': {
+          conn.ok(requestId, action, {})
+          if (opts.onSendPlayerAction) opts.onSendPlayerAction(conn, argString(args, 'action'), ctx())
+          else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        case 'sendPlayerBoolean': {
+          conn.ok(requestId, action, {})
+          if (opts.onSendPlayerBoolean) opts.onSendPlayerBoolean(conn, ctx())
+          else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        case 'sendPlayerInteger': {
+          conn.ok(requestId, action, {})
+          const value = Number(argString(args, 'value'))
+          if (opts.onSendPlayerInteger) opts.onSendPlayerInteger(conn, value, ctx())
+          else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        case 'sendPlayerString': {
+          conn.ok(requestId, action, {})
+          if (opts.onSendPlayerString) opts.onSendPlayerString(conn, argString(args, 'value'), ctx())
+          else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        default:
+          if (opts.onExtra?.(conn, action, args, requestId)) return
+          conn.ok(requestId, action, {})
+      }
+    },
+  }
 }
 
 class FakeConnection implements FakeConn {

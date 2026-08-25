@@ -1,4 +1,4 @@
-import type { Scenario } from '../fake'
+import { makeBaseScenario } from '../fake'
 import { makeGameView, makePermanent, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
 
@@ -133,71 +133,10 @@ export function mechanicsScenario(): Scenario {
     ],
   })
 
-  const table = {
+  return makeBaseScenario({
     tableId: TABLE_ID,
     tableName: 'Mechanics & Reminder Showcase',
-    gameType: 'Two Player Duel',
-    deckType: 'Constructed - Modern',
-    controllerName: 'e2e',
-    additionalInfoShort: '2/2',
-    additionalInfoFull: '',
-    createTime: Date.now(),
-    tableState: 'READY_TO_START',
-    skillLevel: 'Casual',
-    tableStateText: 'Lista',
-    seatsInfo: '2/2',
-    isTournament: false,
-    seats: [
-      { playerName: HUMAN_NAME, seatIndex: 0, playerType: 'HUMAN' },
-      { playerName: SIM_NAME, seatIndex: 1, playerType: 'SIM' },
-    ],
-    games: [GAME_ID],
-    quitRatio: '100',
-    minimumRating: '0',
-    limited: false,
-  }
-
-  return {
-    onConnect: (conn) => {
-      conn.raw({ type: 'connected', message: 'Proxy ready.' })
-      conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table])
-    },
-    onAction: (conn, action, args, requestId) => {
-      switch (action) {
-        case 'connect':
-          conn.ok(requestId, action, {})
-          break
-        case 'createTable':
-          conn.ok(requestId, action, { tableId: TABLE_ID })
-          conn.lobby([table])
-          break
-        case 'startMatch':
-          conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: 'Mechanics & Reminder Showcase' }, GAME_ID)
-          conn.broadcast('GAME_INIT', { gameView }, GAME_ID)
-          conn.broadcast(
-            'GAME_SELECT',
-            {
-              message: 'Main 1: Cast spells or activate abilities',
-              options: { specialButton: 'Pass' },
-              gameView,
-            },
-            GAME_ID,
-          )
-          break
-        case 'sendPlayerAction':
-        case 'sendPlayerBoolean':
-        case 'sendPlayerInteger':
-        case 'sendPlayerUUID':
-        case 'sendPlayerString':
-          conn.ok(requestId, action, {})
-          conn.broadcast('GAME_UPDATE', { gameView }, GAME_ID)
-          break
-        default:
-          conn.ok(requestId, action, undefined)
-          break
-      }
-    },
-  }
+    gameId: GAME_ID,
+    gameView,
+  })
 }

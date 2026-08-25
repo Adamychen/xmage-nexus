@@ -5,7 +5,7 @@
  * 3. Storm & Copias: Lanzar Grapeshot con Storm count=2, crear copias en la pila y re-elegir objetivos.
  */
 
-import type { FakeConn, Scenario } from '../fake'
+import { makeBaseScenario } from '../fake'
 import { makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -26,7 +26,6 @@ export function stackPriorityScenario(): Scenario {
     | 'storm_copies'
     | 'finished' = 'hold_priority_idle'
 
-  let activeConn: FakeConn | null = null
   let humanLife = 20
   let simLife = 20
   let holdingPriority = false
@@ -285,189 +284,117 @@ export function stackPriorityScenario(): Scenario {
     }
   }
 
-  const table = {
+  return makeBaseScenario({
     tableId,
     tableName: 'stack-priority-test',
-    controllerName: HUMAN_NAME,
-    gameType: 'Two Player Duel',
-    deckType: 'Constructed - Modern',
-    createTime: Date.now(),
-    tableState: 'READY_TO_START',
-    skillLevel: 'Casual',
-    tableStateText: 'Lista',
-    seatsInfo: '2/2',
-    isTournament: false,
-    seats: [
-      { playerName: HUMAN_NAME, seatIndex: 0, playerType: 'HUMAN' },
-      { playerName: SIM_NAME, seatIndex: 1, playerType: 'SIM' },
-    ],
-    games: [GAME_ID],
-    quitRatio: '100',
-    minimumRating: '0',
-    limited: false,
-  }
-
-  return {
-    onConnect: (conn) => {
-      conn.raw({ type: 'connected', message: 'Proxy ready.' })
-      conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table])
-      activeConn = conn
-    },
-    onAction: (conn, action, args, requestId) => {
-      activeConn = conn
-
-      switch (action) {
-        case 'connect':
-        case 'createTable':
-        case 'joinGame':
-        case 'watchTable':
-        case 'watchGame':
-          conn.ok(requestId, action, { tableId: TABLE_ID })
-          conn.lobby([table])
-          break
-
-        case 'startMatch': {
-          conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: 'stack-priority-test' }, GAME_ID)
-          conn.broadcast('GAME_INIT', { gameView: getGameView() }, GAME_ID)
-          conn.broadcast(
-            'GAME_SELECT',
-            {
-              message: 'Prioridad en Fase Principal (M1) — Lanza Infernal Tutor con prioridad retenida:',
-              gameView: getGameView(),
-            },
-            GAME_ID
-          )
-          break
-        }
-
-        case 'sendPlayerAction': {
-          conn.ok(requestId, action, {})
-          const pAction = String((args as any)?.action ?? (args as any)?.[0] ?? '')
-          if (pAction === 'HOLD_PRIORITY') {
-            holdingPriority = true
-            stage = 'hold_priority_active'
-          } else if (pAction === 'UNHOLD_PRIORITY') {
-            holdingPriority = false
-            stage = 'hold_priority_idle'
-          }
-          break
-        }
-
-        case 'sendPlayerUUID': {
-          conn.ok(requestId, action, {})
-          const uuid = String((args as any)?.value ?? (args as any)?.uuid ?? (args as any)?.[0] ?? '')
-
-          // STAGE 1: Hold priority & cast Tutor
-          if (uuid === 'card-tutor') {
-            stage = 'tutor_cast_holding'
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-            conn.broadcast(
-              'GAME_SELECT',
-              {
-                message: 'Prioridad retenida tras lanzar Infernal Tutor. Puedes responder en la pila.',
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-            break
-          }
-
-          // STAGE 1 (cont): Cast LED in response
-          if (uuid === 'card-led') {
-            stage = 'led_in_response'
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-
-            // Stage 2: APNAP trigger stacking
-            setTimeout(() => {
-              stage = 'triggers_order'
-              conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-              conn.broadcast(
-                'GAME_CHOOSE_ABILITY',
-                {
-                  message: 'Elige el orden de colocación en la pila para las habilidades disparadas simultáneas (APNAP):',
-                  choices: [
-                    {
-                      id: 'choice-warden-first',
-                      label: 'Poner Soul Warden primero (Impact Tremors resolverá antes)',
-                      value: 'choice-warden-first',
-                    },
-                    {
-                      id: 'choice-tremors-first',
-                      label: 'Poner Impact Tremors primero (Soul Warden resolverá antes)',
-                      value: 'choice-tremors-first',
-                    },
-                  ],
-                  gameView: getGameView(),
-                },
-                GAME_ID
-              )
-            }, 250)
-            break
-          }
-
-          // STAGE 2: Order triggers chosen
-          if (stage === 'triggers_order' || uuid === 'choice-warden-first' || uuid === 'choice-tremors-first') {
-            stage = 'storm_cast'
-            humanLife = 21 // Soul Warden gain +1
-            simLife = 19 // Impact Tremors deal 1
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-            conn.broadcast(
-              'GAME_SELECT',
-              {
-                message: 'Lanza Grapeshot con Tormenta (Storm count = 2):',
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-            break
-          }
-
-          // STAGE 3: Cast Grapeshot with Storm
-          if (uuid === 'card-grapeshot') {
-            stage = 'storm_copies'
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-            conn.broadcast(
-              'GAME_TARGET',
-              {
-                message: 'Elige objetivo para la copia de Grapeshot (Tormenta):',
-                targets: [SIM_PLAYER_ID, 'sim-creature-1'],
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-            break
-          }
-
-          // STAGE 3 (cont): Target chosen for copy
-          if (stage === 'storm_copies') {
-            stage = 'finished'
-            simLife = 16 // -3 damage from original + 2 copies
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-            conn.broadcast(
-              'GAME_SELECT',
-              {
-                message: '¡Tormenta resuelta! Daño total aplicado a la pila.',
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-            break
-          }
-
-          break
-        }
-
-        case 'sendPlayerBoolean': {
-          conn.ok(requestId, action, {})
-          conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-          break
-        }
-
-        default:
-          conn.ok(requestId, action, {})
+    gameId,
+    getGameView,
+    selectMessage: 'Prioridad en Fase Principal (M1) — Lanza Infernal Tutor con prioridad retenida:',
+    onSendPlayerAction: (_conn, value) => {
+      if (value === 'HOLD_PRIORITY') {
+        holdingPriority = true
+        stage = 'hold_priority_active'
+      } else if (value === 'UNHOLD_PRIORITY') {
+        holdingPriority = false
+        stage = 'hold_priority_idle'
       }
     },
-  }
+    onSendPlayerUUID: (conn, uuid) => {
+      // STAGE 1: Hold priority & cast Tutor
+      if (uuid === 'card-tutor') {
+        stage = 'tutor_cast_holding'
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        conn.broadcast(
+          'GAME_SELECT',
+          {
+            message: 'Prioridad retenida tras lanzar Infernal Tutor. Puedes responder en la pila.',
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+        return
+      }
+
+      // STAGE 1 (cont): Cast LED in response
+      if (uuid === 'card-led') {
+        stage = 'led_in_response'
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+
+        // Stage 2: APNAP trigger stacking
+        setTimeout(() => {
+          stage = 'triggers_order'
+          conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+          conn.broadcast(
+            'GAME_CHOOSE_ABILITY',
+            {
+              message: 'Elige el orden de colocación en la pila para las habilidades disparadas simultáneas (APNAP):',
+              choices: [
+                {
+                  id: 'choice-warden-first',
+                  label: 'Poner Soul Warden primero (Impact Tremors resolverá antes)',
+                  value: 'choice-warden-first',
+                },
+                {
+                  id: 'choice-tremors-first',
+                  label: 'Poner Impact Tremors primero (Soul Warden resolverá antes)',
+                  value: 'choice-tremors-first',
+                },
+              ],
+              gameView: getGameView(),
+            },
+            GAME_ID,
+          )
+        }, 250)
+        return
+      }
+
+      // STAGE 2: Order triggers chosen
+      if (stage === 'triggers_order' || uuid === 'choice-warden-first' || uuid === 'choice-tremors-first') {
+        stage = 'storm_cast'
+        humanLife = 21 // Soul Warden gain +1
+        simLife = 19 // Impact Tremors deal 1
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        conn.broadcast(
+          'GAME_SELECT',
+          {
+            message: 'Lanza Grapeshot con Tormenta (Storm count = 2):',
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+        return
+      }
+
+      // STAGE 3: Cast Grapeshot with Storm
+      if (uuid === 'card-grapeshot') {
+        stage = 'storm_copies'
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        conn.broadcast(
+          'GAME_TARGET',
+          {
+            message: 'Elige objetivo para la copia de Grapeshot (Tormenta):',
+            targets: [SIM_PLAYER_ID, 'sim-creature-1'],
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+        return
+      }
+
+      // STAGE 3 (cont): Target chosen for copy
+      if (stage === 'storm_copies') {
+        stage = 'finished'
+        simLife = 16 // -3 damage from original + 2 copies
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        conn.broadcast(
+          'GAME_SELECT',
+          {
+            message: '¡Tormenta resuelta! Daño total aplicado a la pila.',
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+      }
+    },
+  })
 }

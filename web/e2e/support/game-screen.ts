@@ -88,20 +88,21 @@ export async function targetOpponent(page: Page, _target: GameFrame, label: stri
 /** Paga el maná del hechizo en curso. El diálogo "Pagar maná" se VERIFICA por UI
  *  (render de la página); el pago en sí va por WS (determinista: el clic por
  *  escena en los sources es una carrera con partidas rápidas). */
-export async function payMana(page: Page, helper: HumanHelper): Promise<void> {
+export async function payMana(page: Page, helper: HumanHelper, fromIndex?: number): Promise<void> {
   try {
-    await payManaInner(page, helper)
+    await payManaInner(page, helper, fromIndex)
   } catch (e) {
     dumpE2E(page, 'payMana-fallback')
     throw e
   }
 }
 
-async function payManaInner(page: Page, helper: HumanHelper): Promise<void> {
+async function payManaInner(page: Page, helper: HumanHelper, fromIndex?: number): Promise<void> {
   // lookback: el primer GAME_PLAY_MANA puede haber llegado mientras la acción
   // anterior terminaba (p. ej. la verificación del target); un cursor estricto
-  // lo saltaría y esperaría un ask que ya no llega
-  let cursor = Math.max(0, parsedLen(page) - 10)
+  // lo saltaría y esperaría un ask que ya no llega. `fromIndex` permite arrancar
+  // el cursor justo tras lanzar (usado por los flujos best-of/defeat).
+  let cursor = fromIndex ?? Math.max(0, parsedLen(page) - 10)
   for (let i = 0; i < 14; i++) {
     const { frame: mana, index: manaIndex } = await waitFrameAt(page, (f) => f.method === 'GAME_PLAY_MANA', `GAME_PLAY_MANA (${i})`, 15_000, cursor)
     // verificación UI del diálogo de pago

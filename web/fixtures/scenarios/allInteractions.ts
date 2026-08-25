@@ -7,7 +7,7 @@
  * 5. GAME_CHOOSE_CARDS_ORDER (Scry / Surveil / Reordenar biblioteca con botones Top/Bottom)
  */
 
-import type { FakeConn, Scenario } from '../fake'
+import { makeBaseScenario } from '../fake'
 import { makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -19,7 +19,6 @@ export function allInteractionsScenario(): Scenario {
   const gameId = GAME_ID
 
   let stage: 'ask' | 'color' | 'pile' | 'tutor' | 'scry' | 'finished' = 'ask'
-  let activeConn: FakeConn | null = null
 
   const commanderCard: CardView = makeCard({
     id: 'cmd-atraxa',
@@ -116,28 +115,6 @@ export function allInteractionsScenario(): Scenario {
     }
   }
 
-  const table = {
-    tableId,
-    tableName: 'all-interactions-test',
-    controllerName: HUMAN_NAME,
-    gameType: 'Two Player Duel',
-    deckType: 'Constructed - Standard',
-    createTime: Date.now(),
-    tableState: 'READY_TO_START',
-    skillLevel: 'Casual',
-    tableStateText: 'Lista',
-    seatsInfo: '2/2',
-    isTournament: false,
-    seats: [
-      { playerName: HUMAN_NAME, seatIndex: 0, playerType: 'HUMAN' },
-      { playerName: SIM_NAME, seatIndex: 1, playerType: 'SIM' },
-    ],
-    games: [GAME_ID],
-    quitRatio: '100',
-    minimumRating: '0',
-    limited: false,
-  }
-
   const tutorCards: Record<string, CardView> = {
     'c-lotus': makeCard({ id: 'c-lotus', name: 'Black Lotus', displayName: 'Black Lotus', manaCostLeftStr: ['{0}'], manaValue: 0, cardTypes: ['Artifact'] }),
     'c-recall': makeCard({ id: 'c-recall', name: 'Ancestral Recall', displayName: 'Ancestral Recall', manaCostLeftStr: ['{U}'], manaValue: 1, cardTypes: ['Instant'] }),
@@ -159,143 +136,109 @@ export function allInteractionsScenario(): Scenario {
     'scry-opt': makeCard({ id: 'scry-opt', name: 'Opt', displayName: 'Opt', manaCostLeftStr: ['{U}'], manaValue: 1, cardTypes: ['Instant'] }),
   }
 
-  return {
-    onConnect: (conn) => {
-      conn.raw({ type: 'connected', message: 'Proxy ready.' })
-      conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table])
-      activeConn = conn
+  return makeBaseScenario({
+    tableId,
+    tableName: 'all-interactions-test',
+    gameId,
+    getGameView,
+    onStartMatch: (conn) => {
+      // 1. GAME_ASK
+      stage = 'ask'
+      conn.broadcast(
+        'GAME_ASK',
+        {
+          message: '¿Deseas pagar 2 vidas para que Blood Crypt entre al campo enderezada?',
+          gameView: getGameView(),
+        },
+        GAME_ID,
+      )
     },
-    onAction: (conn, action, args, requestId) => {
-      activeConn = conn
-
-      switch (action) {
-        case 'connect':
-        case 'createTable':
-        case 'joinGame':
-        case 'watchTable':
-        case 'watchGame':
-          conn.ok(requestId, action, { tableId: TABLE_ID })
-          conn.lobby([table])
-          break
-
-        case 'startMatch': {
-          conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId: GAME_ID, tableName: 'all-interactions-test' }, GAME_ID)
-          conn.broadcast('GAME_INIT', { gameView: getGameView() }, GAME_ID)
-          // 1. GAME_ASK
-          stage = 'ask'
-          conn.broadcast(
-            'GAME_ASK',
-            {
-              message: '¿Deseas pagar 2 vidas para que Blood Crypt entre al campo enderezada?',
-              gameView: getGameView(),
+    onSendPlayerBoolean: (conn) => {
+      if (stage === 'ask') {
+        // Avanzar a 2. GAME_CHOOSE_COLOR
+        stage = 'color'
+        conn.broadcast(
+          'GAME_CHOOSE_CHOICE',
+          {
+            choice: {
+              message: 'Elige un color de maná para Utopia Sprawl',
+              keyChoices: {
+                White: 'White',
+                Blue: 'Blue',
+                Black: 'Black',
+                Red: 'Red',
+                Green: 'Green',
+              },
             },
-            GAME_ID
-          )
-          break
-        }
-
-        case 'sendPlayerBoolean': {
-          conn.ok(requestId, action, {})
-          if (stage === 'ask') {
-            // Avanzar a 2. GAME_CHOOSE_COLOR
-            stage = 'color'
-            conn.broadcast(
-              'GAME_CHOOSE_CHOICE',
-              {
-                choice: {
-                  message: 'Elige un color de maná para Utopia Sprawl',
-                  keyChoices: {
-                    White: 'White',
-                    Blue: 'Blue',
-                    Black: 'Black',
-                    Red: 'Red',
-                    Green: 'Green',
-                  },
-                },
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-          } else if (stage === 'pile') {
-            // Avanzar a 4. GAME_TARGET con CardGrid (Tutor)
-            stage = 'tutor'
-            conn.broadcast(
-              'GAME_TARGET',
-              {
-                message: 'Busca una carta en tu biblioteca (Demonic Tutor)',
-                cardsView1: tutorCards,
-                required: true,
-                min: 1,
-                max: 1,
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-          }
-          break
-        }
-
-        case 'sendPlayerString': {
-          conn.ok(requestId, action, {})
-          if (stage === 'color') {
-            // Avanzar a 3. GAME_CHOOSE_PILE
-            stage = 'pile'
-            conn.broadcast(
-              'GAME_CHOOSE_PILE',
-              {
-                message: 'Fact or Fiction: Elige una pila de cartas para poner en tu mano',
-                cardsView1: {
-                  'p1-bolt': makeCard({ id: 'p1-bolt', name: 'Lightning Bolt', displayName: 'Lightning Bolt', manaCostLeftStr: ['{R}'], manaValue: 1 }),
-                  'p1-counter': makeCard({ id: 'p1-counter', name: 'Counterspell', displayName: 'Counterspell', manaCostLeftStr: ['{U}{U}'], manaValue: 2 }),
-                  'p1-brainstorm': makeCard({ id: 'p1-brainstorm', name: 'Brainstorm', displayName: 'Brainstorm', manaCostLeftStr: ['{U}'], manaValue: 1 }),
-                },
-                cardsView2: {
-                  'p2-jace': makeCard({ id: 'p2-jace', name: 'Jace, the Mind Sculptor', displayName: 'Jace, the Mind Sculptor', manaCostLeftStr: ['{2}{U}{U}'], manaValue: 4 }),
-                  'p2-island': makeCard({ id: 'p2-island', name: 'Island', displayName: 'Island', manaValue: 0 }),
-                },
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-          } else if (stage === 'scry') {
-            stage = 'finished'
-            conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-            conn.broadcast(
-              'GAME_SELECT',
-              {
-                message: 'Prioridad en Fase Principal (M1)',
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-          }
-          break
-        }
-
-        case 'sendPlayerUUID': {
-          conn.ok(requestId, action, {})
-          if (stage === 'tutor') {
-            // Avanzar a 5. GAME_CHOOSE_CARDS_ORDER (Scry 3)
-            stage = 'scry'
-            conn.broadcast(
-              'GAME_CHOOSE_CARDS_ORDER',
-              {
-                message: 'Scry 3: Ordena las cartas de tu biblioteca o ponlas al fondo',
-                cardsView1: scryCards,
-                gameView: getGameView(),
-              },
-              GAME_ID
-            )
-          }
-          break
-        }
-
-        default:
-          conn.ok(requestId, action, {})
-          break
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+      } else if (stage === 'pile') {
+        // Avanzar a 4. GAME_TARGET con CardGrid (Tutor)
+        stage = 'tutor'
+        conn.broadcast(
+          'GAME_TARGET',
+          {
+            message: 'Busca una carta en tu biblioteca (Demonic Tutor)',
+            cardsView1: tutorCards,
+            required: true,
+            min: 1,
+            max: 1,
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
       }
     },
-  }
+    onSendPlayerString: (conn) => {
+      if (stage === 'color') {
+        // Avanzar a 3. GAME_CHOOSE_PILE
+        stage = 'pile'
+        conn.broadcast(
+          'GAME_CHOOSE_PILE',
+          {
+            message: 'Fact or Fiction: Elige una pila de cartas para poner en tu mano',
+            cardsView1: {
+              'p1-bolt': makeCard({ id: 'p1-bolt', name: 'Lightning Bolt', displayName: 'Lightning Bolt', manaCostLeftStr: ['{R}'], manaValue: 1 }),
+              'p1-counter': makeCard({ id: 'p1-counter', name: 'Counterspell', displayName: 'Counterspell', manaCostLeftStr: ['{U}{U}'], manaValue: 2 }),
+              'p1-brainstorm': makeCard({ id: 'p1-brainstorm', name: 'Brainstorm', displayName: 'Brainstorm', manaCostLeftStr: ['{U}'], manaValue: 1 }),
+            },
+            cardsView2: {
+              'p2-jace': makeCard({ id: 'p2-jace', name: 'Jace, the Mind Sculptor', displayName: 'Jace, the Mind Sculptor', manaCostLeftStr: ['{2}{U}{U}'], manaValue: 4 }),
+              'p2-island': makeCard({ id: 'p2-island', name: 'Island', displayName: 'Island', manaValue: 0 }),
+            },
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+      } else if (stage === 'scry') {
+        stage = 'finished'
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        conn.broadcast(
+          'GAME_SELECT',
+          {
+            message: 'Prioridad en Fase Principal (M1)',
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+      }
+    },
+    onSendPlayerUUID: (conn) => {
+      if (stage === 'tutor') {
+        // Avanzar a 5. GAME_CHOOSE_CARDS_ORDER (Scry 3)
+        stage = 'scry'
+        conn.broadcast(
+          'GAME_CHOOSE_CARDS_ORDER',
+          {
+            message: 'Scry 3: Ordena las cartas de tu biblioteca o ponlas al fondo',
+            cardsView1: scryCards,
+            gameView: getGameView(),
+          },
+          GAME_ID,
+        )
+      }
+    },
+  })
 }

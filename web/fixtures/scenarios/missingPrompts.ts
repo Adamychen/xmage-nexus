@@ -19,7 +19,8 @@
  * prompt. El flujo termina con GAME_UPDATE + GAME_SELECT.
  */
 
-import type { FakeConn, Scenario } from '../fake'
+import type { FakeConn } from '../fake'
+import { makeBaseScenario } from '../fake'
 import { makeCard } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -57,18 +58,6 @@ export function missingPromptsScenario(): Scenario {
     myHand: {},
     canPlayObjects: { objects: {} },
   })
-
-  const table = {
-    tableId, tableName: 'missing-prompts-test', controllerName: HUMAN_NAME,
-    gameType: 'Two Player Duel', deckType: 'Constructed - Modern', createTime: Date.now(),
-    tableState: 'READY_TO_START', skillLevel: 'Casual', tableStateText: 'Lista',
-    seatsInfo: '2/2', isTournament: false,
-    seats: [
-      { playerName: HUMAN_NAME, seatIndex: 0, playerType: 'HUMAN' },
-      { playerName: SIM_NAME, seatIndex: 1, playerType: 'SIM' },
-    ],
-    games: [gameId], quitRatio: '100', minimumRating: '0', limited: false,
-  }
 
   const selectCards: Record<string, CardView> = {
     'c-a': makeCard({ id: 'c-a', name: 'Mountain', displayName: 'Mountain' }),
@@ -175,70 +164,50 @@ export function missingPromptsScenario(): Scenario {
     emit('GAME_SELECT', { message: 'Priority', gameView: getGameView() })
   }
 
-  return {
-    onConnect: (conn) => {
-      activeConn = conn
-      conn.raw({ type: 'connected', message: 'Proxy ready.' })
-      conn.raw({ type: 'info', message: 'Proxy ready.' })
-      conn.lobby([table])
+  const track = (conn: FakeConn): void => {
+    activeConn = conn
+  }
+
+  return makeBaseScenario({
+    tableId,
+    tableName: 'missing-prompts-test',
+    gameId,
+    getGameView,
+    onConnect: track,
+    onStartMatch: (conn) => {
+      track(conn)
+      toSelectPlayer()
     },
-    onAction: (conn, action, _args, requestId) => {
-      activeConn = conn
-      switch (action) {
-        case 'connect':
-        case 'createTable':
-        case 'joinGame':
-        case 'watchTable':
-        case 'watchGame':
-          conn.ok(requestId, action, { tableId })
-          conn.lobby([table])
-          break
-        case 'startMatch':
-          conn.ok(requestId, action, {})
-          conn.broadcast('START_GAME', { gameId, tableName: 'missing-prompts-test' }, gameId)
-          conn.broadcast('GAME_INIT', { gameView: getGameView() }, gameId)
-          toSelectPlayer()
-          break
-        case 'sendPlayerUUID': {
-          conn.ok(requestId, action, {})
-          if (stage === 'select_player') toChooseString()
-          else if (stage === 'choose_mode') toChooseCards()
-          else if (stage === 'choose_cards') toTargetPlayer()
-          else if (stage === 'target_player') toTargetAmount()
-          else if (stage === 'select_cards') {
-            cardsCount++
-            if (cardsCount >= 2) toXMana()
-          }
-          break
-        }
-        case 'sendPlayerString': {
-          conn.ok(requestId, action, {})
-          if (stage === 'choose_string') toChooseStringFree()
-          else if (stage === 'choose_string_free') toChooseNumber()
-          else if (stage === 'choose_one') toChooseBetween()
-          else if (stage === 'choose_between') toChooseMode()
-          break
-        }
-        case 'sendPlayerInteger': {
-          conn.ok(requestId, action, {})
-          if (stage === 'choose_number') toChooseOne()
-          else if (stage === 'target_amount') toSelectCards()
-          break
-        }
-        case 'sendPlayerBoolean': {
-          conn.ok(requestId, action, {})
-          if (stage === 'xmana') toUserRequest()
-          break
-        }
-        case 'sendPlayerAction': {
-          conn.ok(requestId, action, {})
-          if (stage === 'user_request') finish()
-          break
-        }
-        default:
-          conn.ok(requestId, action, {})
-          break
+    onSendPlayerUUID: (conn, _uuid) => {
+      track(conn)
+      if (stage === 'select_player') toChooseString()
+      else if (stage === 'choose_mode') toChooseCards()
+      else if (stage === 'choose_cards') toTargetPlayer()
+      else if (stage === 'target_player') toTargetAmount()
+      else if (stage === 'select_cards') {
+        cardsCount++
+        if (cardsCount >= 2) toXMana()
       }
     },
-  }
+    onSendPlayerString: (conn) => {
+      track(conn)
+      if (stage === 'choose_string') toChooseStringFree()
+      else if (stage === 'choose_string_free') toChooseNumber()
+      else if (stage === 'choose_one') toChooseBetween()
+      else if (stage === 'choose_between') toChooseMode()
+    },
+    onSendPlayerInteger: (conn) => {
+      track(conn)
+      if (stage === 'choose_number') toChooseOne()
+      else if (stage === 'target_amount') toSelectCards()
+    },
+    onSendPlayerBoolean: (conn) => {
+      track(conn)
+      if (stage === 'xmana') toUserRequest()
+    },
+    onSendPlayerAction: (conn) => {
+      track(conn)
+      if (stage === 'user_request') finish()
+    },
+  })
 }

@@ -10,19 +10,16 @@ import {
   gameViewOf,
   lastGameView,
   myHandEntries,
-  nextManaSource,
   opponentPlayer,
   parseFrames,
-  parsedLen,
   playableInView,
   waitFrame,
-  waitFrameAt,
 } from './support/frames'
 import { playableInSceneByName, waitSceneTargeting } from './support/scene'
 import { startGame } from './support/start-game'
 import { targetingScenario } from '../fixtures/scenarios/targeting'
 import { withFakeServer } from './support/fake-backend'
-import { feedbackDialog } from './support/game-screen'
+import { feedbackDialog, payMana } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
@@ -108,46 +105,9 @@ test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetiv
     await button.click()
   }
 
-  // (h) pagar maná: el diálogo se verifica por UI; el pago va por WS (determinista).
-  //     Cursor estricto: tras pagar se espera el ask SIGUIENTE con un cursor
-  //     pasado el actual; un lookback re-matchea el MISMO ask y pagaría una 2ª
-  //     fuente (tierras todas giradas -> "sin fuente").
-  let cursor = Math.max(0, parsedLen(page) - 10)
-  for (let i = 0; i < 6; i++) {
-    const { frame: mana, index: manaIndex } = await waitFrameAt(
-      page,
-      (f) => f.method === 'GAME_PLAY_MANA',
-      `GAME_PLAY_MANA (${i})`,
-      15_000,
-      cursor,
-    )
-    await expect(page.locator('.feedback-dialog, .mana-prompt-bar')).toContainText(/Pagar maná/, { timeout: 10_000 })
-    cursor = manaIndex + 1
-    // la vista del ask puede ir stale (fuentes tapadas en frames viejos): reintentar
-    // la lectura hasta ver una fuente sin girar (el pago del ask anterior se propaga)
-    let sourceId: string | null = null
-    for (let attempt = 0; attempt < 20 && !sourceId; attempt++) {
-      sourceId = nextManaSource(lastGameView(parseFrames(frames)), null)
-      if (!sourceId) await page.waitForTimeout(150)
-    }
-    if (!sourceId) throw new Error(`sin fuente de maná para "${String((mana.data as { message?: unknown } | null)?.message ?? '').slice(0, 40)}"`)
-    expect(await helper.playCard(sourceId), `pago de maná por WS (intento ${i})`).toBeTruthy()
-    let nextIndex = -1
-    try {
-      const next = await waitFrameAt(
-        page,
-        (f) => f.method === 'GAME_PLAY_MANA',
-        `siguiente ask de maná (${i})`,
-        5_000,
-        cursor,
-      )
-      nextIndex = next.index
-    } catch {
-      nextIndex = -1
-    }
-    if (nextIndex < 0) break
-    cursor = nextIndex
-  }
+  // (h) pagar maná: reutiliza el bucle determinista compartido en
+  //     support/game-screen (cursor estricto + retry de fuente sin girar).
+  await payMana(page, helper)
 
   // (i) resolución: el helper pasa las prioridades del stack; la vida del
   //     oponente baja a 17 (3 de daño del Bolt)

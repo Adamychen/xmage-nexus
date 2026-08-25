@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
-import { mutateRecordedScenario } from '../fixtures/scenarios/mutate-recorded'
+import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
@@ -12,7 +12,7 @@ test.describe('Mutate mechanic (real recorded frame)', { tag: '@mutate-recorded'
   test('renders the real mutateView pile captured from a live XMage server', async ({ page }) => {
     fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
-    await withFakeServer(mutateRecordedScenario, async () => {
+    await withFakeServer(() => replayRecordedScenario('mutate.json', 'Mutate Recorded (real frame)'), async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mutr',
         tableName: 'Mutate Recorded (real frame)',
