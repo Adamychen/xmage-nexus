@@ -98,6 +98,7 @@ public class ProxyClient implements MageClient {
     // servidor al que conecta la sesión web (los Sim se conectan al mismo)
     private volatile String serverHost = "";
     private volatile int serverPort = 0;
+    private String accountKey = null;
 
     private volatile boolean connected = false;
     private final List<ClientCallback> handshakeBuffer = new java.util.LinkedList<>();
@@ -178,6 +179,10 @@ public class ProxyClient implements MageClient {
                         } catch (Exception ignored) {
                         }
                         connected = false;
+                        if (accountKey != null) {
+                            gateway.unregisterSession(accountKey);
+                            accountKey = null;
+                        }
                     }
                 }
             }, DISCONNECT_GRACE_PERIOD_SECS, TimeUnit.SECONDS);
@@ -435,6 +440,10 @@ public class ProxyClient implements MageClient {
                     stopSims();
                     session.connectStop(false, false);
                     connected = false;
+                    if (accountKey != null) {
+                        gateway.unregisterSession(accountKey);
+                        accountKey = null;
+                    }
                     authorized.clear();
                     gateway.send(conn, resultJson(action, requestId, true, null, null));
                     break;
@@ -731,6 +740,10 @@ public class ProxyClient implements MageClient {
         if (connected) {
             // replace the old session instead of rejecting the new client (refresh/reconnect case)
             logger.info("connect: already connected, disconnecting old session first");
+            if (accountKey != null) {
+                gateway.unregisterSession(accountKey);
+                accountKey = null;
+            }
             stopSims();
             authorized.clear();
             session.connectStop(false, false);
@@ -779,6 +792,8 @@ public class ProxyClient implements MageClient {
             lobbyTimer.shutdownNow();
             lobbyTimer = Executors.newSingleThreadScheduledExecutor();
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
+            accountKey = host + "|" + username;
+            gateway.registerSession(accountKey, this);
             if (conn != null) {
                 authorized.add(conn);
             }
@@ -792,7 +807,17 @@ public class ProxyClient implements MageClient {
         connect(null, "", host, port, username, password, "world.png", 51);
     }
 
-    private boolean isSameSession(String host, int port, String username) {
+    /** Adjunta una conexión ya autenticada a esta sesión existente (misma cuenta, otra ventana). */
+    public synchronized void attach(WebSocket conn, String requestId) {
+        authorized.add(conn);
+        gateway.send(conn, resultJson("connect", requestId, true, null, null));
+        JsonObject ev = new JsonObject();
+        ev.addProperty("type", "connected");
+        ev.addProperty("info", "Connected (attached to existing session)");
+        gateway.send(conn, ev.toString());
+    }
+
+    public boolean isSameSession(String host, int port, String username) {
         try {
             return session.getUserName() != null
                     && session.getUserName().equalsIgnoreCase(username)

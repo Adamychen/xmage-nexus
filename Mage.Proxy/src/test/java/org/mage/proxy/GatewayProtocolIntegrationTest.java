@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GatewayProtocolIntegrationTest {
 
     private Gateway gateway;
-    private ProxyClient proxy;
     private TestClient client;
 
     @AfterEach
@@ -28,10 +27,10 @@ class GatewayProtocolIntegrationTest {
         if (client != null) {
             client.closeClient();
         }
-        if (proxy != null) {
-            proxy.shutdown();
-        }
         if (gateway != null) {
+            for (ProxyClient pc : gateway.getSessions()) {
+                pc.shutdown();
+            }
             gateway.stop(1000);
         }
     }
@@ -85,8 +84,6 @@ class GatewayProtocolIntegrationTest {
 
     private void start(Config config) throws Exception {
         gateway = new Gateway(config, 0);
-        proxy = new ProxyClient(config, gateway);
-        gateway.setHandler(proxy);
         gateway.start();
         long deadline = System.currentTimeMillis() + 5000;
         while (gateway.getPort() == 0 && System.currentTimeMillis() < deadline) {

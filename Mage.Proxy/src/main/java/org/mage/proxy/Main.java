@@ -24,26 +24,20 @@ public class Main {
         Config config = Config.parse(args);
 
         Gateway gateway = new Gateway(config);
-        ProxyClient client = new ProxyClient(config, gateway);
-        gateway.setHandler(client);
         gateway.start();
 
         System.out.println("[proxy] XMage proxy started");
         System.out.println("[proxy]   websocket gateway : ws://" + config.getBindAddress() + ":" + config.getWsPort() + "/");
         System.out.println("[proxy]   test page         : http://" + config.getBindAddress() + ":" + config.getHttpPort() + "/index.html");
-        System.out.println("[proxy]   client version    : " + client.getVersion());
         System.out.println("[proxy]   protocol version  : " + Config.PROTOCOL_VERSION);
+        System.out.println("[proxy]   multi-tenant     : each WebSocket connection = its own XMage session");
 
         startHttpServer(config);
 
-        if (config.hasAutoConnect()) {
-            System.out.println("[proxy] auto-connect to " + config.getServerHost() + ":" + config.getServerPort()
-                    + " as " + config.getUsername());
-            client.connect(config.getServerHost(), config.getServerPort(), config.getUsername(), config.getPassword());
-        }
-
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            client.shutdown();
+            for (ProxyClient pc : gateway.getSessions()) {
+                pc.shutdown();
+            }
             try {
                 gateway.stop(1000);
             } catch (InterruptedException ignored) {

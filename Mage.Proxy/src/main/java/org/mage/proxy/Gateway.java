@@ -11,8 +11,13 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Locale;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * WebSocket server: transport between the web client and the proxy logic.
@@ -24,8 +29,11 @@ import java.util.Set;
  */
 public class Gateway extends WebSocketServer {
 
-    private ProxyClient handler;
     private final Config config;
+    /** conn -> su ProxyClient (sesión propia o compartida por cuenta). */
+    private final Map<WebSocket, ProxyClient> byConn = Collections.synchronizedMap(new IdentityHashMap<WebSocket, ProxyClient>());
+    /** host|username -> ProxyClient conectado (para re-adjuntar ventanas de la misma cuenta). */
+    private final Map<String, ProxyClient> byAccount = new ConcurrentHashMap<>();
 
     /** recuento de mensajes por conexión (ventana deslizante de 1 s) */
     private final Map<WebSocket, Deque<Long>> messageTimes =
@@ -45,31 +53,43 @@ public class Gateway extends WebSocketServer {
         return config;
     }
 
-    public void setHandler(ProxyClient handler) {
-        this.handler = handler;
+    public void registerSession(String key, ProxyClient pc) {
+        byAccount.put(key, pc);
+    }
+
+    public void unregisterSession(String key) {
+        byAccount.remove(key);
+    }
+
+    public ProxyClient findSession(String key) {
+        return byAccount.get(key);
+    }
+
+    public java.util.Collection<ProxyClient> getSessions() {
+        return byAccount.values();
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.err.println("[proxy] ws open: " + conn.getRemoteSocketAddress() + " -> " + conn.getLocalSocketAddress());
         String origin = handshake.getFieldValue("Origin");
         if (!originAllowed(origin)) {
             System.err.println("[proxy] ws rejected origin=" + origin);
             conn.close(1008, "origin not allowed");
             return;
         }
-        if (handler != null) {
-            handler.onClientOpen(conn);
-        }
+        // Lazy: la sesión se crea en handleConnect (al recibir `connect`), para poder
+        // re-adjuntar la conexión a una sesión existente de la misma cuenta.
+        sendReady(conn);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         messageTimes.remove(conn);
-        System.err.println("[proxy] ws close: " + conn.getRemoteSocketAddress() + " code=" + code + " reason='" + reason + "'");
-        if (handler != null) {
-            handler.onClientClose(conn);
+        ProxyClient pc = byConn.remove(conn);
+        if (pc != null) {
+            pc.onClientClose(conn);
         }
+        System.err.println("[proxy] ws close: " + conn.getRemoteSocketAddress() + " code=" + code + " reason='" + reason + "'");
     }
 
     @Override
@@ -82,8 +102,30 @@ public class Gateway extends WebSocketServer {
             conn.close(1009, "message too large");
             return;
         }
-        if (handler != null) {
-            handler.onClientMessage(conn, message);
+        ProxyClient pc = byConn.get(conn);
+        if (pc != null) {
+            pc.onClientMessage(conn, message);
+            return;
+        }
+        // Pre-auth: solo se acepta `connect` (y `ping`, keep-alive público).
+        String action = "";
+        String requestId = "";
+        try {
+            JsonObject cmd = JsonParser.parseString(message).getAsJsonObject();
+            action = cmd.has("action") ? cmd.get("action").getAsString() : "";
+            if (cmd.has("requestId") && cmd.get("requestId").isJsonPrimitive()) {
+                requestId = cmd.get("requestId").getAsString();
+            }
+        } catch (Exception ex) {
+            conn.send(ProxyClient.resultJson("", "", false, ProxyClient.ERR_BAD_JSON, "Bad JSON"));
+            return;
+        }
+        if ("connect".equals(action)) {
+            handleConnect(conn, message);
+        } else if ("ping".equals(action)) {
+            conn.send(ProxyClient.resultJson("ping", requestId, true, null, "pong"));
+        } else {
+            conn.send(ProxyClient.resultJson(action, requestId, false, ProxyClient.ERR_NOT_AUTHORIZED, "send connect first"));
         }
     }
 
@@ -102,15 +144,45 @@ public class Gateway extends WebSocketServer {
         }
     }
 
-    public void broadcast(String json) {
-        int n = getConnections().size();
-        if (n == 0) {
-            System.err.println("[proxy] WARNING broadcast to 0 connections: " + (json.length() > 60 ? json.substring(0, 60) + "..." : json));
-        }
-        for (WebSocket conn : getConnections()) {
-            if (conn.isOpen()) {
-                conn.send(json);
+    /** Intercepta `connect` para decidir create-vs-attach antes de crear la sesión. */
+    private void handleConnect(WebSocket conn, String message) {
+        String requestId = "";
+        String host;
+        int port;
+        String username;
+        try {
+            JsonObject cmd = JsonParser.parseString(message).getAsJsonObject();
+            if (cmd.has("requestId") && cmd.get("requestId").isJsonPrimitive()) {
+                requestId = cmd.get("requestId").getAsString();
             }
+            JsonObject args = cmd.has("args") && cmd.get("args").isJsonObject()
+                    ? cmd.getAsJsonObject("args") : new JsonObject();
+            host = args.has("host") ? args.get("host").getAsString() : config.getServerHost();
+            port = args.has("port") ? args.get("port").getAsInt() : config.getServerPort();
+            username = args.has("username") ? args.get("username").getAsString() : config.getUsername();
+        } catch (Exception ex) {
+            conn.send(ProxyClient.resultJson("connect", requestId, false, ProxyClient.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
+            return;
+        }
+        String key = host + "|" + username;
+        ProxyClient existing = byAccount.get(key);
+        if (existing != null && existing.isConnected() && existing.isSameSession(host, port, username)) {
+            // Misma cuenta: adjuntar a la sesión existente (varias ventanas = una sesión).
+            byConn.put(conn, existing);
+            existing.attach(conn, requestId);
+            return;
+        }
+        ProxyClient pc = new ProxyClient(config, this);
+        byConn.put(conn, pc);
+        pc.onClientMessage(conn, message);
+    }
+
+    private void sendReady(WebSocket conn) {
+        JsonObject ev = new JsonObject();
+        ev.addProperty("type", "info");
+        ev.addProperty("message", "Proxy ready. Send {\"action\":\"connect\",...} to log in.");
+        if (conn != null && conn.isOpen()) {
+            conn.send(ev.toString());
         }
     }
 

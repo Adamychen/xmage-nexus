@@ -56,6 +56,13 @@ Request format:
 
 ### Connection & Session
 
+**Multi-tenant:** cada conexión WebSocket posee su propia sesión XMage (`SessionImpl`);
+un solo proceso proxy sirve a muchos usuarios a la vez. Si una segunda conexión
+hace `connect` con la **misma cuenta** (`host|username`), se adjunta a la sesión
+ya existente (varias pestañas/ventanas = una sola sesión) en vez de abrir una
+nueva. Cuentas distintas son sesiones aisladas: los eventos server→cliente de una
+sesión solo llegan a sus propias conexiones.
+
 | Action | Args | Description |
 |---|---|---|
 | `connect` | `{host, port, username, password}` | Connect to XMage server |
