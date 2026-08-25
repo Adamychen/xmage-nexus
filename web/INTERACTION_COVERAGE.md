@@ -82,7 +82,7 @@ blueprint de `ROADMAP.md` §7. Leyenda: ✅ = sí · ⚠️ = parcial · ❌ = n
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Auras / Equipment (render de adjuntos) | ✅ | ✅ | `OpponentZone` (`.attachment-subcard`) + `mechanics.spec.ts` | 2026-08-24 |
-| Mutate (apilar bajo/sobre host) | ❌ | ❌ | no hay componente (ROADMAP §7 lo planea) | 2026-08-24 |
+| Mutate (apilar bajo/sobre host) | ✅ | ✅ | `PermanentView.mutateView` (MutateView) + `.card-mutate-pile`/`.mutated-badge`/`.mutate-part` en `PlayerZone`/`OpponentZone`; activación vía `canPlayObjects`→`GAME_CHOOSE_ABILITY`; `mutate.spec.ts` (fake) + `OpponentZone.test.tsx`. **Beta real**: el proxy reenvía `mutateView` por reflexión (sin cambio Java, verificado en código); el render está verificado en fake. El play en vivo contra beta desde el harness está BLOQUEADO por el modelo de sesión del proxy (`Mage.Proxy` rechaza el 2º login con el mismo usuario que la página → el `HumanHelper` no conecta). Falta: permitir la 2ª sesión en el proxy o grabar frames reales para un fixture anti-drift. | 2026-08-25 |
 
 ### C. Estados globales y contadores de jugador
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

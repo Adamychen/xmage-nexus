@@ -14,6 +14,7 @@ export type UUID = string
 // ─── Generated view types (from JsonUtil wire format) ────────────────────────
 export type {
   GameView, PlayerView, CardView, PermanentView,
+  MutateView,
   CardsView, SimpleCardsView, SimpleCardView,
   CounterView, ManaPoolView,
   CombatGroupView, ExileView, RevealedView,

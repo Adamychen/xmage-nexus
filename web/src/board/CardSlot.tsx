@@ -204,6 +204,13 @@ export default function CardSlot({
         </div>
       )}
 
+      {/* Mutated Permanent Badge (Mutate pile) */}
+      {perm.mutated === true && (
+        <div className="mutated-badge" title="Criatura mutada (pila de cartas fusionadas)">
+          <span className="mutated-icon">🧬</span>
+        </div>
+      )}
+
       {/* Card Counters Container */}
       {showCounters && counters.length > 0 && (
         <div className="card-counters-wrap">

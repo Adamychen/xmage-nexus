@@ -225,8 +225,14 @@
         "cloaked": { "type": "boolean" },
         "attachedToPermanent": { "type": "boolean" },
         "attachedControllerDiffers": { "type": "boolean" },
-        "mutated": { "type": "boolean" }
+        "mutated": { "type": "boolean" },
+        "mutateView": { "$ref": "#/definitions/MutateView" }
       }
+    },
+    "MutateView": {
+      "type": "object",
+      "description": "Constituent cards of a mutated permanent, ordered top->bottom. Real XMage: PermanentView.mutateView (extends CardsView). Keys are card UUIDs.",
+      "additionalProperties": { "$ref": "#/definitions/CardView" }
     },
     "CardsView": {
       "type": "object",

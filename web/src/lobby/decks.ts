@@ -128,7 +128,25 @@ export const COMBAT_BLOCK_SIM_DECK: Deck = {
   sideboard: [],
 }
 
-export const DECKS = [DEFAULT_DECK, ADVANCED_DECK, STABLE_DECK, AI_OPPONENT_DECK, COMBAT_OPPONENT_DECK, COMBAT_HUMAN_DECK, COMBAT_BLOCK_SIM_DECK, LANDS_DECK]
+// Mazo de verificación de Mutate contra el servidor real (beta.xmage.today):
+// un objetivo no-Humano barato (Elvish Mystic, {G}) y criaturas mutate (Gemrazer,
+// {3}{G}, mutate {1}{G}{G}) encima de él. ORDENADO para partidas deterministas
+// (skipInitShuffling): la mano inicial es [Elvish Mystic, Gemrazer, 5 Forest] →
+// turno 1 juega la tierra + Elvish, turno 2 muta Gemrazer sobre Elvish (la Elvish
+// aporta el maná verde del coste).
+export const MUTATE_DECK: Deck = {
+  name: 'Mage Web mutate',
+  cards: [
+    { cardName: 'Elvish Mystic', setCode: 'm14', cardNumber: '169', amount: 1 },
+    { cardName: 'Gemrazer', setCode: 'iko', cardNumber: '155', amount: 1 },
+    { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 54 },
+    { cardName: 'Elvish Mystic', setCode: 'm14', cardNumber: '169', amount: 2 },
+    { cardName: 'Gemrazer', setCode: 'iko', cardNumber: '155', amount: 2 },
+  ],
+  sideboard: [],
+}
+
+export const DECKS = [DEFAULT_DECK, ADVANCED_DECK, STABLE_DECK, AI_OPPONENT_DECK, COMBAT_OPPONENT_DECK, COMBAT_HUMAN_DECK, COMBAT_BLOCK_SIM_DECK, LANDS_DECK, MUTATE_DECK]
 
 export const CUSTOM_DECKS_STORAGE_KEY = 'mage_custom_decks'
 

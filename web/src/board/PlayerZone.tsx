@@ -160,6 +160,64 @@ export default function PlayerZone({
             const isAttacking = (perm as any).attacking === true || (isChosen && combatMode === 'attack')
             const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
             const attachments = perm.attachments ?? []
+            const mutateParts = perm.mutated
+              ? (Object.values(perm.mutateView ?? {}).filter(Boolean) as CardView[])
+              : []
+
+            if (mutateParts.length > 0) {
+              return (
+                <div
+                  key={id}
+                  className={`card-mutate-pile ${attachments.length > 0 ? 'has-attachments' : ''}`}
+                  style={{ width: `calc(var(--card-w, 100px) + ${(mutateParts.length + attachments.length) * 14}px)` }}
+                >
+                  <div className="mutate-parts">
+                    {mutateParts.map((part, mi) => (
+                      <CardSlot
+                        key={(part as any).id ?? `mp-${mi}`}
+                        card={part}
+                        className="mutate-part"
+                        style={{ left: `${(mi + 1) * 12}px`, top: `${(mi + 1) * 6}px` }}
+                      />
+                    ))}
+                  </div>
+                  {attachments.length > 0 && (
+                    <div className="attachments-list">
+                      {attachments.map((attId, ai) => {
+                        const attCard = battlefield[attId]
+                        if (!attCard) return null
+                        return (
+                          <CardSlot
+                            key={attId}
+                            cardId={attId}
+                            card={attCard}
+                            onClick={onCardClick ? () => onCardClick(attId) : undefined}
+                            onHover={onCardHover}
+                            isTarget={targetIds.has(attId)}
+                            isPlayable={playableIds.has(attId)}
+                            className="attachment-subcard"
+                            style={{ left: `${(ai + 1) * 16}px` }}
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+                  <CardSlot
+                    cardId={id}
+                    card={perm}
+                    onClick={onCardClick ? () => onCardClick(id) : undefined}
+                    onHover={onCardHover}
+                    isTarget={targetIds.has(id)}
+                    isPlayable={playableIds.has(id) || isSelectable || isChosen}
+                    isChosen={isChosen}
+                    tapped={isTapped}
+                    showPt
+                    showCounters
+                    showDamage
+                  />
+                </div>
+              )
+            }
 
             if (attachments.length > 0) {
               return (

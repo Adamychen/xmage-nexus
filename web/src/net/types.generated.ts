@@ -161,9 +161,12 @@ export interface PermanentView extends CardView {
   attachedToPermanent?: boolean
   attachedControllerDiffers?: boolean
   mutated?: boolean
+  mutateView?: MutateView
 }
 
 export type CardsView = Record<string, CardView>
+
+export type MutateView = Record<string, CardView>
 
 export interface SimpleCardView {
   id: string

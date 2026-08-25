@@ -1,7 +1,13 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { eventSchema, gameViewFromAndValidate, validateMessage } from './schema'
 import { fullFlowScenario, type FullFlowOptions } from './scenarios/fullFlow'
 import type { FakeConn } from './fake'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const RECORDED = path.join(__dirname, 'recorded', 'mutate.json')
 
 class Recorder implements FakeConn {
   readonly id = 1
@@ -76,5 +82,14 @@ describe('schema del contrato (anti-deriva)', () => {
   it('rechaza un GameView sin turno (deriva de protocolo)', () => {
     const res = gameViewFromAndValidate({ gameView: { phase: 'MAIN', step: 'PRECOMBAT_MAIN' } })
     expect(res.ok).toBe(false)
+  })
+
+  it('el gameView real capturado (mutate) pasa la validación de vista', () => {
+    // Anti-deriva: el frame fue grabado por scripts/record-mutate.mjs contra un
+    // servidor XMage real. Si el proxy deja de reenviar mutateView (o cambia su
+    // forma), este test falla y avisa que el contrato se movió.
+    const raw = JSON.parse(fs.readFileSync(RECORDED, 'utf8')) as { gameView: unknown }
+    const res = gameViewFromAndValidate(raw.gameView)
+    expect(res.ok, `mutate.json inválido: ${JSON.stringify(res.errors)}`).toBe(true)
   })
 })

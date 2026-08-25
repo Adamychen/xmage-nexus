@@ -59,8 +59,8 @@ export async function login(page: Page, username: string, opts: LoginOptions = {
   await page.goto(`/?proxyPort=${PROXY_PORT}`)
   await expect(page.locator('form.login-card')).toBeVisible({ timeout: 20_000 })
   await page.getByLabel(/Proxy/i).fill('localhost')
-  await page.getByLabel(/XMage Server/i).fill('localhost')
-  await page.getByLabel(/Port/i).fill('17171')
+  await page.getByLabel(/XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')
+  await page.getByLabel(/Port/i).fill(process.env.E2E_SERVER_PORT || '17171')
   await page.getByLabel('Usuario').fill(username)
   await page.getByLabel('Contraseña').fill('x')
   const lobby = page.getByRole('heading', { name: /Lobby|XMage Nexus/i })
@@ -87,6 +87,8 @@ export interface CreateTableOptions {
   deck?: string
   /** Mazo del asiento SIM ('Mage Web combat sim', ...). */
   simDeck?: string
+  /** Formato (Deck Type) p.ej. 'Constructed - Pioneer'. Por defecto el del diálogo. */
+  deckType?: string
   skipShuffle?: boolean
   skipStartingPlayer?: boolean
   /** Rellenar el asiento SIM (el proxy une un bot con su propia sesión). */
@@ -109,23 +111,18 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
     }
   }
 
-  if (opts.deck || opts.simDeck) {
-    await page.getByRole('button', { name: /Asientos/i }).click()
-    if (opts.deck) {
-      try {
-        await page.getByLabel(/Mazo para jugar/i).selectOption({ label: new RegExp(opts.deck, 'i') })
-      } catch {
-        await page.getByLabel(/Mazo para jugar/i).selectOption(opts.deck)
+    if (opts.deckType) {
+      await page.getByLabel(/Formato \(Deck Type\)/i).selectOption({ value: opts.deckType })
+    }
+    if (opts.deck || opts.simDeck) {
+      await page.getByRole('button', { name: /Asientos/i }).click()
+      if (opts.deck) {
+        await page.getByLabel(/Mazo para jugar/i).selectOption({ value: opts.deck })
+      }
+      if (opts.simDeck) {
+        await page.getByLabel(/Mazo del Bot SIM/i).selectOption({ value: opts.simDeck })
       }
     }
-    if (opts.simDeck) {
-      try {
-        await page.getByLabel(/Mazo del Bot SIM/i).selectOption({ label: new RegExp(opts.simDeck, 'i') })
-      } catch {
-        await page.getByLabel(/Mazo del Bot SIM/i).selectOption(opts.simDeck)
-      }
-    }
-  }
 
   if ((opts.skipShuffle ?? true) || (opts.skipStartingPlayer ?? true)) {
     await page.getByRole('button', { name: /Pruebas \/ Dev/i }).click()

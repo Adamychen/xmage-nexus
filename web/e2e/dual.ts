@@ -7,7 +7,7 @@
  * (node scripts/ctl.mjs start).
  */
 
-export const FAKE_MODE = process.env.E2E_BACKEND !== 'real'
+export const FAKE_MODE = (process.env.E2E_BACKEND || '').trim() !== 'real'
 
 export const BACKEND_HOST = 'localhost'
 /** Puerto del FixtureServer en fake. OJO: NO usar 8788 — es la página HTTP del

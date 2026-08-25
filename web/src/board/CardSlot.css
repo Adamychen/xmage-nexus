@@ -366,6 +366,55 @@
   transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Mutated Permanent Badge (Mutate pile) */
+.mutated-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  left: auto;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.2;
+  background: rgba(16, 185, 129, 0.95);
+  border: 1.5px solid #34d399;
+  color: #ecfdf5;
+  z-index: 6;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Mutated Permanent Pile: stacked constituent cards behind the top */
+.card-mutate-pile {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: visible;
+  height: calc(var(--card-w, 100px) * 1.4);
+}
+
+.mutate-parts {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+
+.mutate-part {
+  position: absolute !important;
+  width: var(--card-w, 100px) !important;
+  height: 100% !important;
+  pointer-events: none;
+  opacity: 0.92;
+  border-radius: 7px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(52, 211, 153, 0.85);
+  overflow: hidden;
+}
+
 /* Double-faced / Transform / MDFC Badge */
 .card-transform-badge {
   position: absolute;

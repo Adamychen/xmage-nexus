@@ -110,6 +110,43 @@ describe('OpponentZone', () => {
     expect(permBand?.querySelectorAll('.card-slot').length).toBe(0)
   })
 
+  it('renders a mutated creature as a pile with badge and constituent parts', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 0,
+      controlled: false,
+      battlefield: {
+        'mut-creature': {
+          id: 'mut-creature',
+          name: 'Sea-Dasher Octopus',
+          cardTypes: ['CREATURE'],
+          power: '3',
+          toughness: '3',
+          mutated: true,
+          mutateView: {
+            'under-1': { id: 'under-1', name: 'Gemrazer', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+            'under-2': { id: 'under-2', name: 'Pouncing Shoreshark', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+          },
+        } as any,
+      },
+    }
+
+    const { container, getByText } = render(
+      <OpponentZone player={oppPlayer as PlayerView} />
+    )
+
+    // Mutated creature renders as a pile, not an attachment group
+    expect(container.querySelector('.card-mutate-pile')).not.toBeNull()
+    expect(container.querySelector('.card-attachment-group')).toBeNull()
+    expect(container.querySelector('.mutated-badge')).not.toBeNull()
+    expect(container.querySelectorAll('.mutate-part').length).toBe(2)
+    expect(getByText('Sea-Dasher Octopus')).not.toBeNull()
+    expect(getByText('Gemrazer')).not.toBeNull()
+    expect(getByText('Pouncing Shoreshark')).not.toBeNull()
+  })
+
   it('renders opponent commander in command zone', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',
