@@ -1,0 +1,145 @@
+.deck-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.35;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0f1419;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+.deck-box:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+.deck-box.selected {
+  border-color: #ffb84d;
+  box-shadow: 0 0 0 2px #ffb84d, 0 10px 28px rgba(0,0,0,0.7);
+}
+.deck-box-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  border: 2px solid #ffb84d;
+  pointer-events: none;
+}
+.deck-box-art {
+  position: absolute;
+  inset: 0;
+}
+.deck-box-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.08) contrast(1.05);
+}
+.deck-box-art-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #1a242e 0%, #0d1218 100%);
+  color: #7a8a9a;
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+}
+.deck-box-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 36%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 100%);
+}
+.deck-box-footer {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.deck-box-name {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(6px);
+  color: #f5f1e8;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.deck-box-colors {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.mana-pip {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #111;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+}
+.mana-pip.pip-w { background: radial-gradient(circle at 30% 28%, #fffef0 0%, #e6d9a3 55%, #b8a86a 100%); }
+.mana-pip.pip-u { background: radial-gradient(circle at 30% 28%, #d6eaf8 0%, #6bb3d9 55%, #2a6ea3 100%); }
+.mana-pip.pip-b { background: radial-gradient(circle at 30% 28%, #6b7280 0%, #2f353f 55%, #0f1419 100%); color: #e6e2d9; text-shadow: 0 1px 0 rgba(0,0,0,0.8); border-color: rgba(255,255,255,0.75); }
+.mana-pip.pip-r { background: radial-gradient(circle at 30% 28%, #ffd0b8 0%, #e05a33 55%, #8a1e0f 100%); }
+.mana-pip.pip-g { background: radial-gradient(circle at 30% 28%, #d4edc9 0%, #5faa4b 55%, #1d4d1a 100%); }
+.mana-pip.pip-c { background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 55%, #6b7280 100%); }
+.deck-box-meta {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.72);
+}
+.deck-box-count { letter-spacing: 0.03em; }
+.deck-box-fav { color: #ffb84d; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.7)); }
+.deck-box-precon { background: rgba(255,255,255,0.12); padding: 1px 6px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.deck-box-create {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 30% 20%, #1a242e 0%, #0a0f14 70%);
+  border: 1px dashed rgba(255,255,255,0.16);
+}
+.deck-box-create-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.deck-box-create-plus {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: #a8b4c2;
+  box-shadow: 0 0 22px rgba(120,160,255,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.deck-box:hover .deck-box-create-plus { color: #d6e2f0; border-color: rgba(255,255,255,0.22); }
+.deck-box-create-label { color: #8a9ab0; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.04em; }

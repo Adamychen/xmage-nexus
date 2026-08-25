@@ -1,0 +1,56 @@
+import { test, expect } from './fixtures'
+import { withFakeServer } from './support/fake-backend'
+import { startGame } from './support/start-game'
+import { TABLE } from '../fixtures/table-names'
+import { DECK } from '../fixtures/deck-names'
+
+test.describe('Decks Gallery', () => {
+  test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
+    await withFakeServer(null as never, async () => {
+      await page.goto('/')
+      const username = `deck_${Date.now()}`
+      await page.getByPlaceholder('Usuario').fill(username)
+      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.decks-title', { hasText: 'DECKS' })).toBeVisible()
+      await expect(page.locator('.deck-box-create')).toBeVisible()
+      await expect(page.locator('.deck-box').first()).toBeVisible()
+      await expect(page.getByRole('button', { name: /Edit Deck/i })).toBeVisible()
+      // create new deck navigates to builder
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.builder-name')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.search-panel')).toBeVisible({ timeout: 5000 })
+      // deck list may need a tick for meta load
+      await page.waitForTimeout(800)
+      await expect(page.locator('.deck-builder-body')).toBeVisible()
+      await expect(page.getByRole('button', { name: /Done/i })).toBeVisible()
+      // mini-import adds a card without Scryfall
+      await page.locator('#mini-import').fill('4 [LEA:292] Mountain')
+      await page.getByRole('button', { name: '+ Añadir al mazo' }).click()
+      await expect(page.getByText('Mountain')).toBeVisible({ timeout: 3000 })
+    })
+  })
+  test('import .dck text creates deck in gallery @decks', async ({ page }) => {
+    await withFakeServer(null as never, async () => {
+      await page.goto('/')
+      const username = `deck2_${Date.now()}`
+      await page.getByPlaceholder('Usuario').fill(username)
+      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await page.getByRole('button', { name: /IMPORT TEXT/ }).click()
+      await expect(page.locator('.decks-import-dialog')).toBeVisible()
+      await page.locator('.decks-import-dialog input').first().fill('Mi Test DCK')
+      await page.locator('.decks-import-dialog textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
+      await page.getByRole('button', { name: 'Importar' }).click()
+      await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
+    })
+  })
+})

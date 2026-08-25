@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { TableView } from '../net/types'
 import {
   getAllAvailableDecks,
@@ -27,6 +27,27 @@ export default function JoinTableDialog({
   const currentEquippedDeck = useStore((s) => s.myDeck)
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
   const [selectedDeck, setSelectedDeck] = useState<Deck>(() => currentEquippedDeck ?? allDecks[0] ?? DEFAULT_DECK)
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const mod = await import('../decks/storage')
+        const st = mod.getDeckStorage()
+        const v2 = await st.list()
+        if (cancelled) return
+        const maps = new Map<string, Deck>()
+        for (const d of getAllAvailableDecks()) maps.set(d.name, d)
+        for (const d of v2) {
+          const deck: Deck = { name: d.name, cards: d.cards, sideboard: d.sideboard }
+          if (!maps.has(deck.name)) maps.set(deck.name, deck)
+        }
+        const merged = [...maps.values()]
+        setAllDecks(merged)
+        if (merged.length && !merged.some((d) => d.name === selectedDeck.name)) setSelectedDeck(merged[0])
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
   const [password, setPassword] = useState('')
   const [setAsDefault, setSetAsDefault] = useState(true)
 

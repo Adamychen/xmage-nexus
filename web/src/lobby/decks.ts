@@ -167,5 +167,20 @@ export function saveCustomDecks(decks: Deck[]) {
 }
 
 export function getAllAvailableDecks(): Deck[] {
-  return [...DECKS, ...loadSavedCustomDecks()]
+  const legacy = loadSavedCustomDecks()
+  let v2: Deck[] = []
+  try {
+    const raw = localStorage.getItem('mage_decks_v2')
+    if (raw) {
+      const arr = JSON.parse(raw) as (Deck & { id?: string })[]
+      if (Array.isArray(arr)) v2 = arr.map((d) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard }))
+    }
+  } catch {}
+  const merged = new Map<string, Deck>()
+  for (const d of [...DECKS, ...legacy, ...v2]) merged.set(d.name, d)
+  return [...merged.values()]
+}
+
+export function getAllAvailableDecksV2Raw(): Deck[] {
+  return getAllAvailableDecks()
 }

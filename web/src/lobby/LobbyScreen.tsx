@@ -6,7 +6,8 @@ import { cacheAvatar } from './avatarCache'
 import CreateTableDialog from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import ChatBox from './ChatBox'
-import DeckManager from './DeckManager'
+import DecksGallery from '../decks/DecksGallery'
+import DeckBuilder from '../decks/DeckBuilder'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import AvatarImage from './AvatarImage'
@@ -134,6 +135,7 @@ export default function LobbyScreen() {
   const error = useStore((s) => s.error)
   const events = useStore((s) => s.events)
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
+  const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
@@ -666,7 +668,13 @@ export default function LobbyScreen() {
           </div>
         )}
 
-        {activeTab === 'decks' && <DeckManager />}
+        {activeTab === 'decks' && (
+          deckBuilderId ? (
+            <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+          ) : (
+            <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
+          )
+        )}
 
         {activeTab === 'community' && (
           <div className="lobby-community-grid">

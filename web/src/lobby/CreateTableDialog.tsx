@@ -97,7 +97,26 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)
-  const availableDecks = useMemo(() => getAllAvailableDecks(), [])
+  const [availableDecks, setAvailableDecks] = useState<Deck[]>(() => getAllAvailableDecks())
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const mod = await import('../decks/storage')
+        const st = mod.getDeckStorage()
+        const v2 = await st.list()
+        if (cancelled) return
+        const maps = new Map<string, Deck>()
+        for (const d of getAllAvailableDecks()) maps.set(d.name, d)
+        for (const d of v2) {
+          const deck: Deck = { name: d.name, cards: d.cards, sideboard: d.sideboard }
+          if (!maps.has(deck.name)) maps.set(deck.name, deck)
+        }
+        setAvailableDecks([...maps.values()])
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
   const [myDeck, setMyDeckState] = useState<Deck>(storeDeck ?? DEFAULT_DECK)
   const [simDeck, setSimDeck] = useState<Deck>(LANDS_DECK)
   const [playerTypesSel, setPlayerTypesSel] = useState<string[]>(['SIM'])

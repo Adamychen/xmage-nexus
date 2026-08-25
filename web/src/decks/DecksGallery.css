@@ -1,0 +1,140 @@
+.decks-gallery {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(110,140,200,0.14) 0%, transparent 60%),
+              radial-gradient(900px 500px at 95% 10%, rgba(80,180,120,0.10) 0%, transparent 60%),
+              #080c10;
+  color: #e6eaf0;
+  padding-bottom: 72px;
+}
+.decks-gallery-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: linear-gradient(to bottom, rgba(10,14,18,0.96), rgba(10,14,18,0.88));
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.decks-title {
+  font-family: "Cinzel", serif;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-size: 1.65rem;
+  margin: 0;
+  color: #f0ede4;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+}
+.decks-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.decks-select {
+  background: #141a21;
+  color: #d6dce6;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.84rem;
+}
+.decks-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.decks-search {
+  background: #0f1419;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 7px 32px 7px 14px;
+  color: #d6dce6;
+  min-width: 180px;
+}
+.decks-search-clear {
+  position: absolute;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: #d6dce6;
+  cursor: pointer;
+}
+.decks-mana-filter { display: flex; gap: 6px; }
+.mana-filter-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  font-weight: 800; font-size: 0.72rem;
+  cursor: pointer; opacity: 0.45; transition: opacity 150ms, transform 150ms, box-shadow 150ms;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.35);
+}
+.mana-filter-btn.active { opacity: 1; transform: scale(1.08); box-shadow: 0 0 12px rgba(255,255,255,0.45); }
+.decks-counter { margin-left: auto; font-weight: 700; opacity: 0.8; letter-spacing: 0.04em; }
+
+.decks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  padding: 22px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.decks-footer {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(10,14,18,0.96);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  z-index: 6;
+  flex-wrap: wrap;
+}
+.decks-footer-left { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.decks-footer-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #d6dce6;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.decks-footer-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.decks-footer-btn.danger { color: #ffb4a8; border-color: rgba(255,120,100,0.35); }
+.decks-footer-btn.fav-active { color: #ffb84d; border-color: rgba(255,184,77,0.5); background: rgba(255,184,77,0.12); }
+.decks-edit-btn {
+  margin-left: auto;
+  background: linear-gradient(135deg, #2a5bd7 0%, #1e3fa8 100%);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(37,86,204,0.45);
+}
+.decks-edit-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+.decks-import-dialog { max-width: 560px; width: 92vw; }
+.decks-import-dialog label { display: grid; gap: 6px; margin: 12px 0; font-size: 0.82rem; color: #a8b4c2; }
+.decks-import-dialog input, .decks-import-dialog textarea {
+  background: #0f1419; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; color: #e6eaf0; font-family: ui-monospace, monospace; font-size: 0.82rem;
+}
+.decks-import-hint { color: #8a9ab0; font-size: 0.82rem; line-height: 1.45; }
+.decks-import-hint code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 6px; font-size: 0.78rem; }
+.decks-import-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
