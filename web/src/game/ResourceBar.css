@@ -2,23 +2,25 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 4px 8px;
+  padding: 0 8px;
   pointer-events: auto;
   flex-shrink: 0;
+  align-self: flex-end;
 }
 
 /* Opponent mode — aligned to top edge */
 .resource-bar.opp,
 .resource-bar.opp.compact {
   align-items: flex-start;
+  align-self: flex-start;
 }
 
 /* Compact mode — card-sized stacks in bottom/top bar */
 .resource-bar.compact {
-  height: 100%;
   padding: 0 6px;
   gap: 8px;
   align-items: flex-end;
+  align-self: flex-end;
   overflow: visible;
   position: relative;
   z-index: 10;
@@ -26,10 +28,17 @@
 
 .resource-bar.opp.compact {
   align-items: flex-start;
+  align-self: flex-start;
 }
 
 .resource-mana-wrap {
   position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.resource-bar.opp .resource-mana-wrap {
+  align-items: flex-start;
 }
 
 .resource-mana {
