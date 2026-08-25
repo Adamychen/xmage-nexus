@@ -19,11 +19,7 @@
   overflow: hidden;
 }
 
-/* Opponents on top are flipped (info bar at top) — already done by OpponentZone */
-.pod-row--top {
-  flex: 0 0 46%;
-}
-
+.pod-row--top,
 .pod-row--bottom {
   flex: 1 1 0;
   min-height: 0;

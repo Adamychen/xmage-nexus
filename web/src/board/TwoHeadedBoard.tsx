@@ -141,6 +141,7 @@ export default function TwoHeadedBoard({
         targetIds={targetIdSet}
         revealedCards={revealedCards(game, player)}
         mirrored={mirrored}
+        compactPod
       />
     </div>
   )
@@ -178,6 +179,7 @@ export default function TwoHeadedBoard({
               crossZonePlayables={crossZonePlayables}
               onPlayCrossZone={onPlayCrossZone}
               helperEmblems={game?.myHelperEmblems}
+              compactPod
             />
           ) : (
             <OpponentZone
@@ -187,6 +189,7 @@ export default function TwoHeadedBoard({
               targetIds={targetIdSet}
               revealedCards={revealedCards(game, botLeft as PlayerView | undefined)}
               mirrored
+              compactPod
             />
           )}
         </div>

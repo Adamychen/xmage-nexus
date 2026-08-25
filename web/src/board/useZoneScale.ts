@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-const MIN_CARD_W = 52
+const MIN_CARD_W = 48
 const MAX_CARD_W = 130
 const CARD_ASPECT = 1.4
 
@@ -21,25 +21,24 @@ export function useZoneScale(): ZoneScale {
       const rect = el.getBoundingClientRect()
       if (rect.height <= 0 || rect.width <= 0) return
 
-      const isOpponent = el.classList.contains('opponent-zone')
-      const rowGap = 4
-      const fixedRowH = isOpponent ? 0 : 56
+      // Measure the status bar (InfoBar + Hand + ResourceBar) or fallback to 54px
+      const statusRow = el.querySelector(
+        '.bz-status-row, .pz-bottom-row, .oz-top-row, .oz-bottom-row'
+      ) as HTMLElement | null
+      const statusH = statusRow && statusRow.offsetHeight > 0 ? statusRow.offsetHeight : 54
+
+      // Zone grid has 2 card rows (1fr each) + 1 status row (auto)
+      // Gaps (4px * 2 = 8px) + Zone padding (3px * 2 = 6px) + Band padding (2px * 2 = 4px) = ~18px
+      const verticalOverhead = statusH + 18
+      const availH = rect.height - verticalOverhead
+      if (availH <= 0) return
+
       const cardRows = 2
-      const availH = rect.height - fixedRowH - rowGap * (cardRows + 1)
-      const fromHeight = availH / cardRows / CARD_ASPECT
+      const rowHeight = availH / cardRows
+      const safeCardH = Math.max(32, rowHeight - 6)
+      const fromHeight = safeCardH / CARD_ASPECT
 
-      const bandPadding = 16
-      const availW = rect.width - bandPadding * 2
-
-      const row1Selector = isOpponent ? '.oz-permanents-row .card-slot' : '.pz-creatures-row .card-slot'
-      const row2Selector = isOpponent ? '.oz-creatures-row .card-slot' : '.pz-permanents-row .card-slot'
-      const row1Cards = el.querySelectorAll(row1Selector).length || 1
-      const row2Cards = el.querySelectorAll(row2Selector).length || 1
-      const maxInRow = Math.max(row1Cards, row2Cards)
-      const cardGap = 10
-      const fromWidth = (availW - cardGap * (maxInRow - 1)) / maxInRow
-
-      const w = Math.max(MIN_CARD_W, Math.min(MAX_CARD_W, Math.min(fromHeight, fromWidth)))
+      const w = Math.max(MIN_CARD_W, Math.min(MAX_CARD_W, fromHeight))
       setCardW(Math.round(w))
     }
 
