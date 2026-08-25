@@ -279,7 +279,15 @@ export class FakeServer {
   private cleanups: (() => void)[] = []
   private scenarioInstance: Scenario | null = null
 
-  constructor(readonly port: number, private readonly makeScenario: () => Scenario) {}
+  constructor(private readonly requestedPort: number, private readonly makeScenario: () => Scenario) {
+    this.assignedPort = requestedPort
+  }
+
+  private assignedPort: number
+  /** Puerto real en el que escucha. Si requestedPort=0, el SO lo asigna. */
+  get port(): number {
+    return this.assignedPort
+  }
 
   static async start(port: number, makeScenario: () => Scenario): Promise<FakeServer> {
     const server = new FakeServer(port, makeScenario)
@@ -289,10 +297,11 @@ export class FakeServer {
 
   private listen(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.wss = new WebSocketServer({ port: this.port })
+      this.wss = new WebSocketServer({ port: this.requestedPort })
       this.wss.on('error', reject)
       this.wss.on('listening', () => {
         this.wss.removeListener('error', reject)
+        this.assignedPort = (this.wss.address() as { port: number }).port
         this.wss.on('error', (err) => {
           console.error(`[fake] error del servidor (puerto ${this.port}): ${err.message}`)
         })

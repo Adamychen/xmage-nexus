@@ -9,14 +9,17 @@
 
 import { FakeServer, type Scenario } from '../../fixtures/fake'
 import { BACKEND_PORT, FAKE_MODE } from '../dual'
+import { getFakePort, setFakePort } from './fake-port'
 
 export async function withFakeServer<T>(makeScenario: () => Scenario, run: () => Promise<T>): Promise<T> {
   if (!FAKE_MODE) return run()
-  const server = await FakeServer.start(BACKEND_PORT, makeScenario)
+  const server = await FakeServer.start(0, makeScenario)
+  setFakePort(server.port)
   try {
     return await run()
   } finally {
     await server.stop()
+    setFakePort(BACKEND_PORT)
   }
 }
 

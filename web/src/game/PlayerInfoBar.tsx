@@ -238,6 +238,8 @@ export default function PlayerInfoBar({
   const timeLeft = useTickingTimer(player.priorityTimeLeftSecs, hasPriority)
   const hasTimer = (player.priorityTimeLeftSecs != null && player.priorityTimeLeftSecs > 0) || !!player.timerActive
   const isTimeLow = hasTimer && timeLeft > 0 && timeLeft <= 30
+  const bufferTimeLeft = player.bufferTimeLeft ?? 0
+  const hasBuffer = bufferTimeLeft > 0
 
   // Match wins dots (Bo1 / Bo3 / Bo5)
   const winsNeeded = player.winsNeeded ?? (player.wins ? player.wins : 0)
@@ -348,6 +350,11 @@ export default function PlayerInfoBar({
             >
               <span className="timer-icon">⏱️</span>
               <span className="timer-value">{formatTimer(timeLeft)}</span>
+              {hasBuffer && (
+                <span className="timer-buffer" title="Tiempo de buffer disponible">
+                  +{formatTimer(bufferTimeLeft)}
+                </span>
+              )}
             </span>
           )}
         </div>

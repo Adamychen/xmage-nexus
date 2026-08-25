@@ -110,4 +110,54 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.getAllByText('Ponder').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Brainstorm').length).toBeGreaterThanOrEqual(1)
   })
+
+  it('renderiza CardGrid HD para GAME_CHOOSE_CARDS (tutor) y envía sendPlayerUUID al elegir', async () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_CARDS',
+      messageId: 4,
+      objectId: 'game-1',
+      data: {
+        message: 'Search your library for a card',
+        min: 1,
+        max: 1,
+        cardsView1: {
+          'c-1': { id: 'c-1', name: 'Demonic Tutor', expansionSetCode: 'LEG', cardNumber: '74' },
+          'c-2': { id: 'c-2', name: 'Swamp', expansionSetCode: 'LEA', cardNumber: '293' },
+        },
+      },
+    } as never)
+    render(<FeedbackDialog />)
+    const dialog = document.querySelector('.card-grid-dialog')
+    expect(dialog).toBeTruthy()
+    expect(screen.getAllByText('Demonic Tutor').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Swamp').length).toBeGreaterThanOrEqual(1)
+
+    const cell = dialog?.querySelector('.card-grid-cell') as HTMLElement
+    fireEvent.click(cell)
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerUUID', expect.objectContaining({ value: 'c-1', gameId: 'game-1' }))
+    })
+  })
+
+  it('muestra título de descarte para GAME_CHOOSE_CARDS con mensaje de discard (Thoughtseize)', () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_CARDS',
+      messageId: 5,
+      objectId: 'game-1',
+      data: {
+        message: 'Choose a card for them to discard',
+        min: 1,
+        max: 1,
+        cardsView1: {
+          'c-1': { id: 'c-1', name: 'Lightning Bolt', expansionSetCode: 'LEA', cardNumber: '161' },
+        },
+      },
+    } as never)
+    render(<FeedbackDialog />)
+    expect(screen.getByText('Elige una carta para que descarte')).toBeTruthy()
+    expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
+  })
 })

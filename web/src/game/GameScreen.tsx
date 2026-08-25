@@ -3,7 +3,7 @@ import GameBoard from '../board/GameBoard'
 import TwoHeadedBoard from '../board/TwoHeadedBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import * as cmds from '../net/commands'
-import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
@@ -18,6 +18,7 @@ import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import MechanicsTray from './MechanicsTray'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
+import { setState } from '../state/state'
 import './GameScreen.css'
 
 export default function GameScreen() {
@@ -97,6 +98,23 @@ export default function GameScreen() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [canPass, feedback, onResolveClick])
+
+  // F4 / F9 alternan el "stop" de fin de turno (tu turno / turno del oponente)
+  useEffect(() => {
+    const handleStopKeys = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      if (e.key !== 'F4' && e.key !== 'F9') return
+      e.preventDefault()
+      const turn: 'yourTurn' | 'opponentTurn' = e.key === 'F4' ? 'yourTurn' : 'opponentTurn'
+      const stops = getState().phaseStops
+      const key = 'endStep'
+      const next = { ...stops, [turn]: { ...stops[turn], [key]: !stops[turn][key] } }
+      setState({ phaseStops: next })
+      void cmds.updatePreferences(next)
+    }
+    window.addEventListener('keydown', handleStopKeys)
+    return () => window.removeEventListener('keydown', handleStopKeys)
+  }, [])
 
   const opps = game?.players?.filter((p) => !p.controlled) ?? []
   const isSpectator = !me

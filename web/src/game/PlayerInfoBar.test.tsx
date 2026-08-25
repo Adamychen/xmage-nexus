@@ -196,6 +196,42 @@ describe('PlayerInfoBar', () => {
     }
   })
 
+  it('renders priority timer badge when priorityTimeLeftSecs > 0', () => {
+    const timedPlayer: PlayerView = {
+      ...basePlayer,
+      priorityTimeLeftSecs: 95,
+      hasPriority: true,
+      timerActive: true,
+    }
+    const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
+    const badge = container.querySelector('.player-timer-badge')
+    expect(badge).toBeDefined()
+    expect(badge?.textContent).toContain('01:35')
+  })
+
+  it('marks timer low when timeLeft <= 30', () => {
+    const timedPlayer: PlayerView = {
+      ...basePlayer,
+      priorityTimeLeftSecs: 15,
+      hasPriority: true,
+    }
+    const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
+    const badge = container.querySelector('.player-timer-badge.timer-low')
+    expect(badge).toBeDefined()
+  })
+
+  it('renders buffer time when bufferTimeLeft > 0', () => {
+    const timedPlayer: PlayerView = {
+      ...basePlayer,
+      priorityTimeLeftSecs: 95,
+      bufferTimeLeft: 30,
+    }
+    const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
+    const buf = container.querySelector('.timer-buffer')
+    expect(buf).toBeDefined()
+    expect(buf?.textContent).toContain('00:30')
+  })
+
   it('renders Curses badge when player has attachments', () => {
     const onHover = vi.fn()
     const cursePlayer: PlayerView = {

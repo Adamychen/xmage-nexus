@@ -9,7 +9,8 @@ import { expect, type Page } from '@playwright/test'
 import { cleanupUser, registerHelper } from '../cleanup'
 import { HumanHelper } from '../wshelper'
 import { parsedLen } from './frames'
-import { PROXY_PORT } from '../dual'
+import { FAKE_MODE } from '../dual'
+import { getFakePort } from './fake-port'
 
 export const MAX_FRAMES = 500
 
@@ -56,7 +57,7 @@ export interface LoginOptions {
 }
 
 export async function login(page: Page, username: string, opts: LoginOptions = {}): Promise<void> {
-  await page.goto(`/?proxyPort=${PROXY_PORT}`)
+  await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : 8787}`)
   await expect(page.locator('form.login-card')).toBeVisible({ timeout: 20_000 })
   await page.getByLabel(/Proxy/i).fill('localhost')
   await page.getByLabel(/XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')

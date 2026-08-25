@@ -5,9 +5,9 @@
 // Elimina las carreras del canvas y los cuelgues de desarrollo de tierras:
 // la partida avanza sola y el test solo actúa cuando toca la acción bajo prueba.
 
-import { PROXY_PORT, FAKE_MODE } from './dual'
+import { FAKE_MODE } from './dual'
+import { getFakePort } from './support/fake-port'
 
-const WS_URL = `ws://127.0.0.1:${PROXY_PORT}`
 const HOST = FAKE_MODE ? 'localhost' : process.env.E2E_SERVER_HOST || 'beta.xmage.today'
 const PORT = Number(process.env.E2E_SERVER_PORT || '17171')
 
@@ -80,7 +80,8 @@ export class HumanHelper {
   }
 
   private async connectOnce(): Promise<void> {
-    this.ws = new WebSocket(WS_URL)
+    const wsUrl = `ws://127.0.0.1:${FAKE_MODE ? getFakePort() : 8787}`
+    this.ws = new WebSocket(wsUrl)
     await new Promise<void>((resolve, reject) => {
       const ws = this.ws
       if (!ws) return reject(new Error('helper: no websocket'))

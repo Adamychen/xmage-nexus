@@ -126,7 +126,9 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_SELECT_TARGETS':
     case 'GAME_CHOOSE_CARDS': {
       const cards = feedbackCards(data)
-      return prompt(method, gameId, 'Selecciona cartas', message, 'uuid', cardOptions(data.cardsView1 ?? data.options), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
+      const isDiscard = /descart|discard/i.test(message)
+      const title = isDiscard ? 'Elige una carta para que descarte' : 'Selecciona cartas'
+      return prompt(method, gameId, title, message, 'uuid', cardOptions(data.cardsView1 ?? data.options), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
     }
     case 'GAME_CHOOSE_ABILITY': {
       const abilities = asRecord(raw)

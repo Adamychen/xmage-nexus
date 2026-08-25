@@ -33,6 +33,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Phase 1: Web Foundation** | React 19 + TS + Vite + PixiJS 8. Lobby, room chat, real-time tables/users, Scryfall HD card cache (IndexedDB), full 1v1 board rendering & spectator mode. | ✅ **Completed** | 100% typecheck clean, live AI vs AI spectator matches working end-to-end. |
 | **Phase 2: Interaction Engine** | London mulligan, priority loops (`GAME_SELECT`), visual targeting (animated dotted lines & pulsing glows), mana tapping & pool payment (`sendPlayerManaType`), floating non-blocking combat UI (attack/block & alpha strike), advanced spell interactions (X-costs, multi-target, modal choices, +1/+1 counters). | ✅ **Completed** | Validated via `human-test.mjs` (83 checks PASS) and Playwright E2E suites (*Blaze*, *Arc Trail*, *Boros Charm*, *Walking Ballista*). |
 | **Quality & QA Foundation** | 105 unit tests (vitest, <1s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
+| **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), y **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
 
 ---
 
@@ -45,7 +46,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Room & Match Chat | ✅ Yes | ✅ Yes | Completed |
 | | 1v1 Table Creation (Human vs Human / Human vs AI) | ✅ Yes | ✅ Yes | Completed |
 | | Table Filters & Private Messaging (Whispers/PM) | ✅ Yes | ❌ No | Phase 3 |
-| | Match Clocks / Visible Timers | ✅ Yes | 🟡 Backend-only | **Phase 2.5** |
+| | Match Clocks / Visible Timers | ✅ Yes | ✅ Yes | Completed |
 | **Deck Management** | Predefined / JSON Deck Loading | ✅ Yes | ✅ Yes | Completed |
 | | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ❌ No | Phase 3 |
 | | Text / Arena / Standard Deck Import & Export | ✅ Yes | ❌ No | Phase 3 |
@@ -53,13 +54,13 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Stack, Library, Graveyard, Exile | ✅ Yes | ✅ Yes | Completed |
 | | Tap Rotations, Life Totals, Counters (+1/+1, loyalty) | ✅ Yes | ✅ Yes | Completed |
 | | Graveyard / Exile Pile Inspector Overlays | ✅ Yes | ✅ Yes | Completed |
-| | Double-Faced Cards (Transform, MDFC, Sagas) | ✅ Yes | 🟡 Front-face only | **Phase 2.5** |
+| | Double-Faced Cards (Transform, MDFC, Sagas) | ✅ Yes | ✅ Yes | Completed |
 | **In-Game Rules & Prompts** | Priority & Turn Passing (`GAME_SELECT`) | ✅ Yes | ✅ Yes | Completed |
 | | Mana Payment (Tapping lands on board + color pool) | ✅ Yes | ✅ Yes | Completed |
 | | Visual Targeting (Outlines, arrows to cards/players) | ❌ Crude lines | ✅ Dotted animated lines + Glow | Completed (Surpasses Swing) |
 | | Complex Spells (X-costs, Modals, Multi-target) | ✅ Yes | ✅ Yes | Completed |
 | | Interactive Combat (Declare Attackers / Blockers) | ✅ Yes | ✅ Yes (Floating UI) | Completed |
-| | **Card Selection Lists (Tutors, Scry, Surveil, Hand Reveal)** | ✅ Yes (`ShowCardsDialog`) | ❌ No | **Phase 2.5 (Priority)** |
+| | **Card Selection Lists (Tutors, Scry, Surveil, Hand Reveal)** | ✅ Yes (`ShowCardsDialog`) | ✅ Yes (HD grid via `CardGrid`) | Completed |
 | | **Phase Stops & Priority Shortcuts (F4, F9, Space)** | ✅ Yes | ❌ No (Manual pass only) | **Phase 2.5 (Priority)** |
 | | **Sideboarding Screen between Bo3 Matches** | ✅ Yes | ❌ No | **Phase 2.5 (Priority)** |
 | | Multi-blocker Damage Assignment Order | ✅ Yes | 🟡 Auto-assigned | Phase 2.5 |
@@ -114,7 +115,7 @@ flowchart TD
   - Modal card-grid overlay styled after modern digital card games.
   - Search library (Fetchlands, Demonic Tutor).
   - Scry / Surveil / Look at top N cards (allow reordering/placing on top or bottom).
-  - Reveal hand effects (*Thoughtseize*, *Inquisition of Kozilek*): view opponent's hand in a dedicated reveal window and click to discard.
+  - Reveal hand effects (*Thoughtseize*, *Inquisition of Kozilek*): view opponent's hand in a dedicated reveal window (`game.revealed`/`game.opponentHands` en `OpponentZone`) and click to discard — implementado: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` enrutan a la grilla HD `CardGrid` y el clic envía `sendPlayerUUID` (ver `e2e/reveal.spec.ts`, `@reveal`).
   - Graveyard / Exile selective interactions (reanimation, flashback picker).
 
 #### 2.5.2 Phase Stops & Priority Shortcuts — **CRITICAL**

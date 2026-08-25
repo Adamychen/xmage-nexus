@@ -25,20 +25,43 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
       skipAsks: true,
     })
 
-    const dialog = page.locator('.feedback-dialog')
+    const fbDialog = page.locator('.feedback-dialog')
+    const anyDialog = page.locator('.feedback-dialog, .card-grid-dialog, .targeting-bar, .mana-prompt-bar')
     let cursor = 0
 
     async function step(method: string): Promise<void> {
       await waitFrameAt(page, (f) => f.method === method, method, 15_000, cursor)
       // refresca el cursor al índice del frame recién llegado para no re-matchear
       cursor = parsedLen(page)
-      await expect(dialog).toBeVisible({ timeout: 15_000 })
-      await expect(dialog).toContainText(method, { timeout: 5_000 })
+      // el prompt puede renderizar en .feedback-dialog (opciones) o .card-grid-dialog
+      // (selección de cartas): ambos llevan el método en la cabecera.
+      await expect(anyDialog).toContainText(method, { timeout: 15_000 })
       await page.waitForTimeout(150)
       fs.writeFileSync(path.join(SHOTS_DIR, `prompts-${method}.png`), await page.screenshot({ fullPage: true }))
     }
 
-    const options = () => dialog.locator('.feedback-options button')
+    const options = () => fbDialog.locator('.feedback-options button')
+
+    // El CardGrid se monta sobre un .feedback-backdrop que intercepta el clic de
+    // Playwright (la celda queda "cubierta"); el clic raw por evaluate dispara el
+    // onClick de React igual que en producción. Igual que en reveal.spec.ts.
+    async function clickCardCell(text: string): Promise<void> {
+      await page.evaluate((txt) => {
+        const el = Array.from(document.querySelectorAll('.card-grid-cell')).find((e) =>
+          e.textContent?.includes(txt),
+        ) as HTMLElement | undefined
+        el?.click()
+      }, text)
+    }
+
+    async function confirmCardGrid(): Promise<void> {
+      await page.evaluate(() => {
+        const b = Array.from(document.querySelectorAll('.card-grid-dialog button')).find((e) =>
+          /Confirmar/i.test(e.textContent ?? ''),
+        ) as HTMLElement | undefined
+        b?.click()
+      })
+    }
 
     // 1. GAME_SELECT_PLAYER (uuid)
     await step('GAME_SELECT_PLAYER')
@@ -53,7 +76,7 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     const freeInput = page.getByLabel('Texto libre')
     await expect(freeInput).toBeVisible({ timeout: 10_000 })
     await freeInput.fill('Blinkmoth Nexus')
-    await dialog.getByRole('button', { name: 'Enviar' }).click()
+    await fbDialog.getByRole('button', { name: 'Enviar' }).click()
     expect(
       parseSent(sentOf(page)).some(
         (s) => s.action === 'sendPlayerString' && String(s.args?.value) === 'Blinkmoth Nexus',
@@ -77,9 +100,9 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     await step('GAME_CHOOSE_MODE')
     await options().first().click()
 
-    // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1)
+    // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1) — renderiza en CardGrid
     await step('GAME_CHOOSE_CARDS')
-    await options().first().click()
+    await clickCardCell('Mountain')
     expect(
       parseSent(sentOf(page)).some(
         (s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === 'c-a',
@@ -95,11 +118,11 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     await step('GAME_TARGET_AMOUNT')
     await resolveInteger(page, 2, 'TARGET_AMOUNT')
 
-    // 11. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2)
+    // 11. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2) — renderiza en CardGrid
     await step('GAME_SELECT_CARDS')
-    await options().nth(0).click()
-    await options().nth(1).click()
-    await dialog.getByRole('button', { name: /Confirmar/i }).click()
+    await clickCardCell('Mountain')
+    await clickCardCell('Island')
+    await confirmCardGrid()
     expect(
       parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID').length >= 2,
       'GAME_SELECT_CARDS debería enviar al menos 2 sendPlayerUUID',
@@ -107,11 +130,11 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
 
     // 12. GAME_PLAY_XMANA (boolean)
     await step('GAME_PLAY_XMANA')
-    await dialog.getByRole('button', { name: /Confirmar|sí|yes/i }).click()
+    await fbDialog.getByRole('button', { name: /Confirmar|sí|yes/i }).click()
 
     // 13. USER_REQUEST_DIALOG (botones -> sendPlayerAction)
     await step('USER_REQUEST_DIALOG')
-    await dialog.getByRole('button', { name: /Rebobinar/i }).click()
+    await fbDialog.getByRole('button', { name: /Rebobinar/i }).click()
     expect(
       parseSent(sentOf(page)).some(
         (s) => s.action === 'sendPlayerAction' && String(s.args?.action) === 'ROLLBACK_TURN',

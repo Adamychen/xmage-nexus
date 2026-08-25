@@ -114,7 +114,7 @@ Lista actual (de `engine-view-gap.json`):
 | MDFC / Transform (cara 2) | ✅ | ✅ | `CardPreview.secondCardFace`; `complex-costs.spec.ts` | 2026-08-24 |
 | Adventures (modo criatura vs hechizo) | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
 | Split / Fuse | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
-| Sagas (badge de capítulo / lore) | ⚠️ | ⚠️ | `CardSlot` renderiza `lore`; sin spec dedicada | 2026-08-24 |
+| Sagas (badge de capítulo / lore) | ✅ | ✅ | `CardSlot` renderiza contador `lore` (📖 + nº de capítulo); `CardSlot.test.tsx` cubre contadores | 2026-08-25 |
 | Battles (cartas batalla) | ✅ | ✅ | `mechanics.spec.ts` (`.defense-badge`) | 2026-08-24 |
 | Tokens (Treasure/Food/Clue/Map/Blood) | ✅ | ✅ | `cardImages.tokenScryfallKey` + `gameEventParser` + `mechanics.spec.ts` (render) | 2026-08-24 |
 
@@ -175,6 +175,8 @@ Lista actual (de `engine-view-gap.json`):
 |---|---|---|---|---|
 | Scry / Surveil / Mill | ✅ | ✅ | `keywordExtractor.test.ts` + `mechanics.spec.ts` (`.library-stack.has-top-revealed`) + `LibraryOrderDialog.test.tsx` (scry) | 2026-08-24 |
 | Reordenar biblioteca (`GAME_CHOOSE_CARDS_ORDER`) | ✅ | ✅ | `feedback.test.ts` + `LibraryOrderDialog.test.tsx` | 2026-08-24 |
+| Selección de cartas (`GAME_CHOOSE_CARDS`/`GAME_SELECT_CARDS` — tutores, buscar en biblioteca, revelar) en grilla HD | ✅ | ✅ | `FeedbackDialog.test.tsx` enruta a `CardGrid` (buscar, multi-select, `sendPlayerUUID`) | 2026-08-25 |
+| Descarte desde mano revelada (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1`) — grilla HD interactiva que envía `sendPlayerUUID` (descarte) | ✅ | ✅ | `reveal.spec.ts` (`@reveal`) + título "Elige una carta para que descarte" en `feedback.test.ts`/`FeedbackDialog.test.tsx` | 2026-08-25 |
 
 ### K. Planeswalkers
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

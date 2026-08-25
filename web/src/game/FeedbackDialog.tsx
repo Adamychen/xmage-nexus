@@ -100,6 +100,11 @@ export default function FeedbackDialog() {
     return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} cancel={cancel} busy={busy} />
   }
 
+  // ── Selección de cartas (tutores, buscar en biblioteca, revelar mano): grid HD
+  if ((prompt.method === 'GAME_CHOOSE_CARDS' || prompt.method === 'GAME_SELECT_CARDS' || prompt.method === 'GAME_SELECT_TARGETS') && hasCardGrid) {
+    return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} cancel={cancel} busy={busy} />
+  }
+
   // ── GAME_TARGET sin cardsView1: barra flotante no-modal
   if (prompt.method === 'GAME_TARGET') {
     const chosenCount = prompt.chosenTargets?.length ?? 0

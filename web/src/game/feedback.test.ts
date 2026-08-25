@@ -313,6 +313,16 @@ describe('parseFeedback', () => {
     expect(prompt?.options).toEqual([])
   })
 
+  it('uses a discard-specific title when the message indicates a discard (Thoughtseize)', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CARDS', 'game-15', {
+      message: 'Choose a card for them to discard',
+      cardsView1: { 'c-1': { id: 'c-1', name: 'Lightning Bolt' } },
+      min: 1,
+      max: 1,
+    })
+    expect(prompt?.title).toBe('Elige una carta para que descarte')
+  })
+
   it('maps GAME_CHOOSE_CARDS_ORDER to an order prompt (library reorder / scry)', () => {
     const prompt = parseFeedback('GAME_CHOOSE_CARDS_ORDER', 'game-14', {
       message: 'Reorder the top cards of your library',
