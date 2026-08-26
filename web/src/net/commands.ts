@@ -197,3 +197,56 @@ export async function getFinishedMatches(roomId?: string): Promise<import('./typ
 export async function replayGame(gameId: string) {
   return getGateway().send('replayGame', { gameId })
 }
+
+export async function sendCardPick(draftId: string, cardId: string, hiddenCards?: string[]) {
+  return getGateway().send('sendCardPick', { draftId, cardId, hiddenCards })
+}
+
+export async function sendCardMark(draftId: string, cardId: string) {
+  return getGateway().send('sendCardMark', { draftId, cardId })
+}
+
+export async function setBoosterLoaded(draftId: string) {
+  return getGateway().send('setBoosterLoaded', { draftId })
+}
+
+export async function quitDraft(draftId: string) {
+  return getGateway().send('quitDraft', { draftId })
+}
+
+export async function quitTournament(tournamentId: string) {
+  return getGateway().send('quitTournament', { tournamentId })
+}
+
+export async function createTournamentTable(args: Record<string, unknown>) {
+  return getGateway().send('createTournamentTable', args)
+}
+
+export async function joinTournamentTable(args: { roomId?: string; tableId: string; playerName?: string; playerType?: string; skill?: number; deck?: DeckJson; password?: string }) {
+  return getGateway().send('joinTournamentTable', { ...args })
+}
+
+export async function watchTournamentTable(tableId: string, roomId?: string) {
+  return getGateway().send('watchTournamentTable', { tableId, roomId })
+}
+
+export async function getTournament(tournamentId: string) {
+  const res = await getGateway().send('getTournament', { tournamentId })
+  return res.ok ? res.data : null
+}
+
+export async function replayNext(gameId: string) {
+  return getGateway().send('replayNext', { gameId })
+}
+
+export async function replayPrevious(gameId: string) {
+  return getGateway().send('replayPrevious', { gameId })
+}
+
+export async function replaySkipForward(gameId: string, moves: number) {
+  return getGateway().send('replaySkipForward', { gameId, moves })
+}
+
+export async function stopReplay(gameId: string) {
+  return getGateway().send('stopReplay', { gameId })
+}

@@ -42,21 +42,6 @@ function extractCallbacks(): string[] {
 
 // 2. Callbacks sin UI hoy (planeados). Deben tener `case` en eventHandler/feedback O estar aquí.
 const KNOWN_UNHANDLED: Record<string, string> = {
-  START_TOURNAMENT: 'Slice B (Torneo) — planeado',
-  TOURNAMENT_INIT: 'Slice B (Torneo) — planeado',
-  TOURNAMENT_UPDATE: 'Slice B (Torneo) — planeado',
-  TOURNAMENT_OVER: 'Slice B (Torneo) — planeado',
-  SHOW_TOURNAMENT: 'Slice B (Torneo) — planeado',
-  START_DRAFT: 'Slice A (Draft/Limited) — planeado',
-  CONSTRUCT: 'Slice A (Draft/Limited) — planeado',
-  DRAFT_OVER: 'Slice A (Draft/Limited) — planeado',
-  DRAFT_INIT: 'Slice A (Draft/Limited) — planeado',
-  DRAFT_PICK: 'Slice A (Draft/Limited) — planeado',
-  DRAFT_UPDATE: 'Slice A (Draft/Limited) — planeado',
-  REPLAY_GAME: 'Slice C (Replay) — planeado (comando cliente, sin UI entrante)',
-  REPLAY_INIT: 'Slice C (Replay) — planeado',
-  REPLAY_UPDATE: 'Slice C (Replay) — planeado',
-  REPLAY_DONE: 'Slice C (Replay) — planeado',
 }
 
 const eventHandlerSrc = readFileSync(resolve(here, './eventHandler.ts'), 'utf8')

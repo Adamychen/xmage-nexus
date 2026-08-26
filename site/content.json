@@ -19,7 +19,7 @@
     { "id": 2.5, "name": "1v1 Competitive Parity", "status": "done", "date": "2026-08-25", "desc": "Card selection modals (HD CardGrid), phase stops/shortcuts (F4/F9), match clocks, DFCs/Sagas, interactive discard from revealed hand (Thoughtseize)." },
     { "id": 3, "name": "Visual Polish, Audio & Deck Builder", "status": "pending", "date": "", "desc": "Web Audio engine, VFX/particles, in-app deck builder, customization." },
     { "id": 4, "name": "Desktop Packaging (Tauri)", "status": "pending", "date": "", "desc": "Tauri wrapper, embedded one-click proxy + JRE, auto-updater." },
-    { "id": 5, "name": "Advanced Formats & Tournaments", "status": "pending", "date": "", "desc": "4-Player Commander/EDH, Booster Draft & Sealed, Swiss/SE brackets." }
+    { "id": 5, "name": "Advanced Formats & Tournaments", "status": "done", "date": "2026-08-26", "desc": "4-Player Commander pod (max 4, PodBoard 2x2 + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay viewer — max 4 commander enforced." }
   ],
   "features": [
     { "category": "Connectivity & Lobby", "feature": "Connect Local / Custom / Public Server", "official": "yes", "nexus": "yes", "phase": "Completed" },
@@ -42,14 +42,15 @@
     { "category": "In-Game Rules & Prompts", "feature": "Complex Spells (X-costs, Modals, Multi-target)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Rules & Prompts", "feature": "Interactive Combat (attack/block)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Rules & Prompts", "feature": "Card Selection Lists (Tutors, Scry, Reveal)", "official": "yes", "nexus": "yes", "phase": "Completed" },
-    { "category": "In-Game Rules & Prompts", "feature": "Phase Stops & Shortcuts (F4/F9/Space)", "official": "yes", "nexus": "no", "phase": "Phase 2.5" },
-    { "category": "In-Game Rules & Prompts", "feature": "Sideboarding Screen (Bo3)", "official": "yes", "nexus": "no", "phase": "Phase 2.5" },
-    { "category": "In-Game Rules & Prompts", "feature": "Multi-blocker Damage Assignment", "official": "yes", "nexus": "partial", "phase": "Phase 2.5" },
+    { "category": "In-Game Rules & Prompts", "feature": "Phase Stops & Shortcuts (F4/F9/Space)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Sideboarding Screen (Bo3)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Rules & Prompts", "feature": "Multi-blocker Damage Assignment", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Presentation & Audio", "feature": "Sound Effects", "official": "yes", "nexus": "no", "phase": "Phase 3" },
     { "category": "Presentation & Audio", "feature": "VFX & Animations", "official": "no", "nexus": "partial", "phase": "Phase 3" },
     { "category": "Distribution", "feature": "Desktop & Web Deployment", "official": "no", "nexus": "partial", "phase": "Phase 4" },
-    { "category": "Advanced Formats", "feature": "4-Player Commander / EDH", "official": "yes", "nexus": "no", "phase": "Phase 5" },
-    { "category": "Advanced Formats", "feature": "Booster Draft & Sealed", "official": "yes", "nexus": "no", "phase": "Phase 5" }
+    { "category": "Advanced Formats", "feature": "4-Player Commander / EDH (max 4, XMage limit)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Advanced Formats", "feature": "Booster Draft & Sealed (8-player, Construct 40)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Advanced Formats", "feature": "Swiss Tournament Brackets + Replay Viewer", "official": "yes", "nexus": "yes", "phase": "Completed" }
   ],
   "guards": [
     { "name": "callbackCoverage", "status": "pass", "desc": "Every server callback has a client handler or is listed as planned.", "note": "Guard: web/src/state/callbackCoverage.test.ts" },

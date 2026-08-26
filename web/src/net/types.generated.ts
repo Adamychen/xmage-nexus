@@ -189,6 +189,90 @@ export interface SimpleCardView {
   id: string
   name?: string
   mageObjectType?: string
+  expansionSetCode?: string
+  cardNumber?: string
+  usesVariousArt?: boolean
+  gameObject?: boolean
+  isChoosable?: boolean
+  isSelected?: boolean
+  playableStats?: Record<string, unknown>
+}
+
+export interface DraftView {
+  setNames: string[]
+  setCodes: string[]
+  boosterNum: number
+  cardNum: number
+  isCube?: boolean
+  players: string[]
+}
+
+export interface DraftPickView {
+  booster: SimpleCardsView
+  picks: SimpleCardsView
+  picking: boolean
+  timeout: number
+}
+
+export interface DraftClientMessage {
+  draftView: DraftView
+  draftPickView?: DraftPickView | null
+}
+
+export interface DeckView {
+  name: string
+  cards: SimpleCardsView
+  sideboard: SimpleCardsView
+}
+
+export interface TableClientMessage {
+  deck?: DeckView | null
+  roomId?: string | null
+  currentTableId?: string | null
+  parentTableId?: string | null
+  gameId?: string | null
+  playerId?: string | null
+  time?: number
+  flag?: boolean
+}
+
+export interface TournamentPlayerView {
+  name: string
+  state: string
+  points: number
+  results?: string
+  history?: string
+  flagName?: string
+  quit?: boolean
+}
+
+export interface TournamentGameView {
+  roundNum: number
+  matchId?: string
+  gameId?: string
+  state: string
+  result?: string
+  players: string
+  tableId?: string
+}
+
+export interface RoundView {
+  games: TournamentGameView[]
+}
+
+export interface TournamentView {
+  tournamentName: string
+  tournamentType: string
+  tournamentState: string
+  startTime?: number
+  endTime?: number | null
+  stepStartTime?: number | null
+  serverTime?: number
+  constructionTime: number
+  watchingAllowed: boolean
+  rounds: RoundView[]
+  players: TournamentPlayerView[]
+  runningInfo?: string
 }
 
 export type SimpleCardsView = Record<string, SimpleCardView>

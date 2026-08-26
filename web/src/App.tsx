@@ -5,6 +5,8 @@ import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
+import DraftScreen from './game/DraftScreen'
+import ConstructScreen from './game/ConstructScreen'
 
 export default function App() {
   const phase = usePhase()
@@ -53,6 +55,8 @@ export default function App() {
       ) : (
         <LoginScreen />
       )}
+      <DraftScreen />
+      <ConstructScreen />
       <GameEndDialog />
       <footer className="app-attribution">
         Card images courtesy of <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a> · Not affiliated with Wizards of the Coast

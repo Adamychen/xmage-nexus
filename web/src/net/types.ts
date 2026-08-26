@@ -22,6 +22,8 @@ export type {
   RoomUsersView, UsersView, UserView,
   ChatMessage, GameEndInfo,
   PlayableObjectsList, PlayableObjectStats, PlayableObjectRecord,
+  DraftView, DraftPickView, DraftClientMessage, DeckView, TableClientMessage,
+  TournamentView, TournamentPlayerView, TournamentGameView, RoundView,
 } from './types.generated'
 
 // ─── Proxy envelope types (proxy → cliente) ─────────────────────────────────

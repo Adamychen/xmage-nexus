@@ -16,9 +16,12 @@ import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters } from './TableFilterBar'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
+import TournamentBracket from './TournamentBracket'
+import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { useFullscreen } from '../utils/fullscreen'
 import './LobbyScreen.css'
+import './TournamentBracket.css'
 
 /** Las promesas del proxy no deben colgar la UI: todo con timeout explícito. */
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
@@ -148,6 +151,11 @@ export default function LobbyScreen() {
   const [busyTable, setBusyTable] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
+  const tournamentState = useStore((s) => s.tournament)
+  const [bracketTable, setBracketTable] = useState<TableView | null>(null)
+  const [bracketView, setBracketView] = useState<TournamentView | null>(null)
+  const [bracketLoading, setBracketLoading] = useState(false)
+  const [bracketError, setBracketError] = useState<string | null>(null)
 
   const openLeaderboard = (target?: string, tab: 'room' | 'profile' | 'tiers' = 'room') => {
     setLeaderboardTarget(target)
@@ -273,6 +281,72 @@ export default function LobbyScreen() {
       setBusyTable(null)
     }
   }
+
+  const openBracket = async (t: TableView) => {
+    setBracketTable(t)
+    setBracketError(null)
+    if (tournamentState && tournamentState.tournamentId === t.tableId) {
+      setBracketView(tournamentState.view)
+      return
+    }
+    if (tournamentState && tournamentState.view.tournamentName === t.tableName) {
+      setBracketView(tournamentState.view)
+    }
+    setBracketLoading(true)
+    try {
+      const data = await withTimeout(cmds.getTournament(t.tableId) as Promise<unknown>, 8000, 'getTournament')
+      if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
+        setBracketView(data as TournamentView)
+      } else if (tournamentState?.view) {
+        setBracketView(tournamentState.view)
+      }
+    } catch (e) {
+      if (tournamentState?.view) {
+        setBracketView(tournamentState.view)
+      } else {
+        setBracketError((e as Error).message)
+      }
+    } finally {
+      setBracketLoading(false)
+    }
+  }
+
+  const closeBracket = () => {
+    setBracketTable(null)
+    setBracketView(null)
+    setBracketError(null)
+  }
+
+  const refreshBracket = async () => {
+    if (!bracketTable) return
+    setBracketLoading(true)
+    setBracketError(null)
+    try {
+      const data = await withTimeout(cmds.getTournament(bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
+      if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
+        setBracketView(data as TournamentView)
+      }
+    } catch (e) {
+      setBracketError((e as Error).message)
+    } finally {
+      setBracketLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!bracketTable) return
+    if (tournamentState && (tournamentState.tournamentId === bracketTable.tableId || tournamentState.view.tournamentName === bracketTable.tableName)) {
+      setBracketView(tournamentState.view)
+    }
+  }, [tournamentState, bracketTable])
+
+  useEffect(() => {
+    if (!bracketTable) return
+    const id = setInterval(() => {
+      void refreshBracket()
+    }, 8000)
+    return () => clearInterval(id)
+  }, [bracketTable?.tableId])
 
   return (
     <div className="lobby">
@@ -631,6 +705,16 @@ export default function LobbyScreen() {
                         >
                           👁️ Ver
                         </button>
+                        {t.isTournament && (
+                          <button
+                            className="table-action-btn bracket-btn"
+                            disabled={busyTable === t.tableId}
+                            onClick={() => void openBracket(t)}
+                            data-testid="open-bracket"
+                          >
+                            🏆 Ver bracket
+                          </button>
+                        )}
                       </div>
                     </div>
                   )
@@ -839,6 +923,37 @@ export default function LobbyScreen() {
           onClose={() => setJoiningTable(null)}
           onJoin={handleJoinWithDeck}
         />
+      )}
+      {bracketTable && (
+        <div className="tournament-modal-backdrop" role="presentation" onClick={closeBracket} data-testid="tournament-modal-backdrop">
+          <div className="tournament-modal" role="dialog" aria-modal="true" aria-label="Bracket del torneo" onClick={(e) => e.stopPropagation()} data-testid="tournament-modal">
+            <div className="tournament-bracket-toolbar">
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1' }}>🏆 {bracketTable.tableName}</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className="tournament-refresh-btn" onClick={() => void refreshBracket()} disabled={bracketLoading}>
+                  {bracketLoading ? 'Cargando…' : '🔄 Actualizar'}
+                </button>
+                <button type="button" className="tournament-close-btn" onClick={closeBracket} aria-label="Cerrar">✕</button>
+              </div>
+            </div>
+            <div className="tournament-modal-scroll">
+              {bracketLoading && !bracketView && <div className="tournament-modal-loading">Cargando bracket…</div>}
+              {bracketError && <div className="tournament-modal-error" data-testid="tournament-modal-error">{bracketError}</div>}
+              {bracketView && (
+                <TournamentBracket
+                  view={bracketView}
+                  tournamentId={bracketTable.tableId}
+                  onClose={closeBracket}
+                />
+              )}
+              {!bracketView && !bracketLoading && !bracketError && (
+                <div className="tournament-modal-loading" data-testid="tournament-empty">
+                  Usa el estado del torneo en vivo si está disponible. Pulsa Actualizar para consultar al servidor (getTournament).
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

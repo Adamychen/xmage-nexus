@@ -1,26 +1,32 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
-import { setState, addLog } from '../state/state'
-import type { SideboardCard } from '../state/state'
+import { setState, addLog, getState } from '../state/state'
+import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
-import './SideboardScreen.css'
+import './ConstructScreen.css'
 
 function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
 }
 
-function groupInstances(cards: SideboardCard[]): DeckCard[] {
+function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
   const map = new Map<string, DeckCard>()
-  for (const c of cards) {
-    const key = `${c.setCode}:${c.cardNumber}:${c.name}`
+  for (const [instanceId, raw] of Object.entries(pool)) {
+    const sc = raw as SimpleCardView & { cardName?: string; name?: string }
+    const name = (sc as any).name ?? (sc as any).cardName ?? sc.id ?? instanceId
+    const set = sc.expansionSetCode ?? ''
+    const num = sc.cardNumber ?? ''
+    const cardName = String(name)
+    if (!cardName) continue
+    const key = `${cardName}|${set}|${num}`
     const existing = map.get(key)
     if (existing) existing.amount++
-    else map.set(key, { cardName: c.name, setCode: c.setCode, cardNumber: c.cardNumber, amount: 1 })
+    else map.set(key, { cardName, setCode: set, cardNumber: num, amount: 1 })
   }
   return [...map.values()]
 }
@@ -38,29 +44,42 @@ function categorizeCard(typeLine?: string): string {
   return 'Otros'
 }
 
-export default function SideboardScreen() {
-  const screen = useStore((s) => s.sideboardScreen)
-  const lobby = useStore((s) => s.lobby)
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+export default function ConstructScreen() {
+  const construct = useStore((s) => s.construct)
+  useEffect(() => {
+    if (construct && getState().phase !== 'game') setState({ phase: 'game' })
+  }, [construct])
   const [main, setMain] = useState<DeckCard[]>([])
-  const [side, setSide] = useState<DeckCard[]>([])
+  const [pool, setPool] = useState<DeckCard[]>([])
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const [timeLeft, setTimeLeft] = useState(0)
   const [busy, setBusy] = useState(false)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
-  const [sideFilter, setSideFilter] = useState('')
+  const [poolFilter, setPoolFilter] = useState('')
   const [isMainDragOver, setIsMainDragOver] = useState(false)
-  const [isSideDragOver, setIsSideDragOver] = useState(false)
+  const [isPoolDragOver, setIsPoolDragOver] = useState(false)
   const submitRef = useRef<() => Promise<void>>(async () => {})
+  const poolSize = useMemo(() => {
+    if (!construct?.pool) return 0
+    return Object.keys(construct.pool).length
+  }, [construct?.pool])
 
   useEffect(() => {
-    if (!screen) return
-    setMain(groupInstances(screen.maindeck))
-    setSide(groupInstances(screen.sideboard))
-    setTimeLeft(screen.timeLeft)
+    if (!construct) return
+    const grouped = poolToDeckCards(construct.pool as Record<string, unknown>)
+    setPool(grouped)
+    setMain([])
+    setTimeLeft(construct.timeLeft)
     setMainFilter('')
-    setSideFilter('')
-  }, [screen?.tableId])
+    setPoolFilter('')
+  }, [construct?.tableId])
 
   const updateMetaForCards = useCallback((cards: DeckCard[]) => {
     const toFetch: DeckCard[] = []
@@ -101,9 +120,9 @@ export default function SideboardScreen() {
   }, [metaMap])
 
   useEffect(() => {
-    if (main.length === 0 && side.length === 0) return
-    updateMetaForCards([...main, ...side])
-  }, [main.length, side.length])
+    if (main.length === 0 && pool.length === 0) return
+    updateMetaForCards([...main, ...pool])
+  }, [main.length, pool.length])
 
   const handleHover = useCallback((card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => {
     let img: string | null = meta?.imageUrl ?? null
@@ -113,20 +132,13 @@ export default function SideboardScreen() {
       img = m?.imageUrl ?? null
       backImg = m?.backImageUrl ?? null
     }
-    if (!img && card.setCode && card.cardNumber) {
-      // fallback via scryfall helpers if we have a Scryfall card shape not available
-      img = null
-    }
     if (!img) return
     const previewWidth = backImg ? 520 : 255
     let x = 0
     let y = 0
     if (rect) {
-      if (rect.left > window.innerWidth / 2) {
-        x = Math.max(10, rect.left - previewWidth - 15)
-      } else {
-        x = Math.min(window.innerWidth - previewWidth - 15, rect.right + 15)
-      }
+      if (rect.left > window.innerWidth / 2) x = Math.max(10, rect.left - previewWidth - 15)
+      else x = Math.min(window.innerWidth - previewWidth - 15, rect.right + 15)
       y = Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40))
     } else {
       x = window.innerWidth / 2 - previewWidth / 2
@@ -138,59 +150,58 @@ export default function SideboardScreen() {
   const handleLeave = useCallback(() => setHoverPreview(null), [])
 
   const handleInc = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c)))
+    const isPool = actionKey.startsWith('pool:')
+    const key = isPool ? actionKey.slice(5) : actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    if (isPool || actionKey.startsWith('sb:')) {
+      setPool((prev) => prev.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c)))
     } else {
       setMain((prev) => prev.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c)))
     }
   }, [])
 
   const handleDec = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
+    const isPool = actionKey.startsWith('pool:')
+    const key = isPool ? actionKey.slice(5) : actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    if (isPool || actionKey.startsWith('sb:')) {
+      setPool((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
     } else {
       setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
     }
   }, [])
 
   const handleRemove = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.filter((c) => deckCardKey(c) !== key))
+    const isPool = actionKey.startsWith('pool:')
+    const key = isPool ? actionKey.slice(5) : actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    if (isPool || actionKey.startsWith('sb:')) {
+      setPool((prev) => prev.filter((c) => deckCardKey(c) !== key))
     } else {
       setMain((prev) => prev.filter((c) => deckCardKey(c) !== key))
     }
   }, [])
 
-  const moveOneToSide = useCallback((actionKey: string) => {
-    const key = actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
-    // if called from side, ignore; only main -> side
-    const src = main.find((c) => deckCardKey(c) === key)
-    if (!src) return
-    setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
-    setSide((prev) => {
-      const idx = prev.findIndex((c) => deckCardKey(c) === key)
-      if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: c.amount + 1 } : c))
-      return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount: 1 }]
-    })
-  }, [main])
-
   const moveOneToMain = useCallback((actionKey: string) => {
-    const key = actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
-    const src = side.find((c) => deckCardKey(c) === key)
+    const key = actionKey.startsWith('pool:') ? actionKey.slice(5) : actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    const src = pool.find((c) => deckCardKey(c) === key)
     if (!src) return
-    setSide((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
+    setPool((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
     setMain((prev) => {
       const idx = prev.findIndex((c) => deckCardKey(c) === key)
       if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: c.amount + 1 } : c))
       return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount: 1 }]
     })
-  }, [side])
+  }, [pool])
+
+  const moveOneToPool = useCallback((actionKey: string) => {
+    const key = actionKey.startsWith('pool:') ? actionKey.slice(5) : actionKey
+    const src = main.find((c) => deckCardKey(c) === key)
+    if (!src) return
+    setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
+    setPool((prev) => {
+      const idx = prev.findIndex((c) => deckCardKey(c) === key)
+      if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: c.amount + 1 } : c))
+      return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount: 1 }]
+    })
+  }, [main])
 
   const handleDropOnMain = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -199,52 +210,53 @@ export default function SideboardScreen() {
     if (!raw) return
     try {
       const data = JSON.parse(raw)
-      if (data.source === 'sideboard' && data.key) {
-        moveOneToMain(data.key)
+      if ((data.source === 'sideboard' || data.source === 'pool') && data.key) {
+        moveOneToMain(data.key.startsWith('pool:') ? data.key : `pool:${data.key.replace(/^sb:/, '')}`)
+      } else if (data.key) {
+        const k = data.key.startsWith('pool:') ? data.key : data.key.includes(':') ? `pool:${data.key.split(':').slice(1).join(':')}` : `pool:${data.key}`
+        if (pool.some((c) => deckCardKey(c) === k.replace(/^pool:/, ''))) moveOneToMain(k)
       }
     } catch {}
-  }, [moveOneToMain])
+  }, [moveOneToMain, pool])
 
-  const handleDropOnSide = useCallback((e: React.DragEvent) => {
+  const handleDropOnPool = useCallback((e: React.DragEvent) => {
     e.preventDefault()
-    setIsSideDragOver(false)
+    setIsPoolDragOver(false)
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
     try {
       const data = JSON.parse(raw)
       if (data.source === 'main' && data.key) {
-        moveOneToSide(data.key)
-      } else if (data.source === 'sideboard' && data.key) {
-        // reordering within same zone ignored
+        moveOneToPool(data.key)
       }
     } catch {}
-  }, [moveOneToSide])
+  }, [moveOneToPool])
 
   const submitDeck = useCallback(async () => {
-    if (!screen || busy) return
+    if (!construct || busy) return
     setBusy(true)
     try {
       const deck = {
-        name: screen.deckName,
+        name: construct.deckName,
         cards: main,
-        sideboard: side,
+        sideboard: pool,
       }
-      const result = await cmds.submitDeck(screen.tableId, deck)
+      const result = await cmds.submitDeck(construct.tableId, deck)
       if (result.ok) {
-        setState({ sideboardScreen: null })
-        addLog('partida', 'Mazo enviado — espera la siguiente partida…')
+        setState({ construct: null })
+        addLog('torneo', 'Mazo de limitado enviado — espera el emparejamiento…')
       } else {
         addLog('error', `Error al enviar mazo: ${result.error ?? 'desconocido'}`)
       }
     } finally {
       setBusy(false)
     }
-  }, [screen, main, side, busy])
+  }, [construct, main, pool, busy])
 
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
   useEffect(() => {
-    if (!screen || timeLeft <= 0) return
+    if (!construct || timeLeft <= 0) return
     const timer = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
@@ -256,54 +268,35 @@ export default function SideboardScreen() {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [screen?.tableId])
+  }, [construct?.tableId])
 
   const formatForValidation: DeckFormat = useMemo(() => {
-    if (screen?.limited) return 'Freeform' as DeckFormat
-    // try to infer from lobby table deckType
-    const tableId = screen?.tableId
-    if (tableId && lobby) {
-      const tables = Array.isArray(lobby.tables) ? lobby.tables : []
-      const found = (tables as any[]).find((t: any) => t.tableId === tableId || t.id === tableId)
-      const deckType = found?.deckType ?? found?.options?.deckType ?? ''
-      const norm = String(deckType).toLowerCase()
-      if (norm.includes('commander') || norm.includes('brawl')) return 'Commander'
-      if (norm.includes('standard')) return 'Standard'
-      if (norm.includes('modern')) return 'Modern'
-      if (norm.includes('pioneer')) return 'Pioneer'
-      if (norm.includes('legacy')) return 'Legacy'
-      if (norm.includes('vintage')) return 'Vintage'
-      if (norm.includes('pauper')) return 'Pauper'
-      if (norm.includes('historic')) return 'Historic'
-      if (norm.includes('timeless')) return 'Timeless'
-    }
-    return 'Standard'
-  }, [screen?.limited, screen?.tableId, lobby])
+    return 'Freeform' as DeckFormat
+  }, [])
 
   const validation = useMemo(() => {
-    if (main.length === 0 && side.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
+    if (main.length === 0 && pool.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
     const fakeDeck: any = {
-      name: screen?.deckName ?? 'Mazo',
+      name: construct?.deckName ?? 'Mazo',
       cards: main,
-      sideboard: side,
+      sideboard: pool,
       format: formatForValidation,
-      id: 'sideboard-tmp',
+      id: 'construct-tmp',
       colors: [],
       createdAt: 0,
       updatedAt: 0,
       source: 'custom',
     }
     return validateDeckForFormat(fakeDeck, metaMap)
-  }, [main, side, metaMap, formatForValidation, screen?.deckName])
+  }, [main, pool, metaMap, formatForValidation, construct?.deckName])
 
-  if (!screen) return null
+  if (!construct) return null
 
   const mainTotal = main.reduce((s, c) => s + c.amount, 0)
-  const sideTotal = side.reduce((s, c) => s + c.amount, 0)
-  const minMain = screen.limited ? 40 : 60
+  const poolTotal = pool.reduce((s, c) => s + c.amount, 0)
+  const minMain = 40
   const mainValid = mainTotal >= minMain
-  const sideValid = validation.issues.filter((i: any) => i.type === 'sideboard_size').length === 0
-  const timerPct = Math.max(0, (timeLeft / (screen.timeLeft || 1)) * 100)
+  const timerPct = Math.max(0, (timeLeft / (construct.timeLeft || 1)) * 100)
   const timerUrgent = timeLeft <= 30
 
   const categoriesOrder = ['Criaturas', 'Planeswalkers', 'Instantáneos', 'Conjuros', 'Artefactos', 'Encantamientos', 'Tierras', 'Otros'] as const
@@ -319,45 +312,96 @@ export default function SideboardScreen() {
     list.push(card)
   }
 
-  const filteredSide = sideFilter.trim()
-    ? side.filter((c) => c.cardName.toLowerCase().includes(sideFilter.toLowerCase()) || c.setCode.toLowerCase().includes(sideFilter.toLowerCase()))
-    : side
+  const filteredPool = poolFilter.trim()
+    ? pool.filter((c) => c.cardName.toLowerCase().includes(poolFilter.toLowerCase()) || c.setCode.toLowerCase().includes(poolFilter.toLowerCase()))
+    : pool
 
   return (
-    <div className="sideboard-backdrop" role="presentation">
-      <section className="sideboard-screen" role="dialog" aria-modal="true">
-        <div className="sideboard-header">
-          <div className="sideboard-title">
-            <h2>Sideboard</h2>
-            <span className="sideboard-deck-name">{screen.deckName}</span>
+    <div className="construct-backdrop" role="presentation">
+      <section className="construct-screen" role="dialog" aria-modal="true" aria-label="Construcción limitado">
+        <div className="construct-header">
+          <div className="construct-title">
+            <h2>Construcción</h2>
+            <span className="construct-deck-name">{construct.deckName}</span>
+            <span className="construct-pool-info">{poolSize} cartas en pool</span>
           </div>
-          <div className={`sideboard-timer ${timerUrgent ? 'urgent' : ''}`}>
-            <div className="sideboard-timer-bar" style={{ width: `${timerPct}%` }} />
-            <span className="sideboard-timer-text">{formatTime(timeLeft)}</span>
+          <div className={`construct-timer ${timerUrgent ? 'urgent' : ''}`}>
+            <div className="construct-timer-bar" style={{ width: `${timerPct}%` }} />
+            <span className="construct-timer-text">{formatTime(timeLeft)}</span>
           </div>
         </div>
 
-        <div className="sideboard-columns">
+        <div className="construct-columns">
           <div
-            className={`sideboard-column ${isMainDragOver ? 'is-drag-over' : ''}`}
+            className={`construct-column ${isPoolDragOver ? 'is-drag-over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isPoolDragOver) setIsPoolDragOver(true) }}
+            onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsPoolDragOver(false) }}
+            onDrop={handleDropOnPool}
+          >
+            <div className="construct-col-header">
+              <h3>Pool</h3>
+              <span className="construct-col-count">{poolTotal}</span>
+            </div>
+            {pool.length > 10 && (
+              <input
+                className="construct-filter"
+                type="text"
+                placeholder="Filtrar..."
+                value={poolFilter}
+                onChange={(e) => setPoolFilter(e.target.value)}
+              />
+            )}
+            <div className="construct-card-list construct-arena-list">
+              {isPoolDragOver && (
+                <div className="arena-drop-target-hint"><span>✨</span> Soltar para devolver al pool</div>
+              )}
+              {filteredPool.map((card) => {
+                const k = `pool:${deckCardKey(card)}`
+                const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
+                const issue = validation.cardIssues.get(k)?.message ?? validation.cardIssues.get(card.cardName)?.message
+                return (
+                  <ArenaCardStrip
+                    key={k}
+                    card={card}
+                    meta={meta}
+                    sideboard
+                    issue={issue}
+                    onInc={handleInc}
+                    onDec={handleDec}
+                    onRemove={handleRemove}
+                    onSwap={moveOneToMain}
+                    swapLabel="Añadir al mazo →"
+                    onHover={handleHover}
+                    onLeave={handleLeave}
+                  />
+                )
+              })}
+              {filteredPool.length === 0 && (
+                <div className="deck-list-empty-hint"><small>Pool vacío — mueve cartas desde el mazo</small></div>
+              )}
+            </div>
+          </div>
+
+          <div
+            className={`construct-column ${isMainDragOver ? 'is-drag-over' : ''}`}
             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isMainDragOver) setIsMainDragOver(true) }}
             onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsMainDragOver(false) }}
             onDrop={handleDropOnMain}
           >
-            <div className="sideboard-col-header">
+            <div className="construct-col-header">
               <h3>Mazo principal</h3>
-              <span className={`sideboard-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
+              <span className={`construct-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
             </div>
             {main.length > 10 && (
               <input
-                className="sideboard-filter"
+                className="construct-filter"
                 type="text"
                 placeholder="Filtrar..."
                 value={mainFilter}
                 onChange={(e) => setMainFilter(e.target.value)}
               />
             )}
-            <div className="sideboard-card-list sideboard-arena-list">
+            <div className="construct-card-list construct-arena-list">
               {isMainDragOver && (
                 <div className="arena-drop-target-hint"><span>✨</span> Soltar para añadir al mazo</div>
               )}
@@ -381,8 +425,8 @@ export default function SideboardScreen() {
                           onInc={handleInc}
                           onDec={handleDec}
                           onRemove={handleRemove}
-                          onSwap={moveOneToSide}
-                          swapLabel="Mover al banquillo →"
+                          onSwap={moveOneToPool}
+                          swapLabel="← Devolver al pool"
                           onHover={handleHover}
                           onLeave={handleLeave}
                         />
@@ -392,80 +436,32 @@ export default function SideboardScreen() {
                 )
               })}
               {main.length === 0 && (
-                <div className="deck-list-empty-hint"><span>El mazo está vacío.</span></div>
-              )}
-            </div>
-          </div>
-
-          <div
-            className={`sideboard-column ${isSideDragOver ? 'is-drag-over' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isSideDragOver) setIsSideDragOver(true) }}
-            onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsSideDragOver(false) }}
-            onDrop={handleDropOnSide}
-          >
-            <div className="sideboard-col-header">
-              <h3>Sideboard</h3>
-              <span className={`sideboard-col-count ${sideValid ? 'valid' : 'invalid'}`}>{sideTotal}/15</span>
-            </div>
-            {side.length > 10 && (
-              <input
-                className="sideboard-filter"
-                type="text"
-                placeholder="Filtrar..."
-                value={sideFilter}
-                onChange={(e) => setSideFilter(e.target.value)}
-              />
-            )}
-            <div className="sideboard-card-list sideboard-arena-list">
-              {isSideDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> Soltar para añadir al banquillo</div>
-              )}
-              {filteredSide.map((card) => {
-                const k = `sb:${deckCardKey(card)}`
-                const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-                const issue = validation.cardIssues.get(k)?.message ?? validation.cardIssues.get(card.cardName)?.message
-                return (
-                  <ArenaCardStrip
-                    key={k}
-                    card={card}
-                    meta={meta}
-                    sideboard
-                    issue={issue}
-                    onInc={handleInc}
-                    onDec={handleDec}
-                    onRemove={handleRemove}
-                    onSwap={moveOneToMain}
-                    swapLabel="← Mover al mazo"
-                    onHover={handleHover}
-                    onLeave={handleLeave}
-                  />
-                )
-              })}
-              {filteredSide.length === 0 && side.length === 0 && (
-                <div className="deck-list-empty-hint"><small>Arrastra cartas aquí o usa ⇄ para mover</small></div>
+                <div className="deck-list-empty-hint"><span>El mazo está vacío — añade al menos 40 cartas</span></div>
               )}
             </div>
           </div>
         </div>
 
         {validation.issues.length > 0 && (
-          <div className="sideboard-validation">
+          <div className="construct-validation">
             {validation.issues.slice(0, 3).map((iss: any, i: number) => (
               <span key={i} className={`validation-issue ${iss.severity}`}>{iss.message}</span>
             ))}
           </div>
         )}
 
-        <div className="sideboard-footer">
-          <div className="sideboard-counts">
-            <span className={mainValid ? 'valid' : 'invalid'}>Main: {mainTotal} (mín {minMain})</span>
-            <span className={sideValid ? 'valid' : 'invalid'}>Side: {sideTotal} (máx 15)</span>
+        <div className="construct-footer">
+          <div className="construct-counts">
+            <span className={mainValid ? 'valid' : 'invalid'}>Mazo: {mainTotal} (mín {minMain})</span>
+            <span>Pool: {poolTotal}</span>
+            <span>Total: {mainTotal + poolTotal} / {poolSize}</span>
           </div>
           <button
             className="primary"
             disabled={busy || !mainValid}
             onClick={() => void submitDeck()}
-            title={!mainValid ? `El mazo principal debe tener al menos ${minMain} cartas` : undefined}
+            title={!mainValid ? `El mazo debe tener al menos ${minMain} cartas` : undefined}
+            data-testid="construct-submit"
           >
             {busy ? 'Enviando…' : 'Enviar mazo'}
           </button>
@@ -490,10 +486,4 @@ export default function SideboardScreen() {
       )}
     </div>
   )
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
 }

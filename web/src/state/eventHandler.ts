@@ -12,6 +12,7 @@ import {
   gameViewFrom, isOlderThanCurrentGame, consolidatePlayables, combatFromSelect,
   isCombatStep, combatChosenFrom, emptyCombat, targetFirstId,
 } from './gameUtils'
+import type { DraftClientMessage, TournamentView } from '../net/types.generated'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -281,6 +282,84 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
           void cmds.submitDeck(tableId, deck)
         }
       })
+      break
+    }
+    case 'START_DRAFT': {
+      const d = data as { currentTableId?: string } | null
+      addLog('torneo', `Draft iniciado${d?.currentTableId ? ` (mesa ${String(d.currentTableId).slice(0, 8)})` : ''}`)
+      break
+    }
+    case 'DRAFT_INIT':
+    case 'DRAFT_PICK':
+    case 'DRAFT_UPDATE': {
+      const msg = data as DraftClientMessage | null
+      if (!msg?.draftView) break
+      const draftId = objectId ?? 'draft'
+      setState({ draft: { draftId, message: msg } })
+      if (method === 'DRAFT_INIT') addLog('torneo', `Draft: booster ${msg.draftView.boosterNum} carta ${msg.draftView.cardNum} — ${msg.draftView.setCodes.join(', ')}`)
+      else if (method === 'DRAFT_PICK' && msg.draftPickView?.picking) addLog('torneo', `Tu turno de draftear — timeout ${msg.draftPickView.timeout}s`)
+      break
+    }
+    case 'DRAFT_OVER': {
+      const draftId = objectId ?? ''
+      addLog('torneo', 'Draft terminado — pasa a construcción')
+      setState({ draft: null })
+      void draftId
+      break
+    }
+    case 'CONSTRUCT': {
+      const d = data as { deck?: { name?: string; cards?: Record<string, unknown>; sideboard?: Record<string, unknown> }; currentTableId?: string; parentTableId?: string; time?: number } | null
+      const tableId = d?.currentTableId ?? objectId ?? ''
+      if (!tableId) break
+      const deckName = d?.deck?.name ?? 'Pool'
+      const pool = (d?.deck?.cards ?? {}) as Record<string, unknown>
+      const time = d?.time ?? 600
+      setState({ construct: { deckName, pool, tableId, parentTableId: d?.parentTableId ?? null, timeLeft: time } })
+      setState({ draft: null })
+      addLog('torneo', `Construcción: pool ${Object.keys(pool).length} cartas — ${time}s`)
+      break
+    }
+    case 'START_TOURNAMENT': {
+      const d = data as { currentTableId?: string } | null
+      addLog('torneo', `Torneo iniciado${d?.currentTableId ? ` (mesa ${String(d.currentTableId).slice(0, 8)})` : ''}`)
+      break
+    }
+    case 'TOURNAMENT_INIT':
+    case 'TOURNAMENT_UPDATE': {
+      const view = data as TournamentView | null
+      if (!view) break
+      const tid = objectId ?? view.tournamentName ?? 'tournament'
+      setState({ tournament: { tournamentId: tid, view } })
+      addLog('torneo', `${view.tournamentName} — ${view.tournamentState} ${view.runningInfo ?? ''}`.trim())
+      break
+    }
+    case 'TOURNAMENT_OVER': {
+      const text = typeof data === 'string' ? data : (data as { message?: string } | null)?.message ?? 'Torneo terminado'
+      addLog('torneo', text)
+      break
+    }
+    case 'SHOW_TOURNAMENT': {
+      const d = data as { currentTableId?: string } | null
+      addLog('torneo', `Viendo torneo ${d?.currentTableId?.slice(0, 8) ?? ''}`)
+      break
+    }
+    case 'REPLAY_GAME': {
+      addLog('replay', `Replay disponible: ${objectId?.slice(0, 8) ?? ''}`)
+      break
+    }
+    case 'REPLAY_INIT':
+    case 'REPLAY_UPDATE': {
+      const gv = gameViewFrom(data)
+      if (gv) {
+        setState({ replayViewer: { gameView: gv } })
+        setState({ game: gv, phase: 'game' })
+      }
+      break
+    }
+    case 'REPLAY_DONE': {
+      const text = typeof data === 'string' ? data : (data as { message?: string } | null)?.message ?? 'Replay terminado'
+      addLog('replay', text)
+      setState({ replayViewer: { gameView: null, result: text } })
       break
     }
     case 'GAME_TARGET': {

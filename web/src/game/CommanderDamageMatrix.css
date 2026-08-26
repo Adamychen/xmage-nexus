@@ -1,0 +1,191 @@
+.commander-damage-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(13, 16, 34, 0.96);
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.commander-damage-matrix.is-empty {
+  opacity: 0.92;
+}
+
+.cdm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 4px;
+  border-bottom: 1px solid rgba(124, 92, 255, 0.15);
+}
+
+.cdm-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffd070;
+}
+
+.cdm-lethal-hint {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ff7878;
+  background: rgba(255, 120, 120, 0.12);
+  border: 1px solid rgba(255, 120, 120, 0.28);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.cdm-empty {
+  padding: 10px 8px;
+  color: #8c96c0;
+  font-size: 12px;
+  text-align: center;
+  font-style: italic;
+}
+
+.cdm-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 255, 0.28) transparent;
+  border-radius: 6px;
+}
+
+.cdm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 280px;
+  font-size: 12px;
+}
+
+.cdm-table th,
+.cdm-table td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid rgba(124, 92, 255, 0.14);
+  white-space: nowrap;
+}
+
+.cdm-corner {
+  background: rgba(124, 92, 255, 0.12);
+  color: #a78bfa;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cdm-commander-head {
+  background: rgba(255, 208, 112, 0.08);
+  color: #e8ecf6;
+  font-weight: 700;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cdm-cmd-name {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.cdm-cmd-owner {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #8c96c0;
+  margin-top: 1px;
+}
+
+.cdm-player-cell {
+  background: rgba(255, 255, 255, 0.03);
+  text-align: left !important;
+  font-weight: 600;
+  color: #c8d0ea;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 110px;
+}
+
+.cdm-player-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cdm-you-badge {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #63e6be;
+  background: rgba(99, 230, 190, 0.14);
+  border: 1px solid rgba(99, 230, 190, 0.32);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.cdm-active-badge {
+  font-size: 8px;
+  color: #ffd070;
+}
+
+.cdm-damage-cell {
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: #c8d0ea;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.15s, color 0.15s;
+}
+
+.cdm-damage-cell.is-self {
+  color: #6b7394;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.cdm-damage-cell.is-warning {
+  background: rgba(255, 176, 58, 0.16);
+  color: #ffb03a;
+  border-color: rgba(255, 176, 58, 0.32);
+}
+
+.cdm-damage-cell.is-lethal {
+  background: rgba(255, 60, 60, 0.22);
+  color: #fff;
+  border-color: rgba(255, 60, 60, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 60, 60, 0.4), 0 0 8px rgba(255, 60, 60, 0.35);
+  animation: cdmLethalPulse 1.4s infinite alternate;
+}
+
+@keyframes cdmLethalPulse {
+  from { box-shadow: inset 0 0 0 1px rgba(255, 60, 60, 0.4), 0 0 6px rgba(255, 60, 60, 0.3); }
+  to   { box-shadow: inset 0 0 0 1px rgba(255, 60, 60, 0.7), 0 0 12px rgba(255, 60, 60, 0.55); }
+}
+
+.cdm-active-row .cdm-player-cell {
+  background: rgba(255, 208, 112, 0.08);
+  border-left: 2px solid #ffd070;
+}
+
+.cdm-footer {
+  padding: 2px 4px 0;
+  border-top: 1px dashed rgba(124, 92, 255, 0.12);
+}
+
+.cdm-footer-hint {
+  font-size: 9.5px;
+  color: #6b7394;
+  font-style: italic;
+}

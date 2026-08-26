@@ -470,6 +470,14 @@ public class ProxyClient implements MageClient {
                     gateway.send(conn, resultJson(action, requestId, true, null, session.getTournamentGameTypes()));
                     break;
                 }
+                case "getTournamentTypes": {
+                    gateway.send(conn, resultJson(action, requestId, true, null, session.getTournamentTypes()));
+                    break;
+                }
+                case "getDraftCubes": {
+                    gateway.send(conn, resultJson(action, requestId, true, null, session.getDraftCubes()));
+                    break;
+                }
                 case "getDeckTypes": {
                     gateway.send(conn, resultJson(action, requestId, true, null, Arrays.asList(session.getDeckTypes())));
                     break;
@@ -586,6 +594,105 @@ public class ProxyClient implements MageClient {
                     UUID gameId = uuid(args, "gameId", null);
                     boolean ok = gameId != null && session.replayGame(gameId);
                     gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
+                    break;
+                }
+                case "startReplay": {
+                    UUID gameId = uuid(args, "gameId", null);
+                    gateway.send(conn, resultJson(action, requestId, session.startReplay(gameId), null, null));
+                    break;
+                }
+                case "stopReplay": {
+                    UUID gameId = uuid(args, "gameId", null);
+                    gateway.send(conn, resultJson(action, requestId, session.stopReplay(gameId), null, null));
+                    break;
+                }
+                case "replayNext": {
+                    UUID gameId = uuid(args, "gameId", null);
+                    gateway.send(conn, resultJson(action, requestId, session.nextPlay(gameId), null, null));
+                    break;
+                }
+                case "replayPrevious": {
+                    UUID gameId = uuid(args, "gameId", null);
+                    gateway.send(conn, resultJson(action, requestId, session.previousPlay(gameId), null, null));
+                    break;
+                }
+                case "replaySkipForward": {
+                    UUID gameId = uuid(args, "gameId", null);
+                    int moves = getInt(args, "moves", 1);
+                    gateway.send(conn, resultJson(action, requestId, session.skipForward(gameId, moves), null, null));
+                    break;
+                }
+                case "createTournamentTable": {
+                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
+                    mage.game.tournament.TournamentOptions tOpts = parseTournamentOptions(args);
+                    Object result = session.createTournamentTable(roomId, tOpts);
+                    boolean ok = result != null;
+                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, result));
+                    break;
+                }
+                case "joinTournamentTable": {
+                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
+                    UUID tableId = uuid(args, "tableId", null);
+                    String playerName = str(args, "playerName", session.getUserName());
+                    PlayerType playerType = PlayerType.valueOf(str(args, "playerType", "HUMAN").toUpperCase(Locale.ROOT));
+                    int skill = getInt(args, "skill", 0);
+                    DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject() ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
+                    String password = str(args, "password", "");
+                    boolean ok = session.joinTournamentTable(roomId, tableId, playerName, playerType, skill, deck, password);
+                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
+                    break;
+                }
+                case "watchTournamentTable": {
+                    UUID tableId = uuid(args, "tableId", null);
+                    gateway.send(conn, resultJson(action, requestId, session.watchTournamentTable(tableId), null, null));
+                    break;
+                }
+                case "getTournament": {
+                    UUID tournamentId = uuid(args, "tournamentId", null);
+                    gateway.send(conn, resultJson(action, requestId, tournamentId != null, tournamentId == null ? ERR_INVALID_ARGUMENT : null, tournamentId != null ? session.getTournament(tournamentId) : null));
+                    break;
+                }
+                case "getTournamentChatId": {
+                    UUID tournamentId = uuid(args, "tournamentId", null);
+                    java.util.Optional<UUID> chatId = tournamentId != null ? session.getTournamentChatId(tournamentId) : java.util.Optional.empty();
+                    gateway.send(conn, resultJson(action, requestId, true, null, chatId.orElse(null)));
+                    break;
+                }
+                case "quitTournament": {
+                    UUID tournamentId = uuid(args, "tournamentId", null);
+                    gateway.send(conn, resultJson(action, requestId, tournamentId != null && session.quitTournament(tournamentId), null, null));
+                    break;
+                }
+                case "quitDraft": {
+                    UUID draftId = uuid(args, "draftId", null);
+                    gateway.send(conn, resultJson(action, requestId, draftId != null && session.quitDraft(draftId), null, null));
+                    break;
+                }
+                case "sendCardPick": {
+                    UUID draftId = uuid(args, "draftId", null);
+                    UUID cardId = uuid(args, "cardId", null);
+                    java.util.Set<UUID> hidden = null;
+                    if (args.has("hiddenCards") && args.get("hiddenCards").isJsonArray()) {
+                        hidden = new java.util.HashSet<>();
+                        for (com.google.gson.JsonElement e : args.getAsJsonArray("hiddenCards")) {
+                            try { hidden.add(UUID.fromString(e.getAsString())); } catch (Exception ignored) {}
+                        }
+                    }
+                    Object res = (draftId != null && cardId != null) ? session.sendCardPick(draftId, cardId, hidden) : null;
+                    gateway.send(conn, resultJson(action, requestId, res != null, res == null ? ERR_FAILED : null, res));
+                    break;
+                }
+                case "sendCardMark": {
+                    UUID draftId = uuid(args, "draftId", null);
+                    UUID cardId = uuid(args, "cardId", null);
+                    Object res = (draftId != null && cardId != null) ? session.sendCardMark(draftId, cardId) : null;
+                    gateway.send(conn, resultJson(action, requestId, true, null, res));
+                    break;
+                }
+                case "setBoosterLoaded": {
+                    UUID draftId = uuid(args, "draftId", null);
+                    boolean ok = draftId != null && session.setBoosterLoaded(draftId);
+                    gateway.send(conn, resultJson(action, requestId, true, null, ok));
                     break;
                 }
                 case "stopWatching": {
@@ -912,6 +1019,71 @@ public class ProxyClient implements MageClient {
             }
         }
         return options;
+    }
+
+    static mage.game.tournament.TournamentOptions parseTournamentOptions(JsonObject args) {
+        String name = str(args, "name", "Tournament " + System.currentTimeMillis());
+        String tournamentType = str(args, "tournamentType", "Elimination");
+        String matchType = str(args, "matchType", str(args, "gameType", "Two Player Duel"));
+        boolean isSingleMultiplayerGame = getBool(args, "isSingleMultiplayerGame", false);
+        mage.game.tournament.TournamentOptions tOpts = new mage.game.tournament.TournamentOptions(name, matchType, isSingleMultiplayerGame);
+        tOpts.setTournamentType(tournamentType);
+        if (args.has("numberRounds")) tOpts.setNumberRounds(getInt(args, "numberRounds", 0));
+        if (args.has("password")) tOpts.setPassword(str(args, "password", ""));
+        if (args.has("quitRatio")) tOpts.setQuitRatio(getInt(args, "quitRatio", 100));
+        if (args.has("minimumRating")) tOpts.setMinimumRating(getInt(args, "minimumRating", 0));
+        if (args.has("watchingAllowed")) tOpts.setWatchingAllowed(getBool(args, "watchingAllowed", true));
+        if (args.has("playerTypes")) {
+            JsonArray arr = args.getAsJsonArray("playerTypes");
+            List<PlayerType> types = new java.util.ArrayList<>();
+            for (JsonElement e : arr) {
+                String raw = e.getAsString();
+                if ("SIM".equalsIgnoreCase(raw)) types.add(PlayerType.HUMAN);
+                else try { types.add(PlayerType.valueOf(raw.toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
+            }
+            if (!types.isEmpty()) {
+                tOpts.getPlayerTypes().clear();
+                tOpts.getPlayerTypes().addAll(types);
+            }
+        }
+        // matchOptions sub-fields
+        MatchOptions mOpts = tOpts.getMatchOptions();
+        mOpts.setDeckType(str(args, "deckType", ""));
+        mOpts.setLimited(getBool(args, "limited", false));
+        mOpts.setWinsNeeded(getInt(args, "winsNeeded", 1));
+        mOpts.setQuitRatio(getInt(args, "quitRatio", 100));
+        mOpts.setPassword(str(args, "password", ""));
+        mOpts.setSpectatorsAllowed(getBool(args, "spectatorsAllowed", true));
+        if (args.has("skillLevel")) {
+            try { mOpts.setSkillLevel(mage.constants.SkillLevel.valueOf(str(args, "skillLevel", "CASUAL").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
+        }
+        if (args.has("timeLimit")) {
+            try { mOpts.setMatchTimeLimit(mage.constants.MatchTimeLimit.valueOf(str(args, "timeLimit", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
+        }
+        if (args.has("bufferTime")) {
+            try { mOpts.setMatchBufferTime(mage.constants.MatchBufferTime.valueOf(str(args, "bufferTime", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
+        }
+        // limitedOptions
+        if (args.has("limitedOptions") && args.get("limitedOptions").isJsonObject()) {
+            JsonObject lo = args.getAsJsonObject("limitedOptions");
+            mage.game.tournament.LimitedOptions lim = new mage.game.tournament.LimitedOptions();
+            if (lo.has("constructionTime")) lim.setConstructionTime(getInt(lo, "constructionTime", 600));
+            if (lo.has("numberBoosters")) lim.setNumberBoosters(getInt(lo, "numberBoosters", 3));
+            if (lo.has("draftCubeName")) lim.setDraftCubeName(str(lo, "draftCubeName", ""));
+            try {
+                java.lang.reflect.Field f = mage.game.tournament.LimitedOptions.class.getDeclaredField("sets");
+                f.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                List<String> sets = (List<String>) f.get(lim);
+                if (lo.has("setCodes") && lo.get("setCodes").isJsonArray()) {
+                    for (JsonElement e : lo.getAsJsonArray("setCodes")) sets.add(e.getAsString());
+                } else if (lo.has("sets") && lo.get("sets").isJsonArray()) {
+                    for (JsonElement e : lo.getAsJsonArray("sets")) sets.add(e.getAsString());
+                }
+            } catch (Exception ignored) {}
+            tOpts.setLimitedOptions(lim);
+        }
+        return tOpts;
     }
 
     // ============================ simulated seats (SIM) ============================

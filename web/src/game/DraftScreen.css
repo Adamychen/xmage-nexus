@@ -1,0 +1,328 @@
+.draft-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(4 6 16 / 88%);
+  backdrop-filter: blur(4px);
+}
+
+.draft-screen {
+  width: min(1100px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 16px;
+  background: var(--panel, #0f1226);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.draft-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+  gap: 12px;
+}
+
+.draft-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.draft-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.draft-subtitle {
+  color: var(--text-dim, #94a3b8);
+  font-size: 13px;
+}
+
+.draft-set-names {
+  color: var(--text-dim, #94a3b8);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.draft-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.draft-timer {
+  position: relative;
+  width: 140px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.draft-timer-bar {
+  position: absolute;
+  inset: 0;
+  background: var(--accent, #7c5cff);
+  opacity: 0.25;
+  transition: width 1s linear;
+}
+
+.draft-timer.picking .draft-timer-bar {
+  background: #63e6be;
+}
+
+.draft-timer.urgent .draft-timer-bar {
+  background: #ff5c6c;
+  opacity: 0.35;
+}
+
+.draft-timer-text {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-family: var(--font-display, sans-serif);
+  font-size: 14px;
+}
+
+.draft-timer-label {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim, #94a3b8);
+}
+
+.draft-timer.urgent .draft-timer-text {
+  color: #ff5c6c;
+}
+
+.draft-quit-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,92,108,0.3);
+  background: rgba(60,20,30,0.5);
+  color: #ff9ea8;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.draft-quit-btn:hover {
+  background: rgba(180,40,60,0.8);
+  color: #fff;
+}
+
+.draft-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  gap: 12px;
+}
+
+.draft-status-picking {
+  color: #63e6be;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.draft-status-waiting {
+  color: #f6ad55;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.draft-status-count {
+  color: var(--text-dim, #94a3b8);
+  font-size: 11px;
+}
+
+.draft-booster-area,
+.draft-picks-area {
+  padding: 12px 16px;
+}
+
+.draft-booster-area {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 220px;
+}
+
+.draft-picks-area {
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+  background: rgba(0,0,0,0.15);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.draft-section-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim, #94a3b8);
+}
+
+.draft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.draft-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a1d2e;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+  aspect-ratio: 2.5 / 3.5;
+}
+
+.draft-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--accent, #7c5cff);
+  box-shadow: 0 8px 24px rgba(124,92,255,0.3);
+}
+
+.draft-card.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.draft-card.is-marked {
+  border-color: #ecc94b;
+  box-shadow: 0 0 14px rgba(236,201,75,0.45);
+}
+
+.draft-card.is-busy {
+  opacity: 0.5;
+}
+
+.draft-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.draft-card-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #1e2348 0%, #14182e 100%);
+  color: var(--text-dim, #94a3b8);
+  padding: 8px;
+  text-align: center;
+}
+
+.draft-card-placeholder.small {
+  aspect-ratio: 2.5 / 3.5;
+}
+
+.draft-card-placeholder-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text, #e2e8f0);
+  word-break: break-word;
+}
+
+.draft-card-placeholder-set {
+  font-size: 10px;
+  color: var(--text-dim, #94a3b8);
+}
+
+.draft-card-mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  background: #ecc94b;
+  color: #1a202c;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.draft-card-busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 20px;
+}
+
+.draft-card-name-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 6px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.draft-picks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.draft-pick-card {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1d2e;
+  aspect-ratio: 2.5 / 3.5;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.draft-pick-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.draft-empty,
+.draft-picks-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim, #94a3b8);
+  font-size: 12px;
+}
+
+.draft-picks-empty {
+  padding: 12px;
+}

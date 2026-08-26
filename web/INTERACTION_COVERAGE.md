@@ -22,18 +22,18 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `SHOW_USERMESSAGE` | ✅ | — | — | — | 2026-08-24 |
 | `SERVER_MESSAGE` | ✅ | — | — | — | 2026-08-24 |
 | `JOINED_TABLE` | ✅ | — | — | — | 2026-08-24 |
-| `START_TOURNAMENT` | ❌ (Slice B) | — | — | — | 2026-08-24 |
-| `TOURNAMENT_INIT` | ❌ (Slice B) | — | — | — | 2026-08-24 |
-| `TOURNAMENT_UPDATE` | ❌ (Slice B) | — | — | — | 2026-08-24 |
-| `TOURNAMENT_OVER` | ❌ (Slice B) | — | — | — | 2026-08-24 |
-| `START_DRAFT` | ❌ (Slice A) | — | — | — | 2026-08-24 |
+| `START_TOURNAMENT` | ✅ | — | ✅ | tournament.spec.ts / TournamentBracket | 2026-08-26 |
+| `TOURNAMENT_INIT` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
+| `TOURNAMENT_UPDATE` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
+| `TOURNAMENT_OVER` | ✅ | — | ✅ | tournament.spec.ts | 2026-08-26 |
+| `START_DRAFT` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
 | `SIDEBOARD` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
-| `CONSTRUCT` | ❌ (Slice A) | — | — | — | 2026-08-24 |
-| `DRAFT_OVER` | ❌ (Slice A) | — | — | — | 2026-08-24 |
-| `DRAFT_INIT` | ❌ (Slice A) | — | — | — | 2026-08-24 |
-| `DRAFT_PICK` | ❌ (Slice A) | — | — | — | 2026-08-24 |
-| `DRAFT_UPDATE` | ❌ (Slice A) | — | — | — | 2026-08-24 |
-| `SHOW_TOURNAMENT` | ❌ (Slice B) | — | — | — | 2026-08-24 |
+| `CONSTRUCT` | ✅ | — | ✅ | ConstructScreen / draft.spec.ts | 2026-08-26 |
+| `DRAFT_OVER` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
+| `DRAFT_INIT` | ✅ | ✅ | ✅ | DraftScreen.test.tsx / draft.spec.ts | 2026-08-26 |
+| `DRAFT_PICK` | ✅ | ✅ | ✅ | DraftScreen.test.tsx / draft.spec.ts | 2026-08-26 |
+| `DRAFT_UPDATE` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
+| `SHOW_TOURNAMENT` | ✅ | — | ✅ | TournamentBracket / tournament.spec.ts | 2026-08-26 |
 | `WATCHGAME` | ✅ | — | ✅ | self-test (real) | 2026-08-24 |
 | `VIEW_LIMITED_DECK` | ✅ | ✅ | — | eventHandler.test.ts | 2026-08-24 |
 | `VIEW_SIDEBOARD` | ✅ | ✅ | — | eventHandler.test.ts | 2026-08-24 |
@@ -57,10 +57,10 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `GAME_GET_MULTI_AMOUNT` | ✅ | ✅ | — | feedback.test.ts | 2026-08-24 |
 | `GAME_OVER` | ✅ | — | ✅ | full-flow.spec.ts / defeat.spec.ts | 2026-08-24 |
 | `END_GAME_INFO` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
-| `REPLAY_GAME` | ❌ (Slice C) | — | — | — | 2026-08-24 |
-| `REPLAY_INIT` | ❌ (Slice C) | — | — | — | 2026-08-24 |
-| `REPLAY_UPDATE` | ❌ (Slice C) | — | — | — | 2026-08-24 |
-| `REPLAY_DONE` | ❌ (Slice C) | — | — | — | 2026-08-24 |
+| `REPLAY_GAME` | ✅ | — | — | eventHandler `REPLAY_GAME` (log) | 2026-08-26 |
+| `REPLAY_INIT` | ✅ | — | — | eventHandler `REPLAY_INIT` + replayViewer | 2026-08-26 |
+| `REPLAY_UPDATE` | ✅ | — | — | eventHandler `REPLAY_UPDATE` | 2026-08-26 |
+| `REPLAY_DONE` | ✅ | — | — | eventHandler `REPLAY_DONE` | 2026-08-26 |
 
 ## Catálogo de mecánicas de juego
 
@@ -187,8 +187,10 @@ Lista actual (de `engine-view-gap.json`):
 ### L. Modos de juego
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Commander (zona / tax / eminence) | ✅ | ✅ | `mechanics.spec.ts` (`.commander-slot`) | 2026-08-24 |
-| Two-Headed Giant / multijugador | ❌ | ❌ | solo 1v1 implícito; sin soporte | 2026-08-24 |
+| Commander (zona / tax / eminence / pod 4-max) | ✅ | ✅ | `PodBoard.tsx` (2x2 clamp 4) + `TurnOrderRing` + `CommanderDamageMatrix` (`PodBoard.test.tsx` 12) + `CommandZone` ×4 | 2026-08-26 |
+| Draft / Sealed (8-player) | ✅ | ✅ | `DraftScreen.tsx` + `ConstructScreen.tsx` + `DraftScreen.test.tsx` + `draft.spec.ts` (`@draft` 8→4) | 2026-08-26 |
+| Torneo Swiss / Bracket | ✅ | ✅ | `TournamentBracket.tsx` + `TournamentPanel.tsx` + `TournamentBracket.test.tsx` + `tournament.spec.ts` | 2026-08-26 |
+| Two-Headed Giant / multijugador | ✅ | ✅ | `TwoHeadedBoard` (`PodBoard`) 2×2 pod — Commander FFA 4-max (XMage no soporta >4) | 2026-08-26 |
 
 ### M. Miscelánea
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -196,10 +198,11 @@ Lista actual (de `engine-view-gap.json`):
 | Concede / rendirse | ✅ | ✅ | `concedeGame` en `actions.ts` + `concede.spec.ts` (fake) + `concede.test.ts` | 2026-08-24 |
 | Mulligan / Keep (auto) | ✅ | ✅ | UI dedicada `MulliganDialog` (`isMulligan`/`isMulliganLondon` en `feedback.ts`); E2E `mulligan.spec.ts` (fake) ejercita la ventana con mano en abanico + London-bottom (`shots/mulligan-01-window.png`) | 2026-08-24 |
 | Sideboard (Bo3 / Bo5) | ✅ | ✅ | `SIDEBOARD` + `best-of-3.spec.ts` / `best-of-5.spec.ts` | 2026-08-24 |
-| Replay viewer | ❌ | ❌ | Slice C (ver Tabla A) | 2026-08-24 |
+| Replay viewer | ✅ | — | `eventHandler` `REPLAY_*` + `replayViewer` state | 2026-08-26 |
+| Sideboard Arena strips (A+B) | ✅ | ✅ | `ArenaCardStrip` swap + agrupación + drag + preview + `validateDeckForFormat` en `SideboardScreen.tsx:376` | 2026-08-26 |
 
-## Planes enlazados (callbacks ❌)
-- **Slice A — Draft / Limited**: `START_DRAFT`, `DRAFT_INIT`, `DRAFT_PICK`, `DRAFT_UPDATE`, `DRAFT_OVER`, `CONSTRUCT`.
-- **Slice B — Torneo**: `START_TOURNAMENT`, `TOURNAMENT_INIT`, `TOURNAMENT_UPDATE`, `TOURNAMENT_OVER`, `SHOW_TOURNAMENT`.
-- **Slice C — Replay viewer**: `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE`.
+## Planes enlazados (callbacks ✅)
+- **Slice A — Draft / Limited** ✅: `START_DRAFT`, `DRAFT_INIT`, `DRAFT_PICK`, `DRAFT_UPDATE`, `DRAFT_OVER`, `CONSTRUCT` → `DraftScreen`/`ConstructScreen`.
+- **Slice B — Torneo** ✅: `START_TOURNAMENT`, `TOURNAMENT_INIT`, `TOURNAMENT_UPDATE`, `TOURNAMENT_OVER`, `SHOW_TOURNAMENT` → `TournamentBracket`/`TournamentPanel`.
+- **Slice C — Replay viewer** ✅: `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE` → `replayViewer` + `GameView`.
 - **Trivial**: `GAME_REDRAW_GUI` (log-only; el tablero ya reacciona a `GAME_UPDATE`).

@@ -1,4 +1,4 @@
-import type { ChatMessageEvent, DeckCardEntry, DeckJson, GameEndInfo, GameView, LobbyEnvelope, TableView } from '../net/types'
+import type { ChatMessageEvent, DeckCardEntry, DeckJson, DraftClientMessage, GameEndInfo, GameView, LobbyEnvelope, TableView, TournamentView } from '../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../game/feedback'
 import type { PhaseStops } from '../net/commands'
 import { loadConn, type ConnectionInfo } from './persistence'
@@ -60,6 +60,28 @@ export interface CardViewerState {
   cards: FeedbackCard[]
 }
 
+/** Draft state (START_DRAFT / DRAFT_INIT / DRAFT_PICK / DRAFT_UPDATE / DRAFT_OVER). */
+export interface DraftState {
+  draftId: string
+  message: DraftClientMessage
+  timeLeft?: number
+}
+
+/** Tournament snapshot (TOURNAMENT_INIT / TOURNAMENT_UPDATE). */
+export interface TournamentState {
+  tournamentId: string
+  view: TournamentView
+}
+
+/** Limited construct (CONSTRUCT) — pool deckbuilding between draft and matches. */
+export interface ConstructState {
+  deckName: string
+  pool: Record<string, unknown>
+  tableId: string
+  parentTableId: string | null
+  timeLeft: number
+}
+
 export interface AppState {
   phase: 'idle' | 'connecting' | 'lobby' | 'spectating_pending' | 'game'
   conn: ConnectionInfo | null
@@ -83,6 +105,10 @@ export interface AppState {
   sideboardScreen: SideboardScreenState | null
   userRequest: UserRequestView | null
   viewer: CardViewerState | null
+  draft: DraftState | null
+  tournament: TournamentState | null
+  construct: ConstructState | null
+  replayViewer: { gameView: GameView | null; result?: string } | null
   phaseStops: PhaseStops
   log: LogEntry[]
   events: { method: string; time: number }[]
@@ -118,6 +144,10 @@ export const initialState: AppState = {
   sideboardScreen: null,
   userRequest: null,
   viewer: null,
+  draft: null,
+  tournament: null,
+  construct: null,
+  replayViewer: null,
   phaseStops: {
     yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
     opponentTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },

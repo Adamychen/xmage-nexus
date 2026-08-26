@@ -63,6 +63,73 @@ export const SKILL_LEVEL_OPTIONS = [
   { label: 'Competitivo', value: 'SERIOUS', icon: '⭐⭐⭐' },
 ]
 
+export interface LimitedDraftOptions {
+  numberBoosters: number
+  constructionTime: number
+  setCodes: string[]
+  draftCubeName?: string
+}
+
+export const LIMITED_BOOSTER_OPTIONS = [3, 6] as const
+export const CONSTRUCTION_TIME_OPTIONS = [
+  { label: '5 minutos', value: 300 },
+  { label: '10 minutos', value: 600 },
+  { label: '15 minutos', value: 900 },
+  { label: '25 minutos', value: 1500 },
+] as const
+
+export function buildLimitedOptions(opts: LimitedDraftOptions): Record<string, unknown> {
+  return {
+    numberBoosters: opts.numberBoosters,
+    constructionTime: opts.constructionTime,
+    setCodes: opts.setCodes,
+    sets: opts.setCodes,
+    ...(opts.draftCubeName ? { draftCubeName: opts.draftCubeName } : {}),
+  }
+}
+
+export function buildDraftTournamentArgs(args: {
+  name: string
+  tournamentType: string
+  gameType: string
+  deckType: string
+  limitedOptions: LimitedDraftOptions
+  playerTypes?: string[]
+  password?: string
+  watchingAllowed?: boolean
+  winsNeeded?: number
+}): Record<string, unknown> {
+  const limited = buildLimitedOptions(args.limitedOptions)
+  return {
+    name: args.name,
+    tournamentType: args.tournamentType,
+    gameType: args.gameType,
+    matchType: args.gameType,
+    deckType: args.deckType,
+    limited: true,
+    limitedOptions: limited,
+    playerTypes: args.playerTypes ?? ['HUMAN'],
+    password: args.password ?? '',
+    watchingAllowed: args.watchingAllowed ?? true,
+    winsNeeded: args.winsNeeded ?? 1,
+  }
+}
+
+export function parseLimitedSetCodes(raw: string): string[] {
+  return raw.split(/[,\s]+/).map((s) => s.trim().toUpperCase()).filter(Boolean)
+}
+
+export const MAX_COMMANDER_PLAYERS = 4
+export const MAX_DRAFT_PLAYERS = 8
+
+export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo[], isDraft: boolean): number {
+  if (isDraft) return MAX_DRAFT_PLAYERS
+  const info = gameTypes.find((g) => g.name === gameType)
+  if (info) return info.maxPlayers
+  if (gameType.toLowerCase().includes('commander')) return MAX_COMMANDER_PLAYERS
+  return 2
+}
+
 export default function CreateTableDialog({ onClose }: { onClose: () => void }) {
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
@@ -79,6 +146,11 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const [wins, setWins] = useState(1)
   const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>('CASUAL')
   const [rated, setRated] = useState(false)
+  const [useDraftTournament, setUseDraftTournament] = useState(false)
+  const [draftSetsRaw, setDraftSetsRaw] = useState('M21')
+  const [draftBoosters, setDraftBoosters] = useState<3 | 6>(3)
+  const [draftConstructionTime, setDraftConstructionTime] = useState(600)
+  const [tournamentType, setTournamentType] = useState('Booster Draft')
 
   // Timing tab
   const [timeLimit, setTimeLimit] = useState('MIN__25')
@@ -194,10 +266,59 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     return (selectedGameTypeInfo?.maxPlayers ?? 2) > 2 || gameType.toLowerCase().includes('commander')
   }, [selectedGameTypeInfo, gameType])
 
+  const isLimited = deckType === 'Limited'
+  const isDraftLimited = isLimited && useDraftTournament
+
   const create = async () => {
     setBusy(true)
     setError(null)
-    const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? 2
+    if (isDraftLimited) {
+      const setCodes = parseLimitedSetCodes(draftSetsRaw)
+      if (setCodes.length === 0) {
+        setError('Debes indicar al menos un set para el draft (ej. M21, MH3)')
+        setBusy(false)
+        return
+      }
+      const limitedOptions = buildLimitedOptions({
+        numberBoosters: draftBoosters,
+        constructionTime: draftConstructionTime,
+        setCodes,
+      })
+      const tArgs = {
+        name: name || `${username}'s table`,
+        tournamentType,
+        gameType,
+        deckType: 'Limited',
+        limitedOptions,
+        playerTypes: ['HUMAN'],
+        password: password.trim() || undefined,
+        watchingAllowed: spectatorsAllowed,
+        winsNeeded: wins,
+      }
+      const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
+      setBusy(false)
+      if (!res.ok) {
+        setError(res.error ?? 'No se pudo crear el torneo draft')
+        return
+      }
+      const tableId = (res.data as { tableId?: string } | null)?.tableId
+      if (tableId) {
+        const join = await cmds.joinTournamentTable({
+          tableId,
+          playerName: username,
+          playerType: 'HUMAN',
+          skill: 1,
+        })
+        if (!join.ok) {
+          setError(join.error ?? 'No se pudo unir al torneo creado')
+          return
+        }
+      }
+      onClose()
+      return
+    }
+    const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
+    const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
     const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
     const aiTypes = (playerTypesSel.length ? playerTypesSel : ['SIM']).slice(0, maxAi)
     const playerTypesFinal = humanSeat ? ['HUMAN', ...aiTypes] : aiTypes
@@ -387,6 +508,60 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   <span className="toggle-desc">Afectará al ELO / Ranking de los jugadores en este formato</span>
                 </div>
               </label>
+
+              {deckType === 'Limited' && (
+                <div className="create-multiplayer-box" style={{ marginTop: 12 }}>
+                  <span className="multiplayer-box-title">🃏 Limitado — Draft / Sealed</span>
+                  <label className="toggle-label-row">
+                    <input
+                      type="checkbox"
+                      checked={useDraftTournament}
+                      onChange={(e) => setUseDraftTournament(e.target.checked)}
+                    />
+                    <div className="toggle-text-block">
+                      <span className="toggle-title">Crear torneo Draft (hasta 8 jugadores)</span>
+                      <span className="toggle-desc">Crea un torneo Limited Booster Draft — Commander limitado a 4, Draft hasta 8. Si está desmarcado, se crea mesa Limited normal.</span>
+                    </div>
+                  </label>
+                  {useDraftTournament && (
+                    <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+                      <div className="create-grid-2col">
+                        <label>
+                          Tipo de torneo
+                          <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)}>
+                            <option value="Booster Draft">Booster Draft</option>
+                            <option value="Sealed">Sealed</option>
+                            <option value="Elimination">Elimination Draft</option>
+                          </select>
+                        </label>
+                        <label>
+                          Boosters
+                          <select value={draftBoosters} onChange={(e) => setDraftBoosters(Number(e.target.value) as 3 | 6)}>
+                            <option value={3}>3 boosters (draft)</option>
+                            <option value={6}>6 boosters (sealed)</option>
+                          </select>
+                        </label>
+                      </div>
+                      <label>
+                        Sets (códigos separados por coma)
+                        <input
+                          value={draftSetsRaw}
+                          onChange={(e) => setDraftSetsRaw(e.target.value)}
+                          placeholder="Ej. M21, MH3, BLB"
+                        />
+                      </label>
+                      <label>
+                        Tiempo de construcción
+                        <select value={draftConstructionTime} onChange={(e) => setDraftConstructionTime(Number(e.target.value))}>
+                          {CONSTRUCTION_TIME_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -717,6 +892,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           <span className="summary-pill">Bo{wins === 1 ? '1' : wins === 2 ? '3' : '5'}</span>
           <span className="summary-pill">{timeLimit === 'NONE' ? 'Sin reloj' : timeLimit.replace('MIN__', '') + 'm'}</span>
           <span className="summary-pill">{SKILL_LEVEL_OPTIONS.find((s) => s.value === skillLevel)?.label}</span>
+          {isDraftLimited && <span className="summary-pill">🃏 Draft {draftBoosters}× {parseLimitedSetCodes(draftSetsRaw).join(', ') || 'sets'}</span>}
+          {isLimited && !isDraftLimited && <span className="summary-pill">Limited 40 min</span>}
           {minimumRating > 0 && <span className="summary-pill">⭐ Min {minimumRating}</span>}
           {quitRatio < 100 && <span className="summary-pill">🚫 Max Quit {quitRatio}%</span>}
           {password.trim() && <span className="summary-pill security">🔒 Clave</span>}
@@ -730,7 +907,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
             Cancelar
           </button>
           <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
-            {busy ? 'Creando mesa…' : 'Crear Mesa 🚀'}
+            {busy ? 'Creando…' : isDraftLimited ? 'Crear Torneo Draft 🃏' : 'Crear Mesa 🚀'}
           </button>
         </div>
       </div>

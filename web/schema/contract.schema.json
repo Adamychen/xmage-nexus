@@ -270,9 +270,119 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "mageObjectType": { "type": "string" }
+        "mageObjectType": { "type": "string" },
+        "expansionSetCode": { "type": "string" },
+        "cardNumber": { "type": "string" },
+        "usesVariousArt": { "type": "boolean" },
+        "gameObject": { "type": "boolean" },
+        "isChoosable": { "type": "boolean" },
+        "isSelected": { "type": "boolean" },
+        "playableStats": { "type": "object" }
       },
       "required": ["id"]
+    },
+    "DraftView": {
+      "type": "object",
+      "properties": {
+        "setNames": { "type": "array", "items": { "type": "string" } },
+        "setCodes": { "type": "array", "items": { "type": "string" } },
+        "boosterNum": { "type": "number" },
+        "cardNum": { "type": "number" },
+        "isCube": { "type": "boolean" },
+        "players": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["setNames", "setCodes", "boosterNum", "cardNum", "players"]
+    },
+    "DraftPickView": {
+      "type": "object",
+      "properties": {
+        "booster": { "$ref": "#/definitions/SimpleCardsView" },
+        "picks": { "$ref": "#/definitions/SimpleCardsView" },
+        "picking": { "type": "boolean" },
+        "timeout": { "type": "number" }
+      },
+      "required": ["booster", "picks", "picking", "timeout"]
+    },
+    "DraftClientMessage": {
+      "type": "object",
+      "properties": {
+        "draftView": { "$ref": "#/definitions/DraftView" },
+        "draftPickView": { "anyOf": [{ "$ref": "#/definitions/DraftPickView" }, { "type": "null" }] }
+      },
+      "required": ["draftView"]
+    },
+    "DeckView": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "cards": { "$ref": "#/definitions/SimpleCardsView" },
+        "sideboard": { "$ref": "#/definitions/SimpleCardsView" }
+      },
+      "required": ["name", "cards", "sideboard"]
+    },
+    "TableClientMessage": {
+      "type": "object",
+      "properties": {
+        "deck": { "anyOf": [{ "$ref": "#/definitions/DeckView" }, { "type": "null" }] },
+        "roomId": { "type": ["string", "null"] },
+        "currentTableId": { "type": ["string", "null"] },
+        "parentTableId": { "type": ["string", "null"] },
+        "gameId": { "type": ["string", "null"] },
+        "playerId": { "type": ["string", "null"] },
+        "time": { "type": "number" },
+        "flag": { "type": "boolean" }
+      }
+    },
+    "TournamentPlayerView": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "state": { "type": "string" },
+        "points": { "type": "number" },
+        "results": { "type": "string" },
+        "history": { "type": "string" },
+        "flagName": { "type": "string" },
+        "quit": { "type": "boolean" }
+      },
+      "required": ["name", "state", "points"]
+    },
+    "TournamentGameView": {
+      "type": "object",
+      "properties": {
+        "roundNum": { "type": "number" },
+        "matchId": { "type": "string" },
+        "gameId": { "type": "string" },
+        "state": { "type": "string" },
+        "result": { "type": "string" },
+        "players": { "type": "string" },
+        "tableId": { "type": "string" }
+      },
+      "required": ["roundNum", "state", "players"]
+    },
+    "RoundView": {
+      "type": "object",
+      "properties": {
+        "games": { "type": "array", "items": { "$ref": "#/definitions/TournamentGameView" } }
+      },
+      "required": ["games"]
+    },
+    "TournamentView": {
+      "type": "object",
+      "properties": {
+        "tournamentName": { "type": "string" },
+        "tournamentType": { "type": "string" },
+        "tournamentState": { "type": "string" },
+        "startTime": { "type": "number" },
+        "endTime": { "type": ["number", "null"] },
+        "stepStartTime": { "type": ["number", "null"] },
+        "serverTime": { "type": "number" },
+        "constructionTime": { "type": "number" },
+        "watchingAllowed": { "type": "boolean" },
+        "rounds": { "type": "array", "items": { "$ref": "#/definitions/RoundView" } },
+        "players": { "type": "array", "items": { "$ref": "#/definitions/TournamentPlayerView" } },
+        "runningInfo": { "type": "string" }
+      },
+      "required": ["tournamentName", "tournamentType", "tournamentState", "constructionTime", "watchingAllowed", "rounds", "players"]
     },
     "SimpleCardsView": {
       "type": "object",

@@ -9,9 +9,10 @@ export { handleMessage } from './eventHandler'
 export { clearError, setStoreError, clearFeedback, setMyDeck, clearGameEnd, returnToLobby, concedeGame, setSetting, maybeAutoPass, setWatchingTable, appendLocalChatMessage } from './actions'
 
 // gancho de depuración para E2E (estado del store en vivo)
-import { getState as _getState } from './state'
+import { getState as _getState, setState as _setState } from './state'
 import { setSetting as _setSetting } from './actions'
 ;(globalThis as unknown as { __mageStore?: unknown }).__mageStore = {
   getState: _getState,
+  setState: _setState,
   setSetting: _setSetting,
 }

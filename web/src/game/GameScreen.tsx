@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
-import TwoHeadedBoard from '../board/TwoHeadedBoard'
+import PodBoard from '../board/PodBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import * as cmds from '../net/commands'
 import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState } from '../state/store'
@@ -8,6 +8,8 @@ import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
 import SideboardScreen from './SideboardScreen'
+import DraftScreen from './DraftScreen'
+import ConstructScreen from './ConstructScreen'
 import Sidebar from './Sidebar'
 import GameChat from './GameChat'
 import PhaseBar from './PhaseBar'
@@ -16,10 +18,12 @@ import ActionFeed from './ActionFeed'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import MechanicsTray from './MechanicsTray'
+import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { setState } from '../state/state'
 import './GameScreen.css'
+import './TournamentPanel.css'
 
 export default function GameScreen() {
   const game = useGame()
@@ -241,7 +245,7 @@ export default function GameScreen() {
         <Sidebar />
         <div className="board-wrap">
           {settings.boardLayout === 'pod' ? (
-            <TwoHeadedBoard
+            <PodBoard
               game={game}
               targetIds={targetIds}
               chosenTargetIds={chosenTargetIds}
@@ -350,7 +354,10 @@ export default function GameScreen() {
       <FeedbackDialog />
       <UserRequestDialog />
       <LimitedDeckDialog />
+      <DraftScreen />
+      <ConstructScreen />
       <SideboardScreen />
+      <TournamentPanel />
     </div>
   )
 }

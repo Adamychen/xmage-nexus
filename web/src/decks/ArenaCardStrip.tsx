@@ -40,6 +40,8 @@ export function ArenaCardStrip({
   onHover,
   onLeave,
   sideboard = false,
+  onSwap,
+  swapLabel,
 }: {
   card: DeckCard
   meta?: CardStripMeta
@@ -53,6 +55,8 @@ export function ArenaCardStrip({
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
   sideboard?: boolean
+  onSwap?: (key: string) => void
+  swapLabel?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [isDraggingSelf, setIsDraggingSelf] = useState(false)
@@ -144,6 +148,16 @@ export function ArenaCardStrip({
 
       {/* Quick Hover Controls */}
       <div className="strip-actions" onClick={(e) => e.stopPropagation()}>
+        {onSwap && (
+          <button
+            type="button"
+            className="strip-btn swap"
+            onClick={() => onSwap(actionKey)}
+            title={swapLabel ?? (sideboard ? 'Mover al mazo' : 'Mover al banquillo')}
+          >
+            ⇄
+          </button>
+        )}
         <button
           type="button"
           className="strip-btn"
