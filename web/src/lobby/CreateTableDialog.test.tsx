@@ -6,9 +6,9 @@ import * as cmds from '../net/commands'
 vi.mock('../net/commands', () => ({
   getGameTypes: vi.fn().mockResolvedValue([
     { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
-    { name: 'Commander / Free For All', minPlayers: 2, maxPlayers: 4 },
+    { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
   ]),
-  getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern', 'Constructed - Standard', 'Constructed - Commander']),
+  getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern', 'Constructed - Standard', 'Variant Magic - Commander']),
   getPlayerTypes: vi.fn().mockResolvedValue(['COMPUTER_MAD', 'COMPUTER_DRAFT']),
   createTable: vi.fn().mockResolvedValue({ ok: true, data: { tableId: 'table-123' } }),
   joinTable: vi.fn().mockResolvedValue({ ok: true }),

@@ -22,7 +22,9 @@
     "gen-zod": "node ../scripts/gen-zod.mjs",
     "gen-zod:validate": "node ../scripts/gen-zod.mjs --validate",
     "gen-types:validate": "node ../scripts/gen-types.mjs --validate",
-    "gen": "npm run gen-types && npm run gen-zod"
+    "gen-server-state": "node ../scripts/server-state-schema.mjs",
+    "gen-server-state:validate": "node ../scripts/server-state-schema.mjs --validate",
+    "gen": "npm run gen-types && npm run gen-zod && npm run gen-server-state"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

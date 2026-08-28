@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-28T09:43:12.091Z",
+    "note": "Exhaustive ServerState enumerations for the current fork version. Derived from Mage.Server/config/config.xml (canonical for this release) + MatchType Java limits. Oracle for serverStateCoverage.test.ts.",
+    "configPath": "Mage.Server/config/config.xml",
+    "version": "1.4.61-V1"
+  },
+  "gameTypes": [
+    {
+      "name": "Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.TwoPlayerDuelType"
+    },
+    {
+      "name": "Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.FreeForAllType"
+    },
+    {
+      "name": "Commander Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.CommanderDuelType"
+    },
+    {
+      "name": "Commander Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.CommanderFreeForAllType"
+    },
+    {
+      "name": "Tiny Leaders Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.TinyLeadersDuelType"
+    },
+    {
+      "name": "Canadian Highlander Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.CanadianHighlanderDuelType"
+    },
+    {
+      "name": "Penny Dreadful Commander Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.PennyDreadfulCommanderFreeForAllType"
+    },
+    {
+      "name": "Freeform Commander Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.FreeformCommanderDuelType"
+    },
+    {
+      "name": "Freeform Commander Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.FreeformCommanderFreeForAllType"
+    },
+    {
+      "name": "Freeform Unlimited Commander",
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "typeName": "mage.game.FreeformUnlimitedCommanderType"
+    },
+    {
+      "name": "Oathbreaker Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.OathbreakerDuelType"
+    },
+    {
+      "name": "Oathbreaker Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.OathbreakerFreeForAllType"
+    },
+    {
+      "name": "Brawl Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.BrawlDuelType"
+    },
+    {
+      "name": "Brawl Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.BrawlFreeForAllType"
+    },
+    {
+      "name": "Momir Basic Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.MomirDuelType"
+    },
+    {
+      "name": "Momir Basic Free For All",
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "typeName": "mage.game.MomirFreeForAllType"
+    },
+    {
+      "name": "Custom Pillar of the Paruns Two Player Duel",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "typeName": "mage.game.CustomPillarOfTheParunsDuelType"
+    }
+  ],
+  "deckTypes": [
+    "Constructed - Standard",
+    "Constructed - Extended",
+    "Constructed - Frontier",
+    "Constructed - Pioneer",
+    "Constructed - Modern",
+    "Constructed - Modern - No Banned List",
+    "Constructed - Eternal",
+    "Constructed - Legacy",
+    "Constructed - Vintage",
+    "Constructed - Pauper",
+    "Constructed - Historic",
+    "Constructed - Historical Type 2",
+    "Constructed - Super Type 2",
+    "Constructed - Australian Highlander",
+    "Constructed - Canadian Highlander",
+    "Constructed - European Highlander",
+    "Constructed - Old School 93/94",
+    "Constructed - Old School 93/94 - Italian Rules",
+    "Constructed - Old School 93/94 - Channel Fireball Rules",
+    "Constructed - Old School 93/94 - EudoGames Rules",
+    "Constructed - Old School 93/94 - EC Rules",
+    "Constructed - Premodern",
+    "Constructed - Freeform",
+    "Constructed - Freeform Unlimited",
+    "Variant Magic - Commander",
+    "Variant Magic - Duel Commander",
+    "Variant Magic - MTGO 1v1 Commander",
+    "Variant Magic - Centurion Commander",
+    "Variant Magic - Tiny Leaders",
+    "Variant Magic - Momir Basic",
+    "Variant Magic - Penny Dreadful Commander",
+    "Variant Magic - Freeform Commander",
+    "Variant Magic - Freeform Unlimited Commander",
+    "Variant Magic - Brawl",
+    "Variant Magic - Oathbreaker",
+    "Block Constructed - Amonkhet",
+    "Block Constructed - Battle for Zendikar",
+    "Block Constructed - Innistrad",
+    "Block Constructed - Ixalan",
+    "Block Constructed - Kaladesh",
+    "Block Constructed - Kamigawa",
+    "Block Constructed - Khans of Tarkir",
+    "Block Constructed - Lorwyn",
+    "Block Constructed - Return to Ravnica",
+    "Block Constructed - Scars of Mirrodin",
+    "Block Constructed - Shadowmoor",
+    "Block Constructed - Shadows over Innistrad",
+    "Block Constructed - Shards of Alara",
+    "Block Constructed - Theros",
+    "Block Constructed - Zendikar",
+    "Block Constructed Custom - Star Wars",
+    "Limited"
+  ],
+  "playerTypes": [
+    "Human",
+    "Computer - mad",
+    "Computer - monte carlo",
+    "Computer - draftbot"
+  ],
+  "tournamentTypes": [
+    "Constructed Elimination",
+    "Constructed Swiss",
+    "Booster Draft Elimination",
+    "Booster Draft Elimination (Cube)",
+    "Booster Draft Elimination (Random)",
+    "Booster Draft Elimination (Reshuffled)",
+    "Booster Draft Elimination (Rich Man)",
+    "Booster Draft Elimination (Rich Man Cube)",
+    "Booster Draft Swiss",
+    "Booster Draft Swiss (Cube)",
+    "Booster Draft Swiss (Random)",
+    "Booster Draft Swiss (Reshuffled)",
+    "Booster Draft Swiss (Rich Man)",
+    "Booster Draft Swiss (Rich Man Cube)",
+    "Sealed Elimination",
+    "Sealed Elimination (Cube)",
+    "Sealed Swiss",
+    "Sealed Swiss (Cube)",
+    "Jumpstart Elimination",
+    "Jumpstart Swiss",
+    "Jumpstart Elimination (Custom)"
+  ],
+  "draftCubes": [
+    "Cube From Deck",
+    "MTGO Legacy Cube",
+    "MTGO Vintage Cube",
+    "MTGO Legendary Cube",
+    "MTGO Legendary Cube April 2016",
+    "MTGO Modern Cube 2017",
+    "MTGO Khans Expanded Cube",
+    "MTGO Cube March 2014",
+    "MTGA Cube 2020 April",
+    "SCG Con Cube 2018 December",
+    "The Peasant's Toolbox",
+    "www.MTGCube.com",
+    "The Pauper Cube",
+    "Ben's Cube",
+    "Cube Tutor 360 Pauper",
+    "Cube Tutor 720",
+    "Eric Klug's Pro Tour Cube",
+    "Guillaume Matignon's Jenny's/Johnny's Cube",
+    "Jim Davis's Cube",
+    "Joseph Vasoli's Peasant Cube",
+    "Sam Black's No Search Cube",
+    "Timothee Simonot's Twisted Color Pie Cube",
+    "Mono Blue Cube",
+    "MTGO Legacy Cube 2016 January",
+    "MTGO Legacy Cube 2016 September",
+    "MTGO Legacy Cube 2017 January",
+    "MTGO Legacy Cube 2017 April",
+    "MTGO Legacy Cube 2018 February",
+    "MTGO Legacy Cube 2019 July",
+    "MTGO Legacy Cube 2021 May",
+    "MTGO Vintage Cube 2015",
+    "MTGO Vintage Cube 2016",
+    "MTGO Vintage Cube June 2016",
+    "MTGO Vintage Cube November 2016",
+    "MTGO Vintage Cube June 2017",
+    "MTGO Vintage Cube December 2017",
+    "MTGO Vintage Cube June 2018",
+    "MTGO Vintage Cube December 2018",
+    "MTGO Vintage Cube June 2019",
+    "MTGO Vintage Cube December 2019",
+    "MTGO Vintage Cube April 2020",
+    "MTGO Vintage Cube July 2020",
+    "MTGO Vintage Cube December 2020",
+    "MTGO Vintage Cube July 2021",
+    "MTGO Vintage Cube February 2022",
+    "MTGO Vintage Cube October 2023"
+  ]
+}

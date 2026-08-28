@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-08-26 (MTG Arena Deck Builder overhaul: Arena Card Strips with art crop backgrounds, 3D floating drag & drop with glowing drop zones, mini mana curve in header tile, comprehensive format rules engine supporting 11 formats with Scryfall legality & copy limits validation)
+> Last updated: 2026-08-28 (ServerState drift guard: `scripts/server-state-schema.mjs` + `server-state-schema.json` (17 gameTypes/52 deckTypes from `config.xml`), 4th guard `serverStateCoverage.test.ts` (DEFAULT_* exhaustive vs oracle, FakeServer valid), DEFAULT_GAME_TYPES/DEFAULT_DECK_TYPES expanded to exhaustive 1.4.61-V1, `gen-server-state:validate` in CI)
 
 ---
 
@@ -308,6 +308,7 @@ web/
 | 2026-08-26 | F5 Agent C | Torneo Swiss/Bracket: `TournamentBracket.tsx` (rounds bracket + standings sorted points) + `TournamentStandings.tsx` + `TournamentPanel.tsx` (overlay `state.tournament` con `TournamentBracket` compact) + `LobbyScreen.tsx` (`Ver bracket` + `getTournament` polling). Fixture `scenarios/tournament.ts` (sample 4 players/2 rounds). | vitest 417 ✅; typecheck ✅; e2e tournament 2/2 ✅ |
 | 2026-08-26 | F5 Agent A | Commander Pod 4-max (sin tocar `BoardZone.css`): `PodBoard.tsx` wrapper `TwoHeadedBoard` (`clampedGame` `slice(0,4)` + `TurnOrderRing` + `CommanderDamageMatrix`) + `TurnOrderRing.tsx` (circular 3-4, pill 2) + `CommanderDamageMatrix.tsx` (Target×Commander 21 lethal) + `GameScreen.tsx` (`boardLayout==='pod' ? PodBoard : GameBoard`). `PodBoard.test.tsx` 12. `MAX_POD_PLAYERS=4` en `PodBoard/TurnOrderRing/CommanderDamageMatrix` + `CreateTableDialog.getEffectiveMaxPlayers` (XMage hard limit). `BoardZone.css` intacto verificado `git diff --stat`. | vitest 429 ✅; typecheck ✅; build ✅ |
 | 2026-08-26 | F5 Integración | Fase 5 completa: todos los callbacks `INTERACTION_COVERAGE.md` Tabla A → ✅ (15 Slices A/B/C a log/UI), L/Tournament/Replay en `site/content.json` `done 2026-08-26` + `PROJECT.md` §2. Verif: `vitest 67 files 429` ✅; `typecheck` ✅; `vite build 193kB` ✅; `mvn Proxy 18` ✅; `playwright draft 2 + tournament 2 + PodBoard 12 unit` ✅; `git diff` sin `BoardZone.css` | — |
+| 2026-08-28 | QA/Antidrift | **4º guard ServerState** (`scripts/server-state-schema.mjs` → `web/fixtures/server-state-schema.json` 17 gameTypes/52 deckTypes/4 playerTypes/21 tournamentTypes/46 cubes desde `Mage.Server/config/config.xml` + `MatchType` limits): `web/src/state/serverStateCoverage.test.ts` (7 tests: schema up-to-date, DEFAULT_GAME_TYPES/DEFAULT_DECK_TYPES válidos y exhaustivos, FakeServer válido). `CreateTableDialog.tsx` DEFAULTs expandidos a exhaustivos 1.4.61-V1 (`Two Player Duel`…`Custom Pillar`, `Constructed - Standard`…`Limited` 52), `fake.ts`/`draft.ts`/`tournament.ts` corregidos (`Three/Four Player`→`Free For All`/`Commander Free For All`, `Commander`→`Variant Magic - Commander`). `web/package.json` `gen-server-state[:validate]`, `web-ci.yml` step `Validate server-state schema`. `site/content.json` 4º guard `serverStateCoverage`. | vitest 68/436 ✅; typecheck ✅; build 715kB ✅; `gen-server-state:validate` ✅ |
 
 ---
 

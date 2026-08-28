@@ -48,8 +48,8 @@ export interface Scenario {
 export const DEFAULT_RESULTS: Record<string, unknown> = {
   getGameTypes: [
     { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
-    { name: 'Three Player', minPlayers: 3, maxPlayers: 3 },
-    { name: 'Four Player', minPlayers: 4, maxPlayers: 4 },
+    { name: 'Free For All', minPlayers: 3, maxPlayers: 10 },
+    { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
   ],
   getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD'],
   getDeckTypes: ['Constructed - Modern'],

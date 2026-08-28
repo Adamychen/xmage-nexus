@@ -42,6 +42,9 @@ jobs:
       - name: Validate generated TS types are in sync with contract
         working-directory: web
         run: npm run gen-types:validate
+      - name: Validate server-state schema is in sync with config.xml
+        working-directory: web
+        run: npm run gen-server-state:validate
       - name: Unit tests (vitest)
         working-directory: web
         run: npm run test

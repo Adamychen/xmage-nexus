@@ -8,8 +8,8 @@ const GAME_ID = 'game-tournament-1'
 function localMakeTable(opts: { tableId: string; tableName: string; gameId: string; gameType?: string; deckType?: string }): TableView {
   return {
     tableId: opts.tableId,
-    gameType: opts.gameType ?? 'Commander / Free For All',
-    deckType: opts.deckType ?? 'Commander',
+    gameType: opts.gameType ?? 'Commander Free For All',
+    deckType: opts.deckType ?? 'Variant Magic - Commander',
     tableName: opts.tableName,
     controllerName: 'host',
     additionalInfoShort: '3/4',
@@ -96,7 +96,7 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
     tableName: view.tournamentName,
     gameId: GAME_ID,
     gameType: view.tournamentType,
-    deckType: 'Commander',
+    deckType: 'Variant Magic - Commander',
   })
 
   function broadcastTournament(method: string, v: TournamentView) {
@@ -171,12 +171,12 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
           return
         case 'getGameTypes':
           conn.ok(requestId, action, [
-            { name: 'Commander / Free For All', minPlayers: 2, maxPlayers: 4 },
+            { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
             { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
           ])
           return
         case 'getDeckTypes':
-          conn.ok(requestId, action, ['Commander'])
+          conn.ok(requestId, action, ['Variant Magic - Commander'])
           return
         default:
           conn.ok(requestId, action, {})

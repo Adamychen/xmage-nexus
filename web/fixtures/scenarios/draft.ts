@@ -151,7 +151,7 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
           conn.ok(requestId, action, [
             { name: 'Booster Draft', minPlayers: 2, maxPlayers: 8 },
             { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
-            { name: 'Commander / Free For All', minPlayers: 2, maxPlayers: 4 },
+            { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
           ])
           return
         case 'getDeckTypes':
