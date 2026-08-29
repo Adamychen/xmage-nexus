@@ -194,12 +194,12 @@ export default function LoginScreen() {
         </div>
 
         {/* Network Connection Configuration Box */}
-        <div className="login-network-box">
-          <div className="login-network-header">
+        <details className="login-network-box" style={{ border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 10, padding: '0', background: 'rgba(10, 13, 28, 0.65)', boxSizing: 'border-box', width: '100%' }}>
+          <summary className="login-network-header" style={{ cursor: 'pointer', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
             <span className="network-box-title">Configuración de Red</span>
             <span className="network-box-hint">{serverHost}:{port}</span>
-          </div>
-          <div className="login-network-fields">
+          </summary>
+          <div className="login-network-fields" style={{ padding: '0 12px 10px' }}>
             <label className="network-field-proxy">
               Proxy
               <input
@@ -234,7 +234,7 @@ export default function LoginScreen() {
               </label>
             </div>
           </div>
-        </div>
+        </details>
 
         {error && (
           <div className="error-box">

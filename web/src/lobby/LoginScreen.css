@@ -91,7 +91,9 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 208, 112, 0.65);
   box-shadow: 0 0 28px rgba(124, 92, 255, 0.5), 0 0 14px rgba(255, 208, 112, 0.35);
-  margin-bottom: 6px;
+  display: block;
+  margin: 0 auto 6px auto;
+  align-self: center;
   animation: logoGlowPulse 4s ease-in-out infinite alternate;
 }
 
@@ -192,7 +194,25 @@
 }
 
 .user-avatar-preview:hover {
-  transform: scale(1.06);
+  transform: scale(1.04);
+}
+
+.user-avatar-preview::after {
+  content: '✏️';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.user-avatar-preview:hover::after {
+  opacity: 1;
 }
 
 .user-avatar-badge-edit {
@@ -412,6 +432,31 @@
   to { transform: rotate(360deg); }
 }
 
+.connecting-splash {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 36px 30px;
+}
+
+.connecting-splash .login-header {
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.connecting-spinner {
+  width: 32px;
+  height: 32px;
+  margin: 14px auto 0 auto;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffd070;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  align-self: center;
+}
+
 
 .login-attribution {
   font-size: 10.5px;
@@ -430,18 +475,16 @@
   text-decoration: underline;
 }
 
-.connecting-splash {
-  align-items: center;
-  text-align: center;
-  padding: 32px 24px;
-}
 
-.connecting-spinner {
-  width: 36px;
-  height: 36px;
-  margin: 16px auto 8px auto;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+
+details.login-network-box summary {
+  cursor: pointer;
+  list-style: none;
+}
+details.login-network-box summary::-webkit-details-marker { display: none; }
+details.login-network-box .login-network-fields {
+  padding: 0 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

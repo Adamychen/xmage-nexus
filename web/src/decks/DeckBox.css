@@ -52,6 +52,33 @@
   inset: 0;
   background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 36%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 100%);
 }
+.deck-box-format-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.format-badge-valid {
+  background: rgba(16, 185, 129, 0.88);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.format-badge-invalid {
+  background: rgba(239, 68, 68, 0.88);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 .deck-box-footer {
   position: absolute;
   left: 10px;

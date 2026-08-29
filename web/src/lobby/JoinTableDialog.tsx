@@ -36,10 +36,12 @@ export default function JoinTableDialog({
         const v2 = await st.list()
         if (cancelled) return
         const maps = new Map<string, Deck>()
-        for (const d of getAllAvailableDecks()) maps.set(d.name, d)
         for (const d of v2) {
           const deck: Deck = { name: d.name, cards: d.cards, sideboard: d.sideboard }
-          if (!maps.has(deck.name)) maps.set(deck.name, deck)
+          maps.set(deck.name, deck)
+        }
+        for (const d of getAllAvailableDecks()) {
+          if (!maps.has(d.name)) maps.set(d.name, d)
         }
         const merged = [...maps.values()]
         setAllDecks(merged)

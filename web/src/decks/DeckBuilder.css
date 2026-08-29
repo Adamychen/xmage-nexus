@@ -1,12 +1,17 @@
-/* MTG Arena Deck Builder Global Layout */
+/* Deck Builder Layout */
 .deck-builder {
-  min-height: 100vh;
-  height: 100vh;
-  background: #080c10 radial-gradient(circle at 50% 20%, #151d27 0%, #080b0f 100%);
-  color: #e6eaf0;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: #080c10 radial-gradient(circle at 50% 20%, #151d27 0%, #080b0f 100%);
+  color: #e6eaf0;
   overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -14,12 +19,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100%;
+  flex: 1;
   font-size: 1.1rem;
   color: #a0aec0;
 }
 
-/* MTG Arena Top Navigation Bar */
+/* Top Navigation Bar */
 .arena-top-nav {
   display: flex;
   align-items: center;
@@ -31,12 +37,13 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .arena-nav-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .arena-nav-back {
@@ -59,37 +66,11 @@
   color: #ffffff;
 }
 
-.arena-nav-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.arena-nav-item {
-  color: #718096;
-  font-size: 0.8rem;
+.deck-builder-title {
+  font-size: 0.95rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 12px 4px;
-  position: relative;
-  cursor: default;
-}
-
-.arena-nav-item.active {
-  color: #f6ad55;
-}
-
-.arena-nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #dd6b20, #f6ad55);
-  box-shadow: 0 0 8px rgba(246, 173, 85, 0.8);
-  border-radius: 3px 3px 0 0;
+  color: #f0ede4;
+  letter-spacing: 0.04em;
 }
 
 .arena-nav-right {
@@ -112,7 +93,7 @@
   padding: 12px 16px;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 48px);
+  height: calc(100% - 48px);
   max-width: 1920px;
   width: 100%;
   margin: 0 auto;

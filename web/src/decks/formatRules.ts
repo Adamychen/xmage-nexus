@@ -200,7 +200,7 @@ export interface DeckValidationReport {
 
 export function validateDeckForFormat(
   deck: DeckV2,
-  metaMap: Map<string, CardStripMeta>
+  metaMap: Map<string, CardStripMeta> = new Map()
 ): DeckValidationReport {
   const config = FORMAT_CONFIGS[deck.format] ?? FORMAT_CONFIGS.Freeform
   const issues: ValidationIssue[] = []

@@ -83,27 +83,70 @@ export function formatDeckTypeName(deckType?: string): { short: string; full: st
 }
 
 export function formatSeatHistory(sHistory?: string, userHistory?: string): { short: string | null; full: string } {
-  const full = (userHistory || sHistory || '').trim()
-  if (!full) return { short: null, full: '' }
+  const raw = (sHistory || userHistory || '').trim()
+  if (!raw) return { short: null, full: '' }
 
-  // Prefer seat's own concise history if present (e.g. "52 (Q:25)")
-  if (sHistory && sHistory.trim().length <= 16 && !sHistory.includes('Constructed Rating')) {
-    return { short: sHistory.trim(), full }
+  // Check for Win-Loss format like "10-2" or "5-5-1"
+  const wlMatch = raw.match(/^(\d+-\d+(?:-\d+)?)$/)
+  if (wlMatch) {
+    return { short: wlMatch[1], full: `${wlMatch[1]} (Victorias - Derrotas)` }
   }
 
-  // Parse from raw user history "Matches: 265 (I:3 T:1 Q:13) (6%), Tourneys..."
-  const matchMatch = full.match(/Matches:\s*(\d+)/i)
-  const quitMatch = full.match(/\((\d+%\))\s*,/i) || full.match(/\((\d+%)\)/i)
+  // Parse seat history like "720 (I:15 T:8 Q:3)", "1817 (I:4 T:12 Q:0)", "8 (Q:1)", "2"
+  const seatMatch = raw.match(/^(\d+)(?:\s*\((.*?)\))?/)
+  if (seatMatch && !raw.toLowerCase().includes('matches:')) {
+    const totalMatches = seatMatch[1]
+    const details = seatMatch[2] || ''
+    const quitMatch = details.match(/Q:(\d+)/i)
+    const quitCount = quitMatch ? parseInt(quitMatch[1], 10) : 0
+
+    let short = totalMatches
+    if (quitCount > 0) {
+      short = `${totalMatches} (Q:${quitCount})`
+    }
+
+    let full = `${totalMatches} partidas jugadas`
+    if (details) {
+      const parts: string[] = []
+      const iMatch = details.match(/I:(\d+)/i)
+      const tMatch = details.match(/T:(\d+)/i)
+      if (quitCount > 0) parts.push(`${quitCount} abandonos`)
+      if (iMatch && parseInt(iMatch[1], 10) > 0) parts.push(`${iMatch[1]} inactivos`)
+      if (tMatch && parseInt(tMatch[1], 10) > 0) parts.push(`${tMatch[1]} timeouts`)
+      if (parts.length > 0) {
+        full += ` (${parts.join(', ')})`
+      } else {
+        full += ` (${details})`
+      }
+    }
+    return { short, full }
+  }
+
+  // Parse from raw user history "Matches: 265 (I:3 T:1 Q:13) (6%), Tourneys: 0 (0%), Constructed Rating..."
+  const matchMatch = raw.match(/Matches:\s*(\d+)(?:\s*\((.*?)\))?(?:\s*\(([\d.]+%)\))?/i)
   if (matchMatch) {
-    const count = matchMatch[1]
-    const quit = quitMatch ? quitMatch[1] : ''
-    return { short: `${count}M${quit ? ` (${quit})` : ''}`, full }
+    const totalMatches = matchMatch[1]
+    const details = matchMatch[2] || ''
+    const quitPct = matchMatch[3] || ''
+    const quitMatch = details.match(/Q:(\d+)/i)
+    const quitCount = quitMatch ? parseInt(quitMatch[1], 10) : 0
+
+    let short = totalMatches
+    if (quitPct && quitPct !== '0%') {
+      short = `${totalMatches} (${quitPct})`
+    } else if (quitCount > 0) {
+      short = `${totalMatches} (Q:${quitCount})`
+    }
+
+    return { short, full: raw }
   }
 
-  if (full.length > 14) {
-    return { short: full.slice(0, 12) + '…', full }
+  // Fallback for simple short strings
+  if (raw.length <= 14) {
+    return { short: raw, full: raw }
   }
-  return { short: full, full }
+
+  return { short: raw.slice(0, 10), full: raw }
 }
 
 export function extractLobbyUsers(rawUsers: unknown): import('../net/types').UsersView[] {
@@ -137,6 +180,8 @@ export default function LobbyScreen() {
   const myDeck = useStore((s) => s.myDeck)
   const error = useStore((s) => s.error)
   const events = useStore((s) => s.events)
+  const [unreadChat, setUnreadChat] = useState(0)
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -147,7 +192,12 @@ export default function LobbyScreen() {
   const [chatPrefill, setChatPrefill] = useState<string>('')
   const [joiningTable, setJoiningTable] = useState<TableView | null>(null)
   const [showDebug, setShowDebug] = useState(false)
-  const [filters, setFilters] = useState<TableFilters>(INITIAL_TABLE_FILTERS)
+  const [filters, setFilters] = useState<TableFilters>(() => {
+    try {
+      const saved = localStorage.getItem('lobby_filters')
+      return saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
+    } catch { return INITIAL_TABLE_FILTERS }
+  })
   const [busyTable, setBusyTable] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
@@ -350,75 +400,19 @@ export default function LobbyScreen() {
 
   return (
     <div className="lobby">
-      {/* Top Arena Navigation Bar */}
-      <header className="lobby-top">
+      {/* Thin top strip: brand + user identity */}
+      <header className="lobby-topstrip">
         <div className="lobby-brand-col">
           <img src="/logo.jpeg" alt="XMage Nexus" className="lobby-brand-logo" />
           <div className="lobby-brand-titles">
             <h1 className="lobby-main-heading">XMage Nexus</h1>
             <span className="conn-info">
               <span className="conn-status-dot" />
-              {conn?.serverHost}:{conn?.port} • {users.length} jugadores en línea
+              {conn?.serverHost}:{conn?.port} · {users.length} en línea
             </span>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav className="lobby-nav-tabs">
-          <button
-            type="button"
-            className="nav-tab-btn hero-create-btn"
-            onClick={() => setShowCreate(true)}
-            title="Crear una nueva partida o torneo"
-          >
-            <span className="tab-icon">➕</span>
-            <span>Nueva mesa</span>
-          </button>
-          <button
-            type="button"
-            className={`nav-tab-btn ${activeTab === 'tables' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tables')}
-          >
-            <span className="tab-icon">⚔️</span>
-            <span>Mesas ({tables.length})</span>
-          </button>
-          <button
-            type="button"
-            className={`nav-tab-btn ${activeTab === 'decks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('decks')}
-          >
-            <span className="tab-icon">🃏</span>
-            <span>Mis Mazos</span>
-          </button>
-          <button
-            type="button"
-            className={`nav-tab-btn ${activeTab === 'community' ? 'active' : ''}`}
-            onClick={() => setActiveTab('community')}
-          >
-            <span className="tab-icon">👥</span>
-            <span>Comunidad & Chat</span>
-          </button>
-          <button
-            type="button"
-            className={`nav-tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matches')}
-            title="Ver resultados y repeticiones de partidas finalizadas"
-          >
-            <span className="tab-icon">📜</span>
-            <span>Partidas Finalizadas</span>
-          </button>
-          <button
-            type="button"
-            className="nav-tab-btn leaderboard-nav-tab"
-            onClick={() => openLeaderboard(conn?.username, 'room')}
-            title="Ver clasificación de la sala y rangos de liga"
-          >
-            <span className="tab-icon">🏆</span>
-            <span>Leaderboard</span>
-          </button>
-        </nav>
-
-        {/* User Identity, Fullscreen & Disconnect */}
         <div className="lobby-user-actions">
           <button
             type="button"
@@ -434,7 +428,7 @@ export default function LobbyScreen() {
           <div
             className="lobby-user-badge"
             onClick={() => openLeaderboard(conn?.username, 'profile')}
-            title="Haz clic para ver tu perfil competitivo y estadísticas"
+            title="Ver tu perfil competitivo"
           >
             <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
             <div className="lobby-user-col">
@@ -445,81 +439,166 @@ export default function LobbyScreen() {
               <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
             </div>
           </div>
-          <button className="lobby-disconnect-btn" onClick={reset} title="Cerrar sesión">
-            Desconectar
-          </button>
+          {confirmDisconnect ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>¿Desconectar?</span>
+              <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>Sí</button>
+              <button onClick={() => setConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>No</button>
+            </div>
+          ) : (
+            <button className="lobby-disconnect-btn" onClick={() => setConfirmDisconnect(true)} title="Cerrar sesión">
+              🚪
+            </button>
+          )}
         </div>
       </header>
 
-      {error && <div className="error-box panel">{error}</div>}
-      {notice && <div className="notice panel">{notice}</div>}
+      {error && <div className="error-box panel lobby-error-banner">{error}</div>}
+      {notice && <div className="notice panel lobby-notice-banner">{notice}</div>}
 
-      {/* Main Tab Content */}
-      <div className="lobby-body-container">
-        {activeTab === 'tables' && (
-          <div className="lobby-tables-view">
-            {/* Modern Full Table Filter Bar */}
-            <TableFilterBar
-              tables={tables}
-              filters={filters}
-              onChange={setFilters}
-              onReset={() => setFilters(INITIAL_TABLE_FILTERS)}
-            />
+      {/* 3-Column main area */}
+      <div className="lobby-columns">
 
-            {/* Tables Grid Section */}
-            <section className="panel tables-panel">
-              <div className="tables-panel-header">
-                <div className="tables-header-title-row">
-                  <h2>
-                    Mesas ({filteredTables.length}
-                    {filteredTables.length !== tables.length ? ` de ${tables.length}` : ''})
-                  </h2>
-                  <span className="tables-deck-hint">
-                    Mostrando partidas activas y en espera
-                  </span>
+        {/* LEFT: Icon Sidebar Navigation */}
+        <nav className="lobby-sidebar" aria-label="Navegación principal">
+          <button
+            type="button"
+            className="sidebar-btn hero-create-btn"
+            onClick={() => setShowCreate(true)}
+            title="Nueva mesa"
+          >
+            <span className="sidebar-btn-icon">➕</span>
+            <span className="sidebar-btn-label">Nueva</span>
+          </button>
+
+          <div className="sidebar-divider" />
+
+          <button
+            type="button"
+            className={`sidebar-btn ${activeTab === 'tables' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tables')}
+            title={`Mesas (${tables.length})`}
+          >
+            <span className="sidebar-btn-icon">⚔️</span>
+            <span className="sidebar-btn-label">Mesas{tables.length > 0 ? ` (${tables.length})` : ''}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`sidebar-btn ${activeTab === 'decks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('decks')}
+            title="Mis Mazos"
+          >
+            <span className="sidebar-btn-icon">🃏</span>
+            <span className="sidebar-btn-label">Mazos</span>
+          </button>
+
+          <button
+            type="button"
+            className={`sidebar-btn ${activeTab === 'matches' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matches')}
+            title="Partidas Finalizadas"
+          >
+            <span className="sidebar-btn-icon">📜</span>
+            <span className="sidebar-btn-label">Historial</span>
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-btn sidebar-btn-leaderboard"
+            onClick={() => openLeaderboard(conn?.username, 'room')}
+            title="Leaderboard"
+          >
+            <span className="sidebar-btn-icon">🏆</span>
+            <span className="sidebar-btn-label">Ranking</span>
+          </button>
+        </nav>
+
+        {/* CENTER: Main tab content */}
+        <main className="lobby-main">
+          {activeTab === 'tables' && (
+            <div className="lobby-tables-view">
+              <TableFilterBar
+                tables={tables}
+                filters={filters}
+                onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
+                onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
+              />
+
+              <section className="panel tables-panel">
+                <div className="tables-panel-header">
+                  <div className="tables-header-title-row">
+                    <h2>
+                      Mesas ({filteredTables.length}
+                      {filteredTables.length !== tables.length ? ` de ${tables.length}` : ''})
+                    </h2>
+                    <span className="tables-deck-hint">Partidas activas y en espera</span>
+                  </div>
+                  <div className="hero-deck-badge" title={`Mazo activo: ${myDeck?.name ?? 'Mage Web bolt'}`}>
+                    <span className="hero-deck-label">Mazo:</span>
+                    <span className="hero-deck-name">🃏 {myDeck?.name ?? 'Mage Web bolt'}</span>
+                  </div>
                 </div>
-                <div className="hero-deck-badge" title={`Mazo activo para unirse a partidas: ${myDeck?.name ?? 'Mage Web bolt'}`}>
-                  <span className="hero-deck-label">Mazo equipado:</span>
-                  <span className="hero-deck-name">🃏 {myDeck?.name ?? 'Mage Web bolt'}</span>
-                </div>
-              </div>
 
-              <div className="tables-list">
-                {filteredTables.map((t) => {
-                  const isReady = t.tableState === 'READY_TO_START'
-                  const isPlaying = t.tableState === 'DUELING' || t.tableState === 'SIDEBOARDING'
-                  const isWaiting = t.tableState === 'WAITING'
+                <div className="tables-list">
+                  {filteredTables.map((t) => {
+                    const isReady = t.tableState === 'READY_TO_START'
+                    const isPlaying = t.tableState === 'DUELING' || t.tableState === 'SIDEBOARDING'
+                    const isWaiting = t.tableState === 'WAITING'
 
-                  const hasHumanSeat =
-                    (isWaiting || isReady) &&
-                    t.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
-                  const hasAiSeat =
-                    (isWaiting || isReady) &&
-                    t.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
+                    const hasHumanSeat =
+                      (isWaiting || isReady) &&
+                      t.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
+                    const hasAiSeat =
+                      (isWaiting || isReady) &&
+                      t.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
 
-                  const statusClass = isReady
-                    ? 'status-ready'
-                    : isPlaying
-                    ? 'status-playing'
-                    : 'status-waiting'
+                    const statusClass = isReady
+                      ? 'status-ready'
+                      : isPlaying
+                      ? 'status-playing'
+                      : 'status-waiting'
 
-                  const timeAgo = formatTimeAgo(t.createTime)
-                  const skill = getSkillBadge(t.skillLevel)
+                    const timeAgo = formatTimeAgo(t.createTime)
+                    const skill = getSkillBadge(t.skillLevel)
 
-                  return (
-                    <div key={t.tableId} className={`table-card table-row ${statusClass}`}>
-                      <div className="table-card-main">
-                        {/* Top Badges & Status */}
-                        <div className="table-card-top-bar">
-                          <div className="table-badges-left">
-                            {t.isTournament ? (
-                              <span className="table-type-badge tourney" title="Torneo">🏆 Torneo</span>
-                            ) : (
-                              <span className="table-type-badge match" title="Duelo">⚔️ Duelo</span>
-                            )}
-                            {t.passworded && (
-                              <span className="table-badge-lock" title="Mesa privada con contraseña">🔒 Privada</span>
-                            )}
+                    return (
+                      <div key={t.tableId} className={`table-card table-row ${statusClass}`}>
+                        <div className="table-card-main">
+                          <div className="table-card-top-bar">
+                            <div className="table-badges-left">
+                              {t.isTournament ? (
+                                <span className="table-type-badge tourney" title="Torneo">🏆 Torneo</span>
+                              ) : (
+                                <span className="table-type-badge match" title="Duelo">⚔️ Duelo</span>
+                              )}
+                              {t.passworded && (
+                                <span className="table-badge-lock" title="Mesa privada con contraseña">🔒 Privada</span>
+                              )}
+                            </div>
+                            <div className="table-header-right">
+                              {timeAgo && (
+                                <span className="table-time-ago" title={t.createTime ? new Date(t.createTime).toLocaleTimeString() : undefined}>
+                                  ⏱️ {timeAgo}
+                                </span>
+                              )}
+                              <span className={`table-state-badge ${statusClass}`}>{t.tableStateText}</span>
+                            </div>
+                          </div>
+
+                          <div className="table-title-area">
+                            <h3 className="table-name-text" title={t.tableName}>{t.tableName}</h3>
+                          </div>
+
+                          <div className="table-meta-row">
+                            <span className="table-game-tag">🎮 {t.gameType}</span>
+                            <span
+                              className="table-deck-tag"
+                              title={formatDeckTypeName(t.deckType).full}
+                            >
+                              📜 {formatDeckTypeName(t.deckType).short}
+                            </span>
+                            <span className="table-seats-count table-seats">👥 {t.seatsInfo}</span>
                             {skill && (
                               <span className={`table-skill-badge ${skill.className}`} title={`Nivel de habilidad: ${skill.label}`}>
                                 {skill.icon} {skill.label}
@@ -530,243 +609,228 @@ export default function LobbyScreen() {
                             ) : (
                               <span className="table-tag-unrated" title="Partida casual sin rating">Unrated</span>
                             )}
-                          </div>
-                          <div className="table-header-right">
-                            {timeAgo && (
-                              <span className="table-time-ago" title={t.createTime ? new Date(t.createTime).toLocaleTimeString() : undefined}>
-                                ⏱️ {timeAgo}
+                            {t.spectatorsAllowed && (
+                              <span className="table-tag-spectate" title="Espectadores permitidos">👁️ Espectadores</span>
+                            )}
+                            {Number(t.minimumRating) > 0 && (
+                              <span className="table-tag-restriction" title={`Rating mínimo requerido: ${t.minimumRating}`}>
+                                ⭐ Min {t.minimumRating}
                               </span>
                             )}
-                            <span className={`table-state-badge ${statusClass}`}>{t.tableStateText}</span>
+                            {Number(String(t.quitRatio ?? '100').replace('%', '')) < 100 && (
+                              <span className="table-tag-restriction" title={`Máximo porcentaje de abandono permitido: ${t.quitRatio}`}>
+                                🚫 Max Quit {t.quitRatio}
+                              </span>
+                            )}
+                          </div>
+
+                          {t.additionalInfoShort && (
+                            <div className="table-info-strip" title={t.additionalInfoFull || t.additionalInfoShort}>
+                              <span className="info-strip-icon">ℹ️</span>
+                              <span className="info-strip-text">{t.additionalInfoShort}</span>
+                            </div>
+                          )}
+
+                          <div className="table-seats-roster">
+                            {t.seats.map((s, idx) => {
+                              const isOwner = t.controllerName && s.playerName === t.controllerName
+                              const isHuman = !s.playerType || s.playerType === 'HUMAN'
+                              const foundUser = s.playerName
+                                ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
+                                : undefined
+                              const rating = foundUser?.constructedRating ?? (s as any).constructedRating
+                              const historyInfo = formatSeatHistory(s.history, foundUser?.matchHistory)
+                              const seatAvatarId = isHuman
+                                ? s.playerName === conn?.username
+                                  ? conn?.avatarId
+                                  : foundUser?.avatarId
+                                : 13
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`seat-badge ${s.playerName ? 'occupied interactive' : 'empty'} ${isOwner ? 'is-owner' : ''}`}
+                                  onClick={() => {
+                                    if (!s.playerName) return
+                                    setSelectedUser(
+                                      foundUser ?? {
+                                        userName: s.playerName,
+                                        flagName: s.flagName ?? '',
+                                        constructedRating: (s as any).constructedRating || 1500,
+                                        matchHistory: s.history || '',
+                                        infoGames: '',
+                                        matchQuitRatio: 0,
+                                        tourneyHistory: '',
+                                        tourneyQuitRatio: 0,
+                                        infoPing: '',
+                                        generalRating: 1500,
+                                        limitedRating: 1500,
+                                      },
+                                    )
+                                  }}
+                                  style={s.playerName ? { cursor: 'pointer' } : undefined}
+                                  title={s.playerName ? `Ver acciones de ${s.playerName}` : 'Plaza disponible'}
+                                >
+                                  <div className="seat-part-avatar">
+                                    {s.playerName ? (
+                                      <AvatarImage avatarId={seatAvatarId} username={s.playerName} size="small" />
+                                    ) : (
+                                      <span className="seat-icon empty-circle">⭕</span>
+                                    )}
+                                    {s.flagName && <CountryFlag flagName={s.flagName} className="seat-flag" />}
+                                  </div>
+
+                                  <div className="seat-part-main">
+                                    <div className="seat-name-row">
+                                      <span className="seat-player-name">
+                                        {s.playerName || 'Plaza vacía disponible'}
+                                      </span>
+                                      {isOwner && <span className="seat-crown" title="Creador / Host de la mesa">👑 Host</span>}
+                                      {!isHuman && <span className="seat-bot-tag" title="Oponente Inteligencia Artificial">🤖 {s.playerType || 'IA'}</span>}
+                                    </div>
+
+                                    {s.playerName && (rating || historyInfo.short) && (
+                                      <div className="seat-meta-row">
+                                        {rating && <RankBadge elo={rating} compact showElo />}
+                                        {historyInfo.short && (
+                                          <span className="seat-history-pill" title={historyInfo.full || `Historial: ${historyInfo.short}`}>
+                                            🏆 {historyInfo.short}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="seat-part-status">
+                                    {s.playerName ? (
+                                      <span className="seat-ready-indicator" title="Jugador conectado y listo">
+                                        <span className="seat-ready-dot" />
+                                        <span className="seat-ready-text">Listo</span>
+                                      </span>
+                                    ) : (
+                                      <span className="seat-open-badge">Disponible</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
                           </div>
                         </div>
 
-                        {/* Prominent Table Title */}
-                        <div className="table-title-area">
-                          <h3 className="table-name-text" title={t.tableName}>{t.tableName}</h3>
-                        </div>
-
-                        <div className="table-meta-row">
-                          <span className="table-game-tag">🎮 {t.gameType}</span>
-                          <span
-                            className="table-deck-tag"
-                            title={formatDeckTypeName(t.deckType).full}
+                        <div className="table-actions">
+                          {isReady && (
+                            <button
+                              className="primary table-action-btn"
+                              disabled={busyTable === t.tableId}
+                              onClick={() => startTable(t)}
+                            >
+                              Empezar
+                            </button>
+                          )}
+                          {hasHumanSeat && (
+                            <button
+                              className="table-action-btn join-btn"
+                              disabled={busyTable === t.tableId}
+                              onClick={() => joinHuman(t)}
+                            >
+                              Unirse (humano)
+                            </button>
+                          )}
+                          {hasAiSeat && (
+                            <button
+                              className="table-action-btn ai-btn"
+                              disabled={busyTable === t.tableId}
+                              onClick={() => joinAi(t)}
+                            >
+                              Unirse IA
+                            </button>
+                          )}
+                          <button
+                            className="table-action-btn watch-btn"
+                            disabled={busyTable === t.tableId}
+                            onClick={() => watchTable(t)}
                           >
-                            📜 {formatDeckTypeName(t.deckType).short}
-                          </span>
-                          <span className="table-seats-count table-seats">👥 {t.seatsInfo}</span>
-                          {skill && (
-                            <span className={`table-skill-badge ${skill.className}`} title={`Nivel de habilidad: ${skill.label}`}>
-                              {skill.icon} {skill.label}
-                            </span>
+                            👁️ Ver
+                          </button>
+                          {t.isTournament && (
+                            <button
+                              className="table-action-btn bracket-btn"
+                              disabled={busyTable === t.tableId}
+                              onClick={() => void openBracket(t)}
+                              data-testid="open-bracket"
+                            >
+                              🏆 Ver bracket
+                            </button>
                           )}
-                          {t.rated ? (
-                            <span className="table-tag-rated" title="Partida clasificatoria (afecta a ELO)">🏅 Rated</span>
-                          ) : (
-                            <span className="table-tag-unrated" title="Partida casual sin rating">Unrated</span>
-                          )}
-                          {t.spectatorsAllowed && (
-                            <span className="table-tag-spectate" title="Espectadores permitidos">👁️ Espectadores</span>
-                          )}
-                          {Number(t.minimumRating) > 0 && (
-                            <span className="table-tag-restriction" title={`Rating mínimo requerido: ${t.minimumRating}`}>
-                              ⭐ Min {t.minimumRating}
-                            </span>
-                          )}
-                          {Number(String(t.quitRatio ?? '100').replace('%', '')) < 100 && (
-                            <span className="table-tag-restriction" title={`Máximo porcentaje de abandono permitido: ${t.quitRatio}`}>
-                              🚫 Max Quit {t.quitRatio}
-                            </span>
-                          )}
-                        </div>
-
-                        {t.additionalInfoShort && (
-                          <div className="table-info-strip" title={t.additionalInfoFull || t.additionalInfoShort}>
-                            <span className="info-strip-icon">ℹ️</span>
-                            <span className="info-strip-text">{t.additionalInfoShort}</span>
-                          </div>
-                        )}
-
-                        {/* Player Seats Section (Full Width, 3-Part Layout: Avatar, Full Name, Info) */}
-                        <div className="table-seats-roster">
-                          {t.seats.map((s, idx) => {
-                            const isOwner = t.controllerName && s.playerName === t.controllerName
-                            const isHuman = !s.playerType || s.playerType === 'HUMAN'
-                            const foundUser = s.playerName
-                              ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
-                              : undefined
-                            const rating = foundUser?.constructedRating ?? (s as any).constructedRating
-                            const historyInfo = formatSeatHistory(s.history, foundUser?.matchHistory)
-                            const seatAvatarId = isHuman
-                              ? s.playerName === conn?.username
-                                ? conn?.avatarId
-                                : foundUser?.avatarId
-                              : 13
-
-                            return (
-                              <div
-                                key={idx}
-                                className={`seat-badge ${s.playerName ? 'occupied interactive' : 'empty'} ${isOwner ? 'is-owner' : ''}`}
-                                onClick={() => {
-                                  if (!s.playerName) return
-                                  setSelectedUser(
-                                    foundUser ?? {
-                                      userName: s.playerName,
-                                      flagName: s.flagName ?? '',
-                                      constructedRating: (s as any).constructedRating || 1500,
-                                      matchHistory: s.history || '',
-                                      infoGames: '',
-                                      matchQuitRatio: 0,
-                                      tourneyHistory: '',
-                                      tourneyQuitRatio: 0,
-                                      infoPing: '',
-                                      generalRating: 1500,
-                                      limitedRating: 1500,
-                                    },
-                                  )
-                                }}
-                                style={s.playerName ? { cursor: 'pointer' } : undefined}
-                                title={s.playerName ? `Ver acciones de ${s.playerName}` : 'Plaza disponible'}
-                              >
-                                {/* Parte 1: Icono / Avatar & Bandera */}
-                                <div className="seat-part-avatar">
-                                  {s.playerName ? (
-                                    <AvatarImage avatarId={seatAvatarId} username={s.playerName} size="small" />
-                                  ) : (
-                                    <span className="seat-icon empty-circle">⭕</span>
-                                  )}
-                                  {s.flagName && <CountryFlag flagName={s.flagName} className="seat-flag" />}
-                                </div>
-
-                                {/* Parte 2: Nombre Completo (sin cortar, centrado, altura flexible) */}
-                                <div className="seat-part-name">
-                                  <span className="seat-player-name">
-                                    {s.playerName || 'Plaza vacía disponible'}
-                                  </span>
-                                  {isOwner && <span className="seat-crown" title="Creador / Host de la mesa">👑 Host</span>}
-                                  {!isHuman && <span className="seat-bot-tag" title="Oponente Inteligencia Artificial">🤖 {s.playerType || 'IA'}</span>}
-                                </div>
-
-                                {/* Parte 3: Resto de info (Historial, Rating, Estado) */}
-                                <div className="seat-part-info">
-                                  {historyInfo.short && (
-                                    <span className="seat-history-pill" title={historyInfo.full || `Historial: ${historyInfo.short}`}>
-                                      🏆 {historyInfo.short}
-                                    </span>
-                                  )}
-                                  {rating && <RankBadge elo={rating} compact showElo />}
-                                  {s.playerName ? (
-                                    <span className="seat-ready-indicator" title="Jugador conectado y listo">
-                                      <span className="seat-ready-dot" />
-                                      <span className="seat-ready-text">Listo</span>
-                                    </span>
-                                  ) : (
-                                    <span className="seat-open-badge">Disponible</span>
-                                  )}
-                                </div>
-                              </div>
-                            )
-                          })}
                         </div>
                       </div>
+                    )
+                  })}
 
-                      <div className="table-actions">
-                        {isReady && (
-                          <button
-                            className="primary table-action-btn"
-                            disabled={busyTable === t.tableId}
-                            onClick={() => startTable(t)}
-                          >
-                            Empezar
-                          </button>
-                        )}
-                        {hasHumanSeat && (
-                          <button
-                            className="table-action-btn join-btn"
-                            disabled={busyTable === t.tableId}
-                            onClick={() => joinHuman(t)}
-                          >
-                            Unirse (humano)
-                          </button>
-                        )}
-                        {hasAiSeat && (
-                          <button
-                            className="table-action-btn ai-btn"
-                            disabled={busyTable === t.tableId}
-                            onClick={() => joinAi(t)}
-                          >
-                            Unirse IA
-                          </button>
-                        )}
-                        <button
-                          className="table-action-btn watch-btn"
-                          disabled={busyTable === t.tableId}
-                          onClick={() => watchTable(t)}
-                        >
-                          👁️ Ver
+                  {filteredTables.length === 0 && tables.length === 0 && (
+                    <div className="tables-empty-state">
+                      <span className="empty-icon">🏰</span>
+                      <h3>No hay mesas disponibles</h3>
+                      <p>Crea una nueva partida o espera a otros jugadores.</p>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <button className="primary" onClick={() => setShowCreate(true)}>
+                          ➕ Crear Mesa
                         </button>
-                        {t.isTournament && (
-                          <button
-                            className="table-action-btn bracket-btn"
-                            disabled={busyTable === t.tableId}
-                            onClick={() => void openBracket(t)}
-                            data-testid="open-bracket"
-                          >
-                            🏆 Ver bracket
-                          </button>
-                        )}
                       </div>
                     </div>
-                  )
-                })}
+                  )}
 
-                {filteredTables.length === 0 && tables.length === 0 && (
-                  <div className="tables-empty-state">
-                    <span className="empty-icon">🏰</span>
-                    <h3>No hay mesas disponibles en este momento</h3>
-                    <p>Crea una nueva partida o lanza una demo rápida contra la IA.</p>
-                    <button className="primary" onClick={() => setShowCreate(true)}>
-                      ➕ Crear Nueva Mesa
-                    </button>
-                  </div>
-                )}
+                  {filteredTables.length === 0 && tables.length > 0 && (
+                    <div className="tables-empty-match">
+                      <span className="empty-match-icon">🔍</span>
+                      <span className="empty-match-title">No hay mesas que coincidan con los filtros</span>
+                      <p className="empty-match-desc">
+                        Hay {tables.length} {tables.length === 1 ? 'mesa activa' : 'mesas activas'} en el servidor, pero ninguna cumple los criterios seleccionados.
+                      </p>
+                      <button
+                        type="button"
+                        className="empty-reset-btn"
+                        onClick={() => setFilters(INITIAL_TABLE_FILTERS)}
+                      >
+                        Restablecer filtros
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          )}
 
-                {filteredTables.length === 0 && tables.length > 0 && (
-                  <div className="tables-empty-match">
-                    <span className="empty-match-icon">🔍</span>
-                    <span className="empty-match-title">No hay mesas que coincidan con los filtros</span>
-                    <p className="empty-match-desc">
-                      Hay {tables.length} {tables.length === 1 ? 'mesa activa' : 'mesas activas'} en el servidor, pero ninguna cumple los criterios seleccionados.
-                    </p>
-                    <button
-                      type="button"
-                      className="empty-reset-btn"
-                      onClick={() => setFilters(INITIAL_TABLE_FILTERS)}
-                    >
-                      Restablecer filtros
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
-        )}
+          {activeTab === 'decks' && (
+            deckBuilderId ? (
+              <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+            ) : (
+              <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
+            )
+          )}
 
-        {activeTab === 'decks' && (
-          deckBuilderId ? (
-            <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
-          ) : (
-            <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
-          )
-        )}
+          {activeTab === 'matches' && (
+            <FinishedMatchesPanel
+              users={users}
+              onInspectUser={(username) => openLeaderboard(username, 'profile')}
+            />
+          )}
+        </main>
 
-        {activeTab === 'community' && (
-          <div className="lobby-community-grid">
-            <section className="panel chat-panel">
-              <h2>💬 Sala de Chat Global</h2>
+        {/* RIGHT: Persistent Chat + Users panel (always visible) */}
+        <aside className="lobby-aside">
+          <section className="aside-chat-section">
+            <div className="aside-section-header">
+              <span className="aside-section-title">💬 Chat Global</span>
+              {unreadChat > 0 && (
+                <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
+              )}
+            </div>
+            <div className="aside-chat-body">
               <ChatBox
                 prefill={chatPrefill}
                 onPrefillUsed={() => setChatPrefill('')}
+                onMessage={() => setUnreadChat(0)}
                 onUserClick={(username) => {
                   const found = users.find(
                     (u) => u.userName.toLowerCase() === username.toLowerCase(),
@@ -790,97 +854,90 @@ export default function LobbyScreen() {
                   }
                 }}
               />
-            </section>
+            </div>
+          </section>
 
-            <section className="panel users-panel">
-              <div className="users-panel-header">
-                <h2>👥 Jugadores Conectados ({users.length})</h2>
-                <button
-                  type="button"
-                  className="view-leaderboard-btn"
-                  onClick={() => openLeaderboard(conn?.username, 'room')}
-                  title="Abrir clasificación de la sala"
+          <section className="aside-users-section">
+            <div className="aside-section-header">
+              <span className="aside-section-title">👥 Online ({users.length})</span>
+              <button
+                type="button"
+                className="view-leaderboard-btn"
+                onClick={() => openLeaderboard(conn?.username, 'room')}
+                title="Abrir clasificación de la sala"
+              >
+                🏆
+              </button>
+            </div>
+            <ul className="users-list aside-users-list">
+              {users.map((u) => (
+                <li
+                  key={u.userName}
+                  className="user-list-item interactive"
+                  onClick={() => setSelectedUser(u)}
+                  style={{ cursor: 'pointer' }}
+                  title={`Ver acciones de ${u.userName}`}
                 >
-                  🏆 Leaderboard
-                </button>
-              </div>
-              <ul className="users-list">
-                {users.map((u) => (
-                  <li
-                    key={u.userName}
-                    className="user-list-item interactive"
-                    onClick={() => setSelectedUser(u)}
-                    style={{ cursor: 'pointer' }}
-                    title={`Ver acciones de usuario para ${u.userName}`}
-                  >
-                    <span className={`dot ${u.infoGames ? 'playing' : 'online'}`} />
-                    <AvatarImage avatarId={u.avatarId} username={u.userName} size="medium" />
-                    <div className="user-info-col">
-                      <div className="user-name-row">
-                        {u.flagName && <CountryFlag flagName={u.flagName} className="user-list-flag" showTextFallback />}
-                        <span className="user-name-text">{u.userName}</span>
-                        <RankBadge elo={u.constructedRating} compact showElo />
-                        {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
-                      </div>
-                      {u.matchHistory && (
-                        <span className="user-history-text">Historial: {u.matchHistory}</span>
-                      )}
+                  <span className={`dot ${u.infoGames ? 'playing' : 'online'}`} />
+                  <AvatarImage avatarId={u.avatarId} username={u.userName} size="medium" />
+                  <div className="user-info-col">
+                    <div className="user-name-row">
+                      {u.flagName && <CountryFlag flagName={u.flagName} className="user-list-flag" showTextFallback />}
+                      <span className="user-name-text">{u.userName}</span>
                     </div>
-                    {u.infoGames ? (
-                      <span className="game-info-badge">⚔️ {u.infoGames}</span>
-                    ) : (
-                      <span className="lobby-idle-badge">En lobby</span>
-                    )}
-                  </li>
-                ))}
-                {users.length === 0 && (
-                  <li className="users-empty-item">
-                    <span className="empty">Esperando jugadores en la sala…</span>
-                  </li>
-                )}
-              </ul>
-            </section>
-          </div>
-        )}
-
-        {/* Tab: Finished Matches History & Replays */}
-        {activeTab === 'matches' && (
-          <FinishedMatchesPanel
-            users={users}
-            onInspectUser={(username) => openLeaderboard(username, 'profile')}
-          />
-        )}
+                    <div className="user-name-row">
+                      <RankBadge elo={u.constructedRating} compact />
+                      {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
+                    </div>
+                  </div>
+                  {u.infoGames ? (
+                    <span className="game-info-badge">⚔️</span>
+                  ) : (
+                    <span className="lobby-idle-badge">Lobby</span>
+                  )}
+                </li>
+              ))}
+              {users.length === 0 && (
+                <li className="users-empty-item">
+                  <span className="empty">Esperando jugadores…</span>
+                </li>
+              )}
+            </ul>
+          </section>
+        </aside>
       </div>
 
       {/* Collapsible Debug Drawer Toggle at Bottom */}
-      <div className="debug-drawer-container">
-        <button
-          type="button"
-          className="debug-toggle-btn"
-          onClick={() => setShowDebug(!showDebug)}
-        >
-          <span>🛠️ Eventos de red ({events.length})</span>
-          <span>{showDebug ? '▼ Ocultar' : '▲ Ver'}</span>
-        </button>
+      {import.meta.env.DEV && (
+        <div className="debug-drawer-container">
+          <button
+            type="button"
+            className="debug-toggle-btn"
+            onClick={() => setShowDebug(!showDebug)}
+          >
+            <span>🛠️ Eventos de red ({events.length})</span>
+            <span>{showDebug ? '▼ Ocultar' : '▲ Ver'}</span>
+          </button>
 
-        {showDebug && (
-          <div className="debug-drawer-panel panel">
-            <div className="debug-drawer-header">
-              <h3>Registro de Eventos WebSocket</h3>
-              <span className="debug-count">{events.length} recibidos</span>
+          {showDebug && (
+            <div className="debug-drawer-panel panel">
+              <div className="debug-drawer-header">
+                <h3>Registro de Eventos WebSocket</h3>
+                <span className="debug-count">{events.length} recibidos</span>
+              </div>
+              <ul className="events-list">
+                {events.slice(-50).map((e, i) => (
+                  <li key={i}>
+                    <span className="debug-time">{new Date(e.time).toLocaleTimeString()}</span>
+                    <span className="debug-method">{e.method}</span>
+                  </li>
+                ))}
+                {events.length === 0 && <p className="empty">Esperando eventos…</p>}
+              </ul>
             </div>
-            <ul className="events-list">
-              {events.slice(-50).map((e, i) => (
-                <li key={i}>
-                  <span className="debug-time">{new Date(e.time).toLocaleTimeString()}</span>
-                  <span className="debug-method">{e.method}</span>
-                </li>
-              ))}
-              {events.length === 0 && <p className="empty">Esperando eventos…</p>}
-            </ul>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {showCreate && <CreateTableDialog onClose={() => setShowCreate(false)} />}
       {showLeaderboard && (

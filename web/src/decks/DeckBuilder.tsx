@@ -8,6 +8,10 @@ import { scryfallCardArtCrop, scryfallCardImage, scryfallCardBackImage } from '.
 import SearchPanel from './SearchPanel'
 import DeckListPanel from './DeckListPanel'
 import { ArenaDeckHeader } from './ArenaDeckHeader'
+import { BasicLandAdder } from './BasicLandAdder'
+import { BASIC_LAND_PRESETS, type BasicLandPreset } from './deckUtils'
+import { SampleHandModal } from './SampleHandModal'
+import { CardPrintingsModal } from './CardPrintingsModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat } from './formatRules'
 import { useStore, setMyDeck } from '../state/store'
@@ -27,6 +31,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
+  const [showSampleHand, setShowSampleHand] = useState(false)
+  const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
 
   const storage = useMemo(() => getDeckStorage(), [])
   const equipped = useStore((s) => s.myDeck)
@@ -243,6 +249,76 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     schedulePersist({ ...deck, coverCard: c })
   }
 
+  const handleAddBasicLand = (preset: BasicLandPreset) => {
+    if (!deck) return
+    const existingIdx = deck.cards.findIndex(
+      (c) => c.cardName.toLowerCase() === preset.name.toLowerCase()
+    )
+    let nextCards: DeckCard[]
+    if (existingIdx >= 0) {
+      nextCards = deck.cards.map((c, i) =>
+        i === existingIdx ? { ...c, amount: Math.min(99, c.amount + 1) } : c
+      )
+    } else {
+      nextCards = [
+        ...deck.cards,
+        { cardName: preset.name, setCode: preset.setCode, cardNumber: preset.cardNumber, amount: 1 },
+      ]
+    }
+    schedulePersist({ ...deck, cards: nextCards, coverCard: deck.coverCard ?? nextCards[0] })
+  }
+
+  const handleRemoveBasicLand = (preset: BasicLandPreset) => {
+    if (!deck) return
+    const existingIdx = deck.cards.findIndex(
+      (c) => c.cardName.toLowerCase() === preset.name.toLowerCase()
+    )
+    if (existingIdx < 0) return
+    const nextCards = deck.cards.flatMap((c, i) => {
+      if (i === existingIdx) {
+        return c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]
+      }
+      return [c]
+    })
+    schedulePersist({ ...deck, cards: nextCards })
+  }
+
+  const handleApplySuggestedLands = (
+    suggested: { name: string; setCode: string; cardNumber: string; amount: number }[]
+  ) => {
+    if (!deck) return
+    const basicNames = new Set(BASIC_LAND_PRESETS.map((p) => p.name.toLowerCase()))
+    const nonBasicCards = deck.cards.filter((c) => !basicNames.has(c.cardName.toLowerCase()))
+    const newLands: DeckCard[] = suggested.map((s) => ({
+      cardName: s.name,
+      setCode: s.setCode,
+      cardNumber: s.cardNumber,
+      amount: s.amount,
+    }))
+    const nextCards = [...nonBasicCards, ...newLands]
+    schedulePersist({ ...deck, cards: nextCards, coverCard: deck.coverCard ?? nextCards[0] })
+  }
+
+  const handleChangePrinting = (card: DeckCard) => {
+    setPrintingTargetCard(card)
+  }
+
+  const handleApplyPrinting = (setCode: string, cardNumber: string) => {
+    if (!deck || !printingTargetCard) return
+    const oldKey = deckCardKey(printingTargetCard)
+    const updateCard = (c: DeckCard) => {
+      if (deckCardKey(c) === oldKey) {
+        return { ...c, setCode, cardNumber }
+      }
+      return c
+    }
+    const nextCards = deck.cards.map(updateCard)
+    const nextSide = deck.sideboard.map(updateCard)
+    schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+    updateMetaForDeck([{ ...printingTargetCard, setCode, cardNumber }])
+    setPrintingTargetCard(null)
+  }
+
   // Hover floating card preview handler (supports dual-faced / transform cards)
   const handleHoverCard = (
     card: DeckCard | ScryfallSearchCard,
@@ -317,19 +393,13 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   return (
     <div className="deck-builder">
-      {/* MTG Arena Top Navbar */}
+      {/* Top Navbar */}
       <header className="arena-top-nav deck-builder-top">
         <div className="arena-nav-left">
           <button type="button" className="arena-nav-back builder-back" onClick={onClose}>
-            <span>←</span> Galería
+            <span>←</span> Volver a Mazos
           </button>
-          <div className="arena-nav-links">
-            <span className="arena-nav-item">Home</span>
-            <span className="arena-nav-item">Profile</span>
-            <span className="arena-nav-item active">Decks</span>
-            <span className="arena-nav-item">Packs</span>
-            <span className="arena-nav-item">Store</span>
-          </div>
+          <span className="deck-builder-title">Editor de Mazos</span>
         </div>
 
         <div className="arena-nav-right">
@@ -407,6 +477,16 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             onToggleLayout={() => setLayout((l) => (l === 'vertical' ? 'horizontal' : 'vertical'))}
           />
 
+          {/* Basic Land Quick Adder & Suggester */}
+          <BasicLandAdder
+            cards={deck.cards}
+            metaMap={metaMap}
+            format={format}
+            onAddLand={handleAddBasicLand}
+            onRemoveLand={handleRemoveBasicLand}
+            onApplySuggestedLands={handleApplySuggestedLands}
+          />
+
           {/* Deck List (Card Strips) */}
           <DeckListPanel
             cards={deck.cards}
@@ -422,6 +502,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             onSetCover={handleSetCover}
             onHover={handleHoverCard}
             onLeave={handleLeaveCard}
+            onChangePrinting={handleChangePrinting}
             onDropCard={handleDropCardOnDeck}
             onDropFile={async (f) => {
               const text = await f.text()
@@ -481,6 +562,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               </button>
               <button
                 type="button"
+                className="builder-act"
+                onClick={() => setShowSampleHand(true)}
+                title="Simular y probar mano inicial con London Mulligan"
+              >
+                🖐️ Probar Mano
+              </button>
+              <button
+                type="button"
                 className={`builder-act primary ${equipped?.name === deck.name ? 'is-equipped' : ''}`}
                 onClick={() => setMyDeck(deck)}
               >
@@ -521,11 +610,32 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
             {/* Glowing Signature Done Button */}
             <button type="button" className="builder-done" onClick={onClose}>
-              Done
+              Guardar y Salir
             </button>
           </div>
         </section>
       </div>
+
+      {/* Sample Hand & Playtest Modal */}
+      {showSampleHand && deck && (
+        <SampleHandModal
+          deckName={deck.name}
+          cards={deck.cards}
+          metaMap={metaMap}
+          onClose={() => setShowSampleHand(false)}
+        />
+      )}
+
+      {/* Card Printing & Alternate Art Selector Modal */}
+      {printingTargetCard && (
+        <CardPrintingsModal
+          cardName={printingTargetCard.cardName}
+          currentSet={printingTargetCard.setCode}
+          currentNumber={printingTargetCard.cardNumber}
+          onSelectPrinting={handleApplyPrinting}
+          onClose={() => setPrintingTargetCard(null)}
+        />
+      )}
 
       {/* Floating Card Image Preview on Hover */}
       {hoverPreview && (

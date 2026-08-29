@@ -58,7 +58,9 @@ export interface LoginOptions {
 
 export async function login(page: Page, username: string, opts: LoginOptions = {}): Promise<void> {
   await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : 8787}`)
-  await expect(page.locator('form.login-card')).toBeVisible({ timeout: 20_000 })
+  if (await page.locator('details.login-network-box:not([open])').count() > 0) {
+    await page.locator('summary.login-network-header').click()
+  }
   await page.getByLabel(/Proxy/i).fill('localhost')
   await page.getByLabel(/XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')
   await page.getByLabel(/Port/i).fill(process.env.E2E_SERVER_PORT || '17171')

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { DeckV2 } from './types'
 import { deckMainCount } from './types'
+import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
 import './DeckBox.css'
 
 function useDeckCoverUrl(deck: DeckV2): string | null {
@@ -52,11 +53,24 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
   const coverUrl = useDeckCoverUrl(deck)
   const total = deckMainCount(deck)
   const colors = deck.colors
+  const formatReport = validateDeckForFormat(deck)
+  const hasErrors = formatReport.issues.some((i) => i.severity === 'error')
+  const minRequired = FORMAT_CONFIGS[deck.format]?.minMain ?? 60
+  const isValid = !hasErrors && total >= minRequired
+  const issueTooltip = formatReport.issues.map((i) => `• ${i.message}`).join('\n')
+
   return (
     <div className={`deck-box ${selected ? 'selected' : ''}`} onClick={onSelect} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}>
       <div className="deck-box-art">
         {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deck.name.slice(0, 2).toUpperCase()}</div>}
         <div className="deck-box-art-scrim" />
+        <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} válido`}>
+          {isValid ? (
+            <span className="format-badge-valid">✓ {deck.format}</span>
+          ) : (
+            <span className="format-badge-invalid">⚠️ {total}/{minRequired}</span>
+          )}
+        </div>
       </div>
       <div className="deck-box-footer">
         <span className="deck-box-name" title={deck.name}>{deck.name}</span>

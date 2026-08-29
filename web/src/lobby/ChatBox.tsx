@@ -50,9 +50,10 @@ interface ChatBoxProps {
   prefill?: string
   onPrefillUsed?: () => void
   onUserClick?: (username: string) => void
+  onMessage?: () => void
 }
 
-export default function ChatBox({ prefill, onPrefillUsed, onUserClick }: ChatBoxProps = {}) {
+export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage }: ChatBoxProps = {}) {
   const chatId = useStore((s) => s.roomChatId)
   const messages = useStore((s) => s.chatMessages)
   const [text, setText] = useState('')
@@ -61,6 +62,10 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick }: ChatBox
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    onMessage?.()
+  }, [messages.length])
 
   useEffect(() => {
     if (prefill) {

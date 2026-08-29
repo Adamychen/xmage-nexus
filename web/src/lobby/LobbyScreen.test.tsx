@@ -1,6 +1,56 @@
 import { describe, expect, it } from 'vitest'
-import { extractLobbyUsers } from './LobbyScreen'
+import { extractLobbyUsers, formatSeatHistory } from './LobbyScreen'
 import type { RoomUsersView, UsersView } from '../net/types'
+
+describe('formatSeatHistory', () => {
+  it('formats XMage seat history with quit counts cleanly without truncating', () => {
+    expect(formatSeatHistory('720 (I:15 T:8 Q:3)')).toEqual({
+      short: '720 (Q:3)',
+      full: '720 partidas jugadas (3 abandonos, 15 inactivos, 8 timeouts)',
+    })
+    expect(formatSeatHistory('1817 (I:4 T:12 Q:0)')).toEqual({
+      short: '1817',
+      full: '1817 partidas jugadas (4 inactivos, 12 timeouts)',
+    })
+    expect(formatSeatHistory('239 (I:3 T:9 Q:1)')).toEqual({
+      short: '239 (Q:1)',
+      full: '239 partidas jugadas (1 abandonos, 3 inactivos, 9 timeouts)',
+    })
+    expect(formatSeatHistory('8 (Q:1)')).toEqual({
+      short: '8 (Q:1)',
+      full: '8 partidas jugadas (1 abandonos)',
+    })
+    expect(formatSeatHistory('2')).toEqual({
+      short: '2',
+      full: '2 partidas jugadas',
+    })
+  })
+
+  it('formats Win-Loss and raw tournament records', () => {
+    expect(formatSeatHistory('10-2')).toEqual({
+      short: '10-2',
+      full: '10-2 (Victorias - Derrotas)',
+    })
+    expect(formatSeatHistory('5-5-1')).toEqual({
+      short: '5-5-1',
+      full: '5-5-1 (Victorias - Derrotas)',
+    })
+  })
+
+  it('formats user profile history strings with percentages', () => {
+    expect(
+      formatSeatHistory(undefined, 'Matches: 265 (I:3 T:1 Q:13) (6%), Tourneys: 0 (0%), Constructed Rating: 1500')
+    ).toEqual({
+      short: '265 (6%)',
+      full: 'Matches: 265 (I:3 T:1 Q:13) (6%), Tourneys: 0 (0%), Constructed Rating: 1500',
+    })
+  })
+
+  it('handles null and undefined', () => {
+    expect(formatSeatHistory(undefined, undefined)).toEqual({ short: null, full: '' })
+    expect(formatSeatHistory('', '')).toEqual({ short: null, full: '' })
+  })
+})
 
 describe('extractLobbyUsers', () => {
   it('extracts users when proxy sends Array of RoomUsersView (actual XMage Java proxy format)', () => {

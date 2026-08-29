@@ -36,6 +36,7 @@ export default function DeckListPanel({
   onSetCover,
   onHover,
   onLeave,
+  onChangePrinting,
   onDropCard,
   onDropFile,
 }: {
@@ -52,6 +53,7 @@ export default function DeckListPanel({
   onSetCover: (c: DeckCard) => void
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
+  onChangePrinting?: (c: DeckCard) => void
   onDropCard?: (cardData: any, target: 'main' | 'sideboard') => void
   onDropFile?: (f: File) => void
 }) {
@@ -149,6 +151,7 @@ export default function DeckListPanel({
                 onSetCover={onSetCover}
                 onHover={onHover}
                 onLeave={onLeave}
+                onChangePrinting={onChangePrinting}
               />
             </div>
           )}
@@ -182,6 +185,7 @@ export default function DeckListPanel({
                       onSetCover={onSetCover}
                       onHover={onHover}
                       onLeave={onLeave}
+                      onChangePrinting={onChangePrinting}
                     />
                   )
                 })}
@@ -221,6 +225,7 @@ export default function DeckListPanel({
                     onRemove={onRemove}
                     onHover={onHover}
                     onLeave={onLeave}
+                    onChangePrinting={onChangePrinting}
                   />
                 )
               })}
@@ -263,6 +268,7 @@ export default function DeckListPanel({
                         onSetCover={onSetCover}
                         onHover={onHover}
                         onLeave={onLeave}
+                        onChangePrinting={onChangePrinting}
                       />
                     )
                   })}

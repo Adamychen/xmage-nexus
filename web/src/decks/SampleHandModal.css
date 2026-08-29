@@ -1,0 +1,332 @@
+.sample-hand-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 150ms ease;
+}
+
+.sample-hand-modal {
+  background: #0d121d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  position: relative;
+}
+
+.sample-hand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(20, 26, 38, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sample-hand-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.sample-hand-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f7fafc;
+}
+
+.sample-hand-deck-name {
+  font-size: 0.85rem;
+  color: #ffd070;
+  font-weight: 700;
+}
+
+.sample-hand-stats-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stats-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #cbd5e0;
+}
+
+.stats-chip.lands {
+  border-color: rgba(72, 187, 120, 0.4);
+  color: #68d391;
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.stats-chip.spells {
+  border-color: rgba(124, 92, 255, 0.4);
+  color: #c4b5fd;
+  background: rgba(124, 92, 255, 0.1);
+}
+
+.stats-chip.turn {
+  border-color: rgba(255, 208, 112, 0.4);
+  color: #ffd070;
+  background: rgba(255, 208, 112, 0.1);
+}
+
+.sample-hand-close-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.sample-hand-close-btn:hover {
+  color: white;
+}
+
+/* London Mulligan Banner */
+.mulligan-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(237, 137, 54, 0.25) 0%, rgba(221, 107, 32, 0.15) 100%);
+  border-bottom: 1px solid rgba(237, 137, 54, 0.4);
+  color: #fbd38d;
+  font-size: 0.84rem;
+}
+
+.confirm-keep-btn {
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 120ms;
+}
+
+.confirm-keep-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Cards Area */
+.sample-hand-cards-area {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sample-hand-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+}
+
+.sample-card-item {
+  width: 130px;
+  height: 185px;
+  border-radius: 10px;
+  background: #1a202c;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.sample-card-item:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.4);
+  z-index: 10;
+}
+
+.sample-card-item.is-land {
+  border-color: rgba(72, 187, 120, 0.35);
+}
+
+.sample-card-item.selected-bottom {
+  border-color: #f56565;
+  opacity: 0.55;
+  transform: translateY(6px);
+}
+
+.sample-card-art {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #0f1419;
+}
+
+.sample-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sample-card-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #718096;
+}
+
+.sample-card-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.8) 100%);
+}
+
+.sample-card-cost {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: #ffd070;
+}
+
+.sample-card-footer {
+  padding: 6px 8px;
+  background: rgba(10, 14, 20, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sample-card-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.land-indicator {
+  font-size: 0.62rem;
+  color: #68d391;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bottom-badge {
+  position: absolute;
+  inset: 0;
+  background: rgba(229, 62, 62, 0.75);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Hover Dock Preview */
+.sample-hand-preview-dock {
+  position: absolute;
+  right: 20px;
+  bottom: 70px;
+  width: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  z-index: 50;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: fadeIn 100ms ease;
+}
+
+.sample-hand-preview-dock img {
+  width: 100%;
+  display: block;
+}
+
+/* Footer Actions */
+.sample-hand-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(20, 26, 38, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sample-hand-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sample-action-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.sample-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+}
+
+.sample-action-btn.primary {
+  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+  border-color: #4299e1;
+  color: white;
+}
+
+.sample-action-btn.reset {
+  background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+  border-color: #9f7aea;
+  color: white;
+}

@@ -39,6 +39,7 @@ export function ArenaCardStrip({
   onSetCover,
   onHover,
   onLeave,
+  onChangePrinting,
   sideboard = false,
   onSwap,
   swapLabel,
@@ -54,6 +55,7 @@ export function ArenaCardStrip({
   onSetCover?: (c: DeckCard) => void
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
+  onChangePrinting?: (c: DeckCard) => void
   sideboard?: boolean
   onSwap?: (key: string) => void
   swapLabel?: string
@@ -174,6 +176,16 @@ export function ArenaCardStrip({
         >
           +
         </button>
+        {onChangePrinting && (
+          <button
+            type="button"
+            className="strip-btn print"
+            onClick={() => onChangePrinting(card)}
+            title="Cambiar edición / arte de la carta"
+          >
+            🎨
+          </button>
+        )}
         {onSetCover && (
           <button
             type="button"

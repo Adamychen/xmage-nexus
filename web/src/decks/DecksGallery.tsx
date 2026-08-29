@@ -217,6 +217,58 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     setSelectedId(upd.id)
   }
 
+  const handleBackupAll = async () => {
+    const customDecks = await storage.list()
+    if (customDecks.length === 0) {
+      alert('No tienes mazos personalizados para exportar.')
+      return
+    }
+    const payload = {
+      app: 'xmage-nexus',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      decks: customDecks,
+    }
+    const text = JSON.stringify(payload, null, 2)
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `xmage-nexus-decks-backup-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+  }
+
+  const handleRestoreBackup = async (f: File) => {
+    try {
+      const text = await f.text()
+      const json = JSON.parse(text)
+      const deckList: DeckV2[] = Array.isArray(json) ? json : (Array.isArray(json.decks) ? json.decks : [])
+      if (deckList.length === 0) {
+        alert('El archivo no contiene una copia de seguridad válida de mazos.')
+        return
+      }
+      for (const d of deckList) {
+        if (d && typeof d === 'object' && d.name && Array.isArray(d.cards)) {
+          const v2: DeckV2 = {
+            ...d,
+            id: d.id || makeDeckId(),
+            createdAt: d.createdAt || Date.now(),
+            updatedAt: Date.now(),
+            source: 'custom',
+          }
+          await storage.put(v2)
+        }
+      }
+      await load()
+      alert(`¡Se restauraron ${deckList.length} mazo(s) con éxito!`)
+    } catch {
+      alert('Error al leer el archivo JSON de copia de seguridad.')
+    }
+  }
+
   const handleFile = async (f: File) => {
     const text = await f.text()
     const name = f.name.replace(/\.(dck|txt|cod|dec)$/i, '')
@@ -229,7 +281,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   return (
     <div className="decks-gallery">
       <header className="decks-gallery-top">
-        <h1 className="decks-title">DECKS</h1>
+        <h1 className="decks-title">MAZOS</h1>
 
         <div className="gallery-view-tabs">
           <button
@@ -252,19 +304,19 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <>
             <div className="decks-filters">
               <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
-                <option>All Decks</option>
+                <option value="All Decks">Todos los formatos</option>
                 {ALL_FORMATS.map((f) => (
                   <option key={f} value={f}>{f}</option>
                 ))}
-                <option>Favoritos</option>
+                <option value="Favoritos">★ Favoritos</option>
               </select>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
-                <option value="updated">Last Modified</option>
+                <option value="updated">Modificado recientemente</option>
                 <option value="name">Nombre A–Z</option>
-                <option value="size">Tamaño</option>
+                <option value="size">Tamaño (cartas)</option>
               </select>
               <div className="decks-search-wrap">
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="decks-search" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar mazo..." className="decks-search" />
                 {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
               </div>
               <div className="decks-mana-filter">
@@ -294,25 +346,34 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <footer className="decks-footer">
             <div className="decks-footer-left">
               <label className="decks-footer-btn">
-                IMPORT
+                📥 Importar archivo
                 <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleFile(f)
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>IMPORT TEXT</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>EXPORT .DCK</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>EXPORT ARENA</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>CLONE</button>
-              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>DELETE</button>
-              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ FAVORITE</button>
+              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>📝 Pegar lista</button>
+              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title="Exportar todos los mazos personalizados en un archivo JSON">📦 Backup Global</button>
+              <label className="decks-footer-btn" title="Restaurar copia de seguridad de mazos JSON">
+                📥 Restaurar Backup
+                <input type="file" accept=".json" hidden onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  if (f) await handleRestoreBackup(f)
+                  e.currentTarget.value = ''
+                }} />
+              </label>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>💾 Exportar .dck</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>📋 Exportar Arena</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>📑 Duplicar</button>
+              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>🗑️ Borrar</button>
+              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ Favorito</button>
             </div>
-            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>Edit Deck</button>
+            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>✏️ Editar Mazo</button>
           </footer>
         </>
       ) : (
-        <div style={{ padding: '20px 24px', flex: 1, minHeight: 'calc(100vh - 120px)' }}>
+        <div style={{ padding: '16px 20px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
           <DeckBrowser
             onCloneDeck={handleCloneFromBrowser}
             onOpenBuilder={(deckId) => onEdit(deckId)}

@@ -63,15 +63,18 @@
   display: flex;
   background: rgba(10, 13, 28, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 4px 16px 0;
-  gap: 8px;
+  padding: 8px 16px;
+  gap: 6px;
 }
 
 .leaderboard-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 10px 16px;
+  border: 1px solid transparent;
   color: #8c96c0;
   font-size: 12.5px;
   font-weight: 700;
@@ -81,11 +84,14 @@
 
 .leaderboard-tab-btn:hover {
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .leaderboard-tab-btn.active {
-  color: #ffd070;
-  border-bottom-color: #ffd070;
+  background: rgba(124, 92, 255, 0.25);
+  border-color: rgba(124, 92, 255, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(124, 92, 255, 0.3);
 }
 
 /* Body */

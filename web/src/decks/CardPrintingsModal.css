@@ -1,0 +1,196 @@
+.printings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 150ms ease;
+}
+
+.printings-modal {
+  background: #0d121d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  position: relative;
+}
+
+.printings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(20, 26, 38, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px;
+}
+
+.printings-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.printings-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f7fafc;
+}
+
+.printings-card-name {
+  font-size: 0.9rem;
+  color: #ffd070;
+  font-weight: 700;
+}
+
+.printings-close-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.printings-close-btn:hover {
+  color: white;
+}
+
+.printings-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 280px;
+}
+
+.printings-status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.printings-status-box.error {
+  color: #fc8181;
+}
+
+.printings-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffd070;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.printings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+}
+
+.printing-card-item {
+  background: #141a24;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 140ms ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.printing-card-item:hover {
+  border-color: #ffd070;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(255, 208, 112, 0.25);
+}
+
+.printing-card-item.selected {
+  border-color: #48bb78;
+  box-shadow: 0 0 16px rgba(72, 187, 120, 0.35);
+}
+
+.printing-img-wrap {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  position: relative;
+  background: #080c10;
+  overflow: hidden;
+}
+
+.printing-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.printing-selected-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #38a169;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.printing-info {
+  padding: 8px 10px;
+  background: rgba(10, 14, 20, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.printing-set-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.printing-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: #a0aec0;
+}
+
+.printing-set-code {
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+}
+
+.printing-rarity {
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+.printing-rarity.mythic { color: #f6ad55; }
+.printing-rarity.rare { color: #ffd700; }
+.printing-rarity.uncommon { color: #a0aec0; }
+.printing-rarity.common { color: #718096; }
