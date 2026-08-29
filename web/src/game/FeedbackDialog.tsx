@@ -20,6 +20,22 @@ function isResultOk(result: { ok: boolean; error?: string }, fallback: string) {
   return false
 }
 
+function getFeedbackKicker(prompt: FeedbackPrompt): { icon: string; label: string } {
+  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: 'ELIGE MODO' }
+  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: 'ELIGE HABILIDAD' }
+  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: 'SELECCIONA COLOR' }
+  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: 'NOMBRA UNA CARTA O TIPO' }
+  if (prompt.method === 'GAME_CHOOSE_NUMBER' || prompt.method === 'GAME_GET_AMOUNT' || prompt.method === 'GAME_PLAY_XMANA') {
+    return { icon: '🔢', label: 'SELECCIONA CANTIDAD' }
+  }
+  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: 'DISTRIBUYE CANTIDADES' }
+  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: 'SELECCIONA JUGADOR' }
+  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: 'ELIGE UN MONTÓN' }
+  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: 'TOMA UNA DECISIÓN' }
+  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: 'CONFIRMACIÓN' }
+  return { icon: '⚔️', label: 'ACCIÓN REQUERIDA' }
+}
+
 export default function FeedbackDialog() {
   const prompt = useStore((s) => s.feedback)
   const game = useStore((s) => s.game)
@@ -242,86 +258,179 @@ export default function FeedbackDialog() {
     void send(() => cmds.sendPlayerString(values.join(' '), prompt.gameId), 'No se pudieron enviar las cantidades')
   }
 
+  const kicker = getFeedbackKicker(prompt)
+
   return (
     <div className="feedback-backdrop" role="presentation">
       <section className="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-        <div className="feedback-kicker">{prompt.method}</div>
+        <div className="feedback-kicker">
+          <span className="kicker-icon">{kicker.icon}</span> {kicker.label}
+        </div>
         <h2 id="feedback-title"><FormattedText text={prompt.title} /></h2>
-        <p><FormattedText text={prompt.message} /></p>
+        <p className="feedback-prompt-message"><FormattedText text={prompt.message} /></p>
 
         {prompt.mode === 'string' && (
-          <div className="feedback-string-input">
-            <input
-              aria-label="Texto libre"
-              type="text"
-              value={textValue}
-              placeholder="Escribe un nombre…"
-              onChange={(event) => setTextValue(event.target.value)}
-            />
-            <button
-              className="primary"
-              disabled={busy || textValue.trim() === ''}
-              onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')}
-            >
-              Enviar
-            </button>
+          <div className="feedback-string-wrap">
+            <div className="feedback-input-box">
+              <span className="feedback-input-icon">🏷️</span>
+              <input
+                aria-label="Texto libre"
+                type="text"
+                value={textValue}
+                placeholder="Escribe un nombre de carta o tipo…"
+                autoFocus
+                onChange={(event) => setTextValue(event.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && textValue.trim() !== '' && !busy) {
+                    void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')
+                  }
+                }}
+              />
+            </div>
+            <div className="feedback-dialog-actions">
+              <button
+                className="primary send-btn"
+                disabled={busy || textValue.trim() === ''}
+                onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')}
+              >
+                Confirmar
+              </button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+            </div>
           </div>
         )}
 
         {prompt.mode === 'integer' && (
-          <div className="feedback-amount">
-            <input
-              aria-label="Cantidad"
-              type="number"
-              min={prompt.min}
-              max={prompt.max}
-              value={amount}
-              onChange={(event) => setAmount(Number(event.target.value))}
-            />
-            <button className="primary" disabled={busy} onClick={confirmAmount}>Enviar</button>
-            <button disabled={busy} onClick={cancel}>Cancelar</button>
+          <div className="feedback-amount-wrap">
+            <div className="feedback-amount-stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={busy || amount <= prompt.min}
+                onClick={() => setAmount((v) => Math.max(prompt.min, v - 1))}
+                aria-label="Disminuir"
+              >
+                −
+              </button>
+              <div className="stepper-display">
+                <input
+                  aria-label="Cantidad"
+                  type="number"
+                  min={prompt.min}
+                  max={prompt.max}
+                  value={amount}
+                  onChange={(event) => setAmount(Number(event.target.value))}
+                  className="stepper-input"
+                />
+                <span className="stepper-range">({prompt.min} a {prompt.max})</span>
+              </div>
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={busy || amount >= prompt.max}
+                onClick={() => setAmount((v) => Math.min(prompt.max, v + 1))}
+                aria-label="Aumentar"
+              >
+                +
+              </button>
+            </div>
+            {prompt.min !== prompt.max && (
+              <div className="stepper-quick-row">
+                <button
+                  type="button"
+                  className="quick-val-btn"
+                  disabled={busy || amount === prompt.min}
+                  onClick={() => setAmount(prompt.min)}
+                >
+                  Mín ({prompt.min})
+                </button>
+                <button
+                  type="button"
+                  className="quick-val-btn"
+                  disabled={busy || amount === prompt.max}
+                  onClick={() => setAmount(prompt.max)}
+                >
+                  Máx ({prompt.max})
+                </button>
+              </div>
+            )}
+            <div className="feedback-dialog-actions">
+              <button className="primary send-btn" disabled={busy} onClick={confirmAmount}>Enviar</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+            </div>
           </div>
         )}
 
         {prompt.mode === 'multiString' && (
-          <div className="feedback-multi-amount">
-            {(prompt.items ?? []).map((item) => (
-              <label key={item.id}>
-                <FormattedText text={item.label} />
-                <input
-                  aria-label={item.label}
-                  type="number"
-                  min={item.min}
-                  max={item.max}
-                  value={multiAmounts[item.id] ?? item.defaultValue}
-                  onChange={(event) => setMultiAmounts((current) => ({ ...current, [item.id]: Number(event.target.value) }))}
-                />
-              </label>
-            ))}
-            <button className="primary" disabled={busy} onClick={confirmMultiAmount}>Enviar</button>
-            <button disabled={busy} onClick={cancel}>Cancelar</button>
+          <div className="feedback-multi-amount-wrap">
+            <div className="feedback-multi-list">
+              {(prompt.items ?? []).map((item) => {
+                const cur = multiAmounts[item.id] ?? item.defaultValue ?? item.min
+                return (
+                  <div key={item.id} className="multi-amount-row">
+                    <span className="multi-amount-label"><FormattedText text={item.label} /></span>
+                    <div className="multi-stepper">
+                      <button
+                        type="button"
+                        className="stepper-btn mini"
+                        disabled={busy || cur <= item.min}
+                        onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}
+                      >
+                        −
+                      </button>
+                      <span className="multi-stepper-val">{cur}</span>
+                      <button
+                        type="button"
+                        className="stepper-btn mini"
+                        disabled={busy || cur >= item.max}
+                        onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="feedback-dialog-actions">
+              <button className="primary send-btn" disabled={busy} onClick={confirmMultiAmount}>Confirmar</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+            </div>
           </div>
         )}
 
-        {prompt.mode !== 'integer' && prompt.mode !== 'multiString' && (
-          <div className="feedback-options">
-            {prompt.options.map((option) => (
-              <button
-                key={option.id}
-                className={selected.includes(option.value) ? 'selected' : ''}
-                disabled={busy}
-                onClick={() => selectOption(option)}
-              >
-                <FormattedText text={option.label} />
-              </button>
-            ))}
-            {prompt.mode === 'uuid' && prompt.max > 1 && (
-              <button className="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
-                Confirmar ({selected.length})
-              </button>
-            )}
-            {prompt.required === false && (
-              <button disabled={busy} onClick={finishOptionalTarget}>Terminar selección</button>
+        {prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string' && (
+          <div className="feedback-options feedback-options-wrap">
+            <div className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}>
+              {prompt.options.map((option, idx) => {
+                const isSel = selected.includes(option.value)
+                return (
+                  <button
+                    key={option.id}
+                    className={`feedback-choice-card ${isSel ? 'selected' : ''}`}
+                    disabled={busy}
+                    onClick={() => selectOption(option)}
+                  >
+                    <span className="choice-number">{idx + 1}</span>
+                    <span className="choice-text"><FormattedText text={option.label} /></span>
+                    {prompt.mode === 'uuid' && prompt.max > 1 && (
+                      <span className="choice-checkbox">{isSel ? '✓' : ''}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
+              <div className="feedback-dialog-actions">
+                {prompt.mode === 'uuid' && prompt.max > 1 && (
+                  <button className="primary send-btn" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
+                    Confirmar ({selected.length} seleccionada{selected.length !== 1 ? 's' : ''})
+                  </button>
+                )}
+                {prompt.required === false && (
+                  <button disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">Terminar selección</button>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -332,15 +332,14 @@ export default function LobbyScreen() {
   const openBracket = async (t: TableView) => {
     setBracketTable(t)
     setBracketError(null)
-    if (tournamentState && tournamentState.tournamentId === t.tableId) {
-      setBracketView(tournamentState.view)
-      return
-    }
-    if (tournamentState && tournamentState.view.tournamentName === t.tableName) {
+    if (tournamentState) {
       setBracketView(tournamentState.view)
     }
     setBracketLoading(true)
     try {
+      // 1. Tell XMage server to stream tournament data for this table
+      void cmds.watchTournamentTable(t.tableId)
+      // 2. Also try direct getTournament
       const data = await withTimeout(cmds.getTournament(t.tableId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
@@ -369,12 +368,19 @@ export default function LobbyScreen() {
     setBracketLoading(true)
     setBracketError(null)
     try {
+      void cmds.watchTournamentTable(bracketTable.tableId)
       const data = await withTimeout(cmds.getTournament(bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
+      } else if (tournamentState?.view) {
+        setBracketView(tournamentState.view)
       }
     } catch (e) {
-      setBracketError((e as Error).message)
+      if (tournamentState?.view) {
+        setBracketView(tournamentState.view)
+      } else {
+        setBracketError((e as Error).message)
+      }
     } finally {
       setBracketLoading(false)
     }
@@ -382,7 +388,7 @@ export default function LobbyScreen() {
 
   useEffect(() => {
     if (!bracketTable) return
-    if (tournamentState && (tournamentState.tournamentId === bracketTable.tableId || tournamentState.view.tournamentName === bracketTable.tableName)) {
+    if (tournamentState?.view) {
       setBracketView(tournamentState.view)
     }
   }, [tournamentState, bracketTable])

@@ -53,7 +53,10 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
     <div className="feedback-backdrop" role="presentation">
       <section className="feedback-dialog card-grid-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
         <header className="card-grid-header">
-          <div className="feedback-kicker">{prompt.method}</div>
+          <div className="feedback-kicker">
+            <span className="kicker-icon">{prompt.method === 'GAME_TARGET' ? '🎯' : '🃏'}</span>{' '}
+            {prompt.method === 'GAME_TARGET' ? 'SELECCIONA OBJETIVOS' : 'SELECCIÓN DE CARTAS'}
+          </div>
           <div className="card-grid-title-row">
             <h2 id="feedback-title">{prompt.title}</h2>
             <span className="card-grid-count-badge">

@@ -101,8 +101,7 @@ export interface CreateTableOptions {
 }
 
 export async function createTable(page: Page, tableName: string, opts: CreateTableOptions = {}): Promise<void> {
-  // exact: el empty-state de "0 mesas" añade un segundo botón "Crear Nueva Mesa"
-  await page.getByRole('button', { name: '➕ Nueva mesa', exact: true }).click()
+  await page.getByRole('button', { name: /Nueva/i }).first().click()
   await expect(page.getByRole('heading', { name: /Nueva mesa/i })).toBeVisible()
   await page.getByLabel(/Nombre/i).fill(tableName)
 

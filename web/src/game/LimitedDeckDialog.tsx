@@ -17,10 +17,15 @@ export default function LimitedDeckDialog() {
         onClick={(e) => e.stopPropagation()}
       >
         <header className="card-grid-header">
-          <h2 id="viewer-title">{viewer.title}</h2>
-          <span className="card-grid-count-badge">
-            {viewer.cards.length} carta{viewer.cards.length !== 1 ? 's' : ''}
-          </span>
+          <div className="feedback-kicker">
+            <span className="kicker-icon">🗂️</span> VISOR DE CARTAS
+          </div>
+          <div className="card-grid-title-row">
+            <h2 id="viewer-title">{viewer.title}</h2>
+            <span className="card-grid-count-badge">
+              {viewer.cards.length} carta{viewer.cards.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </header>
         <div className="card-grid-scroll-area">
           <div className="card-grid">

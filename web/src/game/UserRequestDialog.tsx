@@ -25,14 +25,16 @@ export default function UserRequestDialog() {
         aria-labelledby="user-request-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="feedback-kicker">USER_REQUEST_DIALOG</div>
+        <div className="feedback-kicker">
+          <span className="kicker-icon">🤝</span> PETICIÓN DE PARTIDA
+        </div>
         <h2 id="user-request-title"><FormattedText text={request.title} /></h2>
-        {request.message && <p><FormattedText text={request.message} /></p>}
-        <div className="feedback-options">
+        {request.message && <p className="feedback-prompt-message"><FormattedText text={request.message} /></p>}
+        <div className="feedback-dialog-actions user-request-actions">
           {request.buttons.map((button, index) => (
             <button
               key={`${button.action}-${index}`}
-              className={index === 0 ? 'primary' : ''}
+              className={index === 0 ? 'primary send-btn' : 'cancel-btn'}
               onClick={() => void onButton(button.action)}
             >
               <FormattedText text={button.text} />

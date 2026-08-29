@@ -70,7 +70,9 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     return (
       <div className="mulligan-backdrop" role="presentation">
         <section className="mulligan-dialog mulligan-london" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
-          <div className="mulligan-kicker">MULLIGAN DE LONDRES</div>
+          <div className="mulligan-kicker">
+            <span className="kicker-icon">🃏</span> MULLIGAN DE LONDRES
+          </div>
           <h2 id="mulligan-title">Pon cartas al fondo de tu biblioteca</h2>
           <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
 
@@ -118,7 +120,9 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   return (
     <div className="mulligan-backdrop" role="presentation">
       <section className="mulligan-dialog" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
-        <div className="mulligan-kicker">MULLIGAN</div>
+        <div className="mulligan-kicker">
+          <span className="kicker-icon">🃏</span> DECISIÓN DE MULLIGAN
+        </div>
         <h2 id="mulligan-title"><FormattedText text={prompt.title} /></h2>
         <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
 
