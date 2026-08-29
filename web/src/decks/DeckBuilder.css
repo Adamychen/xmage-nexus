@@ -242,42 +242,6 @@
   transform: translateY(1px);
 }
 
-/* Mini Import Area */
-.builder-import-mini {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.builder-import-mini textarea {
-  flex: 1;
-  background: #080c10;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 4px 6px;
-  color: #cbd5e0;
-  font-family: ui-monospace, monospace;
-  font-size: 0.7rem;
-  resize: none;
-}
-
-.mini-add-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #cbd5e0;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.mini-add-btn:hover {
-  background: #3182ce;
-  color: #ffffff;
-}
-
 /* Floating Card Preview on Hover */
 .arena-floating-preview {
   position: fixed;

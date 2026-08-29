@@ -62,6 +62,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
     return
   }
 
+  // Guard: If we are in the lobby, ignore in-flight trailing game events from closed/stopped games
+  if (s.phase === 'lobby' && isGameEvent && method !== 'START_GAME' && method !== 'WATCHGAME') {
+    return
+  }
+
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame && !isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)) {
     const sameGame = !!objectId && objectId === s.gameId
@@ -180,6 +185,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       if (objectId) {
         saveActiveGame(objectId, undefined, 'watcher')
         void cmds.watchGame(objectId)
+        setState({ phase: 'spectating_pending', gameId: objectId, watchingTable: null })
       }
       addLog('partida', `Espectador: mirando la partida ${objectId?.slice(0, 8) ?? ''}…`)
       break
@@ -192,9 +198,25 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'GAME_OVER': {
-      const d = data as { gameId?: string; winnerName?: string; message?: string } | null
+      const d = data as { gameId?: string; winnerName?: string; message?: string } | string | null
+      const msg = typeof d === 'string' ? d : (d?.message ?? 'Fin de la partida')
       clearActiveGame()
-      addLog('partida', d?.message ?? 'Fin de partida', d?.gameId ?? undefined)
+      addLog('partida', msg, objectId ?? undefined)
+
+      const fresh = getState()
+      const me = fresh.game?.players?.find((p) => p.controlled)
+      if (!me || !fresh.gameEnd) {
+        const syntheticEnd: GameEndInfo = {
+          gameInfo: msg,
+          matchInfo: msg,
+          won: false,
+          matchView: {
+            endTime: new Date().toISOString(),
+            result: msg,
+          },
+        }
+        setState({ gameEnd: syntheticEnd })
+      }
       break
     }
     case 'END_GAME_INFO': {

@@ -315,12 +315,9 @@ export default function LobbyScreen() {
   const watchTable = async (t: TableView) => {
     setBusyTable(t.tableId)
     try {
-      const isPlaying = t.tableState === 'DUELING' || t.tableState === 'SIDEBOARDING'
       const res = await withTimeout(cmds.watchTable(t.tableId), 15000, 'watchTable')
       if (res.ok) {
-        if (!isPlaying) {
-          setWatchingTable(t)
-        }
+        setWatchingTable(t)
         setNotice('Conectado como espectador')
       } else {
         setNotice(`watchTable: ${res.error}`)

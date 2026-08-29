@@ -12,6 +12,7 @@ import { BasicLandAdder } from './BasicLandAdder'
 import { BASIC_LAND_PRESETS, type BasicLandPreset } from './deckUtils'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
+import { DeckImportModal, type ImportResult } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat } from './formatRules'
 import { useStore, setMyDeck } from '../state/store'
@@ -32,6 +33,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
   const [showSampleHand, setShowSampleHand] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
 
   const storage = useMemo(() => getDeckStorage(), [])
@@ -319,6 +321,49 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     setPrintingTargetCard(null)
   }
 
+  const handleApplyImport = (result: ImportResult) => {
+    if (!deck) return
+    if (result.mode === 'replace') {
+      const nextCards = result.cards
+      const nextSide = result.sideboard
+      schedulePersist({
+        ...deck,
+        cards: nextCards,
+        sideboard: nextSide,
+        coverCard: nextCards[0] ?? null,
+      })
+      updateMetaForDeck([...nextCards, ...nextSide])
+    } else {
+      const mergedCards: DeckCard[] = [...deck.cards]
+      for (const c of result.cards) {
+        const k = deckCardKey(c)
+        const idx = mergedCards.findIndex((x) => deckCardKey(x) === k)
+        if (idx >= 0) {
+          mergedCards[idx] = { ...mergedCards[idx], amount: Math.min(99, mergedCards[idx].amount + c.amount) }
+        } else {
+          mergedCards.push(c)
+        }
+      }
+      const mergedSide: DeckCard[] = [...deck.sideboard]
+      for (const c of result.sideboard) {
+        const k = deckCardKey(c)
+        const idx = mergedSide.findIndex((x) => deckCardKey(x) === k)
+        if (idx >= 0) {
+          mergedSide[idx] = { ...mergedSide[idx], amount: Math.min(99, mergedSide[idx].amount + c.amount) }
+        } else {
+          mergedSide.push(c)
+        }
+      }
+      schedulePersist({
+        ...deck,
+        cards: mergedCards,
+        sideboard: mergedSide,
+        coverCard: deck.coverCard ?? mergedCards[0] ?? null,
+      })
+      updateMetaForDeck([...result.cards, ...result.sideboard])
+    }
+  }
+
   // Hover floating card preview handler (supports dual-faced / transform cards)
   const handleHoverCard = (
     card: DeckCard | ScryfallSearchCard,
@@ -563,6 +608,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               <button
                 type="button"
                 className="builder-act"
+                onClick={() => setShowImportModal(true)}
+                title="Importar o pegar lista de cartas (.dck, Arena, MTGO)"
+              >
+                📥 Importar Lista
+              </button>
+              <button
+                type="button"
+                className="builder-act"
                 onClick={() => setShowSampleHand(true)}
                 title="Simular y probar mano inicial con London Mulligan"
               >
@@ -577,37 +630,6 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               </button>
             </div>
 
-            {/* Mini Import Box */}
-            <div className="builder-import-mini">
-              <textarea
-                placeholder="Pega .dck o texto Arena aquí… Ej: 4 [LEA:292] Mountain"
-                rows={1}
-                id="mini-import"
-              />
-              <button
-                type="button"
-                className="mini-add-btn"
-                onClick={() => {
-                  const el = document.getElementById('mini-import') as HTMLTextAreaElement | null
-                  if (!el || !el.value.trim()) return
-                  const parsed = parseAnyDeck(el.value, deck.name)
-                  if (!parsed) return
-                  const merged: DeckCard[] = [...deck.cards]
-                  for (const c of parsed.cards) {
-                    const k = deckCardKey(c)
-                    const idx = merged.findIndex((x) => deckCardKey(x) === k)
-                    if (idx >= 0) merged[idx] = { ...merged[idx], amount: Math.min(99, merged[idx].amount + c.amount) }
-                    else merged.push(c)
-                  }
-                  const sb = [...deck.sideboard, ...parsed.sideboard]
-                  schedulePersist({ ...deck, cards: merged, sideboard: sb })
-                  el.value = ''
-                }}
-              >
-                + Añadir al mazo
-              </button>
-            </div>
-
             {/* Glowing Signature Done Button */}
             <button type="button" className="builder-done" onClick={onClose}>
               Guardar y Salir
@@ -615,6 +637,15 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           </div>
         </section>
       </div>
+
+      {/* Deck Import & Paste List Modal */}
+      {showImportModal && deck && (
+        <DeckImportModal
+          deckName={deck.name}
+          onImport={handleApplyImport}
+          onClose={() => setShowImportModal(false)}
+        />
+      )}
 
       {/* Sample Hand & Playtest Modal */}
       {showSampleHand && deck && (

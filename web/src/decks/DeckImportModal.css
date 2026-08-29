@@ -1,0 +1,313 @@
+.deck-import-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 150ms ease;
+}
+
+.deck-import-modal {
+  background: #0d121d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  position: relative;
+  transition: border-color 150ms ease;
+}
+
+.deck-import-modal.drag-over {
+  border-color: #ffd070;
+  box-shadow: 0 0 30px rgba(255, 208, 112, 0.3);
+}
+
+.deck-import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  background: rgba(20, 26, 38, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px;
+}
+
+.deck-import-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.deck-import-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f7fafc;
+}
+
+.deck-import-formats {
+  font-size: 0.76rem;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+.deck-import-close-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.deck-import-close-btn:hover {
+  color: white;
+}
+
+.deck-import-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Mode row */
+.deck-import-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.import-mode-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #cbd5e0;
+}
+
+.import-mode-options {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 4px;
+}
+
+.import-mode-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.import-mode-btn:hover {
+  color: white;
+}
+
+.import-mode-btn.active {
+  background: #2b6cb0;
+  color: white;
+  box-shadow: 0 2px 8px rgba(43, 108, 176, 0.4);
+}
+
+/* Textarea Wrap */
+.deck-import-textarea-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.deck-import-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #070a10;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #f7fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 180px;
+  max-height: 380px;
+  outline: none;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+
+.deck-import-textarea:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+}
+
+.deck-import-textarea::placeholder {
+  color: #4a5568;
+  font-style: italic;
+}
+
+.import-drop-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(49, 130, 206, 0.85);
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* Status bar */
+.deck-import-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.import-status-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.import-file-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms;
+}
+
+.import-file-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.import-clear-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 0.74rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: underline;
+}
+
+.import-clear-btn:hover {
+  color: #fc8181;
+}
+
+.import-status-right {
+  display: flex;
+  align-items: center;
+}
+
+.import-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.import-badge.success {
+  background: rgba(72, 187, 120, 0.15);
+  border: 1px solid rgba(72, 187, 120, 0.35);
+  color: #68d391;
+}
+
+.import-badge.warning {
+  background: rgba(237, 137, 54, 0.15);
+  border: 1px solid rgba(237, 137, 54, 0.35);
+  color: #fbd38d;
+}
+
+.import-hint-text {
+  font-size: 0.74rem;
+  color: #718096;
+}
+
+.deck-import-error {
+  padding: 8px 12px;
+  background: rgba(245, 101, 101, 0.15);
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  border-radius: 6px;
+  color: #fc8181;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Footer */
+.deck-import-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 22px;
+  background: rgba(20, 26, 38, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 12px;
+}
+
+.import-cancel-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms;
+}
+
+.import-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.import-submit-btn {
+  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+  border: 1px solid #4299e1;
+  color: white;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 140ms ease;
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.35);
+}
+
+.import-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(49, 130, 206, 0.5);
+}
+
+.import-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}

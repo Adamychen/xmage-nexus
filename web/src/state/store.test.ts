@@ -768,5 +768,58 @@ describe('active game persistence in store', () => {
 
     expect(getState().chatMessages).toEqual([])
   })
+
+  it('drops in-flight GAME_UPDATE frames arriving after returnToLobby, keeping phase in lobby', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-spectate-1',
+      game: makeGameView({}),
+    })
+
+    // User clicks exit once
+    returnToLobby()
+    expect(getState().phase).toBe('lobby')
+    expect(getState().gameId).toBeNull()
+
+    // In-flight GAME_UPDATE arrives from the socket buffer
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 42,
+      objectId: 'g-spectate-1',
+      data: makeGameView({ turn: 5 }),
+    })
+
+    // Phase must REMAIN 'lobby', not resurrected to 'game'
+    expect(getState().phase).toBe('lobby')
+    expect(getState().gameId).toBeNull()
+    expect(getState().game).toBeNull()
+  })
+
+  it('GAME_OVER sets gameEnd for spectators so end game notification is visible', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-spectate-2',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: false }),
+          makePlayer({ playerId: 'p-bob', name: 'Bob', controlled: false }),
+        ],
+      }),
+    })
+
+    handleMessage({
+      type: 'event',
+      method: 'GAME_OVER',
+      messageId: 50,
+      objectId: 'g-spectate-2',
+      data: { message: 'Alice has won the game' },
+    })
+
+    const end = getState().gameEnd
+    expect(end).not.toBeNull()
+    expect(end?.gameInfo).toBe('Alice has won the game')
+    expect(end?.matchView?.endTime).toBeDefined()
+  })
 })
 
