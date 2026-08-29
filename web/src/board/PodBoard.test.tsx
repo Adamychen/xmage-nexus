@@ -74,7 +74,7 @@ describe('PodBoard', () => {
 
   it('renders TurnOrderRing with 4 seats and highlights active', () => {
     const game = fourPlayerGame({ activePlayerId: 'p3' })
-    const { getByTestId, container } = render(<PodBoard game={game} />)
+    const { getByTestId, container } = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
     const ring = getByTestId('turn-order-ring')
     expect(ring).not.toBeNull()
     expect(ring.classList.contains('count-4')).toBe(true)
@@ -89,7 +89,7 @@ describe('PodBoard', () => {
 
   it('TurnOrderRing shows progression around the pod', () => {
     const game = fourPlayerGame({ activePlayerId: 'p2' })
-    const { getByTestId } = render(<PodBoard game={game} />)
+    const { getByTestId } = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
     const arrow = getByTestId('tor-arrow-p2-p3')
     expect(arrow.classList.contains('is-active-edge')).toBe(true)
     const nonActiveArrow = getByTestId('tor-arrow-p1-p2')
@@ -98,7 +98,7 @@ describe('PodBoard', () => {
 
   it('renders CommanderDamageMatrix overlay when commanders exist', () => {
     const game = fourPlayerGame()
-    const { getByTestId } = render(<PodBoard game={game} />)
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
     const matrix = getByTestId('commander-damage-matrix')
     expect(matrix).not.toBeNull()
     const table = getByTestId('cdm-table')
@@ -204,9 +204,10 @@ describe('PodBoard', () => {
     expect(getByTestId('pod-board').classList.contains('is-spectator')).toBe(true)
     const zones = container.querySelectorAll('.board-zone')
     expect(zones.length).toBe(4)
-    const seats = getByTestId('turn-order-ring').querySelectorAll('.tor-seat')
+    const ring = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
+    const seats = ring.getByTestId('turn-order-ring').querySelectorAll('.tor-seat')
     expect(seats.length).toBe(4)
-    const active = getByTestId('tor-seat-p2')
+    const active = ring.getByTestId('tor-seat-p2')
     expect(active.classList.contains('is-active')).toBe(true)
   })
 
@@ -221,11 +222,12 @@ describe('PodBoard', () => {
         makePlayer({ playerId: 'p5', name: 'Eve', commandList: [] }),
       ],
     })
-    const { container, getByTestId } = render(<PodBoard game={game} />)
-    const seats = getByTestId('turn-order-ring').querySelectorAll('.tor-seat')
-    expect(seats.length).toBe(4)
+    const { container } = render(<PodBoard game={game} />)
     const podCells = container.querySelectorAll('.pod-cell')
     expect(podCells.length).toBe(4)
+    const ring = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
+    const seats = ring.getByTestId('turn-order-ring').querySelectorAll('.tor-seat')
+    expect(seats.length).toBe(4)
   })
 
   it('renders gracefully with no commanders (empty matrix)', () => {

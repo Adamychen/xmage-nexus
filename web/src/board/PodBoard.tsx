@@ -1,8 +1,6 @@
 import { useMemo } from 'react'
 import type { CardView, GameView } from '../net/types'
 import TwoHeadedBoard from './TwoHeadedBoard'
-import TurnOrderRing from './TurnOrderRing'
-import CommanderDamageMatrix from '../game/CommanderDamageMatrix'
 import type { CrossZonePlayable } from './crossZone'
 import { parseCommandList } from './CommandZone'
 import './PodBoard.css'
@@ -61,14 +59,8 @@ export default function PodBoard({
     return !allPlayers.some((p) => p.controlled)
   }, [allPlayers])
 
-  const activePlayerId = game?.activePlayerId ?? ''
-
   return (
     <div className={`pod-board-wrapper ${isSpectator ? 'is-spectator' : 'is-player'} ${hasCommanders ? 'has-commanders' : ''}`} data-testid="pod-board">
-      <div className="pod-ring-bar" data-testid="pod-ring-bar">
-        <TurnOrderRing players={allPlayers} activePlayerId={activePlayerId} />
-      </div>
-
       <div className="pod-board-main" data-testid="pod-board-main">
         <TwoHeadedBoard
           game={clampedGame}
@@ -86,12 +78,6 @@ export default function PodBoard({
           onPlayCrossZone={onPlayCrossZone}
         />
       </div>
-
-      {hasCommanders && (
-        <div className="pod-damage-overlay" data-testid="pod-damage-overlay">
-          <CommanderDamageMatrix game={clampedGame} />
-        </div>
-      )}
     </div>
   )
 }

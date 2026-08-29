@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
 import PodBoard from '../board/PodBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
+import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
 import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
@@ -18,6 +19,7 @@ import ActionFeed from './ActionFeed'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import MechanicsTray from './MechanicsTray'
+import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
@@ -33,7 +35,7 @@ export default function GameScreen() {
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
   const gameBodyRef = useRef<HTMLDivElement>(null)
-  const [rightTab, setRightTab] = useState<'stack' | 'log' | 'mechanics' | 'chat'>('log')
+  const [rightTab, setRightTab] = useState<'stack' | 'log' | 'commander' | 'mechanics' | 'chat'>('log')
   const [busy, setBusy] = useState(false)
   const stackCount = Object.keys(game?.stack ?? {}).length
   const prevStackCountRef = useRef(0)
@@ -156,6 +158,17 @@ export default function GameScreen() {
     })
   }, [game?.players])
 
+  const hasCommanders = useMemo(() => {
+    if (!game?.players) return false
+    return game.players.some((p) => {
+      const items = Array.isArray(p.commandList) ? p.commandList : Object.values(p.commandList ?? {})
+      return items.some((c: any) => c?.mageObjectType === 'COMMANDER' || c?.isCommander)
+    })
+  }, [game?.players])
+
+  const isMultiplayer = opps.length >= 2
+  const isPodLayout = settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard')
+
   return (
     <div className="game">
       <header className="game-top">
@@ -168,16 +181,20 @@ export default function GameScreen() {
           )}
         </div>
         <div className="game-top-center">
-          {topOpps.length > 1 && (
-            <OpponentSwitcherBar
-              opponents={topOpps}
-              selectedOppId={currentOpp?.playerId || ''}
-              onSelectOpponent={(id) => setSelectedOppId(id)}
-              activePlayerId={game?.activePlayerId}
-              targetIds={new Set(targetIds)}
-              onTargetClick={onTargetClick}
-              combat={game?.combat ?? []}
-            />
+          {isPodLayout ? (
+            <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
+          ) : (
+            topOpps.length > 1 && (
+              <OpponentSwitcherBar
+                opponents={topOpps}
+                selectedOppId={currentOpp?.playerId || ''}
+                onSelectOpponent={(id) => setSelectedOppId(id)}
+                activePlayerId={game?.activePlayerId}
+                targetIds={new Set(targetIds)}
+                onTargetClick={onTargetClick}
+                combat={game?.combat ?? []}
+              />
+            )
           )}
         </div>
         <div className="game-controls">
@@ -212,11 +229,11 @@ export default function GameScreen() {
           {opps.length >= 1 && (
             <button
               type="button"
-              className={`layout-toggle-btn ${settings.boardLayout === 'pod' ? 'is-active' : ''}`}
-              title={settings.boardLayout === 'pod' ? 'Cambiar a layout estándar (un oponente a la vez)' : `Ver todos los tableros en cuadrícula (${opps.length + 1} jugadores)`}
-              onClick={() => setSetting('boardLayout', settings.boardLayout === 'pod' ? 'standard' : 'pod')}
+              className={`layout-toggle-btn ${isPodLayout ? 'is-active' : ''}`}
+              title={isPodLayout ? 'Cambiar a layout estándar (un oponente a la vez)' : `Ver todos los tableros en cuadrícula (${opps.length + 1} jugadores)`}
+              onClick={() => setSetting('boardLayout', isPodLayout ? 'standard' : 'pod')}
             >
-              {settings.boardLayout === 'pod' ? '⊞ Pod ✓' : '⊞ Pod'}
+              {isPodLayout ? '⊞ Pod ✓' : '⊞ Pod'}
             </button>
           )}
           <button
@@ -244,7 +261,7 @@ export default function GameScreen() {
       <div className="game-body" ref={gameBodyRef}>
         <Sidebar />
         <div className="board-wrap">
-          {settings.boardLayout === 'pod' ? (
+          {isPodLayout ? (
             <PodBoard
               game={game}
               targetIds={targetIds}
@@ -296,6 +313,16 @@ export default function GameScreen() {
             >
               Log
             </button>
+            {hasCommanders && (
+              <button
+                type="button"
+                className={`right-tab-btn ${rightTab === 'commander' ? 'active' : ''}`}
+                onClick={() => setRightTab('commander')}
+                title="Matriz de daño de comandante"
+              >
+                👑 CMD
+              </button>
+            )}
             <button
               type="button"
               className={`right-tab-btn ${rightTab === 'mechanics' ? 'active' : ''}`}
@@ -326,6 +353,10 @@ export default function GameScreen() {
               />
             ) : rightTab === 'log' ? (
               <ActionFeed />
+            ) : rightTab === 'commander' ? (
+              <div className="sidebar-commander-tab">
+                <CommanderDamageMatrix game={game} />
+              </div>
             ) : rightTab === 'mechanics' ? (
               <MechanicsTray />
             ) : (

@@ -1,14 +1,30 @@
+.sidebar-commander-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.sidebar-commander-tab .commander-damage-matrix {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
 .commander-damage-matrix {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   padding: 8px;
   background: rgba(13, 16, 34, 0.96);
   border: 1px solid rgba(124, 92, 255, 0.22);
   border-radius: 10px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   min-width: 0;
-  overflow: hidden;
   font-size: 12px;
 }
 
@@ -21,15 +37,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 2px 4px 4px;
-  border-bottom: 1px solid rgba(124, 92, 255, 0.15);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(124, 92, 255, 0.18);
+}
+
+.cdm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .cdm-title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #ffd070;
 }
@@ -44,14 +66,291 @@
   padding: 1px 6px;
 }
 
-.cdm-empty {
-  padding: 10px 8px;
-  color: #8c96c0;
-  font-size: 12px;
-  text-align: center;
+.cdm-view-toggles {
+  display: flex;
+  gap: 4px;
+}
+
+.cdm-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(124, 92, 255, 0.2);
+  border-radius: 6px;
+  color: #94a3b8;
+  padding: 2px 7px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cdm-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.cdm-toggle-btn.active {
+  background: rgba(124, 92, 255, 0.35);
+  border-color: #a78bfa;
+  color: #fff;
+}
+
+/* Alert banner */
+.cdm-alert-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cdm-alert-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.cdm-alert-pill.warning {
+  background: rgba(255, 176, 58, 0.14);
+  border: 1px solid rgba(255, 176, 58, 0.35);
+  color: #ffc058;
+}
+
+.cdm-alert-pill.lethal {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  animation: cdmLethalPulse 1.4s infinite alternate;
+}
+
+/* Cards View */
+.cdm-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cdm-player-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(124, 92, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.cdm-player-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(124, 92, 255, 0.28);
+}
+
+.cdm-player-card.is-active {
+  border-color: rgba(255, 208, 112, 0.45);
+  background: rgba(255, 208, 112, 0.04);
+}
+
+.cdm-player-card.is-defeated {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.cdm-player-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cdm-player-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cdm-player-dot {
+  font-size: 8px;
+  color: #64748b;
+}
+
+.cdm-player-card.is-active .cdm-player-dot {
+  color: #ffd070;
+}
+
+.cdm-player-title {
+  font-weight: 700;
+  color: #f1f5f9;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cdm-badge-you {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.cdm-player-life-pill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.cdm-player-commanders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cdm-commander-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffd070;
+  background: rgba(255, 208, 112, 0.1);
+  border: 1px solid rgba(255, 208, 112, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.cdm-tax-badge {
+  font-size: 9px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+.cdm-damage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.cdm-no-opponents {
+  font-size: 10.5px;
+  color: #64748b;
   font-style: italic;
 }
 
+.cdm-damage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cdm-damage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cdm-damage-source {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cdm-source-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cdm-source-owner {
+  font-size: 9.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.cdm-damage-metric {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.cdm-count-text {
+  color: #cbd5e1;
+}
+
+.cdm-denom {
+  font-size: 9.5px;
+  color: #64748b;
+}
+
+.cdm-damage-item.warning .cdm-count-text {
+  color: #fbbf24;
+}
+
+.cdm-lethal-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.cdm-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cdm-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.cdm-progress-bar.low {
+  background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+}
+
+.cdm-progress-bar.mid {
+  background: linear-gradient(90deg, #eab308 0%, #f59e0b 100%);
+}
+
+.cdm-progress-bar.warning {
+  background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+}
+
+.cdm-progress-bar.lethal {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+/* Classic Table View */
 .cdm-table-wrap {
   overflow-x: auto;
   overflow-y: hidden;
@@ -60,16 +359,20 @@
   border-radius: 6px;
 }
 
+.cdm-table-hidden {
+  display: none;
+}
+
 .cdm-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 280px;
-  font-size: 12px;
+  min-width: 260px;
+  font-size: 11.5px;
 }
 
 .cdm-table th,
 .cdm-table td {
-  padding: 6px 8px;
+  padding: 5px 6px;
   text-align: center;
   border: 1px solid rgba(124, 92, 255, 0.14);
   white-space: nowrap;
@@ -80,7 +383,7 @@
   color: #a78bfa;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -89,21 +392,21 @@
   background: rgba(255, 208, 112, 0.08);
   color: #e8ecf6;
   font-weight: 700;
-  max-width: 140px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .cdm-cmd-name {
   display: block;
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.2;
   color: #fff;
 }
 
 .cdm-cmd-owner {
   display: block;
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 600;
   color: #8c96c0;
   margin-top: 1px;
@@ -117,29 +420,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  min-width: 110px;
+  min-width: 90px;
 }
 
 .cdm-player-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.cdm-you-badge {
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #63e6be;
-  background: rgba(99, 230, 190, 0.14);
-  border: 1px solid rgba(99, 230, 190, 0.32);
-  border-radius: 4px;
-  padding: 1px 4px;
-}
-
-.cdm-active-badge {
-  font-size: 8px;
-  color: #ffd070;
 }
 
 .cdm-damage-cell {
@@ -180,12 +467,12 @@
 }
 
 .cdm-footer {
-  padding: 2px 4px 0;
+  padding: 4px 2px 0;
   border-top: 1px dashed rgba(124, 92, 255, 0.12);
 }
 
 .cdm-footer-hint {
   font-size: 9.5px;
-  color: #6b7394;
+  color: #64748b;
   font-style: italic;
 }
