@@ -3,6 +3,7 @@ import { useStore } from '../state/store'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
+import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import './PlayerInfoBar.css'
 
@@ -224,6 +225,7 @@ export default function PlayerInfoBar({
 }: PlayerInfoBarProps) {
   const myConn = useStore((s) => s.conn)
   const game = useStore((s) => s.game)
+  const { t } = useTranslation()
   const rawUserData = player.userData as { avatarId?: number; flagName?: string } | undefined
   const avatarId =
     rawUserData?.avatarId ??
@@ -299,12 +301,12 @@ export default function PlayerInfoBar({
             {player.name}
           </span>
           {player.hasLeft ? (
-            <span className="player-status-badge status-left"><Icon name="door" size={12} /> Fuera</span>
+            <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
           ) : player.life <= 0 ? (
-            <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> Derrotado</span>
+            <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
           ) : null}
           {showMatchWins && (
-            <span className="match-wins-dots" title={`Victorias en el match: ${wins}/${winsNeeded}`}>
+            <span className="match-wins-dots" title={`${t('game', 'match_wins')}: ${wins}/${winsNeeded}`}>
               {Array.from({ length: Math.max(1, winsNeeded) }).map((_, i) => (
                 <span key={i} className={`win-dot ${i < wins ? 'won' : 'pending'}`}>
                   {i < wins ? '●' : '○'}
@@ -316,7 +318,7 @@ export default function PlayerInfoBar({
 
         <div className="player-counters">
           {/* Life Counter */}
-          <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title="Vida">
+          <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
             <span className="counter-icon"><Icon name="heart" size={12} /></span>
             <span className="life-value">{player.life}</span>
           </span>
@@ -342,12 +344,12 @@ export default function PlayerInfoBar({
           {hasTimer && (
             <span
               className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${hasPriority ? 'timer-active' : ''}`}
-              title="Tiempo restante de prioridad"
+              title={t('game', 'priority_time_left')}
             >
               <span className="timer-icon"><Icon name="timer" size={12} /></span>
               <span className="timer-value">{formatTimer(timeLeft)}</span>
               {hasBuffer && (
-                <span className="timer-buffer" title="Tiempo de buffer disponible">
+                <span className="timer-buffer" title={t('game', 'buffer_time_left')}>
                   +{formatTimer(bufferTimeLeft)}
                 </span>
               )}

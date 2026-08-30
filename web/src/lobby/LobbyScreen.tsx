@@ -451,12 +451,12 @@ export default function LobbyScreen() {
           </div>
           {confirmDisconnect ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>¿Desconectar?</span>
-              <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>Sí</button>
-              <button onClick={() => setConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>No</button>
+              <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>{t('lobby', 'disconnect_confirm')}</span>
+              <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>{t('common', 'yes')}</button>
+              <button onClick={() => setConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>{t('common', 'no')}</button>
             </div>
           ) : (
-            <button className="lobby-disconnect-btn" onClick={() => setConfirmDisconnect(true)} title="Cerrar sesión">
+            <button className="lobby-disconnect-btn" onClick={() => setConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
               🚪
             </button>
           )}

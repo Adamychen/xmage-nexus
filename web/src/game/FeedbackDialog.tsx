@@ -8,6 +8,8 @@ import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
 import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
+import { useTranslation } from '../i18n'
+import Icon from '../ui/Icon'
 
 const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
 
@@ -37,6 +39,7 @@ function getFeedbackKicker(prompt: FeedbackPrompt): { icon: string; label: strin
 }
 
 export default function FeedbackDialog() {
+  const { t } = useTranslation()
   const prompt = useStore((s) => s.feedback)
   const game = useStore((s) => s.game)
   const [busy, setBusy] = useState(false)
@@ -100,8 +103,8 @@ export default function FeedbackDialog() {
     return (
       <div className="feedback-backdrop" role="presentation">
         <section className="feedback-dialog starting-player-dialog" role="dialog" aria-modal="true" aria-labelledby="sp-title">
-          <div className="feedback-kicker">⚔️ INICIO DE PARTIDA</div>
-          <h2 id="sp-title">¿Quién empieza?</h2>
+          <div className="feedback-kicker"><Icon name="swords" size={13} /> {t('game', 'turn')}</div>
+          <h2 id="sp-title">{t('game', 'who_starts')}</h2>
           <p><FormattedText text={prompt.message} /></p>
           <div className="starting-player-options">
             {prompt.options.map((option) => (

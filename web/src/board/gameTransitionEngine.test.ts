@@ -1,11 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { detectAndAnimateTransitions } from './gameTransitionEngine'
 import { getActiveFlights } from './flightManager'
+import { recordCardPosition, clearCardPositionRegistry } from './cardPositionRegistry'
 import { makeGameView, makePlayer, makePermanent, makeCard } from '../__fixtures__/gameViews'
+
+const mockRect = (left: number, top: number, width = 80, height = 112): DOMRect =>
+  ({
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+    x: left,
+    y: top,
+    toJSON: () => {},
+  } as DOMRect)
 
 describe('gameTransitionEngine', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    clearCardPositionRegistry()
     document.body.innerHTML = `
       <div class="game-board">
         <div class="player-zone" data-player-id="p-alice" data-player-name="Alice">
@@ -19,19 +34,6 @@ describe('gameTransitionEngine', () => {
         <div class="stack-zone" style="width: 250px; height: 400px;"></div>
       </div>
     `
-
-    const mockRect = (left: number, top: number, width = 80, height = 112): DOMRect =>
-      ({
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-        x: left,
-        y: top,
-        toJSON: () => {},
-      } as DOMRect)
 
     const lib = document.querySelector('.library-stack')
     if (lib) vi.spyOn(lib, 'getBoundingClientRect').mockReturnValue(mockRect(100, 100))
@@ -49,7 +51,11 @@ describe('gameTransitionEngine', () => {
     if (grizzly) vi.spyOn(grizzly, 'getBoundingClientRect').mockReturnValue(mockRect(450, 400))
   })
 
-  it('detects card draws from library to hand', () => {
+  afterEach(() => {
+    clearCardPositionRegistry()
+  })
+
+  it('detects card draws from library to hand (opponent, uses handCount)', () => {
     const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', handCount: 3 })
     const prevGame = makeGameView({ players: [alice1] })
 
@@ -61,6 +67,29 @@ describe('gameTransitionEngine', () => {
 
     const flights = getActiveFlights()
     expect(flights.length).toBeGreaterThan(0)
+  })
+
+  it('detects card draws for controlled player using real myHand IDs', () => {
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 1 })
+    const prevGame = makeGameView({
+      players: [alice1],
+      myHand: { 'h-old': makeCard({ id: 'h-old', name: 'Forest' }) },
+    })
+
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2 })
+    const nextGame = makeGameView({
+      players: [alice2],
+      myHand: {
+        'h-old': makeCard({ id: 'h-old', name: 'Forest' }),
+        'h-new': makeCard({ id: 'h-new', name: 'Lightning Bolt' }),
+      },
+    })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(100)
+
+    const flights = getActiveFlights()
+    expect(flights.some((f) => f.card.name === 'Lightning Bolt')).toBe(true)
   })
 
   it('detects spells cast to the stack', () => {
@@ -76,7 +105,7 @@ describe('gameTransitionEngine', () => {
     expect(flights.some((f) => f.card.name === 'Lightning Bolt')).toBe(true)
   })
 
-  it('detects creatures dying and flying to the graveyard', () => {
+  it('detects creatures dying via DOM when slot is still present', () => {
     const grizzly = makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' })
     const alice1 = makePlayer({
       playerId: 'p-alice',
@@ -85,16 +114,34 @@ describe('gameTransitionEngine', () => {
     })
     const prevGame = makeGameView({ players: [alice1] })
 
-    const alice2 = makePlayer({
-      playerId: 'p-alice',
-      name: 'Alice',
-      battlefield: {},
-    })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
     const nextGame = makeGameView({ players: [alice2] })
 
     detectAndAnimateTransitions(prevGame, nextGame)
 
     const flights = getActiveFlights()
     expect(flights.some((f) => f.card.name === 'Grizzly Bears')).toBe(true)
+  })
+
+  it('detects creatures dying via cardPositionRegistry when DOM slot is already unmounted', () => {
+    const grizzly = makePermanent({ id: 'perm-gone', name: 'Goblin Guide' })
+
+    // Simulate the card having been recorded before unmounting (CardSlot cleanup)
+    recordCardPosition('perm-gone', mockRect(500, 400), 'player-zone')
+
+    const alice1 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: { 'perm-gone': grizzly },
+    })
+    const prevGame = makeGameView({ players: [alice1] })
+
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+
+    const flights = getActiveFlights()
+    expect(flights.some((f) => f.card.name === 'Goblin Guide')).toBe(true)
   })
 })

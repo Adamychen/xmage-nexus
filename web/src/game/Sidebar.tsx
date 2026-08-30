@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useGame, returnToLobby, concedeGame, useStore } from '../state/store'
 import { useFullscreen } from '../utils/fullscreen'
 import { formatTimer, useTickingTimer } from '../utils/timer'
+import { useTranslation } from '../i18n'
 import HelpWikiModal from './HelpWikiModal'
 import './Sidebar.css'
 
@@ -27,6 +28,7 @@ export default function Sidebar() {
   const gameId = useStore((s) => s.gameId)
   const [showHelp, setShowHelp] = useState(false)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
+  const { t } = useTranslation()
 
   const me = game?.players?.find((p) => p.controlled)
 
@@ -46,8 +48,8 @@ export default function Sidebar() {
     switch (id) {
       case 'exit': {
         const msg = me
-          ? '¿Seguro que quieres conceder la partida y volver al lobby?'
-          : '¿Dejar de espectar y volver al lobby?'
+          ? t('game', 'concede_prompt')
+          : t('game', 'leave_spectate_prompt')
         if (confirm(msg)) {
           if (me && gameId) {
             await concedeGame(gameId)
@@ -87,7 +89,7 @@ export default function Sidebar() {
     <>
       <nav className="sidebar">
         <div className="sidebar-turn-info">
-          <span className="sidebar-turn-label">Turn</span>
+          <span className="sidebar-turn-label">{t('game', 'turn')}</span>
           <span className="sidebar-turn-value">{game?.turn ?? '—'}</span>
           <TurnTimer secs={timerSecs} isTicking={isTimerTicking} label={`Tiempo de prioridad (${priorityPlayer?.name ?? 'Jugador'})`} />
           <TurnTimer secs={bufferSecs} isTicking={false} label="Tiempo de buffer" />

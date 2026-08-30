@@ -1,5 +1,6 @@
 import type { GameView } from '../net/types'
 import type { FeedbackPrompt } from './feedback'
+import { useTranslation } from '../i18n'
 import './ActionButton.css'
 
 interface ActionButtonProps {
@@ -18,32 +19,35 @@ export default function ActionButton({
   onPass,
   busy = false,
 }: ActionButtonProps) {
+  const { t } = useTranslation()
   const me = game?.players?.find((p) => p.controlled)
   const opp = game?.players?.find((p) => !p.controlled)
   const stackItems = Object.keys(game?.stack ?? {}).length
 
   // Determine button role and state
-  let label = 'Pasar'
+  let label = t('game', 'pass_priority')
   let sublabel: string | null = null
   let modeClass = 'action-pass'
 
   if (stackItems > 0) {
-    label = 'Resolver'
-    sublabel = `Pila (${stackItems})`
+    label = t('game', 'resolve')
+    sublabel = `${t('game', 'stack')} (${stackItems})`
     modeClass = 'action-resolve'
   } else if (feedback?.mode === 'combat') {
-    label = feedback.title === 'Declara atacantes' ? 'Confirmar atacantes' : 'Confirmar bloqueadores'
+    label = feedback.title.toLowerCase().includes('atacan') || feedback.title.toLowerCase().includes('attack')
+      ? t('game', 'confirm_attackers')
+      : t('game', 'confirm_blockers')
     modeClass = 'action-combat'
   } else if (me?.hasPriority) {
-    label = 'Pasar'
-    sublabel = me.isActive ? 'Siguiente paso' : 'Ceder prioridad'
+    label = t('game', 'pass_priority')
+    sublabel = me.isActive ? t('game', 'turn') : t('game', 'priority')
     modeClass = 'action-priority'
   } else if (!me?.hasPriority && opp?.hasPriority) {
-    label = 'Esperando...'
+    label = `${t('common', 'loading')}`
     sublabel = opp.name
     modeClass = 'action-waiting'
   } else if (!canPass) {
-    label = 'Esperando...'
+    label = `${t('common', 'loading')}`
     modeClass = 'action-waiting'
   }
 

@@ -33,10 +33,19 @@ export function startCardFlight(
   const dy = toRect.top - fromRect.top
   if (Math.hypot(dx, dy) < 25) return null
 
+  const cardId = (card as any).id || (card as any).parentId || ''
+
+  if (cardId) {
+    const existing = activeFlights.find((f) => f.cardId === cardId)
+    if (existing) {
+      activeFlights = activeFlights.filter((f) => f.cardId !== cardId)
+    }
+  }
+
   const flightId = `flight-${++flightCounter}-${Date.now()}`
   const record: FlightRecord = {
     flightId,
-    cardId: card.id || (card as any).parentId || flightId,
+    cardId: cardId || flightId,
     card,
     fromRect,
     toRect,

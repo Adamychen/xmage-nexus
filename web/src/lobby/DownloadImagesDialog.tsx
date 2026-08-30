@@ -7,6 +7,7 @@ import {
   type DownloadProgress,
   type CacheStats,
 } from '../services/imageDownloader'
+import { useTranslation } from '../i18n'
 import './DownloadImagesDialog.css'
 
 export interface DownloadImagesDialogProps {
@@ -14,6 +15,7 @@ export interface DownloadImagesDialogProps {
 }
 
 export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogProps) {
+  const { t } = useTranslation()
   const [source, setSource] = useState<DownloadSource>('scryfall_normal')
   const [scope, setScope] = useState<DownloadScope>('STANDARD')
   const [concurrency, setConcurrency] = useState<number>(5)
@@ -52,7 +54,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
   }
 
   const handleClearCache = async () => {
-    if (window.confirm('¿Seguro que deseas eliminar todas las imágenes y símbolos de la caché local?')) {
+    if (window.confirm(t('dialogs', 'download_clear') + '?')) {
       await imageDownloader.clearCache()
       await updateStats()
     }

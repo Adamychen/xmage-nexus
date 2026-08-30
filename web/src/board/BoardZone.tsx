@@ -8,6 +8,7 @@ import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
+import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import './BoardZone.css'
 
@@ -67,6 +68,7 @@ export default function BoardZone({
   const isTop = effectivePosition === 'top'
 
   const { cardW, ref: zoneRef } = useZoneScale()
+  const { t } = useTranslation()
 
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
@@ -396,10 +398,10 @@ export default function BoardZone({
           <div className="zone-defeated-card">
             <span className="zone-defeated-icon">{player.hasLeft ? <Icon name="door" size={28} /> : <Icon name="skull" size={28} />}</span>
             <span className="zone-defeated-title">
-              {player.name} {player.hasLeft ? 'ha abandonado la partida' : 'ha sido derrotado'}
+              {player.name} {player.hasLeft ? t('game', 'player_left') : t('game', 'player_defeated')}
             </span>
             <span className="zone-defeated-sub">
-              {player.hasLeft ? 'El jugador se ha desconectado o concedido' : 'Vida reducida a 0'}
+              {player.hasLeft ? t('game', 'player_left_desc') : t('game', 'life_zero_desc')}
             </span>
           </div>
         </div>

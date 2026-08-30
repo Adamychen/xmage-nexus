@@ -55,7 +55,7 @@ describe('GameEndDialog', () => {
     })
 
     render(<GameEndDialog />)
-    expect(screen.getByText('💀 Fin de partida')).toBeDefined()
+    expect(screen.getByText('💀 Derrota')).toBeDefined()
     expect(screen.getByText(/Marcador: 0–2/i)).toBeDefined()
   })
 
@@ -76,7 +76,7 @@ describe('GameEndDialog', () => {
     })
 
     render(<GameEndDialog />)
-    expect(screen.getByText('🏆 Fin de la Partida')).toBeDefined()
+    expect(screen.getByText('🏆 Partida finalizada')).toBeDefined()
     expect(screen.getByText('Alice')).toBeDefined()
     expect(screen.queryByText(/Marcador:/i)).toBeNull()
 

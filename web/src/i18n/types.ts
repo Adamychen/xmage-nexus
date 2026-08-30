@@ -113,6 +113,49 @@ export interface TranslationSchema {
     revealed_hand: string
     concede: string
     concede_confirm: string
+    leave: string
+    concede_prompt: string
+    leave_spectate_prompt: string
+    hold_priority_title: string
+    auto_mulligan: string
+    auto_pass: string
+    pod_view: string
+    pod_view_active: string
+    pod_view_hint: string
+    pod_standard_hint: string
+    player_left: string
+    player_defeated: string
+    player_left_desc: string
+    life_zero_desc: string
+    status_left: string
+    status_defeated: string
+    match_wins: string
+    priority_time_left: string
+    buffer_time_left: string
+    resolve: string
+    attack_all: string
+    confirm_attackers: string
+    confirm_blockers: string
+    no_blocks: string
+    ability_triggered: string
+    ability_activated: string
+    ability_static: string
+    ability_loyalty: string
+    ability_general: string
+    type_instant: string
+    type_sorcery: string
+    type_creature: string
+    type_enchantment: string
+    type_artifact: string
+    type_planeswalker: string
+    type_land: string
+    type_spell: string
+    who_starts: string
+    choose_player: string
+    game_over: string
+    victory: string
+    defeat: string
+    return_to_lobby: string
     you: string
     opponent: string
     draw_card: string

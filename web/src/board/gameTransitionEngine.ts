@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
 import { startCardFlight } from './flightManager'
+import { getPreviousCardPosition, consumePreviousCardPosition } from './cardPositionRegistry'
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -38,21 +39,25 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       const ctrlName = spell.controllerName ?? spell.sourceCard?.controllerName
       const pSel = getPlayerSelector(ctrlId, ctrlName)
 
-      // Find source rect
       let sourceRect: DOMRect | null = null
 
-      // Check if source card was on battlefield
-      const srcId = spell.sourceCard?.id
+      // 1a. Check cardPositionRegistry first (card just unmounted from hand/battlefield)
+      const srcId = spell.sourceCard?.id ?? spell.id
       if (srcId) {
+        sourceRect = getPreviousCardPosition(srcId)
+      }
+
+      // 1b. Check if source card is still visible on battlefield
+      if (!sourceRect && srcId) {
         sourceRect = getRect(`[data-card-id="${srcId}"]`)
       }
 
-      // If not on battlefield, check player's hand
+      // 1c. Fallback: player's hand zone
       if (!sourceRect && pSel) {
         sourceRect = getRect(`${pSel} .hand-zone`)
       }
 
-      // Fallback: player zone
+      // 1d. Fallback: player zone
       if (!sourceRect && pSel) {
         sourceRect = getRect(pSel)
       }
@@ -79,22 +84,47 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const graveRect = getRect(`${pSel} .graveyard-stack`)
 
     // A) Card Draws (Library -> Hand)
-    const prevHandCount = prevP.handCount ?? 0
-    const nextHandCount = nextP.handCount ?? 0
-    if (nextHandCount > prevHandCount && libRect && handRect) {
-      const drawnCount = Math.min(3, nextHandCount - prevHandCount)
-      for (let i = 0; i < drawnCount; i++) {
-        const dummyCard: CardView = {
-          id: `draw-${nextP.playerId}-${Date.now()}-${i}`,
-          name: 'Magic Card',
-          manaValue: 0,
-          expansionSetCode: '',
-          cardNumber: '0',
-          faceDown: true,
+    // Use real hand IDs when available (controlled player), else fall back to handCount delta
+    const isControlled = nextP.controlled === true
+    if (isControlled) {
+      const prevHand = prevGame.myHand ?? {}
+      const nextHand = nextGame.myHand ?? {}
+      const drawnIds = Object.keys(nextHand).filter((id) => !(id in prevHand))
+      if (drawnIds.length > 0 && libRect && handRect) {
+        const capped = drawnIds.slice(0, 3)
+        capped.forEach((id, i) => {
+          const drawn = nextHand[id]
+          const dummyCard: CardView = drawn ?? {
+            id,
+            name: 'Magic Card',
+            manaValue: 0,
+            expansionSetCode: '',
+            cardNumber: '0',
+            faceDown: true,
+          }
+          setTimeout(() => {
+            startCardFlight(dummyCard, libRect, handRect, 320)
+          }, i * 70)
+        })
+      }
+    } else {
+      const prevHandCount = prevP.handCount ?? 0
+      const nextHandCount = nextP.handCount ?? 0
+      if (nextHandCount > prevHandCount && libRect && handRect) {
+        const drawnCount = Math.min(3, nextHandCount - prevHandCount)
+        for (let i = 0; i < drawnCount; i++) {
+          const dummyCard: CardView = {
+            id: `draw-${nextP.playerId}-${Date.now()}-${i}`,
+            name: 'Magic Card',
+            manaValue: 0,
+            expansionSetCode: '',
+            cardNumber: '0',
+            faceDown: true,
+          }
+          setTimeout(() => {
+            startCardFlight(dummyCard, libRect, handRect, 320)
+          }, i * 70)
         }
-        setTimeout(() => {
-          startCardFlight(dummyCard, libRect, handRect, 320)
-        }, i * 70)
       }
     }
 
@@ -104,12 +134,21 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
 
     for (const [permId, perm] of Object.entries(nextBattlefield)) {
       if (!(permId in prevBattlefield)) {
-        // Find if it resolved from stack or was played from hand
         const wasInStack = permId in prevStack || (perm.parentId && perm.parentId in prevStack)
-        const originRect = wasInStack ? stackRect : handRect
+
+        let originRect: DOMRect | null = null
+
+        // Check registry first: card may have just unmounted from hand/stack
+        const prevRegistered = consumePreviousCardPosition(permId)
+        if (prevRegistered) {
+          originRect = prevRegistered.rect
+        } else if (wasInStack) {
+          originRect = stackRect
+        } else {
+          originRect = handRect
+        }
 
         if (originRect) {
-          // Defer slightly until destination DOM slot mounts
           requestAnimationFrame(() => {
             const destRect =
               getRect(`[data-card-id="${permId}"]`) ||
@@ -117,7 +156,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
               getRect(`${pSel} .permanents-band`)
 
             if (destRect) {
-              startCardFlight(perm, originRect, destRect, 350)
+              startCardFlight(perm, originRect!, destRect, 350)
             }
           })
         }
@@ -127,7 +166,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     // C) Permanent Leaves Battlefield -> Graveyard (Dies)
     for (const [permId, perm] of Object.entries(prevBattlefield)) {
       if (!(permId in nextBattlefield) && graveRect) {
-        const prevCardRect = getRect(`[data-card-id="${permId}"]`)
+        // Card is already unmounted: use cardPositionRegistry (recorded on cleanup)
+        const registryEntry = consumePreviousCardPosition(permId)
+        const prevCardRect = registryEntry?.rect ?? getRect(`[data-card-id="${permId}"]`)
         if (prevCardRect) {
           startCardFlight(perm, prevCardRect, graveRect, 350)
         }

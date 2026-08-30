@@ -8,6 +8,7 @@ import { parseAnyDeck, exportDck, exportArena } from './parseDck'
 import { DECKS } from '../lobby/decks'
 import { DeckBrowser } from './DeckBrowser'
 import type { MetaDeckItem } from './metaDeckCatalog'
+import { useTranslation } from '../i18n'
 import './DecksGallery.css'
 
 function preconToV2(): DeckV2[] {
@@ -25,6 +26,7 @@ function preconToV2(): DeckV2[] {
 }
 
 export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void }) {
+  const { t } = useTranslation()
   const [mainView, setMainView] = useState<'my-decks' | 'browser'>('my-decks')
   const [decks, setDecks] = useState<DeckV2[]>([])
   const [search, setSearch] = useState('')
@@ -183,7 +185,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleDelete = async () => {
     if (!selected || selected.source === 'precon') return
-    if (!confirm(`¿Borrar "${selected.name}"?`)) return
+    if (!confirm(`${t('common', 'delete')} "${selected.name}"?`)) return
     await storage.del(selected.id)
     setSelectedId(null)
     await load()

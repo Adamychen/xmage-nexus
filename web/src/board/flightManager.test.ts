@@ -75,4 +75,19 @@ describe('flightManager', () => {
 
     unsubscribe()
   })
+
+  it('deduplicates: second flight for the same cardId cancels the first', () => {
+    const firstId = startCardFlight(dummyCard, fromRect, toRect, 500)
+    expect(firstId).not.toBeNull()
+    expect(getActiveFlights().length).toBe(1)
+
+    const altDest = { ...toRect, left: 700, top: 100 } as DOMRect
+    const secondId = startCardFlight(dummyCard, fromRect, altDest, 500)
+    expect(secondId).not.toBeNull()
+
+    const active = getActiveFlights()
+    expect(active.length).toBe(1)
+    expect(active[0].flightId).toBe(secondId)
+    expect(active.find((f) => f.flightId === firstId)).toBeUndefined()
+  })
 })

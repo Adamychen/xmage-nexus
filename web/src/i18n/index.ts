@@ -121,9 +121,28 @@ function getStoreSnapshot(): string {
 
 /**
  * Type-safe string translation path accessor.
- * Example: t('common.save') or t('game.concede')
+ * Supports both t('game', 'concede') and t('game.concede') formats.
  */
-export function t(path: string, params?: Record<string, string | number>): string {
+export function t<K1 extends keyof TranslationSchema, K2 extends keyof TranslationSchema[K1]>(
+  category: K1,
+  key: K2,
+  params?: Record<string, string | number>,
+): string
+export function t(path: string, params?: Record<string, string | number>): string
+export function t(
+  pathOrCat: string,
+  keyOrParams?: string | Record<string, string | number>,
+  params?: Record<string, string | number>,
+): string {
+  let path = pathOrCat
+  let effectiveParams = params
+
+  if (typeof keyOrParams === 'string') {
+    path = `${pathOrCat}.${keyOrParams}`
+  } else if (typeof keyOrParams === 'object' && keyOrParams !== null) {
+    effectiveParams = keyOrParams
+  }
+
   const parts = path.split('.')
   let current: any = LOCALES[currentLanguage] || LOCALES.es
 
@@ -147,9 +166,9 @@ export function t(path: string, params?: Record<string, string | number>): strin
 
   if (typeof current !== 'string') return path
 
-  if (params) {
+  if (effectiveParams) {
     let text = current
-    for (const [k, v] of Object.entries(params)) {
+    for (const [k, v] of Object.entries(effectiveParams)) {
       text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
     }
     return text
@@ -219,8 +238,8 @@ export function useTranslation() {
     setCardLanguage(newCardLang)
   }, [])
 
-  const translate = useCallback((path: string, params?: Record<string, string | number>) => {
-    return t(path, params)
+  const translate: typeof t = useCallback((pathOrCat: any, keyOrParams?: any, params?: any) => {
+    return t(pathOrCat, keyOrParams, params)
   }, [])
 
   const errorTranslator = useCallback((err: string | null | undefined) => {

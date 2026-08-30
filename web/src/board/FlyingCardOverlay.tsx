@@ -22,26 +22,38 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     if (!el) return
 
     const { fromRect, toRect, duration } = flight
+
+    // Uniform scale to destination (use min to avoid stretching)
     const scaleX = toRect.width / Math.max(1, fromRect.width)
     const scaleY = toRect.height / Math.max(1, fromRect.height)
-    const scale = Math.max(scaleX, scaleY)
+    const scale = Math.min(scaleX, scaleY)
 
-    // Initial state at fromRect
+    // Arc offset: perpendicular lift proportional to travel distance
+    const dx = toRect.left - fromRect.left
+    const dy = toRect.top - fromRect.top
+    const dist = Math.hypot(dx, dy)
+    const arcLift = Math.min(120, dist * 0.25)
+
+    // Define the arc keyframe on the element itself
+    const keyframeName = `arc-${flight.flightId}`
+    const styleTag = document.createElement('style')
+    styleTag.id = keyframeName
+    styleTag.textContent = `
+      @keyframes ${keyframeName} {
+        0%   { transform: translate3d(${fromRect.left}px, ${fromRect.top}px, 0) scale(1); opacity: 0.85; }
+        50%  { transform: translate3d(${fromRect.left + dx * 0.5}px, ${fromRect.top + dy * 0.5 - arcLift}px, 0) scale(${(1 + scale) / 2}); opacity: 1; }
+        100% { transform: translate3d(${toRect.left}px, ${toRect.top}px, 0) scale(${scale}); opacity: 0.7; }
+      }
+    `
+    document.head.appendChild(styleTag)
+
     el.style.width = `${fromRect.width}px`
     el.style.height = `${fromRect.height}px`
     el.style.transform = `translate3d(${fromRect.left}px, ${fromRect.top}px, 0) scale(1)`
-    el.style.transition = 'none'
-
-    let rafId = requestAnimationFrame(() => {
-      rafId = requestAnimationFrame(() => {
-        if (!el) return
-        el.style.transition = `transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${duration}ms ease`
-        el.style.transform = `translate3d(${toRect.left}px, ${toRect.top}px, 0) scale(${scale})`
-      })
-    })
+    el.style.animation = `${keyframeName} ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) forwards`
 
     return () => {
-      if (rafId) cancelAnimationFrame(rafId)
+      document.getElementById(keyframeName)?.remove()
     }
   }, [flight])
 

@@ -1,4 +1,5 @@
 import { returnToLobby, useStore, useGame } from '../state/store'
+import { useTranslation } from '../i18n'
 import './GameEndDialog.css'
 
 /** Resumen del fin de partida/match (END_GAME_INFO o GAME_OVER del servidor).
@@ -6,6 +7,7 @@ import './GameEndDialog.css'
 export default function GameEndDialog() {
   const end = useStore((s) => s.gameEnd)
   const game = useGame()
+  const { t } = useTranslation()
   if (!end) return null
 
   const me = game?.players?.find((p) => p.controlled)
@@ -23,7 +25,7 @@ export default function GameEndDialog() {
     <div className="end-backdrop" role="presentation">
       <section className="end-dialog panel" role="dialog" aria-modal="true" aria-labelledby="end-title">
         <h2 id="end-title">
-          {isSpectator ? '🏆 Fin de la Partida' : (end.won ? '🎉 ¡Victoria!' : '💀 Fin de partida')}
+          {isSpectator ? `🏆 ${t('game', 'game_over')}` : (end.won ? `🎉 ${t('game', 'victory')}` : `💀 ${t('game', 'defeat')}`)}
         </h2>
 
         {winnerName && (
@@ -43,7 +45,7 @@ export default function GameEndDialog() {
 
         {matchOver ? (
           <button className="primary" onClick={returnToLobby}>
-            Volver al lobby
+            {t('game', 'return_to_lobby')}
           </button>
         ) : (
           <p className="end-hint">El match continúa — esperando la siguiente partida…</p>

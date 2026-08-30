@@ -24,11 +24,13 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { setState } from '../state/state'
+import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
 export default function GameScreen() {
+  const { t } = useTranslation()
   const game = useGame()
   const settings = useSettings()
   const gameId = useStore((s) => s.gameId)
@@ -199,7 +201,7 @@ export default function GameScreen() {
           )}
         </div>
         <div className="game-controls">
-          <label className={`toggle hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`} title="Retener prioridad al lanzar hechizos o activar habilidades (o mantén Ctrl/Cmd al hacer clic)">
+          <label className={`toggle hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`} title={t('game', 'hold_priority_title')}>
             <input
               type="checkbox"
               checked={settings.holdPriority}
@@ -209,7 +211,7 @@ export default function GameScreen() {
                 if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
               }}
             />
-            <Icon name="bolt" size={13} /> Retener prioridad
+            <Icon name="bolt" size={13} /> {t('game', 'hold_priority')}
           </label>
           <label className="toggle">
             <input
@@ -217,7 +219,7 @@ export default function GameScreen() {
               checked={settings.autoKeepMulligan}
               onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
             />
-            Auto-mulligan
+            {t('game', 'auto_mulligan')}
           </label>
           <label className="toggle">
             <input
@@ -225,16 +227,16 @@ export default function GameScreen() {
               checked={settings.autoPass}
               onChange={(e) => setSetting('autoPass', e.target.checked)}
             />
-            Auto-pass
+            {t('game', 'auto_pass')}
           </label>
           {opps.length >= 1 && (
             <button
               type="button"
               className={`layout-toggle-btn ${isPodLayout ? 'is-active' : ''}`}
-              title={isPodLayout ? 'Cambiar a layout estándar (un oponente a la vez)' : `Ver todos los tableros en cuadrícula (${opps.length + 1} jugadores)`}
+              title={isPodLayout ? t('game', 'pod_standard_hint') : `${t('game', 'pod_view_hint')} (${opps.length + 1})`}
               onClick={() => setSetting('boardLayout', isPodLayout ? 'standard' : 'pod')}
             >
-              <Icon name="grid" size={13} /> {isPodLayout ? 'Pod ✓' : 'Pod'}
+              <Icon name="grid" size={13} /> {isPodLayout ? t('game', 'pod_view_active') : t('game', 'pod_view')}
             </button>
           )}
           <button
@@ -243,8 +245,8 @@ export default function GameScreen() {
             onClick={async () => {
               const isPlayer = !!me
               const msg = isPlayer
-                ? '¿Seguro que quieres conceder la partida y volver al lobby?'
-                : '¿Dejar de espectar y volver al lobby?'
+                ? t('game', 'concede_prompt')
+                : t('game', 'leave_spectate_prompt')
               if (confirm(msg)) {
                 if (isPlayer && gameId) {
                   await concedeGame(gameId)
@@ -253,9 +255,9 @@ export default function GameScreen() {
                 }
               }
             }}
-            title={me ? 'Conceder la partida y volver al lobby' : 'Volver al lobby'}
+            title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
           >
-            {me ? <><Icon name="flag" size={13} /> Conceder</> : <><Icon name="door" size={13} /> Salir</>}
+            {me ? <><Icon name="flag" size={13} /> {t('game', 'concede')}</> : <><Icon name="door" size={13} /> {t('game', 'leave')}</>}
           </button>
         </div>
       </header>

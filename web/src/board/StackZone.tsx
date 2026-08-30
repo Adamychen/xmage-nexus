@@ -4,6 +4,8 @@ import { awaitImageUrl, isAbilityCard, cardName } from '../cards/cardImages'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
+import { useTranslation } from '../i18n'
+import Icon from '../ui/Icon'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -29,24 +31,24 @@ function isCopyCard(card: CardView): boolean {
   return name.includes('[Copia') || name.includes('[Copy') || disp.includes('[Copia') || (card as any).isCopy === true
 }
 
-function stackTypeLabel(card: CardView): string {
+function stackTypeLabel(card: CardView, t: (cat: any, key: any) => string): string {
   if (isStackAbility(card)) {
     const at = card.abilityType ?? ''
-    if (at === 'Triggered' || at === 'Triggered Mana') return 'Disparada'
-    if (at === 'Activated' || at === 'Mana') return 'Activada'
-    if (at === 'Static') return 'Estática'
-    if (at === 'Loyalty') return 'Lealtad'
-    return 'Habilidad'
+    if (at === 'Triggered' || at === 'Triggered Mana') return t('game', 'ability_triggered')
+    if (at === 'Activated' || at === 'Mana') return t('game', 'ability_activated')
+    if (at === 'Static') return t('game', 'ability_static')
+    if (at === 'Loyalty') return t('game', 'ability_loyalty')
+    return t('game', 'ability_general')
   }
   const types = card.cardTypes ?? []
-  if (types.includes('INSTANT')) return 'Instantáneo'
-  if (types.includes('SORCERY')) return 'Conjuro'
-  if (types.includes('CREATURE')) return 'Criatura'
-  if (types.includes('ENCHANTMENT')) return 'Encantamiento'
-  if (types.includes('ARTIFACT')) return 'Artefacto'
-  if (types.includes('PLANESWALKER')) return 'Planeswalker'
-  if (types.includes('LAND')) return 'Tierra'
-  return 'Hechizo'
+  if (types.includes('INSTANT')) return t('game', 'type_instant')
+  if (types.includes('SORCERY')) return t('game', 'type_sorcery')
+  if (types.includes('CREATURE')) return t('game', 'type_creature')
+  if (types.includes('ENCHANTMENT')) return t('game', 'type_enchantment')
+  if (types.includes('ARTIFACT')) return t('game', 'type_artifact')
+  if (types.includes('PLANESWALKER')) return t('game', 'type_planeswalker')
+  if (types.includes('LAND')) return t('game', 'type_land')
+  return t('game', 'type_spell')
 }
 
 function stackSubtype(card: CardView): string | null {
@@ -80,7 +82,9 @@ function getControllerInfo(
   id: string,
   players?: PlayerView[],
   myPlayerId?: string | null,
+  t?: (cat: any, key: any) => string,
 ): ControllerInfo {
+  const youLabel = t ? t('game', 'you') : 'Tú'
   const ctrlId = card.controllerId ?? card.sourceCard?.controllerId
   const ctrlName = card.controllerName ?? card.sourceCard?.controllerName
   const me = players?.find((p) => p.controlled || (myPlayerId != null && p.playerId === myPlayerId))
@@ -92,7 +96,7 @@ function getControllerInfo(
       const isMe = !!me && (matchedPlayer.controlled || (myPlayerId != null && matchedPlayer.playerId === myPlayerId))
       return {
         id: ctrlId,
-        name: isMe ? 'Tú' : matchedPlayer.name,
+        name: isMe ? youLabel : matchedPlayer.name,
         isMe,
         isOpponent: !isMe,
         avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
@@ -106,7 +110,7 @@ function getControllerInfo(
     if (matchedPlayer) {
       const isMe = !!me && (matchedPlayer.controlled || (myPlayerId != null && matchedPlayer.playerId === myPlayerId))
       return {
-        name: isMe ? 'Tú' : matchedPlayer.name,
+        name: isMe ? youLabel : matchedPlayer.name,
         isMe,
         isOpponent: !isMe,
         avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
@@ -127,7 +131,7 @@ function getControllerInfo(
       if (id in (p.battlefield ?? {}) || id in (p.graveyard ?? {})) {
         const isMe = !!me && (p.controlled || (myPlayerId != null && p.playerId === myPlayerId))
         return {
-          name: isMe ? 'Tú' : p.name,
+          name: isMe ? youLabel : p.name,
           isMe,
           isOpponent: !isMe,
           avatarIcon: isMe ? '👤' : (p.isHuman ? '👤' : '🤖'),
@@ -138,7 +142,7 @@ function getControllerInfo(
 
   // 4) Last resort — never label a spectator (no `me`) as "Tú".
   return {
-    name: me ? 'Tú' : 'Desconocido',
+    name: me ? youLabel : 'Desconocido',
     isMe: false,
     isOpponent: !me,
     avatarIcon: me ? '👤' : '❓',
@@ -198,6 +202,7 @@ export default function StackZone({
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
+  const { t } = useTranslation()
 
   const modalOpen = useStore(isBlockingModal)
   useEffect(() => {
@@ -222,9 +227,8 @@ export default function StackZone({
     return (
       <div className="stack-zone empty">
         <div className="stack-empty-state">
-          <span className="stack-empty-icon">⚡</span>
-          <span className="stack-empty-title">Pila vacía</span>
-          <span className="stack-empty-desc">Los hechizos y habilidades jugados aparecerán aquí para resolver.</span>
+          <span className="stack-empty-icon"><Icon name="bolt" size={24} /></span>
+          <span className="stack-empty-title">{t('game', 'stack')}</span>
         </div>
       </div>
     )
@@ -236,7 +240,7 @@ export default function StackZone({
     <div className={`stack-zone view-mode-${viewMode}`}>
       <div className="stack-header">
         <div className="stack-header-left">
-          <span className="stack-header-title">Pila ({ordered.length})</span>
+          <span className="stack-header-title">{t('game', 'stack')} ({ordered.length})</span>
         </div>
         <div className="stack-header-actions">
           {canResolve && (
@@ -245,14 +249,14 @@ export default function StackZone({
               className="stack-resolve-header-btn"
               onClick={onResolveClick}
             >
-              ⚡ Resolver
+              <Icon name="bolt" size={13} /> {t('game', 'resolve')}
             </button>
           )}
           <div className="stack-view-toggle">
             <button
               type="button"
               className={`toggle-mode-btn ${viewMode === 'compact' ? 'active' : ''}`}
-              title="Vista compacta con timeline"
+              title="Compact"
               onClick={() => setViewMode('compact')}
             >
               ▤
@@ -260,7 +264,7 @@ export default function StackZone({
             <button
               type="button"
               className={`toggle-mode-btn ${viewMode === 'expanded' ? 'active' : ''}`}
-              title="Vista expandida con cartas"
+              title="Expanded"
               onClick={() => setViewMode('expanded')}
             >
               ▦
@@ -275,12 +279,12 @@ export default function StackZone({
           const isLast = idx === ordered.length - 1
           const isAbility = isStackAbility(card)
           const isCopy = isCopyCard(card)
-          const typeLabel = stackTypeLabel(card)
+          const typeLabel = stackTypeLabel(card, t)
           const subtype = stackSubtype(card)
           const rulesText = stackRulesText(card)
           const manaCost = (card.manaCostLeftStr ?? []).join('')
           const isTargetable = targetIds.has(id)
-          const ctrlInfo = getControllerInfo(card, id, players, myPlayerId)
+          const ctrlInfo = getControllerInfo(card, id, players, myPlayerId, t)
           const ownership = ctrlInfo.isMe ? 'mine' : 'opponent'
           const ptLine = !isAbility && card.power != null && card.toughness != null
             ? `${card.power}/${card.toughness}`
