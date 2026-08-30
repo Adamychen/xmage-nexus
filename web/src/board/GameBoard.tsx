@@ -5,6 +5,7 @@ import PlayerZone from './PlayerZone'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import { useSceneBridge } from './sceneBridge'
+import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
 import { useStore, isBlockingModal } from '../state/store'
 import './GameBoard.css'
@@ -159,6 +160,8 @@ export default function GameBoard({
     combatChosen,
     crossZonePlayables,
   })
+
+  useGameTransitions(game)
 
   const onHandCardClick = onPlayableClick
 

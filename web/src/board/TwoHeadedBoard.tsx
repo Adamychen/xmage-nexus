@@ -5,6 +5,7 @@ import PlayerZone from './PlayerZone'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import { useSceneBridge } from './sceneBridge'
+import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
 import { useStore, isBlockingModal } from '../state/store'
 import './TwoHeadedBoard.css'
@@ -126,6 +127,7 @@ export default function TwoHeadedBoard({
   )
 
   useSceneBridge({ game, playableIds, targetIds, chosenTargetIds, combatSelectable, combatMode, combatChosen, crossZonePlayables })
+  useGameTransitions(game)
 
   const handleCardClick = (id: string) => {
     if (combatSelectable.includes(id) || combatChosen.includes(id)) onCombatClick?.(id)
