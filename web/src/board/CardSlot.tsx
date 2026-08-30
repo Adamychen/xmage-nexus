@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
-import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
+import { getPreviousCardPosition, recordCardPosition } from './cardPositionRegistry'
+import { startCardFlight } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import './CardSlot.css'
@@ -51,17 +52,7 @@ export default function CardSlot({
     const el = slotRef.current
     if (!el || !effectiveId) return
 
-    let rafId: number | null = null
     let timerId: ReturnType<typeof setTimeout> | null = null
-
-    const resetStyles = () => {
-      if (el) {
-        el.style.transform = ''
-        el.style.transition = ''
-        el.style.zIndex = ''
-        el.style.boxShadow = ''
-      }
-    }
 
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
@@ -72,48 +63,25 @@ export default function CardSlot({
       if (lastRect.width > 0 && lastRect.height > 0) {
         const prevRect = getPreviousCardPosition(effectiveId)
         if (prevRect && prevRect.width > 0) {
-          const prevZone = getPreviousCardZone(effectiveId)
-          const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
-          const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
-          if (prevZone && curZoneClass && prevZone === curZoneClass) {
-            return
-          }
-          const dx = prevRect.left + prevRect.width / 2 - (lastRect.left + lastRect.width / 2)
-          const dy = prevRect.top + prevRect.height / 2 - (lastRect.top + lastRect.height / 2)
-
-          if (Math.hypot(dx, dy) > 20) {
-            const scale = Math.min(1.15, Math.max(0.7, prevRect.width / lastRect.width))
-            el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${scale})`
-            el.style.transition = 'none'
-            el.style.zIndex = '60'
-            el.style.boxShadow = '0 16px 36px rgba(0, 0, 0, 0.85), 0 0 16px rgba(255, 208, 112, 0.35)'
-
-            rafId = requestAnimationFrame(() => {
-              rafId = null
-              el.style.transition = 'transform 460ms cubic-bezier(0.19, 1, 0.22, 1), box-shadow 460ms ease'
-              el.style.transform = ''
-              el.style.boxShadow = ''
-
-              timerId = setTimeout(() => {
-                timerId = null
-                resetStyles()
-              }, 480)
-            })
+          const flightId = startCardFlight(card, prevRect, lastRect, 360)
+          if (flightId) {
+            el.style.opacity = '0'
+            timerId = setTimeout(() => {
+              timerId = null
+              if (el) {
+                el.style.transition = 'opacity 180ms ease'
+                el.style.opacity = '1'
+              }
+            }, 340)
           }
         }
       }
     }
 
     return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId)
-        rafId = null
-        resetStyles()
-      }
       if (timerId !== null) {
         clearTimeout(timerId)
         timerId = null
-        resetStyles()
       }
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
@@ -121,7 +89,7 @@ export default function CardSlot({
         recordCardPosition(effectiveId, el.getBoundingClientRect(), zoneClass)
       }
     }
-  }, [effectiveId])
+  }, [effectiveId, card])
 
   useEffect(() => {
     if (faceDown) return

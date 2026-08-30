@@ -3,6 +3,7 @@ import type { CardView, GameView, PermanentView, PlayerView } from '../net/types
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import FloatingCardPreview from './FloatingCardPreview'
+import FlyingCardOverlay from './FlyingCardOverlay'
 import { useSceneBridge } from './sceneBridge'
 import type { CrossZonePlayable } from './crossZone'
 import { useStore, isBlockingModal } from '../state/store'
@@ -221,6 +222,7 @@ export default function GameBoard({
         anchorRect={anchorRect}
         boardRect={boardRef.current?.getBoundingClientRect() ?? null}
       />
+      <FlyingCardOverlay />
     </div>
   )
 }
