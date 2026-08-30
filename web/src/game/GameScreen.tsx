@@ -24,6 +24,7 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { setState } from '../state/state'
+import Icon from '../ui/Icon'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
@@ -208,7 +209,7 @@ export default function GameScreen() {
                 if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
               }}
             />
-            ⚡ Retener prioridad
+            <Icon name="bolt" size={13} /> Retener prioridad
           </label>
           <label className="toggle">
             <input
@@ -233,7 +234,7 @@ export default function GameScreen() {
               title={isPodLayout ? 'Cambiar a layout estándar (un oponente a la vez)' : `Ver todos los tableros en cuadrícula (${opps.length + 1} jugadores)`}
               onClick={() => setSetting('boardLayout', isPodLayout ? 'standard' : 'pod')}
             >
-              {isPodLayout ? '⊞ Pod ✓' : '⊞ Pod'}
+              <Icon name="grid" size={13} /> {isPodLayout ? 'Pod ✓' : 'Pod'}
             </button>
           )}
           <button
@@ -254,7 +255,7 @@ export default function GameScreen() {
             }}
             title={me ? 'Conceder la partida y volver al lobby' : 'Volver al lobby'}
           >
-            {me ? '🏳️ Conceder' : '🚪 Salir'}
+            {me ? <><Icon name="flag" size={13} /> Conceder</> : <><Icon name="door" size={13} /> Salir</>}
           </button>
         </div>
       </header>

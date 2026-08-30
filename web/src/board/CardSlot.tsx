@@ -5,6 +5,7 @@ import { consumePreviousCardPosition, recordCardPosition } from './cardPositionR
 import { startCardFlight } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
+import Icon from '../ui/Icon'
 import './CardSlot.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
@@ -183,7 +184,7 @@ export default function CardSlot({
       {/* Battle Defense Badge (Battles only) */}
       {isBattle && defenseVal > 0 && (
         <div className="defense-badge" title={`Defensa: ${perm.defense}`}>
-          <span className="defense-icon">⚔️</span>
+          <span className="defense-icon"><Icon name="swords" size={11} /></span>
           <span className="defense-val">{perm.defense}</span>
         </div>
       )}
@@ -191,7 +192,7 @@ export default function CardSlot({
       {/* Mutated Permanent Badge (Mutate pile) */}
       {perm.mutated === true && (
         <div className="mutated-badge" title="Criatura mutada (pila de cartas fusionadas)">
-          <span className="mutated-icon">🧬</span>
+          <span className="mutated-icon"><Icon name="dna" size={12} /></span>
         </div>
       )}
 
@@ -200,7 +201,7 @@ export default function CardSlot({
         <div className="card-counters-wrap">
           {counters.map((c, ci) => {
             const n = c.name.toLowerCase()
-            let icon = ''
+            let iconElement: React.ReactNode = null
             let customClass = ''
             let label = ''
 
@@ -211,22 +212,22 @@ export default function CardSlot({
               label = `-${c.count}`
               customClass = 'm1m1'
             } else if (n.includes('shield')) {
-              icon = '🛡️'
+              iconElement = <Icon name="shield" size={10} />
               label = c.count > 1 ? `${c.count}` : ''
               customClass = 'shield'
             } else if (n.includes('stun')) {
-              icon = '⚡'
+              iconElement = <Icon name="bolt" size={10} />
               label = c.count > 1 ? `${c.count}` : ''
               customClass = 'stun'
             } else if (n.includes('oil')) {
-              icon = '🛢️'
+              iconElement = <Icon name="drop" size={10} />
               label = `${c.count}`
               customClass = 'oil'
             } else if (n.includes('finality')) {
-              icon = '⏳'
+              iconElement = <Icon name="timer" size={10} />
               customClass = 'finality'
             } else if (n.includes('lore')) {
-              icon = '📖'
+              iconElement = <Icon name="book" size={10} />
               label = `${c.count}`
               customClass = 'lore'
             } else {
@@ -239,7 +240,7 @@ export default function CardSlot({
                 className={`counter-badge ${customClass}`}
                 title={`${c.name}: ${c.count}`}
               >
-                {icon && <span className="counter-icon-symbol">{icon}</span>}
+                {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
                 {label && <span className="counter-text-val">{label}</span>}
               </div>
             )
@@ -255,7 +256,7 @@ export default function CardSlot({
       {/* Summoning Sickness indicator (Creatures only) */}
       {hasSummoningSickness && (
         <div className="sickness-badge" title="Mareo de invocación (No puede atacar ni girarse este turno)">
-          🌀
+          <Icon name="timer" size={11} />
         </div>
       )}
 
@@ -275,7 +276,7 @@ export default function CardSlot({
           className={`card-transform-badge ${perm.transformed ? 'is-transformed' : ''}`}
           title={perm.transformed ? 'Carta transformada (Reverso)' : 'Carta de doble cara (Anverso)'}
         >
-          {perm.transformed ? '🌙' : '☀️'}
+          {perm.transformed ? <Icon name="moon" size={11} /> : <Icon name="sun" size={11} />}
         </div>
       )}
 

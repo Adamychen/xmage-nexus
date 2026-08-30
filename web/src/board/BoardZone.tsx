@@ -8,6 +8,7 @@ import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
+import Icon from '../ui/Icon'
 import './BoardZone.css'
 
 export interface BoardZoneProps {
@@ -393,7 +394,7 @@ export default function BoardZone({
       {isDefeated && (
         <div className="zone-defeated-overlay">
           <div className="zone-defeated-card">
-            <span className="zone-defeated-icon">{player.hasLeft ? '🚪' : '💀'}</span>
+            <span className="zone-defeated-icon">{player.hasLeft ? <Icon name="door" size={28} /> : <Icon name="skull" size={28} />}</span>
             <span className="zone-defeated-title">
               {player.name} {player.hasLeft ? 'ha abandonado la partida' : 'ha sido derrotado'}
             </span>

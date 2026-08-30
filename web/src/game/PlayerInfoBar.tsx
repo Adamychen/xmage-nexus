@@ -3,6 +3,7 @@ import { useStore } from '../state/store'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
+import Icon from '../ui/Icon'
 import './PlayerInfoBar.css'
 
 interface PlayerInfoBarProps {
@@ -14,17 +15,12 @@ interface PlayerInfoBarProps {
   onHover?: (card: CardView | null, rect?: DOMRect) => void
 }
 
-function counterIcon(name: string): string {
+function renderCounterIcon(name: string): React.ReactNode {
   const n = name.toLowerCase()
-  if (n.includes('poison')) return '☠️'
-  if (n.includes('energy')) return '⚡'
-  if (n.includes('rad')) return '☢️'
-  if (n.includes('experience')) return '🎖️'
-  if (n.includes('ticket')) return '🎟️'
-  if (n.includes('acorn')) return '🌰'
-  if (n.includes('speed')) return '🏎️'
-  if (n.includes('commander')) return '👑'
-  return '💎'
+  if (n.includes('poison')) return <Icon name="skull" size={13} />
+  if (n.includes('energy')) return <Icon name="bolt" size={13} />
+  if (n.includes('commander')) return <Icon name="crown" size={13} />
+  return <Icon name="sparkles" size={12} />
 }
 
 function getCounterTokenCard(name: string, count: number): CardView {
@@ -303,9 +299,9 @@ export default function PlayerInfoBar({
             {player.name}
           </span>
           {player.hasLeft ? (
-            <span className="player-status-badge status-left">🚪 Fuera</span>
+            <span className="player-status-badge status-left"><Icon name="door" size={12} /> Fuera</span>
           ) : player.life <= 0 ? (
-            <span className="player-status-badge status-defeated">💀 Derrotado</span>
+            <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> Derrotado</span>
           ) : null}
           {showMatchWins && (
             <span className="match-wins-dots" title={`Victorias en el match: ${wins}/${winsNeeded}`}>
@@ -321,7 +317,7 @@ export default function PlayerInfoBar({
         <div className="player-counters">
           {/* Life Counter */}
           <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title="Vida">
-            <span className="counter-icon">&#9829;</span>
+            <span className="counter-icon"><Icon name="heart" size={12} /></span>
             <span className="life-value">{player.life}</span>
           </span>
 
@@ -336,7 +332,7 @@ export default function PlayerInfoBar({
                 onMouseEnter={(e) => handleMouseEnter(tokenCard, e)}
                 onMouseLeave={handleMouseLeave}
               >
-                <span className="counter-emoji">{counterIcon(c.name)}</span>
+                <span className="counter-emoji">{renderCounterIcon(c.name)}</span>
                 <span className="counter-val">{c.count}</span>
               </span>
             )
@@ -348,7 +344,7 @@ export default function PlayerInfoBar({
               className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${hasPriority ? 'timer-active' : ''}`}
               title="Tiempo restante de prioridad"
             >
-              <span className="timer-icon">⏱️</span>
+              <span className="timer-icon"><Icon name="timer" size={12} /></span>
               <span className="timer-value">{formatTimer(timeLeft)}</span>
               {hasBuffer && (
                 <span className="timer-buffer" title="Tiempo de buffer disponible">
@@ -371,7 +367,7 @@ export default function PlayerInfoBar({
               onMouseEnter={(e) => handleMouseEnter(ringInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
-              💍<span className="badge-sub-level">{ringInfo.level}</span>
+              <Icon name="target" size={13} /><span className="badge-sub-level">{ringInfo.level}</span>
             </span>
           )}
 
@@ -388,7 +384,7 @@ export default function PlayerInfoBar({
               }
               onMouseLeave={handleMouseLeave}
             >
-              👑
+              <Icon name="crown" size={13} />
             </span>
           )}
 
@@ -405,7 +401,7 @@ export default function PlayerInfoBar({
               }
               onMouseLeave={handleMouseLeave}
             >
-              ⚔️
+              <Icon name="swords" size={13} />
             </span>
           )}
 
@@ -417,7 +413,7 @@ export default function PlayerInfoBar({
               onMouseEnter={(e) => handleMouseEnter(dungeonInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
-              🗺️
+              <Icon name="book" size={13} />
             </span>
           )}
 
@@ -429,7 +425,7 @@ export default function PlayerInfoBar({
               onMouseEnter={(e) => handleMouseEnter(dayNightInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
-              {dayNightInfo.isNight ? '🌙' : '☀️'}
+              {dayNightInfo.isNight ? <Icon name="moon" size={13} /> : <Icon name="sun" size={13} />}
             </span>
           )}
 
@@ -441,7 +437,7 @@ export default function PlayerInfoBar({
               onMouseEnter={(e) => handleMouseEnter(curseInfo.firstCard, e)}
               onMouseLeave={handleMouseLeave}
             >
-              💀<span className="badge-sub-level">{curseInfo.count}</span>
+              <Icon name="skull" size={13} /><span className="badge-sub-level">{curseInfo.count}</span>
             </span>
           )}
 

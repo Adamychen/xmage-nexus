@@ -5,6 +5,7 @@ import CrossZoneOverlay from '../board/CrossZoneOverlay'
 import { crossZoneCounts } from '../board/crossZone'
 import type { CrossZonePlayable } from '../board/crossZone'
 import CardSlot from '../board/CardSlot'
+import Icon from '../ui/Icon'
 import './ResourceBar.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -131,7 +132,7 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
             <img className="stack-back-img" src={CARD_BACK_URL} alt="" draggable={false} />
           )}
           <span className="stack-count">{player.libraryCount}</span>
-          {player.topCard && <span className="top-card-badge" title="Carta superior revelada">👁️</span>}
+          {player.topCard && <span className="top-card-badge" title="Carta superior revelada"><Icon name="target" size={12} /></span>}
         </button>
 
         <button
@@ -146,7 +147,7 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
             <CardSlot card={topGraveyardCard} className="graveyard-top-card" />
           ) : (
             <div className="stack-card-back graveyard-back">
-              <span className="stack-mark">&#9760;</span>
+              <span className="stack-mark"><Icon name="skull" size={20} /></span>
             </div>
           )}
           <span className="stack-count">{graveyardCount}</span>
@@ -165,7 +166,7 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
             <CardSlot card={topExileCard} className="exile-top-card" />
           ) : (
             <div className="stack-card-back exile-back">
-              <span className="stack-mark">&#9784;</span>
+              <span className="stack-mark"><Icon name="portal" size={20} /></span>
             </div>
           )}
           <span className="stack-count">{exileCount}</span>
@@ -184,14 +185,11 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
             {topCrossZoneCard ? (
               <>
                 <CardSlot card={topCrossZoneCard} className="ray-top-card" />
-                <div className="ray-mini-badge" title="Lanzable desde otra zona">⚡</div>
+                <div className="ray-mini-badge" title="Lanzable desde otra zona"><Icon name="bolt" size={10} /></div>
               </>
             ) : (
               <div className="stack-card-back ray-back">
-                <svg className="ray-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
-                </svg>
+                <Icon name="bolt" size={18} />
               </div>
             )}
             <span className="stack-count">{crossZone.length}</span>

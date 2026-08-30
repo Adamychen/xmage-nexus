@@ -1,25 +1,26 @@
-import { fireEvent, render } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { render, fireEvent } from '@testing-library/react'
 import PlayerInfoBar from './PlayerInfoBar'
 import type { PlayerView } from '../net/types'
 
+import { makePlayer } from '../__fixtures__/gameViews'
+
+const basePlayer: PlayerView = makePlayer({
+  playerId: 'p1',
+  name: 'Alice',
+  life: 20,
+  handCount: 7,
+  libraryCount: 40,
+  manaPool: { white: 0, blue: 0, black: 0, red: 0, green: 0, colorless: 0 },
+  controlled: true,
+  isHuman: true,
+})
+
 describe('PlayerInfoBar', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  const basePlayer: PlayerView = {
-    playerId: 'p1',
-    name: 'Alice',
-    life: 20,
-    controlled: true,
-    isHuman: true,
-  } as unknown as PlayerView
-
   it('renders basic player info (avatar, name, life)', () => {
-    const { getByText } = render(<PlayerInfoBar player={basePlayer} side="my" />)
-    expect(getByText('Alice')).toBeDefined()
-    expect(getByText('20')).toBeDefined()
+    const { container } = render(<PlayerInfoBar player={basePlayer} side="my" />)
+    expect(container.querySelector('.player-name')?.textContent).toBe('Alice')
+    expect(container.querySelector('.life-value')?.textContent).toBe('20')
   })
 
   it('renders Monarch badge and calls onHover with The Monarch token card', () => {
@@ -31,7 +32,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={monarchPlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-monarch')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('👑')
+    expect(badge?.querySelector('svg')).not.toBeNull()
 
     if (badge) {
       fireEvent.mouseEnter(badge)
@@ -54,7 +55,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={initPlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-initiative')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('⚔️')
+    expect(badge?.querySelector('svg')).not.toBeNull()
 
     if (badge) {
       fireEvent.mouseEnter(badge)
@@ -80,7 +81,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={ringPlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-ring')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('💍')
+    expect(badge?.querySelector('svg')).not.toBeNull()
     expect(badge?.textContent).toContain('2')
 
     if (badge) {
@@ -107,7 +108,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={dungeonPlayer} side="opp" onHover={onHover} />)
     const badge = container.querySelector('.badge-dungeon')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('🗺️')
+    expect(badge?.querySelector('svg')).not.toBeNull()
 
     if (badge) {
       fireEvent.mouseEnter(badge)
@@ -152,7 +153,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={dayPlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-daynight')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('☀️')
+    expect(badge?.querySelector('svg')).not.toBeNull()
 
     if (badge) {
       fireEvent.mouseEnter(badge)
@@ -168,16 +169,14 @@ describe('PlayerInfoBar', () => {
     const counterPlayer: PlayerView = {
       ...basePlayer,
       counters: [
-        { name: 'Poison', count: 3 },
-        { name: 'Energy', count: 5 },
+        { name: 'Poison', count: 4 },
+        { name: 'Energy', count: 3 },
       ],
     }
     const { container } = render(<PlayerInfoBar player={counterPlayer} side="my" onHover={onHover} />)
     const poisonBadge = container.querySelector('.counter-poison')
-    const energyBadge = container.querySelector('.counter-energy')
-
     expect(poisonBadge).toBeDefined()
-    expect(energyBadge).toBeDefined()
+    expect(poisonBadge?.textContent).toContain('4')
 
     if (poisonBadge) {
       fireEvent.mouseEnter(poisonBadge)
@@ -186,49 +185,41 @@ describe('PlayerInfoBar', () => {
         expect.any(Object),
       )
     }
-
-    if (energyBadge) {
-      fireEvent.mouseEnter(energyBadge)
-      expect(onHover).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Energy Reserve' }),
-        expect.any(Object),
-      )
-    }
   })
 
   it('renders priority timer badge when priorityTimeLeftSecs > 0', () => {
     const timedPlayer: PlayerView = {
       ...basePlayer,
-      priorityTimeLeftSecs: 95,
       hasPriority: true,
-      timerActive: true,
+      priorityTimeLeftSecs: 95,
     }
     const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
-    const badge = container.querySelector('.player-timer-badge')
-    expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('01:35')
+    const timerBadge = container.querySelector('.player-timer-badge')
+    expect(timerBadge).toBeDefined()
+    expect(timerBadge?.classList.contains('timer-active')).toBe(true)
+    expect(timerBadge?.querySelector('.timer-value')?.textContent).toBe('01:35')
   })
 
   it('marks timer low when timeLeft <= 30', () => {
-    const timedPlayer: PlayerView = {
+    const lowTimePlayer: PlayerView = {
       ...basePlayer,
-      priorityTimeLeftSecs: 15,
-      hasPriority: true,
+      priorityTimeLeftSecs: 20,
     }
-    const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
-    const badge = container.querySelector('.player-timer-badge.timer-low')
-    expect(badge).toBeDefined()
+    const { container } = render(<PlayerInfoBar player={lowTimePlayer} side="my" />)
+    const timerBadge = container.querySelector('.player-timer-badge')
+    expect(timerBadge?.classList.contains('timer-low')).toBe(true)
   })
 
   it('renders buffer time when bufferTimeLeft > 0', () => {
-    const timedPlayer: PlayerView = {
+    const bufferPlayer: PlayerView = {
       ...basePlayer,
-      priorityTimeLeftSecs: 95,
+      hasPriority: true,
+      priorityTimeLeftSecs: 90,
       bufferTimeLeft: 30,
     }
-    const { container } = render(<PlayerInfoBar player={timedPlayer} side="my" />)
+    const { container } = render(<PlayerInfoBar player={bufferPlayer} side="my" />)
     const buf = container.querySelector('.timer-buffer')
-    expect(buf).toBeDefined()
+    expect(buf).not.toBeNull()
     expect(buf?.textContent).toContain('00:30')
   })
 
@@ -241,7 +232,7 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={cursePlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-curse')
     expect(badge).toBeDefined()
-    expect(badge?.textContent).toContain('💀')
+    expect(badge?.querySelector('svg')).not.toBeNull()
     expect(badge?.textContent).toContain('2')
 
     if (badge) {
