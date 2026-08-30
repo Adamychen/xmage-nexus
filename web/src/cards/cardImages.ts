@@ -220,6 +220,18 @@ function candidateUrls(key: string): string[] {
 async function tryFetch(key: string): Promise<string | null> {
   const isBack = key.endsWith('#back')
   const cleanKey = key.replace(/#back$/, '')
+
+  if (typeof caches !== 'undefined' && !cleanKey.startsWith('named:') && !cleanKey.startsWith('token:') && cleanKey.includes('/')) {
+    try {
+      const cache = await caches.open('xmage-card-images-v1')
+      const directUrl = `https://api.scryfall.com/cards/${cleanKey.toLowerCase()}?format=image&version=normal`
+      const match = await cache.match(directUrl)
+      if (match) {
+        return directUrl
+      }
+    } catch {}
+  }
+
   const urls = candidateUrls(key)
   for (const url of urls) {
     for (let attempt = 0; attempt <= RETRIES; attempt++) {

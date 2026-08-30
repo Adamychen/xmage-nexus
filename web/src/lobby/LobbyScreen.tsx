@@ -17,6 +17,7 @@ import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters } from './TableFilterBar'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import TournamentBracket from './TournamentBracket'
+import DownloadImagesDialog from './DownloadImagesDialog'
 import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { useFullscreen } from '../utils/fullscreen'
@@ -185,6 +186,7 @@ export default function LobbyScreen() {
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [showDownloadImages, setShowDownloadImages] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
   const [leaderboardTab, setLeaderboardTab] = useState<'room' | 'profile' | 'tiers'>('room')
@@ -514,6 +516,18 @@ export default function LobbyScreen() {
           >
             <span className="sidebar-btn-icon">🏆</span>
             <span className="sidebar-btn-label">Ranking</span>
+          </button>
+
+          <div className="sidebar-divider" />
+
+          <button
+            type="button"
+            className="sidebar-btn"
+            onClick={() => setShowDownloadImages(true)}
+            title="Descargar Imágenes y Símbolos (XMage Downloader)"
+          >
+            <span className="sidebar-btn-icon">📥</span>
+            <span className="sidebar-btn-label">Imágenes</span>
           </button>
         </nav>
 
@@ -1014,6 +1028,9 @@ export default function LobbyScreen() {
             </div>
           </div>
         </div>
+      )}
+      {showDownloadImages && (
+        <DownloadImagesDialog onClose={() => setShowDownloadImages(false)} />
       )}
     </div>
   )
