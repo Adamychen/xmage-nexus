@@ -1,4 +1,5 @@
 import type { CardView } from '../net/types'
+import { getCardLanguage } from '../i18n'
 
 const memory = new Map<string, string | null>()
 const inflight = new Map<string, Promise<string | null>>()
@@ -214,6 +215,14 @@ function candidateUrls(key: string): string[] {
   }
 
   // Standard set/number like "LEA/299"
+  const cardLang = getCardLanguage()
+  if (cardLang && cardLang !== 'en') {
+    return [
+      `https://api.scryfall.com/cards/${cleanKey}/${cardLang}?format=json`,
+      `https://api.scryfall.com/cards/${cleanKey}?format=json`,
+    ]
+  }
+
   return [`https://api.scryfall.com/cards/${cleanKey}?format=json`]
 }
 

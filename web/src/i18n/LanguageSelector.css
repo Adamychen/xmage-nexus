@@ -1,0 +1,135 @@
+.language-selector-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.language-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  border-radius: 8px;
+  color: #cbd5e1;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.language-selector-btn:hover,
+.language-selector-btn.active {
+  background: rgba(124, 92, 255, 0.15);
+  border-color: #a78bfa;
+  color: #fff;
+}
+
+.language-selector-btn.compact {
+  padding: 4px 7px;
+}
+
+.lang-flag {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.lang-name {
+  white-space: nowrap;
+}
+
+.lang-arrow {
+  font-size: 9px;
+  color: #8c96c0;
+  transition: transform 0.15s ease;
+}
+
+.language-selector-btn.active .lang-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.language-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #111428;
+  border: 1px solid rgba(124, 92, 255, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 16px rgba(124, 92, 255, 0.18);
+  min-width: 170px;
+  z-index: 10000;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: langFadeIn 0.15s ease-out;
+}
+
+@keyframes langFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-section-header {
+  padding: 4px 8px 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffd070;
+}
+
+.dropdown-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dropdown-option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #cbd5e1;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.dropdown-option-item:hover {
+  background: rgba(124, 92, 255, 0.15);
+  color: #fff;
+}
+
+.dropdown-option-item.selected {
+  background: rgba(124, 92, 255, 0.28);
+  color: #ffd070;
+  font-weight: 700;
+}
+
+.option-flag {
+  font-size: 14px;
+}
+
+.option-name {
+  flex: 1;
+}
+
+.option-check {
+  font-size: 11px;
+  color: #6ee7b7;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(124, 92, 255, 0.18);
+  margin: 4px 0;
+}

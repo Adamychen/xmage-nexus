@@ -18,6 +18,8 @@ import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters 
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import TournamentBracket from './TournamentBracket'
 import DownloadImagesDialog from './DownloadImagesDialog'
+import LanguageSelector from '../i18n/LanguageSelector'
+import { useTranslation } from '../i18n'
 import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { useFullscreen } from '../utils/fullscreen'
@@ -176,6 +178,7 @@ export function extractLobbyUsers(rawUsers: unknown): import('../net/types').Use
 export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches'
 
 export default function LobbyScreen() {
+  const { t } = useTranslation()
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
   const myDeck = useStore((s) => s.myDeck)
@@ -419,6 +422,8 @@ export default function LobbyScreen() {
         </div>
 
         <div className="lobby-user-actions">
+          <LanguageSelector showCardLangToggle={true} />
+
           <button
             type="button"
             className={`lobby-fullscreen-btn ${isFullscreenActive ? 'active' : ''}`}
@@ -470,10 +475,10 @@ export default function LobbyScreen() {
             type="button"
             className="sidebar-btn hero-create-btn"
             onClick={() => setShowCreate(true)}
-            title="Nueva mesa"
+            title={t('lobby.nav_new')}
           >
             <span className="sidebar-btn-icon">➕</span>
-            <span className="sidebar-btn-label">Nueva</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_new')}</span>
           </button>
 
           <div className="sidebar-divider" />
@@ -482,40 +487,40 @@ export default function LobbyScreen() {
             type="button"
             className={`sidebar-btn ${activeTab === 'tables' ? 'active' : ''}`}
             onClick={() => setActiveTab('tables')}
-            title={`Mesas (${tables.length})`}
+            title={`${t('lobby.nav_tables')} (${tables.length})`}
           >
             <span className="sidebar-btn-icon">⚔️</span>
-            <span className="sidebar-btn-label">Mesas{tables.length > 0 ? ` (${tables.length})` : ''}</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_tables')}{tables.length > 0 ? ` (${tables.length})` : ''}</span>
           </button>
 
           <button
             type="button"
             className={`sidebar-btn ${activeTab === 'decks' ? 'active' : ''}`}
             onClick={() => setActiveTab('decks')}
-            title="Mis Mazos"
+            title={t('lobby.nav_decks')}
           >
             <span className="sidebar-btn-icon">🃏</span>
-            <span className="sidebar-btn-label">Mazos</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_decks')}</span>
           </button>
 
           <button
             type="button"
             className={`sidebar-btn ${activeTab === 'matches' ? 'active' : ''}`}
             onClick={() => setActiveTab('matches')}
-            title="Partidas Finalizadas"
+            title={t('lobby.nav_history')}
           >
             <span className="sidebar-btn-icon">📜</span>
-            <span className="sidebar-btn-label">Historial</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_history')}</span>
           </button>
 
           <button
             type="button"
             className="sidebar-btn sidebar-btn-leaderboard"
             onClick={() => openLeaderboard(conn?.username, 'room')}
-            title="Leaderboard"
+            title={t('lobby.nav_ranking')}
           >
             <span className="sidebar-btn-icon">🏆</span>
-            <span className="sidebar-btn-label">Ranking</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_ranking')}</span>
           </button>
 
           <div className="sidebar-divider" />
@@ -527,7 +532,7 @@ export default function LobbyScreen() {
             title="Descargar Imágenes y Símbolos (XMage Downloader)"
           >
             <span className="sidebar-btn-icon">📥</span>
-            <span className="sidebar-btn-label">Imágenes</span>
+            <span className="sidebar-btn-label">{t('lobby.nav_downloads')}</span>
           </button>
         </nav>
 
