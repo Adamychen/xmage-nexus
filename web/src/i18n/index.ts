@@ -5,6 +5,10 @@ import { en } from './locales/en'
 import { de } from './locales/de'
 import { fr } from './locales/fr'
 import { ja } from './locales/ja'
+import { it } from './locales/it'
+import { pt } from './locales/pt'
+import { ru } from './locales/ru'
+import { zhs } from './locales/zhs'
 
 export * from './types'
 
@@ -13,7 +17,11 @@ export const LANGUAGES: LanguageInfo[] = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'zhs', name: '简体中文', flag: '🇨🇳' },
 ]
 
 export const CARD_LANGUAGES: Array<{ code: string; name: string; flag: string }> = [
@@ -34,6 +42,10 @@ const LOCALES: Record<SupportedLanguage, TranslationSchema> = {
   de,
   fr,
   ja,
+  it,
+  pt,
+  ru,
+  zhs,
 }
 
 const STORAGE_KEY_LANG = 'nexus_lang'
