@@ -1,5 +1,6 @@
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
+import { useTranslation } from '../i18n'
 import './QuickReactions.css'
 
 // Fila fija de reacciones de un click (spec sección 61.3). Se envían como
@@ -8,6 +9,7 @@ import './QuickReactions.css'
 const REACTIONS = ['👍', '👏', '⏳', '❓', '✔️', '❌', '🎉']
 
 export default function QuickReactions() {
+  const { t } = useTranslation()
   const roomChatId = useStore((s) => s.roomChatId)
 
   const react = async (emoji: string) => {
@@ -24,12 +26,12 @@ export default function QuickReactions() {
           className="quick-reaction-btn"
           disabled={!roomChatId}
           onClick={() => react(emoji)}
-          title="Enviar reacción"
+          title={t('game', 'send_reaction')}
         >
           {emoji}
         </button>
       ))}
-      <button type="button" className="quick-reaction-btn quick-reaction-more" title="Más reacciones" disabled>
+      <button type="button" className="quick-reaction-btn quick-reaction-more" title={t('game', 'send_reaction')} disabled>
         +
       </button>
     </div>

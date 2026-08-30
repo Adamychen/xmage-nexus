@@ -228,7 +228,8 @@ export default function StackZone({
       <div className="stack-zone empty">
         <div className="stack-empty-state">
           <span className="stack-empty-icon"><Icon name="bolt" size={24} /></span>
-          <span className="stack-empty-title">{t('game', 'stack')}</span>
+          <span className="stack-empty-title">{t('game', 'stack_empty')}</span>
+          <span className="stack-empty-desc">{t('game', 'stack_empty_desc')}</span>
         </div>
       </div>
     )
@@ -256,7 +257,7 @@ export default function StackZone({
             <button
               type="button"
               className={`toggle-mode-btn ${viewMode === 'compact' ? 'active' : ''}`}
-              title="Compact"
+              title={t('game', 'compact_view')}
               onClick={() => setViewMode('compact')}
             >
               ▤
@@ -264,7 +265,7 @@ export default function StackZone({
             <button
               type="button"
               className={`toggle-mode-btn ${viewMode === 'expanded' ? 'active' : ''}`}
-              title="Expanded"
+              title={t('game', 'expanded_view')}
               onClick={() => setViewMode('expanded')}
             >
               ▦
@@ -320,7 +321,7 @@ export default function StackZone({
                   <span className="stack-tl-pos">
                     {isTop ? '▶ #1' : `#${idx + 1}`}
                   </span>
-                  <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`Controlador: ${ctrlInfo.name}`}>
+                  <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
                     <span className="ctrl-icon">{ctrlInfo.avatarIcon}</span>
                     <span className="ctrl-name">{ctrlInfo.name}</span>
                   </span>
@@ -344,7 +345,7 @@ export default function StackZone({
                       </span>
                       {subtype && <span className="stack-tl-subtype">{subtype}</span>}
                       {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
-                      {isCopy && <span className="stack-tl-copy-badge">✨ Copia</span>}
+                      {isCopy && <span className="stack-tl-copy-badge">✨ {t('game', 'copy_badge')}</span>}
                     </div>
                     {rulesText && viewMode === 'expanded' && (
                       <div className="stack-tl-rules">

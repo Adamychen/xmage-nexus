@@ -6,6 +6,7 @@ import { startCardFlight } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
+import { useTranslation } from '../i18n'
 import './CardSlot.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
@@ -43,6 +44,7 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
 }: CardSlotProps) {
+  const { lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
@@ -287,7 +289,11 @@ export default function CardSlot({
       {keywordBadges.length > 0 && (
         <div className="keyword-badges" aria-label="keywords">
           {keywordBadges.map((kw) => (
-            <span key={kw.id} className={`keyword-badge cat-${kw.category}`} title={`${kw.name} — ${kw.summary}`}>
+            <span
+              key={kw.id}
+              className={`keyword-badge cat-${kw.category}`}
+              title={`${lang === 'es' ? kw.nameEs : kw.name} — ${kw.summary}`}
+            >
               {kw.icon}
             </span>
           ))}

@@ -59,7 +59,7 @@ describe('LeaderboardModal Component', () => {
     const onClose = vi.fn()
     render(<LeaderboardModal users={mockUsers} currentUsername="player1" onClose={onClose} />)
 
-    expect(screen.getByText(/Clasificación & Rangos de Liga/i)).toBeDefined()
+    expect(screen.getByText(/Clasificación/i)).toBeDefined()
     expect(screen.getByText('mythic_player')).toBeDefined()
     expect(screen.getByText('player1')).toBeDefined()
 

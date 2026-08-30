@@ -5,24 +5,25 @@ import FormattedText from '../game/FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { handleIgnoreCommand, isUserIgnored } from './ignoreList'
 import type { CardView, ChatMessageEvent } from '../net/types'
+import { useTranslation } from '../i18n'
 import './ChatBox.css'
 
-function parseSystemEvent(text: string): { icon: string; text: string } {
+function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: string; text: string } {
   if (text.includes('has joined')) {
     const user = text.replace(/\s+has joined.*$/i, '').trim()
-    return { icon: '🟢', text: `${user} se ha conectado` }
+    return { icon: '🟢', text: `${user} ${t('lobby', 'user_joined')}` }
   }
   if (text.includes('has lost connection')) {
     const user = text.replace(/\s+has lost connection.*$/i, '').trim()
-    return { icon: '🔌', text: `${user} ha perdido la conexión` }
+    return { icon: '🔌', text: `${user} ${t('lobby', 'user_lost_connection')}` }
   }
   if (text.includes('has disconnected')) {
     const user = text.replace(/\s+has disconnected.*$/i, '').trim()
-    return { icon: '🚪', text: `${user} se ha desconectado` }
+    return { icon: '🚪', text: `${user} ${t('lobby', 'user_disconnected')}` }
   }
   if (text.includes('has left')) {
     const user = text.replace(/\s+has left.*$/i, '').trim()
-    return { icon: '🚪', text: `${user} ha salido` }
+    return { icon: '🚪', text: `${user} ${t('lobby', 'user_left')}` }
   }
   return { icon: 'ℹ️', text }
 }
@@ -54,6 +55,7 @@ interface ChatBoxProps {
 }
 
 export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage }: ChatBoxProps = {}) {
+  const { t } = useTranslation()
   const chatId = useStore((s) => s.roomChatId)
   const messages = useStore((s) => s.chatMessages)
   const [text, setText] = useState('')
@@ -123,9 +125,9 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           type="button"
           className={`chat-toggle-btn ${hideConnections ? 'active' : ''}`}
           onClick={() => setHideConnections(!hideConnections)}
-          title={hideConnections ? 'Mostrar avisos de conexión/desconexión' : 'Ocultar avisos de conexión/desconexión'}
+          title={hideConnections ? t('lobby', 'show_system_msgs') : t('lobby', 'hide_system_msgs')}
         >
-          {hideConnections ? '🔇 Avisos ocultos' : '👁️ Avisos visibles'}
+          {hideConnections ? `🔇 ${t('lobby', 'hide_system_msgs')}` : `👁️ ${t('lobby', 'show_system_msgs')}`}
         </button>
       </div>
 
@@ -138,7 +140,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             m.message.toLowerCase().startsWith('whisper')
 
           if (sys) {
-            const parsed = parseSystemEvent(m.message)
+            const parsed = parseSystemEvent(m.message, t)
             return (
               <div key={i} className="chat-msg system-msg">
                 <span className="sys-icon">{parsed.icon}</span>
@@ -154,7 +156,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
                 className="chat-from"
                 onClick={() => onUserClick?.(m.username)}
                 style={{ cursor: 'pointer' }}
-                title={`Ver acciones de usuario para ${m.username}`}
+                title={`${t('lobby', 'view_profile_hint')} ${m.username}`}
               >
                 {m.username}:
               </span>{' '}
@@ -162,7 +164,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             </div>
           )
         })}
-        {filteredMessages.length === 0 && <p className="empty">Sin mensajes</p>}
+        {filteredMessages.length === 0 && <p className="empty">{t('lobby', 'no_messages')}</p>}
       </div>
 
       <FloatingCardPreview
@@ -176,10 +178,10 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Mensaje o comando (/w, /card, /history, /ignore, /help)…"
+          placeholder={t('lobby', 'chat_input_placeholder')}
         />
         <button className="primary" disabled={!chatId} type="submit">
-          Enviar
+          {t('common', 'send')}
         </button>
       </form>
     </div>

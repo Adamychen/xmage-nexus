@@ -3,6 +3,7 @@ import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName, getSourceCardName, isAbilityCard } from '../cards/cardImages'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import FormattedText from '../game/FormattedText'
+import { useTranslation } from '../i18n'
 import './FloatingCardPreview.css'
 
 interface FloatingCardPreviewProps {
@@ -22,6 +23,7 @@ export default function FloatingCardPreview({
   boardRect,
   fixedSide = 'auto',
 }: FloatingCardPreviewProps) {
+  const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [showBackFace, setShowBackFace] = useState(false)
 
@@ -189,9 +191,9 @@ export default function FloatingCardPreview({
         <div className="floating-card-inner">
           {/* Flip Hint Badge (Double-faced / Transform / MDFC) */}
           {hasSecondFace && (
-            <div className="floating-card-flip-badge" title="Pulsa Shift o F para voltear">
+            <div className="floating-card-flip-badge" title={t('wiki', 'flip_hint')}>
               <span className="flip-icon">🔄</span>
-              <span className="flip-label">{showBackFace ? 'Reverso' : 'Anverso'} (Shift / F)</span>
+              <span className="flip-label">{showBackFace ? t('wiki', 'face_back') : t('wiki', 'face_front')} (Shift / F)</span>
             </div>
           )}
 
@@ -221,7 +223,7 @@ export default function FloatingCardPreview({
 
           {/* Loyalty Badge (Planeswalkers) */}
           {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
-            <div className="floating-card-loyalty" title={`Lealtad: ${perm.loyalty}`}>
+            <div className="floating-card-loyalty" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
               🛡️ {perm.loyalty}
             </div>
           )}
@@ -229,7 +231,7 @@ export default function FloatingCardPreview({
           {/* Counters Badge */}
           {activeCard.counters && activeCard.counters.length > 0 && (
             <div className="floating-card-counters">
-              +{activeCard.counters.reduce((sum, c) => sum + c.count, 0)} contadores
+              +{activeCard.counters.reduce((sum, c) => sum + c.count, 0)} {t('wiki', 'cat_counters').toLowerCase()}
             </div>
           )}
 
@@ -242,19 +244,24 @@ export default function FloatingCardPreview({
 
       {/* Keywords Breakdown Boxes (MTG Arena style) */}
       {keywords.length > 0 && (
-        <aside className="floating-card-keywords" aria-label="Mecánicas de la carta">
-          {keywords.map((kw) => (
-            <div key={kw.id} className={`floating-card-kw-box cat-${kw.category}`}>
-              <div className="kw-box-header">
-                <span className="kw-box-icon">{kw.icon}</span>
-                <span className="kw-box-name">{kw.name}</span>
-                <span className="kw-box-es">({kw.nameEs})</span>
+        <aside className="floating-card-keywords" aria-label={t('wiki', 'tab_keywords')}>
+          {keywords.map((kw) => {
+            const primaryName = lang === 'es' ? kw.nameEs : kw.name
+            const secondaryName = lang === 'es' ? kw.name : (lang !== 'en' ? kw.nameEs : null)
+
+            return (
+              <div key={kw.id} className={`floating-card-kw-box cat-${kw.category}`}>
+                <div className="kw-box-header">
+                  <span className="kw-box-icon">{kw.icon}</span>
+                  <span className="kw-box-name">{primaryName}</span>
+                  {secondaryName && <span className="kw-box-es">({secondaryName})</span>}
+                </div>
+                <p className="kw-box-summary">
+                  <FormattedText text={kw.summary} />
+                </p>
               </div>
-              <p className="kw-box-summary">
-                <FormattedText text={kw.summary} />
-              </p>
-            </div>
-          ))}
+            )
+          })}
         </aside>
       )}
     </div>

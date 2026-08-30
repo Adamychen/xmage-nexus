@@ -7,6 +7,7 @@ import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
+import { useTranslation } from '../i18n'
 import './LeaderboardModal.css'
 
 interface LeaderboardModalProps {
@@ -26,6 +27,7 @@ export default function LeaderboardModal({
   initialTab = 'room',
   onClose,
 }: LeaderboardModalProps) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<LeaderboardTab>(initialTab)
   const [searchQuery, setSearchQuery] = useState('')
   const [targetUsername, setTargetUsername] = useState<string>(initialTargetUsername ?? currentUsername)
@@ -114,28 +116,34 @@ export default function LeaderboardModal({
       return (b.stats.winrate ?? 0) - (a.stats.winrate ?? 0)
     })
 
-    if (!searchQuery.trim()) return list
-    const q = searchQuery.toLowerCase()
-    return list.filter((u) => u.userName.toLowerCase().includes(q))
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      return list.filter((u) => u.userName.toLowerCase().includes(q))
+    }
+
+    return list
   }, [users, searchQuery])
 
   return (
-    <div
-      className="overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="dialog panel leaderboard-dialog">
-        <div className="leaderboard-header">
+    <div className="feedback-backdrop leaderboard-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="feedback-dialog leaderboard-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lb-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="leaderboard-header">
           <div className="leaderboard-header-title">
-            <h2>🏆 Clasificación & Rangos de Liga</h2>
-            <span className="leaderboard-subtitle">Sistema de Liga Oficial estilo MTG Arena</span>
+            <h2 id="lb-modal-title">🏆 {t('lobby', 'nav_ranking')}</h2>
+            <span className="leaderboard-subtitle">
+              XMage Nexus Competitive Elo & Leaderboard
+            </span>
           </div>
           <button type="button" className="leaderboard-close-btn" onClick={onClose}>
             ✕
           </button>
-        </div>
+        </header>
 
         {/* Modal Tabs */}
         <nav className="leaderboard-tabs">
@@ -144,7 +152,7 @@ export default function LeaderboardModal({
             className={`leaderboard-tab-btn ${activeTab === 'room' ? 'active' : ''}`}
             onClick={() => setActiveTab('room')}
           >
-            <span>🏆 Top Sala ({users.length})</span>
+            <span>🏆 {t('lobby', 'leaderboard_top_room')} ({users.length})</span>
           </button>
           <button
             type="button"
@@ -153,8 +161,8 @@ export default function LeaderboardModal({
           >
             <span>
               {isMyProfile
-                ? '👤 Mi Rango & Estadísticas'
-                : `👤 Perfil: ${targetUser?.userName ?? targetUsername}`}
+                ? `👤 ${t('lobby', 'leaderboard_my_profile')}`
+                : `👤 ${t('lobby', 'leaderboard_profile_of')}: ${targetUser?.userName ?? targetUsername}`}
             </span>
           </button>
           <button
@@ -162,7 +170,7 @@ export default function LeaderboardModal({
             className={`leaderboard-tab-btn ${activeTab === 'tiers' ? 'active' : ''}`}
             onClick={() => setActiveTab('tiers')}
           >
-            <span>📖 Guía de Rangos</span>
+            <span>📖 {t('lobby', 'leaderboard_rank_guide')}</span>
           </button>
         </nav>
 
@@ -173,7 +181,7 @@ export default function LeaderboardModal({
               <div className="leaderboard-search-bar">
                 <input
                   type="text"
-                  placeholder="🔍 Buscar jugador en la sala…"
+                  placeholder={t('lobby', 'leaderboard_search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -183,13 +191,13 @@ export default function LeaderboardModal({
                 <table className="leaderboard-table">
                   <thead>
                     <tr>
-                      <th style={{ width: 50, textAlign: 'center' }}>Pos.</th>
-                      <th>Jugador</th>
-                      <th>Rango de Liga</th>
-                      <th style={{ textAlign: 'center' }}>ELO</th>
-                      <th style={{ textAlign: 'center' }}>Historial</th>
-                      <th style={{ textAlign: 'center' }}>Win Rate</th>
-                      <th>Estado</th>
+                      <th style={{ width: 50, textAlign: 'center' }}>{t('lobby', 'leaderboard_col_pos')}</th>
+                      <th>{t('lobby', 'leaderboard_col_player')}</th>
+                      <th>{t('lobby', 'leaderboard_col_tier')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_elo')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_history')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_winrate')}</th>
+                      <th>{t('lobby', 'leaderboard_col_status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -207,7 +215,7 @@ export default function LeaderboardModal({
                             setActiveTab('profile')
                           }}
                           style={{ cursor: 'pointer' }}
-                          title={`Haz clic para ver el perfil de ${u.userName}`}
+                          title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
                         >
                           <td className="pos-cell">
                             {medal ? <span className="pos-medal">{medal}</span> : `#${pos}`}
@@ -511,7 +519,7 @@ export default function LeaderboardModal({
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   )
 }

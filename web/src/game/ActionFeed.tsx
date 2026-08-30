@@ -5,6 +5,7 @@ import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './ActionFeed.css'
 
 interface ActionFeedProps {
@@ -12,6 +13,7 @@ interface ActionFeedProps {
 }
 
 export default function ActionFeed({ onHover }: ActionFeedProps) {
+  const { t } = useTranslation()
   const log = useStore((s) => s.log)
   const game = useStore((s) => s.game)
   const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual')
@@ -86,17 +88,17 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             type="button"
             className={`mode-btn ${viewMode === 'visual' ? 'active' : ''}`}
             onClick={() => setViewMode('visual')}
-            title="Vista visual con tarjetas e ilustraciones"
+            title={t('game', 'visual_feed')}
           >
-            🎨 Visual
+            🎨 {t('game', 'visual_feed')}
           </button>
           <button
             type="button"
             className={`mode-btn ${viewMode === 'raw' ? 'active' : ''}`}
             onClick={() => setViewMode('raw')}
-            title="Vista clásica de texto crudo"
+            title={t('game', 'text_feed')}
           >
-            📜 Texto
+            📜 {t('game', 'text_feed')}
           </button>
         </div>
         <span className="action-count-tag">{feedItems.length} eventos</span>

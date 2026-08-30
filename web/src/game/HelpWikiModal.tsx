@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import FormattedText from './FormattedText'
+import { useTranslation } from '../i18n'
 import './HelpWikiModal.css'
 
 interface HelpWikiModalProps {
@@ -9,22 +10,23 @@ interface HelpWikiModalProps {
 
 type TabType = 'glossary' | 'phases' | 'shortcuts'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  all: 'Todas',
-  combat: '⚔️ Combate',
-  evasion: '🦅 Evasión',
-  protection: '🛡️ Protección',
-  cards: '🔮 Biblioteca y Robo',
-  counters: '🧪 Contadores',
-  mana: '⚡ Maná y Costes',
-  graveyard: '☠️ Cementerio',
-  mechanic: '✨ Mecánicas Especiales',
-}
-
 export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>('glossary')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  const categoryLabels: Record<string, string> = useMemo(() => ({
+    all: `✨ ${t('wiki', 'cat_all')}`,
+    combat: `⚔️ ${t('wiki', 'cat_combat')}`,
+    evasion: `🦅 ${t('wiki', 'cat_evasion')}`,
+    protection: `🛡️ ${t('wiki', 'cat_protection')}`,
+    cards: `🔮 ${t('wiki', 'cat_cards')}`,
+    counters: `🧪 ${t('wiki', 'cat_counters')}`,
+    mana: `⚡ ${t('wiki', 'cat_mana')}`,
+    graveyard: `☠️ ${t('wiki', 'cat_graveyard')}`,
+    mechanic: `✨ ${t('wiki', 'cat_mechanic')}`,
+  }), [t])
 
   // Close on Escape
   useEffect(() => {
@@ -70,11 +72,11 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
           <div className="wiki-title-group">
             <span className="wiki-icon">📖</span>
             <div>
-              <h2 id="wiki-modal-title">Wiki de Reglas y Glosario MTG</h2>
-              <p className="wiki-subtitle">Consulta de palabras clave, fases de juego y controles del cliente</p>
+              <h2 id="wiki-modal-title">{t('wiki', 'title')}</h2>
+              <p className="wiki-subtitle">{t('wiki', 'subtitle')}</p>
             </div>
           </div>
-          <button type="button" className="wiki-close-btn" onClick={onClose} title="Cerrar (Esc)">
+          <button type="button" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
             ✕
           </button>
         </header>
@@ -86,21 +88,21 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
             className={`wiki-tab-btn ${activeTab === 'glossary' ? 'active' : ''}`}
             onClick={() => setActiveTab('glossary')}
           >
-            📚 Palabras Clave ({MTG_KEYWORDS.length})
+            📚 {t('wiki', 'tab_keywords')} ({MTG_KEYWORDS.length})
           </button>
           <button
             type="button"
             className={`wiki-tab-btn ${activeTab === 'phases' ? 'active' : ''}`}
             onClick={() => setActiveTab('phases')}
           >
-            ⏱️ Fases y Prioridad
+            ⏱️ {t('wiki', 'tab_phases')}
           </button>
           <button
             type="button"
             className={`wiki-tab-btn ${activeTab === 'shortcuts' ? 'active' : ''}`}
             onClick={() => setActiveTab('shortcuts')}
           >
-            ⌨️ Atajos y Controles
+            ⌨️ {t('wiki', 'tab_shortcuts')}
           </button>
         </nav>
 
@@ -127,7 +129,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
 
               {/* Category pills */}
               <div className="wiki-category-pills">
-                {Object.entries(CATEGORY_LABELS).map(([catKey, catLabel]) => (
+                {Object.entries(categoryLabels).map(([catKey, catLabel]) => (
                   <button
                     key={catKey}
                     type="button"
@@ -149,7 +151,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                         <strong className="wiki-kw-name-en">{kw.name}</strong>
                         <span className="wiki-kw-name-es">({kw.nameEs})</span>
                       </div>
-                      <span className="wiki-kw-type-badge">{CATEGORY_LABELS[kw.category] ?? kw.category}</span>
+                      <span className="wiki-kw-type-badge">{categoryLabels[kw.category] ?? kw.category}</span>
                     </div>
                     <p className="wiki-kw-summary">
                       <FormattedText text={kw.summary} />

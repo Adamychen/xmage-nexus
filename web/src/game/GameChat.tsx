@@ -5,6 +5,7 @@ import QuickReactions from './QuickReactions'
 import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './GameChat.css'
 
 // Set corto para el selector de emoji del chat (icono 😊 a la izquierda del input,
@@ -12,6 +13,7 @@ import './GameChat.css'
 const EMOJI_PICKS = ['😊', '😂', '😮', '👀', '🙏', '😅', '🤔', '🔥']
 
 export default function GameChat() {
+  const { t } = useTranslation()
   const gameChatId = useStore((s) => s.gameChatId)
   const roomChatId = useStore((s) => s.roomChatId)
   const log = useStore((s) => s.log)
@@ -66,7 +68,7 @@ export default function GameChat() {
       <div className="game-chat-messages">
         {chatEntries.length === 0 ? (
           <div className="game-chat-empty">
-            💬 No hay mensajes en el chat aún. ¡Escribe o envía una reacción abajo!
+            💬 {t('game', 'chat_empty')}
           </div>
         ) : (
           chatEntries.map((entry) => (
@@ -93,7 +95,7 @@ export default function GameChat() {
           <button
             type="button"
             className="game-chat-emoji-btn"
-            title="Insertar emoji"
+            title={t('game', 'insert_emoji')}
             onClick={() => setPickerOpen((v) => !v)}
           >
             😊
@@ -113,7 +115,7 @@ export default function GameChat() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribe un mensaje en el chat..."
+          placeholder={t('game', 'chat_placeholder')}
           maxLength={500}
         />
         <button type="submit" className="game-chat-send" disabled={!input.trim() || !chatId}>▸</button>

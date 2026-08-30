@@ -74,15 +74,15 @@ export default function Sidebar() {
   const bufferSecs = game?.bufferTime ?? 0
 
   const navItems = [
-    { id: 'settings', label: 'Ajustes', path: ICON_PATHS.settings },
-    { id: 'help', label: 'Wiki, Glosario y Ayuda (F1)', path: ICON_PATHS.help, active: showHelp },
+    { id: 'settings', label: t('common', 'settings'), path: ICON_PATHS.settings },
+    { id: 'help', label: t('game', 'help_wiki'), path: ICON_PATHS.help, active: showHelp },
     {
       id: 'fullscreen',
-      label: isFullscreenActive ? 'Salir de pantalla completa (F11)' : 'Pantalla completa (F11)',
+      label: isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen'),
       path: isFullscreenActive ? ICON_PATHS.fullscreenContract : ICON_PATHS.fullscreenExpand,
       active: isFullscreenActive,
     },
-    { id: 'exit', label: 'Conceder / Volver al Lobby', path: ICON_PATHS.exit, danger: true },
+    { id: 'exit', label: `${t('game', 'concede')} / ${t('game', 'return_to_lobby')}`, path: ICON_PATHS.exit, danger: true },
   ]
 
   return (
@@ -91,8 +91,12 @@ export default function Sidebar() {
         <div className="sidebar-turn-info">
           <span className="sidebar-turn-label">{t('game', 'turn')}</span>
           <span className="sidebar-turn-value">{game?.turn ?? '—'}</span>
-          <TurnTimer secs={timerSecs} isTicking={isTimerTicking} label={`Tiempo de prioridad (${priorityPlayer?.name ?? 'Jugador'})`} />
-          <TurnTimer secs={bufferSecs} isTicking={false} label="Tiempo de buffer" />
+          <TurnTimer
+            secs={timerSecs}
+            isTicking={isTimerTicking}
+            label={`${t('game', 'priority_time_left')} (${priorityPlayer?.name ?? t('common', 'player')})`}
+          />
+          <TurnTimer secs={bufferSecs} isTicking={false} label={t('game', 'buffer_time_left')} />
         </div>
 
         <div className="sidebar-icons-col">

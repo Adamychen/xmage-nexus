@@ -29,6 +29,10 @@ export interface TranslationSchema {
     done: string
     language: string
     card_language: string
+    settings: string
+    status: string
+    send: string
+    player: string
   }
   login: {
     subtitle: string
@@ -88,6 +92,27 @@ export interface TranslationSchema {
     select_deck_prompt: string
     tournament_badge: string
     spectators: string
+    hide_system_msgs: string
+    show_system_msgs: string
+    chat_input_placeholder: string
+    no_messages: string
+    user_joined: string
+    user_lost_connection: string
+    user_disconnected: string
+    user_left: string
+    leaderboard_top_room: string
+    leaderboard_my_profile: string
+    leaderboard_profile_of: string
+    leaderboard_rank_guide: string
+    leaderboard_search_placeholder: string
+    leaderboard_col_pos: string
+    leaderboard_col_player: string
+    leaderboard_col_tier: string
+    leaderboard_col_elo: string
+    leaderboard_col_history: string
+    leaderboard_col_winrate: string
+    leaderboard_col_status: string
+    view_profile_hint: string
   }
   game: {
     turn: string
@@ -163,6 +188,40 @@ export interface TranslationSchema {
     tap_mana: string
     hold_priority: string
     stop_turn: string
+    help_wiki: string
+    enter_fullscreen: string
+    exit_fullscreen: string
+    stack_empty: string
+    stack_empty_desc: string
+    controller: string
+    copy_badge: string
+    compact_view: string
+    expanded_view: string
+    visual_feed: string
+    text_feed: string
+    chat_empty: string
+    chat_placeholder: string
+    insert_emoji: string
+    send_reaction: string
+  }
+  wiki: {
+    title: string
+    subtitle: string
+    tab_keywords: string
+    tab_phases: string
+    tab_shortcuts: string
+    cat_all: string
+    cat_combat: string
+    cat_evasion: string
+    cat_protection: string
+    cat_cards: string
+    cat_counters: string
+    cat_mana: string
+    cat_graveyard: string
+    cat_mechanic: string
+    flip_hint: string
+    face_front: string
+    face_back: string
   }
   dialogs: {
     mulligan_title: string
