@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useSyncExternalStore, useCallback } from 'react'
 import type { SupportedLanguage, LanguageInfo, TranslationSchema } from './types'
 import { es } from './locales/es'
 import { en } from './locales/en'
@@ -72,7 +72,13 @@ function getInitialCardLanguage(): string {
 
 let currentLanguage: SupportedLanguage = getInitialLanguage()
 let currentCardLanguage: string = getInitialCardLanguage()
+let storeVersion = 0
 const listeners = new Set<() => void>()
+
+function notifyListeners() {
+  storeVersion++
+  listeners.forEach((fn) => fn())
+}
 
 export function getLanguage(): SupportedLanguage {
   return currentLanguage
@@ -84,7 +90,7 @@ export function setLanguage(lang: SupportedLanguage): void {
     try {
       localStorage.setItem(STORAGE_KEY_LANG, lang)
     } catch {}
-    listeners.forEach((fn) => fn())
+    notifyListeners()
   }
 }
 
@@ -98,8 +104,19 @@ export function setCardLanguage(langCode: string): void {
     try {
       localStorage.setItem(STORAGE_KEY_CARD_LANG, langCode)
     } catch {}
-    listeners.forEach((fn) => fn())
+    notifyListeners()
   }
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback)
+  return () => {
+    listeners.delete(callback)
+  }
+}
+
+function getStoreSnapshot(): string {
+  return `${currentLanguage}:${currentCardLanguage}:${storeVersion}`
 }
 
 /**
@@ -142,19 +159,7 @@ export function t(path: string, params?: Record<string, string | number>): strin
 }
 
 export function useTranslation() {
-  const [lang, setLangState] = useState<SupportedLanguage>(currentLanguage)
-  const [cardLang, setCardLangState] = useState<string>(currentCardLanguage)
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setLangState(currentLanguage)
-      setCardLangState(currentCardLanguage)
-    }
-    listeners.add(handleUpdate)
-    return () => {
-      listeners.delete(handleUpdate)
-    }
-  }, [])
+  useSyncExternalStore(subscribe, getStoreSnapshot, getStoreSnapshot)
 
   const changeLanguage = useCallback((newLang: SupportedLanguage) => {
     setLanguage(newLang)
@@ -164,10 +169,14 @@ export function useTranslation() {
     setCardLanguage(newCardLang)
   }, [])
 
+  const translate = useCallback((path: string, params?: Record<string, string | number>) => {
+    return t(path, params)
+  }, [])
+
   return {
-    t,
-    lang,
-    cardLang,
+    t: translate,
+    lang: currentLanguage,
+    cardLang: currentCardLanguage,
     setLanguage: changeLanguage,
     setCardLanguage: changeCardLanguage,
     languages: LANGUAGES,
