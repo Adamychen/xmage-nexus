@@ -242,21 +242,28 @@
 .board-zone.compact-pod,
 .opponent-zone.compact-pod,
 .player-zone.compact-pod {
-  padding: 0 6px;
-  gap: 3px;
+  padding: 0 4px;
+  gap: 2px;
+}
+
+.board-zone.compact-pod .bz-status-row,
+.opponent-zone.compact-pod .oz-top-row,
+.player-zone.compact-pod .pz-bottom-row {
+  max-height: 48px;
+  flex-shrink: 0;
 }
 
 .board-zone.compact-pod .bz-band,
 .opponent-zone.compact-pod .oz-band,
 .player-zone.compact-pod .pz-band {
-  gap: 5px;
-  padding: 1px 4px;
+  gap: 4px;
+  padding: 1px 2px;
 }
 
 .board-zone.compact-pod .bz-commander,
 .opponent-zone.compact-pod .oz-commander,
 .player-zone.compact-pod .pz-commander {
-  width: var(--card-w, 75px);
+  width: var(--card-w, 64px);
 }
 
 /* ── Defeated / Left Overlay ─────────────────────────────────────── */

@@ -5,7 +5,7 @@ interface PositionRecord {
 }
 
 const registry = new Map<string, PositionRecord>()
-const EXPIRATION_MS = 4000
+const EXPIRATION_MS = 3000
 
 export function recordCardPosition(id: string, rect: DOMRect, zone = '') {
   if (!id || rect.width <= 0 || rect.height <= 0) return
@@ -38,30 +38,45 @@ export function getPreviousCardZone(id: string): string {
   return record.zone
 }
 
+export function consumePreviousCardPosition(id: string): { rect: DOMRect; zone: string } | null {
+  if (!id) return null
+  const record = registry.get(id)
+  if (!record) return null
+  registry.delete(id)
+  if (Date.now() - record.timestamp > EXPIRATION_MS) {
+    return null
+  }
+  return { rect: record.rect, zone: record.zone }
+}
+
+export function clearCardPositionRegistry() {
+  registry.clear()
+}
+
 export function getFallbackSourceRect(element: HTMLElement): DOMRect | null {
   const isHand = !!element.closest('.hand-zone')
   const isStack = !!element.closest('.stack-zone')
   const isPlayerZone = !!element.closest('.player-zone')
   const isOppZone = !!element.closest('.opponent-zone')
 
-  const root = element.closest('.game-board') || document.body
+  const root = element.closest('.game-board, .pod-board') || document.body
 
   if (isHand) {
     const lib = isOppZone
-      ? root.querySelector('.opp-top-row .library-stack')
-      : root.querySelector('.pz-bottom-row .library-stack')
+      ? root.querySelector('.opp-top-row .library-stack, .oz-top-row .library-stack')
+      : root.querySelector('.pz-bottom-row .library-stack, .bz-status-row .library-stack')
     if (lib) return lib.getBoundingClientRect()
   } else if (isStack) {
     const hand = isOppZone
-      ? root.querySelector('.opp-zone .hand-zone')
-      : root.querySelector('.pz-bottom-row .hand-zone')
+      ? root.querySelector('.opp-zone .hand-zone, .oz-top-row .hand-zone')
+      : root.querySelector('.pz-bottom-row .hand-zone, .bz-status-row .hand-zone')
     if (hand) return hand.getBoundingClientRect()
   } else if (isPlayerZone || isOppZone) {
     const stack = root.querySelector('.stack-zone')
     if (stack) return stack.getBoundingClientRect()
     const hand = isOppZone
-      ? root.querySelector('.opp-zone .hand-zone')
-      : root.querySelector('.pz-bottom-row .hand-zone')
+      ? root.querySelector('.opp-zone .hand-zone, .oz-top-row .hand-zone')
+      : root.querySelector('.pz-bottom-row .hand-zone, .bz-status-row .hand-zone')
     if (hand) return hand.getBoundingClientRect()
   }
 

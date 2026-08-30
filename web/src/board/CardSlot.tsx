@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
-import { getPreviousCardPosition, recordCardPosition } from './cardPositionRegistry'
+import { consumePreviousCardPosition, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
@@ -61,18 +61,23 @@ export default function CardSlot({
       }
       const lastRect = el.getBoundingClientRect()
       if (lastRect.width > 0 && lastRect.height > 0) {
-        const prevRect = getPreviousCardPosition(effectiveId)
-        if (prevRect && prevRect.width > 0) {
-          const flightId = startCardFlight(card, prevRect, lastRect, 360)
-          if (flightId) {
-            el.style.opacity = '0'
-            timerId = setTimeout(() => {
-              timerId = null
-              if (el) {
-                el.style.transition = 'opacity 180ms ease'
-                el.style.opacity = '1'
-              }
-            }, 340)
+        const prev = consumePreviousCardPosition(effectiveId)
+        if (prev && prev.rect.width > 0) {
+          const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
+          const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
+          // Only animate flight if changing between different zones
+          if (!prev.zone || !curZoneClass || prev.zone !== curZoneClass) {
+            const flightId = startCardFlight(card, prev.rect, lastRect, 320)
+            if (flightId) {
+              el.style.opacity = '0'
+              timerId = setTimeout(() => {
+                timerId = null
+                if (el) {
+                  el.style.transition = 'opacity 160ms ease'
+                  el.style.opacity = '1'
+                }
+              }, 300)
+            }
           }
         }
       }
@@ -82,6 +87,10 @@ export default function CardSlot({
       if (timerId !== null) {
         clearTimeout(timerId)
         timerId = null
+      }
+      if (el) {
+        el.style.opacity = ''
+        el.style.transition = ''
       }
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')

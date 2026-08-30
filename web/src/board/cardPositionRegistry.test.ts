@@ -3,6 +3,7 @@ import {
   getFallbackSourceRect,
   getPreviousCardPosition,
   recordCardPosition,
+  consumePreviousCardPosition,
 } from './cardPositionRegistry'
 
 describe('cardPositionRegistry', () => {
@@ -19,15 +20,21 @@ describe('cardPositionRegistry', () => {
       toJSON: () => ({}),
     } as DOMRect
 
-    recordCardPosition('c123', dummyRect)
+    recordCardPosition('c123', dummyRect, 'hand-zone')
     const result = getPreviousCardPosition('c123')
     expect(result).not.toBeNull()
     expect(result?.left).toBe(100)
     expect(result?.top).toBe(200)
+
+    const consumed = consumePreviousCardPosition('c123')
+    expect(consumed).not.toBeNull()
+    expect(consumed?.zone).toBe('hand-zone')
+    expect(consumePreviousCardPosition('c123')).toBeNull()
   })
 
   it('returns null for unknown card ids', () => {
     expect(getPreviousCardPosition('unknown-999')).toBeNull()
+    expect(consumePreviousCardPosition('unknown-999')).toBeNull()
   })
 
   it('handles getFallbackSourceRect gracefully without DOM root', () => {
