@@ -28,7 +28,7 @@ describe('CreateTableDialog', () => {
   it('renders modern create table dialog with navigation tabs', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    expect(screen.getByText(/Crear Nueva Mesa/)).toBeDefined()
+    expect(screen.getByRole('heading', { name: /Crear Mesa/ })).toBeDefined()
     expect(screen.getByText(/⚙️ General/)).toBeDefined()
     expect(screen.getByText(/⏱️ Tiempos & Reglas/)).toBeDefined()
     expect(screen.getByText(/🛡️ Seguridad/)).toBeDefined()

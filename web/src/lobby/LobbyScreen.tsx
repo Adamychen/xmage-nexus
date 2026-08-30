@@ -551,29 +551,29 @@ export default function LobbyScreen() {
                 <div className="tables-panel-header">
                   <div className="tables-header-title-row">
                     <h2>
-                      Mesas ({filteredTables.length}
-                      {filteredTables.length !== tables.length ? ` de ${tables.length}` : ''})
+                      {t('lobby.tables_heading')} ({filteredTables.length}
+                      {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
                     </h2>
-                    <span className="tables-deck-hint">Partidas activas y en espera</span>
+                    <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                   </div>
-                  <div className="hero-deck-badge" title={`Mazo activo: ${myDeck?.name ?? 'Mage Web bolt'}`}>
-                    <span className="hero-deck-label">Mazo:</span>
+                  <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? 'Mage Web bolt'}`}>
+                    <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
                     <span className="hero-deck-name">🃏 {myDeck?.name ?? 'Mage Web bolt'}</span>
                   </div>
                 </div>
 
                 <div className="tables-list">
-                  {filteredTables.map((t) => {
-                    const isReady = t.tableState === 'READY_TO_START'
-                    const isPlaying = t.tableState === 'DUELING' || t.tableState === 'SIDEBOARDING'
-                    const isWaiting = t.tableState === 'WAITING'
+                  {filteredTables.map((tTable) => {
+                    const isReady = tTable.tableState === 'READY_TO_START'
+                    const isPlaying = tTable.tableState === 'DUELING' || tTable.tableState === 'SIDEBOARDING'
+                    const isWaiting = tTable.tableState === 'WAITING'
 
                     const hasHumanSeat =
                       (isWaiting || isReady) &&
-                      t.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
+                      tTable.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
                     const hasAiSeat =
                       (isWaiting || isReady) &&
-                      t.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
+                      tTable.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
 
                     const statusClass = isReady
                       ? 'status-ready'
@@ -581,81 +581,81 @@ export default function LobbyScreen() {
                       ? 'status-playing'
                       : 'status-waiting'
 
-                    const timeAgo = formatTimeAgo(t.createTime)
-                    const skill = getSkillBadge(t.skillLevel)
+                    const timeAgo = formatTimeAgo(tTable.createTime)
+                    const skill = getSkillBadge(tTable.skillLevel)
 
                     return (
-                      <div key={t.tableId} className={`table-card table-row ${statusClass}`}>
+                      <div key={tTable.tableId} className={`table-card table-row ${statusClass}`}>
                         <div className="table-card-main">
                           <div className="table-card-top-bar">
                             <div className="table-badges-left">
-                              {t.isTournament ? (
-                                <span className="table-type-badge tourney" title="Torneo">🏆 Torneo</span>
+                              {tTable.isTournament ? (
+                                <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}>🏆 {t('lobby.tournament_badge')}</span>
                               ) : (
-                                <span className="table-type-badge match" title="Duelo">⚔️ Duelo</span>
+                                <span className="table-type-badge match" title="Match">⚔️ Match</span>
                               )}
-                              {t.passworded && (
-                                <span className="table-badge-lock" title="Mesa privada con contraseña">🔒 Privada</span>
+                              {tTable.passworded && (
+                                <span className="table-badge-lock" title="Private">🔒 Private</span>
                               )}
                             </div>
                             <div className="table-header-right">
                               {timeAgo && (
-                                <span className="table-time-ago" title={t.createTime ? new Date(t.createTime).toLocaleTimeString() : undefined}>
+                                <span className="table-time-ago" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString() : undefined}>
                                   ⏱️ {timeAgo}
                                 </span>
                               )}
-                              <span className={`table-state-badge ${statusClass}`}>{t.tableStateText}</span>
+                              <span className={`table-state-badge ${statusClass}`}>{tTable.tableStateText}</span>
                             </div>
                           </div>
 
                           <div className="table-title-area">
-                            <h3 className="table-name-text" title={t.tableName}>{t.tableName}</h3>
+                            <h3 className="table-name-text" title={tTable.tableName}>{tTable.tableName}</h3>
                           </div>
 
                           <div className="table-meta-row">
-                            <span className="table-game-tag">🎮 {t.gameType}</span>
+                            <span className="table-game-tag">🎮 {tTable.gameType}</span>
                             <span
                               className="table-deck-tag"
-                              title={formatDeckTypeName(t.deckType).full}
+                              title={formatDeckTypeName(tTable.deckType).full}
                             >
-                              📜 {formatDeckTypeName(t.deckType).short}
+                              📜 {formatDeckTypeName(tTable.deckType).short}
                             </span>
-                            <span className="table-seats-count table-seats">👥 {t.seatsInfo}</span>
+                            <span className="table-seats-count table-seats">👥 {tTable.seatsInfo}</span>
                             {skill && (
                               <span className={`table-skill-badge ${skill.className}`} title={`Nivel de habilidad: ${skill.label}`}>
                                 {skill.icon} {skill.label}
                               </span>
                             )}
-                            {t.rated ? (
+                            {tTable.rated ? (
                               <span className="table-tag-rated" title="Partida clasificatoria (afecta a ELO)">🏅 Rated</span>
                             ) : (
                               <span className="table-tag-unrated" title="Partida casual sin rating">Unrated</span>
                             )}
-                            {t.spectatorsAllowed && (
-                              <span className="table-tag-spectate" title="Espectadores permitidos">👁️ Espectadores</span>
+                            {tTable.spectatorsAllowed && (
+                              <span className="table-tag-spectate" title="Espectadores permitidos">👁️ {t('lobby.spectators')}</span>
                             )}
-                            {Number(t.minimumRating) > 0 && (
-                              <span className="table-tag-restriction" title={`Rating mínimo requerido: ${t.minimumRating}`}>
-                                ⭐ Min {t.minimumRating}
+                            {Number(tTable.minimumRating) > 0 && (
+                              <span className="table-tag-restriction" title={`Rating mínimo requerido: ${tTable.minimumRating}`}>
+                                ⭐ Min {tTable.minimumRating}
                               </span>
                             )}
-                            {Number(String(t.quitRatio ?? '100').replace('%', '')) < 100 && (
-                              <span className="table-tag-restriction" title={`Máximo porcentaje de abandono permitido: ${t.quitRatio}`}>
-                                🚫 Max Quit {t.quitRatio}
+                            {Number(String(tTable.quitRatio ?? '100').replace('%', '')) < 100 && (
+                              <span className="table-tag-restriction" title={`Máximo porcentaje de abandono permitido: ${tTable.quitRatio}`}>
+                                🚫 Max Quit {tTable.quitRatio}
                               </span>
                             )}
                           </div>
 
-                          {t.additionalInfoShort && (
-                            <div className="table-info-strip" title={t.additionalInfoFull || t.additionalInfoShort}>
+                          {tTable.additionalInfoShort && (
+                            <div className="table-info-strip" title={tTable.additionalInfoFull || tTable.additionalInfoShort}>
                               <span className="info-strip-icon">ℹ️</span>
-                              <span className="info-strip-text">{t.additionalInfoShort}</span>
+                              <span className="info-strip-text">{tTable.additionalInfoShort}</span>
                             </div>
                           )}
 
                           <div className="table-seats-roster">
-                            {t.seats.map((s, idx) => {
-                              const isOwner = t.controllerName && s.playerName === t.controllerName
+                            {tTable.seats.map((s, idx) => {
+                              const isOwner = tTable.controllerName && s.playerName === tTable.controllerName
                               const isHuman = !s.playerType || s.playerType === 'HUMAN'
                               const foundUser = s.playerName
                                 ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
@@ -702,13 +702,13 @@ export default function LobbyScreen() {
                                     {s.flagName && <CountryFlag flagName={s.flagName} className="seat-flag" />}
                                   </div>
 
-                                  <div className="seat-part-main">
+                                   <div className="seat-part-main">
                                     <div className="seat-name-row">
                                       <span className="seat-player-name">
-                                        {s.playerName || 'Plaza vacía disponible'}
+                                        {s.playerName || t('lobby.open_seat')}
                                       </span>
-                                      {isOwner && <span className="seat-crown" title="Creador / Host de la mesa">👑 Host</span>}
-                                      {!isHuman && <span className="seat-bot-tag" title="Oponente Inteligencia Artificial">🤖 {s.playerType || 'IA'}</span>}
+                                      {isOwner && <span className="seat-crown" title={t('lobby.host')}>👑 {t('lobby.host')}</span>}
+                                      {!isHuman && <span className="seat-bot-tag" title={t('lobby.ai')}>🤖 {s.playerType || t('lobby.ai')}</span>}
                                     </div>
 
                                     {s.playerName && (rating || historyInfo.short) && (
@@ -725,12 +725,12 @@ export default function LobbyScreen() {
 
                                   <div className="seat-part-status">
                                     {s.playerName ? (
-                                      <span className="seat-ready-indicator" title="Jugador conectado y listo">
+                                      <span className="seat-ready-indicator" title={t('lobby.ready_status')}>
                                         <span className="seat-ready-dot" />
-                                        <span className="seat-ready-text">Listo</span>
+                                        <span className="seat-ready-text">{t('lobby.ready_status')}</span>
                                       </span>
                                     ) : (
-                                      <span className="seat-open-badge">Disponible</span>
+                                      <span className="seat-open-badge">{t('lobby.open_seat')}</span>
                                     )}
                                   </div>
                                 </div>
@@ -743,45 +743,45 @@ export default function LobbyScreen() {
                           {isReady && (
                             <button
                               className="primary table-action-btn"
-                              disabled={busyTable === t.tableId}
-                              onClick={() => startTable(t)}
+                              disabled={busyTable === tTable.tableId}
+                              onClick={() => startTable(tTable)}
                             >
-                              Empezar
+                              {t('lobby.start_match_btn')}
                             </button>
                           )}
                           {hasHumanSeat && (
                             <button
                               className="table-action-btn join-btn"
-                              disabled={busyTable === t.tableId}
-                              onClick={() => joinHuman(t)}
+                              disabled={busyTable === tTable.tableId}
+                              onClick={() => joinHuman(tTable)}
                             >
-                              Unirse (humano)
+                              {t('lobby.join_human_btn')}
                             </button>
                           )}
                           {hasAiSeat && (
                             <button
                               className="table-action-btn ai-btn"
-                              disabled={busyTable === t.tableId}
-                              onClick={() => joinAi(t)}
+                              disabled={busyTable === tTable.tableId}
+                              onClick={() => joinAi(tTable)}
                             >
-                              Unirse IA
+                              {t('lobby.join_ai_btn')}
                             </button>
                           )}
                           <button
                             className="table-action-btn watch-btn"
-                            disabled={busyTable === t.tableId}
-                            onClick={() => watchTable(t)}
+                            disabled={busyTable === tTable.tableId}
+                            onClick={() => watchTable(tTable)}
                           >
-                            👁️ Ver
+                            👁️ {t('lobby.watch_btn')}
                           </button>
-                          {t.isTournament && (
+                          {tTable.isTournament && (
                             <button
                               className="table-action-btn bracket-btn"
-                              disabled={busyTable === t.tableId}
-                              onClick={() => void openBracket(t)}
+                              disabled={busyTable === tTable.tableId}
+                              onClick={() => void openBracket(tTable)}
                               data-testid="open-bracket"
                             >
-                              🏆 Ver bracket
+                              🏆 {t('lobby.view_bracket')}
                             </button>
                           )}
                         </div>
@@ -881,12 +881,12 @@ export default function LobbyScreen() {
 
           <section className="aside-users-section">
             <div className="aside-section-header">
-              <span className="aside-section-title">👥 Online ({users.length})</span>
+              <span className="aside-section-title">👥 {t('lobby.online_users')} ({users.length})</span>
               <button
                 type="button"
                 className="view-leaderboard-btn"
                 onClick={() => openLeaderboard(conn?.username, 'room')}
-                title="Abrir clasificación de la sala"
+                title="Leaderboard"
               >
                 🏆
               </button>
@@ -898,7 +898,7 @@ export default function LobbyScreen() {
                   className="user-list-item interactive"
                   onClick={() => setSelectedUser(u)}
                   style={{ cursor: 'pointer' }}
-                  title={`Ver acciones de ${u.userName}`}
+                  title={`Actions: ${u.userName}`}
                 >
                   <span className={`dot ${u.infoGames ? 'playing' : 'online'}`} />
                   <AvatarImage avatarId={u.avatarId} username={u.userName} size="medium" />
@@ -915,13 +915,13 @@ export default function LobbyScreen() {
                   {u.infoGames ? (
                     <span className="game-info-badge">⚔️</span>
                   ) : (
-                    <span className="lobby-idle-badge">Lobby</span>
+                    <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>
                   )}
                 </li>
               ))}
               {users.length === 0 && (
                 <li className="users-empty-item">
-                  <span className="empty">Esperando jugadores…</span>
+                  <span className="empty">{t('lobby.waiting_players')}</span>
                 </li>
               )}
             </ul>

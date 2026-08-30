@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { TableView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './TableFilterBar.css'
 
 export interface TableFilters {
@@ -196,6 +197,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
     return c
   }, [filters])
 
+  const { t } = useTranslation()
   const isOtherFormatSelected = !POPULAR_FORMATS.some((p) => p.id === filters.format)
 
   return (
@@ -207,7 +209,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
           <input
             type="text"
             className="tfb-search-input"
-            placeholder="Buscar por mesa, anfitrión o formato… (Esc)"
+            placeholder={t('lobby.filter_search_placeholder')}
             value={filters.searchQuery}
             onChange={(e) => onChange({ ...filters, searchQuery: e.target.value })}
             onKeyDown={(e) => {
@@ -219,7 +221,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
               type="button"
               className="tfb-clear-search-btn"
               onClick={() => onChange({ ...filters, searchQuery: '' })}
-              title="Limpiar búsqueda"
+              title={t('common.clear')}
             >
               &times;
             </button>
@@ -236,10 +238,10 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 availability: filters.availability === 'open' ? 'all' : 'open',
               })
             }
-            title="Mostrar solo mesas con plazas libres para unirse"
+            title={t('lobby.filter_only_open')}
           >
             <span className="tfb-pill-dot open-dot" />
-            <span>Plazas libres</span>
+            <span>{t('lobby.filter_only_open')}</span>
           </button>
 
           <button
@@ -251,16 +253,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 availability: filters.availability === 'dueling' ? 'all' : 'dueling',
               })
             }
-            title="Mostrar solo partidas en juego para espectar"
+            title={t('lobby.in_game')}
           >
-            <span>👁️ En juego</span>
+            <span>👁️ {t('lobby.in_game')}</span>
           </button>
 
           <button
             type="button"
             className={`tfb-pill-btn tfb-advanced-trigger ${showAdvanced || activeCount > 0 ? 'is-open' : ''}`}
             onClick={() => setShowAdvanced((v) => !v)}
-            title="Abrir filtros avanzados"
+            title="Filters"
           >
             <span>⚙️ Filtros</span>
             {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
@@ -272,9 +274,9 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
               type="button"
               className="tfb-reset-btn"
               onClick={onReset}
-              title="Restablecer todos los filtros"
+              title={t('lobby.filter_reset')}
             >
-              <span>Restablecer</span>
+              <span>{t('lobby.filter_reset')}</span>
             </button>
           )}
         </div>
@@ -294,7 +296,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 onClick={() => onChange({ ...filters, format: pf.id })}
               >
                 <span className="tfb-chip-icon">{pf.icon}</span>
-                <span className="tfb-chip-label">{pf.label}</span>
+                <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.label}</span>
                 <span className="tfb-chip-count">{count}</span>
               </button>
             )

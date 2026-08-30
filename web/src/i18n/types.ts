@@ -43,6 +43,11 @@ export interface TranslationSchema {
     avatar: string
     flag: string
     custom_server_hint: string
+    network_config: string
+    proxy: string
+    xmage_server: string
+    port: string
+    attribution: string
   }
   lobby: {
     brand_title: string
@@ -62,11 +67,27 @@ export interface TranslationSchema {
     join_human_btn: string
     join_ai_btn: string
     start_match_btn: string
+    watch_btn: string
+    view_bracket: string
+    host: string
+    ai: string
     ready_status: string
     open_seat: string
+    online_users: string
+    in_game: string
+    in_lobby: string
     global_chat: string
     disconnect: string
     disconnect_confirm: string
+    filter_search_placeholder: string
+    filter_format_all: string
+    filter_only_open: string
+    filter_hide_playing: string
+    filter_reset: string
+    no_tables_found: string
+    select_deck_prompt: string
+    tournament_badge: string
+    spectators: string
   }
   game: {
     turn: string

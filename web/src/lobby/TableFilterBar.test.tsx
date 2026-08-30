@@ -195,7 +195,7 @@ describe('TableFilterBar component', () => {
       />
     )
 
-    const input = getByPlaceholderText('Buscar por mesa, anfitrión o formato… (Esc)')
+    const input = getByPlaceholderText(/Buscar/)
     fireEvent.change(input, { target: { value: 'Modern' } })
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ searchQuery: 'Modern' })

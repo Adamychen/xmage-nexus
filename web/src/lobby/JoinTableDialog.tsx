@@ -9,6 +9,7 @@ import {
 } from './decks'
 import { parseArenaDeck } from './DeckManager'
 import { setMyDeck, useStore } from '../state/store'
+import { useTranslation } from '../i18n'
 import './JoinTableDialog.css'
 
 interface JoinTableDialogProps {
@@ -24,6 +25,7 @@ export default function JoinTableDialog({
   onClose,
   onJoin,
 }: JoinTableDialogProps) {
+  const { t } = useTranslation()
   const currentEquippedDeck = useStore((s) => s.myDeck)
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
   const [selectedDeck, setSelectedDeck] = useState<Deck>(() => currentEquippedDeck ?? allDecks[0] ?? DEFAULT_DECK)
@@ -276,7 +278,7 @@ export default function JoinTableDialog({
                 onClick={onClose}
                 disabled={busy}
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"

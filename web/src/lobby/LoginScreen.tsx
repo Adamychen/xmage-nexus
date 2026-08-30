@@ -205,12 +205,12 @@ export default function LoginScreen() {
         {/* Network Connection Configuration Box */}
         <details className="login-network-box" style={{ border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 10, padding: '0', background: 'rgba(10, 13, 28, 0.65)', boxSizing: 'border-box', width: '100%' }}>
           <summary className="login-network-header" style={{ cursor: 'pointer', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
-            <span className="network-box-title">Configuración de Red</span>
+            <span className="network-box-title">{t('login.network_config')}</span>
             <span className="network-box-hint">{serverHost}:{port}</span>
           </summary>
           <div className="login-network-fields" style={{ padding: '0 12px 10px' }}>
             <label className="network-field-proxy">
-              Proxy
+              {t('login.proxy')}
               <input
                 value={proxyHost}
                 onChange={(e) => {
@@ -221,7 +221,7 @@ export default function LoginScreen() {
             </label>
             <div className="network-field-row">
               <label className="network-field-host">
-                XMage Server
+                {t('login.xmage_server')}
                 <input
                   value={serverHost}
                   onChange={(e) => {
@@ -231,7 +231,7 @@ export default function LoginScreen() {
                 />
               </label>
               <label className="network-field-port">
-                Port
+                {t('login.port')}
                 <input
                   value={port}
                   onChange={(e) => {
@@ -266,7 +266,7 @@ export default function LoginScreen() {
           )}
         </button>
         <div className="login-attribution">
-          Card images courtesy of <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a> · Not affiliated with Wizards of the Coast
+          {t('login.attribution')}
         </div>
       </form>
 

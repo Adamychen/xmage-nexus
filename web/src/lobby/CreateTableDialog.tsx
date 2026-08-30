@@ -3,6 +3,7 @@ import * as cmds from '../net/commands'
 import type { GameTypeInfo } from '../net/commands'
 import { setMyDeck, useStore } from '../state/store'
 import { getAllAvailableDecks, DEFAULT_DECK, LANDS_DECK, type Deck } from './decks'
+import { useTranslation } from '../i18n'
 import './CreateTableDialog.css'
 
 export type CreateTab = 'general' | 'timing' | 'security' | 'seats' | 'dev'
@@ -426,12 +427,14 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     onClose()
   }
 
+  const { t } = useTranslation()
+
   return (
     <div className="overlay">
       <div className="dialog panel create-table-dialog">
         <div className="create-table-header">
           <div className="create-table-header-title">
-            <h2>⚔️ Crear Nueva Mesa</h2>
+            <h2>⚔️ {t('lobby.create_table_btn')}</h2>
             <span className="create-table-subtitle">Configura reglas, tiempos, permisos y oponentes</span>
           </div>
           <button type="button" className="create-dialog-close-btn" onClick={onClose}>
@@ -957,10 +960,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
         <div className="dialog-actions">
           <button type="button" onClick={onClose} disabled={busy}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
-            {busy ? 'Creando…' : isDraftLimited ? 'Crear Torneo Draft 🃏' : 'Crear Mesa 🚀'}
+            {busy ? `${t('lobby.create_table_btn')}…` : isDraftLimited ? 'Crear Torneo Draft 🃏' : `${t('lobby.create_table_btn')} 🚀`}
           </button>
         </div>
       </div>
