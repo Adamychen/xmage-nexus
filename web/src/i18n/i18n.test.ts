@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
-import { t, setLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage } from './index'
+import { t, translateError, setLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage } from './index'
 
 describe('i18n system', () => {
   beforeEach(() => {
@@ -50,6 +50,22 @@ describe('i18n system', () => {
     setLanguage('zhs')
     expect(getLanguage()).toBe('zhs')
     expect(t('common.save')).toBe('保存')
+  })
+
+  it('translates error messages and raw server phrases across languages', () => {
+    setLanguage('es')
+    expect(translateError('login failed')).toBe('Error de inicio de sesión: credenciales incorrectas o servidor no disponible')
+    expect(translateError('table full')).toBe('La mesa ya está completa')
+
+    setLanguage('en')
+    expect(translateError('login failed')).toBe('Login failed: invalid credentials or server unavailable')
+    expect(translateError('table full')).toBe('This table is already full')
+
+    setLanguage('de')
+    expect(translateError('login failed')).toBe('Anmeldung fehlgeschlagen: Ungültige Anmeldedaten oder Server nicht erreichbar')
+
+    setLanguage('ja')
+    expect(translateError('login failed')).toBe('ログイン失敗: 認証情報が無効か、サーバーが利用できません')
   })
 
   it('supports interpolation parameters', () => {

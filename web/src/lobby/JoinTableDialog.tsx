@@ -25,7 +25,7 @@ export default function JoinTableDialog({
   onClose,
   onJoin,
 }: JoinTableDialogProps) {
-  const { t } = useTranslation()
+  const { t, tError } = useTranslation()
   const currentEquippedDeck = useStore((s) => s.myDeck)
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
   const [selectedDeck, setSelectedDeck] = useState<Deck>(() => currentEquippedDeck ?? allDecks[0] ?? DEFAULT_DECK)
@@ -144,7 +144,7 @@ export default function JoinTableDialog({
         {joinError && (
           <div className="join-error-banner">
             <span className="join-error-icon">⚠️</span>
-            <span className="join-error-text">{joinError}</span>
+            <span className="join-error-text">{tError(joinError)}</span>
           </div>
         )}
 
@@ -202,7 +202,7 @@ export default function JoinTableDialog({
                   rows={4}
                   className="import-textarea"
                 />
-                {importError && <p className="import-error-msg">{importError}</p>}
+                {importError && <p className="import-error-msg">{tError(importError)}</p>}
                 <div className="import-actions">
                   <button
                     type="button"

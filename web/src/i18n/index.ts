@@ -158,6 +158,56 @@ export function t(path: string, params?: Record<string, string | number>): strin
   return current
 }
 
+/**
+ * Automatically translates known backend/gateway error phrases or keys to the active language.
+ */
+export function translateError(error: string | null | undefined): string {
+  if (!error) return ''
+  const str = String(error).trim()
+  const lower = str.toLowerCase()
+
+  if (lower.includes('login fallido') || lower.includes('login failed') || lower.includes('invalid username or password') || lower.includes('can\'t receive server state')) {
+    return t('errors.login_failed')
+  }
+  if (lower.includes('no se pudo conectar al proxy') || lower.includes('failed to connect to proxy') || lower.includes('unable to connect') || lower.includes('websocket')) {
+    return t('errors.proxy_connection_failed')
+  }
+  if (lower.includes('table full') || lower.includes('mesa llena') || lower.includes('full table')) {
+    return t('errors.table_full')
+  }
+  if (lower.includes('table not found') || lower.includes('mesa no encontrada') || lower.includes('no existe')) {
+    return t('errors.table_not_found')
+  }
+  if (lower.includes('invalid password') || lower.includes('password incorrect') || lower.includes('contraseña incorrecta')) {
+    return t('errors.invalid_password')
+  }
+  if (lower.includes('timeout') || lower.includes('tiempo de espera agotado')) {
+    return t('errors.timeout')
+  }
+  if (lower.includes('no se pudo crear la mesa') || lower.includes('failed to create table')) {
+    return t('errors.create_table_failed')
+  }
+  if (lower.includes('no se pudo unir') || lower.includes('failed to join') || lower.includes('rechazó la unión')) {
+    return t('errors.join_table_failed')
+  }
+  if (lower.includes('debes indicar al menos un set') || lower.includes('at least one set')) {
+    return t('errors.draft_no_sets')
+  }
+  if (lower.includes('no se pudieron reconocer cartas') || lower.includes('could not recognize cards')) {
+    return t('errors.deck_parse_failed')
+  }
+  if (lower.includes('no se pudo leer el archivo') || lower.includes('could not read')) {
+    return t('errors.deck_read_failed')
+  }
+
+  // If path exists in translations (e.g. 'errors.create_table_failed')
+  if (str.startsWith('errors.')) {
+    return t(str)
+  }
+
+  return str
+}
+
 export function useTranslation() {
   useSyncExternalStore(subscribe, getStoreSnapshot, getStoreSnapshot)
 
@@ -173,8 +223,13 @@ export function useTranslation() {
     return t(path, params)
   }, [])
 
+  const errorTranslator = useCallback((err: string | null | undefined) => {
+    return translateError(err)
+  }, [])
+
   return {
     t: translate,
+    tError: errorTranslator,
     lang: currentLanguage,
     cardLang: currentCardLanguage,
     setLanguage: changeLanguage,

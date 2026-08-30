@@ -427,7 +427,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     onClose()
   }
 
-  const { t } = useTranslation()
+  const { t, tError } = useTranslation()
 
   return (
     <div className="overlay">
@@ -956,7 +956,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {rated && <span className="summary-pill rated">⭐ Ranked</span>}
         </div>
 
-        {error && <div className="error-box">⚠️ {error}</div>}
+        {error && <div className="error-box">⚠️ {tError(error)}</div>}
 
         <div className="dialog-actions">
           <button type="button" onClick={onClose} disabled={busy}>

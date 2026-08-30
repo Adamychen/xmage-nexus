@@ -155,4 +155,21 @@ export interface TranslationSchema {
     format_legal: string
     format_illegal: string
   }
+  errors: {
+    connection_failed: string
+    proxy_connection_failed: string
+    login_failed: string
+    table_full: string
+    table_not_found: string
+    invalid_password: string
+    timeout: string
+    create_table_failed: string
+    join_table_failed: string
+    start_game_failed: string
+    draft_no_sets: string
+    draft_create_failed: string
+    deck_parse_failed: string
+    deck_read_failed: string
+    generic_error: string
+  }
 }

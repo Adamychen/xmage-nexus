@@ -33,7 +33,7 @@ export const POPULAR_FLAGS = [
 ]
 
 export default function LoginScreen() {
-  const { t } = useTranslation()
+  const { t, tError } = useTranslation()
   const phase = useStore((s) => s.phase)
   const error = useStore((s) => s.error)
   const [proxyHost, setProxyHost] = useState('localhost')
@@ -248,8 +248,8 @@ export default function LoginScreen() {
         {error && (
           <div className="error-box">
             <span className="error-icon">⚠️</span>
-            <span className="error-msg">{error}</span>
-            <button type="button" onClick={clearError} title="Cerrar">
+            <span className="error-msg">{tError(error)}</span>
+            <button type="button" onClick={clearError} title={t('common.close')}>
               ✕
             </button>
           </div>
