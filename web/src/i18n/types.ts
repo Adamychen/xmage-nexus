@@ -30,6 +30,20 @@ export interface TranslationSchema {
     language: string
     card_language: string
   }
+  login: {
+    subtitle: string
+    server_target: string
+    server_local: string
+    server_official: string
+    server_custom: string
+    connect_btn: string
+    connecting: string
+    username: string
+    password: string
+    avatar: string
+    flag: string
+    custom_server_hint: string
+  }
   lobby: {
     brand_title: string
     online_count: string

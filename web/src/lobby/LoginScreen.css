@@ -11,6 +11,16 @@
   box-sizing: border-box;
 }
 
+.login-top-bar {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* Ambient Mana Glow Orbs */
 .login-bg-glow {
   position: absolute;

@@ -3,6 +3,8 @@ import { clearError, doConnect, useStore, loadConn, clearActiveGame } from '../s
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
+import LanguageSelector from '../i18n/LanguageSelector'
+import { useTranslation } from '../i18n'
 import './LoginScreen.css'
 
 function urlProxyPort(): number | null {
@@ -31,6 +33,7 @@ export const POPULAR_FLAGS = [
 ]
 
 export default function LoginScreen() {
+  const { t } = useTranslation()
   const phase = useStore((s) => s.phase)
   const error = useStore((s) => s.error)
   const [proxyHost, setProxyHost] = useState('localhost')
@@ -69,14 +72,16 @@ export default function LoginScreen() {
     }
   }, [])
 
-  const handleSelectPreset = (p: ServerPreset) => {
-    setPreset(p)
-    if (p === 'local') {
+  const handleSelectPreset = (nextPreset: ServerPreset) => {
+    setPreset(nextPreset)
+    if (nextPreset === 'local') {
       setProxyHost('localhost')
+      setProxyPort(8787)
       setServerHost('localhost')
       setPort('17171')
-    } else if (p === 'official') {
+    } else if (nextPreset === 'official') {
       setProxyHost('localhost')
+      setProxyPort(8787)
       setServerHost('beta.xmage.today')
       setPort('17171')
     }
@@ -102,18 +107,22 @@ export default function LoginScreen() {
 
   return (
     <div className="login-wrap">
+      <div className="login-top-bar">
+        <LanguageSelector showCardLangToggle={true} />
+      </div>
+
       <div className="login-bg-glow login-bg-glow-1" />
       <div className="login-bg-glow login-bg-glow-2" />
 
       <form className="login-card panel" onSubmit={submit}>
         <div className="login-header">
           <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
-          <p className="subtitle">Cliente Web Moderno para XMage</p>
+          <p className="subtitle">{t('login.subtitle')}</p>
         </div>
 
         {/* Server Preset Selector */}
         <div className="login-presets-container">
-          <span className="login-presets-title">Servidor de Destino:</span>
+          <span className="login-presets-title">{t('login.server_target')}</span>
           <div className="login-presets-row">
             <button
               type="button"
@@ -121,7 +130,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('local')}
             >
               <span className="preset-icon">🏠</span>
-              <span>Localhost</span>
+              <span>{t('login.server_local')}</span>
             </button>
             <button
               type="button"
@@ -129,7 +138,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('official')}
             >
               <span className="preset-icon">🌐</span>
-              <span>Oficial (Beta)</span>
+              <span>{t('login.server_official')}</span>
             </button>
             <button
               type="button"
@@ -137,7 +146,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('custom')}
             >
               <span className="preset-icon">⚙️</span>
-              <span>Personalizado</span>
+              <span>{t('login.server_custom')}</span>
             </button>
           </div>
         </div>
@@ -159,18 +168,18 @@ export default function LoginScreen() {
           <div className="user-inputs-col">
             <div className="user-name-and-flag-grid">
               <label className="login-field-username">
-                Usuario
+                {t('login.username')}
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   maxLength={14}
-                  placeholder="Nombre de usuario"
+                  placeholder={t('login.username')}
                   autoComplete="username"
                   required
                 />
               </label>
               <label className="login-field-flag">
-                País
+                {t('login.flag')}
                 <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
                   {POPULAR_FLAGS.map((f) => (
                     <option key={f.code} value={f.code}>
@@ -181,12 +190,12 @@ export default function LoginScreen() {
               </label>
             </div>
             <label>
-              Contraseña
+              {t('login.password')}
               <input
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
-                placeholder="Contraseña (opcional)"
+                placeholder={t('login.password')}
                 autoComplete="current-password"
               />
             </label>
@@ -250,10 +259,10 @@ export default function LoginScreen() {
           {busy ? (
             <span className="btn-connecting-wrap">
               <span className="btn-spinner" />
-              <span>Conectando al servidor…</span>
+              <span>{t('login.connecting')}</span>
             </span>
           ) : (
-            <span>Conectar</span>
+            <span>{t('login.connect_btn')}</span>
           )}
         </button>
         <div className="login-attribution">
