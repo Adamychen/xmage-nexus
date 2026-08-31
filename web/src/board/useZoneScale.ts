@@ -46,11 +46,20 @@ export function useZoneScale(): ZoneScale {
 
     measure()
     if (typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(measure)
+    let rafId: number | null = null
+    const debouncedMeasure = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        measure()
+      })
+    }
+    const ro = new ResizeObserver(debouncedMeasure)
     ro.observe(el)
-    const mo = new MutationObserver(measure)
+    const mo = new MutationObserver(debouncedMeasure)
     mo.observe(el, { childList: true, subtree: true })
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
       ro.disconnect()
       mo.disconnect()
     }

@@ -1,5 +1,6 @@
 import type { GameView } from '../net/types'
 import type { CrossZonePlayable } from './crossZone'
+import { getActiveFlights } from './flightManager'
 import { useCallback, useEffect, useRef } from 'react'
 
 export interface MageSceneState {
@@ -106,7 +107,9 @@ export function useSceneBridge({
       }
 
       publish()
-      const interval = setInterval(publish, 300)
+      const interval = setInterval(() => {
+        if (getActiveFlights().length === 0) publish()
+      }, 500)
       return () => clearInterval(interval)
       }, [computeCards, click])
 }

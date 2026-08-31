@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
-import { consumePreviousCardPosition, recordCardPosition } from './cardPositionRegistry'
+import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
@@ -48,6 +48,7 @@ export default function CardSlot({
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
+  const [entering, setEntering] = useState(false)
 
   const effectiveId = cardId || (card as any).id
 
@@ -56,6 +57,7 @@ export default function CardSlot({
     if (!el || !effectiveId) return
 
     let timerId: ReturnType<typeof setTimeout> | null = null
+    let enterTimerId: ReturnType<typeof setTimeout> | null = null
 
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
@@ -64,13 +66,13 @@ export default function CardSlot({
       }
       const lastRect = el.getBoundingClientRect()
       if (lastRect.width > 0 && lastRect.height > 0) {
-        const prev = consumePreviousCardPosition(effectiveId)
-        if (prev && prev.rect.width > 0) {
+        const prev = getPreviousCardPosition(effectiveId)
+        const prevZone = getPreviousCardZone(effectiveId)
+        if (prev && prev.width > 0) {
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
-          // Only animate flight if changing between different zones
-          if (!prev.zone || !curZoneClass || prev.zone !== curZoneClass) {
-            const flightId = startCardFlight(card, prev.rect, lastRect, 320)
+          if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
+            const flightId = startCardFlight(card, prev, lastRect, 320)
             if (flightId) {
               el.style.opacity = '0'
               timerId = setTimeout(() => {
@@ -81,7 +83,13 @@ export default function CardSlot({
                 }
               }, 300)
             }
+          } else {
+            setEntering(true)
+            enterTimerId = setTimeout(() => { enterTimerId = null; setEntering(false) }, 250)
           }
+        } else {
+          setEntering(true)
+          enterTimerId = setTimeout(() => { enterTimerId = null; setEntering(false) }, 250)
         }
       }
     }
@@ -90,6 +98,10 @@ export default function CardSlot({
       if (timerId !== null) {
         clearTimeout(timerId)
         timerId = null
+      }
+      if (enterTimerId !== null) {
+        clearTimeout(enterTimerId)
+        enterTimerId = null
       }
       if (el) {
         el.style.opacity = ''
@@ -148,6 +160,7 @@ export default function CardSlot({
         faceDown ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         onClick ? 'clickable' : '',
+        entering ? 'entering' : '',
         className,
       ].filter(Boolean).join(' ')}
       onClick={onClick}

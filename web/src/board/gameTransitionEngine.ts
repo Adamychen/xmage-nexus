@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
 import { startCardFlight } from './flightManager'
-import { getPreviousCardPosition, consumePreviousCardPosition } from './cardPositionRegistry'
+import { getPreviousCardPosition } from './cardPositionRegistry'
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -139,9 +139,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         let originRect: DOMRect | null = null
 
         // Check registry first: card may have just unmounted from hand/stack
-        const prevRegistered = consumePreviousCardPosition(permId)
+        const prevRegistered = getPreviousCardPosition(permId)
         if (prevRegistered) {
-          originRect = prevRegistered.rect
+          originRect = prevRegistered
         } else if (wasInStack) {
           originRect = stackRect
         } else {
@@ -166,9 +166,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     // C) Permanent Leaves Battlefield -> Graveyard (Dies)
     for (const [permId, perm] of Object.entries(prevBattlefield)) {
       if (!(permId in nextBattlefield) && graveRect) {
-        // Card is already unmounted: use cardPositionRegistry (recorded on cleanup)
-        const registryEntry = consumePreviousCardPosition(permId)
-        const prevCardRect = registryEntry?.rect ?? getRect(`[data-card-id="${permId}"]`)
+        const prevCardRect = getPreviousCardPosition(permId) ?? getRect(`[data-card-id="${permId}"]`)
         if (prevCardRect) {
           startCardFlight(perm, prevCardRect, graveRect, 350)
         }

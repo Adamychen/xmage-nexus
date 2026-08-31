@@ -334,11 +334,17 @@ export async function awaitImageUrl(card: CardView): Promise<string | null> {
 
   const p = (async () => {
     let url = await load(key).catch(() => null)
-    // If set/number lookup returned null (e.g. 404 from mismatched set codes/promos), fallback by card name!
     if (!url && cleanName && !key.replace(/#back$/, '').startsWith('named:')) {
       const isBack = key.endsWith('#back')
       const fallbackKey = `named:${cleanName}${isBack ? '#back' : ''}`
       url = await load(fallbackKey).catch(() => null)
+    }
+    if (url) {
+      try {
+        const img = new Image()
+        img.src = url
+        await img.decode()
+      } catch {}
     }
     remember(key, url)
     return url
