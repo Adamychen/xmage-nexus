@@ -325,6 +325,9 @@ export interface TranslationSchema {
     pod_view_active: string
     pod_view_hint: string
     pod_standard_hint: string
+    arena_view: string
+    arena_view_active: string
+    arena_view_hint: string
     player_left: string
     player_defeated: string
     player_left_desc: string

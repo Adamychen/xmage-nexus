@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
 import PodBoard from '../board/PodBoard'
+import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
@@ -173,7 +174,9 @@ export default function GameScreen() {
   }, [game?.players])
 
   const isMultiplayer = opps.length >= 2
-  const isPodLayout = settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard')
+  const isArenaLayout = settings.boardLayout === 'arena' && isMultiplayer
+  const isPodLayout = !isArenaLayout && (settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena'))
+  const layoutMode: 'standard' | 'pod' | 'arena' = isArenaLayout ? 'arena' : isPodLayout ? 'pod' : 'standard'
 
   return (
     <div className="game">
@@ -235,11 +238,28 @@ export default function GameScreen() {
           {opps.length >= 1 && (
             <button
               type="button"
-              className={`layout-toggle-btn ${isPodLayout ? 'is-active' : ''}`}
-              title={isPodLayout ? t('game', 'pod_standard_hint') : `${t('game', 'pod_view_hint')} (${opps.length + 1})`}
-              onClick={() => setSetting('boardLayout', isPodLayout ? 'standard' : 'pod')}
+              className={`layout-toggle-btn ${layoutMode !== 'standard' ? 'is-active' : ''}`}
+              title={
+                layoutMode === 'standard'
+                  ? t('game', 'pod_view_hint')
+                  : layoutMode === 'pod'
+                    ? t('game', 'arena_view_hint')
+                    : t('game', 'pod_standard_hint')
+              }
+              onClick={() => {
+                const cycle: Array<'standard' | 'pod' | 'arena'> = isMultiplayer
+                  ? ['standard', 'pod', 'arena']
+                  : ['standard', 'pod']
+                const idx = cycle.indexOf(layoutMode)
+                setSetting('boardLayout', cycle[(idx + 1) % cycle.length] ?? 'standard')
+              }}
             >
-              <Icon name="grid" size={13} /> {isPodLayout ? t('game', 'pod_view_active') : t('game', 'pod_view')}
+              <Icon name="grid" size={13} />{' '}
+              {layoutMode === 'pod'
+                ? t('game', 'pod_view_active')
+                : layoutMode === 'arena'
+                  ? t('game', 'arena_view_active')
+                  : t('game', 'pod_view')}
             </button>
           )}
           <button
@@ -267,7 +287,24 @@ export default function GameScreen() {
       <div className="game-body" ref={gameBodyRef}>
         <Sidebar />
         <div className="board-wrap">
-          {isPodLayout ? (
+          {isArenaLayout ? (
+            <ArenaBoard
+              game={game}
+              targetIds={targetIds}
+              chosenTargetIds={chosenTargetIds}
+              onTargetClick={onTargetClick}
+              playableIds={playableIds}
+              onPlayableClick={onPlayableClick}
+              combatSelectable={combat?.selectable ?? []}
+              combatMode={combat?.mode ?? null}
+              combatChosen={combat?.chosen ?? []}
+              onCombatClick={onCombatClick}
+              attackingIds={combatActors.attackingIds}
+              blockingIds={combatActors.blockingIds}
+              crossZonePlayables={crossZone}
+              onPlayCrossZone={onPlayableClick}
+            />
+          ) : isPodLayout ? (
             <PodBoard
               game={game}
               targetIds={targetIds}

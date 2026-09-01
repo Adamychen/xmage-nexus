@@ -116,7 +116,7 @@ export interface AppState {
     autoKeepMulligan: boolean
     autoPass: boolean
     holdPriority: boolean
-    boardLayout: 'standard' | 'pod'
+    boardLayout: 'standard' | 'pod' | 'arena'
   }
   error: string | null
 }

@@ -30,7 +30,7 @@ interface TwoHeadedBoardProps {
   onPlayCrossZone?: (id: string) => void
 }
 
-function revealedCards(
+export function revealedCards(
   game: GameView | null | undefined,
   player: PlayerView | undefined,
 ): Record<string, CardView> {

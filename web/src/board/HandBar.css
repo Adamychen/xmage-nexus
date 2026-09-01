@@ -16,6 +16,13 @@
   overflow: visible;
   box-sizing: border-box;
   background: transparent;
+  /* La tira vacía no bloquea clicks (p. ej. pilas de recursos bajo ella):
+     solo las cartas son interactivas. */
+  pointer-events: none;
+}
+
+.hand-bar .hand-card-slot {
+  pointer-events: auto;
 }
 
 /* Contact shadow grounding the fan onto the playmat */
