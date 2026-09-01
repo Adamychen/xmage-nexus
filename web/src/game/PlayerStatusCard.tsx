@@ -1,4 +1,5 @@
 import type { PlayerView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './PlayerStatusCard.css'
 
 interface BadgeSlot {
@@ -6,30 +7,26 @@ interface BadgeSlot {
   title: string
 }
 
-/**
- * Los 3 diamantes de la referencia no son decoración: mapean a estados de
- * partida reales que XMage ya expone en PlayerView (monarch, initiative,
- * designationNames) y que hasta ahora no se pintaban en ningún sitio.
- * Si hay más de una designación, se cicla la que se muestra en el tercer slot.
- */
-function badgeSlots(player: PlayerView): (BadgeSlot | null)[] {
-  const slots: (BadgeSlot | null)[] = [null, null, null]
-  if (player.monarch) slots[0] = { icon: '♛', title: 'Monarch' }
-  if (player.initiative) slots[1] = { icon: '⚔', title: 'Iniciativa' }
-  const designation = player.designationNames?.[0]
-  if (designation) slots[2] = { icon: '★', title: designation }
-  return slots
-}
-
-function secondaryCounter(player: PlayerView): { label: string; value: number } {
-  const poison = player.counters?.find((c) => c.name.toLowerCase() === 'poison')
-  if (poison) return { label: 'Veneno', value: poison.count }
-  const other = player.counters?.[0]
-  if (other) return { label: other.name, value: other.count }
-  return { label: 'Veneno', value: 0 }
-}
-
 export default function PlayerStatusCard({ player, side }: { player: PlayerView; side: 'opp' | 'my' }) {
+  const { t } = useTranslation()
+
+  function badgeSlots(p: PlayerView): (BadgeSlot | null)[] {
+    const slots: (BadgeSlot | null)[] = [null, null, null]
+    if (p.monarch) slots[0] = { icon: '♛', title: t('game', 'mechanics_monarch') }
+    if (p.initiative) slots[1] = { icon: '⚔', title: t('game', 'mechanics_initiative') }
+    const designation = p.designationNames?.[0]
+    if (designation) slots[2] = { icon: '★', title: designation }
+    return slots
+  }
+
+  function secondaryCounter(p: PlayerView): { label: string; value: number } {
+    const poison = p.counters?.find((c) => c.name.toLowerCase() === 'poison')
+    if (poison) return { label: t('game', 'poison'), value: poison.count }
+    const other = p.counters?.[0]
+    if (other) return { label: other.name, value: other.count }
+    return { label: t('game', 'poison'), value: 0 }
+  }
+
   const secondary = secondaryCounter(player)
   const slots = badgeSlots(player)
 

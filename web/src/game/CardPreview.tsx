@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardImages'
 import type { CardView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './CardPreview.css'
 
 interface Props {
@@ -8,18 +9,19 @@ interface Props {
   onClose?: () => void
 }
 
-function abilityBadgeLabel(card: CardView): string {
-  const at = card.abilityType ?? ''
-  if (at === 'Triggered' || at === 'Triggered Mana') return '🔔 Habilidad disparada'
-  if (at === 'Activated' || at === 'Mana') return '⚡ Habilidad activada'
-  if (at === 'Loyalty') return '👑 Habilidad de lealtad'
-  if (at === 'Static') return '🛡️ Habilidad estática'
-  return '⚡ Habilidad'
-}
-
 export default function CardPreview({ card, onClose }: Props) {
+  const { t } = useTranslation()
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number>(0)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+
+  function abilityBadgeLabel(c: CardView): string {
+    const at = c.abilityType ?? ''
+    if (at === 'Triggered' || at === 'Triggered Mana') return t('game', 'ability_badge_triggered')
+    if (at === 'Activated' || at === 'Mana') return t('game', 'ability_badge_activated')
+    if (at === 'Loyalty') return t('game', 'ability_badge_loyalty')
+    if (at === 'Static') return t('game', 'ability_badge_static')
+    return t('game', 'ability_badge_general')
+  }
 
   // Reset face selection when card changes
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function CardPreview({ card, onClose }: Props) {
   if (!card || !activeCard) {
     return (
       <div className="card-preview card-preview--empty">
-        <span className="card-preview-hint">Pasa el cursor sobre una carta o habilidad</span>
+        <span className="card-preview-hint">{t('game', 'card_preview_hint')}</span>
       </div>
     )
   }
@@ -75,7 +77,7 @@ export default function CardPreview({ card, onClose }: Props) {
       {isAbility && (
         <div className="card-preview-ability-banner">
           <span className="ability-banner-type">{abilityBadgeLabel(card)}</span>
-          <span className="ability-banner-source">Fuente: {getSourceCardName(card)}</span>
+          <span className="ability-banner-source">{t('game', 'card_source_label')} {getSourceCardName(card)}</span>
         </div>
       )}
 
@@ -87,14 +89,14 @@ export default function CardPreview({ card, onClose }: Props) {
             className={`face-tab-btn ${selectedFaceIndex === 0 ? 'active' : ''}`}
             onClick={() => setSelectedFaceIndex(0)}
           >
-            Cara 1: {card.name}
+            {t('game', 'card_preview_face1', { name: card.name })}
           </button>
           <button
             type="button"
             className={`face-tab-btn ${selectedFaceIndex === 1 ? 'active' : ''}`}
             onClick={() => setSelectedFaceIndex(1)}
           >
-            🔄 {card.secondCardFace?.name || 'Cara 2'}
+            🔄 {card.secondCardFace?.name || t('game', 'card_preview_face2')}
           </button>
         </div>
       )}
@@ -121,7 +123,7 @@ export default function CardPreview({ card, onClose }: Props) {
 
         {isAbility && card.rules && card.rules.length > 0 ? (
           <div className="card-preview-ability-box">
-            <div className="ability-box-label">Texto de la habilidad:</div>
+            <div className="ability-box-label">{t('game', 'card_ability_text')}</div>
             <div className="ability-box-rules">{card.rules.join('\n')}</div>
           </div>
         ) : activeCard.rules && activeCard.rules.length > 0 ? (
@@ -136,7 +138,7 @@ export default function CardPreview({ card, onClose }: Props) {
       </div>
 
       {onClose && (
-        <button className="card-preview-close" onClick={onClose} title="Cerrar">
+        <button className="card-preview-close" onClick={onClose} title={t('common', 'close')}>
           ×
         </button>
       )}

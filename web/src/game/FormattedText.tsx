@@ -1,5 +1,6 @@
 import React from 'react'
 import type { CardView } from '../net/types'
+import { t as tStatic } from '../i18n'
 import './FormattedText.css'
 
 interface FormattedTextProps {
@@ -193,7 +194,7 @@ export default function FormattedText({ text, className = '', onHover }: Formatt
               key={idx}
               className={`formatted-colored ${isCard ? 'is-card' : ''} ${isPlayer ? 'is-player' : ''}`.trim()}
               style={token.color ? { color: token.color } : undefined}
-              title={isPlayer ? `👤 Jugador: ${token.content}` : `🃏 Carta: ${token.content}`}
+              title={isPlayer ? `👤 ${tStatic('common','player')}: ${token.content}` : `🃏 ${token.content}`}
               onMouseEnter={(e) => {
                 if (isCard && onHover) {
                   onHover(

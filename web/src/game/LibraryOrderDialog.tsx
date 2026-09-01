@@ -1,3 +1,4 @@
+import { useTranslation } from '../i18n'
 import { useState, useMemo, useEffect } from 'react'
 import * as cmds from '../net/commands'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
@@ -19,7 +20,7 @@ interface OrderableCard {
 }
 
 export default function LibraryOrderDialog({ prompt, send, cancel, busy }: LibraryOrderDialogProps) {
-  // Initial card list
+  const { t, lang } = useTranslation()
   const initialCards = useMemo((): OrderableCard[] => {
     const feedbackCards = prompt.cards ?? []
     const options = prompt.options ?? []
@@ -40,7 +41,6 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     })
   }, [prompt.options, prompt.cards])
 
-  // Split into Top cards and Bottom / Graveyard cards
   const [topCards, setTopCards] = useState<OrderableCard[]>(initialCards)
   const [bottomCards, setBottomCards] = useState<OrderableCard[]>([])
 
@@ -57,7 +57,6 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     prompt.title.toLowerCase().includes('bloqueador') ||
     prompt.title.toLowerCase().includes('blocker')
 
-  // Move card within top zone
   const moveUp = (index: number) => {
     if (index <= 0) return
     const next = [...topCards]
@@ -76,7 +75,6 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     setTopCards(next)
   }
 
-  // Move card between Top and Bottom zones
   const moveToBottom = (index: number) => {
     const card = topCards[index]
     setTopCards(topCards.filter((_, i) => i !== index))
@@ -89,7 +87,6 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     setTopCards([...topCards, card])
   }
 
-  // Quick actions
   const allToTop = () => {
     setTopCards([...topCards, ...bottomCards])
     setBottomCards([])
@@ -100,13 +97,11 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     setTopCards([])
   }
 
-  // Confirm order
   const handleConfirm = () => {
-    // Send sequence of ordered IDs (top cards in order + bottom cards in order)
     const finalOrder = [...topCards.map((c) => c.id), ...bottomCards.map((c) => c.id)]
     void send(
       () => cmds.sendPlayerString(finalOrder.join(' '), prompt.gameId),
-      'No se pudo enviar el orden de las cartas'
+      t('errors','send_failed')
     )
   }
 
@@ -118,10 +113,10 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
             <span className="dialog-icon">{isBlockerOrder ? '🛡️' : '🔮'}</span>
             <span className="dialog-title">
               {isBlockerOrder
-                ? 'Ordenar Bloqueadores (Damage Assignment Order)'
+                ? t('dialogs','library_title_blocker')
                 : isSurveil
-                ? 'Vigilar (Surveil)'
-                : prompt.title || 'Adivinar (Scry) / Ordenar'}
+                ? t('dialogs','library_title_surveil')
+                : prompt.title || t('dialogs','library_title_scry')}
             </span>
           </div>
           <div className="dialog-message">
@@ -130,24 +125,23 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
         </header>
 
         <div className="library-order-body">
-          {/* Top / Primary Order Zone */}
           <div className="order-zone top-zone">
             <div className="order-zone-header">
               <span className="zone-name">
                 {isBlockerOrder
-                  ? `🛡️ Orden de asignación de daño (${topCards.length} bloqueadores)`
-                  : `⬆️ En la parte superior de la biblioteca (${topCards.length})`}
+                  ? `${t('dialogs','library_title_blocker')} (${topCards.length})`
+                  : `${t('dialogs','library_top_zone', { count: topCards.length })}`}
               </span>
               <span className="zone-hint">
                 {isBlockerOrder
-                  ? 'El atacante asignará daño letal en este orden (de izquierda a derecha)'
-                  : 'Se robarán en este orden (de izquierda a derecha)'}
+                  ? t('dialogs','library_title_blocker')
+                  : t('dialogs','library_title_scry')}
               </span>
             </div>
             <div className={`order-cards-list ${topCards.length === 0 ? 'is-empty' : 'has-cards'}`}>
               {topCards.length === 0 ? (
                 <div className="empty-zone-placeholder">
-                  {isBlockerOrder ? 'No hay bloqueadores seleccionados' : 'Ninguna carta se quedará en la parte superior'}
+                  {t('dialogs','library_empty_top')}
                 </div>
               ) : (
                 topCards.map((item, idx) => (
@@ -162,7 +156,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           className="btn-arrow"
                           disabled={busy || idx === 0}
                           onClick={() => moveUp(idx)}
-                          title={isBlockerOrder ? 'Asignar daño antes' : 'Mover antes (robar primero)'}
+                          title={t('dialogs','library_to_top')}
                         >
                           ◀
                         </button>
@@ -171,7 +165,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           className="btn-arrow"
                           disabled={busy || idx === topCards.length - 1}
                           onClick={() => moveDown(idx)}
-                          title={isBlockerOrder ? 'Asignar daño después' : 'Mover después (robar más tarde)'}
+                          title={t('dialogs','library_to_top')}
                         >
                           ▶
                         </button>
@@ -182,9 +176,9 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           className="btn-switch-zone btn-to-bottom"
                           disabled={busy}
                           onClick={() => moveToBottom(idx)}
-                          title={isSurveil ? 'Mandar al cementerio' : 'Poner al fondo de la biblioteca'}
+                          title={isSurveil ? t('dialogs','library_to_graveyard') : t('dialogs','library_to_bottom')}
                         >
-                          {isSurveil ? '⬇️ Al Cementerio' : '⬇️ Al Fondo'}
+                          {isSurveil ? t('dialogs','library_to_graveyard') : t('dialogs','library_to_bottom')}
                         </button>
                       )}
                     </div>
@@ -194,23 +188,22 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
             </div>
           </div>
 
-          {/* Bottom of Library / Graveyard Zone (only for Scry/Surveil/Library) */}
           {!isBlockerOrder && (
             <div className="order-zone bottom-zone">
               <div className="order-zone-header">
                 <span className="zone-name">
-                  {isSurveil ? '☠️ Al Cementerio' : '⬇️ En el fondo de la biblioteca'} ({bottomCards.length})
+                  {isSurveil ? t('dialogs','library_graveyard_zone', { count: bottomCards.length }) : t('dialogs','library_bottom_zone', { count: bottomCards.length })} 
                 </span>
                 <span className="zone-hint">
-                  {isSurveil ? 'Estas cartas irán al cementerio' : 'Estas cartas irán al fondo del mazo'}
+                  {isSurveil ? t('dialogs','library_to_graveyard') : t('dialogs','library_to_bottom')}
                 </span>
               </div>
               <div className={`order-cards-list ${bottomCards.length === 0 ? 'is-empty' : 'has-cards'}`}>
                 {bottomCards.length === 0 ? (
                   <div className="empty-zone-placeholder">
                     {isSurveil
-                      ? '☠️ Ninguna carta irá al cementerio'
-                      : '⬇️ Ninguna carta irá al fondo (pulsa "⬇️ Al Fondo" en una carta arriba)'}
+                      ? t('dialogs','library_empty_graveyard')
+                      : t('dialogs','library_empty_bottom')}
                   </div>
                 ) : (
                   bottomCards.map((item, idx) => (
@@ -231,7 +224,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                               next[idx - 1] = temp
                               setBottomCards(next)
                             }}
-                            title="Mover antes"
+                            title={t('dialogs','library_to_top')}
                           >
                             ◀
                           </button>
@@ -247,7 +240,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                               next[idx + 1] = temp
                               setBottomCards(next)
                             }}
-                            title="Mover después"
+                            title={t('dialogs','library_to_top')}
                           >
                             ▶
                           </button>
@@ -257,9 +250,9 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           className="btn-switch-zone btn-to-top"
                           disabled={busy}
                           onClick={() => moveToTop(idx)}
-                          title="Poner arriba en la biblioteca"
+                          title={t('dialogs','library_to_top')}
                         >
-                          ⬆️ Al Top
+                          {t('dialogs','library_to_top')}
                         </button>
                       </div>
                     </div>
@@ -270,26 +263,25 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
           )}
         </div>
 
-        {/* Global Action Controls */}
         <footer className="library-order-footer">
           {!isBlockerOrder && (
             <div className="quick-actions">
               <button type="button" disabled={busy || bottomCards.length === 0} onClick={allToTop}>
-                ⬆️ Todas arriba
+                {t('dialogs','library_all_to_top')}
               </button>
               <button type="button" disabled={busy || topCards.length === 0} onClick={allToBottom}>
-                {isSurveil ? '☠️ Todas al cementerio' : '⬇️ Todas al fondo'}
+                {isSurveil ? t('dialogs','library_all_to_graveyard') : t('dialogs','library_all_to_bottom')}
               </button>
             </div>
           )}
           <div className="dialog-confirm-actions">
             <button type="button" className="primary" disabled={busy} onClick={handleConfirm}>
               {isBlockerOrder
-                ? `Confirmar orden (${topCards.length} bloqueadores)`
-                : `Confirmar orden (${topCards.length} arriba, ${bottomCards.length} ${isSurveil ? 'cementerio' : 'fondo'})`}
+                ? t('dialogs','library_confirm_blockers', { count: topCards.length })
+                : t('dialogs','library_confirm_order', { top: topCards.length, bottom: bottomCards.length, zone: isSurveil ? t('game','pile_graveyard').toLowerCase() : (lang === 'es' ? 'fondo' : 'bottom') })}
             </button>
             <button type="button" disabled={busy} onClick={cancel} className="cancel-btn">
-              Cancelar
+              {t('common','cancel')}
             </button>
           </div>
         </footer>

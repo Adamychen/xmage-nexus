@@ -17,6 +17,7 @@ import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat } from './formatRules'
 import { useStore, setMyDeck } from '../state/store'
 import type { DeckCard } from '../lobby/decks'
+import { useTranslation } from '../i18n'
 import './DeckBuilder.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -24,6 +25,7 @@ function deckCardKey(c: DeckCard): string {
 }
 
 export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClose: () => void }) {
+  const { t } = useTranslation()
   const [deck, setDeck] = useState<DeckV2 | null>(null)
   const [name, setName] = useState('')
   const [format, setFormat] = useState<DeckV2['format']>('Freeform')
@@ -434,7 +436,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     return validateDeckForFormat(deck, metaMap)
   }, [deck, metaMap, format])
 
-  if (!deck) return <div className="deck-builder loading">Cargando mazo…</div>
+  if (!deck) return <div className="deck-builder loading">{t('common', 'loading')}</div>
 
   return (
     <div className="deck-builder">
@@ -442,15 +444,15 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       <header className="arena-top-nav deck-builder-top">
         <div className="arena-nav-left">
           <button type="button" className="arena-nav-back builder-back" onClick={onClose}>
-            <span>←</span> Volver a Mazos
+            <span>←</span> {t('decks', 'my_decks')}
           </button>
-          <span className="deck-builder-title">Editor de Mazos</span>
+          <span className="deck-builder-title">{t('decks', 'builder_editor')}</span>
         </div>
 
         <div className="arena-nav-right">
           {saveState !== 'idle' && (
             <span className="builder-save-badge builder-save">
-              {saveState === 'saving' ? 'Guardando…' : 'Guardado ✓'}
+              {saveState === 'saving' ? t('common', 'loading') : `${t('common', 'done')} ✓`}
             </span>
           )}
         </div>
@@ -486,7 +488,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         >
           {isCollectionDragOver && (
             <div className="arena-remove-drop-hint">
-              <span>🗑️</span> Soltar aquí para quitar una copia del mazo
+              <span>🗑️</span> {t('decks', 'builder_drag_hint')}
             </div>
           )}
           <SearchPanel
@@ -609,30 +611,30 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                 type="button"
                 className="builder-act"
                 onClick={() => setShowImportModal(true)}
-                title="Importar o pegar lista de cartas (.dck, Arena, MTGO)"
+                title={t('decks', 'import_hint')}
               >
-                📥 Importar Lista
+                📥 {t('decks', 'import_deck')}
               </button>
               <button
                 type="button"
                 className="builder-act"
                 onClick={() => setShowSampleHand(true)}
-                title="Simular y probar mano inicial con London Mulligan"
+                title={t('decks', 'sample_london')}
               >
-                🖐️ Probar Mano
+                🖐️ {t('decks', 'builder_sample')}
               </button>
               <button
                 type="button"
                 className={`builder-act primary ${equipped?.name === deck.name ? 'is-equipped' : ''}`}
                 onClick={() => setMyDeck(deck)}
               >
-                {equipped?.name === deck.name ? '✓ Equipado' : 'Equipar'}
+                {equipped?.name === deck.name ? `✓ ${t('common', 'done')}` : t('common', 'confirm')}
               </button>
             </div>
 
             {/* Glowing Signature Done Button */}
             <button type="button" className="builder-done" onClick={onClose}>
-              Guardar y Salir
+              {t('common', 'save')}
             </button>
           </div>
         </section>
@@ -675,13 +677,13 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
           <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">Anverso</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? 'Anverso'} />
+            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
+            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
           </div>
           {hoverPreview.backUrl && (
             <div className="preview-face-card">
-              <span className="preview-face-label">Reverso / Transformación</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (Reverso)`} />
+              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
             </div>
           )}
         </div>

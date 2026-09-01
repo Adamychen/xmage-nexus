@@ -6,6 +6,7 @@ import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
+import { useTranslation } from '../i18n'
 import './MulliganDialog.css'
 
 interface MulliganDialogProps {
@@ -16,6 +17,7 @@ interface MulliganDialogProps {
 }
 
 export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganDialogProps) {
+  const { t } = useTranslation()
   const game = useStore((s) => s.game)
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
@@ -25,8 +27,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const [hoveredCard, setHoveredCard] = useState<CardView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
-  const keep = () => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), 'No se pudo mantener la mano')
-  const mulligan = () => void send(() => cmds.sendPlayerBoolean(true, prompt.gameId), 'No se pudo hacer mulligan')
+  const keep = () => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed'))
+  const mulligan = () => void send(() => cmds.sendPlayerBoolean(true, prompt.gameId), t('errors', 'send_failed_mulligan'))
 
   const toggle = (id: string) => {
     setSelected((current) =>
@@ -38,7 +40,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
   const pickOne = (id: string) => {
     setBottomCount((count) => count + 1)
-    void send(() => cmds.sendPlayerUUID(id, prompt.gameId), 'No se pudo poner la carta al fondo')
+    void send(() => cmds.sendPlayerUUID(id, prompt.gameId), t('errors', 'send_failed'))
   }
 
   const confirmSelected = () => {
@@ -49,7 +51,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
         if (!result.ok) break
       }
       return result
-    }, 'No se pudo enviar la selección')
+    }, t('errors', 'send_failed'))
     setBottomCount((count) => count + selected.length)
   }
 
@@ -61,8 +63,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const cardCount = handEntries.length
   const needToBottom = isLondon
     ? prompt.max > 1
-      ? `Selecciona ${prompt.min}–${prompt.max} cartas para poner al fondo`
-      : `Haz clic en una carta para ponerla al fondo (${bottomCount} puestas)`
+      ? t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })
+      : `${t('game', 'targeting_hint')} (${bottomCount})`
     : null
 
   if (isLondon) {
@@ -71,9 +73,9 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
       <div className="mulligan-backdrop" role="presentation">
         <section className="mulligan-dialog mulligan-london" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
           <div className="mulligan-kicker">
-            <span className="kicker-icon">🃏</span> MULLIGAN DE LONDRES
+            <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_london_title')}
           </div>
-          <h2 id="mulligan-title">Pon cartas al fondo de tu biblioteca</h2>
+          <h2 id="mulligan-title">{t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}</h2>
           <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
 
           {cardCount > 0 && (
@@ -104,11 +106,11 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
           <div className="mulligan-actions">
             {prompt.max > 1 && (
               <button className="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
-                Confirmar ({selected.length} / {prompt.min})
+                {t('dialogs', 'mulligan_london_confirm', { selected: selected.length, min: prompt.min })}
               </button>
             )}
             {prompt.required === false && (
-              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</button>
             )}
           </div>
         </section>
@@ -121,7 +123,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     <div className="mulligan-backdrop" role="presentation">
       <section className="mulligan-dialog" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
         <div className="mulligan-kicker">
-          <span className="kicker-icon">🃏</span> DECISIÓN DE MULLIGAN
+          <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_decision_title')}
         </div>
         <h2 id="mulligan-title"><FormattedText text={prompt.title} /></h2>
         <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
@@ -143,10 +145,10 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
         <div className="mulligan-actions">
           <button className="mulligan-keep" disabled={busy} onClick={keep}>
-            ✋ Mantener ({cardCount})
+            ✋ {t('dialogs', 'mulligan_keep_btn', { count: cardCount })}
           </button>
           <button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
-            🔄 Mulligan
+            🔄 {t('dialogs', 'mulligan_btn')}
           </button>
         </div>
       </section>

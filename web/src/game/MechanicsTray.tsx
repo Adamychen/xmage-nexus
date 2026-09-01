@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
+import { useTranslation } from '../i18n'
 import './MechanicsTray.css'
 
 interface MechanicsTrayProps {
@@ -27,54 +28,54 @@ interface DayNightState {
 const RING_LEVELS = [
   {
     level: 1,
-    title: 'Portador Legendario & Evasión',
-    rule: 'Tu portador del Anillo es legendario y no puede ser bloqueado por criaturas con mayor fuerza.',
+    title: 'Legendary Bearer & Evasion',
+    rule: 'Your Ring-bearer is legendary and can\'t be blocked by creatures with greater power.',
   },
   {
     level: 2,
-    title: 'Saqueo al Atacar',
-    rule: 'Siempre que tu portador del Anillo ataque, roba una carta, luego descarta una carta.',
+    title: 'Loot on Attack',
+    rule: 'Whenever your Ring-bearer attacks, draw a card, then discard a card.',
   },
   {
     level: 3,
-    title: 'Toque Mortal a Bloqueadores',
-    rule: 'Siempre que tu portador del Anillo sea bloqueado por una criatura, el controlador de esa criatura la sacrifica al final del combate.',
+    title: 'Deathtouch to Blockers',
+    rule: 'Whenever your Ring-bearer becomes blocked by a creature, that creature\'s controller sacrifices it at end of combat.',
   },
   {
     level: 4,
-    title: 'Drenar 3 Vidas',
-    rule: 'Siempre que tu portador del Anillo haga daño de combate a un jugador, cada oponente pierde 3 vidas.',
+    title: 'Drain 3 Life',
+    rule: 'Whenever your Ring-bearer deals combat damage to a player, each opponent loses 3 life.',
   },
 ]
 
 const DUNGEON_ROOMS: Record<string, string[]> = {
   undercity: [
-    'Secret Entrance (Busca tierra básica a la mano)',
-    'Forge (+2 contadores +1/+1) / Lost Well (Scry 2)',
-    'Trap! (Oponente pierde 5 vidas) / Arena (Goad criatura)',
-    'Stash (Roba 1 carta) / Archives (Exilia 2 cartas jugables)',
-    'Throne of the Dead Three (Criatura gratis + 3 contadores + hexproof)',
+    'Secret Entrance (Search basic land to hand)',
+    'Forge (+2 +1/+1 counters) / Lost Well (Scry 2)',
+    'Trap! (Opponent loses 5 life) / Arena (Goad creature)',
+    'Stash (Draw 1 card) / Archives (Exile 2 playable cards)',
+    'Throne of the Dead Three (Free creature + 3 counters + hexproof)',
   ],
   'dungeon of the mad mage': [
-    'Yawning Portal (Gana 1 vida)',
+    'Yawning Portal (Gain 1 life)',
     'Dungeon Level (Scry 1)',
-    'Goblin Bazaar (Crea ficha de Tesoro)',
-    'Twisted Caverns (Criatura no puede atacar)',
+    'Goblin Bazaar (Create Treasure token)',
+    'Twisted Caverns (Creature can\'t attack)',
     'Lost Level (Scry 2)',
-    'Runestone Caverns (Exilia 2 cartas para jugarlas)',
-    'Mad Wizard’s Lair (Roba 3 cartas y lanza 1 gratis)',
+    'Runestone Caverns (Exile 2 cards to play)',
+    'Mad Wizard’s Lair (Draw 3 cards and cast 1 for free)',
   ],
   'lost mine of phandelver': [
     'Cave Entrance (Scry 1)',
-    'Goblin Lair (Ficha 1/1 Goblin) / Mine Tunnels (Tesoro)',
-    'Storeroom (+1/+1) / Dark Pool (Drena 1 vida)',
-    'Temple of Dumathoin (Roba 1 carta)',
+    'Goblin Lair (1/1 Goblin token) / Mine Tunnels (Treasure)',
+    'Storeroom (+1/+1) / Dark Pool (Drain 1 life)',
+    'Temple of Dumathoin (Draw 1 card)',
   ],
   'tomb of annihilation': [
-    'Trapped Entry (Cada jugador pierde 1 vida)',
-    'Veils of Fear (Pierde 2 vidas o descarta)',
-    'Sandfall Cell (Pierde 2 vidas o sacrifica permanente)',
-    'Cradle of the Death God (Crea a The Atropal 4/4 toque mortal)',
+    'Trapped Entry (Each player loses 1 life)',
+    'Veils of Fear (Lose 2 life or discard)',
+    'Sandfall Cell (Lose 2 life or sacrifice permanent)',
+    'Cradle of the Death God (Create The Atropal 4/4 deathtouch)',
   ],
 }
 
@@ -83,18 +84,18 @@ function findRingBearer(player: PlayerView): string | undefined {
   for (const perm of Object.values(battlefield)) {
     const p = perm as PermanentView & { isRingBearer?: boolean; ringBearer?: boolean }
     if (p.isRingBearer || p.ringBearer) {
-      return p.displayName || p.name || 'Criatura'
+      return p.displayName || p.name || 'Creature'
     }
   }
   return undefined
 }
 
 export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
+  const { t } = useTranslation()
   const game = useStore((s) => s.game)
   const [activeTab, setActiveTab] = useState<string>('auto')
   const [tokenImages, setTokenImages] = useState<Record<string, string>>({})
 
-  // 1. Detect Ring state
   const ringStates = useMemo((): RingState[] => {
     if (!game?.players) return []
     const list: RingState[] = []
@@ -122,7 +123,6 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     return list
   }, [game?.players])
 
-  // 2. Detect Dungeon state
   const dungeonStates = useMemo((): DungeonState[] => {
     if (!game?.players) return []
     const list: DungeonState[] = []
@@ -149,7 +149,6 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     return list
   }, [game?.players])
 
-  // 3. Detect Day/Night state
   const dayNightState = useMemo((): DayNightState | null => {
     if (!game?.players) return null
     for (const p of game.players) {
@@ -163,11 +162,9 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     return null
   }, [game?.players])
 
-  // 4. Monarch & Initiative
   const monarchPlayer = game?.players?.find((p) => p.monarch)
   const initiativePlayer = game?.players?.find((p) => p.initiative)
 
-  // 5. Specialized Designations (City's Blessing, Speed)
   const cityBlessingPlayers = game?.players?.filter((p) =>
     p.designationNames?.some((d) => d.toLowerCase().includes('blessing'))
   ) ?? []
@@ -176,7 +173,6 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     p.designationNames?.some((d) => d.toLowerCase().includes('speed'))
   ) ?? []
 
-  // Pre-load Scryfall token images
   useEffect(() => {
     const tokens = [
       { key: 'ring', name: 'The Ring' },
@@ -186,30 +182,29 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       { key: 'blessing', name: "City's Blessing" },
       { key: 'speed', name: 'Speed' },
     ]
-    tokens.forEach((t) => {
-      awaitImageUrl({ name: t.name, displayName: t.name, manaValue: 0 } as CardView).then((url) => {
+    tokens.forEach((tkn) => {
+      awaitImageUrl({ name: tkn.name, displayName: tkn.name, manaValue: 0 } as CardView).then((url) => {
         if (url) {
-          setTokenImages((prev) => ({ ...prev, [t.key]: url }))
+          setTokenImages((prev) => ({ ...prev, [tkn.key]: url }))
         }
       })
     })
   }, [])
 
-  // Available tabs
   const availableTabs = useMemo(() => {
     const tabs: Array<{ id: string; label: string; icon: string }> = []
-    if (ringStates.length > 0) tabs.push({ id: 'ring', label: 'El Anillo', icon: '💍' })
-    if (dungeonStates.length > 0) tabs.push({ id: 'dungeon', label: 'Mazmorra', icon: '🗺️' })
-    if (dayNightState) tabs.push({ id: 'daynight', label: dayNightState.isNight ? 'Noche' : 'Día', icon: dayNightState.isNight ? '🌙' : '☀️' })
-    if (monarchPlayer) tabs.push({ id: 'monarch', label: 'Monarca', icon: '👑' })
-    if (initiativePlayer) tabs.push({ id: 'initiative', label: 'Iniciativa', icon: '⚔️' })
-    if (cityBlessingPlayers.length > 0) tabs.push({ id: 'blessing', label: 'Bendición', icon: '🏛️' })
-    if (speedPlayers.length > 0) tabs.push({ id: 'speed', label: 'Velocidad', icon: '🏎️' })
+    if (ringStates.length > 0) tabs.push({ id: 'ring', label: t('game', 'mechanics_ring_title'), icon: '💍' })
+    if (dungeonStates.length > 0) tabs.push({ id: 'dungeon', label: t('game', 'mechanics_dungeon_title'), icon: '🗺️' })
+    if (dayNightState) tabs.push({ id: 'daynight', label: dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day'), icon: dayNightState.isNight ? '🌙' : '☀️' })
+    if (monarchPlayer) tabs.push({ id: 'monarch', label: t('game', 'mechanics_monarch'), icon: '👑' })
+    if (initiativePlayer) tabs.push({ id: 'initiative', label: t('game', 'mechanics_initiative'), icon: '⚔️' })
+    if (cityBlessingPlayers.length > 0) tabs.push({ id: 'blessing', label: t('game', 'mechanics_blessing'), icon: '🏛️' })
+    if (speedPlayers.length > 0) tabs.push({ id: 'speed', label: t('game', 'mechanics_speed_title'), icon: '🏎️' })
     return tabs
-  }, [ringStates, dungeonStates, dayNightState, monarchPlayer, initiativePlayer, cityBlessingPlayers, speedPlayers])
+  }, [ringStates, dungeonStates, dayNightState, monarchPlayer, initiativePlayer, cityBlessingPlayers, speedPlayers, t])
 
   const effectiveTab =
-    activeTab === 'auto' || !availableTabs.some((t) => t.id === activeTab)
+    activeTab === 'auto' || !availableTabs.some((tab) => tab.id === activeTab)
       ? availableTabs[0]?.id ?? 'none'
       : activeTab
 
@@ -221,15 +216,15 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       <div className="mechanics-tray empty">
         <div className="mechanics-empty-box">
           <span className="empty-icon">📜</span>
-          <h4>Estados y Mecánicas</h4>
-          <p>No hay mecánicas globales activas en esta partida.</p>
+          <h4>{t('game', 'mechanics_title')}</h4>
+          <p>{t('game', 'mechanics_empty')}</p>
           <div className="mechanics-glossary-hint">
-            <span>Mecánicas que aparecerán aquí:</span>
+            <span>{t('game', 'mechanics_title')}:</span>
             <ul>
-              <li>💍 <strong>El Anillo:</strong> Niveles y habilidades de tentación</li>
-              <li>🗺️ <strong>Mazmorras:</strong> Salas de Undercity y Mad Mage</li>
-              <li>☀️/🌙 <strong>Día y Noche:</strong> Triggers de cambio de ciclo</li>
-              <li>👑 <strong>Monarca e Iniciativa:</strong> Títulos y transferencias</li>
+              <li>💍 <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
+              <li>🗺️ <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
+              <li>☀️/🌙 <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
+              <li>👑 <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
             </ul>
           </div>
         </div>
@@ -239,7 +234,6 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
 
   return (
     <div className="mechanics-tray">
-      {/* Category Pills Header */}
       <div className="mechanics-nav-bar">
         {availableTabs.map((tab) => (
           <button
@@ -255,18 +249,17 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       </div>
 
       <div className="mechanics-content-scroll">
-        {/* TAB 1: THE RING */}
         {effectiveTab === 'ring' && myRing && (
           <div className="mechanic-panel panel-ring">
             <div className="mechanic-header-card">
               <div className="mechanic-title-row">
-                <h3>💍 El Anillo te tienta</h3>
-                <span className="ring-level-badge">Nivel {myRing.level} / 4</span>
+                <h3>💍 {t('game', 'mechanics_ring_title')}</h3>
+                <span className="ring-level-badge">{t('game', 'mechanics_ring_level', { level: myRing.level })}</span>
               </div>
               <div className="ring-bearer-row">
-                <span className="bearer-label">Portador:</span>
+                <span className="bearer-label">{t('game', 'mechanics_ring_bearer')}</span>
                 <span className="bearer-value">
-                  {myRing.bearerName ? `⚔️ ${myRing.bearerName}` : 'Ninguna criatura'}
+                  {myRing.bearerName ? `⚔️ ${myRing.bearerName}` : t('game', 'no_target')}
                 </span>
                 <span className="player-tag">({myRing.player.name})</span>
               </div>
@@ -286,7 +279,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                         <span className="level-num">{item.level}.</span>
                         <h4 className="level-title">{item.title}</h4>
                       </div>
-                      <span className="level-status">{isActive ? '✓ ACTIVO' : '🔒 BLOQUEADO'}</span>
+                      <span className="level-status">{isActive ? `✓ ${t('common', 'online')}` : `🔒 ${t('common', 'offline')}`}</span>
                     </div>
                     <p className="level-rule">{item.rule}</p>
                   </div>
@@ -313,7 +306,6 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           </div>
         )}
 
-        {/* TAB 2: ACTIVE DUNGEONS */}
         {effectiveTab === 'dungeon' && myDungeon && (
           <div className="mechanic-panel panel-dungeon">
             <div className="mechanic-header-card">
@@ -321,14 +313,14 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                 <h3>🗺️ {myDungeon.name}</h3>
                 <span className="player-tag">({myDungeon.player.name})</span>
               </div>
-              <p className="dungeon-sub">Adéntrate en la mazmorra para avanzar de sala en sala.</p>
+              <p className="dungeon-sub">{t('game', 'mechanics_dungeon_active')} {myDungeon.name}</p>
             </div>
 
             <div className="dungeon-rooms-flow">
               {(DUNGEON_ROOMS[myDungeon.name.toLowerCase()] ?? [
-                'Sala de entrada',
-                'Galería intermedia',
-                'Cámara final del tesoro',
+                'Entrance Hall',
+                'Intermediate Gallery',
+                'Final Treasure Chamber',
               ]).map((room, idx) => {
                 const isCurrentRoom = myDungeon.currentRoom
                   ? room.toLowerCase().includes(myDungeon.currentRoom.toLowerCase())
@@ -340,7 +332,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                   >
                     <span className="room-step">#{idx + 1}</span>
                     <span className="room-name">{room}</span>
-                    {isCurrentRoom && <span className="current-marker">📍 Posición actual</span>}
+                    {isCurrentRoom && <span className="current-marker">📍 {t('game', 'mechanics_dungeon_active')}</span>}
                   </div>
                 )
               })}
@@ -348,43 +340,41 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           </div>
         )}
 
-        {/* TAB 3: DAY / NIGHT */}
         {effectiveTab === 'daynight' && dayNightState && (
           <div className="mechanic-panel panel-daynight">
             <div className={`daynight-banner ${dayNightState.isNight ? 'night-active' : 'day-active'}`}>
               <span className="daynight-giant-icon">{dayNightState.isNight ? '🌙' : '☀️'}</span>
               <div className="daynight-giant-text">
-                <h3>Es de {dayNightState.isNight ? 'NOCHE' : 'DÍA'}</h3>
+                <h3>{dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day')}</h3>
                 <span className="daynight-hint">
                   {dayNightState.isNight
-                    ? 'Las criaturas diurnas se transforman en sus caras nocturnas.'
-                    : 'Las criaturas nocturnas regresan a su forma diurna.'}
+                    ? t('wiki', 'phases_stack')
+                    : t('wiki', 'phases_priority')}
                 </span>
               </div>
             </div>
 
             <div className="daynight-rules-box">
-              <h4>🔄 Transición de Ciclo:</h4>
+              <h4>🔄 {t('game', 'mechanics_title')}:</h4>
               <div className="rule-card">
-                <span className="rule-badge">☀️ → 🌙 Noche</span>
-                <p>Si el jugador activo <strong>no lanza hechizos</strong> en su turno.</p>
+                <span className="rule-badge">☀️ → 🌙 {t('game', 'mechanics_night')}</span>
+                <p>{t('wiki', 'phases_priority')}</p>
               </div>
               <div className="rule-card">
-                <span className="rule-badge">🌙 → ☀️ Día</span>
-                <p>Si el jugador activo <strong>lanza 2 o más hechizos</strong> en su turno.</p>
+                <span className="rule-badge">🌙 → ☀️ {t('game', 'mechanics_day')}</span>
+                <p>{t('wiki', 'phases_stack')}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 4: THE MONARCH */}
         {effectiveTab === 'monarch' && monarchPlayer && (
           <div className="mechanic-panel panel-monarch">
             <div className="mechanic-header-card monarch-header">
               <span className="crown-large">👑</span>
-              <h3>El Monarca</h3>
+              <h3>{t('game', 'mechanics_monarch')}</h3>
               <p className="holder-row">
-                Poseedor: <strong>{monarchPlayer.name}</strong> {monarchPlayer.controlled ? '(Tú)' : ''}
+                {t('common', 'player')}: <strong>{monarchPlayer.name}</strong> {monarchPlayer.controlled ? `(${t('game', 'you')})` : ''}
               </p>
             </div>
 
@@ -392,29 +382,28 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               <div className="rule-item">
                 <span className="rule-icon">🃏</span>
                 <div>
-                  <strong>Robo al final del turno:</strong>
-                  <p>Al comienzo de tu paso final, roba una carta.</p>
+                  <strong>{t('game', 'monarch_hint')}</strong>
+                  <p>{t('game', 'monarch_hint')}</p>
                 </div>
               </div>
               <div className="rule-item">
                 <span className="rule-icon">⚔️</span>
                 <div>
-                  <strong>Transferencia por combate:</strong>
-                  <p>Si una criatura te hace daño de combate, su controlador toma el Monarca.</p>
+                  <strong>{t('game', 'mechanics_monarch')}</strong>
+                  <p>{t('game', 'monarch_hint')}</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 5: THE INITIATIVE */}
         {effectiveTab === 'initiative' && initiativePlayer && (
           <div className="mechanic-panel panel-initiative">
             <div className="mechanic-header-card initiative-header">
               <span className="crown-large">⚔️</span>
-              <h3>La Iniciativa</h3>
+              <h3>{t('game', 'mechanics_initiative')}</h3>
               <p className="holder-row">
-                Poseedor: <strong>{initiativePlayer.name}</strong> {initiativePlayer.controlled ? '(Tú)' : ''}
+                {t('common', 'player')}: <strong>{initiativePlayer.name}</strong> {initiativePlayer.controlled ? `(${t('game', 'you')})` : ''}
               </p>
             </div>
 
@@ -422,32 +411,31 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               <div className="rule-item">
                 <span className="rule-icon">🏰</span>
                 <div>
-                  <strong>Adentrarse en Undercity:</strong>
-                  <p>En tu mantenimiento y al tomar la iniciativa, avanzas en la Mazmorra.</p>
+                  <strong>{t('game', 'dungeon_active')}</strong>
+                  <p>{t('game', 'initiative_hint')}</p>
                 </div>
               </div>
               <div className="rule-item">
                 <span className="rule-icon">⚔️</span>
                 <div>
-                  <strong>Transferencia por combate:</strong>
-                  <p>Daño de combate a quien tiene la iniciativa transfiere el título.</p>
+                  <strong>{t('game', 'mechanics_initiative')}</strong>
+                  <p>{t('game', 'initiative_hint')}</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 6: CITY'S BLESSING & SPEED */}
         {effectiveTab === 'blessing' && (
           <div className="mechanic-panel panel-blessing">
             <div className="mechanic-header-card">
-              <h3>🏛️ Bendición de la Ciudad</h3>
-              <p>Otorgada permanentemente al alcanzar 10 o más permanentes (*Ascend*).</p>
+              <h3>🏛️ {t('game', 'mechanics_blessing')}</h3>
+              <p>{t('game', 'mechanics_blessing')}</p>
             </div>
             <div className="blessing-players-list">
               {cityBlessingPlayers.map((p) => (
                 <div key={p.playerId} className="blessing-player-row">
-                  <span>★ {p.name} {p.controlled ? '(Tú)' : ''}</span>
+                  <span>★ {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
                   <span className="badge-ascended">Ascend OK</span>
                 </div>
               ))}
@@ -458,13 +446,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'speed' && (
           <div className="mechanic-panel panel-speed">
             <div className="mechanic-header-card">
-              <h3>🏎️ Velocidad (*Aetherdrift*)</h3>
-              <p>Mecánica de carrera con efectos aumentados según la velocidad.</p>
+              <h3>🏎️ {t('game', 'mechanics_speed_title')}</h3>
+              <p>{t('game', 'mechanics_speed_title')}</p>
             </div>
             <div className="speed-players-list">
               {speedPlayers.map((p) => (
                 <div key={p.playerId} className="speed-player-row">
-                  <span>🏎️ {p.name} {p.controlled ? '(Tú)' : ''}</span>
+                  <span>🏎️ {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
                 </div>
               ))}
             </div>

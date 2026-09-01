@@ -123,7 +123,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     const now = Date.now()
     const empty: DeckV2 = {
       id: makeDeckId(),
-      name: `Mazo ${customCount + 1}`,
+      name: `${t('decks', 'box_create').replace('Crear ', '').replace('Create ', '')} ${customCount + 1}`,
       cards: [],
       sideboard: [],
       format: 'Freeform',
@@ -157,9 +157,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleImport = async () => {
     setImportError(null)
-    if (!importText.trim()) { setImportError('Pega una lista.'); return }
-    const parsed = parseAnyDeck(importText, importName.trim() || 'Mazo Importado')
-    if (!parsed) { setImportError('No se reconocieron cartas. Prueba "4 Lightning Bolt (M10) 146" o formato .dck.'); return }
+    if (!importText.trim()) { setImportError(t('errors', 'deck_parse_failed')); return }
+    const parsed = parseAnyDeck(importText, importName.trim() || t('decks', 'import_placeholder'))
+    if (!parsed) { setImportError(t('errors', 'deck_parse_failed')); return }
     setBusy(true)
     try {
       const v2: DeckV2 = {
@@ -193,7 +193,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleClone = async () => {
     if (!selected) return
-    const clone: DeckV2 = { ...selected, id: makeDeckId(), name: `${selected.name} Copia`, createdAt: Date.now(), updatedAt: Date.now(), source: 'custom' as const }
+    const clone: DeckV2 = { ...selected, id: makeDeckId(), name: `${selected.name} ${t('common', 'copy')}`, createdAt: Date.now(), updatedAt: Date.now(), source: 'custom' as const }
     await storage.put(clone)
     await load()
     setSelectedId(clone.id)
@@ -222,7 +222,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const handleBackupAll = async () => {
     const customDecks = await storage.list()
     if (customDecks.length === 0) {
-      alert('No tienes mazos personalizados para exportar.')
+      alert(t('decks', 'deck_no_cards'))
       return
     }
     const payload = {
@@ -249,7 +249,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       const json = JSON.parse(text)
       const deckList: DeckV2[] = Array.isArray(json) ? json : (Array.isArray(json.decks) ? json.decks : [])
       if (deckList.length === 0) {
-        alert('El archivo no contiene una copia de seguridad válida de mazos.')
+        alert(t('errors', 'deck_read_failed'))
         return
       }
       for (const d of deckList) {
@@ -265,17 +265,17 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         }
       }
       await load()
-      alert(`¡Se restauraron ${deckList.length} mazo(s) con éxito!`)
+      alert(`${t('common', 'done')}: ${deckList.length}`)
     } catch {
-      alert('Error al leer el archivo JSON de copia de seguridad.')
+      alert(t('errors', 'deck_read_failed'))
     }
   }
 
   const handleFile = async (f: File) => {
     const text = await f.text()
     const name = f.name.replace(/\.(dck|txt|cod|dec)$/i, '')
-    const parsed = parseAnyDeck(text, name || 'Mazo Importado')
-    if (!parsed) { setImportError(`No se pudo leer ${f.name}`); setShowImport(true); return }
+    const parsed = parseAnyDeck(text, name || t('decks', 'import_placeholder'))
+    if (!parsed) { setImportError(`${t('errors', 'deck_read_failed')}: ${f.name}`); setShowImport(true); return }
     const v2: DeckV2 = { ...parsed, id: makeDeckId(), format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform', colors: [], coverCard: parsed.cards[0], createdAt: Date.now(), updatedAt: Date.now(), source: 'imported' }
     await storage.put(v2); await load(); setSelectedId(v2.id)
   }
@@ -283,7 +283,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   return (
     <div className="decks-gallery">
       <header className="decks-gallery-top">
-        <h1 className="decks-title">MAZOS</h1>
+        <h1 className="decks-title">{t('decks', 'my_decks').toUpperCase()}</h1>
 
         <div className="gallery-view-tabs">
           <button
@@ -291,14 +291,14 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
             onClick={() => setMainView('my-decks')}
           >
-            📦 Mis Mazos ({customCount})
+            📦 {t('decks', 'my_decks')} ({customCount})
           </button>
           <button
             type="button"
             className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
             onClick={() => setMainView('browser')}
           >
-            🌍 Explorar Mazos (Deck Browser)
+            🌍 {t('decks', 'popular_meta')}
           </button>
         </div>
 
@@ -306,19 +306,19 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <>
             <div className="decks-filters">
               <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
-                <option value="All Decks">Todos los formatos</option>
+                <option value="All Decks">{t('decks', 'gallery_all_formats')}</option>
                 {ALL_FORMATS.map((f) => (
                   <option key={f} value={f}>{f}</option>
                 ))}
-                <option value="Favoritos">★ Favoritos</option>
+                <option value="Favoritos">★ {t('common', 'all')}</option>
               </select>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
-                <option value="updated">Modificado recientemente</option>
-                <option value="name">Nombre A–Z</option>
-                <option value="size">Tamaño (cartas)</option>
+                <option value="updated">{t('decks', 'gallery_recent')}</option>
+                <option value="name">{t('common', 'search')} A–Z</option>
+                <option value="size">{t('decks', 'total_cards')}</option>
               </select>
               <div className="decks-search-wrap">
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar mazo..." className="decks-search" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common', 'search')} className="decks-search" />
                 {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
               </div>
               <div className="decks-mana-filter">
@@ -348,30 +348,30 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <footer className="decks-footer">
             <div className="decks-footer-left">
               <label className="decks-footer-btn">
-                📥 Importar archivo
+                📥 {t('decks', 'import_deck')}
                 <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleFile(f)
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>📝 Pegar lista</button>
-              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title="Exportar todos los mazos personalizados en un archivo JSON">📦 Backup Global</button>
-              <label className="decks-footer-btn" title="Restaurar copia de seguridad de mazos JSON">
-                📥 Restaurar Backup
+              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>📝 {t('decks', 'import_hint')}</button>
+              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title={t('decks', 'export_deck')}>📦 {t('common', 'save')}</button>
+              <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
+                📥 {t('common', 'refresh')}
                 <input type="file" accept=".json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleRestoreBackup(f)
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>💾 Exportar .dck</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>📋 Exportar Arena</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>📑 Duplicar</button>
-              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>🗑️ Borrar</button>
-              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ Favorito</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>💾 {t('decks', 'export_deck')} .dck</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>📋 {t('decks', 'export_deck')} Arena</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>📑 {t('common', 'copy')}</button>
+              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>🗑️ {t('common', 'delete')}</button>
+              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ {t('common', 'all')}</button>
             </div>
-            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>✏️ Editar Mazo</button>
+            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>✏️ {t('common', 'edit')}</button>
           </footer>
         </>
       ) : (
@@ -386,14 +386,14 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       {showImport && (
         <div className="overlay" onClick={() => setShowImport(false)}>
           <div className="dialog panel decks-import-dialog" onClick={(e) => e.stopPropagation()}>
-            <h2>📥 Importar mazo</h2>
-            <p className="decks-import-hint">Pega formato XMage <code>.dck</code> (<code>4 [LEA:292] Mountain</code>) o Arena (<code>4 Lightning Bolt (M10) 146</code>). También puedes soltar un archivo <code>.dck/.txt</code> sobre la galería.</p>
-            <label>Nombre <input value={importName} onChange={(e) => setImportName(e.target.value)} placeholder="Mazo Importado" /></label>
-            <label>Lista <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={12} placeholder={`NAME:Mi Mazo\n4 [M10:146] Lightning Bolt\nSB: 2 [4ED:218] Red Elemental Blast\n\n—o—\nDeck\n4 Lightning Bolt (M10) 146\nSideboard\n2 Red Elemental Blast (4ED) 218`} /></label>
+            <h2>📥 {t('decks', 'import_deck')}</h2>
+            <p className="decks-import-hint">{t('decks', 'import_hint')}</p>
+            <label>{t('common', 'player')} <input value={importName} onChange={(e) => setImportName(e.target.value)} placeholder={t('decks', 'import_placeholder')} /></label>
+            <label>{t('decks', 'total_cards')} <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={12} placeholder={`NAME:${t('decks', 'import_placeholder')}\n4 [M10:146] Lightning Bolt\nSB: 2 [4ED:218] Red Elemental Blast\n\n—o—\nDeck\n4 Lightning Bolt (M10) 146\nSideboard\n2 Red Elemental Blast (4ED) 218`} /></label>
             {importError && <div className="error-box">{importError}</div>}
             <div className="decks-import-actions">
-              <button type="button" onClick={() => setShowImport(false)}>Cancelar</button>
-              <button type="button" className="primary" disabled={busy} onClick={handleImport}>{busy ? 'Importando…' : 'Importar'}</button>
+              <button type="button" onClick={() => setShowImport(false)}>{t('common', 'cancel')}</button>
+              <button type="button" className="primary" disabled={busy} onClick={handleImport}>{busy ? t('common', 'loading') : t('decks', 'import_deck')}</button>
             </div>
           </div>
         </div>

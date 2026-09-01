@@ -110,7 +110,7 @@ describe('FinishedMatchesPanel helpers', () => {
   it('formats relative time properly', () => {
     const now = Date.now()
     expect(formatRelativeTime(now - 1000 * 30)).toBe('Hace un momento')
-    expect(formatRelativeTime(now - 1000 * 60 * 10)).toBe('Hace 10 min')
+    expect(formatRelativeTime(now - 1000 * 60 * 10).toLowerCase()).toBe('hace 10m')
   })
 })
 
@@ -145,7 +145,7 @@ describe('FinishedMatchesPanel component', () => {
       expect(screen.getAllByText('Alice').length).toBeGreaterThan(0)
     })
 
-    const searchInput = screen.getAllByPlaceholderText(/Buscar por jugador/i)[0]
+    const searchInput = screen.getAllByPlaceholderText(/Buscar/i)[0]
     fireEvent.change(searchInput, { target: { value: 'Chandra' } })
 
     expect(screen.getAllByText('Chandra').length).toBeGreaterThan(0)

@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react'
 import { DECKS, loadSavedCustomDecks, saveCustomDecks, type Deck, type DeckCard } from './decks'
 import { setMyDeck, useStore } from '../state/store'
+import { t as tStatic } from '../i18n'
+import { useTranslation } from '../i18n'
 import './DeckManager.css'
 
-export function parseArenaDeck(text: string, defaultName = 'Mazo Importado'): Deck | null {
+export function parseArenaDeck(text: string, defaultName?: string): Deck | null {
+  const resolvedName = defaultName ?? tStatic('decks','import_placeholder')
   const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
   if (lines.length === 0) return null
 
@@ -40,13 +43,14 @@ export function parseArenaDeck(text: string, defaultName = 'Mazo Importado'): De
 
   if (cards.length === 0) return null
   return {
-    name: defaultName,
+    name: resolvedName,
     cards,
     sideboard,
   }
 }
 
 export default function DeckManager() {
+  const { t, tError } = useTranslation()
   const currentStoreDeck = useStore((s) => s.myDeck)
   const [customDecks, setCustomDecks] = useState<Deck[]>(loadSavedCustomDecks)
   const [selectedDeck, setSelectedDeck] = useState<Deck>(currentStoreDeck ?? DECKS[0])
@@ -73,9 +77,9 @@ export default function DeckManager() {
   const handleImportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setImportError(null)
-    const parsed = parseArenaDeck(importText, importName.trim() || 'Mazo Importado')
+    const parsed = parseArenaDeck(importText, importName.trim() || t('decks','import_placeholder'))
     if (!parsed) {
-      setImportError('No se pudieron reconocer cartas. Usa el formato estándar (ej. "4 Lightning Bolt").')
+      setImportError(t('errors','deck_parse_failed'))
       return
     }
 
@@ -102,13 +106,13 @@ export default function DeckManager() {
       {/* Left Sidebar: List of Decks */}
       <div className="deck-sidebar">
         <div className="deck-sidebar-header">
-          <h3>Mis Mazos ({allDecks.length})</h3>
+          <h3>{t('decks','my_decks')} ({allDecks.length})</h3>
           <button
             type="button"
             className="deck-import-btn"
             onClick={() => setShowImportModal(true)}
           >
-            📥 Importar
+            📥 {t('decks','import_deck')}
           </button>
         </div>
 
@@ -126,9 +130,9 @@ export default function DeckManager() {
               >
                 <div className="deck-item-info">
                   <span className="deck-item-name">{d.name}</span>
-                  <span className="deck-item-meta">{count} cartas {isCustom ? '• Personalizado' : '• Preconstruido'}</span>
+                  <span className="deck-item-meta">{count} {t('decks','total_cards')} {isCustom ? `• ${t('decks','filter_recent')}` : `• ${t('common','all')}`}</span>
                 </div>
-                {isActive && <span className="deck-active-badge">✓ Activo</span>}
+                {isActive && <span className="deck-active-badge">✓ {t('common','done')}</span>}
                 {isCustom && (
                   <button
                     type="button"
@@ -137,7 +141,7 @@ export default function DeckManager() {
                       e.stopPropagation()
                       handleDeleteCustom(d)
                     }}
-                    title="Eliminar mazo"
+                    title={t('common','delete')}
                   >
                     ✕
                   </button>
@@ -154,7 +158,7 @@ export default function DeckManager() {
           <div>
             <h2>{selectedDeck.name}</h2>
             <p className="deck-view-subtitle">
-              {totalCards} cartas principales {totalSideboard > 0 ? `+ ${totalSideboard} en banquillo` : ''}
+              {totalCards} {t('decks','total_cards')} {totalSideboard > 0 ? `+ ${totalSideboard} ` + t('decks','sideboard') : ''}
             </p>
           </div>
           <button
@@ -162,13 +166,13 @@ export default function DeckManager() {
             className="primary deck-select-primary"
             onClick={() => handleSelectActive(selectedDeck)}
           >
-            {currentStoreDeck?.name === selectedDeck.name ? '⭐ Mazo Seleccionado' : 'Equipar para jugar'}
+            {currentStoreDeck?.name === selectedDeck.name ? `⭐ ${t('common','done')}` : t('common','confirm')}
           </button>
         </div>
 
         <div className="deck-breakdown-grid">
           <div className="deck-section-box">
-            <h3>Cartas Principales ({totalCards})</h3>
+            <h3>{t('decks','total_cards')} ({totalCards})</h3>
             <div className="deck-cards-list">
               {selectedDeck.cards.map((c, i) => (
                 <div key={i} className="deck-card-row">
@@ -182,7 +186,7 @@ export default function DeckManager() {
 
           {selectedDeck.sideboard.length > 0 && (
             <div className="deck-section-box">
-              <h3>Banquillo / Sideboard ({totalSideboard})</h3>
+              <h3>{t('decks','sideboard')} ({totalSideboard})</h3>
               <div className="deck-cards-list">
                 {selectedDeck.sideboard.map((c, i) => (
                   <div key={i} className="deck-card-row">
@@ -201,21 +205,21 @@ export default function DeckManager() {
       {showImportModal && (
         <div className="overlay">
           <div className="dialog panel import-dialog">
-            <h2>📥 Importar Mazo desde Texto</h2>
-            <p className="import-desc">Pega la lista de cartas exportada en formato de texto:</p>
+            <h2>📥 {t('decks','import_deck')}</h2>
+            <p className="import-desc">{t('decks','import_hint')}</p>
 
             <label>
-              Nombre del Mazo
+              {t('decks','import_placeholder')}
               <input
                 value={importName}
                 onChange={(e) => setImportName(e.target.value)}
-                placeholder="Mi Mazo Personalizado"
+                placeholder={t('decks','import_placeholder')}
                 required
               />
             </label>
 
             <label>
-              Lista de cartas
+              {t('decks','total_cards')}
               <textarea
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
@@ -225,14 +229,14 @@ export default function DeckManager() {
               />
             </label>
 
-            {importError && <div className="error-box">{importError}</div>}
+            {importError && <div className="error-box">{tError(importError)}</div>}
 
             <div className="import-actions">
               <button type="button" onClick={() => setShowImportModal(false)}>
-                Cancelar
+                {t('common','cancel')}
               </button>
               <button className="primary" onClick={handleImportSubmit}>
-                Guardar e Importar
+                {t('common','save')}
               </button>
             </div>
           </div>

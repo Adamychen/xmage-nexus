@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
+import { useTranslation } from '../i18n'
 import './CommanderDamageMatrix.css'
 
 export const COMMANDER_LETHAL = 21
@@ -121,6 +122,7 @@ export interface CommanderDamageMatrixProps {
 }
 
 export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixProps) {
+  const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
   const players = useMemo(() => (game?.players ?? []).slice(0, MAX_POD_PLAYERS), [game?.players])
 
@@ -169,10 +171,10 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
     return (
       <div className="commander-damage-matrix is-empty" data-testid="commander-damage-matrix">
         <div className="cdm-header">
-          <span className="cdm-title">👑 Daño de Comandante</span>
-          <span className="cdm-lethal-hint">{COMMANDER_LETHAL} letal</span>
+          <span className="cdm-title">👑 {t('game', 'commander_damage')}</span>
+          <span className="cdm-lethal-hint">{t('game', 'commander_lethal_label', { count: String(COMMANDER_LETHAL) })}</span>
         </div>
-        <div className="cdm-empty">No hay comandantes en esta partida.</div>
+        <div className="cdm-empty">{t('game', 'commander_no_commanders')}</div>
       </div>
     )
   }
@@ -181,15 +183,15 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
     <div className={`commander-damage-matrix view-${viewMode}`} data-testid="commander-damage-matrix">
       <div className="cdm-header">
         <div className="cdm-header-left">
-          <span className="cdm-title">👑 Daño de Comandante</span>
-          <span className="cdm-lethal-hint">{COMMANDER_LETHAL} letal</span>
+          <span className="cdm-title">👑 {t('game', 'commander_damage')}</span>
+          <span className="cdm-lethal-hint">{t('game', 'commander_lethal_label', { count: String(COMMANDER_LETHAL) })}</span>
         </div>
         <div className="cdm-view-toggles">
           <button
             type="button"
             className={`cdm-toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
             onClick={() => setViewMode('cards')}
-            title="Vista vertical en tarjetas"
+            title={t('game', 'commander_view_cards_hint')}
           >
             📊
           </button>
@@ -197,7 +199,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             type="button"
             className={`cdm-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
             onClick={() => setViewMode('table')}
-            title="Vista clásica en tabla"
+            title={t('game', 'commander_view_table_hint')}
           >
             ⊞
           </button>
@@ -237,7 +239,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                       {isActive ? '▶' : '●'}
                     </span>
                     <span className="cdm-player-title">{p.name}</span>
-                    {p.controlled && <span className="cdm-badge-you">TÚ</span>}
+                    {p.controlled && <span className="cdm-badge-you">{t('game', 'you').toUpperCase()}</span>}
                   </div>
                   <div className="cdm-player-life-pill">
                     <span className="cdm-life-heart">❤️</span>
@@ -265,7 +267,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
 
                 <div className="cdm-damage-list">
                   {opposingCommanders.length === 0 ? (
-                    <div className="cdm-no-opponents">Sin comandantes rivales</div>
+                    <div className="cdm-no-opponents">{t('game', 'commander_no_rivals')}</div>
                   ) : (
                     opposingCommanders.map((c) => {
                       const dmg = extractDamage(p, c, game)
@@ -312,7 +314,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
         <table className="cdm-table" data-testid="cdm-table">
           <thead>
             <tr>
-              <th className="cdm-corner">Objetivo \ Comandante</th>
+              <th className="cdm-corner">{t('game', 'commander_table_corner')}</th>
               {commanders.map((c) => (
                 <th key={c.id} className="cdm-commander-head" title={`${c.name} — de ${c.ownerName}`}>
                   <span className="cdm-cmd-name">{c.name}</span>
@@ -328,7 +330,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                 <tr key={p.playerId} className={isActivePlayer ? 'cdm-active-row' : ''} data-testid={`cdm-row-${p.playerId}`}>
                   <td className="cdm-player-cell">
                     <span className="cdm-player-name">{p.name}</span>
-                    {p.controlled && <span className="cdm-you-badge">TÚ</span>}
+                    {p.controlled && <span className="cdm-you-badge">{t('game', 'you').toUpperCase()}</span>}
                     {isActivePlayer && <span className="cdm-active-badge">● activo</span>}
                   </td>
                   {commanders.map((c) => {
@@ -343,7 +345,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                         data-testid={`cdm-cell-${p.playerId}-${c.id}`}
                         data-damage={dmg}
                         data-lethal={isLethal ? 'true' : undefined}
-                        title={isSelf ? 'Comandante propio (sin daño)' : `${c.name} ha hecho ${dmg} daño a ${p.name}${isLethal ? ' — LETAL (21+)' : ''}`}
+                        title={isSelf ? t('game', 'commander_self_hint') : `${t('game', 'commander_damage_dealt', { name: c.name, damage: String(dmg), target: p.name })}${isLethal ? ' — ' + t('game', 'lethal') + ' (21+)' : ''}`}
                       >
                         {isSelf ? '—' : dmg}
                       </td>
@@ -357,7 +359,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
       </div>
 
       <div className="cdm-footer">
-        <span className="cdm-footer-hint">21 o más de daño de un mismo comandante elimina al jugador.</span>
+        <span className="cdm-footer-hint">{t('game', 'commander_damage_hint')}</span>
       </div>
     </div>
   )

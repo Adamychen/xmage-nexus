@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
+import { useTranslation } from '../i18n'
 import './SampleHandModal.css'
 
 export interface SingleCard {
@@ -65,6 +66,7 @@ export function SampleHandModal({
   metaMap: Map<string, CardStripMeta>
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const allInstances = useMemo(() => buildDeckInstances(cards, metaMap), [cards, metaMap])
 
   const [library, setLibrary] = useState<SingleCard[]>([])
@@ -145,16 +147,16 @@ export function SampleHandModal({
         {/* Header */}
         <header className="sample-hand-header">
           <div className="sample-hand-title-wrap">
-            <h2 className="sample-hand-title">🖐️ Simulador de Mano Inicial</h2>
+            <h2 className="sample-hand-title">🖐️ {t('decks', 'sample_hand')}</h2>
             <span className="sample-hand-deck-name">{deckName}</span>
           </div>
 
           <div className="sample-hand-stats-chips">
-            <span className="stats-chip">Cartas: {hand.length}</span>
-            <span className="stats-chip lands">🏝️ Tierras: {landsInHand}</span>
-            <span className="stats-chip spells">✨ Hechizos: {spellsInHand}</span>
-            <span className="stats-chip">Biblioteca: {library.length}</span>
-            <span className="stats-chip turn">Turno: {turn}</span>
+            <span className="stats-chip">{t('decks', 'total_cards')}: {hand.length}</span>
+            <span className="stats-chip lands">🏝️ {t('decks', 'lands')}: {landsInHand}</span>
+            <span className="stats-chip spells">✨ {t('decks', 'spells')}: {spellsInHand}</span>
+            <span className="stats-chip">{t('board', 'zone_library')}: {library.length}</span>
+            <span className="stats-chip turn">{t('game', 'turn')}: {turn}</span>
           </div>
 
           <button type="button" className="sample-hand-close-btn" onClick={onClose}>
@@ -166,8 +168,8 @@ export function SampleHandModal({
         {mulliganCount > 0 && !isKeeping && (
           <div className="mulligan-alert-banner">
             <span>
-              London Mulligan ({mulliganCount}): Elige <strong>{mulliganCount}</strong> carta(s) para poner en el fondo de la biblioteca.
-              {mustBottomCount > 0 && ` (Faltan ${mustBottomCount})`}
+              {t('decks', 'sample_london')} ({mulliganCount}): {t('decks', 'sample_to_bottom')} {mulliganCount}
+              {mustBottomCount > 0 && ` (${mustBottomCount})`}
             </span>
             <button
               type="button"
@@ -175,7 +177,7 @@ export function SampleHandModal({
               disabled={selectedToBottom.size !== mulliganCount}
               onClick={handleConfirmKeep}
             >
-              ✓ Aceptar Mano ({7 - mulliganCount} cartas)
+              ✓ {t('common', 'confirm')} ({7 - mulliganCount} {t('decks', 'total_cards')})
             </button>
           </div>
         )}
@@ -183,7 +185,7 @@ export function SampleHandModal({
         {/* Hand Cards Area */}
         <div className="sample-hand-cards-area">
           {hand.length === 0 ? (
-            <div className="sample-hand-empty">No hay cartas en la mano</div>
+            <div className="sample-hand-empty">{t('decks', 'sample_no_cards')}</div>
           ) : (
             <div className="sample-hand-grid">
               {hand.map((card) => {
@@ -217,11 +219,11 @@ export function SampleHandModal({
                       <span className="sample-card-name" title={card.cardName}>
                         {card.cardName}
                       </span>
-                      {card.isLand && <span className="land-indicator">Tierra</span>}
+                      {card.isLand && <span className="land-indicator">{t('decks', 'sample_land')}</span>}
                     </div>
 
                     {isSelectedForBottom && (
-                      <div className="bottom-badge">Al fondo</div>
+                      <div className="bottom-badge">{t('decks', 'sample_to_bottom')}</div>
                     )}
                   </div>
                 )
@@ -244,18 +246,18 @@ export function SampleHandModal({
               type="button"
               className="sample-action-btn"
               onClick={handleMulligan}
-              title="Tomar un Mulligan (London Mulligan)"
+              title={t('decks', 'sample_london')}
             >
-              🔄 Mulligan {mulliganCount > 0 ? `(a ${Math.max(1, 7 - mulliganCount - 1)})` : '(a 6)'}
+              🔄 {t('decks', 'sample_mulligan')} {mulliganCount > 0 ? `(a ${Math.max(1, 7 - mulliganCount - 1)})` : '(a 6)'}
             </button>
             <button
               type="button"
               className="sample-action-btn primary"
               onClick={handleDrawCard}
               disabled={library.length === 0}
-              title="Robar la carta superior de la biblioteca"
+              title={t('board', 'zone_library')}
             >
-              📥 Robar Carta (Turno {turn + 1})
+              📥 {t('game', 'draw_card')} ({t('game', 'turn')} {turn + 1})
             </button>
           </div>
 
@@ -264,9 +266,9 @@ export function SampleHandModal({
               type="button"
               className="sample-action-btn reset"
               onClick={startNewHand}
-              title="Barajar y repartir nueva mano de 7"
+              title={t('common', 'refresh')}
             >
-              ✨ Nueva Mano (Reiniciar)
+              ✨ {t('common', 'refresh')}
             </button>
           </div>
         </footer>

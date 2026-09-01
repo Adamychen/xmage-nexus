@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { setState } from '../state/state'
+import { useTranslation } from '../i18n'
 import './PhaseBar.css'
 
 interface StepDef {
@@ -28,6 +29,7 @@ const STEPS: StepDef[] = [
 const GROUPS = ['b', 'm1', 'c', 'm2', 'e']
 
 export default function PhaseBar({ step }: { step: string }) {
+  const { t } = useTranslation()
   const currentIdx = STEPS.findIndex((s) => s.key === step)
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
   const phaseStops = useStore((s) => s.phaseStops)
@@ -37,11 +39,9 @@ export default function PhaseBar({ step }: { step: string }) {
     e?.preventDefault()
     e?.stopPropagation()
 
-    // Toggle your turn stop (or both on right click)
     const currentYour = !!phaseStops.yourTurn?.[stopKey]
     const currentOpp = !!phaseStops.opponentTurn?.[stopKey]
 
-    // If shift or right click, toggle opponent stop, else toggle your stop
     const nextYour = e?.shiftKey ? currentYour : !currentYour
     const nextOpp = e?.shiftKey ? !currentOpp : currentOpp
 
@@ -54,7 +54,7 @@ export default function PhaseBar({ step }: { step: string }) {
   }, [phaseStops])
 
   return (
-    <div className="phase-bar" role="navigation" aria-label="Fases del turno">
+    <div className="phase-bar" role="navigation" aria-label={t('game', 'phase')}>
       {GROUPS.map((g, gi) => {
         const groupSteps = STEPS.map((s, i) => ({ ...s, idx: i })).filter((s) => s.group === g)
         return (
@@ -75,7 +75,7 @@ export default function PhaseBar({ step }: { step: string }) {
                   type="button"
                   key={s.key}
                   className={cls}
-                  title={`${s.fullName}${s.stopKey ? ` (Stop Tú: ${hasYourStop ? 'ON' : 'OFF'}, Rival: ${hasOppStop ? 'ON' : 'OFF'})` : ''}`}
+                  title={`${s.fullName}${s.stopKey ? ` (${t('game', 'you')}: ${hasYourStop ? 'ON' : 'OFF'}, ${t('game', 'opponent')}: ${hasOppStop ? 'ON' : 'OFF'})` : ''}`}
                   onClick={(e) => toggleStop(s.stopKey, e)}
                   onContextMenu={(e) => {
                     e.preventDefault()
@@ -90,9 +90,9 @@ export default function PhaseBar({ step }: { step: string }) {
                     }
                   }}
                 >
-                  {hasOppStop && <span className="stop-dot stop-dot-opp" title="Stop en turno rival" />}
+                  {hasOppStop && <span className="stop-dot stop-dot-opp" title={t('game', 'opponent')} />}
                   <span className="phase-label">{s.label}</span>
-                  {hasYourStop && <span className="stop-dot stop-dot-you" title="Stop en tu turno" />}
+                  {hasYourStop && <span className="stop-dot stop-dot-you" title={t('game', 'you')} />}
                 </button>
               )
             })}

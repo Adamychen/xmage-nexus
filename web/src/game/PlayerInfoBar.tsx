@@ -27,25 +27,25 @@ function renderCounterIcon(name: string): React.ReactNode {
 function getCounterTokenCard(name: string, count: number): CardView {
   const n = name.toLowerCase()
   if (n.includes('poison')) {
-    return { name: 'Poison Counter', displayName: `Contador de Veneno (${count}/10)`, manaValue: 0 } as CardView
+    return { name: 'Poison Counter', displayName: `Poison Counter (${count}/10)`, manaValue: 0 } as CardView
   }
   if (n.includes('energy')) {
-    return { name: 'Energy Reserve', displayName: `Reserva de Energía (${count})`, manaValue: 0 } as CardView
+    return { name: 'Energy Reserve', displayName: `Energy Reserve (${count})`, manaValue: 0 } as CardView
   }
   if (n.includes('rad')) {
-    return { name: 'Rad Counter', displayName: `Contador de Radiactividad (${count})`, manaValue: 0 } as CardView
+    return { name: 'Rad Counter', displayName: `Rad Counter (${count})`, manaValue: 0 } as CardView
   }
   if (n.includes('experience')) {
-    return { name: 'Experience Counter', displayName: `Contador de Experiencia (${count})`, manaValue: 0 } as CardView
+    return { name: 'Experience Counter', displayName: `Experience Counter (${count})`, manaValue: 0 } as CardView
   }
   if (n.includes('ticket')) {
-    return { name: 'Ticket Counter', displayName: `Tickets (${count})`, manaValue: 0 } as CardView
+    return { name: 'Ticket Counter', displayName: `Ticket Counter (${count})`, manaValue: 0 } as CardView
   }
   if (n.includes('acorn')) {
-    return { name: 'Acorn Counter', displayName: `Bellotas (${count})`, manaValue: 0 } as CardView
+    return { name: 'Acorn Counter', displayName: `Acorn Counter (${count})`, manaValue: 0 } as CardView
   }
   if (n.includes('speed')) {
-    return { name: 'Speed', displayName: `Velocidad (${count})`, manaValue: 0 } as CardView
+    return { name: 'Speed', displayName: `Speed (${count})`, manaValue: 0 } as CardView
   }
   return { name: `${name} Counter`, displayName: `${name} (${count})`, manaValue: 0 } as CardView
 }
@@ -149,7 +149,7 @@ function getDayNightInfo(player: PlayerView): { isNight: boolean; card: CardView
         isNight,
         card: {
           name: 'Day // Night',
-          displayName: isNight ? 'Night (Noche)' : 'Day (Día)',
+          displayName: isNight ? 'Night' : 'Day',
           manaValue: 0,
         } as CardView,
       }
@@ -190,27 +190,27 @@ function getDesignationDetails(d: string): { icon: string; title: string; card: 
   if (dl.includes("city's blessing") || dl.includes("citys blessing") || dl.includes('blessing')) {
     return {
       icon: '🏛️',
-      title: 'Bendición de la Ciudad (Ascend)',
+      title: 'City\'s Blessing (Ascend)',
       card: { name: "City's Blessing", displayName: "City's Blessing", manaValue: 0 } as CardView,
     }
   }
   if (dl.includes('speed')) {
     return {
       icon: '🏎️',
-      title: 'Velocidad (Aetherdrift)',
+      title: 'Speed',
       card: { name: 'Speed', displayName: 'Speed', manaValue: 0 } as CardView,
     }
   }
   if (dl.includes('enduring story') || dl.includes('story')) {
     return {
       icon: '📖',
-      title: 'Historia Perdurable',
+      title: 'Enduring Story',
       card: { name: 'Enduring Story', displayName: 'Enduring Story', manaValue: 0 } as CardView,
     }
   }
   return {
     icon: '★',
-    title: `Designación: ${d}`,
+    title: `Designation: ${d}`,
     card: { name: d, displayName: d, manaValue: 0 } as CardView,
   }
 }
@@ -239,16 +239,13 @@ export default function PlayerInfoBar({
   const bufferTimeLeft = player.bufferTimeLeft ?? 0
   const hasBuffer = bufferTimeLeft > 0
 
-  // Match wins dots (Bo1 / Bo3 / Bo5)
   const winsNeeded = player.winsNeeded ?? (player.wins ? player.wins : 0)
   const wins = player.wins ?? 0
   const showMatchWins = winsNeeded > 1 || wins > 0
 
-  // Active Player Counters (> 0 only)
   const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
   const isDefeated = player.hasLeft === true || player.life <= 0
 
-  // Mechanics & Reminders
   const ringInfo = getRingInfo(player)
   const dungeonInfo = getDungeonInfo(player)
   const dayNightInfo = getDayNightInfo(player)
@@ -320,13 +317,11 @@ export default function PlayerInfoBar({
         </div>
 
         <div className="player-counters">
-          {/* Life Counter */}
           <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
             <span className="counter-icon"><Icon name="heart" size={12} /></span>
             <span className="life-value">{player.life}</span>
           </span>
 
-          {/* Active Player counters (interactive with token preview on hover) */}
           {activeCounters.map((c) => {
             const tokenCard = getCounterTokenCard(c.name, c.count)
             return (
@@ -343,7 +338,6 @@ export default function PlayerInfoBar({
             )
           })}
 
-          {/* Priority Clock Timer (when timed) */}
           {hasTimer && (
             <span
               className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${hasPriority ? 'timer-active' : ''}`}
@@ -361,14 +355,12 @@ export default function PlayerInfoBar({
         </div>
       </div>
 
-      {/* Status Badges: Monarch, Initiative, The Ring, Dungeon, Day/Night, Curses, Designations */}
       {hasAnyBadge && (
         <div className="player-badges">
-          {/* The Ring Badge */}
           {ringInfo && (
             <span
               className="badge badge-ring interactive-badge"
-              title={`El Anillo (Nivel ${ringInfo.level}/4)`}
+              title={t('game', 'ring_level_badge', { level: ringInfo.level })}
               onMouseEnter={(e) => handleMouseEnter(ringInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
@@ -376,11 +368,10 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Monarch Badge */}
           {player.monarch && (
             <span
               className="badge badge-monarch interactive-badge"
-              title="Monarca (Roba carta al final del turno)"
+              title={t('game', 'monarch_hint')}
               onMouseEnter={(e) =>
                 handleMouseEnter(
                   { name: 'The Monarch', displayName: 'The Monarch', isToken: true, manaValue: 0 } as CardView,
@@ -393,11 +384,10 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Initiative Badge */}
           {player.initiative && (
             <span
               className="badge badge-initiative interactive-badge"
-              title="Iniciativa (Te adentras en la Mazmorra / Undercity)"
+              title={t('game', 'initiative_hint')}
               onMouseEnter={(e) =>
                 handleMouseEnter(
                   { name: 'The Initiative', displayName: 'The Initiative', isToken: true, manaValue: 0 } as CardView,
@@ -410,11 +400,10 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Dungeon Badge */}
           {dungeonInfo && (
             <span
               className="badge badge-dungeon interactive-badge"
-              title={`Mazmorra activa: ${dungeonInfo.name}`}
+              title={`${t('game', 'dungeon_active')} ${dungeonInfo.name}`}
               onMouseEnter={(e) => handleMouseEnter(dungeonInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
@@ -422,11 +411,10 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Day / Night Badge */}
           {dayNightInfo && (
             <span
               className={`badge badge-daynight interactive-badge ${dayNightInfo.isNight ? 'is-night' : 'is-day'}`}
-              title={dayNightInfo.isNight ? 'Noche (Night)' : 'Día (Day)'}
+              title={dayNightInfo.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day')}
               onMouseEnter={(e) => handleMouseEnter(dayNightInfo.card, e)}
               onMouseLeave={handleMouseLeave}
             >
@@ -434,11 +422,10 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Curses / Player Attachments Badge */}
           {curseInfo && (
             <span
               className="badge badge-curse interactive-badge"
-              title={`${curseInfo.count} Maldición${curseInfo.count > 1 ? 'es' : ''} sobre el jugador`}
+              title={`${curseInfo.count} ${t('board', 'zone_graveyard')}`}
               onMouseEnter={(e) => handleMouseEnter(curseInfo.firstCard, e)}
               onMouseLeave={handleMouseLeave}
             >
@@ -446,7 +433,6 @@ export default function PlayerInfoBar({
             </span>
           )}
 
-          {/* Specialized Designations (City's Blessing, Speed, Enduring Story, etc.) */}
           {nonDayNightDesignations.map((d) => {
             const details = getDesignationDetails(d)
             return (

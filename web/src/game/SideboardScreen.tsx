@@ -8,6 +8,8 @@ import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
+import { useTranslation } from '../i18n'
+import { t as tStatic } from '../i18n'
 import './SideboardScreen.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -26,19 +28,20 @@ function groupInstances(cards: SideboardCard[]): DeckCard[] {
 }
 
 function categorizeCard(typeLine?: string): string {
-  if (!typeLine) return 'Otros'
-  const t = typeLine.toLowerCase()
-  if (t.includes('creature') || t.includes('criatura')) return 'Criaturas'
-  if (t.includes('planeswalker')) return 'Planeswalkers'
-  if (t.includes('instant') || t.includes('instantáneo')) return 'Instantáneos'
-  if (t.includes('sorcery') || t.includes('conjuro')) return 'Conjuros'
-  if (t.includes('enchantment') || t.includes('encantamiento')) return 'Encantamientos'
-  if (t.includes('artifact') || t.includes('artefacto')) return 'Artefactos'
-  if (t.includes('land') || t.includes('tierra')) return 'Tierras'
-  return 'Otros'
+  if (!typeLine) return tStatic('game', 'category_other')
+  const lower = typeLine.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  if (lower.includes('creature') || lower.includes('criatura')) return tStatic('game', 'category_creatures')
+  if (lower.includes('planeswalker')) return tStatic('game', 'category_planeswalkers')
+  if (lower.includes('instant')) return tStatic('game', 'category_instants')
+  if (lower.includes('sorcery') || lower.includes('conjuro')) return tStatic('game', 'category_sorceries')
+  if (lower.includes('enchantment') || lower.includes('encantamiento')) return tStatic('game', 'category_enchantments')
+  if (lower.includes('artifact') || lower.includes('artefacto')) return tStatic('game', 'category_artifacts')
+  if (lower.includes('land') || lower.includes('tierra')) return tStatic('game', 'category_lands')
+  return tStatic('game', 'category_other')
 }
 
 export default function SideboardScreen() {
+  const { t } = useTranslation()
   const screen = useStore((s) => s.sideboardScreen)
   const lobby = useStore((s) => s.lobby)
   const [main, setMain] = useState<DeckCard[]>([])
@@ -232,9 +235,9 @@ export default function SideboardScreen() {
       const result = await cmds.submitDeck(screen.tableId, deck)
       if (result.ok) {
         setState({ sideboardScreen: null })
-        addLog('partida', 'Mazo enviado — espera la siguiente partida…')
+        addLog('partida', t('game', 'sideboard_submit'))
       } else {
-        addLog('error', `Error al enviar mazo: ${result.error ?? 'desconocido'}`)
+        addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)
       }
     } finally {
       setBusy(false)
@@ -283,7 +286,7 @@ export default function SideboardScreen() {
   const validation = useMemo(() => {
     if (main.length === 0 && side.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
     const fakeDeck: any = {
-      name: screen?.deckName ?? 'Mazo',
+      name: screen?.deckName ?? t('game', 'sideboard_main'),
       cards: main,
       sideboard: side,
       format: formatForValidation,
@@ -306,7 +309,16 @@ export default function SideboardScreen() {
   const timerPct = Math.max(0, (timeLeft / (screen.timeLeft || 1)) * 100)
   const timerUrgent = timeLeft <= 30
 
-  const categoriesOrder = ['Criaturas', 'Planeswalkers', 'Instantáneos', 'Conjuros', 'Artefactos', 'Encantamientos', 'Tierras', 'Otros'] as const
+  const categoriesOrder = [
+    t('game', 'category_creatures'),
+    t('game', 'category_planeswalkers'),
+    t('game', 'category_instants'),
+    t('game', 'category_sorceries'),
+    t('game', 'category_artifacts'),
+    t('game', 'category_enchantments'),
+    t('game', 'category_lands'),
+    t('game', 'category_other'),
+  ] as const
   const groupedMain = new Map<string, DeckCard[]>()
   for (const cat of categoriesOrder) groupedMain.set(cat, [])
   const filteredMainForGroup = mainFilter.trim()
@@ -315,7 +327,7 @@ export default function SideboardScreen() {
   for (const card of filteredMainForGroup) {
     const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
     const cat = categorizeCard(meta?.typeLine)
-    const list = groupedMain.get(cat) ?? groupedMain.get('Otros')!
+    const list = groupedMain.get(cat) ?? groupedMain.get(t('game', 'category_other'))!
     list.push(card)
   }
 
@@ -345,21 +357,21 @@ export default function SideboardScreen() {
             onDrop={handleDropOnMain}
           >
             <div className="sideboard-col-header">
-              <h3>Mazo principal</h3>
+              <h3>{t('game', 'sideboard_main')}</h3>
               <span className={`sideboard-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
             </div>
             {main.length > 10 && (
               <input
                 className="sideboard-filter"
                 type="text"
-                placeholder="Filtrar..."
+                placeholder={t('game', 'sideboard_filter')}
                 value={mainFilter}
                 onChange={(e) => setMainFilter(e.target.value)}
               />
             )}
             <div className="sideboard-card-list sideboard-arena-list">
               {isMainDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> Soltar para añadir al mazo</div>
+                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_main')}</div>
               )}
               {categoriesOrder.map((cat) => {
                 const list = groupedMain.get(cat) ?? []
@@ -382,7 +394,7 @@ export default function SideboardScreen() {
                           onDec={handleDec}
                           onRemove={handleRemove}
                           onSwap={moveOneToSide}
-                          swapLabel="Mover al banquillo →"
+                          swapLabel={`${t('game', 'sideboard_side')} →`}
                           onHover={handleHover}
                           onLeave={handleLeave}
                         />
@@ -392,7 +404,7 @@ export default function SideboardScreen() {
                 )
               })}
               {main.length === 0 && (
-                <div className="deck-list-empty-hint"><span>El mazo está vacío.</span></div>
+                <div className="deck-list-empty-hint"><span>{t('game', 'sideboard_invalid')}</span></div>
               )}
             </div>
           </div>
@@ -411,14 +423,14 @@ export default function SideboardScreen() {
               <input
                 className="sideboard-filter"
                 type="text"
-                placeholder="Filtrar..."
+                placeholder={t('game', 'sideboard_filter')}
                 value={sideFilter}
                 onChange={(e) => setSideFilter(e.target.value)}
               />
             )}
             <div className="sideboard-card-list sideboard-arena-list">
               {isSideDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> Soltar para añadir al banquillo</div>
+                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_side')}</div>
               )}
               {filteredSide.map((card) => {
                 const k = `sb:${deckCardKey(card)}`
@@ -435,14 +447,14 @@ export default function SideboardScreen() {
                     onDec={handleDec}
                     onRemove={handleRemove}
                     onSwap={moveOneToMain}
-                    swapLabel="← Mover al mazo"
+                    swapLabel={`← ${t('game', 'sideboard_main')}`}
                     onHover={handleHover}
                     onLeave={handleLeave}
                   />
                 )
               })}
               {filteredSide.length === 0 && side.length === 0 && (
-                <div className="deck-list-empty-hint"><small>Arrastra cartas aquí o usa ⇄ para mover</small></div>
+                <div className="deck-list-empty-hint"><small>{t('game', 'sideboard_main')}</small></div>
               )}
             </div>
           </div>
@@ -458,16 +470,16 @@ export default function SideboardScreen() {
 
         <div className="sideboard-footer">
           <div className="sideboard-counts">
-            <span className={mainValid ? 'valid' : 'invalid'}>Main: {mainTotal} (mín {minMain})</span>
-            <span className={sideValid ? 'valid' : 'invalid'}>Side: {sideTotal} (máx 15)</span>
+            <span className={mainValid ? 'valid' : 'invalid'}>{t('game', 'sideboard_main_count', { count: String(mainTotal), min: String(minMain) })}</span>
+            <span className={sideValid ? 'valid' : 'invalid'}>{t('game', 'sideboard_side_count', { count: String(sideTotal), max: '15' })}</span>
           </div>
           <button
             className="primary"
             disabled={busy || !mainValid}
             onClick={() => void submitDeck()}
-            title={!mainValid ? `El mazo principal debe tener al menos ${minMain} cartas` : undefined}
+            title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
           >
-            {busy ? 'Enviando…' : 'Enviar mazo'}
+            {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
           </button>
         </div>
       </section>

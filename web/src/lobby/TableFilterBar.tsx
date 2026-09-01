@@ -264,7 +264,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
             onClick={() => setShowAdvanced((v) => !v)}
             title="Filters"
           >
-            <span>⚙️ Filtros</span>
+            <span>⚙️ {t('common', 'settings')}</span>
             {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
             <span className="tfb-arrow-icon">{showAdvanced ? '▴' : '▾'}</span>
           </button>
@@ -331,77 +331,77 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
         <div className="tfb-advanced-drawer">
           {/* Mode group */}
           <div className="tfb-drawer-section">
-            <span className="tfb-section-label">Modo de juego:</span>
+            <span className="tfb-section-label">{t('game', 'combat')}:</span>
             <div className="tfb-button-group">
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === 'all' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: 'all' })}
               >
-                Todos
+                {t('common', 'all')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === '1v1' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: '1v1' })}
               >
-                ⚔️ Duelo 1v1
+                ⚔️ 1v1
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === 'multi' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: 'multi' })}
               >
-                👥 Multijugador (3-4p)
+                👥 {t('lobby', 'create_tab_multi')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === 'tourney' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: 'tourney' })}
               >
-                🏆 Torneo
+                🏆 {t('lobby', 'tournament_badge')}
               </button>
             </div>
           </div>
 
           {/* Skill group */}
           <div className="tfb-drawer-section">
-            <span className="tfb-section-label">Nivel de habilidad:</span>
+            <span className="tfb-section-label">{t('lobby', 'create_field_skill')}:</span>
             <div className="tfb-button-group">
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'all' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'all' })}
               >
-                Cualquiera
+                {t('common', 'all')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'BEGINNER' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'BEGINNER' })}
               >
-                ⭐ Novato
+                ⭐ {t('lobby', 'create_skill_beginner')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'CASUAL' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'CASUAL' })}
               >
-                ⭐⭐ Casual
+                ⭐⭐ {t('lobby', 'create_skill_casual')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'SERIOUS' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'SERIOUS' })}
               >
-                ⭐⭐⭐ Competitivo
+                ⭐⭐⭐ {t('lobby', 'create_skill_competitive')}
               </button>
             </div>
           </div>
 
           {/* Options & Access Checkboxes */}
           <div className="tfb-drawer-section tfb-switches-section">
-            <span className="tfb-section-label">Opciones de acceso:</span>
+            <span className="tfb-section-label">{t('lobby','create_tab_restrictions')}:</span>
             <div className="tfb-switches-grid">
               <label className="tfb-switch-label">
                 <input
@@ -409,7 +409,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.hidePassworded}
                   onChange={(e) => onChange({ ...filters, hidePassworded: e.target.checked })}
                 />
-                <span>🔓 Ocultar privadas con contraseña</span>
+                <span>🔓 {t('lobby','tag_private')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -418,7 +418,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.ratedOnly}
                   onChange={(e) => onChange({ ...filters, ratedOnly: e.target.checked })}
                 />
-                <span>🏅 Solo clasificatorias (Rated)</span>
+                <span>🏅 {t('lobby','tag_rated')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -427,7 +427,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.spectatorsOnly}
                   onChange={(e) => onChange({ ...filters, spectatorsOnly: e.target.checked })}
                 />
-                <span>👁️ Permitir espectadores</span>
+                <span>👁️ {t('lobby','create_field_spectators')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -436,7 +436,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.aiSeatsOnly}
                   onChange={(e) => onChange({ ...filters, aiSeatsOnly: e.target.checked })}
                 />
-                <span>🤖 Con plazas de IA</span>
+                <span>🤖 {t('lobby','ai')}</span>
               </label>
             </div>
           </div>

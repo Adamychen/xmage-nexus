@@ -2,6 +2,7 @@ import { useStore } from '../state/store'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
+import { useTranslation } from '../i18n'
 import './PlaneswalkerAbilityDialog.css'
 
 interface PlaneswalkerAbilityDialogProps {
@@ -25,6 +26,7 @@ function deltaLabel(delta: number | null): string {
 }
 
 export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: PlaneswalkerAbilityDialogProps) {
+  const { t } = useTranslation()
   const game = useStore((s) => s.game)
   const deltas = prompt.loyaltyDeltas ?? []
 
@@ -59,7 +61,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
                 key={opt.id}
                 className={`pw-ability-btn ${deltaClass(d)}`}
                 disabled={busy}
-                onClick={() => void send(() => cmds.sendPlayerUUID(opt.value, prompt.gameId), 'No se pudo activar la habilidad')}
+                onClick={() => void send(() => cmds.sendPlayerUUID(opt.value, prompt.gameId), t('errors', 'send_failed'))}
               >
                 <span className="pw-delta">{deltaLabel(d)}</span>
                 <span className="pw-label"><FormattedText text={opt.label} /></span>

@@ -19,11 +19,11 @@ describe('DeckImportModal', () => {
       />
     )
 
-    expect(screen.getByText('📥 Importar y Pegar Cartas')).toBeDefined()
-    expect(screen.getByText('➕ Añadir al mazo actual')).toBeDefined()
-    expect(screen.getByText('🔄 Reemplazar mazo completo')).toBeDefined()
+    expect(screen.getByText(/Importar Mazo/)).toBeDefined()
+    expect(screen.getAllByText(/Añadir al mazo actual/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/Reemplazar mazo completo/).length).toBeGreaterThanOrEqual(1)
 
-    const textarea = screen.getByPlaceholderText(/Pega aquí la lista de cartas/i)
+    const textarea = screen.getByPlaceholderText(/Importar mazo|Import deck/i)
     fireEvent.change(textarea, {
       target: {
         value: `4 Lightning Bolt\n20 Mountain\nSB: 2 Red Elemental Blast`,
@@ -46,17 +46,17 @@ describe('DeckImportModal', () => {
       />
     )
 
-    const replaceBtn = screen.getByText('🔄 Reemplazar mazo completo')
+    const replaceBtn = screen.getByText(/Reemplazar mazo completo/)
     fireEvent.click(replaceBtn)
 
-    const textarea = screen.getByPlaceholderText(/Pega aquí la lista de cartas/i)
+    const textarea = screen.getByPlaceholderText(/Importar mazo|Import deck/i)
     fireEvent.change(textarea, {
       target: {
         value: `4 [M10:146] Lightning Bolt\n16 [LEA:292] Mountain`,
       },
     })
 
-    const submitBtn = screen.getByRole('button', { name: /Reemplazar Mazo \(\d+ cartas\)/i })
+    const submitBtn = screen.getByRole('button', { name: /Reemplazar mazo completo \(\d+ Total Cartas\)/i })
     fireEvent.click(submitBtn)
 
     expect(onImport).toHaveBeenCalledWith({

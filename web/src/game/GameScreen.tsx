@@ -65,7 +65,7 @@ export default function GameScreen() {
   const onTargetClick = async (id: string) => {
     if (!gameId) return
     const result = await cmds.sendPlayerUUID(id, gameId)
-    if (!result.ok) setStoreError(result.error ?? 'No se pudo enviar el objetivo')
+    if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_target'))
   }
 
   const onPlayableClick = async (id: string, e?: React.MouseEvent) => {
@@ -74,7 +74,7 @@ export default function GameScreen() {
       await cmds.sendPlayerAction('HOLD_PRIORITY', gameId)
     }
     const result = await cmds.sendPlayerUUID(id, gameId)
-    if (!result.ok) setStoreError(result.error ?? 'No se pudo jugar la carta')
+    if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
   }
 
   const crossZone = crossZonePlayables(game, feedback ?? undefined)
@@ -82,7 +82,7 @@ export default function GameScreen() {
   const onCombatClick = async (id: string) => {
     if (!gameId) return
     const result = await cmds.sendPlayerUUID(id, gameId)
-    if (!result.ok) setStoreError(result.error ?? 'No se pudo declarar la criatura en combate')
+    if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_combat'))
   }
 
   const onResolveClick = useCallback(async () => {
@@ -90,13 +90,13 @@ export default function GameScreen() {
     setBusy(true)
     try {
       const result = await cmds.sendPlayerBoolean(false, gameId)
-      if (!result.ok) setStoreError(result.error ?? 'No se pudo pasar prioridad')
+      if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
     } finally {
       setBusy(false)
     }
-  }, [gameId, busy])
+  }, [gameId, busy, t])
 
-  // Espacio activa la acción principal / pasar prioridad
+  // Space activates main action / pass priority
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
@@ -312,7 +312,7 @@ export default function GameScreen() {
               className={`right-tab-btn ${rightTab === 'stack' ? 'active' : ''}`}
               onClick={() => setRightTab('stack')}
             >
-              Stack
+              {t('game', 'tab_stack')}
               {stackCount > 0 && <span className="right-tab-badge active-stack">{stackCount}</span>}
             </button>
             <button
@@ -320,14 +320,14 @@ export default function GameScreen() {
               className={`right-tab-btn ${rightTab === 'log' ? 'active' : ''}`}
               onClick={() => setRightTab('log')}
             >
-              Log
+              {t('game', 'tab_log')}
             </button>
             {hasCommanders && (
               <button
                 type="button"
                 className={`right-tab-btn ${rightTab === 'commander' ? 'active' : ''}`}
                 onClick={() => setRightTab('commander')}
-                title="Matriz de daño de comandante"
+                title={t('game', 'commander_damage')}
               >
                 👑 CMD
               </button>
@@ -337,7 +337,7 @@ export default function GameScreen() {
               className={`right-tab-btn ${rightTab === 'mechanics' ? 'active' : ''}`}
               onClick={() => setRightTab('mechanics')}
             >
-              Mecánicas
+              {t('game', 'tab_mechanics')}
               {hasActiveMechanics && <span className="right-tab-badge active-mechanics">★</span>}
             </button>
             <button
@@ -345,7 +345,7 @@ export default function GameScreen() {
               className={`right-tab-btn ${rightTab === 'chat' ? 'active' : ''}`}
               onClick={() => setRightTab('chat')}
             >
-              Chat
+              {t('game', 'tab_chat')}
             </button>
           </div>
 

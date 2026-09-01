@@ -1,6 +1,7 @@
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
+import { useTranslation } from '../i18n'
 import './VotingDialog.css'
 
 interface VotingDialogProps {
@@ -10,11 +11,12 @@ interface VotingDialogProps {
 }
 
 export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) {
+  const { t } = useTranslation()
   const choose = (value: string) => {
     const isBool = prompt.mode === 'boolean'
     void send(
       () => (isBool ? cmds.sendPlayerBoolean(value === 'true', prompt.gameId) : cmds.sendPlayerString(value, prompt.gameId)),
-      'No se pudo enviar el voto',
+      t('errors', 'send_failed_vote'),
     )
   }
 
@@ -26,7 +28,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
   return (
     <div className="voting-backdrop" role="presentation">
       <section className="voting-dialog" role="dialog" aria-modal="true" aria-labelledby="voting-title">
-        <div className="voting-kicker">🗳️ VOTACIÓN {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
+        <div className="voting-kicker">🗳️ {t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
         <h2 id="voting-title"><FormattedText text={prompt.title} /></h2>
         <p className="voting-msg"><FormattedText text={prompt.message} /></p>
         {hasTwo ? (
@@ -58,7 +60,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
             ))}
           </div>
         )}
-        <div className="voting-hint">Tu voto es secreto hasta que todos hayan elegido</div>
+        <div className="voting-hint">{t('dialogs', 'voting_hint')}</div>
       </section>
     </div>
   )

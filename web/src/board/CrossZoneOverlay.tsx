@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import CardSlot from './CardSlot'
 import type { CrossZonePlayable } from './crossZone'
+import { useTranslation } from '../i18n'
 import './PileOverlay.css'
 
 interface CrossZoneOverlayProps {
@@ -10,6 +11,7 @@ interface CrossZoneOverlayProps {
 }
 
 export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZoneOverlayProps) {
+  const { t } = useTranslation()
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
    }, [onClose])
@@ -23,7 +25,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
     <div className="pile-overlay-backdrop" onClick={onClose}>
       <div className="pile-overlay cross-zone-overlay" onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
-          <h3>Lanzar desde otra zona ({playables.length})</h3>
+          <h3>{t('game', 'pile_stack')} ({playables.length})</h3>
           <button type="button" className="pile-overlay-close" onClick={onClose}>
           &times;
           </button>
@@ -36,7 +38,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
              </div>
            ))}
           {playables.length === 0 && (
-            <div className="pile-overlay-empty">Nada que lanzar desde otras zonas</div>
+            <div className="pile-overlay-empty">{t('game', 'stack_empty')}</div>
           )}
         </div>
       </div>

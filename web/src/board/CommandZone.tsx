@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
+import { useTranslation } from '../i18n'
 import './CommandZone.css'
 
 interface CommandZoneProps {
@@ -66,7 +67,6 @@ export function parseCommandList(
     const nameLower = String(card.name ?? '').trim().toLowerCase()
     const displayNameLower = String(card.displayName ?? '').trim().toLowerCase()
 
-    // 1. Filter out reminder cards, state helpers, and system trackers
     if (
       REMINDER_TOKEN_NAMES.has(nameLower) ||
       REMINDER_TOKEN_NAMES.has(displayNameLower) ||
@@ -80,7 +80,6 @@ export function parseCommandList(
       return
     }
 
-    // 2. Real Planeswalker Emblems (e.g. "Emblem - Teferi", "Emblem - Chandra")
     const isEmblem =
       card.mageObjectType === 'EMBLEM' ||
       nameLower.startsWith('emblem -') ||
@@ -88,13 +87,11 @@ export function parseCommandList(
       nameLower.startsWith('emblem ') ||
       (Array.isArray(card.cardTypes) && card.cardTypes.some((t: string) => String(t).toLowerCase() === 'emblem'))
 
-    // 3. Companion Cards (e.g. Lurrus, Yorion, Jegantha)
     const isCompanion =
       card.mageObjectType === 'COMPANION' ||
       card.isCompanion === true ||
       (Array.isArray(card.rules) && card.rules.some((r: string) => String(r).toLowerCase().includes('companion')))
 
-    // 4. Genuine Commander Cards
     const isExplicitCommander = card.mageObjectType === 'COMMANDER' || card.isCommander === true
     const isAuthenticCard =
       (card.expansionSetCode && card.cardNumber) ||
@@ -103,7 +100,6 @@ export function parseCommandList(
 
     const isCommander = !isEmblem && !isCompanion && (isExplicitCommander || isAuthenticCard)
 
-    // Ignore any unknown non-commander/non-emblem helper object
     if (!isEmblem && !isCompanion && !isCommander) {
       return
     }
@@ -120,14 +116,12 @@ export function parseCommandList(
     })
   }
 
-  // 1. Process player.commandList (Commanders & Companions in command zone)
   if (Array.isArray(commandList)) {
     commandList.forEach((c) => processCard(c))
   } else if (commandList && typeof commandList === 'object') {
     Object.entries(commandList).forEach(([id, c]) => processCard(c, id))
   }
 
-  // 2. Process helperCards (Real player emblems)
   if (helperCards && typeof helperCards === 'object') {
     Object.entries(helperCards).forEach(([id, c]) => processCard(c, id))
   }
@@ -158,6 +152,7 @@ export default function CommandZone({
   targetIds = new Set(),
   helperEmblems,
 }: CommandZoneProps) {
+  const { t } = useTranslation()
   const hoverHandler = onHover ?? onCardHover
 
   const items = useMemo(() => {
@@ -176,7 +171,6 @@ export default function CommandZone({
 
   return (
     <div className={`command-zone ${side}`}>
-      {/* Commanders & Companions */}
       {commanders.map((item) => {
         const isPlayable = playableIds.has(item.id)
         const isTarget = targetIds.has(item.id)
@@ -193,19 +187,17 @@ export default function CommandZone({
               isTarget={isTarget}
               className="commander-slot"
             />
-            {/* Commander or Companion Badge */}
             {item.isCompanion ? (
-              <div className="companion-badge" title="Compañero (Companion)">
+              <div className="companion-badge" title={t('board', 'zone_command')}>
                 🦄
               </div>
             ) : (
-              <div className="commander-badge" title="Comandante en la Zona de Comando">
+              <div className="commander-badge" title={t('board', 'zone_command')}>
                 👑
               </div>
             )}
-            {/* Commander Tax Badge */}
             {tax > 0 && (
-              <div className="commander-tax-badge" title={`Impuesto de Comandante: +{${tax}} (Casteado ${item.castCount} veces)`}>
+              <div className="commander-tax-badge" title={`${t('board', 'zone_command')}: +{${tax}}`}>
                 +{tax}
               </div>
             )}
@@ -213,7 +205,6 @@ export default function CommandZone({
         )
       })}
 
-      {/* Emblems Stack */}
       {emblems.length > 0 && (
         <div className="emblems-wrap">
           {emblems.map((item, ei) => (
@@ -231,7 +222,7 @@ export default function CommandZone({
               }}
             />
           ))}
-          <span className="emblems-count-badge" title={`${emblems.length} Emblemas activos`}>
+          <span className="emblems-count-badge" title={`${emblems.length} ${t('board', 'zone_command')}`}>
             {emblems.length}
           </span>
         </div>

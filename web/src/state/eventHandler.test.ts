@@ -52,7 +52,7 @@ describe('eventHandler — callbacks críticos', () => {
       objectId: 'g1',
       data: { deck: { cards: { 'c1': { id: 'c1', name: 'Island' } } } },
     } as never)
-    expect(getState().viewer?.title).toBe('Mazo limitado')
+    expect(getState().viewer?.title).toBe('Mis Mazos')
     expect(getState().viewer?.cards).toHaveLength(1)
   })
 })

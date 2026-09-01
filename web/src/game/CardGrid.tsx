@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import CardSlot from '../board/CardSlot'
 import type { FeedbackPrompt } from './feedback'
+import { useTranslation } from '../i18n'
 import './CardGrid.css'
 
 interface CardGridProps {
@@ -13,6 +14,7 @@ interface CardGridProps {
 }
 
 export default function CardGrid({ prompt, selected, setSelected, send, cancel, busy }: CardGridProps) {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const cards = prompt.cards ?? []
   const isMulti = prompt.max > 1
@@ -34,7 +36,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
         ? current.filter((id) => id !== cardId)
         : current.length < prompt.max ? [...current, cardId] : current)
     } else {
-      void send(() => sendSingle(prompt, cardId), 'No se pudo enviar la selección')
+      void send(() => sendSingle(prompt, cardId), t('errors','send_failed_choice'))
     }
   }
 
@@ -46,7 +48,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
         if (!result.ok) break
       }
       return result
-    }, 'No se pudo enviar la selección')
+    }, t('errors','send_failed_choice'))
   }
 
   return (
@@ -55,14 +57,14 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
         <header className="card-grid-header">
           <div className="feedback-kicker">
             <span className="kicker-icon">{prompt.method === 'GAME_TARGET' ? '🎯' : '🃏'}</span>{' '}
-            {prompt.method === 'GAME_TARGET' ? 'SELECCIONA OBJETIVOS' : 'SELECCIÓN DE CARTAS'}
+            {prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
           </div>
           <div className="card-grid-title-row">
             <h2 id="feedback-title">{prompt.title}</h2>
             <span className="card-grid-count-badge">
               {filtered.length === cards.length
-                ? `${cards.length} carta${cards.length !== 1 ? 's' : ''}`
-                : `${filtered.length} de ${cards.length}`}
+                ? `${cards.length} ${t('board','zone_hand')}`
+                : `${filtered.length} / ${cards.length}`}
             </span>
           </div>
           {prompt.message && <p className="card-grid-message">{prompt.message}</p>}
@@ -72,7 +74,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
             <input
               className="card-grid-filter"
               type="text"
-              placeholder="Buscar por nombre, tipo de carta o texto de regla..."
+              placeholder={t('dialogs','cardgrid_search_placeholder')}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               autoFocus
@@ -82,7 +84,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
                 type="button"
                 className="card-grid-clear-btn"
                 onClick={() => setFilter('')}
-                title="Limpiar búsqueda"
+                title={t('common','clear')}
               >
                 ✕
               </button>
@@ -113,7 +115,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
           {filtered.length === 0 && (
             <div className="card-grid-empty">
               <span>🔍</span>
-              <p>No se encontraron cartas que coincidan con "{filter}"</p>
+              <p>{t('dialogs','cardgrid_empty', { filter })}</p>
             </div>
           )}
         </div>
@@ -125,17 +127,17 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
               disabled={busy || selected.length < prompt.min}
               onClick={confirmMulti}
             >
-              Confirmar ({selected.length}/{prompt.max})
+              {t('dialogs','cardgrid_confirm', { selected: selected.length, max: prompt.max })}
             </button>
           )}
           {prompt.required === false && (
             <button disabled={busy} onClick={() => {
-              void send(() => sendSingle(prompt, ''), 'No se pudo finalizar')
+              void send(() => sendSingle(prompt, ''), t('errors','send_failed'))
             }}>
-              Terminar selección
+              {t('dialogs','cardgrid_finish')}
             </button>
           )}
-          <button disabled={busy} onClick={cancel}>Cancelar</button>
+          <button disabled={busy} onClick={cancel}>{t('dialogs','cardgrid_cancel')}</button>
         </footer>
       </section>
     </div>

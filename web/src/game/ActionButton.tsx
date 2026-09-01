@@ -24,7 +24,6 @@ export default function ActionButton({
   const opp = game?.players?.find((p) => !p.controlled)
   const stackItems = Object.keys(game?.stack ?? {}).length
 
-  // Determine button role and state
   let label = t('game', 'pass_priority')
   let sublabel: string | null = null
   let modeClass = 'action-pass'
@@ -60,14 +59,14 @@ export default function ActionButton({
         className={`big-action-btn ${modeClass} ${isInteractive ? 'interactive' : 'disabled'}`}
         disabled={!isInteractive}
         onClick={onPass}
-        title="Acción principal (Espacio)"
+        title={t('game', 'action_main_hint')}
       >
         <span className="action-btn-glow" aria-hidden="true" />
         <div className="action-btn-content">
-          <span className="action-btn-label">{busy ? 'Enviando...' : label}</span>
+          <span className="action-btn-label">{busy ? t('game', 'action_sending') : label}</span>
           {sublabel && !busy && <span className="action-btn-sublabel">{sublabel}</span>}
         </div>
-        <kbd className="action-btn-shortcut">Espacio</kbd>
+        <kbd className="action-btn-shortcut">{t('wiki', 'shortcuts_space').split(':')[0]}</kbd>
       </button>
     </div>
   )

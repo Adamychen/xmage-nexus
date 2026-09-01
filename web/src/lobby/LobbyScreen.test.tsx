@@ -29,11 +29,11 @@ describe('formatSeatHistory', () => {
   it('formats Win-Loss and raw tournament records', () => {
     expect(formatSeatHistory('10-2')).toEqual({
       short: '10-2',
-      full: '10-2 (Victorias - Derrotas)',
+      full: '10-2 (Historial)',
     })
     expect(formatSeatHistory('5-5-1')).toEqual({
       short: '5-5-1',
-      full: '5-5-1 (Victorias - Derrotas)',
+      full: '5-5-1 (Historial)',
     })
   })
 

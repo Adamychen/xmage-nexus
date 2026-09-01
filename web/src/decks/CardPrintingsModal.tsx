@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { scryfallCardImage } from './scryfallSearch'
+import { useTranslation } from '../i18n'
 import './CardPrintingsModal.css'
 
 export interface CardPrinting {
@@ -40,6 +41,7 @@ export function CardPrintingsModal({
   onSelectPrinting: (setCode: string, cardNumber: string) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [printings, setPrintings] = useState<CardPrinting[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +55,7 @@ export function CardPrintingsModal({
 
     fetch(url, { headers: { Accept: 'application/json' } })
       .then((res) => {
-        if (!res.ok) throw new Error(`Scryfall respondió con error (${res.status})`)
+        if (!res.ok) throw new Error(`${t('errors', 'generic_error')} (${res.status})`)
         return res.json()
       })
       .then((json) => {
@@ -63,7 +65,7 @@ export function CardPrintingsModal({
       })
       .catch((err) => {
         if (cancelled) return
-        setError(err.message || 'No se pudieron cargar las impresiones')
+        setError(err.message || t('errors', 'generic_error'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -79,7 +81,7 @@ export function CardPrintingsModal({
       <div className="printings-modal" onClick={(e) => e.stopPropagation()}>
         <header className="printings-header">
           <div className="printings-title-wrap">
-            <h2 className="printings-title">🎨 Seleccionar Edición & Arte</h2>
+            <h2 className="printings-title">🎨 {t('dialogs', 'card_printings_title')}</h2>
             <span className="printings-card-name">{cardName}</span>
           </div>
           <button type="button" className="printings-close-btn" onClick={onClose}>
@@ -91,7 +93,7 @@ export function CardPrintingsModal({
           {loading && (
             <div className="printings-status-box">
               <div className="printings-spinner" />
-              <span>Buscando todas las impresiones de {cardName}…</span>
+              <span>{t('common', 'loading')} {cardName}…</span>
             </div>
           )}
 
@@ -103,7 +105,7 @@ export function CardPrintingsModal({
 
           {!loading && !error && printings.length === 0 && (
             <div className="printings-status-box">
-              <span>No se encontraron versiones alternativas.</span>
+              <span>{t('decks', 'sample_no_cards')}</span>
             </div>
           )}
 
@@ -125,7 +127,7 @@ export function CardPrintingsModal({
                   >
                     <div className="printing-img-wrap">
                       <img src={p.imageUrl} alt={`${cardName} (${p.set})`} loading="lazy" />
-                      {isSelected && <div className="printing-selected-badge">✓ En uso</div>}
+                      {isSelected && <div className="printing-selected-badge">✓ {t('common', 'done')}</div>}
                     </div>
 
                     <div className="printing-info">

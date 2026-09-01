@@ -104,11 +104,11 @@ describe('LibraryOrderDialog', () => {
       max: 1,
     }
 
-    const { getByText } = render(
+    const { getByText, getAllByText } = render(
       <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
     )
 
-    expect(getByText('⬇️ Al Cementerio')).not.toBeNull()
+    expect(getAllByText('⬇️ Al Cementerio').length).toBeGreaterThan(0)
     expect(getByText('☠️ Todas al cementerio')).not.toBeNull()
   })
 

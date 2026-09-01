@@ -27,7 +27,7 @@ describe('DeckBox', () => {
     render(<DeckBox deck={deck} />)
     expect(screen.getByText('Standard Deck')).toBeDefined()
     expect(screen.getByText('✓ Standard')).toBeDefined()
-    expect(screen.getByText('60 cartas')).toBeDefined()
+    expect(screen.getByText('60 Total Cartas')).toBeDefined()
   })
 
   it('renders invalid badge when deck is under minimum card limit', () => {

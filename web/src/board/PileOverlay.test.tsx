@@ -54,7 +54,7 @@ describe('PileOverlay', () => {
     )
 
     expect(getByText('Biblioteca de Jugador (3 cartas)')).not.toBeNull()
-    expect(document.body.textContent).toContain('1 carta revelada · #1 es la carta superior (Top)')
+    expect(document.body.textContent).toContain('1 revelado · #1 Biblioteca')
 
     // Check position badges
     expect(getByText('★ #1 TOP')).not.toBeNull()

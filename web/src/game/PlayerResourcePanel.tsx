@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { PlayerView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './PlayerResourcePanel.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -12,6 +13,7 @@ const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; cl
 ]
 
 export default function PlayerResourcePanel({ player, side }: { player: PlayerView; side: 'opp' | 'my' }) {
+  const { t } = useTranslation()
   const [manaOpen, setManaOpen] = useState(false)
   const pool = player.manaPool
   const manaTotal = MANA_COLORS.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
@@ -25,7 +27,7 @@ export default function PlayerResourcePanel({ player, side }: { player: PlayerVi
           type="button"
           className="resource-mana"
           onClick={() => setManaOpen((v) => !v)}
-          title="Pool de maná"
+          title={t('game', 'mana_title')}
         >
           <span>{manaTotal}</span>
           <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M7 10l5 5 5-5z" /></svg>
@@ -42,7 +44,7 @@ export default function PlayerResourcePanel({ player, side }: { player: PlayerVi
         )}
       </div>
 
-      <div className="resource-library" title="Biblioteca">
+      <div className="resource-library" title={t('game', 'pile_library')}>
         <div className="resource-card-back">
           <span className="resource-card-back-mark">✦</span>
         </div>
@@ -50,8 +52,8 @@ export default function PlayerResourcePanel({ player, side }: { player: PlayerVi
       </div>
 
       <div className="resource-side-piles">
-        <div className="resource-pip" title={`Cementerio: ${graveyardCount}`}>{graveyardCount}</div>
-        <div className="resource-pip" title={`Exilio: ${exileCount}`}>{exileCount}</div>
+        <div className="resource-pip" title={`${t('game', 'pile_graveyard')}: ${graveyardCount}`}>{graveyardCount}</div>
+        <div className="resource-pip" title={`${t('game', 'pile_exile')}: ${exileCount}`}>{exileCount}</div>
       </div>
     </div>
   )

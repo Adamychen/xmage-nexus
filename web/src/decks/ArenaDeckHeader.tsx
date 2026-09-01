@@ -2,6 +2,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
+import { useTranslation } from '../i18n'
 import './ArenaDeckHeader.css'
 
 export function ArenaDeckHeader({
@@ -43,6 +44,7 @@ export function ArenaDeckHeader({
   }
   if (maxBucket === 0) maxBucket = 1
 
+  const { t } = useTranslation()
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
   const requiredCount = config.minMain
   const hasErrors = issues.some((i) => i.severity === 'error')
@@ -81,8 +83,8 @@ export function ArenaDeckHeader({
             className="deck-header-name-input builder-name"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="Nombre del mazo"
-            title="Haz clic para editar el nombre del mazo"
+            placeholder={t('decks', 'import_placeholder')}
+            title={t('decks', 'builder_editor')}
           />
         </div>
         <div className="deck-header-meta-row">
@@ -90,7 +92,7 @@ export function ArenaDeckHeader({
             className={`deck-header-count ${isValid ? 'valid' : 'invalid'}`}
             title={errorTooltip}
           >
-            {mainCount}/{requiredCount} Cards {sideCount > 0 && `(SB: ${sideCount})`}
+            {mainCount}/{requiredCount} {t('decks', 'total_cards')} {sideCount > 0 && `(SB: ${sideCount})`}
             {issues.length > 0 && (
               <span style={{ marginLeft: '4px', cursor: 'help' }}>⚠️</span>
             )}
@@ -111,7 +113,7 @@ export function ArenaDeckHeader({
       </div>
 
       {/* Mini Mana Curve Histogram */}
-      <div className="deck-header-curve" title="Curva de maná del mazo">
+      <div className="deck-header-curve" title={t('decks', 'builder_mana_curve')}>
         {buckets.map((v, i) => {
           const heightPercent = Math.max(8, (v / maxBucket) * 100)
           return (
@@ -119,7 +121,7 @@ export function ArenaDeckHeader({
               <div
                 className="mini-curve-bar"
                 style={{ height: `${heightPercent}%` }}
-                title={`CMC ${i === 7 ? '7+' : i}: ${v} cartas`}
+                title={`CMC ${i === 7 ? '7+' : i}: ${v} ${t('decks', 'total_cards')}`}
               />
               <span className="mini-curve-label">{i === 7 ? '7+' : i}</span>
             </div>
@@ -132,7 +134,7 @@ export function ArenaDeckHeader({
         type="button"
         className={`deck-header-layout-btn ${layout === 'horizontal' ? 'active' : ''}`}
         onClick={onToggleLayout}
-        title="Cambiar vista del mazo (Vertical / Horizontal)"
+        title={t('decks', 'builder_editor')}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
           {layout === 'vertical' ? (

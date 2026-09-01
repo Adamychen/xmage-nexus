@@ -3,6 +3,7 @@ import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import CurveChart from './CurveChart'
+import { useTranslation } from '../i18n'
 import './DeckInspectorModal.css'
 
 export function DeckInspectorModal({
@@ -21,6 +22,7 @@ export function DeckInspectorModal({
   const archetype = 'archetype' in deck ? (deck as MetaDeckItem).archetype : undefined
   const tier = 'tier' in deck ? (deck as MetaDeckItem).tier : undefined
 
+  const { t } = useTranslation()
   const mainTotal = deck.cards.reduce((s, c) => s + c.amount, 0)
   const sideTotal = deck.sideboard.reduce((s, c) => s + c.amount, 0)
 
@@ -50,7 +52,7 @@ export function DeckInspectorModal({
         <div className="deck-inspector-body">
           <div className="inspector-cards-column">
             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginBottom: 4 }}>
-              Mazo Principal ({mainTotal} cartas)
+              {t('decks', 'sideboard')} ({mainTotal} {t('decks', 'total_cards')})
             </div>
             {deck.cards.map((c) => (
               <ArenaCardStrip
@@ -62,7 +64,7 @@ export function DeckInspectorModal({
             {deck.sideboard.length > 0 && (
               <>
                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginTop: 12, marginBottom: 4 }}>
-                  Banquillo (Sideboard: {sideTotal} cartas)
+                  {t('decks', 'sideboard')} (Sideboard: {sideTotal} {t('decks', 'total_cards')})
                 </div>
                 {deck.sideboard.map((c) => (
                   <ArenaCardStrip
@@ -79,7 +81,7 @@ export function DeckInspectorModal({
             {metaDesc && (
               <div>
                 <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#718096' }}>
-                  Estrategia
+                  {t('common', 'status')}
                 </span>
                 <p className="inspector-desc">{metaDesc}</p>
               </div>
@@ -87,7 +89,7 @@ export function DeckInspectorModal({
 
             <div>
               <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#718096' }}>
-                Curva de Maná
+                {t('decks', 'mana_curve')}
               </span>
               <CurveChart cards={deck.cards} meta={new Map()} />
             </div>
@@ -96,11 +98,11 @@ export function DeckInspectorModal({
 
         <footer className="deck-inspector-footer">
           <button type="button" className="inspector-edit-btn" onClick={() => onEdit(deck)}>
-            ✏️ Clonar y Abrir en Deck Builder
+            ✏️ {t('decks', 'deck_builder')}
           </button>
 
           <button type="button" className="inspector-copy-btn" onClick={handleCopy}>
-            {copied ? '✓ ¡Copiado a Mis Mazos!' : '📋 Copiar a Mis Mazos'}
+            {copied ? `✓ ${t('common', 'copied')}` : `📋 ${t('common', 'copy')}`}
           </button>
         </footer>
       </div>

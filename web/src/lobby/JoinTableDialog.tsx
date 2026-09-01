@@ -72,10 +72,10 @@ export default function JoinTableDialog({
   const handleImportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setImportError(null)
-    const name = importName.trim() || 'Mazo Importado'
+    const name = importName.trim() || t('decks','import_placeholder')
     const parsed = parseArenaDeck(importText, name)
     if (!parsed) {
-      setImportError('No se pudieron reconocer cartas. Formato esperado: "4 Lightning Bolt".')
+      setImportError(t('errors','deck_parse_failed'))
       return
     }
 
@@ -114,7 +114,7 @@ export default function JoinTableDialog({
         {/* Header */}
         <div className="join-modal-header">
           <div className="join-header-titles">
-            <span className="join-target-pill">⚔️ UNIRSE A MESA</span>
+            <span className="join-target-pill">{t('lobby','join_human_btn').toUpperCase()}</span>
             <h2 className="join-table-title">{table.tableName}</h2>
           </div>
           <button type="button" className="close-btn" onClick={onClose}>
@@ -125,17 +125,17 @@ export default function JoinTableDialog({
         {/* Table summary badges */}
         <div className="join-table-meta-bar">
           <span className="meta-badge meta-format">
-            📜 Formato: <strong>{table.deckType || 'Cualquiera'}</strong>
+            📜 {t('lobby','create_field_format')}: <strong>{table.deckType || t('common','all')}</strong>
           </span>
           <span className="meta-badge meta-mode">
-            🎮 Modo: <strong>{table.gameType || 'Duelo 1v1'}</strong>
+            🎮 {t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong>
           </span>
           <span className="meta-badge meta-host">
-            👑 Anfitrión: <strong>{table.controllerName}</strong>
+            👑 {t('lobby','host')}: <strong>{table.controllerName}</strong>
           </span>
           {table.passworded && (
             <span className="meta-badge meta-lock">
-              🔒 Requiere contraseña
+              🔒 {t('lobby','join_requires_password')}
             </span>
           )}
         </div>
@@ -153,12 +153,12 @@ export default function JoinTableDialog({
           {table.passworded && (
             <div className="join-password-section">
               <label className="join-field-label">
-                <span>🔑 Contraseña de la mesa:</span>
+                <span>🔑 {t('lobby','create_field_password')}:</span>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Introduce la contraseña para entrar…"
+                  placeholder={t('lobby','join_password_enter_placeholder')}
                   required
                   className="join-password-input"
                   autoFocus
@@ -171,34 +171,34 @@ export default function JoinTableDialog({
           <div className="join-deck-section">
             <div className="join-deck-section-header">
               <span className="join-deck-section-title">
-                🃏 Selecciona el mazo para esta partida:
+                🃏 {t('lobby','active_deck')}
               </span>
               <button
                 type="button"
                 className="join-import-toggle-btn"
                 onClick={() => setShowImport(!showImport)}
               >
-                {showImport ? '✕ Cancelar importación' : '📋 Pegar mazo nuevo…'}
+                {showImport ? `✕ ${t('lobby','join_import_toggle_close')}` : `📋 ${t('lobby','join_import_toggle_open')}`}
               </button>
             </div>
 
             {/* Inline Quick Importer */}
             {showImport && (
               <div className="join-inline-importer">
-                <h4>Importar mazo desde texto (Formato texto / Moxfield / Archidekt)</h4>
+                <h4>{t('decks','import_deck')}</h4>
                 <div className="import-row">
                   <input
                     type="text"
                     value={importName}
                     onChange={(e) => setImportName(e.target.value)}
-                    placeholder="Nombre del mazo (ej. Mi Mazo Commander)"
+                    placeholder={t('decks','import_placeholder')}
                     className="import-name-input"
                   />
                 </div>
                 <textarea
                   value={importText}
                   onChange={(e) => setImportText(e.target.value)}
-                  placeholder="Pega aquí la lista de cartas (ej.&#10;1 Sol Ring&#10;1 Arcane Signet&#10;...)"
+                  placeholder={t('lobby','join_import_cards_placeholder')}
                   rows={4}
                   className="import-textarea"
                 />
@@ -210,7 +210,7 @@ export default function JoinTableDialog({
                     onClick={handleImportSubmit}
                     disabled={!importText.trim()}
                   >
-                    Guardar y Seleccionar
+                    {t('lobby','join_save_select')}
                   </button>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function JoinTableDialog({
                       <div className="deck-card-title-row">
                         <span className="deck-card-name">🃏 {d.name}</span>
                         <span className="deck-card-count-badge">
-                          {count} cartas {sbCount > 0 ? `(+${sbCount} sb)` : ''}
+                          {count} {t('decks','total_cards')} {sbCount > 0 ? `(+${sbCount} sb)` : ''}
                         </span>
                       </div>
                       <span className="deck-card-sample">{sampleCards}…</span>
@@ -268,7 +268,7 @@ export default function JoinTableDialog({
                 checked={setAsDefault}
                 onChange={(e) => setSetAsDefault(e.target.checked)}
               />
-              <span>Recordar este mazo como equipado</span>
+              <span>{t('common','save')}</span>
             </label>
 
             <div className="join-footer-buttons">
@@ -278,14 +278,14 @@ export default function JoinTableDialog({
                 onClick={onClose}
                 disabled={busy}
               >
-                {t('common.cancel')}
+                {t('common','cancel')}
               </button>
               <button
                 type="submit"
                 className="primary join-submit-btn"
                 disabled={busy || (table.passworded && !password.trim())}
               >
-                {busy ? 'Uniéndose…' : `⚔️ Unirse con "${selectedDeck.name}"`}
+                {busy ? t('common','loading') : t('lobby','join_with_deck', { name: selectedDeck.name })}
               </button>
             </div>
           </div>

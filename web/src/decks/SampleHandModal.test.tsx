@@ -63,13 +63,13 @@ describe('SampleHandModal functions', () => {
       />
     )
 
-    const drawBtn = screen.getByRole('button', { name: /Robar Carta/ })
+    const drawBtn = screen.getByRole('button', { name: /Robar carta/i })
     fireEvent.click(drawBtn)
     expect(screen.getByText(/Cartas:\s*8/)).toBeDefined()
     expect(screen.getByText(/Biblioteca:\s*16/)).toBeDefined()
 
     const mulliganBtn = screen.getByRole('button', { name: /Mulligan/ })
     fireEvent.click(mulliganBtn)
-    expect(screen.getByText(/London Mulligan \(1\)/)).toBeDefined()
+    expect(screen.getByText(/Mulligan.*\(1\)/i)).toBeDefined()
   })
 })

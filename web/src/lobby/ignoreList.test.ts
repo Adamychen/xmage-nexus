@@ -33,7 +33,7 @@ describe('ignoreList manager', () => {
     // List empty
     const listRes = handleIgnoreCommand('/ignore')
     expect(listRes?.handled).toBe(true)
-    expect(listRes?.message).toContain('vacía')
+    expect(listRes?.message).toContain('Sin cartas')
 
     // Add user
     const addRes = handleIgnoreCommand('/ignore BadPlayer')

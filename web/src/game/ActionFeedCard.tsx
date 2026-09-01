@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import type { ActionFeedItem } from './gameEventParser'
 import { awaitImageUrl } from '../cards/cardImages'
+import { useTranslation } from '../i18n'
 import FormattedText from './FormattedText'
 import './ActionFeedCard.css'
 
@@ -25,6 +26,7 @@ const TYPE_ICONS: Record<string, string> = {
 }
 
 export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
+  const { t } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const icon = TYPE_ICONS[item.type] ?? 'ℹ️'
 
@@ -44,7 +46,7 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
       <div className="action-feed-turn-divider">
         <span className="turn-line" />
         <span className="turn-badge">
-          {icon} Turno {item.amount} {item.playerName ? `· ${item.playerName}` : ''}
+          {icon} {t('game','turn')} {item.amount} {item.playerName ? `· ${item.playerName}` : ''}
         </span>
         <span className="turn-line" />
       </div>
@@ -102,7 +104,7 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
         <div className="action-card-header">
           <span className="action-icon">{icon}</span>
           <span className={`action-player-tag ${item.isMe ? 'me' : 'opp'}`}>
-            {item.isMe ? 'Tú' : item.playerName || 'Partida'}
+            {item.isMe ? t('game','you') : item.playerName || t('lobby','tables_heading')}
           </span>
           {/* Life / Damage badge */}
           {isDamage && item.amount !== undefined && (

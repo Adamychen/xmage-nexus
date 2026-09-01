@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import FloatingCardPreview from './FloatingCardPreview'
+import { useTranslation } from '../i18n'
 import './PileOverlay.css'
 
 interface PileOverlayProps {
@@ -22,6 +23,7 @@ export default function PileOverlay({
   onPlayCard,
   isLibrary = false,
 }: PileOverlayProps) {
+  const { t } = useTranslation()
   const entries = Object.entries(cards)
   const playableSet = useMemo(() => playableIds ?? new Set<string>(), [playableIds])
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
@@ -53,16 +55,16 @@ export default function PileOverlay({
       <div className={`pile-overlay ${isLibrary ? 'library-overlay' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <div className="pile-header-titles">
-            <h3>{title} ({entries.length} cartas)</h3>
+            <h3>{title} ({entries.length} {t('board', 'zone_hand').toLowerCase() === 'mano' ? 'cartas' : 'cards'})</h3>
             {isLibrary && (
               <span className="pile-header-subtitle">
                 {knownCount > 0
-                  ? `👁️ ${knownCount} carta${knownCount > 1 ? 's' : ''} revelada${knownCount > 1 ? 's' : ''} · #1 es la carta superior (Top)`
-                  : 'Orden de biblioteca: #1 es la carta superior (Top)'}
+                  ? `👁️ ${knownCount} ${t('board', 'zone_revealed').toLowerCase()} · #1 ${t('board', 'zone_library')}`
+                  : `${t('board', 'zone_library')}: #1 Top`}
               </span>
             )}
           </div>
-          <button type="button" className="pile-overlay-close" onClick={onClose} title="Cerrar (Esc)">
+          <button type="button" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
             &times;
           </button>
         </div>
@@ -75,7 +77,7 @@ export default function PileOverlay({
               <div key={id} className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}`}>
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>
-                    {isTop ? '★ #1 TOP' : `#${index + 1}`}
+                    {isTop ? `★ #1 TOP` : `#${index + 1}`}
                     {isRevealed && <span className="revealed-icon"> 👁️</span>}
                   </div>
                 )}
@@ -92,7 +94,7 @@ export default function PileOverlay({
             )
           })}
           {entries.length === 0 && (
-            <div className="pile-overlay-empty">{isLibrary ? 'Biblioteca vacía' : 'Vacío'}</div>
+            <div className="pile-overlay-empty">{isLibrary ? t('board', 'pile_library') : t('common', 'search')}</div>
           )}
         </div>
       </div>

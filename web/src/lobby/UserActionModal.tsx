@@ -6,6 +6,7 @@ import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
+import { useTranslation } from '../i18n'
 import './UserActionModal.css'
 
 interface UserActionModalProps {
@@ -27,6 +28,7 @@ export default function UserActionModal({
   onWatchTable,
   onClose,
 }: UserActionModalProps) {
+  const { t } = useTranslation()
   const [isIgnored, setIsIgnored] = useState(() => isUserIgnored(user.userName))
   const isMe = user.userName.toLowerCase() === currentUsername.toLowerCase()
 
@@ -77,7 +79,7 @@ export default function UserActionModal({
             <div className="user-action-title-row">
               <CountryFlag flagName={user.flagName} />
               <h3 className="user-action-name">{user.userName}</h3>
-              {isMe && <span className="me-badge">Tú</span>}
+              {isMe && <span className="me-badge">{t('game', 'you')}</span>}
             </div>
 
             <div className="user-action-badges-row">
@@ -92,7 +94,7 @@ export default function UserActionModal({
               {user.infoGames ? (
                 <span className="user-status-playing">⚔️ {user.infoGames}</span>
               ) : (
-                <span className="user-status-idle">🟢 En lobby disponible</span>
+                <span className="user-status-idle">🟢 {t('lobby', 'user_status_available')}</span>
               )}
             </div>
           </div>
@@ -108,8 +110,8 @@ export default function UserActionModal({
             <button type="button" className="user-action-btn primary" onClick={handleWhisper}>
               <span className="action-btn-icon">💬</span>
               <div className="action-btn-text">
-                <span className="action-btn-title">Enviar Susurro Privado</span>
-                <span className="action-btn-desc">Abrir chat privado (/w {user.userName})</span>
+                <span className="action-btn-title">{t('lobby', 'useraction_whisper')}</span>
+                <span className="action-btn-desc">{t('lobby', 'useraction_whisper_hint', { username: user.userName })}</span>
               </div>
             </button>
           )}
@@ -118,8 +120,8 @@ export default function UserActionModal({
             <button type="button" className="user-action-btn spectate-btn" onClick={handleWatchGame}>
               <span className="action-btn-icon">👁️</span>
               <div className="action-btn-text">
-                <span className="action-btn-title">Espectar Partida</span>
-                <span className="action-btn-desc">Ver mesa en vivo: {currentTable.tableName}</span>
+                <span className="action-btn-title">{t('lobby', 'useraction_spectate')}</span>
+                <span className="action-btn-desc">{t('lobby', 'useraction_spectate_hint', { tableName: currentTable.tableName })}</span>
               </div>
             </button>
           )}
@@ -134,8 +136,8 @@ export default function UserActionModal({
           >
             <span className="action-btn-icon">🏆</span>
             <div className="action-btn-text">
-              <span className="action-btn-title">Ver Perfil y Rango de Liga</span>
-              <span className="action-btn-desc">Consultar medallas, ELO y estadísticas en el Leaderboard</span>
+              <span className="action-btn-title">{t('lobby', 'useraction_profile_title')}</span>
+              <span className="action-btn-desc">{t('lobby', 'useraction_profile_desc')}</span>
             </div>
           </button>
 
@@ -148,12 +150,12 @@ export default function UserActionModal({
               <span className="action-btn-icon">{isIgnored ? '🔓' : '🚫'}</span>
               <div className="action-btn-text">
                 <span className="action-btn-title">
-                  {isIgnored ? 'Desbloquear Usuario' : 'Ignorar / Silenciar Usuario'}
+                  {isIgnored ? t('lobby', 'useraction_unignore_title') : t('lobby', 'useraction_ignore_full')}
                 </span>
                 <span className="action-btn-desc">
                   {isIgnored
-                    ? 'Permitir que te envíe mensajes e ingrese a tus mesas'
-                    : 'Bloquear chat y prohibir que entre a tus mesas (/ignore)'}
+                    ? t('lobby', 'useraction_unignore_desc')
+                    : t('lobby', 'useraction_ignore_desc')}
                 </span>
               </div>
             </button>

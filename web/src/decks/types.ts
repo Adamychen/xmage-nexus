@@ -1,4 +1,5 @@
 import type { Deck, DeckCard } from '../lobby/decks'
+import { t } from '../i18n'
 
 export type DeckFormat = 'Standard' | 'Modern' | 'Commander' | 'Freeform' | 'Brawl' | 'Historic' | 'Pioneer' | 'Legacy' | 'Vintage' | 'Pauper' | 'Timeless'
 
@@ -63,7 +64,7 @@ export function colorIdentityFromCards(_cards: DeckCard[]): ('W' | 'U' | 'B' | '
 export function deckIsValidForPlay(d: Deck): { ok: boolean; reason?: string } {
   const main = deckTotalCards(d)
   const sb = deckSideboardCount(d)
-  if (main < 60) return { ok: false, reason: `Mazo principal ${main}/60` }
-  if (sb > 15) return { ok: false, reason: `Banquillo ${sb}/15 excedido` }
+  if (main < 60) return { ok: false, reason: `${t('decks', 'total_cards')} ${main}/60` }
+  if (sb > 15) return { ok: false, reason: `${t('decks', 'sideboard')} ${sb}/15` }
   return { ok: true }
 }

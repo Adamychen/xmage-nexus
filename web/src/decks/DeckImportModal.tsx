@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { parseAnyDeck } from './parseDck'
 import type { DeckCard } from '../lobby/decks'
+import { useTranslation } from '../i18n'
 import './DeckImportModal.css'
 
 export interface ImportResult {
@@ -18,6 +19,7 @@ export function DeckImportModal({
   onImport: (result: ImportResult) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [text, setText] = useState('')
   const [mode, setMode] = useState<'add' | 'replace'>('add')
   const [isDragOver, setIsDragOver] = useState(false)
@@ -38,7 +40,7 @@ export function DeckImportModal({
       setText(content)
       setError(null)
     } catch {
-      setError(`No se pudo leer el archivo ${f.name}`)
+      setError(`${t('errors', 'deck_read_failed')}: ${f.name}`)
     }
   }
 
@@ -53,7 +55,7 @@ export function DeckImportModal({
 
   const handleSubmit = () => {
     if (!parsed || totalCount === 0) {
-      setError('No se pudieron reconocer cartas válidas en el texto.')
+      setError(t('errors', 'deck_parse_failed'))
       return
     }
 
@@ -82,7 +84,7 @@ export function DeckImportModal({
       >
         <header className="deck-import-header">
           <div className="deck-import-title-wrap">
-            <h2 className="deck-import-title">📥 Importar y Pegar Cartas</h2>
+            <h2 className="deck-import-title">📥 {t('decks', 'import_deck')}</h2>
             <span className="deck-import-formats">XMage .dck · MTG Arena · MTGO · Texto Plano</span>
           </div>
           <button type="button" className="deck-import-close-btn" onClick={onClose}>
@@ -93,21 +95,21 @@ export function DeckImportModal({
         <div className="deck-import-body">
           {/* Mode Selector Row */}
           <div className="deck-import-mode-row">
-            <span className="import-mode-label">Acción de importación:</span>
+            <span className="import-mode-label">{t('decks', 'import_hint')}:</span>
             <div className="import-mode-options">
               <button
                 type="button"
                 className={`import-mode-btn ${mode === 'add' ? 'active' : ''}`}
                 onClick={() => setMode('add')}
               >
-                ➕ Añadir al mazo actual
+                ➕ {t('decks', 'import_mode_add')}
               </button>
               <button
                 type="button"
                 className={`import-mode-btn ${mode === 'replace' ? 'active' : ''}`}
                 onClick={() => setMode('replace')}
               >
-                🔄 Reemplazar mazo completo
+                🔄 {t('decks', 'import_mode_replace')}
               </button>
             </div>
           </div>
@@ -116,7 +118,7 @@ export function DeckImportModal({
           <div className="deck-import-textarea-wrap">
             <textarea
               className="deck-import-textarea"
-              placeholder={`Pega aquí la lista de cartas o arrastra un archivo .dck / .txt...\n\nFormatos soportados:\n• XMage: 4 [M10:146] Lightning Bolt\n• MTG Arena: 4 Lightning Bolt (M10) 146\n• Banquillo: SB: 2 Red Elemental Blast o bajo la línea "Sideboard"`}
+              placeholder={t('decks', 'import_hint')}
               rows={12}
               value={text}
               onChange={(e) => {
@@ -128,7 +130,7 @@ export function DeckImportModal({
 
             {isDragOver && (
               <div className="import-drop-overlay">
-                <span>Suelta tu archivo aquí (.dck, .txt, .dec)</span>
+                <span>{t('decks', 'builder_drag_hint')}</span>
               </div>
             )}
           </div>
@@ -137,7 +139,7 @@ export function DeckImportModal({
           <div className="deck-import-status-bar">
             <div className="import-status-left">
               <label className="import-file-btn">
-                📂 Cargar archivo (.dck, .txt)
+                📂 {t('common', 'search')}
                 <input
                   type="file"
                   accept=".dck,.txt,.dec,.cod,.o8d"
@@ -159,7 +161,7 @@ export function DeckImportModal({
                     setError(null)
                   }}
                 >
-                  Limpiar texto
+                  {t('common', 'clear')}
                 </button>
               )}
             </div>
@@ -172,7 +174,7 @@ export function DeckImportModal({
                 </div>
               ) : text.trim() ? (
                 <div className="import-badge warning">
-                  ⚠️ No se han detectado cartas válidas
+                  ⚠️ {t('errors', 'deck_parse_failed')}
                 </div>
               ) : (
                 <span className="import-hint-text">Esperando lista de cartas…</span>
@@ -185,7 +187,7 @@ export function DeckImportModal({
 
         <footer className="deck-import-footer">
           <button type="button" className="import-cancel-btn" onClick={onClose}>
-            Cancelar
+            {t('common', 'cancel')}
           </button>
           <button
             type="button"
@@ -193,8 +195,8 @@ export function DeckImportModal({
             disabled={totalCount === 0}
             onClick={handleSubmit}
           >
-            {mode === 'replace' ? '🔄 Reemplazar Mazo' : '➕ Añadir Cartas'}{' '}
-            {totalCount > 0 ? `(${totalCount} cartas)` : ''}
+            {mode === 'replace' ? `🔄 ${t('decks', 'import_mode_replace')}` : `➕ ${t('decks', 'import_mode_add')}`}{' '}
+            {totalCount > 0 ? `(${totalCount} ${t('decks', 'total_cards')})` : ''}
           </button>
         </footer>
       </div>

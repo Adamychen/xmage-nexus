@@ -35,7 +35,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     [onHover]
   )
 
-  // Parse all raw log and chat messages into structured action feed items
   const feedItems = useMemo((): ActionFeedItem[] => {
     const items: ActionFeedItem[] = []
     const seenRaw = new Set<string>()
@@ -64,7 +63,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     return items
   }, [log, myPlayerName])
 
-  // Handle scroll detection to pause auto-scroll if user looks at past turns
   const handleScroll = () => {
     if (!containerRef.current) return
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current
@@ -72,7 +70,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     setAutoScroll(isAtBottom)
   }
 
-  // Smooth scroll to bottom on new items if autoScroll is active
   useEffect(() => {
     if (autoScroll && feedEndRef.current && typeof feedEndRef.current.scrollIntoView === 'function') {
       feedEndRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -81,7 +78,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
   return (
     <div className="action-feed-container">
-      {/* Header controls: Switch between Visual Feed and Raw Log */}
       <div className="action-feed-controls">
         <div className="action-feed-mode-toggle">
           <button
@@ -101,10 +97,9 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             📜 {t('game', 'text_feed')}
           </button>
         </div>
-        <span className="action-count-tag">{feedItems.length} eventos</span>
+        <span className="action-count-tag">{t('game', 'feed_events', { count: feedItems.length })}</span>
       </div>
 
-      {/* Main content list */}
       <div
         className="action-feed-list game-log-entries"
         ref={containerRef}
@@ -112,7 +107,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
       >
         {viewMode === 'visual' ? (
           feedItems.length === 0 ? (
-            <div className="action-feed-empty">Esperando acciones de la partida...</div>
+            <div className="action-feed-empty">{t('game', 'feed_waiting')}</div>
           ) : (
             feedItems.map((item) => (
               <ActionFeedCard key={item.id} item={item} onHover={handleCardHover} />
@@ -132,7 +127,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
         <div ref={feedEndRef} />
       </div>
 
-      {/* Floating Card Preview for hovered action feed cards */}
       <FloatingCardPreview
         card={hoverCard}
         anchorRect={hoverRect}

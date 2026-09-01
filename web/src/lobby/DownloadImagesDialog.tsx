@@ -62,16 +62,16 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
 
   const handleDownloadSymbols = async () => {
     setSymbolsBusy(true)
-    setSymbolsStatus('Descargando símbolos oficiales de Scryfall...')
+    setSymbolsStatus(t('dialogs','download_status_downloading'))
     const res = await imageDownloader.downloadSymbols((done, total) => {
-      setSymbolsStatus(`Descargando símbolos: ${done}/${total}`)
+      setSymbolsStatus(`${t('dialogs','download_status_downloading')} ${done}/${total}`)
     })
     setSymbolsBusy(false)
     if (res.success) {
-      setSymbolsStatus(`✓ ¡${res.count} símbolos de maná y fases guardados en local!`)
+      setSymbolsStatus(`✓ ${res.count} ${t('dialogs','download_metrics_symbols')}!`)
       await updateStats()
     } else {
-      setSymbolsStatus('❌ Error al descargar los símbolos.')
+      setSymbolsStatus(t('dialogs','download_status_error'))
     }
     setTimeout(() => setSymbolsStatus(null), 5000)
   }
@@ -83,22 +83,21 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
 
   return (
     <div className="download-dialog-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="download-dialog panel" role="dialog" aria-label="Descargar Imágenes y Símbolos">
+      <div className="download-dialog panel" role="dialog" aria-label={t('dialogs','download_title')}>
         <header className="download-dialog-header">
           <div className="download-dialog-title">
             <span className="download-header-icon">📥</span>
-            <h2>Descargar Imágenes y Símbolos (XMage Downloader)</h2>
+            <h2>{t('dialogs','download_title')} (XMage Downloader)</h2>
           </div>
-          <button type="button" className="download-dialog-close" onClick={onClose} title="Cerrar ventana" aria-label="Cerrar ventana">
+          <button type="button" className="download-dialog-close" onClick={onClose} title={t('common','close')} aria-label={t('common','close')}>
             ✕
           </button>
         </header>
 
         <div className="download-dialog-body">
-          {/* Configuration Form */}
           <div className="download-form-grid">
             <div className="form-group">
-              <label htmlFor="dl-source">Fuente de descarga (Source):</label>
+              <label htmlFor="dl-source">{t('dialogs','download_source')}:</label>
               <select
                 id="dl-source"
                 value={source}
@@ -106,14 +105,14 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
                 onChange={(e) => setSource(e.target.value as DownloadSource)}
                 className="download-select"
               >
-                <option value="scryfall_normal">Scryfall (Normal - Calidad recomendada, ~10 GB)</option>
-                <option value="scryfall_large">Scryfall (Large / HD - Alta definición, ~15 GB)</option>
-                <option value="scryfall_small">Scryfall (Small - Miniaturas ligeras, ~1.5 GB)</option>
+                <option value="scryfall_normal">{t('dialogs','download_option_scryfall_normal')}</option>
+                <option value="scryfall_large">{t('dialogs','download_option_scryfall_large')}</option>
+                <option value="scryfall_small">{t('dialogs','download_option_scryfall_small')}</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="dl-scope">Expansión / Alcance (Sets):</label>
+              <label htmlFor="dl-scope">{t('dialogs','download_scope_label')}</label>
               <select
                 id="dl-scope"
                 value={scope}
@@ -121,16 +120,16 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
                 onChange={(e) => setScope(e.target.value as DownloadScope)}
                 className="download-select"
               >
-                <optgroup label="Colecciones y Formatos">
-                  <option value="ALL">- ALL images from selected source (Todas las cartas de MTG)</option>
-                  <option value="STANDARD">- STANDARD (Formato Estándar actual)</option>
-                  <option value="MODERN">- MODERN (Formato Modern)</option>
-                  <option value="COMMANDER">- COMMANDER (Staples principales)</option>
-                  <option value="MY_DECKS">- MIS MAZOS (Todas las cartas de tus mazos guardados)</option>
-                  <option value="BASIC_LANDS">- TIERRAS BÁSICAS (Llanura, Isla, Pantano, etc.)</option>
-                  <option value="TOKENS">- FICHAS Y EMBLEMAS</option>
+                <optgroup label={t('dialogs','download_group_collections')}>
+                  <option value="ALL">{t('dialogs','download_scope_all')}</option>
+                  <option value="STANDARD">{t('dialogs','download_scope_standard')}</option>
+                  <option value="MODERN">{t('dialogs','download_scope_modern')}</option>
+                  <option value="COMMANDER">{t('dialogs','download_scope_commander')}</option>
+                  <option value="MY_DECKS">{t('dialogs','download_scope_my_decks')}</option>
+                  <option value="BASIC_LANDS">{t('dialogs','download_scope_basic_lands')}</option>
+                  <option value="TOKENS">{t('dialogs','download_scope_tokens')}</option>
                 </optgroup>
-                <optgroup label="Expansiones Recientes">
+                <optgroup label={t('dialogs','download_group_recent')}>
                   {POPULAR_SETS.map((s) => (
                     <option key={s.code} value={s.code}>
                       [{s.code}] {s.name}
@@ -141,7 +140,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             </div>
 
             <div className="form-group">
-              <label htmlFor="dl-threads">Hilos concurrentes (Threads):</label>
+              <label htmlFor="dl-threads">{t('dialogs','download_threads')}:</label>
               <select
                 id="dl-threads"
                 value={concurrency}
@@ -149,10 +148,10 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
                 onChange={(e) => setConcurrency(Number(e.target.value))}
                 className="download-select"
               >
-                <option value={1}>1 hilo (Bajo consumo de red)</option>
-                <option value={2}>2 hilos (Moderado)</option>
-                <option value={5}>5 hilos (Recomendado)</option>
-                <option value={10}>10 hilos (Rápido)</option>
+                <option value={1}>{t('dialogs','download_threads_1')}</option>
+                <option value={2}>{t('dialogs','download_threads_2')}</option>
+                <option value={5}>{t('dialogs','download_threads_5')}</option>
+                <option value={10}>{t('dialogs','download_threads_10')}</option>
               </select>
             </div>
 
@@ -164,18 +163,17 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
                   disabled={isRunning}
                   onChange={(e) => setOnlyMissing(e.target.checked)}
                 />
-                <span>Solo descargar imágenes faltantes (evita re-descargar cartas existentes)</span>
+                <span>{t('dialogs','download_checkbox_only_missing')}</span>
               </label>
             </div>
           </div>
 
-          {/* Symbology section */}
           <div className="download-symbology-box">
             <div className="symbology-info">
               <span className="symbology-icon">🔮</span>
               <div>
-                <strong>Símbolos de Maná y Fases</strong>
-                <p>Descarga todos los símbolos oficiales (WUBRG, números, giro, pirexiano, etc.) para juego instantáneo offline.</p>
+                <strong>{t('dialogs','download_symbology_title')}</strong>
+                <p>{t('dialogs','download_symbology_desc')}</p>
               </div>
             </div>
             <button
@@ -184,21 +182,20 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
               disabled={symbolsBusy || isRunning}
               onClick={handleDownloadSymbols}
             >
-              {symbolsBusy ? 'Descargando...' : 'Descargar Símbolos (1 MB)'}
+              {symbolsBusy ? t('dialogs','download_status_downloading') : t('dialogs','download_symbols_btn')}
             </button>
           </div>
           {symbolsStatus && <div className="symbology-status-banner">{symbolsStatus}</div>}
 
-          {/* Progress & Live Stats */}
           <div className="download-progress-section">
             <div className="progress-header">
               <span className="progress-status-label">
-                {progress.status === 'fetching_list' && '🔍 Consultando índice de cartas...'}
-                {progress.status === 'running' && '⬇️ Descargando cartas...'}
-                {progress.status === 'paused' && '⏸️ Descarga pausada'}
-                {progress.status === 'done' && '✅ Descarga completada'}
-                {progress.status === 'error' && '❌ Error en la descarga'}
-                {progress.status === 'idle' && 'Listo para descargar'}
+                {progress.status === 'fetching_list' && t('dialogs','download_progress_index')}
+                {progress.status === 'running' && t('dialogs','download_status_downloading')}
+                {progress.status === 'paused' && t('dialogs','download_pause')}
+                {progress.status === 'done' && t('dialogs','download_status_done')}
+                {progress.status === 'error' && t('dialogs','download_status_error')}
+                {progress.status === 'idle' && t('common','done')}
               </span>
               <span className="progress-pct-val">{pct}%</span>
             </div>
@@ -209,7 +206,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
 
             <div className="progress-details-row">
               <span className="current-card-text" title={progress.currentItem}>
-                {progress.currentItem || 'Selecciona un set y pulsa Iniciar Descarga.'}
+                {progress.currentItem || t('dialogs','download_title')}
               </span>
               {progress.total > 0 && (
                 <span className="count-stats-text">
@@ -218,27 +215,26 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
               )}
             </div>
 
-            {/* Stats row */}
             <div className="download-metrics-row">
               <div className="metric-pill">
                 <span className="metric-icon">⚡</span>
-                <span className="metric-label">Velocidad:</span>
+                <span className="metric-label">{t('dialogs','download_metrics_speed')}:</span>
                 <span className="metric-val">{progress.speedCardsPerSec} c/s</span>
               </div>
               <div className="metric-pill">
                 <span className="metric-icon">💾</span>
-                <span className="metric-label">En Disco:</span>
-                <span className="metric-val">{cacheStats.cardCount} cartas ({mbInDisk} MB)</span>
+                <span className="metric-label">{t('dialogs','download_metrics_disk')}:</span>
+                <span className="metric-val">{cacheStats.cardCount} ({mbInDisk} MB)</span>
               </div>
               <div className="metric-pill">
                 <span className="metric-icon">🔮</span>
-                <span className="metric-label">Símbolos:</span>
+                <span className="metric-label">{t('dialogs','download_metrics_symbols')}:</span>
                 <span className="metric-val">{cacheStats.symbolCount}</span>
               </div>
               {progress.failed > 0 && (
                 <div className="metric-pill error">
                   <span className="metric-icon">⚠️</span>
-                  <span className="metric-label">Fallos:</span>
+                  <span className="metric-label">{t('dialogs','download_metrics_errors')}:</span>
                   <span className="metric-val">{progress.failed}</span>
                 </div>
               )}
@@ -252,19 +248,19 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             className="download-btn-clear"
             disabled={isRunning}
             onClick={handleClearCache}
-            title="Borrar todas las imágenes de la caché local"
+            title={t('dialogs','download_clear_cache')}
           >
-            🧹 Limpiar Caché
+            🧹 {t('dialogs','download_clear_cache')}
           </button>
 
           <div className="footer-action-buttons">
             {isRunning && (
               <>
                 <button type="button" className="download-btn-pause" onClick={handlePause}>
-                  ⏸ Pausar
+                  ⏸ {t('dialogs','download_pause_btn')}
                 </button>
                 <button type="button" className="download-btn-cancel" onClick={handleCancel}>
-                  ⏹ Cancelar
+                  ⏹ {t('dialogs','download_cancel_btn')}
                 </button>
               </>
             )}
@@ -272,22 +268,22 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             {isPaused && (
               <>
                 <button type="button" className="download-btn-primary" onClick={handleResume}>
-                  ▶ Reanudar
+                  ▶ {t('dialogs','download_resume_btn')}
                 </button>
                 <button type="button" className="download-btn-cancel" onClick={handleCancel}>
-                  ⏹ Cancelar
+                  ⏹ {t('dialogs','download_cancel_btn')}
                 </button>
               </>
             )}
 
             {!isRunning && !isPaused && (
               <button type="button" className="download-btn-primary" onClick={handleStart}>
-                ▶ Iniciar Descarga
+                ▶ {t('dialogs','download_start_btn')}
               </button>
             )}
 
             <button type="button" className="download-btn-secondary" onClick={onClose}>
-              Cerrar
+              {t('common','close')}
             </button>
           </div>
         </footer>

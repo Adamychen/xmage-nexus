@@ -91,7 +91,7 @@ describe('JoinTableDialog', () => {
     const importToggle = getByText('📋 Pegar mazo nuevo…')
     fireEvent.click(importToggle)
 
-    const nameInput = getByPlaceholderText('Nombre del mazo (ej. Mi Mazo Commander)')
+    const nameInput = getByPlaceholderText(/Mazo Importado|Imported Deck/)
     fireEvent.change(nameInput, { target: { value: 'My Red Burn' } })
 
     const textarea = getByPlaceholderText(/Pega aquí la lista de cartas/i)

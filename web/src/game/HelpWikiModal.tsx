@@ -28,7 +28,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
     mechanic: `✨ ${t('wiki', 'cat_mechanic')}`,
   }), [t])
 
-  // Close on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -81,7 +80,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
           </button>
         </header>
 
-        {/* Navigation Tabs */}
         <nav className="wiki-nav-tabs">
           <button
             type="button"
@@ -107,7 +105,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
         </nav>
 
         <div className="wiki-content">
-          {/* TAB 1: GLOSARIO DE KEYWORDS */}
           {activeTab === 'glossary' && (
             <div className="wiki-glossary-tab">
               <div className="wiki-search-bar-wrap">
@@ -115,7 +112,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 <input
                   type="text"
                   className="wiki-search-input"
-                  placeholder="Buscar palabra clave por nombre en inglés, español o regla (ej. Ward, Arrollar, Scry)..."
+                  placeholder={t('wiki', 'search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -127,7 +124,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 )}
               </div>
 
-              {/* Category pills */}
               <div className="wiki-category-pills">
                 {Object.entries(categoryLabels).map(([catKey, catLabel]) => (
                   <button
@@ -141,7 +137,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 ))}
               </div>
 
-              {/* Keywords List */}
               <div className="wiki-keywords-grid">
                 {filteredKeywords.map((kw) => (
                   <article key={kw.id} className={`wiki-kw-card cat-${kw.category}`}>
@@ -167,143 +162,140 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 {filteredKeywords.length === 0 && (
                   <div className="wiki-empty">
                     <span>🔍</span>
-                    <p>No se encontraron palabras clave que coincidan con "{searchQuery}"</p>
+                    <p>{t('dialogs', 'cardgrid_empty', { filter: searchQuery })}</p>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* TAB 2: FASES Y PRIORIDAD */}
           {activeTab === 'phases' && (
             <div className="wiki-phases-tab">
               <section className="wiki-section">
-                <h3>🔄 Secuencia de Fases y Pasos del Turno</h3>
+                <h3>🔄 {t('wiki', 'tab_phases')}</h3>
                 <div className="wiki-phases-timeline">
                   <div className="phase-block phase-beginning">
-                    <div className="phase-title">1. Fase Inicial (Beginning Phase)</div>
+                    <div className="phase-title">1. {t('wiki', 'phases_untap')}</div>
                     <div className="phase-steps">
-                      <div className="phase-step"><strong>Enderezar (Untap):</strong> Enderezas todos tus permanentes. Nadie recibe prioridad.</div>
-                      <div className="phase-step"><strong>Mantenimiento (Upkeep):</strong> Se disparan habilidades de inicio de turno. Los jugadores reciben prioridad.</div>
-                      <div className="phase-step"><strong>Robar (Draw):</strong> El jugador activo roba una carta. Ambos jugadores reciben prioridad.</div>
+                      <div className="phase-step">{t('wiki', 'phases_untap')}</div>
+                      <div className="phase-step">{t('wiki', 'phases_upkeep')}</div>
+                      <div className="phase-step">{t('wiki', 'phases_draw')}</div>
                     </div>
                   </div>
 
                   <div className="phase-block phase-main">
-                    <div className="phase-title">2. Fase Principal 1 (Pre-combat Main)</div>
+                    <div className="phase-title">2. {t('wiki', 'phases_main1')}</div>
                     <div className="phase-steps">
-                      <div className="phase-step">Puedes jugar una tierra si no has jugado ninguna. Puedes lanzar criaturas, conjuros, artefactos, encantamientos y planeswalkers cuando la pila esté vacía.</div>
+                      <div className="phase-step">{t('wiki', 'phases_main1')}</div>
                     </div>
                   </div>
 
                   <div className="phase-block phase-combat">
-                    <div className="phase-title">3. Fase de Combate (Combat Phase)</div>
+                    <div className="phase-title">3. {t('wiki', 'phases_combat')}</div>
                     <div className="phase-steps">
-                      <div className="phase-step"><strong>Inicio del combate:</strong> Última oportunidad para girar criaturas enemigas antes de que ataquen.</div>
-                      <div className="phase-step"><strong>Declarar atacantes:</strong> El jugador activo elige criaturas atacantes y se giran (salvo con Vigilancia).</div>
-                      <div className="phase-step"><strong>Declarar bloqueadores:</strong> El jugador defensor asigna bloqueadores. Se ordena el daño si hay múltiples bloqueadores.</div>
-                      <div className="phase-step"><strong>Daño de combate:</strong> Primero resuelven criaturas con Dañar Primero / Doble Golpe. Luego el daño regular.</div>
-                      <div className="phase-step"><strong>Fin del combate:</strong> Se limpian los estados de combate.</div>
+                      <div className="phase-step">{t('game', 'declare_attackers')}</div>
+                      <div className="phase-step">{t('game', 'declare_blockers')}</div>
+                      <div className="phase-step">{t('game', 'damage')}</div>
+                      <div className="phase-step">{t('wiki', 'phases_combat')}</div>
                     </div>
                   </div>
 
                   <div className="phase-block phase-main">
-                    <div className="phase-title">4. Fase Principal 2 (Post-combat Main)</div>
+                    <div className="phase-title">4. {t('wiki', 'phases_main2')}</div>
                     <div className="phase-steps">
-                      <div className="phase-step">Segunda oportunidad para jugar tierras y lanzar cualquier tipo de hechizo o permanente.</div>
+                      <div className="phase-step">{t('wiki', 'phases_main2')}</div>
                     </div>
                   </div>
 
                   <div className="phase-block phase-ending">
-                    <div className="phase-title">5. Fase Final (Ending Phase)</div>
+                    <div className="phase-title">5. {t('wiki', 'phases_end')}</div>
                     <div className="phase-steps">
-                      <div className="phase-step"><strong>Paso final (End Step):</strong> Se disparan habilidades "al comienzo del paso final". Ventana para instantáneos.</div>
-                      <div className="phase-step"><strong>Paso de limpieza (Cleanup):</strong> Descartas hasta tu tamaño máximo de mano (7). El daño en criaturas se cura.</div>
+                      <div className="phase-step">{t('wiki', 'phases_end')}</div>
+                      <div className="phase-step">{t('wiki', 'phases_priority')}</div>
                     </div>
                   </div>
                 </div>
               </section>
 
               <section className="wiki-section">
-                <h3>⚡ La Pila (The Stack) y Prioridad Avanzada</h3>
+                <h3>⚡ {t('wiki', 'phases_stack')}</h3>
                 <div className="wiki-stack-card">
                   <p>
-                    <strong>Estructura LIFO (Last In, First Out):</strong> El último hechizo o habilidad que entra a la pila es el primero en resolverse.
+                    <strong>{t('wiki', 'phases_stack')}:</strong> {t('wiki', 'phases_priority')}
                   </p>
                   <p>
-                    Cuando lanzas un hechizo o activas una habilidad, ambos jugadores deben <strong>pasar prioridad en secuencia</strong> para que el objeto superior de la pila se resuelva.
+                    {t('wiki', 'phases_priority')}
                   </p>
                   <p>
-                    <strong>⚡ Retención de Prioridad (Hold Priority):</strong> Por defecto, el juego asume que cedes el paso al rival tras lanzar un hechizo. Si mantienes pulsado <code>Ctrl</code> (o <code>Cmd</code> en Mac) o activas la casilla <em>⚡ Retener prioridad</em>, recibirás la prioridad inmediatamente tras el lanzamiento para responder a tu propio hechizo antes de que el rival pueda actuar (ej. combo <em>Infernal Tutor</em> + <em>Lion's Eye Diamond</em> o duplicar con <em>Fork</em>).
+                    <strong>{t('wiki', 'shortcuts_ctrl')}:</strong> {t('game', 'hold_priority_title')}
                   </p>
                   <p>
-                    <strong>🔄 Orden de Disparos Simultáneos (APNAP):</strong> Si varias habilidades se disparan a la vez (ej. entran dos criaturas que disparan habilidades de entrada), el jugador activo elige el orden en que entran a la pila, y luego el jugador no activo. La última en colocarse resolverá primero.
+                    {t('wiki', 'phases_priority')}
                   </p>
                   <p>
-                    <strong>🌪️ Tormenta y Copias (Storm & Copies):</strong> Cuando se copian hechizos en la pila, las copias se colocan directamente en la pila sin ser lanzadas y el juego te permite re-elegir nuevos objetivos para cada una.
+                    {t('wiki', 'phases_stack')}
                   </p>
                 </div>
               </section>
             </div>
           )}
 
-          {/* TAB 3: ATAJOS Y CONTROLES */}
           {activeTab === 'shortcuts' && (
             <div className="wiki-shortcuts-tab">
               <div className="wiki-shortcuts-grid">
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Espacio</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_space').split(':')[0]}</span>
                   <div className="shortcut-info">
-                    <strong>Pasar Prioridad / Resolver</strong>
-                    <p>Resuelve el objeto superior de la pila o pasa al siguiente paso/fase del turno.</p>
+                    <strong>{t('wiki', 'shortcuts_space')}</strong>
+                    <p>{t('game', 'pass_priority')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
                   <span className="shortcut-key">Ctrl / Cmd + Click</span>
                   <div className="shortcut-info">
-                    <strong>Retener Prioridad (Hold Priority)</strong>
-                    <p>Lanza un hechizo o activa una habilidad reteniendo la prioridad para responderte a ti mismo.</p>
+                    <strong>{t('wiki', 'shortcuts_ctrl')}</strong>
+                    <p>{t('game', 'hold_priority_title')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
                   <span className="shortcut-key">Shift / F</span>
                   <div className="shortcut-info">
-                    <strong>Voltear Carta (Double-Faced / MDFC)</strong>
-                    <p>Mientras tienes el ratón sobre una carta con dos caras, pulsa Shift o F para ver su reverso.</p>
+                    <strong>{t('wiki', 'shortcuts_shift_f')}</strong>
+                    <p>{t('wiki', 'flip_hint')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Click Izquierdo</span>
+                  <span className="shortcut-key">Click</span>
                   <div className="shortcut-info">
-                    <strong>Jugar / Seleccionar / Girar Tierras</strong>
-                    <p>Lanza cartas de tu mano, gira tierras para agregar maná, o declara atacantes y bloqueadores.</p>
+                    <strong>{t('game', 'tap_mana')}</strong>
+                    <p>{t('game', 'choose_target')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Hover (Ratón)</span>
+                  <span className="shortcut-key">Hover</span>
                   <div className="shortcut-info">
-                    <strong>Vista Ampliada & Glosario de Mecánicas</strong>
-                    <p>Pasa el ratón sobre cualquier carta para ver su arte en HD y el desglose de todas sus habilidades.</p>
+                    <strong>{t('wiki', 'flip_hint')}</strong>
+                    <p>{t('game', 'search_placeholder')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
                   <span className="shortcut-key">Esc</span>
                   <div className="shortcut-info">
-                    <strong>Cerrar / Cancelar</strong>
-                    <p>Cierra ventanas modales, el glosario o cancela modos de selección de objetivos.</p>
+                    <strong>{t('common', 'close')}</strong>
+                    <p>{t('common', 'close')}</p>
                   </div>
                 </div>
 
                 <div className="shortcut-card">
                   <span className="shortcut-key">Auto-Pass</span>
                   <div className="shortcut-info">
-                    <strong>Pase Automático de Prioridad</strong>
-                    <p>Casilla superior derecha para pasar automáticamente cuando no desees responder en turnos ajenos.</p>
+                    <strong>{t('game', 'auto_pass')}</strong>
+                    <p>{t('game', 'auto_pass')}</p>
                   </div>
                 </div>
               </div>
@@ -313,7 +305,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
 
         <footer className="wiki-footer">
           <button type="button" className="primary" onClick={onClose}>
-            Entendido
+            {t('common', 'done')}
           </button>
         </footer>
       </section>

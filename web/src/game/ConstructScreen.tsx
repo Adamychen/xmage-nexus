@@ -8,6 +8,7 @@ import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
+import { useTranslation } from '../i18n'
 import './ConstructScreen.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -51,6 +52,7 @@ function formatTime(seconds: number): string {
 }
 
 export default function ConstructScreen() {
+  const { t } = useTranslation()
   const construct = useStore((s) => s.construct)
   useEffect(() => {
     if (construct && getState().phase !== 'game') setState({ phase: 'game' })
@@ -244,9 +246,9 @@ export default function ConstructScreen() {
       const result = await cmds.submitDeck(construct.tableId, deck)
       if (result.ok) {
         setState({ construct: null })
-        addLog('torneo', 'Mazo de limitado enviado — espera el emparejamiento…')
+        addLog('torneo', t('game', 'sideboard_submit'))
       } else {
-        addLog('error', `Error al enviar mazo: ${result.error ?? 'desconocido'}`)
+        addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)
       }
     } finally {
       setBusy(false)
@@ -277,7 +279,7 @@ export default function ConstructScreen() {
   const validation = useMemo(() => {
     if (main.length === 0 && pool.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
     const fakeDeck: any = {
-      name: construct?.deckName ?? 'Mazo',
+      name: construct?.deckName ?? t('game', 'construct_title'),
       cards: main,
       sideboard: pool,
       format: formatForValidation,
@@ -321,7 +323,7 @@ export default function ConstructScreen() {
       <section className="construct-screen" role="dialog" aria-modal="true" aria-label="Construcción limitado">
         <div className="construct-header">
           <div className="construct-title">
-            <h2>Construcción</h2>
+            <h2>{t('game','construct_title')}</h2>
             <span className="construct-deck-name">{construct.deckName}</span>
             <span className="construct-pool-info">{poolSize} cartas en pool</span>
           </div>
@@ -346,14 +348,14 @@ export default function ConstructScreen() {
               <input
                 className="construct-filter"
                 type="text"
-                placeholder="Filtrar..."
+                placeholder={t('game', 'sideboard_filter')}
                 value={poolFilter}
                 onChange={(e) => setPoolFilter(e.target.value)}
               />
             )}
             <div className="construct-card-list construct-arena-list">
               {isPoolDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> Soltar para devolver al pool</div>
+                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'construct_pool')}</div>
               )}
               {filteredPool.map((card) => {
                 const k = `pool:${deckCardKey(card)}`
@@ -370,14 +372,14 @@ export default function ConstructScreen() {
                     onDec={handleDec}
                     onRemove={handleRemove}
                     onSwap={moveOneToMain}
-                    swapLabel="Añadir al mazo →"
+                    swapLabel={`${t('game', 'sideboard_main')} →`}
                     onHover={handleHover}
                     onLeave={handleLeave}
                   />
                 )
               })}
               {filteredPool.length === 0 && (
-                <div className="deck-list-empty-hint"><small>Pool vacío — mueve cartas desde el mazo</small></div>
+                <div className="deck-list-empty-hint"><small>{t('game', 'construct_pool')}</small></div>
               )}
             </div>
           </div>
@@ -389,21 +391,21 @@ export default function ConstructScreen() {
             onDrop={handleDropOnMain}
           >
             <div className="construct-col-header">
-              <h3>Mazo principal</h3>
+              <h3>{t('game', 'sideboard_main')}</h3>
               <span className={`construct-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
             </div>
             {main.length > 10 && (
               <input
                 className="construct-filter"
                 type="text"
-                placeholder="Filtrar..."
+                placeholder={t('game', 'sideboard_filter')}
                 value={mainFilter}
                 onChange={(e) => setMainFilter(e.target.value)}
               />
             )}
             <div className="construct-card-list construct-arena-list">
               {isMainDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> Soltar para añadir al mazo</div>
+                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_main')}</div>
               )}
               {categoriesOrder.map((cat) => {
                 const list = groupedMain.get(cat) ?? []
@@ -426,7 +428,7 @@ export default function ConstructScreen() {
                           onDec={handleDec}
                           onRemove={handleRemove}
                           onSwap={moveOneToPool}
-                          swapLabel="← Devolver al pool"
+                          swapLabel={`← ${t('game', 'construct_pool')}`}
                           onHover={handleHover}
                           onLeave={handleLeave}
                         />
@@ -436,7 +438,7 @@ export default function ConstructScreen() {
                 )
               })}
               {main.length === 0 && (
-                <div className="deck-list-empty-hint"><span>El mazo está vacío — añade al menos 40 cartas</span></div>
+                <div className="deck-list-empty-hint"><span>{t('game', 'sideboard_invalid')}</span></div>
               )}
             </div>
           </div>
@@ -452,7 +454,7 @@ export default function ConstructScreen() {
 
         <div className="construct-footer">
           <div className="construct-counts">
-            <span className={mainValid ? 'valid' : 'invalid'}>Mazo: {mainTotal} (mín {minMain})</span>
+            <span className={mainValid ? 'valid' : 'invalid'}>{t('game', 'construct_total', { count: mainTotal })} (mín {minMain})</span>
             <span>Pool: {poolTotal}</span>
             <span>Total: {mainTotal + poolTotal} / {poolSize}</span>
           </div>
@@ -460,10 +462,10 @@ export default function ConstructScreen() {
             className="primary"
             disabled={busy || !mainValid}
             onClick={() => void submitDeck()}
-            title={!mainValid ? `El mazo debe tener al menos ${minMain} cartas` : undefined}
+            title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
             data-testid="construct-submit"
           >
-            {busy ? 'Enviando…' : 'Enviar mazo'}
+            {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
           </button>
         </div>
       </section>

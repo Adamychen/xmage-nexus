@@ -5,6 +5,7 @@ import { parseFeedback, feedbackCards } from '../game/feedback'
 import type { FeedbackCard } from '../game/feedback'
 import { getState, setState, addLog } from './state'
 import type { SideboardCard, SideboardScreenState } from './state'
+import { t as tStatic } from '../i18n'
 import { awaitCardMeta } from '../cards/cardImages'
 import { saveActiveGame, clearActiveGame } from './persistence'
 import { attributeStackControllers } from '../game/stackAttribution'
@@ -121,7 +122,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
     }
     case 'JOINED_TABLE': {
       const d = data as { tableId?: string; tableName?: string } | null
-      addLog('mesa', `Te has unido a "${d?.tableName ?? d?.tableId ?? ''}"`)
+      addLog('mesa', `${tStatic('lobby','join_human_btn')} "${d?.tableName ?? d?.tableId ?? ''}"`)
       break
     }
     case 'START_GAME': {
@@ -129,7 +130,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       const isNewGame = !!d?.gameId && d.gameId !== s.gameId
       if (d?.gameId) saveActiveGame(d.gameId)
       setState({ phase: 'game', watchingTable: null, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
-      addLog('partida', `¡Partida arrancada!${d?.tableName ? ` (${d.tableName})` : ''}`)
+      addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
       if (isNewGame) {
         void cmds.joinGame(d!.gameId!)
         void cmds.getGameChatId(d!.gameId!).then((cid) => {
@@ -251,7 +252,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       } | null
       const tableId = d?.currentTableId
       if (!tableId) break
-      const deckName = d?.deck?.name ?? 'Mazo'
+      const deckName = d?.deck?.name ?? tStatic('decks','import_placeholder')
       const time = d?.time ?? 180
       const limited = d?.flag === true
       const rawCards = d?.deck?.cards ?? {}
@@ -451,7 +452,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       const d = data as { deck?: { cards?: unknown }; cards?: unknown; currentTableId?: string; parentTableId?: string; time?: number } | null
       const view = (d?.deck?.cards ?? d?.cards) as Record<string, unknown> | undefined
       const cards = feedbackCards({ cardsView1: view }) ?? []
-      setState({ viewer: { title: 'Mazo limitado', cards } })
+      setState({ viewer: { title: tStatic('decks','my_decks'), cards } })
       addLog('partida', 'Viendo mazo limitado')
       break
     }

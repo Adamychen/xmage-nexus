@@ -3,6 +3,7 @@ import type { TournamentView, RoundView, TournamentGameView } from '../net/types
 import * as cmds from '../net/commands'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
+import { useTranslation } from '../i18n'
 
 export interface TournamentBracketProps {
   view: TournamentView
@@ -23,6 +24,7 @@ function formatTimer(serverTime?: number, stepStartTime?: number | null): string
 }
 
 export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }: TournamentBracketProps) {
+  const { t } = useTranslation()
   const [tick, setTick] = useState(0)
   useEffect(() => {
     if (view.serverTime == null || view.stepStartTime == null) return
@@ -57,9 +59,9 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
           <span className="tournament-type" data-testid="tournament-type">{view.tournamentType}</span>
           <span className="tournament-state-badge" data-testid="tournament-state">{view.tournamentState}</span>
           {view.watchingAllowed ? (
-            <span className="tournament-watching-badge" data-testid="tournament-watching">👁️ Espectadores</span>
+            <span className="tournament-watching-badge" data-testid="tournament-watching">👁️ {t('lobby', 'tag_spectators')}</span>
           ) : (
-            <span className="tournament-watching-badge off">🔒 Privado</span>
+            <span className="tournament-watching-badge off">🔒 {t('lobby', 'tag_private')}</span>
           )}
         </div>
         <div className="tournament-header-actions">
@@ -69,10 +71,10 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
             </span>
           )}
           {view.constructionTime > 0 && (
-            <span className="tournament-construction">🧱 {Math.floor(view.constructionTime / 60)}m construcción</span>
+            <span className="tournament-construction">🧱 {Math.floor(view.constructionTime / 60)}m {t('game', 'construct_title').toLowerCase()}</span>
           )}
           {onClose && (
-            <button type="button" className="tournament-close-btn" onClick={onClose} aria-label="Cerrar">✕</button>
+            <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}>✕</button>
           )}
         </div>
       </div>
@@ -80,15 +82,15 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
         <div className="tournament-running-info" data-testid="tournament-running-info">{view.runningInfo}</div>
       )}
       {(view.tournamentState.toLowerCase().includes('draft') || view.tournamentState.toLowerCase().includes('construct')) && (
-        <div className="tournament-state-hint">Fase de construcción / draft activa</div>
+        <div className="tournament-state-hint">{t('lobby', 'tournament_construction_hint')}</div>
       )}
       <div className="tournament-header-footer">
         <span className="tournament-meta" data-testid="tournament-meta">
-          {view.rounds.length} ronda{view.rounds.length !== 1 ? 's' : ''} · {view.players.length} jugador{view.players.length !== 1 ? 'es' : ''}
+          {view.rounds.length} {view.rounds.length === 1 ? t('lobby', 'tournament_round_single') : t('lobby', 'tournament_round_plural')} · {view.players.length} {view.players.length === 1 ? t('lobby', 'tournament_player_single') : t('lobby', 'tournament_player_plural')}
         </span>
         {tournamentId && (
           <button type="button" className="tournament-quit-btn" onClick={() => void handleQuit()} data-testid="tournament-quit">
-            Abandonar torneo
+            {t('lobby', 'tournament_quit')}
           </button>
         )}
       </div>
@@ -97,11 +99,12 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
 }
 
 function BracketRound({ round, index, watchingAllowed }: { round: RoundView; index: number; watchingAllowed: boolean }) {
+  const { t } = useTranslation()
   return (
     <div className="bracket-round" data-testid="bracket-round" data-round={index}>
-      <h4 className="bracket-round-title">Ronda {index + 1}</h4>
+      <h4 className="bracket-round-title">{t('lobby', 'tournament_round_label', { number: index + 1 })}</h4>
       <div className="bracket-games">
-        {round.games.length === 0 && <div className="bracket-empty">Sin emparejamientos</div>}
+        {round.games.length === 0 && <div className="bracket-empty">{t('lobby', 'bracket_empty')}</div>}
         {round.games.map((g: TournamentGameView, gi: number) => (
           <div key={`${g.tableId ?? g.matchId ?? gi}-${gi}`} className="bracket-game" data-testid="bracket-game">
             <div className="bracket-game-top">
@@ -111,7 +114,7 @@ function BracketRound({ round, index, watchingAllowed }: { round: RoundView; ind
             {g.result && <div className="bracket-game-result" data-testid="bracket-game-result">{g.result}</div>}
             <div className="bracket-game-meta">
               {g.roundNum != null && <span className="bracket-round-num">#R{g.roundNum}</span>}
-              {g.tableId && <span className="bracket-table-id" title={g.tableId}>Mesa {g.tableId.slice(0, 6)}</span>}
+              {g.tableId && <span className="bracket-table-id" title={g.tableId}>{t('lobby', 'create_table_btn')} {g.tableId.slice(0, 6)}</span>}
               {watchingAllowed && g.gameId && <span className="bracket-watchable">👁️</span>}
             </div>
           </div>
@@ -122,6 +125,7 @@ function BracketRound({ round, index, watchingAllowed }: { round: RoundView; ind
 }
 
 export default function TournamentBracket({ view, tournamentId, onClose, onQuit, compact }: TournamentBracketProps) {
+  const { t } = useTranslation()
   const sortedPlayers = useMemo(() => {
     return [...view.players].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
   }, [view.players])
@@ -130,10 +134,10 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
     <div className={`tournament-bracket ${compact ? 'compact' : ''}`} data-testid="tournament-bracket">
       <TournamentBracketHeader view={view} tournamentId={tournamentId} onClose={onClose} onQuit={onQuit} />
       <div className="tournament-bracket-body">
-        <section className="tournament-rounds-section" aria-label="Bracket">
-          <h3 className="tournament-section-title">Bracket — Rondas</h3>
+        <section className="tournament-rounds-section" aria-label={t('lobby', 'bracket_title')}>
+          <h3 className="tournament-section-title">{t('lobby', 'bracket_title')}</h3>
           {view.rounds.length === 0 ? (
-            <div className="tournament-empty" data-testid="tournament-no-rounds">Aún no hay rondas generadas — esperando emparejamientos.</div>
+            <div className="tournament-empty" data-testid="tournament-no-rounds">{t('lobby', 'bracket_no_rounds')}</div>
           ) : (
             <div className="bracket-columns" data-testid="bracket-columns">
               {view.rounds.map((r, idx) => (
@@ -142,8 +146,8 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
             </div>
           )}
         </section>
-        <section className="tournament-standings-section" aria-label="Clasificación">
-          <h3 className="tournament-section-title">Clasificación</h3>
+        <section className="tournament-standings-section" aria-label={t('lobby', 'standings_title')}>
+          <h3 className="tournament-section-title">{t('lobby', 'standings_title')}</h3>
           <TournamentStandings players={view.players} sortedPlayers={sortedPlayers} />
         </section>
       </div>

@@ -1,11 +1,12 @@
 import type { Deck, DeckCard } from '../lobby/decks'
+import { t } from '../i18n'
 
 const DCK_LINE = /^(SB:\s*)?(\d+)\s*\[([^:\]]+):([^\]]+)\]\s*(.+?)\s*$/
 const NAME_RE = /^NAME:\s*(.*)\s*$/
 const AUTHOR_RE = /^AUTHOR:\s*(.*)\s*$/
 const LAYOUT_RE = /^LAYOUT\s+(MAIN|SIDEBOARD):/
 
-export function parseDck(text: string, fallbackName = 'Mazo Importado'): Deck | null {
+export function parseDck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
   const lines = text.split(/\r?\n/)
   let name: string | null = null
   const cards: DeckCard[] = []
@@ -48,7 +49,7 @@ export function parseDck(text: string, fallbackName = 'Mazo Importado'): Deck | 
   }
 }
 
-export function parseAnyDeck(text: string, fallbackName = 'Mazo Importado'): Deck | null {
+export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
   if (/^\s*NAME:/m.test(text) || /\[.*:.*\].*\n/.test(text) && /SB:/.test(text)) {
     const dck = parseDck(text, fallbackName)
     if (dck) return dck

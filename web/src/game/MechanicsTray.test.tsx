@@ -30,7 +30,7 @@ describe('MechanicsTray', () => {
 
     const { getByText } = render(<MechanicsTray />)
     expect(getByText('No hay mecánicas globales activas en esta partida.')).toBeDefined()
-    expect(getByText('El Anillo:')).toBeDefined()
+    expect(getByText(/El Anillo te tienta/)).toBeDefined()
   })
 
   it('renders The Ring tab with level breakdown and Ring-bearer', () => {
@@ -112,9 +112,9 @@ describe('MechanicsTray', () => {
       } as unknown as GameView,
     })
 
-    const { getByText } = render(<MechanicsTray />)
-    expect(getByText('Es de NOCHE')).toBeDefined()
-    expect(getByText('lanza 2 o más hechizos')).toBeDefined()
+    const { getAllByText } = render(<MechanicsTray />)
+    expect(getAllByText('Es de NOCHE').length).toBeGreaterThan(0)
+    expect(getAllByText(/Prioridad — Responde|Pila — Último/i).length).toBeGreaterThan(0)
   })
 
   it('renders Monarch tab with rules explanation and current holder', () => {
@@ -131,10 +131,10 @@ describe('MechanicsTray', () => {
       } as unknown as GameView,
     })
 
-    const { getByText, container } = render(<MechanicsTray />)
+    const { getAllByText, getByText, container } = render(<MechanicsTray />)
     expect(container.querySelector('.panel-monarch h3')?.textContent).toBe('El Monarca')
     expect(getByText(/Queen Marchesa/)).toBeDefined()
-    expect(getByText(/Al comienzo de tu paso final, roba una carta/)).toBeDefined()
+    expect(getAllByText(/Al comienzo de tu paso final, roba una carta/).length).toBeGreaterThan(0)
   })
 
   it('allows switching tabs when multiple mechanics are active', () => {

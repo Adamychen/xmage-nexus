@@ -1,8 +1,10 @@
 import { useStore, setState } from '../state/store'
 import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
+import { useTranslation } from '../i18n'
 
 export default function UserRequestDialog() {
+  const { t } = useTranslation()
   const request = useStore((s) => s.userRequest)
   if (!request) return null
 
@@ -11,7 +13,7 @@ export default function UserRequestDialog() {
   const onButton = async (action: string) => {
     if (request.gameId) {
       const result = await cmds.sendPlayerAction(action, request.gameId)
-      if (!result.ok) setState({ error: result.error ?? 'No se pudo enviar la acción' })
+      if (!result.ok) setState({ error: result.error ?? t('dialogs', 'userrequest_error') })
     }
     close()
   }
@@ -26,7 +28,7 @@ export default function UserRequestDialog() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="feedback-kicker">
-          <span className="kicker-icon">🤝</span> PETICIÓN DE PARTIDA
+          <span className="kicker-icon">🤝</span> {t('dialogs', 'userrequest_title')}
         </div>
         <h2 id="user-request-title"><FormattedText text={request.title} /></h2>
         {request.message && <p className="feedback-prompt-message"><FormattedText text={request.message} /></p>}

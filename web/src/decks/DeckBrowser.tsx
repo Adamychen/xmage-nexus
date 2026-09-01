@@ -6,6 +6,7 @@ import { loadDeckFromOnlineSource } from './onlineDeckService'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { ManaPip } from './ArenaManaSymbols'
+import { useTranslation } from '../i18n'
 import './DeckBrowser.css'
 
 export function DeckBrowser({
@@ -15,6 +16,7 @@ export function DeckBrowser({
   onCloneDeck: (deck: MetaDeckItem | DeckV2) => Promise<void>
   onOpenBuilder: (deckId: string) => void
 }) {
+  const { t } = useTranslation()
   const [tab, setTab] = useState<'catalog' | 'import'>('catalog')
   const [search, setSearch] = useState('')
   const [formatFilter, setFormatFilter] = useState<string>('All Formats')
@@ -68,21 +70,21 @@ export function DeckBrowser({
   const handleOnlineImport = async () => {
     if (!importInput.trim()) return
     setImportLoading(true)
-    setImportStatus('Descargando e interpretando el mazo...')
+    setImportStatus(t('common', 'loading'))
 
     try {
       const parsed = await loadDeckFromOnlineSource(importInput, importName)
       if (parsed) {
         await onCloneDeck(parsed)
-        setImportStatus(`✓ ¡Mazo "${parsed.name}" importado con éxito!`)
+        setImportStatus(`✓ ${parsed.name} ${t('common', 'done')}`)
         setImportInput('')
         setImportName('')
         setTimeout(() => onOpenBuilder(parsed.id), 800)
       } else {
-        setImportStatus('❌ No se pudo interpretar el mazo. Verifica el enlace o el formato de texto.')
+        setImportStatus(t('errors', 'deck_parse_failed'))
       }
     } catch {
-      setImportStatus('❌ Error al conectar con el servidor.')
+      setImportStatus(t('errors', 'connection_failed'))
     } finally {
       setImportLoading(false)
     }
@@ -97,14 +99,14 @@ export function DeckBrowser({
           className={`browser-tab-btn ${tab === 'catalog' ? 'active' : ''}`}
           onClick={() => setTab('catalog')}
         >
-          🏆 Meta & Decks Populares ({filteredCatalog.length})
+          🏆 {t('decks', 'popular_meta')} ({filteredCatalog.length})
         </button>
         <button
           type="button"
           className={`browser-tab-btn ${tab === 'import' ? 'active' : ''}`}
           onClick={() => setTab('import')}
         >
-          🌐 Importar por URL / Texto (Moxfield, Archidekt)
+          🌐 {t('decks', 'import_deck')}
         </button>
       </nav>
 
@@ -117,7 +119,7 @@ export function DeckBrowser({
                 className="browser-search-input"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por mazo o carta (ej. Murktide, Atraxa)..."
+                placeholder={t('common', 'search')}
               />
             </div>
 
@@ -126,7 +128,7 @@ export function DeckBrowser({
               onChange={(e) => setFormatFilter(e.target.value)}
               className="browser-select"
             >
-              <option>All Formats</option>
+              <option>{t('decks', 'filter_all_formats')}</option>
               {ALL_FORMATS.map((f) => (
                 <option key={f} value={f}>
                   {f}
@@ -139,10 +141,10 @@ export function DeckBrowser({
               onChange={(e) => setArchetypeFilter(e.target.value)}
               className="browser-select"
             >
-              <option>All Archetypes</option>
-              <option>Aggro</option>
-              <option>Midrange</option>
-              <option>Control</option>
+              <option>{t('common', 'all')}</option>
+              <option>{t('decks', 'browser_filter_aggro')}</option>
+              <option>{t('decks', 'browser_filter_midrange')}</option>
+              <option>{t('decks', 'browser_filter_control')}</option>
               <option>Combo</option>
               <option>Ramp</option>
               <option>Tribal</option>
@@ -156,7 +158,7 @@ export function DeckBrowser({
                   type="button"
                   className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''} pip-${c.toLowerCase()}`}
                   onClick={() => toggleColor(c)}
-                  title={`Filtrar por ${c}`}
+                  title={`${t('decks', 'filter_cmc')} ${c}`}
                 >
                   <ManaPip symbol={c} size={16} />
                 </button>
@@ -201,14 +203,14 @@ export function DeckBrowser({
                         className="browser-deck-btn"
                         onClick={() => setInspectingDeck(deck)}
                       >
-                        👁️ Ver Lista
+                        👁️ {t('common', 'search')}
                       </button>
                       <button
                         type="button"
                         className="browser-deck-btn primary"
                         onClick={() => handleCopy(deck)}
                       >
-                        📋 Copiar
+                        📋 {t('common', 'copy')}
                       </button>
                     </div>
                   </div>
@@ -220,32 +222,32 @@ export function DeckBrowser({
       ) : (
         /* Online URL / Text Import View */
         <div className="browser-url-import-view">
-          <h2 className="url-import-title">Importar Mazo desde Enlace o Texto</h2>
+          <h2 className="url-import-title">{t('decks', 'import_deck')}</h2>
           <p style={{ color: '#a0aec0', fontSize: '0.82rem', margin: 0 }}>
-            Pega una URL pública de <strong>Moxfield</strong> (ej. <code>https://www.moxfield.com/decks/...</code>) o <strong>Archidekt</strong>, o pega la lista de cartas en formato Arena o .dck.
+            {t('decks', 'browser_import_hint')}
           </p>
 
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#cbd5e0', marginBottom: 4 }}>
-              URL de Moxfield / Archidekt o Lista de Cartas:
+              {t('decks', 'browser_import_hint')}:
             </label>
             <textarea
               className="url-import-textarea"
               value={importInput}
               onChange={(e) => setImportInput(e.target.value)}
-              placeholder="https://www.moxfield.com/decks/k8N3h...  o pega la lista de cartas aquí..."
+              placeholder={t('decks', 'browser_import_hint')}
             />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#cbd5e0', marginBottom: 4 }}>
-              Nombre personalizado (Opcional):
+              {t('decks', 'import_placeholder')}:
             </label>
             <input
               className="url-import-input"
               value={importName}
               onChange={(e) => setImportName(e.target.value)}
-              placeholder="Nombre del mazo..."
+              placeholder={t('decks', 'import_placeholder')}
             />
           </div>
 
@@ -261,7 +263,7 @@ export function DeckBrowser({
             disabled={importLoading || !importInput.trim()}
             onClick={handleOnlineImport}
           >
-            {importLoading ? 'Importando…' : '🚀 Importar a Mis Mazos'}
+            {importLoading ? t('common', 'loading') : `🚀 ${t('decks', 'import_deck')}`}
           </button>
         </div>
       )}

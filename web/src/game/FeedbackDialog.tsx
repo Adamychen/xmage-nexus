@@ -8,7 +8,7 @@ import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
 import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
-import { useTranslation } from '../i18n'
+import { useTranslation, t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
 
 const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
@@ -23,19 +23,19 @@ function isResultOk(result: { ok: boolean; error?: string }, fallback: string) {
 }
 
 function getFeedbackKicker(prompt: FeedbackPrompt): { icon: string; label: string } {
-  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: 'ELIGE MODO' }
-  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: 'ELIGE HABILIDAD' }
-  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: 'SELECCIONA COLOR' }
-  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: 'NOMBRA UNA CARTA O TIPO' }
+  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: tStatic('game', 'feedback_kicker_mode') }
+  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: tStatic('game', 'feedback_kicker_ability') }
+  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: tStatic('game', 'feedback_kicker_color') }
+  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: tStatic('game', 'feedback_kicker_name') }
   if (prompt.method === 'GAME_CHOOSE_NUMBER' || prompt.method === 'GAME_GET_AMOUNT' || prompt.method === 'GAME_PLAY_XMANA') {
-    return { icon: '🔢', label: 'SELECCIONA CANTIDAD' }
+    return { icon: '🔢', label: tStatic('game', 'feedback_kicker_amount') }
   }
-  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: 'DISTRIBUYE CANTIDADES' }
-  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: 'SELECCIONA JUGADOR' }
-  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: 'ELIGE UN MONTÓN' }
-  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: 'TOMA UNA DECISIÓN' }
-  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: 'CONFIRMACIÓN' }
-  return { icon: '⚔️', label: 'ACCIÓN REQUERIDA' }
+  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: tStatic('game', 'feedback_kicker_multi') }
+  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: tStatic('game', 'feedback_kicker_player') }
+  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: tStatic('game', 'feedback_kicker_pile') }
+  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: tStatic('game', 'feedback_kicker_choice') }
+  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: tStatic('game', 'feedback_kicker_confirm') }
+  return { icon: '⚔️', label: tStatic('game', 'feedback_kicker_required') }
 }
 
 export default function FeedbackDialog() {
@@ -71,11 +71,11 @@ export default function FeedbackDialog() {
   }
 
   const cancel = () => {
-    void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), 'No se pudo cancelar la decisión')
+    void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed'))
   }
 
   const finishOptionalTarget = () => {
-    void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), 'No se pudo finalizar la selección')
+    void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed'))
   }
 
   // ── Scry / Surveil / Reorder dialog (GAME_CHOOSE_CARDS_ORDER or mode === 'order')
@@ -112,11 +112,11 @@ export default function FeedbackDialog() {
                 key={option.id}
                 className="starting-player-btn"
                 disabled={busy}
-                onClick={() => void send(() => sendValue(prompt, option.value), 'No se pudo enviar la selección')}
+                onClick={() => void send(() => sendValue(prompt, option.value), t('errors', 'send_failed'))}
               >
                 <span className="sp-avatar">🧙</span>
                 <span className="sp-name"><FormattedText text={option.label} /></span>
-                <span className="sp-action">Empieza primero →</span>
+                <span className="sp-action">{t('game', 'starting_player_starts_first')}</span>
               </button>
             ))}
           </div>
@@ -143,19 +143,19 @@ export default function FeedbackDialog() {
       <div className="action-prompt-bar targeting-bar">
         <div className="action-prompt-info">
           <span className="action-prompt-title">
-            <FormattedText text={prompt.sourceName ?? 'Objetivo'} />
+            <FormattedText text={prompt.sourceName ?? t('game', 'choose_target')} />
           </span>
           <span className="action-prompt-hint">
             {chosenCount > 0
-              ? `${chosenCount} seleccionado(s)`
-              : 'Haz clic en el objetivo en el tablero'}
+              ? t('game', 'targeting_chosen', { count: chosenCount })
+              : t('game', 'targeting_hint')}
           </span>
         </div>
         <div className="action-prompt-actions">
           {prompt.required === false && (
-            <button disabled={busy} onClick={finishOptionalTarget}>Terminar</button>
+            <button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</button>
           )}
-          <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+          <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'targeting_cancel')}</button>
         </div>
       </div>
     )
@@ -166,11 +166,11 @@ export default function FeedbackDialog() {
     return (
       <div className="action-prompt-bar mana-prompt-bar">
         <div className="action-prompt-info">
-          <span className="action-prompt-title">Pagar maná:</span>
+          <span className="action-prompt-title">{t('game', 'mana_title')}</span>
           <span className="action-prompt-msg">
             <FormattedText text={prompt.message} />
           </span>
-          <span className="action-prompt-hint">Haz clic en tus fuentes de maná, criaturas (Convoke) o artefactos (Improvise)</span>
+          <span className="action-prompt-hint">{t('game', 'mana_hint')}</span>
         </div>
         <div className="action-prompt-actions">
           {prompt.playerId && poolMana(game).map((mana) => (
@@ -178,16 +178,16 @@ export default function FeedbackDialog() {
               key={mana.color}
               className="mana-pool-btn"
               disabled={busy}
-              onClick={() => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, mana.color), 'No se pudo usar la reserva de maná')}
+              onClick={() => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, mana.color), t('errors', 'send_failed_mana'))}
             >
-              Pagar reserva: {mana.label}
+              {t('game', 'mana_pool_pay', { label: mana.label })}
             </button>
           ))}
-          <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), 'No se pudo activar el pago especial')}>
-            Acción especial
+          <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
+            {t('game', 'mana_special')}
           </button>
           <button disabled={busy} onClick={cancel} className="cancel-btn">
-            Cancelar
+            {t('game', 'targeting_cancel')}
           </button>
         </div>
       </div>
@@ -201,21 +201,21 @@ export default function FeedbackDialog() {
         <div className="action-prompt-info">
           <span className="action-prompt-title">{prompt.title}</span>
           <span className="action-prompt-hint">
-            Haz clic en tus criaturas del tablero para declararlas
+            {t('game', 'combat_hint')}
           </span>
         </div>
         <div className="action-prompt-actions">
           {prompt.special && (
-            <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), 'No se pudo declarar el ataque')}>
-              Atacar con todos
+            <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_combat'))}>
+              {t('game', 'combat_attack_all')}
             </button>
           )}
           <button
             className="primary"
             disabled={busy}
-            onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), 'No se pudo confirmar el combate')}
+            onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed_combat'))}
           >
-            {prompt.title === 'Declara atacantes' ? 'Confirmar atacantes' : 'Confirmar bloqueadores'}
+            {prompt.title === 'Declara atacantes' ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')}
           </button>
         </div>
       </div>
@@ -229,7 +229,7 @@ export default function FeedbackDialog() {
         : current.length < prompt.max ? [...current, option.value] : current)
       return
     }
-    void send(() => sendValue(prompt, option.value), 'No se pudo enviar la selección')
+    void send(() => sendValue(prompt, option.value), t('errors', 'send_failed'))
   }
 
   const confirmSelected = () => {
@@ -240,12 +240,12 @@ export default function FeedbackDialog() {
         if (!result.ok) break
       }
       return result
-    }, 'No se pudo enviar la selección')
+    }, t('errors', 'send_failed'))
   }
 
   const confirmAmount = () => {
     const value = Math.max(prompt.min, Math.min(prompt.max, amount))
-    void send(() => cmds.sendPlayerInteger(value, prompt.gameId), 'No se pudo enviar la cantidad')
+    void send(() => cmds.sendPlayerInteger(value, prompt.gameId), t('errors', 'send_failed_amount'))
   }
 
   const confirmMultiAmount = () => {
@@ -255,10 +255,10 @@ export default function FeedbackDialog() {
     })
     const total = values.reduce((sum, value) => sum + value, 0)
     if (total < prompt.min || total > prompt.max) {
-      setStoreError(`La suma debe estar entre ${prompt.min} y ${prompt.max}`)
+      setStoreError(t('game', 'sum_between', { min: prompt.min, max: prompt.max }))
       return
     }
-    void send(() => cmds.sendPlayerString(values.join(' '), prompt.gameId), 'No se pudieron enviar las cantidades')
+    void send(() => cmds.sendPlayerString(values.join(' '), prompt.gameId), t('errors', 'send_failed_amount'))
   }
 
   const kicker = getFeedbackKicker(prompt)
@@ -277,15 +277,15 @@ export default function FeedbackDialog() {
             <div className="feedback-input-box">
               <span className="feedback-input-icon">🏷️</span>
               <input
-                aria-label="Texto libre"
+                aria-label={t('common', 'search')}
                 type="text"
                 value={textValue}
-                placeholder="Escribe un nombre de carta o tipo…"
+                placeholder={t('game', 'string_placeholder')}
                 autoFocus
                 onChange={(event) => setTextValue(event.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && textValue.trim() !== '' && !busy) {
-                    void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')
+                    void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), t('errors', 'send_failed_choice'))
                   }
                 }}
               />
@@ -298,7 +298,7 @@ export default function FeedbackDialog() {
                       key={option.id}
                       className="feedback-choice-card"
                       disabled={busy}
-                      onClick={() => void send(() => cmds.sendPlayerString(option.value, prompt.gameId), 'No se pudo enviar la elección')}
+                      onClick={() => void send(() => cmds.sendPlayerString(option.value, prompt.gameId), t('errors', 'send_failed_choice'))}
                     >
                       <span className="choice-number">{idx + 1}</span>
                       <span className="choice-text"><FormattedText text={option.label} /></span>
@@ -311,11 +311,11 @@ export default function FeedbackDialog() {
               <button
                 className="primary send-btn"
                 disabled={busy || textValue.trim() === ''}
-                onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), 'No se pudo enviar el texto')}
+                onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), t('errors', 'send_failed_choice'))}
               >
-                Confirmar
+                {t('game', 'string_confirm')}
               </button>
-              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
             </div>
           </div>
         )}
@@ -375,8 +375,8 @@ export default function FeedbackDialog() {
               </div>
             )}
             <div className="feedback-dialog-actions">
-              <button className="primary send-btn" disabled={busy} onClick={confirmAmount}>Enviar</button>
-              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+              <button className="primary send-btn" disabled={busy} onClick={confirmAmount}>{t('game', 'integer_confirm')}</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
             </div>
           </div>
         )}
@@ -413,8 +413,8 @@ export default function FeedbackDialog() {
               })}
             </div>
             <div className="feedback-dialog-actions">
-              <button className="primary send-btn" disabled={busy} onClick={confirmMultiAmount}>Confirmar</button>
-              <button disabled={busy} onClick={cancel} className="cancel-btn">Cancelar</button>
+              <button className="primary send-btn" disabled={busy} onClick={confirmMultiAmount}>{t('game', 'multi_confirm')}</button>
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
             </div>
           </div>
         )}
@@ -444,11 +444,11 @@ export default function FeedbackDialog() {
               <div className="feedback-dialog-actions">
                 {prompt.mode === 'uuid' && prompt.max > 1 && (
                   <button className="primary send-btn" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
-                    Confirmar ({selected.length} seleccionada{selected.length !== 1 ? 's' : ''})
+                    {t('game', 'selected_count', { count: selected.length })}
                   </button>
                 )}
                 {prompt.required === false && (
-                  <button disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">Terminar selección</button>
+                  <button disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">{t('game', 'targeting_finish')}</button>
                 )}
               </div>
             )}
@@ -479,9 +479,9 @@ function sendValue(prompt: FeedbackPrompt, value: string) {
     case 'uuid':
       return cmds.sendPlayerUUID(value, prompt.gameId)
     case 'mana':
-      if (!prompt.playerId) return Promise.resolve({ ok: false, error: 'No hay jugador de maná activo' })
+      if (!prompt.playerId) return Promise.resolve({ ok: false, error: tStatic('errors', 'send_failed_mana') })
       return cmds.sendPlayerManaType(prompt.gameId, prompt.playerId, value)
     default:
-      return Promise.resolve({ ok: false, error: 'Tipo de feedback no soportado' })
+      return Promise.resolve({ ok: false, error: tStatic('errors', 'generic_error') })
   }
 }

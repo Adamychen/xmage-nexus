@@ -3,6 +3,8 @@ import type { MatchView, UsersView } from '../net/types'
 import { getFinishedMatches, replayGame } from '../net/commands'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
+import { useTranslation } from '../i18n'
+import { t as tStatic } from '../i18n'
 import './FinishedMatchesPanel.css'
 
 export interface ParsedPlayerScore {
@@ -79,13 +81,13 @@ export function formatRelativeTime(timestamp?: number | string): string {
   const time = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp
   if (isNaN(time)) return ''
   const diffSec = Math.floor((Date.now() - time) / 1000)
-  if (diffSec < 60) return 'Hace un momento'
+  if (diffSec < 60) return tStatic('lobby', 'time_just_now')
   const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return `Hace ${diffMin} min`
+  if (diffMin < 60) return tStatic('lobby', 'time_ago_m', { count: String(diffMin) })
   const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) return `Hace ${diffHours} h`
+  if (diffHours < 24) return tStatic('lobby', 'time_ago_h', { count: String(diffHours) })
   const diffDays = Math.floor(diffHours / 24)
-  return `Hace ${diffDays} d`
+  return tStatic('lobby', 'time_ago_d', { count: String(diffDays) })
 }
 
 interface FinishedMatchesPanelProps {
@@ -99,6 +101,7 @@ export default function FinishedMatchesPanel({
   users = [],
   onInspectUser,
 }: FinishedMatchesPanelProps) {
+  const { t } = useTranslation()
   const [matches, setMatches] = useState<MatchView[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -152,7 +155,7 @@ export default function FinishedMatchesPanel({
       )
     }
 
-    // Ordenar de más reciente a más antigua
+    // Ordenar de mas reciente a mas antigua
     list.sort((a, b) => {
       const timeA = typeof a.endTime === 'string' ? new Date(a.endTime).getTime() : (a.endTime ?? 0)
       const timeB = typeof b.endTime === 'string' ? new Date(b.endTime).getTime() : (b.endTime ?? 0)
@@ -178,11 +181,11 @@ export default function FinishedMatchesPanel({
         <div className="finished-matches-title-wrap">
           <div className="finished-matches-title-row">
             <span className="finished-matches-icon">📜</span>
-            <h2 className="finished-matches-title">Partidas Finalizadas</h2>
+            <h2 className="finished-matches-title">{t('lobby', 'matches_title')}</h2>
             <span className="finished-matches-count-badge">{filteredMatches.length}</span>
           </div>
           <p className="finished-matches-subtitle">
-            Historial de resultados y repeticiones de los duelos terminados recientemente en la sala.
+            {t('lobby', 'matches_subtitle')}
           </p>
         </div>
 
@@ -191,7 +194,7 @@ export default function FinishedMatchesPanel({
             <input
               type="text"
               className="matches-search-input"
-              placeholder="🔍 Buscar por jugador o formato…"
+              placeholder={t('common', 'search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -212,7 +215,7 @@ export default function FinishedMatchesPanel({
               className={`filter-chip ${filterType === 'all' ? 'active' : ''}`}
               onClick={() => setFilterType('all')}
             >
-              Todas ({matches.length})
+              {t('lobby', 'matches_filter_all', { count: String(matches.length) })}
             </button>
             <button
               type="button"
@@ -235,10 +238,10 @@ export default function FinishedMatchesPanel({
             className={`matches-refresh-btn ${loading ? 'spinning' : ''}`}
             onClick={fetchMatches}
             disabled={loading}
-            title="Actualizar historial de partidas"
+            title={t('common', 'refresh')}
           >
             <span className="refresh-icon">🔄</span>
-            <span>{loading ? 'Cargando…' : 'Actualizar'}</span>
+            <span>{loading ? t('common', 'loading') : t('common', 'refresh')}</span>
           </button>
         </div>
       </div>
@@ -297,10 +300,10 @@ export default function FinishedMatchesPanel({
                           {scores[0].quit && (
                             <span className="player-quit-tag">
                               {scores[0].timeoutType === 'timer'
-                                ? '⏱️ Tiempo agotado'
+                                ? `⏱️ ${t('lobby', 'match_quit_timeout')}`
                                 : scores[0].timeoutType === 'idle'
-                                ? '💤 Inactivo'
-                                : '🚪 Abandonó'}
+                                ? `💤 ${t('lobby', 'match_quit_idle')}`
+                                : `🚪 ${t('lobby', 'match_quit_abandon')}`}
                             </span>
                           )}
                         </div>
@@ -334,10 +337,10 @@ export default function FinishedMatchesPanel({
                           {scores[1].quit && (
                             <span className="player-quit-tag">
                               {scores[1].timeoutType === 'timer'
-                                ? '⏱️ Tiempo agotado'
+                                ? `⏱️ ${t('lobby', 'match_quit_timeout')}`
                                 : scores[1].timeoutType === 'idle'
-                                ? '💤 Inactivo'
-                                : '🚪 Abandonó'}
+                                ? `💤 ${t('lobby', 'match_quit_idle')}`
+                                : `🚪 ${t('lobby', 'match_quit_abandon')}`}
                             </span>
                           )}
                         </div>
@@ -352,7 +355,7 @@ export default function FinishedMatchesPanel({
                 ) : (
                   <div className="match-single-player-row">
                     <span className="player-raw-text">
-                      {m.result || m.players || 'Resultado final no disponible'}
+                      {m.result || m.players || t('lobby', 'match_no_result')}
                     </span>
                   </div>
                 )}
@@ -361,8 +364,8 @@ export default function FinishedMatchesPanel({
               {/* Match Replays & Footer */}
               <div className="match-card-footer">
                 <div className="match-result-summary">
-                  <span className="result-label">Resultado:</span>
-                  <span className="result-text">{m.result || m.players || 'Concluido'}</span>
+                  <span className="result-label">{t('lobby', 'match_result_label')}</span>
+                  <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>
                 </div>
 
                 {m.games && m.games.length > 0 && (
@@ -374,10 +377,10 @@ export default function FinishedMatchesPanel({
                         className="replay-btn"
                         onClick={() => handleReplay(gId)}
                         disabled={replayingGameId === gId}
-                        title={`Cargar repetición del Juego #${gIdx + 1}`}
+                        title={`${t('common', 'loading')} #${gIdx + 1}`}
                       >
                         <span className="replay-icon">🎬</span>
-                        <span>{replayingGameId === gId ? 'Cargando…' : m.games!.length === 1 ? 'Ver Repetición' : `Repetición J${gIdx + 1}`}</span>
+                        <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
                       </button>
                     ))}
                   </div>
@@ -390,11 +393,11 @@ export default function FinishedMatchesPanel({
         {filteredMatches.length === 0 && !loading && (
           <div className="matches-empty-state">
             <span className="empty-icon">📭</span>
-            <h3 className="empty-title">No hay partidas finalizadas</h3>
+            <h3 className="empty-title">{t('lobby', 'matches_empty')}</h3>
             <p className="empty-desc">
               {searchQuery
-                ? 'No se encontraron partidas que coincidan con la búsqueda.'
-                : 'Aún no ha concluido ninguna partida en esta sala desde que el servidor arrancó.'}
+                ? t('lobby', 'no_tables_found')
+                : t('lobby', 'matches_empty')}
             </p>
           </div>
         )}

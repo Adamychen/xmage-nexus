@@ -27,14 +27,12 @@ export default function FloatingCardPreview({
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [showBackFace, setShowBackFace] = useState(false)
 
-  // Reset face toggle whenever the card changes
   useEffect(() => {
     setShowBackFace(false)
   }, [card?.id, card?.name])
 
   const hasSecondFace = !card?.faceDown && (!!card?.secondCardFace || !!card?.transformable || !!card?.alternateName)
 
-  // Keyboard shortcut: Press Shift or F while hovering to flip
   useEffect(() => {
     if (!hasSecondFace) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,7 +44,6 @@ export default function FloatingCardPreview({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [hasSecondFace])
 
-  // Determine which face to display
   const activeCard: CardView | PermanentView | null = useMemo(() => {
     if (!card) return null
     const isTransformedOnField = (card as PermanentView).transformed === true
@@ -111,11 +108,9 @@ export default function FloatingCardPreview({
     const relRight = anchorRect.right - boardRect.left
     const relBottom = anchorRect.bottom - boardRect.top
 
-    // Check if card is in the bottom hand area
     const isHandCard = relBottom > boardRect.height - 140
 
     if (isHandCard) {
-      // Rise upwards directly above the hand
       const left = Math.max(
         12,
         Math.min(boardRect.width - totalWidth - 12, relLeft + anchorRect.width / 2 - PREVIEW_WIDTH / 2)
@@ -128,7 +123,6 @@ export default function FloatingCardPreview({
         height: `${PREVIEW_HEIGHT}px`,
       }
     } else {
-      // Battlefield/Opponent/Stack: place to the right if fits, otherwise to the left
       const fitsRight = relRight + 16 + totalWidth <= boardRect.width - 12
       const left = fitsRight
         ? relRight + 16
@@ -150,7 +144,6 @@ export default function FloatingCardPreview({
       }
     }
   } else {
-    // Fixed viewport positioning (e.g. from ActionFeed sidebar)
     const fitsLeft = anchorRect.left - totalWidth - 16 >= 12
     const left = fixedSide === 'left' || fitsLeft
       ? Math.max(12, anchorRect.left - totalWidth - 16)
@@ -179,7 +172,6 @@ export default function FloatingCardPreview({
   const manaCost = (activeCard.manaCostLeftStr ?? []).join('')
   const rules = activeCard.rules ?? []
 
-  // Check if keywords should be on the left or right of the card
   const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + PREVIEW_WIDTH + KEYWORDS_WIDTH > (boardRect?.width ?? window.innerWidth) - 20 : false
 
   return (
@@ -189,7 +181,6 @@ export default function FloatingCardPreview({
     >
       <div className="floating-card-main">
         <div className="floating-card-inner">
-          {/* Flip Hint Badge (Double-faced / Transform / MDFC) */}
           {hasSecondFace && (
             <div className="floating-card-flip-badge" title={t('wiki', 'flip_hint')}>
               <span className="flip-icon">🔄</span>
@@ -214,35 +205,30 @@ export default function FloatingCardPreview({
             </div>
           )}
 
-          {/* P/T Badge (Creatures only) */}
           {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'creature') && perm.power && perm.toughness && (
             <div className="floating-card-pt">
               {perm.power}/{perm.toughness}
             </div>
           )}
 
-          {/* Loyalty Badge (Planeswalkers) */}
           {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
             <div className="floating-card-loyalty" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
               🛡️ {perm.loyalty}
             </div>
           )}
 
-          {/* Counters Badge */}
           {activeCard.counters && activeCard.counters.length > 0 && (
             <div className="floating-card-counters">
               +{activeCard.counters.reduce((sum, c) => sum + c.count, 0)} {t('wiki', 'cat_counters').toLowerCase()}
             </div>
           )}
 
-          {/* Token Badge */}
           {(perm.isToken || activeCard.mageObjectType === 'TOKEN') && !perm.copy && (
-            <div className="floating-card-token-badge">TOKEN</div>
+            <div className="floating-card-token-badge">{t('board', 'token')}</div>
           )}
         </div>
       </div>
 
-      {/* Keywords Breakdown Boxes (MTG Arena style) */}
       {keywords.length > 0 && (
         <aside className="floating-card-keywords" aria-label={t('wiki', 'tab_keywords')}>
           {keywords.map((kw) => {

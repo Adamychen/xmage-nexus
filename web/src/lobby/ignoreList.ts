@@ -1,3 +1,5 @@
+import { t } from '../i18n'
+
 const STORAGE_KEY = 'xmage_nexus_ignored_users'
 
 let memoryList: string[] = []
@@ -50,35 +52,35 @@ export function isUserIgnored(username?: string | null): boolean {
 export function addIgnoredUser(username: string): { ok: boolean; message: string } {
   const trimmed = username.trim()
   if (!trimmed) {
-    return { ok: false, message: 'Nombre de usuario inválido.' }
+    return { ok: false, message: t('errors', 'generic_error') }
   }
   const list = loadList()
   if (isUserIgnored(trimmed)) {
-    return { ok: false, message: `El usuario "${trimmed}" ya está en tu lista de ignorados.` }
+    return { ok: false, message: `${t('lobby', 'useraction_ignore')}: "${trimmed}"` }
   }
   const updated = [...list, trimmed]
   saveList(updated)
   return {
     ok: true,
-    message: `🚫 Usuario "${trimmed}" añadido a tu lista de ignorados (total: ${updated.length}).`,
+    message: `🚫 ${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
   }
 }
 
 export function removeIgnoredUser(username: string): { ok: boolean; message: string } {
   const trimmed = username.trim()
   if (!trimmed) {
-    return { ok: false, message: 'Nombre de usuario inválido.' }
+    return { ok: false, message: t('errors', 'generic_error') }
   }
   const list = loadList()
   const lower = trimmed.toLowerCase()
   if (!list.some((u) => u.toLowerCase() === lower)) {
-    return { ok: false, message: `El usuario "${trimmed}" no estaba en tu lista de ignorados.` }
+    return { ok: false, message: `${t('errors', 'generic_error')}: "${trimmed}"` }
   }
   const updated = list.filter((u) => u.toLowerCase() !== lower)
   saveList(updated)
   return {
     ok: true,
-    message: `🔓 Usuario "${trimmed}" eliminado de tu lista de ignorados (total: ${updated.length}).`,
+    message: `🔓 ${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
   }
 }
 
@@ -99,12 +101,12 @@ export function handleIgnoreCommand(text: string): { handled: boolean; message: 
       if (list.length === 0) {
         return {
           handled: true,
-          message: 'ℹ️ Tu lista de ignorados está vacía. Usa `/ignore <usuario>` para silenciar.',
+          message: `ℹ️ ${t('lobby', 'useraction_ignore')}: ${t('decks', 'deck_no_cards')}`,
         }
       }
       return {
         handled: true,
-        message: `ℹ️ Lista de usuarios ignorados (${list.length}): [${list.join(', ')}]`,
+        message: `ℹ️ ${t('lobby', 'useraction_ignore')} (${list.length}): [${list.join(', ')}]`,
       }
     }
     const res = addIgnoredUser(targetUser)
@@ -115,7 +117,7 @@ export function handleIgnoreCommand(text: string): { handled: boolean; message: 
     if (!targetUser) {
       return {
         handled: true,
-        message: 'ℹ️ Uso: `/unignore <usuario>` para dejar de ignorar a un jugador.',
+        message: `ℹ️ ${t('lobby', 'useraction_ignore')}`,
       }
     }
     const res = removeIgnoredUser(targetUser)

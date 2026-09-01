@@ -1,4 +1,5 @@
 import { ManaPip } from './ArenaManaSymbols'
+import { useTranslation } from '../i18n'
 import './ArenaFilterBar.css'
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
@@ -27,6 +28,7 @@ export function ArenaFilterBar({
   onReset: () => void
   loading?: boolean
 }) {
+  const { t } = useTranslation()
   const hasActiveFilters = query.trim() !== '' || colorFilter.size > 0 || cmcFilter !== null || typeFilter !== null
 
   return (
@@ -39,7 +41,7 @@ export function ArenaFilterBar({
             className="arena-search-input search-input"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Buscar cartas..."
+            placeholder={t('common', 'search')}
           />
           {loading && <div className="arena-grid-spinner small" style={{ marginRight: 6 }} />}
           {query && !loading && (
@@ -47,7 +49,7 @@ export function ArenaFilterBar({
               type="button"
               className="arena-search-clear"
               onClick={() => onQueryChange('')}
-              title="Limpiar búsqueda"
+              title={t('common', 'clear')}
             >
               ×
             </button>
@@ -64,7 +66,7 @@ export function ArenaFilterBar({
                 type="button"
                 className={`mana-orb-btn orb-${c.toLowerCase()} ${active ? 'active' : ''}`}
                 onClick={() => onToggleColor(c)}
-                title={`Filtrar por maná ${c}`}
+                title={`${t('decks', 'filter_cmc')} ${c}`}
               >
                 <ManaPip symbol={c} size={20} />
               </button>
@@ -77,7 +79,7 @@ export function ArenaFilterBar({
       <div className="filter-bar-bottom">
         {/* CMC chips */}
         <div className="arena-filter-chips">
-          <span className="arena-chip-label">CMC</span>
+          <span className="arena-chip-label">{t('decks', 'filter_cmc')}</span>
           {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
             <button
               key={n}
@@ -92,7 +94,7 @@ export function ArenaFilterBar({
 
         {/* Type chips */}
         <div className="arena-filter-chips">
-          <span className="arena-chip-label">Tipo</span>
+          <span className="arena-chip-label">{t('decks', 'filter_type')}</span>
           {TYPES.map((t) => (
             <button
               key={t}
@@ -108,7 +110,7 @@ export function ArenaFilterBar({
         {/* Reset filter button */}
         {hasActiveFilters && (
           <button type="button" className="filter-reset-btn" onClick={onReset}>
-            Resetear filtros
+            {t('common', 'clear')}
           </button>
         )}
       </div>

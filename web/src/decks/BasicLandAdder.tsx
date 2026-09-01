@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BASIC_LAND_PRESETS, countManaPips, suggestBasicLands, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
+import { useTranslation } from '../i18n'
 import './BasicLandAdder.css'
 
 export function BasicLandAdder({
@@ -19,6 +20,7 @@ export function BasicLandAdder({
   onRemoveLand: (preset: BasicLandPreset) => void
   onApplySuggestedLands: (suggested: { name: string; setCode: string; cardNumber: string; amount: number }[]) => void
 }) {
+  const { t } = useTranslation()
   const isCommander = format === 'Commander'
   const defaultTarget = isCommander ? 36 : (format === 'Limited' ? 17 : 24)
   const [targetCount, setTargetCount] = useState<number>(defaultTarget)
@@ -44,7 +46,7 @@ export function BasicLandAdder({
     <div className="basic-land-adder">
       {/* Compact Quick Bar */}
       <div className="basic-land-quick-row">
-        <span className="basic-land-label">Tierras Básicas:</span>
+        <span className="basic-land-label">{t('decks', 'basic_lands')}:</span>
         <div className="basic-land-buttons">
           {BASIC_LAND_PRESETS.map((preset) => {
             const count = getLandCount(preset.name)
@@ -79,9 +81,9 @@ export function BasicLandAdder({
           type="button"
           className={`basic-land-suggest-toggle-btn ${isOpen ? 'active' : ''}`}
           onClick={() => setIsOpen(!isOpen)}
-          title="Abrir calculador y asistente de base de maná"
+          title={t('decks', 'basic_lands')}
         >
-          🪄 Sugerir Base de Maná
+          🪄 {t('decks', 'basic_lands')}
         </button>
       </div>
 
@@ -89,9 +91,9 @@ export function BasicLandAdder({
       {isOpen && (
         <div className="basic-land-suggester-panel">
           <div className="suggester-header">
-            <span className="suggester-title">Asistente de Base de Maná</span>
+            <span className="suggester-title">{t('decks', 'basic_lands')}</span>
             <div className="suggester-pips-summary">
-              <span>Símbolos de maná en hechizos:</span>
+              <span>{t('decks', 'mana_curve')}:</span>
               {totalPips > 0 ? (
                 <div className="pips-chips">
                   {pips.W > 0 && <span className="pip-chip pip-w"><ManaPip symbol="W" size={14} /> {pips.W}</span>}
@@ -101,14 +103,14 @@ export function BasicLandAdder({
                   {pips.G > 0 && <span className="pip-chip pip-g"><ManaPip symbol="G" size={14} /> {pips.G}</span>}
                 </div>
               ) : (
-                <span className="pips-empty">Sin hechizos con coste de color</span>
+                <span className="pips-empty">{t('decks', 'basics_empty')}</span>
               )}
             </div>
           </div>
 
           <div className="suggester-action-row">
             <label className="suggester-target-label">
-              Total de tierras sugeridas:
+              {t('decks', 'total_cards')}:
               <input
                 type="number"
                 min={1}
@@ -124,7 +126,7 @@ export function BasicLandAdder({
               disabled={totalPips === 0}
               onClick={handleSuggest}
             >
-              Aplicar Distribución Proporcional
+              {t('common', 'confirm')}
             </button>
           </div>
         </div>

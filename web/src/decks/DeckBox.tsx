@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { DeckV2 } from './types'
 import { deckMainCount } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
+import { useTranslation } from '../i18n'
 import './DeckBox.css'
 
 function useDeckCoverUrl(deck: DeckV2): string | null {
@@ -50,6 +51,7 @@ function useDeckCoverUrl(deck: DeckV2): string | null {
 }
 
 export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?: boolean; onSelect?: () => void }) {
+  const { t } = useTranslation()
   const coverUrl = useDeckCoverUrl(deck)
   const total = deckMainCount(deck)
   const colors = deck.colors
@@ -64,7 +66,7 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
       <div className="deck-box-art">
         {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deck.name.slice(0, 2).toUpperCase()}</div>}
         <div className="deck-box-art-scrim" />
-        <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} válido`}>
+        <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} ${t('decks', 'format_legal')}`}>
           {isValid ? (
             <span className="format-badge-valid">✓ {deck.format}</span>
           ) : (
@@ -84,7 +86,7 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
         {colors.length === 0 && <span className="deck-box-colors"><span className="mana-pip pip-c">C</span></span>}
       </div>
       <div className="deck-box-meta">
-        <span className="deck-box-count">{total} cartas</span>
+        <span className="deck-box-count">{total} {t('decks', 'total_cards')}</span>
         {deck.favorite && <span className="deck-box-fav">★</span>}
         {deck.source === 'precon' && <span className="deck-box-precon">Precon</span>}
       </div>
@@ -94,11 +96,12 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
 }
 
 export function DeckBoxCreate({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation()
   return (
     <div className="deck-box deck-box-create" onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
       <div className="deck-box-create-inner">
         <span className="deck-box-create-plus">+</span>
-        <span className="deck-box-create-label">Crear Mazo</span>
+        <span className="deck-box-create-label">{t('decks', 'box_create')}</span>
       </div>
     </div>
   )

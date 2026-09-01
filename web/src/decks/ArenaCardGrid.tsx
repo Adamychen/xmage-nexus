@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
+import { useTranslation } from '../i18n'
 import './ArenaCardGrid.css'
 
 export function ArenaCardGrid({
@@ -29,6 +30,7 @@ export function ArenaCardGrid({
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
 }) {
+  const { t } = useTranslation()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export function ArenaCardGrid({
       <div className="arena-card-grid-container">
         <div className="arena-grid-status-box">
           <div className="arena-grid-spinner" />
-          <span>Buscando cartas en la biblioteca…</span>
+          <span>{t('common', 'loading')}</span>
         </div>
       </div>
     )
@@ -116,7 +118,7 @@ export function ArenaCardGrid({
               onClick={() => onAdd(card)}
               onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={onLeave}
-              title={`${card.name} — Clic o arrastra para añadir al mazo`}
+              title={`${card.name} — ${t('decks', 'builder_drag_hint')}`}
             >
               {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
               <div className="arena-card-pips">
@@ -144,7 +146,7 @@ export function ArenaCardGrid({
                   </div>
                 )}
                 <div className="arena-grid-card-overlay">
-                  <span className="arena-add-badge search-card-add">+ Añadir</span>
+                  <span className="arena-add-badge search-card-add">+ {t('common', 'search')}</span>
                 </div>
               </div>
             </div>
@@ -157,15 +159,15 @@ export function ArenaCardGrid({
         {loadingMore && (
           <div className="arena-grid-loading-more">
             <div className="arena-grid-spinner small" />
-            <span>Descargando más cartas de Scryfall…</span>
+            <span>{t('common', 'loading')}</span>
           </div>
         )}
 
         {cards.length === 0 && !loading && (
           <div className="arena-grid-status-box">
-            <span>No se encontraron cartas con esos filtros.</span>
+            <span>{t('decks', 'sample_no_cards')}</span>
             <small style={{ color: '#718096' }}>
-              Prueba a buscar por nombre o cambiar los filtros de color y tipo.
+              {t('decks', 'builder_search_hint')}
             </small>
           </div>
         )}
@@ -175,7 +177,7 @@ export function ArenaCardGrid({
       <div className="arena-grid-footer">
         <div className="arena-footer-left">
           <span className="arena-grid-count">
-            {cards.length.toLocaleString()} {totalCards ? `de ${totalCards.toLocaleString()}` : ''} cartas
+            {cards.length.toLocaleString()} {totalCards ? `de ${totalCards.toLocaleString()}` : ''} {t('decks', 'total_cards')}
           </span>
         </div>
 
@@ -183,24 +185,24 @@ export function ArenaCardGrid({
           {loadingMore ? (
             <div className="arena-footer-loading">
               <div className="arena-grid-spinner small" />
-              <span>Cargando cartas…</span>
+              <span>{t('common', 'loading')}</span>
             </div>
           ) : hasMore ? (
             <button
               type="button"
               className="arena-footer-load-btn"
               onClick={() => onLoadMore?.()}
-              title="Cargar siguiente lote de cartas"
+              title={t('common', 'loading')}
             >
-              ⚡ Cargar más cartas (+175)
+              ⚡ {t('common', 'loading')}
             </button>
           ) : cards.length > 0 ? (
-            <span className="arena-footer-done">✓ Catálogo completo cargado</span>
+            <span className="arena-footer-done">✓ {t('common', 'done')}</span>
           ) : null}
         </div>
 
         <div className="arena-footer-right">
-          <span>Arrastra al mazo o haz clic para añadir</span>
+          <span>{t('decks', 'builder_drag_hint')}</span>
         </div>
       </div>
     </div>

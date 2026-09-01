@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { useTranslation } from './i18n'
 import LoginScreen from './lobby/LoginScreen'
 import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
@@ -9,6 +10,7 @@ import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 
 export default function App() {
+  const { t } = useTranslation()
   const phase = usePhase()
   const connecting = useStore((s) => s.connecting)
   const wsAlive = useStore((s) => s.wsAlive)
@@ -37,7 +39,7 @@ export default function App() {
 
   return (
     <>
-      {reconnecting && <div className="reconnect-banner">Conexión con el proxy perdida — reconectando…</div>}
+      {reconnecting && <div className="reconnect-banner">{t('common', 'reconnecting')}</div>}
       {phase === 'lobby' ? (
         <LobbyScreen />
       ) : phase === 'spectating_pending' ? (
@@ -49,7 +51,7 @@ export default function App() {
           <div className="login-card panel connecting-splash">
             <div className="login-header">
               <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
-              <p className="subtitle">Conectando al servidor XMage…</p>
+              <p className="subtitle">{t('common', 'connecting_server')}</p>
             </div>
             <div className="connecting-spinner" />
           </div>
@@ -61,7 +63,17 @@ export default function App() {
       <ConstructScreen />
       <GameEndDialog />
       <footer className="app-attribution">
-        Card images courtesy of <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a> · Not affiliated with Wizards of the Coast
+        {(() => {
+          const attr = t('common', 'attribution_scryfall')
+          const parts = attr.split('Scryfall')
+          return (
+            <>
+              {parts[0]}
+              <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a>
+              {parts[1] ?? ' · Not affiliated with Wizards of the Coast'}
+            </>
+          )
+        })()}
       </footer>
     </>
   )

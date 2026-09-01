@@ -169,7 +169,7 @@ export default function GameBoard({
 
   const onHandCardClick = onPlayableClick
 
-  /** Mano del jugador de abajo en modo espectador (revelada o vista). */
+  /** Bottom player hand in spectator mode (revealed or viewed). */
   const spectatorBottomHand = useMemo(() => {
     if (!isSpectator || !oppBottom) return {}
     const watched =

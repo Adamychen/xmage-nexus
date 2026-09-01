@@ -1,5 +1,6 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
+import { t } from '../i18n'
 
 export interface FormatRuleConfig {
   name: DeckFormat
@@ -218,20 +219,20 @@ export function validateDeckForFormat(
     if (mainTotal < config.minMain) {
       issues.push({
         type: 'deck_size',
-        message: `El mazo debe tener exactamente ${config.minMain} cartas (actualmente: ${mainTotal}).`,
+        message: `${t('decks', 'format_illegal')}: ${mainTotal}/${config.minMain}`,
         severity: 'warning',
       })
     } else if (config.maxMain && mainTotal > config.maxMain) {
       issues.push({
         type: 'deck_size',
-        message: `El mazo excede el límite de ${config.maxMain} cartas (actualmente: ${mainTotal}).`,
+        message: `${t('decks', 'format_illegal')}: ${mainTotal}/${config.maxMain}`,
         severity: 'error',
       })
     }
     if (sideTotal > config.maxSideboard) {
       issues.push({
         type: 'sideboard_size',
-        message: `En ${config.displayName} no se permite banquillo (${sideTotal} cartas).`,
+        message: `${t('decks', 'sideboard')}: ${sideTotal}/${config.maxSideboard}`,
         severity: 'error',
       })
     }
@@ -239,14 +240,14 @@ export function validateDeckForFormat(
     if (mainTotal < config.minMain) {
       issues.push({
         type: 'deck_size',
-        message: `El mazo principal debe tener al menos ${config.minMain} cartas (actualmente: ${mainTotal}).`,
+        message: `${t('decks', 'format_illegal')}: ${mainTotal}/${config.minMain}`,
         severity: 'warning',
       })
     }
     if (sideTotal > config.maxSideboard) {
       issues.push({
         type: 'sideboard_size',
-        message: `El banquillo excede el límite de ${config.maxSideboard} cartas (actualmente: ${sideTotal}).`,
+        message: `${t('decks', 'sideboard')}: ${sideTotal}/${config.maxSideboard}`,
         severity: 'error',
       })
     }
@@ -275,7 +276,7 @@ export function validateDeckForFormat(
     } else {
       issues.push({
         type: 'commander',
-        message: 'No se ha seleccionado ningún Comandante para el mazo.',
+        message: `${t('decks', 'commander')}: ${t('decks', 'deck_no_cards')}`,
         severity: 'error',
       })
     }
@@ -294,7 +295,7 @@ export function validateDeckForFormat(
       if (name.toLowerCase() === 'seven dwarves' && count > 7) {
         const issue: ValidationIssue = {
           type: 'copy_limit',
-          message: `Máximo 7 copias de ${name} (tienes ${count}).`,
+          message: `${name}: ${t('decks', 'format_illegal')} (7/${count})`,
           cardName: name,
           severity: 'error',
         }
@@ -304,9 +305,7 @@ export function validateDeckForFormat(
       } else if (name.toLowerCase() !== 'seven dwarves' && count > config.maxCopies) {
         const issue: ValidationIssue = {
           type: 'copy_limit',
-          message: config.isSingleton
-            ? `Formato Singleton: solo se permite 1 copia de ${name} (tienes ${count}).`
-            : `Máximo ${config.maxCopies} copias de ${name} (tienes ${count}).`,
+          message: `${name}: ${t('decks', 'format_illegal')} (${config.maxCopies}/${count})`,
           cardName: name,
           severity: 'error',
         }
@@ -322,7 +321,7 @@ export function validateDeckForFormat(
       if (status === 'banned') {
         const issue: ValidationIssue = {
           type: 'banned',
-          message: `${name} está prohibida (banned) en ${config.displayName}.`,
+          message: `${name}: ${t('decks', 'format_illegal')} (${config.displayName})`,
           cardName: name,
           severity: 'error',
         }
@@ -332,7 +331,7 @@ export function validateDeckForFormat(
       } else if (status === 'not_legal') {
         const issue: ValidationIssue = {
           type: 'not_legal',
-          message: `${name} no es legal en ${config.displayName}.`,
+          message: `${name}: ${t('decks', 'format_illegal')} (${config.displayName})`,
           cardName: name,
           severity: 'error',
         }
@@ -342,7 +341,7 @@ export function validateDeckForFormat(
       } else if (status === 'restricted' && count > 1) {
         const issue: ValidationIssue = {
           type: 'restricted',
-          message: `${name} está restringida a 1 sola copia en ${config.displayName}.`,
+          message: `${name}: ${t('decks', 'format_illegal')} (${config.displayName})`,
           cardName: name,
           severity: 'error',
         }
@@ -359,7 +358,7 @@ export function validateDeckForFormat(
       if (invalidColors.length > 0) {
         const issue: ValidationIssue = {
           type: 'color_identity',
-          message: `${name} contiene colores (${invalidColors.join(', ')}) fuera de la identidad del Comandante.`,
+          message: `${name}: ${t('decks', 'format_illegal')} (${invalidColors.join(', ')})`,
           cardName: name,
           severity: 'error',
         }

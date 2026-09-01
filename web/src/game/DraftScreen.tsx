@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
 import type { SimpleCardView } from '../net/types'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
+import { useTranslation } from '../i18n'
 import './DraftScreen.css'
 
 function formatTime(seconds: number): string {
@@ -13,6 +14,7 @@ function formatTime(seconds: number): string {
 }
 
 export default function DraftScreen() {
+  const { t } = useTranslation()
   const draft = useStore((s) => s.draft)
   useEffect(() => {
     if (draft && getState().phase !== 'game') setState({ phase: 'game' })
@@ -195,28 +197,28 @@ export default function DraftScreen() {
               <div className={`draft-timer ${urgent ? 'urgent' : ''} ${picking ? 'picking' : 'waiting'}`}>
                 <div className="draft-timer-bar" style={{ width: `${pct}%` }} />
                 <span className="draft-timer-text" data-testid="draft-timeout">{formatTime(timeLeft)}</span>
-                <span className="draft-timer-label">{picking ? 'Tu turno' : 'Esperando'}</span>
+                <span className="draft-timer-label">{picking ? t('game', 'draft_your_turn') : t('game', 'draft_waiting')}</span>
               </div>
             )}
-            <button type="button" className="draft-quit-btn" onClick={() => void handleQuit()} title="Abandonar draft">
-              Salir
+            <button type="button" className="draft-quit-btn" onClick={() => void handleQuit()} title={t('game', 'draft_quit_title')}>
+              {t('game', 'draft_quit')}
             </button>
           </div>
         </header>
 
         <div className="draft-status">
           {picking ? (
-            <span className="draft-status-picking">Elige una carta del booster — clic para draftear, clic derecho para marcar</span>
+            <span className="draft-status-picking">{t('game', 'draft_pick_long')}</span>
           ) : (
-            <span className="draft-status-waiting">Esperando a que los demás jugadores elijan…</span>
+            <span className="draft-status-waiting">{t('game', 'draft_waiting')}</span>
           )}
-          <span className="draft-status-count">{boosterCards.length} carta{boosterCards.length !== 1 ? 's' : ''} en booster · {pickCards.length} pick{pickCards.length !== 1 ? 's' : ''}</span>
+          <span className="draft-status-count">{t('game', 'draft_status_count', { booster: String(boosterCards.length), boosterPlural: boosterCards.length !== 1 ? 's' : '', picks: String(pickCards.length), picksPlural: pickCards.length !== 1 ? 's' : '' })}</span>
         </div>
 
         <div className="draft-booster-area">
           <h3 className="draft-section-title">Booster</h3>
           {boosterCards.length === 0 ? (
-            <div className="draft-empty">Cargando booster…</div>
+            <div className="draft-empty">{t('game', 'draft_loading')}</div>
           ) : (
             <div className="draft-grid" data-testid="draft-booster">
               {boosterCards.map((card) => {
@@ -261,9 +263,9 @@ export default function DraftScreen() {
         </div>
 
         <div className="draft-picks-area">
-          <h3 className="draft-section-title">Tus picks ({pickCards.length})</h3>
+          <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(pickCards.length) })}</h3>
           {pickCards.length === 0 ? (
-            <div className="draft-picks-empty">Aún no has drafteado cartas — tus picks aparecerán aquí</div>
+            <div className="draft-picks-empty">{t('game', 'draft_empty')}</div>
           ) : (
             <div className="draft-picks-grid" data-testid="draft-picks">
               {pickCards.map((card) => {

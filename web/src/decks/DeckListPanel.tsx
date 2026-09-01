@@ -3,6 +3,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
 import { ArenaCardStrip } from './ArenaCardStrip'
+import { useTranslation } from '../i18n'
 import './DeckListPanel.css'
 
 function getCardKey(c: DeckCard): string {
@@ -10,16 +11,16 @@ function getCardKey(c: DeckCard): string {
 }
 
 function categorizeCard(typeLine?: string): string {
-  if (!typeLine) return 'Otros'
-  const t = typeLine.toLowerCase()
-  if (t.includes('creature') || t.includes('criatura')) return 'Criaturas'
-  if (t.includes('planeswalker')) return 'Planeswalkers'
-  if (t.includes('instant') || t.includes('instantáneo')) return 'Instantáneos'
-  if (t.includes('sorcery') || t.includes('conjuro')) return 'Conjuros'
-  if (t.includes('enchantment') || t.includes('encantamiento')) return 'Encantamientos'
-  if (t.includes('artifact') || t.includes('artefacto')) return 'Artefactos'
-  if (t.includes('land') || t.includes('tierra')) return 'Tierras'
-  return 'Otros'
+  if (!typeLine) return 'other'
+  const tl = typeLine.toLowerCase()
+  if (tl.includes('creature') || tl.includes('criatura')) return 'creatures'
+  if (tl.includes('planeswalker')) return 'planeswalkers'
+  if (tl.includes('instant') || tl.includes('instantáneo')) return 'instants'
+  if (tl.includes('sorcery') || tl.includes('conjuro')) return 'sorceries'
+  if (tl.includes('enchantment') || tl.includes('encantamiento')) return 'enchantments'
+  if (tl.includes('artifact') || tl.includes('artefacto')) return 'artifacts'
+  if (tl.includes('land') || tl.includes('tierra')) return 'lands'
+  return 'other'
 }
 
 export default function DeckListPanel({
@@ -57,6 +58,7 @@ export default function DeckListPanel({
   onDropCard?: (cardData: any, target: 'main' | 'sideboard') => void
   onDropFile?: (f: File) => void
 }) {
+  const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -101,14 +103,24 @@ export default function DeckListPanel({
     : cards
 
   // Group main cards by category
-  const categoriesOrder = ['Criaturas', 'Planeswalkers', 'Instantáneos', 'Conjuros', 'Artefactos', 'Encantamientos', 'Tierras', 'Otros']
+  const categoriesOrder = ['creatures', 'planeswalkers', 'instants', 'sorceries', 'artifacts', 'enchantments', 'lands', 'other']
+  const catDisplay: Record<string, string> = {
+    creatures: t('decks', 'creatures'),
+    planeswalkers: 'Planeswalkers',
+    instants: t('decks', 'spells'),
+    sorceries: t('decks', 'spells'),
+    artifacts: t('decks', 'lands'),
+    enchantments: t('decks', 'lands'),
+    lands: t('decks', 'lands'),
+    other: t('common', 'all'),
+  }
   const groupedCards = new Map<string, DeckCard[]>()
   for (const cat of categoriesOrder) groupedCards.set(cat, [])
 
   for (const card of mainCardsWithoutCommander) {
     const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
     const cat = categorizeCard(meta?.typeLine)
-    const list = groupedCards.get(cat) ?? groupedCards.get('Otros')!
+    const list = groupedCards.get(cat) ?? groupedCards.get('other')!
     list.push(card)
   }
 
@@ -128,7 +140,7 @@ export default function DeckListPanel({
           {/* Drop indicator prompt */}
           {isDragOver && (
             <div className="arena-drop-target-hint">
-              <span>✨</span> Soltar para añadir al mazo
+              <span>✨</span> {t('decks', 'builder_drag_hint')}
             </div>
           )}
 
@@ -136,7 +148,7 @@ export default function DeckListPanel({
           {commanderCard && (
             <div className="deck-category-section">
               <div className="deck-category-header">
-                <span>Comandante</span>
+                <span>{t('decks', 'commander')}</span>
                 <span className="deck-category-count">1</span>
               </div>
               <ArenaCardStrip
@@ -165,7 +177,7 @@ export default function DeckListPanel({
             return (
               <div key={cat} className="deck-category-section">
                 <div className="deck-category-header">
-                  <span>{cat}</span>
+                  <span>{catDisplay[cat] ?? cat}</span>
                   <span className="deck-category-count">{count}</span>
                 </div>
                 {list.map((card) => {
@@ -197,8 +209,8 @@ export default function DeckListPanel({
           {mainTotal === 0 && (
             <div className="deck-list-empty-hint">
               <span className="empty-hint-icon">🃏</span>
-              <span>El mazo está vacío.</span>
-              <small>Haz clic en las cartas de la biblioteca o arrástralas aquí.</small>
+              <span>{t('decks', 'deck_no_cards')}</span>
+              <small>{t('decks', 'builder_drag_hint')}</small>
             </div>
           )}
 
@@ -206,7 +218,7 @@ export default function DeckListPanel({
           {sideboard.length > 0 && (
             <div className="deck-category-section deck-sideboard-section">
               <div className="deck-category-header">
-                <span>Banquillo (Sideboard)</span>
+                <span>{t('decks', 'sideboard')} (Sideboard)</span>
                 <span className="deck-category-count">{sideTotal}/15</span>
               </div>
               {sideboard.map((card) => {

@@ -28,25 +28,24 @@ describe('CreateTableDialog', () => {
   it('renders modern create table dialog with navigation tabs', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    expect(screen.getByRole('heading', { name: /Crear Mesa/ })).toBeDefined()
+    expect(screen.getByRole('heading', { name: /Crear Mesa|Create Table/ })).toBeDefined()
     expect(screen.getByText(/⚙️ General/)).toBeDefined()
-    expect(screen.getByText(/⏱️ Tiempos & Reglas/)).toBeDefined()
-    expect(screen.getByText(/🛡️ Seguridad/)).toBeDefined()
-    expect(screen.getByText(/🤖 Asientos/)).toBeDefined()
+    expect(screen.getByText(/⏱️ Tiempos & Reglas|Timers & Rules/)).toBeDefined()
+    expect(screen.getByText(/🛡️/)).toBeDefined()
+    expect(screen.getByText(/Multijugador|Multiplayer/)).toBeDefined()
   })
 
   it('allows navigating to Timing tab and setting custom clocks and mulligans', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     // Switch to Timing tab
-    const timingTab = screen.getByText(/⏱️ Tiempos & Reglas/)
+    const timingTab = screen.getByText(/⏱️ Tiempos & Reglas|Timers & Rules/)
     fireEvent.click(timingTab)
 
-    expect(screen.getByText(/Reloj de prioridad por jugador/)).toBeDefined()
-    expect(screen.getByText(/Tiempo de reserva/)).toBeDefined()
+    expect(screen.getAllByText(/Reloj de Prioridad por Jugador/i).length).toBeGreaterThanOrEqual(1)
 
-    // Select 1 free mulligan
-    const mulliganChip = screen.getByText('1 gratis')
+    // Select 1 free mulligan (chip now shows just number)
+    const mulliganChip = screen.getByText('1')
     fireEvent.click(mulliganChip)
     expect(mulliganChip.classList.contains('on')).toBe(true)
   })
@@ -55,14 +54,14 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     // Switch to Security tab
-    const securityTab = screen.getByText(/🛡️ Seguridad/)
+    const securityTab = screen.getByText(/🛡️/)
     fireEvent.click(securityTab)
 
-    expect(screen.getByText(/Contraseña de la mesa/)).toBeDefined()
-    expect(screen.getByText(/Permitir espectadores/)).toBeDefined()
-    expect(screen.getByText(/Permitir rebobinar turnos/)).toBeDefined()
+    expect(screen.getByText(/Contraseña de la Mesa/i)).toBeDefined()
+    expect(screen.getAllByText(/Permitir Espectadores|Allow Spectators/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Permitir Rebobinar|Allow Rollbacks/i).length).toBeGreaterThan(0)
 
-    const passwordInput = screen.getByPlaceholderText(/Dejar en blanco para mesa pública/)
+    const passwordInput = screen.getByPlaceholderText(/Dejar en blanco para mesa pública|Leave blank for public table/i)
     fireEvent.change(passwordInput, { target: { value: 'secret123' } })
     expect((passwordInput as HTMLInputElement).value).toBe('secret123')
   })

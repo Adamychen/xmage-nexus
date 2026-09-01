@@ -34,16 +34,16 @@ describe('HelpWikiModal', () => {
     const phasesTabBtn = screen.getByRole('button', { name: /Fases y Prioridad/i })
     fireEvent.click(phasesTabBtn)
 
-    expect(screen.getByText(/Fase Inicial/i)).toBeDefined()
-    expect(screen.getByText(/Fase de Combate/i)).toBeDefined()
-    expect(screen.getByText(/La Pila \(The Stack\)/i)).toBeDefined()
+    expect(screen.getAllByText(/Enderezar/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Combate — Ataca/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Pila — Último/i).length).toBeGreaterThan(0)
 
     // Switch to Shortcuts tab
     const shortcutsTabBtn = screen.getByRole('button', { name: /Atajos y Controles/i })
     fireEvent.click(shortcutsTabBtn)
 
-    expect(screen.getByText('Espacio')).toBeDefined()
-    expect(screen.getByText(/Pasar Prioridad \/ Resolver/i)).toBeDefined()
+    expect(screen.getAllByText('Espacio').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Pasar Prioridad/i).length).toBeGreaterThan(0)
   })
 
   it('calls onClose when clicking close button or Entendido', () => {
@@ -54,7 +54,7 @@ describe('HelpWikiModal', () => {
     fireEvent.click(closeBtn)
     expect(onClose).toHaveBeenCalledTimes(1)
 
-    const understoodBtn = screen.getByRole('button', { name: 'Entendido' })
+    const understoodBtn = screen.getByRole('button', { name: 'Listo' })
     fireEvent.click(understoodBtn)
     expect(onClose).toHaveBeenCalledTimes(2)
   })

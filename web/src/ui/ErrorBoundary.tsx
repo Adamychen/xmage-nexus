@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { t } from '../i18n'
 
 interface Props {
   children: ReactNode
@@ -29,15 +30,11 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (!this.state.error) return this.props.children
     return (
       <div className="crash-screen">
-        <h1>Algo salió mal</h1>
-        <p>
-          La interfaz falló y se detuvo para no congelar la pestaña. Recarga la página para
-          reintentar (si vuelve a pasar, revisa que la aceleración por hardware del navegador
-          esté activada).
-        </p>
+        <h1>{t('common', 'crash_title')}</h1>
+        <p>{t('common', 'crash_desc')}</p>
         <pre>{String(this.state.error?.message ?? this.state.error)}</pre>
         <button className="primary" onClick={() => window.location.reload()}>
-          Recargar
+          {t('common', 'reload')}
         </button>
       </div>
     )

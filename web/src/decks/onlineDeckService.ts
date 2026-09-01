@@ -2,6 +2,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckFormat, DeckV2 } from './types'
 import { makeDeckId } from './types'
 import { parseAnyDeck } from './parseDck'
+import { t } from '../i18n'
 
 export interface OnlineDeckSummary {
   id: string
@@ -176,7 +177,7 @@ export async function loadDeckFromOnlineSource(input: string, customName?: strin
   }
 
   // 3. Raw Deck text (Arena, MTGO, .dck, Plain text)
-  const parsed = parseAnyDeck(trimmed, customName || 'Mazo Importado')
+  const parsed = parseAnyDeck(trimmed, customName || t('decks', 'import_placeholder'))
   if (parsed && (parsed.cards.length > 0 || parsed.sideboard.length > 0)) {
     return {
       ...parsed,

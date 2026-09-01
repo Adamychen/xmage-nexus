@@ -1,7 +1,9 @@
 import { useStore, setState } from '../state/store'
 import CardSlot from '../board/CardSlot'
+import { useTranslation } from '../i18n'
 
 export default function LimitedDeckDialog() {
+  const { t } = useTranslation()
   const viewer = useStore((s) => s.viewer)
   if (!viewer) return null
 
@@ -18,12 +20,12 @@ export default function LimitedDeckDialog() {
       >
         <header className="card-grid-header">
           <div className="feedback-kicker">
-            <span className="kicker-icon">🗂️</span> VISOR DE CARTAS
+            <span className="kicker-icon">🗂️</span> {t('dialogs', 'viewer_title')}
           </div>
           <div className="card-grid-title-row">
             <h2 id="viewer-title">{viewer.title}</h2>
             <span className="card-grid-count-badge">
-              {viewer.cards.length} carta{viewer.cards.length !== 1 ? 's' : ''}
+              {viewer.cards.length} {viewer.cards.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')}
             </span>
           </div>
         </header>
@@ -38,12 +40,12 @@ export default function LimitedDeckDialog() {
           </div>
           {viewer.cards.length === 0 && (
             <div className="card-grid-empty">
-              <p>No hay cartas que mostrar</p>
+              <p>{t('dialogs', 'viewer_empty')}</p>
             </div>
           )}
         </div>
         <footer className="card-grid-actions">
-          <button onClick={close}>Cerrar</button>
+          <button onClick={close}>{t('dialogs', 'viewer_close')}</button>
         </footer>
       </section>
     </div>

@@ -226,7 +226,7 @@ export default function LeaderboardModal({
                               <CountryFlag flagName={u.flagName} />
                               <span className="leaderboard-user-name">
                                 {u.userName}
-                                {isMe && <span className="me-badge">Tú</span>}
+                                {isMe && <span className="me-badge">{t('game', 'you')}</span>}
                               </span>
                               {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
                             </div>
@@ -248,14 +248,14 @@ export default function LeaderboardModal({
                                 </div>
                               </div>
                             ) : (
-                              <span className="winrate-na" title="Sin partidas registradas todavía">—</span>
+                              <span className="winrate-na" title={t('lobby', 'leaderboard_no_games_hint')}>—</span>
                             )}
                           </td>
                           <td>
                             {u.infoGames ? (
-                              <span className="status-playing">⚔️ En partida</span>
+                              <span className="status-playing">⚔️ {t('lobby', 'in_game')}</span>
                             ) : (
-                              <span className="status-idle">En lobby</span>
+                              <span className="status-idle">{t('lobby', 'in_lobby')}</span>
                             )}
                           </td>
                         </tr>
@@ -265,7 +265,7 @@ export default function LeaderboardModal({
                     {sortedUsers.length === 0 && (
                       <tr>
                         <td colSpan={7} className="leaderboard-empty-cell">
-                          No se encontraron jugadores que coincidan con la búsqueda.
+                          {t('lobby', 'leaderboard_no_results')}
                         </td>
                       </tr>
                     )}
@@ -280,14 +280,14 @@ export default function LeaderboardModal({
               {!isMyProfile && (
                 <div className="profile-inspect-banner">
                   <span>
-                    Estás inspeccionando el perfil de <strong>{targetUser?.userName}</strong>
+                    {t('lobby', 'leaderboard_inspecting', { username: targetUser?.userName ?? '' })}
                   </span>
                   <button
                     type="button"
                     className="profile-back-my-btn"
                     onClick={() => setTargetUsername(currentUsername)}
                   >
-                    👤 Ver mi propio perfil
+                    👤 {t('lobby', 'leaderboard_view_own')}
                   </button>
                 </div>
               )}
@@ -303,15 +303,15 @@ export default function LeaderboardModal({
                     <div className="profile-rank-name-row">
                       {targetUser?.flagName && <CountryFlag flagName={targetUser.flagName} />}
                       <h3 className="profile-rank-username">{targetUser?.userName}</h3>
-                      {isMyProfile && <span className="me-badge">Tú</span>}
+                      {isMyProfile && <span className="me-badge">{t('game', 'you')}</span>}
                       {targetUser?.infoPing && <PingBadge infoPing={targetUser.infoPing} compact />}
                     </div>
                     <span className="profile-rank-tier" style={{ color: displayedRank.color }}>
                       {displayedRank.label}
                     </span>
-                    <span className="profile-rank-elo">⭐ {displayedElo} ELO Glicko Oficial</span>
+                    <span className="profile-rank-elo">⭐ {t('lobby', 'leaderboard_official_elo', { elo: String(displayedElo) })}</span>
                     <span className="profile-rank-desc">
-                      Rango competitivo en partidas puntuadas (Ranked Matches)
+                      {t('lobby', 'leaderboard_ranked_desc')}
                     </span>
                   </div>
                 </div>
@@ -320,9 +320,9 @@ export default function LeaderboardModal({
                 {displayedRank.nextTierName && (
                   <div className="profile-progress-box">
                     <div className="progress-labels">
-                      <span>Progreso hacia {displayedRank.nextTierName}</span>
+                      <span>{t('lobby', 'leaderboard_progress_to', { tier: displayedRank.nextTierName })}</span>
                       <span className="progress-value">
-                        {displayedElo} / {displayedRank.nextTierMinElo} ELO ({displayedRank.progressPercent}%)
+                        {t('lobby', 'leaderboard_progress_value', { elo: String(displayedElo), next: String(displayedRank.nextTierMinElo), percent: String(displayedRank.progressPercent) })}
                       </span>
                     </div>
                     <div className="progress-bar-track">
@@ -338,7 +338,7 @@ export default function LeaderboardModal({
                 )}
                 {!displayedRank.nextTierName && (
                   <div className="profile-mythic-badge">
-                    <span>👑 ¡Ha alcanzado el rango máximo Mítico! Enhorabuena maestro.</span>
+                    <span>{t('lobby','leaderboard_col_tier')} {t('lobby', 'leaderboard_mythic_badge')}</span>
                   </div>
                 )}
               </div>
@@ -348,7 +348,7 @@ export default function LeaderboardModal({
                 <div className="format-card">
                   <div className="format-card-header">
                     <span className="format-icon">⭐</span>
-                    <span className="format-title">Construido (Ranked)</span>
+                    <span className="format-title">{t('lobby', 'leaderboard_format_constructed')}</span>
                   </div>
                   <div className="format-card-body">
                     <span className="format-elo">{displayedElo} ELO</span>
@@ -361,7 +361,7 @@ export default function LeaderboardModal({
                 <div className="format-card">
                   <div className="format-card-header">
                     <span className="format-icon">🎲</span>
-                    <span className="format-title">Limitado (Draft/Sellado)</span>
+                    <span className="format-title">{t('lobby', 'leaderboard_format_limited')}</span>
                   </div>
                   <div className="format-card-body">
                     <span className="format-elo">
@@ -394,7 +394,7 @@ export default function LeaderboardModal({
                 <div className="format-card">
                   <div className="format-card-header">
                     <span className="format-icon">🏆</span>
-                    <span className="format-title">Torneos Jugados</span>
+                    <span className="format-title">{t('lobby', 'leaderboard_tournaments_played')}</span>
                   </div>
                   <div className="format-card-body">
                     <span className="format-elo">
@@ -413,7 +413,7 @@ export default function LeaderboardModal({
                 <div className="format-card">
                   <div className="format-card-header">
                     <span className="format-icon">🛡️</span>
-                    <span className="format-title">Juego Limpio</span>
+                    <span className="format-title">{t('lobby', 'leaderboard_fair_play')}</span>
                   </div>
                   <div className="format-card-body">
                     <span className="format-elo text-green">
@@ -432,21 +432,21 @@ export default function LeaderboardModal({
               <div className="profile-stats-grid">
                 <div className="stat-card">
                   <span className="stat-value">{displayedStats.total}</span>
-                  <span className="stat-label">Partidas Totales</span>
+                  <span className="stat-label">{t('lobby', 'leaderboard_stat_total')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value text-green">{displayedStats.wins}</span>
-                  <span className="stat-label">Victorias</span>
+                  <span className="stat-label">{t('lobby', 'leaderboard_stat_wins')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value text-red">{displayedStats.losses}</span>
-                  <span className="stat-label">Derrotas</span>
+                  <span className="stat-label">{t('lobby', 'leaderboard_stat_losses')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value text-gold">
                     {displayedStats.winrate !== null ? `${displayedStats.winrate}%` : '—'}
                   </span>
-                  <span className="stat-label">Tasa de Victoria</span>
+                  <span className="stat-label">{t('lobby', 'leaderboard_stat_winrate')}</span>
                 </div>
               </div>
 
@@ -454,9 +454,9 @@ export default function LeaderboardModal({
               {isMyProfile && (
                 <div className="profile-ignored-box">
                   <div className="profile-ignored-header">
-                    <h4>🚫 Jugadores Ignorados & Silenciados ({ignoredList.length})</h4>
+                    <h4>🚫 {t('lobby', 'leaderboard_ignored_title', { count: String(ignoredList.length) })}</h4>
                     <span className="profile-ignored-hint">
-                      Los jugadores ignorados no pueden enviarte mensajes ni unirse a tus mesas.
+                      {t('lobby', 'leaderboard_ignored_hint')}
                     </span>
                   </div>
                   {ignoredList.length > 0 ? (
@@ -468,16 +468,16 @@ export default function LeaderboardModal({
                             type="button"
                             className="unignore-action-btn"
                             onClick={() => handleUnignoreFromProfile(name)}
-                            title={`Desbloquear a ${name}`}
+                            title={t('lobby', 'leaderboard_unblock') + ' ' + name}
                           >
-                            🔓 Desbloquear
+                            🔓 {t('lobby', 'leaderboard_unblock')}
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="profile-ignored-empty">
-                      No tienes a ningún jugador en tu lista de ignorados.
+                      {t('lobby', 'leaderboard_no_ignored')}
                     </p>
                   )}
                 </div>
@@ -506,12 +506,12 @@ export default function LeaderboardModal({
                         : `${tier.minElo} – ${tier.maxElo} ELO`}
                     </div>
                     <p className="tier-desc">
-                      {tier.tier === 'BRONZE' && 'Iniciados y primeros pasos en el juego competitivo.'}
-                      {tier.tier === 'SILVER' && 'Nivel medio y estándar de entrada para nuevos duelistas.'}
-                      {tier.tier === 'GOLD' && 'Jugadores veteranos con consistencia en victorias.'}
-                      {tier.tier === 'PLATINUM' && 'Duelistas avanzados con barajas y estrategias pulidas.'}
-                      {tier.tier === 'DIAMOND' && 'Nivel de élite previo a la cumbre competitiva.'}
-                      {tier.tier === 'MYTHIC' && 'Top 1% mundial. Maestros y leyendas de XMage.'}
+                      {tier.tier === 'BRONZE' && t('lobby', 'tier_bronze_desc')}
+                      {tier.tier === 'SILVER' && t('lobby', 'tier_silver_desc')}
+                      {tier.tier === 'GOLD' && t('lobby', 'tier_gold_desc')}
+                      {tier.tier === 'PLATINUM' && t('lobby', 'tier_platinum_desc')}
+                      {tier.tier === 'DIAMOND' && t('lobby', 'tier_diamond_desc')}
+                      {tier.tier === 'MYTHIC' && t('lobby', 'tier_mythic_desc')}
                     </p>
                   </div>
                 ))}

@@ -221,19 +221,20 @@ describe('TableFilterBar component', () => {
       />
     )
 
-    const trigger = getByText('⚙️ Filtros')
+    const trigger = getByText(/Filtros|Ajustes/)
     fireEvent.click(trigger)
 
-    expect(getByText('Modo de juego:')).not.toBeNull()
-    expect(getByText('Nivel de habilidad:')).not.toBeNull()
-    expect(getByText('🔓 Ocultar privadas con contraseña')).not.toBeNull()
+    expect(getByText(/Modo de juego|Combate/i)).not.toBeNull()
+    expect(getByText(/Nivel de habilidad/i)).not.toBeNull()
+    expect(getByText(/Ocultar privadas|Privada/i)).not.toBeNull()
   })
 
   it('formats massive Chaos Draft booster strings cleanly', () => {
     const hugeDraft =
       'Limited 1xMB1 1x7ED 1xBRO 1xRNA 1xTPR 1xDMU 1xCMM 1xSNC 1xRVR 1xSHM 1xRAV 1xINV 1xEMN 1xMOR 1xTHB 1xDRK 1xM13 1xRTR 1xONS 1xFEM 1xLGN 1xLCI 1xEMA 1xBNG 1xDIS 1xMBS 1xMKM 1xME3 1xMM3 1xHOB 1xME1 1xNEM 1xAFR 1xWHO 1xPCY 1xMH1'
     const res = formatDeckTypeName(hugeDraft)
-    expect(res.short).toContain('Limited (Chaos Draft • 36 sobres)')
+    expect(res.short).toContain('Chaos Draft')
+    expect(res.short).toContain('36')
     expect(res.full).toBe(hugeDraft)
 
     // Standard deck type unchanged

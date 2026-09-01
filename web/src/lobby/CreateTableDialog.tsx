@@ -183,6 +183,7 @@ export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo
 }
 
 export default function CreateTableDialog({ onClose }: { onClose: () => void }) {
+  const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
 
@@ -329,7 +330,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     if (isDraftLimited) {
       const setCodes = parseLimitedSetCodes(draftSetsRaw)
       if (setCodes.length === 0) {
-        setError('Debes indicar al menos un set para el draft (ej. M21, MH3)')
+        setError(t('errors','draft_no_sets'))
         setBusy(false)
         return
       }
@@ -352,7 +353,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
       setBusy(false)
       if (!res.ok) {
-        setError(res.error ?? 'No se pudo crear el torneo draft')
+        setError(res.error ?? t('errors','draft_create_failed'))
         return
       }
       const tableId = (res.data as { tableId?: string } | null)?.tableId
@@ -364,7 +365,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           skill: 1,
         })
         if (!join.ok) {
-          setError(join.error ?? 'No se pudo unir al torneo creado')
+          setError(join.error ?? t('errors','join_table_failed'))
           return
         }
       }
@@ -404,7 +405,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
     setBusy(false)
     if (!res.ok) {
-      setError(res.error ?? 'No se pudo crear la mesa')
+      setError(res.error ?? t('errors','create_table_failed'))
       return
     }
 
@@ -420,14 +421,13 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       })
       setMyDeck(myDeck)
       if (!join.ok) {
-        setError(join.error ?? 'No se pudo unir tu plaza a la mesa creada')
+        setError(join.error ?? t('errors','join_table_failed'))
         return
       }
     }
     onClose()
   }
 
-  const { t, tError } = useTranslation()
 
   return (
     <div className="overlay">
@@ -435,7 +435,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         <div className="create-table-header">
           <div className="create-table-header-title">
             <h2>⚔️ {t('lobby.create_table_btn')}</h2>
-            <span className="create-table-subtitle">Configura reglas, tiempos, permisos y oponentes</span>
+            <span className="create-table-subtitle">{t('lobby','create_header_subtitle')}</span>
           </div>
           <button type="button" className="create-dialog-close-btn" onClick={onClose}>
             ✕
@@ -449,35 +449,35 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
             className={`create-tab-btn ${activeTab === 'general' ? 'active' : ''}`}
             onClick={() => setActiveTab('general')}
           >
-            <span>⚙️ General</span>
+            <span>⚙️ {t('lobby','create_tab_general')}</span>
           </button>
           <button
             type="button"
             className={`create-tab-btn ${activeTab === 'timing' ? 'active' : ''}`}
             onClick={() => setActiveTab('timing')}
           >
-            <span>⏱️ Tiempos & Reglas</span>
+            <span>⏱️ {t('lobby','create_tab_timing')}</span>
           </button>
           <button
             type="button"
             className={`create-tab-btn ${activeTab === 'security' ? 'active' : ''}`}
             onClick={() => setActiveTab('security')}
           >
-            <span>🛡️ Seguridad</span>
+            <span>🛡️ {t('lobby','create_tab_restrictions')}</span>
           </button>
           <button
             type="button"
             className={`create-tab-btn ${activeTab === 'seats' ? 'active' : ''}`}
             onClick={() => setActiveTab('seats')}
           >
-            <span>🤖 Asientos ({humanSeat ? '1 Humano + ' : ''}{playerTypesSel.length} IA)</span>
+            <span>🤖 {t('lobby','create_tab_multi')} ({humanSeat ? `1 ${t('common','player')} + ` : ''}{playerTypesSel.length} {t('lobby','ai')})</span>
           </button>
           <button
             type="button"
             className={`create-tab-btn ${activeTab === 'dev' ? 'active' : ''}`}
             onClick={() => setActiveTab('dev')}
           >
-            <span>🛠️ Pruebas / Dev</span>
+            <span>🛠️ {t('common','settings')} / Dev</span>
           </button>
         </nav>
 
@@ -486,27 +486,27 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {activeTab === 'general' && (
             <div className="create-tab-content">
               <label>
-                Nombre de la mesa
+                {t('lobby','create_field_table_name')}
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej. Modern Casual Bo3"
+                  placeholder={t('lobby','placeholder_table_name')}
                 />
               </label>
 
               <div className="create-grid-2col">
                 <label>
-                  Tipo de juego
+                  {t('lobby','create_field_format')}
                   <select value={gameType} onChange={(e) => setGameType(e.target.value)}>
                     {effectiveGameTypes.map((g) => (
                       <option key={g.name} value={g.name}>
-                        {g.name} ({g.minPlayers}-{g.maxPlayers} jug.)
+                        {g.name} ({g.minPlayers}-{g.maxPlayers})
                       </option>
                     ))}
                   </select>
                 </label>
                 <label>
-                  Formato (Deck Type)
+                  {t('lobby','create_field_format')}
                   <select value={deckType} onChange={(e) => setDeckType(e.target.value)}>
                     {effectiveDeckTypes.map((d) => (
                       <option key={d} value={d}>
@@ -518,12 +518,12 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
               </div>
 
               <div className="field">
-                <span>Victorias necesarias (Match)</span>
+                <span>{t('lobby','create_field_wins_needed')}</span>
                 <div className="chip-row">
                   {[
-                    { label: 'Bo1 (1 victoria)', val: 1 },
-                    { label: 'Bo3 (2 victorias - Estándar)', val: 2 },
-                    { label: 'Bo5 (3 victorias)', val: 3 },
+                    { label: t('lobby','create_option_wins_bo1'), val: 1 },
+                    { label: t('lobby','create_option_wins_bo3'), val: 2 },
+                    { label: t('lobby','create_option_wins_bo5'), val: 3 },
                   ].map((w) => (
                     <button
                       key={w.val}
@@ -538,18 +538,21 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
               </div>
 
               <div className="field">
-                <span>Nivel de habilidad esperado</span>
+                <span>{t('lobby','create_field_skill')}</span>
                 <div className="chip-row">
-                  {SKILL_LEVEL_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      className={`chip ${skillLevel === opt.value ? 'on' : ''}`}
-                      onClick={() => setSkillLevel(opt.value as any)}
-                    >
-                      {opt.icon} {opt.label}
-                    </button>
-                  ))}
+                  {SKILL_LEVEL_OPTIONS.map((opt) => {
+                    const label = opt.value === 'BEGINNER' ? t('lobby','create_skill_beginner') : opt.value === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`chip ${skillLevel === opt.value ? 'on' : ''}`}
+                        onClick={() => setSkillLevel(opt.value as any)}
+                      >
+                        {opt.icon} {label}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -560,14 +563,14 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setRated(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">⭐ Partida puntuada (Rated match)</span>
-                  <span className="toggle-desc">Afectará al ELO / Ranking de los jugadores en este formato</span>
+                  <span className="toggle-title">⭐ {t('lobby','create_field_rated')}</span>
+                  <span className="toggle-desc">{t('lobby','create_field_rated')}</span>
                 </div>
               </label>
 
               {deckType === 'Limited' && (
                 <div className="create-multiplayer-box" style={{ marginTop: 12 }}>
-                  <span className="multiplayer-box-title">🃏 Limitado — Draft / Sealed</span>
+                  <span className="multiplayer-box-title">🃏 {t('lobby','create_field_draft_type')}</span>
                   <label className="toggle-label-row">
                     <input
                       type="checkbox"
@@ -575,19 +578,19 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       onChange={(e) => setUseDraftTournament(e.target.checked)}
                     />
                     <div className="toggle-text-block">
-                      <span className="toggle-title">Crear torneo Draft (hasta 8 jugadores)</span>
-                      <span className="toggle-desc">Crea un torneo Limited Booster Draft — Commander limitado a 4, Draft hasta 8. Si está desmarcado, se crea mesa Limited normal.</span>
+                      <span className="toggle-title">{t('lobby','create_field_draft_type')}</span>
+                      <span className="toggle-desc">{t('lobby','create_field_draft_type')}</span>
                     </div>
                   </label>
                   {useDraftTournament && (
                     <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
                       <div className="create-grid-2col">
                         <label>
-                          Tipo de torneo
+                          {t('lobby','create_field_draft_type')}
                           <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)}>
-                            <option value="Booster Draft">Booster Draft</option>
-                            <option value="Sealed">Sealed</option>
-                            <option value="Elimination">Elimination Draft</option>
+                            <option value="Booster Draft">{t('lobby','create_option_booster_draft')}</option>
+                            <option value="Sealed">{t('lobby','create_option_sealed')}</option>
+                            <option value="Elimination">{t('lobby','create_option_elimination')}</option>
                           </select>
                         </label>
                         <label>
@@ -599,19 +602,20 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         </label>
                       </div>
                       <label>
-                        Sets (códigos separados por coma)
+                        {t('lobby','create_field_draft_sets')}
                         <input
                           value={draftSetsRaw}
                           onChange={(e) => setDraftSetsRaw(e.target.value)}
-                          placeholder="Ej. M21, MH3, BLB"
+                          placeholder={t('lobby','placeholder_draft_sets')}
                         />
                       </label>
                       <label>
-                        Tiempo de construcción
+                        {t('lobby','create_field_timing_limit')}
                         <select value={draftConstructionTime} onChange={(e) => setDraftConstructionTime(Number(e.target.value))}>
-                          {CONSTRUCTION_TIME_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
+                          {CONSTRUCTION_TIME_OPTIONS.map((o) => {
+                            const m = o.value === 300 ? t('lobby','create_time_5') : o.value === 600 ? t('lobby','create_time_10') : o.value === 900 ? t('lobby','create_time_15') : t('lobby','create_time_20')
+                            return <option key={o.value} value={o.value}>{m}</option>
+                          })}
                         </select>
                       </label>
                     </div>
@@ -625,30 +629,52 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
             <div className="create-tab-content">
               <div className="create-grid-2col">
                 <label>
-                  Reloj de prioridad por jugador
+                  {t('lobby','create_field_timing_limit')}
                   <select value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}>
-                    {TIME_LIMIT_OPTIONS.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
+                    {TIME_LIMIT_OPTIONS.map((opt) => {
+                      const labelMap: Record<string, string> = {
+                        NONE: t('lobby','create_time_no_limit'),
+                        MIN__15: t('lobby','create_time_15'),
+                        MIN__20: t('lobby','create_time_20'),
+                        MIN__25: t('lobby','create_time_15'),
+                        MIN__30: t('lobby','create_time_20'),
+                        MIN__45: t('lobby','create_time_20'),
+                        MIN__60: t('lobby','create_time_20'),
+                        MIN__90: t('lobby','create_time_20'),
+                      }
+                      return (
+                        <option key={opt.value} value={opt.value}>
+                          {labelMap[opt.value] ?? opt.label}
+                        </option>
+                      )
+                    })}
                   </select>
                 </label>
 
                 <label>
-                  Tiempo de reserva (Buffer)
+                  {t('lobby','create_field_timing_limit')}
                   <select value={bufferTime} onChange={(e) => setBufferTime(e.target.value)}>
-                    {BUFFER_TIME_OPTIONS.map((b) => (
-                      <option key={b.value} value={b.value}>
-                        {b.label}
-                      </option>
-                    ))}
+                    {BUFFER_TIME_OPTIONS.map((opt) => {
+                      const labelMap: Record<string, string> = {
+                        NONE: t('lobby','create_time_no_limit'),
+                        SEC__05: t('lobby','create_buffer_15'),
+                        SEC__10: t('lobby','create_buffer_15'),
+                        SEC__15: t('lobby','create_buffer_15'),
+                        SEC__20: t('lobby','create_buffer_30'),
+                        SEC__30: t('lobby','create_buffer_30'),
+                      }
+                      return (
+                        <option key={opt.value} value={opt.value}>
+                          {labelMap[opt.value] ?? opt.label}
+                        </option>
+                      )
+                    })}
                   </select>
                 </label>
               </div>
 
               <div className="field">
-                <span>Mulligans gratuitos</span>
+                <span>{t('lobby','create_field_free_mulligans')}</span>
                 <div className="chip-row">
                   {[0, 1, 2, 3].map((m) => (
                     <button
@@ -657,7 +683,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       className={`chip ${freeMulligans === m ? 'on' : ''}`}
                       onClick={() => setFreeMulligans(m)}
                     >
-                      {m === 0 ? '0 (1v1 Estándar)' : `${m} gratis`}
+                      {m}
                     </button>
                   ))}
                 </div>
@@ -665,22 +691,22 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
               {isMultiplayerGame && (
                 <div className="create-multiplayer-box">
-                  <span className="multiplayer-box-title">👑 Reglas Multijugador</span>
+                  <span className="multiplayer-box-title">👑 {t('lobby','create_tab_multi')}</span>
                   <div className="create-grid-2col">
                     <label>
-                      Modo de ataque
+                      {t('lobby','create_field_attack_option')}
                       <select value={attackOption} onChange={(e) => setAttackOption(e.target.value)}>
-                        <option value="LEFT">Atacar a la izquierda</option>
-                        <option value="RIGHT">Atacar a la derecha</option>
-                        <option value="MULTIPLE">Todos contra todos (FFA)</option>
+                        <option value="LEFT">{t('lobby','create_option_attack_left')}</option>
+                        <option value="RIGHT">{t('lobby','create_option_attack_right')}</option>
+                        <option value="MULTIPLE">{t('lobby','create_option_attack_multiple')}</option>
                       </select>
                     </label>
                     <label>
-                      Rango de influencia
+                      {t('lobby','create_field_range')}
                       <select value={range} onChange={(e) => setRange(e.target.value)}>
-                        <option value="ALL">Toda la mesa (All)</option>
-                        <option value="ONE">1 jugador de distancia</option>
-                        <option value="TWO">2 jugadores de distancia</option>
+                        <option value="ALL">{t('lobby','create_option_range_all')}</option>
+                        <option value="ONE">{t('lobby','create_option_range_one')}</option>
+                        <option value="TWO">{t('lobby','create_option_range_two')}</option>
                       </select>
                     </label>
                   </div>
@@ -692,20 +718,20 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {activeTab === 'security' && (
             <div className="create-tab-content">
               <label>
-                Contraseña de la mesa (opcional)
+                {t('lobby','create_field_password')}
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Dejar en blanco para mesa pública"
+                  placeholder={t('lobby','placeholder_password')}
                 />
               </label>
 
               <div className="create-restrictions-box">
-                <span className="restrictions-box-title">🛡️ Restricciones de Jugadores</span>
+                <span className="restrictions-box-title">🛡️ {t('lobby','create_tab_restrictions')}</span>
                 <div className="create-grid-2col">
                   <label>
-                    Rating ELO mínimo
+                    {t('lobby','create_field_min_rating')}
                     <input
                       type="number"
                       min={0}
@@ -713,15 +739,15 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       step={50}
                       value={minimumRating}
                       onChange={(e) => setMinimumRating(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                      placeholder="0 = Sin restricción"
+                      placeholder={t('common','all')}
                     />
                     <span className="create-field-hint">
-                      {minimumRating > 0 ? `Requiere ≥ ${minimumRating} ELO` : 'Cualquier jugador puede unirse'}
+                      {minimumRating > 0 ? `${t('lobby','create_field_min_rating')}: ≥ ${minimumRating}` : t('common','all')}
                     </span>
                   </label>
 
                   <label>
-                    Abandono máx. permitido (%)
+                    {t('lobby','create_field_quit_ratio')}
                     <input
                       type="number"
                       min={0}
@@ -729,10 +755,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       step={5}
                       value={quitRatio}
                       onChange={(e) => setQuitRatio(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                      placeholder="100% = Sin restricción"
+                      placeholder={t('common','all')}
                     />
                     <span className="create-field-hint">
-                      {quitRatio < 100 ? `Máx. ${quitRatio}% abandonos` : 'Sin límite de porcentaje'}
+                      {quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')}: ${quitRatio}%` : t('common','all')}
                     </span>
                   </label>
                 </div>
@@ -740,7 +766,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 {isMultiplayerGame && (
                   <div style={{ marginTop: 10 }}>
                     <label>
-                      Nivel de poder Commander / EDH (Power Level)
+                      {t('lobby','create_field_max_rating')}
                       <input
                         type="number"
                         min={0}
@@ -748,10 +774,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         step={5}
                         value={edhPowerLevel}
                         onChange={(e) => setEdhPowerLevel(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                        placeholder="100 = Sin restricción"
+                        placeholder={t('common','all')}
                       />
                       <span className="create-field-hint">
-                        {edhPowerLevel < 100 ? `Nivel máx. de poder: ${edhPowerLevel}` : 'Cualquier nivel de poder'}
+                        {edhPowerLevel < 100 ? `${t('lobby','create_field_max_rating')}: ${edhPowerLevel}` : t('common','all')}
                       </span>
                     </label>
                   </div>
@@ -765,8 +791,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSpectatorsAllowed(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">👁️ Permitir espectadores</span>
-                  <span className="toggle-desc">Otros usuarios podrán conectarse a ver la partida en vivo</span>
+                  <span className="toggle-title">👁️ {t('lobby','create_field_spectators')}</span>
+                  <span className="toggle-desc">{t('lobby','create_field_spectators')}</span>
                 </div>
               </label>
 
@@ -777,8 +803,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setRollbackTurnsAllowed(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">⏪ Permitir rebobinar turnos (Rollback)</span>
-                  <span className="toggle-desc">Permite a los jugadores solicitar deshacer acciones por mutuo acuerdo</span>
+                  <span className="toggle-title">⏪ {t('lobby','create_field_rollback')}</span>
+                  <span className="toggle-desc">{t('lobby','create_field_rollback')}</span>
                 </div>
               </label>
             </div>
@@ -789,18 +815,18 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
               <div className="create-seats-section">
                 <div className="create-seat-box human-seat-box">
                   <div className="seat-box-header">
-                    <span className="seat-title">👤 Tu Asiento</span>
+                    <span className="seat-title">👤 {t('common','player')}</span>
                     <button
                       type="button"
                       className={`chip ${humanSeat ? 'on' : ''}`}
                       onClick={() => setHumanSeat(!humanSeat)}
                     >
-                      {humanSeat ? '✓ Jugador Activo' : '👁️ Solo Espectador'}
+                      {humanSeat ? `✓ ${t('common','player')}` : `👁️ ${t('lobby','spectators')}`}
                     </button>
                   </div>
                   {humanSeat && (
                     <label>
-                      Mazo para jugar
+                      {t('lobby','active_deck')}
                       <select
                         value={myDeck.name}
                         onChange={(e) =>
@@ -809,7 +835,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       >
                         {availableDecks.map((d) => (
                           <option key={d.name} value={d.name}>
-                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} cartas)
+                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
                           </option>
                         ))}
                       </select>
@@ -819,17 +845,17 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
                 <div className="create-seat-box ai-seat-box">
                   <div className="seat-box-header">
-                    <span className="seat-title">🤖 Oponentes (IA / Sim)</span>
+                    <span className="seat-title">🤖 {t('lobby','ai')}</span>
                   </div>
                   <div className="field">
-                    <span>Selecciona tipos de oponentes simulados:</span>
+                    <span>{t('lobby','create_tab_multi')}</span>
                     <div className="chip-row">
                       <button
                         type="button"
                         className={playerTypesSel.includes('SIM') ? 'chip on' : 'chip'}
                         onClick={() => toggleAi('SIM')}
                       >
-                        🤖 SIM (Bot Determinista)
+                        🤖 SIM ({t('lobby','ai')})
                       </button>
                       {playerTypes.map((pt) => (
                         <button
@@ -846,7 +872,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
                   {playerTypesSel.includes('SIM') && (
                     <label>
-                      Mazo del Bot SIM
+                      {t('decks','my_decks')}
                       <select
                         value={simDeck.name}
                         onChange={(e) =>
@@ -855,7 +881,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       >
                         {availableDecks.map((d) => (
                           <option key={d.name} value={d.name}>
-                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} cartas)
+                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
                           </option>
                         ))}
                       </select>
@@ -869,12 +895,12 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {activeTab === 'dev' && (
             <div className="create-tab-content">
               <div className="dev-options-notice">
-                <span>⚠️ Opciones para pruebas y desarrollo determinista del motor de reglas.</span>
+                <span>⚠️ {t('common','settings')} — Dev</span>
               </div>
 
               <div className="dev-demo-box">
-                <h4>Partida de Demostración Rápida</h4>
-                <p>Crea automáticamente una mesa con 2 bots SIM deterministas y entra como espectador.</p>
+                <h4>{t('lobby','create_submit')}</h4>
+                <p>{t('lobby','create_header_subtitle')}</p>
                 <button
                   type="button"
                   className="primary dev-demo-btn"
@@ -910,7 +936,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   }}
                   disabled={busy}
                 >
-                  ▶ Iniciar Demo IA vs IA (Espectador)
+                  ▶ {t('lobby','watch_btn')} ({t('lobby','ai')} vs {t('lobby','ai')})
                 </button>
               </div>
 
@@ -921,8 +947,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSkipInitShuffling(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">🃏 No barajar el mazo inicial</span>
-                  <span className="toggle-desc">La biblioteca mantendrá el orden exacto de las cartas enviadas</span>
+                  <span className="toggle-title">🃏 {t('decks','my_decks')}</span>
+                  <span className="toggle-desc">{t('decks','import_hint')}</span>
                 </div>
               </label>
 
@@ -933,8 +959,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSkipStartingPlayerChoice(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">🎲 Sin sorteo de jugador inicial</span>
-                  <span className="toggle-desc">El primer asiento de la mesa empezará siempre el turno 1</span>
+                  <span className="toggle-title">🎲 {t('common','player')}</span>
+                  <span className="toggle-desc">{t('lobby','create_field_num_players')}</span>
                 </div>
               </label>
             </div>
@@ -946,24 +972,24 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           <span className="summary-pill">{gameType}</span>
           <span className="summary-pill">{deckType}</span>
           <span className="summary-pill">Bo{wins === 1 ? '1' : wins === 2 ? '3' : '5'}</span>
-          <span className="summary-pill">{timeLimit === 'NONE' ? 'Sin reloj' : timeLimit.replace('MIN__', '') + 'm'}</span>
-          <span className="summary-pill">{SKILL_LEVEL_OPTIONS.find((s) => s.value === skillLevel)?.label}</span>
+          <span className="summary-pill">{timeLimit === 'NONE' ? t('lobby','create_summary_no_clock') : timeLimit.replace('MIN__', '') + 'm'}</span>
+          <span className="summary-pill">{skillLevel === 'BEGINNER' ? t('lobby','create_skill_beginner') : skillLevel === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')}</span>
           {isDraftLimited && <span className="summary-pill">🃏 Draft {draftBoosters}× {parseLimitedSetCodes(draftSetsRaw).join(', ') || 'sets'}</span>}
-          {isLimited && !isDraftLimited && <span className="summary-pill">Limited 40 min</span>}
-          {minimumRating > 0 && <span className="summary-pill">⭐ Min {minimumRating}</span>}
-          {quitRatio < 100 && <span className="summary-pill">🚫 Max Quit {quitRatio}%</span>}
-          {password.trim() && <span className="summary-pill security">🔒 Clave</span>}
-          {rated && <span className="summary-pill rated">⭐ Ranked</span>}
+          {isLimited && !isDraftLimited && <span className="summary-pill">{t('lobby','create_summary_limited')}</span>}
+          {minimumRating > 0 && <span className="summary-pill">⭐ {t('lobby','create_field_min_rating')}: {minimumRating}</span>}
+          {quitRatio < 100 && <span className="summary-pill">🚫 {t('lobby','create_field_quit_ratio')}: {quitRatio}%</span>}
+          {password.trim() && <span className="summary-pill security">🔒 {t('lobby','tag_private')}</span>}
+          {rated && <span className="summary-pill rated">⭐ {t('lobby','tag_rated')}</span>}
         </div>
 
         {error && <div className="error-box">⚠️ {tError(error)}</div>}
 
         <div className="dialog-actions">
           <button type="button" onClick={onClose} disabled={busy}>
-            {t('common.cancel')}
+            {t('common','cancel')}
           </button>
           <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
-            {busy ? `${t('lobby.create_table_btn')}…` : isDraftLimited ? 'Crear Torneo Draft 🃏' : `${t('lobby.create_table_btn')} 🚀`}
+            {busy ? `${t('lobby','create_table_btn')}…` : isDraftLimited ? `${t('lobby','create_submit_draft')} 🃏` : `${t('lobby','create_table_btn')} 🚀`}
           </button>
         </div>
       </div>

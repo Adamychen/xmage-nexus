@@ -48,15 +48,11 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
 }: CardSlotProps) {
-  const { lang } = useTranslation()
+  const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
   const [entering, setEntering] = useState(false)
-  // Timer de "entering" deliberadamente NO se limpia en reruns ni en el
-  // simulated unmount de StrictMode: limpiarlo clava la clase (y su animación
-  // con fill forwards) para siempre y mata la rotación tapped/attacking.
-  // Un setState tras desmonte es no-op inofensivo en React 18+.
   const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [flightState, setFlightState] = useState<'none' | 'hidden' | 'landing'>('none')
   const flightStateRef = useRef(flightState)
@@ -136,7 +132,6 @@ export default function CardSlot({
   const perm = card as PermanentView
   const counters = card.counters ?? []
 
-  // Strict Type Checks
   const types = (card.cardTypes ?? []).map((t) => String(t).toLowerCase())
   const isCreature = types.includes('creature') || String(card.mageObjectType ?? '').toUpperCase().includes('CREATURE')
   const isLand = types.includes('land')
@@ -196,35 +191,30 @@ export default function CardSlot({
         </div>
       )}
 
-      {/* Creature Power / Toughness Badge (Creatures only) */}
       {showPt && isRealCreature && perm.power != null && perm.toughness != null && (
         <div className="pt-badge">{perm.power}/{perm.toughness}</div>
       )}
 
-      {/* Planeswalker Loyalty Badge (Planeswalkers only) */}
       {isPlaneswalker && loyaltyVal > 0 && (
-        <div className="loyalty-badge" title={`Lealtad: ${perm.loyalty}`}>
+        <div className="loyalty-badge" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
           <span className="loyalty-icon">🛡️</span>
           <span className="loyalty-val">{perm.loyalty}</span>
         </div>
       )}
 
-      {/* Battle Defense Badge (Battles only) */}
       {isBattle && defenseVal > 0 && (
-        <div className="defense-badge" title={`Defensa: ${perm.defense}`}>
+        <div className="defense-badge" title={`${t('game', 'damage')}: ${perm.defense}`}>
           <span className="defense-icon"><Icon name="swords" size={11} /></span>
           <span className="defense-val">{perm.defense}</span>
         </div>
       )}
 
-      {/* Mutated Permanent Badge (Mutate pile) */}
       {perm.mutated === true && (
-        <div className="mutated-badge" title="Criatura mutada (pila de cartas fusionadas)">
+        <div className="mutated-badge" title={t('board', 'zone_battlefield')}>
           <span className="mutated-icon"><Icon name="dna" size={12} /></span>
         </div>
       )}
 
-      {/* Card Counters Container */}
       {showCounters && counters.length > 0 && (
         <div className="card-counters-wrap">
           {counters.map((c, ci) => {
@@ -276,42 +266,36 @@ export default function CardSlot({
         </div>
       )}
 
-      {/* Accumulated Combat Damage (Creatures & Planeswalkers only) */}
       {showDamage && isRealCreature && (perm.damage ?? 0) > 0 && (
         <div className="damage-badge">{perm.damage}</div>
       )}
 
-      {/* Summoning Sickness indicator (Creatures only) */}
       {hasSummoningSickness && (
-        <div className="sickness-badge" title="Mareo de invocación (No puede atacar ni girarse este turno)">
+        <div className="sickness-badge" title={t('game', 'tap_mana')}>
           <Icon name="timer" size={11} />
         </div>
       )}
 
-      {/* Face-down Special Type Badges (Morph / Manifest / Disguise / Cloak) */}
       {faceDown && (
         <div className="facedown-badges">
-          {perm.morphed && <span className="facedown-type-badge morph" title="Metamorfosis">Morph</span>}
-          {perm.manifested && <span className="facedown-type-badge manifest" title="Manifestado">Manifest</span>}
-          {perm.disguised && <span className="facedown-type-badge disguise" title="Disfraz">Disguise</span>}
-          {perm.cloaked && <span className="facedown-type-badge cloak" title="Encubierto">Cloak</span>}
+          {perm.morphed && <span className="facedown-type-badge morph" title={t('board', 'morph')}>{t('board', 'morph')}</span>}
+          {perm.manifested && <span className="facedown-type-badge manifest" title={t('board', 'manifest')}>{t('board', 'manifest')}</span>}
+          {perm.disguised && <span className="facedown-type-badge disguise" title={t('board', 'disguise')}>{t('board', 'disguise')}</span>}
+          {perm.cloaked && <span className="facedown-type-badge cloak" title={t('board', 'cloak')}>{t('board', 'cloak')}</span>}
         </div>
       )}
 
-      {/* Transform / Double-Faced Indicator Badge */}
       {(card.transformable || card.secondCardFace != null || card.alternateName != null) && !faceDown && (
         <div
           className={`card-transform-badge ${perm.transformed ? 'is-transformed' : ''}`}
-          title={perm.transformed ? 'Carta transformada (Reverso)' : 'Carta de doble cara (Anverso)'}
+          title={perm.transformed ? t('wiki', 'face_back') : t('wiki', 'face_front')}
         >
           {perm.transformed ? <Icon name="moon" size={11} /> : <Icon name="sun" size={11} />}
         </div>
       )}
 
-      {/* Card restriction / ability icons (e.g. Goad, must/can't attack, keywords) */}
       <CardIcons icons={card.cardIcons} />
 
-      {/* Keyword badges (Flying/Deathtouch/Trample/Haste etc.) — compact, top-right under mutate badge */}
       {keywordBadges.length > 0 && (
         <div className="keyword-badges" aria-label="keywords">
           {keywordBadges.map((kw) => (

@@ -2,21 +2,8 @@ import { useMemo } from 'react'
 import { returnToLobby, useStore } from '../state/store'
 import type { TableView } from '../net/types'
 import ChatBox from './ChatBox'
+import { useTranslation } from '../i18n'
 import './SpectatorStagingScreen.css'
-
-function getSkillBadge(skill?: string): { label: string; icon: string; className: string } | null {
-  if (!skill) return null
-  switch (skill.toUpperCase()) {
-    case 'BEGINNER':
-      return { label: 'Novato', icon: '⭐', className: 'skill-beginner' }
-    case 'CASUAL':
-      return { label: 'Casual', icon: '⭐⭐', className: 'skill-casual' }
-    case 'SERIOUS':
-      return { label: 'Competitivo', icon: '⭐⭐⭐', className: 'skill-serious' }
-    default:
-      return null
-  }
-}
 
 export default function SpectatorStagingScreen({
   table,
@@ -25,6 +12,7 @@ export default function SpectatorStagingScreen({
   table?: TableView | null
   onLeave?: () => void
 }) {
+  const { t } = useTranslation()
   const storeTable = useStore((s) => s.watchingTable)
   const activeTable = table || storeTable
 
@@ -32,6 +20,20 @@ export default function SpectatorStagingScreen({
   const is1v1 = (activeTable?.seats.length ?? 0) <= 2 && !activeTable?.gameType?.toLowerCase().includes('commander')
   const isReady = activeTable?.tableState === 'READY_TO_START'
   const hasEmptySeats = seats.some((s) => !s.playerName)
+
+  const getSkillBadge = (skill?: string): { label: string; icon: string; className: string } | null => {
+    if (!skill) return null
+    switch (skill.toUpperCase()) {
+      case 'BEGINNER':
+        return { label: t('lobby', 'create_skill_beginner'), icon: '⭐', className: 'skill-beginner' }
+      case 'CASUAL':
+        return { label: t('lobby', 'create_skill_casual'), icon: '⭐⭐', className: 'skill-casual' }
+      case 'SERIOUS':
+        return { label: t('lobby', 'create_skill_competitive'), icon: '⭐⭐⭐', className: 'skill-serious' }
+      default:
+        return null
+    }
+  }
 
   const skill = getSkillBadge(activeTable?.skillLevel)
 
@@ -48,7 +50,7 @@ export default function SpectatorStagingScreen({
           <img src="/logo.jpeg" alt="XMage Nexus" className="staging-logo" />
           <div className="staging-titles">
             <h1 className="staging-main-title">XMage Nexus</h1>
-            <span className="staging-subtitle">Sala de Espera de Espectador</span>
+            <span className="staging-subtitle">{t('lobby','staging_title')}</span>
           </div>
         </div>
 
@@ -56,9 +58,9 @@ export default function SpectatorStagingScreen({
           type="button"
           className="staging-leave-btn"
           onClick={handleLeave}
-          title="Salir de la sala y volver al explorador de mesas"
+          title={t('lobby','staging_leave_hint')}
         >
-          <span>🚪 Volver al Lobby</span>
+          <span>🚪 {t('lobby','staging_back_lobby')}</span>
         </button>
       </header>
 
@@ -68,12 +70,12 @@ export default function SpectatorStagingScreen({
           {/* Table Header Info */}
           <div className="staging-card-header">
             <div className="staging-title-row">
-              <span className="staging-status-pill">👁️ MODO ESPECTADOR</span>
-              <h2 className="staging-table-name">{activeTable?.tableName || 'Partida en espera'}</h2>
+              <span className="staging-status-pill">👁️ {t('lobby','staging_mode_spectator')}</span>
+              <h2 className="staging-table-name">{activeTable?.tableName || `${t('lobby','staging_waiting_fallback')} ${t('lobby','staging_title') && ''}`}</h2>
             </div>
 
             <div className="staging-tags-row">
-              <span className="staging-tag tag-game">🎮 {activeTable?.gameType || 'Duelo'}</span>
+              <span className="staging-tag tag-game">🎮 {activeTable?.gameType || t('lobby','staging_duel_fallback')}</span>
               <span className="staging-tag tag-deck">📜 {activeTable?.deckType || 'Constructed'}</span>
               {skill && (
                 <span className={`staging-tag tag-skill ${skill.className}`}>
@@ -81,14 +83,14 @@ export default function SpectatorStagingScreen({
                 </span>
               )}
               {activeTable?.rated ? (
-                <span className="staging-tag tag-rated">🏅 Rated</span>
+                <span className="staging-tag tag-rated">🏅 {t('lobby','tag_rated')}</span>
               ) : (
-                <span className="staging-tag tag-unrated">Unrated</span>
+                <span className="staging-tag tag-unrated">{t('lobby','tag_unrated')}</span>
               )}
               {activeTable?.passworded && (
-                <span className="staging-tag tag-private">🔒 Privada</span>
+                <span className="staging-tag tag-private">🔒 {t('lobby','tag_private')}</span>
               )}
-              <span className="staging-tag tag-seats">👥 {activeTable?.seatsInfo || `${seats.length} plazas`}</span>
+              <span className="staging-tag tag-seats">👥 {activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</span>
             </div>
           </div>
 
@@ -107,20 +109,20 @@ export default function SpectatorStagingScreen({
                   </div>
                   <div className="player-meta">
                     <span className="player-card-name">
-                      {seats[0]?.playerName || 'Esperando jugador…'}
+                      {seats[0]?.playerName || t('lobby','staging_waiting_player')}
                       {activeTable?.controllerName && seats[0]?.playerName === activeTable.controllerName && (
-                        <span className="player-crown" title="Anfitrión de la mesa">👑</span>
+                        <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>
                       )}
                     </span>
                     <span className={`player-status-tag ${seats[0]?.playerName ? 'ready' : 'waiting'}`}>
-                      {seats[0]?.playerName ? 'Conectado / Listo' : 'Plaza disponible'}
+                      {seats[0]?.playerName ? t('lobby','staging_connected_ready') : t('lobby','staging_seat_available')}
                     </span>
                   </div>
                 </div>
 
                 {/* VS Glowing Emblem */}
                 <div className="staging-vs-emblem">
-                  <span className="vs-text">VS</span>
+                  <span className="vs-text">{t('lobby','staging_vs')}</span>
                   <div className="vs-line" />
                 </div>
 
@@ -135,13 +137,13 @@ export default function SpectatorStagingScreen({
                   </div>
                   <div className="player-meta">
                     <span className="player-card-name">
-                      {seats[1]?.playerName || 'Esperando oponente…'}
+                      {seats[1]?.playerName || t('lobby','staging_waiting_opponent')}
                       {activeTable?.controllerName && seats[1]?.playerName === activeTable.controllerName && (
-                        <span className="player-crown" title="Anfitrión de la mesa">👑</span>
+                        <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>
                       )}
                     </span>
                     <span className={`player-status-tag ${seats[1]?.playerName ? 'ready' : 'waiting'}`}>
-                      {seats[1]?.playerName ? 'Conectado / Listo' : 'Esperando oponente'}
+                      {seats[1]?.playerName ? t('lobby','staging_connected_ready') : t('lobby','staging_waiting_opponent_short')}
                     </span>
                   </div>
                 </div>
@@ -159,11 +161,11 @@ export default function SpectatorStagingScreen({
                       </div>
                       <div className="player-meta">
                         <span className="player-card-name">
-                          {s.playerName || `Plaza #${idx + 1}`}
-                          {isHost && <span className="player-crown" title="Anfitrión de la mesa">👑</span>}
+                          {s.playerName || t('lobby','staging_seat_number', { number: idx + 1 })}
+                          {isHost && <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>}
                         </span>
                         <span className={`player-status-tag ${isOccupied ? 'ready' : 'waiting'}`}>
-                          {isOccupied ? 'Listo' : 'Disponible'}
+                          {isOccupied ? t('lobby','ready_status') : t('lobby','staging_available')}
                         </span>
                       </div>
                     </div>
@@ -179,13 +181,13 @@ export default function SpectatorStagingScreen({
             <div className="pulse-text-group">
               <span className="pulse-headline">
                 {isReady
-                  ? '✨ Todos los jugadores están listos. Esperando a que el anfitrión inicie la partida…'
+                  ? `✨ ${t('lobby','staging_all_ready')}`
                   : hasEmptySeats
-                  ? '⏳ Esperando a que se completen las plazas de la mesa…'
-                  : '⏳ Preparando inicio de la partida…'}
+                  ? `⏳ ${t('lobby','staging_waiting_seats')}`
+                  : `⏳ ${t('lobby','staging_preparing')}`}
               </span>
               <span className="pulse-subline">
-                Te conectarás automáticamente al tablero de juego en cuanto empiece el duelo.
+                {t('lobby','staging_auto_connect')}
               </span>
             </div>
           </div>
@@ -194,8 +196,8 @@ export default function SpectatorStagingScreen({
         {/* Embedded Global Chat */}
         <div className="staging-chat-card panel">
           <div className="staging-chat-header">
-            <h3>💬 Chat Global del Servidor</h3>
-            <span className="chat-hint">Canal general del servidor</span>
+            <h3>💬 {t('lobby','staging_chat_title')}</h3>
+            <span className="chat-hint">{t('lobby','staging_chat_hint')}</span>
           </div>
           <div className="staging-chat-body">
             <ChatBox />
