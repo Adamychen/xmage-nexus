@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { detectAndAnimateTransitions } from './gameTransitionEngine'
-import { getActiveFlights } from './flightManager'
+import { getActiveFlights, startCardFlight, clearFlights } from './flightManager'
 import { recordCardPosition, clearCardPositionRegistry } from './cardPositionRegistry'
 import { makeGameView, makePlayer, makePermanent, makeCard } from '../__fixtures__/gameViews'
 
@@ -21,6 +21,7 @@ describe('gameTransitionEngine', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     clearCardPositionRegistry()
+    clearFlights()
     document.body.innerHTML = `
       <div class="game-board">
         <div class="player-zone" data-player-id="p-alice" data-player-name="Alice">
@@ -143,5 +144,68 @@ describe('gameTransitionEngine', () => {
 
     const flights = getActiveFlights()
     expect(flights.some((f) => f.card.name === 'Goblin Guide')).toBe(true)
+  })
+
+  it('does not duplicate a flight when a CardSlot already started one for the card', () => {
+    const grizzly = makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' })
+    const alice1 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: { 'perm-grizzly': grizzly },
+    })
+    const prevGame = makeGameView({ players: [alice1] })
+
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    const preexistingId = startCardFlight(grizzly, mockRect(450, 400), mockRect(900, 100, 80, 112), 340)
+    expect(preexistingId).not.toBeNull()
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+
+    const flights = getActiveFlights()
+    expect(flights.length).toBe(1)
+    expect(flights[0].flightId).toBe(preexistingId)
+    expect(flights[0].toRect.left).toBe(900)
+  })
+
+  it('shakes creatures whose damage increased', () => {
+    const wounded = makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' })
+    ;(wounded as unknown as { damage: number }).damage = 2
+    const alice1 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: { 'perm-grizzly': makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' }) },
+    })
+    const prevGame = makeGameView({ players: [alice1] })
+
+    const alice2 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: { 'perm-grizzly': wounded },
+    })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+
+    const grizzlyEl = document.querySelector('[data-card-id="perm-grizzly"]')
+    expect(grizzlyEl?.classList.contains('took-damage')).toBe(true)
+  })
+
+  it('shakes the player info bar when life drops', () => {
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 20 })
+    const prevGame = makeGameView({ players: [alice1] })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 17 })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    const zoneRoot = document.querySelector('[data-player-id="p-alice"]') as HTMLElement
+    const infoBar = document.createElement('div')
+    infoBar.setAttribute('data-player-id', 'p-alice')
+    zoneRoot.appendChild(infoBar)
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+
+    expect(infoBar.classList.contains('took-damage')).toBe(true)
+    expect(zoneRoot.classList.contains('took-damage')).toBe(false)
   })
 })

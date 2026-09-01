@@ -8,10 +8,11 @@ import { combatScenario } from '../fixtures/scenarios/combat'
 import { withFakeServer } from './support/fake-backend'
 
 /** Verifica el combate del Sim (el HumanHelper mantiene los turnos del humano):
- *  criatura en el campo, ataque declarado y daño aplicado. */
-async function waitForSimCombat(page: Page): Promise<{ goblin: boolean; attack: boolean; damaged: boolean }> {
+ *  criatura en el campo, ataque declarado y daño aplicado. Además comprueba que
+ *  el atacante se muestra girado (clase `tapped`) mientras dura el combate. */
+async function waitForSimCombat(page: Page): Promise<{ goblin: boolean; attack: boolean; damaged: boolean; tapped: boolean }> {
   const deadline = Date.now() + 30_000
-  const seen = { goblin: false, attack: false, damaged: false }
+  const seen = { goblin: false, attack: false, damaged: false, tapped: false }
   while (Date.now() < deadline) {
     const view = lastGameView(parseFrames(framesOf(page)))
     if (view) {
@@ -29,16 +30,22 @@ async function waitForSimCombat(page: Page): Promise<{ goblin: boolean; attack: 
       const life = controlledPlayer(view)?.life
       seen.damaged = seen.damaged || (typeof life === 'number' && life < 20)
     }
-    if (seen.goblin && seen.attack && seen.damaged) return seen
+    if (!seen.tapped) {
+      seen.tapped = await page.evaluate(
+        () => !!document.querySelector('.card-slot.tapped[data-card-name="Raging Goblin"]')
+      )
+    }
+    if (seen.goblin && seen.attack && seen.damaged && seen.tapped) return seen
     await page.waitForTimeout(150)
   }
   return seen
 }
 
-function assertCombat(seen: { goblin: boolean; attack: boolean; damaged: boolean }) {
+function assertCombat(seen: { goblin: boolean; attack: boolean; damaged: boolean; tapped: boolean }) {
   expect(seen.goblin, 'el Sim debería lanzar el Raging Goblin (criatura en su campo)').toBeTruthy()
   expect(seen.attack, 'el Sim debería declarar atacantes (combate con atacantes)').toBeTruthy()
   expect(seen.damaged, 'el daño de combate debería bajar la vida del humano por debajo de 20').toBeTruthy()
+  expect(seen.tapped, 'el atacante debería verse girado (clase tapped en su CardSlot) durante el combate').toBeTruthy()
 }
 
 test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño baja la vida', { tag: '@combat' }, async ({ page }) => {

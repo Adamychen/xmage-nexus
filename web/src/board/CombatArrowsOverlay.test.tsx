@@ -115,4 +115,66 @@ describe('CombatArrowsOverlay', () => {
     unmount()
     containerDiv.remove()
   })
+
+  it('aims attack arrows at the deepest player element (avatar anchor), not the zone root', () => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+
+    const attCard = document.createElement('div')
+    attCard.setAttribute('data-card-id', 'card-goblin-2')
+    attCard.getBoundingClientRect = () => ({ left: 100, top: 400, width: 100, height: 140, right: 200, bottom: 540, x: 100, y: 400, toJSON: () => {} } as DOMRect)
+
+    const zoneRoot = document.createElement('div')
+    zoneRoot.setAttribute('data-player-id', 'p-opp')
+    zoneRoot.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 400, right: 1000, bottom: 400, x: 0, y: 0, toJSON: () => {} } as DOMRect)
+
+    const infoBar = document.createElement('div')
+    infoBar.setAttribute('data-player-id', 'p-opp')
+    infoBar.getBoundingClientRect = () => ({ left: 0, top: 20, width: 300, height: 80, right: 300, bottom: 100, x: 0, y: 20, toJSON: () => {} } as DOMRect)
+
+    const avatar = document.createElement('div')
+    avatar.setAttribute('data-player-anchor', 'p-opp')
+    avatar.getBoundingClientRect = () => ({ left: 120, top: 30, width: 60, height: 60, right: 180, bottom: 90, x: 120, y: 30, toJSON: () => {} } as DOMRect)
+
+    infoBar.appendChild(avatar)
+    zoneRoot.appendChild(infoBar)
+    boardDiv.appendChild(attCard)
+    boardDiv.appendChild(zoneRoot)
+    boardDiv.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 800, right: 1000, bottom: 800, x: 0, y: 0, toJSON: () => {} } as DOMRect)
+
+    const boardRef = { current: boardDiv }
+
+    const fakeGame = {
+      step: 'DECLARE_BLOCKERS',
+      turn: 3,
+      combat: [
+        {
+          attackers: { 'card-goblin-2': {} as any },
+          defenderId: 'p-opp',
+        } as any,
+      ],
+      players: [
+        { playerId: 'p-me', name: 'player1', life: 20, controlled: true } as any,
+        { playerId: 'p-opp', name: 'Computer', life: 19, controlled: false } as any,
+      ],
+    }
+
+    const { container, unmount } = render(
+      <CombatArrowsOverlay
+        game={fakeGame as any}
+        boardRef={boardRef}
+      />
+    )
+
+    const attackPath = container.querySelector('.arrow-path.arrow-attack') as SVGPathElement | null
+    expect(attackPath).not.toBeNull()
+    const d = attackPath!.getAttribute('d') ?? ''
+    // Attacker card center (150, 470), avatar center (150, 60):
+    // trimmed start y = 470 - 42 = 428, trimmed end y = 60 + 18 = 78
+    expect(d.startsWith('M 150 428')).toBe(true)
+    expect(d.endsWith('150 78')).toBe(true)
+
+    unmount()
+    boardDiv.remove()
+  })
 })

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
-import { startCardFlight } from './flightManager'
+import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
@@ -20,6 +20,8 @@ interface CardSlotProps {
   isPlayable?: boolean
   isChosen?: boolean
   tapped?: boolean
+  attacking?: boolean
+  blocking?: boolean
   faceDown?: boolean
   className?: string
   style?: React.CSSProperties
@@ -37,6 +39,8 @@ export default function CardSlot({
   isPlayable = false,
   isChosen = false,
   tapped = false,
+  attacking = false,
+  blocking = false,
   faceDown = false,
   className = '',
   style,
@@ -49,6 +53,9 @@ export default function CardSlot({
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
   const [entering, setEntering] = useState(false)
+  const [flightState, setFlightState] = useState<'none' | 'hidden' | 'landing'>('none')
+  const flightStateRef = useRef(flightState)
+  flightStateRef.current = flightState
 
   const effectiveId = cardId || (card as any).id
 
@@ -56,7 +63,6 @@ export default function CardSlot({
     const el = slotRef.current
     if (!el || !effectiveId) return
 
-    let timerId: ReturnType<typeof setTimeout> | null = null
     let enterTimerId: ReturnType<typeof setTimeout> | null = null
 
     if (isFirstMountRef.current) {
@@ -72,16 +78,22 @@ export default function CardSlot({
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
-            const flightId = startCardFlight(card, prev, lastRect, 320)
+            const flightId = startCardFlight(card, prev, lastRect, 340)
             if (flightId) {
-              el.style.opacity = '0'
-              timerId = setTimeout(() => {
-                timerId = null
-                if (el) {
-                  el.style.transition = 'opacity 160ms ease'
-                  el.style.opacity = '1'
+              setFlightState('hidden')
+              const land = () => {
+                if (flightStateRef.current !== 'hidden') return
+                setFlightState('landing')
+                setTimeout(() => setFlightState('none'), 180)
+              }
+              const offLanded = onFlightLanded(flightId, land)
+              const unsub = subscribeFlights(() => {
+                if (!getActiveFlights().some((f) => f.flightId === flightId)) {
+                  land()
+                  offLanded()
+                  unsub()
                 }
-              }, 300)
+              })
             }
           } else {
             setEntering(true)
@@ -95,17 +107,9 @@ export default function CardSlot({
     }
 
     return () => {
-      if (timerId !== null) {
-        clearTimeout(timerId)
-        timerId = null
-      }
       if (enterTimerId !== null) {
         clearTimeout(enterTimerId)
         enterTimerId = null
-      }
-      if (el) {
-        el.style.opacity = ''
-        el.style.transition = ''
       }
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
@@ -114,6 +118,12 @@ export default function CardSlot({
       }
     }
   }, [effectiveId, card])
+
+  useEffect(() => {
+    if (flightState !== 'hidden') return
+    const safety = setTimeout(() => setFlightState('landing'), 700)
+    return () => clearTimeout(safety)
+  }, [flightState])
 
   useEffect(() => {
     if (faceDown) return
@@ -154,6 +164,8 @@ export default function CardSlot({
       className={[
         'card-slot',
         tapped ? 'tapped' : '',
+        attacking ? 'attacking' : '',
+        blocking ? 'blocking' : '',
         isTarget ? 'targetable' : '',
         isPlayable ? 'playable' : '',
         isChosen ? 'chosen' : '',
@@ -161,6 +173,8 @@ export default function CardSlot({
         isFlipped ? 'is-flipped-card' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
+        flightState === 'hidden' ? 'flight-hidden' : '',
+        flightState === 'landing' ? 'flight-land' : '',
         className,
       ].filter(Boolean).join(' ')}
       onClick={onClick}

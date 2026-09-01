@@ -58,40 +58,36 @@ export function gameViewFrom(value: unknown): GameView | null {
   return null
 }
 
+export interface CombatActors {
+  attackingIds: string[]
+  blockingIds: string[]
+}
+
+/** Atacantes/bloqueadores actuales derivados directamente de los grupos de
+ *  combate del GameView (verdad del servidor, presente también en las vistas
+ *  de espectador). Único sustento fiable: el campo `attacking` no existe en el
+ *  contrato y `perm.tapped` llega tarde o se pierde fuera de los pasos
+ *  DECLARE. */
+export function combatActorsFrom(game: GameView | null): CombatActors {
+  if (!game || !Array.isArray(game.combat)) {
+    return { attackingIds: [], blockingIds: [] }
+  }
+  const attacking = new Set<string>()
+  const blocking = new Set<string>()
+  for (const group of game.combat) {
+    const record = group as Record<string, unknown>
+    stringList(record.attackers).forEach((id) => attacking.add(id))
+    stringList(record.blockers).forEach((id) => blocking.add(id))
+  }
+  return { attackingIds: Array.from(attacking), blockingIds: Array.from(blocking) }
+}
+
 export function combatChosenFrom(game: GameView | null, mode?: 'attack' | 'block'): string[] {
   if (!game) return []
-  const chosen = new Set<string>()
-
-  // 1. From game.combat groups
-  if (Array.isArray(game.combat)) {
-    for (const group of game.combat) {
-      const record = group as Record<string, unknown>
-      const keys = mode === 'attack' ? ['attackers'] : mode === 'block' ? ['blockers'] : ['attackers', 'blockers']
-      for (const key of keys) {
-        const view = record[key]
-        if (Array.isArray(view)) {
-          for (const id of view) chosen.add(String(id))
-        } else if (view && typeof view === 'object') {
-          for (const id of Object.keys(view)) chosen.add(id)
-        }
-      }
-    }
-  }
-
-  // 2. From battlefield permanents marked as attacking or blocking
-  for (const player of game.players ?? []) {
-    for (const [id, perm] of Object.entries(player.battlefield ?? {})) {
-      if (mode === 'attack' && (perm as any).attacking === true) {
-        chosen.add(id)
-      } else if (mode === 'block' && (perm as any).blocking === true) {
-        chosen.add(id)
-      } else if (!mode && ((perm as any).attacking === true || (perm as any).blocking === true)) {
-        chosen.add(id)
-      }
-    }
-  }
-
-  return Array.from(chosen)
+  const actors = combatActorsFrom(game)
+  if (mode === 'attack') return actors.attackingIds
+  if (mode === 'block') return actors.blockingIds
+  return Array.from(new Set([...actors.attackingIds, ...actors.blockingIds]))
 }
 
 /** Ventana de combate del GAME_SELECT: options.possibleAttackers (declarar

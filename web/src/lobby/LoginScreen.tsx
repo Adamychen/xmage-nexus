@@ -128,6 +128,7 @@ export default function LoginScreen() {
               type="button"
               className={`preset-btn ${preset === 'local' ? 'active' : ''}`}
               onClick={() => handleSelectPreset('local')}
+              title={t('login.server_local')}
             >
               <span className="preset-icon">🏠</span>
               <span>{t('login.server_local')}</span>
@@ -136,6 +137,7 @@ export default function LoginScreen() {
               type="button"
               className={`preset-btn ${preset === 'official' ? 'active' : ''}`}
               onClick={() => handleSelectPreset('official')}
+              title={t('login.server_official')}
             >
               <span className="preset-icon">🌐</span>
               <span>{t('login.server_official')}</span>
@@ -144,6 +146,7 @@ export default function LoginScreen() {
               type="button"
               className={`preset-btn ${preset === 'custom' ? 'active' : ''}`}
               onClick={() => handleSelectPreset('custom')}
+              title={t('login.server_custom')}
             >
               <span className="preset-icon">⚙️</span>
               <span>{t('login.server_custom')}</span>
@@ -203,12 +206,12 @@ export default function LoginScreen() {
         </div>
 
         {/* Network Connection Configuration Box */}
-        <details className="login-network-box" style={{ border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 10, padding: '0', background: 'rgba(10, 13, 28, 0.65)', boxSizing: 'border-box', width: '100%' }}>
-          <summary className="login-network-header" style={{ cursor: 'pointer', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
-            <span className="network-box-title">{t('login.network_config')}</span>
+        <details className="login-network-box">
+          <summary className="login-network-header">
+            <span className="network-box-title" title={t('login.network_config')}>{t('login.network_config')}</span>
             <span className="network-box-hint">{serverHost}:{port}</span>
           </summary>
-          <div className="login-network-fields" style={{ padding: '0 12px 10px' }}>
+          <div className="login-network-fields">
             <label className="network-field-proxy">
               {t('login.proxy')}
               <input

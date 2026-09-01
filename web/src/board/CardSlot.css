@@ -33,6 +33,21 @@
   animation: cardAppear 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Card hidden while its flying clone is in the air */
+.card-slot.flight-hidden {
+  opacity: 0;
+}
+
+/* Crossfade when the real card takes over from the landed clone */
+@keyframes cardLand {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.card-slot.flight-land {
+  animation: cardLand 0.17s ease-out both;
+}
+
 .card-slot.clickable:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75);
@@ -42,6 +57,43 @@
 .card-slot.tapped {
   transform: rotate(90deg);
   margin: 0 calc(var(--card-w, 100px) * 0.2);
+}
+
+/* Attacker nudges toward the defender (translate composes with the tap
+   rotation: `translate` applies in screen space before `transform`). */
+.card-slot.attacking {
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+}
+
+.zone-bottom .card-slot.attacking,
+.player-zone .card-slot.attacking {
+  translate: 0 -12px;
+}
+
+.zone-top .card-slot.attacking,
+.opponent-zone .card-slot.attacking {
+  translate: 0 12px;
+}
+
+/* Blocker gets a cool cyan lean-in */
+.card-slot.blocking {
+  box-shadow: 0 0 14px 2px rgba(56, 189, 248, 0.65), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Combat damage feedback */
+@keyframes shakeHit {
+  0%, 100% { margin-left: 0; }
+  20% { margin-left: -4px; }
+  40% { margin-left: 4px; }
+  60% { margin-left: -3px; }
+  80% { margin-left: 3px; }
+}
+
+.card-slot.took-damage,
+.player-info-bar.took-damage {
+  animation: shakeHit 0.38s ease-in-out;
 }
 
 .card-slot.tapped.clickable:hover {

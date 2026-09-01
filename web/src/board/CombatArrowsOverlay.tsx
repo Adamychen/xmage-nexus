@@ -62,29 +62,68 @@ export default function CombatArrowsOverlay({
       return false
     }
 
-    const getCenter = (id: string): { x: number; y: number } | null => {
+    const getCenter = (id: string): { x: number; y: number; rect: DOMRect } | null => {
       if (isDefeatedOrLost(id)) return null
+      const centerOf = (el: Element) => {
+        const rect = el.getBoundingClientRect()
+        if (rect.width > 0 && rect.height > 0) {
+          return {
+            x: rect.left + rect.width / 2 - boardRect.left,
+            y: rect.top + rect.height / 2 - boardRect.top,
+            rect,
+          }
+        }
+        return null
+      }
+
       const cardEl = boardEl.querySelector(`[data-card-id="${id}"]`) || document.querySelector(`[data-card-id="${id}"]`)
       if (cardEl) {
-        const rect = cardEl.getBoundingClientRect()
-        if (rect.width > 0 && rect.height > 0) {
-          return {
-            x: rect.left + rect.width / 2 - boardRect.left,
-            y: rect.top + rect.height / 2 - boardRect.top,
-          }
-        }
+        const c = centerOf(cardEl)
+        if (c) return c
       }
-      const playerEl = boardEl.querySelector(`[data-player-id="${id}"]`) || document.querySelector(`[data-player-id="${id}"]`)
-      if (playerEl) {
-        const rect = playerEl.getBoundingClientRect()
-        if (rect.width > 0 && rect.height > 0) {
-          return {
-            x: rect.left + rect.width / 2 - boardRect.left,
-            y: rect.top + rect.height / 2 - boardRect.top,
-          }
+
+      // Players: prefer the avatar anchor, then the deepest [data-player-id]
+      // (BoardZone root and PlayerInfoBar both carry the attribute; the zone
+      // root's center falls in the lands band, not on the player).
+      const scope = boardEl.parentElement ?? document
+      let playerEl =
+        boardEl.querySelector(`[data-player-id="${id}"] [data-player-anchor]`) ||
+        (scope.querySelector(`[data-player-id="${id}"] [data-player-anchor]`) as Element | null)
+      if (!playerEl) {
+        const candidates = Array.from(
+          boardEl.querySelectorAll(`[data-player-id="${id}"]`) as NodeListOf<Element>
+        )
+        if (candidates.length === 0) {
+          candidates.push(...Array.from(document.querySelectorAll(`[data-player-id="${id}"]`)))
         }
+        playerEl = candidates.reduce<Element | null>((deepest, el) => {
+          if (!deepest || deepest.contains(el)) return el
+          return deepest
+        }, null)
+      }
+      if (playerEl) {
+        const c = centerOf(playerEl)
+        if (c) return c
       }
       return null
+    }
+
+    const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type']): ArrowItem => {
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      const dist = Math.hypot(dx, dy) || 1
+      const ux = dx / dist
+      const uy = dy / dist
+      const startInset = Math.min(from.rect.width, from.rect.height) * 0.42
+      const endInset = type === 'target' ? 12 : 18
+      return {
+        id,
+        x1: from.x + ux * startInset,
+        y1: from.y + uy * startInset,
+        x2: to.x - ux * endInset,
+        y2: to.y - uy * endInset,
+        type,
+      }
     }
 
     // 1. Attack arrows from game.combat groups
@@ -118,14 +157,7 @@ export default function CombatArrowsOverlay({
             const defCenter = getCenter(defenderId)
             const attCenter = getCenter(String(attId))
             if (defCenter && attCenter) {
-              newArrows.push({
-                id: `att-${gi}-${attId}`,
-                x1: attCenter.x,
-                y1: attCenter.y,
-                x2: defCenter.x,
-                y2: defCenter.y,
-                type: 'attack',
-              })
+              newArrows.push(makeArrow(`att-${gi}-${attId}`, attCenter, defCenter, 'attack'))
             }
           }
         })
@@ -144,14 +176,7 @@ export default function CombatArrowsOverlay({
             blockerIds.forEach((blkId) => {
               const blkCenter = getCenter(String(blkId))
               if (blkCenter) {
-                newArrows.push({
-                  id: `blk-${gi}-${blkId}`,
-                  x1: blkCenter.x,
-                  y1: blkCenter.y,
-                  x2: firstAttCenter.x,
-                  y2: firstAttCenter.y,
-                  type: 'block',
-                })
+                newArrows.push(makeArrow(`blk-${gi}-${blkId}`, blkCenter, firstAttCenter, 'block'))
               }
             })
           }
@@ -173,14 +198,7 @@ export default function CombatArrowsOverlay({
             if (!newArrows.some((a) => a.id.includes(attId) && a.type === 'attack')) {
               const attCenter = getCenter(attId)
               if (attCenter) {
-                newArrows.push({
-                  id: `chosen-att-${attId}`,
-                  x1: attCenter.x,
-                  y1: attCenter.y,
-                  x2: defCenter.x,
-                  y2: defCenter.y,
-                  type: 'attack',
-                })
+                newArrows.push(makeArrow(`chosen-att-${attId}`, attCenter, defCenter, 'attack'))
               }
             }
           })
@@ -195,14 +213,7 @@ export default function CombatArrowsOverlay({
         chosenTargetIds.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
           if (tgtCenter) {
-            newArrows.push({
-              id: `target-${ti}-${tgtId}`,
-              x1: sourceCenter.x,
-              y1: sourceCenter.y,
-              x2: tgtCenter.x,
-              y2: tgtCenter.y,
-              type: 'target',
-            })
+            newArrows.push(makeArrow(`target-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target'))
           }
         })
       }
@@ -225,21 +236,14 @@ export default function CombatArrowsOverlay({
         targetList.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
           if (tgtCenter) {
-            newArrows.push({
-              id: `stack-target-${stackId}-${ti}-${tgtId}`,
-              x1: sourceCenter.x,
-              y1: sourceCenter.y,
-              x2: tgtCenter.x,
-              y2: tgtCenter.y,
-              type: 'target',
-            })
+            newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target'))
           }
         })
       })
     }
 
     return newArrows
-  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, opp])
+  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, me, opp])
 
   useEffect(() => {
     const update = () => {
@@ -247,10 +251,24 @@ export default function CombatArrowsOverlay({
     }
     update()
     window.addEventListener('resize', update)
+    const boardEl = boardRef.current
+    let observer: ResizeObserver | null = null
+    if (boardEl && typeof ResizeObserver === 'function') {
+      observer = new ResizeObserver(update)
+      observer.observe(boardEl)
+    }
+    const onScroll = (e: Event) => {
+      if (boardEl && e.target instanceof Node && boardEl.contains(e.target)) {
+        update()
+      }
+    }
+    document.addEventListener('scroll', onScroll, true)
     return () => {
       window.removeEventListener('resize', update)
+      document.removeEventListener('scroll', onScroll, true)
+      observer?.disconnect()
     }
-  }, [computeArrows])
+  }, [computeArrows, boardRef])
 
   if (arrows.length === 0) return null
 
@@ -261,39 +279,39 @@ export default function CombatArrowsOverlay({
         <marker
           id="marker-attack"
           viewBox="0 0 10 10"
-          refX="8"
+          refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerWidth="8.5"
+          markerHeight="8.5"
           orient="auto-start-reverse"
         >
-          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ff4757" />
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#ff4757" stroke="#7a1020" strokeWidth="0.6" />
         </marker>
 
         {/* Block Arrow Marker (Cyan / Blue) */}
         <marker
           id="marker-block"
           viewBox="0 0 10 10"
-          refX="8"
+          refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerWidth="8.5"
+          markerHeight="8.5"
           orient="auto-start-reverse"
         >
-          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#38bdf8" />
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" stroke="#0c4a6e" strokeWidth="0.6" />
         </marker>
 
         {/* Target Arrow Marker (Gold / Amber) */}
         <marker
           id="marker-target"
           viewBox="0 0 10 10"
-          refX="8"
+          refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerWidth="8.5"
+          markerHeight="8.5"
           orient="auto-start-reverse"
         >
-          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ffd070" />
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#ffd070" stroke="#7c4a03" strokeWidth="0.6" />
         </marker>
 
         {/* Glow Filters */}

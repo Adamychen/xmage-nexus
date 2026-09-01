@@ -18,7 +18,7 @@
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.85),
               0 0 24px rgba(120, 190, 255, 0.6);
   will-change: transform, opacity;
-  transform-origin: top left;
+  transform-origin: center center;
   display: flex;
   align-items: center;
   justify-content: center;

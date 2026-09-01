@@ -558,8 +558,12 @@ export class HumanGame {
       this.combat = groups
         .map((g) => { const attackers = { ...g.attackers }; delete attackers[id]; return { ...g, attackers } })
         .filter((g) => Object.keys(g.attackers).length > 0)
+      const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === id)
+      if (perm) perm.tapped = false
     } else {
       this.combat = [{ attackers: { [id]: {} } }]
+      const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === id)
+      if (perm) perm.tapped = true
     }
     this.emitUpdate()
     this.emitAttackSelect()
@@ -567,6 +571,7 @@ export class HumanGame {
 
   private onAttackSpecial(): void {
     this.combat = [{ attackers: Object.fromEntries(this.myBattle.map((p) => [p.parentId ?? p.name, {}])) }]
+    for (const p of this.myBattle) p.tapped = true
     this.emitUpdate()
     this.finishHumanAttack()
   }

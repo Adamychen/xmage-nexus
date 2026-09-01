@@ -54,7 +54,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     await page.getByRole('button', { name: /Confirmar orden/i }).click()
 
     // 4. Aparece el diálogo de Distribución de Daño (Multi-Amount)
-    const multiAmountDialog = page.locator('.feedback-multi-amount')
+    const multiAmountDialog = page.locator('.feedback-multi-amount-wrap')
     await expect(multiAmountDialog).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('.feedback-dialog')).toContainText('Colossal Dreadmaw')
 
@@ -64,7 +64,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     fs.writeFileSync(path.join(SHOTS_DIR, 'combat-09-damage-distribution-amounts.png'), damageShot)
 
     // Enviar asignación de daño
-    await page.locator('.feedback-multi-amount button.primary').click()
+    await page.locator('.feedback-multi-amount-wrap button.primary').click()
 
     // 5. Resolución de daño: los bloqueadores son destruidos
     await expect(page.locator('.feedback-dialog')).toBeHidden({ timeout: 5_000 })

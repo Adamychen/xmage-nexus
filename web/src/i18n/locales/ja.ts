@@ -31,9 +31,9 @@ export const ja: TranslationSchema = {
   login: {
     subtitle: 'XMage用の高速モダンWebクライアント',
     server_target: 'XMageサーバー:',
-    server_local: 'ローカル (localhost:17171)',
-    server_official: '公式ベータ (beta.xmage.today:17171)',
-    server_custom: 'カスタムサーバー...',
+    server_local: 'ローカル',
+    server_official: '公式ベータ',
+    server_custom: 'カスタム',
     connect_btn: '接続してプレイ',
     connecting: '接続中...',
     username: 'ユーザー名',

@@ -8,6 +8,8 @@ export interface OpponentZoneProps {
   onCardHover?: (card: any, rect?: DOMRect) => void
   targetIds?: Set<string>
   revealedCards?: Record<string, CardView>
+  attackingIds?: string[]
+  blockingIds?: string[]
   compactPod?: boolean
   mirrored?: boolean
   className?: string

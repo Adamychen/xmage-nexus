@@ -29,13 +29,13 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     const anyDialog = page.locator('.feedback-dialog, .card-grid-dialog, .targeting-bar, .mana-prompt-bar')
     let cursor = 0
 
-    async function step(method: string): Promise<void> {
+    async function step(method: string, expectedText?: string): Promise<void> {
       await waitFrameAt(page, (f) => f.method === method, method, 15_000, cursor)
       // refresca el cursor al índice del frame recién llegado para no re-matchear
       cursor = parsedLen(page)
-      // el prompt puede renderizar en .feedback-dialog (opciones) o .card-grid-dialog
-      // (selección de cartas): ambos llevan el método en la cabecera.
-      await expect(anyDialog).toContainText(method, { timeout: 15_000 })
+      // el diálogo ya no muestra el método en crudo (título traducido); el frame
+      // de arriba verifica el protocolo y aquí anclamos el prompt por su mensaje
+      await expect(anyDialog).toContainText(expectedText ?? method, { timeout: 15_000 })
       await page.waitForTimeout(150)
       fs.writeFileSync(path.join(SHOTS_DIR, `prompts-${method}.png`), await page.screenshot({ fullPage: true }))
     }
@@ -64,19 +64,19 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     }
 
     // 1. GAME_SELECT_PLAYER (uuid)
-    await step('GAME_SELECT_PLAYER')
+    await step('GAME_SELECT_PLAYER', 'Choose a player')
     await options().filter({ hasText: SIM_NAME }).first().click()
 
     // 2. GAME_CHOOSE_STRING con opciones (string + lista)
-    await step('GAME_CHOOSE_STRING')
+    await step('GAME_CHOOSE_STRING', 'choose from the list')
     await options().filter({ hasText: /Black Lotus/i }).first().click()
 
     // 3. GAME_CHOOSE_STRING sin opciones (texto libre) — verifica el input arreglado
-    await step('GAME_CHOOSE_STRING')
+    await step('GAME_CHOOSE_STRING', 'free text')
     const freeInput = page.getByLabel('Texto libre')
     await expect(freeInput).toBeVisible({ timeout: 10_000 })
     await freeInput.fill('Blinkmoth Nexus')
-    await fbDialog.getByRole('button', { name: 'Enviar' }).click()
+    await fbDialog.getByRole('button', { name: /Enviar|Confirmar/i }).click()
     expect(
       parseSent(sentOf(page)).some(
         (s) => s.action === 'sendPlayerString' && String(s.args?.value) === 'Blinkmoth Nexus',
@@ -85,23 +85,23 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     ).toBeTruthy()
 
     // 4. GAME_CHOOSE_NUMBER (integer)
-    await step('GAME_CHOOSE_NUMBER')
+    await step('GAME_CHOOSE_NUMBER', 'Choose a number')
     await resolveInteger(page, 3, 'CHOOSE_NUMBER')
 
     // 5. GAME_CHOOSE_ONE (string + options)
-    await step('GAME_CHOOSE_ONE')
+    await step('GAME_CHOOSE_ONE', 'Choose one')
     await options().first().click()
 
     // 6. GAME_CHOOSE_BETWEEN (string + options)
-    await step('GAME_CHOOSE_BETWEEN')
+    await step('GAME_CHOOSE_BETWEEN', 'Choose between')
     await options().first().click()
 
     // 7. GAME_CHOOSE_MODE (uuid + choices)
-    await step('GAME_CHOOSE_MODE')
+    await step('GAME_CHOOSE_MODE', 'Choose a mode')
     await options().first().click()
 
     // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1) — renderiza en CardGrid
-    await step('GAME_CHOOSE_CARDS')
+    await step('GAME_CHOOSE_CARDS', 'Choose a card')
     await clickCardCell('Mountain')
     expect(
       parseSent(sentOf(page)).some(
@@ -111,15 +111,15 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     ).toBeTruthy()
 
     // 9. GAME_TARGET_PLAYER (uuid, eligir jugador)
-    await step('GAME_TARGET_PLAYER')
+    await step('GAME_TARGET_PLAYER', 'Choose a player')
     await options().filter({ hasText: SIM_NAME }).first().click()
 
     // 10. GAME_TARGET_AMOUNT (integer, dividir daño)
-    await step('GAME_TARGET_AMOUNT')
+    await step('GAME_TARGET_AMOUNT', 'Distribute the damage')
     await resolveInteger(page, 2, 'TARGET_AMOUNT')
 
     // 11. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2) — renderiza en CardGrid
-    await step('GAME_SELECT_CARDS')
+    await step('GAME_SELECT_CARDS', 'Select up to two cards')
     await clickCardCell('Mountain')
     await clickCardCell('Island')
     await confirmCardGrid()
@@ -129,11 +129,11 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     ).toBeTruthy()
 
     // 12. GAME_PLAY_XMANA (boolean)
-    await step('GAME_PLAY_XMANA')
+    await step('GAME_PLAY_XMANA', 'Pay X mana?')
     await fbDialog.getByRole('button', { name: /Confirmar|sí|yes/i }).click()
 
     // 13. USER_REQUEST_DIALOG (botones -> sendPlayerAction)
-    await step('USER_REQUEST_DIALOG')
+    await step('USER_REQUEST_DIALOG', '¿Qué quieres hacer?')
     await fbDialog.getByRole('button', { name: /Rebobinar/i }).click()
     expect(
       parseSent(sentOf(page)).some(

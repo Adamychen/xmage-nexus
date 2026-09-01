@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useActiveFlights, type FlightRecord } from './flightManager'
+import { useActiveFlights, markFlightLanded, type FlightRecord } from './flightManager'
 import { awaitImageUrl } from '../cards/cardImages'
 import './FlyingCardOverlay.css'
 
@@ -23,30 +23,55 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     const { fromRect, toRect, duration } = flight
 
-    const scaleX = toRect.width / Math.max(1, fromRect.width)
-    const scaleY = toRect.height / Math.max(1, fromRect.height)
-    const scale = Math.min(scaleX, scaleY)
+    const w = fromRect.width
+    const h = fromRect.height
+    const scale = Math.min(toRect.width / Math.max(1, w), toRect.height / Math.max(1, h))
 
-    const dx = toRect.left - fromRect.left
-    const dy = toRect.top - fromRect.top
+    const fromCx = fromRect.left + w / 2
+    const fromCy = fromRect.top + h / 2
+    const toCx = toRect.left + toRect.width / 2
+    const toCy = toRect.top + toRect.height / 2
+
+    const dx = toCx - fromCx
+    const dy = toCy - fromCy
     const dist = Math.hypot(dx, dy)
-    const arcLift = Math.min(120, dist * 0.25)
+    const arcLift = Math.min(110, dist * 0.22)
+    const rot = (flight.card as { tapped?: boolean }).tapped === true ? 90 : 0
 
-    el.style.width = `${fromRect.width}px`
-    el.style.height = `${fromRect.height}px`
+    el.style.width = `${w}px`
+    el.style.height = `${h}px`
+
+    if (typeof el.animate !== 'function') {
+      markFlightLanded(flight.flightId)
+      return
+    }
 
     const anim = el.animate([
-      { transform: `translate3d(${fromRect.left}px, ${fromRect.top}px, 0) scale(1)`, opacity: 0.85 },
-      { transform: `translate3d(${fromRect.left + dx * 0.5}px, ${fromRect.top + dy * 0.5 - arcLift}px, 0) scale(${(1 + scale) / 2})`, opacity: 1 },
-      { transform: `translate3d(${toRect.left}px, ${toRect.top}px, 0) scale(${scale})`, opacity: 0.7 },
+      { transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(0deg) scale(1)`, opacity: 0.9 },
+      { transform: `translate3d(${fromCx - w / 2 + dx * 0.5}px, ${fromCy - h / 2 + dy * 0.5 - arcLift}px, 0) rotate(${rot / 2}deg) scale(${(1 + scale) / 2})`, opacity: 1 },
+      { transform: `translate3d(${toCx - w / 2}px, ${toCy - h / 2}px, 0) rotate(${rot}deg) scale(${scale})`, opacity: 0.95 },
     ], {
       duration,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      easing: 'cubic-bezier(0.3, 0.9, 0.35, 1)',
       fill: 'forwards',
     })
 
+    let fade: Animation | null = null
+    anim.finished
+      .then(() => {
+        markFlightLanded(flight.flightId)
+        fade = el.animate([{ opacity: 0.95 }, { opacity: 0 }], {
+          duration: 140,
+          delay: 60,
+          easing: 'ease-out',
+          fill: 'forwards',
+        })
+      })
+      .catch(() => {})
+
     return () => {
       anim.cancel()
+      fade?.cancel()
     }
   }, [flight])
 

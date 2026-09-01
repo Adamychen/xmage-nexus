@@ -29,14 +29,14 @@
 /* Attack Arrow (Crimson) */
 .arrow-path.arrow-attack {
   stroke: #ff4757;
-  stroke-width: 3.5;
-  stroke-dasharray: 8 4;
+  stroke-width: 4;
+  stroke-dasharray: 9 5;
   animation: arrowFlowAttack 1.2s linear infinite;
 }
 
 @keyframes arrowFlowAttack {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 28;
   }
   to {
     stroke-dashoffset: 0;
@@ -46,14 +46,14 @@
 /* Block Arrow (Cyan / Blue) */
 .arrow-path.arrow-block {
   stroke: #38bdf8;
-  stroke-width: 3.5;
-  stroke-dasharray: 8 4;
+  stroke-width: 4;
+  stroke-dasharray: 9 5;
   animation: arrowFlowBlock 1.2s linear infinite;
 }
 
 @keyframes arrowFlowBlock {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 28;
   }
   to {
     stroke-dashoffset: 0;
@@ -63,14 +63,14 @@
 /* Target Arrow (Gold / Amber) */
 .arrow-path.arrow-target {
   stroke: #ffd070;
-  stroke-width: 3;
-  stroke-dasharray: 6 6;
+  stroke-width: 3.5;
+  stroke-dasharray: 7 6;
   animation: arrowFlowTarget 0.8s linear infinite;
 }
 
 @keyframes arrowFlowTarget {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 26;
   }
   to {
     stroke-dashoffset: 0;

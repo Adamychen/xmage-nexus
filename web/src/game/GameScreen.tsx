@@ -23,6 +23,7 @@ import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
+import { combatActorsFrom } from '../state/gameUtils'
 import { setState } from '../state/state'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
@@ -59,6 +60,7 @@ export default function GameScreen() {
   const targetIds = feedback?.method === 'GAME_TARGET' ? feedback.options.map((option) => option.id) : []
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
+  const combatActors = useMemo(() => combatActorsFrom(game), [game])
 
   const onTargetClick = async (id: string) => {
     if (!gameId) return
@@ -277,6 +279,8 @@ export default function GameScreen() {
               combatMode={combat?.mode ?? null}
               combatChosen={combat?.chosen ?? []}
               onCombatClick={onCombatClick}
+              attackingIds={combatActors.attackingIds}
+              blockingIds={combatActors.blockingIds}
               crossZonePlayables={crossZone}
               onPlayCrossZone={onPlayableClick}
             />
@@ -293,6 +297,8 @@ export default function GameScreen() {
               combatMode={combat?.mode ?? null}
               combatChosen={combat?.chosen ?? []}
               onCombatClick={onCombatClick}
+              attackingIds={combatActors.attackingIds}
+              blockingIds={combatActors.blockingIds}
               crossZonePlayables={crossZone}
               onPlayCrossZone={onPlayableClick}
               focusedOpponentId={currentOpp?.playerId}

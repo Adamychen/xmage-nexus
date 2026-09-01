@@ -1,24 +1,27 @@
 import { test, expect } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
+import { getFakePort } from './support/fake-port'
+import { FAKE_MODE, BACKEND_PORT } from './dual'
+import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
 import { startGame } from './support/start-game'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
 
 test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
-    await withFakeServer(null as never, async () => {
-      await page.goto('/')
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
       const username = `deck_${Date.now()}`
-      await page.getByPlaceholder('Usuario').fill(username)
-      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
-      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.decks-title', { hasText: 'DECKS' })).toBeVisible()
+      await expect(page.locator('.decks-title', { hasText: /DECKS|Mazos/i })).toBeVisible()
       await expect(page.locator('.deck-box-create')).toBeVisible()
       await expect(page.locator('.deck-box').first()).toBeVisible()
-      await expect(page.getByRole('button', { name: /Edit Deck/i })).toBeVisible()
+      await expect(page.getByRole('button', { name: /Editar Mazo|Edit Deck/i })).toBeVisible()
       // create new deck navigates to builder
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
@@ -27,10 +30,11 @@ test.describe('Decks Gallery', () => {
       // deck list may need a tick for meta load
       await page.waitForTimeout(800)
       await expect(page.locator('.deck-builder-body')).toBeVisible()
-      await expect(page.getByRole('button', { name: /Done/i })).toBeVisible()
-      // mini-import adds a card without Scryfall
-      await page.locator('#mini-import').fill('4 [LEA:292] Mountain')
-      await page.getByRole('button', { name: '+ Añadir al mazo' }).click()
+      await expect(page.getByRole('button', { name: /Guardar y Salir|Done/i })).toBeVisible()
+      // import modal adds a card without Scryfall
+      await page.getByRole('button', { name: /Importar Lista/i }).click()
+      await page.locator('.deck-import-textarea').fill('4 [LEA:292] Mountain')
+      await page.locator('.import-submit-btn').click()
       await expect(page.getByText('Mountain')).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.arena-card-strip')).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.strip-name', { hasText: 'Mountain' })).toBeVisible()
@@ -47,21 +51,21 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.mana-orb-btn.orb-r')).toHaveClass(/active/)
       
       // Done button saves and returns to gallery
-      await page.getByRole('button', { name: /Done/i }).click()
+      await page.getByRole('button', { name: /Guardar y Salir|Done/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
   test('import .dck text creates deck in gallery @decks', async ({ page }) => {
-    await withFakeServer(null as never, async () => {
-      await page.goto('/')
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
       const username = `deck2_${Date.now()}`
-      await page.getByPlaceholder('Usuario').fill(username)
-      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
-      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
-      await page.getByRole('button', { name: /IMPORT TEXT/ }).click()
+      await page.getByRole('button', { name: /Pegar lista|IMPORT TEXT/i }).click()
       await expect(page.locator('.decks-import-dialog')).toBeVisible()
       await page.locator('.decks-import-dialog input').first().fill('Mi Test DCK')
       await page.locator('.decks-import-dialog textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
@@ -72,14 +76,14 @@ test.describe('Decks Gallery', () => {
   })
 
   test('explores online & meta decks catalog in Deck Browser @decks', async ({ page }) => {
-    await withFakeServer(null as never, async () => {
-      await page.goto('/')
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
       const username = `deck3_${Date.now()}`
-      await page.getByPlaceholder('Usuario').fill(username)
-      await page.getByPlaceholder('Contraseña').fill('pass')
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
-      await page.getByRole('button', { name: /Mis Mazos/i }).click()
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
 
       // Switch to Deck Browser tab

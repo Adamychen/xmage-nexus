@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { awaitImageUrl, resetCardImageCache, cardKey } from './cardImages'
+import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance } from './cardImages'
 import type { CardView } from '../net/types'
 
 const card = {
@@ -308,6 +308,30 @@ describe('double-faced and transform card resolution', () => {
     // Request back - should use back face image and avoid duplicate network calls
     const backUrl = await awaitImageUrl(back)
     expect(backUrl).toBe('https://img.test/delver_back.jpg')
+  })
+})
+
+describe('hasVigilance', () => {
+  it('detects vigilance in rules text with word boundaries', () => {
+    expect(hasVigilance({ name: 'Oakheaven Sentinel', rules: ['Vigilance'] } as unknown as CardView)).toBe(true)
+    expect(hasVigilance({ name: 'Centaur Courser', rules: ['Vigilance, trample'] } as unknown as CardView)).toBe(true)
+  })
+
+  it('detects vigilance in ability objects', () => {
+    expect(
+      hasVigilance({ name: 'Yosei', abilities: [{ rule: 'Vigilance' }] } as unknown as CardView)
+    ).toBe(true)
+  })
+
+  it('does not match partial words or unrelated text', () => {
+    expect(hasVigilance({ name: 'Vigilant Sentry', rules: ["Attacking doesn't cause this to tap"] } as unknown as CardView)).toBe(false)
+    expect(hasVigilance({ name: 'Goblin Piledriver', rules: ['Provoke'] } as unknown as CardView)).toBe(false)
+  })
+
+  it('returns false for null/undefined or cards without text', () => {
+    expect(hasVigilance(null)).toBe(false)
+    expect(hasVigilance(undefined)).toBe(false)
+    expect(hasVigilance({} as CardView)).toBe(false)
   })
 })
 

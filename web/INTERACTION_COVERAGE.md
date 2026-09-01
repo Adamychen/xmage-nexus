@@ -150,6 +150,8 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Atacar / Bloquear / Multi-bloqueo / Asignación de daño | ✅ | ✅ | `combat.spec.ts`, `combat-human.spec.ts`, `combat-multiblock.spec.ts` | 2026-08-24 |
+| Rotación tapped de atacantes (incl. espectador) + nudge de combate | ✅ | ✅ | `combatActorsFrom` deriva atacantes de `game.combat` (funciona sin ventana propia); `combat.spec.ts` aserta `.card-slot.tapped` del atacante del Sim; frame real `fixtures/recorded/combat.json` (invariante `hasAttackingTappedCreature`) confirma `tapped:true` en battlefield y en `combat.attackers` | 2026-08-31 |
+| Flechas de combate apuntando al defensor (avatar) | ✅ | ✅ | `CombatArrowsOverlay.getCenter` prefiere `[data-player-anchor]`/elemento más profundo; `CombatArrowsOverlay.test.tsx` (arrows aim at deepest player element) | 2026-08-31 |
 
 ### G. Stack y prioridad
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

@@ -203,6 +203,12 @@ export async function runRecorder(driver) {
     get gv() {
       return lastGV
     },
+    get gameId() {
+      return gameId
+    },
+    sendAction(action, args) {
+      ws.send(JSON.stringify({ action, args }))
+    },
     send,
     playLand() {
       const land = firstBasicLand(lastGV?.myHand ?? lastGV?.hand)

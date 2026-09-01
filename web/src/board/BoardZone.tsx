@@ -26,6 +26,8 @@ export interface BoardZoneProps {
   combatSelectable?: string[]
   combatMode?: 'attack' | 'block' | null
   combatChosen?: string[]
+  attackingIds?: string[]
+  blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   helperEmblems?: Record<string, CardView>
@@ -55,6 +57,8 @@ export default function BoardZone({
   combatSelectable = [],
   combatMode = null,
   combatChosen = [],
+  attackingIds = [],
+  blockingIds = [],
   crossZonePlayables,
   onPlayCrossZone,
   helperEmblems,
@@ -72,6 +76,8 @@ export default function BoardZone({
 
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
+  const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
+  const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
 
   const finalHand = useMemo((): CardsView => {
     if (!player) return {}
@@ -183,7 +189,8 @@ export default function BoardZone({
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
     const isSelectable = combatSelectableSet.has(id)
     const isChosen = combatChosenSet.has(id)
-    const isAttacking = (perm as any).attacking === true || (isChosen && combatMode === 'attack')
+    const isAttacking = attackingSet.has(id) || (isChosen && combatMode === 'attack')
+    const isBlocking = blockingSet.has(id) || (isChosen && combatMode === 'block')
     const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
     const attachments = perm.attachments ?? []
     const mutateParts = perm.mutated
@@ -240,6 +247,8 @@ export default function BoardZone({
             isPlayable={isPlayable}
             isChosen={isChosen}
             tapped={isTapped}
+            attacking={isAttacking}
+            blocking={isBlocking}
             showPt={isCreature}
             showCounters
             showDamage={isCreature}
@@ -283,6 +292,8 @@ export default function BoardZone({
             isPlayable={isPlayable}
             isChosen={isChosen}
             tapped={isTapped}
+            attacking={isAttacking}
+            blocking={isBlocking}
             showPt={isCreature}
             showCounters
             showDamage={isCreature}
@@ -302,6 +313,8 @@ export default function BoardZone({
         isPlayable={isPlayable}
         isChosen={isChosen}
         tapped={isTapped}
+        attacking={isAttacking}
+        blocking={isBlocking}
         showPt={isCreature}
         showCounters
         showDamage={isCreature}

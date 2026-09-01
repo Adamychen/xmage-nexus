@@ -14,6 +14,8 @@ export interface PlayerZoneProps {
   combatSelectable?: string[]
   combatMode?: 'attack' | 'block' | null
   combatChosen?: string[]
+  attackingIds?: string[]
+  blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   helperEmblems?: Record<string, CardView>

@@ -62,12 +62,12 @@ export async function login(page: Page, username: string, opts: LoginOptions = {
     await page.locator('summary.login-network-header').click()
   }
   await page.getByLabel(/Proxy/i).fill('localhost')
-  await page.getByLabel(/XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')
-  await page.getByLabel(/Port/i).fill(process.env.E2E_SERVER_PORT || '17171')
-  await page.getByLabel('Usuario').fill(username)
-  await page.getByLabel('Contraseña').fill('x')
+  await page.getByLabel(/Servidor XMage|XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')
+  await page.getByLabel(/Puerto|Port/i).fill(process.env.E2E_SERVER_PORT || '17171')
+  await page.getByLabel(/Nombre de usuario|Usuario|Username/i).fill(username)
+  await page.getByLabel(/Contraseña|Password/i).fill('x')
   const lobby = page.getByRole('heading', { name: /Lobby|XMage Nexus/i })
-  const connect = page.getByRole('button', { name: 'Conectar' })
+  const connect = page.getByRole('button', { name: /Conectar|Connect/i })
   await connect.click()
   if (opts.retryLobby) {
     // el switch de sesión del proxy tras un usuario anterior puede tardar o fallar
@@ -102,7 +102,7 @@ export interface CreateTableOptions {
 
 export async function createTable(page: Page, tableName: string, opts: CreateTableOptions = {}): Promise<void> {
   await page.getByRole('button', { name: /Nueva/i }).first().click()
-  await expect(page.getByRole('heading', { name: /Nueva mesa/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
   await page.getByLabel(/Nombre/i).fill(tableName)
 
   if (opts.winsNeeded && opts.winsNeeded > 1) {
@@ -148,14 +148,14 @@ export async function waitTableReady(page: Page, tableName: string): Promise<voi
   await expect(row).toBeVisible({ timeout: 20_000 })
   // el asiento SIM lo une el proxy inmediatamente: la mesa nace casi llena
   await expect(row.locator('.table-seats')).toHaveText(/2\/2/, { timeout: 20_000 })
-  const startButton = row.getByRole('button', { name: 'Empezar' })
+  const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
   await expect(startButton).toBeVisible({ timeout: 15_000 })
 }
 
-/** Arranca la partida (botón Empezar) y espera la pantalla de partida. */
+/** Arranca la partida (botón Empezar/Iniciar) y espera la pantalla de partida. */
 export async function startMatch(page: Page, tableName: string): Promise<void> {
   const row = page.locator('.table-row', { hasText: tableName }).first()
-  const startButton = row.getByRole('button', { name: 'Empezar' })
+  const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
   await startButton.click()
   await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 }

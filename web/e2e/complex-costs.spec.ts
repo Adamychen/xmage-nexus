@@ -11,6 +11,7 @@ import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { complexCostsScenario } from '../fixtures/scenarios/complexCosts'
 import { parsedLen, waitFrame } from './support/frames'
+import { resolveInteger } from './support/game-screen'
 import { SIM_PLAYER_ID } from '../fixtures/humanGameConstants'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
@@ -98,9 +99,7 @@ test('costes complejos de MTG: Maná Pirexiano, Kicker, Split Cards, Aventuras/M
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_GET_AMOUNT' && /chord of calling/i.test(String(f.data?.message ?? '')), 'GAME_GET_AMOUNT de Chord of Calling', 15_000, cursor)
     cursor = parsedLen(page)
-    const amountInput = page.locator('.feedback-amount input')
-    await amountInput.fill('1')
-    await page.locator('.feedback-amount button.primary').click()
+    await resolveInteger(page, 1, 'Chord of Calling (GAME_GET_AMOUNT)')
 
     await waitFrame(page, (f) => f.method === 'GAME_PLAY_MANA', 'GAME_PLAY_MANA de Convoke', 15_000, cursor)
     const manaBar = page.locator('.mana-prompt-bar')

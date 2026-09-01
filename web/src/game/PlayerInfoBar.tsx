@@ -285,7 +285,10 @@ export default function PlayerInfoBar({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >
-      <div className={`player-avatar ${hasPriority ? 'avatar-active' : ''}`}>
+      <div
+        className={`player-avatar ${hasPriority ? 'avatar-active' : ''}`}
+        data-player-anchor={player.playerId}
+      >
         <AvatarImage
           avatarId={avatarId}
           username={player.name}

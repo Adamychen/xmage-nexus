@@ -127,7 +127,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       })
     })
     await page.waitForTimeout(300)
-    const bracketBtn = page.getByRole('button', { name: /Ver bracket/i }).first()
+    const bracketBtn = page.getByTestId('open-bracket').first()
     await expect(bracketBtn).toBeVisible({ timeout: 10_000 })
     await bracketBtn.click()
     await page.waitForTimeout(300)

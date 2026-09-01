@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
-import { startCardFlight } from './flightManager'
-import { getPreviousCardPosition } from './cardPositionRegistry'
+import { startCardFlight, hasFlightFor } from './flightManager'
+import { getPreviousCardPosition, clearCardPositionRegistry } from './cardPositionRegistry'
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -18,6 +18,29 @@ function getPlayerSelector(playerId?: string, playerName?: string): string {
   if (playerId) return `[data-player-id="${playerId}"]`
   if (playerName) return `[data-player-name="${playerName}"]`
   return ''
+}
+
+/** Vuela solo si ninguna otra parte (CardSlot al montar) ya lanzó un vuelo
+ *  para esta carta; evita clones duplicados y destinos contradictorios. */
+function flyOnce(
+  cardId: string,
+  card: CardView,
+  fromRect: DOMRect | null,
+  toRect: DOMRect | null,
+  duration: number
+): void {
+  if (!fromRect || !toRect) return
+  if (hasFlightFor(cardId)) return
+  startCardFlight(card, fromRect, toRect, duration)
+}
+
+function shakeElement(selector: string, ms = 420): void {
+  const el = document.querySelector(selector)
+  if (!el) return
+  el.classList.remove('took-damage')
+  void (el as HTMLElement).offsetWidth
+  el.classList.add('took-damage')
+  setTimeout(() => el.classList.remove('took-damage'), ms)
 }
 
 export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView) {
@@ -63,7 +86,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
 
       if (sourceRect && stackRect) {
-        startCardFlight(spell, sourceRect, stackRect, 380)
+        flyOnce(spellId, spell, sourceRect, stackRect, 380)
       }
     }
   }
@@ -103,7 +126,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             faceDown: true,
           }
           setTimeout(() => {
-            startCardFlight(dummyCard, libRect, handRect, 320)
+            flyOnce(id, dummyCard, libRect, handRect, 320)
           }, i * 70)
         })
       }
@@ -113,8 +136,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (nextHandCount > prevHandCount && libRect && handRect) {
         const drawnCount = Math.min(3, nextHandCount - prevHandCount)
         for (let i = 0; i < drawnCount; i++) {
+          const drawnId = `draw-${nextP.playerId}-${Date.now()}-${i}`
           const dummyCard: CardView = {
-            id: `draw-${nextP.playerId}-${Date.now()}-${i}`,
+            id: drawnId,
             name: 'Magic Card',
             manaValue: 0,
             expansionSetCode: '',
@@ -122,7 +146,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             faceDown: true,
           }
           setTimeout(() => {
-            startCardFlight(dummyCard, libRect, handRect, 320)
+            flyOnce(drawnId, dummyCard, libRect, handRect, 320)
           }, i * 70)
         }
       }
@@ -156,7 +180,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
               getRect(`${pSel} .permanents-band`)
 
             if (destRect) {
-              startCardFlight(perm, originRect!, destRect, 350)
+              flyOnce(permId, perm, originRect, destRect, 350)
             }
           })
         }
@@ -168,8 +192,31 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (!(permId in nextBattlefield) && graveRect) {
         const prevCardRect = getPreviousCardPosition(permId) ?? getRect(`[data-card-id="${permId}"]`)
         if (prevCardRect) {
-          startCardFlight(perm, prevCardRect, graveRect, 350)
+          flyOnce(permId, perm, prevCardRect, graveRect, 350)
         }
+      }
+    }
+
+    // D) Combat/ability damage feedback: creatures and players that lost life shake
+    for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
+      const prevPerm = prevBattlefield[permId] as { damage?: number } | undefined
+      const prevDamage = typeof prevPerm?.damage === 'number' ? prevPerm.damage : 0
+      const nextDamage = typeof (nextPerm as { damage?: number }).damage === 'number'
+        ? (nextPerm as { damage?: number }).damage ?? 0
+        : 0
+      if (nextDamage > prevDamage) {
+        shakeElement(`[data-card-id="${permId}"]`)
+      }
+    }
+
+    if ((nextP.life ?? 0) < (prevP.life ?? 0)) {
+      const playerEls = Array.from(document.querySelectorAll(`[data-player-id="${nextP.playerId}"]`))
+      const deepest = playerEls.reduce<Element | null>((acc, el) => (!acc || acc.contains(el) ? el : acc), null)
+      if (deepest) {
+        deepest.classList.remove('took-damage')
+        void (deepest as HTMLElement).offsetWidth
+        deepest.classList.add('took-damage')
+        setTimeout(() => deepest.classList.remove('took-damage'), 420)
       }
     }
   }
@@ -184,8 +231,15 @@ export function useGameTransitions(game: GameView | null) {
       return
     }
 
-    if (prevGameRef.current) {
-      detectAndAnimateTransitions(prevGameRef.current, game)
+    const gameId = (game as any).gameId ?? (game as any).matchId ?? null
+    const prevGame = prevGameRef.current
+    if (prevGame) {
+      const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId ?? null
+      if (gameId && prevId && gameId !== prevId) {
+        clearCardPositionRegistry()
+      } else {
+        detectAndAnimateTransitions(prevGame, game)
+      }
     }
 
     prevGameRef.current = game

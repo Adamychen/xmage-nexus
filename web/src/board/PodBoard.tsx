@@ -20,6 +20,8 @@ interface PodBoardProps {
   combatMode?: 'attack' | 'block' | null
   combatChosen?: string[]
   onCombatClick?: (id: string) => void
+  attackingIds?: string[]
+  blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
 }
@@ -36,6 +38,8 @@ export default function PodBoard({
   combatMode = null,
   combatChosen = [],
   onCombatClick,
+  attackingIds = [],
+  blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
 }: PodBoardProps) {
@@ -74,6 +78,8 @@ export default function PodBoard({
           combatMode={combatMode}
           combatChosen={combatChosen}
           onCombatClick={onCombatClick}
+          attackingIds={attackingIds}
+          blockingIds={blockingIds}
           crossZonePlayables={crossZonePlayables}
           onPlayCrossZone={onPlayCrossZone}
         />

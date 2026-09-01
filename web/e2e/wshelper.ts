@@ -223,7 +223,14 @@ export class HumanHelper {
     const hasCombatSelect =
       (Array.isArray(options.possibleAttackers) && options.possibleAttackers.length > 0) ||
       (Array.isArray(options.possibleBlockers) && options.possibleBlockers.length > 0)
-    if (this.skipCombat && hasCombatSelect) return
+    if (hasCombatSelect) {
+      // el test ejerce la ventana de combate por la UI: invalida la ventana main
+      // armada para que el fallback pendiente (1.5s) no dispare un
+      // sendPlayerBoolean extra que el motor interpreta como "fin del paso de
+      // combate" y cierre la ventana antes del click del test
+      this.mainWindow = null
+      if (this.skipCombat) return
+    }
     const myMain = me.isActive === true && gv.phase === 'PRECOMBAT_MAIN'
     if (myMain) {
       // el reloj del fallback mide la ventana ACTUAL (turno+fase): los re-selects

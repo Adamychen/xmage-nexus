@@ -10,5 +10,11 @@
     "mechanic": "creature",
     "assert": "hasNonMutatedCreature",
     "note": "Criatura normal en el battlefield del humano (sin mutate)."
+  },
+  {
+    "file": "combat.json",
+    "mechanic": "combat",
+    "assert": "hasAttackingTappedCreature",
+    "note": "Ataque declarado (Raging Goblin haste): grupo de combate con atacante girado (tapped) tanto en el battlefield como embebido en combat.attackers."
   }
 ]

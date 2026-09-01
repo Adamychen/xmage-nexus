@@ -130,6 +130,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .login-presets-title {
@@ -142,8 +144,10 @@
 
 .login-presets-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .preset-btn {
@@ -151,17 +155,26 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 6px;
+  gap: 5px;
+  padding: 8px 4px;
   border-radius: 10px;
   background: rgba(26, 32, 64, 0.7);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   color: #c4cae8;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
   user-select: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.preset-btn span:not(.preset-icon) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .preset-btn:hover {
@@ -180,6 +193,7 @@
 
 .preset-icon {
   font-size: 13px;
+  flex-shrink: 0;
 }
 
 /* User Identity Section */
@@ -315,7 +329,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 0;
   background: rgba(10, 13, 28, 0.65);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -324,9 +338,14 @@
 }
 
 .login-network-header {
+  cursor: pointer;
+  padding: 10px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  user-select: none;
+  min-width: 0;
 }
 
 .network-box-title {
@@ -335,6 +354,10 @@
   text-transform: uppercase;
   color: #8c96c0;
   letter-spacing: 0.04em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .network-box-hint {
@@ -342,6 +365,7 @@
   color: #63e6be;
   font-family: var(--font-mono, monospace);
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .login-network-fields {
@@ -354,7 +378,7 @@
 
 .network-field-row {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: minmax(0, 1fr) 95px;
   gap: 10px;
   width: 100%;
   box-sizing: border-box;

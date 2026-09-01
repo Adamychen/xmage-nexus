@@ -23,6 +23,8 @@ interface TwoHeadedBoardProps {
   combatMode?: 'attack' | 'block' | null
   combatChosen?: string[]
   onCombatClick?: (id: string) => void
+  attackingIds?: string[]
+  blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
 }
@@ -64,6 +66,8 @@ export default function TwoHeadedBoard({
   combatMode = null,
   combatChosen = [],
   onCombatClick,
+  attackingIds = [],
+  blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
 }: TwoHeadedBoardProps) {
@@ -143,6 +147,8 @@ export default function TwoHeadedBoard({
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
         revealedCards={revealedCards(game, player)}
+        attackingIds={attackingIds}
+        blockingIds={blockingIds}
         mirrored={mirrored}
         compactPod
       />
@@ -179,6 +185,8 @@ export default function TwoHeadedBoard({
               combatSelectable={combatSelectable}
               combatMode={combatMode}
               combatChosen={combatChosen}
+              attackingIds={attackingIds}
+              blockingIds={blockingIds}
               crossZonePlayables={crossZonePlayables}
               onPlayCrossZone={onPlayCrossZone}
               helperEmblems={game?.myHelperEmblems}
@@ -191,6 +199,8 @@ export default function TwoHeadedBoard({
               onCardHover={handleCardHover}
               targetIds={targetIdSet}
               revealedCards={revealedCards(game, botLeft as PlayerView | undefined)}
+              attackingIds={attackingIds}
+              blockingIds={blockingIds}
               mirrored
               compactPod
             />

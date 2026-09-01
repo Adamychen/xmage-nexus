@@ -75,7 +75,7 @@ fakeOnly()
     // watch the demo game — the table row has a "Ver" button
     const tableRow = page.locator('.table-row', { hasText: 'Chat Test' })
     await expect(tableRow).toBeVisible({ timeout: 15_000 })
-    await tableRow.getByRole('button', { name: 'Ver' }).click()
+    await tableRow.getByRole('button', { name: /Ver|Espectar/i }).click()
 
     // game screen visible
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
@@ -116,7 +116,7 @@ fakeOnly()
     // watch the demo game — the table row has a "Ver" button
     const tableRow = page.locator('.table-row', { hasText: 'Chat Test' })
     await expect(tableRow).toBeVisible({ timeout: 15_000 })
-    await tableRow.getByRole('button', { name: 'Ver' }).click()
+    await tableRow.getByRole('button', { name: /Ver|Espectar/i }).click()
 
     // game screen visible
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })

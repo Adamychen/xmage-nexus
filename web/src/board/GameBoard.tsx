@@ -23,6 +23,8 @@ interface GameBoardProps {
   combatMode?: 'attack' | 'block' | null
   combatChosen?: string[]
   onCombatClick?: (id: string) => void
+  attackingIds?: string[]
+  blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   focusedOpponentId?: string
@@ -81,6 +83,8 @@ export default function GameBoard({
   combatMode = null,
   combatChosen = [],
   onCombatClick,
+  attackingIds = [],
+  blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
   focusedOpponentId,
@@ -199,6 +203,8 @@ export default function GameBoard({
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
         revealedCards={getOpponentRevealedCards(game, currentOpp?.playerId, currentOpp?.name)}
+        attackingIds={attackingIds}
+        blockingIds={blockingIds}
       />
       <div className="board-divider" />
       <PlayerZone
@@ -216,6 +222,8 @@ export default function GameBoard({
         combatSelectable={combatSelectable}
         combatMode={combatMode}
         combatChosen={combatChosen}
+        attackingIds={attackingIds}
+        blockingIds={blockingIds}
         crossZonePlayables={isSpectator ? [] : crossZonePlayables}
         onPlayCrossZone={onPlayCrossZone}
         helperEmblems={game?.myHelperEmblems}

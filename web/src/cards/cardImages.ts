@@ -1,5 +1,6 @@
 import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
+import { extractKeywordsFromCard } from '../data/keywordExtractor'
 
 const memory = new Map<string, string | null>()
 const inflight = new Map<string, Promise<string | null>>()
@@ -41,12 +42,22 @@ export function isTokenCard(card: CardView): boolean {
 export function hasVigilance(card: CardView | unknown): boolean {
   if (!card || typeof card !== 'object') return false
   const c = card as Record<string, unknown>
-  const rules = Array.isArray(c.rules) ? c.rules.join(' ') : String(c.rules ?? '')
+  const rules = Array.isArray(c.rules) ? c.rules.join('\n') : String(c.rules ?? '')
   const abilities = Array.isArray(c.abilities)
-    ? c.abilities.map((a) => (typeof a === 'string' ? a : (a as any)?.rule || (a as any)?.name || '')).join(' ')
+    ? c.abilities.map((a) => (typeof a === 'string' ? a : (a as any)?.rule || (a as any)?.name || '')).join('\n')
     : ''
-  const fullText = `${rules} ${abilities} ${c.name ?? ''}`.toLowerCase()
-  return fullText.includes('vigilance') || fullText.includes('vigilancia')
+  const fullText = `${rules}\n${abilities}\n${c.name ?? ''}`.toLowerCase()
+  const keywordHit = /\bvigilance\b|\bvigilancia\b/.test(fullText)
+  if (keywordHit) return true
+  if (Array.isArray(c.rules) || Array.isArray(c.abilities)) {
+    try {
+      const detected = extractKeywordsFromCard(card as CardView)
+      return detected.some((k) => k.id === 'vigilance')
+    } catch {
+      return false
+    }
+  }
+  return false
 }
 
 export function getSourceCard(card: CardView): CardView | null {

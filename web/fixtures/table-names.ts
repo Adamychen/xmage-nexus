@@ -26,6 +26,7 @@ export const TABLE = {
   missingPrompts: 'missing-prompts-test',
   mechanics: 'Mechanics & Reminder Showcase',
   chat: 'Chat Test',
+  decksGallery: 'decks-gallery-test',
   fullFlowDemo: 'Demo IA vs IA',
   crossZone: 'cz-test',
   crossZoneExile: 'cz-exile-test',

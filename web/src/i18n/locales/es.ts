@@ -31,9 +31,9 @@ export const es: TranslationSchema = {
   login: {
     subtitle: 'Cliente web moderno para XMage',
     server_target: 'Servidor XMage:',
-    server_local: 'Local (localhost:17171)',
-    server_official: 'Oficial Beta (beta.xmage.today:17171)',
-    server_custom: 'Personalizado...',
+    server_local: 'Local',
+    server_official: 'Oficial Beta',
+    server_custom: 'Personalizado',
     connect_btn: 'Conectar y Jugar',
     connecting: 'Conectando...',
     username: 'Nombre de usuario',

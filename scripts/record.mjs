@@ -37,6 +37,18 @@ const CREATURE_DECK = {
   sideboard: [],
 }
 
+// Ordenado (skipInitShuffling): mano inicial con Mountain x4 + Goblin x2 →
+// turno 1: tierra + Goblin (haste) + declarar ataque.
+const COMBAT_DECK = {
+  name: 'Mage Web combat rec',
+  cards: [
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
+    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 2 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 26 },
+  ],
+  sideboard: [],
+}
+
 function makeMutateDriver() {
   return {
     name: 'mutate',
@@ -138,7 +150,82 @@ function makeCreatureDriver() {
   }
 }
 
-const REGISTRY = { mutate: makeMutateDriver, creature: makeCreatureDriver }
+function makeCombatDriver() {
+  return {
+    name: 'combat',
+    outFile: 'combat.json',
+    deck: COMBAT_DECK,
+    gameType: 'Constructed - Pioneer',
+    _landTurn: -1,
+    _goblin: false,
+    _attacked: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+
+      // Declarar atacantes: enviar cada atacante disponible y confirmar con 'special'
+      if (gv.step === 'DECLARE_ATTACKERS' && me.isActive === true && !this._attacked) {
+        const attackers = Object.values(me.battlefield ?? {}).filter(
+          (c) => (c.cardTypes ?? []).includes('CREATURE') && !c.tapped
+        )
+        if (attackers.length === 0) {
+          ctx.pass()
+          return
+        }
+        this._attacked = true
+        for (const a of attackers) {
+          ctx.sendAction('sendPlayerUUID', { gameId: ctx.gameId, value: a.id })
+          ctx.log('onSelect: declarar atacante', a.name)
+        }
+        // confirmar la declaración (acción especial del diálogo de ataque)
+        setTimeout(() => {
+          ctx.sendAction('sendPlayerString', { gameId: ctx.gameId, value: 'special' })
+          ctx.log('onSelect: confirmar ataque (special)')
+        }, 300)
+        return
+      }
+
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      const turn = gv.turn ?? 0
+      if (turn !== this._landTurn) {
+        const land = ctx.playLand()
+        if (land) {
+          this._landTurn = turn
+          ctx.log('onSelect: jugar tierra')
+          return
+        }
+      }
+      if (!this._goblin && ctx.cardInHand('Raging Goblin') && ctx.untappedMana() >= 1) {
+        this._goblin = true
+        ctx.log('onSelect: jugar Raging Goblin')
+        ctx.playCardByName('Raging Goblin')
+        return
+      }
+      ctx.pass()
+    },
+    captureWhen(gv) {
+      const combat = gv.combat
+      if (!Array.isArray(combat) || combat.length === 0) return false
+      for (const group of combat) {
+        const attackers = group?.attackers
+        const ids = Array.isArray(attackers)
+          ? attackers
+          : attackers && typeof attackers === 'object'
+          ? Object.keys(attackers)
+          : []
+        if (ids.length > 0) return true
+      }
+      return false
+    },
+  }
+}
+
+const REGISTRY = { mutate: makeMutateDriver, creature: makeCreatureDriver, combat: makeCombatDriver }
 const NAMES = Object.keys(REGISTRY)
 
 async function runOne(name) {

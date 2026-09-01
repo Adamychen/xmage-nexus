@@ -290,6 +290,23 @@ export default function FeedbackDialog() {
                 }}
               />
             </div>
+            {prompt.options.length > 0 && (
+              <div className="feedback-options feedback-options-wrap">
+                <div className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}>
+                  {prompt.options.map((option, idx) => (
+                    <button
+                      key={option.id}
+                      className="feedback-choice-card"
+                      disabled={busy}
+                      onClick={() => void send(() => cmds.sendPlayerString(option.value, prompt.gameId), 'No se pudo enviar la elección')}
+                    >
+                      <span className="choice-number">{idx + 1}</span>
+                      <span className="choice-text"><FormattedText text={option.label} /></span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="feedback-dialog-actions">
               <button
                 className="primary send-btn"
