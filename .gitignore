@@ -84,3 +84,4 @@ mage-bundle.zip
 /web/test-results
 /web/e2e/shots
 /web/coverage
+.aider*
