@@ -81,7 +81,7 @@ export default function CardSlot({
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
-            const flightId = startCardFlight(card, prev, lastRect, 340)
+            const flightId = startCardFlight(card, prev, lastRect, 340, `[data-card-id="${effectiveId}"]`)
             if (flightId) {
               setFlightState('hidden')
               const land = () => {

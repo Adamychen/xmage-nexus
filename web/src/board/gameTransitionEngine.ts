@@ -11,6 +11,27 @@ function getRect(selector: string): DOMRect | null {
   return rect
 }
 
+/** Resuelve el destino real probando selectores concretos (slot de la carta)
+ *  antes de caer al rect del contenedor de zona. Devuelve también el selector
+ *  que casó para poder re-medirlo en vuelo. */
+function getDestRect(selectors: string[]): { rect: DOMRect; selector: string } | null {
+  for (const selector of selectors) {
+    const rect = getRect(selector)
+    if (rect) return { rect, selector }
+  }
+  return null
+}
+
+/** Doble rAF: mide cuando React ha asentado el layout (p.ej. el fan de la mano
+ *  recalcula overlap en su propio effect). Sin rAF (tests/jsdom), setTimeout. */
+function scheduleAfterLayout(fn: () => void): void {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(fn))
+  } else {
+    setTimeout(fn, 34)
+  }
+}
+
 function getPlayerSelector(playerId?: string, playerName?: string): string {
   if (playerId && playerName) {
     return `:is([data-player-id="${playerId}"], [data-player-name="${playerName}"])`
@@ -21,17 +42,25 @@ function getPlayerSelector(playerId?: string, playerName?: string): string {
 }
 
 /** Vuela solo si ninguna otra parte (CardSlot al montar) ya lanzó un vuelo
- *  para esta carta; evita clones duplicados y destinos contradictorios. */
-function flyOnce(
+ *  para esta carta; evita clones duplicados y destinos contradictorios.
+ *  Mide el destino tras asentar el layout y usa el slot real de la carta
+ *  (selectores concretos) en vez del centro del contenedor de zona. */
+function flyAfterLayout(
   cardId: string,
   card: CardView,
   fromRect: DOMRect | null,
-  toRect: DOMRect | null,
+  destSelectors: string[],
+  fallbackRect: DOMRect | null,
   duration: number
 ): void {
-  if (!fromRect || !toRect) return
-  if (hasFlightFor(cardId)) return
-  startCardFlight(card, fromRect, toRect, duration)
+  if (!fromRect) return
+  scheduleAfterLayout(() => {
+    if (hasFlightFor(cardId)) return
+    const dest = getDestRect(destSelectors)
+    const toRect = dest?.rect ?? fallbackRect
+    if (!toRect) return
+    startCardFlight(card, fromRect, toRect, duration, dest?.selector)
+  })
 }
 
 function shakeElement(selector: string, ms = 420): void {
@@ -86,7 +115,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
 
       if (sourceRect && stackRect) {
-        flyOnce(spellId, spell, sourceRect, stackRect, 380)
+        flyAfterLayout(spellId, spell, sourceRect, [
+          `[data-card-id="${spellId}"] .stack-thumb`,
+          `[data-card-id="${spellId}"] .stack-tl-card`,
+          `[data-card-id="${spellId}"]`,
+        ], stackRect, 380)
       }
     }
   }
@@ -126,7 +159,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             faceDown: true,
           }
           setTimeout(() => {
-            flyOnce(id, dummyCard, libRect, handRect, 320)
+            flyAfterLayout(id, dummyCard, libRect, [
+              `[data-card-id="${id}"]`,
+              `${pSel} .hand-zone .hand-card-slot:last-child`,
+            ], handRect, 320)
           }, i * 70)
         })
       }
@@ -146,7 +182,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             faceDown: true,
           }
           setTimeout(() => {
-            flyOnce(drawnId, dummyCard, libRect, handRect, 320)
+            flyAfterLayout(drawnId, dummyCard, libRect, [
+              `${pSel} .hand-zone .hand-card-slot:last-child`,
+            ], handRect, 320)
           }, i * 70)
         }
       }
@@ -173,16 +211,12 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         }
 
         if (originRect) {
-          requestAnimationFrame(() => {
-            const destRect =
-              getRect(`[data-card-id="${permId}"]`) ||
-              getRect(`${pSel} .creatures-band`) ||
-              getRect(`${pSel} .permanents-band`)
-
-            if (destRect) {
-              flyOnce(permId, perm, originRect, destRect, 350)
-            }
-          })
+          flyAfterLayout(permId, perm, originRect, [
+            `[data-card-id="${permId}"]`,
+            `${pSel} .creatures-band [data-card-id="${permId}"]`,
+            `${pSel} .creatures-band`,
+            `${pSel} .permanents-band`,
+          ], null, 350)
         }
       }
     }
@@ -192,7 +226,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (!(permId in nextBattlefield) && graveRect) {
         const prevCardRect = getPreviousCardPosition(permId) ?? getRect(`[data-card-id="${permId}"]`)
         if (prevCardRect) {
-          flyOnce(permId, perm, prevCardRect, graveRect, 350)
+          // Destino con ámbito al cementerio: el id puede seguir presente como
+          // top-card del propio montón del cementerio (nunca el slot de origen).
+          flyAfterLayout(permId, perm, prevCardRect, [
+            `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
+          ], graveRect, 350)
         }
       }
     }

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import { awaitImageUrl, isAbilityCard, cardName } from '../cards/cardImages'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
+import { recordCardPosition } from './cardPositionRegistry'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import './StackZone.css'
@@ -189,6 +191,38 @@ function toSmall(url: string | null): string | null {
   return url.replace('/normal/', '/small/')
 }
 
+/** Entry del stack que registra su rect al desmontar (useLayoutEffect cleanup,
+ *  como CardSlot) para que los vuelos de resolución salgan del slot exacto. */
+function RecordedStackEntry({
+  id,
+  className,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}: {
+  id: string
+  className: string
+  onClick?: () => void
+  onMouseEnter?: (e: React.MouseEvent) => void
+  onMouseLeave?: () => void
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    return () => {
+      if (el && id) recordCardPosition(id, el.getBoundingClientRect(), 'stack-zone')
+    }
+  }, [id])
+
+  return (
+    <div ref={ref} data-card-id={id} className={className} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      {children}
+    </div>
+  )
+}
+
 export default function StackZone({
   stack,
   onCardClick,
@@ -292,9 +326,9 @@ export default function StackZone({
             : null
 
           return (
-            <div
+            <RecordedStackEntry
               key={id}
-              data-card-id={id}
+              id={id}
               className={[
                 'stack-tl-entry',
                 isTop ? 'is-top' : '',
@@ -355,7 +389,7 @@ export default function StackZone({
                   </div>
                 </div>
               </div>
-            </div>
+            </RecordedStackEntry>
           )
         })}
       </div>

@@ -7,6 +7,8 @@ export interface FlightRecord {
   card: CardView | PermanentView
   fromRect: DOMRect
   toRect: DOMRect
+  /** Selector del destino real: permite re-medir en vuelo si el layout se mueve. */
+  toSelector?: string
   startTime: number
   duration: number
 }
@@ -29,7 +31,8 @@ export function startCardFlight(
   card: CardView | PermanentView,
   fromRect: DOMRect,
   toRect: DOMRect,
-  duration = 360
+  duration = 360,
+  toSelector?: string
 ): string | null {
   if (!fromRect || !toRect) return null
   if (fromRect.width <= 0 || toRect.width <= 0) return null
@@ -57,6 +60,7 @@ export function startCardFlight(
     card,
     fromRect,
     toRect,
+    toSelector,
     startTime: performance.now(),
     duration,
   }

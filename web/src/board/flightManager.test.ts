@@ -62,6 +62,20 @@ describe('flightManager', () => {
     expect(active.find((f) => f.flightId === flightId)?.card.name).toBe('Lightning Bolt')
   })
 
+  it('stores the toSelector so the overlay can retarget mid-flight', () => {
+    startCardFlight(dummyCard, fromRect, toRect, 300, '[data-card-id="card-1"]')
+
+    const active = getActiveFlights()
+    expect(active[0].toSelector).toBe('[data-card-id="card-1"]')
+  })
+
+  it('keeps toSelector undefined when omitted', () => {
+    startCardFlight(dummyCard, fromRect, toRect, 300)
+
+    const active = getActiveFlights()
+    expect(active[0].toSelector).toBeUndefined()
+  })
+
   it('ignores flight if distance is too small', () => {
     const closeRect = { ...fromRect, left: 105, top: 505 } as DOMRect
     const flightId = startCardFlight(dummyCard, fromRect, closeRect)
