@@ -30,7 +30,11 @@
 }
 
 .card-slot.entering {
-  animation: cardAppear 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* `backwards` (no `both`): un fill forwards clavaría el keyframe final
+     (transform identidad) por encima de `.tapped`/`.attacking` si la clase
+     quedara pegada — las animaciones ganan a la cascada. Así, al terminar,
+     manda el transform de estado (rotate 90°) con su transition. */
+  animation: cardAppear 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* Card hidden while its flying clone is in the air */

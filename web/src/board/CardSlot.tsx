@@ -53,6 +53,11 @@ export default function CardSlot({
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
   const [entering, setEntering] = useState(false)
+  // Timer de "entering" deliberadamente NO se limpia en reruns ni en el
+  // simulated unmount de StrictMode: limpiarlo clava la clase (y su animación
+  // con fill forwards) para siempre y mata la rotación tapped/attacking.
+  // Un setState tras desmonte es no-op inofensivo en React 18+.
+  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [flightState, setFlightState] = useState<'none' | 'hidden' | 'landing'>('none')
   const flightStateRef = useRef(flightState)
   flightStateRef.current = flightState
@@ -62,8 +67,6 @@ export default function CardSlot({
   useLayoutEffect(() => {
     const el = slotRef.current
     if (!el || !effectiveId) return
-
-    let enterTimerId: ReturnType<typeof setTimeout> | null = null
 
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
@@ -97,20 +100,16 @@ export default function CardSlot({
             }
           } else {
             setEntering(true)
-            enterTimerId = setTimeout(() => { enterTimerId = null; setEntering(false) }, 250)
+            enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
           }
         } else {
           setEntering(true)
-          enterTimerId = setTimeout(() => { enterTimerId = null; setEntering(false) }, 250)
+          enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
         }
       }
     }
 
     return () => {
-      if (enterTimerId !== null) {
-        clearTimeout(enterTimerId)
-        enterTimerId = null
-      }
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
         const zoneClass = zone ? zone.className.split(' ')[0] : ''

@@ -21,7 +21,9 @@ export interface MageSceneState {
    selectable: string[]
    chosen: string[]
   }
-  game: { turn: number; phase: string; step: string; priority: boolean } | null
+   game: { turn: number; phase: string; step: string; priority: boolean } | null
+   /** GameView completo del estado actual (solo diagnóstico/probes). */
+   gameView: GameView | null
 }
 
 declare global {
@@ -103,7 +105,8 @@ export function useSceneBridge({
          game: s.game
             ? { turn: s.game.turn, phase: s.game.phase, step: s.game.step, priority: me?.hasPriority === true }
             : null,
-        } satisfies MageSceneState
+         gameView: s.game ?? null,
+      } satisfies MageSceneState
       }
 
       publish()
