@@ -211,6 +211,13 @@ export class HumanHelper {
   private handleSelect(data: EventDataLike) {
     const gv = data.gameView
     if (!gv || !this.gameId) return
+    // Fase de combate (ataque/bloqueo): invalidar SIEMPRE el fallback de la
+    // ventana main previa, aunque este select no nos dé prioridad (en el bloqueo
+    // del rival el humano la tiene a false y el return de abajo saltaría). Si el
+    // fallback sobrevive, dispara a los ~1.5s un sendPlayerBoolean que el motor
+    // interpreta como "confirmar bloqueos" y cierra la ventana antes del click
+    // del test (race destapado por screenshots fullPage lentas).
+    if (gv.phase === 'COMBAT') this.mainWindow = null
     const me = gv.players?.find((p) => p.controlled)
     if (!me) return
     if (me.hasPriority !== true) return

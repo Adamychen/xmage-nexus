@@ -31,19 +31,25 @@ async function handBarBoxes(page: Page): Promise<{ bar: Box; slots: Box[] }> {
     })()`)
 }
 
-/** La mano (barra dedicada) nunca interseca verticalmente la fila de tierras. */
-async function expectHandClearOfLands(page: Page): Promise<void> {
-  const rows = await page.evaluate(`${RECT_OF}
+/** Overlay: la mano flota sobre el fondo SIN consumir layout — el player-zone
+ *  llega hasta el borde inferior del tablero y la barra está anclada a él. */
+async function expectOverlayLayout(page: Page): Promise<void> {
+  const boxes = await page.evaluate(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
-      const lands = document.querySelector('.player-zone:not(.mirrored) .pz-permanents-row')
-      if (!bar || !lands) throw new Error('hand-bar o fila de tierras no encontrada')
-      return { bar: rectOf(bar), lands: rectOf(lands) }
+      const board = bar?.closest('.game-board, .pod-board')
+      const zone = document.querySelector('.player-zone:not(.mirrored)')
+      if (!bar || !board || !zone) throw new Error('hand-bar, tablero o player-zone no encontrado')
+      return { bar: rectOf(bar), board: rectOf(board), zone: rectOf(zone) }
     })()`)
   expect(
-    rows.lands.y + rows.lands.height,
-    'la fila de tierras debe terminar por encima de la barra de mano',
-  ).toBeLessThanOrEqual(rows.bar.y + 1)
+    boxes.zone.y + boxes.zone.height,
+    'el player-zone llega hasta el fondo del tablero (la mano no consume layout)',
+  ).toBeGreaterThanOrEqual(boxes.board.y + boxes.board.height - 2)
+  expect(
+    boxes.bar.y + boxes.bar.height,
+    'la barra de mano está anclada al fondo del tablero',
+  ).toBeGreaterThanOrEqual(boxes.board.y + boxes.board.height - 2)
 }
 
 /** Cada carta de mano (salvo la primera) muestra >= MIN_VISIBLE_RATIO de su ancho. */
@@ -77,10 +83,10 @@ async function expectHandBarLayout(page: Page): Promise<void> {
     ).toBeLessThanOrEqual(barBox.y + barBox.height + 2)
   }
   expectMinVisibility(slotBoxes)
-  await expectHandClearOfLands(page)
+  await expectOverlayLayout(page)
 }
 
-test('la mano propia vive en una barra full-width sin solapar las tierras (standard) @fullflow @hand-bar', async ({ page }) => {
+test('la mano propia flota como overlay anclado al fondo sin consumir layout (standard) @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hb',
@@ -92,7 +98,7 @@ test('la mano propia vive en una barra full-width sin solapar las tierras (stand
   })
 })
 
-test('la mano propia vive en una barra full-width bajo el grid 2x2 (pod) @fullflow @hand-bar', async ({ page }) => {
+test('la mano propia flota como overlay full-width bajo el grid 2x2 (pod) @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hbp',

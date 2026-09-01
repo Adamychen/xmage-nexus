@@ -1,16 +1,34 @@
 .hand-bar {
+  /* Overlay: flota sobre el borde inferior del tablero sin consumir layout
+     (el player-zone llega hasta el fondo; avatar/recursos no suben). */
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   flex-shrink: 0;
   width: 100%;
   min-width: 0;
-  padding: 6px 12px 4px 12px;
-  position: relative;
+  padding: 6px 12px 5px 12px;
   z-index: 20;
   overflow: visible;
   box-sizing: border-box;
-  background: linear-gradient(180deg, rgba(10, 12, 26, 0) 0%, rgba(10, 12, 26, 0.55) 60%, rgba(10, 12, 26, 0.75) 100%);
+  background: transparent;
+}
+
+/* Contact shadow grounding the fan onto the playmat */
+.hand-bar::before {
+  content: '';
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: -3px;
+  height: 24px;
+  background: radial-gradient(ellipse 52% 100% at 50% 100%, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 72%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .hand-bar .hand-card-slot {
@@ -26,18 +44,47 @@
   margin-left: 0;
 }
 
+/* Fan pose: rotate around a pivot below the card, rising toward the center */
 .hand-bar .hand-card-slot .hand-card {
   width: var(--card-w, 116px);
   height: calc(var(--card-w, 116px) * 1.4);
-  transform-origin: bottom center;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  transform-origin: 50% 150%;
+  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px)));
+  transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease;
+  will-change: transform;
 }
 
 .hand-bar .hand-card-slot:hover {
   z-index: 50;
 }
 
+/* Hover: straighten, enlarge and float above the fan (Arena-style) */
 .hand-bar .hand-card-slot:hover .hand-card {
-  transform: translateY(-28px) scale(1.08);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95);
+  transform: rotate(0deg) translateY(-34px) scale(1.28);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.9),
+    0 0 0 2px rgba(255, 208, 112, 0.95),
+    0 0 38px rgba(255, 180, 64, 0.4);
+}
+
+/* Playable cards breathe softly: animates `filter` (composited) instead of
+   box-shadow, which would repaint the card every frame. */
+.hand-bar .hand-card-slot .hand-card.playable {
+  animation: handPlayableBreath 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-bar .hand-card-slot .hand-card.playable {
+    animation: none;
+  }
+}
+
+@keyframes handPlayableBreath {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.22);
+  }
 }

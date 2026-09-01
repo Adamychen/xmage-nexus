@@ -15,6 +15,7 @@ import Sidebar from './Sidebar'
 import GameChat from './GameChat'
 import PhaseBar from './PhaseBar'
 import ActionButton from './ActionButton'
+import PriorityOrb from './PriorityOrb'
 import ActionFeed from './ActionFeed'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
@@ -304,6 +305,13 @@ export default function GameScreen() {
               focusedOpponentId={currentOpp?.playerId}
             />
           )}
+          <PriorityOrb
+            game={game}
+            feedback={feedback}
+            canPass={canPass}
+            onPass={onResolveClick}
+            busy={busy}
+          />
         </div>
         <div className="game-right-panel">
           <div className="right-panel-tabs">

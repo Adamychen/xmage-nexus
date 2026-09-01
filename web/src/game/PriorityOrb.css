@@ -1,0 +1,138 @@
+.priority-orb {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 208, 112, 0.85);
+  background: radial-gradient(circle at 50% 32%, #3a2f14 0%, #241c0b 58%, #171106 100%);
+  color: #ffd98a;
+  font-family: var(--font-display, inherit);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  z-index: 30;
+  padding: 0;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.65),
+    0 0 18px rgba(255, 176, 58, 0.35),
+    inset 0 1px 0 rgba(255, 230, 170, 0.35);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, filter 0.25s ease, opacity 0.25s ease;
+}
+
+.priority-orb-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  text-align: center;
+  padding: 0 8px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.priority-orb-count {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 11px;
+  background: #7c5cff;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  font-family: var(--font-ui, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Rotating halo */
+.priority-orb-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(255, 208, 112, 0.9);
+  border-right-color: rgba(255, 176, 58, 0.45);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Active: it's your priority — breathe gold (Arena end-step vibe).
+   The glow lives on a dedicated ::after so the pulse animates `opacity`
+   (composited) instead of box-shadow (repaints every frame). */
+.priority-orb.active::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  box-shadow: 0 0 26px 7px rgba(255, 176, 58, 0.55);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .priority-orb.active::after {
+    animation: orbGlowPulse 1.6s ease-in-out infinite;
+  }
+
+  .priority-orb.active .priority-orb-ring {
+    animation: orbRingSpin 3.2s linear infinite;
+  }
+}
+
+@keyframes orbGlowPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes orbRingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Resolve mode (stack items): violet like the stack accents */
+.priority-orb.resolve {
+  border-color: rgba(168, 140, 255, 0.9);
+  background: radial-gradient(circle at 50% 32%, #241d45 0%, #191335 58%, #100c22 100%);
+  color: #cdbdff;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.65),
+    0 0 20px rgba(124, 92, 255, 0.45),
+    inset 0 1px 0 rgba(220, 205, 255, 0.3);
+}
+
+/* Waiting: dim, non-interactive */
+.priority-orb.waiting {
+  cursor: default;
+  opacity: 0.55;
+  filter: saturate(0.4);
+  border-color: rgba(120, 130, 170, 0.5);
+  background: radial-gradient(circle at 50% 32%, #1b1f33 0%, #141828 58%, #0d1020 100%);
+  color: #8c96c0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.priority-orb:not(.waiting):hover {
+  filter: brightness(1.15);
+}
+
+.priority-orb:disabled {
+  pointer-events: none;
+}

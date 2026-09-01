@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import HandBar from './HandBar'
 import type { CardView } from '../net/types'
 import { makeCard } from '../__fixtures__/gameViews'
+import { HAND_BAR_MAX_CARD_W, HAND_CARD_ASPECT, HAND_BAR_PADDING_Y } from './handSizing'
 
 vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardPosition: vi.fn(() => undefined),
@@ -35,9 +36,9 @@ describe('HandBar', () => {
   it('exposes sizing CSS variables and derived bar height', () => {
     const { getByTestId } = render(<HandBar cards={hand()} />)
     const bar = getByTestId('hand-bar') as HTMLElement
-    expect(bar.style.getPropertyValue('--card-w')).toBe('116px')
+    expect(bar.style.getPropertyValue('--card-w')).toBe(`${HAND_BAR_MAX_CARD_W}px`)
     expect(bar.style.getPropertyValue('--hand-gap')).toBe('0px')
-    expect(bar.style.height).toBe(`${116 * 1.4 + 12}px`)
+    expect(bar.style.height).toBe(`${HAND_BAR_MAX_CARD_W * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y}px`)
   })
 
   it('routes clicks through onCardClick', () => {
