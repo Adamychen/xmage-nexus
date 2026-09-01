@@ -73,7 +73,7 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
 
     // 3. GAME_CHOOSE_STRING sin opciones (texto libre) — verifica el input arreglado
     await step('GAME_CHOOSE_STRING', 'free text')
-    const freeInput = page.getByLabel('Texto libre')
+    const freeInput = page.getByLabel(/Buscar/)
     await expect(freeInput).toBeVisible({ timeout: 10_000 })
     await freeInput.fill('Blinkmoth Nexus')
     await fbDialog.getByRole('button', { name: /Enviar|Confirmar/i }).click()

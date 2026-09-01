@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
+import HandBar, { type HandBarOrigin } from './HandBar'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import { useSceneBridge } from './sceneBridge'
@@ -102,6 +103,7 @@ export default function TwoHeadedBoard({
   const boardRef = useRef<HTMLDivElement>(null)
   const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [anchorInHandBar, setAnchorInHandBar] = useState(false)
   const hoverTimeoutRef = useRef<number | null>(null)
 
   const modalOpen = useStore(isBlockingModal)
@@ -113,17 +115,18 @@ export default function TwoHeadedBoard({
       }
       setFloatingCard(null)
       setAnchorRect(null)
+      setAnchorInHandBar(false)
     }
   }, [modalOpen])
 
   const handleCardHover = useCallback(
-    (card: CardView | PermanentView | null, rect?: DOMRect) => {
+    (card: CardView | PermanentView | null, rect?: DOMRect, origin?: HandBarOrigin) => {
       if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null }
       if (card && rect) {
-        setFloatingCard(card); setAnchorRect(rect); onCardHover?.(card as CardView | null)
+        setFloatingCard(card); setAnchorRect(rect); setAnchorInHandBar(origin === 'hand-bar'); onCardHover?.(card as CardView | null)
       } else {
         hoverTimeoutRef.current = window.setTimeout(() => {
-          setFloatingCard(null); setAnchorRect(null); onCardHover?.(null)
+          setFloatingCard(null); setAnchorRect(null); setAnchorInHandBar(false); onCardHover?.(null)
         }, 50)
       }
     },
@@ -191,6 +194,7 @@ export default function TwoHeadedBoard({
               onPlayCrossZone={onPlayCrossZone}
               helperEmblems={game?.myHelperEmblems}
               compactPod
+              showHand={false}
             />
           ) : (
             <OpponentZone
@@ -213,10 +217,22 @@ export default function TwoHeadedBoard({
         {oppSlot(botRight, 'br', true)}
       </div>
 
+      {/* ── Full-width hand bar (my hand, below the pod grid) ── */}
+      {!isSpectator && (
+        <HandBar
+          cards={game?.myHand ?? {}}
+          onCardClick={onPlayableClick}
+          onHover={handleCardHover}
+          playableIds={playableIdSet}
+          targetIds={targetIdSet}
+        />
+      )}
+
       <FloatingCardPreview
         card={floatingCard}
         anchorRect={anchorRect}
         boardRect={boardRef.current?.getBoundingClientRect() ?? null}
+        anchorInHandBar={anchorInHandBar}
       />
       <FlyingCardOverlay />
     </div>

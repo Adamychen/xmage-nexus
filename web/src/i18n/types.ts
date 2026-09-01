@@ -169,6 +169,7 @@ export interface TranslationSchema {
     create_field_table_name: string
     create_field_num_players: string
     create_field_format: string
+    create_field_game_type: string
     create_field_wins_needed: string
     create_field_skill: string
     create_field_rated: string
@@ -184,6 +185,8 @@ export interface TranslationSchema {
     create_field_quit_ratio: string
     create_field_spectators: string
     create_field_rollback: string
+    create_toggle_skip_shuffle: string
+    create_toggle_skip_starting: string
     create_summary_no_clock: string
     create_summary_limited: string
     create_submit: string

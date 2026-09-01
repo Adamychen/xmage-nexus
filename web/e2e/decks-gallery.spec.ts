@@ -21,7 +21,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-title', { hasText: /DECKS|Mazos/i })).toBeVisible()
       await expect(page.locator('.deck-box-create')).toBeVisible()
       await expect(page.locator('.deck-box').first()).toBeVisible()
-      await expect(page.getByRole('button', { name: /Editar Mazo|Edit Deck/i })).toBeVisible()
+      await expect(page.getByRole('button', { name: /Editar|Edit/i })).toBeVisible()
       // create new deck navigates to builder
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
@@ -30,7 +30,7 @@ test.describe('Decks Gallery', () => {
       // deck list may need a tick for meta load
       await page.waitForTimeout(800)
       await expect(page.locator('.deck-builder-body')).toBeVisible()
-      await expect(page.getByRole('button', { name: /Guardar y Salir|Done/i })).toBeVisible()
+      await expect(page.locator('.builder-done')).toBeVisible()
       // import modal adds a card without Scryfall
       await page.getByRole('button', { name: /Importar Lista/i }).click()
       await page.locator('.deck-import-textarea').fill('4 [LEA:292] Mountain')
@@ -51,7 +51,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.mana-orb-btn.orb-r')).toHaveClass(/active/)
       
       // Done button saves and returns to gallery
-      await page.getByRole('button', { name: /Guardar y Salir|Done/i }).click()
+      await page.locator('.builder-done').click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
@@ -65,11 +65,11 @@ test.describe('Decks Gallery', () => {
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
-      await page.getByRole('button', { name: /Pegar lista|IMPORT TEXT/i }).click()
+      await page.getByRole('button', { name: /Importar mazo desde texto/i }).click()
       await expect(page.locator('.decks-import-dialog')).toBeVisible()
       await page.locator('.decks-import-dialog input').first().fill('Mi Test DCK')
       await page.locator('.decks-import-dialog textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
-      await page.getByRole('button', { name: 'Importar' }).click()
+      await page.getByRole('button', { name: /Añadir al mazo/i }).click()
       await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })
@@ -87,7 +87,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
 
       // Switch to Deck Browser tab
-      await page.getByRole('button', { name: /Explorar Mazos/i }).click()
+      await page.getByRole('button', { name: /Meta & Decks Populares/i }).click()
       await expect(page.locator('.deck-browser-container')).toBeVisible({ timeout: 5000 })
       await expect(page.locator('.browser-deck-card').first()).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('Izzet Murktide')).toBeVisible()
@@ -96,14 +96,14 @@ test.describe('Decks Gallery', () => {
       await page.locator('.browser-deck-card', { hasText: 'Izzet Murktide' }).click()
       await expect(page.locator('.deck-inspector-modal')).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.inspector-format-badge', { hasText: 'Modern' })).toBeVisible()
-      await expect(page.getByRole('button', { name: /Copiar a Mis Mazos/i })).toBeVisible()
+      await expect(page.locator('.inspector-copy-btn')).toBeVisible()
 
       // Close modal
       await page.locator('.inspector-close-btn').click()
       await expect(page.locator('.deck-inspector-modal')).not.toBeVisible()
 
       // Switch to URL import sub-tab
-      await page.getByRole('button', { name: /Importar por URL/i }).click()
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await expect(page.locator('.browser-url-import-view')).toBeVisible()
     })
   })

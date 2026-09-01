@@ -21,6 +21,7 @@ export interface PlayerZoneProps {
   helperEmblems?: Record<string, CardView>
   compactPod?: boolean
   className?: string
+  showHand?: boolean
 }
 
 export default function PlayerZone(props: PlayerZoneProps) {

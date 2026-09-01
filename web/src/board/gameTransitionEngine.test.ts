@@ -161,6 +161,40 @@ describe('gameTransitionEngine', () => {
     expect(flight?.toSelector).toBe('[data-card-id="h-new"]')
   })
 
+  it('lands a controlled draw on the dedicated hand bar (my hand lives outside the player zone)', () => {
+    document.querySelector('.player-zone .hand-zone')?.remove()
+    document.querySelector('[data-card-id="h-new"]')?.remove()
+    const bar = document.createElement('div')
+    bar.className = 'hand-bar'
+    bar.innerHTML = '<div class="hand-card-slot"><div data-card-id="h-new" style="width:80px;height:112px;"></div></div>'
+    document.querySelector('.game-board')!.appendChild(bar)
+    vi.spyOn(bar, 'getBoundingClientRect').mockReturnValue(mockRect(100, 700, 1200, 174))
+    const barSlot = bar.querySelector('[data-card-id="h-new"]') as HTMLElement
+    vi.spyOn(barSlot, 'getBoundingClientRect').mockReturnValue(mockRect(500, 710))
+
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 1 })
+    const prevGame = makeGameView({
+      players: [alice1],
+      myHand: { 'h-old': makeCard({ id: 'h-old', name: 'Forest' }) },
+    })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2 })
+    const nextGame = makeGameView({
+      players: [alice2],
+      myHand: {
+        'h-old': makeCard({ id: 'h-old', name: 'Forest' }),
+        'h-new': makeCard({ id: 'h-new', name: 'Lightning Bolt' }),
+      },
+    })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+    expect(flight).toBeDefined()
+    expect(flight?.toRect.left).toBe(500)
+    expect(flight?.toRect.top).toBe(710)
+  })
+
   it('detects spells cast to the stack', () => {
     const bolt = makeCard({
       id: 'spell-bolt',

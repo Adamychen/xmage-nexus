@@ -496,7 +496,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
               <div className="create-grid-2col">
                 <label>
-                  {t('lobby','create_field_format')}
+                  {t('lobby','create_field_game_type')}
                   <select value={gameType} onChange={(e) => setGameType(e.target.value)}>
                     {effectiveGameTypes.map((g) => (
                       <option key={g.name} value={g.name}>
@@ -947,8 +947,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSkipInitShuffling(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">🃏 {t('decks','my_decks')}</span>
-                  <span className="toggle-desc">{t('decks','import_hint')}</span>
+                  <span className="toggle-title">🃏 {t('lobby','create_toggle_skip_shuffle')}</span>
+                  <span className="toggle-desc">{t('lobby','create_toggle_skip_shuffle')}</span>
                 </div>
               </label>
 
@@ -959,8 +959,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSkipStartingPlayerChoice(e.target.checked)}
                 />
                 <div className="toggle-text-block">
-                  <span className="toggle-title">🎲 {t('common','player')}</span>
-                  <span className="toggle-desc">{t('lobby','create_field_num_players')}</span>
+                  <span className="toggle-title">🎲 {t('lobby','create_toggle_skip_starting')}</span>
+                  <span className="toggle-desc">{t('lobby','create_toggle_skip_starting')}</span>
                 </div>
               </label>
             </div>

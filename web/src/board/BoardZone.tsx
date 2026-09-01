@@ -34,6 +34,7 @@ export interface BoardZoneProps {
   compactPod?: boolean
   className?: string
   mirrored?: boolean
+  showHand?: boolean
 }
 
 function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
@@ -65,6 +66,7 @@ export default function BoardZone({
   compactPod = false,
   className = '',
   mirrored = false,
+  showHand = true,
 }: BoardZoneProps) {
   const effectivePosition = position ?? (mirrored ? 'bottom' : 'top')
   const effectiveControlled = isControlled ?? (player?.controlled === true)
@@ -334,14 +336,16 @@ export default function BoardZone({
         isTarget={targetIds.has(player.playerId)}
         onHover={onCardHover}
       />
-      <HandZone
-        cards={finalHand}
-        onCardClick={onHandCardClick ?? onCardClick}
-        onHover={onCardHover}
-        playableIds={playableIds}
-        targetIds={targetIds}
-        compact={isTop}
-      />
+      {showHand && (
+        <HandZone
+          cards={finalHand}
+          onCardClick={onHandCardClick ?? onCardClick}
+          onHover={onCardHover}
+          playableIds={playableIds}
+          targetIds={targetIds}
+          compact={isTop || compactPod}
+        />
+      )}
       <ResourceBar
         player={player}
         side={statusSide}

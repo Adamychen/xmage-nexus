@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
+import HandBar, { type HandBarOrigin } from './HandBar'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import { useSceneBridge } from './sceneBridge'
@@ -118,6 +119,7 @@ export default function GameBoard({
   const boardRef = useRef<HTMLDivElement>(null)
   const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [anchorInHandBar, setAnchorInHandBar] = useState(false)
   const hoverTimeoutRef = useRef<number | null>(null)
 
   const modalOpen = useStore(isBlockingModal)
@@ -129,11 +131,12 @@ export default function GameBoard({
       }
       setFloatingCard(null)
       setAnchorRect(null)
+      setAnchorInHandBar(false)
     }
   }, [modalOpen])
 
   const handleCardHover = useCallback(
-    (card: CardView | PermanentView | null, rect?: DOMRect) => {
+    (card: CardView | PermanentView | null, rect?: DOMRect, origin?: HandBarOrigin) => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current)
         hoverTimeoutRef.current = null
@@ -142,11 +145,13 @@ export default function GameBoard({
       if (card && rect) {
         setFloatingCard(card)
         setAnchorRect(rect)
+        setAnchorInHandBar(origin === 'hand-bar')
         onCardHover?.(card as CardView | null)
       } else {
         hoverTimeoutRef.current = window.setTimeout(() => {
           setFloatingCard(null)
           setAnchorRect(null)
+          setAnchorInHandBar(false)
           onCardHover?.(null)
         }, 50)
       }
@@ -227,11 +232,22 @@ export default function GameBoard({
         crossZonePlayables={isSpectator ? [] : crossZonePlayables}
         onPlayCrossZone={onPlayCrossZone}
         helperEmblems={game?.myHelperEmblems}
+        showHand={isSpectator}
       />
+      {!isSpectator && (
+        <HandBar
+          cards={game?.myHand ?? {}}
+          onCardClick={onHandCardClick}
+          onHover={handleCardHover}
+          playableIds={playableIdSet}
+          targetIds={targetIdSet}
+        />
+      )}
       <FloatingCardPreview
         card={floatingCard}
         anchorRect={anchorRect}
         boardRect={boardRef.current?.getBoundingClientRect() ?? null}
+        anchorInHandBar={anchorInHandBar}
       />
       <FlyingCardOverlay />
     </div>

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-25T16:11:12.020Z",
+    "generatedAt": "2026-09-01T19:11:29.513Z",
     "note": "Exhaustive serializable instance fields of the XMage view classes (oracle for mechanics reverse-drift). Derived from JsonUtil reflection rules.",
     "sources": [
       "Mage.Common/src/main/java",

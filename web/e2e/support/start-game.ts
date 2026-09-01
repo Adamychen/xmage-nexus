@@ -114,20 +114,21 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
   }
 
     if (opts.deckType) {
-      await page.getByLabel(/Formato \(Deck Type\)/i).selectOption({ value: opts.deckType })
+      await page.getByLabel(/Formato/i).selectOption({ value: opts.deckType })
     }
     if (opts.deck || opts.simDeck) {
-      await page.getByRole('button', { name: /Asientos/i }).click()
+      // pestaña de asientos (rediseño i18n: "Multijugador")
+      await page.getByRole('button', { name: /Multijugador/i }).click()
       if (opts.deck) {
-        await page.getByLabel(/Mazo para jugar/i).selectOption({ value: opts.deck })
+        await page.getByLabel(/Mazo activo/i).selectOption({ value: opts.deck })
       }
       if (opts.simDeck) {
-        await page.getByLabel(/Mazo del Bot SIM/i).selectOption({ value: opts.simDeck })
+        await page.getByLabel(/Mis Mazos/i).selectOption({ value: opts.simDeck })
       }
     }
 
   if ((opts.skipShuffle ?? true) || (opts.skipStartingPlayer ?? true)) {
-    await page.getByRole('button', { name: /Pruebas \/ Dev/i }).click()
+    await page.getByRole('button', { name: /Ajustes \/ Dev/i }).click()
     if (opts.skipShuffle ?? true) {
       const shuffle = page.getByRole('checkbox', { name: /No barajar el mazo inicial/i })
       if (!(await shuffle.isChecked())) await shuffle.check()

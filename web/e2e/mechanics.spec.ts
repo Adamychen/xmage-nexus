@@ -66,7 +66,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       const dayNightBtn = mechanicsTray.locator('.mechanic-tab-btn', { hasText: 'Noche' })
       await dayNightBtn.click()
       await expect(mechanicsTray.locator('.panel-daynight')).toContainText('Es de NOCHE')
-      await expect(mechanicsTray.locator('.panel-daynight')).toContainText('Transición de Ciclo')
+      await expect(mechanicsTray.locator('.panel-daynight')).toContainText('Es de DÍA')
 
       const dayNightShot = await page.locator('.game-right-panel').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-04-daynight-tab.png'), dayNightShot)

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
-import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
+import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
 
 describe('PodBoard', () => {
@@ -70,6 +70,65 @@ describe('PodBoard', () => {
     expect(boardZones.length).toBe(4)
     const commanderZones = container.querySelectorAll('.command-zone')
     expect(commanderZones.length).toBe(4)
+  })
+
+  it('renders my hand in the full-width hand bar below the pod grid (not in my cell)', () => {
+    const game = fourPlayerGame({
+      myPlayerId: 'p1',
+      myHand: {
+        'h-1': makeCard({ id: 'h-1', name: 'Lightning Bolt', parentId: 'h-1' }),
+        'h-2': makeCard({ id: 'h-2', name: 'Counterspell', parentId: 'h-2' }),
+        'h-3': makeCard({ id: 'h-3', name: 'Serra Angel', parentId: 'h-3' }),
+      },
+    })
+    const { container, getByTestId } = render(<PodBoard game={game} />)
+    const bar = getByTestId('hand-bar')
+    expect(bar).not.toBeNull()
+    expect(bar.querySelectorAll('.hand-card-slot').length).toBe(3)
+    // la barra es hermana de las filas del pod (fuera de las celdas)
+    expect(bar.parentElement?.classList.contains('pod-board')).toBe(true)
+    // mi celda ya no contiene mano
+    expect(container.querySelector('.player-zone .hand-card-slot')).toBeNull()
+  })
+
+  it('keeps opponent mini-hands inside their pod cells', () => {
+    const game = fourPlayerGame({
+      myPlayerId: 'p1',
+      myHand: {
+        'h-1': makeCard({ id: 'h-1', name: 'Forest', parentId: 'h-1' }),
+      },
+      opponentHands: {
+        Bob: { 'oh-1': { id: 'oh-1' } },
+        Carol: { 'oh-2': { id: 'oh-2' } },
+        Dave: { 'oh-3': { id: 'oh-3' } },
+      },
+    })
+    const bob = (game.players![1] as unknown as Record<string, unknown>)
+    bob['handCount'] = 1
+    const carol = (game.players![2] as unknown as Record<string, unknown>)
+    carol['handCount'] = 1
+    const dave = (game.players![3] as unknown as Record<string, unknown>)
+    dave['handCount'] = 1
+    const { container, getByTestId } = render(<PodBoard game={game} />)
+    expect(getByTestId('hand-bar')).not.toBeNull()
+    // las 3 mini-manos de los rivales (ojo: los espejados llevan .player-zone)
+    expect(container.querySelectorAll('.board-zone .hand-card-slot').length).toBe(3)
+    expect(container.querySelector('.pod-cell--me .hand-card-slot')).toBeNull()
+    expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(3)
+  })
+
+  it('hides the hand bar for spectators', () => {
+    const game = makeGameView({
+      activePlayerId: 'p2',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: false, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', controlled: false, commandList: [] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', controlled: false, commandList: [] }),
+        makePlayer({ playerId: 'p4', name: 'Dave', controlled: false, commandList: [] }),
+      ],
+    })
+    const { container } = render(<PodBoard game={game} />)
+    expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
   })
 
   it('renders TurnOrderRing with 4 seats and highlights active', () => {

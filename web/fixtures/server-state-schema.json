@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-28T09:43:12.091Z",
+    "generatedAt": "2026-09-01T19:11:29.655Z",
     "note": "Exhaustive ServerState enumerations for the current fork version. Derived from Mage.Server/config/config.xml (canonical for this release) + MatchType Java limits. Oracle for serverStateCoverage.test.ts.",
     "configPath": "Mage.Server/config/config.xml",
     "version": "1.4.61-V1"

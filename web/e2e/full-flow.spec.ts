@@ -58,8 +58,8 @@ test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero av
 
   // (e) crear mesa IA vs IA y entrar como espectador desde el modal de creación
   await page.locator('.hero-create-btn').click()
-  await page.getByRole('button', { name: /Pruebas \/ Dev/i }).click()
-  await page.getByRole('button', { name: /Iniciar Demo IA vs IA/i }).click()
+  await page.getByRole('button', { name: /Ajustes \/ Dev/i }).click()
+  await page.getByRole('button', { name: /Espectar \(Bot IA vs Bot IA\)/i }).click()
 
    // (f) pantalla de partida + canvas de Pixi montado en .board-wrap
   await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })

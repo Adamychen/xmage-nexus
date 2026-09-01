@@ -136,12 +136,15 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     if (!pSel) continue
 
     const libRect = getRect(`${pSel} .library-stack`)
-    const handRect = getRect(`${pSel} .hand-zone`)
     const graveRect = getRect(`${pSel} .graveyard-stack`)
 
     // A) Card Draws (Library -> Hand)
     // Use real hand IDs when available (controlled player), else fall back to handCount delta
     const isControlled = nextP.controlled === true
+    // La mano del jugador controlado vive en la barra dedicada (fuera de la zona)
+    const handRect = isControlled
+      ? (getRect('.hand-bar') ?? getRect(`${pSel} .hand-zone`))
+      : getRect(`${pSel} .hand-zone`)
     if (isControlled) {
       const prevHand = prevGame.myHand ?? {}
       const nextHand = nextGame.myHand ?? {}
@@ -161,6 +164,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           setTimeout(() => {
             flyAfterLayout(id, dummyCard, libRect, [
               `[data-card-id="${id}"]`,
+              '.hand-bar .hand-card-slot:last-child',
               `${pSel} .hand-zone .hand-card-slot:last-child`,
             ], handRect, 320)
           }, i * 70)
