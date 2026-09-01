@@ -25,14 +25,14 @@ test.describe('Decks Gallery', () => {
       // create new deck navigates to builder
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.builder-name')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.search-panel')).toBeVisible({ timeout: 5000 })
+      await expect(page.locator('.deck-header-name-input')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-search-panel')).toBeVisible({ timeout: 5000 })
       // deck list may need a tick for meta load
       await page.waitForTimeout(800)
       await expect(page.locator('.deck-builder-body')).toBeVisible()
       await expect(page.locator('.builder-done')).toBeVisible()
       // import modal adds a card without Scryfall
-      await page.getByRole('button', { name: /Importar Lista/i }).click()
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill('4 [LEA:292] Mountain')
       await page.locator('.import-submit-btn').click()
       await expect(page.getByText('Mountain')).toBeVisible({ timeout: 3000 })
@@ -69,7 +69,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-import-dialog')).toBeVisible()
       await page.locator('.decks-import-dialog input').first().fill('Mi Test DCK')
       await page.locator('.decks-import-dialog textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
-      await page.getByRole('button', { name: /Añadir al mazo/i }).click()
+      await page.locator('.decks-import-dialog').getByRole('button', { name: /Importar Mazo/i }).click()
       await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })

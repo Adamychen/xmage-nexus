@@ -2,7 +2,7 @@
 
 > This document is the **project source of truth**: roadmap, phases, decisions, and
 > verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-09-01 (fix rotación tapped/attacking en dev: `entering` clavado — el cleanup del layout-effect de `CardSlot` anulaba su timer y el fill `both` de `cardAppear` pisaba el transform de estado con identidad; timer no-limpio + fill `backwards`; el e2e `combat.spec` afirma ahora el transform computado `matrix(0, 1, -1, 0, 0, 0)`, no solo la clase. Suite: vitest 507/508 (1 fallo preexistente en `store.test.ts` SIDEBOARD, no relacionado), playwright fake @combat 4/4, typecheck ✅. El estado 2026-08-31 (overhaul de animaciones + rescate e2e) queda descrito en el log de abajo)
+> Last updated: 2026-09-01 (HandBar full-width + decks-gallery i18n fix. HandBar: barra dedicada full-width bajo el grid (standard/pod) con computeHandBarSizing 55% visible 64-116px, GameBoard/TwoHeadedBoard isSpectator→HandBar, BoardZone showHand, FloatingCardPreview anchorInHandBar, gameTransitionEngine vuelos a hand-bar slot. Decks-gallery: fix selectors i18n Importar Mazo / builder-name→deck-header-name-input, search-panel→arena-search-panel, submit scoped a dialog. Suite: vitest 531/531, typecheck ✅, build ✅, coverage 80.99% stmts, playwright fake 45/45 (2 skipped real-only).)
 
 ---
 
