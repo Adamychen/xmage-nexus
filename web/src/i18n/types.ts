@@ -217,6 +217,12 @@ export interface TranslationSchema {
     tournament_player_single: string
     tournament_player_plural: string
     staging_mode_spectator: string
+    staging_mode_player: string
+    staging_player_hint: string
+    staging_leave_table: string
+    staging_remove_table: string
+    staging_return_table: string
+    staging_back_hint: string
     staging_waiting_player: string
     staging_waiting_opponent: string
     staging_waiting_opponent_short: string
@@ -236,6 +242,18 @@ export interface TranslationSchema {
     staging_waiting_fallback: string
     staging_seats_count: string
     staging_duel_fallback: string
+    staging_btn_ready: string
+    staging_btn_not_ready: string
+    staging_status_ready: string
+    staging_status_preparing: string
+    staging_btn_change_deck: string
+    staging_change_deck_title: string
+    staging_change_deck_host_warn: string
+    staging_change_deck_confirm: string
+    staging_chat_ready: string
+    staging_chat_not_ready: string
+    staging_waiting_players_ready: string
+    staging_start_blocked_not_ready: string
     join_requires_password: string
     join_password_enter_placeholder: string
     join_import_toggle_open: string

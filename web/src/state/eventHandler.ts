@@ -121,15 +121,20 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'JOINED_TABLE': {
-      const d = data as { tableId?: string; tableName?: string } | null
-      addLog('mesa', `${tStatic('lobby','join_human_btn')} "${d?.tableName ?? d?.tableId ?? ''}"`)
+      const d = data as { roomId?: string; tableId?: string; currentTableId?: string; parentTableId?: string; tableName?: string; flag?: boolean } | null
+      const tableId = d?.currentTableId ?? d?.tableId ?? null
+      const name = d?.tableName ?? tableId ?? ''
+      addLog('mesa', `${tStatic('lobby','join_human_btn')} "${name}"`)
+      if (tableId && (s.phase === 'lobby' || s.phase === 'staging')) {
+        setState({ phase: 'staging', stagingTableId: tableId, error: null })
+      }
       break
     }
     case 'START_GAME': {
       const d = data as { gameId?: string; tableName?: string } | null
       const isNewGame = !!d?.gameId && d.gameId !== s.gameId
       if (d?.gameId) saveActiveGame(d.gameId)
-      setState({ phase: 'game', watchingTable: null, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
+      setState({ phase: 'game', watchingTable: null, stagingTableId: null, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
       addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
       if (isNewGame) {
         void cmds.joinGame(d!.gameId!)

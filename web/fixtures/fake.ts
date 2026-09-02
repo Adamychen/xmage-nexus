@@ -166,6 +166,10 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           conn.ok(requestId, action, { tableId: table.tableId })
           conn.lobby([table])
           return
+        case 'joinTable':
+          conn.ok(requestId, action, {})
+          conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: false })
+          return
         case 'startMatch': {
           conn.ok(requestId, action, {})
           conn.broadcast('START_GAME', { gameId: opts.gameId, tableName: table.tableName }, opts.gameId)

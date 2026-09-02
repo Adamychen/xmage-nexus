@@ -44,6 +44,8 @@ export default function App() {
         <LobbyScreen />
       ) : phase === 'spectating_pending' ? (
         <SpectatorStagingScreen />
+      ) : phase === 'staging' ? (
+        <SpectatorStagingScreen mode="player" />
       ) : phase === 'game' ? (
         <GameScreen />
       ) : phase === 'connecting' ? (

@@ -33,6 +33,44 @@ export function setWatchingTable(table: import('../net/types').TableView | null)
   }
 }
 
+/** Abre la sala de espera de la partida (paridad con el TableWaitingDialog de desktop). */
+export function openStagingTable(tableId: string) {
+  setState({ phase: 'staging', stagingTableId: tableId, error: null })
+}
+
+/** Vuelve al lobby sin abandonar el asiento (se puede regresar con "Ir a la mesa"). */
+export function hideStaging() {
+  setState({ phase: 'lobby', error: null })
+}
+
+async function exitStagingVia(action: (tableId: string) => Promise<unknown>) {
+  const s = getState()
+  const tableId = s.stagingTableId
+  setState({ phase: 'lobby', stagingTableId: null, error: null })
+  if (tableId) {
+    try {
+      await action(tableId)
+    } catch {
+      // el servidor puede rechazar el leave si la partida ya arrancó; el lobby queda igualmente
+    }
+  }
+}
+
+export function leaveStagingTable() {
+  return exitStagingVia((tableId) => cmds.leaveTable(tableId))
+}
+
+export function removeStagingTable() {
+  return exitStagingVia((tableId) => cmds.removeTable(tableId))
+}
+
+/** Arranca la partida de la mesa en staging (solo dueño, la UI lo gatea). */
+export async function startStagedMatch() {
+  const s = getState()
+  if (!s.stagingTableId) return
+  await cmds.startMatch(s.stagingTableId)
+}
+
 /**
  * Concede la partida como jugador (envía PlayerAction.CONCEDE para que el
  * servidor registre la derrota y termine la partida) y vuelve al lobby.
@@ -61,6 +99,9 @@ export function returnToLobby() {
   if (s.watchingTable) {
     void cmds.leaveTable(s.watchingTable.tableId)
   }
+  if (s.stagingTableId) {
+    void cmds.leaveTable(s.stagingTableId)
+  }
   // Filter out match-specific chat messages, preserving only lobby room chat
   const preservedChat = s.roomChatId
     ? s.chatMessages.filter((m) => !m.chatId || m.chatId === s.roomChatId)
@@ -68,6 +109,7 @@ export function returnToLobby() {
   setState({
     phase: 'lobby',
     watchingTable: null,
+    stagingTableId: null,
     game: null,
     gameId: null,
     gameChatId: null,

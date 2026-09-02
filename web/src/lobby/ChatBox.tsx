@@ -9,6 +9,14 @@ import { useTranslation } from '../i18n'
 import './ChatBox.css'
 
 function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: string; text: string } {
+  if (text.includes('[NEXUS_READY]')) {
+    const user = text.replace(/\[NEXUS_READY\]/g, '').trim()
+    return { icon: '🟢', text: `${user} ${t('lobby', 'staging_chat_ready')}`.trim() }
+  }
+  if (text.includes('[NEXUS_NOT_READY]')) {
+    const user = text.replace(/\[NEXUS_NOT_READY\]/g, '').trim()
+    return { icon: '🟡', text: `${user} ${t('lobby', 'staging_chat_not_ready')}`.trim() }
+  }
   if (text.includes('has joined')) {
     const user = text.replace(/\s+has joined.*$/i, '').trim()
     return { icon: '🟢', text: `${user} ${t('lobby', 'user_joined')}` }
@@ -30,6 +38,7 @@ function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { ic
 
 function isSystemMessage(m: ChatMessageEvent): boolean {
   if (!m.username || m.username === 'server' || m.messageType === 'SYSTEM') return true
+  if (m.message.includes('[NEXUS_READY]') || m.message.includes('[NEXUS_NOT_READY]')) return true
   return (
     m.message.includes('has joined') ||
     m.message.includes('has lost connection') ||

@@ -64,4 +64,18 @@ describe('ChatBox component', () => {
 
     expect(sendSpy).toHaveBeenCalledWith('chat-123', 'Testing message')
   })
+
+  it('formatea eventos de preparación [NEXUS_READY] y [NEXUS_NOT_READY] como avisos de sistema', () => {
+    setState({
+      chatMessages: [
+        { chatId: 'chat-123', username: 'Alice', message: '[NEXUS_READY] Alice' },
+        { chatId: 'chat-123', username: 'Bob', message: '[NEXUS_NOT_READY] Bob' },
+      ],
+      roomChatId: 'chat-123',
+    })
+    const { getByText } = render(<ChatBox />)
+
+    expect(getByText(/Alice está listo para jugar\./i)).not.toBeNull()
+    expect(getByText(/Bob aún no está listo/i)).not.toBeNull()
+  })
 })

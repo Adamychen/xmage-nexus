@@ -139,14 +139,28 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
     }
   }
 
-  await page.getByRole('button', { name: /Crear Mesa/i }).click()
+  // selector específico del submit del diálogo: el empty-state del lobby también
+  // tiene un botón "Crear Mesa" cuando el server no tiene ninguna
+  await page.locator('.create-submit-btn').click()
+}
+
+/** Si el salto automático a la sala de espera (JOINED_TABLE) está activo, vuelve al lobby. */
+export async function dismissStaging(page: Page): Promise<void> {
+  const back = page.getByTestId('staging-back')
+  if (await back.isVisible().catch(() => false)) {
+    await back.click()
+    await expect(back).toBeHidden({ timeout: 5_000 }).catch(() => {})
+  }
 }
 
 /** Espera a que la mesa del usuario esté lista (asiento SIM unido, botón Empezar). */
 export async function waitTableReady(page: Page, tableName: string): Promise<void> {
   await page.waitForTimeout(500)
   const row = page.locator('.table-row', { hasText: tableName }).first()
-  await expect(row).toBeVisible({ timeout: 20_000 })
+  await expect(async () => {
+    await dismissStaging(page)
+    await expect(row).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 20_000 })
   // el asiento SIM lo une el proxy inmediatamente: la mesa nace casi llena
   await expect(row.locator('.table-seats')).toHaveText(/2\/2/, { timeout: 20_000 })
   const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
@@ -157,6 +171,10 @@ export async function waitTableReady(page: Page, tableName: string): Promise<voi
 export async function startMatch(page: Page, tableName: string): Promise<void> {
   const row = page.locator('.table-row', { hasText: tableName }).first()
   const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
+  await expect(async () => {
+    await dismissStaging(page)
+    await expect(startButton).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 15_000 })
   await startButton.click()
   await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 }

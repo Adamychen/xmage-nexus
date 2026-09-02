@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
-import { login, createTable } from './support/start-game'
+import { login, createTable, dismissStaging } from './support/start-game'
 import { FAKE_MODE } from './dual'
 
 // Un mismo proxy debe servir a dos cuentas XMage independientes a la vez.
@@ -45,6 +45,11 @@ test.describe('multi-user: dos cuentas en un mismo proxy', () => {
       // con sesiones independientes (multi-tenant).
       const tableName = `mu${stamp}`
       await createTable(pageA, tableName)
+
+      // A (creador + asiento) salta automáticamente a la sala de espera (JOINED_TABLE);
+      // paridad con el TableWaitingDialog del cliente desktop.
+      await expect(pageA.getByTestId('staging-player-actions')).toBeVisible({ timeout: 20_000 })
+      await dismissStaging(pageA)
 
       const rowInA = pageA.locator('.table-row', { hasText: tableName }).first()
       await expect(rowInA).toBeVisible({ timeout: 20_000 })

@@ -15,6 +15,8 @@ import './JoinTableDialog.css'
 interface JoinTableDialogProps {
   table: TableView
   busy?: boolean
+  title?: string
+  submitLabel?: string
   onClose: () => void
   onJoin: (table: TableView, deck: Deck, password?: string) => Promise<void>
 }
@@ -22,6 +24,8 @@ interface JoinTableDialogProps {
 export default function JoinTableDialog({
   table,
   busy = false,
+  title,
+  submitLabel,
   onClose,
   onJoin,
 }: JoinTableDialogProps) {
@@ -104,17 +108,18 @@ export default function JoinTableDialog({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={onClose} data-testid="join-modal-backdrop">
       <div
         className="join-table-modal panel"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        data-testid="join-table-dialog"
       >
         {/* Header */}
         <div className="join-modal-header">
           <div className="join-header-titles">
-            <span className="join-target-pill">{t('lobby','join_human_btn').toUpperCase()}</span>
+            <span className="join-target-pill" data-testid="join-target-pill">{title ? title.toUpperCase() : t('lobby','join_human_btn').toUpperCase()}</span>
             <h2 className="join-table-title">{table.tableName}</h2>
           </div>
           <button type="button" className="close-btn" onClick={onClose}>
@@ -131,7 +136,7 @@ export default function JoinTableDialog({
             🎮 {t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong>
           </span>
           <span className="meta-badge meta-host">
-            👑 {t('lobby','host')}: <strong>{table.controllerName}</strong>
+            👑 {t('lobby','host')}: <strong>{table.controllerName?.split(',')[0]?.trim() || table.controllerName}</strong>
           </span>
           {table.passworded && (
             <span className="meta-badge meta-lock">
@@ -275,6 +280,7 @@ export default function JoinTableDialog({
               <button
                 type="button"
                 className="join-cancel-btn"
+                data-testid="join-cancel-btn"
                 onClick={onClose}
                 disabled={busy}
               >
@@ -285,7 +291,7 @@ export default function JoinTableDialog({
                 className="primary join-submit-btn"
                 disabled={busy || (table.passworded && !password.trim())}
               >
-                {busy ? t('common','loading') : t('lobby','join_with_deck', { name: selectedDeck.name })}
+                {busy ? t('common','loading') : (submitLabel || t('lobby','join_with_deck', { name: selectedDeck.name }))}
               </button>
             </div>
           </div>

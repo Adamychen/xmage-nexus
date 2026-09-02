@@ -1,10 +1,12 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import SpectatorStagingScreen from './SpectatorStagingScreen'
+import { setState } from '../state/store'
 import type { TableView } from '../net/types'
 
 afterEach(() => {
   cleanup()
+  setState({ conn: null, stagingTableId: null, lobby: null, phase: 'idle' })
 })
 
 vi.mock('./ChatBox', () => ({
@@ -98,5 +100,97 @@ describe('SpectatorStagingScreen', () => {
     const leaveBtn = getByText('🚪 Volver al Lobby')
     fireEvent.click(leaveBtn)
     expect(onLeaveSpy).toHaveBeenCalled()
+  })
+
+  it('modo jugador: muestra acciones (salir/eliminar) y gatea Empezar por dueño+ready', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { getByTestId, getByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(getByTestId('staging-player-actions')).not.toBeNull()
+    expect(getByTestId('staging-start')).not.toBeNull()
+    expect(getByTestId('staging-remove')).not.toBeNull()
+    expect(getByTestId('staging-leave')).not.toBeNull()
+    expect(getByText(/MODO JUGADOR/)).not.toBeNull()
+  })
+
+  it('modo jugador: reconoce al dueño cuando controllerName concatena jugadores con comas (formato real del servidor XMage)', () => {
+    const tableWithJoinedPlayers: TableView = {
+      ...MOCK_COMMANDER_TABLE,
+      controllerName: 'Bob, Charlie, Diana, Evan',
+    }
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: tableWithJoinedPlayers.tableId,
+      lobby: { type: 'lobby', tables: [tableWithJoinedPlayers] } as never,
+    })
+    const { getByTestId, getAllByTitle } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(getByTestId('staging-start')).not.toBeNull()
+    expect(getByTestId('staging-remove')).not.toBeNull()
+    expect(getAllByTitle(/anfitrión/i).length).toBeGreaterThan(0)
+  })
+
+  it('modo jugador: no owner no ve Empezar ni Eliminar', () => {
+    setState({
+      conn: { username: 'Charlie' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { queryByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(queryByTestId('staging-player-actions')).not.toBeNull()
+    expect(queryByTestId('staging-start')).toBeNull()
+    expect(queryByTestId('staging-remove')).toBeNull()
+    expect(queryByTestId('staging-leave')).not.toBeNull()
+  })
+
+  it('permite alternar estado de preparación (Listo / No listo) y refleja Preparándose', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { getByTestId, getByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    const toggleBtn = getByTestId('staging-toggle-ready')
+    expect(toggleBtn.textContent).toContain('No estoy listo')
+
+    fireEvent.click(toggleBtn)
+    expect(toggleBtn.textContent).toContain('Estoy listo')
+    expect(getByText(/Preparándose/i)).not.toBeNull()
+  })
+
+  it('deshabilita el botón Empezar si algún jugador no está listo mediante mensaje chat', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+      ],
+    })
+    const { getByTestId, getByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    const startBtn = getByTestId('staging-start') as HTMLButtonElement
+    expect(startBtn.disabled).toBe(true)
+    expect(getByText(/Esperando a que todos los jugadores confirmen/i)).not.toBeNull()
+  })
+
+  it('abre el diálogo de cambiar baraja al pulsar Cambiar baraja', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { getByTestId, getByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    const changeDeckBtn = getByTestId('staging-change-deck')
+    fireEvent.click(changeDeckBtn)
+
+    expect(getByText(/CAMBIAR BARAJA DE LA MESA/i)).not.toBeNull()
   })
 })

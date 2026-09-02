@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { reset, useLobby, useStore, setWatchingTable } from '../state/store'
+import { reset, useLobby, useStore, setWatchingTable, openStagingTable } from '../state/store'
 import * as cmds from '../net/commands'
 import type { TableView, UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
@@ -180,6 +180,7 @@ export default function LobbyScreen() {
   const { t } = useTranslation()
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
+  const stagingTableId = useStore((s) => s.stagingTableId)
   const myDeck = useStore((s) => s.myDeck)
   const error = useStore((s) => s.error)
   const events = useStore((s) => s.events)
@@ -582,6 +583,9 @@ export default function LobbyScreen() {
 
                     const timeAgo = formatTimeAgo(tTable.createTime)
                     const skill = getSkillBadge(tTable.skillLevel)
+                    const mySeat = !!conn?.username
+                      && tTable.seats.some((s) => s.playerName?.toLowerCase() === conn.username.toLowerCase())
+                    const canReenter = mySeat || stagingTableId === tTable.tableId
 
                     return (
                       <div key={tTable.tableId} className={`table-card table-row ${statusClass}`}>
@@ -654,7 +658,8 @@ export default function LobbyScreen() {
 
                           <div className="table-seats-roster">
                             {tTable.seats.map((s, idx) => {
-                              const isOwner = tTable.controllerName && s.playerName === tTable.controllerName
+                              const hostName = tTable.controllerName ? tTable.controllerName.split(',')[0].trim() : ''
+                              const isOwner = !!hostName && !!s.playerName && s.playerName.toLowerCase() === hostName.toLowerCase()
                               const isHuman = !s.playerType || s.playerType === 'HUMAN'
                               const foundUser = s.playerName
                                 ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
@@ -739,6 +744,15 @@ export default function LobbyScreen() {
                         </div>
 
                         <div className="table-actions">
+                          {canReenter && (
+                            <button
+                              className="primary table-action-btn return-table-btn"
+                              data-testid="return-to-table"
+                              onClick={() => openStagingTable(tTable.tableId)}
+                            >
+                              🪑 {t('lobby','staging_return_table')}
+                            </button>
+                          )}
                           {isReady && (
                             <button
                               className="primary table-action-btn"

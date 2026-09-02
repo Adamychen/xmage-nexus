@@ -83,7 +83,7 @@ export interface ConstructState {
 }
 
 export interface AppState {
-  phase: 'idle' | 'connecting' | 'lobby' | 'spectating_pending' | 'game'
+  phase: 'idle' | 'connecting' | 'lobby' | 'spectating_pending' | 'staging' | 'game'
   conn: ConnectionInfo | null
   wsUrl: string | null
   connecting: boolean
@@ -92,6 +92,7 @@ export interface AppState {
   roomChatId: string | null
   chatMessages: ChatMessageEvent[]
   watchingTable: TableView | null
+  stagingTableId: string | null
   game: GameView | null
   gameId: string | null
   gameChatId: string | null
@@ -133,6 +134,7 @@ export const initialState: AppState = {
   roomChatId: null,
   chatMessages: [],
   watchingTable: null,
+  stagingTableId: null,
   game: null,
   gameId: null,
   gameChatId: null,
