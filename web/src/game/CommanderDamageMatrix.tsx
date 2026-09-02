@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
+import { commanderTax } from '../board/commanders'
 import { useTranslation } from '../i18n'
 import './CommanderDamageMatrix.css'
 
@@ -255,8 +256,8 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                         <span key={cmd.id} className="cdm-commander-badge" title={`Comandante de ${p.name}`}>
                           👑 {cmd.name}
                           {castCount > 0 && (
-                            <span className="cdm-tax-badge" title={`Tax: +{${castCount * 2}}`}>
-                              +{castCount * 2}
+                            <span className="cdm-tax-badge" title={`Tax: +{${commanderTax(castCount)}}`}>
+                              +{commanderTax(castCount)}
                             </span>
                           )}
                         </span>

@@ -517,6 +517,10 @@ export const ru: TranslationSchema = {
     ability_badge_loyalty: '👑 Способность верности',
     ability_badge_static: '🛡️ Статическая способность',
     ability_badge_general: '⚡ Способность',
+    fx_effects: 'Эффекты анимации',
+    fx_effects_hint: 'Включить или отключить анимации на столе',
+    fx_speed: 'Скорость',
+    turn_banner_player: 'Ход {turn} · {player}',
   },
   wiki: {
     title: 'MTG Вики Правил и Глоссарий',

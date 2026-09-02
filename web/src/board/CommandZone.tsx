@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
+import { commanderTax } from './commanders'
 import { useTranslation } from '../i18n'
 import './CommandZone.css'
 
@@ -174,7 +175,7 @@ export default function CommandZone({
       {commanders.map((item) => {
         const isPlayable = playableIds.has(item.id)
         const isTarget = targetIds.has(item.id)
-        const tax = item.castCount > 0 ? item.castCount * 2 : 0
+        const tax = commanderTax(item.castCount)
 
         return (
           <div key={item.id} className="commander-card-wrap">

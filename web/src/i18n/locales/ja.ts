@@ -517,6 +517,10 @@ export const ja: TranslationSchema = {
     ability_badge_loyalty: '👑 忠誠度能力',
     ability_badge_static: '🛡️ 常在型能力',
     ability_badge_general: '⚡ 能力',
+    fx_effects: 'アニメーション効果',
+    fx_effects_hint: '盤面のアニメーションの切り替え',
+    fx_speed: '速度',
+    turn_banner_player: 'ターン {turn} · {player}',
   },
   wiki: {
     title: 'MTG ルールWiki & 用語集',

@@ -42,6 +42,12 @@
   position: relative;
   display: flex;
   align-items: flex-end;
+  /* La caja estática de hover es SOLO la banda visible (~cardH×0.5): la carta
+     la desborda hacia arriba. Si el slot creciera a la altura completa de la
+     carta, un puntero sobre las tierras dispararía el hover sin carta visible
+     y, al elevarse la mano, las áreas renderizadas en movimiento crearían un
+     bucle de feedback (oscilación arriba/abajo). */
+  height: var(--sink, 95px);
   margin-left: var(--hand-gap, 0px);
   overflow: visible;
   transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -51,12 +57,14 @@
   margin-left: 0;
 }
 
-/* Fan pose: rotate around a pivot below the card, rising toward the center */
+/* Fan pose: rotate around a pivot below the card, rising toward the center.
+   The hand rests half-sunken below the board edge (`--sink`); the board-shell
+   clips the lower half. */
 .hand-bar .hand-card-slot .hand-card {
-  width: var(--card-w, 116px);
-  height: calc(var(--card-w, 116px) * 1.4);
+  width: var(--card-w, 136px);
+  height: calc(var(--card-w, 136px) * 1.4);
   transform-origin: 50% 150%;
-  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px)));
+  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px)));
   transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease;
   will-change: transform;
 }
@@ -65,9 +73,16 @@
   z-index: 50;
 }
 
-/* Hover: straighten, enlarge and float above the fan (Arena-style) */
+/* Hover on any card: the whole hand rises to ~90% visible… */
+.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:not(:hover) .hand-card {
+  transform: rotate(var(--rot, 0deg))
+    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 0.2));
+}
+
+/* …while the hovered card straightens and floats moderately above the fan
+   (~50px total: translate + scale growth), never reaching the lands row. */
 .hand-bar .hand-card-slot:hover .hand-card {
-  transform: rotate(0deg) translateY(-34px) scale(1.28);
+  transform: rotate(0deg) translateY(calc(var(--sink, 0px) * -0.15)) scale(1.15);
   box-shadow:
     0 20px 48px rgba(0, 0, 0, 0.9),
     0 0 0 2px rgba(255, 208, 112, 0.95),

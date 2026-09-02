@@ -4,6 +4,7 @@
   pointer-events: none;
   z-index: 999999;
   overflow: hidden;
+  perspective: 900px;
 }
 
 .flying-card-item {
@@ -46,4 +47,20 @@
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(100, 180, 255, 0.15) 100%);
   pointer-events: none;
+  animation: flightGlowPulse calc(0.5s / var(--fx-speed, 1)) ease-in-out infinite alternate;
+}
+
+@keyframes flightGlowPulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+html.fx-off .flying-card-glow {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flying-card-glow {
+    animation: none !important;
+  }
 }

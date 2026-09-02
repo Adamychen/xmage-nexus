@@ -3,9 +3,12 @@ import {
   clearActiveGame,
   loadActiveGame,
   loadConn,
+  loadFxSettings,
   saveActiveGame,
   saveConn,
+  saveFxSettings,
   type ConnectionInfo,
+  type FxSettings,
 } from './persistence'
 
 describe('persistence', () => {
@@ -132,6 +135,28 @@ describe('persistence', () => {
 
       expect(loadActiveGame()).toBeNull()
       expect(mockStorage['mage-web-active-game']).toBeUndefined()
+    })
+  })
+
+  describe('fx settings persistence', () => {
+    it('returns defaults when nothing is stored', () => {
+      expect(loadFxSettings()).toEqual({ effects: true, animationSpeed: 1 })
+    })
+
+    it('saves and loads fx settings correctly', () => {
+      const fx: FxSettings = { effects: false, animationSpeed: 1.5 }
+      saveFxSettings(fx)
+      expect(loadFxSettings()).toEqual(fx)
+    })
+
+    it('rejects an unknown animation speed', () => {
+      mockStorage['mage-web-settings'] = JSON.stringify({ effects: true, animationSpeed: 7 })
+      expect(loadFxSettings()).toEqual({ effects: true, animationSpeed: 1 })
+    })
+
+    it('falls back to defaults for corrupt payloads', () => {
+      mockStorage['mage-web-settings'] = '{not json'
+      expect(loadFxSettings()).toEqual({ effects: true, animationSpeed: 1 })
     })
   })
 })

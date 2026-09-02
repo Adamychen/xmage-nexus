@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
+import { useMemo } from 'react'
+import type { CardView, GameView, PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
-import HandBar, { type HandBarOrigin } from './HandBar'
-import FloatingCardPreview from './FloatingCardPreview'
-import FlyingCardOverlay from './FlyingCardOverlay'
-import { useSceneBridge } from './sceneBridge'
-import { useGameTransitions } from './gameTransitionEngine'
+import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
+import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
+import { opponentRevealedCards } from './revealedCards'
 import type { CrossZonePlayable } from './crossZone'
-import { useStore, isBlockingModal } from '../state/store'
 import './TwoHeadedBoard.css'
 
 interface TwoHeadedBoardProps {
@@ -16,7 +13,6 @@ interface TwoHeadedBoardProps {
   targetIds?: string[]
   chosenTargetIds?: string[]
   onTargetClick?: (id: string) => void
-  targetSourceId?: string
   playableIds?: string[]
   onPlayableClick?: (id: string) => void
   onCardHover?: (card: CardView | null) => void
@@ -28,31 +24,6 @@ interface TwoHeadedBoardProps {
   blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
-}
-
-export function revealedCards(
-  game: GameView | null | undefined,
-  player: PlayerView | undefined,
-): Record<string, CardView> {
-  if (!game || !player) return {}
-  const res: Record<string, CardView> = {}
-
-  if (Array.isArray(game.revealed)) {
-    game.revealed.forEach((rev) => {
-      if (rev.cards && typeof rev.cards === 'object') {
-        Object.entries(rev.cards).forEach(([id, c]) => { res[id] = c as CardView })
-      }
-    })
-  }
-  if (game.opponentHands?.[player.playerId]) {
-    Object.entries(game.opponentHands[player.playerId]).forEach(([id, c]) => { res[id] = c as CardView })
-  }
-  if (game.watchedHands?.[player.name]) {
-    Object.entries(game.watchedHands[player.name]).forEach(([id, c]) => {
-      res[id] = { name: (c as any).name ?? '?', manaValue: 0, expansionSetCode: '', cardNumber: '0', parentId: id, id }
-    })
-  }
-  return res
 }
 
 export default function TwoHeadedBoard({
@@ -72,11 +43,22 @@ export default function TwoHeadedBoard({
   crossZonePlayables = [],
   onPlayCrossZone,
 }: TwoHeadedBoardProps) {
-  const allPlayers = useMemo((): PlayerView[] => game?.players ?? [], [game?.players])
-
-  const me = allPlayers.find((p) => p.controlled)
-  const opps = allPlayers.filter((p) => !p.controlled)
-  const isSpectator = !me
+  const { me, opps, isSpectator } = useBoardPlayers(game)
+  const presenter = useBoardPresenter({
+    game,
+    targetIds,
+    chosenTargetIds,
+    playableIds,
+    combatSelectable,
+    combatMode,
+    combatChosen,
+    crossZonePlayables,
+    onTargetClick,
+    onPlayableClick,
+    onCombatClick,
+    onCardHover,
+  })
+  const { handleCardHover, handleCardClick, targetIdSet, playableIdSet } = presenter
 
   /**
    * Pod layout — always a 2×2 grid:
@@ -97,51 +79,6 @@ export default function TwoHeadedBoard({
     return [opps[0], opps[1], me, opps[2]]
   }, [isSpectator, me, opps])
 
-  const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
-  const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
-
-  const boardRef = useRef<HTMLDivElement>(null)
-  const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
-  const [anchorInHandBar, setAnchorInHandBar] = useState(false)
-  const hoverTimeoutRef = useRef<number | null>(null)
-
-  const modalOpen = useStore(isBlockingModal)
-  useEffect(() => {
-    if (modalOpen) {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
-        hoverTimeoutRef.current = null
-      }
-      setFloatingCard(null)
-      setAnchorRect(null)
-      setAnchorInHandBar(false)
-    }
-  }, [modalOpen])
-
-  const handleCardHover = useCallback(
-    (card: CardView | PermanentView | null, rect?: DOMRect, origin?: HandBarOrigin) => {
-      if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null }
-      if (card && rect) {
-        setFloatingCard(card); setAnchorRect(rect); setAnchorInHandBar(origin === 'hand-bar'); onCardHover?.(card as CardView | null)
-      } else {
-        hoverTimeoutRef.current = window.setTimeout(() => {
-          setFloatingCard(null); setAnchorRect(null); setAnchorInHandBar(false); onCardHover?.(null)
-        }, 50)
-      }
-    },
-    [onCardHover],
-  )
-
-  useSceneBridge({ game, playableIds, targetIds, chosenTargetIds, combatSelectable, combatMode, combatChosen, crossZonePlayables })
-  useGameTransitions(game)
-
-  const handleCardClick = (id: string) => {
-    if (combatSelectable.includes(id) || combatChosen.includes(id)) onCombatClick?.(id)
-    else if (targetIds.includes(id)) onTargetClick?.(id)
-    else if (playableIds.includes(id)) onPlayableClick?.(id)
-  }
-
   const oppSlot = (player: PlayerView | undefined, key: string, mirrored = false) => (
     <div className="pod-cell" key={key}>
       <OpponentZone
@@ -149,7 +86,7 @@ export default function TwoHeadedBoard({
         onCardClick={onTargetClick}
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
-        revealedCards={revealedCards(game, player)}
+        revealedCards={opponentRevealedCards(game, player)}
         attackingIds={attackingIds}
         blockingIds={blockingIds}
         mirrored={mirrored}
@@ -159,18 +96,25 @@ export default function TwoHeadedBoard({
   )
 
   return (
-    <div className="pod-board" ref={boardRef}>
+    <BoardShell
+      className="pod-board"
+      presenter={presenter}
+      handBar={!isSpectator ? {
+        cards: game?.myHand ?? {},
+        onCardClick: onPlayableClick,
+        playableIds: playableIdSet,
+        targetIds: targetIdSet,
+      } : null}
+    >
       {/* ── Top row ── */}
       <div className="pod-row pod-row--top">
         {oppSlot(topLeft, 'tl')}
-        <div className="pod-col-divider" />
+        <BoardColDivider />
         {oppSlot(topRight, 'tr')}
       </div>
 
       {/* ── Horizontal board divider ── */}
-      <div className="pod-board-divider">
-        <span className="pod-divider-diamond">◆</span>
-      </div>
+      <BoardDivider labels />
 
       {/* ── Bottom row ── */}
       <div className="pod-row pod-row--bottom">
@@ -202,7 +146,7 @@ export default function TwoHeadedBoard({
               onCardClick={onTargetClick}
               onCardHover={handleCardHover}
               targetIds={targetIdSet}
-              revealedCards={revealedCards(game, botLeft as PlayerView | undefined)}
+              revealedCards={opponentRevealedCards(game, botLeft as PlayerView | undefined)}
               attackingIds={attackingIds}
               blockingIds={blockingIds}
               mirrored
@@ -211,30 +155,11 @@ export default function TwoHeadedBoard({
           )}
         </div>
 
-        <div className="pod-col-divider" />
+        <BoardColDivider />
 
         {/* Bottom-right: always an opponent (mirrored to face the center) */}
         {oppSlot(botRight, 'br', true)}
       </div>
-
-      {/* ── Full-width hand bar (my hand, below the pod grid) ── */}
-      {!isSpectator && (
-        <HandBar
-          cards={game?.myHand ?? {}}
-          onCardClick={onPlayableClick}
-          onHover={handleCardHover}
-          playableIds={playableIdSet}
-          targetIds={targetIdSet}
-        />
-      )}
-
-      <FloatingCardPreview
-        card={floatingCard}
-        anchorRect={anchorRect}
-        boardRect={boardRef.current?.getBoundingClientRect() ?? null}
-        anchorInHandBar={anchorInHandBar}
-      />
-      <FlyingCardOverlay />
-    </div>
+    </BoardShell>
   )
 }

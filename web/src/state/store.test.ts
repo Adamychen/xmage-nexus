@@ -580,10 +580,13 @@ describe('SIDEBOARD event', () => {
       },
     })
 
-    // Wait for async card resolution
-    await vi.waitFor(() => {
-      expect(getState().sideboardScreen).not.toBeNull()
-    })
+    // Wait for async card resolution (depende de red: Scryfall puede tardar >1s)
+    await vi.waitFor(
+      () => {
+        expect(getState().sideboardScreen).not.toBeNull()
+      },
+      { timeout: 15_000 }
+    )
 
     const screen = getState().sideboardScreen!
     expect(screen.deckName).toBe('Test Deck')

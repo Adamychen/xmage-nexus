@@ -11,7 +11,6 @@ interface FloatingCardPreviewProps {
   anchorRect: DOMRect | null
   boardRect?: DOMRect | null
   fixedSide?: 'left' | 'right' | 'auto'
-  anchorInHandBar?: boolean
 }
 
 const PREVIEW_WIDTH = 320
@@ -23,7 +22,6 @@ export default function FloatingCardPreview({
   anchorRect,
   boardRect,
   fixedSide = 'auto',
-  anchorInHandBar = false,
 }: FloatingCardPreviewProps) {
   const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
@@ -110,7 +108,7 @@ export default function FloatingCardPreview({
     const relRight = anchorRect.right - boardRect.left
     const relBottom = anchorRect.bottom - boardRect.top
 
-    const isHandCard = anchorInHandBar || relBottom > boardRect.height - 140
+    const isHandCard = relBottom > boardRect.height - 140
 
     if (isHandCard) {
       const left = Math.max(

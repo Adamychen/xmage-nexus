@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
-import { getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
+import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
@@ -77,7 +77,9 @@ export default function CardSlot({
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
-            const flightId = startCardFlight(card, prev, lastRect, 340, `[data-card-id="${effectiveId}"]`)
+            const flightId = startCardFlight(card, prev, lastRect, 340, `[data-card-id="${effectiveId}"]`, {
+              sourceSize: getPreviousCardSize(effectiveId),
+            })
             if (flightId) {
               setFlightState('hidden')
               const land = () => {
@@ -109,7 +111,12 @@ export default function CardSlot({
       if (el && effectiveId) {
         const zone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
         const zoneClass = zone ? zone.className.split(' ')[0] : ''
-        recordCardPosition(effectiveId, el.getBoundingClientRect(), zoneClass)
+        recordCardPosition(
+          effectiveId,
+          el.getBoundingClientRect(),
+          zoneClass,
+          { w: el.offsetWidth, h: el.offsetHeight }
+        )
       }
     }
   }, [effectiveId, card])
@@ -254,7 +261,7 @@ export default function CardSlot({
 
             return (
               <div
-                key={ci}
+                key={`${ci}:${c.count}`}
                 className={`counter-badge ${customClass}`}
                 title={`${c.name}: ${c.count}`}
               >

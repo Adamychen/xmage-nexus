@@ -517,6 +517,10 @@ export const zhs: TranslationSchema = {
     ability_badge_loyalty: '👑 忠诚异能',
     ability_badge_static: '🛡️ 静态异能',
     ability_badge_general: '⚡ 异能',
+    fx_effects: '动画效果',
+    fx_effects_hint: '开启或关闭棋盘动画',
+    fx_speed: '速度',
+    turn_banner_player: '回合 {turn} · {player}',
   },
   wiki: {
     title: 'MTG 规则百科与术语表',

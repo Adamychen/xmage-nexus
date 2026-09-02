@@ -20,11 +20,21 @@
   --hand-h: 180px;
   --card-w: clamp(112px, 8.5vw, 142px);
   --card-aspect: 0.714;
+  --fx-speed: 1;
 
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 * { box-sizing: border-box; }
+
+/* Ajustes de efectos (settings.effects=false): apaga las animaciones
+   decorativas sin tocar el feedback funcional (glows, clases de estado). */
+html.fx-off .fx-decorate,
+html.fx-off .fx-popover,
+html.fx-off .fx-popover .fx-toggle-knob {
+  animation: none !important;
+  transition: none !important;
+}
 
 html, body, #root {
   margin: 0;

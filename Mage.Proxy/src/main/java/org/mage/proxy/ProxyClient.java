@@ -824,6 +824,14 @@ public class ProxyClient implements MageClient {
     }
 
     private synchronized void connect(WebSocket conn, String requestId, String host, int port, String username, String password, String flagName, int avatarId) {
+        // mage.remote.Connection.getURI() sustituye "localhost" por la primera IP
+        // no-loopback que encuentra enumerando interfaces (Connection.getLocalAddress).
+        // Con interfaces bridge/túnel de VMs activas (p.ej. 192.168.97.0) construye un
+        // locator bisocket inalcanzable y el login muere en "client lease". El literal
+        // 127.0.0.1 se usa tal cual y siempre es correcto en el host del proxy.
+        if ("localhost".equals(host)) {
+            host = "127.0.0.1";
+        }
         if (graceDisconnectTimer != null) {
             graceDisconnectTimer.cancel(false);
             graceDisconnectTimer = null;

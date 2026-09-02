@@ -1,1 +1,3 @@
-@import './BoardZone.css';
+/* BoardZone.css ya se importa desde BoardZone.tsx; este archivo existe solo
+   para que los wrappers tengan su propio punto de estilo si algún día hace
+   falta diferenciarlos. */

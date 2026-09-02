@@ -6,17 +6,15 @@ import {
   computeHandBarSizing,
   HAND_ARC_PLAYABLE_RISE_PX,
   HAND_BAR_MAX_CARD_W,
+  HAND_BAR_PEEK_RATIO,
   HAND_CARD_ASPECT,
   HAND_BAR_PADDING_Y,
 } from './handSizing'
 import './HandBar.css'
 
-export type HandBarOrigin = 'hand-bar'
-
 interface HandBarProps {
   cards: Record<string, CardView>
   onCardClick?: (id: string) => void
-  onHover?: (card: CardView | null, rect?: DOMRect, origin?: HandBarOrigin) => void
   playableIds?: Set<string>
   targetIds?: Set<string>
 }
@@ -24,7 +22,6 @@ interface HandBarProps {
 export default function HandBar({
   cards,
   onCardClick,
-  onHover,
   playableIds = new Set(),
   targetIds = new Set(),
 }: HandBarProps) {
@@ -55,6 +52,8 @@ export default function HandBar({
 
   if (entries.length === 0) return null
 
+  const cardH = cardW * HAND_CARD_ASPECT
+
   return (
     <div
       ref={zoneRef}
@@ -64,7 +63,8 @@ export default function HandBar({
         {
           '--card-w': `${cardW}px`,
           '--hand-gap': `${gap}px`,
-          height: `${cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y}px`,
+          '--sink': `${cardH * HAND_BAR_PEEK_RATIO}px`,
+          height: `${cardH * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y}px`,
         } as React.CSSProperties
       }
     >
@@ -76,8 +76,6 @@ export default function HandBar({
             key={id}
             className="hand-card-slot"
             style={{ '--rot': `${arc.rot}deg`, '--rise': `${rise}px` } as React.CSSProperties}
-            onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect(), 'hand-bar') : undefined}
-            onMouseLeave={onHover ? () => onHover(null) : undefined}
           >
             <CardSlot
               cardId={id}

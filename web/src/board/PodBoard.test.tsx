@@ -259,10 +259,10 @@ describe('PodBoard', () => {
         makePlayer({ playerId: 'p4', name: 'Dave', controlled: false, commandList: [makeCommander('cmd-d', 'D')] }),
       ],
     })
-    const { container, getByTestId } = render(<PodBoard game={game} />)
-    expect(getByTestId('pod-board').classList.contains('is-spectator')).toBe(true)
+    const { container } = render(<PodBoard game={game} />)
     const zones = container.querySelectorAll('.board-zone')
     expect(zones.length).toBe(4)
+    expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
     const ring = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
     const seats = ring.getByTestId('turn-order-ring').querySelectorAll('.tor-seat')
     expect(seats.length).toBe(4)

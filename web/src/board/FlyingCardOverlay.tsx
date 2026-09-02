@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useActiveFlights, markFlightLanded, type FlightRecord } from './flightManager'
+import { useActiveFlights, markFlightLanded, normalizeFlightRect, type FlightRecord } from './flightManager'
 import { awaitImageUrl } from '../cards/cardImages'
 import './FlyingCardOverlay.css'
+
+const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   const elRef = useRef<HTMLDivElement>(null)
@@ -9,6 +11,10 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
   useEffect(() => {
     let cancelled = false
+    if (flight.card.faceDown === true) {
+      setImgUrl(CARD_BACK_URL)
+      return
+    }
     awaitImageUrl(flight.card).then((url) => {
       if (!cancelled) setImgUrl(url)
     })
@@ -23,7 +29,8 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     let toRect = flight.toRect
     const { fromRect, duration } = flight
-    const rot = (flight.card as { tapped?: boolean }).tapped === true ? 90 : 0
+    const endRot = (flight.card as { tapped?: boolean }).tapped === true ? 90 : 0
+    const startRot = flight.rotated90 ? 90 : 0
 
     el.style.width = `${fromRect.width}px`
     el.style.height = `${fromRect.height}px`
@@ -47,11 +54,14 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       const dy = toCy - fromCy
       const dist = Math.hypot(dx, dy)
       const arcLift = Math.min(110, dist * 0.22)
+      // Tilt 3D sutil en vuelos largos: la carta "gira en la mano" mientras cruza.
+      const tilt = dist > 80 ? 14 : dist > 40 ? 8 : 0
+      const midRot = (startRot + endRot) / 2
 
       return [
-        { transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(0deg) scale(1)`, opacity: 0.9 },
-        { transform: `translate3d(${fromCx - w / 2 + dx * 0.5}px, ${fromCy - h / 2 + dy * 0.5 - arcLift}px, 0) rotate(${rot / 2}deg) scale(${(1 + scale) / 2})`, opacity: 1 },
-        { transform: `translate3d(${toCx - w / 2}px, ${toCy - h / 2}px, 0) rotate(${rot}deg) scale(${scale})`, opacity: 0.95 },
+        { transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(${startRot}deg) rotateY(0deg) scale(1)`, opacity: 0.9 },
+        { transform: `translate3d(${fromCx - w / 2 + dx * 0.5}px, ${fromCy - h / 2 + dy * 0.5 - arcLift}px, 0) rotate(${midRot}deg) rotateY(${tilt}deg) scale(${(1 + scale) / 2})`, opacity: 1 },
+        { transform: `translate3d(${toCx - w / 2}px, ${toCy - h / 2}px, 0) rotate(${endRot}deg) rotateY(0deg) scale(${scale})`, opacity: 0.95 },
       ]
     }
 
@@ -73,11 +83,12 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
         const target = document.querySelector(flight.toSelector)
         if (target) {
           const r = target.getBoundingClientRect()
+          const normalized = normalizeFlightRect(r)
           const moved =
-            Math.abs(r.left + r.width / 2 - (toRect.left + toRect.width / 2)) > 2 ||
-            Math.abs(r.top + r.height / 2 - (toRect.top + toRect.height / 2)) > 2
-          if (r.width > 0 && r.height > 0 && moved) {
-            toRect = r
+            Math.abs(normalized.rect.left + normalized.rect.width / 2 - (toRect.left + toRect.width / 2)) > 2 ||
+            Math.abs(normalized.rect.top + normalized.rect.height / 2 - (toRect.top + toRect.height / 2)) > 2
+          if (normalized.rect.width > 0 && normalized.rect.height > 0 && moved) {
+            toRect = normalized.rect
             anim.effect = new KeyframeEffect(el, keyframes(), timing)
           }
         }
@@ -113,7 +124,9 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
   return (
     <div ref={elRef} className="flying-card-item" data-flight-id={flight.flightId}>
-      {imgUrl ? (
+      {flight.card.faceDown === true ? (
+        <img src={CARD_BACK_URL} alt="" className="flying-card-img" draggable={false} />
+      ) : imgUrl ? (
         <img src={imgUrl} alt={flight.card.name || 'Card'} className="flying-card-img" />
       ) : (
         <div className="flying-card-fallback">{flight.card.name || 'Magic Card'}</div>

@@ -134,3 +134,34 @@ export function clearActiveGame() {
     storage.removeItem(ACTIVE_GAME_KEY)
   } catch {}
 }
+
+export interface FxSettings {
+  effects: boolean
+  animationSpeed: number
+}
+
+const FX_SETTINGS_KEY = 'mage-web-settings'
+const FX_SPEEDS = [0.5, 1, 1.5]
+export const DEFAULT_FX_SETTINGS: FxSettings = { effects: true, animationSpeed: 1 }
+
+export function loadFxSettings(): FxSettings {
+  try {
+    const raw = getStorage().getItem(FX_SETTINGS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<FxSettings>
+      return {
+        effects: parsed.effects !== false,
+        animationSpeed: FX_SPEEDS.includes(parsed.animationSpeed as number)
+          ? parsed.animationSpeed as number
+          : DEFAULT_FX_SETTINGS.animationSpeed,
+      }
+    }
+  } catch {}
+  return { ...DEFAULT_FX_SETTINGS }
+}
+
+export function saveFxSettings(fx: FxSettings) {
+  try {
+    getStorage().setItem(FX_SETTINGS_KEY, JSON.stringify(fx))
+  } catch {}
+}

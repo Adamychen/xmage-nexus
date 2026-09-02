@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
+import { Fragment, useMemo } from 'react'
+import type { CardView, GameView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
-import HandBar, { type HandBarOrigin } from './HandBar'
-import FloatingCardPreview from './FloatingCardPreview'
-import FlyingCardOverlay from './FlyingCardOverlay'
-import { revealedCards } from './TwoHeadedBoard'
-import { useSceneBridge } from './sceneBridge'
-import { useGameTransitions } from './gameTransitionEngine'
+import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
+import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
+import { opponentRevealedCards, simpleToCardsView } from './revealedCards'
 import type { CrossZonePlayable } from './crossZone'
-import { useStore, isBlockingModal } from '../state/store'
 import './ArenaBoard.css'
 
 interface ArenaBoardProps {
@@ -52,96 +48,83 @@ export default function ArenaBoard({
   crossZonePlayables = [],
   onPlayCrossZone,
 }: ArenaBoardProps) {
-  const allPlayers = useMemo((): PlayerView[] => game?.players ?? [], [game?.players])
-  const me = allPlayers.find((p) => p.controlled)
-  const opps = allPlayers.filter((p) => !p.controlled)
-  const isSpectator = !me
+  const { me, opps, isSpectator } = useBoardPlayers(game)
+  const presenter = useBoardPresenter({
+    game,
+    targetIds,
+    chosenTargetIds,
+    playableIds,
+    combatSelectable,
+    combatMode,
+    combatChosen,
+    crossZonePlayables,
+    onTargetClick,
+    onPlayableClick,
+    onCombatClick,
+    onCardHover,
+  })
+  const { handleCardHover, handleCardClick, targetIdSet, playableIdSet } = presenter
 
-  const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
-  const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
+  // Espectador: mismo convenio que GameBoard/pod — un jugador abajo (el último)
+  // con su mano si es visible, y el resto arriba en columnas.
+  const spectatorBottom = isSpectator ? (opps.length >= 2 ? opps[opps.length - 1] : opps[0]) : undefined
+  const spectatorBottomHand = useMemo(() => {
+    if (!isSpectator || !spectatorBottom) return {}
+    const watched =
+      game?.watchedHands?.[spectatorBottom.name] ||
+      game?.watchedHands?.[spectatorBottom.playerId]
+    const oppHand =
+      game?.opponentHands?.[spectatorBottom.playerId] ||
+      game?.opponentHands?.[spectatorBottom.name]
+    if (watched) return simpleToCardsView(watched)
+    if (oppHand) return simpleToCardsView(oppHand)
+    return {}
+  }, [isSpectator, spectatorBottom, game?.watchedHands, game?.opponentHands])
 
-  const boardRef = useRef<HTMLDivElement>(null)
-  const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
-  const [anchorInHandBar, setAnchorInHandBar] = useState(false)
-  const hoverTimeoutRef = useRef<number | null>(null)
-
-  const modalOpen = useStore(isBlockingModal)
-  useEffect(() => {
-    if (modalOpen) {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
-        hoverTimeoutRef.current = null
-      }
-      setFloatingCard(null)
-      setAnchorRect(null)
-      setAnchorInHandBar(false)
-    }
-  }, [modalOpen])
-
-  const handleCardHover = useCallback(
-    (card: CardView | PermanentView | null, rect?: DOMRect, origin?: HandBarOrigin) => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
-        hoverTimeoutRef.current = null
-      }
-      if (card && rect) {
-        setFloatingCard(card)
-        setAnchorRect(rect)
-        setAnchorInHandBar(origin === 'hand-bar')
-        onCardHover?.(card as CardView | null)
-      } else {
-        hoverTimeoutRef.current = window.setTimeout(() => {
-          setFloatingCard(null)
-          setAnchorRect(null)
-          setAnchorInHandBar(false)
-          onCardHover?.(null)
-        }, 50)
-      }
-    },
-    [onCardHover],
+  const oppRow = useMemo(
+    () => (isSpectator ? opps.slice(0, Math.max(0, opps.length - 1)).slice(0, 3) : opps.slice(0, 3)),
+    [isSpectator, opps]
   )
 
-  useSceneBridge({ game, playableIds, targetIds, chosenTargetIds, combatSelectable, combatMode, combatChosen, crossZonePlayables })
-  useGameTransitions(game)
-
-  const handleCardClick = (id: string) => {
-    if (combatSelectable.includes(id) || combatChosen.includes(id)) onCombatClick?.(id)
-    else if (targetIds.includes(id)) onTargetClick?.(id)
-    else if (playableIds.includes(id)) onPlayableClick?.(id)
-  }
-
-  const oppRow = useMemo(() => (isSpectator ? opps.slice(0, 4) : opps.slice(0, 3)), [isSpectator, opps])
-
   return (
-    <div className="arena-board" data-testid="arena-board" ref={boardRef}>
+    <BoardShell
+      className="arena-board"
+      testId="arena-board"
+      presenter={presenter}
+      handBar={!isSpectator ? {
+        cards: game?.myHand ?? {},
+        onCardClick: onPlayableClick,
+        playableIds: playableIdSet,
+        targetIds: targetIdSet,
+      } : null}
+    >
       <div className="arena-opp-row">
         {oppRow.map((opp, i) => (
-          <div className="arena-opp-cell" key={opp?.playerId ?? `arena-empty-${i}`}>
-            {opp && (
-              <OpponentZone
-                player={opp}
-                onCardClick={onTargetClick}
-                onCardHover={handleCardHover}
-                targetIds={targetIdSet}
-                revealedCards={revealedCards(game, opp)}
-                attackingIds={attackingIds}
-                blockingIds={blockingIds}
-                mirrored
-                compactPod
-              />
-            )}
-          </div>
+          <Fragment key={opp?.playerId ?? `arena-empty-${i}`}>
+            {i > 0 && <BoardColDivider />}
+            <div className="arena-opp-cell">
+              {opp && (
+                <OpponentZone
+                  player={opp}
+                  onCardClick={onTargetClick}
+                  onCardHover={handleCardHover}
+                  targetIds={targetIdSet}
+                  revealedCards={opponentRevealedCards(game, opp)}
+                  attackingIds={attackingIds}
+                  blockingIds={blockingIds}
+                  compactPod
+                />
+              )}
+            </div>
+          </Fragment>
         ))}
       </div>
 
-      <div className="arena-divider">
-        <span className="arena-divider-diamond">◆</span>
-      </div>
+      <BoardDivider />
 
       <PlayerZone
-        player={me}
-        hand={game?.myHand ?? {}}
+        player={me ?? spectatorBottom}
+        hand={me ? (game?.myHand ?? {}) : spectatorBottomHand}
         onCardClick={handleCardClick}
         onHandCardClick={onPlayableClick}
         onCardHover={handleCardHover}
@@ -152,29 +135,11 @@ export default function ArenaBoard({
         combatChosen={combatChosen}
         attackingIds={attackingIds}
         blockingIds={blockingIds}
-        crossZonePlayables={crossZonePlayables}
+        crossZonePlayables={isSpectator ? [] : crossZonePlayables}
         onPlayCrossZone={onPlayCrossZone}
         helperEmblems={game?.myHelperEmblems}
-        showHand={false}
+        showHand={isSpectator}
       />
-
-      {!isSpectator && (
-        <HandBar
-          cards={game?.myHand ?? {}}
-          onCardClick={onPlayableClick}
-          onHover={handleCardHover}
-          playableIds={playableIdSet}
-          targetIds={targetIdSet}
-        />
-      )}
-
-      <FloatingCardPreview
-        card={floatingCard}
-        anchorRect={anchorRect}
-        boardRect={boardRef.current?.getBoundingClientRect() ?? null}
-        anchorInHandBar={anchorInHandBar}
-      />
-      <FlyingCardOverlay />
-    </div>
+    </BoardShell>
   )
 }

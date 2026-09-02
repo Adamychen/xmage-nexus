@@ -1,7 +1,7 @@
 import type { ChatMessageEvent, DeckCardEntry, DeckJson, DraftClientMessage, GameEndInfo, GameView, LobbyEnvelope, TableView, TournamentView } from '../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../game/feedback'
 import type { PhaseStops } from '../net/commands'
-import { loadConn, type ConnectionInfo } from './persistence'
+import { loadConn, loadFxSettings, type ConnectionInfo } from './persistence'
 
 export type LogChannel = 'game' | 'chat' | 'system'
 
@@ -117,6 +117,8 @@ export interface AppState {
     autoPass: boolean
     holdPriority: boolean
     boardLayout: 'standard' | 'pod' | 'arena'
+    effects: boolean
+    animationSpeed: number
   }
   error: string | null
 }
@@ -154,7 +156,13 @@ export const initialState: AppState = {
   },
   log: [],
   events: [],
-  settings: { autoKeepMulligan: false, autoPass: false, holdPriority: false, boardLayout: 'standard' },
+  settings: {
+    autoKeepMulligan: false,
+    autoPass: false,
+    holdPriority: false,
+    boardLayout: 'standard',
+    ...loadFxSettings(),
+  },
   error: null,
 }
 

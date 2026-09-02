@@ -20,6 +20,9 @@ import PriorityOrb from './PriorityOrb'
 import ActionFeed from './ActionFeed'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
+import FeedbackOverlay from '../board/FeedbackOverlay'
+import { applyFxRoot } from '../board/fx'
+import { hasCommanders as hasCommandersInGame } from '../board/commanders'
 import MechanicsTray from './MechanicsTray'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
@@ -56,6 +59,10 @@ export default function GameScreen() {
   useEffect(() => {
     if (game) maybeAutoPass(game)
   }, [game])
+
+  useEffect(() => {
+    applyFxRoot()
+  }, [settings.effects, settings.animationSpeed])
 
   const me = game?.players?.find((p) => p.controlled)
   const canPass = !!gameId && (!!me?.hasPriority || (!!me?.isActive && (!feedback || feedback.mode === 'combat')))
@@ -165,13 +172,7 @@ export default function GameScreen() {
     })
   }, [game?.players])
 
-  const hasCommanders = useMemo(() => {
-    if (!game?.players) return false
-    return game.players.some((p) => {
-      const items = Array.isArray(p.commandList) ? p.commandList : Object.values(p.commandList ?? {})
-      return items.some((c: any) => c?.mageObjectType === 'COMMANDER' || c?.isCommander)
-    })
-  }, [game?.players])
+  const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const isMultiplayer = opps.length >= 2
   const isArenaLayout = settings.boardLayout === 'arena' && isMultiplayer
@@ -310,7 +311,6 @@ export default function GameScreen() {
               targetIds={targetIds}
               chosenTargetIds={chosenTargetIds}
               onTargetClick={onTargetClick}
-              targetSourceId={targetSourceId}
               playableIds={playableIds}
               onPlayableClick={onPlayableClick}
               combatSelectable={combat?.selectable ?? []}
@@ -328,7 +328,6 @@ export default function GameScreen() {
               targetIds={targetIds}
               chosenTargetIds={chosenTargetIds}
               onTargetClick={onTargetClick}
-              targetSourceId={targetSourceId}
               playableIds={playableIds}
               onPlayableClick={onPlayableClick}
               combatSelectable={combat?.selectable ?? []}
@@ -349,6 +348,7 @@ export default function GameScreen() {
             onPass={onResolveClick}
             busy={busy}
           />
+          <FeedbackOverlay />
         </div>
         <div className="game-right-panel">
           <div className="right-panel-tabs">

@@ -74,11 +74,47 @@
 .zone-bottom .card-slot.attacking,
 .player-zone .card-slot.attacking {
   translate: 0 -12px;
+  animation: attackLungeUp calc(0.45s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .zone-top .card-slot.attacking,
 .opponent-zone .card-slot.attacking {
   translate: 0 12px;
+  animation: attackLungeDown calc(0.45s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes attackLungeUp {
+  0% {
+    translate: 0 0;
+    filter: brightness(1);
+  }
+  38% {
+    translate: 0 -26px;
+    filter: brightness(1.25);
+  }
+  100% {
+    translate: 0 -12px;
+    filter: brightness(1);
+  }
+}
+
+@keyframes attackLungeDown {
+  0% {
+    translate: 0 0;
+    filter: brightness(1);
+  }
+  38% {
+    translate: 0 26px;
+    filter: brightness(1.25);
+  }
+  100% {
+    translate: 0 12px;
+    filter: brightness(1);
+  }
+}
+
+html.fx-off .card-slot.attacking {
+  animation: none !important;
 }
 
 /* Blocker gets a cool cyan lean-in */
@@ -254,6 +290,17 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  animation: badgePop calc(0.28s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0.4); opacity: 0; }
+  55% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+html.fx-off .counter-badge {
+  animation: none !important;
 }
 
 .counter-badge.p1p1 {

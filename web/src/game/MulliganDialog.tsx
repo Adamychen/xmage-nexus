@@ -80,10 +80,11 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
           {cardCount > 0 && (
             <div className="mulligan-hand-grid">
-              {handEntries.map(([id, card]) => (
+              {handEntries.map(([id, card], i) => (
                 <div
                   key={id}
                   className={`mulligan-card-wrap ${selected.includes(id) ? 'is-selected' : ''}`}
+                  style={{ animationDelay: `${i * 55}ms` }}
                   onClick={() => handleCardClick(id)}
                 >
                   <CardSlot
@@ -130,8 +131,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
         {cardCount > 0 && (
           <div className="mulligan-hand-grid">
-            {handEntries.map(([id, card]) => (
-              <div key={id} className="mulligan-card-wrap">
+            {handEntries.map(([id, card], i) => (
+              <div key={id} className="mulligan-card-wrap" style={{ animationDelay: `${i * 55}ms` }}>
                 <CardSlot
                   cardId={id}
                   card={card}

@@ -52,7 +52,9 @@ export async function clickPlayerTarget(page: Page, playerId: string): Promise<b
   const index = opponents.findIndex((p) => p.playerId === playerId)
   if (index < 0) return false
 
-  const oppZones = page.locator('.opponent-zone')
+  // data-role es estable en los tres modos (las zonas espejadas no llevan
+  // la clase .opponent-zone, solo data-role="opponent")
+  const oppZones = page.locator('[data-role="opponent"]')
   const zone = oppZones.nth(index)
   const infoBar = zone.locator('.player-info-bar')
   if (await infoBar.count() > 0) {
@@ -70,7 +72,7 @@ export async function clickPlayerHeader(page: Page, playerId: string): Promise<b
   if (!player) return false
 
   if (player.controlled) {
-    const infoBar = page.locator('.player-zone .player-info-bar')
+    const infoBar = page.locator('.player-zone:not(.mirrored) .player-info-bar')
     if (await infoBar.count() > 0) {
       await infoBar.first().click()
       return true

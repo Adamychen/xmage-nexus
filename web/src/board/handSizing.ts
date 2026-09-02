@@ -1,11 +1,14 @@
 export const HAND_BAR_MIN_CARD_W = 64
-export const HAND_BAR_MAX_CARD_W = 100
+export const HAND_BAR_MAX_CARD_W = 136
 export const HAND_CARD_ASPECT = 1.4
 export const HAND_BAR_MIN_VISIBLE_RATIO = 0.55
 export const HAND_BAR_MAX_GAP = 6
-export const HAND_BAR_MAX_SPAN = 640
+export const HAND_BAR_MAX_SPAN = 900
 export const HAND_BAR_PADDING_X = 24
 export const HAND_BAR_PADDING_Y = 12
+
+export const HAND_BAR_PEEK_RATIO = 0.5
+export const HAND_BAR_HOVER_SINK_RATIO = 0.1
 
 export const HAND_ARC_ROT_PER_CARD = 1.6
 export const HAND_ARC_MAX_ROT_DEG = 10
@@ -43,7 +46,7 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
     return {
       cardW: HAND_BAR_MAX_CARD_W,
       gap: 0,
-      barHeight: HAND_BAR_MAX_CARD_W * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y,
+      barHeight: HAND_BAR_MAX_CARD_W * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y,
     }
   }
 
@@ -51,7 +54,7 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
 
   if (count === 1 || usableW <= 0) {
     const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, usableW))
-    return { cardW, gap: 0, barHeight: cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y }
+    return { cardW, gap: 0, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
   }
 
   const fitW = usableW / (count - (1 - HAND_BAR_MIN_VISIBLE_RATIO) * (count - 1))
@@ -61,5 +64,5 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
   const naturalGap = (usableW - count * cardW) / (count - 1)
   const gap = Math.max(maxOverlap, Math.min(HAND_BAR_MAX_GAP, naturalGap))
 
-  return { cardW, gap, barHeight: cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y }
+  return { cardW, gap, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
 }

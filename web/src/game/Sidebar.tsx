@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useGame, returnToLobby, concedeGame, useStore } from '../state/store'
+import { useGame, returnToLobby, concedeGame, useStore, useSettings, setSetting } from '../state/store'
+import { FX_SPEEDS } from '../board/fx'
 import { useFullscreen } from '../utils/fullscreen'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import { useTranslation } from '../i18n'
@@ -26,7 +27,9 @@ function TurnTimer({ secs, isTicking = false, label }: { secs: number; isTicking
 export default function Sidebar() {
   const game = useGame()
   const gameId = useStore((s) => s.gameId)
+  const settings = useSettings()
   const [showHelp, setShowHelp] = useState(false)
+  const [showFx, setShowFx] = useState(false)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
   const { t } = useTranslation()
 
@@ -62,6 +65,9 @@ export default function Sidebar() {
       case 'help':
         setShowHelp(!showHelp)
         break
+      case 'settings':
+        setShowFx((prev) => !prev)
+        break
       case 'fullscreen':
         toggleFullscreen()
         break
@@ -74,7 +80,7 @@ export default function Sidebar() {
   const bufferSecs = game?.bufferTime ?? 0
 
   const navItems = [
-    { id: 'settings', label: t('common', 'settings'), path: ICON_PATHS.settings },
+    { id: 'settings', label: t('common', 'settings'), path: ICON_PATHS.settings, active: showFx },
     { id: 'help', label: t('game', 'help_wiki'), path: ICON_PATHS.help, active: showHelp },
     {
       id: 'fullscreen',
@@ -114,6 +120,42 @@ export default function Sidebar() {
           ))}
         </div>
       </nav>
+
+      {showFx && (
+        <div className="fx-popover" role="dialog" aria-label={t('common', 'settings')}>
+          <div className="fx-popover-row">
+            <div className="fx-popover-text">
+              <span className="fx-popover-label">{t('game', 'fx_effects')}</span>
+              <span className="fx-popover-hint">{t('game', 'fx_effects_hint')}</span>
+            </div>
+            <button
+              type="button"
+              className={`fx-toggle ${settings.effects ? 'on' : ''}`}
+              role="switch"
+              aria-checked={settings.effects}
+              title={t('game', 'fx_effects_hint')}
+              onClick={() => setSetting('effects', !settings.effects)}
+            >
+              <span className="fx-toggle-knob" />
+            </button>
+          </div>
+          <div className="fx-popover-row">
+            <span className="fx-popover-label">{t('game', 'fx_speed')}</span>
+            <div className="fx-speed-group">
+              {FX_SPEEDS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`fx-speed-btn ${settings.animationSpeed === s ? 'active' : ''}`}
+                  onClick={() => setSetting('animationSpeed', s)}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
     </>

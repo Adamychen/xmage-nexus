@@ -212,7 +212,17 @@ function RecordedStackEntry({
   useLayoutEffect(() => {
     const el = ref.current
     return () => {
-      if (el && id) recordCardPosition(id, el.getBoundingClientRect(), 'stack-zone')
+      if (!el || !id) return
+      // Registrar el thumbnail (forma de carta) en vez de la fila completa: la
+      // fila es una tira ancha y deformaba el clon volador de la resolución.
+      const thumb = el.querySelector<HTMLElement>('.stack-thumb')
+      const source = thumb ?? el
+      recordCardPosition(
+        id,
+        source.getBoundingClientRect(),
+        'stack-zone',
+        { w: source.offsetWidth, h: source.offsetHeight }
+      )
     }
   }, [id])
 

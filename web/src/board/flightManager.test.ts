@@ -8,6 +8,7 @@ import {
   onFlightLanded,
   markFlightLanded,
   clearFlights,
+  normalizeFlightRect,
 } from './flightManager'
 import type { CardView } from '../net/types'
 
@@ -168,5 +169,108 @@ describe('flightManager', () => {
 
     markFlightLanded(firstId!)
     expect(landed).not.toHaveBeenCalled()
+  })
+})
+
+describe('normalizeFlightRect', () => {
+  const CENTER_TOLERANCE = 0.51
+
+  beforeEach(() => {
+    clearFlights()
+  })
+  const baseRect = {
+    left: 100,
+    top: 500,
+    right: 200,
+    bottom: 640,
+    width: 100,
+    height: 140,
+    x: 100,
+    y: 500,
+    toJSON: () => {},
+  } as DOMRect
+  const destRect = {
+    left: 400,
+    top: 200,
+    right: 500,
+    bottom: 340,
+    width: 100,
+    height: 140,
+    x: 400,
+    y: 200,
+    toJSON: () => {},
+  } as DOMRect
+  const card: CardView = {
+    id: 'norm-card-1',
+    name: 'Lightning Bolt',
+    manaValue: 1,
+    expansionSetCode: 'LEA',
+    cardNumber: '161',
+  }
+
+  function centerOf(rect: DOMRect) {
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+  }
+
+  it('keeps card-shaped rects untouched', () => {
+    const { rect, rotated90 } = normalizeFlightRect(baseRect)
+    expect(rotated90).toBe(false)
+    expect(rect.width).toBe(100)
+    expect(rect.height).toBe(140)
+  })
+
+  it('detects a tapped card (90° AABB) and restores the portrait shape', () => {
+    const tappedAabb = { ...baseRect, width: 140, height: 100, right: 240, bottom: 600 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(tappedAabb)
+    expect(rotated90).toBe(true)
+    expect(rect.width).toBe(100)
+    expect(rect.height).toBe(140)
+    const origin = centerOf(tappedAabb)
+    const out = centerOf(rect)
+    expect(Math.abs(out.x - origin.x)).toBeLessThan(CENTER_TOLERANCE)
+    expect(Math.abs(out.y - origin.y)).toBeLessThan(CENTER_TOLERANCE)
+  })
+
+  it('derives a card shape from a wide strip (stack rows)', () => {
+    const strip = { ...baseRect, width: 200, height: 40, right: 300, bottom: 540 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(strip)
+    expect(rotated90).toBe(false)
+    expect(rect.width).toBeGreaterThanOrEqual(44)
+    expect(rect.height / rect.width).toBeCloseTo(1.4, 1)
+    const origin = centerOf(strip)
+    const out = centerOf(rect)
+    expect(Math.abs(out.x - origin.x)).toBeLessThan(CENTER_TOLERANCE)
+    expect(Math.abs(out.y - origin.y)).toBeLessThan(CENTER_TOLERANCE)
+  })
+
+  it('derives a card shape from a tall strip (vertical panels)', () => {
+    const strip = { ...baseRect, width: 100, height: 600, bottom: 1100 } as DOMRect
+    const { rect } = normalizeFlightRect(strip)
+    expect(rect.height / rect.width).toBeCloseTo(1.4, 1)
+  })
+
+  it('uses the known source size when provided (immune to transforms)', () => {
+    const rotated = { ...baseRect, width: 140, height: 100, right: 240, bottom: 600 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(rotated, { w: 100, h: 140 })
+    expect(rotated90).toBe(false)
+    expect(rect.width).toBe(100)
+    expect(rect.height).toBe(140)
+  })
+
+  it('keeps tiny size-known cards untouched (real thumbs are small)', () => {
+    const tiny = { ...baseRect, width: 30, height: 42, right: 130, bottom: 542 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(tiny, { w: 30, h: 42 })
+    expect(rotated90).toBe(false)
+    expect(rect.width).toBe(30)
+    expect(rect.height).toBe(42)
+  })
+
+  it('marks flights as rotated90 when starting from a tapped card', () => {
+    const tappedAabb = { ...baseRect, width: 140, height: 100, right: 240, bottom: 600 } as DOMRect
+    startCardFlight(card, tappedAabb, destRect, 300)
+    const flight = getActiveFlights()[0]
+    expect(flight?.rotated90).toBe(true)
+    expect(flight?.fromRect.width).toBe(100)
+    expect(flight?.fromRect.height).toBe(140)
   })
 })

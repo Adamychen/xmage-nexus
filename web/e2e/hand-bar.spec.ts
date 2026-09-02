@@ -19,25 +19,13 @@ const MIN_VISIBLE_RATIO = 0.55
 
 const RECT_OF = 'const rectOf = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } };'
 
-async function handBarBoxes(page: Page): Promise<{ bar: Box; slots: Box[] }> {
-  return page.evaluate(`${RECT_OF}
-    (() => {
-      const bar = document.querySelector('[data-testid="hand-bar"]')
-      if (!bar) throw new Error('hand-bar no encontrado')
-      return {
-        bar: rectOf(bar),
-        slots: Array.from(bar.querySelectorAll('.hand-card-slot')).map(rectOf),
-      }
-    })()`)
-}
-
 /** Overlay: la mano flota sobre el fondo SIN consumir layout — el player-zone
  *  llega hasta el borde inferior del tablero y la barra está anclada a él. */
 async function expectOverlayLayout(page: Page): Promise<void> {
   const boxes = await page.evaluate(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
-      const board = bar?.closest('.game-board, .pod-board')
+      const board = bar?.closest('.game-board, .pod-board, .arena-board')
       const zone = document.querySelector('.player-zone:not(.mirrored)')
       if (!bar || !board || !zone) throw new Error('hand-bar, tablero o player-zone no encontrado')
       return { bar: rectOf(bar), board: rectOf(board), zone: rectOf(zone) }
@@ -73,16 +61,53 @@ async function expectHandBarLayout(page: Page): Promise<void> {
   // (los rivales espejados en pod comparten la clase .player-zone → excluimos)
   await expect(page.locator('.player-zone:not(.mirrored) .hand-card-slot')).toHaveCount(0)
 
-  const { bar: barBox, slots: slotBoxes } = await handBarBoxes(page)
-  expect(slotBoxes.length).toBeGreaterThanOrEqual(1)
-  for (const [i, slot] of slotBoxes.entries()) {
-    expect(slot.y, `carta ${i} dentro de la barra (top)`).toBeGreaterThanOrEqual(barBox.y - 2)
+  const boxes = await page.evaluate(`${RECT_OF}
+    (() => {
+      const bar = document.querySelector('[data-testid="hand-bar"]')
+      const board = bar?.closest('.game-board, .pod-board, .arena-board')
+      if (!bar || !board) throw new Error('hand-bar o tablero no encontrado')
+      return {
+        bar: rectOf(bar),
+        board: rectOf(board),
+        slots: Array.from(bar.querySelectorAll('.hand-card-slot')).map(rectOf),
+        cards: Array.from(bar.querySelectorAll('.hand-card')).map(rectOf),
+      }
+    })()`)
+  expect(boxes.slots.length).toBeGreaterThanOrEqual(1)
+  expect(boxes.cards.length).toBe(boxes.slots.length)
+
+  // Los slots (caja de layout) quedan anclados al borde inferior de la banda.
+  // Su caja estática es SOLO la banda visible (~cardH×0.5): si creciera a la
+  // altura completa de la carta, un puntero sobre las tierras dispararía el
+  // hover sin carta visible (y al elevarse la mano, oscilación por feedback).
+  for (const [i, slot] of boxes.slots.entries()) {
+    expect(slot.y, `carta ${i}: slot dentro de la banda visible (top)`).toBeGreaterThanOrEqual(
+      boxes.bar.y - 2,
+    )
     expect(
       slot.y + slot.height,
-      `carta ${i} dentro de la barra (bottom)`,
-    ).toBeLessThanOrEqual(barBox.y + barBox.height + 2)
+      `carta ${i} anclada al borde inferior de la banda de mano`,
+    ).toBeLessThanOrEqual(boxes.bar.y + boxes.bar.height + 2)
   }
-  expectMinVisibility(slotBoxes)
+
+  // La carta (caja transformada) se hunde tras el borde inferior del tablero:
+  // en reposo solo se ve la mitad superior ("de la mitad para arriba"),
+  // con tolerancia al arco/rotación de las cartas de los extremos.
+  const boardBottom = boxes.board.y + boxes.board.height
+  for (const [i, card] of boxes.cards.entries()) {
+    expect(
+      card.y + card.height,
+      `carta ${i} hundida tras el borde inferior del tablero`,
+    ).toBeGreaterThanOrEqual(boardBottom - 2)
+    const visible = boardBottom - card.y
+    expect(
+      visible,
+      `carta ${i}: mitad superior visible (${visible}px de ${card.height}px)`,
+    ).toBeGreaterThanOrEqual(card.height * 0.3)
+    expect(visible).toBeLessThanOrEqual(card.height * 0.7)
+  }
+
+  expectMinVisibility(boxes.slots)
   await expectOverlayLayout(page)
 }
 

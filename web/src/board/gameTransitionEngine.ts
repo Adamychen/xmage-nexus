@@ -1,7 +1,10 @@
 import { useEffect, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
 import { startCardFlight, hasFlightFor } from './flightManager'
-import { getPreviousCardPosition, clearCardPositionRegistry } from './cardPositionRegistry'
+import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
+import { announceBanner, spawnFloater } from './feedbackFx'
+import { stringList } from '../state/gameUtils'
+import { t } from '../i18n'
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -51,7 +54,8 @@ function flyAfterLayout(
   fromRect: DOMRect | null,
   destSelectors: string[],
   fallbackRect: DOMRect | null,
-  duration: number
+  duration: number,
+  sourceSize?: CardSourceSize | null
 ): void {
   if (!fromRect) return
   scheduleAfterLayout(() => {
@@ -59,7 +63,7 @@ function flyAfterLayout(
     const dest = getDestRect(destSelectors)
     const toRect = dest?.rect ?? fallbackRect
     if (!toRect) return
-    startCardFlight(card, fromRect, toRect, duration, dest?.selector)
+    startCardFlight(card, fromRect, toRect, duration, dest?.selector, { sourceSize })
   })
 }
 
@@ -71,12 +75,18 @@ function shakeElement(selector: string, ms = 420): void {
   el.classList.add('took-damage')
   setTimeout(() => el.classList.remove('took-damage'), ms)
 }
-
 export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView) {
   if (!prevGame || !nextGame) return
   const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId
   const nextId = (nextGame as any).gameId ?? (nextGame as any).matchId
   if (prevId && nextId && prevId !== nextId) return
+
+  // 0. Turn change → banner centrado con el jugador activo
+  if (nextGame.turn !== prevGame.turn) {
+    const active = nextGame.players?.find((p) => p.isActive)
+    const playerName = active?.name ?? nextGame.activePlayerName ?? ''
+    announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName }))
+  }
 
   const stackEl = document.querySelector('.stack-zone, .stack-list, .right-panel-content') as HTMLElement | null
   const stackRect = stackEl ? stackEl.getBoundingClientRect() : null
@@ -92,11 +102,16 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       const pSel = getPlayerSelector(ctrlId, ctrlName)
 
       let sourceRect: DOMRect | null = null
+      let sourceSize: CardSourceSize | null = null
 
       // 1a. Check cardPositionRegistry first (card just unmounted from hand/battlefield)
       const srcId = spell.sourceCard?.id ?? spell.id
       if (srcId) {
-        sourceRect = getPreviousCardPosition(srcId)
+        const registered = getPreviousCardPosition(srcId)
+        if (registered) {
+          sourceRect = registered
+          sourceSize = getPreviousCardSize(srcId)
+        }
       }
 
       // 1b. Check if source card is still visible on battlefield
@@ -119,7 +134,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           `[data-card-id="${spellId}"] .stack-thumb`,
           `[data-card-id="${spellId}"] .stack-tl-card`,
           `[data-card-id="${spellId}"]`,
-        ], stackRect, 380)
+        ], stackRect, 380, sourceSize)
       }
     }
   }
@@ -203,11 +218,13 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         const wasInStack = permId in prevStack || (perm.parentId && perm.parentId in prevStack)
 
         let originRect: DOMRect | null = null
+        let originSize: CardSourceSize | null = null
 
         // Check registry first: card may have just unmounted from hand/stack
         const prevRegistered = getPreviousCardPosition(permId)
         if (prevRegistered) {
           originRect = prevRegistered
+          originSize = getPreviousCardSize(permId)
         } else if (wasInStack) {
           originRect = stackRect
         } else {
@@ -220,7 +237,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             `${pSel} .creatures-band [data-card-id="${permId}"]`,
             `${pSel} .creatures-band`,
             `${pSel} .permanents-band`,
-          ], null, 350)
+          ], null, 350, originSize)
         }
       }
     }
@@ -228,18 +245,20 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     // C) Permanent Leaves Battlefield -> Graveyard (Dies)
     for (const [permId, perm] of Object.entries(prevBattlefield)) {
       if (!(permId in nextBattlefield) && graveRect) {
-        const prevCardRect = getPreviousCardPosition(permId) ?? getRect(`[data-card-id="${permId}"]`)
+        const registered = getPreviousCardPosition(permId)
+        const prevCardRect = registered ?? getRect(`[data-card-id="${permId}"]`)
         if (prevCardRect) {
           // Destino con ámbito al cementerio: el id puede seguir presente como
           // top-card del propio montón del cementerio (nunca el slot de origen).
           flyAfterLayout(permId, perm, prevCardRect, [
             `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
-          ], graveRect, 350)
+          ], graveRect, 350, registered ? getPreviousCardSize(permId) : null)
         }
       }
     }
 
     // D) Combat/ability damage feedback: creatures and players that lost life shake
+    //    + floating damage numbers on top of the hit element.
     for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
       const prevPerm = prevBattlefield[permId] as { damage?: number } | undefined
       const prevDamage = typeof prevPerm?.damage === 'number' ? prevPerm.damage : 0
@@ -247,19 +266,85 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         ? (nextPerm as { damage?: number }).damage ?? 0
         : 0
       if (nextDamage > prevDamage) {
-        shakeElement(`[data-card-id="${permId}"]`)
+        const sel = `[data-card-id="${permId}"]`
+        shakeElement(sel)
+        const el = document.querySelector(sel) as HTMLElement | null
+        if (el) {
+          spawnFloater(`card:${permId}`, el.getBoundingClientRect(), `-${nextDamage - prevDamage}`, 'bad')
+        }
       }
     }
 
-    if ((nextP.life ?? 0) < (prevP.life ?? 0)) {
+    const prevLife = prevP.life ?? 0
+    const nextLife = nextP.life ?? 0
+    if (nextLife !== prevLife) {
       const playerEls = Array.from(document.querySelectorAll(`[data-player-id="${nextP.playerId}"]`))
       const deepest = playerEls.reduce<Element | null>((acc, el) => (!acc || acc.contains(el) ? el : acc), null)
       if (deepest) {
-        deepest.classList.remove('took-damage')
-        void (deepest as HTMLElement).offsetWidth
-        deepest.classList.add('took-damage')
-        setTimeout(() => deepest.classList.remove('took-damage'), 420)
+        if (nextLife < prevLife) {
+          deepest.classList.remove('took-damage')
+          void (deepest as HTMLElement).offsetWidth
+          deepest.classList.add('took-damage')
+          setTimeout(() => deepest.classList.remove('took-damage'), 420)
+        }
+        spawnFloater(
+          `life:${nextP.playerId}`,
+          deepest.getBoundingClientRect(),
+          nextLife < prevLife ? `-${prevLife - nextLife}` : `+${nextLife - prevLife}`,
+          nextLife < prevLife ? 'bad' : 'good'
+        )
       }
+    }
+  }
+
+  // E) Stack resolution: items que salen del stack sin entrar en battlefield.
+  //    - Si aparecen en el graveyard/exile de un jugador → vuelo hasta el montón.
+  //    - Si desaparecen sin destino visible (resolución sin permanente) → flash
+  //      de resolución en sitio (clon estático que aparece y se desvanece).
+  for (const [spellId, spell] of Object.entries(prevStack)) {
+    if (spellId in nextStack) continue
+    if (nextPlayers.some((p) => spellId in (p.battlefield ?? {}))) continue
+
+    const registered = getPreviousCardPosition(spellId)
+    const prevRect = registered ?? getRect(`[data-card-id="${spellId}"]`)
+    if (!prevRect) continue
+    const prevSize = registered ? getPreviousCardSize(spellId) : null
+
+    let destSelectors: string[] = []
+    let fallbackRect: DOMRect | null = null
+    for (const p of nextPlayers) {
+      const ps = getPlayerSelector(p.playerId, p.name)
+      if (!ps) continue
+      if (p.graveyard && spellId in p.graveyard) {
+        destSelectors = [`${ps} .graveyard-stack [data-card-id="${spellId}"]`, `${ps} .graveyard-stack`]
+        fallbackRect = getRect(`${ps} .graveyard-stack`)
+        break
+      }
+      if (p.exile && spellId in p.exile) {
+        destSelectors = [`${ps} .exile-stack [data-card-id="${spellId}"]`, `${ps} .exile-stack`]
+        fallbackRect = getRect(`${ps} .exile-stack`)
+        break
+      }
+    }
+
+    if (destSelectors.length > 0) {
+      flyAfterLayout(spellId, spell, prevRect, destSelectors, fallbackRect, 380, prevSize)
+    } else {
+      startCardFlight(spell, prevRect, prevRect, 340, undefined, { static: true, sourceSize: prevSize })
+    }
+  }
+
+  // F) Nuevos atacantes → sacudida del jugador/grupo defensor atacado.
+  const prevAttackers = new Set<string>()
+  for (const group of prevGame.combat ?? []) {
+    stringList((group as { attackers?: unknown }).attackers).forEach((id) => prevAttackers.add(id))
+  }
+  for (const group of nextGame.combat ?? []) {
+    const rec = group as Record<string, unknown>
+    const attackers = stringList(rec.attackers)
+    if (attackers.length === 0 || !attackers.some((id) => !prevAttackers.has(id))) continue
+    for (const defId of stringList(rec.defenders)) {
+      shakeElement(`[data-player-id="${defId}"]`)
     }
   }
 }

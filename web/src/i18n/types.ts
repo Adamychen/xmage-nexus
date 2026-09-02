@@ -523,6 +523,10 @@ export interface TranslationSchema {
     ability_badge_loyalty: string
     ability_badge_static: string
     ability_badge_general: string
+    fx_effects: string
+    fx_effects_hint: string
+    fx_speed: string
+    turn_banner_player: string
   }
   wiki: {
     title: string

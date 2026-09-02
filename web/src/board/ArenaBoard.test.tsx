@@ -46,12 +46,14 @@ describe('ArenaBoard', () => {
     expect(getByTestId('arena-board')).not.toBeNull()
     const cells = container.querySelectorAll('.arena-opp-cell')
     expect(cells.length).toBe(2)
-    // rivales compactos y espejados
+    // rivales compactos, orientados como zona superior (estado arriba,
+    // criaturas pegadas al divisor — formato espejo correcto)
     const oppZones = container.querySelectorAll('.arena-opp-cell .board-zone')
     expect(oppZones.length).toBe(2)
     oppZones.forEach((z) => {
       expect(z.classList.contains('compact-pod')).toBe(true)
-      expect(z.classList.contains('zone-bottom')).toBe(true)
+      expect(z.classList.contains('zone-top')).toBe(true)
+      expect(z.classList.contains('opponent-zone')).toBe(true)
     })
     // mi zona: player-zone a ancho completo, sin compactar, fuera de celdas
     const myZone = container.querySelector('.arena-board > .player-zone')
@@ -106,7 +108,7 @@ describe('ArenaBoard', () => {
     expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(2)
   })
 
-  it('renders all rivals as columns in spectator mode (hasta 4)', () => {
+  it('spectator: rivales arriba (hasta 3) y un jugador abajo, como los otros modos', () => {
     const game = makeGameView({
       activePlayerId: 'p2',
       players: [
@@ -117,7 +119,9 @@ describe('ArenaBoard', () => {
       ],
     })
     const { container } = render(<ArenaBoard game={game} />)
-    expect(container.querySelectorAll('.arena-opp-cell').length).toBe(4)
+    expect(container.querySelectorAll('.arena-opp-cell').length).toBe(3)
+    const bottom = container.querySelector('.arena-board > .player-zone')
+    expect(bottom).not.toBeNull()
     expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
   })
 })

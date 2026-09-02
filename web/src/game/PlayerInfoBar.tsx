@@ -3,6 +3,7 @@ import { useStore } from '../state/store'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
+import { useTweenNumber } from './useTweenNumber'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import './PlayerInfoBar.css'
@@ -243,6 +244,8 @@ export default function PlayerInfoBar({
   const wins = player.wins ?? 0
   const showMatchWins = winsNeeded > 1 || wins > 0
 
+  const life = useTweenNumber(player.life ?? 0)
+
   const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
   const isDefeated = player.hasLeft === true || player.life <= 0
 
@@ -319,7 +322,7 @@ export default function PlayerInfoBar({
         <div className="player-counters">
           <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
             <span className="counter-icon"><Icon name="heart" size={12} /></span>
-            <span className="life-value">{player.life}</span>
+            <span className="life-value" key={player.life}>{life}</span>
           </span>
 
           {activeCounters.map((c) => {

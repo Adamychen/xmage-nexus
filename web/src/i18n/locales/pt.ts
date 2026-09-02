@@ -517,6 +517,10 @@ export const pt: TranslationSchema = {
     ability_badge_loyalty: '👑 Habilidade de lealdade',
     ability_badge_static: '🛡️ Habilidade estática',
     ability_badge_general: '⚡ Habilidade',
+    fx_effects: 'Efeitos de animação',
+    fx_effects_hint: 'Ativa ou desativa as animações do tabuleiro',
+    fx_speed: 'Velocidade',
+    turn_banner_player: 'Turno {turn} · {player}',
   },
   wiki: {
     title: 'Wiki de Regras & Glossário MTG',

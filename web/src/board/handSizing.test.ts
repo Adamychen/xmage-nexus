@@ -10,9 +10,12 @@ import {
   HAND_BAR_MAX_SPAN,
   HAND_BAR_MIN_CARD_W,
   HAND_BAR_MIN_VISIBLE_RATIO,
+  HAND_BAR_PEEK_RATIO,
   HAND_CARD_ASPECT,
   HAND_BAR_PADDING_Y,
 } from './handSizing'
+
+const bandHeight = (cardW: number) => cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y
 
 describe('computeHandBarSizing', () => {
   it('returns defaults for empty hand or zero width', () => {
@@ -20,7 +23,7 @@ describe('computeHandBarSizing', () => {
       const s = computeHandBarSizing(w, c)
       expect(s.cardW).toBe(HAND_BAR_MAX_CARD_W)
       expect(s.gap).toBe(0)
-      expect(s.barHeight).toBe(HAND_BAR_MAX_CARD_W * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y)
+      expect(s.barHeight).toBe(bandHeight(HAND_BAR_MAX_CARD_W))
     }
   })
 
@@ -28,7 +31,7 @@ describe('computeHandBarSizing', () => {
     const s = computeHandBarSizing(800, 1)
     expect(s.cardW).toBe(HAND_BAR_MAX_CARD_W)
     expect(s.gap).toBe(0)
-    expect(s.barHeight).toBe(s.cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y)
+    expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
   it('ample width: max card size, compact via cap or slight overlap', () => {
@@ -37,7 +40,7 @@ describe('computeHandBarSizing', () => {
     const maxOverlap = -(1 - HAND_BAR_MIN_VISIBLE_RATIO) * HAND_BAR_MAX_CARD_W
     expect(s.gap).toBeGreaterThanOrEqual(maxOverlap)
     expect(s.gap).toBeLessThanOrEqual(HAND_BAR_MAX_GAP)
-    expect(s.barHeight).toBe(s.cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y)
+    expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
   it('very wide screens: the hand never spans beyond the max span', () => {
@@ -61,7 +64,7 @@ describe('computeHandBarSizing', () => {
     expect(s.cardW).toBe(HAND_BAR_MIN_CARD_W)
     const visible = s.cardW + s.gap
     expect(visible).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
-    expect(s.barHeight).toBe(s.cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y)
+    expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
   it('cards never grow when the hand gets bigger', () => {
@@ -73,11 +76,16 @@ describe('computeHandBarSizing', () => {
     }
   })
 
-  it('bar height always derives from card width', () => {
+  it('bar height is the visible band (half-sunken hand)', () => {
     for (const [w, c] of [[1600, 4], [900, 8], [420, 10]] as const) {
       const s = computeHandBarSizing(w, c)
-      expect(s.barHeight).toBe(s.cardW * HAND_CARD_ASPECT + HAND_BAR_PADDING_Y)
+      expect(s.barHeight).toBe(bandHeight(s.cardW))
     }
+  })
+
+  it('peek ratios keep the hand half-visible at rest and ~90% on hover', () => {
+    expect(HAND_BAR_PEEK_RATIO).toBeGreaterThan(0.25)
+    expect(HAND_BAR_PEEK_RATIO).toBeLessThan(0.75)
   })
 })
 

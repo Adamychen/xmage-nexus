@@ -517,6 +517,10 @@ export const de: TranslationSchema = {
     ability_badge_loyalty: '👑 Loyalitätsfähigkeit',
     ability_badge_static: '🛡️ Statische Fähigkeit',
     ability_badge_general: '⚡ Fähigkeit',
+    fx_effects: 'Animationseffekte',
+    fx_effects_hint: 'Animationen des Spielfelds ein- oder ausschalten',
+    fx_speed: 'Geschwindigkeit',
+    turn_banner_player: 'Zug {turn} · {player}',
   },
   wiki: {
     title: 'MTG Regel-Wiki & Glossar',

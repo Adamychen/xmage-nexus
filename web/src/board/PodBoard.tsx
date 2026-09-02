@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import type { CardView, GameView } from '../net/types'
 import TwoHeadedBoard from './TwoHeadedBoard'
 import type { CrossZonePlayable } from './crossZone'
-import { parseCommandList } from './CommandZone'
 import './PodBoard.css'
 
 const MAX_POD_PLAYERS = 4
@@ -12,7 +11,6 @@ interface PodBoardProps {
   targetIds?: string[]
   chosenTargetIds?: string[]
   onTargetClick?: (id: string) => void
-  targetSourceId?: string
   playableIds?: string[]
   onPlayableClick?: (id: string) => void
   onCardHover?: (card: CardView | null) => void
@@ -51,20 +49,8 @@ export default function PodBoard({
     return { ...game, players: allPlayers } as GameView
   }, [game, allPlayers])
 
-  const hasCommanders = useMemo(() => {
-    return allPlayers.some((p) => {
-      const items = parseCommandList(p.commandList as unknown[], (p.helperCards ?? {}) as Record<string, CardView>)
-      return items.some((i) => i.isCommander)
-    })
-  }, [allPlayers])
-
-  const isSpectator = useMemo(() => {
-    if (!allPlayers.length) return false
-    return !allPlayers.some((p) => p.controlled)
-  }, [allPlayers])
-
   return (
-    <div className={`pod-board-wrapper ${isSpectator ? 'is-spectator' : 'is-player'} ${hasCommanders ? 'has-commanders' : ''}`} data-testid="pod-board">
+    <div className="pod-board-wrapper" data-testid="pod-board">
       <div className="pod-board-main" data-testid="pod-board-main">
         <TwoHeadedBoard
           game={clampedGame}

@@ -1,0 +1,104 @@
+/* ── Tapete bizonal compartido por los tres modos ─────────────────────── */
+.board-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  /* Bizonal: mitad rival fría arriba / propia cálida abajo + base viñeta */
+  background:
+    radial-gradient(ellipse 130% 95% at 50% 112%, rgba(96, 72, 148, 0.30) 0%, rgba(96, 72, 148, 0) 55%),
+    radial-gradient(ellipse 130% 95% at 50% -12%, rgba(16, 22, 48, 0.55) 0%, rgba(16, 22, 48, 0) 60%),
+    radial-gradient(circle at 50% 50%, #171b33 0%, #0d1022 55%, #070912 100%);
+  /* Fallback: las zonas fijan su propio --card-w vía useZoneScale */
+  --card-w: 100px;
+}
+
+/* Viñeta de perímetro: la mesa se lee como una superficie iluminada */
+.board-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(ellipse 96% 92% at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(2, 3, 8, 0.5) 100%);
+}
+
+/* Grano sutil de fieltro sobre el tapete */
+.board-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+/* ── Divisor horizontal unificado (diamante púrpura/dorado) ───────────── */
+.board-shell-divider {
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 92, 255, 0.12) 20%,
+    rgba(255, 208, 112, 0.32) 50%,
+    rgba(124, 92, 255, 0.12) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(124, 92, 255, 0.12);
+  position: relative;
+}
+
+.board-shell-divider-diamond {
+  font-size: 9px;
+  color: #ffd070;
+  text-shadow: 0 0 8px rgba(255, 208, 112, 0.8);
+  line-height: 1;
+}
+
+/* Etiquetas decorativas flanqueando el diamante (pod) */
+.board-shell-divider.with-labels::before,
+.board-shell-divider.with-labels::after {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(140, 150, 192, 0.4);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.board-shell-divider.with-labels::before {
+  content: 'Oponentes';
+  left: 14px;
+}
+
+.board-shell-divider.with-labels::after {
+  content: 'Tu lado';
+  right: 14px;
+}
+
+/* ── Separador vertical de columnas unificado ─────────────────────────── */
+.board-shell-col-divider {
+  width: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(124, 92, 255, 0.18) 15%,
+    rgba(255, 208, 112, 0.4) 50%,
+    rgba(124, 92, 255, 0.18) 85%,
+    transparent 100%
+  );
+}

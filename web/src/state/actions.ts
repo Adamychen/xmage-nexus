@@ -2,7 +2,7 @@ import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
-import { clearActiveGame } from './persistence'
+import { clearActiveGame, saveFxSettings } from './persistence'
 import type { AppState } from './state'
 
 export function clearError() {
@@ -84,6 +84,8 @@ export function returnToLobby() {
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   setState({ settings: { ...getState().settings, [key]: value } })
+  const { effects, animationSpeed } = getState().settings
+  saveFxSettings({ effects, animationSpeed })
 }
 
 export function maybeAutoPass(game: GameView) {

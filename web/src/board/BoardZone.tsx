@@ -408,6 +408,7 @@ export default function BoardZone({
       ref={zoneRef}
       data-player-id={player.playerId}
       data-player-name={player.name}
+      data-role={isTop ? 'opponent' : 'player'}
       style={{ '--card-w': `${cardW}px` } as React.CSSProperties}
     >
       {isDefeated && (

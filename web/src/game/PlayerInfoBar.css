@@ -165,6 +165,22 @@
   animation: dangerPulse 1s infinite alternate;
 }
 
+.life-value {
+  display: inline-block;
+  min-width: 1ch;
+  text-align: center;
+  animation: lifePop calc(0.34s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lifePop {
+  0% { transform: scale(1.6); filter: brightness(1.7); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+html.fx-off .life-value {
+  animation: none !important;
+}
+
 @keyframes dangerPulse {
   from { transform: scale(1); }
   to { transform: scale(1.1); text-shadow: 0 0 8px #ff5252; }
