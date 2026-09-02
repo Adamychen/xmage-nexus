@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
 import { useTranslation } from './i18n'
+import { soundManager } from './audio/soundManager'
+import { loadAudioSettings } from './state/persistence'
 import LoginScreen from './lobby/LoginScreen'
 import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
@@ -16,6 +18,7 @@ export default function App() {
   const wsAlive = useStore((s) => s.wsAlive)
 
   useEffect(() => {
+    soundManager.init(loadAudioSettings())
     const saved = loadConn()
     if (saved && saved.username && phase === 'idle') {
       void doConnect(

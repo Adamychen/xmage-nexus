@@ -2,7 +2,8 @@ import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
-import { clearActiveGame, saveFxSettings } from './persistence'
+import { clearActiveGame, saveFxSettings, saveAudioSettings } from './persistence'
+import { soundManager } from '../audio/soundManager'
 import type { AppState } from './state'
 
 export function clearError() {
@@ -126,8 +127,10 @@ export function returnToLobby() {
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   setState({ settings: { ...getState().settings, [key]: value } })
-  const { effects, animationSpeed } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume } = getState().settings
   saveFxSettings({ effects, animationSpeed })
+  saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
+  soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
 }
 
 export function maybeAutoPass(game: GameView) {

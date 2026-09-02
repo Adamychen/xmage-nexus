@@ -538,6 +538,11 @@ export const zhs: TranslationSchema = {
     fx_effects: '动画效果',
     fx_effects_hint: '开启或关闭棋盘动画',
     fx_speed: '速度',
+    sound_enabled: '音效',
+    sound_enabled_hint: '开启或静音',
+    sound_volume_master: '主音量',
+    sound_volume_sfx: '特效音量',
+    sound_volume_ui: '界面音量',
     turn_banner_player: '回合 {turn} · {player}',
   },
   wiki: {

@@ -14,6 +14,8 @@ import {
   isCombatStep, combatChosenFrom, emptyCombat, targetFirstId,
 } from './gameUtils'
 import type { DraftClientMessage, TournamentView } from '../net/types.generated'
+import { soundManager } from '../audio/soundManager'
+import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -70,6 +72,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame && !isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)) {
+    dispatchGameSounds(s.game, embeddedGame, method)
     const sameGame = !!objectId && objectId === s.gameId
     setState({ game: attributeStackControllers(sameGame ? s.game : null, embeddedGame), phase: 'game', watchingTable: null, gameId: objectId ?? s.gameId })
   }
@@ -83,6 +86,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
   switch (method) {
     case 'CHATMESSAGE': {
       const m = data as ChatMessageEvent
+      if (m.soundToPlay === 'PlayerWhispered') {
+        soundManager.play('whisper', 'ui')
+      } else if (m.soundToPlay === 'PlayerLeft') {
+        soundManager.play('ui_click', 'ui')
+      }
       // If we are in the lobby/staging and message is from a game chat, ignore it
       if (s.phase !== 'game' && m.chatId && s.roomChatId && m.chatId !== s.roomChatId) {
         break
@@ -131,6 +139,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'START_GAME': {
+      soundManager.play('game_start', 'ui')
       const d = data as { gameId?: string; tableName?: string } | null
       const isNewGame = !!d?.gameId && d.gameId !== s.gameId
       if (d?.gameId) saveActiveGame(d.gameId)
@@ -211,6 +220,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
 
       const fresh = getState()
       const me = fresh.game?.players?.find((p) => p.controlled)
+      const won = (typeof d === 'object' && !!d?.winnerName && d.winnerName === me?.name) || false
+      soundManager.play(won ? 'victory' : 'defeat', 'game')
       if (!me || !fresh.gameEnd) {
         const syntheticEnd: GameEndInfo = {
           gameInfo: msg,

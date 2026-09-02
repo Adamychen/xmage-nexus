@@ -7,6 +7,7 @@ import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { soundManager } from '../audio/soundManager'
 import './CardSlot.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
@@ -178,7 +179,10 @@ export default function CardSlot({
         flightState === 'landing' ? 'flight-land' : '',
         className,
       ].filter(Boolean).join(' ')}
-      onClick={onClick}
+      onClick={onClick ? () => {
+        soundManager.play('tap', 'game')
+        onClick()
+      } : undefined}
       onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       style={style}

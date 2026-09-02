@@ -538,6 +538,11 @@ export const de: TranslationSchema = {
     fx_effects: 'Animationseffekte',
     fx_effects_hint: 'Animationen des Spielfelds ein- oder ausschalten',
     fx_speed: 'Geschwindigkeit',
+    sound_enabled: 'Soundeffekte',
+    sound_enabled_hint: 'Sound aktivieren oder stummschalten',
+    sound_volume_master: 'Gesamtlautstärke',
+    sound_volume_sfx: 'SFX-Lautstärke',
+    sound_volume_ui: 'UI-Lautstärke',
     turn_banner_player: 'Zug {turn} · {player}',
   },
   wiki: {

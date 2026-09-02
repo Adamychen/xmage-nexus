@@ -544,6 +544,11 @@ export interface TranslationSchema {
     fx_effects: string
     fx_effects_hint: string
     fx_speed: string
+    sound_enabled: string
+    sound_enabled_hint: string
+    sound_volume_master: string
+    sound_volume_sfx: string
+    sound_volume_ui: string
     turn_banner_player: string
   }
   wiki: {

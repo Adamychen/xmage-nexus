@@ -538,6 +538,11 @@ export const ja: TranslationSchema = {
     fx_effects: 'アニメーション効果',
     fx_effects_hint: '盤面のアニメーションの切り替え',
     fx_speed: '速度',
+    sound_enabled: '効果音',
+    sound_enabled_hint: 'サウンドのオン・オフ',
+    sound_volume_master: 'マスター音量',
+    sound_volume_sfx: '効果音音量',
+    sound_volume_ui: 'UI音量',
     turn_banner_player: 'ターン {turn} · {player}',
   },
   wiki: {

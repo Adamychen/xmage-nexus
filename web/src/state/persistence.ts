@@ -165,3 +165,40 @@ export function saveFxSettings(fx: FxSettings) {
     getStorage().setItem(FX_SETTINGS_KEY, JSON.stringify(fx))
   } catch {}
 }
+
+export interface AudioSettings {
+  soundEnabled: boolean
+  masterVolume: number
+  sfxVolume: number
+  uiVolume: number
+}
+
+const AUDIO_SETTINGS_KEY = 'mage-web-audio'
+export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
+  soundEnabled: true,
+  masterVolume: 0.8,
+  sfxVolume: 0.8,
+  uiVolume: 0.7,
+}
+
+export function loadAudioSettings(): AudioSettings {
+  try {
+    const raw = getStorage().getItem(AUDIO_SETTINGS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AudioSettings>
+      return {
+        soundEnabled: parsed.soundEnabled !== false,
+        masterVolume: typeof parsed.masterVolume === 'number' ? Math.max(0, Math.min(1, parsed.masterVolume)) : DEFAULT_AUDIO_SETTINGS.masterVolume,
+        sfxVolume: typeof parsed.sfxVolume === 'number' ? Math.max(0, Math.min(1, parsed.sfxVolume)) : DEFAULT_AUDIO_SETTINGS.sfxVolume,
+        uiVolume: typeof parsed.uiVolume === 'number' ? Math.max(0, Math.min(1, parsed.uiVolume)) : DEFAULT_AUDIO_SETTINGS.uiVolume,
+      }
+    }
+  } catch {}
+  return { ...DEFAULT_AUDIO_SETTINGS }
+}
+
+export function saveAudioSettings(settings: AudioSettings) {
+  try {
+    getStorage().setItem(AUDIO_SETTINGS_KEY, JSON.stringify(settings))
+  } catch {}
+}

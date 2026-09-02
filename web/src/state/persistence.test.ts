@@ -7,8 +7,12 @@ import {
   saveActiveGame,
   saveConn,
   saveFxSettings,
+  loadAudioSettings,
+  saveAudioSettings,
+  DEFAULT_AUDIO_SETTINGS,
   type ConnectionInfo,
   type FxSettings,
+  type AudioSettings,
 } from './persistence'
 
 describe('persistence', () => {
@@ -157,6 +161,43 @@ describe('persistence', () => {
     it('falls back to defaults for corrupt payloads', () => {
       mockStorage['mage-web-settings'] = '{not json'
       expect(loadFxSettings()).toEqual({ effects: true, animationSpeed: 1 })
+    })
+  })
+
+  describe('audio settings persistence', () => {
+    it('returns defaults when nothing is stored', () => {
+      expect(loadAudioSettings()).toEqual(DEFAULT_AUDIO_SETTINGS)
+    })
+
+    it('saves and loads audio settings correctly', () => {
+      const audio: AudioSettings = {
+        soundEnabled: false,
+        masterVolume: 0.5,
+        sfxVolume: 0.6,
+        uiVolume: 0.4,
+      }
+      saveAudioSettings(audio)
+      expect(loadAudioSettings()).toEqual(audio)
+    })
+
+    it('clamps out-of-range volume values', () => {
+      mockStorage['mage-web-audio'] = JSON.stringify({
+        soundEnabled: true,
+        masterVolume: 2.5,
+        sfxVolume: -0.5,
+        uiVolume: 0.8,
+      })
+      expect(loadAudioSettings()).toEqual({
+        soundEnabled: true,
+        masterVolume: 1,
+        sfxVolume: 0,
+        uiVolume: 0.8,
+      })
+    })
+
+    it('falls back to defaults for corrupt payloads', () => {
+      mockStorage['mage-web-audio'] = '{invalid json'
+      expect(loadAudioSettings()).toEqual(DEFAULT_AUDIO_SETTINGS)
     })
   })
 })

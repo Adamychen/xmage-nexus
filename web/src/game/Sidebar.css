@@ -205,6 +205,44 @@
   color: #cfc3ff;
 }
 
+.fx-popover-divider {
+  height: 1px;
+  background: #262b3d;
+  margin: 2px 0;
+}
+
+.audio-slider {
+  width: 90px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #262b3d;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #7c5cff;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.audio-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #9a80ff;
+}
+
+.audio-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .sidebar-icon-btn .icon-badge {
   position: absolute;
   top: 4px;

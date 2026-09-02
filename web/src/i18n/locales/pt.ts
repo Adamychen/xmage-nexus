@@ -538,6 +538,11 @@ export const pt: TranslationSchema = {
     fx_effects: 'Efeitos de animação',
     fx_effects_hint: 'Ativa ou desativa as animações do tabuleiro',
     fx_speed: 'Velocidade',
+    sound_enabled: 'Efeitos sonoros',
+    sound_enabled_hint: 'Ativar ou silenciar sons',
+    sound_volume_master: 'Volume geral',
+    sound_volume_sfx: 'Volume de efeitos',
+    sound_volume_ui: 'Volume da interface',
     turn_banner_player: 'Turno {turn} · {player}',
   },
   wiki: {

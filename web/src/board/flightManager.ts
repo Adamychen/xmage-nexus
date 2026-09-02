@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { fxEnabled, fxDuration } from './fx'
 import type { CardSourceSize } from './cardPositionRegistry'
+import { soundManager } from '../audio/soundManager'
 
 export interface FlightRecord {
   flightId: string
@@ -153,6 +154,16 @@ export function startCardFlight(
 
   activeFlights = [...activeFlights, record]
   notify()
+
+  if (toSelector?.includes('hand') || toSelector?.includes('hand-bar') || toSelector?.includes('hand-zone')) {
+    soundManager.play('draw', 'game')
+  } else if (toSelector?.includes('stack')) {
+    soundManager.play('stack_cast', 'game')
+  } else if (toSelector?.includes('graveyard')) {
+    soundManager.play('destroy', 'game')
+  } else {
+    soundManager.play('play_card', 'game')
+  }
 
   // Backstop: si el clon no llega a notificar el aterrizaje (cancel/unmount),
   // la carta real nunca queda oculta.

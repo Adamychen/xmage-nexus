@@ -538,6 +538,11 @@ export const en: TranslationSchema = {
     fx_effects: 'Animation effects',
     fx_effects_hint: 'Toggle board animations',
     fx_speed: 'Speed',
+    sound_enabled: 'Sound effects',
+    sound_enabled_hint: 'Enable or mute game sounds',
+    sound_volume_master: 'Master volume',
+    sound_volume_sfx: 'SFX volume',
+    sound_volume_ui: 'UI volume',
     turn_banner_player: 'Turn {turn} · {player}',
   },
   wiki: {

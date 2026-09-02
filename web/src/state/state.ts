@@ -1,7 +1,7 @@
 import type { ChatMessageEvent, DeckCardEntry, DeckJson, DraftClientMessage, GameEndInfo, GameView, LobbyEnvelope, TableView, TournamentView } from '../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../game/feedback'
 import type { PhaseStops } from '../net/commands'
-import { loadConn, loadFxSettings, type ConnectionInfo } from './persistence'
+import { loadConn, loadFxSettings, loadAudioSettings, type ConnectionInfo } from './persistence'
 
 export type LogChannel = 'game' | 'chat' | 'system'
 
@@ -120,6 +120,10 @@ export interface AppState {
     boardLayout: 'standard' | 'pod' | 'arena'
     effects: boolean
     animationSpeed: number
+    soundEnabled: boolean
+    masterVolume: number
+    sfxVolume: number
+    uiVolume: number
   }
   error: string | null
 }
@@ -164,6 +168,7 @@ export const initialState: AppState = {
     holdPriority: false,
     boardLayout: 'standard',
     ...loadFxSettings(),
+    ...loadAudioSettings(),
   },
   error: null,
 }

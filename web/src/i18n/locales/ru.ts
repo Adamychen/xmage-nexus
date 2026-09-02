@@ -538,6 +538,11 @@ export const ru: TranslationSchema = {
     fx_effects: 'Эффекты анимации',
     fx_effects_hint: 'Включить или отключить анимации на столе',
     fx_speed: 'Скорость',
+    sound_enabled: 'Звуковые эффекты',
+    sound_enabled_hint: 'Включить или отключить звук',
+    sound_volume_master: 'Общая громкость',
+    sound_volume_sfx: 'Громкость эффектов',
+    sound_volume_ui: 'Громкость интерфейса',
     turn_banner_player: 'Ход {turn} · {player}',
   },
   wiki: {

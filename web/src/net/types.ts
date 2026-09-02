@@ -76,6 +76,7 @@ export interface ChatMessageEvent {
   username: string
   message: string
   messageType?: string
+  soundToPlay?: string
 }
 
 // ─── Mazo JSON (proxy) ───────────────────────────────────────────────────────

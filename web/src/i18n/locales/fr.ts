@@ -538,6 +538,11 @@ export const fr: TranslationSchema = {
     fx_effects: 'Effets d’animation',
     fx_effects_hint: 'Activer ou désactiver les animations du plateau',
     fx_speed: 'Vitesse',
+    sound_enabled: 'Effets sonores',
+    sound_enabled_hint: 'Activer ou couper le son',
+    sound_volume_master: 'Volume principal',
+    sound_volume_sfx: 'Volume effets',
+    sound_volume_ui: 'Volume interface',
     turn_banner_player: 'Tour {turn} · {player}',
   },
   wiki: {
