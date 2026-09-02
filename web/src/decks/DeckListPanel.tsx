@@ -39,6 +39,7 @@ export default function DeckListPanel({
   onLeave,
   onChangePrinting,
   onDropCard,
+  onSwap,
   onDropFile,
 }: {
   cards: DeckCard[]
@@ -56,14 +57,22 @@ export default function DeckListPanel({
   onLeave?: () => void
   onChangePrinting?: (c: DeckCard) => void
   onDropCard?: (cardData: any, target: 'main' | 'sideboard') => void
+  onSwap?: (key: string) => void
   onDropFile?: (f: File) => void
 }) {
   const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isSideDragOver, setIsSideDragOver] = useState(false)
+
+  // Chrome cancels the drop when dropEffect is not permitted by the drag source's
+  // effectAllowed (search cards drag with 'copy', deck strips with 'move').
+  const compatibleDropEffect = (e: React.DragEvent) => {
+    e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed === 'move' ? 'move' : 'copy'
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
+    compatibleDropEffect(e)
     if (!isDragOver) setIsDragOver(true)
   }
 
@@ -89,6 +98,32 @@ export default function DeckListPanel({
       try {
         const cardData = JSON.parse(rawData)
         onDropCard(cardData, 'main')
+      } catch {}
+    }
+  }
+
+  const handleSideDragOver = (e: React.DragEvent) => {
+    if (!onDropCard) return
+    e.preventDefault()
+    e.stopPropagation()
+    compatibleDropEffect(e)
+    if (!isSideDragOver) setIsSideDragOver(true)
+  }
+
+  const handleSideDragLeave = (e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return
+    setIsSideDragOver(false)
+  }
+
+  const handleSideDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsSideDragOver(false)
+    const rawData = e.dataTransfer.getData('application/json')
+    if (rawData && onDropCard) {
+      try {
+        const cardData = JSON.parse(rawData)
+        if (cardData?.source !== 'sideboard') onDropCard(cardData, 'sideboard')
       } catch {}
     }
   }
@@ -127,6 +162,43 @@ export default function DeckListPanel({
   // Total counts
   const mainTotal = cards.reduce((s, c) => s + c.amount, 0)
   const sideTotal = sideboard.reduce((s, c) => s + c.amount, 0)
+
+  const sideboardSection = (
+    <div
+      className={`deck-category-section deck-sideboard-section ${isSideDragOver ? 'is-side-drag-over' : ''}`}
+      onDragOver={handleSideDragOver}
+      onDragLeave={handleSideDragLeave}
+      onDrop={handleSideDrop}
+    >
+      <div className="deck-category-header">
+        <span>{t('decks', 'sideboard')} (Sideboard)</span>
+        <span className="deck-category-count">{sideTotal}/15</span>
+      </div>
+      {sideboard.length === 0 && <div className="deck-sideboard-empty">{t('decks', 'builder_side_empty')}</div>}
+      {sideboard.map((card) => {
+        const k = `sb:${getCardKey(card)}`
+        const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
+        const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
+        return (
+          <ArenaCardStrip
+            key={k}
+            card={card}
+            meta={meta}
+            sideboard
+            issue={issue}
+            onInc={onInc}
+            onDec={onDec}
+            onRemove={onRemove}
+            onHover={onHover}
+            onLeave={onLeave}
+            onChangePrinting={onChangePrinting}
+            onSwap={onSwap}
+            swapLabel={t('decks', 'builder_swap_to_main')}
+          />
+        )
+      })}
+    </div>
+  )
 
   return (
     <div
@@ -198,6 +270,8 @@ export default function DeckListPanel({
                       onHover={onHover}
                       onLeave={onLeave}
                       onChangePrinting={onChangePrinting}
+                      onSwap={onSwap}
+                      swapLabel={t('decks', 'builder_swap_to_side')}
                     />
                   )
                 })}
@@ -215,80 +289,58 @@ export default function DeckListPanel({
           )}
 
           {/* Sideboard Section */}
-          {sideboard.length > 0 && (
-            <div className="deck-category-section deck-sideboard-section">
-              <div className="deck-category-header">
-                <span>{t('decks', 'sideboard')} (Sideboard)</span>
-                <span className="deck-category-count">{sideTotal}/15</span>
-              </div>
-              {sideboard.map((card) => {
-                const k = `sb:${getCardKey(card)}`
-                const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-                const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
-                return (
-                  <ArenaCardStrip
-                    key={k}
-                    card={card}
-                    meta={meta}
-                    sideboard
-                    issue={issue}
-                    onInc={onInc}
-                    onDec={onDec}
-                    onRemove={onRemove}
-                    onHover={onHover}
-                    onLeave={onLeave}
-                    onChangePrinting={onChangePrinting}
-                  />
-                )
-              })}
-            </div>
-          )}
+          {sideboardSection}
         </div>
       ) : (
-        /* Horizontal Mode (Columns by CMC) */
-        <div className="arena-deck-cols-layout deck-cols">
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((cmc) => {
-            const colCards = cards.filter((c) => {
-              const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
-              const cardCmc = meta?.cmc ?? 0
-              return cmc === 7 ? cardCmc >= 7 : cardCmc === cmc
-            })
-            const totalInCol = colCards.reduce((s, c) => s + c.amount, 0)
-            if (colCards.length === 0) return null
+        <>
+          {/* Horizontal Mode (Columns by CMC) */}
+          <div className="arena-deck-cols-layout deck-cols">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((cmc) => {
+              const colCards = cards.filter((c) => {
+                const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
+                const cardCmc = meta?.cmc ?? 0
+                return cmc === 7 ? cardCmc >= 7 : cardCmc === cmc
+              })
+              const totalInCol = colCards.reduce((s, c) => s + c.amount, 0)
+              if (colCards.length === 0) return null
 
-            return (
-              <div key={cmc} className="arena-deck-column deck-col">
-                <div className="arena-deck-col-head deck-col-head">
-                  <span className="deck-col-title">{cmc === 7 ? '7+' : `CMC ${cmc}`}</span>
-                  <span className="deck-col-count">{totalInCol}</span>
+              return (
+                <div key={cmc} className="arena-deck-column deck-col">
+                  <div className="arena-deck-col-head deck-col-head">
+                    <span className="deck-col-title">{cmc === 7 ? '7+' : `CMC ${cmc}`}</span>
+                    <span className="deck-col-count">{totalInCol}</span>
+                  </div>
+                  <div className="deck-col-list">
+                    {colCards.map((card) => {
+                      const k = getCardKey(card)
+                      const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
+                      const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
+                      return (
+                        <ArenaCardStrip
+                          key={k}
+                          card={card}
+                          meta={meta}
+                          isCover={coverKey === k}
+                          issue={issue}
+                          onInc={onInc}
+                          onDec={onDec}
+                          onRemove={onRemove}
+                          onSetCover={onSetCover}
+                          onHover={onHover}
+                          onLeave={onLeave}
+                          onChangePrinting={onChangePrinting}
+                          onSwap={onSwap}
+                          swapLabel={t('decks', 'builder_swap_to_side')}
+                        />
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className="deck-col-list">
-                  {colCards.map((card) => {
-                    const k = getCardKey(card)
-                    const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-                    const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
-                    return (
-                      <ArenaCardStrip
-                        key={k}
-                        card={card}
-                        meta={meta}
-                        isCover={coverKey === k}
-                        issue={issue}
-                        onInc={onInc}
-                        onDec={onDec}
-                        onRemove={onRemove}
-                        onSetCover={onSetCover}
-                        onHover={onHover}
-                        onLeave={onLeave}
-                        onChangePrinting={onChangePrinting}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+          {sideboardSection}
+        </>
       )}
     </div>
   )

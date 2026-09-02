@@ -720,6 +720,9 @@ export const ru: TranslationSchema = {
     deck_no_cards: 'No cards',
     import_mode_add: 'Add to current deck',
     import_mode_replace: 'Replace entire deck',
+    builder_swap_to_side: 'Переместить в сайдборд',
+    builder_swap_to_main: 'Переместить в основную колоду',
+    builder_side_empty: 'Перетащите карты в сайдборд',
   },
   errors: {
     connection_failed: 'Не удалось подключиться к серверу',

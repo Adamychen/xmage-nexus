@@ -726,6 +726,9 @@ export interface TranslationSchema {
     deck_no_cards: string
     import_mode_add: string
     import_mode_replace: string
+    builder_swap_to_side: string
+    builder_swap_to_main: string
+    builder_side_empty: string
   }
   errors: {
     connection_failed: string

@@ -720,6 +720,9 @@ export const ja: TranslationSchema = {
     deck_no_cards: 'No cards',
     import_mode_add: 'Add to current deck',
     import_mode_replace: 'Replace entire deck',
+    builder_swap_to_side: 'サイドボードへ移動',
+    builder_swap_to_main: 'メインデッキへ移動',
+    builder_side_empty: 'サイドボードにカードをドラッグ',
   },
   errors: {
     connection_failed: 'サーバーへの接続に失敗しました',

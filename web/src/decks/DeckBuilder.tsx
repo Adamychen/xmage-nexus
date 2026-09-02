@@ -175,12 +175,49 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     })
   }
 
+  const moveOneBetween = (from: DeckCard[], to: DeckCard[], key: string): [DeckCard[], DeckCard[]] => {
+    const idx = from.findIndex((c) => deckCardKey(c) === key)
+    if (idx < 0) return [from, to]
+    const card = from[idx]
+    const nextFrom = card.amount <= 1
+      ? from.filter((_, i) => i !== idx)
+      : from.map((c, i) => (i === idx ? { ...c, amount: c.amount - 1 } : c))
+    const toIdx = to.findIndex((c) => deckCardKey(c) === key)
+    const nextTo = toIdx >= 0
+      ? to.map((c, i) => (i === toIdx ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
+      : [...to, { ...card, amount: 1 }]
+    return [nextFrom, nextTo]
+  }
+
+  const handleSwap = (k: string) => {
+    if (!deck) return
+    if (k.startsWith('sb:')) {
+      const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, k.slice(3))
+      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+    } else {
+      const [nextCards, nextSide] = moveOneBetween(deck.cards, deck.sideboard, k)
+      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+    }
+  }
+
   const handleDropCardOnDeck = (cardData: any, target: 'main' | 'sideboard') => {
     if (!deck || !cardData?.cardName) return
     const setCode = (cardData.setCode || '').toUpperCase()
     const cardNumber = cardData.cardNumber || '0'
     const cardName = cardData.cardName
     const key = `${setCode}:${cardNumber}:${cardName}`
+    const source: string = cardData.source ?? 'search'
+
+    if (source === 'sideboard' && target === 'main') {
+      const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, key)
+      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      return
+    }
+    if (source === 'main' && target === 'sideboard') {
+      const [nextCards, nextSide] = moveOneBetween(deck.cards, deck.sideboard, key)
+      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      return
+    }
 
     if (target === 'main') {
       const existingIdx = deck.cards.findIndex((c) => deckCardKey(c) === key)
@@ -465,7 +502,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           className={`builder-left ${isCollectionDragOver ? 'is-drag-over' : ''}`}
           onDragOver={(e) => {
             e.preventDefault()
-            e.dataTransfer.dropEffect = 'move'
+            e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed === 'move' ? 'move' : 'copy'
             if (!isCollectionDragOver) setIsCollectionDragOver(true)
           }}
           onDragLeave={(e) => {
@@ -551,6 +588,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             onLeave={handleLeaveCard}
             onChangePrinting={handleChangePrinting}
             onDropCard={handleDropCardOnDeck}
+            onSwap={handleSwap}
             onDropFile={async (f) => {
               const text = await f.text()
               const parsed = parseAnyDeck(text, deck.name)

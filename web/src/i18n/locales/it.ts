@@ -720,6 +720,9 @@ export const it: TranslationSchema = {
     deck_no_cards: 'No cards',
     import_mode_add: 'Add to current deck',
     import_mode_replace: 'Replace entire deck',
+    builder_swap_to_side: 'Sposta nel sideboard',
+    builder_swap_to_main: 'Sposta nel mazzo principale',
+    builder_side_empty: 'Trascina qui le carte per il sideboard',
   },
   errors: {
     connection_failed: 'Connessione al server non riuscita',

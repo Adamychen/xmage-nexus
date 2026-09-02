@@ -720,6 +720,9 @@ export const es: TranslationSchema = {
     deck_no_cards: 'Sin cartas',
     import_mode_add: 'Añadir al mazo actual',
     import_mode_replace: 'Reemplazar mazo completo',
+    builder_swap_to_side: 'Mover al banquillo',
+    builder_swap_to_main: 'Mover al mazo',
+    builder_side_empty: 'Arrastra cartas aquí para el banquillo',
   },
   errors: {
     connection_failed: 'Error al conectar con el servidor',

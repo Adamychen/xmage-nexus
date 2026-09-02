@@ -720,6 +720,9 @@ export const zhs: TranslationSchema = {
     deck_no_cards: 'No cards',
     import_mode_add: 'Add to current deck',
     import_mode_replace: 'Replace entire deck',
+    builder_swap_to_side: '移入备牌',
+    builder_swap_to_main: '移入主牌',
+    builder_side_empty: '拖拽卡牌加入备牌',
   },
   errors: {
     connection_failed: '无法连接到服务器',

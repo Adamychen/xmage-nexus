@@ -95,6 +95,46 @@
   border-left-color: #e53e3e;
 }
 
+.deck-sideboard-section.is-side-drag-over {
+  border-top: none;
+  border: 1px dashed #ecc94b;
+  border-radius: 6px;
+  padding: 6px;
+  background: rgba(236, 201, 75, 0.08);
+  box-shadow: inset 0 0 16px rgba(236, 201, 75, 0.25);
+}
+
+.deck-sideboard-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 2px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #718096;
+  font-size: 0.8rem;
+  text-align: center;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.deck-sideboard-empty::before {
+  content: '⇩';
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.deck-sideboard-section.is-side-drag-over .deck-sideboard-empty {
+  border-color: #ecc94b;
+  color: #f6e05e;
+  background: rgba(236, 201, 75, 0.06);
+}
+
+/* Sideboard below the CMC columns (horizontal layout) */
+.deck-cols + .deck-sideboard-section {
+  margin: 0 10px 10px;
+}
+
 /* Empty deck list placeholder */
 .deck-list-empty-hint {
   display: flex;
