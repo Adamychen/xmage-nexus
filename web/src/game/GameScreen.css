@@ -314,6 +314,13 @@
   font-family: var(--font-display);
 }
 
+.feedback-source-subtitle {
+  color: #38bdf8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: -2px 0 10px;
+}
+
 .feedback-prompt-message {
   color: #94a3b8;
   font-size: 0.95rem;

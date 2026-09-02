@@ -358,4 +358,82 @@ describe('parseFeedback', () => {
     })
     expect(prompt?.isPlaneswalkerAbility).toBeUndefined()
   })
+
+  it('filters out XMage server metadata from GAME_ASK (e.g. unspent mana warning)', () => {
+    const prompt = parseFeedback('GAME_ASK', 'game-23', {
+      message: 'You still have mana in your mana pool and it will be lost. Pass anyway?',
+      options: {
+        'UI.left.btn.text': 'Yes',
+        'UI.right.btn.text': 'No',
+        'queryType': 'ASK',
+        'autoAnswerMessage': 'You still have mana in your mana pool and it will be lost. Pass anyway?',
+      },
+    })
+    expect(prompt?.options).toHaveLength(2)
+    expect(prompt?.options).toEqual([
+      { id: 'left', label: 'Yes', value: 'true' },
+      { id: 'right', label: 'No', value: 'false' },
+    ])
+  })
+
+  it('extracts secondMessage as sourceName on shocklands without turning it into a button', () => {
+    const prompt = parseFeedback('GAME_ASK', 'game-24', {
+      message: 'Pay 2 life? (otherwise Steam Vents enters tapped)',
+      options: {
+        'UI.left.btn.text': 'Pay 2 life',
+        'UI.right.btn.text': 'Enter tapped',
+        'queryType': 'ASK',
+        'autoAnswerMessage': 'Pay 2 life? (otherwise Steam Vents enters tapped)',
+        'secondMessage': 'Steam Vents',
+        'originalId': 'uuid-123',
+      },
+    })
+    expect(prompt?.sourceName).toBe('Steam Vents')
+    expect(prompt?.options).toEqual([
+      { id: 'left', label: 'Pay 2 life', value: 'true' },
+      { id: 'right', label: 'Enter tapped', value: 'false' },
+    ])
+  })
+
+  it('extracts choices from ChoiceImpl.choices array when keyChoices is empty (ChoiceColor)', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-25', {
+      choice: {
+        message: 'Choose a color',
+        choices: ['White', 'Blue', 'Black', 'Red', 'Green'],
+        keyChoices: {},
+        searchEnabled: true,
+        chosenNormal: false,
+      },
+    })
+    expect(prompt?.options).toHaveLength(5)
+    expect(prompt?.options.map((o) => o.label)).toEqual(['White', 'Blue', 'Black', 'Red', 'Green'])
+    expect(prompt?.options.some((o) => o.label === 'searchEnabled' || o.label === 'chosenNormal')).toBe(false)
+  })
+
+  it('resolves target labels across stack, graveyard, and exile zones', () => {
+    const prompt = parseFeedback('GAME_TARGET', 'game-26', {
+      targets: ['spell-1', 'grave-1', 'exile-1'],
+      gameView: {
+        stack: {
+          'spell-1': { id: 'spell-1', name: 'Counterspell' },
+        },
+        players: [
+          {
+            playerId: 'p1',
+            graveyard: {
+              'grave-1': { id: 'grave-1', name: 'Snapcaster Mage' },
+            },
+            exile: {
+              'exile-1': { id: 'exile-1', name: 'Lightning Bolt' },
+            },
+          },
+        ],
+      },
+    })
+    expect(prompt?.options).toEqual([
+      { id: 'spell-1', label: 'Counterspell', value: 'spell-1' },
+      { id: 'grave-1', label: 'Snapcaster Mage', value: 'grave-1' },
+      { id: 'exile-1', label: 'Lightning Bolt', value: 'exile-1' },
+    ])
+  })
 })

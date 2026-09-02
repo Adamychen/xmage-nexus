@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as cmds from '../net/commands'
 import { clearFeedback, setStoreError, useStore } from '../state/store'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
@@ -55,6 +55,13 @@ export default function FeedbackDialog() {
     setMultiAmounts(Object.fromEntries((prompt?.items ?? []).map((item) => [item.id, item.defaultValue ?? item.min])))
     setTextValue('')
   }, [prompt?.method, prompt?.gameId])
+
+  const filteredStringOptions = useMemo(() => {
+    if (!prompt?.options) return []
+    if (!textValue.trim()) return prompt.options
+    const q = textValue.trim().toLowerCase()
+    return prompt.options.filter((opt) => opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q))
+  }, [prompt?.options, textValue])
 
   if (!prompt) return null
 
@@ -270,6 +277,11 @@ export default function FeedbackDialog() {
           <span className="kicker-icon">{kicker.icon}</span> {kicker.label}
         </div>
         <h2 id="feedback-title"><FormattedText text={prompt.title} /></h2>
+        {prompt.sourceName && prompt.sourceName !== prompt.title && (
+          <div className="feedback-source-subtitle">
+            <FormattedText text={prompt.sourceName} />
+          </div>
+        )}
         <p className="feedback-prompt-message"><FormattedText text={prompt.message} /></p>
 
         {prompt.mode === 'string' && (
@@ -290,10 +302,10 @@ export default function FeedbackDialog() {
                 }}
               />
             </div>
-            {prompt.options.length > 0 && (
+            {filteredStringOptions.length > 0 && (
               <div className="feedback-options feedback-options-wrap">
-                <div className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}>
-                  {prompt.options.map((option, idx) => (
+                <div className={`feedback-options-grid ${filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}>
+                  {filteredStringOptions.map((option, idx) => (
                     <button
                       key={option.id}
                       className="feedback-choice-card"

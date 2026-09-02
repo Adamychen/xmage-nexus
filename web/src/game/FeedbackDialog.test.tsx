@@ -160,4 +160,53 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.getByText('Elige una carta para que descarte')).toBeTruthy()
     expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
   })
+
+  it('filtra opciones en modo string en tiempo real según el texto escrito', () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_STRING',
+      messageId: 6,
+      objectId: 'game-1',
+      data: {
+        message: 'Choose creature type',
+        options: ['Goblin', 'Elf', 'Dragon', 'Zombie'],
+      },
+    } as never)
+    render(<FeedbackDialog />)
+    expect(screen.getByText('Goblin')).toBeTruthy()
+    expect(screen.getByText('Elf')).toBeTruthy()
+    expect(screen.getByText('Dragon')).toBeTruthy()
+    expect(screen.getByText('Zombie')).toBeTruthy()
+
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'gob' } })
+
+    expect(screen.getByText('Goblin')).toBeTruthy()
+    expect(screen.queryByText('Elf')).toBeNull()
+    expect(screen.queryByText('Dragon')).toBeNull()
+    expect(screen.queryByText('Zombie')).toBeNull()
+  })
+
+  it('muestra el subtítulo sourceName cuando está disponible', () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_ASK',
+      messageId: 7,
+      objectId: 'game-1',
+      data: {
+        message: 'Pay 2 life?',
+        options: {
+          'UI.left.btn.text': 'Yes',
+          'UI.right.btn.text': 'No',
+          secondMessage: 'Steam Vents',
+        },
+      },
+    } as never)
+    render(<FeedbackDialog />)
+    expect(screen.getByText('Confirmación')).toBeTruthy()
+    expect(screen.getByText('Steam Vents')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Yes/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
+    expect(screen.queryByText('ASK')).toBeNull()
+  })
 })

@@ -67,6 +67,18 @@ export interface FeedbackPrompt {
 
 type JsonRecord = Record<string, unknown>
 
+const METADATA_OPTION_KEYS = new Set([
+  'queryType',
+  'autoAnswerMessage',
+  'secondMessage',
+  'hintText',
+  'originalId',
+  'dialog',
+  'specialButton',
+  'canCancel',
+  'targetZone',
+])
+
 export function parseFeedback(method: string, objectId: string | null, raw: unknown): FeedbackPrompt | null {
   const data = asRecord(raw)
   const gameId = objectId ?? stringValue(data.gameId)
@@ -110,19 +122,53 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       const isMulligan = /mulligan|keep your hand|keep hand/i.test(message)
       const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
       const isVoting = /vote|voting|voted|votar|votación|council|will of the council/i.test(message) || /vote/i.test(stringValue(data.question) ?? '')
-      const options = optionEntries(data.options)
-      const choices = options.length
-        ? options.map((option, index) => ({ ...option, value: booleanValue(option.label, index) || option.value }))
-        : isMulligan
-          ? [
-              { id: 'keep', label: 'Keep hand', value: 'false' },
-              { id: 'mulligan', label: 'Mulligan', value: 'true' },
-            ]
-          : [
-              { id: 'yes', label: 'Sí', value: 'true' },
-              { id: 'no', label: 'No', value: 'false' },
-            ]
-      return prompt(method, gameId, isVoting ? 'Votación' : isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación', message, 'boolean', choices, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, isMulligan, undefined, isStartingPlayer, isVoting)
+      const sourceName = secondMessageOf(data)
+
+      const rawOpts = asRecord(data.options)
+      let choices: FeedbackOption[]
+
+      if (typeof rawOpts['UI.left.btn.text'] === 'string' || typeof rawOpts['UI.right.btn.text'] === 'string') {
+        const leftLabel = stringValue(rawOpts['UI.left.btn.text']) ?? (isMulligan ? 'Mulligan' : 'Sí')
+        const rightLabel = stringValue(rawOpts['UI.right.btn.text']) ?? (isMulligan ? 'Keep hand' : 'No')
+        choices = [
+          { id: 'left', label: leftLabel, value: 'true' },
+          { id: 'right', label: rightLabel, value: 'false' },
+        ]
+      } else {
+        const options = optionEntries(data.options).filter((opt) => !METADATA_OPTION_KEYS.has(opt.id))
+        choices = options.length
+          ? options.map((option, index) => ({ ...option, value: booleanValue(option.label, index) || option.value }))
+          : isMulligan
+            ? [
+                { id: 'keep', label: 'Keep hand', value: 'false' },
+                { id: 'mulligan', label: 'Mulligan', value: 'true' },
+              ]
+            : [
+                { id: 'yes', label: 'Sí', value: 'true' },
+                { id: 'no', label: 'No', value: 'false' },
+              ]
+      }
+
+      return prompt(
+        method,
+        gameId,
+        isVoting ? 'Votación' : isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación',
+        message,
+        'boolean',
+        choices,
+        bounds,
+        undefined,
+        undefined,
+        true,
+        sourceName,
+        undefined,
+        undefined,
+        undefined,
+        isMulligan,
+        undefined,
+        isStartingPlayer,
+        isVoting,
+      )
     }
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)
@@ -135,7 +181,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       const cards = feedbackCards(data)
       const isDiscard = /descart|discard/i.test(message)
       const title = isDiscard ? 'Elige una carta para que descarte' : 'Selecciona cartas'
-      return prompt(method, gameId, title, message, 'uuid', cardOptions(data.cardsView1 ?? data.options), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
+      return prompt(method, gameId, title, message, 'uuid', cardOptions(data.cardsView1 ?? cleanChoices(data.options)), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
     }
     case 'GAME_CHOOSE_ABILITY': {
       const abilities = asRecord(raw)
@@ -149,7 +195,14 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     }
     case 'GAME_CHOOSE_CHOICE': {
       const choice = asRecord(data.choice)
-      const choices = optionEntries(choice.keyChoices ?? choice.choices ?? choice)
+      const keyChoices = asRecord(choice.keyChoices)
+      const listChoices = Array.isArray(choice.choices) ? choice.choices : []
+      let choices: FeedbackOption[] = []
+      if (Object.keys(keyChoices).length > 0) {
+        choices = optionEntries(keyChoices)
+      } else if (listChoices.length > 0) {
+        choices = listChoices.map((c, i) => ({ id: String(i), label: String(c), value: String(c) }))
+      }
       return prompt(method, gameId, 'Elige una opción', stringValue(choice.message) ?? message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_PILE': {
@@ -181,14 +234,15 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     }
     case 'GAME_CHOOSE_MODE': {
       const abilities = asRecord(raw)
-      return prompt(method, gameId, 'Elige modo', stringValue(abilities.message) ?? message, 'uuid', optionEntries(abilities.choices ?? abilities.options), bounds)
+      const rawChoices = abilities.choices ?? (Array.isArray(abilities.options) ? abilities.options : cleanChoices(abilities.options))
+      return prompt(method, gameId, 'Elige modo', stringValue(abilities.message) ?? message, 'uuid', optionEntries(rawChoices), bounds)
     }
     case 'GAME_CHOOSE_ONE': {
-      const choices = optionEntries(data.options ?? data.choices)
+      const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))
       return prompt(method, gameId, 'Elige una opción', message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_COLOR': {
-      const colors = optionEntries(data.options ?? { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' })
+      const colors = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' }))
       return prompt(method, gameId, 'Elige un color', message, 'string', colors, bounds)
     }
     case 'GAME_CHOOSE_NUMBER': {
@@ -197,15 +251,17 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_CHOOSE_STRING': {
       const choices = Array.isArray(data.options)
         ? data.options.map((v: unknown, i: number) => ({ id: String(i), label: String(v), value: String(v) }))
-        : optionEntries(data.options)
+        : Array.isArray(data.choices)
+          ? data.choices.map((v: unknown, i: number) => ({ id: String(i), label: String(v), value: String(v) }))
+          : optionEntries(cleanChoices(data.choices ?? data.options))
       return prompt(method, gameId, 'Elige un nombre', message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_BETWEEN': {
-      const choices = optionEntries(data.options ?? data.choices)
+      const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))
       return prompt(method, gameId, 'Elige entre opciones', message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_CARDS_ORDER': {
-      const cards = cardOptions(data.cardsView1 ?? data.options)
+      const cards = cardOptions(data.cardsView1 ?? cleanChoices(data.options))
       return prompt(method, gameId, 'Ordena las cartas', message, 'order', cards, bounds, undefined, undefined, true, undefined, undefined, undefined, feedbackCards(data))
     }
     case 'GAME_TARGET_AMOUNT': {
@@ -325,24 +381,44 @@ function cardOptions(value: unknown): FeedbackOption[] {
   })
 }
 
+function cleanChoices(val: unknown): JsonRecord {
+  const rec = asRecord(val)
+  const out: JsonRecord = {}
+  for (const [k, v] of Object.entries(rec)) {
+    if (!METADATA_OPTION_KEYS.has(k)) out[k] = v
+  }
+  return out
+}
+
+function registerCardLabels(zone: unknown, labels: Map<string, string>) {
+  if (!zone || typeof zone !== 'object') return
+  const values = Array.isArray(zone) ? zone : Object.values(zone)
+  for (const item of values) {
+    const record = asRecord(item)
+    const id = stringValue(record.id) ?? stringValue(record.parentId)
+    if (id) {
+      const name = stringValue(record.displayName) ?? stringValue(record.name)
+      if (name) labels.set(id, name)
+    }
+  }
+}
+
 function targetOptions(data: JsonRecord): FeedbackOption[] {
   const labels = new Map(cardOptions(data.cardsView1).map((option) => [option.id, option.label]))
   const game = asRecord(data.gameView)
-  for (const card of Object.values(asRecord(game.myHand))) {
-    const record = asRecord(card)
-    const id = stringValue(record.id) ?? stringValue(record.parentId)
-    if (id) labels.set(id, stringValue(record.displayName) ?? stringValue(record.name) ?? id)
-  }
+  registerCardLabels(game.myHand, labels)
+  registerCardLabels(game.stack, labels)
+  registerCardLabels(game.myHelperEmblems, labels)
+
   const players = Array.isArray(game.players) ? game.players : []
   for (const player of players) {
     const record = asRecord(player)
     const id = stringValue(record.playerId)
     if (id) labels.set(id, stringValue(record.name) ?? id)
-    for (const card of Object.values(asRecord(record.battlefield))) {
-      const cardRecord = asRecord(card)
-      const cardId = stringValue(cardRecord.id) ?? stringValue(cardRecord.parentId)
-      if (cardId) labels.set(cardId, stringValue(cardRecord.displayName) ?? stringValue(cardRecord.name) ?? cardId)
-    }
+    registerCardLabels(record.battlefield, labels)
+    registerCardLabels(record.graveyard, labels)
+    registerCardLabels(record.exile, labels)
+    registerCardLabels(record.commandList, labels)
   }
   const targets = stringList(data.targets)
   const possibleTargets = stringList(asRecord(data.options).possibleTargets)

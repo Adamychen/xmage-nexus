@@ -45,11 +45,11 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `GAME_INFORM_PERSONAL` | ✅ | — | — | — | 2026-08-24 |
 | `GAME_ERROR` | ✅ | ✅ | — | eventHandler.test.ts | 2026-08-24 |
 | `GAME_UPDATE` | ✅ | — | ✅ | (todas las partidas E2E) | 2026-08-24 |
-| `GAME_TARGET` | ✅ | — | ✅ | targeting.spec.ts / combat*.spec.ts | 2026-08-24 |
+| `GAME_TARGET` | ✅ | ✅ | ✅ | feedback.test.ts / targeting.spec.ts / combat*.spec.ts | 2026-09-02 |
 | `GAME_CHOOSE_ABILITY` | ✅ | ✅ | ✅ | feedback.test.ts / complex-costs.spec.ts | 2026-08-24 |
 | `GAME_CHOOSE_PILE` | ✅ | ✅ | — | feedback.test.ts | 2026-08-24 |
-| `GAME_CHOOSE_CHOICE` | ✅ | ✅ | — | feedback.test.ts | 2026-08-24 |
-| `GAME_ASK` | ✅ | — | ✅ | spells.spec.ts / combat*.spec.ts | 2026-08-24 |
+| `GAME_CHOOSE_CHOICE` | ✅ | ✅ | — | feedback.test.ts | 2026-09-02 |
+| `GAME_ASK` | ✅ | ✅ | ✅ | feedback.test.ts / spells.spec.ts / combat*.spec.ts | 2026-09-02 |
 | `GAME_SELECT` | ✅ | — | ✅ | full-flow.spec.ts / interactions.spec.ts | 2026-08-24 |
 | `GAME_PLAY_MANA` | ✅ | — | ✅ | complex-costs.spec.ts / stack-priority.spec.ts / mechanics.spec.ts | 2026-08-24 |
 | `GAME_PLAY_XMANA` | ✅ | ✅ | ✅ | feedback.test.ts / missing-prompts.spec.ts | 2026-08-24 |
