@@ -190,7 +190,9 @@ export default function BoardZone({
   if (!player) {
     return (
       <div
+        ref={zoneRef}
         className={`board-zone empty ${isTop ? 'zone-top opponent-zone' : 'zone-bottom player-zone'} ${compactPod ? 'compact-pod' : ''} ${className}`}
+        style={{ '--card-w': `${cardW}px` } as React.CSSProperties}
       />
     )
   }
