@@ -922,6 +922,12 @@ export interface TranslationSchema {
     send_failed_combat: string
     send_failed_special: string
     generic_crash: string
+    quit_ratio: string
+    rating_too_low: string
+    table_limit: string
+    invalid_deck: string
+    invalid_deck_type: string
+    invalid_game_type: string
   }
   board: {
     zone_hand: string

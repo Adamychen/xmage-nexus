@@ -218,6 +218,33 @@ export function translateError(error: string | null | undefined): string {
   if (lower.includes('no se pudo leer el archivo') || lower.includes('could not read')) {
     return t('errors.deck_read_failed')
   }
+  if (lower.includes('quit ratio') || str === 'QUIT_RATIO' || lower.includes('quit_ratio')) {
+    return lower.includes('quit ratio') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.quit_ratio')
+  }
+  if (lower.includes('minimum rating') || lower.includes('rating') && lower.includes('lower than') || str === 'RATING') {
+    return lower.includes('rating') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.rating_too_low')
+  }
+  if (lower.includes('not started tables') || lower.includes('too much') && lower.includes('started') || str === 'TABLE_LIMIT') {
+    return lower.includes('not started') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.table_limit')
+  }
+  if (lower.includes('invalid deck') || lower.includes('no valid deck') || lower.includes('deck is not valid') || lower.includes('must contain') || lower.includes('too few cards') || lower.includes('deckvalidator') || str === 'INVALID_DECK' || lower.includes('cantidad') && lower.includes('mazo')) {
+    return lower.includes('invalid deck') || lower.includes('no valid deck') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.invalid_deck')
+  }
+  if (lower.includes('wrong password') || lower.includes('invalid password') || str === 'PASSWORD') {
+    return t('errors.invalid_password')
+  }
+  if (lower.includes('no available seats') || lower.includes('table is full') || lower.includes('can join a table only') || str === 'SEAT') {
+    return t('errors.table_full')
+  }
+  if (lower.includes('invalid deck type') || lower.includes('decktype') || str === 'INVALID_DECK_TYPE') {
+    return `${t('errors.create_table_failed')}: ${t('errors.invalid_deck_type')}`
+  }
+  if (lower.includes('invalid game type') || lower.includes('gametype') || str === 'INVALID_GAME_TYPE') {
+    return `${t('errors.create_table_failed')}: ${t('errors.invalid_game_type')}`
+  }
+  if (str === 'FAILED' || lower === 'failed') {
+    return t('errors.create_table_failed')
+  }
 
   // If path exists in translations (e.g. 'errors.create_table_failed')
   if (str.startsWith('errors.')) {

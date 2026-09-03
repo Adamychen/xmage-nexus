@@ -37,7 +37,7 @@ export const de: TranslationSchema = {
     increase: 'Erhöhen',
   },
   login: {
-    subtitle: 'Schlüsselwörter, Phasen und Steuerungsbefehle',
+    subtitle: 'Moderner Hochleistungs-Web-Client für XMage',
     server_target: 'XMage-Server:',
     server_local: 'Lokal',
     server_official: 'Offiziell Beta',
@@ -915,6 +915,12 @@ export const de: TranslationSchema = {
     send_failed_target: 'Ziel konnte nicht gesendet werden',
     send_failed_combat: 'Kampf konnte nicht bestätigt werden',
     send_failed_special: 'Spezialaktion konnte nicht aktiviert werden',
+    quit_ratio: 'Deine Abbruchquote ist höher als von der Tischvorgabe verlangt',
+    rating_too_low: 'Dein Rating ist niedriger als das Tischminimum',
+    table_limit: 'Du hast zu viele nicht gestartete Tische (max. 2)',
+    invalid_deck: 'Deck ist für das gewählte Format ungültig',
+    invalid_deck_type: 'Decktyp ist ungültig oder wird vom Server nicht unterstützt',
+    invalid_game_type: 'Spieltyp ist ungültig oder wird vom Server nicht unterstützt',
     generic_crash: 'Ein unerwarteter Fehler ist aufgetreten',
   },
   board: {

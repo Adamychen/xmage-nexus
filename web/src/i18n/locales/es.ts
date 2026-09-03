@@ -916,6 +916,12 @@ export const es: TranslationSchema = {
     send_failed_combat: 'No se pudo confirmar el combate',
     send_failed_special: 'No se pudo activar el pago especial',
     generic_crash: 'Ocurrió un error inesperado',
+    quit_ratio: 'Tu ratio de abandono es mayor que el requerido por la mesa',
+    rating_too_low: 'Tu rating es inferior al mínimo requerido por la mesa',
+    table_limit: 'Has alcanzado el límite de mesas sin empezar (máx. 2)',
+    invalid_deck: 'Mazo no válido para el formato seleccionado',
+    invalid_deck_type: 'Tipo de mazo no válido o no soportado por el servidor',
+    invalid_game_type: 'Tipo de partida no válido o no soportado por el servidor',
   },
   board: {
     zone_hand: 'Mano',

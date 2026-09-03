@@ -37,7 +37,7 @@ export const zhs: TranslationSchema = {
     increase: '增加',
   },
   login: {
-    subtitle: '关键词异能、回合阶段及客户端快捷键速查',
+    subtitle: 'XMage 现代高性能网页客户端',
     server_target: 'XMage 服务器：',
     server_local: '本地',
     server_official: '官方测试服',
@@ -915,6 +915,12 @@ export const zhs: TranslationSchema = {
     send_failed_target: '无法发送目标',
     send_failed_combat: '无法确认战斗',
     send_failed_special: '无法执行特殊动作',
+    quit_ratio: '你的弃赛率高于牌桌要求',
+    rating_too_low: '你的评分低于牌桌最低要求',
+    table_limit: '未开始的牌桌过多（最多2桌）',
+    invalid_deck: '所选赛制的套牌无效',
+    invalid_deck_type: '套牌类型无效或服务器不支持',
+    invalid_game_type: '游戏类型无效或服务器不支持',
     generic_crash: '发生了意外错误',
   },
   board: {

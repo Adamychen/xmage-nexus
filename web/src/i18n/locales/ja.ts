@@ -37,7 +37,7 @@ export const ja: TranslationSchema = {
     increase: '増やす',
   },
   login: {
-    subtitle: 'キーワード能力、フェイズ進行、操作一覧',
+    subtitle: 'XMage用モダン高速Webクライアント',
     server_target: 'XMageサーバー:',
     server_local: 'ローカル',
     server_official: '公式ベータ',
@@ -915,6 +915,12 @@ export const ja: TranslationSchema = {
     send_failed_target: '対象を送信できませんでした',
     send_failed_combat: '戦闘を確定できませんでした',
     send_failed_special: '特別なアクションを実行できませんでした',
+    quit_ratio: 'あなたの切断率がテーブルの要件を超えています',
+    rating_too_low: 'あなたのレーティングがテーブルの最低要件を下回っています',
+    table_limit: '未開始のテーブルが多すぎます（最大2卓）',
+    invalid_deck: '選択したフォーマットではデッキが無効です',
+    invalid_deck_type: 'デッキタイプが無効か、サーバーでサポートされていません',
+    invalid_game_type: 'ゲームタイプが無効か、サーバーでサポートされていません',
     generic_crash: '予期せぬエラーが発生しました',
   },
   board: {

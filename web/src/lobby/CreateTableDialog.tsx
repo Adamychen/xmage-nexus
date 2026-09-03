@@ -324,9 +324,27 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const isLimited = deckType === 'Limited'
   const isDraftLimited = isLimited && useDraftTournament
 
+  const deckCardCount = (d: Deck) => d.cards.reduce((s, c) => s + c.amount, 0)
+  const isCommanderFormat = (gt: string, dt: string) => gt.toLowerCase().includes('commander') || dt.toLowerCase().includes('commander') || dt.toLowerCase().includes('oathbreaker') || dt.toLowerCase().includes('brawl')
+
   const create = async () => {
     setBusy(true)
     setError(null)
+    if (!effectiveGameTypes.some((g) => g.name === gameType)) {
+      setError(t('errors','invalid_game_type'))
+      setBusy(false)
+      return
+    }
+    if (!effectiveDeckTypes.includes(deckType)) {
+      setError(t('errors','invalid_deck_type'))
+      setBusy(false)
+      return
+    }
+    if (deckType === 'Limited' && !useDraftTournament) {
+      setError(t('errors','invalid_deck_type'))
+      setBusy(false)
+      return
+    }
     if (isDraftLimited) {
       const setCodes = parseLimitedSetCodes(draftSetsRaw)
       if (setCodes.length === 0) {
@@ -374,10 +392,26 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     }
     const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
     const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
+    const minPlayers = selectedGameTypeInfo?.minPlayers ?? 2
     const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
     const aiTypes = (playerTypesSel.length ? playerTypesSel : ['SIM']).slice(0, maxAi)
     const playerTypesFinal = humanSeat ? ['HUMAN', ...aiTypes] : aiTypes
     const simSeats = aiTypes.filter((pt) => pt === 'SIM').length
+    if (playerTypesFinal.length < minPlayers || playerTypesFinal.length > maxPlayers) {
+      setError(t('errors','table_no_seats'))
+      setBusy(false)
+      return
+    }
+    if (humanSeat && deckType !== 'Limited') {
+      const cnt = deckCardCount(myDeck)
+      const needCommander = isCommanderFormat(gameType, deckType)
+      const minCards = needCommander ? 100 : 60
+      if (cnt < minCards) {
+        setError(t('errors','invalid_deck'))
+        setBusy(false)
+        return
+      }
+    }
 
     const res = await cmds.createTable({
       name: name || `${username}'s table`,

@@ -37,7 +37,7 @@ export const pt: TranslationSchema = {
     increase: 'Aumentar',
   },
   login: {
-    subtitle: 'Palavras-chave, fases de turno e controles do cliente',
+    subtitle: 'Cliente web moderno e de alto desempenho para XMage',
     server_target: 'Servidor XMage:',
     server_local: 'Local',
     server_official: 'Oficial Beta',
@@ -915,6 +915,12 @@ export const pt: TranslationSchema = {
     send_failed_target: 'Não foi possível enviar o alvo',
     send_failed_combat: 'Não foi possível confirmar o combate',
     send_failed_special: 'Não foi possível ativar a ação especial',
+    quit_ratio: 'Seu índice de desistência é maior que o exigido pela mesa',
+    rating_too_low: 'Seu rating está abaixo do mínimo exigido',
+    table_limit: 'Muitas mesas não iniciadas (máx. 2)',
+    invalid_deck: 'Deck inválido para o formato selecionado',
+    invalid_deck_type: 'Tipo de deck inválido ou não suportado pelo servidor',
+    invalid_game_type: 'Tipo de jogo inválido ou não suportado pelo servidor',
     generic_crash: 'Ocorreu um erro inesperado',
   },
   board: {

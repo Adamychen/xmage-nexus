@@ -62,6 +62,14 @@ public class ProxyClient implements MageClient {
     public static final String ERR_INVALID_ARGUMENT = "INVALID_ARGUMENT";
     public static final String ERR_UNKNOWN_ACTION = "UNKNOWN_ACTION";
     public static final String ERR_FAILED = "FAILED";
+    public static final String ERR_QUIT_RATIO = "QUIT_RATIO";
+    public static final String ERR_RATING = "RATING";
+    public static final String ERR_INVALID_DECK = "INVALID_DECK";
+    public static final String ERR_TABLE_LIMIT = "TABLE_LIMIT";
+    public static final String ERR_INVALID_GAME_TYPE = "INVALID_GAME_TYPE";
+    public static final String ERR_INVALID_DECK_TYPE = "INVALID_DECK_TYPE";
+    public static final String ERR_PASSWORD = "PASSWORD";
+    public static final String ERR_SEAT = "SEAT";
 
     private static final Logger logger = Logger.getLogger(ProxyClient.class.getName());
 
@@ -102,6 +110,8 @@ public class ProxyClient implements MageClient {
 
     private volatile boolean connected = false;
     private final List<ClientCallback> handshakeBuffer = new java.util.LinkedList<>();
+    private volatile String lastDetailedMessage = null;
+    private volatile long lastDetailedMessageAt = 0;
 
     private ScheduledFuture<?> graceDisconnectTimer = null;
     public static final int DISCONNECT_GRACE_PERIOD_SECS = 60;
@@ -238,6 +248,7 @@ public class ProxyClient implements MageClient {
 
     @Override
     public void showMessage(String message) {
+        captureDetailedMessage(message);
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "info");
         ev.addProperty("message", message);
@@ -246,11 +257,63 @@ public class ProxyClient implements MageClient {
 
     @Override
     public void showError(String message) {
+        captureDetailedMessage(message);
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "error");
         ev.addProperty("message", message);
         ev.addProperty("fatal", true);
         broadcastAuthorized(ev.toString());
+    }
+
+    private void captureDetailedMessage(String message) {
+        if (message != null && !message.isEmpty()) {
+            lastDetailedMessage = message;
+            lastDetailedMessageAt = System.currentTimeMillis();
+        }
+    }
+
+    private static String classifyErrorCode(String detail) {
+        if (detail == null) return ERR_FAILED;
+        String lower = detail.toLowerCase(Locale.ROOT);
+        if (lower.contains("quit ratio")) return ERR_QUIT_RATIO;
+        if (lower.contains("minimum rating") || lower.contains("rating") && lower.contains("lower")) return ERR_RATING;
+        if (lower.contains("not started tables") || lower.contains("too much") || lower.contains("already") && lower.contains("not started")) return ERR_TABLE_LIMIT;
+        if (lower.contains("invalid deck") || lower.contains("deckvalidator") || lower.contains("no valid deck") || lower.contains("must contain") || lower.contains("too few cards") || lower.contains("deck is not valid")) return ERR_INVALID_DECK;
+        if (lower.contains("wrong password") || lower.contains("invalid password") || lower.contains("password")) return ERR_PASSWORD;
+        if (lower.contains("no available seats") || lower.contains("table is full") || lower.contains("can join a table only")) return ERR_SEAT;
+        if (lower.contains("decktype") || lower.contains("deck type") || lower.contains("invalid deck type")) return ERR_INVALID_DECK_TYPE;
+        if (lower.contains("gametype") || lower.contains("game type") || lower.contains("invalid game type")) return ERR_INVALID_GAME_TYPE;
+        return ERR_FAILED;
+    }
+
+    private String pollDetailedMessage(long sinceMillis, long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            String msg = lastDetailedMessage;
+            long at = lastDetailedMessageAt;
+            if (msg != null && at >= sinceMillis) {
+                return msg;
+            }
+            try {
+                Thread.sleep(60);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        String msg = lastDetailedMessage;
+        long at = lastDetailedMessageAt;
+        if (msg != null && at >= sinceMillis && System.currentTimeMillis() - at < 4000) {
+            return msg;
+        }
+        return null;
+    }
+
+    private String stripServerErrorPrefix(String msg) {
+        if (msg == null) return null;
+        if (msg.startsWith("Server error: ")) return msg.substring("Server error: ".length());
+        if (msg.startsWith("Remote task error: ")) return msg.substring("Remote task error: ".length());
+        return msg;
     }
 
     @Override
@@ -263,9 +326,42 @@ public class ProxyClient implements MageClient {
         callbackExecutor.execute(() -> processCallback(callback));
     }
 
+    private void tryCaptureFromCallback(ClientCallback callback) {
+        try {
+            ClientCallbackMethod m = callback.getMethod();
+            if (m == ClientCallbackMethod.SHOW_USERMESSAGE) {
+                Object d = callback.getData();
+                if (d != null) {
+                    String json = JsonUtil.toJson(d);
+                    JsonElement el = JsonParser.parseString(json);
+                    String extracted = null;
+                    if (el.isJsonObject()) {
+                        JsonObject o = el.getAsJsonObject();
+                        if (o.has("message") && o.get("message").isJsonPrimitive()) extracted = o.get("message").getAsString();
+                        else if (o.has("Message") && o.get("Message").isJsonPrimitive()) extracted = o.get("Message").getAsString();
+                        if (extracted == null || extracted.isEmpty()) {
+                            for (Map.Entry<String, JsonElement> e : o.entrySet()) {
+                                if (!e.getValue().isJsonPrimitive()) continue;
+                                String v = e.getValue().getAsString().toLowerCase(Locale.ROOT);
+                                if (v.contains("quit ratio") || v.contains("invalid deck") || v.contains("rating") || v.contains("not started") || v.contains("no valid deck") || v.contains("must contain") || v.contains("too few")) {
+                                    extracted = e.getValue().getAsString();
+                                    break;
+                                }
+                            }
+                        }
+                        if (extracted == null && o.has("text") && o.get("text").isJsonPrimitive()) extracted = o.get("text").getAsString();
+                        if (extracted == null && json.length() < 2000) extracted = json;
+                    }
+                    if (extracted != null && !extracted.isEmpty()) captureDetailedMessage(stripServerErrorPrefix(extracted));
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void processCallback(ClientCallback callback) {
         try {
             callback.decompressData();
+            tryCaptureFromCallback(callback);
 
             // Buffer MESSAGE callbacks that arrive before the handshake completes.
             // The server may send SHOW_USERMESSAGE (news/disclaimer) before connected()
@@ -536,17 +632,28 @@ public class ProxyClient implements MageClient {
                     break;
                 }
                 case "createTable": {
+                    long start = System.currentTimeMillis();
                     MatchOptions options = parseMatchOptions(args);
                     UUID roomId = uuid(args, "roomId", session.getMainRoomId());
                     Object result = session.createTable(roomId, options);
                     boolean ok = result != null;
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, result));
-                    if (ok && result instanceof TableView) {
-                        startSims(args, roomId, ((TableView) result).getTableId());
+                    if (!ok) {
+                        String detail = pollDetailedMessage(start, 750);
+                        if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
+                        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
+                        String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
+                        String err = detail != null ? detail : ERR_FAILED;
+                        gateway.send(conn, resultJson(action, requestId, false, code, err));
+                    } else {
+                        gateway.send(conn, resultJson(action, requestId, true, null, result));
+                        if (result instanceof TableView) {
+                            startSims(args, roomId, ((TableView) result).getTableId());
+                        }
                     }
                     break;
                 }
                 case "joinTable": {
+                    long start = System.currentTimeMillis();
                     UUID roomId = uuid(args, "roomId", session.getMainRoomId());
                     UUID tableId = uuid(args, "tableId", null);
                     String playerName = str(args, "playerName", session.getUserName());
@@ -555,7 +662,16 @@ public class ProxyClient implements MageClient {
                     DeckCardLists deck = DeckJson.parse(args.getAsJsonObject("deck"));
                     String password = str(args, "password", "");
                     boolean ok = session.joinTable(roomId, tableId, playerName, playerType, skill, deck, password);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
+                    if (!ok) {
+                        String detail = pollDetailedMessage(start, 750);
+                        if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
+                        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
+                        String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
+                        String err = detail != null ? detail : ERR_FAILED;
+                        gateway.send(conn, resultJson(action, requestId, false, code, err));
+                    } else {
+                        gateway.send(conn, resultJson(action, requestId, true, null, null));
+                    }
                     break;
                 }
                 case "leaveTable": {
@@ -623,14 +739,25 @@ public class ProxyClient implements MageClient {
                     break;
                 }
                 case "createTournamentTable": {
+                    long start = System.currentTimeMillis();
                     UUID roomId = uuid(args, "roomId", session.getMainRoomId());
                     mage.game.tournament.TournamentOptions tOpts = parseTournamentOptions(args);
                     Object result = session.createTournamentTable(roomId, tOpts);
                     boolean ok = result != null;
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, result));
+                    if (!ok) {
+                        String detail = pollDetailedMessage(start, 750);
+                        if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
+                        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
+                        String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
+                        String err = detail != null ? detail : ERR_FAILED;
+                        gateway.send(conn, resultJson(action, requestId, false, code, err));
+                    } else {
+                        gateway.send(conn, resultJson(action, requestId, true, null, result));
+                    }
                     break;
                 }
                 case "joinTournamentTable": {
+                    long start = System.currentTimeMillis();
                     UUID roomId = uuid(args, "roomId", session.getMainRoomId());
                     UUID tableId = uuid(args, "tableId", null);
                     String playerName = str(args, "playerName", session.getUserName());
@@ -639,7 +766,16 @@ public class ProxyClient implements MageClient {
                     DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject() ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
                     String password = str(args, "password", "");
                     boolean ok = session.joinTournamentTable(roomId, tableId, playerName, playerType, skill, deck, password);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
+                    if (!ok) {
+                        String detail = pollDetailedMessage(start, 750);
+                        if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
+                        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
+                        String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
+                        String err = detail != null ? detail : ERR_FAILED;
+                        gateway.send(conn, resultJson(action, requestId, false, code, err));
+                    } else {
+                        gateway.send(conn, resultJson(action, requestId, true, null, null));
+                    }
                     break;
                 }
                 case "watchTournamentTable": {

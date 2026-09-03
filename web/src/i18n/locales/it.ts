@@ -37,7 +37,7 @@ export const it: TranslationSchema = {
     increase: 'Aumenta',
   },
   login: {
-    subtitle: 'Parole chiave, fasi del turno e comandi del client',
+    subtitle: 'Client web moderno e performante per XMage',
     server_target: 'Server XMage:',
     server_local: 'Locale',
     server_official: 'Beta Ufficiale',
@@ -915,6 +915,12 @@ export const it: TranslationSchema = {
     send_failed_target: 'Impossibile inviare il bersaglio',
     send_failed_combat: 'Impossibile confermare il combattimento',
     send_failed_special: 'Impossibile attivare l\'azione speciale',
+    quit_ratio: 'Il tuo tasso di abbandono è superiore a quello richiesto dal tavolo',
+    rating_too_low: 'Il tuo rating è inferiore al minimo richiesto',
+    table_limit: 'Troppi tavoli non avviati (max 2)',
+    invalid_deck: 'Mazzo non valido per il formato selezionato',
+    invalid_deck_type: 'Tipo di mazzo non valido o non supportato dal server',
+    invalid_game_type: 'Tipo di partita non valido o non supportato dal server',
     generic_crash: 'Si è verificato un errore imprevisto',
   },
   board: {

@@ -37,7 +37,7 @@ export const ru: TranslationSchema = {
     increase: 'Увеличить',
   },
   login: {
-    subtitle: 'Ключевые слова, фазы хода и управление клиентом',
+    subtitle: 'Современный высокопроизводительный веб-клиент для XMage',
     server_target: 'Сервер XMage:',
     server_local: 'Локальный',
     server_official: 'Официальный',
@@ -915,6 +915,12 @@ export const ru: TranslationSchema = {
     send_failed_target: 'Не удалось отправить цель',
     send_failed_combat: 'Не удалось подтвердить бой',
     send_failed_special: 'Не удалось активировать особое действие',
+    quit_ratio: 'Ваш процент сдач выше требуемого столом',
+    rating_too_low: 'Ваш рейтинг ниже минимального требуемого',
+    table_limit: 'Слишком много не начатых столов (макс. 2)',
+    invalid_deck: 'Колода недействительна для выбранного формата',
+    invalid_deck_type: 'Тип колоды недействителен или не поддерживается сервером',
+    invalid_game_type: 'Тип игры недействителен или не поддерживается сервером',
     generic_crash: 'Произошла непредвиденная ошибка',
   },
   board: {

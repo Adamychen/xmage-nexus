@@ -916,6 +916,12 @@ export const en: TranslationSchema = {
     send_failed_combat: 'Could not confirm combat',
     send_failed_special: 'Could not activate special action',
     generic_crash: 'An unexpected error occurred',
+    quit_ratio: 'Your quit ratio is higher than the table requirement',
+    rating_too_low: 'Your rating is below the table minimum',
+    table_limit: 'You have too many tables not started (max 2)',
+    invalid_deck: 'Deck is not valid for the selected format',
+    invalid_deck_type: 'Deck type is not valid or not supported by the server',
+    invalid_game_type: 'Game type is not valid or not supported by the server',
   },
   board: {
     zone_hand: 'Hand',

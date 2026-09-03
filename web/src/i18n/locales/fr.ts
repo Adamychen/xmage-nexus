@@ -915,6 +915,12 @@ export const fr: TranslationSchema = {
     send_failed_target: 'Impossible d’envoyer la cible',
     send_failed_combat: 'Impossible de confirmer le combat',
     send_failed_special: 'Impossible d’activer l’action spéciale',
+    quit_ratio: 'Votre ratio d\u2019abandon est supérieur à celui requis par la table',
+    rating_too_low: 'Votre cote est inférieure au minimum requis',
+    table_limit: 'Trop de tables non démarrées (max. 2)',
+    invalid_deck: 'Deck invalide pour le format sélectionné',
+    invalid_deck_type: 'Type de deck invalide ou non supporté par le serveur',
+    invalid_game_type: 'Type de partie invalide ou non supporté par le serveur',
     generic_crash: 'Une erreur inattendue s’est produite',
   },
   board: {
