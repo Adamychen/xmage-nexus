@@ -320,6 +320,19 @@ export interface TranslationSchema {
     match_replay_number: string
     time_just_now: string
     avatar_pick_title: string
+    sleeve_pick_title: string
+    sleeve_pick_subtitle: string
+    sleeve_btn: string
+    appearance_title: string
+    appearance_subtitle: string
+    appearance_board_title: string
+    appearance_board_hint: string
+    board_standard: string
+    board_standard_desc: string
+    board_pod: string
+    board_pod_desc: string
+    board_arena: string
+    board_arena_desc: string
     match_badge: string
     create_field_boosters: string
     create_option_boosters_3: string

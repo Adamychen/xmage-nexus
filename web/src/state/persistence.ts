@@ -202,3 +202,36 @@ export function saveAudioSettings(settings: AudioSettings) {
     getStorage().setItem(AUDIO_SETTINGS_KEY, JSON.stringify(settings))
   } catch {}
 }
+
+export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
+
+export interface AppearanceSettings {
+  sleeveId: string
+  boardLayout: BoardLayoutPref
+}
+
+const APPEARANCE_KEY = 'mage-web-appearance'
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard' }
+
+const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
+
+export function loadAppearanceSettings(): AppearanceSettings {
+  try {
+    const raw = getStorage().getItem(APPEARANCE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppearanceSettings>
+      const sid = typeof parsed.sleeveId === 'string' ? parsed.sleeveId : DEFAULT_APPEARANCE.sleeveId
+      const layout = VALID_LAYOUTS.includes(parsed.boardLayout as BoardLayoutPref)
+        ? (parsed.boardLayout as BoardLayoutPref)
+        : DEFAULT_APPEARANCE.boardLayout
+      return { sleeveId: sid, boardLayout: layout }
+    }
+  } catch {}
+  return { ...DEFAULT_APPEARANCE }
+}
+
+export function saveAppearanceSettings(s: AppearanceSettings) {
+  try {
+    getStorage().setItem(APPEARANCE_KEY, JSON.stringify(s))
+  } catch {}
+}

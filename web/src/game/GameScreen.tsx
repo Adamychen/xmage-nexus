@@ -33,6 +33,7 @@ import { combatActorsFrom } from '../state/gameUtils'
 import { setState } from '../state/state'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
@@ -142,6 +143,7 @@ export default function GameScreen() {
   const topOpps = isSpectator ? (opps.length >= 2 ? opps.slice(0, opps.length - 1) : []) : opps
 
   const [selectedOppId, setSelectedOppId] = useState<string | null>(null)
+  const [showAppearance, setShowAppearance] = useState(false)
 
   const currentOpp = useMemo(() => {
     if (topOpps.length <= 1) return topOpps[0]
@@ -264,6 +266,9 @@ export default function GameScreen() {
                   : t('game', 'pod_view')}
             </button>
           )}
+          <button type="button" className="sleeve-picker-btn" onClick={() => setShowAppearance(true)} title={t('lobby', 'appearance_title')}>
+            🎨 {t('lobby', 'appearance_title')}
+          </button>
           {game?.rollbackTurnsAllowed && !!me && (
             <button
               type="button"
@@ -468,6 +473,7 @@ export default function GameScreen() {
       <ConstructScreen />
       <SideboardScreen />
       <TournamentPanel />
+      {showAppearance && <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />}
     </div>
   )
 }

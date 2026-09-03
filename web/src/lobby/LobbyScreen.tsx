@@ -24,6 +24,7 @@ import { useTranslation } from '../i18n'
 import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { useFullscreen } from '../utils/fullscreen'
+import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
 
@@ -206,6 +207,7 @@ export default function LobbyScreen() {
   const [busyTable, setBusyTable] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
+  const [showAppearance, setShowAppearance] = useState(false)
   const tournamentState = useStore((s) => s.tournament)
   const [bracketTable, setBracketTable] = useState<TableView | null>(null)
   const [bracketView, setBracketView] = useState<TournamentView | null>(null)
@@ -423,6 +425,16 @@ export default function LobbyScreen() {
 
         <div className="lobby-user-actions">
           <LanguageSelector showCardLangToggle={true} />
+
+          <button
+            type="button"
+            className="lobby-appearance-btn"
+            onClick={() => setShowAppearance(true)}
+            title={t('lobby', 'appearance_title')}
+            data-testid="open-appearance-settings"
+          >
+            🎨
+          </button>
 
           <button
             type="button"
@@ -1049,6 +1061,9 @@ export default function LobbyScreen() {
       )}
       {showDownloadImages && (
         <DownloadImagesDialog onClose={() => setShowDownloadImages(false)} />
+      )}
+      {showAppearance && (
+        <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />
       )}
     </div>
   )

@@ -65,6 +65,8 @@ const WHITELIST = new Set<string>([
   'common.no',
   'lobby.staging_vs',
   'board.pile_top',
+  'lobby.board_pod',
+  'lobby.board_arena',
 ])
 
 function flatten(obj: TranslationSchema): Record<string, string> {

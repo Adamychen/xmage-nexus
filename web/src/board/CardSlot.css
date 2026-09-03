@@ -192,6 +192,22 @@ html.fx-off .card-slot.attacking {
   pointer-events: none;
 }
 
+.sleeve-css-back {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.sleeve-emblem {
+  font-size: 28px;
+  line-height: 1;
+  text-shadow: 0 0 10px currentColor, 0 2px 8px rgba(0,0,0,0.7);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9));
+}
+
 /* Placeholder */
 .card-placeholder {
   width: 100%;

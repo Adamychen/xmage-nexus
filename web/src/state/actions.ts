@@ -2,7 +2,7 @@ import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
-import { clearActiveGame, saveFxSettings, saveAudioSettings } from './persistence'
+import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings } from './persistence'
 import { soundManager } from '../audio/soundManager'
 import type { AppState } from './state'
 
@@ -166,9 +166,10 @@ export function returnToLobby() {
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   setState({ settings: { ...getState().settings, [key]: value } })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
+  saveAppearanceSettings({ sleeveId, boardLayout })
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
 }
 

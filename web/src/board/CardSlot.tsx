@@ -8,9 +8,9 @@ import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
+import { useSettings } from '../state/selectors'
+import { getSleeveDef } from '../appearance/sleeves'
 import './CardSlot.css'
-
-const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 interface CardSlotProps {
   cardId?: string
@@ -50,6 +50,8 @@ export default function CardSlot({
   showDamage = false,
 }: CardSlotProps) {
   const { t, lang } = useTranslation()
+  const settings = useSettings()
+  const sleeve = getSleeveDef(settings.sleeveId)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
@@ -188,7 +190,13 @@ export default function CardSlot({
       style={style}
     >
       {faceDown ? (
-        <img src={CARD_BACK_URL} alt="" className="card-image" draggable={false} />
+        sleeve.kind === 'css' ? (
+          <div className="sleeve-css-back" style={{ background: sleeve.css }} data-sleeve-id={sleeve.id} title={sleeve.name}>
+            <span className="sleeve-emblem" style={{ color: sleeve.accent }}>{sleeve.emblem}</span>
+          </div>
+        ) : (
+          <img src={sleeve.imageUrl} alt="" className="card-image" draggable={false} data-sleeve-id={sleeve.id} />
+        )
       ) : imgUrl ? (
         <img
           src={imgUrl}
