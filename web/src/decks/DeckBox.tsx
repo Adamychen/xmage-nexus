@@ -97,13 +97,13 @@ export function DeckBox({
         {colors.length > 0 && (
           <span className="deck-box-colors">
             {colors.map((c) => (
-              <ManaPip key={c} symbol={c} size={18} />
+              <ManaPip key={c} symbol={c} size={16} />
             ))}
           </span>
         )}
         {colors.length === 0 && (
           <span className="deck-box-colors">
-            <ManaPip symbol="C" size={18} />
+            <ManaPip symbol="C" size={16} />
           </span>
         )}
       </div>

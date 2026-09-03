@@ -3,8 +3,8 @@
   flex-direction: column;
   background: rgba(14, 18, 26, 0.95);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 8px 12px;
-  gap: 8px;
+  padding: 6px 10px;
+  gap: 6px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -12,12 +12,12 @@
 .basic-land-quick-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .basic-land-label {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #a0aec0;
   text-transform: uppercase;
@@ -28,7 +28,7 @@
 .basic-land-buttons {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
@@ -50,13 +50,13 @@
   background: transparent;
   border: none;
   color: #e2e8f0;
-  padding: 4px 8px;
-  font-size: 0.74rem;
+  padding: 3px 6px;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   transition: background 120ms;
 }
 
@@ -69,8 +69,8 @@
   background: #3182ce;
   color: white;
   border-radius: 999px;
-  padding: 1px 6px;
-  font-size: 0.68rem;
+  padding: 1px 5px;
+  font-size: 0.65rem;
   font-weight: 800;
   margin-left: 2px;
 }
@@ -80,8 +80,8 @@
   border: none;
   border-left: 1px solid rgba(255, 255, 255, 0.12);
   color: #a0aec0;
-  padding: 4px 6px;
-  font-size: 0.8rem;
+  padding: 3px 5px;
+  font-size: 0.75rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 120ms;
@@ -98,8 +98,8 @@
   border: 1px solid rgba(124, 92, 255, 0.4);
   color: #c4b5fd;
   border-radius: 999px;
-  padding: 5px 12px;
-  font-size: 0.74rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 150ms ease;

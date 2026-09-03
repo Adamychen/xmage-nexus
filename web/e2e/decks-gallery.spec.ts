@@ -38,34 +38,33 @@ test.describe('Decks Gallery', () => {
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill('4 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
       await page.locator('.import-submit-btn').click()
-      await expect(page.getByText('Mountain')).toBeVisible({ timeout: 3000 })
+      await expect(page.locator('.strip-name', { hasText: /Mountain|Montaña/ })).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.arena-card-strip').first()).toBeVisible({ timeout: 3000 })
-      await expect(page.locator('.strip-name', { hasText: 'Mountain' })).toBeVisible()
 
       // Sideboard section: imported SB cards land there with count and swap moves one copy to main
       await expect(page.locator('.deck-sideboard-section')).toBeVisible({ timeout: 3000 })
-      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: 'Red Elemental Blast' })).toBeVisible()
+      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ })).toBeVisible()
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('2/15')
       const sideStrip = page.locator('.deck-sideboard-section .arena-card-strip').first()
       await sideStrip.hover()
       await sideStrip.locator('.strip-btn.swap').click()
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('1/15')
-      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: 'Red Elemental Blast' })).toBeVisible()
-      const mainRebStrip = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: 'Red Elemental Blast' }).first()
+      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ })).toBeVisible()
+      const mainRebStrip = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ }).first()
       await mainRebStrip.hover()
       await mainRebStrip.locator('.strip-btn.swap').click()
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('2/15')
 
       // Drag & drop: move one Mountain main → sideboard and back via HTML5 DnD
       const dt = await page.evaluateHandle(() => new DataTransfer())
-      const mainMountain = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: 'Mountain' }).first()
+      const mainMountain = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Mountain|Montaña/ }).first()
       const sideSection = page.locator('.deck-sideboard-section')
       await mainMountain.dispatchEvent('dragstart', { dataTransfer: dt })
       await sideSection.dispatchEvent('dragover', { dataTransfer: dt })
       await sideSection.dispatchEvent('drop', { dataTransfer: dt })
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('3/15')
-      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: 'Mountain' })).toBeVisible()
-      const sideMountain = page.locator('.deck-sideboard-section .arena-card-strip', { hasText: 'Mountain' })
+      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Mountain|Montaña/ })).toBeVisible()
+      const sideMountain = page.locator('.deck-sideboard-section .arena-card-strip', { hasText: /Mountain|Montaña/ })
       const firstMainSection = page.locator('.deck-category-section:not(.deck-sideboard-section)').first()
       await sideMountain.dispatchEvent('dragstart', { dataTransfer: dt })
       await firstMainSection.dispatchEvent('dragover', { dataTransfer: dt })
@@ -141,4 +140,51 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.browser-url-import-view')).toBeVisible()
     })
   })
+
+  test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 })
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      const username = `deck_resp_${Date.now()}`
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+
+      // Wait for deck boxes to be laid out
+      await expect(page.locator('.deck-box').first()).toBeVisible({ timeout: 5000 })
+
+      // Verify that no deck boxes overlap each other vertically or horizontally
+      const overlapFound = await page.evaluate(() => {
+        const boxes = Array.from(document.querySelectorAll('.deck-box'))
+        const rects = boxes.map((b) => b.getBoundingClientRect())
+        for (let i = 0; i < rects.length; i++) {
+          for (let j = i + 1; j < rects.length; j++) {
+            const a = rects[i]
+            const b = rects[j]
+            // Two rectangles overlap if they intersect in both X and Y dimensions (excluding exact borders)
+            const overlapX = a.left < b.right - 2 && a.right > b.left + 2
+            const overlapY = a.top < b.bottom - 2 && a.bottom > b.top + 2
+            if (overlapX && overlapY) {
+              return { i, j, a: { top: a.top, bottom: a.bottom }, b: { top: b.top, bottom: b.bottom } }
+            }
+          }
+        }
+        return null
+      })
+      expect(overlapFound).toBeNull()
+
+      // Open DeckBuilder and verify persistent chat & users panel stays visible
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.lobby-aside')).toBeVisible()
+
+      // Verify done button works cleanly
+      await page.locator('.builder-done').click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+    })
+  })
 })
+

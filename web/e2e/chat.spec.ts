@@ -96,6 +96,16 @@ fakeOnly()
       timeout: 5_000,
     })
     await expect(page.locator('.game-chat-player').first()).toContainText('player-1', { timeout: 5_000 })
+
+    // Ensure the chat and quick reactions fill the entire vertical height down to the action button
+    const gapToAction = await page.evaluate(() => {
+      const reactions = document.querySelector('.quick-reactions')
+      const action = document.querySelector('.action-button-container')
+      if (!reactions || !action) return null
+      return Math.abs(action.getBoundingClientRect().top - reactions.getBoundingClientRect().bottom)
+    })
+    expect(gapToAction).not.toBeNull()
+    expect(gapToAction).toBeLessThanOrEqual(1)
   },
 )
 

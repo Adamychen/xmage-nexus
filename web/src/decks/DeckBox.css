@@ -81,24 +81,25 @@
 }
 .deck-box-footer {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 28px;
+  left: 8px;
+  right: 8px;
+  bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 .deck-box-name {
   flex: 1;
   min-width: 0;
-  background: rgba(0,0,0,0.78);
+  background: rgba(0,0,0,0.82);
   backdrop-filter: blur(6px);
   color: #f5f1e8;
   font-weight: 700;
-  font-size: 0.92rem;
-  line-height: 1.1;
-  padding: 7px 10px;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.14);
   overflow: hidden;
@@ -108,7 +109,7 @@
 }
 .deck-box-colors {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   align-items: center;
   flex-shrink: 0;
 }
@@ -117,12 +118,12 @@
   border-radius: 50%;
 }
 .mana-pip {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
   color: #111;
   border: 1.5px solid rgba(255,255,255,0.9);
@@ -137,12 +138,12 @@
 .mana-pip.pip-c { background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 55%, #6b7280 100%); }
 .deck-box-meta {
   position: absolute;
-  left: 12px;
-  bottom: 8px;
+  left: 10px;
+  bottom: 6px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: rgba(255,255,255,0.72);
 }
 .deck-box-count { letter-spacing: 0.03em; }

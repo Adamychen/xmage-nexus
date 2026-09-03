@@ -304,60 +304,65 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   return (
     <div className="decks-gallery">
       <header className="decks-gallery-top">
-        <h1 className="decks-title">{t('decks', 'my_decks').toUpperCase()}</h1>
+        <div className="decks-gallery-header-row">
+          <div className="decks-gallery-header-left">
+            <h1 className="decks-title">{t('decks', 'my_decks').toUpperCase()}</h1>
 
-        <div className="gallery-view-tabs">
-          <button
-            type="button"
-            className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
-            onClick={() => setMainView('my-decks')}
-          >
-            📦 {t('decks', 'my_decks')} ({customCount})
-          </button>
-          <button
-            type="button"
-            className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
-            onClick={() => setMainView('browser')}
-          >
-            🌍 {t('decks', 'popular_meta')}
-          </button>
+            <div className="gallery-view-tabs">
+              <button
+                type="button"
+                className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
+                onClick={() => setMainView('my-decks')}
+              >
+                📦 {t('decks', 'my_decks')} ({customCount})
+              </button>
+              <button
+                type="button"
+                className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
+                onClick={() => setMainView('browser')}
+              >
+                🌍 {t('decks', 'popular_meta')}
+              </button>
+            </div>
+          </div>
+
+          {mainView === 'my-decks' && (
+            <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
+          )}
         </div>
 
         {mainView === 'my-decks' && (
-          <>
-            <div className="decks-filters">
-              <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
-                <option value="All Decks">{t('decks', 'gallery_all_formats')}</option>
-                {ALL_FORMATS.map((f) => (
-                  <option key={f} value={f}>{f}</option>
-                ))}
-                <option value="Favoritos">★ {t('common', 'all')}</option>
-              </select>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
-                <option value="updated">{t('decks', 'gallery_recent')}</option>
-                <option value="name">{t('common', 'search')} A–Z</option>
-                <option value="size">{t('decks', 'total_cards')}</option>
-              </select>
-              <div className="decks-search-wrap">
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common', 'search')} className="decks-search" />
-                {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
-              </div>
-              <div className="decks-mana-filter">
-                {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''}`}
-                    onClick={() => toggleColor(c)}
-                    title={c}
-                  >
-                    <ManaPip symbol={c} size={18} />
-                  </button>
-                ))}
-              </div>
+          <div className="decks-filters">
+            <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
+              <option value="All Decks">{t('decks', 'gallery_all_formats')}</option>
+              {ALL_FORMATS.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+              <option value="Favoritos">★ {t('common', 'all')}</option>
+            </select>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
+              <option value="updated">{t('decks', 'gallery_recent')}</option>
+              <option value="name">{t('common', 'search')} A–Z</option>
+              <option value="size">{t('decks', 'total_cards')}</option>
+            </select>
+            <div className="decks-search-wrap">
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common', 'search')} className="decks-search" />
+              {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
             </div>
-            <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
-          </>
+            <div className="decks-mana-filter">
+              {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''}`}
+                  onClick={() => toggleColor(c)}
+                  title={c}
+                >
+                  <ManaPip symbol={c} size={18} />
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </header>
 

@@ -10,7 +10,7 @@
 .filter-bar-top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -19,9 +19,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-width: 220px;
+  min-width: 160px;
   flex: 1;
-  max-width: 380px;
+  max-width: 360px;
 }
 
 .arena-search-icon {
@@ -71,12 +71,12 @@
 .arena-mana-orbs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .mana-orb-btn {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.2);
   background: #141a22;
@@ -134,7 +134,7 @@
 .filter-bar-bottom {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -142,6 +142,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .arena-chip-label {

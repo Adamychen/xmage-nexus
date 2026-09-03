@@ -47,9 +47,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showCurve, setShowCurve] = useState(() => {
     try {
       const saved = localStorage.getItem('nexus_deck_show_curve')
-      return saved !== null ? saved === 'true' : true
+      return saved !== null ? saved === 'true' : (typeof window !== 'undefined' ? window.innerHeight > 850 : false)
     } catch {
-      return true
+      return false
     }
   })
 

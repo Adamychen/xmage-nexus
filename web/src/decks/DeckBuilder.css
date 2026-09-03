@@ -90,7 +90,7 @@
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   flex: 1;
   min-height: 0;
   height: calc(100% - 48px);
@@ -108,6 +108,15 @@
 @media (max-width: 1200px) {
   .deck-builder-body {
     grid-template-columns: 1fr 340px;
+    gap: 10px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 850px) {
+  .deck-builder-body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
   }
 }
 
@@ -279,8 +288,8 @@
 .builder-deck-footer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   background: #11161d;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
@@ -290,23 +299,26 @@
 .builder-action-btns-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .builder-act {
-  flex: 1;
+  flex: 1 1 calc(33.333% - 4px);
+  min-width: 70px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #cbd5e0;
   border-radius: 6px;
-  padding: 5px 8px;
+  padding: 4px 6px;
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-align: center;
   transition: all 120ms ease;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .builder-act:hover {
@@ -332,9 +344,9 @@
   color: #111111;
   border: 1px solid #ffd180;
   border-radius: 999px;
-  padding: 10px 0;
+  padding: 8px 0;
   font-weight: 900;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
