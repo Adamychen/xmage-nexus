@@ -110,3 +110,17 @@
     filter: brightness(1.22);
   }
 }
+
+.hand-bar .hand-card-slot .hand-card.targetable {
+  animation: handTargetablePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes handTargetablePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px #ffb03a, 0 0 16px rgba(255, 176, 58, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 3px #ffd070, 0 0 24px rgba(255, 208, 112, 0.8);
+  }
+}

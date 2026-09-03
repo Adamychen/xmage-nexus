@@ -4,6 +4,7 @@ import * as cmds from '../net/commands'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
+import { localizeServerMessage } from './serverMessageTranslation'
 import './LibraryOrderDialog.css'
 
 interface LibraryOrderDialogProps {
@@ -120,7 +121,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
             </span>
           </div>
           <div className="dialog-message">
-            <FormattedText text={prompt.message} />
+            <FormattedText text={localizeServerMessage(prompt.message, t as any)} />
           </div>
         </header>
 

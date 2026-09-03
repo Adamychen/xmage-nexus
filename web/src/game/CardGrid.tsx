@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import CardSlot from '../board/CardSlot'
 import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
+import { localizeServerMessage } from './serverMessageTranslation'
 import './CardGrid.css'
 
 interface CardGridProps {
@@ -51,23 +52,29 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
     }, t('errors','send_failed_choice'))
   }
 
+  const isDiscard = /descart|discard/i.test(prompt.message)
+  const cardGridTitle = isDiscard
+    ? t('game', 'choose_discard')
+    : (prompt.sourceName ?? (prompt.method === 'GAME_TARGET' ? t('game', 'choose_target') : t('game', 'choose_cards')))
+  const kickerIcon = prompt.method === 'GAME_TARGET' ? (isDiscard ? '🗑️' : '🎯') : '🃏'
+
   return (
     <div className="feedback-backdrop" role="presentation">
       <section className="feedback-dialog card-grid-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
         <header className="card-grid-header">
           <div className="feedback-kicker">
-            <span className="kicker-icon">{prompt.method === 'GAME_TARGET' ? '🎯' : '🃏'}</span>{' '}
+            <span className="kicker-icon">{kickerIcon}</span>{' '}
             {prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
           </div>
           <div className="card-grid-title-row">
-            <h2 id="feedback-title">{prompt.title}</h2>
+            <h2 id="feedback-title">{cardGridTitle}</h2>
             <span className="card-grid-count-badge">
               {filtered.length === cards.length
                 ? `${cards.length} ${t('board','zone_hand')}`
                 : `${filtered.length} / ${cards.length}`}
             </span>
           </div>
-          {prompt.message && <p className="card-grid-message">{prompt.message}</p>}
+          {prompt.message && <p className="card-grid-message">{localizeServerMessage(prompt.message, t as any)}</p>}
 
           <div className="card-grid-search-wrap">
             <span className="card-grid-search-icon">🔍</span>

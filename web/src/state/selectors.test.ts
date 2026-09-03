@@ -56,5 +56,37 @@ describe('isBlockingModal', () => {
     const d = base()
     d.rollbackDialogOpen = true
     expect(isBlockingModal(d)).toBe(true)
+
+    const e = base()
+    e.draft = {} as never
+    expect(isBlockingModal(e)).toBe(true)
+
+    const f = base()
+    f.construct = {} as never
+    expect(isBlockingModal(f)).toBe(true)
+  })
+
+  it('is true for any general modal feedback prompts like ask, mode, color', () => {
+    const s1 = base()
+    s1.feedback = { method: 'GAME_ASK', title: 'Confirm', message: 'Pay?', min: 0, max: 0, gameId: 'g' } as never
+    expect(isBlockingModal(s1)).toBe(true)
+
+    const s2 = base()
+    s2.feedback = { method: 'GAME_CHOOSE_MODE', title: 'Mode', message: '', min: 0, max: 0, gameId: 'g' } as never
+    expect(isBlockingModal(s2)).toBe(true)
+
+    const s3 = base()
+    s3.feedback = { method: 'GAME_CHOOSE_COLOR', title: 'Color', message: '', min: 0, max: 0, gameId: 'g' } as never
+    expect(isBlockingModal(s3)).toBe(true)
+  })
+
+  it('is false for in-board action bars (mana and combat)', () => {
+    const s1 = base()
+    s1.feedback = { method: 'GAME_PLAY_MANA', mode: 'mana', title: '', message: '', min: 0, max: 0, gameId: 'g' } as never
+    expect(isBlockingModal(s1)).toBe(false)
+
+    const s2 = base()
+    s2.feedback = { method: 'GAME_DECLARE_ATTACKERS', mode: 'combat', title: '', message: '', min: 0, max: 0, gameId: 'g' } as never
+    expect(isBlockingModal(s2)).toBe(false)
   })
 })

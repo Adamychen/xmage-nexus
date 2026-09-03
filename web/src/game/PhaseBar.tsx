@@ -8,22 +8,22 @@ import './PhaseBar.css'
 interface StepDef {
   key: string
   label: string
-  fullName: string
+  nameKey: any
   group: string
   stopKey?: string
 }
 
 const STEPS: StepDef[] = [
-  { key: 'UPKEEP',            label: 'UP',  fullName: 'Upkeep',         group: 'b',  stopKey: 'upkeep' },
-  { key: 'DRAW',              label: 'DR',  fullName: 'Draw',           group: 'b',  stopKey: 'draw' },
-  { key: 'PRECOMBAT_MAIN',    label: 'M1',  fullName: 'Main Phase 1',   group: 'm1', stopKey: 'main1' },
-  { key: 'BEGIN_COMBAT',      label: 'BC',  fullName: 'Begin Combat',   group: 'c',  stopKey: 'beginCombat' },
-  { key: 'DECLARE_ATTACKERS', label: 'AT',  fullName: 'Attackers',      group: 'c' },
-  { key: 'DECLARE_BLOCKERS',  label: 'BL',  fullName: 'Blockers',       group: 'c' },
-  { key: 'END_COMBAT',        label: 'EC',  fullName: 'End Combat',     group: 'c',  stopKey: 'endCombat' },
-  { key: 'POSTCOMBAT_MAIN',   label: 'M2',  fullName: 'Main Phase 2',   group: 'm2', stopKey: 'main2' },
-  { key: 'END_TURN',          label: 'ET',  fullName: 'End Step',       group: 'e',  stopKey: 'endStep' },
-  { key: 'CLEANUP',           label: 'CL',  fullName: 'Cleanup',        group: 'e' },
+  { key: 'UPKEEP',            label: 'UP',  nameKey: 'step_upkeep',         group: 'b',  stopKey: 'upkeep' },
+  { key: 'DRAW',              label: 'DR',  nameKey: 'step_draw',           group: 'b',  stopKey: 'draw' },
+  { key: 'PRECOMBAT_MAIN',    label: 'M1',  nameKey: 'step_main1',          group: 'm1', stopKey: 'main1' },
+  { key: 'BEGIN_COMBAT',      label: 'BC',  nameKey: 'step_begin_combat',   group: 'c',  stopKey: 'beginCombat' },
+  { key: 'DECLARE_ATTACKERS', label: 'AT',  nameKey: 'step_attackers',      group: 'c' },
+  { key: 'DECLARE_BLOCKERS',  label: 'BL',  nameKey: 'step_blockers',       group: 'c' },
+  { key: 'END_COMBAT',        label: 'EC',  nameKey: 'step_end_combat',     group: 'c',  stopKey: 'endCombat' },
+  { key: 'POSTCOMBAT_MAIN',   label: 'M2',  nameKey: 'step_main2',          group: 'm2', stopKey: 'main2' },
+  { key: 'END_TURN',          label: 'ET',  nameKey: 'step_end_step',       group: 'e',  stopKey: 'endStep' },
+  { key: 'CLEANUP',           label: 'CL',  nameKey: 'step_cleanup',        group: 'e' },
 ]
 
 const GROUPS = ['b', 'm1', 'c', 'm2', 'e']
@@ -70,12 +70,16 @@ export default function PhaseBar({ step }: { step: string }) {
 
               if (hasYourStop || hasOppStop) cls += ' has-stop'
 
+              const stepFullName = t('game', s.nameKey)
+              const onLabel = t('common', 'yes')
+              const offLabel = t('common', 'no')
+
               return (
                 <button
                   type="button"
                   key={s.key}
                   className={cls}
-                  title={`${s.fullName}${s.stopKey ? ` (${t('game', 'you')}: ${hasYourStop ? 'ON' : 'OFF'}, ${t('game', 'opponent')}: ${hasOppStop ? 'ON' : 'OFF'})` : ''}`}
+                  title={`${stepFullName}${s.stopKey ? ` (${t('game', 'you')}: ${hasYourStop ? onLabel : offLabel}, ${t('game', 'opponent')}: ${hasOppStop ? onLabel : offLabel})` : ''}`}
                   onClick={(e) => toggleStop(s.stopKey, e)}
                   onContextMenu={(e) => {
                     e.preventDefault()

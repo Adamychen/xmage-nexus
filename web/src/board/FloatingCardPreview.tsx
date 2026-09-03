@@ -5,6 +5,7 @@ import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
+import { useStore, isBlockingModal } from '../state/store'
 import './FloatingCardPreview.css'
 
 interface FloatingCardPreviewProps {
@@ -12,6 +13,7 @@ interface FloatingCardPreviewProps {
   anchorRect: DOMRect | null
   boardRect?: DOMRect | null
   fixedSide?: 'left' | 'right' | 'auto'
+  inModal?: boolean
 }
 
 const PREVIEW_WIDTH = 320
@@ -23,7 +25,9 @@ export default function FloatingCardPreview({
   anchorRect,
   boardRect,
   fixedSide = 'auto',
+  inModal = false,
 }: FloatingCardPreviewProps) {
+  const modalOpen = useStore(isBlockingModal)
   const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [showBackFace, setShowBackFace] = useState(false)
@@ -73,7 +77,7 @@ export default function FloatingCardPreview({
   }, [card, showBackFace])
 
   useEffect(() => {
-    if (!activeCard || activeCard.faceDown) {
+    if ((!inModal && modalOpen) || !activeCard || activeCard.faceDown) {
       setImgUrl(null)
       return
     }
@@ -92,11 +96,13 @@ export default function FloatingCardPreview({
     (activeCard as any)?.isSecondCardFace,
     (activeCard as any)?.isFrontFace,
     showBackFace,
+    modalOpen,
+    inModal,
   ])
 
   const keywords = useMemo(() => extractKeywordsFromCard(activeCard), [activeCard])
 
-  if (!card || !anchorRect || card.faceDown || !activeCard) {
+  if ((!inModal && modalOpen) || !card || !anchorRect || card.faceDown || !activeCard) {
     return null
   }
 

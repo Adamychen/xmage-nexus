@@ -10,6 +10,7 @@ import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
 import { useTranslation, t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
+import { localizeServerMessage, localizeOptionLabel } from './serverMessageTranslation'
 
 const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
 
@@ -22,20 +23,67 @@ function isResultOk(result: { ok: boolean; error?: string }, fallback: string) {
   return false
 }
 
-function getFeedbackKicker(prompt: FeedbackPrompt): { icon: string; label: string } {
-  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: tStatic('game', 'feedback_kicker_mode') }
-  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: tStatic('game', 'feedback_kicker_ability') }
-  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: tStatic('game', 'feedback_kicker_color') }
-  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: tStatic('game', 'feedback_kicker_name') }
+function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: string; label: string } {
+  if (prompt.isStartingPlayer) return { icon: '🎲', label: t('game', 'who_starts') }
+  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: t('game', 'feedback_kicker_mode') }
+  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: t('game', 'feedback_kicker_ability') }
+  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: t('game', 'feedback_kicker_color') }
+  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: t('game', 'feedback_kicker_name') }
   if (prompt.method === 'GAME_CHOOSE_NUMBER' || prompt.method === 'GAME_GET_AMOUNT' || prompt.method === 'GAME_PLAY_XMANA') {
-    return { icon: '🔢', label: tStatic('game', 'feedback_kicker_amount') }
+    return { icon: '🔢', label: t('game', 'feedback_kicker_amount') }
   }
-  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: tStatic('game', 'feedback_kicker_multi') }
-  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: tStatic('game', 'feedback_kicker_player') }
-  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: tStatic('game', 'feedback_kicker_pile') }
-  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: tStatic('game', 'feedback_kicker_choice') }
-  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: tStatic('game', 'feedback_kicker_confirm') }
-  return { icon: '⚔️', label: tStatic('game', 'feedback_kicker_required') }
+  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: t('game', 'feedback_kicker_multi') }
+  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: t('game', 'feedback_kicker_player') }
+  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: t('game', 'feedback_kicker_pile') }
+  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: t('game', 'feedback_kicker_choice') }
+  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: t('game', 'feedback_kicker_confirm') }
+  return { icon: '⚔️', label: t('game', 'feedback_kicker_required') }
+}
+
+function getLocalizedTitle(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): string {
+  if (prompt.isStartingPlayer) return t('game', 'who_starts')
+  const isDiscard = /descart|discard/i.test(prompt.message)
+  if (isDiscard) return t('game', 'choose_discard')
+
+  switch (prompt.method) {
+    case 'GAME_CHOOSE_MODE':
+      return t('game', 'choose_mode')
+    case 'GAME_CHOOSE_ABILITY':
+      return t('game', 'choose_ability')
+    case 'GAME_CHOOSE_COLOR':
+      return t('game', 'choose_color')
+    case 'GAME_CHOOSE_STRING':
+      return t('game', 'choose_name')
+    case 'GAME_CHOOSE_NUMBER':
+      return t('game', 'choose_number')
+    case 'GAME_GET_AMOUNT':
+    case 'GAME_PLAY_XMANA':
+      return t('game', 'amount_title')
+    case 'GAME_GET_MULTI_AMOUNT':
+      return t('game', 'multi_amount_title')
+    case 'GAME_SELECT_PLAYER':
+    case 'GAME_TARGET_PLAYER':
+      return t('game', 'choose_player_title')
+    case 'GAME_CHOOSE_PILE':
+      return t('game', 'choose_pile')
+    case 'GAME_CHOOSE_CHOICE':
+      return t('game', 'choose_option')
+    case 'GAME_CHOOSE_CARDS':
+    case 'GAME_SELECT_CARDS':
+    case 'GAME_SELECT_TARGETS':
+      return t('game', 'choose_cards')
+    case 'GAME_TARGET':
+      return prompt.sourceName ?? t('game', 'choose_target')
+    case 'GAME_ASK':
+      return prompt.isMulligan ? t('dialogs', 'mulligan_title') : prompt.isVoting ? t('dialogs', 'voting_title') : (prompt.title ?? t('game', 'feedback_kicker_confirm'))
+    default:
+      if (prompt.mode === 'mana') return t('game', 'pay_mana')
+      if (prompt.mode === 'combat') {
+        const isAtk = prompt.title.toLowerCase().includes('atacan') || prompt.title.toLowerCase().includes('attack')
+        return isAtk ? t('game', 'combat_attackers_title') : t('game', 'combat_blockers_title')
+      }
+      return prompt.title || t('game', 'choose_option')
+  }
 }
 
 export default function FeedbackDialog() {
@@ -106,7 +154,7 @@ export default function FeedbackDialog() {
   }
 
   // ── Decisión de quién empieza: diálogo dedicado
-  if (prompt.isStartingPlayer) {
+  if (prompt.isStartingPlayer && prompt.method !== 'GAME_TARGET') {
     return (
       <div className="feedback-backdrop" role="presentation">
         <section className="feedback-dialog starting-player-dialog" role="dialog" aria-modal="true" aria-labelledby="sp-title">
@@ -146,23 +194,38 @@ export default function FeedbackDialog() {
   // ── GAME_TARGET sin cardsView1: barra flotante no-modal
   if (prompt.method === 'GAME_TARGET') {
     const chosenCount = prompt.chosenTargets?.length ?? 0
+    const isDiscard = /descart|discard/i.test(prompt.message)
+    const titleText = prompt.isStartingPlayer
+      ? t('game', 'who_starts')
+      : isDiscard
+        ? t('game', 'choose_discard')
+        : (prompt.sourceName ?? t('game', 'choose_target'))
+    const localizedMessage = localizeServerMessage(prompt.message, t as any)
+    const hintText = prompt.isStartingPlayer
+      ? t('game', 'starting_player_board_hint')
+      : chosenCount > 0
+        ? t('game', 'targeting_chosen', { count: chosenCount })
+        : (localizedMessage ? <FormattedText text={localizedMessage} /> : t('game', 'targeting_hint'))
+    const icon = prompt.isStartingPlayer ? '🎲' : isDiscard ? '🗑️' : '🎯'
+
     return (
       <div className="action-prompt-bar targeting-bar">
         <div className="action-prompt-info">
           <span className="action-prompt-title">
-            <FormattedText text={prompt.sourceName ?? t('game', 'choose_target')} />
+            <span className="action-prompt-icon" aria-hidden="true">{icon}</span>{' '}
+            <FormattedText text={titleText} />
           </span>
           <span className="action-prompt-hint">
-            {chosenCount > 0
-              ? t('game', 'targeting_chosen', { count: chosenCount })
-              : t('game', 'targeting_hint')}
+            {hintText}
           </span>
         </div>
         <div className="action-prompt-actions">
           {prompt.required === false && (
             <button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</button>
           )}
-          <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'targeting_cancel')}</button>
+          {!prompt.isStartingPlayer && (
+            <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'targeting_cancel')}</button>
+          )}
         </div>
       </div>
     )
@@ -170,12 +233,16 @@ export default function FeedbackDialog() {
 
   // ── GAME_PLAY_MANA: barra flotante no-modal (el tablero maneja los clicks a las tierras)
   if (prompt.mode === 'mana') {
+    const localizedManaMsg = localizeServerMessage(prompt.message, t as any)
     return (
       <div className="action-prompt-bar mana-prompt-bar">
         <div className="action-prompt-info">
-          <span className="action-prompt-title">{t('game', 'mana_title')}</span>
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true">⚡</span>{' '}
+            {t('game', 'pay_mana')}
+          </span>
           <span className="action-prompt-msg">
-            <FormattedText text={prompt.message} />
+            <FormattedText text={localizedManaMsg} />
           </span>
           <span className="action-prompt-hint">{t('game', 'mana_hint')}</span>
         </div>
@@ -203,10 +270,17 @@ export default function FeedbackDialog() {
 
   // ── Declaración de combate: barra flotante no-modal
   if (prompt.mode === 'combat') {
+    const isAtk = prompt.title.toLowerCase().includes('atacan') || prompt.title.toLowerCase().includes('attack')
+    const combatTitle = isAtk ? t('game', 'combat_attackers_title') : t('game', 'combat_blockers_title')
+    const confirmLabel = isAtk ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')
+
     return (
       <div className="action-prompt-bar combat-bar">
         <div className="action-prompt-info">
-          <span className="action-prompt-title">{prompt.title}</span>
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true">⚔️</span>{' '}
+            {combatTitle}
+          </span>
           <span className="action-prompt-hint">
             {t('game', 'combat_hint')}
           </span>
@@ -222,7 +296,7 @@ export default function FeedbackDialog() {
             disabled={busy}
             onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed_combat'))}
           >
-            {prompt.title === 'Declara atacantes' ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')}
+            {confirmLabel}
           </button>
         </div>
       </div>
@@ -243,7 +317,7 @@ export default function FeedbackDialog() {
     void send(async () => {
       let result: { ok: boolean; error?: string } = { ok: true }
       for (const value of selected) {
-        result = await cmds.sendPlayerUUID(value, prompt.gameId)
+        result = await sendValue(prompt, value)
         if (!result.ok) break
       }
       return result
@@ -251,8 +325,11 @@ export default function FeedbackDialog() {
   }
 
   const confirmAmount = () => {
-    const value = Math.max(prompt.min, Math.min(prompt.max, amount))
-    void send(() => cmds.sendPlayerInteger(value, prompt.gameId), t('errors', 'send_failed_amount'))
+    if (prompt.mode === 'mana') {
+      void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, String(amount)), t('errors', 'send_failed_mana'))
+      return
+    }
+    void send(() => cmds.sendPlayerInteger(amount, prompt.gameId), t('errors', 'send_failed_amount'))
   }
 
   const confirmMultiAmount = () => {
@@ -268,7 +345,8 @@ export default function FeedbackDialog() {
     void send(() => cmds.sendPlayerString(values.join(' '), prompt.gameId), t('errors', 'send_failed_amount'))
   }
 
-  const kicker = getFeedbackKicker(prompt)
+  const kicker = getFeedbackKicker(prompt, t as any)
+  const title = getLocalizedTitle(prompt, t as any)
 
   return (
     <div className="feedback-backdrop" role="presentation">
@@ -276,13 +354,13 @@ export default function FeedbackDialog() {
         <div className="feedback-kicker">
           <span className="kicker-icon">{kicker.icon}</span> {kicker.label}
         </div>
-        <h2 id="feedback-title"><FormattedText text={prompt.title} /></h2>
-        {prompt.sourceName && prompt.sourceName !== prompt.title && (
+        <h2 id="feedback-title"><FormattedText text={title} /></h2>
+        {prompt.sourceName && prompt.sourceName !== title && (
           <div className="feedback-source-subtitle">
             <FormattedText text={prompt.sourceName} />
           </div>
         )}
-        <p className="feedback-prompt-message"><FormattedText text={prompt.message} /></p>
+        <p className="feedback-prompt-message"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
 
         {prompt.mode === 'string' && (
           <div className="feedback-string-wrap">
@@ -313,7 +391,7 @@ export default function FeedbackDialog() {
                       onClick={() => void send(() => cmds.sendPlayerString(option.value, prompt.gameId), t('errors', 'send_failed_choice'))}
                     >
                       <span className="choice-number">{idx + 1}</span>
-                      <span className="choice-text"><FormattedText text={option.label} /></span>
+                      <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
                     </button>
                   ))}
                 </div>
@@ -444,7 +522,7 @@ export default function FeedbackDialog() {
                     onClick={() => selectOption(option)}
                   >
                     <span className="choice-number">{idx + 1}</span>
-                    <span className="choice-text"><FormattedText text={option.label} /></span>
+                    <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
                     {prompt.mode === 'uuid' && prompt.max > 1 && (
                       <span className="choice-checkbox">{isSel ? '✓' : ''}</span>
                     )}

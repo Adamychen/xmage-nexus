@@ -106,7 +106,7 @@ describe('FeedbackDialog (componente)', () => {
       },
     } as never)
     render(<FeedbackDialog />)
-    expect(screen.getByText('Ordena las cartas')).toBeTruthy()
+    expect(screen.getAllByText('Ordena las cartas').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Ponder').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Brainstorm').length).toBeGreaterThanOrEqual(1)
   })
@@ -157,7 +157,7 @@ describe('FeedbackDialog (componente)', () => {
       },
     } as never)
     render(<FeedbackDialog />)
-    expect(screen.getByText('Elige una carta para que descarte')).toBeTruthy()
+    expect(screen.getAllByText('Elige una carta para que descarte').length).toBeGreaterThan(0)
     expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
   })
 
@@ -205,7 +205,7 @@ describe('FeedbackDialog (componente)', () => {
     render(<FeedbackDialog />)
     expect(screen.getByText('Confirmación')).toBeTruthy()
     expect(screen.getByText('Steam Vents')).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Yes/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Sí/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
     expect(screen.queryByText('ASK')).toBeNull()
   })

@@ -186,7 +186,7 @@ export default function GameScreen() {
         <div className="game-top-left">
           {game && (
             <div className="game-state" data-testid="game-status">
-              <span className="game-turn">Turn {game.turn}</span>
+              <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
               <PhaseBar step={game.step} />
             </div>
           )}

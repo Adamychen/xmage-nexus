@@ -39,12 +39,13 @@ export function isBlockingModal(s: AppState): boolean {
   if (s.rollbackDialogOpen) return true
   if (s.sideboardScreen) return true
   if (s.viewer) return true
+  if (s.draft) return true
+  if (s.construct) return true
   const f = s.feedback as FeedbackPrompt | null
   if (f) {
-    if (f.isMulligan || f.isMulliganLondon) return true
-    if (f.isStartingPlayer) return true
-    if (f.mode === 'order' || f.method === 'GAME_CHOOSE_CARDS_ORDER') return true
-    if (f.method === 'GAME_TARGET' && (f.cards?.length ?? 0) > 0) return true
+    if (f.mode === 'mana' || f.mode === 'combat') return false
+    if (f.method === 'GAME_TARGET' && (!f.cards || f.cards.length === 0)) return false
+    return true
   }
   return false
 }

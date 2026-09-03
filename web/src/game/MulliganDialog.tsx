@@ -7,6 +7,7 @@ import FormattedText from './FormattedText'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { useTranslation } from '../i18n'
+import { localizeServerMessage } from './serverMessageTranslation'
 import './MulliganDialog.css'
 
 interface MulliganDialogProps {
@@ -76,7 +77,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_london_title')}
           </div>
           <h2 id="mulligan-title">{t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}</h2>
-          <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
+          <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
 
           {cardCount > 0 && (
             <div className="mulligan-hand-grid">
@@ -115,7 +116,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             )}
           </div>
         </section>
-        <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} />
+        <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />
       </div>
     )
   }
@@ -126,8 +127,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
         <div className="mulligan-kicker">
           <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_decision_title')}
         </div>
-        <h2 id="mulligan-title"><FormattedText text={prompt.title} /></h2>
-        <p className="mulligan-msg"><FormattedText text={prompt.message} /></p>
+        <h2 id="mulligan-title"><FormattedText text={prompt.title === 'Mulligan' ? t('dialogs', 'mulligan_title') : prompt.title} /></h2>
+        <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
 
         {cardCount > 0 && (
           <div className="mulligan-hand-grid">
@@ -153,7 +154,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
           </button>
         </div>
       </section>
-      <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} />
+      <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />
     </div>
   )
 }

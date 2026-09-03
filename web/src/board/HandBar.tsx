@@ -70,7 +70,8 @@ export default function HandBar({
     >
       {entries.map(([id, card], i) => {
         const arc = arcEntries[i] ?? { rot: 0, rise: 0 }
-        const rise = arc.rise + (playableIds.has(id) ? HAND_ARC_PLAYABLE_RISE_PX : 0)
+        const isInteractive = playableIds.has(id) || targetIds.has(id)
+        const rise = arc.rise + (isInteractive ? HAND_ARC_PLAYABLE_RISE_PX : 0)
         return (
           <div
             key={id}

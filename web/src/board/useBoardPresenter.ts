@@ -75,6 +75,12 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
         hoverTimeoutRef.current = null
       }
 
+      if (modalOpen) {
+        setFloatingCard(null)
+        setAnchorRect(null)
+        return
+      }
+
       if (card && rect) {
         setFloatingCard(card)
         setAnchorRect(rect)
@@ -87,7 +93,7 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
         }, 50)
       }
     },
-    [onCardHover]
+    [onCardHover, modalOpen]
   )
 
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])

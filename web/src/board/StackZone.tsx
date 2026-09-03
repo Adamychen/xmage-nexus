@@ -273,11 +273,16 @@ export default function StackZone({
 
   const handleHover = useCallback(
     (card: CardView | null, rect?: DOMRect) => {
+      if (modalOpen) {
+        setHoverCard(null)
+        setHoverRect(null)
+        return
+      }
       setHoverCard(card)
       setHoverRect(rect ?? null)
       onHover?.(card, rect)
     },
-    [onHover]
+    [onHover, modalOpen]
   )
 
   const entries = Object.entries(stack ?? {})

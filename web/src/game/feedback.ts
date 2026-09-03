@@ -173,7 +173,14 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)
       const isMulliganLondon = /^select a card to put on the bottom of (your|the) library/i.test(message)
-      return prompt(method, gameId, 'Elige objetivo', message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon)
+      const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
+      const isDiscard = /descart|discard/i.test(message)
+      const title = isStartingPlayer
+        ? '¿Quién empieza?'
+        : isDiscard
+          ? 'Elige una carta para que descarte'
+          : 'Elige objetivo'
+      return prompt(method, gameId, title, message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer)
     }
     case 'GAME_SELECT_CARDS':
     case 'GAME_SELECT_TARGETS':

@@ -210,4 +210,32 @@ describe('FloatingCardPreview', () => {
       })
     )
   })
+
+  it('suppresses preview when modal is open and inModal is false', async () => {
+    const card: PermanentView = {
+      name: 'Raging Goblin',
+      manaValue: 1,
+      cardTypes: ['CREATURE'],
+      power: '1',
+      toughness: '1',
+    }
+    const anchorRect = { left: 100, top: 100, right: 190, bottom: 226, width: 90, height: 126 } as DOMRect
+
+    const { setState, clearFeedback } = await import('../state/store')
+    setState({
+      feedback: { method: 'GAME_ASK', title: 'Confirm', message: 'Pay?', min: 0, max: 0, gameId: 'g' } as never,
+    })
+
+    const { container: suppressed } = render(
+      <FloatingCardPreview card={card} anchorRect={anchorRect} boardRect={dummyBoardRect} />,
+    )
+    expect(suppressed.firstChild).toBeNull()
+
+    const { container: allowed } = render(
+      <FloatingCardPreview card={card} anchorRect={anchorRect} boardRect={dummyBoardRect} inModal />,
+    )
+    expect(allowed.querySelector('.floating-card-preview')).toBeTruthy()
+
+    clearFeedback()
+  })
 })

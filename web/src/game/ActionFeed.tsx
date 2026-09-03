@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { useStore } from '../state/store'
+import { useStore, isBlockingModal } from '../state/store'
 import { parseGameEvent, type ActionFeedItem } from './gameEventParser'
 import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
@@ -23,16 +23,29 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
+  const modalOpen = useStore(isBlockingModal)
+  useEffect(() => {
+    if (modalOpen) {
+      setHoverCard(null)
+      setHoverRect(null)
+    }
+  }, [modalOpen])
+
   const myPlayer = game?.players?.find((p) => p.controlled)
   const myPlayerName = myPlayer?.name
 
   const handleCardHover = useCallback(
     (card: any, rect?: DOMRect) => {
+      if (modalOpen) {
+        setHoverCard(null)
+        setHoverRect(null)
+        return
+      }
       setHoverCard(card ?? null)
       setHoverRect(rect ?? null)
       if (onHover) onHover(card, rect)
     },
-    [onHover]
+    [onHover, modalOpen]
   )
 
   const feedItems = useMemo((): ActionFeedItem[] => {

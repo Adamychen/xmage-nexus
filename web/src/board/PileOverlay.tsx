@@ -103,6 +103,7 @@ export default function PileOverlay({
         card={hoverCard}
         anchorRect={hoverRect}
         fixedSide="left"
+        inModal
       />
     </div>,
     document.body

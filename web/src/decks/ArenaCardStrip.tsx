@@ -74,6 +74,7 @@ export function ArenaCardStrip({
   }
 
   const handleDragStart = (e: React.DragEvent) => {
+    onLeave?.()
     setIsDraggingSelf(true)
     e.dataTransfer.setData('application/json', JSON.stringify({
       cardName: card.cardName,

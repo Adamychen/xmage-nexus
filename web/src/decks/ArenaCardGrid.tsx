@@ -55,6 +55,7 @@ export function ArenaCardGrid({
   }
 
   const handleDragStart = (e: React.DragEvent, card: ScryfallSearchCard) => {
+    onLeave?.()
     e.dataTransfer.setData('application/json', JSON.stringify({
       cardName: card.name,
       setCode: card.set.toUpperCase(),

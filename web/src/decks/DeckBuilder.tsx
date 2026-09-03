@@ -34,6 +34,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const isDraggingRef = useRef(false)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
   const [showSampleHand, setShowSampleHand] = useState(false)
   const [showInspector, setShowInspector] = useState(false)
@@ -43,6 +45,27 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const storage = useMemo(() => getDeckStorage(), [])
   const equipped = useStore((s) => s.myDeck)
   const debounceRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const handleGlobalDragStart = () => {
+      isDraggingRef.current = true
+      setIsDragging(true)
+      setHoverPreview(null)
+    }
+    const handleGlobalDragEnd = () => {
+      isDraggingRef.current = false
+      setIsDragging(false)
+      setHoverPreview(null)
+    }
+    window.addEventListener('dragstart', handleGlobalDragStart, true)
+    window.addEventListener('dragend', handleGlobalDragEnd, true)
+    window.addEventListener('drop', handleGlobalDragEnd, true)
+    return () => {
+      window.removeEventListener('dragstart', handleGlobalDragStart, true)
+      window.removeEventListener('dragend', handleGlobalDragEnd, true)
+      window.removeEventListener('drop', handleGlobalDragEnd, true)
+    }
+  }, [])
 
   // Load deck data on mount
   useEffect(() => {
@@ -430,6 +453,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     meta?: CardStripMeta,
     rect?: DOMRect
   ) => {
+    if (isDraggingRef.current) return
     let img: string | null = meta?.imageUrl ?? null
     let backImg: string | null = meta?.backImageUrl ?? null
 
@@ -731,7 +755,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       )}
 
       {/* Floating Card Image Preview on Hover */}
-      {hoverPreview && (
+      {!isDragging && hoverPreview && (
         <div
           className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}

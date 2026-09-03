@@ -439,6 +439,7 @@ export interface TranslationSchema {
     combat_blockers_title: string
     combat_hint: string
     starting_player_starts_first: string
+    starting_player_board_hint: string
     choose_target: string
     choose_cards: string
     choose_discard: string
@@ -462,6 +463,24 @@ export interface TranslationSchema {
     string_cancel: string
     integer_confirm: string
     multi_confirm: string
+    pay_life_prompt: string
+    step_upkeep: string
+    step_draw: string
+    step_main1: string
+    step_begin_combat: string
+    step_attackers: string
+    step_blockers: string
+    step_end_combat: string
+    step_main2: string
+    step_end_step: string
+    step_cleanup: string
+    waiting_opponent: string
+    color_white: string
+    color_blue: string
+    color_black: string
+    color_red: string
+    color_green: string
+    color_colorless: string
     sum_between: string
     selected_count: string
     kicker_starting_player: string
