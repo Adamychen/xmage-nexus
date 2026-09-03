@@ -14,7 +14,24 @@ export interface SingleCard {
   imageUrl?: string | null
   manaCost?: string
   typeLine?: string
+  cmc?: number
   isLand: boolean
+}
+
+export function cmcForCard(card: SingleCard): number {
+  if (card.isLand) return 0
+  if (typeof card.cmc === 'number') return card.cmc
+  const mc = card.manaCost ?? ''
+  let cmc = 0
+  const re = /\{([^}]+)\}/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(mc))) {
+    const sym = m[1]
+    if (/^\d+$/.test(sym)) cmc += parseInt(sym, 10)
+    else if (sym === 'X') cmc += 0
+    else cmc += 1
+  }
+  return cmc
 }
 
 export function buildDeckInstances(
@@ -40,6 +57,7 @@ export function buildDeckInstances(
         imageUrl: meta?.imageUrl,
         manaCost: meta?.manaCost,
         typeLine: meta?.typeLine,
+        cmc: meta?.cmc,
         isLand,
       })
     }
@@ -142,6 +160,19 @@ export function SampleHandModal({
   const spellsInHand = hand.length - landsInHand
   const mustBottomCount = mulliganCount - selectedToBottom.size
 
+  const goldfish = useMemo(() => {
+    const onPlay = turn % 2 === 1
+    const projected: { turn: number; mana: number; landsAvailable: number; playable: SingleCard[] }[] = []
+    for (let t = 1; t <= 3; t++) {
+      const mana = t
+      const landsAvailable = Math.min(mana, landsInHand + (t - 1))
+      const playable = hand.filter((c) => !c.isLand && cmcForCard(c) <= Math.min(mana, landsAvailable))
+      projected.push({ turn: t, mana, landsAvailable, playable })
+    }
+    const playableNowSet = new Set(projected[Math.min(turn, 3) - 1]?.playable.map((c) => c.instanceId) ?? [])
+    return { projected, playableNowSet, onPlay }
+  }, [hand, landsInHand, turn])
+
   return (
     <div className="sample-hand-backdrop" onClick={onClose}>
       <div className="sample-hand-modal" onClick={(e) => e.stopPropagation()}>
@@ -183,6 +214,22 @@ export function SampleHandModal({
           </div>
         )}
 
+        {/* Goldfish T1-3 projection */}
+        <div className="goldfish-projection">
+          <div className="goldfish-title">Goldfish T1–T3 {goldfish.onPlay ? '(on the play)' : '(on the draw)'} — tierras en mano: {landsInHand}</div>
+          <div className="goldfish-turns">
+            {goldfish.projected.map((g) => (
+              <div key={g.turn} className={`goldfish-turn ${turn === g.turn ? 'active-turn' : ''}`}>
+                <span className="goldfish-turn-label">T{g.turn} ({g.mana} mana, {g.landsAvailable} tierras)</span>
+                <span className="goldfish-turn-count">{g.playable.length} jugables</span>
+                <span className="goldfish-turn-names" title={g.playable.map((c) => `${c.cardName} {${cmcForCard(c)}}`).join(', ')}>
+                  {g.playable.length ? g.playable.slice(0, 3).map((c) => c.cardName).join(', ') + (g.playable.length > 3 ? ` +${g.playable.length - 3}` : '') : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Hand Cards Area */}
         <div className="sample-hand-cards-area">
           {hand.length === 0 ? (
@@ -191,12 +238,13 @@ export function SampleHandModal({
             <div className="sample-hand-grid">
               {hand.map((card) => {
                 const isSelectedForBottom = selectedToBottom.has(card.instanceId)
+                const isPlayableNow = goldfish.playableNowSet.has(card.instanceId) && !card.isLand
                 const img = card.imageUrl || (card.artCropUrl ? card.artCropUrl : null)
 
                 return (
                   <div
                     key={card.instanceId}
-                    className={`sample-card-item ${card.isLand ? 'is-land' : ''} ${isSelectedForBottom ? 'selected-bottom' : ''}`}
+                    className={`sample-card-item ${card.isLand ? 'is-land' : ''} ${isSelectedForBottom ? 'selected-bottom' : ''} ${isPlayableNow ? 'is-playable-now' : ''}`}
                     onClick={() => {
                       if (mulliganCount > 0 && !isKeeping) {
                         toggleSelectToBottom(card.instanceId)

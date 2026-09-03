@@ -142,12 +142,12 @@ export default function DeckListPanel({
   const catDisplay: Record<string, string> = {
     creatures: t('decks', 'creatures'),
     planeswalkers: 'Planeswalkers',
-    instants: t('decks', 'spells'),
-    sorceries: t('decks', 'spells'),
-    artifacts: t('decks', 'lands'),
-    enchantments: t('decks', 'lands'),
-    lands: t('decks', 'lands'),
-    other: t('common', 'all'),
+    instants: t('game', 'category_instants'),
+    sorceries: t('game', 'category_sorceries'),
+    artifacts: t('game', 'category_artifacts'),
+    enchantments: t('game', 'category_enchantments'),
+    lands: t('game', 'category_lands'),
+    other: t('game', 'category_other'),
   }
   const groupedCards = new Map<string, DeckCard[]>()
   for (const cat of categoriesOrder) groupedCards.set(cat, [])
@@ -157,6 +157,19 @@ export default function DeckListPanel({
     const cat = categorizeCard(meta?.typeLine)
     const list = groupedCards.get(cat) ?? groupedCards.get('other')!
     list.push(card)
+  }
+  for (const cat of categoriesOrder) {
+    const list = groupedCards.get(cat)
+    if (list && list.length > 1) {
+      list.sort((a, b) => {
+        const ma = metaMap.get(`${a.setCode}/${a.cardNumber}`) ?? metaMap.get(a.cardName.toLowerCase())
+        const mb = metaMap.get(`${b.setCode}/${b.cardNumber}`) ?? metaMap.get(b.cardName.toLowerCase())
+        const ca = ma?.cmc ?? 0
+        const cb = mb?.cmc ?? 0
+        if (ca !== cb) return ca - cb
+        return a.cardName.localeCompare(b.cardName)
+      })
+    }
   }
 
   // Total counts

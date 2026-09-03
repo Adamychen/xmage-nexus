@@ -391,6 +391,7 @@ export interface TranslationSchema {
     type_artifact: string
     type_planeswalker: string
     type_land: string
+    type_battle: string
     type_spell: string
     who_starts: string
     choose_player: string
@@ -868,6 +869,16 @@ export interface TranslationSchema {
     strip_cover_current: string
     strip_cover_use: string
     strip_remove_all: string
+    filter_advanced: string
+    filter_rarity: string
+    filter_keyword: string
+    filter_power: string
+    filter_toughness: string
+    filter_set: string
+    filter_set_placeholder: string
+    filter_search_placeholder: string
+    filter_more: string
+    filter_less: string
   }
   errors: {
     connection_failed: string

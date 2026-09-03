@@ -48,8 +48,8 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Table Filters & Private Messaging (Whispers/PM) | ✅ Yes | ❌ No | Phase 3 |
 | | Match Clocks / Visible Timers | ✅ Yes | ✅ Yes | Completed |
 | **Deck Management** | Predefined / JSON Deck Loading | ✅ Yes | ✅ Yes | Completed |
-| | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ❌ No | Phase 3 |
-| | Text / Arena / Standard Deck Import & Export | ✅ Yes | ❌ No | Phase 3 |
+| | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ✅ Yes (Scryfall full syntax + help, 9-lang, curve/donut, CMC sort, drag-drop) | Completed |
+| | Text / Arena / Standard Deck Import & Export | ✅ Yes | ✅ Yes (Arena/DCK/Plain + clipboard, file drop, 9-lang normalization) | Completed |
 | **1v1 In-Game Board** | Hand, Battlefield (Lands / Creatures / Non-creatures) | ✅ Yes | ✅ Yes (HD Art) | Completed (Surpasses Swing) |
 | | Stack, Library, Graveyard, Exile | ✅ Yes | ✅ Yes | Completed |
 | | Tap Rotations, Life Totals, Counters (+1/+1, loyalty) | ✅ Yes | ✅ Yes | Completed |
@@ -64,8 +64,8 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | **Phase Stops & Priority Shortcuts (F4, F9, Space)** | ✅ Yes | ❌ No (Manual pass only) | **Phase 2.5 (Priority)** |
 | | **Sideboarding Screen between Bo3 Matches** | ✅ Yes | ❌ No | **Phase 2.5 (Priority)** |
 | | Multi-blocker Damage Assignment Order | ✅ Yes | 🟡 Auto-assigned | Phase 2.5 |
-| **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ❌ No | Phase 3 |
-| | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | 🟡 Motion tweens | Phase 3 |
+| **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ✅ Yes (Web Audio 15 sfx, 3 buses, JIT unlock) | Completed |
+| | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | ✅ Yes (donut color pie, bars, shake, floating damage) | Completed |
 | **Distribution** | Desktop & Web Deployment | ❌ Heavy JRE required | 🟡 Web / ⬜ Tauri App | Phase 4 |
 | **Advanced Formats** | 4-Player Commander / EDH (Command zone, tax, damage) | ✅ Yes | ❌ No (1v1 Layout) | Phase 5 |
 | | Booster Draft & Sealed Tournaments (Pick timer, packs) | ✅ Yes | ❌ No | Phase 5 |

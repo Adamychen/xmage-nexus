@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { deckMainCount, deckSideCount } from './types'
-import { exportDck, exportArena, parseAnyDeck } from './parseDck'
+import { exportDck, exportArena, exportTxt, parseAnyDeck } from './parseDck'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardArtCrop, scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import SearchPanel from './SearchPanel'
@@ -736,9 +736,11 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               <button
                 type="button"
                 className="builder-act"
+                title={`${t('decks', 'export_deck')} .dck — ${t('common', 'copied')}`}
                 onClick={async () => {
                   const text = exportDck(deck)
-                  try { await navigator.clipboard.writeText(text) } catch {}
+                  let copied = false
+                  try { await navigator.clipboard.writeText(text); copied = true } catch {}
                   const blob = new Blob([text], { type: 'text/plain' })
                   const url = URL.createObjectURL(blob)
                   const a = document.createElement('a')
@@ -748,6 +750,10 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                   a.click()
                   a.remove()
                   setTimeout(() => URL.revokeObjectURL(url), 2000)
+                  if (copied) {
+                    const btn = document.activeElement as HTMLElement | null
+                    if (btn) { const prev = btn.textContent; btn.textContent = `✓ ${t('common', 'copied')}`; setTimeout(() => { if (prev) btn.textContent = prev }, 1400) }
+                  }
                 }}
               >
                 Export .DCK
@@ -755,9 +761,11 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               <button
                 type="button"
                 className="builder-act"
+                title={`${t('decks', 'export_deck')} Arena — ${t('common', 'copied')}`}
                 onClick={async () => {
                   const text = exportArena(deck)
-                  try { await navigator.clipboard.writeText(text) } catch {}
+                  let copied = false
+                  try { await navigator.clipboard.writeText(text); copied = true } catch {}
                   const blob = new Blob([text], { type: 'text/plain' })
                   const url = URL.createObjectURL(blob)
                   const a = document.createElement('a')
@@ -767,9 +775,38 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                   a.click()
                   a.remove()
                   setTimeout(() => URL.revokeObjectURL(url), 2000)
+                  if (copied) {
+                    const btn = document.activeElement as HTMLElement | null
+                    if (btn) { const prev = btn.textContent; btn.textContent = `✓ ${t('common', 'copied')}`; setTimeout(() => { if (prev) btn.textContent = prev }, 1400) }
+                  }
                 }}
               >
                 Export Arena
+              </button>
+              <button
+                type="button"
+                className="builder-act"
+                title={`${t('decks', 'export_deck')} Plain — ${t('common', 'copied')}`}
+                onClick={async () => {
+                  const text = exportTxt(deck)
+                  let copied = false
+                  try { await navigator.clipboard.writeText(text); copied = true } catch {}
+                  const blob = new Blob([text], { type: 'text/plain' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `${deck.name}-plain.txt`
+                  document.body.appendChild(a)
+                  a.click()
+                  a.remove()
+                  setTimeout(() => URL.revokeObjectURL(url), 2000)
+                  if (copied) {
+                    const btn = document.activeElement as HTMLElement | null
+                    if (btn) { const prev = btn.textContent; btn.textContent = `✓ ${t('common', 'copied')}`; setTimeout(() => { if (prev) btn.textContent = prev }, 1400) }
+                  }
+                }}
+              >
+                Export Plain
               </button>
               <button
                 type="button"

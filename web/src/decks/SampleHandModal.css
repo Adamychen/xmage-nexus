@@ -104,6 +104,72 @@
   color: white;
 }
 
+.goldfish-projection {
+  padding: 10px 20px;
+  background: rgba(12, 18, 28, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goldfish-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ecc94b;
+}
+
+.goldfish-turns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.goldfish-turn {
+  flex: 1;
+  min-width: 160px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.goldfish-turn.active-turn {
+  border-color: rgba(236, 201, 75, 0.5);
+  background: rgba(236, 201, 75, 0.08);
+  box-shadow: 0 0 8px rgba(236, 201, 75, 0.18);
+}
+
+.goldfish-turn-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #a0aec0;
+}
+
+.goldfish-turn-count {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #f7fafc;
+}
+
+.goldfish-turn-names {
+  font-size: 0.68rem;
+  color: #cbd5e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sample-card-item.is-playable-now {
+  border-color: rgba(72, 187, 120, 0.85) !important;
+  box-shadow: 0 0 12px rgba(72, 187, 120, 0.35);
+}
+
 /* London Mulligan Banner */
 .mulligan-alert-banner {
   display: flex;

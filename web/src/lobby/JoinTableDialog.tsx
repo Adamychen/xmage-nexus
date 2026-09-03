@@ -7,7 +7,7 @@ import {
   type Deck,
   DEFAULT_DECK,
 } from './decks'
-import { parseArenaDeck } from './DeckManager'
+import { parseAnyDeck } from '../decks/parseDck'
 import { setMyDeck, useStore } from '../state/store'
 import { useTranslation } from '../i18n'
 import './JoinTableDialog.css'
@@ -77,7 +77,7 @@ export default function JoinTableDialog({
     e.preventDefault()
     setImportError(null)
     const name = importName.trim() || t('decks','import_placeholder')
-    const parsed = parseArenaDeck(importText, name)
+    const parsed = parseAnyDeck(importText, name)
     if (!parsed) {
       setImportError(t('errors','deck_parse_failed'))
       return

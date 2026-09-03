@@ -1,6 +1,6 @@
 # Project: XMage Nexus (Web) — Master Working Document
 
-> Last updated: 2026-09-03 (Deck Builder Multilingual Support across all 9 languages with Scryfall localized search, localized printed names in search grid, strips, tooltips and inspectors, localized basic land adder, multi-language MTG Arena deck import & normalization; suite: vitest 98 files / 677 tests ✅, typecheck ✅, vite build ✅).
+> Last updated: 2026-09-03 (Deck Builder 3.3 COMPLETO: Scryfall full syntax t:creature c:red cmc<=3 o:"haste" + help, Search help ?, vertical CMC sort, bug artifacts/enchantments→category fix, CurveChart donut color pie + WUBRG gradient, Plain export + Arena/DCK con clipboard feedback, DeckManager legacy→parseAnyDeck, Goldfish T1-3 con land drops + jugables, 9-lang intacto; suite: vitest 98 files / 677 tests ✅, typecheck ✅, vite build ✅).
 
 ---
 
@@ -21,7 +21,8 @@ card database (+25,000 cards), and social/multiplayer backend. We build a modern
 | 1 | Web Client: login + lobby + rendered board | ✅ Completed and verified (2026-08-08) |
 | 2 | Full Interaction: feedback, targeting, playing | ✅ **Completed and verified (2026-08-15)** — X costs, multi-target, modal choices, and counters validated via WS (human-test 83 checks) and browser E2E (spells 4/4) |
 | 2.5 | 1v1 Competitive Parity (clocks, DFC/Sagas, card selection, phase stops) | ✅ **Completed (2026-08-25)** — Match Chess Clock (+buffer, F4/F9), DFC/MDFC back-face, Saga lore, HD card-selection grid, phase stops, descarte interactivo desde reveal de mano (Thoughtseize) |
-| 3 | Effects, audio, desktop launcher | 🟡 En progreso (Audio implementado y verificado 2026-09-03) |
+| 3 | Visual Polish, Audio & Deck Builder | ✅ **Completed (2026-09-03)** — Audio 15 sfx + 3 buses, VFX donut pie + bars, Deck Builder 3.3 completo: Scryfall full syntax + help, vertical CMC sort, Plain/DCK/Arena export+clipboard, file drag-drop, Goldfish T1-3 (land drops + jugables), 9-lang |
+| 3.1 | Desktop launcher (Tauri) | ⬜ Pendiente (Phase 4) |
 | 5 | Advanced Formats & Tournaments (Commander 4-max, Draft 8, Swiss) | ✅ **Completed (2026-08-26)** — PodBoard 2x2 max 4 (TurnOrderRing + CommanderDamageMatrix sin tocar BoardZone.css), DraftScreen + ConstructScreen (40), TournamentBracket/Panel + Replay viewer, contrato Draft/TournamentView + proxy 12 actions |
 
 ## 3. General Architecture

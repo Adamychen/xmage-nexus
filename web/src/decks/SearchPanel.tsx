@@ -6,6 +6,7 @@ import { ArenaCardGrid } from './ArenaCardGrid'
 import type { DeckFormat } from './types'
 import { FORMAT_CONFIGS } from './formatRules'
 import { useTranslation } from '../i18n'
+import { buildScryfallQuery, type Rarity, type StatFilter } from './filterQuery'
 import './SearchPanel.css'
 
 export default function SearchPanel({
@@ -27,42 +28,30 @@ export default function SearchPanel({
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
   const [cmcFilter, setCmcFilter] = useState<number | null>(null)
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  const [rarityFilter, setRarityFilter] = useState<Set<Rarity>>(new Set())
+  const [keywordFilter, setKeywordFilter] = useState<Set<string>>(new Set())
+  const [powerFilter, setPowerFilter] = useState<StatFilter | null>(null)
+  const [toughnessFilter, setToughnessFilter] = useState<StatFilter | null>(null)
+  const [setFilter, setSetFilter] = useState<string | null>(null)
 
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
 
-  // Construct query string for Scryfall
-  const scryfallQuery = useMemo(() => {
-    const parts: string[] = []
-    if (rawQuery.trim()) {
-      parts.push(rawQuery.trim())
-    } else {
-      // Default query when empty: popular staples
-      parts.push('game:paper -t:basic')
-    }
-
-    if (config.scryfallKey) {
-      parts.push(`f:${config.scryfallKey}`)
-    }
-
-    if (colorFilter.size > 0) {
-      if (colorFilter.has('C')) {
-        parts.push('c:c')
-      } else {
-        parts.push(`c<=${[...colorFilter].join('').toLowerCase()}`)
-      }
-    }
-
-    if (typeFilter) {
-      parts.push(`t:${typeFilter.toLowerCase()}`)
-    }
-
-    if (cmcFilter !== null) {
-      if (cmcFilter >= 7) parts.push('cmc>=7')
-      else parts.push(`cmc=${cmcFilter}`)
-    }
-
-    return parts.join(' ')
-  }, [rawQuery, colorFilter, typeFilter, cmcFilter])
+  const scryfallQuery = useMemo(
+    () =>
+      buildScryfallQuery({
+        rawQuery,
+        formatKey: config.scryfallKey ?? null,
+        colorFilter,
+        typeFilter,
+        cmcFilter,
+        rarityFilter,
+        keywordFilter,
+        powerFilter,
+        toughnessFilter,
+        setFilter,
+      }),
+    [rawQuery, config.scryfallKey, colorFilter, typeFilter, cmcFilter, rarityFilter, keywordFilter, powerFilter, toughnessFilter, setFilter],
+  )
 
   const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery, searchLang)
 
@@ -80,11 +69,30 @@ export default function SearchPanel({
     setColorFilter(next)
   }
 
+  const toggleRarity = (r: Rarity) => {
+    const next = new Set(rarityFilter)
+    if (next.has(r)) next.delete(r)
+    else next.add(r)
+    setRarityFilter(next)
+  }
+
+  const toggleKeyword = (kw: string) => {
+    const next = new Set(keywordFilter)
+    if (next.has(kw)) next.delete(kw)
+    else next.add(kw)
+    setKeywordFilter(next)
+  }
+
   const handleReset = () => {
     setRawQuery('')
     setColorFilter(new Set())
     setCmcFilter(null)
     setTypeFilter(null)
+    setRarityFilter(new Set())
+    setKeywordFilter(new Set())
+    setPowerFilter(null)
+    setToughnessFilter(null)
+    setSetFilter(null)
   }
 
   return (
@@ -98,6 +106,16 @@ export default function SearchPanel({
         onCmcChange={setCmcFilter}
         typeFilter={typeFilter}
         onTypeChange={setTypeFilter}
+        rarityFilter={rarityFilter}
+        onToggleRarity={toggleRarity}
+        keywordFilter={keywordFilter}
+        onToggleKeyword={toggleKeyword}
+        powerFilter={powerFilter}
+        onPowerChange={setPowerFilter}
+        toughnessFilter={toughnessFilter}
+        onToughnessChange={setToughnessFilter}
+        setFilter={setFilter}
+        onSetChange={setSetFilter}
         onReset={handleReset}
         searchLang={searchLang}
         onSearchLangChange={handleSearchLangChange}

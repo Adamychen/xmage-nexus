@@ -100,7 +100,7 @@
 .curve-pips-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px dashed rgba(255, 255, 255, 0.08);
@@ -113,4 +113,29 @@
   font-size: 0.75rem;
   font-weight: 800;
   color: #e2e8f0;
+}
+
+.curve-color-donut {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.curve-donut-hole {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.curve-pips-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }

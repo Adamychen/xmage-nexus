@@ -1,52 +1,13 @@
 import { useState, useMemo } from 'react'
-import { DECKS, loadSavedCustomDecks, saveCustomDecks, type Deck, type DeckCard } from './decks'
+import { DECKS, loadSavedCustomDecks, saveCustomDecks, type Deck } from './decks'
 import { setMyDeck, useStore } from '../state/store'
-import { t as tStatic } from '../i18n'
+import { parseAnyDeck } from '../decks/parseDck'
 import { useTranslation } from '../i18n'
 import './DeckManager.css'
 
+/** @deprecated Use parseAnyDeck from '../decks/parseDck' — kept for backwards compat (tests + JoinTableDialog legacy). */
 export function parseArenaDeck(text: string, defaultName?: string): Deck | null {
-  const resolvedName = defaultName ?? tStatic('decks','import_placeholder')
-  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
-  if (lines.length === 0) return null
-
-  const cards: DeckCard[] = []
-  const sideboard: DeckCard[] = []
-  let isSideboard = false
-
-  for (const line of lines) {
-    if (line.toLowerCase() === 'deck' || line.toLowerCase() === 'main' || line.toLowerCase() === 'mainboard') {
-      isSideboard = false
-      continue
-    }
-    if (line.toLowerCase() === 'sideboard' || line.toLowerCase() === 'companion') {
-      isSideboard = true
-      continue
-    }
-
-    // Matches Arena format: "4 Lightning Bolt (M10) 146" or "4 Lightning Bolt" or "4x Lightning Bolt"
-    const match = line.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?$/)
-    if (match) {
-      const amount = parseInt(match[1], 10) || 1
-      const cardName = match[2].trim()
-      const setCode = match[3] || 'M10'
-      const cardNumber = match[4] || '1'
-
-      const item: DeckCard = { cardName, setCode, cardNumber, amount }
-      if (isSideboard) {
-        sideboard.push(item)
-      } else {
-        cards.push(item)
-      }
-    }
-  }
-
-  if (cards.length === 0) return null
-  return {
-    name: resolvedName,
-    cards,
-    sideboard,
-  }
+  return parseAnyDeck(text, defaultName)
 }
 
 export default function DeckManager() {

@@ -22,8 +22,8 @@ export function deckSideboardCount(d: Deck): number {
 }
 export const deckMainCount = deckTotalCards
 export const deckSideCount = deckSideboardCount
-export function deckColorIdentity(_cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
-  return []
+export function deckColorIdentity(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
+  return colorIdentityFromCards(cards)
 }
 
 export const MAX_DECKS = 75
@@ -57,8 +57,22 @@ export function inferFormat(deck: Deck): DeckFormat {
   return 'Freeform'
 }
 
-export function colorIdentityFromCards(_cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
-  return []
+export function colorIdentityFromCards(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
+  const set = new Set<'W' | 'U' | 'B' | 'R' | 'G'>()
+  for (const c of cards) {
+    const n = c.cardName.toLowerCase()
+    if (n.includes('island') || n.includes('isla')) set.add('U')
+    if (n.includes('mountain') || n.includes('montaña')) set.add('R')
+    if (n.includes('plains') || n.includes('llanura')) set.add('W')
+    if (n.includes('swamp') || n.includes('pantano')) set.add('B')
+    if (n.includes('forest') || n.includes('bosque')) set.add('G')
+    if (n.includes('bolt') || n.includes('blaze')) set.add('R')
+    if (n.includes('charm') || n.includes('counterspell') || n.includes('ponder') || n.includes('brainstorm')) {
+      if (n.includes('charm')) { set.add('R'); set.add('W') }
+      if (n.includes('counterspell')) { set.add('U') }
+    }
+  }
+  return [...set].sort()
 }
 
 export function deckIsValidForPlay(d: Deck): { ok: boolean; reason?: string } {

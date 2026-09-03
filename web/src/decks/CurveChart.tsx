@@ -88,6 +88,25 @@ export default function CurveChart({
   }, [cards, meta])
 
   const activePips = Object.entries(pips).filter(([_, count]) => count > 0)
+  const totalPips = activePips.reduce((s, [, c]) => s + c, 0)
+  const COLOR_META: Record<string, { label: string; color: string }> = {
+    W: { label: 'W', color: '#f0e6c8' },
+    U: { label: 'U', color: '#5aa0d8' },
+    B: { label: 'B', color: '#7a7a7a' },
+    R: { label: 'R', color: '#d94a3a' },
+    G: { label: 'G', color: '#4caf6e' },
+    C: { label: 'C', color: '#9aa0a6' },
+  }
+  let accum = 0
+  const gradient = totalPips > 0
+    ? `conic-gradient(${activePips.map(([sym, cnt]) => {
+        const meta = COLOR_META[sym] ?? COLOR_META.C
+        const start = (accum / totalPips) * 360
+        accum += cnt
+        const end = (accum / totalPips) * 360
+        return `${meta.color} ${start}deg ${end}deg`
+      }).join(', ')})`
+    : 'conic-gradient(#3a3a3a 0deg 360deg)'
 
   return (
     <div className="curve-chart">
@@ -131,12 +150,22 @@ export default function CurveChart({
 
       {activePips.length > 0 && (
         <div className="curve-pips-row">
-          {activePips.map(([symbol, count]) => (
-            <span key={symbol} className="curve-pip-item" title={`${count} ${symbol}`}>
-              <ManaPip symbol={symbol} size={15} />
-              <span>{count}</span>
-            </span>
-          ))}
+          <div
+            className="curve-color-donut"
+            style={{ background: gradient }}
+            title={activePips.map(([s, c]) => `${s}:${c}`).join(' ')}
+            aria-label="color breakdown"
+          >
+            <span className="curve-donut-hole" />
+          </div>
+          <div className="curve-pips-list">
+            {activePips.map(([symbol, count]) => (
+              <span key={symbol} className="curve-pip-item" title={`${count} ${symbol}`}>
+                <ManaPip symbol={symbol} size={15} />
+                <span>{count}</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
