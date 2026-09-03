@@ -57,7 +57,7 @@ describe('PileOverlay', () => {
     expect(document.body.textContent).toContain('1 revelado · #1 Biblioteca')
 
     // Check position badges
-    expect(getByText('★ #1 TOP')).not.toBeNull()
+    expect(getByText('★ #1 Top')).not.toBeNull()
     expect(getByText('#2')).not.toBeNull()
     expect(getByText('#3')).not.toBeNull()
 

@@ -1,4 +1,5 @@
 import type { CombatGroupView, PlayerView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './OpponentSwitcherBar.css'
 
 interface OpponentSwitcherBarProps {
@@ -20,6 +21,7 @@ export default function OpponentSwitcherBar({
   onTargetClick,
   combat = [],
 }: OpponentSwitcherBarProps) {
+  const { t } = useTranslation()
   if (opponents.length <= 1) return null
 
   const currentIndex = opponents.findIndex((p) => p.playerId === selectedOppId)
@@ -41,7 +43,7 @@ export default function OpponentSwitcherBar({
         type="button"
         className="opp-switch-btn prev"
         onClick={handlePrev}
-        title="Ver oponente anterior"
+        title={t('board', 'opp_prev')}
       >
         ‹
       </button>
@@ -77,15 +79,15 @@ export default function OpponentSwitcherBar({
                 }
                 onSelectOpponent(opp.playerId)
               }}
-              title={`Ver mesa de ${opp.name}${isDefeated ? (opp.hasLeft ? ' (Ha abandonado)' : ' (Derrotado)') : ''}${isTargetable ? ' (Clic para seleccionar objetivo)' : ''}`}
+              title={`${t('board', 'opp_view', { name: opp.name })}${isDefeated ? (opp.hasLeft ? t('board', 'opp_left_suffix') : t('board', 'opp_defeated_suffix')) : ''}${isTargetable ? t('board', 'opp_target_suffix') : ''}`}
             >
               <span>{opp.name}</span>
               <span className="opp-pill-life">
-                {isDefeated ? (opp.hasLeft ? '🚪 Fuera' : '💀 0') : `${opp.life} ❤️`}
+                {isDefeated ? (opp.hasLeft ? t('board', 'opp_out') : t('board', 'opp_dead')) : `${opp.life} ❤️`}
               </span>
-              {isTurn && !isDefeated && <span className="opp-pill-tag turn-tag">TURNO</span>}
+              {isTurn && !isDefeated && <span className="opp-pill-tag turn-tag">{t('board', 'opp_turn_tag')}</span>}
               {isInvolvedInCombat && !isDefeated && (
-                <span className="opp-pill-tag combat-tag">⚔️ COMBATE</span>
+                <span className="opp-pill-tag combat-tag">{t('board', 'opp_combat_tag')}</span>
               )}
             </button>
           )
@@ -96,7 +98,7 @@ export default function OpponentSwitcherBar({
         type="button"
         className="opp-switch-btn next"
         onClick={handleNext}
-        title="Ver oponente siguiente"
+        title={t('board', 'opp_next')}
       >
         ›
       </button>

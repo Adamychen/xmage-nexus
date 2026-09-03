@@ -2,22 +2,23 @@ import { useCallback } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { setState } from '../state/state'
+import { useTranslation } from '../i18n'
 import './PhaseStopSelector.css'
 
 interface PhaseDef {
   key: string
-  label: string
+  labelKey: string
   short: string
 }
 
 const PHASES: PhaseDef[] = [
-  { key: 'upkeep', label: 'Upkeep', short: 'UP' },
-  { key: 'draw', label: 'Draw', short: 'DR' },
-  { key: 'main1', label: 'Main 1', short: 'M1' },
-  { key: 'beginCombat', label: 'Begin Combat', short: 'BC' },
-  { key: 'endCombat', label: 'End Combat', short: 'EC' },
-  { key: 'main2', label: 'Main 2', short: 'M2' },
-  { key: 'endStep', label: 'End Step', short: 'ET' },
+  { key: 'upkeep', labelKey: 'step_upkeep', short: 'UP' },
+  { key: 'draw', labelKey: 'step_draw', short: 'DR' },
+  { key: 'main1', labelKey: 'step_main1', short: 'M1' },
+  { key: 'beginCombat', labelKey: 'step_begin_combat', short: 'BC' },
+  { key: 'endCombat', labelKey: 'step_end_combat', short: 'EC' },
+  { key: 'main2', labelKey: 'step_main2', short: 'M2' },
+  { key: 'endStep', labelKey: 'step_end_step', short: 'ET' },
 ]
 
 const DEFAULT_PHASES: cmds.PhaseStops = {
@@ -30,6 +31,7 @@ export function getPhaseStops(): cmds.PhaseStops {
 }
 
 export default function PhaseStopSelector() {
+  const { t } = useTranslation()
   const phaseStops = useStore((s) => s.phaseStops)
 
   const toggle = useCallback((turn: 'yourTurn' | 'opponentTurn', key: string) => {
@@ -41,14 +43,14 @@ export default function PhaseStopSelector() {
 
   return (
     <div className="phase-stop-selector">
-      <span className="phase-stop-label">Stops:</span>
+      <span className="phase-stop-label">{t('game', 'phase_stops')}</span>
       <div className="phase-stop-row">
-        <span className="phase-stop-turn-label">You</span>
+        <span className="phase-stop-turn-label">{t('game', 'phase_you')}</span>
         {PHASES.map((phase) => (
           <button
             key={`your-${phase.key}`}
             className={`phase-stop-btn ${phaseStops.yourTurn[phase.key] ? 'active' : ''}`}
-            title={`${phase.label} (your turn)`}
+            title={`${t('game', phase.labelKey as any)} (${t('game', 'your_turn')})`}
             onClick={() => toggle('yourTurn', phase.key)}
           >
             {phase.short}
@@ -56,12 +58,12 @@ export default function PhaseStopSelector() {
         ))}
       </div>
       <div className="phase-stop-row">
-        <span className="phase-stop-turn-label">Opp</span>
+        <span className="phase-stop-turn-label">{t('game', 'phase_opp')}</span>
         {PHASES.map((phase) => (
           <button
             key={`opp-${phase.key}`}
             className={`phase-stop-btn ${phaseStops.opponentTurn[phase.key] ? 'active' : ''}`}
-            title={`${phase.label} (opponent turn)`}
+            title={`${t('game', phase.labelKey as any)} (${t('game', 'opponent_turn')})`}
             onClick={() => toggle('opponentTurn', phase.key)}
           >
             {phase.short}

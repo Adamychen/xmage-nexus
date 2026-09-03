@@ -7,6 +7,7 @@ import FinishedMatchesPanel, {
 } from './FinishedMatchesPanel'
 import type { MatchView, UsersView } from '../net/types'
 import * as commands from '../net/commands'
+import { t, setLanguage } from '../i18n'
 
 vi.mock('../net/commands', () => ({
   getFinishedMatches: vi.fn(),
@@ -116,6 +117,7 @@ describe('FinishedMatchesPanel helpers', () => {
 
 describe('FinishedMatchesPanel component', () => {
   beforeEach(() => {
+    setLanguage('es')
     vi.mocked(commands.getFinishedMatches).mockResolvedValue(mockMatches)
     vi.mocked(commands.replayGame).mockResolvedValue({ ok: true } as never)
   })
@@ -134,8 +136,8 @@ describe('FinishedMatchesPanel component', () => {
     })
 
     expect(screen.getAllByText(/Constructed - Standard/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/⭐ Ranked/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/🏆 Torneo/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(new RegExp(`⭐ ${t('lobby', 'tag_rated')}`, 'i')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(new RegExp(`🏆 ${t('lobby', 'tournament_badge')}`, 'i')).length).toBeGreaterThan(0)
   })
 
   it('filters matches by search query', async () => {
@@ -160,13 +162,13 @@ describe('FinishedMatchesPanel component', () => {
     })
 
     // Click Ranked filter chip (the button element)
-    const rankedChip = screen.getAllByRole('button', { name: /⭐ Ranked/i })[0]
+    const rankedChip = screen.getAllByRole('button', { name: new RegExp(`⭐ ${t('lobby', 'tag_rated')}`, 'i') })[0]
     fireEvent.click(rankedChip)
     expect(screen.getAllByText('Alice').length).toBeGreaterThan(0)
     expect(screen.queryByText('Chandra')).toBeNull()
 
     // Click Torneos filter chip (the button element)
-    const torneosChip = screen.getAllByRole('button', { name: /🏆 Torneos/i })[0]
+    const torneosChip = screen.getAllByRole('button', { name: new RegExp(`🏆 ${t('lobby', 'tournament_badge')}`, 'i') })[0]
     fireEvent.click(torneosChip)
     expect(screen.getAllByText('Chandra').length).toBeGreaterThan(0)
     expect(screen.queryByText('Alice')).toBeNull()

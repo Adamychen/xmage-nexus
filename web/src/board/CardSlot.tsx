@@ -308,7 +308,7 @@ export default function CardSlot({
       <CardIcons icons={card.cardIcons} />
 
       {keywordBadges.length > 0 && (
-        <div className="keyword-badges" aria-label="keywords">
+        <div className="keyword-badges" aria-label={t('wiki', 'tab_keywords')}>
           {keywordBadges.map((kw) => (
             <span
               key={kw.id}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t as tStatic } from '../i18n'
 import './CountryFlag.css'
 
 export interface CountryFlagProps {
@@ -32,7 +33,7 @@ export default function CountryFlag({ flagName, className = '', showTextFallback
     <img
       src={`/flags/${code}.png`}
       alt={code.toUpperCase()}
-      title={`País: ${code.toUpperCase()}`}
+      title={`${tStatic('login', 'flag')}: ${code.toUpperCase()}`}
       className={`country-flag-icon ${className}`}
       onError={() => setErrored(true)}
       loading="lazy"

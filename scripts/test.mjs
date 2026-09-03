@@ -2,7 +2,7 @@
 // Orquestador de todas las capas de test del Mage.Proxy.
 // Uso: node scripts/test.mjs [layer...] [--skip=unit,typecheck]
 //   (sin argumentos: ejecuta todas las capas en orden)
-// Capas: unit, coverage, typecheck, build, java, self-test, human-test, e2e
+// Capas: unit, coverage, typecheck, build, java, self-test, human-test, e2e, i18n
 
 import path from 'node:path'
 import { binName, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
@@ -19,6 +19,7 @@ const LAYERS = [
   { name: 'self-test', desc: 'E2E headless (ws://127.0.0.1:8787)' },
   { name: 'human-test', desc: 'E2E jugador humano contra IA (ws://127.0.0.1:8787)' },
   { name: 'e2e', desc: 'playwright test (web)' },
+  { name: 'i18n', desc: 'i18n coverage guard (894 claves, whitelist)' },
 ]
 const NAMES = new Set(LAYERS.map((l) => l.name))
 
@@ -177,6 +178,9 @@ async function main() {
         res = run(binName('npx'), ['playwright', 'test'], { cwd: WEB_DIR })
         break
       }
+      case 'i18n':
+        res = run('node', ['scripts/i18n-coverage.mjs'])
+        break
     }
 
     const seconds = ((Date.now() - layerStart) / 1000).toFixed(1)

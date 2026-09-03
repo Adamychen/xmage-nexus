@@ -9,6 +9,7 @@ import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
 import { useTranslation } from '../i18n'
+import { t as tStatic } from '../i18n'
 import './ConstructScreen.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -33,16 +34,16 @@ function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
 }
 
 function categorizeCard(typeLine?: string): string {
-  if (!typeLine) return 'Otros'
-  const t = typeLine.toLowerCase()
-  if (t.includes('creature') || t.includes('criatura')) return 'Criaturas'
-  if (t.includes('planeswalker')) return 'Planeswalkers'
-  if (t.includes('instant') || t.includes('instantáneo')) return 'Instantáneos'
-  if (t.includes('sorcery') || t.includes('conjuro')) return 'Conjuros'
-  if (t.includes('enchantment') || t.includes('encantamiento')) return 'Encantamientos'
-  if (t.includes('artifact') || t.includes('artefacto')) return 'Artefactos'
-  if (t.includes('land') || t.includes('tierra')) return 'Tierras'
-  return 'Otros'
+  if (!typeLine) return tStatic('game', 'category_other')
+  const lower = typeLine.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  if (lower.includes('creature') || lower.includes('criatura')) return tStatic('game', 'category_creatures')
+  if (lower.includes('planeswalker')) return tStatic('game', 'category_planeswalkers')
+  if (lower.includes('instant')) return tStatic('game', 'category_instants')
+  if (lower.includes('sorcery') || lower.includes('conjuro')) return tStatic('game', 'category_sorceries')
+  if (lower.includes('enchantment') || lower.includes('encantamiento')) return tStatic('game', 'category_enchantments')
+  if (lower.includes('artifact') || lower.includes('artefacto')) return tStatic('game', 'category_artifacts')
+  if (lower.includes('land') || lower.includes('tierra')) return tStatic('game', 'category_lands')
+  return tStatic('game', 'category_other')
 }
 
 function formatTime(seconds: number): string {
@@ -301,7 +302,16 @@ export default function ConstructScreen() {
   const timerPct = Math.max(0, (timeLeft / (construct.timeLeft || 1)) * 100)
   const timerUrgent = timeLeft <= 30
 
-  const categoriesOrder = ['Criaturas', 'Planeswalkers', 'Instantáneos', 'Conjuros', 'Artefactos', 'Encantamientos', 'Tierras', 'Otros'] as const
+  const categoriesOrder = [
+    t('game', 'category_creatures'),
+    t('game', 'category_planeswalkers'),
+    t('game', 'category_instants'),
+    t('game', 'category_sorceries'),
+    t('game', 'category_artifacts'),
+    t('game', 'category_enchantments'),
+    t('game', 'category_lands'),
+    t('game', 'category_other'),
+  ] as const
   const groupedMain = new Map<string, DeckCard[]>()
   for (const cat of categoriesOrder) groupedMain.set(cat, [])
   const filteredMainForGroup = mainFilter.trim()
@@ -310,7 +320,7 @@ export default function ConstructScreen() {
   for (const card of filteredMainForGroup) {
     const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
     const cat = categorizeCard(meta?.typeLine)
-    const list = groupedMain.get(cat) ?? groupedMain.get('Otros')!
+    const list = groupedMain.get(cat) ?? groupedMain.get(t('game', 'category_other'))!
     list.push(card)
   }
 
@@ -320,12 +330,12 @@ export default function ConstructScreen() {
 
   return (
     <div className="construct-backdrop" role="presentation">
-      <section className="construct-screen" role="dialog" aria-modal="true" aria-label="Construcción limitado">
+      <section className="construct-screen" role="dialog" aria-modal="true" aria-label={t('game', 'construct_limited_label')}>
         <div className="construct-header">
           <div className="construct-title">
             <h2>{t('game','construct_title')}</h2>
             <span className="construct-deck-name">{construct.deckName}</span>
-            <span className="construct-pool-info">{poolSize} cartas en pool</span>
+            <span className="construct-pool-info">{t('game', 'construct_cards_in_pool', { count: String(poolSize) })}</span>
           </div>
           <div className={`construct-timer ${timerUrgent ? 'urgent' : ''}`}>
             <div className="construct-timer-bar" style={{ width: `${timerPct}%` }} />
@@ -341,7 +351,7 @@ export default function ConstructScreen() {
             onDrop={handleDropOnPool}
           >
             <div className="construct-col-header">
-              <h3>Pool</h3>
+              <h3>{t('game', 'construct_pool')}</h3>
               <span className="construct-col-count">{poolTotal}</span>
             </div>
             {pool.length > 10 && (
@@ -454,9 +464,9 @@ export default function ConstructScreen() {
 
         <div className="construct-footer">
           <div className="construct-counts">
-            <span className={mainValid ? 'valid' : 'invalid'}>{t('game', 'construct_total', { count: mainTotal })} (mín {minMain})</span>
-            <span>Pool: {poolTotal}</span>
-            <span>Total: {mainTotal + poolTotal} / {poolSize}</span>
+            <span className={mainValid ? 'valid' : 'invalid'}>{t('game', 'construct_total', { count: String(mainTotal) })} (mín {minMain})</span>
+            <span>{t('game', 'construct_pool')}: {poolTotal}</span>
+            <span>{t('game', 'construct_total', { count: String(mainTotal + poolTotal) })} / {poolSize}</span>
           </div>
           <button
             className="primary"
@@ -475,13 +485,13 @@ export default function ConstructScreen() {
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
           <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">Anverso</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? 'Anverso'} />
+            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
+            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
           </div>
           {hoverPreview.backUrl && (
             <div className="preview-face-card">
-              <span className="preview-face-label">Reverso</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (Reverso)`} />
+              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
             </div>
           )}
         </div>

@@ -252,7 +252,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Ctrl / Cmd + Click</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_ctrl').split(':')[0]}</span>
                   <div className="shortcut-info">
                     <strong>{t('wiki', 'shortcuts_ctrl')}</strong>
                     <p>{t('game', 'hold_priority_title')}</p>
@@ -260,7 +260,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Shift / F</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_shift_f').split(':')[0]}</span>
                   <div className="shortcut-info">
                     <strong>{t('wiki', 'shortcuts_shift_f')}</strong>
                     <p>{t('wiki', 'flip_hint')}</p>
@@ -268,7 +268,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Click</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_click')}</span>
                   <div className="shortcut-info">
                     <strong>{t('game', 'tap_mana')}</strong>
                     <p>{t('game', 'choose_target')}</p>
@@ -276,7 +276,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Hover</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_hover')}</span>
                   <div className="shortcut-info">
                     <strong>{t('wiki', 'flip_hint')}</strong>
                     <p>{t('game', 'search_placeholder')}</p>
@@ -284,7 +284,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Esc</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_esc')}</span>
                   <div className="shortcut-info">
                     <strong>{t('common', 'close')}</strong>
                     <p>{t('common', 'close')}</p>
@@ -292,7 +292,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
-                  <span className="shortcut-key">Auto-Pass</span>
+                  <span className="shortcut-key">{t('wiki', 'shortcuts_auto_pass')}</span>
                   <div className="shortcut-info">
                     <strong>{t('game', 'auto_pass')}</strong>
                     <p>{t('game', 'auto_pass')}</p>

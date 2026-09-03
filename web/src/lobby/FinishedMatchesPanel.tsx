@@ -222,14 +222,14 @@ export default function FinishedMatchesPanel({
               className={`filter-chip ${filterType === 'ranked' ? 'active' : ''}`}
               onClick={() => setFilterType('ranked')}
             >
-              ⭐ Ranked
+              ⭐ {t('lobby', 'tag_rated')}
             </button>
             <button
               type="button"
               className={`filter-chip ${filterType === 'tournament' ? 'active' : ''}`}
               onClick={() => setFilterType('tournament')}
             >
-              🏆 Torneos
+              🏆 {t('lobby', 'tournament_badge')}
             </button>
           </div>
 
@@ -264,8 +264,8 @@ export default function FinishedMatchesPanel({
                 </div>
 
                 <div className="match-meta-right">
-                  {m.rated && <span className="match-badge rated">⭐ Ranked</span>}
-                  {m.isTournament && <span className="match-badge tournament">🏆 Torneo</span>}
+                  {m.rated && <span className="match-badge rated">⭐ {t('lobby', 'tag_rated')}</span>}
+                  {m.isTournament && <span className="match-badge tournament">🏆 {t('lobby', 'tournament_badge')}</span>}
                   {duration && <span className="match-duration">⏱️ {duration}</span>}
                   {relativeTime && <span className="match-time-ago">{relativeTime}</span>}
                 </div>
@@ -313,7 +313,7 @@ export default function FinishedMatchesPanel({
 
                     {/* Center VS Indicator */}
                     <div className="match-vs-divider">
-                      <span className="vs-text">VS</span>
+                      <span className="vs-text">{t('lobby', 'staging_vs')}</span>
                     </div>
 
                     {/* Player 2 (Right) */}

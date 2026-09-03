@@ -128,7 +128,7 @@ export function DeckBrowser({
               onChange={(e) => setFormatFilter(e.target.value)}
               className="browser-select"
             >
-              <option>{t('decks', 'filter_all_formats')}</option>
+              <option value="All Formats">{t('decks', 'filter_all_formats')}</option>
               {ALL_FORMATS.map((f) => (
                 <option key={f} value={f}>
                   {f}
@@ -141,14 +141,14 @@ export function DeckBrowser({
               onChange={(e) => setArchetypeFilter(e.target.value)}
               className="browser-select"
             >
-              <option>{t('common', 'all')}</option>
-              <option>{t('decks', 'browser_filter_aggro')}</option>
-              <option>{t('decks', 'browser_filter_midrange')}</option>
-              <option>{t('decks', 'browser_filter_control')}</option>
-              <option>Combo</option>
-              <option>Ramp</option>
-              <option>Tribal</option>
-              <option>Precon</option>
+              <option value="All Archetypes">{t('common', 'all')}</option>
+              <option value="Aggro">{t('decks', 'browser_filter_aggro')}</option>
+              <option value="Midrange">{t('decks', 'browser_filter_midrange')}</option>
+              <option value="Control">{t('decks', 'browser_filter_control')}</option>
+              <option value="Combo">{t('decks', 'browser_filter_combo')}</option>
+              <option value="Ramp">{t('decks', 'browser_filter_ramp')}</option>
+              <option value="Tribal">{t('decks', 'browser_filter_tribal')}</option>
+              <option value="Precon">{t('decks', 'browser_filter_precon')}</option>
             </select>
 
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>

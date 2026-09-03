@@ -145,7 +145,7 @@ function getControllerInfo(
 
   // 4) Last resort — never label a spectator (no `me`) as "Tú".
   return {
-    name: me ? youLabel : 'Desconocido',
+    name: me ? youLabel : (t ? t('lobby', 'deck_unknown') : 'Unknown'),
     isMe: false,
     isOpponent: !me,
     avatarIcon: me ? '👤' : '❓',

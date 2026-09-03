@@ -39,6 +39,8 @@ export interface TranslationSchema {
     reload: string
     crash_title: string
     crash_desc: string
+    decrease: string
+    increase: string
   }
   login: {
     subtitle: string
@@ -317,6 +319,12 @@ export interface TranslationSchema {
     match_replay_single: string
     match_replay_number: string
     time_just_now: string
+    avatar_pick_title: string
+    match_badge: string
+    create_field_boosters: string
+    create_option_boosters_3: string
+    create_option_boosters_6: string
+    filter_more_formats: string
   }
   game: {
     turn: string
@@ -580,6 +588,69 @@ export interface TranslationSchema {
     sound_volume_sfx: string
     sound_volume_ui: string
     turn_banner_player: string
+    log_title: string
+    planeswalker_choose: string
+    planeswalker_loyalty_now: string
+    planeswalker_hint: string
+    construct_cards_in_pool: string
+    construct_limited_label: string
+    phase_stops: string
+    phase_you: string
+    phase_opp: string
+    booster_label: string
+    tournament_in_progress: string
+    tournament_view_bracket: string
+    tournament_view_bracket_tooltip: string
+    tournament_minimize: string
+    tournament_close: string
+    tournament_quit_short: string
+    tournament_leaving: string
+    ring_level_1_title: string
+    ring_level_1_rule: string
+    ring_level_2_title: string
+    ring_level_2_rule: string
+    ring_level_3_title: string
+    ring_level_3_rule: string
+    ring_level_4_title: string
+    ring_level_4_rule: string
+    dungeon_undercity_1: string
+    dungeon_undercity_2: string
+    dungeon_undercity_3: string
+    dungeon_undercity_4: string
+    dungeon_undercity_5: string
+    dungeon_mad_mage_1: string
+    dungeon_mad_mage_2: string
+    dungeon_mad_mage_3: string
+    dungeon_mad_mage_4: string
+    dungeon_mad_mage_5: string
+    dungeon_mad_mage_6: string
+    dungeon_mad_mage_7: string
+    dungeon_phandelver_1: string
+    dungeon_phandelver_2: string
+    dungeon_phandelver_3: string
+    dungeon_phandelver_4: string
+    dungeon_annihilation_1: string
+    dungeon_annihilation_2: string
+    dungeon_annihilation_3: string
+    dungeon_annihilation_4: string
+    dungeon_fallback_1: string
+    dungeon_fallback_2: string
+    dungeon_fallback_3: string
+    blessing_ascend_ok: string
+    commander_active: string
+    commander_of: string
+    commander_owner_label: string
+    commander_source_label: string
+    commander_lethal_short: string
+    curse: string
+    confirmation: string
+    tab_commander: string
+    target_fallback: string
+    amount_fallback: string
+    pile_1: string
+    pile_2: string
+    pile_summary: string
+    card_number: string
   }
   wiki: {
     title: string
@@ -614,6 +685,10 @@ export interface TranslationSchema {
     shortcuts_f1: string
     shortcuts_f11: string
     shortcuts_shift_f: string
+    shortcuts_click: string
+    shortcuts_hover: string
+    shortcuts_esc: string
+    shortcuts_auto_pass: string
   }
   dialogs: {
     mulligan_title: string
@@ -756,6 +831,10 @@ export interface TranslationSchema {
     browser_filter_aggro: string
     browser_filter_midrange: string
     browser_filter_control: string
+    browser_filter_combo: string
+    browser_filter_ramp: string
+    browser_filter_tribal: string
+    browser_filter_precon: string
     browser_import_hint: string
     filter_cmc: string
     filter_type: string
@@ -776,6 +855,19 @@ export interface TranslationSchema {
     builder_swap_to_main: string
     builder_side_empty: string
     inspect_double_click: string
+    import_formats: string
+    import_recognized: string
+    import_waiting: string
+    avg_cmc: string
+    strip_click_hint: string
+    strip_move_to_main: string
+    strip_move_to_side: string
+    strip_remove_one: string
+    strip_add_one: string
+    strip_change_art: string
+    strip_cover_current: string
+    strip_cover_use: string
+    strip_remove_all: string
   }
   errors: {
     connection_failed: string
@@ -826,5 +918,24 @@ export interface TranslationSchema {
     manifest: string
     disguise: string
     cloak: string
+    turn_order_label: string
+    turn_active_badge: string
+    turn_active_suffix: string
+    turn_priority_suffix: string
+    turn_life_label: string
+    opp_prev: string
+    opp_next: string
+    opp_view: string
+    opp_left_suffix: string
+    opp_defeated_suffix: string
+    opp_target_suffix: string
+    opp_out: string
+    opp_dead: string
+    opp_turn_tag: string
+    opp_combat_tag: string
+    restriction_fallback: string
+    pile_top: string
+    pile_empty: string
+    card_fallback: string
   }
 }

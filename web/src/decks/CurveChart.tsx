@@ -124,7 +124,7 @@ export default function CurveChart({
           <span className="curve-stat-val">{totalSpells}</span>
         </div>
         <div className="curve-stat-pill">
-          <span className="curve-stat-name">⚖️ Avg CMC</span>
+          <span className="curve-stat-name">⚖️ {t('decks', 'avg_cmc')}</span>
           <span className="curve-stat-val">{avgCmc}</span>
         </div>
       </div>

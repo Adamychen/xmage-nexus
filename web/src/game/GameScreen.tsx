@@ -385,7 +385,7 @@ export default function GameScreen() {
                 onClick={() => setRightTab('commander')}
                 title={t('game', 'commander_damage')}
               >
-                👑 CMD
+                👑 {t('game', 'tab_commander')}
               </button>
             )}
             <button

@@ -180,10 +180,10 @@ export default function DraftScreen() {
 
   return (
     <div className="draft-backdrop" role="presentation">
-      <section className="draft-screen" role="dialog" aria-modal="true" aria-label="Draft">
+      <section className="draft-screen" role="dialog" aria-modal="true" aria-label={t('game', 'draft_title')}>
         <header className="draft-header">
           <div className="draft-title">
-            <h2>Draft</h2>
+            <h2>{t('game', 'draft_title')}</h2>
             <span className="draft-subtitle">
               Booster {draftView.boosterNum} · Carta {draftView.cardNum}
               {setCodesLabel ? ` · ${setCodesLabel}` : ''}
@@ -216,7 +216,7 @@ export default function DraftScreen() {
         </div>
 
         <div className="draft-booster-area">
-          <h3 className="draft-section-title">Booster</h3>
+          <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
           {boosterCards.length === 0 ? (
             <div className="draft-empty">{t('game', 'draft_loading')}</div>
           ) : (
@@ -305,13 +305,13 @@ export default function DraftScreen() {
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
           <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">Anverso</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? 'Anverso'} />
+            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
+            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
           </div>
           {hoverPreview.backUrl && (
             <div className="preview-face-card">
-              <span className="preview-face-label">Reverso</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (Reverso)`} />
+              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
             </div>
           )}
         </div>

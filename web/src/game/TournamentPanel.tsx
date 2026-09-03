@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useStore } from '../state/store'
 import TournamentBracket from '../lobby/TournamentBracket'
 import * as cmds from '../net/commands'
+import { useTranslation } from '../i18n'
 import './TournamentPanel.css'
 
 export default function TournamentPanel() {
+  const { t } = useTranslation()
   const tournament = useStore((s) => s.tournament)
   const [expanded, setExpanded] = useState(true)
   const [quitting, setQuitting] = useState(false)
@@ -25,10 +27,10 @@ export default function TournamentPanel() {
         className="tournament-panel-mini"
         onClick={() => setExpanded(true)}
         data-testid="tournament-panel-mini"
-        title="Ver bracket del torneo"
+        title={t('game', 'tournament_view_bracket_tooltip')}
       >
-        🏆 {view.tournamentName} — {view.tournamentState} · {view.players.length} jugadores
-        <span className="tournament-mini-expand">Ver bracket ▸</span>
+        🏆 {view.tournamentName} — {view.tournamentState} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
+        <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
       </button>
     )
   }
@@ -45,11 +47,11 @@ export default function TournamentPanel() {
 
   return (
     <div className="tournament-panel-backdrop" role="presentation" data-testid="tournament-panel">
-      <section className="tournament-panel" role="dialog" aria-modal="true" aria-label="Torneo">
+      <section className="tournament-panel" role="dialog" aria-modal="true" aria-label={t('game', 'tournament_in_progress')}>
         <header className="tournament-panel-header">
           <div className="tournament-panel-title">
             <span className="tournament-panel-icon">🏆</span>
-            <span>Torneo en curso</span>
+            <span>{t('game', 'tournament_in_progress')}</span>
             <span className="tournament-panel-name" data-testid="tournament-panel-name">{view.tournamentName}</span>
           </div>
           <div className="tournament-panel-actions">
@@ -57,9 +59,9 @@ export default function TournamentPanel() {
               type="button"
               className="tournament-panel-collapse"
               onClick={() => setExpanded(false)}
-              title="Minimizar"
+              title={t('game', 'tournament_minimize')}
             >
-              ─ Minimizar
+              {t('game', 'tournament_minimize')}
             </button>
             <button
               type="button"
@@ -68,13 +70,13 @@ export default function TournamentPanel() {
               disabled={quitting}
               data-testid="tournament-panel-quit"
             >
-              {quitting ? 'Saliendo…' : 'Abandonar'}
+              {quitting ? t('game', 'tournament_leaving') : t('game', 'tournament_quit_short')}
             </button>
             <button
               type="button"
               className="tournament-panel-close"
               onClick={() => setExpanded(false)}
-              aria-label="Cerrar"
+              aria-label={t('game', 'tournament_close')}
             >
               ✕
             </button>

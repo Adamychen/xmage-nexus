@@ -262,7 +262,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
             type="button"
             className={`tfb-pill-btn tfb-advanced-trigger ${showAdvanced || activeCount > 0 ? 'is-open' : ''}`}
             onClick={() => setShowAdvanced((v) => !v)}
-            title="Filters"
+            title={t('common', 'settings')}
           >
             <span>⚙️ {t('common', 'settings')}</span>
             {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
@@ -314,7 +314,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
               }}
             >
               <option value="" disabled>
-                {isOtherFormatSelected ? `Formato: ${filters.format}` : '▾ Más formatos…'}
+                {isOtherFormatSelected ? `Formato: ${filters.format}` : t('lobby', 'filter_more_formats')}
               </option>
               {extraFormats.map((fmt) => (
                 <option key={fmt} value={fmt}>

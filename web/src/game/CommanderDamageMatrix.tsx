@@ -213,7 +213,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             <div key={i} className={`cdm-alert-pill ${a.isLethal ? 'lethal' : 'warning'}`}>
               <span className="cdm-alert-icon">{a.isLethal ? '💀' : '⚠️'}</span>
               <span className="cdm-alert-text">
-                <strong>{a.targetName}</strong>: {a.dmg}/{COMMANDER_LETHAL} de <em>{a.commanderName}</em>
+                <strong>{a.targetName}</strong>: {a.dmg}/{COMMANDER_LETHAL} <em>{t('game', 'commander_of', { owner: a.commanderName })}</em>
               </span>
             </div>
           ))}
@@ -253,7 +253,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                     {playerCommanders.map((cmd) => {
                       const castCount = Number((cmd.card as any).castCount ?? 0)
                       return (
-                        <span key={cmd.id} className="cdm-commander-badge" title={`Comandante de ${p.name}`}>
+                        <span key={cmd.id} className="cdm-commander-badge" title={t('game', 'commander_source_label', { name: p.name })}>
                           👑 {cmd.name}
                           {castCount > 0 && (
                             <span className="cdm-tax-badge" title={`Tax: +{${commanderTax(castCount)}}`}>
@@ -280,13 +280,13 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                       return (
                         <div key={c.id} className={`cdm-damage-item ${severity}`} data-testid={`cdm-item-${p.playerId}-${c.id}`}>
                           <div className="cdm-damage-row">
-                            <div className="cdm-damage-source" title={`Comandante: ${c.name} (${c.ownerName})`}>
+                            <div className="cdm-damage-source" title={t('game', 'commander_owner_label', { name: c.name, owner: c.ownerName })}>
                               <span className="cdm-source-name">{c.name}</span>
-                              <span className="cdm-source-owner">de {c.ownerName}</span>
+                              <span className="cdm-source-owner">{t('game', 'commander_of', { owner: c.ownerName })}</span>
                             </div>
                             <div className="cdm-damage-metric">
                               {isLethal ? (
-                                <span className="cdm-lethal-badge">💀 LETAL</span>
+                                <span className="cdm-lethal-badge">{t('game', 'commander_lethal_short')}</span>
                               ) : (
                                 <span className="cdm-count-text">
                                   <strong>{dmg}</strong> <span className="cdm-denom">/ 21</span>
@@ -317,7 +317,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             <tr>
               <th className="cdm-corner">{t('game', 'commander_table_corner')}</th>
               {commanders.map((c) => (
-                <th key={c.id} className="cdm-commander-head" title={`${c.name} — de ${c.ownerName}`}>
+                <th key={c.id} className="cdm-commander-head" title={t('game', 'commander_owner_label', { name: c.name, owner: c.ownerName })}>
                   <span className="cdm-cmd-name">{c.name}</span>
                   <span className="cdm-cmd-owner">({c.ownerName})</span>
                 </th>
@@ -332,7 +332,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                   <td className="cdm-player-cell">
                     <span className="cdm-player-name">{p.name}</span>
                     {p.controlled && <span className="cdm-you-badge">{t('game', 'you').toUpperCase()}</span>}
-                    {isActivePlayer && <span className="cdm-active-badge">● activo</span>}
+                    {isActivePlayer && <span className="cdm-active-badge">{t('game', 'commander_active')}</span>}
                   </td>
                   {commanders.map((c) => {
                     const dmg = extractDamage(p, c, game)

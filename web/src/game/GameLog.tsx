@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
 import FormattedText from './FormattedText'
+import { useTranslation } from '../i18n'
 import './GameLog.css'
 
 export default function GameLog() {
+  const { t } = useTranslation()
   const log = useStore((s) => s.log)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -13,7 +15,7 @@ export default function GameLog() {
 
   return (
     <aside className="gamelog panel">
-      <h2>Log</h2>
+      <h2>{t('game', 'log_title')}</h2>
       <div className="gamelog-list" ref={ref}>
         {log.map((e) => (
           <div key={e.id} className="gamelog-entry">

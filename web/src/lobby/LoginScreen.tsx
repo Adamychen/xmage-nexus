@@ -159,7 +159,7 @@ export default function LoginScreen() {
           <div
             className="user-avatar-preview"
             onClick={() => setShowAvatarPicker(true)}
-            title="Haz clic para elegir tu Avatar de Magic"
+            title={t('lobby', 'avatar_pick_title')}
             style={{ cursor: 'pointer' }}
           >
             <AvatarImage avatarId={avatarId} username={username} size="large" />

@@ -25,58 +25,22 @@ interface DayNightState {
   isNight: boolean
 }
 
-const RING_LEVELS = [
-  {
-    level: 1,
-    title: 'Legendary Bearer & Evasion',
-    rule: 'Your Ring-bearer is legendary and can\'t be blocked by creatures with greater power.',
-  },
-  {
-    level: 2,
-    title: 'Loot on Attack',
-    rule: 'Whenever your Ring-bearer attacks, draw a card, then discard a card.',
-  },
-  {
-    level: 3,
-    title: 'Deathtouch to Blockers',
-    rule: 'Whenever your Ring-bearer becomes blocked by a creature, that creature\'s controller sacrifices it at end of combat.',
-  },
-  {
-    level: 4,
-    title: 'Drain 3 Life',
-    rule: 'Whenever your Ring-bearer deals combat damage to a player, each opponent loses 3 life.',
-  },
-]
+function getRingLevels(t: (c: any, k: any) => string) {
+  return [
+    { level: 1, title: t('game', 'ring_level_1_title'), rule: t('game', 'ring_level_1_rule') },
+    { level: 2, title: t('game', 'ring_level_2_title'), rule: t('game', 'ring_level_2_rule') },
+    { level: 3, title: t('game', 'ring_level_3_title'), rule: t('game', 'ring_level_3_rule') },
+    { level: 4, title: t('game', 'ring_level_4_title'), rule: t('game', 'ring_level_4_rule') },
+  ]
+}
 
-const DUNGEON_ROOMS: Record<string, string[]> = {
-  undercity: [
-    'Secret Entrance (Search basic land to hand)',
-    'Forge (+2 +1/+1 counters) / Lost Well (Scry 2)',
-    'Trap! (Opponent loses 5 life) / Arena (Goad creature)',
-    'Stash (Draw 1 card) / Archives (Exile 2 playable cards)',
-    'Throne of the Dead Three (Free creature + 3 counters + hexproof)',
-  ],
-  'dungeon of the mad mage': [
-    'Yawning Portal (Gain 1 life)',
-    'Dungeon Level (Scry 1)',
-    'Goblin Bazaar (Create Treasure token)',
-    'Twisted Caverns (Creature can\'t attack)',
-    'Lost Level (Scry 2)',
-    'Runestone Caverns (Exile 2 cards to play)',
-    'Mad Wizard’s Lair (Draw 3 cards and cast 1 for free)',
-  ],
-  'lost mine of phandelver': [
-    'Cave Entrance (Scry 1)',
-    'Goblin Lair (1/1 Goblin token) / Mine Tunnels (Treasure)',
-    'Storeroom (+1/+1) / Dark Pool (Drain 1 life)',
-    'Temple of Dumathoin (Draw 1 card)',
-  ],
-  'tomb of annihilation': [
-    'Trapped Entry (Each player loses 1 life)',
-    'Veils of Fear (Lose 2 life or discard)',
-    'Sandfall Cell (Lose 2 life or sacrifice permanent)',
-    'Cradle of the Death God (Create The Atropal 4/4 deathtouch)',
-  ],
+function getDungeonRooms(name: string, t: (c: any, k: any) => string): string[] | null {
+  const key = name.toLowerCase()
+  if (key.includes('undercity')) return [t('game', 'dungeon_undercity_1'), t('game', 'dungeon_undercity_2'), t('game', 'dungeon_undercity_3'), t('game', 'dungeon_undercity_4'), t('game', 'dungeon_undercity_5')]
+  if (key.includes('dungeon of the mad mage')) return [t('game', 'dungeon_mad_mage_1'), t('game', 'dungeon_mad_mage_2'), t('game', 'dungeon_mad_mage_3'), t('game', 'dungeon_mad_mage_4'), t('game', 'dungeon_mad_mage_5'), t('game', 'dungeon_mad_mage_6'), t('game', 'dungeon_mad_mage_7')]
+  if (key.includes('lost mine of phandelver')) return [t('game', 'dungeon_phandelver_1'), t('game', 'dungeon_phandelver_2'), t('game', 'dungeon_phandelver_3'), t('game', 'dungeon_phandelver_4')]
+  if (key.includes('tomb of annihilation')) return [t('game', 'dungeon_annihilation_1'), t('game', 'dungeon_annihilation_2'), t('game', 'dungeon_annihilation_3'), t('game', 'dungeon_annihilation_4')]
+  return null
 }
 
 function findRingBearer(player: PlayerView): string | undefined {
@@ -135,7 +99,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       const dungeonItem = items.find((c: any) => {
         const n = String(c?.name ?? '').toLowerCase()
         const types = Array.isArray(c?.cardTypes) ? c.cardTypes.map((t: string) => String(t).toLowerCase()) : []
-        return types.includes('dungeon') || Object.keys(DUNGEON_ROOMS).some((k) => n.includes(k))
+        return types.includes('dungeon') || ['undercity', 'dungeon of the mad mage', 'lost mine of phandelver', 'tomb of annihilation'].some((k) => n.includes(k))
       }) as { name?: string; currentRoom?: string } | undefined
 
       if (dungeonItem?.name) {
@@ -266,7 +230,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
             </div>
 
             <div className="ring-levels-list">
-              {RING_LEVELS.map((item) => {
+              {getRingLevels(t).map((item) => {
                 const isActive = item.level <= myRing.level
                 const isCurrent = item.level === myRing.level
                 return (
@@ -317,10 +281,10 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
             </div>
 
             <div className="dungeon-rooms-flow">
-              {(DUNGEON_ROOMS[myDungeon.name.toLowerCase()] ?? [
-                'Entrance Hall',
-                'Intermediate Gallery',
-                'Final Treasure Chamber',
+              {(getDungeonRooms(myDungeon.name, t) ?? [
+                t('game', 'dungeon_fallback_1'),
+                t('game', 'dungeon_fallback_2'),
+                t('game', 'dungeon_fallback_3'),
               ]).map((room, idx) => {
                 const isCurrentRoom = myDungeon.currentRoom
                   ? room.toLowerCase().includes(myDungeon.currentRoom.toLowerCase())
@@ -436,7 +400,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               {cityBlessingPlayers.map((p) => (
                 <div key={p.playerId} className="blessing-player-row">
                   <span>★ {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
-                  <span className="badge-ascended">Ascend OK</span>
+                  <span className="badge-ascended">{t('game', 'blessing_ascend_ok')}</span>
                 </div>
               ))}
             </div>

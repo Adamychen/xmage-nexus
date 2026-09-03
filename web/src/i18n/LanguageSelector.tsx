@@ -35,7 +35,7 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
         className={`language-selector-btn ${compact ? 'compact' : ''} ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title={t('common.language')}
-        aria-label="Seleccionar idioma"
+        aria-label={t('common.language')}
         aria-expanded={isOpen}
       >
         <span className="lang-flag">{currentLangInfo.flag}</span>

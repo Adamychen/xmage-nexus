@@ -594,10 +594,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                           </select>
                         </label>
                         <label>
-                          Boosters
+                          {t('lobby', 'create_field_boosters')}
                           <select value={draftBoosters} onChange={(e) => setDraftBoosters(Number(e.target.value) as 3 | 6)}>
-                            <option value={3}>3 boosters (draft)</option>
-                            <option value={6}>6 boosters (sealed)</option>
+                            <option value={3}>{t('lobby', 'create_option_boosters_3')}</option>
+                            <option value={6}>{t('lobby', 'create_option_boosters_6')}</option>
                           </select>
                         </label>
                       </div>

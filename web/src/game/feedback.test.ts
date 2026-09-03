@@ -338,7 +338,7 @@ describe('parseFeedback', () => {
       options: { yes: 'Strength', no: 'Numbers' },
     })
     expect(prompt?.isVoting).toBe(true)
-    expect(prompt?.title).toBe('Votación')
+    expect(prompt?.title).toBe('Votación en Curso')
   })
 
   it('routes planeswalker GAME_CHOOSE_ABILITY to dedicated dialog with loyalty deltas', () => {

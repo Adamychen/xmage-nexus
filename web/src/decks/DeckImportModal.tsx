@@ -85,7 +85,7 @@ export function DeckImportModal({
         <header className="deck-import-header">
           <div className="deck-import-title-wrap">
             <h2 className="deck-import-title">📥 {t('decks', 'import_deck')}</h2>
-            <span className="deck-import-formats">XMage .dck · MTG Arena · MTGO · Texto Plano</span>
+            <span className="deck-import-formats">{t('decks', 'import_formats')}</span>
           </div>
           <button type="button" className="deck-import-close-btn" onClick={onClose}>
             ×
@@ -169,15 +169,14 @@ export function DeckImportModal({
             <div className="import-status-right">
               {parsed && totalCount > 0 ? (
                 <div className="import-badge success">
-                  ✓ Reconocidas: <strong>{mainCount}</strong> principales
-                  {sideCount > 0 && ` + ${sideCount} banquillo`}
+                  {t('decks', 'import_recognized', { mainCount: String(mainCount), sideCount: String(sideCount) })}
                 </div>
               ) : text.trim() ? (
                 <div className="import-badge warning">
                   ⚠️ {t('errors', 'deck_parse_failed')}
                 </div>
               ) : (
-                <span className="import-hint-text">Esperando lista de cartas…</span>
+                <span className="import-hint-text">{t('decks', 'import_waiting')}</span>
               )}
             </div>
           </div>

@@ -5,6 +5,7 @@ import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
 import { useTweenNumber } from './useTweenNumber'
 import { useTranslation } from '../i18n'
+import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
 import './PlayerInfoBar.css'
 
@@ -68,7 +69,7 @@ function getRingInfo(player: PlayerView): RingInfo | null {
         level,
         card: {
           name: 'The Ring',
-          displayName: `The Ring (Nivel ${level})`,
+          displayName: `The Ring (${tStatic('game', 'mechanics_ring_level', { level: String(level) })})`,
           rules: rules.length > 0 ? rules : undefined,
           manaValue: 0,
         } as CardView,
@@ -180,7 +181,7 @@ function getCurseInfo(player: PlayerView, game: GameView | null): { count: numbe
     count,
     firstCard: firstCard ?? ({
       name: 'Curse',
-      displayName: `Maldición (${count})`,
+      displayName: `${tStatic('game', 'curse')} (${count})`,
       manaValue: 0,
     } as CardView),
   }

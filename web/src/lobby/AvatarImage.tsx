@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { resolveAvatarPath } from './avatars'
+import { t as tStatic } from '../i18n'
 import './AvatarImage.css'
 
 interface AvatarImageProps {
@@ -36,8 +37,8 @@ export default function AvatarImage({
   return (
     <img
       src={path}
-      alt={username || 'Avatar'}
-      title={username ? `Avatar de ${username}` : 'Avatar'}
+      alt={username || tStatic('login', 'avatar')}
+      title={username ? `${tStatic('login', 'avatar')} · ${username}` : tStatic('login', 'avatar')}
       className={`avatar-image avatar-size-${size} ${className}`}
       onError={() => setErrored(true)}
       onClick={onClick}

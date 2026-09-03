@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
 import AvatarImage from './AvatarImage'
+import { useTranslation } from '../i18n'
 import './AvatarPickerModal.css'
 
 interface AvatarPickerModalProps {
@@ -14,6 +15,7 @@ export default function AvatarPickerModal({
   onSelect,
   onClose,
 }: AvatarPickerModalProps) {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<'all' | 'standard' | 'special'>('all')
 
   const filteredAvatars = OFFICIAL_AVATARS.filter((a) => {
@@ -27,7 +29,7 @@ export default function AvatarPickerModal({
       <div className="dialog panel avatar-picker-dialog">
         <div className="avatar-picker-header">
           <div className="avatar-picker-title">
-            <h2>🧙‍♂️ Elige tu Avatar de Duelista</h2>
+            <h2>{t('lobby', 'avatar_pick_title')}</h2>
             <span className="avatar-picker-subtitle">
               Planeswalkers, leyendas y avatares animados oficiales de Magic
             </span>

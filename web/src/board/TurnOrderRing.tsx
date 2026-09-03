@@ -1,4 +1,5 @@
 import type { PlayerView } from '../net/types'
+import { useTranslation } from '../i18n'
 import './TurnOrderRing.css'
 
 export interface TurnOrderRingProps {
@@ -9,6 +10,7 @@ export interface TurnOrderRingProps {
 const MAX_POD_PLAYERS = 4
 
 export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRingProps) {
+  const { t } = useTranslation()
   const clamped = (players ?? []).slice(0, MAX_POD_PLAYERS)
   const count = clamped.length
   if (count === 0) return null
@@ -18,7 +20,7 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
       className={`turn-order-ring count-${count}`}
       data-testid="turn-order-ring"
       role="navigation"
-      aria-label="Turn order"
+      aria-label={t('board', 'turn_order_label')}
     >
       <div className="tor-track" />
       <div className="tor-seats-flow">
@@ -35,14 +37,14 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
                 className={`tor-seat ${isActive ? 'is-active' : ''} ${isPriority ? 'has-priority' : ''} ${isDefeated ? 'is-defeated' : ''} ${p.controlled ? 'is-controlled' : ''}`}
                 data-testid={`tor-seat-${p.playerId}`}
                 data-active={isActive ? 'true' : undefined}
-                title={`${p.name}${isActive ? ' — turno activo' : ''}${isPriority ? ' (prioridad)' : ''} · Vida: ${p.life}`}
+                title={`${p.name}${isActive ? t('board', 'turn_active_suffix') : ''}${isPriority ? t('board', 'turn_priority_suffix') : ''} · ${t('board', 'turn_life_label')}: ${p.life}`}
               >
                 <span className="tor-seat-dot" aria-hidden>
                   {isActive ? '▶' : '●'}
                 </span>
                 <span className="tor-seat-name">{p.name}</span>
                 <span className="tor-seat-life">{p.life <= 0 || p.hasLeft ? '💀' : p.life}</span>
-                {isActive && <span className="tor-active-badge">Active</span>}
+                {isActive && <span className="tor-active-badge">{t('board', 'turn_active_badge')}</span>}
               </div>
               {count > 1 && (
                 <span

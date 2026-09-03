@@ -337,10 +337,10 @@ export default function SideboardScreen() {
 
   return (
     <div className="sideboard-backdrop" role="presentation">
-      <section className="sideboard-screen" role="dialog" aria-modal="true">
+      <section className="sideboard-screen" role="dialog" aria-modal="true" aria-label={t('game', 'sideboard_title')}>
         <div className="sideboard-header">
           <div className="sideboard-title">
-            <h2>Sideboard</h2>
+            <h2>{t('game', 'sideboard_title')}</h2>
             <span className="sideboard-deck-name">{screen.deckName}</span>
           </div>
           <div className={`sideboard-timer ${timerUrgent ? 'urgent' : ''}`}>
@@ -416,7 +416,7 @@ export default function SideboardScreen() {
             onDrop={handleDropOnSide}
           >
             <div className="sideboard-col-header">
-              <h3>Sideboard</h3>
+              <h3>{t('game', 'sideboard_side')}</h3>
               <span className={`sideboard-col-count ${sideValid ? 'valid' : 'invalid'}`}>{sideTotal}/15</span>
             </div>
             {side.length > 10 && (
@@ -489,13 +489,13 @@ export default function SideboardScreen() {
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
           <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">Anverso</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? 'Anverso'} />
+            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
+            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
           </div>
           {hoverPreview.backUrl && (
             <div className="preview-face-card">
-              <span className="preview-face-label">Reverso</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (Reverso)`} />
+              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
             </div>
           )}
         </div>

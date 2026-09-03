@@ -87,7 +87,7 @@ describe('PlayerInfoBar', () => {
     if (badge) {
       fireEvent.mouseEnter(badge)
       expect(onHover).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'The Ring', displayName: 'The Ring (Nivel 2)' }),
+        expect.objectContaining({ name: 'The Ring', displayName: expect.stringContaining('Nivel 2') }),
         expect.any(Object),
       )
     }

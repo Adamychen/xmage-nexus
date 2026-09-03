@@ -46,11 +46,11 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
   return (
     <div className="pw-backdrop" role="presentation">
       <section className="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title">
-        <div className="pw-kicker">✨ PLANESWALKER — ELIGE HABILIDAD</div>
+        <div className="pw-kicker">{t('game', 'planeswalker_choose')}</div>
         <h2 id="pw-title"><FormattedText text={prompt.title} /></h2>
         <p className="pw-msg"><FormattedText text={prompt.message} /></p>
         {pwLoyalty != null && (
-          <div className="pw-loyalty-now">Lealtad actual: <span className="pw-loyalty-val">{pwLoyalty}</span></div>
+          <div className="pw-loyalty-now">{t('game', 'planeswalker_loyalty_now')} <span className="pw-loyalty-val">{pwLoyalty}</span></div>
         )}
         <div className="pw-options">
           {prompt.options.map((opt, idx) => {
@@ -70,7 +70,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
             )
           })}
         </div>
-        <div className="pw-hint">Solo una habilidad de lealtad por turno. El coste se paga con contadores de lealtad.</div>
+        <div className="pw-hint">{t('game', 'planeswalker_hint')}</div>
       </section>
     </div>
   )

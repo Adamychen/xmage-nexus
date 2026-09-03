@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import { ManaCost } from './ArenaManaSymbols'
 import { setFloatingStripDragImage } from './arenaDragHelpers'
+import { useTranslation } from '../i18n'
 import './ArenaCardStrip.css'
 
 export interface CardStripMeta {
@@ -60,6 +61,7 @@ export function ArenaCardStrip({
   onSwap?: (key: string) => void
   swapLabel?: string
 }) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const [isDraggingSelf, setIsDraggingSelf] = useState(false)
   const cardKey = `${card.setCode}:${card.cardNumber}:${card.cardName}`
@@ -117,7 +119,7 @@ export function ArenaCardStrip({
       onMouseLeave={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      title={issue ? `${card.cardName} — ⚠️ ${issue}` : `${card.cardName} — Clic izquierdo: restar 1 · Clic derecho: sumar 1`}
+      title={issue ? `${card.cardName} — ⚠️ ${issue}` : `${card.cardName} — ${t('decks', 'strip_click_hint')}`}
     >
       {/* Background card art crop */}
       {meta?.artCropUrl && (
@@ -156,7 +158,7 @@ export function ArenaCardStrip({
             type="button"
             className="strip-btn swap"
             onClick={() => onSwap(actionKey)}
-            title={swapLabel ?? (sideboard ? 'Mover al mazo' : 'Mover al banquillo')}
+            title={swapLabel ?? (sideboard ? t('decks', 'strip_move_to_main') : t('decks', 'strip_move_to_side'))}
           >
             ⇄
           </button>
@@ -165,7 +167,7 @@ export function ArenaCardStrip({
           type="button"
           className="strip-btn"
           onClick={() => onDec?.(actionKey)}
-          title="Quitar 1"
+          title={t('decks', 'strip_remove_one')}
         >
           −
         </button>
@@ -173,7 +175,7 @@ export function ArenaCardStrip({
           type="button"
           className="strip-btn"
           onClick={() => onInc?.(actionKey)}
-          title="Añadir 1"
+          title={t('decks', 'strip_add_one')}
         >
           +
         </button>
@@ -182,7 +184,7 @@ export function ArenaCardStrip({
             type="button"
             className="strip-btn print"
             onClick={() => onChangePrinting(card)}
-            title="Cambiar edición / arte de la carta"
+            title={t('decks', 'strip_change_art')}
           >
             🎨
           </button>
@@ -192,7 +194,7 @@ export function ArenaCardStrip({
             type="button"
             className={`strip-btn star ${isCover ? 'active' : ''}`}
             onClick={() => onSetCover(card)}
-            title={isCover ? 'Portada actual' : 'Usar como portada'}
+            title={isCover ? t('decks', 'strip_cover_current') : t('decks', 'strip_cover_use')}
           >
             ★
           </button>
@@ -201,7 +203,7 @@ export function ArenaCardStrip({
           type="button"
           className="strip-btn danger"
           onClick={() => onRemove?.(actionKey)}
-          title="Eliminar todas las copias"
+          title={t('decks', 'strip_remove_all')}
         >
           ×
         </button>

@@ -55,12 +55,12 @@ export default function PileOverlay({
       <div className={`pile-overlay ${isLibrary ? 'library-overlay' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <div className="pile-header-titles">
-            <h3>{title} ({entries.length} {t('board', 'zone_hand').toLowerCase() === 'mano' ? 'cartas' : 'cards'})</h3>
+            <h3>{title} ({entries.length} {t('dialogs', 'viewer_card_plural')})</h3>
             {isLibrary && (
               <span className="pile-header-subtitle">
                 {knownCount > 0
                   ? `👁️ ${knownCount} ${t('board', 'zone_revealed').toLowerCase()} · #1 ${t('board', 'zone_library')}`
-                  : `${t('board', 'zone_library')}: #1 Top`}
+                  : `${t('board', 'zone_library')}: #1 ${t('board', 'pile_top')}`}
               </span>
             )}
           </div>
@@ -77,7 +77,7 @@ export default function PileOverlay({
               <div key={id} className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}`}>
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>
-                    {isTop ? `★ #1 TOP` : `#${index + 1}`}
+                    {isTop ? `★ #1 ${t('board', 'pile_top')}` : `#${index + 1}`}
                     {isRevealed && <span className="revealed-icon"> 👁️</span>}
                   </div>
                 )}

@@ -595,7 +595,7 @@ export default function LobbyScreen() {
                               {tTable.isTournament ? (
                                 <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}>🏆 {t('lobby.tournament_badge')}</span>
                               ) : (
-                                <span className="table-type-badge match" title="Match">⚔️ Match</span>
+                                <span className="table-type-badge match" title={t('lobby','match_badge')}>⚔️ {t('lobby','match_badge')}</span>
                               )}
                               {tTable.passworded && (
                                 <span className="table-badge-lock" title={t('lobby','tag_private')}>🔒 {t('lobby','tag_private')}</span>

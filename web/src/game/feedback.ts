@@ -1,3 +1,5 @@
+import { t as tStatic } from '../i18n'
+
 export type FeedbackMode = 'boolean' | 'string' | 'uuid' | 'integer' | 'multiString' | 'mana' | 'combat' | 'order'
 
 export interface FeedbackOption {
@@ -84,7 +86,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
   const gameId = objectId ?? stringValue(data.gameId)
   if (!gameId) return null
 
-  const message = stringValue(data.message) ?? stringValue(data.question) ?? 'Elige una opción'
+  const message = stringValue(data.message) ?? stringValue(data.question) ?? tStatic('game', 'choose_option')
   const bounds = boundsFrom(data)
 
   switch (method) {
@@ -102,7 +104,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
         return prompt(
           method,
           gameId,
-          attacking ? 'Declara atacantes' : 'Declara bloqueadores',
+          attacking ? tStatic('game', 'declare_attackers') : tStatic('game', 'declare_blockers'),
           message,
           'combat',
           [],
@@ -128,8 +130,8 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       let choices: FeedbackOption[]
 
       if (typeof rawOpts['UI.left.btn.text'] === 'string' || typeof rawOpts['UI.right.btn.text'] === 'string') {
-        const leftLabel = stringValue(rawOpts['UI.left.btn.text']) ?? (isMulligan ? 'Mulligan' : 'Sí')
-        const rightLabel = stringValue(rawOpts['UI.right.btn.text']) ?? (isMulligan ? 'Keep hand' : 'No')
+        const leftLabel = stringValue(rawOpts['UI.left.btn.text']) ?? (isMulligan ? tStatic('dialogs', 'mulligan_btn') : tStatic('common', 'yes'))
+        const rightLabel = stringValue(rawOpts['UI.right.btn.text']) ?? (isMulligan ? tStatic('dialogs', 'mulligan_keep') : tStatic('common', 'no'))
         choices = [
           { id: 'left', label: leftLabel, value: 'true' },
           { id: 'right', label: rightLabel, value: 'false' },
@@ -140,19 +142,19 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
           ? options.map((option, index) => ({ ...option, value: booleanValue(option.label, index) || option.value }))
           : isMulligan
             ? [
-                { id: 'keep', label: 'Keep hand', value: 'false' },
-                { id: 'mulligan', label: 'Mulligan', value: 'true' },
+                { id: 'keep', label: tStatic('dialogs', 'mulligan_keep'), value: 'false' },
+                { id: 'mulligan', label: tStatic('dialogs', 'mulligan_btn'), value: 'true' },
               ]
             : [
-                { id: 'yes', label: 'Sí', value: 'true' },
-                { id: 'no', label: 'No', value: 'false' },
+                { id: 'yes', label: tStatic('common', 'yes'), value: 'true' },
+                { id: 'no', label: tStatic('common', 'no'), value: 'false' },
               ]
       }
 
       return prompt(
         method,
         gameId,
-        isVoting ? 'Votación' : isMulligan ? 'Mulligan' : isStartingPlayer ? '¿Quién empieza?' : 'Confirmación',
+        isVoting ? tStatic('dialogs', 'voting_title') : isMulligan ? tStatic('dialogs', 'mulligan_title') : isStartingPlayer ? tStatic('game', 'who_starts') : tStatic('game', 'confirmation'),
         message,
         'boolean',
         choices,
@@ -176,10 +178,10 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
       const isDiscard = /descart|discard/i.test(message)
       const title = isStartingPlayer
-        ? '¿Quién empieza?'
+        ? tStatic('game', 'who_starts')
         : isDiscard
-          ? 'Elige una carta para que descarte'
-          : 'Elige objetivo'
+          ? tStatic('game', 'choose_discard')
+          : tStatic('game', 'choose_target')
       return prompt(method, gameId, title, message, 'uuid', targetOptions(data), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer)
     }
     case 'GAME_SELECT_CARDS':
@@ -187,7 +189,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
     case 'GAME_CHOOSE_CARDS': {
       const cards = feedbackCards(data)
       const isDiscard = /descart|discard/i.test(message)
-      const title = isDiscard ? 'Elige una carta para que descarte' : 'Selecciona cartas'
+      const title = isDiscard ? tStatic('game', 'choose_discard') : tStatic('game', 'choose_cards')
       return prompt(method, gameId, title, message, 'uuid', cardOptions(data.cardsView1 ?? cleanChoices(data.options)), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
     }
     case 'GAME_CHOOSE_ABILITY': {
@@ -198,7 +200,7 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
         const m = /^([+-]?\d+)\s*:/.exec(o.label)
         return m ? parseInt(m[1], 10) : null
       }) : undefined
-      return prompt(method, gameId, isPW ? 'Habilidad de Planeswalker' : 'Elige habilidad', stringValue(abilities.message) ?? message, 'uuid', opts, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
+      return prompt(method, gameId, isPW ? tStatic('dialogs', 'planeswalker_title') : tStatic('game', 'choose_ability'), stringValue(abilities.message) ?? message, 'uuid', opts, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
     }
     case 'GAME_CHOOSE_CHOICE': {
       const choice = asRecord(data.choice)
@@ -210,12 +212,12 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       } else if (listChoices.length > 0) {
         choices = listChoices.map((c, i) => ({ id: String(i), label: String(c), value: String(c) }))
       }
-      return prompt(method, gameId, 'Elige una opción', stringValue(choice.message) ?? message, 'string', choices, bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_option'), stringValue(choice.message) ?? message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_PILE': {
-      const pile1 = cardSummary(data.cardsView1, 'Pila 1')
-      const pile2 = cardSummary(data.cardsView2, 'Pila 2')
-      return prompt(method, gameId, 'Elige una pila', message, 'boolean', [
+      const pile1 = cardSummary(data.cardsView1, tStatic('game', 'pile_1'))
+      const pile2 = cardSummary(data.cardsView2, tStatic('game', 'pile_2'))
+      return prompt(method, gameId, tStatic('game', 'choose_pile'), message, 'boolean', [
         { id: 'pile1', label: pile1, value: 'true' },
         { id: 'pile2', label: pile2, value: 'false' },
       ], bounds)
@@ -224,36 +226,36 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
       // El servidor NO manda los colores de maná: options solo trae {queryType: "PLAY_MANA"}.
       // El pago real se hace clicando las fuentes de maná en el tablero
       // (canPlayObjects del gameView incrustado), igual que el cliente oficial.
-      return prompt(method, gameId, 'Pagar maná', message, 'mana', [], bounds, undefined, controlledPlayerId(data.gameView))
+      return prompt(method, gameId, tStatic('game', 'pay_mana'), message, 'mana', [], bounds, undefined, controlledPlayerId(data.gameView))
     case 'GAME_PLAY_XMANA':
-      return prompt(method, gameId, 'Pagar maná', message, 'boolean', [
-        { id: 'yes', label: 'Confirmar', value: 'true' },
-        { id: 'no', label: 'Cancelar', value: 'false' },
+      return prompt(method, gameId, tStatic('game', 'pay_mana'), message, 'boolean', [
+        { id: 'yes', label: tStatic('common', 'confirm'), value: 'true' },
+        { id: 'no', label: tStatic('common', 'cancel'), value: 'false' },
       ], bounds)
     case 'GAME_GET_AMOUNT':
     case 'GAME_SELECT_AMOUNT':
-      return prompt(method, gameId, 'Elige cantidad', message, 'integer', [], bounds)
+      return prompt(method, gameId, tStatic('game', 'amount_title'), message, 'integer', [], bounds)
     case 'GAME_GET_MULTI_AMOUNT': {
       const items = multiAmountItems(data.messages)
       const minSum = typeof data.min === 'number' ? data.min : items.reduce((acc, it) => acc + it.min, 0)
       const maxSum = typeof data.max === 'number' ? data.max : items.reduce((acc, it) => acc + it.max, 999999)
-      return prompt(method, gameId, 'Elige cantidades', message, 'multiString', [], { min: minSum, max: maxSum }, items)
+      return prompt(method, gameId, tStatic('game', 'multi_amount_title'), message, 'multiString', [], { min: minSum, max: maxSum }, items)
     }
     case 'GAME_CHOOSE_MODE': {
       const abilities = asRecord(raw)
       const rawChoices = abilities.choices ?? (Array.isArray(abilities.options) ? abilities.options : cleanChoices(abilities.options))
-      return prompt(method, gameId, 'Elige modo', stringValue(abilities.message) ?? message, 'uuid', optionEntries(rawChoices), bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_mode'), stringValue(abilities.message) ?? message, 'uuid', optionEntries(rawChoices), bounds)
     }
     case 'GAME_CHOOSE_ONE': {
       const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))
-      return prompt(method, gameId, 'Elige una opción', message, 'string', choices, bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_option'), message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_COLOR': {
       const colors = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' }))
-      return prompt(method, gameId, 'Elige un color', message, 'string', colors, bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_color'), message, 'string', colors, bounds)
     }
     case 'GAME_CHOOSE_NUMBER': {
-      return prompt(method, gameId, 'Elige un número', message, 'integer', [], bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_number'), message, 'integer', [], bounds)
     }
     case 'GAME_CHOOSE_STRING': {
       const choices = Array.isArray(data.options)
@@ -261,24 +263,24 @@ export function parseFeedback(method: string, objectId: string | null, raw: unkn
         : Array.isArray(data.choices)
           ? data.choices.map((v: unknown, i: number) => ({ id: String(i), label: String(v), value: String(v) }))
           : optionEntries(cleanChoices(data.choices ?? data.options))
-      return prompt(method, gameId, 'Elige un nombre', message, 'string', choices, bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_name'), message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_BETWEEN': {
       const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))
-      return prompt(method, gameId, 'Elige entre opciones', message, 'string', choices, bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_between'), message, 'string', choices, bounds)
     }
     case 'GAME_CHOOSE_CARDS_ORDER': {
       const cards = cardOptions(data.cardsView1 ?? cleanChoices(data.options))
-      return prompt(method, gameId, 'Ordena las cartas', message, 'order', cards, bounds, undefined, undefined, true, undefined, undefined, undefined, feedbackCards(data))
+      return prompt(method, gameId, tStatic('game', 'choose_order'), message, 'order', cards, bounds, undefined, undefined, true, undefined, undefined, undefined, feedbackCards(data))
     }
     case 'GAME_TARGET_AMOUNT': {
-      return prompt(method, gameId, 'Elige cantidad para objetivo', message, 'integer', [], bounds)
+      return prompt(method, gameId, tStatic('game', 'choose_target_amount'), message, 'integer', [], bounds)
     }
     case 'GAME_SELECT_PLAYER':
     case 'GAME_TARGET_PLAYER': {
       const players = targetOptions(data)
       const isStartingPlayer = /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
-      return prompt(method, gameId, isStartingPlayer ? '¿Quién empieza?' : 'Elige jugador', message, 'uuid', players, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, isStartingPlayer)
+      return prompt(method, gameId, isStartingPlayer ? tStatic('game', 'who_starts') : tStatic('game', 'choose_player_title'), message, 'uuid', players, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, isStartingPlayer)
     }
     default:
       return null
@@ -435,7 +437,7 @@ function targetOptions(data: JsonRecord): FeedbackOption[] {
       ? possibleTargets
       : cardOptions(data.cardsView1).map((option) => option.id)
   return candidateIds.map((id, index) => {
-    return { id, label: labels.get(id) ?? `Objetivo ${index + 1} (${id.slice(0, 8)})`, value: id }
+    return { id, label: labels.get(id) ?? tStatic('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) }), value: id }
   })
 }
 
@@ -455,7 +457,7 @@ function multiAmountItems(value: unknown): FeedbackItem[] {
     const record = asRecord(item)
     return {
       id: stringValue(record.id) ?? String(index),
-      label: stringValue(record.message) ?? `Cantidad ${index + 1}`,
+      label: stringValue(record.message) ?? tStatic('game', 'amount_fallback', { index: String(index + 1) }),
       min: numberValue(record.min, 0),
       max: numberValue(record.max, 999),
       defaultValue: numberValue(record.defaultValue, numberValue(record.min, 0)),
@@ -465,7 +467,7 @@ function multiAmountItems(value: unknown): FeedbackItem[] {
 
 function cardSummary(value: unknown, fallback: string): string {
   const cards = cardOptions(value)
-  return cards.length ? `${fallback}: ${cards.length} cartas` : fallback
+  return cards.length ? tStatic('game', 'pile_summary', { fallback, count: String(cards.length) }) : fallback
 }
 
 export function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {

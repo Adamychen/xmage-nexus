@@ -11,6 +11,8 @@ function abbrev(hint: string): string {
   return words.slice(0, 2).map((w) => w[0].toUpperCase()).join('')
 }
 
+import { t as tStatic } from '../i18n'
+
 /**
  * Renders the restriction / ability icons the server sends on each card
  * (`cardIcons`). Goad and all combat restrictions (must/can't attack/block/untap/
@@ -31,7 +33,7 @@ export default function CardIcons({ icons }: { icons?: CardIcon[] }) {
         <span
           key={`r${i}`}
           className="card-icon restriction"
-          title={r.hint?.replace(/<br>/g, '\n') ?? 'Restricción'}
+          title={r.hint?.replace(/<br>/g, '\n') ?? tStatic('board', 'restriction_fallback')}
         >
           {r.text || '⚠'}
         </span>
