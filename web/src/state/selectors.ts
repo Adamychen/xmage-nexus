@@ -36,6 +36,7 @@ export function useSettings() {
  */
 export function isBlockingModal(s: AppState): boolean {
   if (s.userRequest) return true
+  if (s.rollbackDialogOpen) return true
   if (s.sideboardScreen) return true
   if (s.viewer) return true
   const f = s.feedback as FeedbackPrompt | null

@@ -3,6 +3,7 @@ import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName, getSourceCardName, isAbilityCard } from '../cards/cardImages'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import FormattedText from '../game/FormattedText'
+import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import './FloatingCardPreview.css'
 
@@ -194,13 +195,19 @@ export default function FloatingCardPreview({
             <div className="floating-card-fallback">
               <div className="floating-card-header">
                 <span className="floating-card-name">{name}</span>
-                {manaCost && <span className="floating-card-mana">{manaCost}</span>}
+                {manaCost && (
+                  <span className="floating-card-mana">
+                    <ManaCost manaCost={manaCost} size={16} />
+                  </span>
+                )}
               </div>
               {activeCard.cardTypes && activeCard.cardTypes.length > 0 && (
                 <div className="floating-card-type">{activeCard.cardTypes.join(' — ')}</div>
               )}
               {rules.length > 0 && (
-                <div className="floating-card-rules">{rules.join('\n')}</div>
+                <div className="floating-card-rules">
+                  <FormattedText text={rules.join('\n')} />
+                </div>
               )}
             </div>
           )}

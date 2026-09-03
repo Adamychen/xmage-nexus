@@ -2,6 +2,25 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import type { ScryfallSearchCard } from './scryfallSearch'
 
+export function isLandCard(cardName: string, typeLine?: string): boolean {
+  if (typeLine && /land/i.test(typeLine)) return true
+  const n = cardName.trim().toLowerCase()
+  return (
+    /^(plains|island|swamp|mountain|forest|llanura|isla|pantano|montaña|bosque|wastes)$/i.test(n) ||
+    n.endsWith(' land') ||
+    n.includes('guildgate')
+  )
+}
+
+export function fallbackCmc(cardName: string): number {
+  const n = cardName.trim().toLowerCase()
+  if (isLandCard(n)) return 0
+  if (n.includes('lotus') || n.includes('mox') || n.includes('bauble') || n.includes('ballista') || n.includes('ornithopter') || n.includes('memnite')) return 0
+  if (n.includes('bolt') || n.includes('goblin') || n.includes('shock') || n.includes('push') || n.includes('path to') || n.includes('swords to') || n.includes('thoughtseize') || n.includes('ponder') || n.includes('brainstorm') || n.includes('preordain') || n.includes('blaze')) return 1
+  if (n.includes('counterspell') || n.includes('arc trail') || n.includes('boros charm') || n.includes('charm') || n.includes('snapcaster') || n.includes('grizzly') || n.includes('signet') || n.includes('talisman')) return 2
+  return 3
+}
+
 export function cmcFromManaCost(manaCost?: string): number {
   if (!manaCost) return 0
   let cmc = 0

@@ -1,6 +1,7 @@
 import React from 'react'
 import type { CardView } from '../net/types'
 import { t as tStatic } from '../i18n'
+import { symbolToSvgPath } from '../decks/ArenaManaSymbols'
 import './FormattedText.css'
 
 interface FormattedTextProps {
@@ -128,11 +129,11 @@ export function parseMageTextTokens(raw: string): TextToken[] {
 }
 
 function parseManaTokens(text: string): TextToken[] {
-  const parts = text.split(/(\{[\w/]+\})/g)
+  const parts = text.split(/(\{[^}]+\})/g)
   const result: TextToken[] = []
   for (const part of parts) {
     if (!part) continue
-    if (/^\{[\w/]+\}$/.test(part)) {
+    if (/^\{[^}]+\}$/.test(part)) {
       result.push({ type: 'mana', content: part.slice(1, -1).toUpperCase() })
     } else {
       result.push({ type: 'text', content: part })
@@ -142,7 +143,7 @@ function parseManaTokens(text: string): TextToken[] {
 }
 
 export function ManaBadge({ symbol }: { symbol: string }) {
-  const sym = symbol.toUpperCase()
+  const sym = symbol.replace(/^\{|\}$/g, '').toUpperCase().trim()
   let className = 'mana-badge'
   let label = sym
 
@@ -167,9 +168,12 @@ export function ManaBadge({ symbol }: { symbol: string }) {
     className += ' mana-generic'
   }
 
+  const svgUrl = symbolToSvgPath(sym)
+
   return (
     <span className={className} title={`Maná ${sym}`}>
-      {label}
+      <img src={svgUrl} alt={`{${sym}}`} className="mana-symbol-svg" draggable={false} loading="lazy" />
+      <span className="visually-hidden">{label}</span>
     </span>
   )
 }

@@ -105,6 +105,7 @@ export interface AppState {
   sideboard: DeckCardEntry[]
   sideboardScreen: SideboardScreenState | null
   userRequest: UserRequestView | null
+  rollbackDialogOpen: boolean
   viewer: CardViewerState | null
   draft: DraftState | null
   tournament: TournamentState | null
@@ -151,6 +152,7 @@ export const initialState: AppState = {
   sideboard: [],
   sideboardScreen: null,
   userRequest: null,
+  rollbackDialogOpen: false,
   viewer: null,
   draft: null,
   tournament: null,

@@ -270,6 +270,7 @@ export interface TranslationSchema {
     useraction_ignore_desc: string
     useraction_unignore_desc: string
     user_status_available: string
+    leaderboard_subtitle: string
     leaderboard_no_results: string
     leaderboard_inspecting: string
     leaderboard_view_own: string
@@ -283,6 +284,8 @@ export interface TranslationSchema {
     leaderboard_format_limited: string
     leaderboard_tournaments_played: string
     leaderboard_fair_play: string
+    leaderboard_quit_ratio: string
+    leaderboard_reliable: string
     leaderboard_stat_total: string
     leaderboard_stat_wins: string
     leaderboard_stat_losses: string
@@ -291,6 +294,12 @@ export interface TranslationSchema {
     leaderboard_ignored_hint: string
     leaderboard_unblock: string
     leaderboard_no_ignored: string
+    tier_bronze: string
+    tier_silver: string
+    tier_gold: string
+    tier_platinum: string
+    tier_diamond: string
+    tier_mythic: string
     tier_bronze_desc: string
     tier_silver_desc: string
     tier_gold_desc: string
@@ -333,6 +342,8 @@ export interface TranslationSchema {
     revealed_hand: string
     concede: string
     concede_confirm: string
+    rollback: string
+    rollback_title: string
     leave: string
     concede_prompt: string
     leave_spectate_prompt: string
@@ -637,6 +648,17 @@ export interface TranslationSchema {
     planeswalker_hint: string
     userrequest_title: string
     userrequest_error: string
+    rollback_title: string
+    rollback_desc: string
+    rollback_current_turn: string
+    rollback_prev_turn: string
+    rollback_turns_ago: string
+    rollback_confirm: string
+    rollback_cancel: string
+    rollback_undo_btn: string
+    rollback_undo_hint: string
+    rollback_priority_warn: string
+    rollback_sent: string
     viewer_title: string
     viewer_empty: string
     viewer_close: string
@@ -734,6 +756,7 @@ export interface TranslationSchema {
     builder_swap_to_side: string
     builder_swap_to_main: string
     builder_side_empty: string
+    inspect_double_click: string
   }
   errors: {
     connection_failed: string

@@ -52,5 +52,9 @@ describe('isBlockingModal', () => {
     const c = base()
     c.viewer = { title: '', cards: [] }
     expect(isBlockingModal(c)).toBe(true)
+
+    const d = base()
+    d.rollbackDialogOpen = true
+    expect(isBlockingModal(d)).toBe(true)
   })
 })

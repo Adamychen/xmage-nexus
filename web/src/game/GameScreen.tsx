@@ -5,9 +5,10 @@ import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
-import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState } from '../state/store'
+import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState, openRollbackDialog } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
+import RollbackDialog from './RollbackDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
 import SideboardScreen from './SideboardScreen'
 import DraftScreen from './DraftScreen'
@@ -263,6 +264,16 @@ export default function GameScreen() {
                   : t('game', 'pod_view')}
             </button>
           )}
+          {game?.rollbackTurnsAllowed && !!me && (
+            <button
+              type="button"
+              className="rollback-game-btn"
+              onClick={() => openRollbackDialog()}
+              title={t('game', 'rollback_title')}
+            >
+              ⏪ {t('game', 'rollback')}
+            </button>
+          )}
           <button
             type="button"
             className="leave-game-btn"
@@ -438,6 +449,7 @@ export default function GameScreen() {
       </div>
       <FeedbackDialog />
       <UserRequestDialog />
+      <RollbackDialog />
       <LimitedDeckDialog />
       <DraftScreen />
       <ConstructScreen />

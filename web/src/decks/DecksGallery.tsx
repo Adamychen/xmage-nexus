@@ -5,11 +5,31 @@ import type { DeckV2 } from './types'
 import { MAX_DECKS, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { parseAnyDeck, exportDck, exportArena } from './parseDck'
-import { DECKS } from '../lobby/decks'
+import { DECKS, type DeckCard } from '../lobby/decks'
 import { DeckBrowser } from './DeckBrowser'
+import { DeckInspectorModal } from './DeckInspectorModal'
 import type { MetaDeckItem } from './metaDeckCatalog'
+import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import './DecksGallery.css'
+
+function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
+  const set = new Set<'W' | 'U' | 'B' | 'R' | 'G'>()
+  for (const c of cards) {
+    const n = c.cardName.toLowerCase()
+    if (n.includes('island') || n.includes('isla')) set.add('U')
+    if (n.includes('mountain') || n.includes('montaña')) set.add('R')
+    if (n.includes('plains') || n.includes('llanura')) set.add('W')
+    if (n.includes('swamp') || n.includes('pantano')) set.add('B')
+    if (n.includes('forest') || n.includes('bosque')) set.add('G')
+    if (n.includes('bolt') || n.includes('blaze') || n.includes('goblin') || n.includes('trail')) set.add('R')
+    if (n.includes('charm')) {
+      set.add('R')
+      set.add('W')
+    }
+  }
+  return [...set].sort()
+}
 
 function preconToV2(): DeckV2[] {
   const now = Date.now()
@@ -17,7 +37,7 @@ function preconToV2(): DeckV2[] {
     ...d,
     id: `precon-${i}-${d.name}`,
     format: d.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' as const : 'Freeform' as const,
-    colors: [],
+    colors: inferDeckColors(d.cards),
     coverCard: d.cards[0],
     createdAt: now - 1000000 - i * 1000,
     updatedAt: now - 1000000 - i * 1000,
@@ -34,6 +54,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [formatFilter, setFormatFilter] = useState<string>('All Decks')
   const [sortBy, setSortBy] = useState<'updated' | 'name' | 'size'>('updated')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [inspectingDeck, setInspectingDeck] = useState<DeckV2 | null>(null)
   const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
   const [importName, setImportName] = useState('')
@@ -323,7 +344,15 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               </div>
               <div className="decks-mana-filter">
                 {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
-                  <button key={c} type="button" className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''} pip-${c.toLowerCase()}`} onClick={() => toggleColor(c)} title={c}>{c}</button>
+                  <button
+                    key={c}
+                    type="button"
+                    className={`mana-filter-btn ${colorFilter.has(c) ? 'active' : ''}`}
+                    onClick={() => toggleColor(c)}
+                    title={c}
+                  >
+                    <ManaPip symbol={c} size={18} />
+                  </button>
                 ))}
               </div>
             </div>
@@ -341,7 +370,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           }}>
             <DeckBoxCreate onClick={handleCreate} />
             {filtered.map((d) => (
-              <DeckBox key={d.id} deck={d} selected={selectedId === d.id} onSelect={() => setSelectedId(d.id)} />
+              <DeckBox
+                key={d.id}
+                deck={d}
+                selected={selectedId === d.id}
+                onSelect={() => setSelectedId(d.id)}
+                onDoubleClick={() => setInspectingDeck(d)}
+              />
             ))}
           </div>
 
@@ -397,6 +432,18 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             </div>
           </div>
         </div>
+      )}
+
+      {inspectingDeck && (
+        <DeckInspectorModal
+          deck={inspectingDeck}
+          onClose={() => setInspectingDeck(null)}
+          onEdit={(deckToEdit) => {
+            setInspectingDeck(null)
+            onEdit(deckToEdit.id)
+          }}
+          onCopy={handleClone}
+        />
       )}
     </div>
   )

@@ -12,6 +12,7 @@ import { BasicLandAdder } from './BasicLandAdder'
 import { BASIC_LAND_PRESETS, type BasicLandPreset } from './deckUtils'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
+import { DeckInspectorModal } from './DeckInspectorModal'
 import { DeckImportModal, type ImportResult } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat } from './formatRules'
@@ -35,6 +36,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
   const [showSampleHand, setShowSampleHand] = useState(false)
+  const [showInspector, setShowInspector] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
 
@@ -104,7 +106,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }
     if (toFetch.length === 0) return
 
-    for (const c of toFetch.slice(0, 15)) {
+    for (const c of toFetch) {
       const url = c.setCode && c.cardNumber && c.cardNumber !== '0'
         ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
         : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
@@ -237,6 +239,25 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         nextSide = [...deck.sideboard, { cardName, setCode, cardNumber, amount: 1 }]
       }
       schedulePersist({ ...deck, sideboard: nextSide })
+    }
+
+    if (cardData.manaCost !== undefined || cardData.typeLine) {
+      setMetaMap((prev) => {
+        const nxt = new Map(prev)
+        const meta: CardStripMeta = {
+          artCropUrl: cardData.artCropUrl ?? null,
+          imageUrl: cardData.imageUrl ?? null,
+          backImageUrl: cardData.backImageUrl ?? null,
+          manaCost: cardData.manaCost ?? '',
+          cmc: cardData.cmc ?? 0,
+          typeLine: cardData.typeLine ?? '',
+          colors: cardData.colors ?? [],
+          legalities: cardData.legalities,
+        }
+        nxt.set(`${setCode}/${cardNumber}`, meta)
+        nxt.set(cardName.toLowerCase(), meta)
+        return nxt
+      })
     }
   }
 
@@ -559,6 +580,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             issues={validationReport.issues}
             layout={layout}
             onToggleLayout={() => setLayout((l) => (l === 'vertical' ? 'horizontal' : 'vertical'))}
+            onOpenInspector={() => setShowInspector(true)}
           />
 
           {/* Basic Land Quick Adder & Suggester */}
@@ -725,6 +747,16 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             </div>
           )}
         </div>
+      )}
+
+      {/* Deck Inspector & Statistics Modal */}
+      {showInspector && deck && (
+        <DeckInspectorModal
+          deck={deck}
+          onClose={() => setShowInspector(false)}
+          onEdit={() => setShowInspector(false)}
+          onCopy={() => {}}
+        />
       )}
     </div>
   )

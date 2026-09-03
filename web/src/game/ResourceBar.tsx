@@ -7,6 +7,7 @@ import type { CrossZonePlayable } from '../board/crossZone'
 import CardSlot from '../board/CardSlot'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { ManaPip } from '../decks/ArenaManaSymbols'
 import './ResourceBar.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -107,12 +108,15 @@ export default function ResourceBar({ player, side, compact = false, crossZonePl
          </button>
          {manaOpen && (
            <div className="mana-breakdown">
-             {MANA_COLORS.map((c) => (
-               <div key={c.key} className={`mana-pip ${c.className}`}>
-                 <span className="mana-symbol">{c.symbol}</span>
-                 <span className="mana-count">{pool[c.key] ?? 0}</span>
-               </div>
-             ))}
+              {MANA_COLORS.map((c) => (
+                <div key={c.key} className={`mana-pip ${c.className}`}>
+                  <span className="mana-symbol">
+                    <ManaPip symbol={c.symbol} size={18} />
+                    <span className="visually-hidden">{c.symbol}</span>
+                  </span>
+                  <span className="mana-count">{pool[c.key] ?? 0}</span>
+                </div>
+              ))}
            </div>
          )}
        </div>

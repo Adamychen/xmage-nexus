@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardImages'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
+import { ManaCost } from '../decks/ArenaManaSymbols'
 import './CardPreview.css'
 
 interface Props {
@@ -114,7 +115,11 @@ export default function CardPreview({ card, onClose }: Props) {
       <div className="card-preview-info">
         <div className="card-preview-header">
           <div className="card-preview-name">{isAbility ? getSourceCardName(activeCard) : activeCard.name}</div>
-          {manaCost && <div className="card-preview-mana">{manaCost}</div>}
+          {manaCost && (
+            <div className="card-preview-mana">
+              <ManaCost manaCost={manaCost} size={18} />
+            </div>
+          )}
         </div>
 
         {activeCard.cardTypes && activeCard.cardTypes.length > 0 && (

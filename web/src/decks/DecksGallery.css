@@ -106,15 +106,32 @@
   color: #d6dce6;
   cursor: pointer;
 }
-.decks-mana-filter { display: flex; gap: 6px; }
+.decks-mana-filter { display: flex; gap: 6px; align-items: center; }
 .mana-filter-btn {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.9);
-  font-weight: 800; font-size: 0.72rem;
-  cursor: pointer; opacity: 0.45; transition: opacity 150ms, transform 150ms, box-shadow 150ms;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.35);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: #141a22;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 150ms, transform 150ms, box-shadow 150ms, border-color 150ms;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
-.mana-filter-btn.active { opacity: 1; transform: scale(1.08); box-shadow: 0 0 12px rgba(255,255,255,0.45); }
+.mana-filter-btn:hover {
+  opacity: 0.85;
+  transform: scale(1.08);
+}
+.mana-filter-btn.active {
+  opacity: 1;
+  transform: scale(1.12);
+  border-color: #ecc94b;
+  box-shadow: 0 0 10px rgba(236, 201, 75, 0.5);
+}
 .decks-counter { margin-left: auto; font-weight: 700; opacity: 0.8; letter-spacing: 0.04em; }
 
 .decks-grid {

@@ -11,6 +11,7 @@ export interface RankInfo {
   border: string
   minElo: number
   maxElo: number
+  nextTier: RankTier | null
   nextTierName: string | null
   nextTierMinElo: number | null
   progressPercent: number
@@ -104,6 +105,7 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
       border: 'rgba(251, 146, 60, 0.6)',
       minElo: 2000,
       maxElo: 3000,
+      nextTier: null,
       nextTierName: null,
       nextTierMinElo: null,
       progressPercent: 100,
@@ -137,8 +139,37 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
     border: config.border,
     minElo: config.minElo,
     maxElo: config.maxElo,
+    nextTier: nextConfig?.tier ?? null,
     nextTierName: nextConfig?.name ?? null,
     nextTierMinElo: nextConfig?.minElo ?? null,
     progressPercent,
   }
+}
+
+export function getTierName(tier: RankTier, t?: (ns: 'lobby', key: string) => string): string {
+  if (!t) {
+    const fallbackMap: Record<RankTier, string> = {
+      BRONZE: 'Bronce',
+      SILVER: 'Plata',
+      GOLD: 'Oro',
+      PLATINUM: 'Platino',
+      DIAMOND: 'Diamante',
+      MYTHIC: 'Mítico',
+    }
+    return fallbackMap[tier] ?? tier
+  }
+  const keyMap: Record<RankTier, string> = {
+    BRONZE: 'tier_bronze',
+    SILVER: 'tier_silver',
+    GOLD: 'tier_gold',
+    PLATINUM: 'tier_platinum',
+    DIAMOND: 'tier_diamond',
+    MYTHIC: 'tier_mythic',
+  }
+  return t('lobby', keyMap[tier])
+}
+
+export function getRankLabel(rank: RankInfo, t?: (ns: 'lobby', key: string) => string): string {
+  const name = getTierName(rank.tier, t)
+  return rank.tier === 'MYTHIC' ? name : `${name} ${rank.subTier}`
 }

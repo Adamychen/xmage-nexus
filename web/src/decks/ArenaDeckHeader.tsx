@@ -2,6 +2,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
+import { isLandCard, fallbackCmc } from './deckUtils'
 import { useTranslation } from '../i18n'
 import './ArenaDeckHeader.css'
 
@@ -18,6 +19,7 @@ export function ArenaDeckHeader({
   issues = [],
   layout,
   onToggleLayout,
+  onOpenInspector,
 }: {
   name: string
   onNameChange: (name: string) => void
@@ -31,14 +33,16 @@ export function ArenaDeckHeader({
   issues?: ValidationIssue[]
   layout: 'vertical' | 'horizontal'
   onToggleLayout: () => void
+  onOpenInspector?: () => void
 }) {
-  // Compute mana curve buckets
+  // Compute mana curve buckets (excluding lands)
   const buckets = Array(8).fill(0) as number[]
   let maxBucket = 0
   for (const c of cards) {
+    if (isLandCard(c.cardName)) continue
     const key = `${c.setCode}/${c.cardNumber}`
-    const cmc = metaMap.get(key) ?? metaMap.get(c.cardName.toLowerCase()) ?? 0
-    const idx = cmc >= 7 ? 7 : cmc
+    const cmc = metaMap.get(key) ?? metaMap.get(c.cardName.toLowerCase()) ?? fallbackCmc(c.cardName)
+    const idx = cmc >= 7 ? 7 : Math.max(0, Math.floor(cmc))
     buckets[idx] += c.amount
     maxBucket = Math.max(maxBucket, buckets[idx])
   }
@@ -55,7 +59,11 @@ export function ArenaDeckHeader({
     : undefined
 
   return (
-    <div className="arena-deck-header">
+    <div
+      className="arena-deck-header"
+      onDoubleClick={onOpenInspector}
+      title={onOpenInspector ? t('decks', 'inspect_double_click') : undefined}
+    >
       {/* Background artwork */}
       {coverArtUrl && (
         <div
@@ -113,7 +121,14 @@ export function ArenaDeckHeader({
       </div>
 
       {/* Mini Mana Curve Histogram */}
-      <div className="deck-header-curve" title={t('decks', 'builder_mana_curve')}>
+      <div
+        className="deck-header-curve"
+        title={`${t('decks', 'builder_mana_curve')}${onOpenInspector ? ' — ' + t('decks', 'inspect_double_click') : ''}`}
+        onClick={onOpenInspector}
+        role={onOpenInspector ? 'button' : undefined}
+        tabIndex={onOpenInspector ? 0 : undefined}
+        onKeyDown={(e) => e.key === 'Enter' && onOpenInspector?.()}
+      >
         {buckets.map((v, i) => {
           const heightPercent = Math.max(8, (v / maxBucket) * 100)
           return (
@@ -128,6 +143,18 @@ export function ArenaDeckHeader({
           )
         })}
       </div>
+
+      {/* View Deck Stats / Details Button */}
+      {onOpenInspector && (
+        <button
+          type="button"
+          className="deck-header-layout-btn"
+          onClick={onOpenInspector}
+          title={t('decks', 'inspect_double_click')}
+        >
+          📊
+        </button>
+      )}
 
       {/* Change Deck Layout Toggle Button */}
       <button

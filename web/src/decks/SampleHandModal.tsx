@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
+import { ManaCost } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import './SampleHandModal.css'
 
@@ -211,7 +212,9 @@ export function SampleHandModal({
                       )}
                       <div className="sample-card-scrim" />
                       {card.manaCost && (
-                        <span className="sample-card-cost">{card.manaCost}</span>
+                        <span className="sample-card-cost">
+                          <ManaCost manaCost={card.manaCost} size={15} />
+                        </span>
                       )}
                     </div>
 

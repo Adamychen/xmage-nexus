@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { UsersView } from '../net/types'
-import { getRankInfo, RANK_TIERS_CONFIG } from './ranking'
+import { getRankInfo, getTierName, getRankLabel, RANK_TIERS_CONFIG } from './ranking'
 import { getIgnoredUsers, removeIgnoredUser } from './ignoreList'
 import { appendLocalChatMessage } from '../state/store'
 import RankBadge from './RankBadge'
@@ -56,6 +56,9 @@ export default function LeaderboardModal({
 
   const displayedElo = targetUser?.constructedRating ?? 1500
   const displayedRank = getRankInfo(displayedElo)
+  const displayedLimitedRank = getRankInfo(
+    targetUser?.limitedRating && targetUser.limitedRating > 0 ? targetUser.limitedRating : 1500
+  )
 
   // Compute wins / losses and winrate for user
   const parseStats = (historyStr?: string | null, elo?: number) => {
@@ -127,7 +130,7 @@ export default function LeaderboardModal({
   return (
     <div className="feedback-backdrop leaderboard-backdrop" role="presentation" onClick={onClose}>
       <section
-        className="feedback-dialog leaderboard-dialog"
+        className="leaderboard-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="lb-modal-title"
@@ -137,7 +140,7 @@ export default function LeaderboardModal({
           <div className="leaderboard-header-title">
             <h2 id="lb-modal-title">🏆 {t('lobby', 'nav_ranking')}</h2>
             <span className="leaderboard-subtitle">
-              XMage Nexus Competitive Elo & Leaderboard
+              {t('lobby', 'leaderboard_subtitle')}
             </span>
           </div>
           <button type="button" className="leaderboard-close-btn" onClick={onClose}>
@@ -307,7 +310,7 @@ export default function LeaderboardModal({
                       {targetUser?.infoPing && <PingBadge infoPing={targetUser.infoPing} compact />}
                     </div>
                     <span className="profile-rank-tier" style={{ color: displayedRank.color }}>
-                      {displayedRank.label}
+                      {getRankLabel(displayedRank, t)}
                     </span>
                     <span className="profile-rank-elo">⭐ {t('lobby', 'leaderboard_official_elo', { elo: String(displayedElo) })}</span>
                     <span className="profile-rank-desc">
@@ -317,10 +320,10 @@ export default function LeaderboardModal({
                 </div>
 
                 {/* Progress to Next Tier */}
-                {displayedRank.nextTierName && (
+                {displayedRank.nextTier && (
                   <div className="profile-progress-box">
                     <div className="progress-labels">
-                      <span>{t('lobby', 'leaderboard_progress_to', { tier: displayedRank.nextTierName })}</span>
+                      <span>{t('lobby', 'leaderboard_progress_to', { tier: getTierName(displayedRank.nextTier, t) })}</span>
                       <span className="progress-value">
                         {t('lobby', 'leaderboard_progress_value', { elo: String(displayedElo), next: String(displayedRank.nextTierMinElo), percent: String(displayedRank.progressPercent) })}
                       </span>
@@ -336,7 +339,7 @@ export default function LeaderboardModal({
                     </div>
                   </div>
                 )}
-                {!displayedRank.nextTierName && (
+                {!displayedRank.nextTier && (
                   <div className="profile-mythic-badge">
                     <span>{t('lobby','leaderboard_col_tier')} {t('lobby', 'leaderboard_mythic_badge')}</span>
                   </div>
@@ -353,7 +356,7 @@ export default function LeaderboardModal({
                   <div className="format-card-body">
                     <span className="format-elo">{displayedElo} ELO</span>
                     <span className="format-tier" style={{ color: displayedRank.color }}>
-                      {displayedRank.label}
+                      {getRankLabel(displayedRank, t)}
                     </span>
                   </div>
                 </div>
@@ -372,21 +375,9 @@ export default function LeaderboardModal({
                     </span>
                     <span
                       className="format-tier"
-                      style={{
-                        color: getRankInfo(
-                          targetUser?.limitedRating && targetUser.limitedRating > 0
-                            ? targetUser.limitedRating
-                            : 1500,
-                        ).color,
-                      }}
+                      style={{ color: displayedLimitedRank.color }}
                     >
-                      {
-                        getRankInfo(
-                          targetUser?.limitedRating && targetUser.limitedRating > 0
-                            ? targetUser.limitedRating
-                            : 1500,
-                        ).label
-                      }
+                      {getRankLabel(displayedLimitedRank, t)}
                     </span>
                   </div>
                 </div>
@@ -403,9 +394,9 @@ export default function LeaderboardModal({
                         : '0'}
                     </span>
                     <span className="format-tier text-muted">
-                      {targetUser?.tourneyQuitRatio
-                        ? `${targetUser.tourneyQuitRatio}% aband.`
-                        : '0% aband.'}
+                      {t('lobby', 'leaderboard_quit_ratio', {
+                        ratio: String(targetUser?.tourneyQuitRatio ?? 0),
+                      })}
                     </span>
                   </div>
                 </div>
@@ -421,8 +412,10 @@ export default function LeaderboardModal({
                     </span>
                     <span className="format-tier text-muted">
                       {targetUser?.matchQuitRatio
-                        ? `${targetUser.matchQuitRatio}% aband.`
-                        : '100% fiable'}
+                        ? t('lobby', 'leaderboard_quit_ratio', {
+                            ratio: String(targetUser.matchQuitRatio),
+                          })
+                        : t('lobby', 'leaderboard_reliable')}
                     </span>
                   </div>
                 </div>
@@ -497,7 +490,7 @@ export default function LeaderboardModal({
                     <div className="tier-card-header">
                       <span className="tier-icon">{tier.icon}</span>
                       <span className="tier-name" style={{ color: tier.color }}>
-                        {tier.name}
+                        {getTierName(tier.tier, t)}
                       </span>
                     </div>
                     <div className="tier-elo-range">

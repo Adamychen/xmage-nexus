@@ -49,4 +49,23 @@ describe('DeckBox', () => {
     expect(screen.getByText('Incomplete Deck')).toBeDefined()
     expect(screen.getByText('⚠️ 30/60')).toBeDefined()
   })
+
+  it('triggers onDoubleClick when double clicked', () => {
+    const deck: DeckV2 = {
+      id: 'deck-3',
+      name: 'Test Deck',
+      format: 'Standard',
+      colors: ['R'],
+      cards: [{ cardName: 'Mountain', setCode: 'DMU', cardNumber: '280', amount: 60 }],
+      sideboard: [],
+      createdAt: 1000,
+      updatedAt: 1000,
+      source: 'custom',
+    }
+    let dblClicked = false
+    render(<DeckBox deck={deck} onDoubleClick={() => { dblClicked = true }} />)
+    const box = screen.getByRole('button')
+    box.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(dblClicked).toBe(true)
+  })
 })

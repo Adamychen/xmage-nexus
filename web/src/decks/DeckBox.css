@@ -109,7 +109,12 @@
 .deck-box-colors {
   display: flex;
   gap: 4px;
+  align-items: center;
   flex-shrink: 0;
+}
+.deck-box-colors .mana-symbol {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
 }
 .mana-pip {
   width: 22px;

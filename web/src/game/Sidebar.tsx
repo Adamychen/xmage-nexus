@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useGame, returnToLobby, concedeGame, useStore, useSettings, setSetting } from '../state/store'
+import { useGame, returnToLobby, concedeGame, useStore, useSettings, setSetting, openRollbackDialog } from '../state/store'
 import { FX_SPEEDS } from '../board/fx'
 import { useFullscreen } from '../utils/fullscreen'
 import { formatTimer, useTickingTimer } from '../utils/timer'
@@ -73,6 +73,9 @@ export default function Sidebar() {
       case 'fullscreen':
         toggleFullscreen()
         break
+      case 'rollback':
+        openRollbackDialog()
+        break
     }
   }
 
@@ -90,6 +93,9 @@ export default function Sidebar() {
   const navItems = [
     { id: 'settings', label: t('common', 'settings'), path: ICON_PATHS.settings, active: showFx },
     { id: 'help', label: t('game', 'help_wiki'), path: ICON_PATHS.help, active: showHelp },
+    ...(game?.rollbackTurnsAllowed && me
+      ? [{ id: 'rollback', label: t('game', 'rollback'), path: 'M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z' }]
+      : []),
     {
       id: 'fullscreen',
       label: isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen'),

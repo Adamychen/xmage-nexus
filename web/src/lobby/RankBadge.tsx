@@ -1,4 +1,5 @@
-import { getRankInfo } from './ranking'
+import { getRankInfo, getTierName, getRankLabel } from './ranking'
+import { useTranslation } from '../i18n'
 import './RankBadge.css'
 
 interface RankBadgeProps {
@@ -9,7 +10,10 @@ interface RankBadgeProps {
 }
 
 export default function RankBadge({ elo, showElo = false, compact = false, className = '' }: RankBadgeProps) {
+  const { t } = useTranslation()
   const rank = getRankInfo(elo)
+  const tierName = getTierName(rank.tier, t)
+  const label = getRankLabel(rank, t)
   const numericElo = typeof elo === 'number' ? elo : parseInt(String(elo ?? '1500'), 10) || 1500
 
   return (
@@ -20,10 +24,10 @@ export default function RankBadge({ elo, showElo = false, compact = false, class
         borderColor: rank.border,
         color: rank.color,
       }}
-      title={`Rango: ${rank.label} (${numericElo} ELO)`}
+      title={`${t('lobby', 'leaderboard_col_tier')}: ${label} (${numericElo} ELO)`}
     >
       <span className="rank-badge-icon">{rank.icon}</span>
-      <span className="rank-badge-name">{compact ? rank.name : rank.label}</span>
+      <span className="rank-badge-name">{compact ? tierName : label}</span>
       {showElo && <span className="rank-badge-elo">({numericElo})</span>}
     </div>
   )

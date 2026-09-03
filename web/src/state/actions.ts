@@ -82,6 +82,30 @@ export async function concedeGame(gameId: string) {
   returnToLobby()
 }
 
+export function openRollbackDialog() {
+  setState({ rollbackDialogOpen: true })
+}
+
+export function closeRollbackDialog() {
+  setState({ rollbackDialogOpen: false })
+}
+
+export async function requestRollback(gameId: string, turnsToRollback = 0) {
+  const res = await cmds.sendPlayerAction('ROLLBACK_TURNS', gameId, turnsToRollback)
+  if (!res.ok) {
+    setState({ error: res.error ?? 'Error requesting rollback' })
+  }
+  return res
+}
+
+export async function requestUndo(gameId: string) {
+  const res = await cmds.sendPlayerAction('UNDO', gameId)
+  if (!res.ok) {
+    setState({ error: res.error ?? 'Error requesting undo' })
+  }
+  return res
+}
+
 export function returnToLobby() {
   const s = getState()
   const gameId = s.gameId

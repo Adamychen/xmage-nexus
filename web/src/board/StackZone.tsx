@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
-import { awaitImageUrl, isAbilityCard, cardName } from '../cards/cardImages'
+import { awaitImageUrl, isAbilityCard } from '../cards/cardImages'
+import { useLocalizedCardName } from '../cards/cardLocalization'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
@@ -191,6 +192,20 @@ function toSmall(url: string | null): string | null {
   return url.replace('/normal/', '/small/')
 }
 
+function StackEntryCardName({ card }: { card: CardView }) {
+  const { displayName, originalName } = useLocalizedCardName(card)
+  const isTranslated = displayName !== originalName
+
+  return (
+    <span
+      className="stack-tl-name"
+      title={isTranslated ? `${originalName} (${displayName})` : undefined}
+    >
+      {displayName}
+    </span>
+  )
+}
+
 /** Entry del stack que registra su rect al desmontar (useLayoutEffect cleanup,
  *  como CardSlot) para que los vuelos de resolución salgan del slot exacto. */
 function RecordedStackEntry({
@@ -376,7 +391,7 @@ export default function StackZone({
 
                   <div className="stack-tl-info">
                     <div className="stack-tl-name-row">
-                      <span className="stack-tl-name">{cardName(card)}</span>
+                      <StackEntryCardName card={card} />
                       {manaCost && (
                         <span className="stack-tl-mana">
                           <FormattedText text={manaCost} />

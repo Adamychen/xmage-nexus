@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { DeckV2 } from './types'
 import { deckMainCount } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
+import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import './DeckBox.css'
 
@@ -50,7 +51,17 @@ function useDeckCoverUrl(deck: DeckV2): string | null {
   return url
 }
 
-export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?: boolean; onSelect?: () => void }) {
+export function DeckBox({
+  deck,
+  selected,
+  onSelect,
+  onDoubleClick,
+}: {
+  deck: DeckV2
+  selected?: boolean
+  onSelect?: () => void
+  onDoubleClick?: () => void
+}) {
   const { t } = useTranslation()
   const coverUrl = useDeckCoverUrl(deck)
   const total = deckMainCount(deck)
@@ -62,7 +73,14 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
   const issueTooltip = formatReport.issues.map((i) => `• ${i.message}`).join('\n')
 
   return (
-    <div className={`deck-box ${selected ? 'selected' : ''}`} onClick={onSelect} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}>
+    <div
+      className={`deck-box ${selected ? 'selected' : ''}`}
+      onClick={onSelect}
+      onDoubleClick={onDoubleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}
+    >
       <div className="deck-box-art">
         {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deck.name.slice(0, 2).toUpperCase()}</div>}
         <div className="deck-box-art-scrim" />
@@ -79,11 +97,15 @@ export function DeckBox({ deck, selected, onSelect }: { deck: DeckV2; selected?:
         {colors.length > 0 && (
           <span className="deck-box-colors">
             {colors.map((c) => (
-              <span key={c} className={`mana-pip pip-${c.toLowerCase()}`}>{c}</span>
+              <ManaPip key={c} symbol={c} size={18} />
             ))}
           </span>
         )}
-        {colors.length === 0 && <span className="deck-box-colors"><span className="mana-pip pip-c">C</span></span>}
+        {colors.length === 0 && (
+          <span className="deck-box-colors">
+            <ManaPip symbol="C" size={18} />
+          </span>
+        )}
       </div>
       <div className="deck-box-meta">
         <span className="deck-box-count">{total} {t('decks', 'total_cards')}</span>

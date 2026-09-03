@@ -1,0 +1,130 @@
+.rollback-dialog {
+  max-width: 480px;
+  width: 90vw;
+}
+
+.rollback-description {
+  color: #a0aec0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.rollback-priority-notice {
+  background: rgba(237, 137, 54, 0.15);
+  border: 1px solid rgba(237, 137, 54, 0.4);
+  color: #f6ad55;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rollback-turn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rollback-turn-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+}
+
+.rollback-turn-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.rollback-turn-option.selected {
+  background: rgba(99, 179, 237, 0.15);
+  border-color: #4299e1;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+}
+
+.rollback-turn-option input[type="radio"] {
+  accent-color: #4299e1;
+  cursor: pointer;
+}
+
+.rollback-undo-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.rollback-undo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rollback-undo-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e0;
+}
+
+.rollback-undo-hint {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.rollback-undo-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 120ms ease;
+}
+
+.rollback-undo-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.rollback-game-btn {
+  background: rgba(246, 173, 85, 0.12);
+  border: 1px solid rgba(246, 173, 85, 0.3);
+  color: #f6ad55;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+}
+
+.rollback-game-btn:hover {
+  background: rgba(246, 173, 85, 0.25);
+  border-color: rgba(246, 173, 85, 0.6);
+  color: #feebc8;
+}
