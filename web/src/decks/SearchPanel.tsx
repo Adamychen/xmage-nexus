@@ -5,6 +5,7 @@ import { ArenaFilterBar } from './ArenaFilterBar'
 import { ArenaCardGrid } from './ArenaCardGrid'
 import type { DeckFormat } from './types'
 import { FORMAT_CONFIGS } from './formatRules'
+import { useTranslation } from '../i18n'
 import './SearchPanel.css'
 
 export default function SearchPanel({
@@ -20,6 +21,8 @@ export default function SearchPanel({
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
 }) {
+  const { cardLang, setCardLanguage, lang: uiLang } = useTranslation()
+  const [searchLang, setSearchLang] = useState<string>(() => cardLang || uiLang || 'es')
   const [rawQuery, setRawQuery] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
   const [cmcFilter, setCmcFilter] = useState<number | null>(null)
@@ -61,7 +64,14 @@ export default function SearchPanel({
     return parts.join(' ')
   }, [rawQuery, colorFilter, typeFilter, cmcFilter])
 
-  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery)
+  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery, searchLang)
+
+  const handleSearchLangChange = (nextLang: string) => {
+    setSearchLang(nextLang)
+    if (nextLang !== 'any') {
+      setCardLanguage(nextLang)
+    }
+  }
 
   const toggleColor = (c: string) => {
     const next = new Set(colorFilter)
@@ -89,6 +99,8 @@ export default function SearchPanel({
         typeFilter={typeFilter}
         onTypeChange={setTypeFilter}
         onReset={handleReset}
+        searchLang={searchLang}
+        onSearchLangChange={handleSearchLangChange}
         loading={loading}
       />
       <ArenaCardGrid

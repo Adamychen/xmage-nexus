@@ -209,6 +209,15 @@
   padding: 12px;
 }
 
+.lobby-main.has-deck-builder {
+  padding: 0;
+}
+
+.lobby-main.has-deck-builder .deck-builder {
+  border-radius: 0;
+  border: none;
+}
+
 .lobby-error-banner,
 .lobby-notice-banner {
   flex-shrink: 0;

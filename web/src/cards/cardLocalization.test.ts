@@ -112,4 +112,13 @@ describe('cardLocalization', () => {
     expect(translated).toBe('Elfi di Llanowar')
     expect(getCachedCardName('Llanowar Elves', 'it')).toBe('Elfi di Llanowar')
   })
+
+  it('localizes DeckCard instances seamlessly', async () => {
+    setCachedCardName('Lightning Bolt', 'Relámpago', 'es')
+    const deckCard = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }
+
+    const { result } = renderHook(() => useLocalizedCardName(deckCard))
+    expect(result.current.originalName).toBe('Lightning Bolt')
+    expect(result.current.displayName).toBe('Relámpago')
+  })
 })

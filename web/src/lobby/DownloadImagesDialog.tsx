@@ -15,9 +15,10 @@ export interface DownloadImagesDialogProps {
 }
 
 export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogProps) {
-  const { t } = useTranslation()
+  const { t, cardLanguages, cardLang: globalCardLang } = useTranslation()
   const [source, setSource] = useState<DownloadSource>('scryfall_normal')
   const [scope, setScope] = useState<DownloadScope>('STANDARD')
+  const [downloadLang, setDownloadLang] = useState<string>(globalCardLang || 'en')
   const [concurrency, setConcurrency] = useState<number>(5)
   const [onlyMissing, setOnlyMissing] = useState<boolean>(true)
   const [progress, setProgress] = useState<DownloadProgress>(imageDownloader.getProgress())
@@ -37,7 +38,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
   }
 
   const handleStart = () => {
-    void imageDownloader.startDownload(scope, source, concurrency, onlyMissing)
+    void imageDownloader.startDownload(scope, source, concurrency, onlyMissing, downloadLang)
   }
 
   const handlePause = () => {
@@ -136,6 +137,23 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
                     </option>
                   ))}
                 </optgroup>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="dl-lang">{t('common', 'card_language')}:</label>
+              <select
+                id="dl-lang"
+                value={downloadLang}
+                disabled={isRunning}
+                onChange={(e) => setDownloadLang(e.target.value)}
+                className="download-select"
+              >
+                {cardLanguages.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.flag} {l.name} ({l.code.toUpperCase()})
+                  </option>
+                ))}
               </select>
             </div>
 

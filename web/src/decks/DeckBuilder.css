@@ -88,27 +88,26 @@
 /* Main Split View */
 .deck-builder-body {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 380px;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   flex: 1;
   min-height: 0;
   height: calc(100% - 48px);
-  max-width: 1920px;
   width: 100%;
-  margin: 0 auto;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 @media (min-width: 1600px) {
   .deck-builder-body {
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 420px;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .deck-builder-body {
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 340px;
   }
 }
 
@@ -162,6 +161,118 @@
   height: 100%;
   overflow: hidden;
   gap: 0;
+}
+
+/* Dedicated Mana Curve Panel in Deck Right Column */
+.deck-curve-panel {
+  background: #111720;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: curveSlideDown 150ms ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes curveSlideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.deck-curve-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.deck-curve-panel-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ecc94b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+
+.deck-curve-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-curve-inspect-btn,
+.deck-curve-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a0aec0;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.deck-curve-inspect-btn:hover,
+.deck-curve-close-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Make CurveChart adapt seamlessly when inside .deck-curve-panel */
+.deck-curve-panel .curve-chart {
+  background: transparent;
+  border: none;
+  padding: 0;
+  gap: 8px;
+}
+
+.deck-curve-panel .curve-bars {
+  height: 70px;
+  gap: 6px;
+}
+
+.deck-curve-panel .curve-bar-col {
+  gap: 3px;
+}
+
+.deck-curve-panel .curve-count {
+  font-size: 0.74rem;
+  min-height: 14px;
+}
+
+.deck-curve-panel .curve-bar-track {
+  max-width: 24px;
+}
+
+.deck-curve-panel .curve-bar-fill {
+  box-shadow: 0 0 6px rgba(236, 201, 75, 0.3);
+}
+
+.deck-curve-panel .curve-label {
+  font-size: 0.68rem;
+}
+
+.deck-curve-panel .curve-stats-grid {
+  gap: 4px;
+  padding-top: 6px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.deck-curve-panel .curve-stat-pill {
+  padding: 3px 6px;
+  font-size: 0.72rem;
+}
+
+.deck-curve-panel .curve-pips-row {
+  margin-top: 2px;
+  gap: 8px;
 }
 
 /* Deck Actions Footer */
@@ -247,24 +358,27 @@
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(236, 201, 75, 0.45);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95), 0 0 32px rgba(236, 201, 75, 0.5);
   background: transparent;
   display: flex;
-  gap: 12px;
+  gap: 16px;
   transition: opacity 100ms ease;
+  transform-origin: center center;
   animation: arena-preview-pop 120ms cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .preview-face-card {
   position: relative;
-  width: 250px;
+  width: 420px;
+  max-width: calc(48vw - 24px);
+  max-height: calc(100vh - 40px);
   aspect-ratio: 2.5 / 3.5;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 2px solid rgba(236, 201, 75, 0.6);
-  background: #111;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+  border: 2.5px solid rgba(236, 201, 75, 0.85);
+  background: #0d1117;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
 }
 
 .preview-face-card img {
@@ -276,16 +390,16 @@
 
 .preview-face-label {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 10px;
+  left: 10px;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.82);
   border: 1px solid #ecc94b;
   color: #f6e05e;
-  font-size: 0.65rem;
+  font-size: 0.76rem;
   font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   backdrop-filter: blur(4px);

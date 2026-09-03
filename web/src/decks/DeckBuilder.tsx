@@ -13,12 +13,15 @@ import { BASIC_LAND_PRESETS, type BasicLandPreset } from './deckUtils'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
 import { DeckInspectorModal } from './DeckInspectorModal'
+import CurveChart from './CurveChart'
 import { DeckImportModal, type ImportResult } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat } from './formatRules'
 import { useStore, setMyDeck } from '../state/store'
 import type { DeckCard } from '../lobby/decks'
 import { useTranslation } from '../i18n'
+import LanguageSelector from '../i18n/LanguageSelector'
+import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import './DeckBuilder.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -41,6 +44,24 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showInspector, setShowInspector] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
+  const [showCurve, setShowCurve] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexus_deck_show_curve')
+      return saved !== null ? saved === 'true' : true
+    } catch {
+      return true
+    }
+  })
+
+  const toggleCurve = () => {
+    setShowCurve((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('nexus_deck_show_curve', String(next))
+      } catch {}
+      return next
+    })
+  }
 
   const storage = useMemo(() => getDeckStorage(), [])
   const equipped = useStore((s) => s.myDeck)
@@ -129,22 +150,44 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }
     if (toFetch.length === 0) return
 
+    const cardLang = getEffectiveCardLang()
     for (const c of toFetch) {
-      const url = c.setCode && c.cardNumber && c.cardNumber !== '0'
-        ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
+      const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
+      const localizedUrl = hasSetAndNum && cardLang && cardLang !== 'en'
+        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${cardLang}?format=json`
+        : null
+      const defaultUrl = hasSetAndNum
+        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=json`
         : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
 
-      fetch(url, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
+      const fetchMetadata = async () => {
+        try {
+          if (localizedUrl) {
+            const locRes = await fetch(localizedUrl, { headers: { Accept: 'application/json' } })
+            if (locRes.ok) return await locRes.json()
+          }
+          const defRes = await fetch(defaultUrl, { headers: { Accept: 'application/json' } })
+          if (defRes.ok) return await defRes.json()
+          return null
+        } catch {
+          return null
+        }
+      }
+
+      fetchMetadata()
         .then((data) => {
           if (!data) return
+          const printedName = data.printed_name || data.card_faces?.[0]?.printed_name
+          if (printedName && cardLang && cardLang !== 'en') {
+            setCachedCardName(c.cardName, printedName, cardLang)
+          }
           const meta: CardStripMeta = {
             artCropUrl: data.image_uris?.art_crop ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null,
             imageUrl: data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null,
             backImageUrl: data.card_faces?.[1]?.image_uris?.normal ?? null,
             manaCost: data.mana_cost ?? data.card_faces?.[0]?.mana_cost ?? '',
             cmc: data.cmc ?? 0,
-            typeLine: data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
+            typeLine: data.printed_type_line ?? data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
             colors: data.colors ?? data.color_identity ?? [],
             legalities: data.legalities,
           }
@@ -170,6 +213,10 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     const cardName = card.name
     const key = `${setCode}:${cardNumber}:${cardName}`
 
+    if (card.printed_name) {
+      setCachedCardName(card.name, card.printed_name, card.lang || getEffectiveCardLang())
+    }
+
     const existingIdx = deck.cards.findIndex((c) => deckCardKey(c) === key)
     let nextCards: DeckCard[]
     if (existingIdx >= 0) {
@@ -185,7 +232,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       backImageUrl: scryfallCardBackImage(card),
       manaCost: card.mana_cost ?? '',
       cmc: card.cmc ?? 0,
-      typeLine: card.type_line ?? '',
+      typeLine: card.printed_type_line ?? card.type_line ?? '',
       colors: card.colors || card.color_identity || [],
       legalities: card.legalities,
     }
@@ -537,6 +584,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               {saveState === 'saving' ? t('common', 'loading') : `${t('common', 'done')} ✓`}
             </span>
           )}
+          <LanguageSelector compact showCardLangToggle />
         </div>
       </header>
 
@@ -604,8 +652,40 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             issues={validationReport.issues}
             layout={layout}
             onToggleLayout={() => setLayout((l) => (l === 'vertical' ? 'horizontal' : 'vertical'))}
+            isCurveOpen={showCurve}
+            onToggleCurve={toggleCurve}
             onOpenInspector={() => setShowInspector(true)}
           />
+
+          {/* Dedicated Collapsible Mana Curve & Stats Section */}
+          {showCurve && (
+            <div className="deck-curve-panel">
+              <div className="deck-curve-panel-header">
+                <span className="deck-curve-panel-title">
+                  📊 {t('decks', 'builder_mana_curve')}
+                </span>
+                <div className="deck-curve-panel-actions">
+                  <button
+                    type="button"
+                    className="deck-curve-inspect-btn"
+                    onClick={() => setShowInspector(true)}
+                    title={t('decks', 'inspect_double_click')}
+                  >
+                    🔍 📊
+                  </button>
+                  <button
+                    type="button"
+                    className="deck-curve-close-btn"
+                    onClick={toggleCurve}
+                    title={t('common', 'close')}
+                  >
+                    ▲
+                  </button>
+                </div>
+              </div>
+              <CurveChart cards={deck.cards} meta={metaMap} />
+            </div>
+          )}
 
           {/* Basic Land Quick Adder & Suggester */}
           <BasicLandAdder

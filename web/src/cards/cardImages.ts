@@ -244,6 +244,14 @@ async function tryFetch(key: string): Promise<string | null> {
   if (typeof caches !== 'undefined' && !cleanKey.startsWith('named:') && !cleanKey.startsWith('token:') && cleanKey.includes('/')) {
     try {
       const cache = await caches.open('xmage-card-images-v1')
+      const cardLang = getCardLanguage()
+      if (cardLang && cardLang !== 'en') {
+        const locUrl = `https://api.scryfall.com/cards/${cleanKey.toLowerCase()}/${cardLang}?format=image&version=normal`
+        const locMatch = await cache.match(locUrl)
+        if (locMatch) {
+          return locUrl
+        }
+      }
       const directUrl = `https://api.scryfall.com/cards/${cleanKey.toLowerCase()}?format=image&version=normal`
       const match = await cache.match(directUrl)
       if (match) {

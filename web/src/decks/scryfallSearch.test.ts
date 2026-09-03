@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   scryfallCardImage,
   scryfallCardBackImage,
@@ -69,4 +69,23 @@ describe('scryfallSearch', () => {
     expect(scryfallCardArtCrop(singleFaceCard)).toBe('https://cards.scryfall.io/art_crop/bolt.jpg')
     expect(scryfallCardArtCrop(doubleFaceCard)).toBe('https://cards.scryfall.io/art_crop/delver_front.jpg')
   })
+
+  it('handles language parameter in searchScryfall', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ id: '1', name: 'Lightning Bolt', printed_name: 'Relámpago', lang: 'es' }], has_more: false }),
+    } as any)
+
+    const { searchScryfall } = await import('./scryfallSearch')
+    const res = await searchScryfall('Relámpago', 1, 'es')
+    expect(res.data).toHaveLength(1)
+    expect(res.data[0].printed_name).toBe('Relámpago')
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('lang%3Aes%20Rel%C3%A1mpago'),
+      expect.any(Object),
+    )
+    fetchSpy.mockRestore()
+  })
 })
+

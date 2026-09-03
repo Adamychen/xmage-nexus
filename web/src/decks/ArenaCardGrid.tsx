@@ -56,20 +56,22 @@ export function ArenaCardGrid({
 
   const handleDragStart = (e: React.DragEvent, card: ScryfallSearchCard) => {
     onLeave?.()
+    const displayName = card.printed_name || card.name
     e.dataTransfer.setData('application/json', JSON.stringify({
       cardName: card.name,
+      printedName: card.printed_name,
       setCode: card.set.toUpperCase(),
       cardNumber: card.collector_number,
       manaCost: card.mana_cost,
       cmc: card.cmc,
-      typeLine: card.type_line,
+      typeLine: card.printed_type_line || card.type_line,
       colors: card.colors || card.color_identity || [],
       source: 'search',
     }))
     e.dataTransfer.effectAllowed = 'copy'
 
     const imgUrl = scryfallCardImage(card)
-    setFloatingCardDragImage(e, imgUrl, card.name)
+    setFloatingCardDragImage(e, imgUrl, displayName)
   }
 
   if (loading && cards.length === 0) {
@@ -109,6 +111,9 @@ export function ArenaCardGrid({
           const imgUrl = scryfallCardImage(card)
           const count = getDeckCount(card)
           const maxPips = 4
+          const displayName = card.printed_name || card.name
+          const displayType = card.printed_type_line || card.type_line
+          const hoverTitle = displayName !== card.name ? `${displayName} (${card.name})` : card.name
 
           return (
             <div
@@ -119,7 +124,7 @@ export function ArenaCardGrid({
               onClick={() => onAdd(card)}
               onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={onLeave}
-              title={`${card.name} — ${t('decks', 'builder_drag_hint')}`}
+              title={`${hoverTitle} — ${t('decks', 'builder_drag_hint')}`}
             >
               {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
               <div className="arena-card-pips">
@@ -136,14 +141,14 @@ export function ArenaCardGrid({
                 {imgUrl ? (
                   <img
                     src={imgUrl}
-                    alt={card.name}
+                    alt={displayName}
                     className="arena-grid-card-img"
                     loading="lazy"
                   />
                 ) : (
                   <div className="arena-grid-card-fallback">
-                    <div className="arena-grid-card-fallback-name">{card.name}</div>
-                    <div>{card.type_line}</div>
+                    <div className="arena-grid-card-fallback-name">{displayName}</div>
+                    <div>{displayType}</div>
                   </div>
                 )}
                 <div className="arena-grid-card-overlay">

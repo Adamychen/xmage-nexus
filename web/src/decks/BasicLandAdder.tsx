@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BASIC_LAND_PRESETS, countManaPips, suggestBasicLands, type BasicLandPreset } from './deckUtils'
+import { BASIC_LAND_PRESETS, countManaPips, suggestBasicLands, getBasicLandLabel, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
@@ -20,7 +20,7 @@ export function BasicLandAdder({
   onRemoveLand: (preset: BasicLandPreset) => void
   onApplySuggestedLands: (suggested: { name: string; setCode: string; cardNumber: string; amount: number }[]) => void
 }) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const isCommander = format === 'Commander'
   const defaultTarget = isCommander ? 36 : (format === 'Limited' ? 17 : 24)
   const [targetCount, setTargetCount] = useState<number>(defaultTarget)
@@ -50,16 +50,17 @@ export function BasicLandAdder({
         <div className="basic-land-buttons">
           {BASIC_LAND_PRESETS.map((preset) => {
             const count = getLandCount(preset.name)
+            const label = getBasicLandLabel(preset.name, lang)
             return (
               <div key={preset.name} className="basic-land-btn-group">
                 <button
                   type="button"
                   className={`basic-land-btn pip-${preset.color.toLowerCase()}`}
                   onClick={() => onAddLand(preset)}
-                  title={`+1 ${preset.label} (${preset.name})`}
+                  title={`+1 ${label} (${preset.name})`}
                 >
                   <ManaPip symbol={preset.symbol} size={16} />
-                  <span className="basic-land-btn-name">{preset.label}</span>
+                  <span className="basic-land-btn-name">{label}</span>
                   {count > 0 && <span className="basic-land-btn-count">{count}</span>}
                 </button>
                 {count > 0 && (
@@ -67,7 +68,7 @@ export function BasicLandAdder({
                     type="button"
                     className="basic-land-dec-btn"
                     onClick={() => onRemoveLand(preset)}
-                    title={`-1 ${preset.label}`}
+                    title={`-1 ${label}`}
                   >
                     -
                   </button>

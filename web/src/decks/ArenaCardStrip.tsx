@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import { ManaCost } from './ArenaManaSymbols'
 import { setFloatingStripDragImage } from './arenaDragHelpers'
+import { useLocalizedCardName } from '../cards/cardLocalization'
 import { useTranslation } from '../i18n'
 import './ArenaCardStrip.css'
 
@@ -62,6 +63,8 @@ export function ArenaCardStrip({
   swapLabel?: string
 }) {
   const { t } = useTranslation()
+  const { displayName, originalName } = useLocalizedCardName(card)
+  const hoverTitle = displayName && displayName !== originalName ? `${displayName} (${originalName})` : (displayName || originalName)
   const ref = useRef<HTMLDivElement>(null)
   const [isDraggingSelf, setIsDraggingSelf] = useState(false)
   const cardKey = `${card.setCode}:${card.cardNumber}:${card.cardName}`
@@ -80,13 +83,14 @@ export function ArenaCardStrip({
     setIsDraggingSelf(true)
     e.dataTransfer.setData('application/json', JSON.stringify({
       cardName: card.cardName,
+      printedName: displayName !== originalName ? displayName : undefined,
       setCode: card.setCode,
       cardNumber: card.cardNumber,
       source: sideboard ? 'sideboard' : 'main',
       key: actionKey,
     }))
     e.dataTransfer.effectAllowed = 'move'
-    setFloatingStripDragImage(e, card.cardName, meta?.artCropUrl)
+    setFloatingStripDragImage(e, displayName || card.cardName, meta?.artCropUrl)
   }
 
   const handleDragEnd = () => {
@@ -119,7 +123,7 @@ export function ArenaCardStrip({
       onMouseLeave={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      title={issue ? `${card.cardName} — ⚠️ ${issue}` : `${card.cardName} — ${t('decks', 'strip_click_hint')}`}
+      title={issue ? `${hoverTitle} — ⚠️ ${issue}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`}
     >
       {/* Background card art crop */}
       {meta?.artCropUrl && (
@@ -139,8 +143,8 @@ export function ArenaCardStrip({
       </div>
 
       {/* Card Name */}
-      <div className="strip-name" title={card.cardName}>
-        {card.cardName}
+      <div className="strip-name" title={hoverTitle}>
+        {displayName || originalName}
       </div>
 
       {/* Issue warning icon */}

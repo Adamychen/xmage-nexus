@@ -219,3 +219,91 @@
   border-color: #e53e3e;
   color: #fc8181;
 }
+
+/* Language selector dropdown */
+.arena-lang-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.arena-lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: #141a22;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.arena-lang-btn:hover {
+  background: #1e2632;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.arena-lang-btn .lang-flag {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.arena-lang-btn .lang-code {
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+.arena-lang-btn .lang-arrow {
+  font-size: 0.65rem;
+  color: #718096;
+}
+
+.arena-lang-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #10161f;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  min-width: 140px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arena-lang-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #cbd5e0;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 120ms ease;
+}
+
+.arena-lang-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.arena-lang-item.selected {
+  background: rgba(236, 201, 75, 0.15);
+  color: #ecc94b;
+  font-weight: 700;
+}
+

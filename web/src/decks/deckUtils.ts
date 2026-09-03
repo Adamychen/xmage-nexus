@@ -2,14 +2,52 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import type { ScryfallSearchCard } from './scryfallSearch'
 
+export const BASIC_LAND_NAMES: Record<string, Record<string, string>> = {
+  Plains: { es: 'Llanura', en: 'Plains', fr: 'Plaine', de: 'Ebene', it: 'Pianura', pt: 'Planície', ru: 'Равнина', ja: '平地', zhs: '平原' },
+  Island: { es: 'Isla', en: 'Island', fr: 'Île', de: 'Insel', it: 'Isola', pt: 'Ilha', ru: 'Остров', ja: '島', zhs: '海岛' },
+  Swamp: { es: 'Pantano', en: 'Swamp', fr: 'Marais', de: 'Sumpf', it: 'Palude', pt: 'Pântano', ru: 'Болото', ja: '沼', zhs: '沼泽' },
+  Mountain: { es: 'Montaña', en: 'Mountain', fr: 'Montagne', de: 'Gebirge', it: 'Montagna', pt: 'Montanha', ru: 'Гора', ja: '山', zhs: '山脉' },
+  Forest: { es: 'Bosque', en: 'Forest', fr: 'Forêt', de: 'Wald', it: 'Foresta', pt: 'Floresta', ru: 'Лес', ja: '森', zhs: '树林' },
+  Wastes: { es: 'Yermos', en: 'Wastes', fr: 'Désert', de: 'Ödland', it: 'Terre Devastate', pt: 'Ermo', ru: 'Пустоши', ja: '荒地', zhs: '荒地' },
+}
+
+export const BASIC_LAND_NORMALIZATION_MAP: Record<string, string> = {
+  // English
+  plains: 'Plains', island: 'Island', swamp: 'Swamp', mountain: 'Mountain', forest: 'Forest', wastes: 'Wastes',
+  // Spanish
+  llanura: 'Plains', isla: 'Island', pantano: 'Swamp', montaña: 'Mountain', montana: 'Mountain', bosque: 'Forest', yermos: 'Wastes',
+  // French
+  plaine: 'Plains', île: 'Island', ile: 'Island', marais: 'Swamp', montagne: 'Mountain', forêt: 'Forest', foret: 'Forest', désert: 'Wastes', desert: 'Wastes',
+  // German
+  ebene: 'Plains', insel: 'Island', sumpf: 'Swamp', gebirge: 'Mountain', wald: 'Forest', ödland: 'Wastes', oedland: 'Wastes',
+  // Italian
+  pianura: 'Plains', isola: 'Island', palude: 'Swamp', montagna: 'Mountain', foresta: 'Forest', 'terre devastate': 'Wastes',
+  // Portuguese
+  planície: 'Plains', planicie: 'Plains', ilha: 'Island', pântano: 'Swamp', montanha: 'Mountain', floresta: 'Forest', ermo: 'Wastes',
+  // Russian
+  равнина: 'Plains', остров: 'Island', болото: 'Swamp', гора: 'Mountain', лес: 'Forest', пустоши: 'Wastes',
+  // Japanese
+  平地: 'Plains', 島: 'Island', 沼: 'Swamp', 山: 'Mountain', 森: 'Forest', 荒地: 'Wastes',
+  // Chinese
+  平原: 'Plains', 海岛: 'Island', 沼泽: 'Swamp', 山脉: 'Mountain', 树林: 'Forest',
+}
+
+export function normalizeBasicLandName(name: string): string | null {
+  const clean = name.trim().toLowerCase()
+  return BASIC_LAND_NORMALIZATION_MAP[clean] || null
+}
+
+export function getBasicLandLabel(landName: string, lang = 'en'): string {
+  const map = BASIC_LAND_NAMES[landName]
+  if (!map) return landName
+  return map[lang] || map.en || landName
+}
+
 export function isLandCard(cardName: string, typeLine?: string): boolean {
   if (typeLine && /land/i.test(typeLine)) return true
   const n = cardName.trim().toLowerCase()
-  return (
-    /^(plains|island|swamp|mountain|forest|llanura|isla|pantano|montaña|bosque|wastes)$/i.test(n) ||
-    n.endsWith(' land') ||
-    n.includes('guildgate')
-  )
+  if (BASIC_LAND_NORMALIZATION_MAP[n]) return true
+  return n.endsWith(' land') || n.includes('guildgate')
 }
 
 export function fallbackCmc(cardName: string): number {

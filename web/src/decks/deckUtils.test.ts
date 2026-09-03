@@ -65,4 +65,22 @@ describe('deckUtils basic calculations', () => {
     const pips = { W: 0, U: 0, B: 0, R: 0, G: 0 }
     expect(suggestBasicLands(pips, 20)).toEqual([])
   })
+
+  it('normalizes basic lands in all supported languages', async () => {
+    const { normalizeBasicLandName, getBasicLandLabel } = await import('./deckUtils')
+    expect(normalizeBasicLandName('Montaña')).toBe('Mountain')
+    expect(normalizeBasicLandName('Plaine')).toBe('Plains')
+    expect(normalizeBasicLandName('Insel')).toBe('Island')
+    expect(normalizeBasicLandName('Foresta')).toBe('Forest')
+    expect(normalizeBasicLandName('Pântano')).toBe('Swamp')
+    expect(normalizeBasicLandName('Гора')).toBe('Mountain')
+    expect(normalizeBasicLandName('島')).toBe('Island')
+    expect(normalizeBasicLandName('沼泽')).toBe('Swamp')
+    expect(normalizeBasicLandName('Counterspell')).toBeNull()
+
+    expect(getBasicLandLabel('Mountain', 'es')).toBe('Montaña')
+    expect(getBasicLandLabel('Island', 'ja')).toBe('島')
+    expect(getBasicLandLabel('Forest', 'de')).toBe('Wald')
+    expect(getBasicLandLabel('Plains', 'fr')).toBe('Plaine')
+  })
 })

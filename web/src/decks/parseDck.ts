@@ -1,5 +1,6 @@
 import type { Deck, DeckCard } from '../lobby/decks'
 import { t } from '../i18n'
+import { normalizeBasicLandName } from './deckUtils'
 
 const DCK_LINE = /^(SB:\s*)?(\d+)\s*\[([^:\]]+):([^\]]+)\]\s*(.+?)\s*$/
 const NAME_RE = /^NAME:\s*(.*)\s*$/
@@ -32,8 +33,9 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
       const amount = parseInt(m[2], 10) || 1
       const setCode = m[3].trim()
       const cardNumber = m[4].trim()
-      const cardName = m[5].trim()
-      if (!cardName) continue
+      const rawName = m[5].trim()
+      if (!rawName) continue
+      const cardName = normalizeBasicLandName(rawName) || rawName
       const entry: DeckCard = { cardName, setCode, cardNumber, amount }
       if (isSideboard) sideboard.push(entry)
       else cards.push(entry)
@@ -71,18 +73,35 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
 
   for (const line of lines) {
     const low = line.toLowerCase()
-    if (low === 'deck' || low === 'main' || low === 'mainboard' || low === '[main]' || low === 'maindeck') {
+    if (
+      low === 'deck' || low === 'main' || low === 'mainboard' || low === '[main]' || low === 'maindeck' ||
+      low === 'mazo' || low === 'mazzo' || low === 'колода' || low === 'デッキ' || low === '套牌'
+    ) {
       isSideboard = false
       headerSeen = true
       continue
     }
-    if (low === 'sideboard' || low === '[sideboard]' || low === 'companion' || low === '[companion]') {
+    if (
+      low === 'sideboard' || low === '[sideboard]' || low === 'companion' || low === '[companion]' ||
+      low === 'banquillo' || low === 'réserve' || low === 'reserve' || low === 'reserva' ||
+      low === 'compagnon' || low === 'compagno' || low === 'companheiro' || low === 'compañero' ||
+      low === 'сайдборд' || low === 'спутник' || low === 'サイドボード' || low === '相棒' ||
+      low === '备牌' || low === '行侣' || low === 'gefährte'
+    ) {
       isSideboard = true
       headerSeen = true
       continue
     }
+    if (
+      low === 'commander' || low === 'commandant' || low === 'kommandeur' || low === 'comandante' ||
+      low === 'командир' || low === '統率者' || low === '指挥官'
+    ) {
+      isSideboard = false
+      headerSeen = true
+      continue
+    }
     if (low.startsWith('//')) {
-      if (low.includes('sideboard')) {
+      if (low.includes('sideboard') || low.includes('banquillo') || low.includes('reserva') || low.includes('réserve')) {
         isSideboard = true
         headerSeen = true
       }
@@ -93,10 +112,16 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
       const m = rest.match(/^(\d+)x?\s+(.+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?\s*$/)
       if (m) {
         const amount = parseInt(m[1], 10) || 1
-        sideboard.push({ cardName: m[2].trim(), setCode: m[3] || 'M10', cardNumber: m[4] || '1', amount })
+        const rawName = m[2].trim()
+        const cardName = normalizeBasicLandName(rawName) || rawName
+        sideboard.push({ cardName, setCode: m[3] || 'M10', cardNumber: m[4] || '1', amount })
       } else {
         const m2 = rest.match(/^(.+)$/)
-        if (m2) sideboard.push({ cardName: m2[1].trim(), setCode: 'M10', cardNumber: '1', amount: 1 })
+        if (m2) {
+          const rawName = m2[1].trim()
+          const cardName = normalizeBasicLandName(rawName) || rawName
+          sideboard.push({ cardName, setCode: 'M10', cardNumber: '1', amount: 1 })
+        }
       }
       continue
     }
@@ -104,8 +129,9 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
     const m = line.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?$/)
     if (m) {
       const amount = parseInt(m[1], 10) || 1
-      const cardName = m[2].trim().replace(/\s*\/\/.*$/, '').trim()
-      if (!cardName || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(cardName)) continue
+      const rawName = m[2].trim().replace(/\s*\/\/.*$/, '').trim()
+      if (!rawName || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(rawName)) continue
+      const cardName = normalizeBasicLandName(rawName) || rawName
       const setCode = m[3] || 'M10'
       const cardNumber = m[4] || '1'
       const item: DeckCard = { cardName, setCode, cardNumber, amount }

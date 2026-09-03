@@ -66,4 +66,31 @@ SB: 3 Pyroblast
     expect(out).toContain('Deck')
     expect(out).toContain('20 Mountain (LEA) 292')
   })
+
+  it('parses Spanish and Japanese Arena formats with basic land normalization', () => {
+    const spanishDeck = `Mazo
+4 Lightning Bolt (M10) 146
+20 Montaña (DMU) 280
+
+Banquillo
+2 Red Elemental Blast (4ED) 218
+`
+    const dSpanish = parseAnyDeck(spanishDeck)!
+    expect(dSpanish.cards[0].cardName).toBe('Lightning Bolt')
+    expect(dSpanish.cards[1].cardName).toBe('Mountain') // Montaña -> Mountain
+    expect(dSpanish.sideboard[0].cardName).toBe('Red Elemental Blast')
+
+    const japaneseDeck = `デッキ
+4 Counterspell (MH2) 267
+20 島 (DMU) 278
+
+サイドボード
+2 Spell Pierce (XLN) 81
+`
+    const dJapanese = parseAnyDeck(japaneseDeck)!
+    expect(dJapanese.cards[0].cardName).toBe('Counterspell')
+    expect(dJapanese.cards[1].cardName).toBe('Island') // 島 -> Island
+    expect(dJapanese.sideboard[0].cardName).toBe('Spell Pierce')
+  })
 })
+

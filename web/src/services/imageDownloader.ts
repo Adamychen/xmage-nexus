@@ -203,7 +203,8 @@ class ImageDownloadManager {
     scope: DownloadScope,
     source: DownloadSource = 'scryfall_normal',
     concurrency = 5,
-    onlyMissing = true
+    onlyMissing = true,
+    lang?: string
   ): Promise<void> {
     this.cancel()
     this.abortController = new AbortController()
@@ -219,7 +220,7 @@ class ImageDownloadManager {
     this.notify()
 
     try {
-      const cards = await this.fetchCardListForScope(scope, source)
+      const cards = await this.fetchCardListForScope(scope, source, lang)
       if (cards.length === 0) {
         this.progress.status = 'done'
         this.progress.currentItem = 'No se encontraron cartas para este filtro.'
@@ -313,8 +314,9 @@ class ImageDownloadManager {
     }
   }
 
-  private async fetchCardListForScope(scope: DownloadScope, source: DownloadSource): Promise<CardToDownload[]> {
+  private async fetchCardListForScope(scope: DownloadScope, source: DownloadSource, lang?: string): Promise<CardToDownload[]> {
     const sizeParam = source === 'scryfall_large' ? 'large' : source === 'scryfall_small' ? 'small' : 'normal'
+    const langPrefix = lang && lang !== 'en' ? `(lang:${lang} or lang:en) ` : ''
 
     // Scope 0: ALL (All images from selected source via Scryfall Bulk Data)
     if (scope === 'ALL') {
@@ -359,7 +361,7 @@ class ImageDownloadManager {
       } catch {
         // fallback to query
       }
-      return this.fetchScryfallSearchList('game:paper', sizeParam, 40000)
+      return this.fetchScryfallSearchList(`${langPrefix}game:paper`, sizeParam, 40000)
     }
 
     // Scope 1: MY_DECKS
@@ -374,11 +376,14 @@ class ImageDownloadManager {
           const key = `${c.setCode.toLowerCase()}/${c.cardNumber}`
           if (!seen.has(key) && c.setCode && c.cardNumber) {
             seen.add(key)
+            const imgUrl = lang && lang !== 'en'
+              ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${lang}?format=image&version=${sizeParam}`
+              : `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=image&version=${sizeParam}`
             list.push({
               name: c.cardName,
               setCode: c.setCode,
               cardNumber: c.cardNumber,
-              imageUrl: `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=image&version=${sizeParam}`,
+              imageUrl: imgUrl,
             })
           }
         }
@@ -388,37 +393,37 @@ class ImageDownloadManager {
 
     // Scope 2: BASIC_LANDS
     if (scope === 'BASIC_LANDS') {
-      const query = 't:basic game:paper'
+      const query = `${langPrefix}t:basic game:paper`
       return this.fetchScryfallSearchList(query, sizeParam, 400)
     }
 
     // Scope 3: TOKENS
     if (scope === 'TOKENS') {
-      const query = 't:token game:paper'
+      const query = `${langPrefix}t:token game:paper`
       return this.fetchScryfallSearchList(query, sizeParam, 600)
     }
 
     // Scope 4: STANDARD
     if (scope === 'STANDARD') {
-      const query = 'f:standard game:paper'
+      const query = `${langPrefix}f:standard game:paper`
       return this.fetchScryfallSearchList(query, sizeParam, 3000)
     }
 
     // Scope 5: MODERN
     if (scope === 'MODERN') {
-      const query = 'f:modern game:paper'
+      const query = `${langPrefix}f:modern game:paper`
       return this.fetchScryfallSearchList(query, sizeParam, 5000)
     }
 
     // Scope 6: COMMANDER
     if (scope === 'COMMANDER') {
-      const query = 'f:commander game:paper (is:commander or order:edhrec)'
+      const query = `${langPrefix}f:commander game:paper (is:commander or order:edhrec)`
       return this.fetchScryfallSearchList(query, sizeParam, 2000)
     }
 
     // Scope 7: Specific Set Code (e.g. MH3, BLB, DSK)
     const setCode = scope.toLowerCase()
-    const query = `s:${setCode} game:paper`
+    const query = `${langPrefix}s:${setCode} game:paper`
     return this.fetchScryfallSearchList(query, sizeParam, 1000)
   }
 

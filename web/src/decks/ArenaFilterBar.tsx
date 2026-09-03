@@ -1,9 +1,20 @@
+import { useState, useRef, useEffect } from 'react'
 import { ManaPip } from './ArenaManaSymbols'
-import { useTranslation } from '../i18n'
+import { useTranslation, type TranslationSchema } from '../i18n'
 import './ArenaFilterBar.css'
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
 const TYPES = ['Creature', 'Instant', 'Sorcery', 'Planeswalker', 'Artifact', 'Enchantment', 'Land'] as const
+
+const TYPE_LABEL_KEYS: Record<(typeof TYPES)[number], keyof TranslationSchema['game']> = {
+  Creature: 'type_creature',
+  Instant: 'type_instant',
+  Sorcery: 'type_sorcery',
+  Planeswalker: 'type_planeswalker',
+  Artifact: 'type_artifact',
+  Enchantment: 'type_enchantment',
+  Land: 'type_land',
+}
 
 export function ArenaFilterBar({
   query,
@@ -15,6 +26,8 @@ export function ArenaFilterBar({
   typeFilter,
   onTypeChange,
   onReset,
+  searchLang = 'any',
+  onSearchLangChange,
   loading = false,
 }: {
   query: string
@@ -26,14 +39,39 @@ export function ArenaFilterBar({
   typeFilter: string | null
   onTypeChange: (type: string | null) => void
   onReset: () => void
+  searchLang?: string
+  onSearchLangChange?: (lang: string) => void
   loading?: boolean
 }) {
-  const { t } = useTranslation()
+  const { t, cardLanguages } = useTranslation()
+  const [langMenuOpen, setLangMenuOpen] = useState(false)
+  const langMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setLangMenuOpen(false)
+      }
+    }
+    if (langMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [langMenuOpen])
+
+  const allLangOptions = [
+    { code: 'any', name: t('common', 'all'), flag: '🌐' },
+    ...cardLanguages,
+  ]
+
+  const activeLangOption = allLangOptions.find((l) => l.code === searchLang) ?? allLangOptions[0]
   const hasActiveFilters = query.trim() !== '' || colorFilter.size > 0 || cmcFilter !== null || typeFilter !== null
 
   return (
     <div className="arena-filter-bar">
-      {/* Main Top Row: Search and Mana Color Orbs */}
+      {/* Main Top Row: Search, Language selector and Mana Color Orbs */}
       <div className="filter-bar-top">
         <div className="arena-search-box">
           <span className="arena-search-icon">🔍</span>
@@ -55,6 +93,42 @@ export function ArenaFilterBar({
             </button>
           )}
         </div>
+
+        {/* Language selector dropdown */}
+        {onSearchLangChange && (
+          <div className="arena-lang-select-wrap" ref={langMenuRef}>
+            <button
+              type="button"
+              className="arena-lang-btn"
+              onClick={() => setLangMenuOpen(!langMenuOpen)}
+              title={t('common', 'card_language')}
+              aria-label={t('common', 'card_language')}
+            >
+              <span className="lang-flag">{activeLangOption.flag}</span>
+              <span className="lang-code">{activeLangOption.code.toUpperCase()}</span>
+              <span className="lang-arrow">▾</span>
+            </button>
+            {langMenuOpen && (
+              <div className="arena-lang-dropdown" role="menu">
+                {allLangOptions.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    className={`arena-lang-item ${l.code === searchLang ? 'selected' : ''}`}
+                    onClick={() => {
+                      onSearchLangChange(l.code)
+                      setLangMenuOpen(false)
+                    }}
+                  >
+                    <span>{l.flag}</span>
+                    <span>{l.name}</span>
+                    {l.code === searchLang && <span style={{ marginLeft: 'auto' }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Mana Color Orbs */}
         <div className="arena-mana-orbs">
@@ -95,14 +169,14 @@ export function ArenaFilterBar({
         {/* Type chips */}
         <div className="arena-filter-chips">
           <span className="arena-chip-label">{t('decks', 'filter_type')}</span>
-          {TYPES.map((t) => (
+          {TYPES.map((tKey) => (
             <button
-              key={t}
+              key={tKey}
               type="button"
-              className={`arena-type-btn ${typeFilter === t ? 'active' : ''}`}
-              onClick={() => onTypeChange(typeFilter === t ? null : t)}
+              className={`arena-type-btn ${typeFilter === tKey ? 'active' : ''}`}
+              onClick={() => onTypeChange(typeFilter === tKey ? null : tKey)}
             >
-              {t}
+              {t('game', TYPE_LABEL_KEYS[tKey])}
             </button>
           ))}
         </div>

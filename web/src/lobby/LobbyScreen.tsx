@@ -537,7 +537,7 @@ export default function LobbyScreen() {
         </nav>
 
         {/* CENTER: Main tab content */}
-        <main className="lobby-main">
+        <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : ''}`}>
           {activeTab === 'tables' && (
             <div className="lobby-tables-view">
               <TableFilterBar

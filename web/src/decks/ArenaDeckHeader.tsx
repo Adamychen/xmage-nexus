@@ -2,7 +2,6 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
-import { isLandCard, fallbackCmc } from './deckUtils'
 import { useTranslation } from '../i18n'
 import './ArenaDeckHeader.css'
 
@@ -14,11 +13,11 @@ export function ArenaDeckHeader({
   coverArtUrl,
   mainCount,
   sideCount,
-  cards,
-  metaMap,
   issues = [],
   layout,
   onToggleLayout,
+  isCurveOpen,
+  onToggleCurve,
   onOpenInspector,
 }: {
   name: string
@@ -28,26 +27,15 @@ export function ArenaDeckHeader({
   coverArtUrl?: string | null
   mainCount: number
   sideCount: number
-  cards: DeckCard[]
-  metaMap: Map<string, number>
+  cards?: DeckCard[]
+  metaMap?: Map<string, number>
   issues?: ValidationIssue[]
   layout: 'vertical' | 'horizontal'
   onToggleLayout: () => void
+  isCurveOpen?: boolean
+  onToggleCurve?: () => void
   onOpenInspector?: () => void
 }) {
-  // Compute mana curve buckets (excluding lands)
-  const buckets = Array(8).fill(0) as number[]
-  let maxBucket = 0
-  for (const c of cards) {
-    if (isLandCard(c.cardName)) continue
-    const key = `${c.setCode}/${c.cardNumber}`
-    const cmc = metaMap.get(key) ?? metaMap.get(c.cardName.toLowerCase()) ?? fallbackCmc(c.cardName)
-    const idx = cmc >= 7 ? 7 : Math.max(0, Math.floor(cmc))
-    buckets[idx] += c.amount
-    maxBucket = Math.max(maxBucket, buckets[idx])
-  }
-  if (maxBucket === 0) maxBucket = 1
-
   const { t } = useTranslation()
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
   const requiredCount = config.minMain
@@ -120,57 +108,37 @@ export function ArenaDeckHeader({
         </div>
       </div>
 
-      {/* Mini Mana Curve Histogram */}
-      <div
-        className="deck-header-curve"
-        title={`${t('decks', 'builder_mana_curve')}${onOpenInspector ? ' — ' + t('decks', 'inspect_double_click') : ''}`}
-        onClick={onOpenInspector}
-        role={onOpenInspector ? 'button' : undefined}
-        tabIndex={onOpenInspector ? 0 : undefined}
-        onKeyDown={(e) => e.key === 'Enter' && onOpenInspector?.()}
-      >
-        {buckets.map((v, i) => {
-          const heightPercent = Math.max(8, (v / maxBucket) * 100)
-          return (
-            <div key={i} className="mini-curve-bar-wrapper">
-              <div
-                className="mini-curve-bar"
-                style={{ height: `${heightPercent}%` }}
-                title={`CMC ${i === 7 ? '7+' : i}: ${v} ${t('decks', 'total_cards')}`}
-              />
-              <span className="mini-curve-label">{i === 7 ? '7+' : i}</span>
-            </div>
-          )
-        })}
-      </div>
+      {/* Right Controls: Stats/Curve Toggle + Layout Switch */}
+      <div className="deck-header-right">
+        {/* Toggle Mana Curve Panel Button */}
+        {(onToggleCurve || onOpenInspector) && (
+          <button
+            type="button"
+            className={`deck-header-stats-btn ${isCurveOpen ? 'active' : ''}`}
+            onClick={onToggleCurve ?? onOpenInspector}
+            title={`${t('decks', 'builder_mana_curve')}${onOpenInspector ? ' (' + t('decks', 'inspect_double_click') + ')' : ''}`}
+            onDoubleClick={onOpenInspector}
+          >
+            📊
+          </button>
+        )}
 
-      {/* View Deck Stats / Details Button */}
-      {onOpenInspector && (
+        {/* Change Deck Layout Toggle Button */}
         <button
           type="button"
-          className="deck-header-stats-btn"
-          onClick={onOpenInspector}
-          title={t('decks', 'inspect_double_click')}
+          className={`deck-header-layout-btn ${layout === 'horizontal' ? 'active' : ''}`}
+          onClick={onToggleLayout}
+          title={t('decks', 'builder_editor')}
         >
-          📊
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            {layout === 'vertical' ? (
+              <path d="M3 4h8v16H3V4zm10 0h8v16h-8V4z" />
+            ) : (
+              <path d="M3 4h18v7H3V4zm0 9h18v7H3v-7z" />
+            )}
+          </svg>
         </button>
-      )}
-
-      {/* Change Deck Layout Toggle Button */}
-      <button
-        type="button"
-        className={`deck-header-layout-btn ${layout === 'horizontal' ? 'active' : ''}`}
-        onClick={onToggleLayout}
-        title={t('decks', 'builder_editor')}
-      >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-          {layout === 'vertical' ? (
-            <path d="M3 4h8v16H3V4zm10 0h8v16h-8V4z" />
-          ) : (
-            <path d="M3 4h18v7H3V4zm0 9h18v7H3v-7z" />
-          )}
-        </svg>
-      </button>
+      </div>
     </div>
   )
 }

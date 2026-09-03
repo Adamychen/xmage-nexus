@@ -4,6 +4,7 @@ import type { DeckV2 } from './types'
 import { ArenaCardStrip, type CardStripMeta } from './ArenaCardStrip'
 import CurveChart from './CurveChart'
 import { useTranslation } from '../i18n'
+import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import './DeckInspectorModal.css'
 
 export function DeckInspectorModal({
@@ -29,22 +30,44 @@ export function DeckInspectorModal({
 
   useEffect(() => {
     const all = [...deck.cards, ...deck.sideboard]
+    const cardLang = getEffectiveCardLang()
     for (const c of all) {
-      const url = c.setCode && c.cardNumber && c.cardNumber !== '0'
-        ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
+      const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
+      const localizedUrl = hasSetAndNum && cardLang && cardLang !== 'en'
+        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${cardLang}?format=json`
+        : null
+      const defaultUrl = hasSetAndNum
+        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=json`
         : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
 
-      fetch(url, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
+      const fetchMeta = async () => {
+        try {
+          if (localizedUrl) {
+            const locRes = await fetch(localizedUrl, { headers: { Accept: 'application/json' } })
+            if (locRes.ok) return await locRes.json()
+          }
+          const defRes = await fetch(defaultUrl, { headers: { Accept: 'application/json' } })
+          if (defRes.ok) return await defRes.json()
+          return null
+        } catch {
+          return null
+        }
+      }
+
+      fetchMeta()
         .then((data) => {
           if (!data) return
+          const printedName = data.printed_name || data.card_faces?.[0]?.printed_name
+          if (printedName && cardLang && cardLang !== 'en') {
+            setCachedCardName(c.cardName, printedName, cardLang)
+          }
           const meta: CardStripMeta = {
             artCropUrl: data.image_uris?.art_crop ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null,
             imageUrl: data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null,
             backImageUrl: data.card_faces?.[1]?.image_uris?.normal ?? null,
             manaCost: data.mana_cost ?? data.card_faces?.[0]?.mana_cost ?? '',
             cmc: data.cmc ?? 0,
-            typeLine: data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
+            typeLine: data.printed_type_line ?? data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
             colors: data.colors ?? data.color_identity ?? [],
             legalities: data.legalities,
           }

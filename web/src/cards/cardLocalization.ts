@@ -1,6 +1,6 @@
 import type { CardView } from '../net/types'
 import { getLanguage, getCardLanguage } from '../i18n'
-import { cardName, isAbilityCard } from './cardImages'
+import { isAbilityCard, getSourceCardName } from './cardImages'
 import { useState, useEffect } from 'react'
 
 const memoryCache = new Map<string, string>()
@@ -40,11 +40,41 @@ export function setCachedCardName(englishName: string, translatedName: string, l
   } catch {}
 }
 
+export type LocalizableCard =
+  | CardView
+  | {
+      name?: string
+      cardName?: string
+      displayName?: string
+      expansionSetCode?: string
+      setCode?: string
+      cardNumber?: string
+      sourceCard?: CardView
+      ability?: CardView
+      mageObjectType?: string
+      isSecondCardFace?: boolean
+      isBackFace?: boolean
+      transformed?: boolean
+      isFrontFace?: boolean
+      faceDown?: boolean
+    }
+
+export function extractCardName(card: LocalizableCard): string {
+  if (!card) return ''
+  if (typeof (card as any).mageObjectType === 'string' && isAbilityCard(card as CardView)) {
+    return getSourceCardName(card as CardView)
+  }
+  if ('cardName' in card && card.cardName) return card.cardName
+  if ('displayName' in card && card.displayName) return card.displayName
+  if ('name' in card && card.name) return card.name
+  return ''
+}
+
 export async function fetchLocalizedCardName(
-  card: CardView,
+  card: LocalizableCard,
   lang: string = getEffectiveCardLang(),
 ): Promise<string | null> {
-  const baseName = cardName(card)
+  const baseName = extractCardName(card)
   if (!baseName || lang === 'en') return baseName || null
   if (/^(?:ability|habilidad)$/i.test(baseName.trim())) return null
 
@@ -60,9 +90,10 @@ export async function fetchLocalizedCardName(
 
   const promise = (async () => {
     try {
-      const src = isAbilityCard(card) ? (card.sourceCard || card.ability) : card
-      const set = src?.expansionSetCode
-      const num = src?.cardNumber
+      const isAb = typeof (card as any).mageObjectType === 'string' && isAbilityCard(card as CardView)
+      const src = isAb ? ((card as any).sourceCard || (card as any).ability) : card
+      const set = (src as any)?.setCode || (src as any)?.expansionSetCode
+      const num = (src as any)?.cardNumber
 
       if (set && num && num !== '0' && set !== 'XMAGE') {
         try {
@@ -118,8 +149,8 @@ export async function fetchLocalizedCardName(
   return promise
 }
 
-export function useLocalizedCardName(card: CardView): { displayName: string; originalName: string } {
-  const originalName = cardName(card)
+export function useLocalizedCardName(card: LocalizableCard): { displayName: string; originalName: string } {
+  const originalName = extractCardName(card)
   const lang = getEffectiveCardLang()
   const [displayName, setDisplayName] = useState<string>(() => {
     if (lang === 'en') return originalName
