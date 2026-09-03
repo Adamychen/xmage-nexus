@@ -9,14 +9,14 @@
 ```
 ┌──────────────────────────┐   WS JSON    ┌────────────────────┐   XMage protocol    ┌───────────────────┐
 │  XMage Nexus Web Client  │ ──────────▶ │ Proxy Java (Mage   │ ─────────────────── │ Server XMage        │
-│  React 19 + PixiJS 8     │ ◀────────── │ .Proxy)            │ ◀────────────────── │ (Mage.Server)       │
-│  WebGL2 Rendering        │              │ WebSocket :8787    │                     │ 1.4.61-V1           │
+│  React 19 + TypeScript   │ ◀────────── │ .Proxy)            │ ◀────────────────── │ (Mage.Server)       │
+│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.61-V1           │
 └──────────────────────────┘              └────────────────────┘                     └───────────────────┘
 ```
 
 - **XMage Server** (`Mage.Server/`): rules engine, card database (+25,000 cards) and networking (Java). Existing project.
 - **WebSocket Proxy** (`Mage.Proxy/`): high-throughput bridge that translates between JSON/WebSocket and the XMage serialization protocol.
-- **Web Client** (`web/`): React 19 + PixiJS 8 (WebGL2) client rendering the board, animations, targeting, audio, and lobby UI.
+- **Web Client** (`web/`): React 19 + TypeScript + Vite client rendering the board, animations, targeting, audio, and lobby UI via hardware-accelerated CSS and SVG overlays.
 
 ## Tech Stack
 
@@ -24,7 +24,7 @@
 |---|---|
 | XMage Server | Java 17, jboss-remoting (1.4.61-V1) |
 | WebSocket Proxy | Java 17, Java-WebSocket, Gson (`Mage.Proxy`) |
-| Web Client | React 19, PixiJS 8 (WebGL2), TypeScript, Vite 8, Vitest, Playwright |
+| Web Client | React 19, TypeScript, Vite 8, CSS3 / SVG, Web Audio API, Vitest, Playwright |
 
 ## Requirements
 

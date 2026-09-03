@@ -1,9 +1,10 @@
 export const HAND_BAR_MIN_CARD_W = 64
-export const HAND_BAR_MAX_CARD_W = 136
+export const HAND_BAR_MAX_CARD_W = 156
 export const HAND_CARD_ASPECT = 1.4
 export const HAND_BAR_MIN_VISIBLE_RATIO = 0.55
+export const HAND_BAR_REST_OVERLAP_RATIO = 0.5
 export const HAND_BAR_MAX_GAP = 6
-export const HAND_BAR_MAX_SPAN = 900
+export const HAND_BAR_MAX_SPAN = 1100
 export const HAND_BAR_PADDING_X = 24
 export const HAND_BAR_PADDING_Y = 12
 

@@ -166,8 +166,9 @@
   line-height: 1;
 }
 
-/* Layout switch button */
-.deck-header-layout-btn {
+/* Layout switch button + deck stats button share the icon-button look */
+.deck-header-layout-btn,
+.deck-header-stats-btn {
   position: relative;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -184,7 +185,8 @@
   transition: all 120ms ease;
 }
 
-.deck-header-layout-btn:hover {
+.deck-header-layout-btn:hover,
+.deck-header-stats-btn:hover {
   background: rgba(255, 255, 255, 0.18);
   border-color: #ecc94b;
   color: #f6e05e;

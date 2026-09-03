@@ -6,6 +6,7 @@ import ResourceBar from '../game/ResourceBar'
 import PlayerInfoBar from '../game/PlayerInfoBar'
 import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
+import { useDragScroll } from './useDragScroll'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
 import { useTranslation } from '../i18n'
@@ -44,6 +45,27 @@ function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
   return 'other'
 }
 
+interface LandGroup {
+  name: string
+  items: [string, PermanentView][]
+}
+
+function groupLands(lands: [string, PermanentView][]): LandGroup[] {
+  const groups: LandGroup[] = []
+  const map = new Map<string, [string, PermanentView][]>()
+  for (const item of lands) {
+    const name = item[1].name || 'Land'
+    let list = map.get(name)
+    if (!list) {
+      list = []
+      map.set(name, list)
+      groups.push({ name, items: list })
+    }
+    list.push(item)
+  }
+  return groups
+}
+
 export default function BoardZone({
   player,
   position,
@@ -74,6 +96,8 @@ export default function BoardZone({
   const isTop = effectivePosition === 'top'
 
   const { cardW, ref: zoneRef } = useZoneScale()
+  const creaturesBandRef = useDragScroll<HTMLDivElement>()
+  const permanentsBandRef = useDragScroll<HTMLDivElement>()
   const { t } = useTranslation()
 
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
@@ -324,6 +348,8 @@ export default function BoardZone({
     )
   }
 
+  const landGroups = groupLands(lands)
+
   const statusRow = (
     <div
       key="status-row"
@@ -332,6 +358,7 @@ export default function BoardZone({
       <PlayerInfoBar
         player={player}
         side={statusSide}
+        compact={compactPod}
         onClick={onCardClick ? () => onCardClick(player.playerId) : undefined}
         isTarget={targetIds.has(player.playerId)}
         onHover={onCardHover}
@@ -350,6 +377,7 @@ export default function BoardZone({
         player={player}
         side={statusSide}
         compact
+        micro={compactPod}
         crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
         onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
         onCardHover={onCardHover}
@@ -362,8 +390,24 @@ export default function BoardZone({
       key="permanents-row"
       className="bz-row bz-permanents-row oz-permanents-row pz-permanents-row"
     >
-      <div className="bz-band oz-band pz-band permanents-band full-width">
-        {lands.map(([id, perm]) => renderCardItem(id, perm, false))}
+      <div ref={permanentsBandRef} className="bz-band oz-band pz-band permanents-band full-width">
+        {landGroups.map(({ name, items }) => {
+          if (items.length === 1) {
+            return renderCardItem(items[0][0], items[0][1], false)
+          }
+          return (
+            <div
+              key={`lg-${name}-${items[0][0]}`}
+              className="land-group"
+              data-land-name={name}
+              data-count={items.length}
+              title={`${name} (×${items.length})`}
+            >
+              {items.map(([id, perm]) => renderCardItem(id, perm, false))}
+              <span className="land-group-badge">×{items.length}</span>
+            </div>
+          )
+        })}
         {others.map(([id, perm]) => renderCardItem(id, perm, false))}
       </div>
     </div>
@@ -384,20 +428,27 @@ export default function BoardZone({
             playableIds={playableIds}
             targetIds={targetIds}
             helperEmblems={effectiveControlled ? helperEmblems : undefined}
+            compact={compactPod}
           />
         </div>
       )}
-      <div className={`bz-band oz-band pz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
+      <div ref={creaturesBandRef} className={`bz-band oz-band pz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
         {creatures.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>
     </div>
   )
+
+  const hasAnyBoardCards = creatures.length > 0 || hasCommander || lands.length > 0 || others.length > 0
+  const noCreatures = hasAnyBoardCards && creatures.length === 0 && !hasCommander
+  const noPermanents = hasAnyBoardCards && lands.length === 0 && others.length === 0
 
   const zoneClasses = [
     'board-zone',
     isTop ? 'zone-top opponent-zone' : 'zone-bottom player-zone',
     mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
+    noCreatures ? 'no-creatures' : '',
+    noPermanents ? 'no-permanents' : '',
     isDefeated ? 'is-defeated' : '',
     className,
   ].filter(Boolean).join(' ')

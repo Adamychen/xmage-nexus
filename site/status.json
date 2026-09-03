@@ -4,10 +4,10 @@
   "runUrl": null,
   "project": {
     "name": "XMage Nexus",
-    "tagline": "Modern, Arena-grade web client for XMage (React 19 + PixiJS 8 + WebSocket proxy).",
+    "tagline": "Modern, Arena-grade web client for XMage (React 19 + TypeScript + WebSocket proxy).",
     "version": "0.1.0",
     "repo": "Adamychen/xmage-nexus",
-    "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS + PixiJS 8"
+    "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "layers": [
     {
@@ -67,7 +67,7 @@
       "name": "Web Client: login + lobby + board",
       "status": "done",
       "date": "2026-08-08",
-      "desc": "React 19 + Vite + PixiJS 8, lobby, chat, live tables/users, HD card cache, 1v1 board + spectator."
+      "desc": "React 19 + Vite, lobby, chat, live tables/users, HD card cache, 1v1 board + spectator."
     },
     {
       "id": 2,

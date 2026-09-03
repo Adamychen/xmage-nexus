@@ -1,15 +1,13 @@
 # Project: XMage Nexus (Web) — Master Working Document
 
-> This document is the **project source of truth**: roadmap, phases, decisions, and
-> verified actual state. It is updated at every work step, not just at the end of phases.
-> Last updated: 2026-09-03 (Action dock repositioned to right sidebar above pass button, board avatar targeting for starting player and hand card discard highlighting, dynamic localization & precise contextual icons across all in-game modals, prompts and action buttons, comprehensive server prompt message translation layer in serverMessageTranslation.ts eliminating English leaks in Spanish and other locales; suite: vitest 96 files / 663 tests ✅, typecheck ✅, vite build ✅).
+> Last updated: 2026-09-03 (Board Drag-to-Scroll "Hand Tool" ✋ implemented on battlefield creature and permanent bands with mouse pan, click suppression on drag, vertical-to-horizontal wheel scrolling, and dynamic grab/grabbing cursors; suite: vitest 97 files / 669 tests ✅, typecheck ✅, vite build ✅).
 
 ---
 
 ## 1. Objective
 
 Replicate the full XMage experience (multiplayer and vs AI) with a
-**modern, Arena-grade** web client: WebGL2 rendering, animations, visual targeting,
+**modern, Arena-grade** web client: hardware-accelerated DOM/CSS animations, visual targeting,
 and instantly playable **without installing anything** (one link and play).
 
 We do not re-implement game rules: the XMage Java server remains the authoritative rules engine,
@@ -31,8 +29,8 @@ card database (+25,000 cards), and social/multiplayer backend. We build a modern
 ```
 ┌──────────────┐   WS JSON    ┌────────────────┐   XMage Protocol     ┌───────────────────┐
 │  Browser     │ ───────────▶ │ Java Proxy     │ ───────────────────▶ │ XMage Server      │
-│  React+Pixi  │ ◀─────────── │ (Mage.Proxy)   │ ◀─────────────────── │ (Mage.Server)     │
-│  WebGL2      │              │ Real Session   │   jboss-serialization│ 1.4.61-V1         │
+│  React 19    │ ◀─────────── │ (Mage.Proxy)   │ ◀─────────────────── │ (Mage.Server)     │
+│  CSS3 / SVG  │              │ Real Session   │   jboss-serialization│ 1.4.61-V1         │
 └──────────────┘              └────────────────┘                      └───────────────────┘
 ```
 
@@ -40,16 +38,16 @@ card database (+25,000 cards), and social/multiplayer backend. We build a modern
 - **Proxy (`Mage.Proxy/`)**: Custom Java module. Opens a real XMage session (`SessionImpl`),
   receives server callbacks, re-exposes them over WebSocket as JSON, and forwards client actions
   to the server. Necessary because browsers cannot speak jboss-serialization.
-- **Web Client (`web/`)**: React + PixiJS app. Communicates solely with the proxy,
+- **Web Client (`web/`)**: React 19 app. Communicates solely with the proxy,
   never directly with Mage.Common → modifying the client does not break the proxy or vice versa.
 
 ## 4. Technical Decisions (and Rationale)
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Client Stack | React 19 + Vite + TypeScript + PixiJS 8 (WebGL2) | PixiJS = GPU sprites/particles/filters; React = UI (lobby, dialogs). Maximum iteration speed and visual fidelity |
+| Client Stack | React 19 + Vite + TypeScript + Web Audio | Hardware-accelerated CSS transforms + SVG overlays for targeting/combat; pure React DOM UI. Eliminates PixiJS/canvas overhead for crisp text, zero GPU memory leaks, and native responsiveness |
 | State Architecture | **Snapshot-diff → animation**: each `GAME_UPDATE` delivers the full `GameView`; client calculates transitions (card A moved from hand→battlefield, B tapped...) and animates them | Pure testable logic; effects are data-driven rather than hardcoded per action |
-| Effects | Declarative catalog (`fx/catalog.ts`): an effect = config entry (animation, easing, duration, particles) | Adding effects takes lines of config, not refactors; maintainable |
+| Effects | Declarative transitions (`gameTransitionEngine.ts`, `feedbackFx.ts`): animations, screen shakes, floating damage numbers, sound dispatch | High-performance CSS/DOM animations without canvas overhead |
 | Distribution | Pure browser (Phases 1-2) → Tauri launcher (Phase 3) | Web link = zero installation (core advantage vs desktop Swing); Tauri = ~15 MB desktop app running the embedded proxy automatically |
 | Maintainability | `types.ts` = single source of protocol truth; pure logic decoupled from rendering; minimal pinned dependencies | Real project risk is XMage protocol versions (proxy), not client-side churn |
 | Performance | Shared sprite sheets, unique card textures, particle pooling, DPI-aware rendering | Game is not performance-bound; memory usage and GC pauses are kept strictly bounded |
@@ -131,10 +129,10 @@ web/
     ├── cards/
     │   └── cardImages.ts           — Scryfall (set + number) with memory LRU + 75ms throttle, Accept + 429 Retry-After; IndexedDB 24h cache planned Phase 3
     ├── board/
-    │   ├── BoardView.tsx           — Mounts Pixi.Application (WebGL) within React
-    │   ├── BoardScene.ts           — Orchestrates: snapshot → sprites; zones, tap, counters
-    │   ├── zones.ts                — Layout: card slot coordinates in pixels
-    │   └── gameToScene.ts          — Maps GameView → scene entities
+    │   ├── BoardShell.tsx          — Game board viewport container & scale management
+    │   ├── GameBoard.tsx           — Main 1v1 and pod board orchestration
+    │   ├── BoardZone.tsx           — Symmetric zone layout: lands, creatures, non-creatures
+    │   └── CardSlot.tsx            — Card slot component with tap/counters/damage badges
     └── ui/
         ├── TopBar.tsx              — Turn, phase/step, player life/mana
         └── GameLog.tsx             — Match log from GAME_UPDATE_AND_INFORM / CHATMESSAGE
@@ -172,7 +170,7 @@ web/
 
 ## 8. Phase 3 — Visual Polish, Audio & Distribution (In Progress)
 
-- Declarative visual effect engine (`fx/engine.ts`, `fx/catalog.ts`): card trajectory arcs, color-coded particle bursts, glow/outline shaders, screen shake, floating $-X$ combat damage numbers, Web Audio sound pack.
+- Declarative visual effect engine (`gameTransitionEngine.ts`, `feedbackFx.ts`, `soundManager.ts`): card trajectory arcs, CSS glow/outline effects, screen shake, floating $-X$ combat damage numbers, Web Audio sound pack.
 - Structured event feed (`ActionFeed.tsx`) parsing rules engine logs into visual action cards.
 - Tauri desktop packaging: lightweight native launcher (~15 MB) bundling embedded proxy.
 - PWA support: installable browser app with offline card caching.
@@ -204,6 +202,7 @@ web/
 | 2026-08-24 | Bug/Fix | Game Log (ActionFeed) only shows match events now. Root cause: the single `log` store mixed chat, lobby join/leave (`g-dogg has joined`, `gabrielk12 has left XMage`) and game-log lines, and unmatched lines fell back to `type:'system'` (🏆). Fix: route each `CHATMESSAGE` by XMage `messageType` (`GAME`→game log, `TALK`→Chat tab, `STATUS`/`USER_INFO`→system noise) via a new `channel` field on `LogEntry`; `ActionFeed` filters to `channel==='game'` and `GameChat` to `channel==='chat'`. No proxy rebuild needed — `JsonUtil` already serializes the whole `ChatMessage` (incl. `messageType`); updated `Mage.Proxy/README.md` contract. Fallback heuristic keeps the fake test server (no `messageType`) working | vitest 310/310 ✅; typecheck ✅; e2e chat 3/3 ✅ |
 | 2026-08-23 | F2/F3 | Advanced Stack & Priority Suite (Block B): implemented `holdPriority` setting and UI toggle in `GameScreen` with `Ctrl`/`Cmd` key support; connected `HOLD_PRIORITY`/`UNHOLD_PRIORITY` actions via WebSocket; updated `HelpWikiModal` with full Stack, Priority, APNAP trigger ordering, and Storm rules; created deterministic scenario & Playwright E2E covering (1) Hold Priority response loop with *Infernal Tutor* + *Lion's Eye Diamond*, (2) APNAP simultaneous trigger stacking (*Soul Warden* + *Impact Tremors*), and (3) Storm count copies with re-targeting (*Grapeshot*) | vitest 306/306 ✅; typecheck ✅; e2e stack-priority 1/1 ✅ (3.1s) |
 | 2026-08-23 | UI/Polish | Resource Piles Top Card Rendering & Hover Preview: upgraded `ResourceBar` to display the HD card artwork of the top card in Graveyard, Exile, and Cross-Zone (Ray stack) with count badge and mini-lightning icon; added full hover card preview & Scryfall resolution on resource stacks; updated `CardSlot` data-attributes | vitest 306/306 ✅; typecheck ✅; e2e cross-zone 2/2 ✅ |
+| 2026-09-03 | F3/F5 | Commander Small-Screen & Multiplayer UX Overhaul: (1) Implemented `micro` mode for `ResourceBar` in `compactPod` replacing 68x96px card stacks with sleek 26px chips (`[📚 84]`, `[🪦 12]`, `[🌀 2]`, `[⚡ 2]`), preventing card/resource overlap; (2) Implemented `land-group` cascade accordion grouping identical lands into a single fan with `×N` badge expanding smoothly on hover; (3) Restored equal 1fr/1fr height for opponents' lands and creatures; (4) Boosted player card size up to 175px on battlefield (`MAX_PLAYER_CARD_W`) and 156px in hand (`HAND_BAR_MAX_CARD_W`); (5) Constrained `HandBar` to left 50% in POD 2x2 with `row-reverse` for bottom-right opponent status bar, preventing avatar occlusion; (6) Fixed Partner / multi-commander layout by removing fixed 1-card container width (`bz-commander` `width: auto`) and adding `multi-commander`/`compact` classes; (7) Implemented "Hand Tool" (`useDragScroll`) on battlefield bands with mouse click-and-drag panning, click suppression on drag, vertical-to-horizontal wheel translation, and `grab`/`grabbing` cursors | vitest 97 files / 669 tests ✅; typecheck ✅; build ✅ |
 | 2026-08-23 | F2/F3 | Complex Casting Costs Suite & E2E Validation: implemented Phyrexian mana symbols (`{U/P}`, `{W/P}`, etc. with $\Phi$ icon badges and gradients), hybrid mana badges, Convoke/Improvise board tapping guidance in `mana-prompt-bar`, and dedicated E2E test scenario covering (1) Phyrexian life payment with live 20→18 HUD life update, (2) Kicker confirmation with 4-damage resolution to opponent (20→16), (3) Split cards (Fire // Ice) modal choice, (4) Adventure/MDFC (Bonecrusher Giant // Stomp) choice, and (5) Convoke creature tapping on the battlefield | vitest 303/303 ✅; typecheck ✅; e2e complex-costs 1/1 ✅ (5.8s) |
 | 2026-08-22 | F2/F3 | Comprehensive MTG Interactions Suite & Visual Showcase: built E2E test scenario covering `GAME_ASK` (Shockland binary prompts), `GAME_CHOOSE_COLOR` (mana color picker), `GAME_CHOOSE_PILE` (Fact or Fiction split piles), `CardGrid` (Demonic Tutor search with Scryfall HD art), `LibraryOrderDialog` (Scry 3 Top/Bottom order), and Command Zone Commander Tax (+2 badge & cast); updated `GAME_ASK` fallback and added `skipAsks` flag to `HumanHelper` | vitest 286/286 ✅; typecheck ✅; e2e interactions 1/1 ✅ (5.7s) |
 | 2026-08-22 | F2/F3 | Universal Playable Objects Audit & Mana Floating: audited and unified `canPlayObjects` resolution across all zones (Hand, Battlefield lands & activated abilities, Command Zone commanders & companions, Graveyard, Exile, Library top card); fixed land tapping during regular priority to float mana before casting spells | vitest 286/286 ✅; typecheck ✅; e2e combat 4/4 ✅ |

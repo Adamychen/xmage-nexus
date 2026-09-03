@@ -12,7 +12,7 @@
     radial-gradient(ellipse 130% 95% at 50% -12%, rgba(16, 22, 48, 0.55) 0%, rgba(16, 22, 48, 0) 60%),
     radial-gradient(circle at 50% 50%, #171b33 0%, #0d1022 55%, #070912 100%);
   /* Fallback: las zonas fijan su propio --card-w vía useZoneScale */
-  --card-w: 100px;
+  --card-w: 120px;
 }
 
 /* Viñeta de perímetro: la mesa se lee como una superficie iluminada */

@@ -1,17 +1,32 @@
 .command-zone {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
+  gap: 6px;
+  padding: 3px 5px;
   background: rgba(18, 22, 45, 0.6);
   border-radius: 8px;
   border: 1px dashed rgba(255, 208, 112, 0.4);
   flex-shrink: 0;
   max-height: 100%;
+  box-sizing: border-box;
 }
 
 .command-zone.opp {
   border-color: rgba(255, 170, 70, 0.35);
+}
+
+.command-zone.multi-commander {
+  gap: 4px;
+  padding: 2px 4px;
+}
+
+.command-zone.compact.multi-commander {
+  gap: 3px;
+  padding: 2px 3px;
+}
+
+.command-zone.compact.multi-commander .commander-slot {
+  --card-w: calc(var(--card-w) * 0.88);
 }
 
 .commander-card-wrap {

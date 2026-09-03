@@ -4,6 +4,7 @@ import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
+import { HAND_BAR_REST_OVERLAP_RATIO } from '../src/board/handSizing'
 import type { Page } from '@playwright/test'
 
 fakeOnly()
@@ -15,7 +16,8 @@ interface Box {
   height: number
 }
 
-const MIN_VISIBLE_RATIO = 0.55
+/** Visible horizontal ratio per card at rest = 1 - rest overlap (mirrors the HandBar CSS token). */
+const MIN_VISIBLE_RATIO = 1 - HAND_BAR_REST_OVERLAP_RATIO
 
 const RECT_OF = 'const rectOf = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } };'
 
@@ -123,7 +125,7 @@ test('la mano propia flota como overlay anclado al fondo sin consumir layout (st
   })
 })
 
-test('la mano propia flota como overlay full-width bajo el grid 2x2 (pod) @fullflow @hand-bar', async ({ page }) => {
+test('la mano propia se restringe al cuadrante inferior-izquierdo del pod 2x2 @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hbp',
@@ -139,13 +141,27 @@ test('la mano propia flota como overlay full-width bajo el grid 2x2 (pod) @fullf
     })
     await expect(page.locator('[data-testid="pod-board"]')).toBeVisible({ timeout: 15_000 })
 
-    const widths = await page.evaluate(() => {
+    // En pod 2x2 el humano está abajo-izquierda y el rival abajo-derecha: la mano
+    // no debe cruzar el divisor central ni tapar el avatar/recursos del rival.
+    const boxes = await page.evaluate(() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
       const pod = document.querySelector('[data-testid="pod-board"]')
       if (!bar || !pod) throw new Error('hand-bar o pod-board no encontrado')
-      return { bar: bar.getBoundingClientRect().width, pod: pod.getBoundingClientRect().width }
+      const rectOf = (el: Element) => {
+        const r = el.getBoundingClientRect()
+        return { x: r.x, width: r.width }
+      }
+      return { bar: rectOf(bar), pod: rectOf(pod) }
     })
-    expect(widths.bar, 'la barra cruza todo el ancho del pod').toBeGreaterThanOrEqual(widths.pod * 0.95)
+    expect(
+      boxes.bar.width,
+      'la mano ocupa la mitad izquierda del pod',
+    ).toBeGreaterThanOrEqual(boxes.pod.width * 0.45)
+    expect(boxes.bar.width).toBeLessThanOrEqual(boxes.pod.width * 0.55)
+    expect(
+      boxes.bar.x + boxes.bar.width,
+      'la mano no cruza el divisor central del pod',
+    ).toBeLessThanOrEqual(boxes.pod.x + boxes.pod.width / 2 + 2)
 
     await expectHandBarLayout(page)
     expect(pageErrors).toEqual([])

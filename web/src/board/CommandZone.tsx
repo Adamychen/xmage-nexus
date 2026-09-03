@@ -14,6 +14,7 @@ interface CommandZoneProps {
   playableIds?: Set<string>
   targetIds?: Set<string>
   helperEmblems?: Record<string, CardView>
+  compact?: boolean
 }
 
 interface CommandObject {
@@ -152,6 +153,7 @@ export default function CommandZone({
   playableIds = new Set(),
   targetIds = new Set(),
   helperEmblems,
+  compact = false,
 }: CommandZoneProps) {
   const { t } = useTranslation()
   const hoverHandler = onHover ?? onCardHover
@@ -169,9 +171,10 @@ export default function CommandZone({
 
   const commanders = items.filter((item) => item.isCommander || item.isCompanion)
   const emblems = items.filter((item) => item.isEmblem)
+  const isMulti = commanders.length > 1
 
   return (
-    <div className={`command-zone ${side}`}>
+    <div className={`command-zone ${side} ${isMulti ? 'multi-commander' : ''} ${compact ? 'compact' : ''}`}>
       {commanders.map((item) => {
         const isPlayable = playableIds.has(item.id)
         const isTarget = targetIds.has(item.id)

@@ -7,13 +7,13 @@
 
 ## 1. Vision & Architectural Philosophy
 
-The goal of **XMage Nexus** is to deliver a fast, modern, and beautiful web client with an **Arena-grade aesthetic** (WebGL2 rendering, animated targeting, sound, smooth interaction) while leveraging the battle-tested, 10-year **XMage Java server** (`Mage.Server`) as the authoritative rules engine, card database (+25,000 cards), and multiplayer matchmaking backend.
+The goal of **XMage Nexus** is to deliver a fast, modern, and beautiful web client with an **Arena-grade aesthetic** (hardware-accelerated DOM/CSS animations, animated targeting, sound, smooth interaction) while leveraging the battle-tested, 10-year **XMage Java server** (`Mage.Server`) as the authoritative rules engine, card database (+25,000 cards), and multiplayer matchmaking backend.
 
 ### The 3-Tier Architecture
 ```
 ┌─────────────────────────┐          WebSocket JSON          ┌──────────────────────────┐      JBoss / TCP      ┌─────────────────────────┐
 │  XMage Nexus Web Client │ ◄──────────────────────────────► │        Mage.Proxy        │ ◄───────────────────► │      XMage Server       │
-│  (React 19 + PixiJS)    │   (Type-safe protocol schema)    │  (Java 17 / MageClient)  │   (Native protocol)   │  (1.4.61-V1 / Official) │
+│  (React 19 + Vite)      │   (Type-safe protocol schema)    │  (Java 17 / MageClient)  │   (Native protocol)   │  (1.4.61-V1 / Official) │
 └─────────────────────────┘                                  └──────────────────────────┘                       └─────────────────────────┘
 ```
 
@@ -30,7 +30,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | Milestone | Scope | Status | Verification & Evidence |
 |---|---|---|---|
 | **Phase 0: Proxy Bridge** | Java 17 proxy (`Mage.Proxy`), WebSocket gateway, cycle-safe JSON serializer. | ✅ **Completed** | Connect + real game flow works against `beta.xmage.today:17171` AND local `localhost:17171` (same 1.4.61-V1 fork). NOTE: beta's anonymous-login handshake is intermittently fatal server-side (`Can't receive server state before other data`) and is **not** fixed by any proxy buffer — beta is best-effort only; CI's real-protocol oracle is the local server. The proxy is now **multi-tenant** (one process serves many independent users), which already enables zero-install server-side play today (see `AGENTS.md`). |
-| **Phase 1: Web Foundation** | React 19 + TS + Vite + PixiJS 8. Lobby, room chat, real-time tables/users, Scryfall HD card cache (IndexedDB), full 1v1 board rendering & spectator mode. | ✅ **Completed** | 100% typecheck clean, live AI vs AI spectator matches working end-to-end. |
+| **Phase 1: Web Foundation** | React 19 + TS + Vite. Lobby, room chat, real-time tables/users, Scryfall HD card cache (IndexedDB), full 1v1 board rendering & spectator mode. | ✅ **Completed** | 100% typecheck clean, live AI vs AI spectator matches working end-to-end. |
 | **Phase 2: Interaction Engine** | London mulligan, priority loops (`GAME_SELECT`), visual targeting (animated dotted lines & pulsing glows), mana tapping & pool payment (`sendPlayerManaType`), floating non-blocking combat UI (attack/block & alpha strike), advanced spell interactions (X-costs, multi-target, modal choices, +1/+1 counters). | ✅ **Completed** | Validated via `human-test.mjs` (83 checks PASS) and Playwright E2E suites (*Blaze*, *Arc Trail*, *Boros Charm*, *Walking Ballista*). |
 | **Quality & QA Foundation** | 105 unit tests (vitest, <1s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
 | **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), y **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
@@ -158,9 +158,8 @@ flowchart TD
 - Sound FX for core interactions: card draw, card tap, spell cast whoosh, land drop, creature attack impact, life total counter tick, turn bell/notification chimes.
 - Volume sliders in settings (Master, SFX, Ambient).
 
-#### 3.2 VFX & Particle System (PixiJS)
+#### 3.2 VFX & Visual Effects (CSS & SVG Overlays)
 - Spell resolution visual trajectories (arcs from hand $\to$ stack $\to$ battlefield/graveyard).
-- Particle effects tailored to card colors (Red fire, Blue arcane sparkles, Green nature wisps, White holy light, Black dark smoke).
 - Combat impact effects: screen shake on heavy damage, floating $-X$ life numbers.
 
 #### 3.3 Integrated Web Deck Builder
@@ -222,7 +221,7 @@ flowchart TD
 | **Phase 2.5** | Match Clocks | 🟢 Low | Client-side countdown syncing with server updates |
 | **Phase 2.5** | Double-Faced Cards / Sagas | 🟢 Low-Medium | Scryfall back-face cache, card hover flip |
 | **Phase 3** | Audio Engine | 🟢 Low | Web Audio API / Howler.js, sound asset pack |
-| **Phase 3** | VFX & Particle System | 🟡 Medium | PixiJS 8 particle emitter & tween engine |
+| **Phase 3** | VFX & Visual Animations | 🟢 Low-Medium | CSS3 keyframes, SVG overlays & tween engine |
 | **Phase 3** | In-App Deck Builder | 🟡 Medium | Scryfall REST API search, text format parsers |
 | **Phase 4** | Tauri Desktop Launcher | 🟢 Low-Medium | Tauri 2.0, Rust process launcher for Java JAR |
 | **Phase 5** | 4-Player Commander Layout | 🔴 High | Complete board geometry overhaul (4 quadrants) |

@@ -25,7 +25,7 @@ Each test creates ITS OWN isolated match. Shared utilities live in `e2e/support/
 - `frames.ts` — WS frame DSL: parsing, GameView accessors, `waitFrame`, `waitFrameAt`, `waitOppLife`, mana payment (`nextManaSource`).
 - `start-game.ts` — `startGame(page, opts)` handles login → table vs SIM → match launch → WS helper, returning the active `GameSession`.
 - `game-screen.ts` — Page objects for feedback dialogs (`feedback-dialog`) and action drivers: `payMana`, `targetOpponent`, `resolveInteger`, `waitPlayable`.
-- `scene.ts` / `canvas.ts` — Live scene state (`window.__mageScene`, deterministic) and Pixi canvas interactions.
+- `scene.ts` / `canvas.ts` — Live scene state (`window.__mageScene`, deterministic) and board scene interactions.
 - `wshelper.ts` — `HumanHelper`: plays lands, discards, and yields priority over WS for fast/fragile operations; UI verifies dialogs, rendering, and page errors.
 - `fake-backend.ts` — `withFakeServer(scenario, run)`: spins up the FixtureServer with the specified test scenario and tears it down cleanly.
 

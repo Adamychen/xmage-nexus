@@ -1,6 +1,6 @@
 # web — Mage.Proxy web client
 
-React 19 + Vite + TypeScript + PixiJS 8 client. It communicates **only** with the
+React 19 + Vite + TypeScript client. It communicates **only** with the
 proxy over a JSON WebSocket and contains **no XMage/Java code**.
 
 ## Scope

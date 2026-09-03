@@ -7,6 +7,7 @@ import {
   HAND_ARC_PLAYABLE_RISE_PX,
   HAND_BAR_MAX_CARD_W,
   HAND_BAR_PEEK_RATIO,
+  HAND_BAR_REST_OVERLAP_RATIO,
   HAND_CARD_ASPECT,
   HAND_BAR_PADDING_Y,
 } from './handSizing'
@@ -63,6 +64,7 @@ export default function HandBar({
         {
           '--card-w': `${cardW}px`,
           '--hand-gap': `${gap}px`,
+          '--hand-rest-overlap': HAND_BAR_REST_OVERLAP_RATIO,
           '--sink': `${cardH * HAND_BAR_PEEK_RATIO}px`,
           height: `${cardH * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y}px`,
         } as React.CSSProperties

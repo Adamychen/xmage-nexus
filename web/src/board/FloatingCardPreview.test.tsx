@@ -1,5 +1,5 @@
-import { fireEvent, render } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FloatingCardPreview from './FloatingCardPreview'
 import type { CardView, PermanentView } from '../net/types'
 
@@ -13,6 +13,10 @@ vi.mock('../cards/cardImages', () => ({
 describe('FloatingCardPreview', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    cleanup()
   })
 
   const dummyBoardRect = {

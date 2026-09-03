@@ -59,3 +59,20 @@
 .pod-board .player-zone {
   flex: unset;
 }
+
+/* ── HandBar positioning in POD mode (2x2) ───────────────────── */
+/* In 2x2 pod mode, the human player is strictly in the bottom-left quadrant.
+   HandBar must be constrained to the left 50% so it never crosses the center
+   divider and never covers the bottom-right opponent's avatar/life total. */
+.pod-board .hand-bar {
+  left: 0;
+  right: auto;
+  width: 50%;
+  max-width: 50%;
+  justify-content: center;
+}
+
+/* Ensure the bottom-right opponent's avatar is placed at the right outer edge */
+.pod-row--bottom .pod-cell:last-child .opponent-zone.mirrored .bz-status-row {
+  flex-direction: row-reverse;
+}

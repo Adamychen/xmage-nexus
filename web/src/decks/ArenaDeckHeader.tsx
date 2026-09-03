@@ -148,7 +148,7 @@ export function ArenaDeckHeader({
       {onOpenInspector && (
         <button
           type="button"
-          className="deck-header-layout-btn"
+          className="deck-header-stats-btn"
           onClick={onOpenInspector}
           title={t('decks', 'inspect_double_click')}
         >

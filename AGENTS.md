@@ -2,7 +2,7 @@
 
 A modern, high-performance web client for XMage. The stack consists of:
 XMage server (Java, test mode) + WebSocket proxy (`Mage.Proxy`, Java) + web
-client (`web`, React 19 + TypeScript + PixiJS 8 + Vite).
+client (`web`, React 19 + TypeScript + Vite).
 
 **Master document: `PROJECT.md`** — source of truth for status, phases and
 lessons. Update it when finishing a task (phases, lessons, quality table,

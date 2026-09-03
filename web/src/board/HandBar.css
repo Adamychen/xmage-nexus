@@ -48,23 +48,36 @@
      y, al elevarse la mano, las áreas renderizadas en movimiento crearían un
      bucle de feedback (oscilación arriba/abajo). */
   height: var(--sink, 95px);
-  margin-left: var(--hand-gap, 0px);
+  /* Rest state: narrower hand with compact card overlap (token in handSizing.ts) */
+  margin-left: calc(
+    var(--hand-gap, 0px) - var(--card-w, 136px) * var(--hand-rest-overlap, 0.5)
+  );
   overflow: visible;
-  transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hand-bar .hand-card-slot:first-child {
-  margin-left: 0;
+  margin-left: 0 !important;
+}
+
+/* Hover over the hand: expands horizontally to full browsing width */
+.hand-bar:hover .hand-card-slot,
+.hand-bar:has(.hand-card-slot:hover) .hand-card-slot {
+  margin-left: var(--hand-gap, 0px);
+}
+
+.hand-bar:hover .hand-card-slot:first-child,
+.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:first-child {
+  margin-left: 0 !important;
 }
 
 /* Fan pose: rotate around a pivot below the card, rising toward the center.
-   The hand rests half-sunken below the board edge (`--sink`); the board-shell
-   clips the lower half. */
+   The hand rests tucked below the board edge in rest state. */
 .hand-bar .hand-card-slot .hand-card {
   width: var(--card-w, 136px);
   height: calc(var(--card-w, 136px) * 1.4);
   transform-origin: 50% 150%;
-  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px)));
+  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 1.12));
   transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease;
   will-change: transform;
 }
@@ -73,7 +86,8 @@
   z-index: 50;
 }
 
-/* Hover on any card: the whole hand rises to ~90% visible… */
+/* Hover on any card or hand area: the whole hand rises to ~90% visible… */
+.hand-bar:hover .hand-card-slot:not(:hover) .hand-card,
 .hand-bar:has(.hand-card-slot:hover) .hand-card-slot:not(:hover) .hand-card {
   transform: rotate(var(--rot, 0deg))
     translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 0.2));

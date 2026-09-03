@@ -63,8 +63,8 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
       })
     }
 
-    // 1. GAME_SELECT_PLAYER (uuid)
-    await step('GAME_SELECT_PLAYER', 'Choose a player')
+    // 1. GAME_SELECT_PLAYER (uuid) — 'Choose a player' se traduce (serverMessageTranslation)
+    await step('GAME_SELECT_PLAYER', 'Elige jugador')
     await options().filter({ hasText: SIM_NAME }).first().click()
 
     // 2. GAME_CHOOSE_STRING con opciones (string + lista)
@@ -88,16 +88,16 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     await step('GAME_CHOOSE_NUMBER', 'Choose a number')
     await resolveInteger(page, 3, 'CHOOSE_NUMBER')
 
-    // 5. GAME_CHOOSE_ONE (string + options)
-    await step('GAME_CHOOSE_ONE', 'Choose one')
+    // 5. GAME_CHOOSE_ONE (string + options) — 'Choose one' → 'Elige modo (1)'
+    await step('GAME_CHOOSE_ONE', 'Elige modo (1)')
     await options().first().click()
 
     // 6. GAME_CHOOSE_BETWEEN (string + options)
     await step('GAME_CHOOSE_BETWEEN', 'Choose between')
     await options().first().click()
 
-    // 7. GAME_CHOOSE_MODE (uuid + choices)
-    await step('GAME_CHOOSE_MODE', 'Choose a mode')
+    // 7. GAME_CHOOSE_MODE (uuid + choices) — 'Choose a mode' → 'Elige modo'
+    await step('GAME_CHOOSE_MODE', 'Elige modo')
     await options().first().click()
 
     // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1) — renderiza en CardGrid
@@ -110,8 +110,8 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
       'GAME_CHOOSE_CARDS debería enviar sendPlayerUUID con la carta elegida',
     ).toBeTruthy()
 
-    // 9. GAME_TARGET_PLAYER (uuid, eligir jugador)
-    await step('GAME_TARGET_PLAYER', 'Choose a player')
+    // 9. GAME_TARGET_PLAYER (uuid, eligir jugador) — 'Choose a player' → 'Elige jugador'
+    await step('GAME_TARGET_PLAYER', 'Elige jugador')
     await options().filter({ hasText: SIM_NAME }).first().click()
 
     // 10. GAME_TARGET_AMOUNT (integer, dividir daño)

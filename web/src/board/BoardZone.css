@@ -222,6 +222,22 @@
   justify-content: safe center;
 }
 
+/* ── Drag-to-Scroll (Hand tool ✋) ────────────────────────────────── */
+.bz-band.has-overflow {
+  cursor: grab;
+}
+
+.bz-band.is-dragging {
+  cursor: grabbing !important;
+  user-select: none !important;
+  scroll-behavior: auto !important;
+}
+
+.bz-band.is-dragging * {
+  cursor: grabbing !important;
+  pointer-events: none !important;
+}
+
 .bz-band.full-width,
 .pz-band.full-width,
 .oz-band.full-width {
@@ -232,16 +248,58 @@
 .bz-commander,
 .pz-commander,
 .oz-commander {
-  width: var(--card-w, 100px);
+  width: auto;
+  max-width: 55%;
   flex-shrink: 0;
   border-radius: 8px;
   border: none;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
-/* ── Compact Pod Layout (Commander 4-Player 2x2 grid) ────────────── */
+/* ── Land Grouping (Accordion Cascade Stack) ─────────────────────── */
+.land-group {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.land-group .card-slot + .card-slot {
+  margin-left: calc(-1 * var(--card-w, 100px) * 0.72);
+  transition: margin 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.land-group:hover .card-slot + .card-slot {
+  margin-left: 6px;
+}
+
+.land-group-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(12, 16, 36, 0.94);
+  border: 1px solid rgba(255, 208, 112, 0.75);
+  color: #ffd070;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  border-radius: 4px;
+  padding: 1px 4.5px;
+  z-index: 6;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+  transition: opacity 0.15s ease;
+  line-height: 1.2;
+}
+
+.land-group:hover .land-group-badge {
+  opacity: 0;
+}
+
+/* ── Compact Pod Layout (Commander 4-Player 2x2 grid & Arena) ─────── */
 .board-zone.compact-pod,
 .opponent-zone.compact-pod,
 .player-zone.compact-pod {
@@ -252,8 +310,48 @@
 .board-zone.compact-pod .bz-status-row,
 .opponent-zone.compact-pod .oz-top-row,
 .player-zone.compact-pod .pz-bottom-row {
-  max-height: 48px;
+  max-height: 32px;
+  min-height: 28px;
   flex-shrink: 0;
+}
+
+/* Row proportions in compact-pod: equal 1fr for lands and creatures for opponents */
+.board-zone.compact-pod.zone-top:not(.no-creatures):not(.no-permanents),
+.opponent-zone.compact-pod:not(.mirrored):not(.no-creatures):not(.no-permanents) {
+  grid-template-rows: auto 1fr 1fr;
+}
+
+.board-zone.compact-pod.zone-bottom:not(.no-creatures):not(.no-permanents),
+.player-zone.compact-pod:not(.no-creatures):not(.no-permanents),
+.opponent-zone.compact-pod.mirrored:not(.no-creatures):not(.no-permanents) {
+  grid-template-rows: 1fr 1fr auto;
+}
+
+/* Collapsible rows when empty */
+.board-zone.compact-pod.no-creatures.zone-top,
+.opponent-zone.compact-pod.no-creatures:not(.mirrored) {
+  grid-template-rows: auto 1fr 0px;
+}
+.board-zone.compact-pod.no-creatures.zone-bottom,
+.player-zone.compact-pod.no-creatures:not(.mirrored),
+.opponent-zone.compact-pod.no-creatures.mirrored {
+  grid-template-rows: 0px 1fr auto;
+}
+.board-zone.compact-pod.no-creatures .bz-creatures-row {
+  display: none !important;
+}
+
+.board-zone.compact-pod.no-permanents.zone-top,
+.opponent-zone.compact-pod.no-permanents:not(.mirrored) {
+  grid-template-rows: auto 0px 1fr;
+}
+.board-zone.compact-pod.no-permanents.zone-bottom,
+.player-zone.compact-pod.no-permanents:not(.mirrored),
+.opponent-zone.compact-pod.no-permanents.mirrored {
+  grid-template-rows: 1fr 0px auto;
+}
+.board-zone.compact-pod.no-permanents .bz-permanents-row {
+  display: none !important;
 }
 
 .board-zone.compact-pod .bz-band,
@@ -266,7 +364,8 @@
 .board-zone.compact-pod .bz-commander,
 .opponent-zone.compact-pod .oz-commander,
 .player-zone.compact-pod .pz-commander {
-  width: var(--card-w, 64px);
+  width: auto;
+  max-width: 60%;
 }
 
 /* ── Defeated / Left Overlay ─────────────────────────────────────── */

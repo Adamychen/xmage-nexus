@@ -15,7 +15,7 @@ XMage Server (Java, RMI)
   Mage.Proxy (Java)
         │  WebSocket JSON (:8787)
         ▼
-  XMage Nexus Web Client (React 19 + PixiJS 8)
+  XMage Nexus Web Client (React 19 + TypeScript + Vite)
 ```
 
 El bridge es responsable de:

@@ -174,4 +174,81 @@ describe('OpponentZone', () => {
     expect(container.querySelector('.commander-badge')).not.toBeNull()
     expect(getByText('Urza, Lord High Artificer')).not.toBeNull()
   })
+
+  it('groups multiple lands of the same name in a land-group accordion', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'LandLord',
+      life: 40,
+      handCount: 5,
+      controlled: false,
+      battlefield: {
+        'land-1': { id: 'land-1', name: 'Island', cardTypes: ['LAND'] } as any,
+        'land-2': { id: 'land-2', name: 'Island', cardTypes: ['LAND'] } as any,
+        'land-3': { id: 'land-3', name: 'Island', cardTypes: ['LAND'] } as any,
+        'land-4': { id: 'land-4', name: 'Mountain', cardTypes: ['LAND'] } as any,
+      },
+    }
+
+    const { container, getByText } = render(
+      <OpponentZone player={oppPlayer as PlayerView} compactPod />
+    )
+
+    // Island group has 3 lands and badge '×3'
+    const islandGroup = container.querySelector('.land-group[data-land-name="Island"]')
+    expect(islandGroup).toBeTruthy()
+    expect(islandGroup?.getAttribute('data-count')).toBe('3')
+    expect(islandGroup?.querySelector('.land-group-badge')?.textContent).toBe('×3')
+    expect(islandGroup?.querySelectorAll('.card-slot').length).toBe(3)
+
+    // Mountain is a single land, so not wrapped in land-group
+    expect(container.querySelector('.land-group[data-land-name="Mountain"]')).toBeNull()
+    expect(getByText('Mountain')).toBeTruthy()
+
+    // Compact-pod enables micro resource bar and compact styling
+    expect(container.querySelector('.resource-bar.micro')).toBeTruthy()
+  })
+
+  it('renders multiple partner commanders with multi-commander and compact classes', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-partner',
+      name: 'PartnerOpponent',
+      life: 40,
+      handCount: 7,
+      controlled: false,
+      commandList: [
+        {
+          id: 'cmd-ellie',
+          name: 'Ellie',
+          manaValue: 3,
+          castCount: 0,
+          mageObjectType: 'COMMANDER',
+        } as any,
+        {
+          id: 'cmd-joel',
+          name: 'Joel, Resolute Survivor',
+          manaValue: 6,
+          castCount: 1,
+          mageObjectType: 'COMMANDER',
+        } as any,
+      ],
+      battlefield: {},
+    }
+
+    const { container, getByText } = render(
+      <OpponentZone player={oppPlayer as PlayerView} compactPod />
+    )
+
+    const cmdZone = container.querySelector('.command-zone')
+    expect(cmdZone).not.toBeNull()
+    expect(cmdZone?.classList.contains('multi-commander')).toBe(true)
+    expect(cmdZone?.classList.contains('compact')).toBe(true)
+
+    // Both commanders rendered
+    expect(getByText('Ellie')).not.toBeNull()
+    expect(getByText('Joel, Resolute Survivor')).not.toBeNull()
+
+    // 2 crown badges
+    expect(container.querySelectorAll('.commander-badge').length).toBe(2)
+  })
 })

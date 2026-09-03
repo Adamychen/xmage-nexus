@@ -1,10 +1,13 @@
-import { fireEvent, render } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import ResourceBar from './ResourceBar'
 import type { PlayerView } from '../net/types'
 import { makePlayer } from '../__fixtures__/gameViews'
 
 describe('ResourceBar', () => {
+  afterEach(() => {
+    cleanup()
+  })
   const basePlayer: PlayerView = makePlayer({
     playerId: 'p-1',
     name: 'Alice',
@@ -99,5 +102,65 @@ describe('ResourceBar', () => {
 
     const rayCard = rayStack?.querySelector('.card-slot')
     expect(rayCard?.getAttribute('data-card-name')).toBe('Faithless Looting')
+  })
+
+  it('renders compact micro chips when micro={true}', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      libraryCount: 84,
+      graveyard: {
+        'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 },
+      },
+      exile: {
+        'c-2': { id: 'c-2', name: 'Force of Will', manaValue: 5 },
+      },
+    }
+
+    const { container, getByText } = render(
+      <ResourceBar player={playerWithPiles} side="opp" micro={true} />
+    )
+
+    // Resource bar has micro class
+    expect(container.querySelector('.resource-bar.micro')).toBeTruthy()
+
+    // Mana button has micro styling and thunder icon
+    const manaBtn = container.querySelector('.resource-mana.micro')
+    expect(manaBtn).toBeTruthy()
+    expect(container.querySelector('.mana-micro-icon')).toBeTruthy()
+
+    // Does NOT render heavy 68x96 card-sized stacks
+    expect(container.querySelector('.resource-stack')).toBeNull()
+
+    // Renders lightweight micro chips
+    expect(container.querySelector('.resource-chip.library-chip')).toBeTruthy()
+    expect(container.querySelector('.resource-chip.graveyard-chip')).toBeTruthy()
+    expect(container.querySelector('.resource-chip.exile-chip')).toBeTruthy()
+
+    // Displays counts in the chips
+    expect(getByText('84')).toBeTruthy()
+    const chipCounts = container.querySelectorAll('.chip-count')
+    expect(Array.from(chipCounts).map((el) => el.textContent)).toContain('84')
+    expect(Array.from(chipCounts).map((el) => el.textContent)).toContain('1')
+  })
+
+  it('opens pile overlay when micro chip is clicked', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      graveyard: {
+        'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 },
+      },
+    }
+
+    const { container } = render(
+      <ResourceBar player={playerWithPiles} side="opp" micro={true} />
+    )
+
+    const gyChip = container.querySelector('.resource-chip.graveyard-chip')
+    expect(gyChip).toBeTruthy()
+
+    fireEvent.click(gyChip!)
+
+    // Pile overlay opens in portal (document.body)
+    expect(document.body.querySelector('.pile-overlay')).toBeTruthy()
   })
 })
