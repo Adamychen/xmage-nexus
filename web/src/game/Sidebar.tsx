@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useGame, returnToLobby, concedeGame, useStore, useSettings, setSetting, openRollbackDialog } from '../state/store'
+import { useGame, returnToLobby, concedeMatch, useStore, useSettings, setSetting, openRollbackDialog } from '../state/store'
 import { FX_SPEEDS } from '../board/fx'
 import { useFullscreen } from '../utils/fullscreen'
 import { formatTimer, useTickingTimer } from '../utils/timer'
@@ -57,7 +57,7 @@ export default function Sidebar() {
           : t('game', 'leave_spectate_prompt')
         if (confirm(msg)) {
           if (me && gameId) {
-            await concedeGame(gameId)
+            await concedeMatch(gameId)
           } else {
             returnToLobby()
           }

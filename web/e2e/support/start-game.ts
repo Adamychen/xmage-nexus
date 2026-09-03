@@ -214,11 +214,13 @@ export async function startGame(page: Page, opts: StartGameOptions = {}): Promis
     await page.evaluate(() => {
       const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
       store?.setSetting?.('autoKeepMulligan', true)
+      store?.setSetting?.('autoSubmitSideboard', true)
     })
   } else {
     await page.evaluate(() => {
       const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
       store?.setSetting?.('autoKeepMulligan', false)
+      store?.setSetting?.('autoSubmitSideboard', true)
     })
   }
   const tableName = opts.tableName ?? `${username}-t`

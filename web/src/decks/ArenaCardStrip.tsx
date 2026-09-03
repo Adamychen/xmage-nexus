@@ -98,6 +98,10 @@ export function ArenaCardStrip({
   }
 
   const handleClick = (e: React.MouseEvent) => {
+    if (onSwap) {
+      onSwap(actionKey)
+      return
+    }
     // Left-click decreases count (like Arena), unless shift is held
     if (e.shiftKey) {
       onInc?.(actionKey)
@@ -108,6 +112,10 @@ export function ArenaCardStrip({
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
+    if (onSwap) {
+      onSwap(actionKey)
+      return
+    }
     // Right-click increases count (like Arena)
     onInc?.(actionKey)
   }
@@ -123,7 +131,7 @@ export function ArenaCardStrip({
       onMouseLeave={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      title={issue ? `${hoverTitle} — ⚠️ ${issue}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`}
+      title={issue ? `${hoverTitle} — ⚠️ ${issue}` : (onSwap ? `${hoverTitle} — ${swapLabel ?? '⇄'}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`)}
     >
       {/* Background card art crop */}
       {meta?.artCropUrl && (

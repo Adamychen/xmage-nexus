@@ -297,9 +297,9 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
           timeLeft: time,
           limited,
         }
-        setState({ sideboardScreen: screen })
+        setState({ sideboardScreen: screen, gameEnd: null })
         addLog('partida', `Sideboard: ${maindeck.length} main / ${sideboard.length} side — tienes ${time}s para ajustar`)
-        if (s.settings.autoKeepMulligan) {
+        if (s.settings.autoSubmitSideboard) {
           const group = (cards: SideboardCard[]) => {
             const map = new Map<string, { cardName: string; setCode: string; cardNumber: string; amount: number }>()
             for (const c of cards) {

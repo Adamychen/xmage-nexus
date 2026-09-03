@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { getState, setState } from './state'
-import { concedeGame, returnToLobby, reset } from './store'
+import { concedeGame, concedeMatch, returnToLobby, reset } from './store'
 import * as cmds from '../net/commands'
 
 vi.mock('../net/commands', () => ({
@@ -26,10 +26,20 @@ describe('concedeGame', () => {
     })
   })
 
-  it('envía PlayerAction.CONCEDE y vuelve al lobby', async () => {
+  it('envía PlayerAction.CONCEDE manteniendo la fase de juego para SIDEBOARD / siguiente partida', async () => {
     await concedeGame('game-1')
 
     expect(cmds.sendPlayerAction).toHaveBeenCalledWith('CONCEDE', 'game-1')
+    // No aborta el match: espera a que el servidor envíe END_GAME_INFO
+    expect(getState().phase).toBe('game')
+    expect(getState().gameId).toBe('game-1')
+  })
+
+  it('concedeMatch envía CONCEDE, quitMatch y vuelve al lobby', async () => {
+    await concedeMatch('game-1')
+
+    expect(cmds.sendPlayerAction).toHaveBeenCalledWith('CONCEDE', 'game-1')
+    expect(cmds.quitMatch).toHaveBeenCalledWith('game-1')
     expect(getState().phase).toBe('lobby')
     expect(getState().gameId).toBeNull()
   })

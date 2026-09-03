@@ -84,4 +84,47 @@ describe('GameEndDialog', () => {
     expect(btn).toBeDefined()
     fireEvent.click(btn)
   })
+
+  it('renders nothing when sideboardScreen is active (does not block sideboard)', () => {
+    setState({
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true })],
+      }),
+      gameEnd: {
+        won: false,
+        gameInfo: 'Hero lost the game',
+        matchInfo: 'Match continues',
+      },
+      sideboardScreen: {
+        deckName: 'Hero Deck',
+        maindeck: [],
+        sideboard: [],
+        tableId: 't-1',
+        parentTableId: null,
+        timeLeft: 180,
+        limited: false,
+      },
+    })
+
+    const { container } = render(<GameEndDialog />)
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('renders close button when match continues and clicking it clears gameEnd', () => {
+    setState({
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true })],
+      }),
+      gameEnd: {
+        won: false,
+        gameInfo: 'Hero lost the game',
+        matchInfo: 'Match continues',
+      },
+    })
+
+    const { getByRole } = render(<GameEndDialog />)
+    const closeBtn = getByRole('button', { name: /Cerrar|Close/i })
+    expect(closeBtn).toBeDefined()
+    fireEvent.click(closeBtn)
+  })
 })

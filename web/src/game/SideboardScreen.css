@@ -378,3 +378,9 @@
 .sideboard-counts .invalid {
   color: #ff5c6c;
 }
+
+.sideboard-footer-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

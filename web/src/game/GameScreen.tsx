@@ -5,7 +5,7 @@ import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
-import { returnToLobby, concedeGame, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState, openRollbackDialog } from '../state/store'
+import { returnToLobby, concedeGame, concedeMatch, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState, openRollbackDialog } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
@@ -274,17 +274,30 @@ export default function GameScreen() {
               ⏪ {t('game', 'rollback')}
             </button>
           )}
+          {me && (
+            <button
+              type="button"
+              className="leave-game-btn"
+              onClick={async () => {
+                if (confirm(t('game', 'concede_confirm'))) {
+                  if (gameId) await concedeGame(gameId)
+                }
+              }}
+              title={t('game', 'concede_confirm')}
+            >
+              <Icon name="flag" size={13} /> {t('game', 'concede')}
+            </button>
+          )}
           <button
             type="button"
-            className="leave-game-btn"
+            className="leave-match-btn"
             onClick={async () => {
-              const isPlayer = !!me
-              const msg = isPlayer
+              const msg = me
                 ? t('game', 'concede_prompt')
                 : t('game', 'leave_spectate_prompt')
               if (confirm(msg)) {
-                if (isPlayer && gameId) {
-                  await concedeGame(gameId)
+                if (me && gameId) {
+                  await concedeMatch(gameId)
                 } else {
                   returnToLobby()
                 }
@@ -292,7 +305,7 @@ export default function GameScreen() {
             }}
             title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
           >
-            {me ? <><Icon name="flag" size={13} /> {t('game', 'concede')}</> : <><Icon name="door" size={13} /> {t('game', 'leave')}</>}
+            <Icon name="door" size={13} /> {t('game', 'leave')}
           </button>
         </div>
       </header>

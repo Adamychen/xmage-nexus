@@ -117,6 +117,7 @@ export interface AppState {
   settings: {
     autoKeepMulligan: boolean
     autoPass: boolean
+    autoSubmitSideboard?: boolean
     holdPriority: boolean
     boardLayout: 'standard' | 'pod' | 'arena'
     effects: boolean

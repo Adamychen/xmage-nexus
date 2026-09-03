@@ -55,15 +55,26 @@ export default function SideboardScreen() {
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
   const submitRef = useRef<() => Promise<void>>(async () => {})
+  const initialMainRef = useRef<DeckCard[]>([])
+  const initialSideRef = useRef<DeckCard[]>([])
 
   useEffect(() => {
     if (!screen) return
-    setMain(groupInstances(screen.maindeck))
-    setSide(groupInstances(screen.sideboard))
+    const gMain = groupInstances(screen.maindeck)
+    const gSide = groupInstances(screen.sideboard)
+    initialMainRef.current = gMain
+    initialSideRef.current = gSide
+    setMain(gMain)
+    setSide(gSide)
     setTimeLeft(screen.timeLeft)
     setMainFilter('')
     setSideFilter('')
   }, [screen?.tableId])
+
+  const handleReset = useCallback(() => {
+    setMain(initialMainRef.current)
+    setSide(initialSideRef.current)
+  }, [])
 
   const updateMetaForCards = useCallback((cards: DeckCard[]) => {
     const toFetch: DeckCard[] = []
@@ -116,10 +127,6 @@ export default function SideboardScreen() {
       img = m?.imageUrl ?? null
       backImg = m?.backImageUrl ?? null
     }
-    if (!img && card.setCode && card.cardNumber) {
-      // fallback via scryfall helpers if we have a Scryfall card shape not available
-      img = null
-    }
     if (!img) return
     const previewWidth = backImg ? 520 : 255
     let x = 0
@@ -140,39 +147,8 @@ export default function SideboardScreen() {
 
   const handleLeave = useCallback(() => setHoverPreview(null), [])
 
-  const handleInc = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c)))
-    } else {
-      setMain((prev) => prev.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c)))
-    }
-  }, [])
-
-  const handleDec = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
-    } else {
-      setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
-    }
-  }, [])
-
-  const handleRemove = useCallback((actionKey: string) => {
-    const isSide = actionKey.startsWith('sb:')
-    const key = isSide ? actionKey.slice(3) : actionKey
-    if (isSide) {
-      setSide((prev) => prev.filter((c) => deckCardKey(c) !== key))
-    } else {
-      setMain((prev) => prev.filter((c) => deckCardKey(c) !== key))
-    }
-  }, [])
-
   const moveOneToSide = useCallback((actionKey: string) => {
     const key = actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
-    // if called from side, ignore; only main -> side
     const src = main.find((c) => deckCardKey(c) === key)
     if (!src) return
     setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
@@ -194,6 +170,59 @@ export default function SideboardScreen() {
       return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount: 1 }]
     })
   }, [side])
+
+  const moveAllToSide = useCallback((actionKey: string) => {
+    const key = actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    const src = main.find((c) => deckCardKey(c) === key)
+    if (!src) return
+    const amount = src.amount
+    setMain((prev) => prev.filter((c) => deckCardKey(c) !== key))
+    setSide((prev) => {
+      const idx = prev.findIndex((c) => deckCardKey(c) === key)
+      if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: c.amount + amount } : c))
+      return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount }]
+    })
+  }, [main])
+
+  const moveAllToMain = useCallback((actionKey: string) => {
+    const key = actionKey.startsWith('sb:') ? actionKey.slice(3) : actionKey
+    const src = side.find((c) => deckCardKey(c) === key)
+    if (!src) return
+    const amount = src.amount
+    setSide((prev) => prev.filter((c) => deckCardKey(c) !== key))
+    setMain((prev) => {
+      const idx = prev.findIndex((c) => deckCardKey(c) === key)
+      if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: c.amount + amount } : c))
+      return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount }]
+    })
+  }, [side])
+
+  const handleDec = useCallback((actionKey: string) => {
+    const isSide = actionKey.startsWith('sb:')
+    if (isSide) {
+      moveOneToMain(actionKey)
+    } else {
+      moveOneToSide(actionKey)
+    }
+  }, [moveOneToMain, moveOneToSide])
+
+  const handleInc = useCallback((actionKey: string) => {
+    const isSide = actionKey.startsWith('sb:')
+    if (isSide) {
+      moveOneToSide(actionKey)
+    } else {
+      moveOneToMain(actionKey)
+    }
+  }, [moveOneToMain, moveOneToSide])
+
+  const handleRemove = useCallback((actionKey: string) => {
+    const isSide = actionKey.startsWith('sb:')
+    if (isSide) {
+      moveAllToMain(actionKey)
+    } else {
+      moveAllToSide(actionKey)
+    }
+  }, [moveAllToMain, moveAllToSide])
 
   const handleDropOnMain = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -473,14 +502,24 @@ export default function SideboardScreen() {
             <span className={mainValid ? 'valid' : 'invalid'}>{t('game', 'sideboard_main_count', { count: String(mainTotal), min: String(minMain) })}</span>
             <span className={sideValid ? 'valid' : 'invalid'}>{t('game', 'sideboard_side_count', { count: String(sideTotal), max: '15' })}</span>
           </div>
-          <button
-            className="primary"
-            disabled={busy || !mainValid}
-            onClick={() => void submitDeck()}
-            title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
-          >
-            {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
-          </button>
+          <div className="sideboard-footer-actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={handleReset}
+              title={t('lobby', 'filter_reset')}
+            >
+              ↺ {t('lobby', 'filter_reset')}
+            </button>
+            <button
+              className="primary"
+              disabled={busy || !mainValid}
+              onClick={() => void submitDeck()}
+              title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
+            >
+              {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
+            </button>
+          </div>
         </div>
       </section>
       {hoverPreview && (

@@ -1,12 +1,14 @@
-import { returnToLobby, useStore, useGame } from '../state/store'
+import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
 import { useTranslation } from '../i18n'
 import './GameEndDialog.css'
 
 export default function GameEndDialog() {
   const end = useStore((s) => s.gameEnd)
+  const sideboardScreen = useStore((s) => s.sideboardScreen)
   const game = useGame()
   const { t } = useTranslation()
-  if (!end) return null
+
+  if (!end || sideboardScreen) return null
 
   const me = game?.players?.find((p) => p.controlled)
   const isSpectator = !me
@@ -45,7 +47,12 @@ export default function GameEndDialog() {
             {t('game', 'return_to_lobby')}
           </button>
         ) : (
-          <p className="end-hint">{t('game', 'match_continues')}</p>
+          <div className="end-actions">
+            <p className="end-hint">{t('game', 'match_continues')}</p>
+            <button className="primary" onClick={clearGameEnd}>
+              {t('common', 'close')}
+            </button>
+          </div>
         )}
       </section>
     </div>

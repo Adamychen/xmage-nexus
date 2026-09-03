@@ -73,12 +73,27 @@ export async function startStagedMatch() {
 }
 
 /**
- * Concede la partida como jugador (envía PlayerAction.CONCEDE para que el
- * servidor registre la derrota y termine la partida) y vuelve al lobby.
- * En modo espectador no hay concede: usar `returnToLobby`.
+ * Concede únicamente la partida individual en curso. No abandona el match:
+ * si es Bo3 o Bo5 y el match continúa, el servidor enviará END_GAME_INFO y
+ * luego SIDEBOARD para preparar la siguiente partida.
  */
 export async function concedeGame(gameId: string) {
   await cmds.sendPlayerAction('CONCEDE', gameId)
+}
+
+/**
+ * Concede y abandona el match por completo, saliendo de la mesa y volviendo al lobby.
+ */
+export async function concedeMatch(gameId?: string | null) {
+  const s = getState()
+  const gid = gameId ?? s.gameId
+  if (gid) {
+    const me = s.game?.players?.find((p) => p.controlled)
+    if (me) {
+      void cmds.sendPlayerAction('CONCEDE', gid)
+      void cmds.quitMatch(gid)
+    }
+  }
   returnToLobby()
 }
 
