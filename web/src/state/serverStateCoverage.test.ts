@@ -21,6 +21,8 @@ function loadSchema() {
 const schema = loadSchema()
 const oracleGameNames = new Set(schema.gameTypes.map((g: { name: string }) => g.name))
 const oracleDeckSet = new Set(schema.deckTypes as string[])
+const oracleTournamentSet = new Set(schema.tournamentTypes as string[])
+const oracleCubeSet = new Set(schema.draftCubes as string[])
 
 function extractDefaultGameTypes(): string[] {
   const src = readFileSync(CREATE_DIALOG_PATH, 'utf8')
@@ -73,6 +75,36 @@ function extractFakeGameTypes(): string[] {
   return names
 }
 
+function extractDefaultTournamentTypes(): string[] {
+  const src = readFileSync(CREATE_DIALOG_PATH, 'utf8')
+  const blockMatch = src.match(/export const DEFAULT_TOURNAMENT_TYPES[^=]*=\s*\[([\s\S]*?)\]/m)
+  if (!blockMatch) return []
+  const block = blockMatch[1]
+  const names: string[] = []
+  let m
+  const reDouble = /"([^"]+)"/g
+  while ((m = reDouble.exec(block))) names.push(m[1])
+  const stripped = block.replace(/"[^"]*"/g, '')
+  const reSingle = /'([^']+)'/g
+  while ((m = reSingle.exec(stripped))) if (!names.includes(m[1])) names.push(m[1])
+  return names
+}
+
+function extractDefaultDraftCubes(): string[] {
+  const src = readFileSync(CREATE_DIALOG_PATH, 'utf8')
+  const blockMatch = src.match(/export const DEFAULT_DRAFT_CUBES[^=]*=\s*\[([\s\S]*?)\]/m)
+  if (!blockMatch) return []
+  const block = blockMatch[1]
+  const names: string[] = []
+  let m
+  const reDouble = /"([^"]+)"/g
+  while ((m = reDouble.exec(block))) names.push(m[1])
+  const stripped = block.replace(/"[^"]*"/g, '')
+  const reSingle = /'([^']+)'/g
+  while ((m = reSingle.exec(stripped))) if (!names.includes(m[1])) names.push(m[1])
+  return names
+}
+
 describe('serverState coverage — drift guard for createTable formats', () => {
   it('server-state-schema.json is up to date with Mage.Server/config/config.xml', () => {
     const live = computeServerStateSchema()
@@ -114,5 +146,29 @@ describe('serverState coverage — drift guard for createTable formats', () => {
     const fake = extractFakeDeckTypes()
     const invalid = fake.filter((n) => !oracleDeckSet.has(n))
     expect(invalid, `FakeServer getDeckTypes has invalid entries: ${invalid.join(', ')}`).toEqual([])
+  })
+
+  it('DEFAULT_TOURNAMENT_TYPES contains only valid server tournamentTypes (no stale names)', () => {
+    const defaults = extractDefaultTournamentTypes()
+    const invalid = defaults.filter((n) => !oracleTournamentSet.has(n))
+    expect(invalid, `DEFAULT_TOURNAMENT_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+  })
+
+  it('DEFAULT_TOURNAMENT_TYPES covers all server tournamentTypes (exhaustive fallback for offline)', () => {
+    const defaults = new Set(extractDefaultTournamentTypes())
+    const missing = [...oracleTournamentSet].filter((n) => !defaults.has(n as string))
+    expect(missing, `DEFAULT_TOURNAMENT_TYPES missing ${missing.length} server tournamentTypes: ${missing.join(', ')} — add them to CreateTableDialog.tsx DEFAULT_TOURNAMENT_TYPES from server-state-schema.json`).toEqual([])
+  })
+
+  it('DEFAULT_DRAFT_CUBES contains only valid server draftCubes (no stale names)', () => {
+    const defaults = extractDefaultDraftCubes()
+    const invalid = defaults.filter((n) => !oracleCubeSet.has(n))
+    expect(invalid, `DEFAULT_DRAFT_CUBES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+  })
+
+  it('DEFAULT_DRAFT_CUBES covers all server draftCubes (exhaustive fallback for offline)', () => {
+    const defaults = new Set(extractDefaultDraftCubes())
+    const missing = [...oracleCubeSet].filter((n) => !defaults.has(n as string))
+    expect(missing, `DEFAULT_DRAFT_CUBES missing ${missing.length} server draftCubes: ${missing.join(', ')} — add them to CreateTableDialog.tsx DEFAULT_DRAFT_CUBES from server-state-schema.json`).toEqual([])
   })
 })

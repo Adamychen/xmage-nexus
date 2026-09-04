@@ -47,6 +47,21 @@ export async function getDeckTypes(): Promise<string[]> {
   return res.ok ? (res.data ?? []) : []
 }
 
+export async function getTournamentTypes(): Promise<string[]> {
+  const res = await getGateway().send<string[]>('getTournamentTypes')
+  return res.ok ? (res.data ?? []) : []
+}
+
+export async function getDraftCubes(): Promise<string[]> {
+  const res = await getGateway().send<string[]>('getDraftCubes')
+  return res.ok ? (res.data ?? []) : []
+}
+
+export async function getTournamentGameTypes(): Promise<GameTypeInfo[]> {
+  const res = await getGateway().send<GameTypeInfo[]>('getTournamentGameTypes')
+  return res.ok ? (res.data ?? []) : []
+}
+
 export async function getRoomChatId(): Promise<string | undefined> {
   const res = await getGateway().send<string>('getRoomChatId')
   return res.ok ? res.data : undefined

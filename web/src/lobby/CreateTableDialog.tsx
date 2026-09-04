@@ -303,6 +303,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const [gameTypes, setGameTypes] = useState<GameTypeInfo[]>(DEFAULT_GAME_TYPES)
   const [deckTypes, setDeckTypes] = useState<string[]>(DEFAULT_DECK_TYPES)
   const [playerTypes, setPlayerTypes] = useState<string[]>(DEFAULT_PLAYER_TYPES)
+  const [tournamentTypes, setTournamentTypes] = useState<string[]>(DEFAULT_TOURNAMENT_TYPES)
+  const [draftCubes, setDraftCubes] = useState<string[]>(DEFAULT_DRAFT_CUBES)
 
   // General tab
   const [name, setName] = useState(() => {
@@ -454,10 +456,12 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     let active = true
     void (async () => {
       try {
-        const [g, d, p] = await Promise.all([
-          cmds.getGameTypes().catch(() => []),
-          cmds.getDeckTypes().catch(() => []),
-          cmds.getPlayerTypes().catch(() => []),
+        const [g, d, p, tt, dc] = await Promise.all([
+          cmds.getGameTypes().catch(() => [] as GameTypeInfo[]),
+          cmds.getDeckTypes().catch(() => [] as string[]),
+          cmds.getPlayerTypes().catch(() => [] as string[]),
+          cmds.getTournamentTypes().catch(() => [] as string[]),
+          cmds.getDraftCubes().catch(() => [] as string[]),
         ])
         if (!active) return
         if (g && g.length > 0) {
@@ -470,6 +474,14 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         }
         if (p && p.length > 0) {
           setPlayerTypes(p)
+        }
+        if (tt && tt.length > 0) {
+          setTournamentTypes(tt)
+          if (!tt.includes(tournamentType)) setTournamentType(tt[0])
+        }
+        if (dc && dc.length > 0) {
+          setDraftCubes(dc)
+          if (draftCubeName && !dc.includes(draftCubeName)) setDraftCubeName('')
         }
       } catch (err) {
         console.warn('Could not fetch server match types, using defaults', err)
@@ -893,7 +905,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         <label>
                           {t('lobby','create_field_draft_type')}
                           <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)}>
-                            {DEFAULT_TOURNAMENT_TYPES.map((tt) => (
+                            {(tournamentTypes.length ? tournamentTypes : DEFAULT_TOURNAMENT_TYPES).map((tt) => (
                               <option key={tt} value={tt}>{tt}</option>
                             ))}
                           </select>
@@ -911,7 +923,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                           Cube
                           <select value={draftCubeName} onChange={(e) => setDraftCubeName(e.target.value)}>
                             <option value="">— {t('common','all')} (aleatorio) —</option>
-                            {DEFAULT_DRAFT_CUBES.map((c) => (
+                            {(draftCubes.length ? draftCubes : DEFAULT_DRAFT_CUBES).map((c) => (
                               <option key={c} value={c}>{c}</option>
                             ))}
                           </select>
