@@ -63,6 +63,48 @@
   * Match duration and completion timestamp.
   * Replay launcher / viewer.
 
+### F. Wizard Crear Mesa — Auditoría vs desktop `Mage.Client` (2026-09-04)
+> Análisis exhaustivo: `web/src/lobby/CreateTableDialog.tsx` (640 líneas, 4 pasos + Dev) vs `Mage.Client/dialog/NewTableDialog.java` (1126 líneas) + `CustomOptionsDialog.java` (631 líneas) vs `Mage/src/main/java/mage/game/match/MatchOptions.java` vs `Mage.Proxy/ProxyClient.parseMatchOptions` (1142-1292). Oráculo anti-drift: `Mage.Server/config/config.xml` → `web/fixtures/server-state-schema.json` (17 gameTypes, 45 deckTypes, 21 tournamentTypes, 41 draftCubes).
+
+**Gaps funcionales que el usuario ve como "faltan cosas":**
+
+| # | Campo `MatchOptions` | Desktop | Web hoy | Proxy `parseMatchOptions` | Impacto |
+|---|---|---|---|---|---|
+| F1 | `numPlayers` (min/max por `GameTypeView`) | ✅ spinner + `setGameOptions()` adapta visibilidad de `range/attackOption` | ❌ deriva `maxPlayers` y avisa "Máx N bots" sin selector | derivable de `playerTypes.length` | Free For All/Commander FFA (3-10) no puede limitar a 3-4 |
+| F2 | Asientos por plaza (tipo+skill+deck) | ✅ `List<TablePlayerPanel>` | ⚠️ `playerTypesSel[]` único + 1 `simDeck` replicado, sin skill por bot | ✅ (`SIM`→`HUMAN` en servidor, join per-`TablePlayerPanel`) | No hay 3-10 plazas mixtas |
+| F3 | `mulliganType` | ✅ combo en CustomOptions | ❌ no enviado | ❌ ignora → `GAME_DEFAULT` | Sin fix London/Vancouver etc. |
+| F4 | `customStartLife` / `customStartHandSize` (bool+valor) | ✅ | ❌ | ❌ | Sin vida/mano inicial custom |
+| F5 | `planeChase` | ✅ | ❌ | ❌ | Sin Planechase |
+| F6 | `perPlayerEmblemCards`/`globalEmblemCards` (experimental dck) | ✅ file picker | ❌ | ❌ | Stretch, deja fuera del MVP |
+| F7 | `bannedUsers` (`IgnoreList`) | ✅ | ❌ | ❌ | Ignorados pueden entrar |
+| F8 | `limited` para `Freeform Unlimited Commander` | ✅ `startsWith("Limited")` \|\| `Freeform Unlimited Commander→limited=true` | ❌ `=== "Limited"` literal | ✅ si web lo manda | Sideboarding roto para ese deckType |
+| F9 | `range`/`attackOption` gating | ✅ `isUseRange/isUseAttackOption` + fila oculta si ninguno aplica | ⚠️ `maxPlayers>2 \|\| commander` | ✅ | Heurística imperfecta en 2p no-FFA |
+| F10 | `tournamentType` (21) + `draftCubeName`/`numberRounds` | ✅ 21 entradas de `config.xml` | ⚠️ solo 3 (`Booster Draft/Sealed/Elimination`) | ✅ parser ya soporta los 21 + `draftCubeName`/`sets`/`numberBoosters`/`constructionTime` | Draft Cube no se puede elegir |
+
+**Gaps de UX / robustez:**
+
+| # | Problema | Detalle |
+|---|---|---|
+| U1 | Sin validación `deckType ↔ gameType` | Desktop `checkMatchOptions()` rechaza `Commander`+`Two Player Duel` antes de server; web dispara `createTable` y falla post-submit |
+| U2 | Sin validación por paso | `goNext` siempre habilitado, `name` vacío, `quitRatio`>100, etc. no bloquean |
+| U3 | `freeMulligans` auto→1 vía `useEffect` silencioso | Compite con setting manual, sin badge |
+| U4 | Sin persistencia `lastSessionId`/slots | Desktop `PreferencesDialog.KEY_NEW_TABLE_*` (2 slots + last); web resetea cada apertura |
+| U5 | Sin pre-validación viva por plaza | Solo `requestDeckValidation` en submit secuencial (humano+SIM), sin hint inline |
+| U6 | Summary strip incompleto + i18n mixto | Tags hardcodeados "Buffer de tiempo", stepper no responsive |
+| U7 | `winsNeeded` 1-5 vs solo 1/2/3 | Desktop permite 1-5 (Bo7) |
+| U8 | `Draft` con `numberRounds`/cube faltan | No hay `isSingleMultiplayerGame` / `numberRounds` en UI |
+
+**Plan de cierre (ordenado):**
+
+| Fase | Alcance | Toca | Verifica |
+|---|---|---|---|
+| **1** | Fixes sin contrato: validación `formatRules.ts` port de `checkMatchOptions`, selector `numPlayers` (min/max del oráculo), matriz `SeatConfig[]` por plaza (colapsa a chips en 2p), fix `limited` F8, `wins 1-5`, `freeMulligans 0-5`, `localStorage mage_createTable_v1`, live badge `validateDeck` debounced, i18n+stepper | `CreateTableDialog.*`, `decks/formatRules.ts`, `net/commands.ts` (`CreateTableArgs`), `i18n/locales/*`, `fixtures/fake.ts` | `unit` (serverStateCoverage) + `typecheck` + `e2e fake` |
+| **2** | Contrato proxy: añadir a `parseMatchOptions` `mulliganType`+`customLife/Hand`+`planeChase`+`bannedUsers`; UI Custom Options (mulligan select, vida/mano custom, Planechase) en tab Timing → chip "Custom (n)" | `Mage.Proxy/ProxyClient.java` + tests, `web/...` | `java` (`mvn -pl Mage.Proxy -am test`) + rebuild `build.mjs proxy` + `ctl.mjs restart proxy` |
+| **3** | Torneos: `tournamentType` exhaustive (agrupado por familia) + `draftCubeName` (41 cubes del oráculo) + `numberRounds`/`isSingleMultiplayerGame`; forzar `playerTypes=['HUMAN']` y `MAX_DRAFT_PLAYERS=8` en draft | mismo web + `Mage.Proxy` (parseTournament ya cubre) | `self-test` real localhost |
+| **4 (stretch)** | Emblem cards + Save/Load presets (2 slots + last) + `bannedUsers` de `ignoreList` | web + proxy | — |
+
+Guard (`web/src/state/serverStateCoverage.test.ts`) ya cubre drift `gameTypes/deckTypes` vs `config.xml`; se extenderá a `draftCubes/tournamentTypes` si se exponen dinámicamente. El oráculo vivo es `scripts/server-state-schema.mjs` (no necesita Java).
+
 ---
 
 ## 2. Implementation Roadmap

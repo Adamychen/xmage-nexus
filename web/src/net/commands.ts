@@ -90,6 +90,14 @@ export interface CreateTableArgs {
   edhPowerLevel?: number
   skipInitShuffling?: boolean
   skipStartingPlayerChoice?: boolean
+  limited?: boolean
+  mulliganType?: string
+  customStartLifeEnabled?: boolean
+  customStartLife?: number
+  customStartHandSizeEnabled?: boolean
+  customStartHandSize?: number
+  planeChase?: boolean
+  bannedUsers?: string[]
   /** mazos de los asientos "SIM" (oponentes simulados que une el proxy) */
   simDecks?: DeckJson[]
 }

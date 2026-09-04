@@ -1199,6 +1199,28 @@ public class ProxyClient implements MageClient {
         if (args.has("edhPowerLevel")) {
             options.setEdhPowerLevel(getInt(args, "edhPowerLevel", 100));
         }
+        if (args.has("mulliganType")) {
+            try {
+                options.setMullgianType(mage.game.mulligan.MulliganType.valueOf(str(args, "mulliganType", "GAME_DEFAULT").toUpperCase(Locale.ROOT)));
+            } catch (Exception ignored) {
+            }
+        }
+        if (args.has("customStartLifeEnabled")) {
+            options.setCustomStartLifeEnabled(getBool(args, "customStartLifeEnabled", false));
+            if (args.has("customStartLife")) options.setCustomStartLife(getInt(args, "customStartLife", 20));
+        }
+        if (args.has("customStartHandSizeEnabled")) {
+            options.setCustomStartHandSizeEnabled(getBool(args, "customStartHandSizeEnabled", false));
+            if (args.has("customStartHandSize")) options.setCustomStartHandSize(getInt(args, "customStartHandSize", 7));
+        }
+        if (args.has("planeChase")) {
+            options.setPlaneChase(getBool(args, "planeChase", false));
+        }
+        if (args.has("bannedUsers") && args.get("bannedUsers").isJsonArray()) {
+            java.util.Set<String> banned = new java.util.HashSet<>();
+            for (JsonElement e : args.getAsJsonArray("bannedUsers")) banned.add(e.getAsString());
+            options.setBannedUsers(banned);
+        }
         // modo test: no barajar el mazo inicial (la librería queda en el orden
         // enviado); los servidores sin modificar ignoran el campo
         options.setSkipInitShuffling(getBool(args, "skipInitShuffling", false));

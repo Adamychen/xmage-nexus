@@ -186,6 +186,84 @@ export function isBasicOrUnlimited(name: string): boolean {
   return BASIC_LANDS.has(n) || ANY_NUMBER_CARDS.has(n)
 }
 
+export function isLimitedDeckType(deckType?: string): boolean {
+  if (!deckType) return false
+  if (deckType.startsWith('Limited')) return true
+  if (deckType === 'Variant Magic - Freeform Unlimited Commander') return true
+  return false
+}
+
+export function validateDeckGameCompatibility(deckType: string, gameType: string): string | null {
+  const dt = deckType.trim()
+  const gt = gameType.trim()
+  switch (dt) {
+    case 'Variant Magic - Commander':
+    case 'Variant Magic - Duel Commander':
+    case 'Variant Magic - MTGO 1v1 Commander':
+    case 'Variant Magic - Centurion Commander':
+    case 'Variant Magic - Penny Dreadful Commander':
+      if (!gt.startsWith('Commander')) return 'Deck type Commander needs also a Commander game type'
+      break
+    case 'Variant Magic - Freeform Commander':
+      if (!gt.startsWith('Freeform Commander')) return 'Deck type Freeform Commander needs also a Freeform Commander game type'
+      break
+    case 'Variant Magic - Freeform Unlimited Commander':
+      if (!gt.startsWith('Freeform Unlimited Commander')) return 'Deck type Freeform+ Commander needs also a Freeform Unlimited Commander game type'
+      break
+    case 'Variant Magic - Brawl':
+    case 'Variant Magic - Duel Brawl':
+      if (!gt.startsWith('Brawl')) return 'Deck type Brawl needs also a Brawl game type'
+      break
+    case 'Variant Magic - Tiny Leaders':
+      if (!gt.startsWith('Tiny Leaders')) return 'Deck type Tiny Leaders needs also a Tiny Leaders game type'
+      break
+    case 'Variant Magic - Momir Basic':
+      if (!gt.startsWith('Momir Basic')) return 'Deck type Momir Basic needs also a Momir Basic game type'
+      break
+    case 'Variant Magic - Oathbreaker':
+      if (!gt.startsWith('Oathbreaker')) return 'Deck type Oathbreaker needs also a Oathbreaker game type'
+      break
+    default:
+      break
+  }
+  switch (gt) {
+    case 'Commander Two Player Duel':
+    case 'Commander Free For All':
+      if (
+        dt !== 'Variant Magic - Commander' &&
+        dt !== 'Variant Magic - Duel Commander' &&
+        dt !== 'Variant Magic - MTGO 1v1 Commander' &&
+        dt !== 'Variant Magic - Centurion Commander' &&
+        dt !== 'Variant Magic - Freeform Commander' &&
+        dt !== 'Variant Magic - Penny Dreadful Commander'
+      ) {
+        return 'Deck type Commander needs also a Commander game type'
+      }
+      break
+    case 'Freeform Commander Two Player Duel':
+    case 'Freeform Commander Free For All':
+      if (dt !== 'Variant Magic - Freeform Commander') return 'Deck type Freeform Commander needs also a Freeform Commander game type'
+      break
+    case 'Freeform Unlimited Commander':
+      if (dt !== 'Variant Magic - Freeform Unlimited Commander') return 'Deck type Freeform Unlimited Commander needs also a Freeform Unlimited Commander game type'
+      break
+    case 'Brawl Two Player Duel':
+    case 'Brawl Free For All':
+      if (dt !== 'Variant Magic - Brawl' && dt !== 'Variant Magic - Duel Brawl') return 'Deck type Brawl needs also a Brawl game type'
+      break
+    case 'Tiny Leaders Two Player Duel':
+      if (dt !== 'Variant Magic - Tiny Leaders') return 'Deck type Tiny Leaders needs also a Tiny Leaders game type'
+      break
+    case 'Oathbreaker Two Player Duel':
+    case 'Oathbreaker Free For All':
+      if (dt !== 'Variant Magic - Oathbreaker') return 'Deck type Oathbreaker needs also a Oathbreaker game type'
+      break
+    default:
+      break
+  }
+  return null
+}
+
 export interface ValidationIssue {
   type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue'
   message: string

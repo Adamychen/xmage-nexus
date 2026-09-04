@@ -6,7 +6,10 @@ import { getAllAvailableDecks, DEFAULT_DECK, LANDS_DECK, type Deck } from './dec
 import { requestDeckValidation } from './DeckIssuesDialog'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
+import { isLimitedDeckType, validateDeckGameCompatibility } from '../decks/formatRules'
 import './CreateTableDialog.css'
+
+const STORAGE_KEY = 'mage_createTable_v1'
 
 export type CreateTab = 'general' | 'timing' | 'security' | 'seats' | 'dev'
 
@@ -117,6 +120,79 @@ export const SKILL_LEVEL_OPTIONS = [
   { label: 'Competitivo', value: 'SERIOUS', icon: '⭐⭐⭐' },
 ]
 
+export const DEFAULT_TOURNAMENT_TYPES: string[] = [
+  'Constructed Elimination',
+  'Constructed Swiss',
+  'Booster Draft Elimination',
+  'Booster Draft Elimination (Cube)',
+  'Booster Draft Elimination (Random)',
+  'Booster Draft Elimination (Reshuffled)',
+  'Booster Draft Elimination (Rich Man)',
+  'Booster Draft Elimination (Rich Man Cube)',
+  'Booster Draft Swiss',
+  'Booster Draft Swiss (Cube)',
+  'Booster Draft Swiss (Random)',
+  'Booster Draft Swiss (Reshuffled)',
+  'Booster Draft Swiss (Rich Man)',
+  'Booster Draft Swiss (Rich Man Cube)',
+  'Sealed Elimination',
+  'Sealed Elimination (Cube)',
+  'Sealed Swiss',
+  'Sealed Swiss (Cube)',
+  'Jumpstart Elimination',
+  'Jumpstart Swiss',
+  'Jumpstart Elimination (Custom)',
+]
+
+export const DEFAULT_DRAFT_CUBES: string[] = [
+  'Cube From Deck',
+  'MTGO Legacy Cube',
+  'MTGO Vintage Cube',
+  'MTGO Legendary Cube',
+  'MTGO Legendary Cube April 2016',
+  'MTGO Modern Cube 2017',
+  'MTGO Khans Expanded Cube',
+  'MTGO Cube March 2014',
+  'MTGA Cube 2020 April',
+  'SCG Con Cube 2018 December',
+  "The Peasant's Toolbox",
+  'www.MTGCube.com',
+  'The Pauper Cube',
+  "Ben's Cube",
+  'Cube Tutor 360 Pauper',
+  'Cube Tutor 720',
+  "Eric Klug's Pro Tour Cube",
+  "Guillaume Matignon's Jenny's/Johnny's Cube",
+  "Jim Davis's Cube",
+  "Joseph Vasoli's Peasant Cube",
+  "Sam Black's No Search Cube",
+  "Timothee Simonot's Twisted Color Pie Cube",
+  'Mono Blue Cube',
+  'MTGO Legacy Cube 2016 January',
+  'MTGO Legacy Cube 2016 September',
+  'MTGO Legacy Cube 2017 January',
+  'MTGO Legacy Cube 2017 April',
+  'MTGO Legacy Cube 2018 February',
+  'MTGO Legacy Cube 2019 July',
+  'MTGO Legacy Cube 2021 May',
+  'MTGO Vintage Cube 2015',
+  'MTGO Vintage Cube 2016',
+  'MTGO Vintage Cube June 2016',
+  'MTGO Vintage Cube November 2016',
+  'MTGO Vintage Cube June 2017',
+  'MTGO Vintage Cube December 2017',
+  'MTGO Vintage Cube June 2018',
+  'MTGO Vintage Cube December 2018',
+  'MTGO Vintage Cube June 2019',
+  'MTGO Vintage Cube December 2019',
+  'MTGO Vintage Cube April 2020',
+  'MTGO Vintage Cube July 2020',
+  'MTGO Vintage Cube December 2020',
+  'MTGO Vintage Cube July 2021',
+  'MTGO Vintage Cube February 2022',
+  'MTGO Vintage Cube October 2023',
+]
+
 export interface LimitedDraftOptions {
   numberBoosters: number
   constructionTime: number
@@ -184,6 +260,11 @@ export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo
   return 2
 }
 
+export interface SeatConfig {
+  type: string
+  deckName: string
+}
+
 type WizardStep = { id: CreateTab; icon: string; labelKey: string; titleFallback: string }
 
 const WIZARD_STEPS_BASE: WizardStep[] = [
@@ -224,22 +305,83 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const [playerTypes, setPlayerTypes] = useState<string[]>(DEFAULT_PLAYER_TYPES)
 
   // General tab
-  const [name, setName] = useState(`${username}'s table`)
-  const [gameType, setGameType] = useState('Two Player Duel')
-  const [deckType, setDeckType] = useState('Constructed - Modern')
-  const [wins, setWins] = useState(1)
-  const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>('CASUAL')
-  const [rated, setRated] = useState(false)
+  const [name, setName] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (j.name) return j.name as string
+      }
+    } catch {}
+    return `${username}'s table`
+  })
+  const [gameType, setGameType] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (j.gameType) return j.gameType as string
+      }
+    } catch {}
+    return 'Two Player Duel'
+  })
+  const [deckType, setDeckType] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (j.deckType) return j.deckType as string
+      }
+    } catch {}
+    return 'Constructed - Modern'
+  })
+  const [wins, setWins] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (typeof j.wins === 'number' && j.wins >= 1 && j.wins <= 5) return j.wins as number
+      }
+    } catch {}
+    return 1
+  })
+  const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (j.skillLevel) return j.skillLevel as 'BEGINNER' | 'CASUAL' | 'SERIOUS'
+      }
+    } catch {}
+    return 'CASUAL'
+  })
+  const [rated, setRated] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (typeof j.rated === 'boolean') return j.rated as boolean
+      }
+    } catch {}
+    return false
+  })
   const [useDraftTournament, setUseDraftTournament] = useState(false)
   const [draftSetsRaw, setDraftSetsRaw] = useState('M21')
   const [draftBoosters, setDraftBoosters] = useState<3 | 6>(3)
   const [draftConstructionTime, setDraftConstructionTime] = useState(600)
   const [tournamentType, setTournamentType] = useState('Booster Draft')
+  const [draftCubeName, setDraftCubeName] = useState('')
 
   // Timing tab
   const [timeLimit, setTimeLimit] = useState('MIN__25')
   const [bufferTime, setBufferTime] = useState('NONE')
   const [freeMulligans, setFreeMulligans] = useState(0)
+  const [mulliganType, setMulliganType] = useState('GAME_DEFAULT')
+  const [customStartLifeEnabled, setCustomStartLifeEnabled] = useState(false)
+  const [customStartLife, setCustomStartLife] = useState(20)
+  const [customStartHandSizeEnabled, setCustomStartHandSizeEnabled] = useState(false)
+  const [customStartHandSize, setCustomStartHandSize] = useState(7)
+  const [planeChase, setPlaneChase] = useState(false)
   const [attackOption, setAttackOption] = useState('LEFT')
   const [range, setRange] = useState('ALL')
 
@@ -251,6 +393,27 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const [minimumRating, setMinimumRating] = useState(0)
   const [quitRatio, setQuitRatio] = useState(100)
   const [edhPowerLevel, setEdhPowerLevel] = useState(100)
+
+  const [numPlayers, setNumPlayers] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (typeof j.numPlayers === 'number' && j.numPlayers >= 2 && j.numPlayers <= 10) return j.numPlayers as number
+      }
+    } catch {}
+    return 2
+  })
+  const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (Array.isArray(j.seatConfigs)) return j.seatConfigs as SeatConfig[]
+      }
+    } catch {}
+    return []
+  })
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)
@@ -317,18 +480,6 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     }
   }, [])
 
-  // Auto-adjust free mulligans hint instead of forcing — keep previous behavior but less aggressive
-  useEffect(() => {
-    const isMulti = gameType.toLowerCase().includes('commander') || gameType.toLowerCase().includes('free for all')
-    if (isMulti && freeMulligans === 0) {
-      setFreeMulligans(1)
-    }
-  }, [gameType])
-
-  const toggleAi = (pt: string) => {
-    setPlayerTypesSel((cur) => (cur.includes(pt) ? cur.filter((x) => x !== pt) : [...cur, pt]))
-  }
-
   const effectiveGameTypes = useMemo(() => {
     const list = [...gameTypes]
     if (gameType && !list.some((g) => g.name === gameType)) {
@@ -353,10 +504,56 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     return (selectedGameTypeInfo?.maxPlayers ?? 2) > 2 || gameType.toLowerCase().includes('commander')
   }, [selectedGameTypeInfo, gameType])
 
-  const isLimited = deckType === 'Limited'
-  const isDraftLimited = isLimited && useDraftTournament
+  const isLimited = isLimitedDeckType(deckType)
+  const isDraftLimited = deckType === 'Limited' && useDraftTournament
+
+  const compatibilityError = useMemo(() => validateDeckGameCompatibility(deckType, gameType), [deckType, gameType])
+
+  useEffect(() => {
+    const min = selectedGameTypeInfo?.minPlayers ?? 2
+    const max = selectedGameTypeInfo?.maxPlayers ?? 2
+    if (numPlayers < min) setNumPlayers(min)
+    else if (numPlayers > max) setNumPlayers(max)
+  }, [selectedGameTypeInfo, numPlayers])
+
+  useEffect(() => {
+    const target = Math.max(0, numPlayers - (humanSeat ? 1 : 0))
+    setSeatConfigs((prev) => {
+      if (prev.length === target) return prev
+      if (prev.length < target) {
+        const add = Array.from({ length: target - prev.length }, () => ({ type: 'SIM', deckName: simDeck.name }))
+        return [...prev, ...add]
+      }
+      return prev.slice(0, target)
+    })
+  }, [numPlayers, humanSeat, simDeck.name])
+
+  useEffect(() => {
+    try {
+      const payload = { name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    } catch {}
+  }, [name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase])
+
+  const toggleAi = (pt: string) => {
+    setPlayerTypesSel((cur) => (cur.includes(pt) ? cur.filter((x) => x !== pt) : [...cur, pt]))
+  }
+  const setSeatType = (idx: number, type: string) => {
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type } : s)))
+  }
+  const setSeatDeck = (idx: number, deckName: string) => {
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName } : s)))
+  }
 
   const create = async () => {
+    if (!name.trim()) {
+      setError(t('errors','create_table_failed') + ': nombre requerido')
+      return
+    }
+    if (compatibilityError) {
+      setError(compatibilityError)
+      return
+    }
     setBusy(true)
     setError(null)
     if (isDraftLimited) {
@@ -370,6 +567,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         numberBoosters: draftBoosters,
         constructionTime: draftConstructionTime,
         setCodes,
+        ...(draftCubeName ? { draftCubeName } : {}),
       })
       const tArgs = {
         name: name || `${username}'s table`,
@@ -408,12 +606,18 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       onClose()
       return
     }
-    const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
-    const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
-    const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
-    const aiTypes = (playerTypesSel.length ? playerTypesSel : ['SIM']).slice(0, maxAi)
-    const playerTypesFinal = humanSeat ? ['HUMAN', ...aiTypes] : aiTypes
-    const simSeats = aiTypes.filter((pt) => pt === 'SIM').length
+    const seatTypes = seatConfigs.map((s) => s.type)
+    // fallback para mesas 2p clásicas sin seatConfigs inicializado: usa chips antiguos
+    const fallbackTypes = (playerTypesSel.length ? playerTypesSel : ['SIM'])
+    const effectiveSeatTypes = seatTypes.length > 0 ? seatTypes : fallbackTypes.slice(0, Math.max(0, numPlayers - (humanSeat ? 1 : 0)))
+    const playerTypesFinal = humanSeat ? ['HUMAN', ...effectiveSeatTypes] : effectiveSeatTypes
+    // validar numPlayers coherente con playerTypesFinal
+    if (playerTypesFinal.length !== numPlayers) {
+      // truncar o rellenar con SIM si hay mismatch (ej. datos persistidos viejos)
+      while (playerTypesFinal.length < numPlayers) playerTypesFinal.push('SIM')
+      while (playerTypesFinal.length > numPlayers) playerTypesFinal.pop()
+    }
+    const simSeats = effectiveSeatTypes.filter((pt) => pt === 'SIM').length
 
     // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
     // Transformación invisible para Commander: XMage espera comandante en banquillo
@@ -438,6 +642,18 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       finalSimDeck = fixed
     }
 
+    const simDecksBySeat: typeof finalSimDeck[] = []
+    if (simSeats > 0) {
+      for (let i = 0; i < effectiveSeatTypes.length; i++) {
+        if (effectiveSeatTypes[i] === 'SIM') {
+          const cfg = seatConfigs[i]
+          const deckForSeat = cfg?.deckName ? (availableDecks.find((d) => d.name === cfg.deckName) ?? finalSimDeck as unknown as Deck) : (finalSimDeck as unknown as Deck)
+          const xmageDeckForSeat = prepareDeckForXMage(deckForSeat as Deck, deckType, gameType)
+          simDecksBySeat.push(xmageDeckForSeat as unknown as typeof finalSimDeck)
+        }
+      }
+      while (simDecksBySeat.length < simSeats) simDecksBySeat.push(finalSimDeck)
+    }
     const res = await cmds.createTable({
       name: name || `${username}'s table`,
       gameType,
@@ -459,8 +675,15 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       edhPowerLevel: edhPowerLevel < 100 ? edhPowerLevel : undefined,
       skipInitShuffling,
       skipStartingPlayerChoice,
-      simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => finalSimDeck) : undefined,
-    })
+      limited: isLimitedDeckType(deckType) || undefined,
+      mulliganType: mulliganType !== 'GAME_DEFAULT' ? mulliganType : undefined,
+      customStartLifeEnabled: customStartLifeEnabled || undefined,
+      customStartLife: customStartLifeEnabled ? customStartLife : undefined,
+      customStartHandSizeEnabled: customStartHandSizeEnabled || undefined,
+      customStartHandSize: customStartHandSizeEnabled ? customStartHandSize : undefined,
+      planeChase: planeChase || undefined,
+      simDecks: simSeats > 0 ? simDecksBySeat : undefined,
+    } as any)
 
     setBusy(false)
     if (!res.ok) {
@@ -587,6 +810,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                     { label: t('lobby','create_option_wins_bo1'), val: 1 },
                     { label: t('lobby','create_option_wins_bo3'), val: 2 },
                     { label: t('lobby','create_option_wins_bo5'), val: 3 },
+                    { label: 'Bo7 (4)', val: 4 },
+                    { label: 'Bo9 (5)', val: 5 },
                   ].map((w) => (
                     <button
                       key={w.val}
@@ -599,6 +824,23 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   ))}
                 </div>
               </div>
+
+              {selectedGameTypeInfo && selectedGameTypeInfo.minPlayers !== selectedGameTypeInfo.maxPlayers && (
+                <label>
+                  {t('lobby','create_field_num_players')}
+                  <select value={numPlayers} onChange={(e) => setNumPlayers(Number(e.target.value))}>
+                    {Array.from({ length: selectedGameTypeInfo.maxPlayers - selectedGameTypeInfo.minPlayers + 1 }, (_, i) => {
+                      const n = selectedGameTypeInfo.minPlayers + i
+                      return <option key={n} value={n}>{n} {t('lobby','staging_seats_count').replace('{count}', String(n))}</option>
+                    })}
+                  </select>
+                  <span className="create-field-hint">Min {selectedGameTypeInfo.minPlayers} — Max {selectedGameTypeInfo.maxPlayers}</span>
+                </label>
+              )}
+
+              {compatibilityError && (
+                <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,80,80,0.4)', color: '#ff9a9a' }}>⚠️ {compatibilityError}</div>
+              )}
 
               <div className="field">
                 <span>{t('lobby','create_field_skill')}</span>
@@ -651,9 +893,9 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         <label>
                           {t('lobby','create_field_draft_type')}
                           <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)}>
-                            <option value="Booster Draft">{t('lobby','create_option_booster_draft')}</option>
-                            <option value="Sealed">{t('lobby','create_option_sealed')}</option>
-                            <option value="Elimination">{t('lobby','create_option_elimination')}</option>
+                            {DEFAULT_TOURNAMENT_TYPES.map((tt) => (
+                              <option key={tt} value={tt}>{tt}</option>
+                            ))}
                           </select>
                         </label>
                         <label>
@@ -664,6 +906,17 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                           </select>
                         </label>
                       </div>
+                      {tournamentType.includes('Cube') && (
+                        <label>
+                          Cube
+                          <select value={draftCubeName} onChange={(e) => setDraftCubeName(e.target.value)}>
+                            <option value="">— {t('common','all')} (aleatorio) —</option>
+                            {DEFAULT_DRAFT_CUBES.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
                       <label>
                         {t('lobby','create_field_draft_sets')}
                         <input
@@ -716,7 +969,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
               <div className="field">
                 <span>{t('lobby','create_field_free_mulligans')} <em style={{ textTransform: 'none', fontWeight: 400, color: '#9aa3c2' }}>— recomendado 1 para Commander/FFA</em></span>
                 <div className="chip-row">
-                  {[0, 1, 2, 3].map((m) => (
+                  {[0, 1, 2, 3, 4, 5].map((m) => (
                     <button
                       key={m}
                       type="button"
@@ -727,6 +980,40 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="create-restrictions-box" style={{ background: 'rgba(124,92,255,0.08)', borderColor: 'rgba(124,92,255,0.25)' }}>
+                <span className="restrictions-box-title">🎲 Opciones Custom {(mulliganType !== 'GAME_DEFAULT' || customStartLifeEnabled || customStartHandSizeEnabled || planeChase) ? `(${[mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null, customStartLifeEnabled ? 'Vida' : null, customStartHandSizeEnabled ? 'Mano' : null, planeChase ? 'Planechase' : null].filter(Boolean).join(', ')})` : ''}</span>
+                <label>
+                  Tipo de Mulligan
+                  <select value={mulliganType} onChange={(e) => setMulliganType(e.target.value)}>
+                    <option value="GAME_DEFAULT">Por defecto del formato</option>
+                    <option value="LONDON">London</option>
+                    <option value="VANCOUVER">Vancouver</option>
+                    <option value="PARIS">Paris</option>
+                    <option value="SMOOTHED_LONDON">Smoothed London</option>
+                    <option value="CANADIAN_HIGHLANDER">Canadian Highlander</option>
+                  </select>
+                </label>
+                <div className="create-grid-2col">
+                  <label className="toggle-label-row" style={{ flexDirection: 'row' as const, alignItems: 'center' }}>
+                    <input type="checkbox" checked={customStartLifeEnabled} onChange={(e) => setCustomStartLifeEnabled(e.target.checked)} />
+                    <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: '#c4cae8' }}>Vida inicial custom</span>
+                    <input type="number" min={1} max={100} value={customStartLife} onChange={(e) => setCustomStartLife(Math.min(100, Math.max(1, parseInt(e.target.value,10)||20)))} disabled={!customStartLifeEnabled} style={{ width: 72, marginLeft: 8 }} />
+                  </label>
+                  <label className="toggle-label-row" style={{ flexDirection: 'row' as const, alignItems: 'center' }}>
+                    <input type="checkbox" checked={customStartHandSizeEnabled} onChange={(e) => setCustomStartHandSizeEnabled(e.target.checked)} />
+                    <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: '#c4cae8' }}>Mano inicial custom</span>
+                    <input type="number" min={0} max={20} value={customStartHandSize} onChange={(e) => setCustomStartHandSize(Math.min(20, Math.max(0, parseInt(e.target.value,10)||7)))} disabled={!customStartHandSizeEnabled} style={{ width: 72, marginLeft: 8 }} />
+                  </label>
+                </div>
+                <label className="toggle-label-row">
+                  <input type="checkbox" checked={planeChase} onChange={(e) => setPlaneChase(e.target.checked)} />
+                  <div className="toggle-text-block">
+                    <span className="toggle-title">🗺️ Planechase</span>
+                    <span className="toggle-desc">Mazo planar compartido + dado de 9 caras (experimental).</span>
+                  </div>
+                </label>
               </div>
 
               {isMultiplayerGame && (
@@ -902,47 +1189,68 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
                 <div className="create-seat-box ai-seat-box">
                   <div className="seat-box-header">
-                    <span className="seat-title">🤖 {t('lobby','ai')}</span>
-                    {(() => {
-                      const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
-                      const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
-                      const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
-                      const truncated = playerTypesSel.length > maxAi
-                      return truncated ? <span className="wizard-warn-badge">⚠️ Máx {maxAi} bots para {gameType}</span> : null
-                    })()}
+                    <span className="seat-title">🤖 {t('lobby','ai')} — {seatConfigs.length} {seatConfigs.length === 1 ? 'plaza' : 'plazas'} BOT ({numPlayers} total)</span>
+                    {numPlayers !== (selectedGameTypeInfo?.maxPlayers ?? numPlayers) && selectedGameTypeInfo && (
+                      <span className="wizard-warn-badge">Config: {numPlayers} / {selectedGameTypeInfo.maxPlayers} max</span>
+                    )}
                   </div>
-                  <div className="field">
-                    <span>{t('lobby','create_tab_multi')}</span>
-                    <div className="chip-row">
-                      <button
-                        type="button"
-                        className={playerTypesSel.includes('SIM') ? 'chip on' : 'chip'}
-                        onClick={() => toggleAi('SIM')}
-                      >
-                        🤖 SIM ({t('lobby','ai')})
-                      </button>
-                      {playerTypes.map((pt) => (
-                        <button
-                          key={pt}
-                          type="button"
-                          className={playerTypesSel.includes(pt) ? 'chip on' : 'chip'}
-                          onClick={() => toggleAi(pt)}
-                        >
-                          {pt}
-                        </button>
+                  {numPlayers > 2 && (
+                    <div className="wizard-hint-box" style={{ marginBottom: 8 }}>
+                      {isMultiplayerGame ? 'Modo multijugador: cada plaza extra es un bot. Ajusta número de jugadores en la pestaña General.' : 'Ajusta el número de jugadores en General para añadir plazas.'}
+                    </div>
+                  )}
+                  {seatConfigs.length === 0 ? (
+                    <div className="wizard-hint-box">Sin plazas BOT — entrarás solo (útil para tests). Añade jugadores en General o activa tu asiento.</div>
+                  ) : (
+                    <div className="create-seats-section">
+                      {seatConfigs.map((cfg, idx) => (
+                        <div key={idx} className="create-seat-box" style={{ background: 'rgba(22,28,56,0.5)' }}>
+                          <div className="seat-box-header">
+                            <span className="seat-title">Plaza {idx + 2} {humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
+                            <select value={cfg.type} onChange={(e) => setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
+                              <option value="SIM">🤖 SIM</option>
+                              {playerTypes.map((pt) => (
+                                <option key={pt} value={pt}>{pt}</option>
+                              ))}
+                            </select>
+                          </div>
+                          {cfg.type === 'SIM' && (
+                            <label>
+                              Mazo plaza {idx + 2}
+                              <select value={cfg.deckName} onChange={(e) => setSeatDeck(idx, e.target.value)}>
+                                {availableDecks.map((d) => (
+                                  <option key={d.name} value={d.name}>
+                                    {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )}
+                          {cfg.type !== 'SIM' && <span className="wizard-hint-box">Bot {cfg.type} — usa mazo interno del servidor</span>}
+                        </div>
                       ))}
                     </div>
-                  </div>
-
-                  {playerTypesSel.includes('SIM') && (
-                    <label>
-                      Mazo para bots SIM
-                      <select
-                        value={simDeck.name}
-                        onChange={(e) =>
-                          setSimDeck(availableDecks.find((d) => d.name === e.target.value) ?? LANDS_DECK)
-                        }
-                      >
+                  )}
+                  <div style={{ marginTop: 10, borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                    <div className="field">
+                      <span>Atajo: aplicar a todas las plazas BOT</span>
+                      <div className="chip-row">
+                        <button type="button" className={playerTypesSel.includes('SIM') ? 'chip on' : 'chip'} onClick={() => toggleAi('SIM')}>🤖 SIM</button>
+                        {playerTypes.map((pt) => (
+                          <button key={pt} type="button" className={playerTypesSel.includes(pt) ? 'chip on' : 'chip'} onClick={() => {
+                            toggleAi(pt)
+                            setSeatConfigs((prev) => prev.map((s) => ({ ...s, type: pt })))
+                          }}>{pt}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <label style={{ marginTop: 8 }}>
+                      Mazo global para SIM (atajo)
+                      <select value={simDeck.name} onChange={(e) => {
+                        const d = availableDecks.find((x) => x.name === e.target.value) ?? LANDS_DECK
+                        setSimDeck(d)
+                        setSeatConfigs((prev) => prev.map((s) => s.type === 'SIM' ? { ...s, deckName: d.name } : s))
+                      }}>
                         {availableDecks.map((d) => (
                           <option key={d.name} value={d.name}>
                             {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
@@ -950,7 +1258,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         ))}
                       </select>
                     </label>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1034,11 +1342,13 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         </div>
 
         <div className="create-table-summary-strip">
-          <span className="summary-pill">{gameType}</span>
+          <span className="summary-pill">{gameType} · {numPlayers}p</span>
           <span className="summary-pill">{deckType}</span>
-          <span className="summary-pill">Bo{wins === 1 ? '1' : wins === 2 ? '3' : '5'}</span>
+          <span className="summary-pill">Bo{wins === 1 ? '1' : wins === 2 ? '3' : wins === 3 ? '5' : wins === 4 ? '7' : '9'} ({wins})</span>
           <span className="summary-pill">{timeLimit === 'NONE' ? t('lobby','create_summary_no_clock') : timeLimit.replace('MIN__', '') + 'm'}</span>
           <span className="summary-pill">{skillLevel === 'BEGINNER' ? t('lobby','create_skill_beginner') : skillLevel === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')}</span>
+          {(mulliganType !== 'GAME_DEFAULT' || customStartLifeEnabled || customStartHandSizeEnabled || planeChase) && <span className="summary-pill" style={{ borderColor: 'rgba(124,92,255,0.4)' }}>🎲 Custom ({[mulliganType !== 'GAME_DEFAULT' ? mulliganType : null, customStartLifeEnabled ? `Vida ${customStartLife}` : null, customStartHandSizeEnabled ? `Mano ${customStartHandSize}` : null, planeChase ? 'Planechase' : null].filter(Boolean).join(' · ')})</span>}
+          {compatibilityError && <span className="summary-pill security">⚠️ {compatibilityError.slice(0, 28)}</span>}
           {isDraftLimited && <span className="summary-pill">🃏 Draft {draftBoosters}× {parseLimitedSetCodes(draftSetsRaw).join(', ') || 'sets'}</span>}
           {isLimited && !isDraftLimited && <span className="summary-pill">{t('lobby','create_summary_limited')}</span>}
           {minimumRating > 0 && <span className="summary-pill">⭐ {t('lobby','create_field_min_rating')}: {minimumRating}</span>}
@@ -1066,7 +1376,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 Siguiente →
               </button>
             ) : (
-              <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
+              <button type="button" className="primary create-submit-btn" disabled={busy || !!compatibilityError || !name.trim()} onClick={create} title={compatibilityError || undefined}>
                 {busy ? `${t('lobby','create_table_btn')}…` : isDraftLimited ? `${t('lobby','create_submit_draft')} 🃏` : `${t('lobby','create_table_btn')} 🚀`}
               </button>
             )}
