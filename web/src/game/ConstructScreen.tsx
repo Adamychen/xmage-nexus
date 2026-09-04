@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { setState, addLog, getState } from '../state/state'
+import { useTickingTimer } from '../utils/timer'
 import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
@@ -61,7 +62,7 @@ export default function ConstructScreen() {
   const [main, setMain] = useState<DeckCard[]>([])
   const [pool, setPool] = useState<DeckCard[]>([])
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
-  const [timeLeft, setTimeLeft] = useState(0)
+  const timeLeft = useTickingTimer(construct?.timeLeft ?? 0, !!construct)
   const [busy, setBusy] = useState(false)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
@@ -79,7 +80,6 @@ export default function ConstructScreen() {
     const grouped = poolToDeckCards(construct.pool as Record<string, unknown>)
     setPool(grouped)
     setMain([])
-    setTimeLeft(construct.timeLeft)
     setMainFilter('')
     setPoolFilter('')
   }, [construct?.tableId])
@@ -259,19 +259,11 @@ export default function ConstructScreen() {
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
   useEffect(() => {
-    if (!construct || timeLeft <= 0) return
-    const timer = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timer)
-          void submitRef.current()
-          return 0
-        }
-        return t - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [construct?.tableId])
+    if (!construct) return
+    if (construct.timeLeft > 0 && timeLeft === 0) {
+      void submitRef.current()
+    }
+  }, [timeLeft, construct?.tableId])
 
   const formatForValidation: DeckFormat = useMemo(() => {
     return 'Freeform' as DeckFormat

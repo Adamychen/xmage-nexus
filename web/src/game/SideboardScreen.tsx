@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { setState, addLog } from '../state/state'
+import { useTickingTimer } from '../utils/timer'
 import type { SideboardCard } from '../state/state'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
@@ -47,7 +48,7 @@ export default function SideboardScreen() {
   const [main, setMain] = useState<DeckCard[]>([])
   const [side, setSide] = useState<DeckCard[]>([])
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
-  const [timeLeft, setTimeLeft] = useState(0)
+  const timeLeft = useTickingTimer(screen?.timeLeft ?? 0, !!screen)
   const [busy, setBusy] = useState(false)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
@@ -66,7 +67,6 @@ export default function SideboardScreen() {
     initialSideRef.current = gSide
     setMain(gMain)
     setSide(gSide)
-    setTimeLeft(screen.timeLeft)
     setMainFilter('')
     setSideFilter('')
   }, [screen?.tableId])
@@ -276,19 +276,11 @@ export default function SideboardScreen() {
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
   useEffect(() => {
-    if (!screen || timeLeft <= 0) return
-    const timer = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timer)
-          void submitRef.current()
-          return 0
-        }
-        return t - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [screen?.tableId])
+    if (!screen) return
+    if (screen.timeLeft > 0 && timeLeft === 0) {
+      void submitRef.current()
+    }
+  }, [timeLeft, screen?.tableId])
 
   const formatForValidation: DeckFormat = useMemo(() => {
     if (screen?.limited) return 'Freeform' as DeckFormat
