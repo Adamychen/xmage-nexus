@@ -16,9 +16,12 @@ import { DeckInspectorModal } from './DeckInspectorModal'
 import CurveChart from './CurveChart'
 import { DeckImportModal, type ImportResult } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { validateDeckForFormat } from './formatRules'
+import { validateDeckForFormat, type ValidationIssue } from './formatRules'
+import { fetchDeckIssues, issueKeysFromReport } from './deckIssues'
+import type { DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
 import type { DeckCard } from '../lobby/decks'
+import { normalizeDeckCard } from './deckNormalize'
 import { useTranslation } from '../i18n'
 import LanguageSelector from '../i18n/LanguageSelector'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
@@ -44,6 +47,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showInspector, setShowInspector] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
+  const [serverIssues, setServerIssues] = useState<DeckValidationResult | null>(null)
   const [showCurve, setShowCurve] = useState(() => {
     try {
       const saved = localStorage.getItem('nexus_deck_show_curve')
@@ -100,6 +104,30 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       }
     })()
   }, [deckId])
+
+  // Pre-validación contra la BD de cartas del servidor (advisory, no bloquea).
+  // Se ejecuta al abrir el mazo Y en vivo tras cada edición (debounce: la
+  // validación hace un round-trip al proxy, no por cada tecla).
+  const lastValidatedRef = useRef<DeckV2 | null>(null)
+  useEffect(() => {
+    setServerIssues(null)
+    void (async () => {
+      const d = await storage.get(deckId)
+      if (!d) return
+      lastValidatedRef.current = d
+      const report = await fetchDeckIssues(d)
+      setServerIssues(report)
+    })()
+  }, [deckId])
+
+  useEffect(() => {
+    if (!deck || deck === lastValidatedRef.current) return
+    const timer = window.setTimeout(() => {
+      lastValidatedRef.current = deck
+      void fetchDeckIssues(deck).then((report) => setServerIssues(report))
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [deck])
 
   const persist = async (next: DeckV2) => {
     setSaveState('saving')
@@ -208,9 +236,10 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const handleAddFromSearch = (card: ScryfallSearchCard) => {
     if (!deck) return
-    const setCode = card.set.toUpperCase()
-    const cardNumber = card.collector_number
-    const cardName = card.name
+    const raw = normalizeDeckCard({ cardName: card.name, setCode: card.set.toUpperCase(), cardNumber: card.collector_number, amount: 1 })
+    const setCode = raw.setCode
+    const cardNumber = raw.cardNumber
+    const cardName = raw.cardName
     const key = `${setCode}:${cardNumber}:${cardName}`
 
     if (card.printed_name) {
@@ -437,6 +466,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const handleApplyPrinting = (setCode: string, cardNumber: string) => {
     if (!deck || !printingTargetCard) return
+    const norm = normalizeDeckCard({ cardName: printingTargetCard.cardName, setCode, cardNumber, amount: 1 })
+    setCode = norm.setCode
+    cardNumber = norm.cardNumber
     const oldKey = deckCardKey(printingTargetCard)
     const updateCard = (c: DeckCard) => {
       if (deckCardKey(c) === oldKey) {
@@ -564,6 +596,29 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     if (!deck) return { isValid: true, issues: [], cardIssues: new Map() }
     return validateDeckForFormat(deck, metaMap)
   }, [deck, metaMap, format])
+
+  // merged format issues + server card issues (badge ⚠️ per strip)
+  const mergedCardIssues = useMemo(() => {
+    const merged = new Map(validationReport.cardIssues)
+    if (!serverIssues || !deck) return merged
+    const byKey = issueKeysFromReport(serverIssues)
+    const addIssue = (card: { cardName: string; setCode: string; cardNumber: string }, message: string) => {
+      const issue: ValidationIssue = { type: 'server_issue', message, severity: 'error', cardName: card.cardName }
+      merged.set(`${card.setCode}:${card.cardNumber}:${card.cardName}`, issue)
+      merged.set(card.cardName, issue)
+    }
+    for (const c of [...deck.cards, ...deck.sideboard]) {
+      if (!byKey.has(`${c.cardName}|${c.setCode}|${c.cardNumber}`)) continue
+      const miss = serverIssues.missing.find((m) => m.cardName === c.cardName && m.setCode === c.setCode && m.cardNumber === c.cardNumber)
+      const mis = serverIssues.mismatches.find((m) => m.cardName === c.cardName && m.setCode === c.setCode && m.cardNumber === c.cardNumber)
+      if (miss) {
+        addIssue(c, miss.reason === 'OUTDATED_PRINTING' ? t('decks', 'issues_reason_outdated') : t('decks', 'issues_reason_unimplemented'))
+      } else if (mis) {
+        addIssue(c, t('decks', 'issues_mismatch_resolved', { resolved: mis.resolvedName }))
+      }
+    }
+    return merged
+  }, [validationReport, serverIssues, deck, t])
 
   if (!deck) return <div className="deck-builder loading">{t('common', 'loading')}</div>
 
@@ -704,7 +759,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             coverKey={coverKey}
             isCommanderFormat={isCommanderFormat}
             metaMap={metaMap}
-            cardIssues={validationReport.cardIssues}
+            cardIssues={mergedCardIssues}
             layout={layout}
             onInc={handleInc}
             onDec={handleDec}

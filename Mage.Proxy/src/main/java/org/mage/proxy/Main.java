@@ -26,6 +26,9 @@ public class Main {
         Gateway gateway = new Gateway(config);
         gateway.start();
 
+        // construcción perezosa de la BD de cartas del proxy (validación de mazos)
+        DeckValidation.ensureCardDatabaseAsync();
+
         System.out.println("[proxy] XMage proxy started");
         System.out.println("[proxy]   websocket gateway : ws://" + config.getBindAddress() + ":" + config.getWsPort() + "/");
         System.out.println("[proxy]   test page         : http://" + config.getBindAddress() + ":" + config.getHttpPort() + "/index.html");

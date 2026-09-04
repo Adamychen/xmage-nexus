@@ -1,0 +1,114 @@
+.deck-issues-modal {
+  position: relative;
+  width: min(680px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  overflow: hidden;
+}
+
+.deck-issues-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+}
+
+.deck-issues-intro {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+
+.deck-issues-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.deck-issues-section h3 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.deck-issues-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deck-issue-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.deck-issue-card {
+  font-size: 0.9rem;
+}
+
+.deck-issue-printing {
+  opacity: 0.6;
+  font-size: 0.8rem;
+}
+
+.deck-issue-reason {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  font-style: italic;
+}
+
+.deck-issue-fixes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.deck-issue-suggestion-btn {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.deck-issue-suggestion-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.deck-issues-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.deck-issues-cancel-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.deck-issues-play-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}

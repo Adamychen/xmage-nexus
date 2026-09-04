@@ -45,7 +45,40 @@ public final class DeckJson {
             String cardNumber = card.has("cardNumber") ? card.get("cardNumber").getAsString() : "";
             int amount = card.has("amount") ? card.get("amount").getAsInt() : 1;
             if (!cardName.isEmpty()) {
-                result.add(new DeckCardInfo(cardName, cardNumber, setCode, amount));
+                String normSet = setCode.trim();
+                String normNum = cardNumber.trim();
+                if (normSet.equalsIgnoreCase("PLST") && normNum.contains("-")) {
+                    String[] parts = normNum.split("-");
+                    String num = parts[parts.length - 1].trim();
+                    String origSet = parts[0].trim();
+                    if (!origSet.isEmpty() && !num.isEmpty()) {
+                        normSet = origSet;
+                        normNum = num.replaceAll("(?i)[p★]$", "");
+                        if (normNum.isEmpty()) normNum = num;
+                    }
+                } else if (normNum.contains("-") && normNum.matches("(?i)^[A-Z0-9]+-\\d+[a-z★*+]*$")) {
+                    String[] parts = normNum.split("-");
+                    String num = parts[parts.length - 1].trim();
+                    if (!num.isEmpty()) normNum = num.replaceAll("(?i)[p★]$", "");
+                } else {
+                    String stripped = normNum.replaceAll("(?i)[p★]$", "");
+                    if (!stripped.equals(normNum) && stripped.matches(".*\\d.*")) normNum = stripped;
+                }
+                if (normSet.length() >= 3 && normSet.charAt(0) == 'P' && !normSet.equalsIgnoreCase("PLST")) {
+                    String base = normSet.substring(1);
+                    if (base.matches("(?i)^[A-Z0-9]{2,4}$")) {
+                        try {
+                            if (mage.cards.Sets.findSet(base) != null) normSet = base;
+                            else if (mage.cards.repository.CardRepository.instance.findCard(cardName, true) != null) {
+                                // fallback via name exists, prefer stripped promo base
+                                normSet = base;
+                            }
+                        } catch (Exception ignored) {
+                            normSet = base;
+                        }
+                    }
+                }
+                result.add(new DeckCardInfo(cardName, normNum, normSet, amount));
             }
         }
         return result;

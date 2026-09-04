@@ -33,6 +33,15 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- set/card classes of the same XMage release: lets the proxy build its own
+             cards DB (CardScanner) to pre-validate decks exactly like the official
+             server does (strict findCard(set, number)), without any fork changes -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mage-sets</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- json support (defined in parent dependencyManagement) -->
         <dependency>
             <groupId>com.google.code.gson</groupId>

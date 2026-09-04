@@ -12,7 +12,7 @@
 }
 
 .create-table-dialog {
-  width: 580px;
+  width: 640px;
   max-width: 95vw;
   max-height: 90vh;
   display: flex;
@@ -32,7 +32,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .create-table-header-title h2 {
@@ -68,50 +68,189 @@
   color: #ffffff;
 }
 
-/* Modal Navigation Tabs */
-.create-table-tabs {
-  display: flex;
-  gap: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 8px;
-  margin-bottom: 14px;
-  overflow-x: auto;
+/* Wizard progress */
+.wizard-progress-track {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.wizard-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd070 0%, #7c5cff 100%);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.wizard-step-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9aa3c2;
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
 }
 
-.create-tab-btn {
+/* Wizard stepper */
+.wizard-stepper {
   display: flex;
+  align-items: flex-start;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.wizard-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(22, 28, 56, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #a5b0d8;
-  font-size: 12px;
-  font-weight: 700;
+  flex: 1;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
+  padding: 0 4px;
+  color: #7a84a8;
+  transition: color 0.15s ease;
+}
+.wizard-step:hover {
+  color: #c4cae8;
+}
+.wizard-step.active {
+  color: #ffd070;
+}
+.wizard-step.completed {
+  color: #8b9cff;
 }
 
-.create-tab-btn:hover {
-  background: rgba(36, 44, 88, 0.7);
-  color: #ffffff;
-  border-color: rgba(255, 208, 112, 0.3);
+.wizard-step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(22, 28, 56, 0.8);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
 }
-
-.create-tab-btn.active {
+.wizard-step.active .wizard-step-circle {
   background: rgba(124, 92, 255, 0.3);
   border-color: #ffd070;
   color: #ffd070;
-  box-shadow: 0 0 12px rgba(255, 208, 112, 0.2);
+  box-shadow: 0 0 12px rgba(255,208,112,0.3);
+}
+.wizard-step.completed .wizard-step-circle {
+  background: rgba(124, 92, 255, 0.35);
+  border-color: #7c5cff;
+  color: #fff;
+}
+
+.wizard-step-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.wizard-step-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.wizard-step-text {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wizard-connector {
+  position: absolute;
+  top: 14px;
+  left: 58%;
+  right: -42%;
+  height: 2px;
+  background: rgba(255,255,255,0.1);
+  z-index: 0;
+}
+.wizard-connector.done {
+  background: rgba(124,92,255,0.5);
+}
+
+.wizard-step-heading {
+  margin-bottom: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255,255,255,0.06);
+}
+.wizard-step-heading h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #e8e9ff;
+  letter-spacing: 0.02em;
+}
+.wizard-step-heading p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #8c96c0;
+}
+
+.wizard-hint-box {
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 8px;
+  font-size: 11px;
+  color: #9aa3c2;
+  line-height: 1.4;
+}
+
+.wizard-warn-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ff9f43;
+  background: rgba(255,159,67,0.15);
+  border: 1px solid rgba(255,159,67,0.35);
+  padding: 2px 6px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.password-field-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.password-field-wrap input {
+  flex: 1;
+}
+.password-toggle-btn {
+  background: rgba(22,28,56,0.8);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #c4cae8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+.password-toggle-btn:hover {
+  border-color: #ffd070;
+  color: #fff;
 }
 
 /* Tab Body */
 .create-table-body {
   flex: 1;
   overflow-y: auto;
-  min-height: 240px;
+  min-height: 260px;
   max-height: 52vh;
   padding-right: 4px;
   display: flex;
@@ -136,7 +275,8 @@
 }
 
 .create-table-dialog input[type="text"],
-.create-table-dialog input[type="password"] {
+.create-table-dialog input[type="password"],
+.create-table-dialog input[type="number"] {
   padding: 8px 12px;
   border-radius: 8px;
   background: rgba(10, 13, 28, 0.85);
@@ -397,12 +537,22 @@
 /* Actions */
 .dialog-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.wizard-actions-left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.wizard-actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .create-submit-btn {
@@ -445,4 +595,3 @@
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
-

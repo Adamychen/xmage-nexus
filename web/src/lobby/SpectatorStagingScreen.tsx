@@ -4,6 +4,7 @@ import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
 import ChatBox from './ChatBox'
 import JoinTableDialog from './JoinTableDialog'
+import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
 import { useTranslation } from '../i18n'
 import './SpectatorStagingScreen.css'
@@ -94,6 +95,9 @@ export default function SpectatorStagingScreen({
   }, [isReady, seats, myUsername, myIsReady, playerReadyMap])
 
   const handleChangeDeck = async (tTable: TableView, deck: Deck, password?: string) => {
+    // pre-validación: un mazo con cartas no implementadas rompería también los SIM
+    const finalDeck = await requestDeckValidation(deck)
+    if (!finalDeck) return
     if (isOwner) {
       const otherHumans = seats.some((s) => s.playerName && s.playerName.toLowerCase() !== conn?.username?.toLowerCase() && (!s.playerType || s.playerType === 'HUMAN'))
       if (otherHumans) {
@@ -113,7 +117,7 @@ export default function SpectatorStagingScreen({
         skillLevel: tTable.skillLevel || 'CASUAL',
         rated: tTable.rated,
         spectatorsAllowed: tTable.spectatorsAllowed,
-        simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => deck) : undefined,
+        simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => finalDeck) : undefined,
       })
       if (createRes.ok) {
         const newTableId = (createRes.data as { tableId?: string } | null)?.tableId
@@ -123,7 +127,7 @@ export default function SpectatorStagingScreen({
             playerName: conn?.username ?? 'player',
             playerType: 'HUMAN',
             skill: 1,
-            deck,
+            deck: finalDeck,
             password: password?.trim() || undefined,
           })
         }
@@ -135,11 +139,11 @@ export default function SpectatorStagingScreen({
         playerName: conn?.username ?? 'player',
         playerType: 'HUMAN',
         skill: 1,
-        deck,
+        deck: finalDeck,
         password: password?.trim() || undefined,
       })
     }
-    setMyDeck(deck)
+    setMyDeck(finalDeck)
     setShowChangeDeck(false)
   }
 

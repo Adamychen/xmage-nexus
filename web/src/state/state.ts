@@ -127,6 +127,8 @@ export interface AppState {
     sfxVolume: number
     uiVolume: number
     sleeveId: string
+    uiScale: import('./persistence').UiScale
+    cjkBoost: boolean
   }
   error: string | null
 }

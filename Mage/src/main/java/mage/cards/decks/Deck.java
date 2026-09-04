@@ -143,16 +143,14 @@ public class Deck implements Serializable, Copyable<Deck> {
     private static Card createCard(DeckCardInfo deckCardInfo, boolean mockCards, Map<String, CardInfo> cardInfoCache) {
         CardInfo cardInfo;
         if (cardInfoCache != null) {
-            // from cache
             String key = String.format("%s_%s", deckCardInfo.getSetCode(), deckCardInfo.getCardNumber());
             cardInfo = cardInfoCache.getOrDefault(key, null);
             if (cardInfo == null) {
-                cardInfo = CardRepository.instance.findCard(deckCardInfo.getSetCode(), deckCardInfo.getCardNumber());
+                cardInfo = resolveCardInfo(deckCardInfo);
                 cardInfoCache.put(key, cardInfo);
             }
         } else {
-            // from db
-            cardInfo = CardRepository.instance.findCard(deckCardInfo.getSetCode(), deckCardInfo.getCardNumber());
+            cardInfo = resolveCardInfo(deckCardInfo);
         }
 
         if (cardInfo == null) {
@@ -164,6 +162,72 @@ public class Deck implements Serializable, Copyable<Deck> {
         } else {
             return cardInfo.createCard();
         }
+    }
+
+    private static CardInfo resolveCardInfo(DeckCardInfo info) {
+        String set = info.getSetCode() != null ? info.getSetCode().trim() : "";
+        String num = info.getCardNumber() != null ? info.getCardNumber().trim() : "";
+        String name = info.getCardName() != null ? info.getCardName().trim() : "";
+
+        CardInfo c = CardRepository.instance.findCard(set, num);
+        if (c != null && (name.isEmpty() || c.getName().equalsIgnoreCase(name))) return c;
+
+        String normNum = num;
+        if (normNum.contains("-") && normNum.matches("(?i)^[A-Z0-9]+-\\d+[a-z★*+]*$")) {
+            String[] parts = normNum.split("-");
+            String last = parts[parts.length - 1].trim();
+            if (!last.isEmpty()) normNum = last;
+        }
+        String stripped = normNum.replaceAll("(?i)[p★]$", "");
+        if (!stripped.equals(normNum) && stripped.matches(".*\\d.*")) {
+            CardInfo c2 = CardRepository.instance.findCard(set, stripped);
+            if (c2 != null && (name.isEmpty() || c2.getName().equalsIgnoreCase(name))) return c2;
+            normNum = stripped;
+        } else if (!normNum.equals(num)) {
+            CardInfo c2 = CardRepository.instance.findCard(set, normNum);
+            if (c2 != null && (name.isEmpty() || c2.getName().equalsIgnoreCase(name))) return c2;
+        }
+
+        if (set.equalsIgnoreCase("PLST") && num.contains("-")) {
+            String[] parts = num.split("-");
+            String origSet = parts[0].trim();
+            String n = parts[parts.length - 1].trim().replaceAll("(?i)[p★]$", "");
+            if (!origSet.isEmpty() && !n.isEmpty()) {
+                CardInfo c3 = CardRepository.instance.findCard(origSet, n);
+                if (c3 != null && (name.isEmpty() || c3.getName().equalsIgnoreCase(name))) return c3;
+            }
+        }
+
+        String derived = null;
+        if (set.length() >= 3 && set.charAt(0) == 'P' && !set.equalsIgnoreCase("PLST")) {
+            String base = set.substring(1);
+            if (base.matches("(?i)^[A-Z0-9]{2,4}$")) {
+                try {
+                    if (mage.cards.Sets.findSet(base) != null) derived = base;
+                } catch (Exception ignored) {}
+                if (derived == null) {
+                    try {
+                        if (CardRepository.instance.findCard(name, true) != null) derived = base;
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        if (derived != null) {
+            CardInfo c4 = CardRepository.instance.findCard(derived, normNum);
+            if (c4 != null && (name.isEmpty() || c4.getName().equalsIgnoreCase(name))) return c4;
+            if (!stripped.equals(normNum)) {
+                CardInfo c5 = CardRepository.instance.findCard(derived, stripped);
+                if (c5 != null && (name.isEmpty() || c5.getName().equalsIgnoreCase(name))) return c5;
+            }
+        }
+
+        if (!name.isEmpty()) {
+            CardInfo best = CardRepository.instance.findPreferredCoreExpansionCard(name, derived != null ? derived : set);
+            if (best != null) return best;
+            CardInfo any = CardRepository.instance.findCard(name, true);
+            if (any != null) return any;
+        }
+        return CardRepository.instance.findCard(set, num);
     }
 
     /**

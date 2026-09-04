@@ -121,7 +121,17 @@ export function CardPrintingsModal({
                     key={p.id}
                     className={`printing-card-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => {
-                      onSelectPrinting(p.set, p.collectorNumber)
+                      let s = p.set
+                      let n = p.collectorNumber
+                      if (s.toUpperCase() === 'PLST' && n.includes('-')) {
+                        const parts = n.split('-')
+                        n = parts.pop()!.trim()
+                        s = parts[0]?.trim() || s
+                      } else if (n.includes('-')) {
+                        const last = n.split('-').pop()!.trim()
+                        if (last) n = last
+                      }
+                      onSelectPrinting(s.toUpperCase(), n)
                       onClose()
                     }}
                   >

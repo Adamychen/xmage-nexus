@@ -89,15 +89,75 @@ function legacyToV2(decks: Deck[]): DeckV2[] {
   }))
 }
 
+function normalizeStoredCard(c: { setCode: string; cardNumber: string }): { setCode: string; cardNumber: string } {
+  let s = c.setCode.trim().toUpperCase()
+  let n = c.cardNumber.trim()
+  if (s === 'PLST' && n.includes('-')) {
+    const parts = n.split('-')
+    const num = parts.pop()!.trim()
+    const orig = parts[0]?.trim() || 'C18'
+    if (orig && num) {
+      s = orig.toUpperCase()
+      n = num.replace(/[p★]$/i, '').replace(/[*+]$/, '') || num
+      return { setCode: s, cardNumber: n }
+    }
+  }
+  if (n.includes('-') && /^[A-Z0-9]+-\d+[a-z★*+]*$/i.test(n)) {
+    const last = n.split('-').pop()!.trim().replace(/[p★]$/i, '').replace(/[*+]$/, '')
+    if (last) n = last
+  } else {
+    const stripped = n.replace(/[p★]$/i, '')
+    if (stripped !== n && /^\d/.test(stripped)) n = stripped
+  }
+  if (s.length >= 3 && s.charAt(0) === 'P' && s !== 'PLST') {
+    const base = s.substring(1)
+    if (/^[A-Z0-9]{2,4}$/.test(base)) s = base
+  }
+  return { setCode: s, cardNumber: n }
+}
+
+function normalizeDeckV2(deck: DeckV2): DeckV2 {
+  let changed = false
+  const norm = (c: DeckV2['cards'][number]) => {
+    const n = normalizeStoredCard(c)
+    if (n.setCode !== c.setCode || n.cardNumber !== c.cardNumber) {
+      changed = true
+      return { ...c, setCode: n.setCode, cardNumber: n.cardNumber }
+    }
+    return c
+  }
+  const cards = deck.cards.map(norm)
+  const sideboard = deck.sideboard.map(norm)
+  const coverCard = deck.coverCard ? norm(deck.coverCard as any) as any : deck.coverCard
+  return changed ? { ...deck, cards, sideboard, coverCard } : deck
+}
+
 async function migrateIfNeeded(): Promise<void> {
   try {
-    if (localStorage.getItem(LS_KEY_MIGRATED) === '1') return
+    if (localStorage.getItem(LS_KEY_MIGRATED) === '1') {
+      const fixKey = 'mage_decks_robust_fixed_v2'
+      if (localStorage.getItem(fixKey) !== '1') {
+        const all = isIdbAvailable() ? await idbList().catch(() => lsList()) : lsList()
+        let fixed = 0
+        for (const d of all) {
+          const nd = normalizeDeckV2(d)
+          if (nd !== d) {
+            if (isIdbAvailable()) try { await idbPut(nd) } catch { lsSaveAll(lsList().map(x => x.id === d.id ? nd : x)) }
+            else lsSaveAll(lsList().map(x => x.id === d.id ? nd : x))
+            fixed++
+          }
+        }
+        localStorage.setItem(fixKey, '1')
+        if (fixed) console.info(`[decks] robust normalized ${fixed} decks`)
+      }
+      return
+    }
     const legacy = loadSavedCustomDecks()
     if (legacy.length === 0) {
       localStorage.setItem(LS_KEY_MIGRATED, '1')
       return
     }
-    const v2 = legacyToV2(legacy)
+    const v2 = legacyToV2(legacy).map(normalizeDeckV2)
     if (isIdbAvailable()) {
       for (const d of v2) await idbPut(d)
       localStorage.setItem(LS_KEY_MIGRATED, '1')

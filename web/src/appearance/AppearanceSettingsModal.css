@@ -136,6 +136,71 @@
   }
 }
 
+.ui-scale-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .ui-scale-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.ui-scale-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: #14182e;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+
+.ui-scale-item.selected {
+  border-color: #7c5cff;
+  box-shadow: 0 0 12px rgba(124,92,255,0.35);
+}
+
+.ui-scale-label { font-size: 13px; font-weight: 800; }
+.ui-scale-desc { font-size: 10px; color: #8a90b8; text-align: center; }
+
+.ui-scale-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #7c5cff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-scale-cjk-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #c4cae8;
+  cursor: pointer;
+}
+
+.ui-scale-cjk-toggle input { width: 14px; height: 14px; }
+
+.ui-scale-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #7a82a6;
+}
+
 .appearance-footer {
   margin-top: 16px;
   display: flex;

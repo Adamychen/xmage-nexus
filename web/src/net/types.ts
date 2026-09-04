@@ -94,6 +94,39 @@ export interface DeckCardEntry {
   amount: number
 }
 
+// ─── Validación de mazos (validateDeck del proxy) ────────────────────────────
+
+/** Motivo por el que el servidor rechazaría una carta ("Card not found"). */
+export type DeckIssueReason = 'UNIMPLEMENTED' | 'OUTDATED_PRINTING'
+
+/** Impresión alternativa implementada en el servidor (reparación con un clic). */
+export interface DeckPrintingSuggestion {
+  cardName: string
+  setCode: string
+  cardNumber: string
+}
+
+/** Carta que el servidor rechazará al unirse ("Card not found"). */
+export interface DeckMissingCard extends DeckCardEntry {
+  reason: DeckIssueReason
+  suggestions?: DeckPrintingSuggestion[]
+}
+
+/** Carta aceptada pero que el servidor carga como OTRA carta (set/número de otra). */
+export interface DeckMismatchCard extends DeckCardEntry {
+  resolvedName: string
+  suggestions?: DeckPrintingSuggestion[]
+}
+
+/** Informe de validateDeck. ready=false => BD de cartas del proxy no disponible. */
+export interface DeckValidationResult {
+  ready: boolean
+  missing: DeckMissingCard[]
+  mismatches: DeckMismatchCard[]
+  /** mazo sin las cartas rechazadas (solo si missing > 0) */
+  fixedDeck?: DeckJson
+}
+
 // ─── Fin de partida / match (GameEndView del servidor) ───────────────────────
 
 /** Evento SIDEBOARD del servidor (match best-of-N entre partidas). */

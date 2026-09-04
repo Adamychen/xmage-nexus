@@ -15,6 +15,14 @@ const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descK
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc', icon: '⬒' },
 ]
 
+const UI_SCALES: Array<{ value: import('../state/persistence').UiScale; label: string; desc: string }> = [
+  { value: 0.9, label: '90%', desc: 'Compacto' },
+  { value: 1, label: '100%', desc: 'Normal' },
+  { value: 1.15, label: '115%', desc: 'Grande' },
+  { value: 1.3, label: '130%', desc: 'Muy grande' },
+  { value: 1.5, label: '150%', desc: 'Extra (CJK)' },
+]
+
 export default function AppearanceSettingsModal({ onClose }: Props) {
   const { t } = useTranslation()
   const settings = useSettings()
@@ -27,6 +35,39 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
           <button type="button" className="appearance-close" onClick={onClose}>✕</button>
         </div>
         <p className="appearance-subtitle">{t('lobby', 'appearance_subtitle')}</p>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">Tamaño de interfaz</h3>
+          <p className="appearance-section-hint">Escala global del lobby/login. 115-150% recomendado para chino/japonés (caracteres más densos).</p>
+          <div className="ui-scale-grid">
+            {UI_SCALES.map((o) => {
+              const isSelected = settings.uiScale === o.value
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  className={`ui-scale-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSetting('uiScale', o.value)}
+                  data-testid={`ui-scale-${String(o.value).replace('.', '-')}`}
+                >
+                  <span className="ui-scale-label">{o.label}</span>
+                  <span className="ui-scale-desc">{o.desc}</span>
+                  {isSelected && <span className="ui-scale-check">✓</span>}
+                </button>
+              )
+            })}
+          </div>
+          <label className="ui-scale-cjk-toggle">
+            <input
+              type="checkbox"
+              checked={settings.cjkBoost}
+              onChange={(e) => setSetting('cjkBoost', e.target.checked)}
+              data-testid="cjk-boost-toggle"
+            />
+            <span>Boost automático CJK (+15% en 日本語/中文)</span>
+          </label>
+          <p className="ui-scale-hint">Se combina con la escala manual: 1.5× + CJK = ~1.72× en japonés/chino.</p>
+        </section>
 
         <section className="appearance-section">
           <h3 className="appearance-section-title">{t('lobby', 'appearance_board_title')}</h3>

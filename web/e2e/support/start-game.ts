@@ -117,18 +117,19 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
       await page.getByLabel(/Formato/i).selectOption({ value: opts.deckType })
     }
     if (opts.deck || opts.simDeck) {
-      // pestaña de asientos (rediseño i18n: "Multijugador")
+      // paso del wizard (rediseño 2026-09): "🤖 Multijugador"
       await page.getByRole('button', { name: /Multijugador/i }).click()
       if (opts.deck) {
         await page.getByLabel(/Mazo activo/i).selectOption({ value: opts.deck })
       }
       if (opts.simDeck) {
-        await page.getByLabel(/Mis Mazos/i).selectOption({ value: opts.simDeck })
+        await page.getByLabel(/Mazo para bots SIM|Mis Mazos/i).selectOption({ value: opts.simDeck })
       }
     }
 
   if ((opts.skipShuffle ?? true) || (opts.skipStartingPlayer ?? true)) {
-    await page.getByRole('button', { name: /Ajustes \/ Dev/i }).click()
+    // paso del wizard: "🛠️ Dev" (antes "Ajustes / Dev")
+    await page.getByRole('button', { name: /Dev/i }).click()
     if (opts.skipShuffle ?? true) {
       const shuffle = page.getByRole('checkbox', { name: /No barajar el mazo inicial/i })
       if (!(await shuffle.isChecked())) await shuffle.check()

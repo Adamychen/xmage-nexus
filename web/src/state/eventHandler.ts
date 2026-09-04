@@ -5,7 +5,7 @@ import { parseFeedback, feedbackCards } from '../game/feedback'
 import type { FeedbackCard } from '../game/feedback'
 import { getState, setState, addLog } from './state'
 import type { SideboardCard, SideboardScreenState } from './state'
-import { t as tStatic } from '../i18n'
+import { t as tStatic, translateError } from '../i18n'
 import { awaitCardMeta } from '../cards/cardImages'
 import { saveActiveGame, clearActiveGame } from './persistence'
 import { attributeStackControllers } from '../game/stackAttribution'
@@ -29,7 +29,7 @@ export function handleMessage(msg: ProxyMessage) {
       addLog('servidor', msg.message)
       break
     case 'error':
-      setState({ error: msg.message })
+      setState({ error: translateError(msg.message) })
       addLog('error', msg.message)
       break
     case 'lobby': {
@@ -44,12 +44,21 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ lobby: msg, watchingTable: updatedWatching })
       break
     }
-    case 'result':
+    case 'result': {
       if (!msg.ok && msg.action !== 'disconnect') {
+        const delegated = new Set(['createTable', 'createTournamentTable', 'joinTable', 'joinTournamentTable', 'watchTable', 'startMatch'])
+        if (delegated.has(msg.action)) {
+          const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined)
+          if (detail && detail !== 'FAILED' && detail.toLowerCase() !== 'failed') {
+            setState({ error: translateError(detail, msg.action) })
+          }
+          break
+        }
         const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined)
-        setState({ error: detail ?? `${msg.action} falló` })
+        setState({ error: translateError(detail ?? `${msg.action} falló`, msg.action) })
       }
       break
+    }
     case 'event':
       handleEvent(msg.method, msg.objectId ?? null, msg.data)
       break
@@ -318,7 +327,14 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
             cards: group(maindeck),
             sideboard: group(sideboard),
           }
-          void cmds.submitDeck(tableId, deck)
+          void cmds.submitDeck(tableId, deck).then((res) => {
+            if (!res.ok) {
+              // con el detalle real del servidor (p.ej. "Card not found - X - SET - N")
+              const detail = typeof res.error === 'string' ? res.error : 'submitDeck'
+              addLog('error', `Auto-submit de sideboard falló: ${detail}`)
+              setState({ error: translateError(detail, 'submitDeck') })
+            }
+          })
         }
       })
       break

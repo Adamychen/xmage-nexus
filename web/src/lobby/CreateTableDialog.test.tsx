@@ -29,17 +29,17 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     expect(screen.getByRole('heading', { name: /Crear Mesa|Create Table/ })).toBeDefined()
-    expect(screen.getByText(/⚙️ General/)).toBeDefined()
-    expect(screen.getByText(/⏱️ Tiempos & Reglas|Timers & Rules/)).toBeDefined()
+    expect(screen.getAllByText(/General/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/Tiempos & Reglas|Timers & Rules/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/🛡️/)).toBeDefined()
-    expect(screen.getByText(/Multijugador|Multiplayer/)).toBeDefined()
+    expect(screen.getAllByText(/Multijugador|Multiplayer/).length).toBeGreaterThanOrEqual(1)
   })
 
   it('allows navigating to Timing tab and setting custom clocks and mulligans', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    // Switch to Timing tab
-    const timingTab = screen.getByText(/⏱️ Tiempos & Reglas|Timers & Rules/)
+    // Switch to Timing step (wizard is linear — clicking stepper jumps)
+    const timingTab = screen.getAllByText(/Tiempos & Reglas|Timers & Rules/)[0]
     fireEvent.click(timingTab)
 
     expect(screen.getAllByText(/Reloj de Prioridad por Jugador/i).length).toBeGreaterThanOrEqual(1)
@@ -69,11 +69,17 @@ describe('CreateTableDialog', () => {
   it('submits createTable with selected options and joins own seat', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    // Fill table name
+    // Fill table name (step 1 General)
     const nameInput = screen.getByPlaceholderText(/Ej. Modern Casual Bo3/)
     fireEvent.change(nameInput, { target: { value: 'Epic Modern Duel' } })
 
-    // Click submit button
+    // Wizard is linear — navigate to last step via Siguiente
+    for (let i = 0; i < 5; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (nextBtn) fireEvent.click(nextBtn)
+    }
+
+    // Click submit button (only visible on last step)
     const submitBtn = screen.getByRole('button', { name: /Crear Mesa/ })
     fireEvent.click(submitBtn)
 

@@ -99,6 +99,7 @@ sesión solo llegan a sus propias conexiones.
 |---|---|---|
 | `submitDeck` | `{tableId, deck}` | Submit deck for the match |
 | `updateDeck` | `{tableId, deck}` | Update deck |
+| `validateDeck` | `{deck}` | Pre-validate a deck against the proxy's card DB (see below) |
 
 Deck format:
 ```json
@@ -108,6 +109,53 @@ Deck format:
   "sideboard": [{"cardName": "Path to Exile", "setCode": "2XM", "cardNumber": "30", "amount": 2}]
 }
 ```
+
+#### Deck pre-validation (`validateDeck`)
+
+Replicates **exactly** the target XMage server's `Deck.load` semantics (upstream:
+strict `CardRepository.findCard(set, number)`, card name ignored) using only
+public upstream APIs (`CardRepository`, `CardScanner`) against the proxy's own
+card DB, built from the same `mage-sets` release the fork pins. No fork code is
+used, so the report is valid for any server on the same XMage version
+(`beta.xmage.today` included).
+
+The DB is built lazily on first proxy start (`CardScanner.scan()`, ~10 s in
+background, stored in `Mage.Proxy/db/`, gitignored) and rebuilt automatically
+whenever the fork build changes (new release ⇒ new card list).
+
+Response `data` (advisory — `ready:false` means the DB isn't available and the
+client must not block):
+
+```json
+{
+  "ready": true,
+  "missing": [
+    {"cardName": "Rhystic Tutor", "setCode": "CY", "cardNumber": "77", "amount": 1,
+     "reason": "OUTDATED_PRINTING",
+     "suggestions": [{"cardName": "Rhystic Tutor", "setCode": "PCY", "cardNumber": "77"}]}
+  ],
+  "mismatches": [
+    {"cardName": "Rhystic Tutor", "setCode": "C20", "cardNumber": "77", "amount": 1,
+     "resolvedName": "Banisher Priest", "suggestions": [...]}
+  ],
+  "fixedDeck": {"name": "...", "cards": [...], "sideboard": [...]}
+}
+```
+
+- `missing`: the server will throw `Card not found` at join. `reason` is
+  `OUTDATED_PRINTING` (the card name exists in other printings — repairable by
+  swapping set/number) or `UNIMPLEMENTED` (no printing exists). `fixedDeck` is
+  the deck without the rejected cards.
+- `mismatches`: the server ACCEPTS the entry but loads a **different card**
+  (set/number of another card — the name is ignored upstream). Surfaced so the
+  player can swap to a correct printing instead of silently playing the wrong card.
+
+Related hardening: join/submit/update failures now classify
+`Card not found` as `errorCode: "CARD_NOT_FOUND"` and always carry the server's
+detail text (login failures too — `SHOW_USERMESSAGE` lists are parsed). SIM
+seats strip rejected cards from their deck and report join failures to the web
+as non-fatal `{type:"error"}` broadcasts instead of leaving the seat silently
+empty.
 
 ### Game Actions
 

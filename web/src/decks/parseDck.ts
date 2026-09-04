@@ -1,6 +1,7 @@
 import type { Deck, DeckCard } from '../lobby/decks'
 import { t } from '../i18n'
 import { normalizeBasicLandName } from './deckUtils'
+import { normalizeDeckCard } from './deckNormalize'
 
 const DCK_LINE = /^(SB:\s*)?(\d+)\s*\[([^:\]]+):([^\]]+)\]\s*(.+?)\s*$/
 const NAME_RE = /^NAME:\s*(.*)\s*$/
@@ -36,7 +37,7 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
       const rawName = m[5].trim()
       if (!rawName) continue
       const cardName = normalizeBasicLandName(rawName) || rawName
-      const entry: DeckCard = { cardName, setCode, cardNumber, amount }
+      const entry = normalizeDeckCard({ cardName, setCode, cardNumber, amount })
       if (isSideboard) sideboard.push(entry)
       else cards.push(entry)
       continue
@@ -114,13 +115,13 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
         const amount = parseInt(m[1], 10) || 1
         const rawName = m[2].trim()
         const cardName = normalizeBasicLandName(rawName) || rawName
-        sideboard.push({ cardName, setCode: m[3] || 'M10', cardNumber: m[4] || '1', amount })
+        sideboard.push(normalizeDeckCard({ cardName, setCode: m[3] || 'M10', cardNumber: m[4] || '1', amount }))
       } else {
         const m2 = rest.match(/^(.+)$/)
         if (m2) {
           const rawName = m2[1].trim()
           const cardName = normalizeBasicLandName(rawName) || rawName
-          sideboard.push({ cardName, setCode: 'M10', cardNumber: '1', amount: 1 })
+          sideboard.push(normalizeDeckCard({ cardName, setCode: 'M10', cardNumber: '1', amount: 1 }))
         }
       }
       continue
@@ -134,7 +135,7 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
       const cardName = normalizeBasicLandName(rawName) || rawName
       const setCode = m[3] || 'M10'
       const cardNumber = m[4] || '1'
-      const item: DeckCard = { cardName, setCode, cardNumber, amount }
+      const item = normalizeDeckCard({ cardName, setCode, cardNumber, amount })
       if (isSideboard) sideboard.push(item)
       else cards.push(item)
       continue
@@ -142,7 +143,7 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
     if (/^\d+\s+\[.*:.*\]/.test(line)) {
       const dck = line.match(/^(\d+)\s*\[([^:]+):([^\]]+)\]\s*(.+)$/)
       if (dck) {
-        const item: DeckCard = { cardName: dck[4].trim(), setCode: dck[2].trim(), cardNumber: dck[3].trim(), amount: parseInt(dck[1], 10) || 1 }
+        const item = normalizeDeckCard({ cardName: dck[4].trim(), setCode: dck[2].trim(), cardNumber: dck[3].trim(), amount: parseInt(dck[1], 10) || 1 })
         if (isSideboard) sideboard.push(item)
         else cards.push(item)
       }

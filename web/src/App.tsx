@@ -2,20 +2,22 @@ import { useEffect } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
-import { loadAudioSettings } from './state/persistence'
+import { loadAudioSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
 import LoginScreen from './lobby/LoginScreen'
 import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
+import DeckIssuesDialog from './lobby/DeckIssuesDialog'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 
 export default function App() {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const phase = usePhase()
   const connecting = useStore((s) => s.connecting)
   const wsAlive = useStore((s) => s.wsAlive)
+  const settings = useStore((s) => s.settings)
 
   useEffect(() => {
     soundManager.init(loadAudioSettings())
@@ -31,6 +33,14 @@ export default function App() {
       )
     }
   }, [])
+
+  useEffect(() => {
+    applyAppearanceToDocument({ sleeveId: settings.sleeveId, boardLayout: settings.boardLayout, uiScale: settings.uiScale, cjkBoost: settings.cjkBoost }, lang)
+  }, [settings.sleeveId, settings.boardLayout, settings.uiScale, settings.cjkBoost, lang])
+
+  useEffect(() => {
+    applyAppearanceToDocument(loadAppearanceSettings(), lang)
+  }, [lang])
 
   useEffect(() => {
     const onBeforeUnload = () => undefined
@@ -67,6 +77,7 @@ export default function App() {
       <DraftScreen />
       <ConstructScreen />
       <GameEndDialog />
+      <DeckIssuesDialog />
       <footer className="app-attribution">
         {(() => {
           const attr = t('common', 'attribution_scryfall')

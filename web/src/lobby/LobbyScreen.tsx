@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
-import { reset, useLobby, useStore, setWatchingTable, openStagingTable } from '../state/store'
+import { reset, useLobby, useStore, setWatchingTable, openStagingTable, setSetting } from '../state/store'
+import { useSettings } from '../state/selectors'
 import * as cmds from '../net/commands'
 import type { TableView, UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
+import type { UiScale } from '../state/persistence'
 import CreateTableDialog from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import ChatBox from './ChatBox'
@@ -19,8 +21,9 @@ import FinishedMatchesPanel from './FinishedMatchesPanel'
 import TournamentBracket from './TournamentBracket'
 import DownloadImagesDialog from './DownloadImagesDialog'
 import LanguageSelector from '../i18n/LanguageSelector'
-import { t as tStatic } from '../i18n'
+import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
+import { setState } from '../state/state'
 import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { useFullscreen } from '../utils/fullscreen'
@@ -178,7 +181,7 @@ export function extractLobbyUsers(rawUsers: unknown): import('../net/types').Use
 export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches'
 
 export default function LobbyScreen() {
-  const { t } = useTranslation()
+  const { t, tError } = useTranslation()
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
   const stagingTableId = useStore((s) => s.stagingTableId)
@@ -208,6 +211,8 @@ export default function LobbyScreen() {
   const [notice, setNotice] = useState<string | null>(null)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
   const [showAppearance, setShowAppearance] = useState(false)
+  const settings = useSettings()
+  const [mobileChatOpen, setMobileChatOpen] = useState(false)
   const tournamentState = useStore((s) => s.tournament)
   const [bracketTable, setBracketTable] = useState<TableView | null>(null)
   const [bracketView, setBracketView] = useState<TournamentView | null>(null)
@@ -239,10 +244,11 @@ export default function LobbyScreen() {
   }, [conn?.username, conn?.avatarId])
 
   const joinHuman = (t: TableView) => {
+    setState({ error: null })
     setNotice(null)
     const seat = t.seats.find((s) => !s.playerName)
     if (!seat) {
-      setNotice(tStatic('errors','table_no_seats'))
+      setState({ error: translateError(tStatic('errors','table_no_seats')) })
       return
     }
     setJoiningTable(t)
@@ -250,6 +256,7 @@ export default function LobbyScreen() {
 
   const handleJoinWithDeck = async (t: TableView, deck: Deck, password?: string) => {
     setBusyTable(t.tableId)
+    setState({ error: null })
     setNotice(null)
     try {
       const res = await withTimeout(
@@ -271,7 +278,7 @@ export default function LobbyScreen() {
         throw new Error(res.error || tStatic('errors','join_table_failed'))
       }
     } catch (e) {
-      setNotice((e as Error).message)
+      setState({ error: translateError((e as Error).message, 'joinTable') })
     } finally {
       setBusyTable(null)
     }
@@ -279,10 +286,11 @@ export default function LobbyScreen() {
 
   const joinAi = async (t: TableView) => {
     setBusyTable(t.tableId)
+    setState({ error: null })
     setNotice(null)
     const seat = t.seats.find((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
     if (!seat?.playerType) {
-      setNotice(tStatic('errors','table_no_seats'))
+      setState({ error: translateError(tStatic('errors','table_no_seats')) })
       return
     }
     const aiSeats = t.seats.filter((s) => s.playerType && /COMPUTER|AI/i.test(s.playerType))
@@ -299,9 +307,13 @@ export default function LobbyScreen() {
         15000,
         'joinTable IA',
       )
-      setNotice(res.ok ? tStatic('lobby','join_ai_btn') : `joinTable IA: ${res.error}`)
+      if (res.ok) {
+        setNotice(tStatic('lobby','join_ai_btn'))
+      } else {
+        setState({ error: translateError(res.error || tStatic('errors','join_table_failed'), 'joinTable') })
+      }
     } catch (e) {
-      setNotice((e as Error).message)
+      setState({ error: translateError((e as Error).message, 'joinTable') })
     } finally {
       setBusyTable(null)
     }
@@ -309,11 +321,17 @@ export default function LobbyScreen() {
 
   const startTable = async (t: TableView) => {
     setBusyTable(t.tableId)
+    setState({ error: null })
+    setNotice(null)
     try {
       const res = await withTimeout(cmds.startMatch(t.tableId), 20000, 'startMatch')
-      setNotice(res.ok ? tStatic('lobby','start_match_btn') : `startMatch: ${res.error}`)
+      if (res.ok) {
+        setNotice(tStatic('lobby','start_match_btn'))
+      } else {
+        setState({ error: translateError(res.error || tStatic('errors','start_game_failed'), 'startMatch') })
+      }
     } catch (e) {
-      setNotice((e as Error).message)
+      setState({ error: translateError((e as Error).message, 'startMatch') })
     } finally {
       setBusyTable(null)
     }
@@ -321,16 +339,18 @@ export default function LobbyScreen() {
 
   const watchTable = async (t: TableView) => {
     setBusyTable(t.tableId)
+    setState({ error: null })
+    setNotice(null)
     try {
       const res = await withTimeout(cmds.watchTable(t.tableId), 15000, 'watchTable')
       if (res.ok) {
         setWatchingTable(t)
         setNotice(tStatic('lobby','watch_btn'))
       } else {
-        setNotice(`watchTable: ${res.error}`)
+        setState({ error: translateError(res.error || tStatic('errors','generic_error'), 'watchTable') })
       }
     } catch (e) {
-      setNotice((e as Error).message)
+      setState({ error: translateError((e as Error).message, 'watchTable') })
     } finally {
       setBusyTable(null)
     }
@@ -426,6 +446,32 @@ export default function LobbyScreen() {
         <div className="lobby-user-actions">
           <LanguageSelector showCardLangToggle={true} />
 
+          <div className="lobby-scale-quick" role="group" aria-label="UI scale">
+            {( [1, 1.15, 1.5] as UiScale[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={settings.uiScale === s ? 'active' : ''}
+                onClick={() => setSetting('uiScale', s)}
+                title={`${Math.round(s*100)}%`}
+                aria-pressed={settings.uiScale === s}
+              >
+                {s === 1 ? 'Aa' : s === 1.15 ? 'A+' : 'A++'}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="lobby-mobile-chat-toggle"
+            onClick={() => setMobileChatOpen((v) => !v)}
+            aria-label={t('lobby','global_chat')}
+            data-testid="toggle-mobile-chat"
+          >
+            💬
+            {unreadChat > 0 && <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>}
+          </button>
+
           <button
             type="button"
             className="lobby-appearance-btn"
@@ -475,7 +521,7 @@ export default function LobbyScreen() {
         </div>
       </header>
 
-      {error && <div className="error-box panel lobby-error-banner">{error}</div>}
+      {error && <div className="error-box panel lobby-error-banner">{tError(error)}</div>}
       {notice && <div className="notice panel lobby-notice-banner">{notice}</div>}
 
       {/* 3-Column main area */}
@@ -864,14 +910,18 @@ export default function LobbyScreen() {
           )}
         </main>
 
-        {/* RIGHT: Persistent Chat + Users panel (always visible) */}
-        <aside className="lobby-aside">
+        {/* RIGHT: Persistent Chat + Users panel */}
+        {mobileChatOpen && <div className="lobby-aside-backdrop" onClick={() => setMobileChatOpen(false)} aria-hidden="true" />}
+        <aside className={`lobby-aside ${mobileChatOpen ? 'mobile-open' : ''}`}>
           <section className="aside-chat-section">
             <div className="aside-section-header">
               <span className="aside-section-title">💬 {t('lobby','global_chat')}</span>
-              {unreadChat > 0 && (
-                <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
-              )}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                {unreadChat > 0 && (
+                  <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
+                )}
+                <button type="button" className="view-leaderboard-btn" onClick={() => setMobileChatOpen(false)} style={{ display: 'none' }} aria-hidden="true">✕</button>
+              </div>
             </div>
             <div className="aside-chat-body">
               <ChatBox
@@ -952,6 +1002,25 @@ export default function LobbyScreen() {
             </ul>
           </section>
         </aside>
+
+        {/* Mobile bottom nav (visible ≤600px) */}
+        <nav className="lobby-mobile-bottom-nav" aria-label="Mobile navigation">
+          <button type="button" className={`mobile-nav-btn ${activeTab === 'tables' ? 'active' : ''}`} onClick={() => { setActiveTab('tables'); setMobileChatOpen(false) }}>
+            <span className="mobile-nav-icon">⚔️</span><span>{t('lobby.nav_tables')}</span>
+          </button>
+          <button type="button" className={`mobile-nav-btn ${activeTab === 'decks' ? 'active' : ''}`} onClick={() => { setActiveTab('decks'); setMobileChatOpen(false) }}>
+            <span className="mobile-nav-icon">🃏</span><span>{t('lobby.nav_decks')}</span>
+          </button>
+          <button type="button" className="mobile-nav-btn" onClick={() => setShowCreate(true)}>
+            <span className="mobile-nav-icon">➕</span><span>{t('lobby.nav_new')}</span>
+          </button>
+          <button type="button" className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`} onClick={() => { setActiveTab('matches'); setMobileChatOpen(false) }}>
+            <span className="mobile-nav-icon">📜</span><span>{t('common.loading') === '読み込み中...' ? '履歴' : t('lobby.nav_history')}</span>
+          </button>
+          <button type="button" className={`mobile-nav-btn ${mobileChatOpen ? 'active' : ''}`} onClick={() => setMobileChatOpen((v) => !v)}>
+            <span className="mobile-nav-icon">💬</span><span>Chat{unreadChat > 0 ? ` (${unreadChat})` : ''}</span>
+          </button>
+        </nav>
       </div>
 
       {/* Collapsible Debug Drawer Toggle at Bottom */}
@@ -1013,9 +1082,11 @@ export default function LobbyScreen() {
             openLeaderboard(username, 'profile')
           }}
           onWatchTable={async (tableId) => {
-            setNotice(tStatic('lobby','watch_btn'))
+            setState({ error: null })
+            setNotice(null)
             const watched = await withTimeout(cmds.watchTable(tableId), 15000, 'watchTable')
-            setNotice(watched.ok ? tStatic('lobby','watch_btn') : tStatic('errors','generic_error'))
+            if (watched.ok) setNotice(tStatic('lobby','watch_btn'))
+            else setState({ error: translateError((watched as { error?: string }).error || tStatic('errors','generic_error'), 'watchTable') })
           }}
           onClose={() => setSelectedUser(null)}
         />

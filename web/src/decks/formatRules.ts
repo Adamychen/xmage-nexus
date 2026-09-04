@@ -187,7 +187,7 @@ export function isBasicOrUnlimited(name: string): boolean {
 }
 
 export interface ValidationIssue {
-  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander'
+  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue'
   message: string
   cardName?: string
   severity: 'error' | 'warning'

@@ -3,6 +3,7 @@ import * as cmds from '../net/commands'
 import type { GameTypeInfo } from '../net/commands'
 import { setMyDeck, useStore } from '../state/store'
 import { getAllAvailableDecks, DEFAULT_DECK, LANDS_DECK, type Deck } from './decks'
+import { requestDeckValidation } from './DeckIssuesDialog'
 import { useTranslation } from '../i18n'
 import './CreateTableDialog.css'
 
@@ -182,12 +183,41 @@ export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo
   return 2
 }
 
+type WizardStep = { id: CreateTab; icon: string; labelKey: string; titleFallback: string }
+
+const WIZARD_STEPS_BASE: WizardStep[] = [
+  { id: 'general', icon: '⚙️', labelKey: 'create_tab_general', titleFallback: 'General' },
+  { id: 'timing', icon: '⏱️', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
+  { id: 'security', icon: '🛡️', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
+  { id: 'seats', icon: '🤖', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
+]
+
 export default function CreateTableDialog({ onClose }: { onClose: () => void }) {
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
 
+  const wizardSteps: WizardStep[] = useMemo(() => {
+    const steps = [...WIZARD_STEPS_BASE]
+    if (import.meta.env.DEV) steps.push({ id: 'dev', icon: '🛠️', labelKey: '', titleFallback: 'Dev' })
+    return steps
+  }, [])
+
   const [activeTab, setActiveTab] = useState<CreateTab>('general')
+  const activeIndex = useMemo(() => {
+    const idx = wizardSteps.findIndex((s) => s.id === activeTab)
+    return idx >= 0 ? idx : 0
+  }, [wizardSteps, activeTab])
+
+  const goToIndex = (idx: number) => {
+    if (idx < 0 || idx >= wizardSteps.length) return
+    setActiveTab(wizardSteps[idx].id)
+  }
+  const goNext = () => goToIndex(activeIndex + 1)
+  const goPrev = () => goToIndex(activeIndex - 1)
+  const isLastStep = activeIndex === wizardSteps.length - 1
+  const isFirstStep = activeIndex === 0
+
   const [gameTypes, setGameTypes] = useState<GameTypeInfo[]>(DEFAULT_GAME_TYPES)
   const [deckTypes, setDeckTypes] = useState<string[]>(DEFAULT_DECK_TYPES)
   const [playerTypes, setPlayerTypes] = useState<string[]>(DEFAULT_PLAYER_TYPES)
@@ -214,6 +244,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
   // Security & Permissions tab
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [spectatorsAllowed, setSpectatorsAllowed] = useState(true)
   const [rollbackTurnsAllowed, setRollbackTurnsAllowed] = useState(true)
   const [minimumRating, setMinimumRating] = useState(0)
@@ -285,7 +316,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     }
   }, [])
 
-  // Auto-adjust free mulligans when switching to Commander/Multiplayer
+  // Auto-adjust free mulligans hint instead of forcing — keep previous behavior but less aggressive
   useEffect(() => {
     const isMulti = gameType.toLowerCase().includes('commander') || gameType.toLowerCase().includes('free for all')
     if (isMulti && freeMulligans === 0) {
@@ -324,27 +355,9 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const isLimited = deckType === 'Limited'
   const isDraftLimited = isLimited && useDraftTournament
 
-  const deckCardCount = (d: Deck) => d.cards.reduce((s, c) => s + c.amount, 0)
-  const isCommanderFormat = (gt: string, dt: string) => gt.toLowerCase().includes('commander') || dt.toLowerCase().includes('commander') || dt.toLowerCase().includes('oathbreaker') || dt.toLowerCase().includes('brawl')
-
   const create = async () => {
     setBusy(true)
     setError(null)
-    if (!effectiveGameTypes.some((g) => g.name === gameType)) {
-      setError(t('errors','invalid_game_type'))
-      setBusy(false)
-      return
-    }
-    if (!effectiveDeckTypes.includes(deckType)) {
-      setError(t('errors','invalid_deck_type'))
-      setBusy(false)
-      return
-    }
-    if (deckType === 'Limited' && !useDraftTournament) {
-      setError(t('errors','invalid_deck_type'))
-      setBusy(false)
-      return
-    }
     if (isDraftLimited) {
       const setCodes = parseLimitedSetCodes(draftSetsRaw)
       if (setCodes.length === 0) {
@@ -392,25 +405,29 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     }
     const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
     const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
-    const minPlayers = selectedGameTypeInfo?.minPlayers ?? 2
     const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
     const aiTypes = (playerTypesSel.length ? playerTypesSel : ['SIM']).slice(0, maxAi)
     const playerTypesFinal = humanSeat ? ['HUMAN', ...aiTypes] : aiTypes
     const simSeats = aiTypes.filter((pt) => pt === 'SIM').length
-    if (playerTypesFinal.length < minPlayers || playerTypesFinal.length > maxPlayers) {
-      setError(t('errors','table_no_seats'))
-      setBusy(false)
-      return
-    }
-    if (humanSeat && deckType !== 'Limited') {
-      const cnt = deckCardCount(myDeck)
-      const needCommander = isCommanderFormat(gameType, deckType)
-      const minCards = needCommander ? 100 : 60
-      if (cnt < minCards) {
-        setError(t('errors','invalid_deck'))
+
+    // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
+    let finalMyDeck = myDeck
+    if (humanSeat) {
+      const fixed = await requestDeckValidation(myDeck)
+      if (!fixed) {
         setBusy(false)
         return
       }
+      finalMyDeck = fixed
+    }
+    let finalSimDeck = simDeck
+    if (simSeats > 0) {
+      const fixed = await requestDeckValidation(simDeck)
+      if (!fixed) {
+        setBusy(false)
+        return
+      }
+      finalSimDeck = fixed
     }
 
     const res = await cmds.createTable({
@@ -434,7 +451,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       edhPowerLevel: edhPowerLevel < 100 ? edhPowerLevel : undefined,
       skipInitShuffling,
       skipStartingPlayerChoice,
-      simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => simDeck) : undefined,
+      simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => finalSimDeck) : undefined,
     })
 
     setBusy(false)
@@ -450,10 +467,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         playerName: username,
         playerType: 'HUMAN',
         skill: 1,
-        deck: myDeck,
+        deck: finalMyDeck,
         password: password.trim() || undefined,
       })
-      setMyDeck(myDeck)
+      setMyDeck(finalMyDeck)
       if (!join.ok) {
         setError(join.error ?? t('errors','join_table_failed'))
         return
@@ -476,49 +493,47 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           </button>
         </div>
 
-        {/* Modal Navigation Tabs */}
-        <nav className="create-table-tabs">
-          <button
-            type="button"
-            className={`create-tab-btn ${activeTab === 'general' ? 'active' : ''}`}
-            onClick={() => setActiveTab('general')}
-          >
-            <span>⚙️ {t('lobby','create_tab_general')}</span>
-          </button>
-          <button
-            type="button"
-            className={`create-tab-btn ${activeTab === 'timing' ? 'active' : ''}`}
-            onClick={() => setActiveTab('timing')}
-          >
-            <span>⏱️ {t('lobby','create_tab_timing')}</span>
-          </button>
-          <button
-            type="button"
-            className={`create-tab-btn ${activeTab === 'security' ? 'active' : ''}`}
-            onClick={() => setActiveTab('security')}
-          >
-            <span>🛡️ {t('lobby','create_tab_restrictions')}</span>
-          </button>
-          <button
-            type="button"
-            className={`create-tab-btn ${activeTab === 'seats' ? 'active' : ''}`}
-            onClick={() => setActiveTab('seats')}
-          >
-            <span>🤖 {t('lobby','create_tab_multi')} ({humanSeat ? `1 ${t('common','player')} + ` : ''}{playerTypesSel.length} {t('lobby','ai')})</span>
-          </button>
-          <button
-            type="button"
-            className={`create-tab-btn ${activeTab === 'dev' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dev')}
-          >
-            <span>🛠️ {t('common','settings')} / Dev</span>
-          </button>
+        <div className="wizard-progress-track" aria-hidden>
+          <div className="wizard-progress-fill" style={{ width: `${((activeIndex + 1) / wizardSteps.length) * 100}%` }} />
+        </div>
+        <div className="wizard-step-counter">
+          Paso {activeIndex + 1} de {wizardSteps.length} · {wizardSteps[activeIndex]?.icon} {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}
+        </div>
+
+        <nav className="wizard-stepper" aria-label="Pasos de creación de mesa">
+          {wizardSteps.map((step, idx) => {
+            const isActive = idx === activeIndex
+            const isCompleted = idx < activeIndex
+            const label = step.labelKey ? t('lobby', step.labelKey as any) : step.titleFallback
+            return (
+              <button
+                key={step.id}
+                type="button"
+                className={`wizard-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                onClick={() => setActiveTab(step.id)}
+                aria-current={isActive ? 'step' : undefined}
+                title={label}
+              >
+                <span className="wizard-step-circle">
+                  {isCompleted ? '✓' : idx + 1}
+                </span>
+                <span className="wizard-step-label">
+                  <span className="wizard-step-icon">{step.icon}</span>
+                  <span className="wizard-step-text">{label}</span>
+                </span>
+                {idx < wizardSteps.length - 1 && <span className={`wizard-connector ${isCompleted ? 'done' : ''}`} />}
+              </button>
+            )
+          })}
         </nav>
 
-        {/* Tab Content */}
         <div className="create-table-body">
           {activeTab === 'general' && (
             <div className="create-tab-content">
+              <div className="wizard-step-heading">
+                <h3>⚙️ {t('lobby','create_tab_general')}</h3>
+                <p>Nombre, formato y estructura del match.</p>
+              </div>
               <label>
                 {t('lobby','create_field_table_name')}
                 <input
@@ -598,12 +613,12 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 />
                 <div className="toggle-text-block">
                   <span className="toggle-title">⭐ {t('lobby','create_field_rated')}</span>
-                  <span className="toggle-desc">{t('lobby','create_field_rated')}</span>
+                  <span className="toggle-desc">Partida puntuada para ranking. Desactívalo para juego casual sin ELO.</span>
                 </div>
               </label>
 
               {deckType === 'Limited' && (
-                <div className="create-multiplayer-box" style={{ marginTop: 12 }}>
+                <div className="create-multiplayer-box" style={{ marginTop: 4 }}>
                   <span className="multiplayer-box-title">🃏 {t('lobby','create_field_draft_type')}</span>
                   <label className="toggle-label-row">
                     <input
@@ -612,8 +627,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       onChange={(e) => setUseDraftTournament(e.target.checked)}
                     />
                     <div className="toggle-text-block">
-                      <span className="toggle-title">{t('lobby','create_field_draft_type')}</span>
-                      <span className="toggle-desc">{t('lobby','create_field_draft_type')}</span>
+                      <span className="toggle-title">Crear como torneo Draft</span>
+                      <span className="toggle-desc">Si lo activas, se creará un torneo en lugar de una mesa normal.</span>
                     </div>
                   </label>
                   {useDraftTournament && (
@@ -644,12 +659,11 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         />
                       </label>
                       <label>
-                        {t('lobby','create_field_timing_limit')}
+                        Tiempo de construcción
                         <select value={draftConstructionTime} onChange={(e) => setDraftConstructionTime(Number(e.target.value))}>
-                          {CONSTRUCTION_TIME_OPTIONS.map((o) => {
-                            const m = o.value === 300 ? t('lobby','create_time_5') : o.value === 600 ? t('lobby','create_time_10') : o.value === 900 ? t('lobby','create_time_15') : t('lobby','create_time_20')
-                            return <option key={o.value} value={o.value}>{m}</option>
-                          })}
+                          {CONSTRUCTION_TIME_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
                         </select>
                       </label>
                     </div>
@@ -661,54 +675,32 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
           {activeTab === 'timing' && (
             <div className="create-tab-content">
+              <div className="wizard-step-heading">
+                <h3>⏱️ {t('lobby','create_tab_timing')}</h3>
+                <p>Relojes, mulligans y reglas de mesa multijugador.</p>
+              </div>
               <div className="create-grid-2col">
                 <label>
                   {t('lobby','create_field_timing_limit')}
                   <select value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}>
-                    {TIME_LIMIT_OPTIONS.map((opt) => {
-                      const labelMap: Record<string, string> = {
-                        NONE: t('lobby','create_time_no_limit'),
-                        MIN__15: t('lobby','create_time_15'),
-                        MIN__20: t('lobby','create_time_20'),
-                        MIN__25: t('lobby','create_time_15'),
-                        MIN__30: t('lobby','create_time_20'),
-                        MIN__45: t('lobby','create_time_20'),
-                        MIN__60: t('lobby','create_time_20'),
-                        MIN__90: t('lobby','create_time_20'),
-                      }
-                      return (
-                        <option key={opt.value} value={opt.value}>
-                          {labelMap[opt.value] ?? opt.label}
-                        </option>
-                      )
-                    })}
+                    {TIME_LIMIT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </label>
 
                 <label>
-                  {t('lobby','create_field_timing_limit')}
+                  Buffer de tiempo
                   <select value={bufferTime} onChange={(e) => setBufferTime(e.target.value)}>
-                    {BUFFER_TIME_OPTIONS.map((opt) => {
-                      const labelMap: Record<string, string> = {
-                        NONE: t('lobby','create_time_no_limit'),
-                        SEC__05: t('lobby','create_buffer_15'),
-                        SEC__10: t('lobby','create_buffer_15'),
-                        SEC__15: t('lobby','create_buffer_15'),
-                        SEC__20: t('lobby','create_buffer_30'),
-                        SEC__30: t('lobby','create_buffer_30'),
-                      }
-                      return (
-                        <option key={opt.value} value={opt.value}>
-                          {labelMap[opt.value] ?? opt.label}
-                        </option>
-                      )
-                    })}
+                    {BUFFER_TIME_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </label>
               </div>
 
               <div className="field">
-                <span>{t('lobby','create_field_free_mulligans')}</span>
+                <span>{t('lobby','create_field_free_mulligans')} <em style={{ textTransform: 'none', fontWeight: 400, color: '#9aa3c2' }}>— recomendado 1 para Commander/FFA</em></span>
                 <div className="chip-row">
                   {[0, 1, 2, 3].map((m) => (
                     <button
@@ -746,19 +738,31 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   </div>
                 </div>
               )}
+              {!isMultiplayerGame && (
+                <div className="wizard-hint-box">Las opciones de ataque y rango aparecen automáticamente al elegir un formato multijugador (Commander / Free For All).</div>
+              )}
             </div>
           )}
 
           {activeTab === 'security' && (
             <div className="create-tab-content">
+              <div className="wizard-step-heading">
+                <h3>🛡️ {t('lobby','create_tab_restrictions')}</h3>
+                <p>Privacidad y filtros de acceso a la mesa.</p>
+              </div>
               <label>
                 {t('lobby','create_field_password')}
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('lobby','placeholder_password')}
-                />
+                <div className="password-field-wrap">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('lobby','placeholder_password')}
+                  />
+                  <button type="button" className="password-toggle-btn" onClick={() => setShowPassword((v) => !v)} title={showPassword ? 'Ocultar' : 'Mostrar'}>
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </label>
 
               <div className="create-restrictions-box">
@@ -800,7 +804,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 {isMultiplayerGame && (
                   <div style={{ marginTop: 10 }}>
                     <label>
-                      {t('lobby','create_field_max_rating')}
+                      Potencia EDH (solo Commander, 0-100)
                       <input
                         type="number"
                         min={0}
@@ -811,7 +815,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         placeholder={t('common','all')}
                       />
                       <span className="create-field-hint">
-                        {edhPowerLevel < 100 ? `${t('lobby','create_field_max_rating')}: ${edhPowerLevel}` : t('common','all')}
+                        {edhPowerLevel < 100 ? `EDH Power: ${edhPowerLevel}` : t('common','all') + ' — sin límite'}
                       </span>
                     </label>
                   </div>
@@ -826,7 +830,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 />
                 <div className="toggle-text-block">
                   <span className="toggle-title">👁️ {t('lobby','create_field_spectators')}</span>
-                  <span className="toggle-desc">{t('lobby','create_field_spectators')}</span>
+                  <span className="toggle-desc">Permite que otros usuarios observen la partida en vivo.</span>
                 </div>
               </label>
 
@@ -838,7 +842,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 />
                 <div className="toggle-text-block">
                   <span className="toggle-title">⏪ {t('lobby','create_field_rollback')}</span>
-                  <span className="toggle-desc">{t('lobby','create_field_rollback')}</span>
+                  <span className="toggle-desc">Permite solicitar rebobinar la partida a un turno anterior.</span>
                 </div>
               </label>
             </div>
@@ -846,6 +850,10 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
           {activeTab === 'seats' && (
             <div className="create-tab-content">
+              <div className="wizard-step-heading">
+                <h3>🤖 {t('lobby','create_tab_multi')}</h3>
+                <p>Tu asiento, tu mazo y los bots rivales.</p>
+              </div>
               <div className="create-seats-section">
                 <div className="create-seat-box human-seat-box">
                   <div className="seat-box-header">
@@ -875,11 +883,19 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                       </select>
                     </label>
                   )}
+                  {!humanSeat && <span className="wizard-hint-box">Entrarás como espectador. Podrás unirte luego desde la sala de espera.</span>}
                 </div>
 
                 <div className="create-seat-box ai-seat-box">
                   <div className="seat-box-header">
                     <span className="seat-title">🤖 {t('lobby','ai')}</span>
+                    {(() => {
+                      const effectiveMax = getEffectiveMaxPlayers(gameType, effectiveGameTypes, false)
+                      const maxPlayers = selectedGameTypeInfo?.maxPlayers ?? effectiveMax
+                      const maxAi = Math.max(0, maxPlayers - (humanSeat ? 1 : 0))
+                      const truncated = playerTypesSel.length > maxAi
+                      return truncated ? <span className="wizard-warn-badge">⚠️ Máx {maxAi} bots para {gameType}</span> : null
+                    })()}
                   </div>
                   <div className="field">
                     <span>{t('lobby','create_tab_multi')}</span>
@@ -906,7 +922,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
                   {playerTypesSel.includes('SIM') && (
                     <label>
-                      {t('decks','my_decks')}
+                      Mazo para bots SIM
                       <select
                         value={simDeck.name}
                         onChange={(e) =>
@@ -928,13 +944,17 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
           {activeTab === 'dev' && (
             <div className="create-tab-content">
+              <div className="wizard-step-heading">
+                <h3>🛠️ Dev / Test</h3>
+                <p>Solo visible en desarrollo. Opciones de test del motor.</p>
+              </div>
               <div className="dev-options-notice">
-                <span>⚠️ {t('common','settings')} — Dev</span>
+                <span>⚠️ Solo para pruebas locales — no afecta a beta.</span>
               </div>
 
               <div className="dev-demo-box">
-                <h4>{t('lobby','create_submit')}</h4>
-                <p>{t('lobby','create_header_subtitle')}</p>
+                <h4>Demo IA vs IA</h4>
+                <p>Crea una mesa SIM vs SIM y arranca la partida automáticamente para espectar.</p>
                 <button
                   type="button"
                   className="primary dev-demo-btn"
@@ -955,8 +975,6 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                         const data = res.data as { tableId?: string; TableId?: string } | undefined
                         const tableId = data?.tableId ?? data?.TableId
                         if (tableId) {
-                          // el servidor NO auto-arranca mesas IA vs IA: hay que
-                          // enviar startMatch antes de colgar el espectador
                           const started = await cmds.startMatch(tableId)
                           if (started.ok) {
                             await cmds.watchTable(tableId)
@@ -982,7 +1000,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 />
                 <div className="toggle-text-block">
                   <span className="toggle-title">🃏 {t('lobby','create_toggle_skip_shuffle')}</span>
-                  <span className="toggle-desc">{t('lobby','create_toggle_skip_shuffle')}</span>
+                  <span className="toggle-desc">No barajar (útil para tests deterministas).</span>
                 </div>
               </label>
 
@@ -994,14 +1012,13 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 />
                 <div className="toggle-text-block">
                   <span className="toggle-title">🎲 {t('lobby','create_toggle_skip_starting')}</span>
-                  <span className="toggle-desc">{t('lobby','create_toggle_skip_starting')}</span>
+                  <span className="toggle-desc">Salta la elección de quién empieza.</span>
                 </div>
               </label>
             </div>
           )}
         </div>
 
-        {/* Summary Strip */}
         <div className="create-table-summary-strip">
           <span className="summary-pill">{gameType}</span>
           <span className="summary-pill">{deckType}</span>
@@ -1018,13 +1035,28 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
         {error && <div className="error-box">⚠️ {tError(error)}</div>}
 
-        <div className="dialog-actions">
-          <button type="button" onClick={onClose} disabled={busy}>
-            {t('common','cancel')}
-          </button>
-          <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
-            {busy ? `${t('lobby','create_table_btn')}…` : isDraftLimited ? `${t('lobby','create_submit_draft')} 🃏` : `${t('lobby','create_table_btn')} 🚀`}
-          </button>
+        <div className="dialog-actions wizard-actions">
+          <div className="wizard-actions-left">
+            {!isFirstStep && (
+              <button type="button" onClick={goPrev} disabled={busy}>
+                ← Atrás
+              </button>
+            )}
+            <button type="button" onClick={onClose} disabled={busy}>
+              {t('common','cancel')}
+            </button>
+          </div>
+          <div className="wizard-actions-right">
+            {!isLastStep ? (
+              <button type="button" className="primary" onClick={goNext} disabled={busy}>
+                Siguiente →
+              </button>
+            ) : (
+              <button type="button" className="primary create-submit-btn" disabled={busy} onClick={create}>
+                {busy ? `${t('lobby','create_table_btn')}…` : isDraftLimited ? `${t('lobby','create_submit_draft')} 🃏` : `${t('lobby','create_table_btn')} 🚀`}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

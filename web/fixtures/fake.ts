@@ -118,6 +118,7 @@ export interface BaseScenarioOptions {
   tableName: string
   gameId: string
   gameView?: GameView
+  seats?: SeatView[]
   getGameView?: () => GameView
   selectMessage?: string
   onConnect?: (conn: FakeConn) => void
@@ -128,6 +129,9 @@ export interface BaseScenarioOptions {
   onSendPlayerInteger?: (conn: FakeConn, value: number, ctx: BaseScenarioActionContext) => void
   onSendPlayerString?: (conn: FakeConn, value: string, ctx: BaseScenarioActionContext) => void
   onExtra?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
+  /** Informe que devuelve la acción `validateDeck` (pre-validación de mazos).
+   *  Si no se define, la respuesta es un mazo válido sin problemas. */
+  onValidateDeck?: (deck?: { name?: string; cards?: unknown[]; sideboard?: unknown[] }) => import('../src/net/types').DeckValidationResult
 }
 
 const argString = (args: Record<string, unknown>, ...keys: string[]): string => {
@@ -140,7 +144,7 @@ const argString = (args: Record<string, unknown>, ...keys: string[]): string => 
 }
 
 export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
-  const table = makeTable({ tableId: opts.tableId, tableName: opts.tableName, gameId: opts.gameId })
+  const table = makeTable({ tableId: opts.tableId, tableName: opts.tableName, gameId: opts.gameId, seats: opts.seats })
   const getGv = opts.getGameView ?? (() => opts.gameView as GameView)
   const selectMessage = opts.selectMessage ?? 'Main 1: Cast spells or activate abilities'
   let activeConn: FakeConn | null = null
@@ -217,6 +221,11 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           conn.ok(requestId, action, {})
           if (opts.onSendPlayerString) opts.onSendPlayerString(conn, argString(args, 'value'), ctx())
           else conn.broadcast('GAME_UPDATE', { gameView: gv() }, opts.gameId)
+          return
+        }
+        case 'validateDeck': {
+          const deck = args.deck as { name?: string; cards?: unknown[]; sideboard?: unknown[] } | undefined
+          conn.ok(requestId, action, opts.onValidateDeck?.(deck) ?? { ready: true, missing: [], mismatches: [] })
           return
         }
         default:

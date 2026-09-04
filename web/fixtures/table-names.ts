@@ -43,4 +43,5 @@ export const TABLE = {
   thoughtseize: 'thoughtseize-test',
   voting: 'voting-test',
   planeswalker: 'planeswalker-test',
+  deckIssues: 'deck-issues-test',
 } as const

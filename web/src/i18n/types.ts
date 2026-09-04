@@ -872,6 +872,19 @@ export interface TranslationSchema {
     import_formats: string
     import_recognized: string
     import_waiting: string
+    issues_title: string
+    issues_intro: string
+    issues_missing_section: string
+    issues_mismatch_section: string
+    issues_reason_unimplemented: string
+    issues_reason_outdated: string
+    issues_mismatch_resolved: string
+    issues_use_suggestion: string
+    issues_remove_and_play: string
+    issues_cancel: string
+    issues_validating: string
+    unimplemented_badge: string
+    mismatch_badge: string
     avg_cmc: string
     strip_click_hint: string
     strip_move_to_main: string
@@ -928,6 +941,7 @@ export interface TranslationSchema {
     invalid_deck: string
     invalid_deck_type: string
     invalid_game_type: string
+    card_not_found: string
   }
   board: {
     zone_hand: string

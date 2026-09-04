@@ -87,6 +87,11 @@ public class SimPlayer implements MageClient {
         return username;
     }
 
+    /** Último error de la sesión del bot (para diagnosticar fallos de join). */
+    public String getLastJoinError() {
+        return session.getLastError();
+    }
+
     /** Conecta y se une a la mesa del asiento SIM (bloquea hasta el join o timeout). */
     public boolean startAndJoin(UUID roomId, UUID tableId) {
         this.roomId = roomId;

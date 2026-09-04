@@ -142,8 +142,18 @@ describe('handleMessage', () => {
   })
 
   it('result with ok:false sets the error', () => {
+    handleMessage({ type: 'result', action: 'someAction', ok: false, error: 'table full' })
+    expect(getState().error).toBe('La mesa ya está completa')
+  })
+
+  it('result with ok:false for delegated join actions with FAILED generic does not set global error', () => {
+    handleMessage({ type: 'result', action: 'joinTable', ok: false, error: 'FAILED' })
+    expect(getState().error).toBeNull()
+  })
+
+  it('result with ok:false for delegated join actions with detail still sets global error', () => {
     handleMessage({ type: 'result', action: 'joinTable', ok: false, error: 'table full' })
-    expect(getState().error).toBe('table full')
+    expect(getState().error).toBe('La mesa ya está completa')
   })
 
   it('result with ok:true does not set an error', () => {

@@ -34,12 +34,38 @@ function getRingLevels(t: (c: any, k: any) => string) {
   ]
 }
 
-function getDungeonRooms(name: string, t: (c: any, k: any) => string): string[] | null {
+type DungeonRoomDef = { keys: string[]; label: string }
+
+function getDungeonRooms(name: string, t: (c: any, k: any) => string): DungeonRoomDef[] | null {
   const key = name.toLowerCase()
-  if (key.includes('undercity')) return [t('game', 'dungeon_undercity_1'), t('game', 'dungeon_undercity_2'), t('game', 'dungeon_undercity_3'), t('game', 'dungeon_undercity_4'), t('game', 'dungeon_undercity_5')]
-  if (key.includes('dungeon of the mad mage')) return [t('game', 'dungeon_mad_mage_1'), t('game', 'dungeon_mad_mage_2'), t('game', 'dungeon_mad_mage_3'), t('game', 'dungeon_mad_mage_4'), t('game', 'dungeon_mad_mage_5'), t('game', 'dungeon_mad_mage_6'), t('game', 'dungeon_mad_mage_7')]
-  if (key.includes('lost mine of phandelver')) return [t('game', 'dungeon_phandelver_1'), t('game', 'dungeon_phandelver_2'), t('game', 'dungeon_phandelver_3'), t('game', 'dungeon_phandelver_4')]
-  if (key.includes('tomb of annihilation')) return [t('game', 'dungeon_annihilation_1'), t('game', 'dungeon_annihilation_2'), t('game', 'dungeon_annihilation_3'), t('game', 'dungeon_annihilation_4')]
+  if (key.includes('undercity')) return [
+    { keys: ['secret entrance'], label: t('game', 'dungeon_undercity_1') },
+    { keys: ['forge', 'lost well'], label: t('game', 'dungeon_undercity_2') },
+    { keys: ['trap!', 'arena'], label: t('game', 'dungeon_undercity_3') },
+    { keys: ['stash', 'archives'], label: t('game', 'dungeon_undercity_4') },
+    { keys: ['catacombs', 'throne of the dead three'], label: t('game', 'dungeon_undercity_5') },
+  ]
+  if (key.includes('dungeon of the mad mage')) return [
+    { keys: ['yawning portal'], label: t('game', 'dungeon_mad_mage_1') },
+    { keys: ['dungeon level'], label: t('game', 'dungeon_mad_mage_2') },
+    { keys: ['goblin bazaar'], label: t('game', 'dungeon_mad_mage_3') },
+    { keys: ['twisted caverns'], label: t('game', 'dungeon_mad_mage_4') },
+    { keys: ['lost level'], label: t('game', 'dungeon_mad_mage_5') },
+    { keys: ['runestone caverns'], label: t('game', 'dungeon_mad_mage_6') },
+    { keys: ["mad wizard's lair"], label: t('game', 'dungeon_mad_mage_7') },
+  ]
+  if (key.includes('lost mine of phandelver')) return [
+    { keys: ['cave entrance'], label: t('game', 'dungeon_phandelver_1') },
+    { keys: ['goblin lair', 'mine tunnels'], label: t('game', 'dungeon_phandelver_2') },
+    { keys: ['storeroom', 'dark pool', 'fungi cavern'], label: t('game', 'dungeon_phandelver_3') },
+    { keys: ['temple of dumathoin'], label: t('game', 'dungeon_phandelver_4') },
+  ]
+  if (key.includes('tomb of annihilation')) return [
+    { keys: ['trapped entry'], label: t('game', 'dungeon_annihilation_1') },
+    { keys: ['veils of fear'], label: t('game', 'dungeon_annihilation_2') },
+    { keys: ['oubliette', 'sandfall cell'], label: t('game', 'dungeon_annihilation_3') },
+    { keys: ['cradle of the death god'], label: t('game', 'dungeon_annihilation_4') },
+  ]
   return null
 }
 
@@ -282,12 +308,15 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
 
             <div className="dungeon-rooms-flow">
               {(getDungeonRooms(myDungeon.name, t) ?? [
-                t('game', 'dungeon_fallback_1'),
-                t('game', 'dungeon_fallback_2'),
-                t('game', 'dungeon_fallback_3'),
+                { keys: [], label: t('game', 'dungeon_fallback_1') },
+                { keys: [], label: t('game', 'dungeon_fallback_2') },
+                { keys: [], label: t('game', 'dungeon_fallback_3') },
               ]).map((room, idx) => {
-                const isCurrentRoom = myDungeon.currentRoom
-                  ? room.toLowerCase().includes(myDungeon.currentRoom.toLowerCase())
+                // currentRoom llega en inglés canónico del servidor ("Forge");
+                // compararlo contra las etiquetas traducidas rompía el marcador 📍
+                const current = (myDungeon.currentRoom ?? '').toLowerCase()
+                const isCurrentRoom = current
+                  ? room.keys.some((k) => current.includes(k))
                   : idx === 0
                 return (
                   <div
@@ -295,7 +324,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                     className={`dungeon-room-node ${isCurrentRoom ? 'active-room' : ''}`}
                   >
                     <span className="room-step">#{idx + 1}</span>
-                    <span className="room-name">{room}</span>
+                    <span className="room-name">{room.label}</span>
                     {isCurrentRoom && <span className="current-marker">📍 {t('game', 'mechanics_dungeon_active')}</span>}
                   </div>
                 )

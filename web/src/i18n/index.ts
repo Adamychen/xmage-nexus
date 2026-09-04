@@ -179,8 +179,9 @@ export function t(
 
 /**
  * Automatically translates known backend/gateway error phrases or keys to the active language.
+ * @param action - originating gateway action (joinTable, createTable, etc) to pick the right FAILED fallback
  */
-export function translateError(error: string | null | undefined): string {
+export function translateError(error: string | null | undefined, action?: string): string {
   if (!error) return ''
   const str = String(error).trim()
   const lower = str.toLowerCase()
@@ -218,17 +219,26 @@ export function translateError(error: string | null | undefined): string {
   if (lower.includes('no se pudo leer el archivo') || lower.includes('could not read')) {
     return t('errors.deck_read_failed')
   }
+  if (lower.includes('card not found') || str === 'CARD_NOT_FOUND') {
+    return t('errors.card_not_found')
+  }
+  const isJoin = action === 'joinTable' || action === 'joinTournamentTable'
+  const isCreate = action === 'createTable' || action === 'createTournamentTable'
+  const joinFailed = t('errors.join_table_failed')
+  const createFailed = t('errors.create_table_failed')
+  const prefixFor = (detail: string) => `${(isJoin ? joinFailed : isCreate ? createFailed : createFailed)}: ${detail}`
+
   if (lower.includes('quit ratio') || str === 'QUIT_RATIO' || lower.includes('quit_ratio')) {
-    return lower.includes('quit ratio') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.quit_ratio')
+    return lower.includes('quit ratio') ? prefixFor(str) : t('errors.quit_ratio')
   }
   if (lower.includes('minimum rating') || lower.includes('rating') && lower.includes('lower than') || str === 'RATING') {
-    return lower.includes('rating') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.rating_too_low')
+    return lower.includes('rating') ? prefixFor(str) : t('errors.rating_too_low')
   }
   if (lower.includes('not started tables') || lower.includes('too much') && lower.includes('started') || str === 'TABLE_LIMIT') {
-    return lower.includes('not started') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.table_limit')
+    return lower.includes('not started') ? prefixFor(str) : t('errors.table_limit')
   }
   if (lower.includes('invalid deck') || lower.includes('no valid deck') || lower.includes('deck is not valid') || lower.includes('must contain') || lower.includes('too few cards') || lower.includes('deckvalidator') || str === 'INVALID_DECK' || lower.includes('cantidad') && lower.includes('mazo')) {
-    return lower.includes('invalid deck') || lower.includes('no valid deck') ? `${t('errors.create_table_failed')}: ${str}` : t('errors.invalid_deck')
+    return lower.includes('invalid deck') || lower.includes('no valid deck') ? prefixFor(str) : t('errors.invalid_deck')
   }
   if (lower.includes('wrong password') || lower.includes('invalid password') || str === 'PASSWORD') {
     return t('errors.invalid_password')
@@ -243,6 +253,9 @@ export function translateError(error: string | null | undefined): string {
     return `${t('errors.create_table_failed')}: ${t('errors.invalid_game_type')}`
   }
   if (str === 'FAILED' || lower === 'failed') {
+    if (action === 'joinTable' || action === 'joinTournamentTable') return t('errors.join_table_failed')
+    if (action === 'watchTable' || action === 'watchTournamentTable') return t('errors.table_not_found')
+    if (action === 'startMatch') return t('errors.start_game_failed')
     return t('errors.create_table_failed')
   }
 
@@ -269,8 +282,8 @@ export function useTranslation() {
     return t(pathOrCat, keyOrParams, params)
   }, [])
 
-  const errorTranslator = useCallback((err: string | null | undefined) => {
-    return translateError(err)
+  const errorTranslator = useCallback((err: string | null | undefined, action?: string) => {
+    return translateError(err, action)
   }, [])
 
   return {

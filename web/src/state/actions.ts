@@ -2,7 +2,8 @@ import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
-import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings } from './persistence'
+import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings, applyAppearanceToDocument } from './persistence'
+import { getLanguage } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import type { AppState } from './state'
 
@@ -166,10 +167,11 @@ export function returnToLobby() {
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   setState({ settings: { ...getState().settings, [key]: value } })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, uiScale, cjkBoost } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout })
+  saveAppearanceSettings({ sleeveId, boardLayout, uiScale, cjkBoost })
+  try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
 }
 

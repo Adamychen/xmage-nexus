@@ -21,9 +21,30 @@
   --card-w: clamp(112px, 8.5vw, 142px);
   --card-aspect: 0.714;
   --fx-speed: 1;
+  --ui-scale: 1;
+  --cjk-boost: 1;
 
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
+
+html { font-size: calc(16px * var(--ui-scale) * var(--cjk-boost)); }
+
+:root:lang(ja) {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', system-ui, sans-serif;
+}
+:root:lang(zh) {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+}
+
+html:lang(ja) body, html:lang(zh) body {
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+}
+
+html[data-ui-scale="0.9"] { --ui-scale: 0.9; }
+html[data-ui-scale="1.15"] { --ui-scale: 1.15; }
+html[data-ui-scale="1.3"] { --ui-scale: 1.3; }
+html[data-ui-scale="1.5"] { --ui-scale: 1.5; }
 
 * { box-sizing: border-box; }
 

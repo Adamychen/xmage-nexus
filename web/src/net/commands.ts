@@ -148,6 +148,16 @@ export async function updateDeck(tableId: string, deck: DeckJson) {
   return getGateway().send('updateDeck', { tableId, deck })
 }
 
+/**
+ * Pre-validación de un mazo contra la BD de cartas del proxy (misma release que
+ * el servidor objetivo, semántica idéntica al servidor oficial: findCard estricto
+ * por set+número). Advisory: si ready=false no bloquea el flujo.
+ */
+export async function validateDeck(deck: DeckJson): Promise<import('./types').DeckValidationResult | null> {
+  const res = await getGateway().send<import('./types').DeckValidationResult>('validateDeck', { deck })
+  return res.ok ? (res.data ?? null) : null
+}
+
 export interface PhaseStops {
   yourTurn: Record<string, boolean>
   opponentTurn: Record<string, boolean>
