@@ -4,6 +4,7 @@ import type { CardView } from '../net/types'
 import { useStore } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
+import Modal from '../ui/Modal'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { useTranslation } from '../i18n'
@@ -71,8 +72,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   if (isLondon) {
     const handleCardClick = prompt.max > 1 ? toggle : pickOne
     return (
-      <div className="mulligan-backdrop" role="presentation">
-        <section className="mulligan-dialog mulligan-london" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
+      <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog mulligan-london" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
           <div className="mulligan-kicker">
             <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_london_title')}
           </div>
@@ -115,15 +115,12 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
               <button disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</button>
             )}
           </div>
-        </section>
-        <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />
-      </div>
+      </Modal>
     )
   }
 
   return (
-    <div className="mulligan-backdrop" role="presentation">
-      <section className="mulligan-dialog" role="dialog" aria-modal="true" aria-labelledby="mulligan-title">
+    <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
         <div className="mulligan-kicker">
           <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_decision_title')}
         </div>
@@ -153,8 +150,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             🔄 {t('dialogs', 'mulligan_btn')}
           </button>
         </div>
-      </section>
-      <FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />
-    </div>
+    </Modal>
   )
 }

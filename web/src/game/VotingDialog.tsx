@@ -1,6 +1,7 @@
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
+import Modal from '../ui/Modal'
 import { useTranslation } from '../i18n'
 import './VotingDialog.css'
 
@@ -26,8 +27,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
   const stepMatch = /step\s+(\d+)\s+of\s+(\d+)/i.exec(prompt.message)
 
   return (
-    <div className="voting-backdrop" role="presentation">
-      <section className="voting-dialog" role="dialog" aria-modal="true" aria-labelledby="voting-title">
+    <Modal backdropClassName="voting-backdrop" dialogClassName="voting-dialog" labelledBy="voting-title">
         <div className="voting-kicker">🗳️ {t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
         <h2 id="voting-title"><FormattedText text={prompt.title} /></h2>
         <p className="voting-msg"><FormattedText text={prompt.message} /></p>
@@ -61,7 +61,6 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
           </div>
         )}
         <div className="voting-hint">{t('dialogs', 'voting_hint')}</div>
-      </section>
-    </div>
+    </Modal>
   )
 }

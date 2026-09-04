@@ -10,7 +10,7 @@ import { computeServerStateSchema } from '../../../scripts/server-state-schema.m
 
 const here = dirname(fileURLToPath(import.meta.url))
 const SCHEMA_PATH = resolve(here, '../../fixtures/server-state-schema.json')
-const CREATE_DIALOG_PATH = resolve(here, '../lobby/CreateTableDialog.tsx')
+const CREATE_DIALOG_PATH = resolve(here, '../lobby/CreateTable/constants.ts')
 const FAKE_PATH = resolve(here, '../../fixtures/fake.ts')
 
 function loadSchema() {
@@ -115,19 +115,19 @@ describe('serverState coverage — drift guard for createTable formats', () => {
   it('DEFAULT_GAME_TYPES contains only valid server gameTypes (no stale names)', () => {
     const defaults = extractDefaultGameTypes()
     const invalid = defaults.filter((n) => !oracleGameNames.has(n))
-    expect(invalid, `DEFAULT_GAME_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+    expect(invalid, `DEFAULT_GAME_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTable/constants.ts`).toEqual([])
   })
 
   it('DEFAULT_DECK_TYPES contains only valid server deckTypes (no stale names)', () => {
     const defaults = extractDefaultDeckTypes()
     const invalid = defaults.filter((n) => !oracleDeckSet.has(n))
-    expect(invalid, `DEFAULT_DECK_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+    expect(invalid, `DEFAULT_DECK_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTable/constants.ts`).toEqual([])
   })
 
   it('DEFAULT_GAME_TYPES covers all server gameTypes (exhaustive fallback for offline)', () => {
     const defaults = new Set(extractDefaultGameTypes())
     const missing = [...oracleGameNames].filter((n) => !defaults.has(n as string))
-    expect(missing, `DEFAULT_GAME_TYPES missing ${missing.length} server gameTypes (offline fallback incomplete): ${missing.join(', ')} — add them to CreateTableDialog.tsx DEFAULT_GAME_TYPES from server-state-schema.json`).toEqual([])
+    expect(missing, `DEFAULT_GAME_TYPES missing ${missing.length} server gameTypes (offline fallback incomplete): ${missing.join(', ')} — add them to CreateTable/constants.ts DEFAULT_GAME_TYPES from server-state-schema.json`).toEqual([])
   })
 
   it('DEFAULT_DECK_TYPES covers all server deckTypes (exhaustive fallback for offline)', () => {
@@ -151,24 +151,24 @@ describe('serverState coverage — drift guard for createTable formats', () => {
   it('DEFAULT_TOURNAMENT_TYPES contains only valid server tournamentTypes (no stale names)', () => {
     const defaults = extractDefaultTournamentTypes()
     const invalid = defaults.filter((n) => !oracleTournamentSet.has(n))
-    expect(invalid, `DEFAULT_TOURNAMENT_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+    expect(invalid, `DEFAULT_TOURNAMENT_TYPES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTable/constants.ts`).toEqual([])
   })
 
   it('DEFAULT_TOURNAMENT_TYPES covers all server tournamentTypes (exhaustive fallback for offline)', () => {
     const defaults = new Set(extractDefaultTournamentTypes())
     const missing = [...oracleTournamentSet].filter((n) => !defaults.has(n as string))
-    expect(missing, `DEFAULT_TOURNAMENT_TYPES missing ${missing.length} server tournamentTypes: ${missing.join(', ')} — add them to CreateTableDialog.tsx DEFAULT_TOURNAMENT_TYPES from server-state-schema.json`).toEqual([])
+    expect(missing, `DEFAULT_TOURNAMENT_TYPES missing ${missing.length} server tournamentTypes: ${missing.join(', ')} — add them to CreateTable/constants.ts DEFAULT_TOURNAMENT_TYPES from server-state-schema.json`).toEqual([])
   })
 
   it('DEFAULT_DRAFT_CUBES contains only valid server draftCubes (no stale names)', () => {
     const defaults = extractDefaultDraftCubes()
     const invalid = defaults.filter((n) => !oracleCubeSet.has(n))
-    expect(invalid, `DEFAULT_DRAFT_CUBES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTableDialog.tsx`).toEqual([])
+    expect(invalid, `DEFAULT_DRAFT_CUBES has stale/invalid entries not in server oracle: ${invalid.join(', ')} — run node scripts/server-state-schema.mjs and update CreateTable/constants.ts`).toEqual([])
   })
 
   it('DEFAULT_DRAFT_CUBES covers all server draftCubes (exhaustive fallback for offline)', () => {
     const defaults = new Set(extractDefaultDraftCubes())
     const missing = [...oracleCubeSet].filter((n) => !defaults.has(n as string))
-    expect(missing, `DEFAULT_DRAFT_CUBES missing ${missing.length} server draftCubes: ${missing.join(', ')} — add them to CreateTableDialog.tsx DEFAULT_DRAFT_CUBES from server-state-schema.json`).toEqual([])
+    expect(missing, `DEFAULT_DRAFT_CUBES missing ${missing.length} server draftCubes: ${missing.join(', ')} — add them to CreateTable/constants.ts DEFAULT_DRAFT_CUBES from server-state-schema.json`).toEqual([])
   })
 })

@@ -117,15 +117,15 @@ public class Gateway extends WebSocketServer {
                 requestId = cmd.get("requestId").getAsString();
             }
         } catch (Exception ex) {
-            conn.send(ProxyClient.resultJson("", "", false, ProxyClient.ERR_BAD_JSON, "Bad JSON"));
+            conn.send(ProxyProtocol.resultJson("", "", false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON"));
             return;
         }
         if ("connect".equals(action)) {
             handleConnect(conn, message);
         } else if ("ping".equals(action)) {
-            conn.send(ProxyClient.resultJson("ping", requestId, true, null, "pong"));
+            conn.send(ProxyProtocol.resultJson("ping", requestId, true, null, "pong"));
         } else {
-            conn.send(ProxyClient.resultJson(action, requestId, false, ProxyClient.ERR_NOT_AUTHORIZED, "send connect first"));
+            conn.send(ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_NOT_AUTHORIZED, "send connect first"));
         }
     }
 
@@ -161,7 +161,7 @@ public class Gateway extends WebSocketServer {
             port = args.has("port") ? args.get("port").getAsInt() : config.getServerPort();
             username = args.has("username") ? args.get("username").getAsString() : config.getUsername();
         } catch (Exception ex) {
-            conn.send(ProxyClient.resultJson("connect", requestId, false, ProxyClient.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
+            conn.send(ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
             return;
         }
         String key = host + "|" + username;

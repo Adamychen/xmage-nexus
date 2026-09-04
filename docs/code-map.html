@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>code-map</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="code-map_files/libs/clipboard/clipboard.min.js"></script>
+<script src="code-map_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="code-map_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="code-map_files/libs/quarto-html/popper.min.js"></script>
+<script src="code-map_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="code-map_files/libs/quarto-html/anchor.min.js"></script>
+<link href="code-map_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="code-map_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="code-map_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="code-map_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="code-map_files/libs/bootstrap/bootstrap-917079515d91bccb85b543faf8aa8bb6.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="code-map-where-things-live-verified-2026-09-05" class="level1">
+<h1>Code map — where things live (verified 2026-09-05)</h1>
+<p>Line counts below are <code>wc -l</code> output. Section ranges for <code>ProxyClient.java</code> are approximate guides, not a contract.</p>
+<section id="websrc-368-files-158-tsx-118-ts-92-css" class="level2">
+<h2 class="anchored" data-anchor-id="websrc-368-files-158-tsx-118-ts-92-css"><code>web/src</code> — 368 files (158 tsx + 118 ts + 92 css)</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Folder</th>
+<th>Files</th>
+<th>What lives here</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>board/</code></td>
+<td>79 (21 css)</td>
+<td>Battlefield rendering: <code>BoardZone</code> (shared zone layout), <code>PlayerZone</code>/<code>OpponentZone</code> (thin wrappers, do not merge), <code>GameBoard</code>/<code>PodBoard</code>/<code>ArenaBoard</code>/<code>TwoHeadedBoard</code>, <code>CardSlot</code>, <code>HandBar</code>, overlays (<code>Targeting</code>, <code>CombatArrows</code>, <code>FlyingCard</code>), sizing/scale hooks, <code>sceneBridge</code> (publishes <code>window.__mageScene</code> for E2E)</td>
+</tr>
+<tr class="even">
+<td><code>game/</code></td>
+<td>96 (32 css)</td>
+<td>Match flow: <code>GameScreen</code> (layout router), <code>FeedbackDialog</code> (prompt router), <code>feedback.ts</code> (prompt parsing), <code>PhaseBar</code>, <code>StackZone</code>, <code>ActionFeed</code>, <code>SideboardScreen</code>, <code>DraftScreen</code>/<code>ConstructScreen</code>, dialogs (Mulligan, Voting, Planeswalker, LibraryOrder, Rollback)</td>
+</tr>
+<tr class="odd">
+<td><code>lobby/</code></td>
+<td>62 (19 css)</td>
+<td><code>LoginScreen</code>, <code>LobbyScreen</code>, <code>CreateTableDialog</code> (wizard), <code>JoinTableDialog</code>, staging (<code>SpectatorStagingScreen</code>), chat, decks gallery/manager, tournament bracket, leaderboard</td>
+</tr>
+<tr class="even">
+<td><code>decks/</code></td>
+<td>60 (16 css)</td>
+<td><code>DeckBuilder</code>, search/list panels, Scryfall integration, import/export (Plain/DCK/Arena), curve chart, validation issues</td>
+</tr>
+<tr class="odd">
+<td><code>state/</code></td>
+<td>18</td>
+<td><code>state.ts</code> (<code>AppState</code>), <code>store.ts</code> (facade + <code>__mageStore</code>), <code>actions.ts</code>, <code>selectors.ts</code>, <code>persistence.ts</code>, <code>gateway.ts</code>, <code>eventHandler.ts</code> (server-event router), <code>gameUtils.ts</code>, coverage guards</td>
+</tr>
+<tr class="even">
+<td><code>net/</code></td>
+<td>6</td>
+<td><code>types.ts</code> (protocol truth: envelopes + <code>EVENT_METHODS</code>), <code>types.generated.ts</code> (generated, do not hand-edit), <code>Gateway.ts</code> (WS + reconnect), <code>commands.ts</code> (action wrappers)</td>
+</tr>
+<tr class="odd">
+<td><code>i18n/</code></td>
+<td>16</td>
+<td><code>types.ts</code> (TranslationSchema, master), <code>index.ts</code>, 9 locales (~980 lines each), <code>LanguageSelector</code></td>
+</tr>
+<tr class="even">
+<td><code>cards/</code></td>
+<td>4</td>
+<td><code>cardImages.ts</code> (Scryfall resolution + cache), <code>cardLocalization.ts</code></td>
+</tr>
+<tr class="odd">
+<td><code>audio/</code></td>
+<td>5</td>
+<td><code>soundManager</code>, <code>soundSynthesizer</code>, <code>gameSoundDispatcher</code></td>
+</tr>
+<tr class="even">
+<td><code>data/</code></td>
+<td>3</td>
+<td><code>mtgKeywords.ts</code> (2951, generated via <code>scripts/extract-keywords.mjs</code>), extractor</td>
+</tr>
+<tr class="odd">
+<td><code>appearance/</code></td>
+<td>5</td>
+<td>Playmat/sleeve settings + modals</td>
+</tr>
+<tr class="even">
+<td><code>services/</code></td>
+<td>2</td>
+<td>Image downloader/cache</td>
+</tr>
+<tr class="odd">
+<td><code>ui/</code></td>
+<td>3</td>
+<td><code>Icon</code>, <code>ErrorBoundary</code></td>
+</tr>
+<tr class="even">
+<td><code>utils/</code></td>
+<td>4</td>
+<td>Timer, fullscreen</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="biggest-files-first-refactor-queue-incremental-only" class="level2">
+<h2 class="anchored" data-anchor-id="biggest-files-first-refactor-queue-incremental-only">Biggest files first (refactor queue, incremental only)</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lines</th>
+<th>File</th>
+<th>Responsibility</th>
+<th>Plan ref</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1484</td>
+<td><code>Mage.Proxy/.../ProxyClient.java</code></td>
+<td>Session bridge, action switch, callback forwarding</td>
+<td>R7: extract <code>ClientActionRouter</code>, <code>CallbackForwarder</code>, <code>MatchOptionsParser</code> (package-private, no protocol change)</td>
+</tr>
+<tr class="even">
+<td>1400</td>
+<td><code>web/src/lobby/CreateTableDialog.tsx</code></td>
+<td>Create-table wizard (5 tabs, timing/buffer consts, deck compat, validation)</td>
+<td>R1: split into <code>CreateTable/{constants,hooks,General,Timing,Security,Seats}</code></td>
+</tr>
+<tr class="odd">
+<td>1160</td>
+<td><code>web/src/lobby/LobbyScreen.tsx</code></td>
+<td>Lobby page + controller (tables, chat, filters, tournaments, staging)</td>
+<td>R6: extract <code>useLobbyFilters</code> + panels, keep page shell</td>
+</tr>
+<tr class="even">
+<td>1040</td>
+<td><code>web/src/decks/DeckBuilder.tsx</code></td>
+<td>Deck editor + data-fetch + validation in one file</td>
+<td>R6: extract <code>useDeckValidation</code> + panels</td>
+</tr>
+<tr class="odd">
+<td>577</td>
+<td><code>web/src/game/FeedbackDialog.tsx</code></td>
+<td>Prompt router (8 modes + sub-dialogs)</td>
+<td>R3: thin router, move branches to sub-dialogs</td>
+</tr>
+<tr class="even">
+<td>542</td>
+<td><code>web/src/game/SideboardScreen.tsx</code></td>
+<td>Bo3 sideboarding</td>
+<td>— (stable, no split planned)</td>
+</tr>
+<tr class="odd">
+<td>516</td>
+<td><code>web/src/state/eventHandler.ts</code></td>
+<td>Server-event router (~30 cases)</td>
+<td>R4: extract per-domain handlers, keep <code>handleEvent</code> as router</td>
+</tr>
+<tr class="even">
+<td>507</td>
+<td><code>web/src/game/feedback.ts</code></td>
+<td>Prompt parsing + <code>FeedbackPrompt</code> model</td>
+<td>R3: pure parsers (no <code>tStatic</code>) + localized labels</td>
+</tr>
+<tr class="odd">
+<td>484</td>
+<td><code>web/src/board/BoardZone.tsx</code></td>
+<td>Shared zone layout (20 optional props, 4 board callers)</td>
+<td>— (do not split; reduce props only opportunistically)</td>
+</tr>
+<tr class="even">
+<td>479</td>
+<td><code>web/src/game/GameScreen.tsx</code></td>
+<td>Match layout router + WS handlers + targeting/combat</td>
+<td>— (thin only when touching it)</td>
+</tr>
+<tr class="odd">
+<td>200</td>
+<td><code>web/src/state/state.ts</code></td>
+<td><code>AppState</code> (~25 cross-domain fields)</td>
+<td>R5: internal slices, keep <code>setState</code> API + <code>store.ts</code> facade</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-cutting: 21 <code>*Dialog|*Modal</code> total 5657 lines with no shared base → R2: new <code>ui/Modal.tsx</code> (overlay/focus/busy/error), migrate Mulligan + Voting first. <code>board/</code> ↔︎ <code>game/</code> imports form a logical cycle (zones import game widgets and vice versa) → do not fix by moving folders in the incremental track; keep <code>features/</code> restructuring out of scope.</p>
+</section>
+<section id="mage.proxysrcmain-8-files-3331-lines" class="level2">
+<h2 class="anchored" data-anchor-id="mage.proxysrcmain-8-files-3331-lines"><code>Mage.Proxy/src/main</code> — 8 files, 3331 lines</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lines</th>
+<th>File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1484</td>
+<td><code>ProxyClient.java</code></td>
+<td><code>MageClient</code> bridge: action dispatch (<code>connect/joinChat/createTable/joinTable/.../sendPlayer*</code>), callback forwarding (<code>{type:event,method,messageId,objectId,data}</code>), lobby timer, SIM map, <code>validateDeck</code> path</td>
+</tr>
+<tr class="even">
+<td>608</td>
+<td><code>SimPlayer.java</code></td>
+<td>Deterministic test bot (land/turn, first payable cast, all-attack/all-block, keep, pass)</td>
+</tr>
+<tr class="odd">
+<td>385</td>
+<td><code>DeckValidation.java</code></td>
+<td>Advisory pre-validation (<code>validateDeck</code>: <code>ready/missing/mismatches/fixedDeck/suggestions</code>), background card-DB build</td>
+</tr>
+<tr class="even">
+<td>247</td>
+<td><code>Gateway.java</code></td>
+<td>WS transport: <code>byConn</code>/<code>byAccount</code>, origin check, rate limit, pre-auth <code>connect/ping</code> only</td>
+</tr>
+<tr class="odd">
+<td>233</td>
+<td><code>JsonUtil.java</code></td>
+<td>Reflection serializer (camelCase 1:1, skips null/static/transient/logger/Class/Throwable, UUID/Enum→string, Date→epoch)</td>
+</tr>
+<tr class="even">
+<td>165</td>
+<td><code>Main.java</code></td>
+<td>Entrypoint: WS + HTTP test page, anti-traversal</td>
+</tr>
+<tr class="odd">
+<td>120</td>
+<td><code>Config.java</code></td>
+<td>CLI flags; defaults <code>beta.xmage.today:17171</code>, WS 8787 / HTTP 8788 / bind 127.0.0.1</td>
+</tr>
+<tr class="even">
+<td>89</td>
+<td><code>DeckJson.java</code></td>
+<td>Deck JSON → <code>DeckCardLists</code> + promo/set normalization</td>
+</tr>
+</tbody>
+</table>
+<p>Tests: <code>src/test</code> (8 files) — <code>DeckValidationTest</code>, <code>GatewayProtocolIntegrationTest</code>, <code>SimPlayerTest</code>, <code>JsonUtilTest</code>, <code>ConfigTest</code>, <code>ProtocolTest</code>, <code>MainSecurityTest</code>, <code>GatewaySecurityTest</code>.</p>
+</section>
+<section id="scripts-24-files-4975-lines" class="level2">
+<h2 class="anchored" data-anchor-id="scripts-24-files-4975-lines"><code>scripts/</code> — 24 files, 4975 lines</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Lines</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lib.mjs</code></td>
+<td>405</td>
+<td>Shared base: repo root, <code>.run/</code>, ports, daemon/pid/port helpers, server classpath, plugin copy</td>
+</tr>
+<tr class="even">
+<td><code>dev.mjs</code></td>
+<td>148</td>
+<td>Real logic: <code>start/stop/status/restart [server/proxy/vite/all]</code> (blocking diagnostics)</td>
+</tr>
+<tr class="odd">
+<td><code>ctl.mjs</code></td>
+<td>45</td>
+<td>Thin wrapper: spawns <code>dev.mjs</code> detached, non-blocking</td>
+</tr>
+<tr class="even">
+<td><code>tail.mjs</code></td>
+<td>31</td>
+<td>Log reader: <code>tail [server/proxy/vite/all] [n]</code></td>
+</tr>
+<tr class="odd">
+<td><code>build.mjs</code></td>
+<td>46</td>
+<td><code>proxy</code>-only vs full (base + plugins + copy to <code>local-server/plugins/</code> + package; stops proxy first)</td>
+</tr>
+<tr class="even">
+<td><code>install.mjs</code></td>
+<td>52</td>
+<td>Deps + jars from scratch (no start, no package)</td>
+</tr>
+<tr class="odd">
+<td><code>test.mjs</code></td>
+<td>212</td>
+<td>9 layers: <code>unit/coverage/typecheck/build/java/self-test/human-test/e2e/i18n</code> + <code>--skip=</code></td>
+</tr>
+<tr class="even">
+<td><code>human-test.mjs</code></td>
+<td>1014</td>
+<td>Full human-vs-AI match driver (mulligan → spells → targets)</td>
+</tr>
+<tr class="odd">
+<td><code>self-test.mjs</code></td>
+<td>284</td>
+<td>Headless proxy check (login → AI table → spectator)</td>
+</tr>
+<tr class="even">
+<td><code>warmup.mjs</code></td>
+<td>201</td>
+<td>Throwaway game vs cold-start <code>SESSION CALLBACK EXCEPTION</code> flake</td>
+</tr>
+<tr class="odd">
+<td><code>clean-tables.mjs</code></td>
+<td>97</td>
+<td>Purge orphan tables (<code>maxGameThreads=10</code>)</td>
+</tr>
+<tr class="even">
+<td><code>multi-tenant-test.mjs</code></td>
+<td>129</td>
+<td>Cross-account isolation + same-account attach</td>
+</tr>
+<tr class="odd">
+<td><code>rec-lib.mjs</code> / <code>record.mjs</code></td>
+<td>435 / 255</td>
+<td>Real-frame recorder → <code>web/fixtures/recorded/*.json</code> + <code>manifest.json</code></td>
+</tr>
+<tr class="even">
+<td><code>view-schema.mjs</code></td>
+<td>130</td>
+<td><code>mage.view.*</code> → <code>server-view-schema.json</code> oracle</td>
+</tr>
+<tr class="odd">
+<td><code>engine-view-schema.mjs</code></td>
+<td>65</td>
+<td><code>mage.game.*</code> not copied to view → gap baseline</td>
+</tr>
+<tr class="even">
+<td><code>server-state-schema.mjs</code></td>
+<td>206</td>
+<td><code>config.xml</code> game/deck types → schema</td>
+</tr>
+<tr class="odd">
+<td><code>gen-types.mjs</code> / <code>gen-zod.mjs</code></td>
+<td>160 / 141</td>
+<td><code>contract.schema.json</code> → <code>types.generated.ts</code> / zod schema (+ <code>--validate</code> for CI)</td>
+</tr>
+<tr class="even">
+<td><code>extract-keywords.mjs</code></td>
+<td>369</td>
+<td>Engine keywords → <code>mtgKeywords.ts</code></td>
+</tr>
+<tr class="odd">
+<td><code>i18n-coverage.mjs</code></td>
+<td>213</td>
+<td>894 keys + whitelist parity check</td>
+</tr>
+<tr class="even">
+<td><code>gen-dashboard.mjs</code></td>
+<td>245</td>
+<td>Test artefacts + <code>content.json</code> → <code>site/status.json</code></td>
+</tr>
+<tr class="odd">
+<td><code>dashboard-ci.mjs</code></td>
+<td>50</td>
+<td>Lightweight CI layers for Pages</td>
+</tr>
+<tr class="even">
+<td><code>integration-report.mjs</code></td>
+<td>42</td>
+<td>Nightly real-stack → <code>reports/integration-result.json</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

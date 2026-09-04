@@ -46,7 +46,7 @@ class GatewayProtocolIntegrationTest {
 
         JsonObject unauthorized = sendAndAwait("info-1", "getServerInfo", "{}");
         assertFalse(unauthorized.get("ok").getAsBoolean());
-        assertEquals(ProxyClient.ERR_NOT_AUTHORIZED, unauthorized.get("errorCode").getAsString());
+        assertEquals(ProxyProtocol.ERR_NOT_AUTHORIZED, unauthorized.get("errorCode").getAsString());
 
         JsonObject connect = sendAndAwait("connect-1", "connect", "{\"host\":\"127.0.0.1\",\"port\":1,\"username\":\"proxy-test\",\"password\":\"x\"}");
         assertFalse(connect.get("ok").getAsBoolean());
@@ -54,7 +54,7 @@ class GatewayProtocolIntegrationTest {
 
         JsonObject action = sendAndAwait("action-1", "sendPlayerBoolean", "{\"gameId\":\"00000000-0000-0000-0000-000000000001\",\"value\":false}");
         assertFalse(action.get("ok").getAsBoolean());
-        assertEquals(ProxyClient.ERR_NOT_AUTHORIZED, action.get("errorCode").getAsString());
+        assertEquals(ProxyProtocol.ERR_NOT_AUTHORIZED, action.get("errorCode").getAsString());
     }
 
     @Test

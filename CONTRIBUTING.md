@@ -128,7 +128,7 @@ npx vitest run
 |---|---|
 | `web/schema/contract.schema.json` | Wire format definition (source of truth for types) |
 | `scripts/gen-types.mjs` | JSON Schema → TypeScript generator |
-| `scripts/export-schema.mjs` | (Future) Java source → JSON Schema extractor |
+| `scripts/view-schema.mjs` | Java source → JSON Schema oracle (`mage.view.*` → `server-view-schema.json`) |
 
 ### E2E Testing
 

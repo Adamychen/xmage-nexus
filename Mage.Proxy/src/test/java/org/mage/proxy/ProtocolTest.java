@@ -11,14 +11,14 @@ class ProtocolTest {
 
     @Test
     void resultEchoesRequestIdAndErrorCode() {
-        String raw = ProxyClient.resultJson("sendPlayerAction", "42", false, ProxyClient.ERR_GAME_ID_REQUIRED, "gameId is required");
+        String raw = ProxyProtocol.resultJson("sendPlayerAction", "42", false, ProxyProtocol.ERR_GAME_ID_REQUIRED, "gameId is required");
         JsonObject result = JsonParser.parseString(raw).getAsJsonObject();
 
         assertEquals("result", result.get("type").getAsString());
         assertEquals("sendPlayerAction", result.get("action").getAsString());
         assertEquals("42", result.get("requestId").getAsString());
         assertTrue(!result.get("ok").getAsBoolean());
-        assertEquals(ProxyClient.ERR_GAME_ID_REQUIRED, result.get("errorCode").getAsString());
+        assertEquals(ProxyProtocol.ERR_GAME_ID_REQUIRED, result.get("errorCode").getAsString());
         assertEquals("gameId is required", result.get("error").getAsString());
         assertTrue(!result.has("data"));
     }
@@ -26,7 +26,7 @@ class ProtocolTest {
     @Test
     void successfulResultDoesNotAddAnErrorCode() {
         JsonObject result = JsonParser.parseString(
-                ProxyClient.resultJson("ping", "7", true, null, "pong")
+                ProxyProtocol.resultJson("ping", "7", true, null, "pong")
         ).getAsJsonObject();
 
         assertEquals("7", result.get("requestId").getAsString());

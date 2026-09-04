@@ -1,185 +1,31 @@
 import { useState, useMemo, useEffect } from 'react'
-import { reset, useLobby, useStore, setWatchingTable, openStagingTable, setSetting } from '../state/store'
-import { useSettings } from '../state/selectors'
+import { useLobby, useStore } from '../state/store'
 import * as cmds from '../net/commands'
-import type { TableView, UsersView } from '../net/types'
+import type { UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
-import type { UiScale } from '../state/persistence'
 import CreateTableDialog from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
-import ChatBox from './ChatBox'
 import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
-import CountryFlag from './CountryFlag'
-import RankBadge from './RankBadge'
-import AvatarImage from './AvatarImage'
-import PingBadge from './PingBadge'
 import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters } from './TableFilterBar'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
-import TournamentBracket from './TournamentBracket'
 import DownloadImagesDialog from './DownloadImagesDialog'
-import LanguageSelector from '../i18n/LanguageSelector'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
-import type { TournamentView } from '../net/types'
-import { AI_OPPONENT_DECK, type Deck } from './decks'
-import { prepareDeckForXMage } from '../decks/deckNormalize'
-import { useFullscreen } from '../utils/fullscreen'
+import LobbyHeader, { type LeaderboardTab } from './LobbyHeader'
+import LobbySidebar, { LobbyMobileNav } from './LobbySidebar'
+import TableCard from './TableCard'
+import LobbyAside from './LobbyAside'
+import TournamentBracketModal from './TournamentBracketModal'
+import { useTableActions } from './useTableActions'
+import { useTournamentBracket } from './useTournamentBracket'
+import { extractLobbyUsers, withTimeout, type LobbyTab } from './lobbyUtils'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
-
-/** Las promesas del proxy no deben colgar la UI: todo con timeout explícito. */
-function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`timeout en ${label} (${ms / 1000}s)`)), ms)
-    p.then(
-      (v) => {
-        clearTimeout(t)
-        resolve(v)
-      },
-      (e) => {
-        clearTimeout(t)
-        reject(e)
-      },
-    )
-  })
-}
-
-function formatTimeAgo(epochMs?: number): string {
-  if (!epochMs) return ''
-  const diffSec = Math.floor((Date.now() - epochMs) / 1000)
-  if (diffSec < 45) return tStatic('lobby','time_now')
-  const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return tStatic('lobby','time_ago_m', { count: diffMin })
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) return tStatic('lobby','time_ago_h', { count: diffHours })
-  return tStatic('lobby','time_ago_d', { count: Math.floor(diffHours / 24) })
-}
-
-function getSkillBadge(skill?: string): { label: string; icon: string; className: string } | null {
-  if (!skill) return null
-  switch (skill.toUpperCase()) {
-    case 'BEGINNER':
-      return { label: tStatic('lobby','create_skill_beginner'), icon: '⭐', className: 'skill-beginner' }
-    case 'CASUAL':
-      return { label: tStatic('lobby','create_skill_casual'), icon: '⭐⭐', className: 'skill-casual' }
-    case 'SERIOUS':
-      return { label: tStatic('lobby','create_skill_competitive'), icon: '⭐⭐⭐', className: 'skill-serious' }
-    default:
-      return null
-  }
-}
-
-export function formatDeckTypeName(deckType?: string): { short: string; full: string } {
-  if (!deckType) return { short: tStatic('lobby','deck_unknown'), full: '' }
-  const boosterMatches = deckType.match(/(\d+x[A-Z0-9]+)/g)
-  if (boosterMatches && boosterMatches.length > 3) {
-    const totalBoosters = boosterMatches.reduce((acc, str) => {
-      const num = parseInt(str.split('x')[0], 10) || 1
-      return acc + num
-    }, 0)
-    return {
-      short: `${tStatic('lobby','deck_chaos')} • ${totalBoosters}`,
-      full: deckType,
-    }
-  }
-  return { short: deckType, full: deckType }
-}
-
-export function formatSeatHistory(sHistory?: string, userHistory?: string): { short: string | null; full: string } {
-  const raw = (sHistory || userHistory || '').trim()
-  if (!raw) return { short: null, full: '' }
-
-  const wlMatch = raw.match(/^(\d+-\d+(?:-\d+)?)$/)
-  if (wlMatch) {
-    return { short: wlMatch[1], full: `${wlMatch[1]} (${tStatic('lobby','leaderboard_col_history')})` }
-  }
-
-  // Parse seat history like "720 (I:15 T:8 Q:3)", "1817 (I:4 T:12 Q:0)", "8 (Q:1)", "2"
-  const seatMatch = raw.match(/^(\d+)(?:\s*\((.*?)\))?/)
-  if (seatMatch && !raw.toLowerCase().includes('matches:')) {
-    const totalMatches = seatMatch[1]
-    const details = seatMatch[2] || ''
-    const quitMatch = details.match(/Q:(\d+)/i)
-    const quitCount = quitMatch ? parseInt(quitMatch[1], 10) : 0
-
-    let short = totalMatches
-    if (quitCount > 0) {
-      short = `${totalMatches} (Q:${quitCount})`
-    }
-
-    let full = `${totalMatches} ${tStatic('lobby','history_matches')}`
-    if (details) {
-      const parts: string[] = []
-      const iMatch = details.match(/I:(\d+)/i)
-      const tMatch = details.match(/T:(\d+)/i)
-      if (quitCount > 0) parts.push(`${quitCount} ${tStatic('lobby','history_quits')}`)
-      if (iMatch && parseInt(iMatch[1], 10) > 0) parts.push(`${iMatch[1]} ${tStatic('lobby','history_inactives')}`)
-      if (tMatch && parseInt(tMatch[1], 10) > 0) parts.push(`${tMatch[1]} ${tStatic('lobby','history_timeouts')}`)
-      if (parts.length > 0) {
-        full += ` (${parts.join(', ')})`
-      } else {
-        full += ` (${details})`
-      }
-    }
-    return { short, full }
-  }
-
-  // Parse from raw user history "Matches: 265 (I:3 T:1 Q:13) (6%), Tourneys: 0 (0%), Constructed Rating..."
-  const matchMatch = raw.match(/Matches:\s*(\d+)(?:\s*\((.*?)\))?(?:\s*\(([\d.]+%)\))?/i)
-  if (matchMatch) {
-    const totalMatches = matchMatch[1]
-    const details = matchMatch[2] || ''
-    const quitPct = matchMatch[3] || ''
-    const quitMatch = details.match(/Q:(\d+)/i)
-    const quitCount = quitMatch ? parseInt(quitMatch[1], 10) : 0
-
-    let short = totalMatches
-    if (quitPct && quitPct !== '0%') {
-      short = `${totalMatches} (${quitPct})`
-    } else if (quitCount > 0) {
-      short = `${totalMatches} (Q:${quitCount})`
-    }
-
-    return { short, full: raw }
-  }
-
-  // Fallback for simple short strings
-  if (raw.length <= 14) {
-    return { short: raw, full: raw }
-  }
-
-  return { short: raw.slice(0, 10), full: raw }
-}
-
-export function extractLobbyUsers(rawUsers: unknown): import('../net/types').UsersView[] {
-  if (!rawUsers) return []
-  if (Array.isArray(rawUsers)) {
-    const list: import('../net/types').UsersView[] = []
-    for (const item of rawUsers) {
-      if (item && typeof item === 'object') {
-        if (Array.isArray((item as any).usersView)) {
-          list.push(...(item as any).usersView)
-        } else if (typeof (item as any).userName === 'string') {
-          list.push(item as import('../net/types').UsersView)
-        }
-      }
-    }
-    return list
-  }
-  if (typeof rawUsers === 'object') {
-    if (Array.isArray((rawUsers as any).usersView)) {
-      return (rawUsers as any).usersView
-    }
-  }
-  return []
-}
-
-export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches'
 
 export default function LobbyScreen() {
   const { t, tError } = useTranslation()
@@ -197,10 +43,9 @@ export default function LobbyScreen() {
   const [showDownloadImages, setShowDownloadImages] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
-  const [leaderboardTab, setLeaderboardTab] = useState<'room' | 'profile' | 'tiers'>('room')
+  const [leaderboardTab, setLeaderboardTab] = useState<LeaderboardTab>('room')
   const [selectedUser, setSelectedUser] = useState<UsersView | null>(null)
   const [chatPrefill, setChatPrefill] = useState<string>('')
-  const [joiningTable, setJoiningTable] = useState<TableView | null>(null)
   const [showDebug, setShowDebug] = useState(false)
   const [filters, setFilters] = useState<TableFilters>(() => {
     try {
@@ -208,19 +53,14 @@ export default function LobbyScreen() {
       return saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
     } catch { return INITIAL_TABLE_FILTERS }
   })
-  const [busyTable, setBusyTable] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  const [isFullscreenActive, toggleFullscreen] = useFullscreen()
-  const [showAppearance, setShowAppearance] = useState(false)
-  const settings = useSettings()
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
-  const tournamentState = useStore((s) => s.tournament)
-  const [bracketTable, setBracketTable] = useState<TableView | null>(null)
-  const [bracketView, setBracketView] = useState<TournamentView | null>(null)
-  const [bracketLoading, setBracketLoading] = useState(false)
-  const [bracketError, setBracketError] = useState<string | null>(null)
+  const [showAppearance, setShowAppearance] = useState(false)
 
-  const openLeaderboard = (target?: string, tab: 'room' | 'profile' | 'tiers' = 'room') => {
+  const tableActions = useTableActions(conn)
+  const { joiningTable, setJoiningTable, busyTable, notice, setNotice } = tableActions
+  const bracket = useTournamentBracket()
+
+  const openLeaderboard = (target?: string, tab: LeaderboardTab = 'room') => {
     setLeaderboardTarget(target)
     setLeaderboardTab(tab)
     setShowLeaderboard(true)
@@ -244,300 +84,19 @@ export default function LobbyScreen() {
     }
   }, [conn?.username, conn?.avatarId])
 
-  const joinHuman = (t: TableView) => {
-    setState({ error: null })
-    setNotice(null)
-    const seat = t.seats.find((s) => !s.playerName)
-    if (!seat) {
-      setState({ error: translateError(tStatic('errors','table_no_seats')) })
-      return
-    }
-    setJoiningTable(t)
-  }
-
-  const handleJoinWithDeck = async (t: TableView, deck: Deck, password?: string) => {
-    setBusyTable(t.tableId)
-    setState({ error: null })
-    setNotice(null)
-    const xmageDeck = prepareDeckForXMage(deck, t.deckType, t.gameType)
-    try {
-      const res = await withTimeout(
-        cmds.joinTable({
-          tableId: t.tableId,
-          playerName: conn?.username ?? 'player',
-          playerType: 'HUMAN',
-          skill: 1,
-          deck: xmageDeck,
-          deckType: t.deckType,
-          gameType: t.gameType,
-          password,
-        }),
-        15000,
-        'joinTable',
-      )
-      if (res.ok) {
-        setNotice(tStatic('lobby','waiting_players'))
-        setJoiningTable(null)
-      } else {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || tStatic('errors','join_table_failed')
-        setState({ error: translateError(raw, 'joinTable', code) })
-        return
-      }
-    } catch (e) {
-      const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
-    } finally {
-      setBusyTable(null)
-    }
-  }
-
-  const joinAi = async (t: TableView) => {
-    setBusyTable(t.tableId)
-    setState({ error: null })
-    setNotice(null)
-    const seat = t.seats.find((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
-    if (!seat?.playerType) {
-      setState({ error: translateError(tStatic('errors','table_no_seats')) })
-      return
-    }
-    const aiSeats = t.seats.filter((s) => s.playerType && /COMPUTER|AI/i.test(s.playerType))
-    const aiIndex = aiSeats.indexOf(seat)
-    try {
-      const res = await withTimeout(
-        cmds.joinTable({
-          tableId: t.tableId,
-          playerName: aiIndex <= 0 ? 'Computer' : `Computer ${aiIndex + 1}`,
-          playerType: seat.playerType,
-          skill: 1,
-          deck: AI_OPPONENT_DECK,
-        }),
-        15000,
-        'joinTable IA',
-      )
-      if (res.ok) {
-        setNotice(tStatic('lobby','join_ai_btn'))
-      } else {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || tStatic('errors','join_table_failed')
-        setState({ error: translateError(raw, 'joinTable', code) })
-        return
-      }
-    } catch (e) {
-      const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
-    } finally {
-      setBusyTable(null)
-    }
-  }
-
-  const startTable = async (t: TableView) => {
-    setBusyTable(t.tableId)
-    setState({ error: null })
-    setNotice(null)
-    try {
-      const res = await withTimeout(cmds.startMatch(t.tableId), 20000, 'startMatch')
-      if (res.ok) {
-        setNotice(tStatic('lobby','start_match_btn'))
-      } else {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || tStatic('errors','start_game_failed')
-        setState({ error: translateError(raw, 'startMatch', code) })
-      }
-    } catch (e) {
-      const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'startMatch', (err as { errorCode?: string }).errorCode) })
-    } finally {
-      setBusyTable(null)
-    }
-  }
-
-  const watchTable = async (t: TableView) => {
-    setBusyTable(t.tableId)
-    setState({ error: null })
-    setNotice(null)
-    try {
-      const res = await withTimeout(cmds.watchTable(t.tableId), 15000, 'watchTable')
-      if (res.ok) {
-        setWatchingTable(t)
-        setNotice(tStatic('lobby','watch_btn'))
-      } else {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || tStatic('errors','generic_error')
-        setState({ error: translateError(raw, 'watchTable', code) })
-      }
-    } catch (e) {
-      const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'watchTable', (err as { errorCode?: string }).errorCode) })
-    } finally {
-      setBusyTable(null)
-    }
-  }
-
-  const openBracket = async (t: TableView) => {
-    setBracketTable(t)
-    setBracketError(null)
-    if (tournamentState) {
-      setBracketView(tournamentState.view)
-    }
-    setBracketLoading(true)
-    try {
-      // 1. Tell XMage server to stream tournament data for this table
-      void cmds.watchTournamentTable(t.tableId)
-      // 2. Also try direct getTournament
-      const data = await withTimeout(cmds.getTournament(t.tableId) as Promise<unknown>, 8000, 'getTournament')
-      if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
-        setBracketView(data as TournamentView)
-      } else if (tournamentState?.view) {
-        setBracketView(tournamentState.view)
-      }
-    } catch (e) {
-      if (tournamentState?.view) {
-        setBracketView(tournamentState.view)
-      } else {
-        setBracketError((e as Error).message)
-      }
-    } finally {
-      setBracketLoading(false)
-    }
-  }
-
-  const closeBracket = () => {
-    setBracketTable(null)
-    setBracketView(null)
-    setBracketError(null)
-  }
-
-  const refreshBracket = async () => {
-    if (!bracketTable) return
-    setBracketLoading(true)
-    setBracketError(null)
-    try {
-      void cmds.watchTournamentTable(bracketTable.tableId)
-      const data = await withTimeout(cmds.getTournament(bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
-      if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
-        setBracketView(data as TournamentView)
-      } else if (tournamentState?.view) {
-        setBracketView(tournamentState.view)
-      }
-    } catch (e) {
-      if (tournamentState?.view) {
-        setBracketView(tournamentState.view)
-      } else {
-        setBracketError((e as Error).message)
-      }
-    } finally {
-      setBracketLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!bracketTable) return
-    if (tournamentState?.view) {
-      setBracketView(tournamentState.view)
-    }
-  }, [tournamentState, bracketTable])
-
-  useEffect(() => {
-    if (!bracketTable) return
-    const id = setInterval(() => {
-      void refreshBracket()
-    }, 8000)
-    return () => clearInterval(id)
-  }, [bracketTable?.tableId])
-
   return (
     <div className="lobby">
-      {/* Thin top strip: brand + user identity */}
-      <header className="lobby-topstrip">
-        <div className="lobby-brand-col">
-          <img src="/logo.jpeg" alt="XMage Nexus" className="lobby-brand-logo" />
-          <div className="lobby-brand-titles">
-            <h1 className="lobby-main-heading">XMage Nexus</h1>
-            <span className="conn-info">
-              <span className="conn-status-dot" />
-              {conn?.serverHost}:{conn?.port} · {users.length} {t('lobby','online_count')}
-            </span>
-          </div>
-        </div>
-
-        <div className="lobby-user-actions">
-          <LanguageSelector showCardLangToggle={true} />
-
-          <div className="lobby-scale-quick" role="group" aria-label="UI scale">
-            {( [1, 1.15, 1.5] as UiScale[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                className={settings.uiScale === s ? 'active' : ''}
-                onClick={() => setSetting('uiScale', s)}
-                title={`${Math.round(s*100)}%`}
-                aria-pressed={settings.uiScale === s}
-              >
-                {s === 1 ? 'Aa' : s === 1.15 ? 'A+' : 'A++'}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            className="lobby-mobile-chat-toggle"
-            onClick={() => setMobileChatOpen((v) => !v)}
-            aria-label={t('lobby','global_chat')}
-            data-testid="toggle-mobile-chat"
-          >
-            💬
-            {unreadChat > 0 && <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>}
-          </button>
-
-          <button
-            type="button"
-            className="lobby-appearance-btn"
-            onClick={() => setShowAppearance(true)}
-            title={t('lobby', 'appearance_title')}
-            data-testid="open-appearance-settings"
-          >
-            🎨
-          </button>
-
-          <button
-            type="button"
-            className={`lobby-fullscreen-btn ${isFullscreenActive ? 'active' : ''}`}
-            onClick={toggleFullscreen}
-            title={isFullscreenActive ? t('game','exit_fullscreen') : t('game','enter_fullscreen')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d={isFullscreenActive ? 'M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3' : 'M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3'} />
-            </svg>
-          </button>
-
-          <div
-            className="lobby-user-badge"
-            onClick={() => openLeaderboard(conn?.username, 'profile')}
-            title={`${t('lobby','view_profile_hint')} ${conn?.username ?? ''}`}
-          >
-            <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
-            <div className="lobby-user-col">
-              <div className="lobby-user-name-line" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="lobby-username">{conn?.username}</span>
-                {myUser?.infoPing && <PingBadge infoPing={myUser.infoPing} compact />}
-              </div>
-              <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
-            </div>
-          </div>
-          {confirmDisconnect ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>{t('lobby', 'disconnect_confirm')}</span>
-              <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>{t('common', 'yes')}</button>
-              <button onClick={() => setConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>{t('common', 'no')}</button>
-            </div>
-          ) : (
-            <button className="lobby-disconnect-btn" onClick={() => setConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
-              🚪
-            </button>
-          )}
-        </div>
-      </header>
+      <LobbyHeader
+        conn={conn}
+        myUser={myUser}
+        onlineCount={users.length}
+        unreadChat={unreadChat}
+        confirmDisconnect={confirmDisconnect}
+        onConfirmDisconnect={setConfirmDisconnect}
+        onToggleMobileChat={() => setMobileChatOpen((v) => !v)}
+        onOpenAppearance={() => setShowAppearance(true)}
+        onOpenLeaderboard={openLeaderboard}
+      />
 
       {error && <div className="error-box panel lobby-error-banner">{tError(error)}</div>}
       {notice && <div className="notice panel lobby-notice-banner">{notice}</div>}
@@ -545,72 +104,14 @@ export default function LobbyScreen() {
       {/* 3-Column main area */}
       <div className="lobby-columns">
 
-        {/* LEFT: Icon Sidebar Navigation */}
-        <nav className="lobby-sidebar" aria-label="Main navigation">
-          <button
-            type="button"
-            className="sidebar-btn hero-create-btn"
-            onClick={() => setShowCreate(true)}
-            title={t('lobby.nav_new')}
-          >
-            <span className="sidebar-btn-icon">➕</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_new')}</span>
-          </button>
-
-          <div className="sidebar-divider" />
-
-          <button
-            type="button"
-            className={`sidebar-btn ${activeTab === 'tables' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tables')}
-            title={`${t('lobby.nav_tables')} (${tables.length})`}
-          >
-            <span className="sidebar-btn-icon">⚔️</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_tables')}{tables.length > 0 ? ` (${tables.length})` : ''}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`sidebar-btn ${activeTab === 'decks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('decks')}
-            title={t('lobby.nav_decks')}
-          >
-            <span className="sidebar-btn-icon">🃏</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_decks')}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`sidebar-btn ${activeTab === 'matches' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matches')}
-            title={t('lobby.nav_history')}
-          >
-            <span className="sidebar-btn-icon">📜</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_history')}</span>
-          </button>
-
-          <button
-            type="button"
-            className="sidebar-btn sidebar-btn-leaderboard"
-            onClick={() => openLeaderboard(conn?.username, 'room')}
-            title={t('lobby.nav_ranking')}
-          >
-            <span className="sidebar-btn-icon">🏆</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_ranking')}</span>
-          </button>
-
-          <div className="sidebar-divider" />
-
-          <button
-            type="button"
-            className="sidebar-btn"
-            onClick={() => setShowDownloadImages(true)}
-            title={t('dialogs','download_title')}
-          >
-            <span className="sidebar-btn-icon">📥</span>
-            <span className="sidebar-btn-label">{t('lobby.nav_downloads')}</span>
-          </button>
-        </nav>
+        <LobbySidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tableCount={tables.length}
+          onCreate={() => setShowCreate(true)}
+          onDownloadImages={() => setShowDownloadImages(true)}
+          onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
+        />
 
         {/* CENTER: Main tab content */}
         <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : ''}`}>
@@ -639,244 +140,23 @@ export default function LobbyScreen() {
                 </div>
 
                 <div className="tables-list">
-                  {filteredTables.map((tTable) => {
-                    const isReady = tTable.tableState === 'READY_TO_START'
-                    const isPlaying = tTable.tableState === 'DUELING' || tTable.tableState === 'SIDEBOARDING'
-                    const isWaiting = tTable.tableState === 'WAITING'
-
-                    const hasHumanSeat =
-                      (isWaiting || isReady) &&
-                      tTable.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
-                    const hasAiSeat =
-                      (isWaiting || isReady) &&
-                      tTable.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
-
-                    const statusClass = isReady
-                      ? 'status-ready'
-                      : isPlaying
-                      ? 'status-playing'
-                      : 'status-waiting'
-
-                    const timeAgo = formatTimeAgo(tTable.createTime)
-                    const skill = getSkillBadge(tTable.skillLevel)
-                    const mySeat = !!conn?.username
-                      && tTable.seats.some((s) => s.playerName?.toLowerCase() === conn.username.toLowerCase())
-                    const canReenter = mySeat || stagingTableId === tTable.tableId
-
-                    return (
-                      <div key={tTable.tableId} className={`table-card table-row ${statusClass}`}>
-                        <div className="table-card-main">
-                          <div className="table-card-top-bar">
-                            <div className="table-badges-left">
-                              {tTable.isTournament ? (
-                                <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}>🏆 {t('lobby.tournament_badge')}</span>
-                              ) : (
-                                <span className="table-type-badge match" title={t('lobby','match_badge')}>⚔️ {t('lobby','match_badge')}</span>
-                              )}
-                              {tTable.passworded && (
-                                <span className="table-badge-lock" title={t('lobby','tag_private')}>🔒 {t('lobby','tag_private')}</span>
-                              )}
-                            </div>
-                            <div className="table-header-right">
-                              {timeAgo && (
-                                <span className="table-time-ago" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString() : undefined}>
-                                  ⏱️ {timeAgo}
-                                </span>
-                              )}
-                              <span className={`table-state-badge ${statusClass}`}>{tTable.tableStateText}</span>
-                            </div>
-                          </div>
-
-                          <div className="table-title-area">
-                            <h3 className="table-name-text" title={tTable.tableName}>{tTable.tableName}</h3>
-                          </div>
-
-                          <div className="table-meta-row">
-                            <span className="table-game-tag">🎮 {tTable.gameType}</span>
-                            <span
-                              className="table-deck-tag"
-                              title={formatDeckTypeName(tTable.deckType).full}
-                            >
-                              📜 {formatDeckTypeName(tTable.deckType).short}
-                            </span>
-                            <span className="table-seats-count table-seats">👥 {tTable.seatsInfo}</span>
-                            {skill && (
-                              <span className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
-                                {skill.icon} {skill.label}
-                              </span>
-                            )}
-                            {tTable.rated ? (
-                              <span className="table-tag-rated" title={t('lobby','tag_rated')}>🏅 {t('lobby','tag_rated')}</span>
-                            ) : (
-                              <span className="table-tag-unrated" title={t('lobby','tag_unrated')}>{t('lobby','tag_unrated')}</span>
-                            )}
-                            {tTable.spectatorsAllowed && (
-                              <span className="table-tag-spectate" title={t('lobby','tag_spectators')}>👁️ {t('lobby','spectators')}</span>
-                            )}
-                            {Number(tTable.minimumRating) > 0 && (
-                              <span className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>
-                                ⭐ Min {tTable.minimumRating}
-                              </span>
-                            )}
-                            {Number(String(tTable.quitRatio ?? '100').replace('%', '')) < 100 && (
-                              <span className="table-tag-restriction" title={`${t('lobby','create_field_quit_ratio')}: ${tTable.quitRatio}`}>
-                                🚫 Max Quit {tTable.quitRatio}
-                              </span>
-                            )}
-                          </div>
-
-                          {tTable.additionalInfoShort && (
-                            <div className="table-info-strip" title={tTable.additionalInfoFull || tTable.additionalInfoShort}>
-                              <span className="info-strip-icon">ℹ️</span>
-                              <span className="info-strip-text">{tTable.additionalInfoShort}</span>
-                            </div>
-                          )}
-
-                          <div className="table-seats-roster">
-                            {tTable.seats.map((s, idx) => {
-                              const hostName = tTable.controllerName ? tTable.controllerName.split(',')[0].trim() : ''
-                              const isOwner = !!hostName && !!s.playerName && s.playerName.toLowerCase() === hostName.toLowerCase()
-                              const isHuman = !s.playerType || s.playerType === 'HUMAN'
-                              const foundUser = s.playerName
-                                ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
-                                : undefined
-                              const rating = foundUser?.constructedRating ?? (s as any).constructedRating
-                              const historyInfo = formatSeatHistory(s.history, foundUser?.matchHistory)
-                              const seatAvatarId = isHuman
-                                ? s.playerName === conn?.username
-                                  ? conn?.avatarId
-                                  : foundUser?.avatarId
-                                : 13
-
-                              return (
-                                <div
-                                  key={idx}
-                                  className={`seat-badge ${s.playerName ? 'occupied interactive' : 'empty'} ${isOwner ? 'is-owner' : ''}`}
-                                  onClick={() => {
-                                    if (!s.playerName) return
-                                    setSelectedUser(
-                                      foundUser ?? {
-                                        userName: s.playerName,
-                                        flagName: s.flagName ?? '',
-                                        constructedRating: (s as any).constructedRating || 1500,
-                                        matchHistory: s.history || '',
-                                        infoGames: '',
-                                        matchQuitRatio: 0,
-                                        tourneyHistory: '',
-                                        tourneyQuitRatio: 0,
-                                        infoPing: '',
-                                        generalRating: 1500,
-                                        limitedRating: 1500,
-                                      },
-                                    )
-                                  }}
-                                  style={s.playerName ? { cursor: 'pointer' } : undefined}
-                                  title={s.playerName ? `${t('lobby','view_profile_hint')} ${s.playerName}` : t('lobby','open_seat')}
-                                >
-                                  <div className="seat-part-avatar">
-                                    {s.playerName ? (
-                                      <AvatarImage avatarId={seatAvatarId} username={s.playerName} size="small" />
-                                    ) : (
-                                      <span className="seat-icon empty-circle">⭕</span>
-                                    )}
-                                    {s.flagName && <CountryFlag flagName={s.flagName} className="seat-flag" />}
-                                  </div>
-
-                                   <div className="seat-part-main">
-                                    <div className="seat-name-row">
-                                      <span className="seat-player-name">
-                                        {s.playerName || t('lobby.open_seat')}
-                                      </span>
-                                      {isOwner && <span className="seat-crown" title={t('lobby.host')}>👑 {t('lobby.host')}</span>}
-                                      {!isHuman && <span className="seat-bot-tag" title={t('lobby.ai')}>🤖 {s.playerType || t('lobby.ai')}</span>}
-                                    </div>
-
-                                    {s.playerName && (rating || historyInfo.short) && (
-                                      <div className="seat-meta-row">
-                                        {rating && <RankBadge elo={rating} compact showElo />}
-                                        {historyInfo.short && (
-                                          <span className="seat-history-pill" title={historyInfo.full || `${t('lobby','leaderboard_col_history')}: ${historyInfo.short}`}>
-                                            🏆 {historyInfo.short}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="seat-part-status">
-                                    {s.playerName ? (
-                                      <span className="seat-ready-indicator" title={t('lobby.ready_status')}>
-                                        <span className="seat-ready-dot" />
-                                        <span className="seat-ready-text">{t('lobby.ready_status')}</span>
-                                      </span>
-                                    ) : (
-                                      <span className="seat-open-badge">{t('lobby.open_seat')}</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        <div className="table-actions">
-                          {canReenter && (
-                            <button
-                              className="primary table-action-btn return-table-btn"
-                              data-testid="return-to-table"
-                              onClick={() => openStagingTable(tTable.tableId)}
-                            >
-                              🪑 {t('lobby','staging_return_table')}
-                            </button>
-                          )}
-                          {isReady && (
-                            <button
-                              className="primary table-action-btn"
-                              disabled={busyTable === tTable.tableId}
-                              onClick={() => startTable(tTable)}
-                            >
-                              {t('lobby.start_match_btn')}
-                            </button>
-                          )}
-                          {hasHumanSeat && (
-                            <button
-                              className="table-action-btn join-btn"
-                              disabled={busyTable === tTable.tableId}
-                              onClick={() => joinHuman(tTable)}
-                            >
-                              {t('lobby.join_human_btn')}
-                            </button>
-                          )}
-                          {hasAiSeat && (
-                            <button
-                              className="table-action-btn ai-btn"
-                              disabled={busyTable === tTable.tableId}
-                              onClick={() => joinAi(tTable)}
-                            >
-                              {t('lobby.join_ai_btn')}
-                            </button>
-                          )}
-                          <button
-                            className="table-action-btn watch-btn"
-                            disabled={busyTable === tTable.tableId}
-                            onClick={() => watchTable(tTable)}
-                          >
-                            👁️ {t('lobby.watch_btn')}
-                          </button>
-                          {tTable.isTournament && (
-                            <button
-                              className="table-action-btn bracket-btn"
-                              disabled={busyTable === tTable.tableId}
-                              onClick={() => void openBracket(tTable)}
-                              data-testid="open-bracket"
-                            >
-                              🏆 {t('lobby.view_bracket')}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                  {filteredTables.map((tTable) => (
+                    <TableCard
+                      key={tTable.tableId}
+                      tTable={tTable}
+                      users={users}
+                      username={conn?.username}
+                      avatarId={conn?.avatarId}
+                      stagingTableId={stagingTableId}
+                      busyTable={busyTable}
+                      onJoinHuman={tableActions.joinHuman}
+                      onJoinAi={tableActions.joinAi}
+                      onStart={tableActions.startTable}
+                      onWatch={tableActions.watchTable}
+                      onOpenBracket={bracket.openBracket}
+                      onSelectUser={setSelectedUser}
+                    />
+                  ))}
 
                   {filteredTables.length === 0 && tables.length === 0 && (
                     <div className="tables-empty-state">
@@ -928,117 +208,27 @@ export default function LobbyScreen() {
           )}
         </main>
 
-        {/* RIGHT: Persistent Chat + Users panel */}
-        {mobileChatOpen && <div className="lobby-aside-backdrop" onClick={() => setMobileChatOpen(false)} aria-hidden="true" />}
-        <aside className={`lobby-aside ${mobileChatOpen ? 'mobile-open' : ''}`}>
-          <section className="aside-chat-section">
-            <div className="aside-section-header">
-              <span className="aside-section-title">💬 {t('lobby','global_chat')}</span>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {unreadChat > 0 && (
-                  <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
-                )}
-                <button type="button" className="view-leaderboard-btn" onClick={() => setMobileChatOpen(false)} style={{ display: 'none' }} aria-hidden="true">✕</button>
-              </div>
-            </div>
-            <div className="aside-chat-body">
-              <ChatBox
-                prefill={chatPrefill}
-                onPrefillUsed={() => setChatPrefill('')}
-                onMessage={() => setUnreadChat(0)}
-                onUserClick={(username) => {
-                  const found = users.find(
-                    (u) => u.userName.toLowerCase() === username.toLowerCase(),
-                  )
-                  if (found) {
-                    setSelectedUser(found)
-                  } else {
-                    setSelectedUser({
-                      userName: username,
-                      flagName: '',
-                      constructedRating: 1500,
-                      matchHistory: '',
-                      infoGames: '',
-                      matchQuitRatio: 0,
-                      tourneyHistory: '',
-                      tourneyQuitRatio: 0,
-                      infoPing: '',
-                      generalRating: 1500,
-                      limitedRating: 1500,
-                    })
-                  }
-                }}
-              />
-            </div>
-          </section>
+        <LobbyAside
+          users={users}
+          chatPrefill={chatPrefill}
+          onPrefillUsed={() => setChatPrefill('')}
+          unreadChat={unreadChat}
+          onMessageRead={() => setUnreadChat(0)}
+          onSelectUser={setSelectedUser}
+          mobileChatOpen={mobileChatOpen}
+          onCloseMobile={() => setMobileChatOpen(false)}
+          onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
+        />
 
-          <section className="aside-users-section">
-            <div className="aside-section-header">
-              <span className="aside-section-title">👥 {t('lobby.online_users')} ({users.length})</span>
-              <button
-                type="button"
-                className="view-leaderboard-btn"
-                onClick={() => openLeaderboard(conn?.username, 'room')}
-                title={t('lobby','nav_ranking')}
-              >
-                🏆
-              </button>
-            </div>
-            <ul className="users-list aside-users-list">
-              {users.map((u) => (
-                <li
-                  key={u.userName}
-                  className="user-list-item interactive"
-                  onClick={() => setSelectedUser(u)}
-                  style={{ cursor: 'pointer' }}
-                  title={`${t('lobby','view_profile_hint')} ${u.userName}`}
-                >
-                  <span className={`dot ${u.infoGames ? 'playing' : 'online'}`} />
-                  <AvatarImage avatarId={u.avatarId} username={u.userName} size="medium" />
-                  <div className="user-info-col">
-                    <div className="user-name-row">
-                      {u.flagName && <CountryFlag flagName={u.flagName} className="user-list-flag" showTextFallback />}
-                      <span className="user-name-text">{u.userName}</span>
-                    </div>
-                    <div className="user-name-row">
-                      <RankBadge elo={u.constructedRating} compact />
-                      {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
-                    </div>
-                  </div>
-                  {u.infoGames ? (
-                    <span className="game-info-badge">⚔️</span>
-                  ) : (
-                    <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>
-                  )}
-                </li>
-              ))}
-              {users.length === 0 && (
-                <li className="users-empty-item">
-                  <span className="empty">{t('lobby.waiting_players')}</span>
-                </li>
-              )}
-            </ul>
-          </section>
-        </aside>
-
-        {/* Mobile bottom nav (visible ≤600px) */}
-        <nav className="lobby-mobile-bottom-nav" aria-label="Mobile navigation">
-          <button type="button" className={`mobile-nav-btn ${activeTab === 'tables' ? 'active' : ''}`} onClick={() => { setActiveTab('tables'); setMobileChatOpen(false) }}>
-            <span className="mobile-nav-icon">⚔️</span><span>{t('lobby.nav_tables')}</span>
-          </button>
-          <button type="button" className={`mobile-nav-btn ${activeTab === 'decks' ? 'active' : ''}`} onClick={() => { setActiveTab('decks'); setMobileChatOpen(false) }}>
-            <span className="mobile-nav-icon">🃏</span><span>{t('lobby.nav_decks')}</span>
-          </button>
-          <button type="button" className="mobile-nav-btn" onClick={() => setShowCreate(true)}>
-            <span className="mobile-nav-icon">➕</span><span>{t('lobby.nav_new')}</span>
-          </button>
-          <button type="button" className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`} onClick={() => { setActiveTab('matches'); setMobileChatOpen(false) }}>
-            <span className="mobile-nav-icon">📜</span><span>{t('common.loading') === '読み込み中...' ? '履歴' : t('lobby.nav_history')}</span>
-          </button>
-          <button type="button" className={`mobile-nav-btn ${mobileChatOpen ? 'active' : ''}`} onClick={() => setMobileChatOpen((v) => !v)}>
-            <span className="mobile-nav-icon">💬</span><span>Chat{unreadChat > 0 ? ` (${unreadChat})` : ''}</span>
-          </button>
-        </nav>
+        <LobbyMobileNav
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onCreate={() => setShowCreate(true)}
+          mobileChatOpen={mobileChatOpen}
+          onToggleChat={() => setMobileChatOpen((v) => !v)}
+          onCloseChat={() => setMobileChatOpen(false)}
+          unreadChat={unreadChat}
+        />
       </div>
 
       {/* Collapsible Debug Drawer Toggle at Bottom */}
@@ -1114,39 +304,18 @@ export default function LobbyScreen() {
           table={joiningTable}
           busy={busyTable === joiningTable.tableId}
           onClose={() => setJoiningTable(null)}
-          onJoin={handleJoinWithDeck}
+          onJoin={tableActions.handleJoinWithDeck}
         />
       )}
-      {bracketTable && (
-        <div className="tournament-modal-backdrop" role="presentation" onClick={closeBracket} data-testid="tournament-modal-backdrop">
-          <div className="tournament-modal" role="dialog" aria-modal="true" aria-label={t('lobby','view_bracket')} onClick={(e) => e.stopPropagation()} data-testid="tournament-modal">
-            <div className="tournament-bracket-toolbar">
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1' }}>🏆 {bracketTable.tableName}</span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="tournament-refresh-btn" onClick={() => void refreshBracket()} disabled={bracketLoading}>
-                  {bracketLoading ? t('lobby','matches_loading') : `🔄 ${t('lobby','matches_refresh')}`}
-                </button>
-                <button type="button" className="tournament-close-btn" onClick={closeBracket} aria-label={t('common','close')}>✕</button>
-              </div>
-            </div>
-            <div className="tournament-modal-scroll">
-              {bracketLoading && !bracketView && <div className="tournament-modal-loading">{t('lobby','matches_loading')}</div>}
-              {bracketError && <div className="tournament-modal-error" data-testid="tournament-modal-error">{bracketError}</div>}
-              {bracketView && (
-                <TournamentBracket
-                  view={bracketView}
-                  tournamentId={bracketTable.tableId}
-                  onClose={closeBracket}
-                />
-              )}
-              {!bracketView && !bracketLoading && !bracketError && (
-                <div className="tournament-modal-loading" data-testid="tournament-empty">
-                  {t('lobby','matches_empty')}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {bracket.bracketTable && (
+        <TournamentBracketModal
+          table={bracket.bracketTable}
+          view={bracket.bracketView}
+          loading={bracket.bracketLoading}
+          error={bracket.bracketError}
+          onClose={bracket.closeBracket}
+          onRefresh={() => void bracket.refreshBracket()}
+        />
       )}
       {showDownloadImages && (
         <DownloadImagesDialog onClose={() => setShowDownloadImages(false)} />
@@ -1157,4 +326,3 @@ export default function LobbyScreen() {
     </div>
   )
 }
-

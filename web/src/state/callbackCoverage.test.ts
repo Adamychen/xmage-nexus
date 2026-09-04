@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 // @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 // @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
@@ -45,7 +45,11 @@ const KNOWN_UNHANDLED: Record<string, string> = {
 }
 
 const eventHandlerSrc = readFileSync(resolve(here, './eventHandler.ts'), 'utf8')
-const feedbackSrc = readFileSync(resolve(here, '../game/feedback.ts'), 'utf8')
+const feedbackDir = resolve(here, '../game/feedback')
+const feedbackSrc = readdirSync(feedbackDir)
+  .filter((f: string) => f.endsWith('.ts') && !f.endsWith('.test.ts'))
+  .map((f: string) => readFileSync(resolve(feedbackDir, f), 'utf8'))
+  .join('\n')
 const combined = eventHandlerSrc + '\n' + feedbackSrc
 
 const hasCase = (name: string) => combined.includes(`case '${name}':`)

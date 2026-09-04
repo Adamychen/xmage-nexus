@@ -26,7 +26,7 @@ class SimPlayerTest {
         types.add("SIM");
         args.add("playerTypes", types);
 
-        MatchOptions options = ProxyClient.parseMatchOptions(args);
+        MatchOptions options = MatchOptionsParser.parseMatchOptions(args);
 
         assertEquals(2, options.getPlayerTypes().size());
         assertEquals(PlayerType.HUMAN, options.getPlayerTypes().get(0));
@@ -42,7 +42,7 @@ class SimPlayerTest {
         types.add("SIM");
         args.add("playerTypes", types);
 
-        MatchOptions options = ProxyClient.parseMatchOptions(args);
+        MatchOptions options = MatchOptionsParser.parseMatchOptions(args);
 
         assertEquals(PlayerType.COMPUTER_MAD, options.getPlayerTypes().get(0));
         assertEquals(PlayerType.HUMAN, options.getPlayerTypes().get(1));

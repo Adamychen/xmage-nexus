@@ -276,8 +276,9 @@ when Java view classes change, then regenerate.
 ### Adding a New Event
 
 1. **If it's a game event** (forwarded from server):
-   - Add the event handler in `src/state/eventHandler.ts` (in the `handleEvent` switch)
-   - Or add feedback parsing in `src/game/feedback.ts` (if it's a player interaction)
+   - Add the event handler in `web/src/state/eventHandler.ts` (a `case` in the
+     `handleEvent` router + body in `web/src/state/events/<domain>.ts`)
+   - Or add feedback parsing in `web/src/game/feedback/` (if it's a player interaction)
    - Add the event method to `EVENT_METHODS` in `types.ts`
 
 2. **If it's a new data type** (new Java view class):
@@ -286,7 +287,10 @@ when Java view classes change, then regenerate.
    - Use the new type in your event handler
 
 3. **If it's a proxy action** (client → server):
-   - Add the action handling in `ProxyClient.java` (the `switch (action)` block)
+   - Add a `case` in the domain class (`InfoCommands` / `TableCommands` /
+     `TournamentCommands` / `GameCommands`), reachable via `CommandDispatch`
+     from the `ProxyClient.handleCommand` router; add to `requiresGameId` in
+     `ProxyClient.java` if the action is game-scoped
    - Add the TypeScript type in `types.ts` if needed
 
 ## What's NOT Supported (and Why)

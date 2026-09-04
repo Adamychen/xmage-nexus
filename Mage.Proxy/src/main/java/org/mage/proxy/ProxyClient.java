@@ -1,27 +1,18 @@
 package org.mage.proxy;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import mage.cards.decks.DeckCardLists;
-import mage.constants.ManaType;
-import mage.constants.PlayerAction;
-import mage.game.match.MatchOptions;
 import mage.interfaces.MageClient;
 import mage.interfaces.callback.ClientCallback;
 import mage.interfaces.callback.ClientCallbackMethod;
 import mage.interfaces.callback.ClientCallbackType;
-import mage.players.PlayerType;
-import mage.players.net.SkipPrioritySteps;
 import mage.players.net.UserData;
-import mage.players.net.UserSkipPrioritySteps;
 import mage.remote.Connection;
 import mage.remote.SessionImpl;
 import mage.utils.MageVersion;
 import mage.view.RoomUsersView;
-import mage.view.TableView;
 import org.java_websocket.WebSocket;
 
 import java.util.Arrays;
@@ -45,7 +36,8 @@ import java.util.logging.Logger;
  * Bridge between an XMage server (SessionImpl) and the WebSocket gateway.
  * <p>
  * - implements MageClient to receive server callbacks and forward them as JSON events
- * - receives JSON commands from the web client and maps them to Session calls
+ * - routes JSON commands from the web client to domain handlers (CommandDispatch)
+ *   and maps them to Session calls
  * - polls the lobby (tables/users) periodically and publishes it
  * <p>
  * Seguridad del protocolo (local-first):
@@ -54,23 +46,7 @@ import java.util.logging.Logger;
  * - respuestas con requestId (echo del comando) y errorCode uniforme
  * - las acciones de partida exigen gameId (GAME_ID_REQUIRED si falta)
  */
-public class ProxyClient implements MageClient {
-
-    public static final String ERR_BAD_JSON = "BAD_JSON";
-    public static final String ERR_NOT_AUTHORIZED = "NOT_AUTHORIZED";
-    public static final String ERR_GAME_ID_REQUIRED = "GAME_ID_REQUIRED";
-    public static final String ERR_INVALID_ARGUMENT = "INVALID_ARGUMENT";
-    public static final String ERR_UNKNOWN_ACTION = "UNKNOWN_ACTION";
-    public static final String ERR_FAILED = "FAILED";
-    public static final String ERR_QUIT_RATIO = "QUIT_RATIO";
-    public static final String ERR_RATING = "RATING";
-    public static final String ERR_INVALID_DECK = "INVALID_DECK";
-    public static final String ERR_CARD_NOT_FOUND = "CARD_NOT_FOUND";
-    public static final String ERR_TABLE_LIMIT = "TABLE_LIMIT";
-    public static final String ERR_INVALID_GAME_TYPE = "INVALID_GAME_TYPE";
-    public static final String ERR_INVALID_DECK_TYPE = "INVALID_DECK_TYPE";
-    public static final String ERR_PASSWORD = "PASSWORD";
-    public static final String ERR_SEAT = "SEAT";
+public class ProxyClient implements MageClient, CommandContext {
 
     private static final Logger logger = Logger.getLogger(ProxyClient.class.getName());
 
@@ -101,12 +77,7 @@ public class ProxyClient implements MageClient {
      */
     private final Set<UUID> sessionGameIds = new java.util.HashSet<>();
 
-    // asientos "SIM": oponentes simulados con su propia sesión de servidor
-    private final Map<String, SimPlayer> sims = new java.util.HashMap<>();
-    private int simCounter = 0;
-    // servidor al que conecta la sesión web (los Sim se conectan al mismo)
-    private volatile String serverHost = "";
-    private volatile int serverPort = 0;
+    private final SimManager simManager;
     private String accountKey = null;
 
     private volatile boolean connected = false;
@@ -121,6 +92,7 @@ public class ProxyClient implements MageClient {
         this.config = config;
         this.gateway = gateway;
         this.session = new SessionImpl(this);
+        this.simManager = new SimManager(config, this::broadcastError);
         Arrays.stream(ClientCallbackType.values()).forEach(t -> this.lastMessages.put(t, 0));
         lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 2, 2, TimeUnit.SECONDS);
         // keep the server session alive (the original client pings from its UI; we have no UI)
@@ -142,6 +114,16 @@ public class ProxyClient implements MageClient {
 
     public SessionImpl getSession() {
         return session;
+    }
+
+    @Override
+    public SessionImpl session() {
+        return session;
+    }
+
+    @Override
+    public Gateway gateway() {
+        return gateway;
     }
 
     public boolean isConnected() {
@@ -184,7 +166,7 @@ public class ProxyClient implements MageClient {
                 synchronized (ProxyClient.this) {
                     if (authorized.isEmpty() && connected) {
                         logger.info("Grace period expired without client reconnect. Cleaning up XMage session.");
-                        stopSims();
+                        simManager.stopSims();
                         try {
                             session.connectStop(false, false);
                         } catch (Exception ignored) {
@@ -273,25 +255,6 @@ public class ProxyClient implements MageClient {
         }
     }
 
-    private static String classifyErrorCode(String detail) {
-        if (detail == null) return ERR_FAILED;
-        String lower = detail.toLowerCase(Locale.ROOT);
-        if (lower.contains("card not found")) return ERR_CARD_NOT_FOUND;
-        if (lower.contains("quit ratio")) return ERR_QUIT_RATIO;
-        if (lower.contains("minimum rating") || lower.contains("rating") && lower.contains("lower")) return ERR_RATING;
-        if (lower.contains("not started tables") || lower.contains("too much") || lower.contains("already") && lower.contains("not started")) return ERR_TABLE_LIMIT;
-        if (lower.contains("invalid deck") || lower.contains("deckvalidator") || lower.contains("no valid deck") || lower.contains("must contain") || lower.contains("too few cards") || lower.contains("deck is not valid")
-                || lower.contains("too powerful") || lower.contains("power level") || lower.contains("requested no") || lower.contains("appropriate for the selected format") || lower.contains("select a deck that is appropriate")
-                || lower.contains("no valid deck selected")) return ERR_INVALID_DECK;
-        if (lower.contains("wrong password") || lower.contains("invalid password") || lower.contains("password")) return ERR_PASSWORD;
-        if (lower.contains("no available seats") || lower.contains("table is full") || lower.contains("can join a table only")) return ERR_SEAT;
-        if (lower.contains("player can't join")) return ERR_SEAT;
-        if (lower.contains("could not create player")) return ERR_FAILED;
-        if (lower.contains("decktype") || lower.contains("deck type") || lower.contains("invalid deck type")) return ERR_INVALID_DECK_TYPE;
-        if (lower.contains("gametype") || lower.contains("game type") || lower.contains("invalid game type")) return ERR_INVALID_GAME_TYPE;
-        return ERR_FAILED;
-    }
-
     private String pollDetailedMessage(long sinceMillis, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
         while (System.currentTimeMillis() < deadline) {
@@ -315,20 +278,19 @@ public class ProxyClient implements MageClient {
         return null;
     }
 
-    private String stripServerErrorPrefix(String msg) {
-        if (msg == null) return null;
-        if (msg.startsWith("Server error: ")) return msg.substring("Server error: ".length());
-        if (msg.startsWith("Remote task error: ")) return msg.substring("Remote task error: ".length());
-        return msg;
+    /** Respuesta ok:false con el detalle real del servidor (y su errorCode clasificado). */
+    @Override
+    public void sendFailure(WebSocket conn, String action, String requestId, long start) {
+        String detail = pollDetailedMessage(start, 1600);
+        if (detail == null) detail = ErrorClassifier.stripServerErrorPrefix(session.getLastError());
+        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
+        String code = detail != null ? ErrorClassifier.classifyErrorCode(detail) : ProxyProtocol.ERR_FAILED;
+        gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, code, detail != null ? detail : ProxyProtocol.ERR_FAILED));
     }
 
-    /** Respuesta ok:false con el detalle real del servidor (y su errorCode clasificado). */
-    private void sendFailure(WebSocket conn, String action, String requestId, long start) {
-        String detail = pollDetailedMessage(start, 1600);
-        if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
-        if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
-        String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
-        gateway.send(conn, resultJson(action, requestId, false, code, detail != null ? detail : ERR_FAILED));
+    @Override
+    public void startSims(JsonObject args, UUID roomId, UUID tableId) {
+        simManager.startSims(args, roomId, tableId);
     }
 
     /** Aviso no fatal a la web (p.ej. un asiento SIM no pudo unirse). */
@@ -388,7 +350,7 @@ public class ProxyClient implements MageClient {
                         if (extracted == null && o.has("text") && o.get("text").isJsonPrimitive()) extracted = o.get("text").getAsString();
                         if (extracted == null && json.length() < 2000) extracted = json;
                     }
-                    if (extracted != null && !extracted.isEmpty()) captureDetailedMessage(stripServerErrorPrefix(extracted));
+                    if (extracted != null && !extracted.isEmpty()) captureDetailedMessage(ErrorClassifier.stripServerErrorPrefix(extracted));
                 }
             }
         } catch (Exception ignored) {}
@@ -523,7 +485,7 @@ public class ProxyClient implements MageClient {
         try {
             cmd = JsonParser.parseString(message).getAsJsonObject();
         } catch (JsonSyntaxException ex) {
-            gateway.send(conn, resultJson("", requestId, false, ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
+            gateway.send(conn, ProxyProtocol.resultJson("", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
             return;
         }
         if (cmd.has("requestId")) {
@@ -540,25 +502,25 @@ public class ProxyClient implements MageClient {
         // auth por conexión: connect/ping son públicos; el resto exige sesión autorizada
         boolean isPublic = "connect".equals(action) || "ping".equals(action);
         if (!isPublic && !authorized.contains(conn)) {
-            gateway.send(conn, resultJson(action, requestId, false, ERR_NOT_AUTHORIZED, "not connected: send connect first"));
+            gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_NOT_AUTHORIZED, "not connected: send connect first"));
             return;
         }
 
         // gameId obligatorio para todas las acciones de partida
-        if (requiresGameId(action) && uuid(args, "gameId", null) == null) {
-            gateway.send(conn, resultJson(action, requestId, false, ERR_GAME_ID_REQUIRED, "gameId is required"));
+        if (requiresGameId(action) && JsonArgs.uuid(args, "gameId", null) == null) {
+            gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_GAME_ID_REQUIRED, "gameId is required"));
             return;
         }
 
         try {
             switch (action) {
                 case "connect": {
-                    String host = str(args, "host", config.getServerHost());
-                    int port = getInt(args, "port", config.getServerPort());
-                    String username = str(args, "username", config.getUsername());
-                    String password = str(args, "password", config.getPassword());
-                    String flagName = str(args, "flagName", "world.png");
-                    int avatarId = getInt(args, "avatarId", 51);
+                    String host = JsonArgs.str(args, "host", config.getServerHost());
+                    int port = JsonArgs.getInt(args, "port", config.getServerPort());
+                    String username = JsonArgs.str(args, "username", config.getUsername());
+                    String password = JsonArgs.str(args, "password", config.getPassword());
+                    String flagName = JsonArgs.str(args, "flagName", "world.png");
+                    int avatarId = JsonArgs.getInt(args, "avatarId", 51);
                     connect(conn, requestId, host, port, username, password, flagName, avatarId);
                     break;
                 }
@@ -569,7 +531,7 @@ public class ProxyClient implements MageClient {
                             graceDisconnectTimer = null;
                         }
                     }
-                    stopSims();
+                    simManager.stopSims();
                     session.connectStop(false, false);
                     connected = false;
                     if (accountKey != null) {
@@ -577,421 +539,43 @@ public class ProxyClient implements MageClient {
                         accountKey = null;
                     }
                     authorized.clear();
-                    gateway.send(conn, resultJson(action, requestId, true, null, null));
+                    gateway.send(conn, ProxyProtocol.resultJson(action, requestId, true, null, null));
                     break;
                 }
                 case "ping": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, "pong"));
-                    break;
-                }
-                case "getServerInfo": {
-                    JsonObject data = new JsonObject();
-                    data.addProperty("host", session.getServerHost());
-                    data.addProperty("version", session.getVersionInfo());
-                    data.addProperty("connected", connected);
-                    data.addProperty("sessionId", session.getSessionId());
-                    data.addProperty("protocolVersion", Config.PROTOCOL_VERSION);
-                    gateway.send(conn, resultJson(action, requestId, true, null, data));
-                    break;
-                }
-                case "getGameTypes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getGameTypes()));
-                    break;
-                }
-                case "getTournamentGameTypes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getTournamentGameTypes()));
-                    break;
-                }
-                case "getTournamentTypes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getTournamentTypes()));
-                    break;
-                }
-                case "getDraftCubes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getDraftCubes()));
-                    break;
-                }
-                case "getDeckTypes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, Arrays.asList(session.getDeckTypes())));
-                    break;
-                }
-                case "getPlayerTypes": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, Arrays.asList(session.getPlayerTypes())));
-                    break;
-                }
-                case "getTables": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getTables(roomId)));
-                    break;
-                }
-                case "getRoomUsers": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getRoomUsers(roomId)));
-                    break;
-                }
-                case "getRoomChatId": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getRoomChatId(roomId).orElse(null)));
-                    break;
-                }
-                case "getFinishedMatches": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getFinishedMatches(roomId)));
-                    break;
-                }
-                case "getServerMessages": {
-                    gateway.send(conn, resultJson(action, requestId, true, null, session.getServerMessages()));
-                    break;
-                }
-                case "joinChat": {
-                    UUID chatId = uuid(args, "chatId", null);
-                    boolean ok = chatId != null && session.joinChat(chatId);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, ok ? null : "joinChat failed, need valid chatId"));
-                    break;
-                }
-                case "leaveChat": {
-                    UUID chatId = uuid(args, "chatId", null);
-                    boolean ok = chatId != null && session.leaveChat(chatId);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
-                    break;
-                }
-                case "getGameChatId": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    UUID chatId = gameId != null ? session.getGameChatId(gameId).orElse(null) : null;
-                    gateway.send(conn, resultJson(action, requestId, true, null, chatId));
-                    break;
-                }
-                case "sendChatMessage": {
-                    UUID chatId = uuid(args, "chatId", null);
-                    String text = str(args, "text", "");
-                    boolean ok = chatId != null && session.sendChatMessage(chatId, text);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
-                    break;
-                }
-                case "createTable": {
-                    long start = System.currentTimeMillis();
-                    MatchOptions options = parseMatchOptions(args);
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    Object result = session.createTable(roomId, options);
-                    boolean ok = result != null;
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, result));
-                        if (result instanceof TableView) {
-                            startSims(args, roomId, ((TableView) result).getTableId());
-                        }
-                    }
-                    break;
-                }
-                case "joinTable": {
-                    long start = System.currentTimeMillis();
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    String playerName = str(args, "playerName", session.getUserName());
-                    PlayerType playerType = PlayerType.valueOf(str(args, "playerType", "HUMAN").toUpperCase(Locale.ROOT));
-                    int skill = getInt(args, "skill", 0);
-                    DeckCardLists deck = DeckJson.parse(args.getAsJsonObject("deck"));
-                    deck = DeckValidation.normalizeForXMage(deck, str(args, "deckType", null), str(args, "gameType", null));
-                    String password = str(args, "password", "");
-                    boolean ok = session.joinTable(roomId, tableId, playerName, playerType, skill, deck, password);
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, null));
-                    }
-                    break;
-                }
-                case "leaveTable": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.leaveTable(roomId, tableId), null, null));
-                    break;
-                }
-                case "removeTable": {
-                    // siempre la variante con roomId: removeTable(tableId) es la
-                    // variante de admin (adminTableRemove) y falla con "Wrong admin
-                    // access" para usuarios normales, dejando mesas huérfanas
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.removeTable(roomId, tableId), null, null));
-                    break;
-                }
-                case "startMatch": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.startMatch(roomId, tableId), null, null));
-                    break;
-                }
-                case "watchTable": {
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.watchTable(roomId, tableId), null, null));
-                    break;
-                }
-                case "watchGame": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.watchGame(gameId), null, null));
-                    break;
-                }
-                case "replayGame": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    boolean ok = gameId != null && session.replayGame(gameId);
-                    gateway.send(conn, resultJson(action, requestId, ok, ok ? null : ERR_FAILED, null));
-                    break;
-                }
-                case "startReplay": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.startReplay(gameId), null, null));
-                    break;
-                }
-                case "stopReplay": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.stopReplay(gameId), null, null));
-                    break;
-                }
-                case "replayNext": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.nextPlay(gameId), null, null));
-                    break;
-                }
-                case "replayPrevious": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.previousPlay(gameId), null, null));
-                    break;
-                }
-                case "replaySkipForward": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    int moves = getInt(args, "moves", 1);
-                    gateway.send(conn, resultJson(action, requestId, session.skipForward(gameId, moves), null, null));
-                    break;
-                }
-                case "createTournamentTable": {
-                    long start = System.currentTimeMillis();
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    mage.game.tournament.TournamentOptions tOpts = parseTournamentOptions(args);
-                    Object result = session.createTournamentTable(roomId, tOpts);
-                    boolean ok = result != null;
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, result));
-                    }
-                    break;
-                }
-                case "joinTournamentTable": {
-                    long start = System.currentTimeMillis();
-                    UUID roomId = uuid(args, "roomId", session.getMainRoomId());
-                    UUID tableId = uuid(args, "tableId", null);
-                    String playerName = str(args, "playerName", session.getUserName());
-                    PlayerType playerType = PlayerType.valueOf(str(args, "playerType", "HUMAN").toUpperCase(Locale.ROOT));
-                    int skill = getInt(args, "skill", 0);
-                    DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject() ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
-                    deck = DeckValidation.normalizeForXMage(deck, str(args, "deckType", null), str(args, "gameType", null));
-                    String password = str(args, "password", "");
-                    boolean ok = session.joinTournamentTable(roomId, tableId, playerName, playerType, skill, deck, password);
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, null));
-                    }
-                    break;
-                }
-                case "watchTournamentTable": {
-                    UUID tableId = uuid(args, "tableId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.watchTournamentTable(tableId), null, null));
-                    break;
-                }
-                case "getTournament": {
-                    UUID tournamentId = uuid(args, "tournamentId", null);
-                    gateway.send(conn, resultJson(action, requestId, tournamentId != null, tournamentId == null ? ERR_INVALID_ARGUMENT : null, tournamentId != null ? session.getTournament(tournamentId) : null));
-                    break;
-                }
-                case "getTournamentChatId": {
-                    UUID tournamentId = uuid(args, "tournamentId", null);
-                    java.util.Optional<UUID> chatId = tournamentId != null ? session.getTournamentChatId(tournamentId) : java.util.Optional.empty();
-                    gateway.send(conn, resultJson(action, requestId, true, null, chatId.orElse(null)));
-                    break;
-                }
-                case "quitTournament": {
-                    UUID tournamentId = uuid(args, "tournamentId", null);
-                    gateway.send(conn, resultJson(action, requestId, tournamentId != null && session.quitTournament(tournamentId), null, null));
-                    break;
-                }
-                case "quitDraft": {
-                    UUID draftId = uuid(args, "draftId", null);
-                    gateway.send(conn, resultJson(action, requestId, draftId != null && session.quitDraft(draftId), null, null));
-                    break;
-                }
-                case "sendCardPick": {
-                    UUID draftId = uuid(args, "draftId", null);
-                    UUID cardId = uuid(args, "cardId", null);
-                    java.util.Set<UUID> hidden = null;
-                    if (args.has("hiddenCards") && args.get("hiddenCards").isJsonArray()) {
-                        hidden = new java.util.HashSet<>();
-                        for (com.google.gson.JsonElement e : args.getAsJsonArray("hiddenCards")) {
-                            try { hidden.add(UUID.fromString(e.getAsString())); } catch (Exception ignored) {}
-                        }
-                    }
-                    Object res = (draftId != null && cardId != null) ? session.sendCardPick(draftId, cardId, hidden) : null;
-                    gateway.send(conn, resultJson(action, requestId, res != null, res == null ? ERR_FAILED : null, res));
-                    break;
-                }
-                case "sendCardMark": {
-                    UUID draftId = uuid(args, "draftId", null);
-                    UUID cardId = uuid(args, "cardId", null);
-                    Object res = (draftId != null && cardId != null) ? session.sendCardMark(draftId, cardId) : null;
-                    gateway.send(conn, resultJson(action, requestId, true, null, res));
-                    break;
-                }
-                case "setBoosterLoaded": {
-                    UUID draftId = uuid(args, "draftId", null);
-                    boolean ok = draftId != null && session.setBoosterLoaded(draftId);
-                    gateway.send(conn, resultJson(action, requestId, true, null, ok));
-                    break;
-                }
-                case "stopWatching": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.stopWatching(gameId), null, null));
-                    break;
-                }
-                case "joinGame": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.joinGame(gameId), null, null));
-                    break;
-                }
-                case "quitMatch": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    gateway.send(conn, resultJson(action, requestId, session.quitMatch(gameId), null, null));
-                    break;
-                }
-                case "submitDeck": {
-                    long start = System.currentTimeMillis();
-                    UUID tableId = uuid(args, "tableId", null);
-                    DeckCardLists deck = DeckJson.parse(args.getAsJsonObject("deck"));
-                    boolean ok = tableId != null && session.submitDeck(tableId, deck);
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, null));
-                    }
-                    break;
-                }
-                case "updateDeck": {
-                    long start = System.currentTimeMillis();
-                    UUID tableId = uuid(args, "tableId", null);
-                    DeckCardLists deck = DeckJson.parse(args.getAsJsonObject("deck"));
-                    boolean ok = tableId != null && session.updateDeck(tableId, deck);
-                    if (!ok) {
-                        sendFailure(conn, action, requestId, start);
-                    } else {
-                        gateway.send(conn, resultJson(action, requestId, true, null, null));
-                    }
-                    break;
-                }
-                case "validateDeck": {
-                    DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject()
-                            ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
-                    gateway.send(conn, resultJson(action, requestId, true, null, DeckValidation.validate(deck)));
-                    break;
-                }
-                case "updatePreferences": {
-                    UserData userData = UserData.getDefaultUserDataView();
-                    JsonObject phases = args.getAsJsonObject("phases");
-                    if (phases != null) {
-                        UserSkipPrioritySteps skips = new UserSkipPrioritySteps();
-                        JsonObject yourTurn = phases.getAsJsonObject("yourTurn");
-                        JsonObject opponentTurn = phases.getAsJsonObject("opponentTurn");
-                        if (yourTurn != null) {
-                            SkipPrioritySteps yt = skips.getYourTurn();
-                            yt.setUpkeep(getBool(yourTurn, "upkeep", false));
-                            yt.setDraw(getBool(yourTurn, "draw", false));
-                            yt.setMain1(getBool(yourTurn, "main1", true));
-                            yt.setBeforeCombat(getBool(yourTurn, "beginCombat", false));
-                            yt.setEndOfCombat(getBool(yourTurn, "endCombat", false));
-                            yt.setMain2(getBool(yourTurn, "main2", true));
-                            yt.setEndOfTurn(getBool(yourTurn, "endStep", false));
-                        }
-                        if (opponentTurn != null) {
-                            SkipPrioritySteps ot = skips.getOpponentTurn();
-                            ot.setUpkeep(getBool(opponentTurn, "upkeep", false));
-                            ot.setDraw(getBool(opponentTurn, "draw", false));
-                            ot.setMain1(getBool(opponentTurn, "main1", true));
-                            ot.setBeforeCombat(getBool(opponentTurn, "beginCombat", false));
-                            ot.setEndOfCombat(getBool(opponentTurn, "endCombat", false));
-                            ot.setMain2(getBool(opponentTurn, "main2", true));
-                            ot.setEndOfTurn(getBool(opponentTurn, "endStep", false));
-                        }
-                        userData.setUserSkipPrioritySteps(skips);
-                    }
-                    gateway.send(conn, resultJson(action, requestId, session.updatePreferencesForServer(userData), null, null));
-                    break;
-                }
-                case "sendPlayerAction": {
-                    PlayerAction playerAction = PlayerAction.valueOf(str(args, "action", ""));
-                    UUID gameId = uuid(args, "gameId", null);
-                    Object data = parseActionData(args.get("data"));
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerAction(playerAction, gameId, data), null, null));
-                    break;
-                }
-                case "sendPlayerUUID": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    UUID value = uuid(args, "value", null);
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerUUID(gameId, value), null, null));
-                    break;
-                }
-                case "sendPlayerBoolean": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    boolean value = getBool(args, "value", false);
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerBoolean(gameId, value), null, null));
-                    break;
-                }
-                case "sendPlayerInteger": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    int value = getInt(args, "value", 0);
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerInteger(gameId, value), null, null));
-                    break;
-                }
-                case "sendPlayerString": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    String value = str(args, "value", "");
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerString(gameId, value), null, null));
-                    break;
-                }
-                case "sendPlayerManaType": {
-                    UUID gameId = uuid(args, "gameId", null);
-                    UUID playerId = uuid(args, "playerId", null);
-                    ManaType manaType = ManaType.valueOf(str(args, "manaType", ""));
-                    gateway.send(conn, resultJson(action, requestId, session.sendPlayerManaType(gameId, playerId, manaType), null, null));
+                    gateway.send(conn, ProxyProtocol.resultJson(action, requestId, true, null, "pong"));
                     break;
                 }
                 default: {
-                    gateway.send(conn, resultJson(action, requestId, false, ERR_UNKNOWN_ACTION, "Unknown action: " + action));
+                    if (!CommandDispatch.dispatch(action, conn, requestId, args, this)) {
+                        gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_UNKNOWN_ACTION, "Unknown action: " + action));
+                    }
                     break;
                 }
             }
         } catch (IllegalArgumentException ex) {
-            String detail = stripServerErrorPrefix(ex.getMessage());
-            String code = classifyErrorCode(detail != null ? detail : ex.getMessage());
-            if (ERR_FAILED.equals(code) && detail != null && !detail.toLowerCase(Locale.ROOT).contains("invalid argument")) {
+            String detail = ErrorClassifier.stripServerErrorPrefix(ex.getMessage());
+            String code = ErrorClassifier.classifyErrorCode(detail != null ? detail : ex.getMessage());
+            if (ProxyProtocol.ERR_FAILED.equals(code) && detail != null && !detail.toLowerCase(Locale.ROOT).contains("invalid argument")) {
                 detail = "Invalid argument: " + detail;
             }
-            gateway.send(conn, resultJson(action, requestId, false, code, detail != null ? detail : "Invalid argument: " + ex.getMessage()));
+            gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, code, detail != null ? detail : "Invalid argument: " + ex.getMessage()));
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Command failed: " + action, ex);
             String raw = ex.getMessage() != null ? ex.getMessage() : ex.toString();
-            String detail = stripServerErrorPrefix(raw);
+            String detail = ErrorClassifier.stripServerErrorPrefix(raw);
             if (detail != null && detail.startsWith("Command failed: ")) detail = detail.substring("Command failed: ".length());
             // si la excepción ya trae "Card not found - ...", no prefijar para no enterrar el pattern
             String payload = detail != null && !detail.isEmpty() ? detail : raw;
             // para errores de cubierta, intentar pescar también el callback que el servidor ya encoló
             String polled = pollDetailedMessage(System.currentTimeMillis() - 2000, 900);
             if (polled != null && polled.length() > payload.length()) payload = polled;
-            String code = classifyErrorCode(payload);
+            String code = ErrorClassifier.classifyErrorCode(payload);
             String msg = payload;
-            if (ERR_FAILED.equals(code) && !payload.toLowerCase(Locale.ROOT).startsWith("command failed")) {
+            if (ProxyProtocol.ERR_FAILED.equals(code) && !payload.toLowerCase(Locale.ROOT).startsWith("command failed")) {
                 msg = "Command failed: " + payload;
             }
-            gateway.send(conn, resultJson(action, requestId, false, code, msg));
+            gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, code, msg));
         }
     }
 
@@ -1036,7 +620,7 @@ public class ProxyClient implements MageClient {
             if (conn != null) {
                 authorized.add(conn);
             }
-            gateway.send(conn, resultJson("connect", requestId, true, null, null));
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
             return;
         }
         if (conn != null) {
@@ -1049,7 +633,7 @@ public class ProxyClient implements MageClient {
                 gateway.unregisterSession(accountKey);
                 accountKey = null;
             }
-            stopSims();
+            simManager.stopSims();
             authorized.clear();
             session.connectStop(false, false);
             connected = false;
@@ -1075,8 +659,7 @@ public class ProxyClient implements MageClient {
         connection.setUserData(userData);
         connection.setProxyType(Connection.ProxyType.NONE);
 
-        serverHost = host;
-        serverPort = port;
+        simManager.setServer(host, port);
 
         boolean ok = session.connectStart(connection);
         connected = ok;
@@ -1102,16 +685,16 @@ public class ProxyClient implements MageClient {
             if (conn != null) {
                 authorized.add(conn);
             }
-            gateway.send(conn, resultJson("connect", requestId, true, null, null));
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
         } else {
             // el servidor manda el detalle del fallo por un callback SHOW_USERMESSAGE
             // (llega ~3s después, tras su sleep anti-bruteforce): sondearlo para no
             // responder con un error vacío
             long start = System.currentTimeMillis();
             String detail = pollDetailedMessage(start, 4500);
-            if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
-            if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ERR_FAILED;
-            gateway.send(conn, resultJson("connect", requestId, false, classifyErrorCode(detail), detail));
+            if (detail == null) detail = ErrorClassifier.stripServerErrorPrefix(session.getLastError());
+            if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ProxyProtocol.ERR_FAILED;
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
         }
     }
 
@@ -1122,7 +705,7 @@ public class ProxyClient implements MageClient {
     /** Adjunta una conexión ya autenticada a esta sesión existente (misma cuenta, otra ventana). */
     public synchronized void attach(WebSocket conn, String requestId) {
         authorized.add(conn);
-        gateway.send(conn, resultJson("connect", requestId, true, null, null));
+        gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "connected");
         ev.addProperty("info", "Connected (attached to existing session)");
@@ -1139,300 +722,7 @@ public class ProxyClient implements MageClient {
         }
     }
 
-    static MatchOptions parseMatchOptions(JsonObject args) {
-        String name = str(args, "name", "Game " + System.currentTimeMillis());
-        String gameType = str(args, "gameType", "");
-        boolean multiPlayer = getBool(args, "multiPlayer", false);
-        MatchOptions options = new MatchOptions(name, gameType, multiPlayer);
-        options.setDeckType(str(args, "deckType", ""));
-        options.setLimited(getBool(args, "limited", false));
-        options.setWinsNeeded(getInt(args, "winsNeeded", 1));
-        // default high value, so any user can create tables (real client lets the owner pick it)
-        options.setQuitRatio(getInt(args, "quitRatio", 100));
-        options.setPassword(str(args, "password", ""));
-        options.setSpectatorsAllowed(getBool(args, "spectatorsAllowed", true));
-        if (args.has("rollbackTurnsAllowed")) {
-            options.setRollbackTurnsAllowed(getBool(args, "rollbackTurnsAllowed", true));
-        }
-        if (args.has("rated")) {
-            options.setRated(getBool(args, "rated", false));
-        }
-        if (args.has("skillLevel")) {
-            try {
-                options.setSkillLevel(mage.constants.SkillLevel.valueOf(str(args, "skillLevel", "CASUAL").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("timeLimit")) {
-            try {
-                options.setMatchTimeLimit(mage.constants.MatchTimeLimit.valueOf(str(args, "timeLimit", "NONE").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("bufferTime")) {
-            try {
-                options.setMatchBufferTime(mage.constants.MatchBufferTime.valueOf(str(args, "bufferTime", "NONE").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("freeMulligans")) {
-            options.setFreeMulligans(getInt(args, "freeMulligans", 0));
-        }
-        if (args.has("attackOption")) {
-            try {
-                options.setAttackOption(mage.constants.MultiplayerAttackOption.valueOf(str(args, "attackOption", "LEFT").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("range")) {
-            try {
-                options.setRange(mage.constants.RangeOfInfluence.valueOf(str(args, "range", "ALL").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("minimumRating")) {
-            options.setMinimumRating(getInt(args, "minimumRating", 0));
-        }
-        if (args.has("quitRatio")) {
-            options.setQuitRatio(getInt(args, "quitRatio", 100));
-        }
-        if (args.has("edhPowerLevel")) {
-            options.setEdhPowerLevel(getInt(args, "edhPowerLevel", 100));
-        }
-        if (args.has("mulliganType")) {
-            try {
-                options.setMullgianType(mage.game.mulligan.MulliganType.valueOf(str(args, "mulliganType", "GAME_DEFAULT").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("customStartLifeEnabled")) {
-            options.setCustomStartLifeEnabled(getBool(args, "customStartLifeEnabled", false));
-            if (args.has("customStartLife")) options.setCustomStartLife(getInt(args, "customStartLife", 20));
-        }
-        if (args.has("customStartHandSizeEnabled")) {
-            options.setCustomStartHandSizeEnabled(getBool(args, "customStartHandSizeEnabled", false));
-            if (args.has("customStartHandSize")) options.setCustomStartHandSize(getInt(args, "customStartHandSize", 7));
-        }
-        if (args.has("planeChase")) {
-            options.setPlaneChase(getBool(args, "planeChase", false));
-        }
-        if (args.has("bannedUsers") && args.get("bannedUsers").isJsonArray()) {
-            java.util.Set<String> banned = new java.util.HashSet<>();
-            for (JsonElement e : args.getAsJsonArray("bannedUsers")) banned.add(e.getAsString());
-            options.setBannedUsers(banned);
-        }
-        // modo test: no barajar el mazo inicial (la librería queda en el orden
-        // enviado); los servidores sin modificar ignoran el campo
-        options.setSkipInitShuffling(getBool(args, "skipInitShuffling", false));
-        // modo test: sin sorteo aleatorio de starting player (el primer jugador de
-        // la mesa empieza); los servidores sin modificar ignoran el campo
-        options.setSkipStartingPlayerChoice(getBool(args, "skipStartingPlayerChoice", false));
-        options.getPlayerTypes().add(PlayerType.HUMAN);
-        if (args.has("playerTypes")) {
-            JsonArray arr = args.getAsJsonArray("playerTypes");
-            List<PlayerType> types = new java.util.ArrayList<>();
-            for (JsonElement e : arr) {
-                String raw = e.getAsString();
-                if ("SIM".equalsIgnoreCase(raw)) {
-                    // asiento simulado: el servidor oficial ve un asiento humano normal
-                    types.add(PlayerType.HUMAN);
-                } else {
-                    types.add(PlayerType.valueOf(raw.toUpperCase(Locale.ROOT)));
-                }
-            }
-            if (!types.isEmpty()) {
-                options.getPlayerTypes().clear();
-                options.getPlayerTypes().addAll(types);
-            }
-        }
-        return options;
-    }
-
-    static mage.game.tournament.TournamentOptions parseTournamentOptions(JsonObject args) {
-        String name = str(args, "name", "Tournament " + System.currentTimeMillis());
-        String tournamentType = str(args, "tournamentType", "Elimination");
-        String matchType = str(args, "matchType", str(args, "gameType", "Two Player Duel"));
-        boolean isSingleMultiplayerGame = getBool(args, "isSingleMultiplayerGame", false);
-        mage.game.tournament.TournamentOptions tOpts = new mage.game.tournament.TournamentOptions(name, matchType, isSingleMultiplayerGame);
-        tOpts.setTournamentType(tournamentType);
-        if (args.has("numberRounds")) tOpts.setNumberRounds(getInt(args, "numberRounds", 0));
-        if (args.has("password")) tOpts.setPassword(str(args, "password", ""));
-        if (args.has("quitRatio")) tOpts.setQuitRatio(getInt(args, "quitRatio", 100));
-        if (args.has("minimumRating")) tOpts.setMinimumRating(getInt(args, "minimumRating", 0));
-        if (args.has("watchingAllowed")) tOpts.setWatchingAllowed(getBool(args, "watchingAllowed", true));
-        if (args.has("playerTypes")) {
-            JsonArray arr = args.getAsJsonArray("playerTypes");
-            List<PlayerType> types = new java.util.ArrayList<>();
-            for (JsonElement e : arr) {
-                String raw = e.getAsString();
-                if ("SIM".equalsIgnoreCase(raw)) types.add(PlayerType.HUMAN);
-                else try { types.add(PlayerType.valueOf(raw.toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-            }
-            if (!types.isEmpty()) {
-                tOpts.getPlayerTypes().clear();
-                tOpts.getPlayerTypes().addAll(types);
-            }
-        }
-        // matchOptions sub-fields
-        MatchOptions mOpts = tOpts.getMatchOptions();
-        mOpts.setDeckType(str(args, "deckType", ""));
-        mOpts.setLimited(getBool(args, "limited", false));
-        mOpts.setWinsNeeded(getInt(args, "winsNeeded", 1));
-        mOpts.setQuitRatio(getInt(args, "quitRatio", 100));
-        mOpts.setPassword(str(args, "password", ""));
-        mOpts.setSpectatorsAllowed(getBool(args, "spectatorsAllowed", true));
-        if (args.has("skillLevel")) {
-            try { mOpts.setSkillLevel(mage.constants.SkillLevel.valueOf(str(args, "skillLevel", "CASUAL").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        if (args.has("timeLimit")) {
-            try { mOpts.setMatchTimeLimit(mage.constants.MatchTimeLimit.valueOf(str(args, "timeLimit", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        if (args.has("bufferTime")) {
-            try { mOpts.setMatchBufferTime(mage.constants.MatchBufferTime.valueOf(str(args, "bufferTime", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        // limitedOptions
-        if (args.has("limitedOptions") && args.get("limitedOptions").isJsonObject()) {
-            JsonObject lo = args.getAsJsonObject("limitedOptions");
-            mage.game.tournament.LimitedOptions lim = new mage.game.tournament.LimitedOptions();
-            if (lo.has("constructionTime")) lim.setConstructionTime(getInt(lo, "constructionTime", 600));
-            if (lo.has("numberBoosters")) lim.setNumberBoosters(getInt(lo, "numberBoosters", 3));
-            if (lo.has("draftCubeName")) lim.setDraftCubeName(str(lo, "draftCubeName", ""));
-            try {
-                java.lang.reflect.Field f = mage.game.tournament.LimitedOptions.class.getDeclaredField("sets");
-                f.setAccessible(true);
-                @SuppressWarnings("unchecked")
-                List<String> sets = (List<String>) f.get(lim);
-                if (lo.has("setCodes") && lo.get("setCodes").isJsonArray()) {
-                    for (JsonElement e : lo.getAsJsonArray("setCodes")) sets.add(e.getAsString());
-                } else if (lo.has("sets") && lo.get("sets").isJsonArray()) {
-                    for (JsonElement e : lo.getAsJsonArray("sets")) sets.add(e.getAsString());
-                }
-            } catch (Exception ignored) {}
-            tOpts.setLimitedOptions(lim);
-        }
-        return tOpts;
-    }
-
-    // ============================ simulated seats (SIM) ============================
-
-    /** Crea y une un SimPlayer por cada asiento "SIM" de la mesa recién creada. */
-    private void startSims(JsonObject args, UUID roomId, UUID tableId) {
-        if (!args.has("playerTypes")) {
-            return;
-        }
-        JsonArray types = args.getAsJsonArray("playerTypes");
-        int simSeats = 0;
-        for (JsonElement e : types) {
-            if ("SIM".equalsIgnoreCase(e.getAsString())) {
-                simSeats++;
-            }
-        }
-        if (simSeats == 0) {
-            return;
-        }
-        JsonArray simDecks = args.has("simDecks") && args.get("simDecks").isJsonArray()
-                ? args.getAsJsonArray("simDecks") : null;
-        for (int i = 0; i < simSeats; i++) {
-            DeckCardLists deck = null;
-            if (simDecks != null && i < simDecks.size() && simDecks.get(i).isJsonObject()) {
-                deck = DeckJson.parse(simDecks.get(i).getAsJsonObject());
-            }
-            if (deck == null) {
-                deck = defaultSimDeck();
-            }
-            // un asiento SIM con cartas no implementadas dejaría la mesa sin bot y sin
-            // señal: quitarlas (la validación es la misma que la del servidor oficial)
-            deck = DeckValidation.stripMissing(deck);
-            SimPlayer sim = new SimPlayer(nextSimUsername(), config.getPassword(), deck, serverHost, serverPort);
-            sims.put(tableId + "#" + i, sim);
-            boolean joined = sim.startAndJoin(roomId, tableId);
-            logger.info("sim seat " + i + " for table " + tableId + " (" + sim.getUsername() + ") joined=" + joined);
-            if (!joined) {
-                String detail = stripServerErrorPrefix(sim.getLastJoinError());
-                broadcastError("SIM " + sim.getUsername() + " failed to join"
-                        + (detail != null && !detail.isEmpty() ? ": " + detail : ""));
-            }
-        }
-    }
-
-    private String nextSimUsername() {
-        return "sim-" + String.format("%06d", ++simCounter) + "-" + (System.currentTimeMillis() % 1000);
-    }
-
-    /** Mazo por defecto del asiento simulado: solo tierras (partida determinista). */
-    private static DeckCardLists defaultSimDeck() {
-        JsonObject deck = new JsonObject();
-        deck.addProperty("name", "Sim lands");
-        JsonArray cards = new JsonArray();
-        cards.add(cardJson("Island", "LEA", "288", 30));
-        cards.add(cardJson("Mountain", "LEA", "292", 30));
-        deck.add("cards", cards);
-        deck.add("sideboard", new JsonArray());
-        return DeckJson.parse(deck);
-    }
-
-    private static JsonObject cardJson(String name, String set, String number, int amount) {
-        JsonObject card = new JsonObject();
-        card.addProperty("cardName", name);
-        card.addProperty("setCode", set);
-        card.addProperty("cardNumber", number);
-        card.addProperty("amount", amount);
-        return card;
-    }
-
-    /** Detiene todos los bots simulados (nuevo usuario o desconexión del web). */
-    private void stopSims() {
-        for (SimPlayer sim : sims.values()) {
-            try {
-                sim.stop();
-            } catch (Exception ignored) {
-            }
-        }
-        sims.clear();
-    }
-
-    private static Object parseActionData(JsonElement data) {
-        if (data == null || data.isJsonNull()) {
-            return null;
-        }
-        if (data.isJsonPrimitive()) {
-            com.google.gson.JsonPrimitive prim = data.getAsJsonPrimitive();
-            if (prim.isBoolean()) {
-                return prim.getAsBoolean();
-            }
-            if (prim.isNumber()) {
-                return prim.getAsInt();
-            }
-            return prim.getAsString();
-        }
-        return data.toString();
-    }
-
     // ============================ helpers ============================
-
-    private static String str(JsonObject args, String key, String defaultValue) {
-        return args.has(key) && args.get(key).isJsonPrimitive() ? args.get(key).getAsString() : defaultValue;
-    }
-
-    private static int getInt(JsonObject args, String key, int defaultValue) {
-        return args.has(key) && args.get(key).isJsonPrimitive() ? args.get(key).getAsInt() : defaultValue;
-    }
-
-    private static boolean getBool(JsonObject args, String key, boolean defaultValue) {
-        return args.has(key) && args.get(key).isJsonPrimitive() ? args.get(key).getAsBoolean() : defaultValue;
-    }
-
-    private static UUID uuid(JsonObject args, String key, UUID defaultValue) {
-        String value = str(args, key, null);
-        if (value == null || value.isEmpty()) {
-            return defaultValue;
-        }
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException ex) {
-            return defaultValue;
-        }
-    }
 
     private static void sendInfo(WebSocket conn, String message) {
         JsonObject ev = new JsonObject();
@@ -1446,39 +736,4 @@ public class ProxyClient implements MageClient {
             conn.send(json);
         }
     }
-
-    static String resultJson(String action, String requestId, boolean ok, String errorCode, Object data) {
-        JsonObject res = new JsonObject();
-        res.addProperty("type", "result");
-        res.addProperty("action", action);
-        res.addProperty("requestId", requestId == null ? "" : requestId);
-        res.addProperty("ok", ok);
-        if (errorCode != null) {
-            res.addProperty("errorCode", errorCode);
-        }
-        if (!ok) {
-            if (data instanceof String) {
-                res.addProperty("error", (String) data);
-            } else if (data != null) {
-                res.addProperty("error", JsonUtil.toJson(data));
-            } else {
-                res.addProperty("error", errorCode == null ? "Command failed" : errorCode);
-            }
-        } else if (data != null) {
-            if (data instanceof JsonElement) {
-                res.add("data", (JsonElement) data);
-            } else if (data instanceof String) {
-                res.addProperty("data", (String) data);
-            } else {
-                res.add("data", JsonParser.parseString(JsonUtil.toJson(data)));
-            }
-        }
-        return res.toString();
-    }
-
-    /** Compat: usado por el auto-connect de arranque (sin requestId). */
-    private static String resultJson(String action, boolean ok, Object data) {
-        return resultJson(action, "", ok, ok ? null : ERR_FAILED, data);
-    }
 }
-

@@ -4,7 +4,7 @@ import TableFilterBar, {
   INITIAL_TABLE_FILTERS,
   filterTables,
 } from './TableFilterBar'
-import { formatDeckTypeName } from './LobbyScreen'
+import { formatDeckTypeName } from './lobbyUtils'
 import type { TableView } from '../net/types'
 
 afterEach(() => {

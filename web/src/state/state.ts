@@ -1,182 +1,31 @@
-import type { ChatMessageEvent, DeckCardEntry, DeckJson, DraftClientMessage, GameEndInfo, GameView, LobbyEnvelope, TableView, TournamentView } from '../net/types'
-import type { FeedbackPrompt, FeedbackCard } from '../game/feedback'
-import type { PhaseStops } from '../net/commands'
-import { loadConn, loadFxSettings, loadAudioSettings, loadAppearanceSettings, type ConnectionInfo } from './persistence'
+import type { SessionSlice } from './slices/session'
+import { initialSession } from './slices/session'
+import type { LobbySlice, LogChannel } from './slices/lobby'
+import { initialLobby } from './slices/lobby'
+import type { GameSlice } from './slices/game'
+import { initialGame } from './slices/game'
+import type { LimitedSlice } from './slices/limited'
+import { initialLimited } from './slices/limited'
+import type { SettingsSlice } from './slices/settings'
+import { initialSettings } from './slices/settings'
 
-export type LogChannel = 'game' | 'chat' | 'system'
+export type {
+  SessionSlice,
+  LogChannel, LogEntry, LobbySlice,
+  CombatState, SideboardCard, SideboardScreenState, UserRequestButton,
+  UserRequestView, CardViewerState, GameSlice,
+  DraftState, TournamentState, ConstructState, LimitedSlice,
+  SettingsState, SettingsSlice,
+} from './slices'
 
-export interface LogEntry {
-  id: number
-  time: number
-  from: string
-  text: string
-  gameId?: string
-  channel?: LogChannel
-}
-
-export interface CombatState {
-  mode: 'attack' | 'block'
-  selectable: string[]
-  special: boolean
-  chosen: string[]
-}
-
-/** A card in the sideboard screen (instance ID + resolved Scryfall data). */
-export interface SideboardCard {
-  instanceId: string
-  setCode: string
-  cardNumber: string
-  name: string
-}
-
-/** State for the sideboard screen (between games in Bo3). */
-export interface SideboardScreenState {
-  deckName: string
-  maindeck: SideboardCard[]
-  sideboard: SideboardCard[]
-  tableId: string
-  parentTableId: string | null
-  timeLeft: number
-  limited: boolean
-}
-
-/** A button of a generic server request dialog (USER_REQUEST_DIALOG). */
-export interface UserRequestButton {
-  text: string
-  action: string
-}
-
-/** State for the generic user-request dialog (server-driven buttons → PlayerAction). */
-export interface UserRequestView {
-  title: string
-  message: string
-  gameId?: string
-  buttons: UserRequestButton[]
-}
-
-/** State for read-only card viewers (VIEW_LIMITED_DECK / VIEW_SIDEBOARD). */
-export interface CardViewerState {
-  title: string
-  cards: FeedbackCard[]
-}
-
-/** Draft state (START_DRAFT / DRAFT_INIT / DRAFT_PICK / DRAFT_UPDATE / DRAFT_OVER). */
-export interface DraftState {
-  draftId: string
-  message: DraftClientMessage
-  timeLeft?: number
-}
-
-/** Tournament snapshot (TOURNAMENT_INIT / TOURNAMENT_UPDATE). */
-export interface TournamentState {
-  tournamentId: string
-  view: TournamentView
-}
-
-/** Limited construct (CONSTRUCT) — pool deckbuilding between draft and matches. */
-export interface ConstructState {
-  deckName: string
-  pool: Record<string, unknown>
-  tableId: string
-  parentTableId: string | null
-  timeLeft: number
-}
-
-export interface AppState {
-  phase: 'idle' | 'connecting' | 'lobby' | 'spectating_pending' | 'staging' | 'game'
-  conn: ConnectionInfo | null
-  wsUrl: string | null
-  connecting: boolean
-  wsAlive: boolean
-  lobby: LobbyEnvelope | null
-  roomChatId: string | null
-  chatMessages: ChatMessageEvent[]
-  watchingTable: TableView | null
-  stagingTableId: string | null
-  game: GameView | null
-  gameId: string | null
-  gameChatId: string | null
-  playableIds: string[]
-  playableWindow: { turn: number; phase: string } | null
-  combat: CombatState | null
-  gameEnd: GameEndInfo | null
-  myDeck: DeckJson | null
-  feedback: FeedbackPrompt | null
-  sideboard: DeckCardEntry[]
-  sideboardScreen: SideboardScreenState | null
-  userRequest: UserRequestView | null
-  rollbackDialogOpen: boolean
-  viewer: CardViewerState | null
-  draft: DraftState | null
-  tournament: TournamentState | null
-  construct: ConstructState | null
-  replayViewer: { gameView: GameView | null; result?: string } | null
-  phaseStops: PhaseStops
-  log: LogEntry[]
-  events: { method: string; time: number }[]
-  settings: {
-    autoKeepMulligan: boolean
-    autoPass: boolean
-    autoSubmitSideboard?: boolean
-    holdPriority: boolean
-    boardLayout: 'standard' | 'pod' | 'arena'
-    effects: boolean
-    animationSpeed: number
-    soundEnabled: boolean
-    masterVolume: number
-    sfxVolume: number
-    uiVolume: number
-    sleeveId: string
-    uiScale: import('./persistence').UiScale
-    cjkBoost: boolean
-  }
-  error: string | null
-}
+export interface AppState extends SessionSlice, LobbySlice, GameSlice, LimitedSlice, SettingsSlice {}
 
 export const initialState: AppState = {
-  phase: 'idle',
-  conn: loadConn(),
-  wsUrl: null,
-  connecting: false,
-  wsAlive: false,
-  lobby: null,
-  roomChatId: null,
-  chatMessages: [],
-  watchingTable: null,
-  stagingTableId: null,
-  game: null,
-  gameId: null,
-  gameChatId: null,
-  playableIds: [],
-  playableWindow: null,
-  combat: null,
-  gameEnd: null,
-  myDeck: null,
-  feedback: null,
-  sideboard: [],
-  sideboardScreen: null,
-  userRequest: null,
-  rollbackDialogOpen: false,
-  viewer: null,
-  draft: null,
-  tournament: null,
-  construct: null,
-  replayViewer: null,
-  phaseStops: {
-    yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
-    opponentTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
-  },
-  log: [],
-  events: [],
-  settings: {
-    autoKeepMulligan: false,
-    autoPass: false,
-    holdPriority: false,
-    ...loadFxSettings(),
-    ...loadAudioSettings(),
-    ...loadAppearanceSettings(),
-  },
-  error: null,
+  ...initialSession,
+  ...initialLobby,
+  ...initialGame,
+  ...initialLimited,
+  ...initialSettings,
 }
 
 let _state: AppState = initialState

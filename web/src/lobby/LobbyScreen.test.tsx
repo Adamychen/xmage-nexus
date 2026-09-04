@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractLobbyUsers, formatSeatHistory } from './LobbyScreen'
+import { extractLobbyUsers, formatSeatHistory } from './lobbyUtils'
 import type { RoomUsersView, UsersView } from '../net/types'
 
 describe('formatSeatHistory', () => {

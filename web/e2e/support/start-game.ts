@@ -123,7 +123,7 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
         await page.getByLabel(/Mazo activo/i).selectOption({ value: opts.deck })
       }
       if (opts.simDeck) {
-        await page.getByLabel(/Mazo para bots SIM|Mis Mazos/i).selectOption({ value: opts.simDeck })
+        await page.getByLabel(/Mazo global para SIM/i).selectOption({ value: opts.simDeck })
       }
     }
 

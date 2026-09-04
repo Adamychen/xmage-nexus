@@ -15,9 +15,9 @@ export default defineConfig({
         'src/board/gameToScene.ts',
         'src/board/zones.ts',
         'src/cards/cardImages.ts',
-        'src/game/feedback.ts',
+        'src/game/feedback/*.ts',
       ],
-      exclude: ['src/**/*.test.ts', 'src/__fixtures__/**'],
+      exclude: ['src/**/*.test.ts', 'src/__fixtures__/**', 'src/game/feedback/*.test.ts'],
       thresholds: {
         lines: 70,
         functions: 70,
