@@ -896,6 +896,8 @@ export const zhs: TranslationSchema = {
     issues_remove_and_play: '移除 {count} 张并开始',
     issues_cancel: '取消',
     issues_validating: '正在对照服务器验证套牌…',
+    issues_banner_title: '此套牌中有问题的牌',
+    issues_banner_same_card: '同一张牌，其他版本：{set} #{num}',
     unimplemented_badge: '服务器未实现',
     mismatch_badge: '载入其他卡牌',
     avg_cmc: '平均CMC',

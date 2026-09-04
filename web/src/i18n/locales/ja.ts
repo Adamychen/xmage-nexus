@@ -896,6 +896,8 @@ export const ja: TranslationSchema = {
     issues_remove_and_play: '{count} 枚削除してプレイ',
     issues_cancel: 'キャンセル',
     issues_validating: 'サーバーに対してデッキを検証中…',
+    issues_banner_title: 'このデッキに問題のあるカードがあります',
+    issues_banner_same_card: '同じカードの別版: {set} #{num}',
     unimplemented_badge: 'サーバーに未実装',
     mismatch_badge: '別のカードを読み込む',
     avg_cmc: '平均CMC',

@@ -181,10 +181,21 @@ export function t(
  * Automatically translates known backend/gateway error phrases or keys to the active language.
  * @param action - originating gateway action (joinTable, createTable, etc) to pick the right FAILED fallback
  */
-export function translateError(error: string | null | undefined, action?: string): string {
-  if (!error) return ''
+export function translateError(error: string | null | undefined, action?: string, errorCode?: string): string {
+  if (!error && !errorCode) return ''
+  if (error && String(error).trim() === 'FAILED' && errorCode && errorCode !== 'FAILED') {
+    return translateError(errorCode, action)
+  }
+  if (!error && errorCode) {
+    return translateError(errorCode, action)
+  }
   const str = String(error).trim()
   const lower = str.toLowerCase()
+  const joinFailedLower = t('errors.join_table_failed').toLowerCase()
+  const createFailedLower = t('errors.create_table_failed').toLowerCase()
+  if (lower.startsWith(joinFailedLower + ':') || lower.startsWith(createFailedLower + ':')) {
+    return str
+  }
 
   if (lower.includes('login fallido') || lower.includes('login failed') || lower.includes('invalid username or password') || lower.includes('can\'t receive server state')) {
     return t('errors.login_failed')
@@ -220,7 +231,7 @@ export function translateError(error: string | null | undefined, action?: string
     return t('errors.deck_read_failed')
   }
   if (lower.includes('card not found') || str === 'CARD_NOT_FOUND') {
-    return t('errors.card_not_found')
+    return lower.includes('card not found') ? `${t('errors.join_table_failed')}: ${str}` : t('errors.card_not_found')
   }
   const isJoin = action === 'joinTable' || action === 'joinTournamentTable'
   const isCreate = action === 'createTable' || action === 'createTournamentTable'
@@ -237,14 +248,17 @@ export function translateError(error: string | null | undefined, action?: string
   if (lower.includes('not started tables') || lower.includes('too much') && lower.includes('started') || str === 'TABLE_LIMIT') {
     return lower.includes('not started') ? prefixFor(str) : t('errors.table_limit')
   }
-  if (lower.includes('invalid deck') || lower.includes('no valid deck') || lower.includes('deck is not valid') || lower.includes('must contain') || lower.includes('too few cards') || lower.includes('deckvalidator') || str === 'INVALID_DECK' || lower.includes('cantidad') && lower.includes('mazo')) {
-    return lower.includes('invalid deck') || lower.includes('no valid deck') ? prefixFor(str) : t('errors.invalid_deck')
+  if (lower.includes('invalid deck') || lower.includes('no valid deck') || lower.includes('deck is not valid') || lower.includes('must contain') || lower.includes('too few cards') || lower.includes('deckvalidator') || str === 'INVALID_DECK' || lower.includes('cantidad') && lower.includes('mazo')
+      || lower.includes('too powerful') || lower.includes('power level') || lower.includes('requested no') || lower.includes('appropriate for the selected format') || lower.includes('select a deck that is appropriate') || lower.includes('no valid deck selected')) {
+    const verbose = lower.includes('invalid deck') || lower.includes('no valid deck') || lower.includes('too powerful') || lower.includes('power level') || lower.includes('requested no') || lower.includes('appropriate')
+    return verbose ? prefixFor(str) : t('errors.invalid_deck')
   }
   if (lower.includes('wrong password') || lower.includes('invalid password') || str === 'PASSWORD') {
-    return t('errors.invalid_password')
+    return lower.includes('wrong password') ? prefixFor(str) : t('errors.invalid_password')
   }
-  if (lower.includes('no available seats') || lower.includes('table is full') || lower.includes('can join a table only') || str === 'SEAT') {
-    return t('errors.table_full')
+  if (lower.includes('no available seats') || lower.includes('table is full') || lower.includes('can join a table only') || lower.includes("player can't join") || lower.includes('could not create player') || str === 'SEAT') {
+    const verbose = lower.includes('no available seats') || lower.includes('player can\'t join') || lower.includes('can join a table only') || lower.includes('could not create')
+    return verbose ? prefixFor(str) : t('errors.table_full')
   }
   if (lower.includes('invalid deck type') || lower.includes('decktype') || str === 'INVALID_DECK_TYPE') {
     return `${t('errors.create_table_failed')}: ${t('errors.invalid_deck_type')}`
@@ -282,8 +296,8 @@ export function useTranslation() {
     return t(pathOrCat, keyOrParams, params)
   }, [])
 
-  const errorTranslator = useCallback((err: string | null | undefined, action?: string) => {
-    return translateError(err, action)
+  const errorTranslator = useCallback((err: string | null | undefined, action?: string, errorCode?: string) => {
+    return translateError(err, action, errorCode)
   }, [])
 
   return {

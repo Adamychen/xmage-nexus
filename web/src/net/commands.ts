@@ -106,6 +106,8 @@ export interface JoinTableArgs {
   skill?: number
   deck?: DeckJson
   password?: string
+  deckType?: string
+  gameType?: string
 }
 
 export async function joinTable(args: JoinTableArgs) {
@@ -232,7 +234,7 @@ export async function createTournamentTable(args: Record<string, unknown>) {
   return getGateway().send('createTournamentTable', args)
 }
 
-export async function joinTournamentTable(args: { roomId?: string; tableId: string; playerName?: string; playerType?: string; skill?: number; deck?: DeckJson; password?: string }) {
+export async function joinTournamentTable(args: { roomId?: string; tableId: string; playerName?: string; playerType?: string; skill?: number; deck?: DeckJson; password?: string; deckType?: string; gameType?: string }) {
   return getGateway().send('joinTournamentTable', { ...args })
 }
 

@@ -160,4 +160,42 @@ class DeckValidationTest {
                 "el mismatch permanece (el servidor lo carga como otra carta)");
         assertEquals("Test deck", clean.getName());
     }
+
+    @Test
+    void deckJsonNormalizationKeepsRealPSetsWithPrefix() {
+        // PCY (Prophecy) y PRO (retro) son sets reales de XMage: el prefijo P
+        // NO debe retirarse nunca (antes se mutilaban a CY/RO y la validación
+        // entraba en bucle PCY -> CY -> PCY).
+        JsonObject json = new JsonObject();
+        json.addProperty("name", "p-sets");
+        JsonArray cards = new JsonArray();
+        cards.add(cardJson("Rhystic Tutor", "PCY", "77"));
+        cards.add(cardJson("Rhystic Tutor", "PRO", "77"));
+        // PLEA no es un set; su base LEA sí: promo legítimo => strip
+        cards.add(cardJson("Island", "PLEA", "1"));
+        json.add("cards", cards);
+
+        DeckCardLists parsed = DeckJson.parse(json);
+        assertEquals(3, parsed.getCards().size());
+        assertEquals("PCY", parsed.getCards().get(0).getSetCode());
+        assertEquals("PRO", parsed.getCards().get(1).getSetCode());
+        assertEquals("LEA", parsed.getCards().get(2).getSetCode(), "promo sobre base real se reduce");
+    }
+
+    @Test
+    void realPSetPrintingValidatesClean() {
+        JsonObject report = DeckValidation.validate(deck(card("Rhystic Tutor", "PCY", "77", 1)));
+        assertTrue(report.get("ready").getAsBoolean());
+        assertEquals(0, report.getAsJsonArray("missing").size(),
+                "PCY #77 existe en la BD: no puede marcarse missing");
+    }
+
+    private static JsonObject cardJson(String cardName, String setCode, String cardNumber) {
+        JsonObject c = new JsonObject();
+        c.addProperty("cardName", cardName);
+        c.addProperty("setCode", setCode);
+        c.addProperty("cardNumber", cardNumber);
+        c.addProperty("amount", 1);
+        return c;
+    }
 }

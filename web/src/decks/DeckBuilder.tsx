@@ -17,7 +17,7 @@ import CurveChart from './CurveChart'
 import { DeckImportModal, type ImportResult } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { validateDeckForFormat, type ValidationIssue } from './formatRules'
-import { fetchDeckIssues, issueKeysFromReport } from './deckIssues'
+import { applySuggestion, fetchDeckIssues, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
 import type { DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
 import type { DeckCard } from '../lobby/decks'
@@ -69,6 +69,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const storage = useMemo(() => getDeckStorage(), [])
   const equipped = useStore((s) => s.myDeck)
+  const wsAlive = useStore((s) => s.wsAlive)
   const debounceRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       const report = await fetchDeckIssues(d)
       setServerIssues(report)
     })()
-  }, [deckId])
+  }, [deckId, wsAlive])
 
   useEffect(() => {
     if (!deck || deck === lastValidatedRef.current) return
@@ -321,18 +322,27 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }
 
     if (target === 'main') {
-      const existingIdx = deck.cards.findIndex((c) => deckCardKey(c) === key)
+      const flaggedIdx = findFlaggedSameName(deck.cards, serverFlaggedKeys, cardName)
+      const existingIdx = flaggedIdx >= 0 ? -1 : deck.cards.findIndex((c) => deckCardKey(c) === key)
       let nextCards: DeckCard[]
-      if (existingIdx >= 0) {
+      let nextCover = deck.coverCard
+      if (flaggedIdx >= 0) {
+        const oldKey = deckCardKey(deck.cards[flaggedIdx])
+        nextCards = deck.cards.map((c, i) => (i === flaggedIdx ? { ...c, cardName, setCode, cardNumber } : c))
+        if (nextCover && deckCardKey(nextCover) === oldKey) nextCover = { ...nextCover, cardName, setCode, cardNumber }
+      } else if (existingIdx >= 0) {
         nextCards = deck.cards.map((c, i) => (i === existingIdx ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
       } else {
         nextCards = [...deck.cards, { cardName, setCode, cardNumber, amount: 1 }]
       }
-      schedulePersist({ ...deck, cards: nextCards, coverCard: deck.coverCard ?? nextCards[0] })
+      schedulePersist({ ...deck, cards: nextCards, coverCard: nextCover ?? nextCards[0] })
     } else {
-      const existingIdx = deck.sideboard.findIndex((c) => deckCardKey(c) === key)
+      const flaggedIdx = findFlaggedSameName(deck.sideboard, serverFlaggedKeys, cardName)
+      const existingIdx = flaggedIdx >= 0 ? -1 : deck.sideboard.findIndex((c) => deckCardKey(c) === key)
       let nextSide: DeckCard[]
-      if (existingIdx >= 0) {
+      if (flaggedIdx >= 0) {
+        nextSide = deck.sideboard.map((c, i) => (i === flaggedIdx ? { ...c, cardName, setCode, cardNumber } : c))
+      } else if (existingIdx >= 0) {
         nextSide = deck.sideboard.map((c, i) => (i === existingIdx ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
       } else {
         nextSide = [...deck.sideboard, { cardName, setCode, cardNumber, amount: 1 }]
@@ -605,7 +615,6 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     const addIssue = (card: { cardName: string; setCode: string; cardNumber: string }, message: string) => {
       const issue: ValidationIssue = { type: 'server_issue', message, severity: 'error', cardName: card.cardName }
       merged.set(`${card.setCode}:${card.cardNumber}:${card.cardName}`, issue)
-      merged.set(card.cardName, issue)
     }
     for (const c of [...deck.cards, ...deck.sideboard]) {
       if (!byKey.has(`${c.cardName}|${c.setCode}|${c.cardNumber}`)) continue
@@ -619,6 +628,49 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }
     return merged
   }, [validationReport, serverIssues, deck, t])
+
+  const serverFlaggedKeys = useMemo(
+    () => (serverIssues ? issueKeysFromReport(serverIssues) : new Set<string>()),
+    [serverIssues],
+  )
+
+  const serverIssueList = useMemo(() => {
+    if (!serverIssues) return []
+    const out: {
+      name: string
+      set: string
+      num: string
+      amount: number
+      message: string
+      from: { cardName: string; setCode: string; cardNumber: string }
+      to?: { cardName: string; setCode: string; cardNumber: string }
+    }[] = []
+    for (const m of serverIssues.missing) {
+      const sug = m.suggestions?.[0]
+      out.push({
+        name: m.cardName,
+        set: m.setCode,
+        num: m.cardNumber,
+        amount: m.amount,
+        message: m.reason === 'OUTDATED_PRINTING' ? t('decks', 'issues_reason_outdated') : t('decks', 'issues_reason_unimplemented'),
+        from: { cardName: m.cardName, setCode: m.setCode, cardNumber: m.cardNumber },
+        to: sug ? { cardName: sug.cardName, setCode: sug.setCode, cardNumber: sug.cardNumber } : undefined,
+      })
+    }
+    for (const m of serverIssues.mismatches) {
+      const sug = m.suggestions?.[0]
+      out.push({
+        name: m.cardName,
+        set: m.setCode,
+        num: m.cardNumber,
+        amount: m.amount,
+        message: t('decks', 'issues_mismatch_resolved', { resolved: m.resolvedName }),
+        from: { cardName: m.cardName, setCode: m.setCode, cardNumber: m.cardNumber },
+        to: sug ? { cardName: sug.cardName, setCode: sug.setCode, cardNumber: sug.cardNumber } : undefined,
+      })
+    }
+    return out
+  }, [serverIssues, t])
 
   if (!deck) return <div className="deck-builder loading">{t('common', 'loading')}</div>
 
@@ -642,6 +694,35 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           <LanguageSelector compact showCardLangToggle />
         </div>
       </header>
+
+      {serverIssueList.length > 0 && (
+        <div className="builder-server-issues" data-testid="builder-server-issues">
+          <div className="bsi-title">⚠️ {t('decks', 'issues_banner_title')}</div>
+          <ul>
+            {serverIssueList.map((it, i) => (
+              <li key={`${it.name}-${it.set}-${it.num}-${i}`}>
+                <strong>{it.amount}× {it.name} ({it.set} #{it.num})</strong> — {it.message}
+                {it.to && (
+                  <>
+                    <span className="bsi-sug"> · {t('decks', 'issues_banner_same_card', { set: it.to.setCode, num: it.to.cardNumber })}</span>{' '}
+                    <button
+                      type="button"
+                      className="bsi-repair-btn"
+                      data-testid="builder-issue-repair"
+                      onClick={() => {
+                        if (!deck || !it.to) return
+                        schedulePersist(applySuggestion(deck, it.from, it.to))
+                      }}
+                    >
+                      {t('decks', 'issues_use_suggestion', { set: it.to.setCode, num: it.to.cardNumber })}
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Main Builder Body Split View */}
       <div className="deck-builder-body">

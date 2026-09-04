@@ -17,7 +17,8 @@ export async function fetchDeckIssues(deck: DeckLike): Promise<DeckValidationRes
   try {
     const report = await validateDeck(deck as never)
     return report && report.ready ? report : null
-  } catch {
+  } catch (e) {
+    console.warn('[deckIssues] validateDeck no disponible:', e instanceof Error ? e.message : e)
     return null
   }
 }
@@ -33,4 +34,36 @@ export function issueKeysFromReport(report: DeckValidationResult): Set<string> {
   for (const c of report.missing) keys.add(deckIssueKey(c.cardName, c.setCode, c.cardNumber))
   for (const c of report.mismatches) keys.add(deckIssueKey(c.cardName, c.setCode, c.cardNumber))
   return keys
+}
+
+export interface DeckPrinting {
+  cardName: string
+  setCode: string
+  cardNumber: string
+}
+
+/** Reemplaza la impresión `from` por `to` en main y sideboard (misma cantidad). */
+export function applySuggestion<D extends { cards: DeckPrinting[]; sideboard: DeckPrinting[] }>(
+  deck: D,
+  from: DeckPrinting,
+  to: DeckPrinting,
+): D {
+  const swap = (cards: DeckPrinting[]) =>
+    cards.map((c) =>
+      c.cardName === from.cardName && c.setCode === from.setCode && c.cardNumber === from.cardNumber
+        ? { ...c, cardName: to.cardName, setCode: to.setCode, cardNumber: to.cardNumber }
+        : c,
+    )
+  return { ...deck, cards: swap(deck.cards), sideboard: swap(deck.sideboard) }
+}
+
+/** Índice de la entrada con ese nombre marcada como problemática por el servidor (-1 si no hay). */
+export function findFlaggedSameName(
+  cards: DeckPrinting[],
+  flaggedKeys: Set<string>,
+  cardName: string,
+): number {
+  return cards.findIndex(
+    (c) => c.cardName === cardName && flaggedKeys.has(deckIssueKey(c.cardName, c.setCode, c.cardNumber)),
+  )
 }

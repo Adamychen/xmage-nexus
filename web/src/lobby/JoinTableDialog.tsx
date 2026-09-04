@@ -11,6 +11,7 @@ import { parseAnyDeck } from '../decks/parseDck'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import { useTranslation } from '../i18n'
+import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './JoinTableDialog.css'
 
 interface JoinTableDialogProps {
@@ -98,14 +99,13 @@ export default function JoinTableDialog({
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault()
     setJoinError(null)
-    // pre-validación contra la BD de cartas del servidor: diálogo si hay cartas
-    // rechazadas ("Card not found") o cargadas como otra carta
-    const finalDeck = await requestDeckValidation(selectedDeck)
+    const xmageDeck = prepareDeckForXMage(selectedDeck, table.deckType, table.gameType)
+    const finalDeck = await requestDeckValidation(xmageDeck)
     if (!finalDeck) {
       return
     }
     if (setAsDefault) {
-      setMyDeck(finalDeck)
+      setMyDeck(selectedDeck)
     }
     try {
       await onJoin(table, finalDeck, password.trim() || undefined)

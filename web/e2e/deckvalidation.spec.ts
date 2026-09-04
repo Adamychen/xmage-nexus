@@ -110,10 +110,38 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
       const badStrip = page.locator('.arena-card-strip.has-issue[title*="Rhystic Tutor"]')
       await expect(badStrip).toBeVisible({ timeout: 8000 })
 
-      // quitar la carta (− = "Quitar 1"; el primer .strip-btn es el ⇄ de swap) → el badge desaparece
-      await badStrip.hover()
-      await badStrip.getByTitle(/Quitar 1|Remove 1/i).click()
-      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0, { timeout: 8000 })
+      // banner de nivel mazo con el detalle (visible sin mirar la carta)
+      const banner = page.getByTestId('builder-server-issues')
+      await expect(banner).toBeVisible()
+      await expect(banner).toContainText(/Rhystic Tutor/)
+      await expect(banner).toContainText(/PCY/)
+
+      // drag-reparación: soltar sobre el panel la misma carta con impresión
+      // válida (PCY, la que ofrece la colección) CONVIERTE la ficha marcada
+      // en vez de duplicarla
+      await page.evaluate(() => {
+        const dt = new DataTransfer()
+        dt.setData('application/json', JSON.stringify({ cardName: 'Rhystic Tutor', setCode: 'PCY', cardNumber: '77', amount: 1, source: 'search' }))
+        document.querySelector('.deck-list-panel')!.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }))
+      })
+      await expect(banner).not.toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
+      await expect(page.locator('.arena-card-strip[title*="Rhystic Tutor"]')).toHaveCount(1)
+
+      // banner con botón Reparar: re-importamos la carta rota y aplicamos la
+      // sugerencia con un clic
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill(`1 [CY:77] Rhystic Tutor`)
+      await page.locator('.import-submit-btn').click()
+      await expect(banner).toBeVisible({ timeout: 8000 })
+      await banner.getByTestId('builder-issue-repair').click()
+      await expect(banner).not.toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
+
+      // el mazo reparado no conserva ninguna entrada CY (el fake solo limpia
+      // el informe cuando la CY ha desaparecido del mazo)
+      await expect(banner).not.toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
     })
   })
 })

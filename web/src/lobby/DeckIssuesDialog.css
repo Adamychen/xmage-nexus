@@ -112,3 +112,9 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+.deck-issue-same-card {
+  width: 100%;
+  font-size: 12px;
+  color: #a8d8b9;
+}

@@ -896,6 +896,8 @@ export const es: TranslationSchema = {
     issues_remove_and_play: 'Quitar {count} y jugar',
     issues_cancel: 'Cancelar',
     issues_validating: 'Validando el mazo contra el servidor…',
+    issues_banner_title: 'Cartas con problemas en este mazo',
+    issues_banner_same_card: 'Misma carta, otra impresión: {set} #{num}',
     unimplemented_badge: 'No implementada en el servidor',
     mismatch_badge: 'Carga otra carta',
     avg_cmc: 'CMC Medio',

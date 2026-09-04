@@ -5,6 +5,7 @@ import { setMyDeck, useStore } from '../state/store'
 import { getAllAvailableDecks, DEFAULT_DECK, LANDS_DECK, type Deck } from './decks'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import { useTranslation } from '../i18n'
+import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './CreateTableDialog.css'
 
 export type CreateTab = 'general' | 'timing' | 'security' | 'seats' | 'dev'
@@ -384,7 +385,9 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
       setBusy(false)
       if (!res.ok) {
-        setError(res.error ?? t('errors','draft_create_failed'))
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || t('errors','draft_create_failed')
+        setError(tError(raw, 'createTournamentTable', code) ?? raw)
         return
       }
       const tableId = (res.data as { tableId?: string } | null)?.tableId
@@ -396,7 +399,9 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           skill: 1,
         })
         if (!join.ok) {
-          setError(join.error ?? t('errors','join_table_failed'))
+          const code = (join as { errorCode?: string }).errorCode
+          const raw = join.error || code || t('errors','join_table_failed')
+          setError(tError(raw, 'joinTournamentTable', code) ?? raw)
           return
         }
       }
@@ -411,18 +416,21 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
     const simSeats = aiTypes.filter((pt) => pt === 'SIM').length
 
     // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
-    let finalMyDeck = myDeck
+    // Transformación invisible para Commander: XMage espera comandante en banquillo
+    const xmageMyDeck = prepareDeckForXMage(myDeck, deckType, gameType)
+    const xmageSimDeck = prepareDeckForXMage(simDeck, deckType, gameType)
+    let finalMyDeck = xmageMyDeck
     if (humanSeat) {
-      const fixed = await requestDeckValidation(myDeck)
+      const fixed = await requestDeckValidation(xmageMyDeck)
       if (!fixed) {
         setBusy(false)
         return
       }
       finalMyDeck = fixed
     }
-    let finalSimDeck = simDeck
+    let finalSimDeck = xmageSimDeck
     if (simSeats > 0) {
-      const fixed = await requestDeckValidation(simDeck)
+      const fixed = await requestDeckValidation(xmageSimDeck)
       if (!fixed) {
         setBusy(false)
         return
@@ -456,7 +464,9 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
     setBusy(false)
     if (!res.ok) {
-      setError(res.error ?? t('errors','create_table_failed'))
+      const code = (res as { errorCode?: string }).errorCode
+      const raw = res.error || code || t('errors','create_table_failed')
+      setError(tError(raw, 'createTable', code) ?? raw)
       return
     }
 
@@ -468,11 +478,15 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         playerType: 'HUMAN',
         skill: 1,
         deck: finalMyDeck,
+        deckType,
+        gameType,
         password: password.trim() || undefined,
       })
-      setMyDeck(finalMyDeck)
+      setMyDeck(myDeck)
       if (!join.ok) {
-        setError(join.error ?? t('errors','join_table_failed'))
+        const code = (join as { errorCode?: string }).errorCode
+        const raw = join.error || code || t('errors','join_table_failed')
+        setError(tError(raw, 'joinTable', code) ?? raw)
         return
       }
     }

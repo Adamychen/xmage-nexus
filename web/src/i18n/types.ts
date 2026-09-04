@@ -883,6 +883,8 @@ export interface TranslationSchema {
     issues_remove_and_play: string
     issues_cancel: string
     issues_validating: string
+    issues_banner_title: string
+    issues_banner_same_card: string
     unimplemented_badge: string
     mismatch_badge: string
     avg_cmc: string

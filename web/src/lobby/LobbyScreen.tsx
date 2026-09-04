@@ -26,6 +26,7 @@ import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
 import type { TournamentView } from '../net/types'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
+import { prepareDeckForXMage } from '../decks/deckNormalize'
 import { useFullscreen } from '../utils/fullscreen'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import './LobbyScreen.css'
@@ -258,6 +259,7 @@ export default function LobbyScreen() {
     setBusyTable(t.tableId)
     setState({ error: null })
     setNotice(null)
+    const xmageDeck = prepareDeckForXMage(deck, t.deckType, t.gameType)
     try {
       const res = await withTimeout(
         cmds.joinTable({
@@ -265,7 +267,9 @@ export default function LobbyScreen() {
           playerName: conn?.username ?? 'player',
           playerType: 'HUMAN',
           skill: 1,
-          deck,
+          deck: xmageDeck,
+          deckType: t.deckType,
+          gameType: t.gameType,
           password,
         }),
         15000,
@@ -275,10 +279,14 @@ export default function LobbyScreen() {
         setNotice(tStatic('lobby','waiting_players'))
         setJoiningTable(null)
       } else {
-        throw new Error(res.error || tStatic('errors','join_table_failed'))
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','join_table_failed')
+        setState({ error: translateError(raw, 'joinTable', code) })
+        return
       }
     } catch (e) {
-      setState({ error: translateError((e as Error).message, 'joinTable') })
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }
@@ -310,10 +318,14 @@ export default function LobbyScreen() {
       if (res.ok) {
         setNotice(tStatic('lobby','join_ai_btn'))
       } else {
-        setState({ error: translateError(res.error || tStatic('errors','join_table_failed'), 'joinTable') })
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','join_table_failed')
+        setState({ error: translateError(raw, 'joinTable', code) })
+        return
       }
     } catch (e) {
-      setState({ error: translateError((e as Error).message, 'joinTable') })
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }
@@ -328,10 +340,13 @@ export default function LobbyScreen() {
       if (res.ok) {
         setNotice(tStatic('lobby','start_match_btn'))
       } else {
-        setState({ error: translateError(res.error || tStatic('errors','start_game_failed'), 'startMatch') })
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','start_game_failed')
+        setState({ error: translateError(raw, 'startMatch', code) })
       }
     } catch (e) {
-      setState({ error: translateError((e as Error).message, 'startMatch') })
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'startMatch', (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }
@@ -347,10 +362,13 @@ export default function LobbyScreen() {
         setWatchingTable(t)
         setNotice(tStatic('lobby','watch_btn'))
       } else {
-        setState({ error: translateError(res.error || tStatic('errors','generic_error'), 'watchTable') })
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','generic_error')
+        setState({ error: translateError(raw, 'watchTable', code) })
       }
     } catch (e) {
-      setState({ error: translateError((e as Error).message, 'watchTable') })
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'watchTable', (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }

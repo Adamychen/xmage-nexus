@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setMyDeck, startStagedMatch, useStore } from '../state/store'
+import { setState } from '../state/state'
 import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
 import ChatBox from './ChatBox'
@@ -7,6 +8,8 @@ import JoinTableDialog from './JoinTableDialog'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
 import { useTranslation } from '../i18n'
+import { translateError } from '../i18n'
+import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './SpectatorStagingScreen.css'
 
 export default function SpectatorStagingScreen({
@@ -95,8 +98,8 @@ export default function SpectatorStagingScreen({
   }, [isReady, seats, myUsername, myIsReady, playerReadyMap])
 
   const handleChangeDeck = async (tTable: TableView, deck: Deck, password?: string) => {
-    // pre-validación: un mazo con cartas no implementadas rompería también los SIM
-    const finalDeck = await requestDeckValidation(deck)
+    const xmageDeck = prepareDeckForXMage(deck, tTable.deckType, tTable.gameType)
+    const finalDeck = await requestDeckValidation(xmageDeck)
     if (!finalDeck) return
     if (isOwner) {
       const otherHumans = seats.some((s) => s.playerName && s.playerName.toLowerCase() !== conn?.username?.toLowerCase() && (!s.playerType || s.playerType === 'HUMAN'))
@@ -119,31 +122,58 @@ export default function SpectatorStagingScreen({
         spectatorsAllowed: tTable.spectatorsAllowed,
         simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => finalDeck) : undefined,
       })
+      if (!createRes.ok) {
+        const code = (createRes as { errorCode?: string }).errorCode
+        const raw = createRes.error || code || ''
+        setState({ error: translateError(raw, 'createTable', code) })
+        return
+      }
       if (createRes.ok) {
         const newTableId = (createRes.data as { tableId?: string } | null)?.tableId
         if (newTableId) {
-          await cmds.joinTable({
+          const jr = await cmds.joinTable({
             tableId: newTableId,
             playerName: conn?.username ?? 'player',
             playerType: 'HUMAN',
             skill: 1,
             deck: finalDeck,
+            deckType: tTable.deckType,
+            gameType: tTable.gameType,
             password: password?.trim() || undefined,
           })
+          if (!jr.ok) {
+            const code = (jr as { errorCode?: string }).errorCode
+            const raw = jr.error || code || ''
+            setState({ error: translateError(raw, 'joinTable', code) })
+            return
+          }
         }
       }
     } else {
-      await cmds.leaveTable(tTable.tableId)
-      await cmds.joinTable({
+      const lv = await cmds.leaveTable(tTable.tableId)
+      if (!lv.ok) {
+        const code = (lv as { errorCode?: string }).errorCode
+        const raw = lv.error || code || ''
+        if (raw) setState({ error: translateError(raw, 'leaveTable', code) })
+      }
+      const jr = await cmds.joinTable({
         tableId: tTable.tableId,
         playerName: conn?.username ?? 'player',
         playerType: 'HUMAN',
         skill: 1,
         deck: finalDeck,
+        deckType: tTable.deckType,
+        gameType: tTable.gameType,
         password: password?.trim() || undefined,
       })
+      if (!jr.ok) {
+        const code = (jr as { errorCode?: string }).errorCode
+        const raw = jr.error || code || ''
+        setState({ error: translateError(raw, 'joinTable', code) })
+        return
+      }
     }
-    setMyDeck(finalDeck)
+    setMyDeck(deck)
     setShowChangeDeck(false)
   }
 

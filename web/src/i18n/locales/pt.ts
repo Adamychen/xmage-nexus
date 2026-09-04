@@ -896,6 +896,8 @@ export const pt: TranslationSchema = {
     issues_remove_and_play: 'Remover {count} e jogar',
     issues_cancel: 'Cancelar',
     issues_validating: 'Validando o deck no servidor…',
+    issues_banner_title: 'Cartas com problemas neste baralho',
+    issues_banner_same_card: 'Mesma carta, outra impressão: {set} #{num}',
     unimplemented_badge: 'Não implementado no servidor',
     mismatch_badge: 'Carrega outro card',
     avg_cmc: 'CMC Médio',

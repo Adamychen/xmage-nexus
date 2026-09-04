@@ -20,16 +20,6 @@ function stripPrefixedNumber(num: string): string {
   return last || num
 }
 
-function derivePromoBase(setCode: string): string | null {
-  const u = setCode.trim().toUpperCase()
-  if (u === 'PLST') return null
-  if (u.length >= 3 && u.charAt(0) === 'P') {
-    const base = u.substring(1)
-    if (/^[A-Z0-9]{2,4}$/.test(base)) return base
-  }
-  return null
-}
-
 export function normalizeDeckCard(card: DeckCard): DeckCard {
   let { setCode, cardNumber } = card
   let rawSet = setCode.trim()
@@ -52,10 +42,10 @@ export function normalizeDeckCard(card: DeckCard): DeckCard {
   }
   rawNum = stripPromoSuffix(rawNum)
 
-  const derived = derivePromoBase(rawSet)
-  if (derived) {
-    rawSet = derived
-  }
+  // NOTA: no se elimina el prefijo "P" de sets promo en el cliente: el proxy
+  // decide en el borde del protocolo si es un promo real (base existente y
+  // original inexistente). Quitar P aquí mutilaba sets reales (PCY, PRO, PC2)
+  // y rompía validateDeck en bucle (PCY -> CY -> PCY -> ...).
 
   if (rawSet !== setCode.trim() || rawNum !== cardNumber.trim()) {
     return { ...card, setCode: rawSet.toUpperCase(), cardNumber: rawNum }
@@ -68,4 +58,26 @@ export function normalizeDeckCard(card: DeckCard): DeckCard {
 
 export function normalizeDeckCards(cards: DeckCard[]): DeckCard[] {
   return cards.map(normalizeDeckCard)
+}
+
+export function isCommanderFormat(deckType?: string, gameType?: string): boolean {
+  const d = (deckType ?? '').toLowerCase()
+  const g = (gameType ?? '').toLowerCase()
+  return d.includes('commander') || g.includes('commander')
+}
+
+export function prepareDeckForXMage(
+  deck: { name: string; cards: DeckCard[]; sideboard: DeckCard[] },
+  deckType?: string,
+  gameType?: string,
+): { name: string; cards: DeckCard[]; sideboard: DeckCard[] } {
+  // Transformación invisible: el usuario ve 100 en main + comandante como portada,
+  // XMage exige 99+1 (comandante en banquillo). El proxy hace la normalización
+  // autoritativa con CardRepository (DeckValidation.normalizeForXMage) usando
+  // deckType/gameType, así que aquí solo preservamos el deck tal cual y
+  // dejamos que el proxy elija el comandante correcto (legendaria criatura,
+  // CanBeYourCommanderAbility, partners, etc.). No tocamos storage.
+  void deckType
+  void gameType
+  return deck
 }

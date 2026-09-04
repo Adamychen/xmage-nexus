@@ -280,9 +280,13 @@ public class ProxyClient implements MageClient {
         if (lower.contains("quit ratio")) return ERR_QUIT_RATIO;
         if (lower.contains("minimum rating") || lower.contains("rating") && lower.contains("lower")) return ERR_RATING;
         if (lower.contains("not started tables") || lower.contains("too much") || lower.contains("already") && lower.contains("not started")) return ERR_TABLE_LIMIT;
-        if (lower.contains("invalid deck") || lower.contains("deckvalidator") || lower.contains("no valid deck") || lower.contains("must contain") || lower.contains("too few cards") || lower.contains("deck is not valid")) return ERR_INVALID_DECK;
+        if (lower.contains("invalid deck") || lower.contains("deckvalidator") || lower.contains("no valid deck") || lower.contains("must contain") || lower.contains("too few cards") || lower.contains("deck is not valid")
+                || lower.contains("too powerful") || lower.contains("power level") || lower.contains("requested no") || lower.contains("appropriate for the selected format") || lower.contains("select a deck that is appropriate")
+                || lower.contains("no valid deck selected")) return ERR_INVALID_DECK;
         if (lower.contains("wrong password") || lower.contains("invalid password") || lower.contains("password")) return ERR_PASSWORD;
         if (lower.contains("no available seats") || lower.contains("table is full") || lower.contains("can join a table only")) return ERR_SEAT;
+        if (lower.contains("player can't join")) return ERR_SEAT;
+        if (lower.contains("could not create player")) return ERR_FAILED;
         if (lower.contains("decktype") || lower.contains("deck type") || lower.contains("invalid deck type")) return ERR_INVALID_DECK_TYPE;
         if (lower.contains("gametype") || lower.contains("game type") || lower.contains("invalid game type")) return ERR_INVALID_GAME_TYPE;
         return ERR_FAILED;
@@ -320,7 +324,7 @@ public class ProxyClient implements MageClient {
 
     /** Respuesta ok:false con el detalle real del servidor (y su errorCode clasificado). */
     private void sendFailure(WebSocket conn, String action, String requestId, long start) {
-        String detail = pollDetailedMessage(start, 750);
+        String detail = pollDetailedMessage(start, 1600);
         if (detail == null) detail = stripServerErrorPrefix(session.getLastError());
         if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = null;
         String code = detail != null ? classifyErrorCode(detail) : ERR_FAILED;
@@ -373,7 +377,9 @@ public class ProxyClient implements MageClient {
                             for (Map.Entry<String, JsonElement> e : o.entrySet()) {
                                 if (!e.getValue().isJsonPrimitive()) continue;
                                 String v = e.getValue().getAsString().toLowerCase(Locale.ROOT);
-                                if (v.contains("card not found") || v.contains("quit ratio") || v.contains("invalid deck") || v.contains("rating") || v.contains("not started") || v.contains("no valid deck") || v.contains("must contain") || v.contains("too few")) {
+                                if (v.contains("card not found") || v.contains("quit ratio") || v.contains("invalid deck") || v.contains("rating") || v.contains("not started") || v.contains("no valid deck") || v.contains("must contain") || v.contains("too few")
+                                        || v.contains("too powerful") || v.contains("power level") || v.contains("requested no") || v.contains("appropriate for the selected format") || v.contains("select a deck") || v.contains("player can't join") || v.contains("could not create player")
+                                        || v.contains("no available seats") || v.contains("table is full") || v.contains("can join a table only") || v.contains("wrong password")) {
                                     extracted = e.getValue().getAsString();
                                     break;
                                 }
@@ -685,6 +691,7 @@ public class ProxyClient implements MageClient {
                     PlayerType playerType = PlayerType.valueOf(str(args, "playerType", "HUMAN").toUpperCase(Locale.ROOT));
                     int skill = getInt(args, "skill", 0);
                     DeckCardLists deck = DeckJson.parse(args.getAsJsonObject("deck"));
+                    deck = DeckValidation.normalizeForXMage(deck, str(args, "deckType", null), str(args, "gameType", null));
                     String password = str(args, "password", "");
                     boolean ok = session.joinTable(roomId, tableId, playerName, playerType, skill, deck, password);
                     if (!ok) {
@@ -779,6 +786,7 @@ public class ProxyClient implements MageClient {
                     PlayerType playerType = PlayerType.valueOf(str(args, "playerType", "HUMAN").toUpperCase(Locale.ROOT));
                     int skill = getInt(args, "skill", 0);
                     DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject() ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
+                    deck = DeckValidation.normalizeForXMage(deck, str(args, "deckType", null), str(args, "gameType", null));
                     String password = str(args, "password", "");
                     boolean ok = session.joinTournamentTable(roomId, tableId, playerName, playerType, skill, deck, password);
                     if (!ok) {
@@ -962,10 +970,28 @@ public class ProxyClient implements MageClient {
                 }
             }
         } catch (IllegalArgumentException ex) {
-            gateway.send(conn, resultJson(action, requestId, false, ERR_INVALID_ARGUMENT, "Invalid argument: " + ex.getMessage()));
+            String detail = stripServerErrorPrefix(ex.getMessage());
+            String code = classifyErrorCode(detail != null ? detail : ex.getMessage());
+            if (ERR_FAILED.equals(code) && detail != null && !detail.toLowerCase(Locale.ROOT).contains("invalid argument")) {
+                detail = "Invalid argument: " + detail;
+            }
+            gateway.send(conn, resultJson(action, requestId, false, code, detail != null ? detail : "Invalid argument: " + ex.getMessage()));
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Command failed: " + action, ex);
-            gateway.send(conn, resultJson(action, requestId, false, ERR_FAILED, "Command failed: " + ex.getMessage()));
+            String raw = ex.getMessage() != null ? ex.getMessage() : ex.toString();
+            String detail = stripServerErrorPrefix(raw);
+            if (detail != null && detail.startsWith("Command failed: ")) detail = detail.substring("Command failed: ".length());
+            // si la excepción ya trae "Card not found - ...", no prefijar para no enterrar el pattern
+            String payload = detail != null && !detail.isEmpty() ? detail : raw;
+            // para errores de cubierta, intentar pescar también el callback que el servidor ya encoló
+            String polled = pollDetailedMessage(System.currentTimeMillis() - 2000, 900);
+            if (polled != null && polled.length() > payload.length()) payload = polled;
+            String code = classifyErrorCode(payload);
+            String msg = payload;
+            if (ERR_FAILED.equals(code) && !payload.toLowerCase(Locale.ROOT).startsWith("command failed")) {
+                msg = "Command failed: " + payload;
+            }
+            gateway.send(conn, resultJson(action, requestId, false, code, msg));
         }
     }
 

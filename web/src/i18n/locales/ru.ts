@@ -896,6 +896,8 @@ export const ru: TranslationSchema = {
     issues_remove_and_play: 'Убрать {count} и играть',
     issues_cancel: 'Отмена',
     issues_validating: 'Проверка колоды на сервере…',
+    issues_banner_title: 'Проблемные карты в этой колоде',
+    issues_banner_same_card: 'Та же карта, другой тираж: {set} №{num}',
     unimplemented_badge: 'Не реализована на сервере',
     mismatch_badge: 'Загрузится другая карта',
     avg_cmc: 'Средн. CMC',

@@ -427,3 +427,42 @@
     transform: scale(1);
   }
 }
+
+.builder-server-issues {
+  margin: 6px 12px 0;
+  padding: 8px 12px;
+  background: rgba(220, 80, 60, 0.12);
+  border: 1px solid rgba(220, 90, 70, 0.45);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #f2b8ad;
+}
+.builder-server-issues .bsi-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.builder-server-issues ul {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.builder-server-issues li {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+.builder-server-issues .bsi-sug {
+  color: #a8d8b9;
+}
+.builder-server-issues .bsi-repair-btn {
+  margin-left: 6px;
+  padding: 1px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 216, 185, 0.5);
+  background: rgba(168, 216, 185, 0.12);
+  color: #a8d8b9;
+  cursor: pointer;
+}
+.builder-server-issues .bsi-repair-btn:hover {
+  background: rgba(168, 216, 185, 0.25);
+}

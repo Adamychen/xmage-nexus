@@ -68,13 +68,16 @@ public final class DeckJson {
                     String base = normSet.substring(1);
                     if (base.matches("(?i)^[A-Z0-9]{2,4}$")) {
                         try {
-                            if (mage.cards.Sets.findSet(base) != null) normSet = base;
-                            else if (mage.cards.repository.CardRepository.instance.findCard(cardName, true) != null) {
-                                // fallback via name exists, prefer stripped promo base
+                            // Solo tratarlo como promo si el ORIGINAL no es un set real
+                            // y el base sí. Nunca decidir por la existencia de la carta
+                            // por nombre: eso mutila sets reales con P (PCY, PRO, PC2...)
+                            // y rompe la validación en bucle (PCY -> CY -> PCY -> ...).
+                            if (mage.cards.Sets.findSet(normSet) == null
+                                    && mage.cards.Sets.findSet(base) != null) {
                                 normSet = base;
                             }
                         } catch (Exception ignored) {
-                            normSet = base;
+                            // no tocar el set ante errores del índice
                         }
                     }
                 }

@@ -48,14 +48,18 @@ export function handleMessage(msg: ProxyMessage) {
       if (!msg.ok && msg.action !== 'disconnect') {
         const delegated = new Set(['createTable', 'createTournamentTable', 'joinTable', 'joinTournamentTable', 'watchTable', 'startMatch'])
         if (delegated.has(msg.action)) {
-          const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined)
+          const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined) ?? msg.errorCode
+          const code = (msg as { errorCode?: string }).errorCode
           if (detail && detail !== 'FAILED' && detail.toLowerCase() !== 'failed') {
-            setState({ error: translateError(detail, msg.action) })
+            setState({ error: translateError(detail, msg.action, code) })
+          } else if (code && code !== 'FAILED') {
+            setState({ error: translateError(code, msg.action, code) })
           }
           break
         }
-        const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined)
-        setState({ error: translateError(detail ?? `${msg.action} falló`, msg.action) })
+        const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined) ?? (msg as { errorCode?: string }).errorCode
+        const code = (msg as { errorCode?: string }).errorCode
+        setState({ error: translateError(detail ?? `${msg.action} falló`, msg.action, code) })
       }
       break
     }

@@ -290,6 +290,65 @@ public final class DeckValidation {
         return arr;
     }
 
+    public static boolean isCommanderFormat(String deckType, String gameType) {
+        String d = deckType == null ? "" : deckType.toLowerCase(java.util.Locale.ROOT);
+        String g = gameType == null ? "" : gameType.toLowerCase(java.util.Locale.ROOT);
+        return d.contains("commander") || g.contains("commander");
+    }
+
+    public static DeckCardLists normalizeForXMage(DeckCardLists deck, String deckType, String gameType) {
+        if (deck == null) return deck;
+        if (!isCommanderFormat(deckType, gameType)) return deck;
+        if (deck.getSideboard() != null && !deck.getSideboard().isEmpty()) return deck;
+        java.util.List<DeckCardInfo> main = deck.getCards();
+        if (main == null || main.isEmpty()) return deck;
+        int totalMain = 0;
+        for (DeckCardInfo c : main) if (c != null) totalMain += c.getAmount();
+        if (totalMain < 99) return deck;
+        // buscar comandante: primera carta legendaria que pueda ser comandante
+        int commanderIdx = -1;
+        for (int i = 0; i < main.size(); i++) {
+            DeckCardInfo info = main.get(i);
+            if (info == null) continue;
+            try {
+                CardInfo ci = CardRepository.instance.findCard(info.getSetCode(), info.getCardNumber());
+                if (ci == null) continue;
+                mage.cards.Card card = ci.createCard();
+                if (card == null) continue;
+                boolean canBe = false;
+                try {
+                    if (card.getAbilities().contains(mage.abilities.common.CanBeYourCommanderAbility.getInstance())) canBe = true;
+                    else if (card.isLegendary() && (card.hasCardTypeForDeckbuilding(mage.constants.CardType.CREATURE)
+                            || card.hasSubTypeForDeckbuilding(mage.constants.SubType.VEHICLE)
+                            || card.hasSubTypeForDeckbuilding(mage.constants.SubType.SPACECRAFT))) canBe = true;
+                } catch (Throwable ignored) {}
+                if (canBe) { commanderIdx = i; break; }
+            } catch (Throwable ignored) {}
+        }
+        if (commanderIdx == -1) commanderIdx = 0;
+        DeckCardLists normalized = new DeckCardLists();
+        normalized.setName(deck.getName());
+        normalized.setAuthor(deck.getAuthor());
+        boolean moved = false;
+        for (int i = 0; i < main.size(); i++) {
+            DeckCardInfo c = main.get(i);
+            if (c == null) continue;
+            if (i == commanderIdx && !moved) {
+                normalized.getSideboard().add(new DeckCardInfo(c.getCardName(), c.getCardNumber(), c.getSetCode(), 1));
+                if (c.getAmount() > 1) {
+                    normalized.getCards().add(new DeckCardInfo(c.getCardName(), c.getCardNumber(), c.getSetCode(), c.getAmount() - 1));
+                }
+                moved = true;
+            } else {
+                normalized.getCards().add(c.copy());
+            }
+        }
+        if (deck.getSideboard() != null) {
+            for (DeckCardInfo c : deck.getSideboard()) if (c != null) normalized.getSideboard().add(c.copy());
+        }
+        return normalized;
+    }
+
     /**
      * Igual que fixedDeckJson pero devolviendo DeckCardLists (para los asientos SIM).
      * Si la BD no está lista o no hay faltantes, devuelve el mismo mazo.

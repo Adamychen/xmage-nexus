@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { Deck } from './decks'
-import { fetchDeckIssues } from '../decks/deckIssues'
+import { applySuggestion, fetchDeckIssues } from '../decks/deckIssues'
 import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
 import { useTranslation } from '../i18n'
 import './DeckIssuesDialog.css'
@@ -32,16 +32,6 @@ function subscribe(fn: () => void) {
   return () => {
     listener = null
   }
-}
-
-function applySuggestion(deck: Deck, from: { cardName: string; setCode: string; cardNumber: string }, to: { cardName: string; setCode: string; cardNumber: string }): Deck {
-  const swap = (cards: Deck['cards']) =>
-    cards.map((c) =>
-      c.cardName === from.cardName && c.setCode === from.setCode && c.cardNumber === from.cardNumber
-        ? { ...c, cardName: to.cardName, setCode: to.setCode, cardNumber: to.cardNumber }
-        : c,
-    )
-  return { ...deck, cards: swap(deck.cards), sideboard: swap(deck.sideboard) }
 }
 
 /**
@@ -117,6 +107,11 @@ export default function DeckIssuesDialog() {
                         ? t('decks', 'issues_reason_outdated')
                         : t('decks', 'issues_reason_unimplemented')}
                     </span>
+                    {c.suggestions && c.suggestions.length > 0 && (
+                      <span className="deck-issue-same-card">
+                        {t('decks', 'issues_banner_same_card', { set: c.suggestions[0].setCode, num: c.suggestions[0].cardNumber })}
+                      </span>
+                    )}
                     {c.suggestions && c.suggestions.length > 0 && (
                       <span className="deck-issue-fixes">
                         {c.suggestions.slice(0, 3).map((s) => (
