@@ -1,4 +1,5 @@
 import { SLEEVES } from './sleeves'
+import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
@@ -15,13 +16,17 @@ const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descK
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc', icon: '⬒' },
 ]
 
-const UI_SCALES: Array<{ value: import('../state/persistence').UiScale; label: string; desc: string }> = [
-  { value: 0.9, label: '90%', desc: 'Compacto' },
-  { value: 1, label: '100%', desc: 'Normal' },
-  { value: 1.15, label: '115%', desc: 'Grande' },
-  { value: 1.3, label: '130%', desc: 'Muy grande' },
-  { value: 1.5, label: '150%', desc: 'Extra (CJK)' },
-]
+const UI_SCALE_DESCS: Record<string, string> = {
+  '90%': 'Compacto',
+  '100%': 'Normal',
+  '115%': 'Grande',
+  '130%': 'Muy grande',
+  '150%': 'Extra (CJK)',
+}
+const UI_SCALES = ZOOM_PRESETS.map((value) => {
+  const label = `${Math.round(value * 100)}%`
+  return { value, label, desc: UI_SCALE_DESCS[label] ?? '' }
+})
 
 export default function AppearanceSettingsModal({ onClose }: Props) {
   const { t } = useTranslation()
@@ -39,9 +44,40 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
         <section className="appearance-section">
           <h3 className="appearance-section-title">Tamaño de interfaz</h3>
           <p className="appearance-section-hint">Escala global del lobby/login. 115-150% recomendado para chino/japonés (caracteres más densos).</p>
+          <div className="ui-scale-stepper">
+            <button
+              type="button"
+              className="ui-scale-step"
+              onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, -1))}
+              title={t('lobby', 'zoom_out')}
+              aria-label={t('lobby', 'zoom_out')}
+              data-testid="ui-scale-minus"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className="ui-scale-current"
+              onClick={() => setSetting('uiScale', 1)}
+              title={t('lobby', 'zoom_reset')}
+              data-testid="ui-scale-current"
+            >
+              {zoomPercent(settings.uiScale)}%
+            </button>
+            <button
+              type="button"
+              className="ui-scale-step"
+              onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, 1))}
+              title={t('lobby', 'zoom_in')}
+              aria-label={t('lobby', 'zoom_in')}
+              data-testid="ui-scale-plus"
+            >
+              +
+            </button>
+          </div>
           <div className="ui-scale-grid">
             {UI_SCALES.map((o) => {
-              const isSelected = settings.uiScale === o.value
+              const isSelected = isZoomPreset(settings.uiScale, o.value)
               return (
                 <button
                   key={o.value}

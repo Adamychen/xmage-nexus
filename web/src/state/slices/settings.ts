@@ -1,5 +1,5 @@
 import { loadAutoAnswers, loadFxSettings, loadAudioSettings, loadAppearanceSettings, loadManaPayment } from '../persistence'
-import type { UiScale, ManaPaymentStored } from '../persistence'
+import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { AutoAnswerRule } from '../../game/autoAnswers'
 
 export interface SettingsState {
@@ -17,7 +17,7 @@ export interface SettingsState {
   sfxVolume: number
   uiVolume: number
   sleeveId: string
-  uiScale: UiScale
+  uiScale: ZoomLevel
   cjkBoost: boolean
 }
 

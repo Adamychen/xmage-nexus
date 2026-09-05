@@ -136,6 +136,49 @@
   }
 }
 
+.ui-scale-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ui-scale-step {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #14182e;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: #e8eaf6;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px;
+}
+
+.ui-scale-step:hover { border-color: #7c5cff; }
+
+.ui-scale-current {
+  flex: 1;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(124,92,255,0.14);
+  border: 1.5px solid rgba(124,92,255,0.4);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
 .ui-scale-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

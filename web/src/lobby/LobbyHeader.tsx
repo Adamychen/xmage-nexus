@@ -1,7 +1,7 @@
 import { reset, setSetting } from '../state/store'
 import { useSettings } from '../state/selectors'
 import type { ConnectionInfo } from '../state/persistence'
-import type { UiScale } from '../state/persistence'
+import { ZOOM_DEFAULT, isZoomPreset, zoomPercent } from '../appearance/zoom'
 import type { UsersView } from '../net/types'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
@@ -21,13 +21,13 @@ interface Props {
   confirmDisconnect: boolean
   onConfirmDisconnect: (v: boolean) => void
   onToggleMobileChat: () => void
-  onOpenAppearance: () => void
+  onOpenSettings: () => void
   onOpenLeaderboard: (target?: string, tab?: LeaderboardTab) => void
 }
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, unreadChat, confirmDisconnect, onConfirmDisconnect,
-  onToggleMobileChat, onOpenAppearance, onOpenLeaderboard,
+  onToggleMobileChat, onOpenSettings, onOpenLeaderboard,
 }: Props) {
   const { t } = useTranslation()
   const settings = useSettings()
@@ -50,18 +50,26 @@ export default function LobbyHeader({
         <LanguageSelector showCardLangToggle={true} />
 
         <div className="lobby-scale-quick" role="group" aria-label="UI scale">
-          {( [1, 1.15, 1.5] as UiScale[]).map((s) => (
+          {([1, 1.15, 1.5]).map((s) => (
             <button
               key={s}
               type="button"
-              className={settings.uiScale === s ? 'active' : ''}
+              className={isZoomPreset(settings.uiScale, s) ? 'active' : ''}
               onClick={() => setSetting('uiScale', s)}
               title={`${Math.round(s*100)}%`}
-              aria-pressed={settings.uiScale === s}
+              aria-pressed={isZoomPreset(settings.uiScale, s)}
             >
               {s === 1 ? 'Aa' : s === 1.15 ? 'A+' : 'A++'}
             </button>
           ))}
+          <button
+            type="button"
+            className="lobby-scale-readout"
+            onClick={() => setSetting('uiScale', ZOOM_DEFAULT)}
+            title={t('lobby', 'zoom_reset')}
+          >
+            {zoomPercent(settings.uiScale)}%
+          </button>
         </div>
 
         <button
@@ -78,11 +86,11 @@ export default function LobbyHeader({
         <button
           type="button"
           className="lobby-appearance-btn"
-          onClick={onOpenAppearance}
-          title={t('lobby', 'appearance_title')}
-          data-testid="open-appearance-settings"
+          onClick={onOpenSettings}
+          title={t('common', 'settings')}
+          data-testid="open-settings"
         >
-          <Icon name="palette" size={16} />
+          <Icon name="settings" size={16} />
         </button>
 
         <button

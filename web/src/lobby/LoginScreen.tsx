@@ -4,6 +4,7 @@ import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
 import LanguageSelector from '../i18n/LanguageSelector'
+import SettingsModal from '../settings/SettingsModal'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './LoginScreen.css'
@@ -46,6 +47,7 @@ export default function LoginScreen() {
   const [flagName, setFlagName] = useState('es')
   const [avatarId, setAvatarId] = useState(10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [preset, setPreset] = useState<ServerPreset>('local')
 
   useEffect(() => {
@@ -110,6 +112,16 @@ export default function LoginScreen() {
     <div className="login-wrap">
       <div className="login-top-bar">
         <LanguageSelector showCardLangToggle={true} />
+        <button
+          type="button"
+          className="login-settings-btn"
+          onClick={() => setShowSettings(true)}
+          title={t('common', 'settings')}
+          aria-label={t('common', 'settings')}
+          data-testid="open-settings"
+        >
+          <Icon name="settings" size={16} />
+        </button>
       </div>
 
       <div className="login-bg-glow login-bg-glow-1" />
@@ -280,6 +292,9 @@ export default function LoginScreen() {
           onSelect={(id) => setAvatarId(id)}
           onClose={() => setShowAvatarPicker(false)}
         />
+      )}
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   )

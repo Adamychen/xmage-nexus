@@ -480,6 +480,12 @@ html:lang(zh) .hero-deck-label {
 
 .lobby-scale-quick button:hover { color: #fff; background: rgba(255,255,255,0.06); }
 
+.lobby-scale-quick .lobby-scale-readout {
+  color: #c4cae8;
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 640px) {
   .lobby-scale-quick { display: none; }
 }

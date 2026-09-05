@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { setSetting } from './state/actions'
+import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
 import { loadAudioSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
@@ -47,6 +49,24 @@ export default function App() {
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [])
+
+  useEffect(() => {
+    const onZoomKeys = (e: KeyboardEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return
+      if (e.key === '=' || e.key === '+') {
+        e.preventDefault()
+        setSetting('uiScale', stepZoom(settings.uiScale, 1))
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        setSetting('uiScale', stepZoom(settings.uiScale, -1))
+      } else if (e.key === '0') {
+        e.preventDefault()
+        setSetting('uiScale', ZOOM_DEFAULT)
+      }
+    }
+    window.addEventListener('keydown', onZoomKeys)
+    return () => window.removeEventListener('keydown', onZoomKeys)
+  }, [settings.uiScale])
 
   const reconnecting = connecting && !wsAlive
 

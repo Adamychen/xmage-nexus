@@ -275,21 +275,22 @@ export function saveAudioSettings(settings: AudioSettings) {
   } catch {}
 }
 
+import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
+
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
-export type UiScale = 0.9 | 1 | 1.15 | 1.3 | 1.5
+export type ZoomLevel = number
 
 export interface AppearanceSettings {
   sleeveId: string
   boardLayout: BoardLayoutPref
-  uiScale: UiScale
+  uiScale: ZoomLevel
   cjkBoost: boolean
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
-export const VALID_UI_SCALES: UiScale[] = [0.9, 1, 1.15, 1.3, 1.5]
 
 export function loadAppearanceSettings(): AppearanceSettings {
   try {
@@ -300,9 +301,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
       const layout = VALID_LAYOUTS.includes(parsed.boardLayout as BoardLayoutPref)
         ? (parsed.boardLayout as BoardLayoutPref)
         : DEFAULT_APPEARANCE.boardLayout
-      const scale = VALID_UI_SCALES.includes(parsed.uiScale as UiScale)
-        ? (parsed.uiScale as UiScale)
-        : DEFAULT_APPEARANCE.uiScale
+      const scale = normalizeZoom(parsed.uiScale)
       const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
       return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost }
     }
@@ -321,7 +320,7 @@ export function applyAppearanceToDocument(s: AppearanceSettings, lang?: string) 
     if (typeof document === 'undefined') return
     const root = document.documentElement
     root.dataset.uiScale = String(s.uiScale)
-    root.style.setProperty('--ui-scale', String(s.uiScale))
+    root.style.setProperty('zoom', String(s.uiScale))
     const isCjk = lang === 'ja' || lang === 'zhs' || lang === 'zh'
     const boost = s.cjkBoost && isCjk ? 1.15 : 1
     root.style.setProperty('--cjk-boost', String(boost))

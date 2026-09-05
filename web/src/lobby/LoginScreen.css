@@ -26,6 +26,24 @@
   justify-content: flex-end;
 }
 
+.login-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  border-radius: 8px;
+  color: #cbd5e1;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.login-settings-btn:hover {
+  background: rgba(124, 92, 255, 0.15);
+  border-color: #a78bfa;
+  color: #fff;
+}
+
 @media (max-width: 480px) {
   .login-top-bar {
     top: 10px;

@@ -337,6 +337,14 @@ export interface TranslationSchema {
     appearance_subtitle: string
     appearance_board_title: string
     appearance_board_hint: string
+    settings_language: string
+    settings_interface: string
+    settings_board: string
+    settings_sound: string
+    settings_gameplay: string
+    zoom_out: string
+    zoom_in: string
+    zoom_reset: string
     board_standard: string
     board_standard_desc: string
     board_pod: string

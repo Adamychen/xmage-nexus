@@ -25,7 +25,7 @@ import { useTableActions } from './useTableActions'
 import { useTournamentBracket } from './useTournamentBracket'
 import { extractLobbyUsers, withTimeout, type LobbyTab } from './lobbyUtils'
 import { getIgnoredUsers } from './ignoreList'
-import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
+import SettingsModal from '../settings/SettingsModal'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
 
@@ -56,7 +56,7 @@ export default function LobbyScreen() {
     } catch { return INITIAL_TABLE_FILTERS }
   })
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
-  const [showAppearance, setShowAppearance] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   const tableActions = useTableActions(conn)
   const { joiningTable, setJoiningTable, busyTable, notice, setNotice } = tableActions
@@ -98,7 +98,7 @@ export default function LobbyScreen() {
         confirmDisconnect={confirmDisconnect}
         onConfirmDisconnect={setConfirmDisconnect}
         onToggleMobileChat={() => setMobileChatOpen((v) => !v)}
-        onOpenAppearance={() => setShowAppearance(true)}
+        onOpenSettings={() => setShowSettings(true)}
         onOpenLeaderboard={openLeaderboard}
       />
 
@@ -324,8 +324,8 @@ export default function LobbyScreen() {
       {showDownloadImages && (
         <DownloadImagesDialog onClose={() => setShowDownloadImages(false)} />
       )}
-      {showAppearance && (
-        <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   )
