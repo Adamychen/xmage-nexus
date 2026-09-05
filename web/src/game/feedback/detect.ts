@@ -20,6 +20,11 @@ export function isLondonBottoming(message: string): boolean {
   return /^select a card to put on the bottom of (your|the) library/i.test(message)
 }
 
+export function isTriggerOrderPick(message: string, queryType?: string): boolean {
+  if (queryType === 'PICK_ABILITY') return true
+  return /pick triggered ability|triggered ability \(goes to the stack first\)|elige.*trigger|orden.*trigger/i.test(message)
+}
+
 export function detectPlaneswalkerChoice(options: FeedbackOption[], message: string): { isPW: boolean; deltas?: (number | null)[] } {
   const isPW = options.some((o) => /^([+-]?\d+)\s*:/.test(o.label)) || /planeswalker|lealtad|loyalty/i.test(message)
   if (!isPW) return { isPW: false }

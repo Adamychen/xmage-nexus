@@ -11,7 +11,12 @@ export interface TurnOrderRingProps {
 export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRingProps) {
   const { t } = useTranslation()
   const clamped = (players ?? []).slice(0, MAX_BOARD_PLAYERS)
-  const count = clamped.length
+  // El servidor lista a los jugadores en orden de mapa (table added order),
+  // pero los turnos avanzan en orden inverso: PlayerList se construye con
+  // CircularList.add(), que inserta en cabeza e invierte la lista. Se muestra
+  // el orden real de turnos (inverso al recibido).
+  const ordered = [...clamped].reverse()
+  const count = ordered.length
   if (count === 0) return null
 
   return (
@@ -23,11 +28,11 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
     >
       <div className="tor-track" />
       <div className="tor-seats-flow">
-        {clamped.map((p, idx) => {
+        {ordered.map((p, idx) => {
           const isActive = p.playerId === activePlayerId
           const isPriority = !!p.hasPriority
           const isDefeated = p.hasLeft === true || p.life <= 0
-          const nextPlayer = clamped[(idx + 1) % count]
+          const nextPlayer = ordered[(idx + 1) % count]
           const isActiveEdge = isActive
 
           return (

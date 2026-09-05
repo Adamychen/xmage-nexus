@@ -36,6 +36,22 @@ final class JsonArgs {
     }
 
     static Object parseActionData(JsonElement data) {
+        return parseActionData(data, "");
+    }
+
+    static Object parseActionData(JsonElement data, String action) {
+        Object parsed = parseActionDataValue(data);
+        if (parsed instanceof String && action != null && action.startsWith("TRIGGER_AUTO_ORDER_ABILITY_")) {
+            try {
+                return UUID.fromString((String) parsed);
+            } catch (IllegalArgumentException ex) {
+                return parsed;
+            }
+        }
+        return parsed;
+    }
+
+    private static Object parseActionDataValue(JsonElement data) {
         if (data == null || data.isJsonNull()) {
             return null;
         }

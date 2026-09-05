@@ -68,12 +68,10 @@ test('commander 1v1 enfocada: la zona del jugador activo brilla con etiqueta de 
 
   const bobBar = page.locator('.player-info-bar.opp.is-turn')
   await expect(bobBar).toBeVisible()
-  await expect(bobBar.locator('.player-status-badge.status-turn')).toBeVisible()
   await expect(page.locator('.player-info-bar.my.is-turn')).toHaveCount(0)
 
   await setGame(page, commanderDuel('p1'))
   const aliceBar = page.locator('.player-info-bar.my.is-turn')
   await expect(aliceBar).toBeVisible()
-  await expect(aliceBar.locator('.player-status-badge.status-turn')).toBeVisible()
   await expect(page.locator('.player-info-bar.opp.is-turn')).toHaveCount(0)
 })

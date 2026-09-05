@@ -72,6 +72,51 @@ function stackRulesText(card: CardView): string | null {
   return null
 }
 
+/** Ids objetivo de un hechizo/habilidad (mismo criterio que las flechas). */
+function stackTargetIds(card: CardView): string[] {
+  const obj = card as unknown as Record<string, unknown>
+  const raw = obj.targets ?? obj.targetIds ?? obj.chosenTargets ?? []
+  if (Array.isArray(raw)) {
+    return raw
+      .map((t) => (typeof t === 'string' ? t : (t as { id?: unknown } | null)?.id))
+      .filter((v): v is string => typeof v === 'string' && v.length > 0)
+  }
+  if (raw && typeof raw === 'object') return Object.keys(raw)
+  return []
+}
+
+function findZoneCard(players: PlayerView[] | undefined, stack: Record<string, CardView>, id: string): CardView | null {
+  for (const p of players ?? []) {
+    for (const zone of [p.battlefield, p.graveyard, p.exile]) {
+      const hit = (zone as Record<string, CardView> | undefined)?.[id]
+      if (hit) return hit
+    }
+    const cmd = p.commandList as unknown
+    if (Array.isArray(cmd)) {
+      const hit = (cmd as CardView[]).find((c) => (c as { id?: string } | null)?.id === id)
+      if (hit) return hit
+    } else if (cmd && typeof cmd === 'object') {
+      const hit = (cmd as Record<string, CardView>)[id]
+      if (hit) return hit
+    }
+  }
+  return stack[id] ?? null
+}
+
+/** Etiquetas legibles de los objetivos: 👤 nombre si es jugador, nombre de carta si es permanente. */
+function resolveStackTargetLabels(
+  ids: string[],
+  stack: Record<string, CardView>,
+  players?: PlayerView[],
+): string[] {
+  return ids.map((tid) => {
+    const pl = players?.find((p) => p.playerId === tid || p.name === tid)
+    if (pl) return `👤 ${pl.name}`
+    const hit = findZoneCard(players, stack, tid)
+    return hit?.displayName ?? hit?.name ?? tid
+  })
+}
+
 interface ControllerInfo {
   id?: string
   name: string
@@ -354,6 +399,7 @@ export default function StackZone({
           const ptLine = !isAbility && card.power != null && card.toughness != null
             ? `${card.power}/${card.toughness}`
             : null
+          const tgtLabels = resolveStackTargetLabels(stackTargetIds(card), stack ?? {}, players)
 
           return (
             <RecordedStackEntry
@@ -411,6 +457,12 @@ export default function StackZone({
                       {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
                       {isCopy && <span className="stack-tl-copy-badge">✨ {t('game', 'copy_badge')}</span>}
                     </div>
+                    {tgtLabels.length > 0 && (
+                      <div className="stack-tl-targets" data-testid="stack-targets" title={tgtLabels.join(', ')}>
+                        <span className="stack-target-arrow" aria-hidden="true">🎯 →</span>
+                        <span className="stack-target-names">{tgtLabels.join(', ')}</span>
+                      </div>
+                    )}
                     {rulesText && viewMode === 'expanded' && (
                       <div className="stack-tl-rules">
                         <FormattedText text={rulesText} />

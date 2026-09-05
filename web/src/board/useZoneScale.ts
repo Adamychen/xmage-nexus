@@ -44,7 +44,7 @@ export function useZoneScale(): ZoneScale {
         '.bz-status-row, .pz-bottom-row, .oz-top-row, .oz-bottom-row'
       ) as HTMLElement | null
       const isCompactPod = el.classList.contains('compact-pod')
-      const defaultStatusH = isCompactPod ? 32 : 44
+      const defaultStatusH = isCompactPod ? 64 : 44
       const statusH = statusRow && statusRow.offsetHeight > 0 ? statusRow.offsetHeight : defaultStatusH
 
       // Zone grid always has 2 card rows (1fr each) + 1 status row (auto).
@@ -88,6 +88,10 @@ export function useZoneScale(): ZoneScale {
     if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(debouncedMeasure)
       ro.observe(el)
+      const statusEl = el.querySelector(
+        '.bz-status-row, .pz-bottom-row, .oz-top-row, .oz-bottom-row'
+      ) as HTMLElement | null
+      if (statusEl) ro.observe(statusEl)
     }
 
     let mo: MutationObserver | null = null

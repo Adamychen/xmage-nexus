@@ -166,6 +166,37 @@ export function saveFxSettings(fx: FxSettings) {
   } catch {}
 }
 
+export interface AutoAnswerStored {
+  pattern: string
+  answer: boolean
+}
+
+const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
+
+export function loadAutoAnswers(): AutoAnswerStored[] {
+  try {
+    const raw = getStorage().getItem(AUTO_ANSWERS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((entry): entry is AutoAnswerStored => {
+            const record = entry as Partial<AutoAnswerStored>
+            return typeof record?.pattern === 'string' && typeof record?.answer === 'boolean'
+          })
+          .map((entry) => ({ pattern: entry.pattern, answer: entry.answer }))
+      }
+    }
+  } catch {}
+  return []
+}
+
+export function saveAutoAnswers(rules: AutoAnswerStored[]) {
+  try {
+    getStorage().setItem(AUTO_ANSWERS_KEY, JSON.stringify(rules))
+  } catch {}
+}
+
 export interface AudioSettings {
   soundEnabled: boolean
   masterVolume: number

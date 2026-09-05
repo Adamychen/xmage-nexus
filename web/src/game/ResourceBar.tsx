@@ -106,32 +106,49 @@ export default function ResourceBar({
   return (
     <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
       <div className="resource-mana-wrap">
-        <button
-          type="button"
-          className={`resource-mana ${micro ? 'micro' : ''}`}
-          onClick={() => setManaOpen((v) => !v)}
-          title={t('game', 'mana_title')}
-        >
-          {micro && <span className="mana-micro-icon">⚡</span>}
-          <span className="mana-total">{manaTotal}</span>
-          {!micro && (
-            <svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor">
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-          )}
-        </button>
-        {manaOpen && (
-          <div className="mana-breakdown">
-            {MANA_COLORS.map((c) => (
-              <div key={c.key} className={`mana-pip ${c.className}`}>
-                <span className="mana-symbol">
-                  <ManaPip symbol={c.symbol} size={18} />
-                  <span className="visually-hidden">{c.symbol}</span>
+        {micro ? (
+          <div
+            className="mana-inline"
+            title={`${t('game', 'mana_title')}: ${manaTotal}`}
+            data-testid="mana-inline"
+          >
+            {MANA_COLORS.map((c) => {
+              const count = pool[c.key] ?? 0
+              return (
+                <span key={c.key} className={`mana-inline-pip ${c.className} ${count === 0 ? 'is-zero' : ''}`}>
+                  <ManaPip symbol={c.symbol} size={12} />
+                  <span className="mana-inline-count">{count}</span>
                 </span>
-                <span className="mana-count">{pool[c.key] ?? 0}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="resource-mana"
+              onClick={() => setManaOpen((v) => !v)}
+              title={t('game', 'mana_title')}
+            >
+              <span className="mana-total">{manaTotal}</span>
+              <svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </button>
+            {manaOpen && (
+              <div className="mana-breakdown">
+                {MANA_COLORS.map((c) => (
+                  <div key={c.key} className={`mana-pip ${c.className}`}>
+                    <span className="mana-symbol">
+                      <ManaPip symbol={c.symbol} size={18} />
+                      <span className="visually-hidden">{c.symbol}</span>
+                    </span>
+                    <span className="mana-count">{pool[c.key] ?? 0}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -203,10 +220,10 @@ export default function ResourceBar({
               {counts.exile > 0 && <span className="chip-playable-dot" />}
             </button>
 
-            {side === 'my' && crossZone.length > 0 && (
+            {side === 'my' && (
               <button
                 type="button"
-                className="resource-chip ray-chip clickable-pile has-playable"
+                className={`resource-chip ray-chip clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''}`}
                 title={`${t('game', 'pile_stack')}: ${crossZone.length}`}
                 onClick={() => setOpenPile('crosszone')}
                 onMouseEnter={(e) =>
@@ -218,7 +235,7 @@ export default function ResourceBar({
                   <Icon name="bolt" size={12} />
                 </span>
                 <span className="chip-count">{crossZone.length}</span>
-                <span className="chip-playable-dot" />
+                {crossZone.length > 0 && <span className="chip-playable-dot" />}
               </button>
             )}
           </>

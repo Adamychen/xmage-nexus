@@ -472,6 +472,22 @@ export interface TranslationSchema {
     choose_player_title: string
     pay_mana: string
     pay_amount: string
+    trigger_title: string
+    trigger_remaining: string
+    trigger_hint: string
+    trigger_choose: string
+    trigger_first: string
+    trigger_last: string
+    trigger_scope: string
+    trigger_scope_card: string
+    trigger_scope_name: string
+    trigger_reset: string
+    trigger_menu_reset: string
+    auto_answer_remember: string
+    auto_answers_title: string
+    auto_answers_empty: string
+    auto_answers_clear: string
+    auto_answers_delete: string
     amount_title: string
     multi_amount_title: string
     string_placeholder: string
@@ -664,6 +680,8 @@ export interface TranslationSchema {
     pile_2: string
     pile_summary: string
     card_number: string
+    opp_hand_stack: string
+    opp_hand_view: string
     game_menu: string
     pass_options: string
     automation: string

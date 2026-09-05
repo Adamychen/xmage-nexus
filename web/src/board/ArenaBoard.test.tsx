@@ -120,7 +120,7 @@ describe('ArenaBoard', () => {
     })
     const { container } = render(<ArenaBoard game={game} />)
     expect(container.querySelectorAll('.arena-opp-cell').length).toBe(3)
-    const bottom = container.querySelector('.arena-board > .player-zone')
+    const bottom = container.querySelector('.arena-board > .board-zone')
     expect(bottom).not.toBeNull()
     expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
   })

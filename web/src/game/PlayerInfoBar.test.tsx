@@ -243,13 +243,11 @@ describe('PlayerInfoBar', () => {
     }
   })
 
-  it('marks the active player with turn glow + badge (isActive fallback)', () => {
+  it('marks the active player with turn glow only (no badge)', () => {
     const activePlayer: PlayerView = { ...basePlayer, isActive: true }
     const { container } = render(<PlayerInfoBar player={activePlayer} side="my" />)
     expect(container.querySelector('.player-info-bar.is-turn')).not.toBeNull()
-    const badge = container.querySelector('.player-status-badge.status-turn')
-    expect(badge).not.toBeNull()
-    expect(badge?.textContent).toContain('▶')
+    expect(container.querySelector('.player-status-badge.status-turn')).toBeNull()
   })
 
   it('shows no turn mark on the inactive player', () => {

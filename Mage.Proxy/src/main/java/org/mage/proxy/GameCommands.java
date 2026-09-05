@@ -129,9 +129,10 @@ final class GameCommands {
                 return true;
             }
             case "sendPlayerAction": {
-                PlayerAction playerAction = PlayerAction.valueOf(JsonArgs.str(args, "action", ""));
+                String actionName = JsonArgs.str(args, "action", "");
+                PlayerAction playerAction = PlayerAction.valueOf(actionName);
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
-                Object data = JsonArgs.parseActionData(args.get("data"));
+                Object data = JsonArgs.parseActionData(args.get("data"), actionName);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerAction(playerAction, gameId, data), null, null));
                 return true;
             }

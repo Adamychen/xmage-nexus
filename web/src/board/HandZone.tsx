@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
+import { useTranslation } from '../i18n'
 import './HandZone.css'
 
 const MIN_CARD_W = 40
@@ -14,6 +15,12 @@ interface HandZoneProps {
   targetIds?: Set<string>
   faceDown?: boolean
   compact?: boolean
+  /** Colapsa los dorsos en un stack ×N (manos enemigas en pod/arena). */
+  stackBacks?: boolean
+  /** Hay cartas conocidas: el stack es clicable y abre el visor. */
+  viewable?: boolean
+  viewKnownCount?: number
+  onViewHand?: () => void
 }
 
 export default function HandZone({
@@ -24,7 +31,12 @@ export default function HandZone({
   targetIds = new Set(),
   faceDown = false,
   compact = false,
+  stackBacks = false,
+  viewable = false,
+  viewKnownCount = 0,
+  onViewHand,
 }: HandZoneProps) {
+  const { t } = useTranslation()
   const entries = Object.entries(cards)
   const zoneRef = useRef<HTMLDivElement>(null)
   const [cardW, setCardW] = useState(MAX_CARD_W)
@@ -67,13 +79,19 @@ export default function HandZone({
     return () => ro.disconnect()
   }, [entries.length, compact])
 
+  const faceUp = entries.filter(([, card]) => !(faceDown || card.faceDown === true))
+  const faceDownEntries = entries.filter(([, card]) => faceDown || card.faceDown === true)
+  const collapseBacks = stackBacks && faceDownEntries.length > 1
+  const shownFaceUp = collapseBacks ? faceUp : entries
+  // El stack siempre abre el visor (aunque todo esté oculto: muestra dorsos).
+
   return (
     <div
       ref={zoneRef}
       className={`hand-zone ${faceDown ? 'face-down' : ''} ${compact ? 'compact' : ''}`}
       style={{ '--card-w': `${cardW}px`, '--overlap': `${overlap}px` } as React.CSSProperties}
     >
-      {entries.map(([id, card]) => {
+      {shownFaceUp.map(([id, card]) => {
         const isCardFaceDown = faceDown || card.faceDown === true
         return (
           <div
@@ -94,6 +112,30 @@ export default function HandZone({
           </div>
         )
       })}
+      {collapseBacks && (
+        <div
+          className={`hand-back-stack ${viewable ? 'is-viewable' : ''} ${onViewHand ? 'is-clickable' : ''}`}
+          data-testid="opp-hand-stack"
+          data-count={faceDownEntries.length}
+          title={
+            viewable
+              ? t('game', 'opp_hand_view', { known: viewKnownCount, count: entries.length })
+              : t('game', 'opp_hand_stack', { count: entries.length })
+          }
+          onClick={onViewHand}
+          role={onViewHand ? 'button' : undefined}
+        >
+          <CardSlot
+            card={faceDownEntries[0][1]}
+            faceDown
+            className="hand-card"
+          />
+          <span className="hand-stack-badge">×{faceDownEntries.length}</span>
+          {viewable && (
+            <span className="hand-view-badge" aria-hidden="true">👁️</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }

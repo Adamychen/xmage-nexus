@@ -14,6 +14,7 @@ import {
   isLondonBottoming,
   isMulliganAsk,
   isStartingPlayerMessage,
+  isTriggerOrderPick,
   isVotingAsk,
 } from './detect'
 import {
@@ -135,12 +136,16 @@ export function parseFeedback(
       const isMulliganLondon = isLondonBottoming(message)
       const isStartingPlayer = isStartingPlayerMessage(message)
       const isDiscard = isDiscardMessage(message)
+      const queryType = stringValue(asRecord(data.options).queryType)
+      const isTriggerOrder = !isStartingPlayer && isTriggerOrderPick(message, queryType)
       const title = isStartingPlayer
         ? t('game', 'who_starts')
         : isDiscard
           ? t('game', 'choose_discard')
-          : t('game', 'choose_target')
-      return prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer)
+          : isTriggerOrder
+            ? t('game', 'trigger_title')
+            : t('game', 'choose_target')
+      return prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer, undefined, undefined, undefined, isTriggerOrder)
     }
     case 'GAME_SELECT_CARDS':
     case 'GAME_SELECT_TARGETS':
@@ -262,11 +267,13 @@ function prompt(
   isVoting?: boolean,
   loyaltyDeltas?: (number | null)[],
   isPlaneswalkerAbility?: boolean,
+  isTriggerOrder?: boolean,
 ): FeedbackPrompt {
   const fp: FeedbackPrompt = { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
   if (isVoting) fp.isVoting = true
   if (isPlaneswalkerAbility) fp.isPlaneswalkerAbility = true
   if (loyaltyDeltas) fp.loyaltyDeltas = loyaltyDeltas
   if (isPlaneswalkerAbility && loyaltyDeltas) fp.isPlaneswalkerAbility = true
+  if (isTriggerOrder) fp.isTriggerOrder = true
   return fp
 }

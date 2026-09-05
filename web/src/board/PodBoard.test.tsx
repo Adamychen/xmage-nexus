@@ -1,10 +1,16 @@
 import { cleanup, render } from '@testing-library/react'
+// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
+import { readFileSync } from 'node:fs'
+// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
+import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
+
+declare const process: { cwd(): string }
 
 describe('PodBoard', () => {
   afterEach(() => cleanup())
@@ -111,7 +117,7 @@ describe('PodBoard', () => {
     dave['handCount'] = 1
     const { container, getByTestId } = render(<PodBoard game={game} />)
     expect(getByTestId('hand-bar')).not.toBeNull()
-    // las 3 mini-manos de los rivales (ojo: los espejados llevan .player-zone)
+    // las 3 mini-manos de los rivales (el de abajo-esquina es .opponent-zone.mirrored)
     expect(container.querySelectorAll('.board-zone .hand-card-slot').length).toBe(3)
     expect(container.querySelector('.pod-cell--me .hand-card-slot')).toBeNull()
     expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(3)
@@ -149,9 +155,10 @@ describe('PodBoard', () => {
   it('TurnOrderRing shows progression around the pod', () => {
     const game = fourPlayerGame({ activePlayerId: 'p2' })
     const { getByTestId } = render(<TurnOrderRing players={game.players ?? []} activePlayerId={game.activePlayerId ?? ''} />)
-    const arrow = getByTestId('tor-arrow-p2-p3')
+    // orden real de turnos = inverso a la lista: p4 → p3 → p2 → p1 ↺
+    const arrow = getByTestId('tor-arrow-p2-p1')
     expect(arrow.classList.contains('is-active-edge')).toBe(true)
-    const nonActiveArrow = getByTestId('tor-arrow-p1-p2')
+    const nonActiveArrow = getByTestId('tor-arrow-p4-p3')
     expect(nonActiveArrow.classList.contains('is-active-edge')).toBe(false)
   })
 
@@ -384,8 +391,18 @@ describe('PodBoard', () => {
     expect(container.querySelectorAll('.board-shell-col-divider').length).toBe(0)
   })
 
-  it('marks empty-board zones so the status row stays visible (avatar/hand/resources)', () => {
-    const game = makeGameView({
+  it('renders the bottom-right opponent mirrored with opponent role (not player)', () => {
+    const game = fourPlayerGame()
+    const { container } = render(<PodBoard game={game} />)
+    const daveZone = container.querySelector('.board-zone[data-player-id="p4"]')
+    expect(daveZone).not.toBeNull()
+    expect(daveZone?.classList.contains('opponent-zone')).toBe(true)
+    expect(daveZone?.classList.contains('player-zone')).toBe(false)
+    expect(daveZone?.classList.contains('zone-bottom')).toBe(true)
+    expect(daveZone?.classList.contains('mirrored')).toBe(true)
+  })
+
+  it('marks empty-board zones so the status row stays visible (avatar/hand/resources)', () => {    const game = makeGameView({
       activePlayerId: 'p1',
       players: [
         makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
@@ -408,5 +425,28 @@ describe('PodBoard', () => {
     // la status row del tablero vacío sigue renderizada
     expect(aliceZone?.querySelector('.bz-status-row')).not.toBeNull()
     expect(aliceZone?.querySelector('.player-info-bar')).not.toBeNull()
+  })
+
+  it('keeps both bands rendered on empty-board zones (no collapse until first card)', () => {
+    const boardZoneCss = readFileSync(join(process.cwd(), 'src/board/BoardZone.css'), 'utf8')
+    const boardZoneRules = boardZoneCss.replace(/\/\*[\s\S]*?\*\//g, '')
+    expect(boardZoneRules).not.toMatch(/zone-empty[^{}]*\{[^}]*display\s*:/)
+    expect(boardZoneCss).not.toContain('0px 0px auto')
+    expect(boardZoneCss).not.toContain('auto 0px 0px')
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const { container } = render(<PodBoard game={game} />)
+    const aliceZone = container.querySelector('.board-zone[data-player-id="p1"]')
+    expect(aliceZone?.classList.contains('zone-empty')).toBe(true)
+    expect(aliceZone?.querySelector('.bz-permanents-row')).not.toBeNull()
+    expect(aliceZone?.querySelector('.bz-creatures-row')).not.toBeNull()
+    const bands = aliceZone?.querySelectorAll('.bz-band') ?? []
+    expect(bands.length).toBe(2)
+    bands.forEach((band) => expect(band.querySelector('.card-slot')).toBeNull())
   })
 })

@@ -3,7 +3,7 @@ import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
-import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings, applyAppearanceToDocument } from './persistence'
+import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, applyAppearanceToDocument } from './persistence'
 import { getLanguage } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import type { AppState } from './state'
@@ -184,10 +184,11 @@ export function returnToLobby() {
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   setState({ settings: { ...getState().settings, [key]: value } })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, uiScale, cjkBoost } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, uiScale, cjkBoost, autoAnswers } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   saveAppearanceSettings({ sleeveId, boardLayout, uiScale, cjkBoost })
+  saveAutoAnswers(autoAnswers.map(({ pattern, answer }) => ({ pattern, answer })))
   try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
 }

@@ -94,7 +94,5 @@
   right: 32%;
 }
 
-/* Ensure the bottom-right opponent's avatar is placed at the right outer edge */
-.pod-row--bottom .pod-cell:last-child .opponent-zone.mirrored .bz-status-row {
-  flex-direction: row-reverse;
-}
+/* La celda inferior-derecha sigue el mismo patrón que la del jugador:
+   cara a la izquierda, recursos a la derecha (sin espejo interno). */

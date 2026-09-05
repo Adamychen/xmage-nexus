@@ -85,8 +85,8 @@ Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `Ga
 |---|---|---|
 | Skips F4/F9 one-shot (pasar turno / hasta mi turno) | `Pasar ▾` + teclas F4/F9 (`skips.ts`, `PassMenu.tsx`) | ✅ |
 | Skips F5 (hasta end step), F7 (hasta próxima main), F10 (saltar pila), F11 (end previo a mi turno), F3 (cancelar skips), F2 (confirmar) + botones con borde activo. Sin F6: el propio desktop lo tiene desactivado (`GamePanel.java:2897-2904`) | `Pasar ▾` split-button (`ActionButton` + `PassMenu`: 6 skips + F3 cancela solo con skip activo) + atajos F4/F5/F7/F9/F10/F11/F3 (`GameScreen.tsx`); skip activo con borde dorado + sublabel `skip_active_to` leído de los flags `passed*` del contrato; `e2e/skips.spec.ts` dual (fake: teclas+clics+DOM; real local: ok proxy a las 7 acciones + eco `passedAllTurns` + limpieza F3). Nota: F10 con pila vacía es no-op en el servidor (`PlayerImpl`) | ✅ G11-1 cerrado 2026-09-05 |
-| Trigger order: menú first/last/name + prefs `TRIGGER_AUTO_ORDER_*` | Sin UI (grep `TRIGGER_AUTO_ORDER` en `web/src` → 0). Si el servidor pregunta, cae en diálogo genérico | ❌ G11-2 |
-| Auto-answers (reemplazos, yes/no por texto) `automaticConfirmsMenu` | Sin equivalente (grep `AUTO_ANSWER` → 0) | ❌ G11-3 |
+| Trigger order: menú first/last/name + prefs `TRIGGER_AUTO_ORDER_*` | Diálogo dedicado `TriggerOrderDialog` (ruta `isTriggerOrder` en `FeedbackDialog`): 1 fila por trigger (arte+regla) con Elegir + ⏫/⏬ por carta o por texto + alcance carta/texto + ↺ reset; `sendTriggerAutoOrder` en `commands.ts`; proxy convierte data String→UUID en `TRIGGER_AUTO_ORDER_ABILITY_*` (`JsonArgs.parseActionData`, `JsonArgsTest` 5); reset también en `GameMenu` ⋯ | ✅ G11-2 cerrado 2026-09-05 |
+| Auto-answers (reemplazos, yes/no por texto) `automaticConfirmsMenu` | Solo-cliente (sin servidor): reglas `{texto→Sí/No}` en `game/autoAnswers.ts` (match exacto normalizado), persistidas `mage-web-auto-answers` vía slice `settings`; intercepción en `prompts.ts handleGameAsk` (nunca mulligan/voting/starting, rastro `auto:` en log); creación con checkbox en `GenericDialog` boolean; gestión en `GameMenu` ⋯ (lista+badge+✕+borrar todas) | ✅ G11-3 cerrado 2026-09-05 |
 | Macros `T` (grabar/repetir) | Sin equivalente | ❌ G11-4 menor |
 | Concede game/match, stop watching, hold priority Ctrl+click, rollback votado 0-3, Undo (solo con pila vacía) | `concedeGame/concedeMatch/stopWatching`, hold-priority, `RollbackDialog`, UNDO (menú ⋯ `GameMenu` + `state/actions`) | ✅ |
 | Replay (play/next/prev/skip10/stop) | Replay viewer (`TournamentPanel`, F5) | ✅ |
@@ -95,7 +95,7 @@ Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `Ga
 | Fin partida auto-cierre 8s | `GameEndDialog` manual (decisión UX, no gap) | — |
 | Cheat solo testMode | Sin equivalente (solo dev; no aplica a release) | — |
 
-Veredicto: ~~priorizar **G11-1** (skips), luego G11-2/G11-3. G11-4 menor.~~ **G11-1 cerrado 2026-09-05** (skips + rediseño pantalla: `GameMenu`, `PassMenu`, header de estado); quedan G11-2/G11-3, G11-4 menor.
+Veredicto: ~~priorizar **G11-1** (skips), luego G11-2/G11-3. G11-4 menor.~~ **G11-1 cerrado 2026-09-05** (skips + rediseño pantalla: `GameMenu`, `PassMenu`, header de estado); **G11-2 cerrado 2026-09-05** (diálogo trigger order); **G11-3 cerrado 2026-09-05** (auto-respuestas solo-cliente); queda G11-4 menor.
 
 ### U12 — Zonas y jugador (AUDITADA 2026-09-05)
 
@@ -113,7 +113,7 @@ looked-at/companion/top-library/sideboard) · `GamePanel#displayStack/showReveal
 | Contadores (vida/veneno/energía/exp/rad/ticket + counts biblioteca/cementerio/exilio/mano) | `PlayerInfoBar` + `ResourceBar` | ✅ |
 | Stack con orden invertido + activar/targetear en pila | `StackZone` (rail #N, tipos, controlador, resolver) + auto-pestaña | ✅ |
 | Permisos de mano: pedir/ver/autorizar/revocar + Switch Hands (Mindslaver) | Solo se muestra lo enviado (`revealed/opponentHands/watchedHands`); grep `PERMISSION_TO_SEE|SWITCH_HAND` → 0 | ❌ G12-1 (multi/Commander) |
-| Visores: looked-at, companion dedicada, top-library, sideboard solo-ver | `PileOverlay` cubre cementerio/exilio/biblioteca (+carta top 👁️); resto sin ventana | ⚠️ G12-2 (parcial) |
+| Visores: looked-at, companion dedicada, top-library, sideboard solo-ver | `PileOverlay` cubre cementerio/exilio/biblioteca (+carta top 👁️); **visor de mano rival** (`HandViewer`: conocidas + dorsos, 👁️ solo si hay algo que ver, clicable para Thoughtseize); looked-at/companion/sideboard sin ventana | ⚠️ G12-2 (parcial, mano ✅ 2026-09-05) |
 | Menú contextual botón derecho sobre jugador | `ContextMenu.tsx` + `CARD_CONTEXT_ITEMS` definidos pero **jamás renderizados** (grep uso → 0) | ⚠️ G12-3 (cablear) |
 | Filtro `phasedIn` (oculta faseados) | `phasedIn` existe en contrato (`types.generated.ts:165`) pero nada lo lee | ❌ G12-4 menor (verificar visual) |
 | Hover carta grande, flechas targeting/combate, sonidos tablero | `FloatingCardPreview` + `CombatArrowsOverlay` + 15 sfx | ✅ |

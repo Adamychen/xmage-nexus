@@ -1,6 +1,7 @@
 import CardGrid from './CardGrid'
 import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
+import TriggerOrderDialog from './TriggerOrderDialog'
 import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
 import { useFeedbackForm } from './useFeedbackForm'
@@ -39,6 +40,11 @@ export default function FeedbackDialog() {
   // ── Decisión de quién empieza: diálogo dedicado
   if (prompt.isStartingPlayer && prompt.method !== 'GAME_TARGET') {
     return <StartingPlayerDialog form={form} />
+  }
+
+  // ── Trigger order: diálogo dedicado (GAME_TARGET PICK_ABILITY)
+  if (prompt.isTriggerOrder) {
+    return <TriggerOrderDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
   // ── GAME_TARGET con cardsView1: grid de cartas (tutores, scry, descarte, etc.)

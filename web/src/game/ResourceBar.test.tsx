@@ -123,10 +123,16 @@ describe('ResourceBar', () => {
     // Resource bar has micro class
     expect(container.querySelector('.resource-bar.micro')).toBeTruthy()
 
-    // Mana button has micro styling and thunder icon
-    const manaBtn = container.querySelector('.resource-mana.micro')
-    expect(manaBtn).toBeTruthy()
-    expect(container.querySelector('.mana-micro-icon')).toBeTruthy()
+    // Mana renders as always-visible inline pips (no popup button)
+    const manaInline = container.querySelector('[data-testid="mana-inline"]')
+    expect(manaInline).toBeTruthy()
+    expect(container.querySelector('.resource-mana')).toBeNull()
+    expect(container.querySelector('.mana-breakdown')).toBeNull()
+    const pips = container.querySelectorAll('.mana-inline-pip')
+    expect(pips.length).toBe(6)
+    const counts = Array.from(container.querySelectorAll('.mana-inline-count')).map((el) => el.textContent)
+    expect(counts).toEqual(['0', '1', '0', '2', '0', '0'])
+    expect(container.querySelectorAll('.mana-inline-pip.is-zero').length).toBe(4)
 
     // Does NOT render heavy 68x96 card-sized stacks
     expect(container.querySelector('.resource-stack')).toBeNull()
@@ -141,6 +147,24 @@ describe('ResourceBar', () => {
     const chipCounts = container.querySelectorAll('.chip-count')
     expect(Array.from(chipCounts).map((el) => el.textContent)).toContain('84')
     expect(Array.from(chipCounts).map((el) => el.textContent)).toContain('1')
+  })
+
+  it('always shows the ray chip in micro for my side (even at 0)', () => {
+    const { container } = render(
+      <ResourceBar player={basePlayer} side="my" micro={true} crossZonePlayables={[]} />
+    )
+    const rayChip = container.querySelector('.resource-chip.ray-chip')
+    expect(rayChip).toBeTruthy()
+    expect(rayChip?.classList.contains('has-playable')).toBe(false)
+    expect(rayChip?.querySelector('.chip-playable-dot')).toBeNull()
+    expect(rayChip?.querySelector('.chip-count')?.textContent).toBe('0')
+  })
+
+  it('hides the ray chip in micro for opponents', () => {
+    const { container } = render(
+      <ResourceBar player={basePlayer} side="opp" micro={true} crossZonePlayables={[]} />
+    )
+    expect(container.querySelector('.resource-chip.ray-chip')).toBeNull()
   })
 
   it('opens pile overlay when micro chip is clicked', () => {

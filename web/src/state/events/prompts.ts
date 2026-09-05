@@ -1,5 +1,7 @@
 import * as cmds from '../../net/commands'
 import { parseFeedback } from '../../game/feedback'
+import { findAutoAnswer } from '../../game/autoAnswers'
+import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { setState, addLog } from '../state'
 import { targetFirstId } from '../gameUtils'
 import type { Snapshot } from './context'
@@ -30,6 +32,23 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
     if (currentGameId) void cmds.sendPlayerBoolean(false, currentGameId)
     setState({ feedback: null })
     addLog('tú', 'mulligan: mantener (auto)')
+  } else if (
+    method === 'GAME_ASK' &&
+    currentGameId &&
+    !isMulliganAsk(question) &&
+    !isVotingAsk(question) &&
+    !isStartingPlayerMessage(question)
+  ) {
+    const rule = findAutoAnswer(s.settings.autoAnswers ?? [], question)
+    if (rule) {
+      void cmds.sendPlayerBoolean(rule.answer, currentGameId)
+      setState({ feedback: null })
+      addLog('tú', `auto: ${rule.answer ? 'Sí' : 'No'} → ${question}`)
+      return
+    }
+    const feedback = parseFeedback(method, currentGameId, data)
+    if (feedback) setState({ feedback })
+    addLog('partida', `¿${question || 'pregunta'}?`)
   } else {
     const feedback = parseFeedback(method, currentGameId, data)
     if (feedback) setState({ feedback })

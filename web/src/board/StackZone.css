@@ -434,6 +434,27 @@
   border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
+.stack-tl-targets {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #ffd070;
+  min-width: 0;
+}
+
+.stack-target-arrow {
+  flex-shrink: 0;
+}
+
+.stack-target-names {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
 .stack-tl-rules {
   font-size: 10.5px;
   line-height: 1.4;

@@ -6,6 +6,7 @@ import {
   isLondonBottoming,
   isMulliganAsk,
   isStartingPlayerMessage,
+  isTriggerOrderPick,
   isVotingAsk,
 } from './detect'
 import { parseFeedback } from './parse'
@@ -38,8 +39,14 @@ describe('feedback detectors (pure, no i18n)', () => {
 
   it('matches London bottoming prompts (exact server phrasing)', () => {
     expect(isLondonBottoming('Select a card to put on the bottom of your library')).toBe(true)
-    expect(isLondonBottoming('Select a card to put on the bottom of the library')).toBe(true)
     expect(isLondonBottoming('Put a card on the bottom')).toBe(false)
+  })
+
+  it('matches trigger-order picks via queryType or message', () => {
+    expect(isTriggerOrderPick('Pick triggered ability (goes to the stack first)', 'PICK_ABILITY')).toBe(true)
+    expect(isTriggerOrderPick('Pick triggered ability (goes to the stack first)', undefined)).toBe(true)
+    expect(isTriggerOrderPick('Choose a target', 'PICK_ABILITY')).toBe(true)
+    expect(isTriggerOrderPick('Choose a target', undefined)).toBe(false)
   })
 
   it('detects planeswalker loyalty options with deltas', () => {
@@ -91,5 +98,17 @@ describe('parseFeedback with injected display strings (no i18n)', () => {
     expect(target?.options).toEqual([{ id: 'abc', label: '[game.target_fallback {"index":"1","id":"abc"}]', value: 'abc' }])
     const multi = parseFeedback('GAME_GET_MULTI_AMOUNT', 'g', { messages: [{ id: 'x' }] }, stub)
     expect(multi?.items?.[0].label).toBe('[game.amount_fallback {"index":"1"}]')
+  })
+
+  it('flags trigger-order picks on GAME_TARGET', () => {
+    const pick = parseFeedback('GAME_TARGET', 'g', {
+      message: 'Pick triggered ability (goes to the stack first)',
+      options: { queryType: 'PICK_ABILITY' },
+      targets: ['t1'],
+    }, stub)
+    expect(pick?.isTriggerOrder).toBe(true)
+    expect(pick?.title).toBe('[game.trigger_title]')
+    const normal = parseFeedback('GAME_TARGET', 'g', { message: 'Choose a target', targets: ['abc'] }, stub)
+    expect(normal?.isTriggerOrder).toBeUndefined()
   })
 })

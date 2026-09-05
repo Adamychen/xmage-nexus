@@ -86,11 +86,11 @@ describe('OpponentSwitcherBar', () => {
 
     const nextBtn = screen.getByTitle('Ver oponente siguiente')
     fireEvent.click(nextBtn)
-    expect(onSelect).toHaveBeenCalledWith('p3')
+    expect(onSelect).toHaveBeenCalledWith('p4')
 
     const prevBtn = screen.getByTitle('Ver oponente anterior')
     fireEvent.click(prevBtn)
-    expect(onSelect).toHaveBeenCalledWith('p4')
+    expect(onSelect).toHaveBeenCalledWith('p3')
   })
 
   it('shows my pill deactivated in turn order with arrows between pills', () => {
@@ -115,9 +115,10 @@ describe('OpponentSwitcherBar', () => {
 
     const arrows = container.querySelectorAll('.opp-arrow')
     expect(arrows.length).toBe(4)
-    expect(container.querySelector('[data-testid="opp-arrow-p2-p3"]')?.classList.contains('is-active-edge')).toBe(true)
-    expect(container.querySelector('[data-testid="opp-arrow-p3-p4"]')?.classList.contains('is-active-edge')).toBe(false)
-    expect(container.querySelector('[data-testid="opp-arrow-p4-p1"]')?.textContent).toContain('↺')
+    // orden mostrado invertido (orden real de turnos): p4 → p3 → p2 → p1 ↺
+    expect(container.querySelector('[data-testid="opp-arrow-p2-p1"]')?.classList.contains('is-active-edge')).toBe(true)
+    expect(container.querySelector('[data-testid="opp-arrow-p3-p2"]')?.classList.contains('is-active-edge')).toBe(false)
+    expect(container.querySelector('[data-testid="opp-arrow-p1-p4"]')?.textContent).toContain('↺')
 
     fireEvent.click(screen.getByText('Me'))
     expect(onSelect).not.toHaveBeenCalled()

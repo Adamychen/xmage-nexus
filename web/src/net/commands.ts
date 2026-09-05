@@ -212,8 +212,19 @@ export async function sendPlayerString(value: string, gameId: string) {
   return getGateway().send('sendPlayerString', { value, gameId })
 }
 
-export async function sendPlayerUUID(uuid: string, gameId: string) {
+export async function sendPlayerUUID(uuid: string | null, gameId: string) {
   return getGateway().send('sendPlayerUUID', { value: uuid, gameId })
+}
+
+export type TriggerAutoOrderKind =
+  | 'TRIGGER_AUTO_ORDER_ABILITY_FIRST'
+  | 'TRIGGER_AUTO_ORDER_ABILITY_LAST'
+  | 'TRIGGER_AUTO_ORDER_NAME_FIRST'
+  | 'TRIGGER_AUTO_ORDER_NAME_LAST'
+  | 'TRIGGER_AUTO_ORDER_RESET_ALL'
+
+export async function sendTriggerAutoOrder(kind: TriggerAutoOrderKind, gameId: string, data?: string | null) {
+  return sendPlayerAction(kind, gameId, data ?? null)
 }
 
 export async function sendPlayerManaType(gameId: string, playerId: string, manaType: string) {

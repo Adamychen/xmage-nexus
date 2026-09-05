@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import HandZone from './HandZone'
+import HandViewer from './HandViewer'
 import ResourceBar from '../game/ResourceBar'
 import PlayerInfoBar from '../game/PlayerInfoBar'
 import CommandZone, { hasCommandObjects } from './CommandZone'
@@ -178,6 +179,15 @@ export default function BoardZone({
 
     return {}
   }, [hand, revealedCards, player?.handCount, player?.playerId])
+
+  const handEntries = useMemo(() => Object.entries(finalHand), [finalHand])
+  const knownHandEntries = useMemo(
+    () => handEntries.filter((entry): entry is [string, CardView] => !entry[1].faceDown),
+    [handEntries],
+  )
+  const unknownHandCount = handEntries.length - knownHandEntries.length
+  const [handViewerOpen, setHandViewerOpen] = useState(false)
+  const handViewable = !effectiveControlled && knownHandEntries.length > 0
 
   const hasCommander = useMemo(() => {
     return hasCommandObjects(
@@ -373,6 +383,10 @@ export default function BoardZone({
           playableIds={playableIds}
           targetIds={targetIds}
           compact={isTop || compactPod}
+          stackBacks={compactPod}
+          viewable={handViewable}
+          viewKnownCount={knownHandEntries.length}
+          onViewHand={() => setHandViewerOpen(true)}
         />
       )}
       <ResourceBar
@@ -446,7 +460,8 @@ export default function BoardZone({
 
   const zoneClasses = [
     'board-zone',
-    isTop ? 'zone-top opponent-zone' : 'zone-bottom player-zone',
+    isTop ? 'zone-top' : 'zone-bottom',
+    effectiveControlled ? 'player-zone' : 'opponent-zone',
     mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
     noCreatures ? 'no-creatures' : '',
@@ -480,6 +495,17 @@ export default function BoardZone({
       )}
 
       {isTop ? [statusRow, permanentsRow, creaturesRow] : [creaturesRow, permanentsRow, statusRow]}
+      {handViewerOpen && (
+        <HandViewer
+          playerName={player?.name ?? ''}
+          known={knownHandEntries}
+          unknownCount={unknownHandCount}
+          targetIds={targetIds}
+          playableIds={playableIds}
+          onCardClick={onHandCardClick ?? onCardClick}
+          onClose={() => setHandViewerOpen(false)}
+        />
+      )}
     </div>
   )
 }

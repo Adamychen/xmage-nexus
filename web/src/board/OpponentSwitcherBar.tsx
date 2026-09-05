@@ -30,9 +30,15 @@ export default function OpponentSwitcherBar({
   combat = [],
 }: OpponentSwitcherBarProps) {
   const { t } = useTranslation()
+  // El servidor lista a los jugadores en orden de mapa (table added order),
+  // pero los turnos avanzan en orden inverso: PlayerList se construye con
+  // CircularList.add(), que inserta en cabeza e invierte la lista. La tira
+  // muestra el orden real de turnos (inverso al recibido) y ‹ › navegan
+  // sobre ese orden mostrado.
+  const ordered = [...players].reverse()
   // Enfocables: rivales en juego. Yo y los derrotados/desconectados salen
   // como píldoras desactivadas y fuera del ciclo ‹ ›.
-  const focusable = players.filter((p) => p.playerId !== controlledId && !isOut(p))
+  const focusable = ordered.filter((p) => p.playerId !== controlledId && !isOut(p))
   if (focusable.length <= 1) return null
 
   const currentIndex = focusable.findIndex((p) => p.playerId === selectedOppId)
@@ -40,8 +46,8 @@ export default function OpponentSwitcherBar({
 
   // Flecha de cierre circular (último → primero): el orden es cíclico,
   // igual que en el anillo de POD.
-  const last = players[players.length - 1]
-  const first = players[0]
+  const last = ordered[ordered.length - 1]
+  const first = ordered[0]
 
   const handlePrev = () => {
     const nextIdx = (currentIdx - 1 + focusable.length) % focusable.length
@@ -65,7 +71,7 @@ export default function OpponentSwitcherBar({
       </button>
 
       <div className="opp-pills-list">
-        {players.map((opp, idx) => {
+        {ordered.map((opp, idx) => {
           const isSelected = opp.playerId === selectedOppId
           const isTurn = opp.playerId === activePlayerId || opp.isActive
           const isTargetable = targetIds.has(opp.playerId)
@@ -79,7 +85,7 @@ export default function OpponentSwitcherBar({
             return defs.includes(opp.playerId) || (g as any).defenderId === opp.playerId
           })
 
-          const next = players[idx + 1]
+          const next = ordered[idx + 1]
           const isActiveEdge = opp.playerId === activePlayerId
 
           return (

@@ -311,8 +311,10 @@
 .opponent-zone.compact-pod .oz-top-row,
 .player-zone.compact-pod .pz-bottom-row {
   min-height: 44px;
-  max-height: 56px;
+  max-height: 92px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  row-gap: 2px;
 }
 
 /* Row proportions in compact-pod: equal 1fr for lands and creatures for opponents */
@@ -352,30 +354,15 @@
   grid-template-rows: 1fr 1fr auto;
 }
 
-/* Empty band slot: dashed cue so the static division reads as intentional. */
-.board-zone.compact-pod .bz-band:empty,
-.opponent-zone.compact-pod .oz-band:empty,
-.player-zone.compact-pod .pz-band:empty {
+/* Empty band slot: dashed cue so the static division reads as intentional.
+   Applies to every layout (not only compact-pod): a player with nothing on
+   the battlefield still renders both bands so each zone is always visible. */
+.board-zone .bz-band:empty,
+.opponent-zone .oz-band:empty,
+.player-zone .pz-band:empty {
   border-style: dashed;
   border-color: rgba(148, 130, 255, 0.22);
   background: linear-gradient(180deg, rgba(148, 130, 255, 0.03) 0%, rgba(148, 130, 255, 0.008) 100%);
-}
-
-/* ── Empty board (no cards at all): collapse both bands so the status row
-   (avatar, hand, resources) is always visible instead of being squeezed
-   to zero height by two empty 1fr tracks. Applies to every layout. */
-.board-zone.zone-empty.zone-top,
-.opponent-zone.zone-empty:not(.mirrored) {
-  grid-template-rows: auto 0px 0px;
-}
-.board-zone.zone-empty.zone-bottom,
-.player-zone.zone-empty,
-.opponent-zone.zone-empty.mirrored {
-  grid-template-rows: 0px 0px auto;
-}
-.board-zone.zone-empty .bz-permanents-row,
-.board-zone.zone-empty .bz-creatures-row {
-  display: none !important;
 }
 
 .board-zone.compact-pod .bz-band,

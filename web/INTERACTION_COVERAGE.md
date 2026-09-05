@@ -157,6 +157,8 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Pasar / Hold priority / Stop-until-* | ✅ | ✅ | `stack-priority.spec.ts` (+ `USER_REQUEST_DIALOG` para stop) | 2026-08-24 |
+| Orden de triggers (`GAME_TARGET` PICK_ABILITY) | ✅ | ✅ | `TriggerOrderDialog` (Elegir + ⏫/⏬ por carta o texto + reset; `sendTriggerAutoOrder`; proxy String→UUID en ability) + `TriggerOrderDialog.test.tsx` + `trigger-order.spec.ts` (`@triggers`) | 2026-09-05 |
+| Auto-respuestas Sí/No (`GAME_ASK` texto exacto) | ✅ | ✅ | Solo-cliente: `autoAnswers.ts` + `prompts.ts handleGameAsk` (excluye mulligan/voting/starting) + checkbox `GenericDialog` + sección `GameMenu` ⋯; `autoAnswers.test.ts` + `prompts.autoAnswers.test.ts` + `auto-answers.spec.ts` (`@autoanswers`) | 2026-09-05 |
 
 ### H. Maná y costes
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

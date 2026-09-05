@@ -32,6 +32,8 @@ const WHITELIST = new Set<string>([
   'dialogs.mulligan_btn',
   'game.board_view',
   'game.game_menu',
+  'game.opp_hand_stack',
+  'game.opp_hand_view',
   'game.auto_mulligan',
   'game.auto_pass',
   'game.pass_options',

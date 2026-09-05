@@ -2,7 +2,11 @@ import * as cmds from '../../net/commands'
 import type { FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
 import Modal from '../../ui/Modal'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../../i18n'
+import { setSetting } from '../../state/store'
+import { getState } from '../../state/state'
+import { addAutoAnswer } from '../autoAnswers'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 
@@ -76,9 +80,25 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
     textValue, setTextValue, filteredStringOptions,
     send, cancel, finishOptionalTarget, selectOption, confirmSelected, confirmAmount, confirmMultiAmount,
   } = form
+  const [rememberAnswer, setRememberAnswer] = useState(false)
+  useEffect(() => {
+    setRememberAnswer(false)
+  }, [form.prompt?.method, form.prompt?.gameId, form.prompt?.message])
   if (!prompt) return null
   const kicker = getFeedbackKicker(prompt, t as any)
   const title = getLocalizedTitle(prompt, t as any)
+  const autoAnswerable =
+    prompt.method === 'GAME_ASK' &&
+    prompt.mode === 'boolean' &&
+    !prompt.isMulligan &&
+    !prompt.isVoting &&
+    !prompt.isStartingPlayer
+  const chooseBoolean = (option: { value: string }) => {
+    if (rememberAnswer && autoAnswerable) {
+      const rules = getState().settings.autoAnswers ?? []
+      setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true'))
+    }
+  }
 
   return (
     <Modal backdropClassName="feedback-backdrop" dialogClassName="feedback-dialog" labelledBy="feedback-title">
@@ -250,7 +270,10 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                   key={option.id}
                   className={`feedback-choice-card ${isSel ? 'selected' : ''}`}
                   disabled={busy}
-                  onClick={() => selectOption(option)}
+                  onClick={() => {
+                    if (autoAnswerable) chooseBoolean(option)
+                    selectOption(option)
+                  }}
                 >
                   <span className="choice-number">{idx + 1}</span>
                   <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
@@ -272,6 +295,17 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 <button disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">{t('game', 'targeting_finish')}</button>
               )}
             </div>
+          )}
+          {autoAnswerable && (
+            <label className="feedback-remember-answer">
+              <input
+                type="checkbox"
+                checked={rememberAnswer}
+                disabled={busy}
+                onChange={(event) => setRememberAnswer(event.target.checked)}
+              />
+              {t('game', 'auto_answer_remember')}
+            </label>
           )}
         </div>
       )}

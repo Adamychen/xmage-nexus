@@ -14,6 +14,8 @@ import { useFullscreen } from '../utils/fullscreen'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import Icon from '../ui/Icon'
+import { sendTriggerAutoOrder } from '../net/commands'
+import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import HelpWikiModal from './HelpWikiModal'
 import './GameMenu.css'
@@ -111,6 +113,62 @@ export default function GameMenu() {
               >
                 ⏪ {t('game', 'rollback')}
               </button>
+            )}
+            {!!me && !!gameId && (
+              <button
+                type="button"
+                className="game-menu-item"
+                data-testid="game-menu-trigger-reset"
+                title={t('game', 'trigger_menu_reset')}
+                onClick={() => {
+                  void sendTriggerAutoOrder('TRIGGER_AUTO_ORDER_RESET_ALL', gameId)
+                  close()
+                }}
+              >
+                🌀 {t('game', 'trigger_menu_reset')}
+              </button>
+            )}
+            {!!me && (
+              <>
+                <div className="game-menu-divider" />
+                <div className="game-menu-section-label" data-testid="game-menu-auto-answers-label">
+                  {t('game', 'auto_answers_title', { count: settings.autoAnswers.length })}
+                </div>
+                {settings.autoAnswers.length === 0 && (
+                  <div className="game-menu-auto-empty">{t('game', 'auto_answers_empty')}</div>
+                )}
+                {settings.autoAnswers.map((rule) => (
+                  <div key={rule.id} className="game-menu-auto-row" data-testid={`game-menu-auto-rule-${rule.id}`}>
+                    <span className="game-menu-auto-text" title={rule.pattern}>{rule.pattern}</span>
+                    <span className={`game-menu-auto-badge ${rule.answer ? 'is-yes' : 'is-no'}`}>
+                      {rule.answer ? t('common', 'yes') : t('common', 'no')}
+                    </span>
+                    <button
+                      type="button"
+                      className="game-menu-auto-delete"
+                      title={t('common', 'delete') ?? ''}
+                      aria-label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
+                      data-testid={`game-menu-auto-delete-${rule.id}`}
+                      onClick={() => setSetting('autoAnswers', removeAutoAnswer(settings.autoAnswers, rule.id))}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {settings.autoAnswers.length > 0 && (
+                  <button
+                    type="button"
+                    className="game-menu-item"
+                    data-testid="game-menu-auto-clear"
+                    onClick={() => {
+                      setSetting('autoAnswers', clearAutoAnswers())
+                      close()
+                    }}
+                  >
+                    🗑️ {t('game', 'auto_answers_clear')}
+                  </button>
+                )}
+              </>
             )}
             <div className="game-menu-divider" />
             <div className="game-menu-section-label">{t('game', 'board_view')}</div>

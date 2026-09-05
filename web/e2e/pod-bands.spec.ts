@@ -12,8 +12,8 @@ function creature(id: string, name: string) {
   return { id, name, parentId: id, cardTypes: ['Creature'], power: '2', toughness: '2', tapped: false, manaValue: 2, expansionSetCode: '', cardNumber: '0' }
 }
 
-function podGame(myBattlefield: Record<string, unknown>) {
-  const mkPlayer = (id: string, name: string, controlled: boolean, battlefield: Record<string, unknown>) => ({
+function podGame(myBattlefield: Record<string, unknown>, bobHandCount = 0, revealed: unknown[] = []) {
+  const mkPlayer = (id: string, name: string, controlled: boolean, battlefield: Record<string, unknown>, handCount = 0) => ({
     playerId: id,
     name,
     life: 40,
@@ -24,7 +24,7 @@ function podGame(myBattlefield: Record<string, unknown>) {
     defeated: false,
     left: false,
     battlefield,
-    handCount: 0,
+    handCount,
     libraryCount: 40,
     counters: [],
     commandList: [],
@@ -35,7 +35,7 @@ function podGame(myBattlefield: Record<string, unknown>) {
   return {
     players: [
       mkPlayer('p1', 'Alice', true, myBattlefield),
-      mkPlayer('p2', 'Bob', false, {}),
+      mkPlayer('p2', 'Bob', false, {}, bobHandCount),
       mkPlayer('p3', 'Carol', false, {}),
     ],
     myPlayerId: 'p1',
@@ -51,7 +51,7 @@ function podGame(myBattlefield: Record<string, unknown>) {
     canPlayObjects: {},
     opponentHands: {},
     watchedHands: {},
-    revealed: [],
+    revealed,
     exiles: {},
   }
 }
@@ -99,4 +99,32 @@ test('pod: la banda de tierras existe aunque solo haya criaturas (sin division d
   expect(boxes.creatures.height, 'banda de criaturas con altura').toBeGreaterThan(10)
   expect(boxes.permanents.display, 'banda de tierras NO colapsada aunque vacia').not.toBe('none')
   expect(boxes.permanents.height, 'banda de tierras reserva su mitad').toBeGreaterThan(10)
+})
+
+test('pod: la mano enemiga colapsa a stack ×N sin marca de vista (privada) @pod', async ({ page }) => {
+  await loadPodGame(page, podGame({}, 5))
+  const stack = page.locator('[data-testid="opp-hand-stack"]')
+  await expect(stack, 'stack de dorsos visible').toBeVisible({ timeout: 10_000 })
+  await expect(stack).toHaveAttribute('data-count', '5')
+  await expect(stack).toContainText('×5')
+  await expect(stack).not.toHaveClass(/is-viewable/)
+})
+
+test('pod: mano revelada abre el visor con conocidas + dorsos @pod', async ({ page }) => {
+  const bolt = { id: 'rk1', name: 'Lightning Bolt', manaValue: 1, expansionSetCode: 'lea', cardNumber: '1' }
+  const shock = { id: 'rk2', name: 'Shock', manaValue: 1, expansionSetCode: 'lea', cardNumber: '2' }
+  await loadPodGame(page, podGame({}, 4, [{ cards: { rk1: bolt, rk2: shock } }]))
+  const stack = page.locator('[data-testid="opp-hand-stack"]')
+  await expect(stack, 'stack de dorsos visible').toBeVisible({ timeout: 10_000 })
+  await expect(stack).toHaveAttribute('data-count', '2')
+  await expect(stack).toHaveClass(/is-viewable/)
+  await stack.click()
+  const viewer = page.locator('[data-testid="hand-viewer"]')
+  await expect(viewer, 'visor de mano abierto').toBeVisible({ timeout: 10_000 })
+  await expect(viewer.locator('[data-card-name="Lightning Bolt"]')).toHaveCount(1)
+  await expect(viewer.locator('[data-card-name="Shock"]')).toHaveCount(1)
+  await expect(viewer.locator('[data-testid="hand-viewer-back"]')).toHaveCount(2)
+  await expect(viewer.locator('.pile-card-wrapper .pile-position-badge').nth(2)).toHaveText('#3')
+  await page.keyboard.press('Escape')
+  await expect(viewer, 'visor cerrado con Escape').toBeHidden({ timeout: 10_000 })
 })

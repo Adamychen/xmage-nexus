@@ -67,15 +67,16 @@ test('estandar multi: switcher en orden de turnos con flechas y yo desactivado @
   const order = await bar.locator('.opp-pill').evaluateAll((els) =>
     els.map((el) => el.querySelector('span')?.textContent?.trim()),
   )
-  expect(order).toEqual(['Alice', 'Bob', 'Carol'])
+  // orden real de turnos: inverso a la lista del servidor (PlayerList inserta en cabeza)
+  expect(order).toEqual(['Carol', 'Bob', 'Alice'])
 
-  await expect(page.locator('[data-testid="opp-arrow-p2-p3"]')).toHaveClass(/is-active-edge/)
-  await expect(page.locator('[data-testid="opp-arrow-p1-p2"]')).not.toHaveClass(/is-active-edge/)
+  await expect(page.locator('[data-testid="opp-arrow-p2-p1"]')).toHaveClass(/is-active-edge/)
+  await expect(page.locator('[data-testid="opp-arrow-p3-p2"]')).not.toHaveClass(/is-active-edge/)
 
   const mePill = bar.locator('.opp-pill.is-self')
   await expect(mePill).toBeVisible()
   await expect(mePill).toBeDisabled()
 
   await setGame(page, stdMulti('p3'))
-  await expect(page.locator('[data-testid="opp-arrow-p3-p1"]')).toHaveClass(/is-active-edge/)
+  await expect(page.locator('[data-testid="opp-arrow-p3-p2"]')).toHaveClass(/is-active-edge/)
 })

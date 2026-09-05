@@ -314,8 +314,6 @@ export default function PlayerInfoBar({
             <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
           ) : player.life <= 0 ? (
             <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
-          ) : showTurn ? (
-            <span className="player-status-badge status-turn">▶ {t('board', 'turn_active_badge')}</span>
           ) : null}
           {showMatchWins && (
             <span className="match-wins-dots" title={`${t('game', 'match_wins')}: ${wins}/${winsNeeded}`}>

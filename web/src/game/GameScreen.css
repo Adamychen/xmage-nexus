@@ -628,6 +628,20 @@
   margin-top: 20px;
 }
 
+.feedback-remember-answer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #9aa3c0;
+  cursor: pointer;
+}
+
+.feedback-remember-answer input {
+  accent-color: #7c5cff;
+}
+
 .feedback-dialog-actions button {
   padding: 10px 22px;
   font-size: 13px;

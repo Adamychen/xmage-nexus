@@ -129,6 +129,62 @@
   font-weight: 700;
 }
 
+.game-menu-auto-empty {
+  font-size: 12px;
+  color: #4a5080;
+  padding: 2px 12px 6px;
+}
+
+.game-menu-auto-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.game-menu-auto-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #c6cde6;
+}
+
+.game-menu-auto-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  border: 1px solid #38436b;
+}
+
+.game-menu-auto-badge.is-yes {
+  color: #7ee2a8;
+  border-color: #2c6b4a;
+}
+
+.game-menu-auto-badge.is-no {
+  color: #f09696;
+  border-color: #6b2c2c;
+}
+
+.game-menu-auto-delete {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: #6b7394;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.game-menu-auto-delete:hover {
+  color: #f09696;
+}
+
 .game-menu-fx {
   display: flex;
   flex-direction: column;
