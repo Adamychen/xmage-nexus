@@ -2,6 +2,7 @@ import * as cmds from '../../net/commands'
 import type { GameEndInfo } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { getState, setState, addLog } from '../state'
+import { sniffDungeonEntry } from '../actions'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame } from '../persistence'
 import {
@@ -41,6 +42,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
   if (objectId) saveActiveGame(objectId)
   if (method === 'GAME_UPDATE_AND_INFORM' && (data as any)?.message) {
     addLog('partida', (data as any).message, objectId ?? undefined)
+    sniffDungeonEntry((data as any).message, objectId ?? s.gameId)
   }
   if (embeddedGame) {
     const fresh = getState()
@@ -88,7 +90,10 @@ export function handleWatchGame(objectId: string | null): void {
 export function handleGameInform(data: unknown, objectId: string | null): void {
   const d = data as { message?: string } | string | null
   const msg = typeof d === 'string' ? d : d?.message
-  if (msg) addLog('partida', msg, objectId ?? undefined)
+  if (msg) {
+    sniffDungeonEntry(msg, objectId ?? getState().gameId)
+    addLog('partida', msg, objectId ?? undefined)
+  }
 }
 
 export function handleGameOver(data: unknown, objectId: string | null): void {

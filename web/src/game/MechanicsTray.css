@@ -344,6 +344,68 @@
   color: #63e6be;
 }
 
+/* Branched dungeon map (depth layers with visible forks) */
+.dungeon-depth-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.dungeon-depth-link {
+  display: flex;
+  justify-content: center;
+  padding: 1px 0;
+}
+
+.dungeon-fork-glyph {
+  font-size: 11px;
+  color: #63e6be;
+  opacity: 0.8;
+}
+
+.dungeon-depth-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dungeon-depth-row.is-fork {
+  flex-direction: row;
+}
+
+.dungeon-depth-row.is-fork .dungeon-room-node {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dungeon-room-node.visited-room {
+  opacity: 0.75;
+  border-color: rgba(99, 230, 190, 0.45);
+}
+
+.dungeon-room-node .dungeon-leads {
+  display: block;
+  font-size: 9px;
+  color: #7d8aa0;
+}
+
+.dungeon-room-node.active-room .dungeon-leads {
+  color: #63e6be;
+}
+
+.visited-marker {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 800;
+  color: #63e6be;
+}
+
+.dungeon-depth-row.is-fork .visited-marker,
+.dungeon-depth-row.is-fork .current-marker {
+  margin-left: 0;
+}
+
 /* Day // Night */
 .daynight-banner {
   display: flex;

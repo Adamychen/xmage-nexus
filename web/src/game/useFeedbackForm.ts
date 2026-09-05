@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as cmds from '../net/commands'
-import { clearFeedback, setStoreError, useStore } from '../state/store'
+import { clearFeedback, recordDungeonRoom, setStoreError, useStore } from '../state/store'
+import { getState } from '../state/state'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
+import { ventureChoiceFromPrompt } from './dungeons'
 import { useTranslation, t as tStatic } from '../i18n'
 
 export function sendValue(prompt: FeedbackPrompt, value: string) {
@@ -102,7 +104,16 @@ export function useFeedbackForm(): UseFeedbackForm {
         : current.length < prompt.max ? [...current, option.value] : current)
       return
     }
-    void send(() => sendValue(prompt, option.value), t('errors', 'send_failed'))
+    const current = prompt
+    const venture = current.method === 'GAME_ASK' ? ventureChoiceFromPrompt(current.message, option.label) : null
+    void send(async () => {
+      const result = await sendValue(current, option.value)
+      if (result.ok && venture) {
+        const me = getState().game?.players?.find((p) => p.controlled)?.name ?? ''
+        recordDungeonRoom(current.gameId, me, venture.dungeon, venture.room)
+      }
+      return result
+    }, t('errors', 'send_failed'))
   }
 
   const confirmSelected = () => {

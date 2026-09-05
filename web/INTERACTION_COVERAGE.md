@@ -128,7 +128,7 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Monarch | ✅ | ✅ | `PlayerInfoBar` + `mechanics.spec.ts` (tab Monarca) | 2026-08-24 |
-| Initiative / Dungeon | ✅ | ✅ | `CommandZone` + `MechanicsTray` + `mechanics.spec.ts` (Mazmorra) | 2026-08-24 |
+| Initiative / Dungeon | ✅ | ✅ | `CommandZone` + `MechanicsTray`/`DungeonMap` + `mechanics.spec.ts` (Mazmorra). 2026-09-05: mapa ramificado real (`game/dungeons.ts`, grafos 1:1 del servidor incl. salas antes ausentes: Muiral's/Deep Mines/Fungi/Catacombs/Oubliette) + tracking propio vía prompt *"Choose which room to go to in"* (`recordDungeonRoom`) + tracking de TODOS los jugadores vía broadcast del servidor *"X has entered Y (dungeon: Z)"* (`sniffDungeonEntry` en `GAME_UPDATE_AND_INFORM`/`GAME_INFORM_PERSONAL`, clave por jugador); `dungeons.test.ts` + `MechanicsTray.test.tsx` | 2026-09-05 |
 | Day / Night | ✅ | ✅ | `PlayerInfoBar` + `MechanicsTray` + `mechanics.spec.ts` | 2026-08-24 |
 | El Anillo (Ring) | ✅ | ✅ | `MechanicsTray` + `mechanics.spec.ts` | 2026-08-24 |
 | Poison / Energy / Experience / Radiation | ✅ | ✅ | `PlayerInfoBar` badges (`PlayerInfoBar.test.tsx`) | 2026-08-24 |

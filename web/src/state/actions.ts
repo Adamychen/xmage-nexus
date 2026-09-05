@@ -2,6 +2,7 @@ import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
+import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings, applyAppearanceToDocument } from './persistence'
 import { getLanguage } from '../i18n'
 import { soundManager } from '../audio/soundManager'
@@ -17,6 +18,22 @@ export function setStoreError(error: string) {
 
 export function clearFeedback() {
   setState({ feedback: null })
+}
+
+/** Record a resolved venture-into-the-dungeon branch choice (client-side tracking). */
+export function recordDungeonRoom(gameId: string, player: string, dungeon: string, room: string) {
+  const graph = findDungeonGraph(dungeon)
+  const key = dungeonProgressKey(gameId, player, graph ? graph.id : dungeon)
+  const prev = getState().dungeonProgress[key] ?? []
+  setState({ dungeonProgress: { ...getState().dungeonProgress, [key]: advanceProgress(prev, room) } })
+}
+
+/** Sniff server dungeon-entry broadcasts (all players, including opponents). */
+export function sniffDungeonEntry(message: string, gameId: string | null) {
+  if (!gameId) return
+  const entry = parseDungeonEntry(message)
+  if (!entry) return
+  recordDungeonRoom(gameId, entry.player, entry.dungeon, entry.room)
 }
 
 export function setMyDeck(deck: DeckJson | null) {

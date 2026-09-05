@@ -64,6 +64,8 @@ export interface GameSlice {
   rollbackDialogOpen: boolean
   viewer: CardViewerState | null
   phaseStops: PhaseStops
+  /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
+  dungeonProgress: Record<string, string[]>
 }
 
 export const initialGame: GameSlice = {
@@ -81,6 +83,7 @@ export const initialGame: GameSlice = {
   userRequest: null,
   rollbackDialogOpen: false,
   viewer: null,
+  dungeonProgress: {},
   phaseStops: {
     yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
     opponentTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },

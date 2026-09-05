@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MechanicsTray from './MechanicsTray'
-import { setState } from '../state/store'
+import { setState, sniffDungeonEntry } from '../state/store'
+import { getState } from '../state/state'
 import type { GameView, PlayerView } from '../net/types'
 
 vi.mock('../cards/cardImages', () => ({
@@ -96,6 +97,63 @@ describe('MechanicsTray', () => {
     const { getByText, container } = render(<MechanicsTray />)
     expect(getByText('🗺️ Undercity')).toBeDefined()
     expect(container.querySelector('.dungeon-room-node.active-room')).toBeDefined()
+  })
+
+  it('renders the Tomb diamond with both branches (no collapsed single path)', () => {
+    setState({
+      gameId: 'g-tomb',
+      dungeonProgress: {},
+      game: {
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Dungeon Master',
+            controlled: true,
+            commandList: [{ id: 'dung-1', name: 'Tomb of Annihilation', cardTypes: ['Dungeon'] }],
+          } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+
+    const { container } = render(<MechanicsTray />)
+    const nodes = [...container.querySelectorAll('.dungeon-room-node')]
+    expect(nodes).toHaveLength(5)
+    const labels = nodes.map((n) => n.querySelector('.room-name')?.textContent ?? '')
+    expect(labels.some((t) => t.includes('Oubliette'))).toBe(true)
+    expect(labels.filter((t) => t.length > 0).length).toBe(5)
+    const forkRows = container.querySelectorAll('.dungeon-depth-row.is-fork')
+    expect(forkRows.length).toBeGreaterThan(0)
+    expect(container.querySelector('.dungeon-room-node.active-room')).toBeDefined()
+  })
+
+  it('tracks opponent rooms from server "has entered" broadcasts', () => {
+    setState({ gameId: 'g-opp', dungeonProgress: {} })
+    sniffDungeonEntry('Rival has entered Sandfall Cell (dungeon: Tomb of Annihilation)', 'g-opp')
+    expect(getState().dungeonProgress['g-opp‖rival‖tomb']).toEqual(['Sandfall Cell'])
+    sniffDungeonEntry('Rival draws a card.', 'g-opp')
+    expect(getState().dungeonProgress['g-opp‖rival‖tomb']).toEqual(['Sandfall Cell'])
+  })
+
+  it('moves the marker along the tracked venture path', () => {
+    setState({
+      gameId: 'g-tomb',
+      dungeonProgress: { 'g-tomb‖dungeon master‖tomb': ['Trapped Entry', 'Oubliette'] },
+      game: {
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Dungeon Master',
+            controlled: true,
+            commandList: [{ id: 'dung-1', name: 'Tomb of Annihilation', cardTypes: ['Dungeon'] }],
+          } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+
+    const { container } = render(<MechanicsTray />)
+    const active = container.querySelector('.dungeon-room-node.active-room .room-name')
+    expect(active?.textContent).toContain('Oubliette')
+    expect(container.querySelectorAll('.dungeon-room-node.visited-room').length).toBeGreaterThan(0)
   })
 
   it('renders Day and Night banner with transition rules', () => {

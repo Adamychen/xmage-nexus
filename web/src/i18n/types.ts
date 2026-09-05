@@ -647,6 +647,11 @@ export interface TranslationSchema {
     dungeon_annihilation_2: string
     dungeon_annihilation_3: string
     dungeon_annihilation_4: string
+    dungeon_annihilation_5: string
+    dungeon_mad_mage_8: string
+    dungeon_mad_mage_9: string
+    dungeon_phandelver_5: string
+    dungeon_undercity_6: string
     dungeon_fallback_1: string
     dungeon_fallback_2: string
     dungeon_fallback_3: string

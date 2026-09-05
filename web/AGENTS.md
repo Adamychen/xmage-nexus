@@ -32,4 +32,7 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
 - Do not hand-edit `web/src/net/types.generated.ts` — regenerate it.
 - The protocol contract in `web/schema/contract.schema.json` is the single
   source of truth for the wire format.
+- `web/COMPONENT_PARITY.md` tracks Desktop↔Web feature parity per module
+  (15 units): when closing a unit audit, update its row (Estado + Evidencia +
+  Última verif.) and mirror only `yes/partial/no` into `site/content.json`.
 - Do not commit unless explicitly requested.

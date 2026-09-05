@@ -3,6 +3,14 @@ import type { CardView, PermanentView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
+import DungeonMap from './DungeonMap'
+import {
+  dungeonProgressKey,
+  dungeonRoot,
+  findDungeonGraph,
+  pathToRoom,
+  type DungeonGraph,
+} from './dungeons'
 import './MechanicsTray.css'
 
 interface MechanicsTrayProps {
@@ -17,8 +25,9 @@ interface RingState {
 
 interface DungeonState {
   name: string
-  currentRoom?: string
   player: PlayerView
+  graph: DungeonGraph | null
+  visited: string[]
 }
 
 interface DayNightState {
@@ -36,37 +45,12 @@ function getRingLevels(t: (c: any, k: any) => string) {
 
 type DungeonRoomDef = { keys: string[]; label: string }
 
-function getDungeonRooms(name: string, t: (c: any, k: any) => string): DungeonRoomDef[] | null {
-  const key = name.toLowerCase()
-  if (key.includes('undercity')) return [
-    { keys: ['secret entrance'], label: t('game', 'dungeon_undercity_1') },
-    { keys: ['forge', 'lost well'], label: t('game', 'dungeon_undercity_2') },
-    { keys: ['trap!', 'arena'], label: t('game', 'dungeon_undercity_3') },
-    { keys: ['stash', 'archives'], label: t('game', 'dungeon_undercity_4') },
-    { keys: ['catacombs', 'throne of the dead three'], label: t('game', 'dungeon_undercity_5') },
+function getFallbackRooms(t: (c: any, k: any) => string): DungeonRoomDef[] {
+  return [
+    { keys: [], label: t('game', 'dungeon_fallback_1') },
+    { keys: [], label: t('game', 'dungeon_fallback_2') },
+    { keys: [], label: t('game', 'dungeon_fallback_3') },
   ]
-  if (key.includes('dungeon of the mad mage')) return [
-    { keys: ['yawning portal'], label: t('game', 'dungeon_mad_mage_1') },
-    { keys: ['dungeon level'], label: t('game', 'dungeon_mad_mage_2') },
-    { keys: ['goblin bazaar'], label: t('game', 'dungeon_mad_mage_3') },
-    { keys: ['twisted caverns'], label: t('game', 'dungeon_mad_mage_4') },
-    { keys: ['lost level'], label: t('game', 'dungeon_mad_mage_5') },
-    { keys: ['runestone caverns'], label: t('game', 'dungeon_mad_mage_6') },
-    { keys: ["mad wizard's lair"], label: t('game', 'dungeon_mad_mage_7') },
-  ]
-  if (key.includes('lost mine of phandelver')) return [
-    { keys: ['cave entrance'], label: t('game', 'dungeon_phandelver_1') },
-    { keys: ['goblin lair', 'mine tunnels'], label: t('game', 'dungeon_phandelver_2') },
-    { keys: ['storeroom', 'dark pool', 'fungi cavern'], label: t('game', 'dungeon_phandelver_3') },
-    { keys: ['temple of dumathoin'], label: t('game', 'dungeon_phandelver_4') },
-  ]
-  if (key.includes('tomb of annihilation')) return [
-    { keys: ['trapped entry'], label: t('game', 'dungeon_annihilation_1') },
-    { keys: ['veils of fear'], label: t('game', 'dungeon_annihilation_2') },
-    { keys: ['oubliette', 'sandfall cell'], label: t('game', 'dungeon_annihilation_3') },
-    { keys: ['cradle of the death god'], label: t('game', 'dungeon_annihilation_4') },
-  ]
-  return null
 }
 
 function findRingBearer(player: PlayerView): string | undefined {
@@ -83,6 +67,8 @@ function findRingBearer(player: PlayerView): string | undefined {
 export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   const { t } = useTranslation()
   const game = useStore((s) => s.game)
+  const gameId = useStore((s) => s.gameId)
+  const progress = useStore((s) => s.dungeonProgress)
   const [activeTab, setActiveTab] = useState<string>('auto')
   const [tokenImages, setTokenImages] = useState<Record<string, string>>({})
 
@@ -129,15 +115,23 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       }) as { name?: string; currentRoom?: string } | undefined
 
       if (dungeonItem?.name) {
-        list.push({
-          name: dungeonItem.name,
-          currentRoom: dungeonItem.currentRoom,
-          player: p,
-        })
+        const graph = findDungeonGraph(dungeonItem.name)
+        let visited: string[] = []
+        if (graph) {
+          const tracked = gameId ? progress[dungeonProgressKey(gameId, p.name, graph.id)] : undefined
+          if (tracked && tracked.length > 0) {
+            visited = tracked
+          } else if (dungeonItem.currentRoom) {
+            visited = pathToRoom(graph, dungeonItem.currentRoom) ?? [dungeonRoot(graph)]
+          } else {
+            visited = [dungeonRoot(graph)]
+          }
+        }
+        list.push({ name: dungeonItem.name, player: p, graph, visited })
       }
     }
     return list
-  }, [game?.players])
+  }, [game?.players, gameId, progress])
 
   const dayNightState = useMemo((): DayNightState | null => {
     if (!game?.players) return null
@@ -199,7 +193,9 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
       : activeTab
 
   const myRing = ringStates.find((r) => r.player.controlled) || ringStates[0]
-  const myDungeon = dungeonStates.find((d) => d.player.controlled) || dungeonStates[0]
+  const orderedDungeons = [...dungeonStates].sort((a, b) =>
+    (a.player.controlled ? 0 : 1) - (b.player.controlled ? 0 : 1),
+  )
 
   if (availableTabs.length === 0) {
     return (
@@ -296,42 +292,38 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           </div>
         )}
 
-        {effectiveTab === 'dungeon' && myDungeon && (
-          <div className="mechanic-panel panel-dungeon">
-            <div className="mechanic-header-card">
-              <div className="mechanic-title-row">
-                <h3>🗺️ {myDungeon.name}</h3>
-                <span className="player-tag">({myDungeon.player.name})</span>
-              </div>
-              <p className="dungeon-sub">{t('game', 'mechanics_dungeon_active')} {myDungeon.name}</p>
-            </div>
-
-            <div className="dungeon-rooms-flow">
-              {(getDungeonRooms(myDungeon.name, t) ?? [
-                { keys: [], label: t('game', 'dungeon_fallback_1') },
-                { keys: [], label: t('game', 'dungeon_fallback_2') },
-                { keys: [], label: t('game', 'dungeon_fallback_3') },
-              ]).map((room, idx) => {
-                // currentRoom llega en inglés canónico del servidor ("Forge");
-                // compararlo contra las etiquetas traducidas rompía el marcador 📍
-                const current = (myDungeon.currentRoom ?? '').toLowerCase()
-                const isCurrentRoom = current
-                  ? room.keys.some((k) => current.includes(k))
-                  : idx === 0
-                return (
-                  <div
-                    key={idx}
-                    className={`dungeon-room-node ${isCurrentRoom ? 'active-room' : ''}`}
-                  >
-                    <span className="room-step">#{idx + 1}</span>
-                    <span className="room-name">{room.label}</span>
-                    {isCurrentRoom && <span className="current-marker">📍 {t('game', 'mechanics_dungeon_active')}</span>}
+        {effectiveTab === 'dungeon' &&
+          orderedDungeons.map((dungeon) =>
+            dungeon.graph ? (
+              <DungeonMap
+                key={`${dungeon.player.playerId}-${dungeon.name}`}
+                graph={dungeon.graph}
+                dungeonName={dungeon.name}
+                playerName={dungeon.player.name}
+                visited={dungeon.visited}
+              />
+            ) : (
+              <div key={`${dungeon.player.playerId}-${dungeon.name}`} className="mechanic-panel panel-dungeon">
+                <div className="mechanic-header-card">
+                  <div className="mechanic-title-row">
+                    <h3>🗺️ {dungeon.name}</h3>
+                    <span className="player-tag">({dungeon.player.name})</span>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
+                  <p className="dungeon-sub">{t('game', 'mechanics_dungeon_active')} {dungeon.name}</p>
+                </div>
+
+                <div className="dungeon-rooms-flow">
+                  {getFallbackRooms(t).map((room, idx) => (
+                    <div key={idx} className={`dungeon-room-node ${idx === 0 ? 'active-room' : ''}`}>
+                      <span className="room-step">#{idx + 1}</span>
+                      <span className="room-name">{room.label}</span>
+                      {idx === 0 && <span className="current-marker">📍 {t('game', 'mechanics_dungeon_active')}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ),
+          )}
 
         {effectiveTab === 'daynight' && dayNightState && (
           <div className="mechanic-panel panel-daynight">
