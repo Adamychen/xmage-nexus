@@ -125,7 +125,7 @@ test('la mano propia flota como overlay anclado al fondo sin consumir layout (st
   })
 })
 
-test('la mano propia se restringe al cuadrante inferior-izquierdo del pod 2x2 @fullflow @hand-bar', async ({ page }) => {
+test('la mano propia ocupa toda la fila inferior del pod 1v1 @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hbp',
@@ -141,8 +141,9 @@ test('la mano propia se restringe al cuadrante inferior-izquierdo del pod 2x2 @f
     })
     await expect(page.locator('[data-testid="pod-board"]')).toBeVisible({ timeout: 15_000 })
 
-    // En pod 2x2 el humano está abajo-izquierda y el rival abajo-derecha: la mano
-    // no debe cruzar el divisor central ni tapar el avatar/recursos del rival.
+    // En pod 1v1 el humano está solo en la fila inferior (abajo-derecha vacío,
+    // rival arriba-izquierda): la mano usa todo el ancho inferior, como en
+    // standard y como en pod 3j (regla pod-board--bottom-full).
     const boxes = await page.evaluate(() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
       const pod = document.querySelector('[data-testid="pod-board"]')
@@ -155,13 +156,12 @@ test('la mano propia se restringe al cuadrante inferior-izquierdo del pod 2x2 @f
     })
     expect(
       boxes.bar.width,
-      'la mano ocupa la mitad izquierda del pod',
-    ).toBeGreaterThanOrEqual(boxes.pod.width * 0.45)
-    expect(boxes.bar.width).toBeLessThanOrEqual(boxes.pod.width * 0.55)
+      'la mano ocupa toda la fila inferior del pod',
+    ).toBeGreaterThanOrEqual(boxes.pod.width * 0.9)
     expect(
-      boxes.bar.x + boxes.bar.width,
-      'la mano no cruza el divisor central del pod',
-    ).toBeLessThanOrEqual(boxes.pod.x + boxes.pod.width / 2 + 2)
+      boxes.bar.x,
+      'la mano empieza en el borde izquierdo del pod',
+    ).toBeLessThanOrEqual(boxes.pod.x + 2)
 
     await expectHandBarLayout(page)
     expect(pageErrors).toEqual([])

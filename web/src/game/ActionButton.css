@@ -1,4 +1,5 @@
 .action-button-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6,6 +7,46 @@
   flex-shrink: 0;
   background: #0a0d1a;
   border-top: 1px solid #1e2444;
+}
+
+.big-action-split {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+}
+
+.big-action-split .big-action-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.big-action-split.has-skip .big-action-btn.interactive {
+  border-color: #ffb03a;
+  box-shadow: 0 0 20px rgba(255, 176, 58, 0.45), 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.big-action-toggle {
+  flex-shrink: 0;
+  width: 30px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: #181c2e;
+  color: #9aa1c0;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.big-action-toggle:hover {
+  background: #252b4a;
+  color: #e8eaf6;
+}
+
+.big-action-toggle.is-open {
+  background: #252b4a;
+  color: #cfc3ff;
+  border-color: #7c5cff;
 }
 
 .big-action-btn {

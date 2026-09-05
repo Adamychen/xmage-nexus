@@ -1,29 +1,13 @@
 import { useMemo } from 'react'
-import type { CardView, GameView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
-import { opponentRevealedCards, simpleToCardsView } from './revealedCards'
-import type { CrossZonePlayable } from './crossZone'
+import { opponentRevealedCards } from './revealedCards'
+import { useSpectatorBottomHand, type BoardProps } from './boardShared'
 import './GameBoard.css'
 
-interface GameBoardProps {
-  game: GameView | null
-  targetIds?: string[]
-  chosenTargetIds?: string[]
-  onTargetClick?: (id: string) => void
-  playableIds?: string[]
-  onPlayableClick?: (id: string) => void
-  onCardHover?: (card: CardView | null) => void
-  combatSelectable?: string[]
-  combatMode?: 'attack' | 'block' | null
-  combatChosen?: string[]
-  onCombatClick?: (id: string) => void
-  attackingIds?: string[]
-  blockingIds?: string[]
-  crossZonePlayables?: CrossZonePlayable[]
-  onPlayCrossZone?: (id: string) => void
+export interface GameBoardProps extends BoardProps {
   focusedOpponentId?: string
 }
 
@@ -69,18 +53,7 @@ export default function GameBoard({
   const topOpps = isSpectator ? (opps.length >= 2 ? opps.slice(0, opps.length - 1) : []) : opps
 
   /** Bottom player hand in spectator mode (revealed or viewed). */
-  const spectatorBottomHand = useMemo(() => {
-    if (!isSpectator || !oppBottom) return {}
-    const watched =
-      game?.watchedHands?.[oppBottom.name] ||
-      game?.watchedHands?.[oppBottom.playerId]
-    const oppHand =
-      game?.opponentHands?.[oppBottom.playerId] ||
-      game?.opponentHands?.[oppBottom.name]
-    if (watched) return simpleToCardsView(watched)
-    if (oppHand) return simpleToCardsView(oppHand)
-    return {}
-  }, [isSpectator, oppBottom, game?.watchedHands, game?.opponentHands])
+  const spectatorBottomHand = useSpectatorBottomHand(game, isSpectator, oppBottom)
 
   const currentOpp = useMemo(() => {
     if (topOpps.length <= 1) return topOpps[0]

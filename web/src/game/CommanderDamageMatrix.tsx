@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
 import { commanderTax } from '../board/commanders'
+import { MAX_BOARD_PLAYERS } from '../board/boardShared'
 import { useTranslation } from '../i18n'
 import './CommanderDamageMatrix.css'
 
 export const COMMANDER_LETHAL = 21
-const MAX_POD_PLAYERS = 4
 
 interface CommanderInfo {
   id: string
@@ -125,7 +125,7 @@ export interface CommanderDamageMatrixProps {
 export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixProps) {
   const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
-  const players = useMemo(() => (game?.players ?? []).slice(0, MAX_POD_PLAYERS), [game?.players])
+  const players = useMemo(() => (game?.players ?? []).slice(0, MAX_BOARD_PLAYERS), [game?.players])
 
   const commanders: CommanderInfo[] = useMemo(() => {
     const res: CommanderInfo[] = []

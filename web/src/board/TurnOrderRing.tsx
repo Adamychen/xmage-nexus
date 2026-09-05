@@ -1,5 +1,6 @@
 import type { PlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
+import { MAX_BOARD_PLAYERS } from './boardShared'
 import './TurnOrderRing.css'
 
 export interface TurnOrderRingProps {
@@ -7,11 +8,9 @@ export interface TurnOrderRingProps {
   activePlayerId: string
 }
 
-const MAX_POD_PLAYERS = 4
-
 export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRingProps) {
   const { t } = useTranslation()
-  const clamped = (players ?? []).slice(0, MAX_POD_PLAYERS)
+  const clamped = (players ?? []).slice(0, MAX_BOARD_PLAYERS)
   const count = clamped.length
   if (count === 0) return null
 

@@ -1,28 +1,10 @@
 import { useMemo } from 'react'
-import type { CardView, GameView } from '../net/types'
+import type { GameView } from '../net/types'
 import TwoHeadedBoard from './TwoHeadedBoard'
-import type { CrossZonePlayable } from './crossZone'
+import { MAX_BOARD_PLAYERS, type BoardProps } from './boardShared'
 import './PodBoard.css'
 
-const MAX_POD_PLAYERS = 4
-
-interface PodBoardProps {
-  game: GameView | null
-  targetIds?: string[]
-  chosenTargetIds?: string[]
-  onTargetClick?: (id: string) => void
-  playableIds?: string[]
-  onPlayableClick?: (id: string) => void
-  onCardHover?: (card: CardView | null) => void
-  combatSelectable?: string[]
-  combatMode?: 'attack' | 'block' | null
-  combatChosen?: string[]
-  onCombatClick?: (id: string) => void
-  attackingIds?: string[]
-  blockingIds?: string[]
-  crossZonePlayables?: CrossZonePlayable[]
-  onPlayCrossZone?: (id: string) => void
-}
+export type { BoardProps as PodBoardProps }
 
 export default function PodBoard({
   game,
@@ -40,12 +22,12 @@ export default function PodBoard({
   blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
-}: PodBoardProps) {
-  const allPlayers = useMemo(() => (game?.players ?? []).slice(0, MAX_POD_PLAYERS), [game?.players])
+}: BoardProps) {
+  const allPlayers = useMemo(() => (game?.players ?? []).slice(0, MAX_BOARD_PLAYERS), [game?.players])
 
   const clampedGame = useMemo(() => {
     if (!game) return null
-    if ((game.players?.length ?? 0) <= MAX_POD_PLAYERS) return game
+    if ((game.players?.length ?? 0) <= MAX_BOARD_PLAYERS) return game
     return { ...game, players: allPlayers } as GameView
   }, [game, allPlayers])
 

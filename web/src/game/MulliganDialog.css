@@ -165,6 +165,14 @@ html.fx-off .mulligan-card-wrap {
   cursor: not-allowed;
 }
 
+.mulligan-auto-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
 .mulligan-keep {
   background: linear-gradient(180deg, #2fbf71 0%, #229c5a 100%);
   color: #06210f;

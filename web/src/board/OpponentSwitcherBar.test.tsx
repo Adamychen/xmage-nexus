@@ -8,8 +8,7 @@ describe('OpponentSwitcherBar', () => {
     cleanup()
   })
 
-  const mockOpponents = [
-    {
+  const mockOpponents = [    {
       playerId: 'p2',
       name: 'Alice',
       life: 40,
@@ -32,7 +31,22 @@ describe('OpponentSwitcherBar', () => {
   it('renders nothing when only 1 opponent', () => {
     const { container } = render(
       <OpponentSwitcherBar
-        opponents={[mockOpponents[0]]}
+        players={[mockOpponents[0]]}
+        selectedOppId="p2"
+        onSelectOpponent={() => {}}
+      />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('renders nothing in 1v1 (only me + one rival focusable)', () => {
+    const { container } = render(
+      <OpponentSwitcherBar
+        players={[
+          { playerId: 'p1', name: 'Me', life: 20, controlled: true } as unknown as PlayerView,
+          mockOpponents[0],
+        ]}
+        controlledId="p1"
         selectedOppId="p2"
         onSelectOpponent={() => {}}
       />
@@ -44,7 +58,7 @@ describe('OpponentSwitcherBar', () => {
     const onSelect = vi.fn()
     render(
       <OpponentSwitcherBar
-        opponents={mockOpponents}
+        players={mockOpponents}
         selectedOppId="p2"
         onSelectOpponent={onSelect}
         activePlayerId="p2"
@@ -64,7 +78,7 @@ describe('OpponentSwitcherBar', () => {
     const onSelect = vi.fn()
     render(
       <OpponentSwitcherBar
-        opponents={mockOpponents}
+        players={mockOpponents}
         selectedOppId="p2"
         onSelectOpponent={onSelect}
       />
@@ -76,6 +90,57 @@ describe('OpponentSwitcherBar', () => {
 
     const prevBtn = screen.getByTitle('Ver oponente anterior')
     fireEvent.click(prevBtn)
+    expect(onSelect).toHaveBeenCalledWith('p4')
+  })
+
+  it('shows my pill deactivated in turn order with arrows between pills', () => {
+    const onSelect = vi.fn()
+    const players = [
+      { playerId: 'p1', name: 'Me', life: 20, controlled: true },
+      ...mockOpponents,
+    ] as unknown as PlayerView[]
+    const { container } = render(
+      <OpponentSwitcherBar
+        players={players}
+        controlledId="p1"
+        selectedOppId="p2"
+        onSelectOpponent={onSelect}
+        activePlayerId="p2"
+      />
+    )
+
+    const pills = Array.from(container.querySelectorAll('.opp-pill')).map((el) => el.textContent)
+    expect(pills.length).toBe(4)
+    expect(container.querySelector('.opp-pill.is-self')?.textContent).toContain('Me')
+
+    const arrows = container.querySelectorAll('.opp-arrow')
+    expect(arrows.length).toBe(4)
+    expect(container.querySelector('[data-testid="opp-arrow-p2-p3"]')?.classList.contains('is-active-edge')).toBe(true)
+    expect(container.querySelector('[data-testid="opp-arrow-p3-p4"]')?.classList.contains('is-active-edge')).toBe(false)
+    expect(container.querySelector('[data-testid="opp-arrow-p4-p1"]')?.textContent).toContain('↺')
+
+    fireEvent.click(screen.getByText('Me'))
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('cycle skips me and defeated players', () => {
+    const onSelect = vi.fn()
+    const players = [
+      { playerId: 'p1', name: 'Me', life: 20, controlled: true },
+      mockOpponents[0],
+      { ...mockOpponents[1], life: 0 },
+      mockOpponents[2],
+    ] as unknown as PlayerView[]
+    render(
+      <OpponentSwitcherBar
+        players={players}
+        controlledId="p1"
+        selectedOppId="p2"
+        onSelectOpponent={onSelect}
+      />
+    )
+
+    fireEvent.click(screen.getByTitle('Ver oponente siguiente'))
     expect(onSelect).toHaveBeenCalledWith('p4')
   })
 })

@@ -126,6 +126,13 @@ export class HumanHelper {
     return this.send('sendPlayerBoolean', { gameId: this.gameId, value: false })
   }
 
+  /** Envía una PlayerAction genérica (skips F4/F9/..., HOLD, ...) y resuelve con
+   *  el ok del proxy: prueba el passthrough proxy→servidor sin depender de la UI. */
+  async sendPlayerAction(action: string): Promise<boolean> {
+    if (!this.gameId) return false
+    return this.send('sendPlayerAction', { gameId: this.gameId, action })
+  }
+
   // ============================ protocolo ============================
 
   private send(action: string, args: Record<string, unknown>): Promise<boolean> {

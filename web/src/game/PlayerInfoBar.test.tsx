@@ -223,8 +223,7 @@ describe('PlayerInfoBar', () => {
     expect(buf?.textContent).toContain('00:30')
   })
 
-  it('renders Curses badge when player has attachments', () => {
-    const onHover = vi.fn()
+  it('renders Curses badge when player has attachments', () => {    const onHover = vi.fn()
     const cursePlayer: PlayerView = {
       ...basePlayer,
       attachments: ['curse-1', 'curse-2'],
@@ -242,5 +241,28 @@ describe('PlayerInfoBar', () => {
         expect.any(Object),
       )
     }
+  })
+
+  it('marks the active player with turn glow + badge (isActive fallback)', () => {
+    const activePlayer: PlayerView = { ...basePlayer, isActive: true }
+    const { container } = render(<PlayerInfoBar player={activePlayer} side="my" />)
+    expect(container.querySelector('.player-info-bar.is-turn')).not.toBeNull()
+    const badge = container.querySelector('.player-status-badge.status-turn')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toContain('▶')
+  })
+
+  it('shows no turn mark on the inactive player', () => {
+    const { container } = render(<PlayerInfoBar player={basePlayer} side="opp" />)
+    expect(container.querySelector('.player-info-bar.is-turn')).toBeNull()
+    expect(container.querySelector('.player-status-badge.status-turn')).toBeNull()
+  })
+
+  it('hides the turn mark on defeated players even if active', () => {
+    const deadActive: PlayerView = { ...basePlayer, isActive: true, life: 0 }
+    const { container } = render(<PlayerInfoBar player={deadActive} side="my" />)
+    expect(container.querySelector('.player-info-bar.is-turn')).toBeNull()
+    expect(container.querySelector('.player-status-badge.status-turn')).toBeNull()
+    expect(container.querySelector('.player-status-badge.status-defeated')).not.toBeNull()
   })
 })

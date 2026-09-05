@@ -1,30 +1,14 @@
 import { useMemo } from 'react'
-import type { CardView, GameView, PlayerView } from '../net/types'
+import type { PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
+import { type BoardProps } from './boardShared'
 import { opponentRevealedCards } from './revealedCards'
-import type { CrossZonePlayable } from './crossZone'
 import './TwoHeadedBoard.css'
 
-interface TwoHeadedBoardProps {
-  game: GameView | null
-  targetIds?: string[]
-  chosenTargetIds?: string[]
-  onTargetClick?: (id: string) => void
-  playableIds?: string[]
-  onPlayableClick?: (id: string) => void
-  onCardHover?: (card: CardView | null) => void
-  combatSelectable?: string[]
-  combatMode?: 'attack' | 'block' | null
-  combatChosen?: string[]
-  onCombatClick?: (id: string) => void
-  attackingIds?: string[]
-  blockingIds?: string[]
-  crossZonePlayables?: CrossZonePlayable[]
-  onPlayCrossZone?: (id: string) => void
-}
+export type { BoardProps as TwoHeadedBoardProps }
 
 export default function TwoHeadedBoard({
   game,
@@ -42,8 +26,8 @@ export default function TwoHeadedBoard({
   blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
-}: TwoHeadedBoardProps) {
-  const { me, opps, isSpectator } = useBoardPlayers(game)
+}: BoardProps) {
+  const { me, opps, isSpectator } = useBoardPlayers(game, true)
   const presenter = useBoardPresenter({
     game,
     targetIds,
@@ -80,24 +64,30 @@ export default function TwoHeadedBoard({
   }, [isSpectator, me, opps])
 
   const oppSlot = (player: PlayerView | undefined, key: string, mirrored = false) => (
-    <div className="pod-cell" key={key}>
-      <OpponentZone
-        player={player}
-        onCardClick={onTargetClick}
-        onCardHover={handleCardHover}
-        targetIds={targetIdSet}
-        revealedCards={opponentRevealedCards(game, player)}
-        attackingIds={attackingIds}
-        blockingIds={blockingIds}
-        mirrored={mirrored}
-        compactPod
-      />
+    <div className={`pod-cell${player ? '' : ' pod-cell--empty'}`} key={key}>
+      {player && (
+        <OpponentZone
+          player={player}
+          onCardClick={onTargetClick}
+          onCardHover={handleCardHover}
+          targetIds={targetIdSet}
+          revealedCards={opponentRevealedCards(game, player)}
+          attackingIds={attackingIds}
+          blockingIds={blockingIds}
+          mirrored={mirrored}
+          compactPod
+        />
+      )}
     </div>
   )
 
+  const isTopFull = !topLeft || !topRight
+  const isBottomFull = !botRight
+  const shellClass = `pod-board${isBottomFull ? ' pod-board--bottom-full' : ''}${isTopFull ? ' pod-board--top-full' : ''}`
+
   return (
     <BoardShell
-      className="pod-board"
+      className={shellClass}
       presenter={presenter}
       handBar={!isSpectator ? {
         cards: game?.myHand ?? {},
@@ -109,7 +99,7 @@ export default function TwoHeadedBoard({
       {/* ── Top row ── */}
       <div className="pod-row pod-row--top">
         {oppSlot(topLeft, 'tl')}
-        <BoardColDivider />
+        {topLeft && topRight && <BoardColDivider />}
         {oppSlot(topRight, 'tr')}
       </div>
 
@@ -119,7 +109,7 @@ export default function TwoHeadedBoard({
       {/* ── Bottom row ── */}
       <div className="pod-row pod-row--bottom">
         {/* Bottom-left: player or spectator-opp */}
-        <div className="pod-cell pod-cell--me">
+        <div className={`pod-cell pod-cell--me${!isSpectator || botLeft ? '' : ' pod-cell--empty'}`}>
           {!isSpectator && botLeft === me ? (
             <PlayerZone
               player={me}
@@ -140,7 +130,7 @@ export default function TwoHeadedBoard({
               compactPod
               showHand={false}
             />
-          ) : (
+          ) : botLeft ? (
             <OpponentZone
               player={botLeft as PlayerView | undefined}
               onCardClick={onTargetClick}
@@ -152,10 +142,10 @@ export default function TwoHeadedBoard({
               mirrored
               compactPod
             />
-          )}
+          ) : null}
         </div>
 
-        <BoardColDivider />
+        {botRight && <BoardColDivider />}
 
         {/* Bottom-right: always an opponent (mirrored to face the center) */}
         {oppSlot(botRight, 'br', true)}

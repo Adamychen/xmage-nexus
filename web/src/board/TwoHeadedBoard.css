@@ -29,6 +29,12 @@
   position: relative;
 }
 
+/* Slot without a player (<4 players): collapse it so the remaining cell
+   takes the full row instead of showing half a board of dead space. */
+.pod-cell--empty {
+  display: none;
+}
+
 /* My cell gets a very subtle green glow at the bottom edge */
 .pod-cell--me::after {
   content: '';
@@ -61,15 +67,31 @@
 }
 
 /* ── HandBar positioning in POD mode (2x2) ───────────────────── */
-/* In 2x2 pod mode, the human player is strictly in the bottom-left quadrant.
-   HandBar must be constrained to the left 50% so it never crosses the center
-   divider and never covers the bottom-right opponent's avatar/life total. */
+/* In full 2x2 pod mode (4 players), the human player is strictly in the
+   bottom-left quadrant. HandBar is constrained to the left 50% so it never
+   crosses the center divider and never covers the bottom-right opponent's
+   avatar/life total. */
 .pod-board .hand-bar {
   left: 0;
   right: auto;
   width: 50%;
   max-width: 50%;
   justify-content: center;
+}
+
+/* With 2-3 players the bottom-right cell collapses (display:none) and the
+   player's cell takes the full bottom row — the hand must span it too,
+   otherwise it sits stuck to the left half (see POD 3-player bug). */
+.pod-board--bottom-full .hand-bar {
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.pod-board--bottom-full .hand-bar::before {
+  left: 32%;
+  right: 32%;
 }
 
 /* Ensure the bottom-right opponent's avatar is placed at the right outer edge */

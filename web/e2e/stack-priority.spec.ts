@@ -22,7 +22,8 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       // ETAPA 1: Retención de Prioridad (Hold Priority)
       // ─────────────────────────────────────────────────────────────
 
-      // 1.1 Validar toggle de Hold Priority en la barra de controles
+      // 1.1 Validar toggle de Hold Priority en el menú ▾ del botón Pasar
+      await page.locator('[data-testid="pass-split-toggle"]').click()
       const holdPriorityToggle = page.locator('.hold-priority-toggle input')
       await expect(holdPriorityToggle, 'toggle de Retener Prioridad visible').toBeVisible({ timeout: 10_000 })
       await holdPriorityToggle.check()

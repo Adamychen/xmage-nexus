@@ -33,9 +33,9 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ❓ | `DRAFT_*` ✅ (`draft.spec.ts`); comparativa fina pendiente | — |
 | U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ❓ | `TOURNAMENT_*` ✅ (`tournament.spec.ts`); `RandomPacksSelector` por auditar | — |
-| U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ❓ | `GAME_*` ✅ (full-flow/spells/targeting); comparativa fina pendiente | — |
-| U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ❓ | board E2E en verde; comparativa fina pendiente | — |
-| U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ❓ | `combat*.spec.ts`, `complex-costs.spec.ts` ✅; comparativa fina pendiente | — |
+| U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ⚠️ | Auditada 2026-09-05: 4 gaps (skips F5/F6/F7/F10/F11/F3, trigger-order, auto-answers, macros), resto ✅ | 2026-09-05 |
+| U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ⚠️ | Auditada 2026-09-05: 4 gaps (permisos de mano, visores looked-at/companion/sideboard, menú contextual sin cablear, phased-out), resto ✅ | 2026-09-05 |
+| U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ⚠️ | Auditada 2026-09-05: 1 gap (prefs auto-pago maná), resto ✅ | 2026-09-05 |
 | U14 | Preguntas al jugador | `dialog/Pick*.java` (5), `ShowCardsDialog.java`, `CustomOptionsDialog.java`, `UserRequestDialog.java`, `game/FeedbackPanel.java`, `components/ability/AbilityPicker.java` | `game/feedback/*`, `game/feedbackModes/*`, `FeedbackDialog.tsx`, `UserRequestDialog.tsx` | ⚠️ | Sin gaps bloqueantes; 6 gaps menores UX (P14-1…P14-6, ver auditoría) | 2026-09-05 |
 | U15 | Sistema | `dialog/PreferencesDialog.java`, `DownloadImagesDialog.java`, `GameEndDialog.java`, `AddLandDialog.java`, `CardInfoWindowDialog.java`, `AboutDialog.java`, `WhatsNewDialog.java` | `appearance/AppearanceSettingsModal.tsx`, `lobby/DownloadImagesDialog.tsx`, `game/GameEndDialog.tsx`, `game/HelpWikiModal.tsx` | ❓ | mapeo parcial visible; auditoría pendiente | — |
 
@@ -72,7 +72,70 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U4 · U5 · U6 · U7 · U9 · U10 · U11 · U12 · U13 · U15 — pendientes
+### U1 · U2 · U4 · U5 · U6 · U7 · U9 · U10 · U15 — pendientes
+
+### U11 — Núcleo partida (AUDITADA 2026-09-05)
+
+Base desktop: `GamePanel.java` (tablero + skips F2–F11 + macros + trigger-order +
+botones concede/replay) · `FeedbackPanel.java` (OK/Undo/Special, coloreado por fase) ·
+`HelperPanel.java` (auto-answers, aviso sonoro) · `GamePane.java` (modos show/watch/replay).
+Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `GameEndDialog`.
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Skips F4/F9 one-shot (pasar turno / hasta mi turno) | `Pasar ▾` + teclas F4/F9 (`skips.ts`, `PassMenu.tsx`) | ✅ |
+| Skips F5 (hasta end step), F7 (hasta próxima main), F10 (saltar pila), F11 (end previo a mi turno), F3 (cancelar skips), F2 (confirmar) + botones con borde activo. Sin F6: el propio desktop lo tiene desactivado (`GamePanel.java:2897-2904`) | `Pasar ▾` split-button (`ActionButton` + `PassMenu`: 6 skips + F3 cancela solo con skip activo) + atajos F4/F5/F7/F9/F10/F11/F3 (`GameScreen.tsx`); skip activo con borde dorado + sublabel `skip_active_to` leído de los flags `passed*` del contrato; `e2e/skips.spec.ts` dual (fake: teclas+clics+DOM; real local: ok proxy a las 7 acciones + eco `passedAllTurns` + limpieza F3). Nota: F10 con pila vacía es no-op en el servidor (`PlayerImpl`) | ✅ G11-1 cerrado 2026-09-05 |
+| Trigger order: menú first/last/name + prefs `TRIGGER_AUTO_ORDER_*` | Sin UI (grep `TRIGGER_AUTO_ORDER` en `web/src` → 0). Si el servidor pregunta, cae en diálogo genérico | ❌ G11-2 |
+| Auto-answers (reemplazos, yes/no por texto) `automaticConfirmsMenu` | Sin equivalente (grep `AUTO_ANSWER` → 0) | ❌ G11-3 |
+| Macros `T` (grabar/repetir) | Sin equivalente | ❌ G11-4 menor |
+| Concede game/match, stop watching, hold priority Ctrl+click, rollback votado 0-3, Undo (solo con pila vacía) | `concedeGame/concedeMatch/stopWatching`, hold-priority, `RollbackDialog`, UNDO (menú ⋯ `GameMenu` + `state/actions`) | ✅ |
+| Replay (play/next/prev/skip10/stop) | Replay viewer (`TournamentPanel`, F5) | ✅ |
+| Reloj chess + aviso <5min + sonido si app inactiva | Timer prioridad + buffer en header + `timer-low` + tick ≤10s (`GameScreen/PlayerInfoBar`) | ✅ |
+| Coloreado feedback por fase, textos fase/paso/turno, GUI scale | `ActionButton` por estados + `PhaseBar` + `uiScale`/sleeves | ✅ |
+| Fin partida auto-cierre 8s | `GameEndDialog` manual (decisión UX, no gap) | — |
+| Cheat solo testMode | Sin equivalente (solo dev; no aplica a release) | — |
+
+Veredicto: ~~priorizar **G11-1** (skips), luego G11-2/G11-3. G11-4 menor.~~ **G11-1 cerrado 2026-09-05** (skips + rediseño pantalla: `GameMenu`, `PassMenu`, header de estado); quedan G11-2/G11-3, G11-4 menor.
+
+### U12 — Zonas y jugador (AUDITADA 2026-09-05)
+
+Base desktop: `PlayAreaPanel.java` (menú contextual jugador: skips/maná/concede/visores/permisos) ·
+`BattlefieldPanel.java` (render + `phasedIn` + sonidos invocación/muerte) ·
+`HandPanel.java` · `PlayerPanelExt.java` (avatar targeteable, bordes estado, pool maná,
+cementerio/exilio jugables, contadores) · `CardInfoWindowDialog` (cementerio/exilio/reveal/
+looked-at/companion/top-library/sideboard) · `GamePanel#displayStack/showRevealed`.
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Tablero por jugador, layouts 1v1/pod/arena/espectador, agrupación tierras, auras/mutate anidadas, overlay derrotado, anillo orden, switcher con orden | `board/*` (37 ficheros): `GameBoard/PodBoard/ArenaBoard` sobre `BoardShell+BoardZone`, `HandBar/HandZone`, `CommandZone`, `PileOverlay`, `TurnOrderRing`, `OpponentSwitcherBar` | ✅ (supera en layouts) |
+| Bordes estado jugador (verde/rojo/amarillo: prioridad/turno/target) + avatar targeteable | Glow prioridad + glow turno `is-turn` + etiqueta (`PlayerInfoBar`) + click target en barra | ✅ |
+| Pool maná en panel jugador + cementerio/exilio resaltados si jugables | `ResourceBar` (desglose WUBRGC + dot jugable) + `CrossZoneOverlay` | ✅ |
+| Contadores (vida/veneno/energía/exp/rad/ticket + counts biblioteca/cementerio/exilio/mano) | `PlayerInfoBar` + `ResourceBar` | ✅ |
+| Stack con orden invertido + activar/targetear en pila | `StackZone` (rail #N, tipos, controlador, resolver) + auto-pestaña | ✅ |
+| Permisos de mano: pedir/ver/autorizar/revocar + Switch Hands (Mindslaver) | Solo se muestra lo enviado (`revealed/opponentHands/watchedHands`); grep `PERMISSION_TO_SEE|SWITCH_HAND` → 0 | ❌ G12-1 (multi/Commander) |
+| Visores: looked-at, companion dedicada, top-library, sideboard solo-ver | `PileOverlay` cubre cementerio/exilio/biblioteca (+carta top 👁️); resto sin ventana | ⚠️ G12-2 (parcial) |
+| Menú contextual botón derecho sobre jugador | `ContextMenu.tsx` + `CARD_CONTEXT_ITEMS` definidos pero **jamás renderizados** (grep uso → 0) | ⚠️ G12-3 (cablear) |
+| Filtro `phasedIn` (oculta faseados) | `phasedIn` existe en contrato (`types.generated.ts:165`) pero nada lo lee | ❌ G12-4 menor (verificar visual) |
+| Hover carta grande, flechas targeting/combate, sonidos tablero | `FloatingCardPreview` + `CombatArrowsOverlay` + 15 sfx | ✅ |
+
+Veredicto: priorizar **G12-1** (permisos mano), luego G12-2/G12-3. G12-4 menor.
+
+### U13 — Combate / Maná (AUDITADA 2026-09-05)
+
+Base desktop: `CombatManager.java` (flechas atacante→defensor rojo/gris si bloqueado,
+bloqueadora→atacante azul, sonidos, show/hide) · `PlayerPanelExt#btnManaActionPerformed`
+(pago manual por color) + `ManaPool.java` legacy · prefs auto-pay/restricted/first-ability/
+confirm-empty-pool.
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Declarar atacantes/bloqueadores + `Atacar con todo` + confirmar | `CombatBar` + selección en campo + `ActionButton` (`combat*.spec.ts` ✅) | ✅ |
+| Flechas combate con colores por estado | `CombatArrowsOverlay` (roja/cian, curva SVG) | ✅ |
+| Pago manual por color WUBRG+C | `ManaBar` (botones pool + special + cancelar) + clicks en tablero en modo maná (`complex-costs.spec.ts` ✅) | ✅ |
+| Prefs auto-pago on/off, restringido (no usar flotante), primera habilidad al girar, confirmar vaciar pool | Sin equivalente (grep `AUTO_PAYMENT` → 0) | ❌ G13-1 (único gap; gameplay) |
+| Highlight cementerio/exilio jugables | Dot jugable + cross-zone (`ResourceBar`) | ✅ |
+
+Veredicto: un solo gap, **G13-1** (prefs maná en ajustes + respetarlas en `ManaBar`).
 
 ### U3 — Crear mesa (auditada, implementación parcial)
 

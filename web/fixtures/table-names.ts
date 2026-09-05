@@ -36,6 +36,7 @@ export const TABLE = {
   bestOf5: 'best-of-5-test',
   bestOfN: 'best-of-n-test',
   concede: 'concede-test',
+  skips: 'skips-test',
   defeatSimWins: 'sim-wins-test',
   mulligan: 'mulligan-test',
   mulliganShowcase: 'Mulligan Showcase',

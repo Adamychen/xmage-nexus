@@ -154,9 +154,24 @@ export async function dismissStaging(page: Page): Promise<void> {
   }
 }
 
+/** ¿Botón de arranque de staging visible Y habilitado? (OJO: `isEnabled()`
+ *  espera hasta el timeout por defecto; aquí se acota explícito para usarlo
+ *  como sonda dentro de polls.) */
+export async function stagingStartReady(page: Page, timeoutMs = 1_000): Promise<boolean> {
+  try {
+    await expect(page.getByTestId('staging-start')).toBeEnabled({ timeout: timeoutMs })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Espera a que la mesa del usuario esté lista (asiento SIM unido, botón Empezar). */
 export async function waitTableReady(page: Page, tableName: string): Promise<void> {
   await page.waitForTimeout(500)
+  // Vía rápida: en staging con arranque habilitado la mesa ya está llena y
+  // lista (el conteo de la lista del lobby puede ir rancio: 1/2 con SIM sentado).
+  if (await stagingStartReady(page)) return
   const row = page.locator('.table-row', { hasText: tableName }).first()
   await expect(async () => {
     await dismissStaging(page)
@@ -164,19 +179,29 @@ export async function waitTableReady(page: Page, tableName: string): Promise<voi
   }).toPass({ timeout: 20_000 })
   // el asiento SIM lo une el proxy inmediatamente: la mesa nace casi llena
   await expect(row.locator('.table-seats')).toHaveText(/2\/2/, { timeout: 20_000 })
+  if (await stagingStartReady(page)) return
   const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
   await expect(startButton).toBeVisible({ timeout: 15_000 })
 }
 
 /** Arranca la partida (botón Empezar/Iniciar) y espera la pantalla de partida. */
 export async function startMatch(page: Page, tableName: string): Promise<void> {
+  // El lobby puede auto-saltar a staging al unirse: arrancar desde allí.
+  const stagingStart = page.getByTestId('staging-start')
+  if (await stagingStart.isVisible().catch(() => false)) {
+    await stagingStart.click()
+    await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
+    return
+  }
   const row = page.locator('.table-row', { hasText: tableName }).first()
   const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
   await expect(async () => {
     await dismissStaging(page)
     await expect(startButton).toBeVisible({ timeout: 1_000 })
   }).toPass({ timeout: 15_000 })
-  await startButton.click()
+  // Forzado: la lista viva del lobby se re-renderiza sin parar y el botón nunca
+  // se estabiliza para un click normal (cuelgue hasta el timeout del test).
+  await startButton.click({ force: true })
   await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 }
 
@@ -206,7 +231,9 @@ export interface StartGameOptions extends CreateTableOptions {
  *  (desarrollo de tierras, descartes y asks por WS) y devuelve la sesión. */
 export async function startGame(page: Page, opts: StartGameOptions = {}): Promise<GameSession> {
   const prefix = opts.prefix ?? 'e2e'
-  const username = `${prefix}-${String(Date.now()).slice(-10)}`
+  // El servidor limita el username a 14 chars y el login lo recorta (maxLength):
+  // el helper debe usar EXACTAMENTE el mismo nombre para compartir sesión.
+  const username = `${prefix}-${String(Date.now()).slice(-8)}`.slice(0, 14)
   cleanupUser(username)
   const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
   installCapture(page, buffers, opts.maxFrames)

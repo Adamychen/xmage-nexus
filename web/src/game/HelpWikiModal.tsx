@@ -252,6 +252,14 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 </div>
 
                 <div className="shortcut-card">
+                  <span className="shortcut-key">F4–F11</span>
+                  <div className="shortcut-info">
+                    <strong>{t('wiki', 'shortcuts_skips')}</strong>
+                    <p>{t('wiki', 'shortcuts_f11')}</p>
+                  </div>
+                </div>
+
+                <div className="shortcut-card">
                   <span className="shortcut-key">{t('wiki', 'shortcuts_ctrl').split(':')[0]}</span>
                   <div className="shortcut-info">
                     <strong>{t('wiki', 'shortcuts_ctrl')}</strong>

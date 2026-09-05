@@ -5,7 +5,7 @@ import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
-import { returnToLobby, concedeGame, concedeMatch, maybeAutoPass, setSetting, setStoreError, useGame, useSettings, useStore, getState, openRollbackDialog } from '../state/store'
+import { maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
@@ -13,7 +13,7 @@ import LimitedDeckDialog from './LimitedDeckDialog'
 import SideboardScreen from './SideboardScreen'
 import DraftScreen from './DraftScreen'
 import ConstructScreen from './ConstructScreen'
-import Sidebar from './Sidebar'
+import GameMenu from './GameMenu'
 import GameChat from './GameChat'
 import PhaseBar from './PhaseBar'
 import ActionButton from './ActionButton'
@@ -30,10 +30,9 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { combatActorsFrom } from '../state/gameUtils'
-import { setState } from '../state/state'
 import { useTranslation } from '../i18n'
-import Icon from '../ui/Icon'
-import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
+import { soundManager } from '../audio/soundManager'
+import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
@@ -67,6 +66,15 @@ export default function GameScreen() {
   }, [settings.effects, settings.animationSpeed])
 
   const me = game?.players?.find((p) => p.controlled)
+  const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
+  const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
+  const isTimerTicking = !!priorityPlayer?.hasPriority
+
+  useEffect(() => {
+    if (isTimerTicking && timerSecs <= 10 && timerSecs > 0) {
+      soundManager.play('timer_tick', 'game')
+    }
+  }, [timerSecs, isTimerTicking])
   const canPass = !!gameId && (!!me?.hasPriority || (!!me?.isActive && (!feedback || feedback.mode === 'combat')))
   const targetIds = feedback?.method === 'GAME_TARGET' ? feedback.options.map((option) => option.id) : []
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
@@ -96,6 +104,23 @@ export default function GameScreen() {
     if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_combat'))
   }
 
+  const boardProps = {
+    game,
+    targetIds,
+    chosenTargetIds,
+    onTargetClick,
+    playableIds,
+    onPlayableClick,
+    combatSelectable: combat?.selectable ?? [],
+    combatMode: combat?.mode ?? null,
+    combatChosen: combat?.chosen ?? [],
+    onCombatClick,
+    attackingIds: combatActors.attackingIds,
+    blockingIds: combatActors.blockingIds,
+    crossZonePlayables: crossZone,
+    onPlayCrossZone: onPlayableClick,
+  }
+
   const onResolveClick = useCallback(async () => {
     if (!gameId || busy) return
     setBusy(true)
@@ -121,29 +146,38 @@ export default function GameScreen() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [canPass, feedback, onResolveClick])
 
-  // F4 / F9 alternan el "stop" de fin de turno (tu turno / turno del oponente)
-  useEffect(() => {
-    const handleStopKeys = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      if (e.key !== 'F4' && e.key !== 'F9') return
-      e.preventDefault()
-      const turn: 'yourTurn' | 'opponentTurn' = e.key === 'F4' ? 'yourTurn' : 'opponentTurn'
-      const stops = getState().phaseStops
-      const key = 'endStep'
-      const next = { ...stops, [turn]: { ...stops[turn], [key]: !stops[turn][key] } }
-      setState({ phaseStops: next })
-      void cmds.updatePreferences(next)
+  // Skips one-shot estilo desktop (F4/F5/F7/F9/F10/F11) + F3 cancela.
+  // Sin F6: el propio desktop lo tiene desactivado ("Skip action don't used").
+  const sendSkip = useCallback(async (action: string) => {
+    if (!gameId || busy) return
+    setBusy(true)
+    try {
+      const result = await cmds.sendPlayerAction(action, gameId)
+      if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
+    } finally {
+      setBusy(false)
     }
-    window.addEventListener('keydown', handleStopKeys)
-    return () => window.removeEventListener('keydown', handleStopKeys)
-  }, [])
+  }, [gameId, busy, t])
+
+  useEffect(() => {
+    const handleSkipKeys = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      if (e.key !== CANCEL_SKIP_SHORTCUT && !skipForShortcut(e.key)) return
+      e.preventDefault()
+      // Sin diálogos modales abiertos (misma guarda que Space)
+      if (feedback && feedback.mode !== 'combat') return
+      const skip = skipForShortcut(e.key)
+      void sendSkip(skip ? skip.action : CANCEL_SKIP_ACTION)
+    }
+    window.addEventListener('keydown', handleSkipKeys)
+    return () => window.removeEventListener('keydown', handleSkipKeys)
+  }, [feedback, sendSkip])
 
   const opps = game?.players?.filter((p) => !p.controlled) ?? []
   const isSpectator = !me
   const topOpps = isSpectator ? (opps.length >= 2 ? opps.slice(0, opps.length - 1) : []) : opps
 
   const [selectedOppId, setSelectedOppId] = useState<string | null>(null)
-  const [showAppearance, setShowAppearance] = useState(false)
 
   const currentOpp = useMemo(() => {
     if (topOpps.length <= 1) return topOpps[0]
@@ -180,7 +214,6 @@ export default function GameScreen() {
   const isMultiplayer = opps.length >= 2
   const isArenaLayout = settings.boardLayout === 'arena' && isMultiplayer
   const isPodLayout = !isArenaLayout && (settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena'))
-  const layoutMode: 'standard' | 'pod' | 'arena' = isArenaLayout ? 'arena' : isPodLayout ? 'pod' : 'standard'
 
   return (
     <div className="game">
@@ -199,7 +232,8 @@ export default function GameScreen() {
           ) : (
             topOpps.length > 1 && (
               <OpponentSwitcherBar
-                opponents={topOpps}
+                players={game?.players ?? []}
+                controlledId={me?.playerId}
                 selectedOppId={currentOpp?.playerId || ''}
                 onSelectOpponent={(id) => setSelectedOppId(id)}
                 activePlayerId={game?.activePlayerId}
@@ -211,164 +245,17 @@ export default function GameScreen() {
           )}
         </div>
         <div className="game-controls">
-          <label className={`toggle hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`} title={t('game', 'hold_priority_title')}>
-            <input
-              type="checkbox"
-              checked={settings.holdPriority}
-              onChange={(e) => {
-                const val = e.target.checked
-                setSetting('holdPriority', val)
-                if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
-              }}
-            />
-            <Icon name="bolt" size={13} /> {t('game', 'hold_priority')}
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={settings.autoKeepMulligan}
-              onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
-            />
-            {t('game', 'auto_mulligan')}
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={settings.autoPass}
-              onChange={(e) => setSetting('autoPass', e.target.checked)}
-            />
-            {t('game', 'auto_pass')}
-          </label>
-          {opps.length >= 1 && (
-            <button
-              type="button"
-              className={`layout-toggle-btn ${layoutMode !== 'standard' ? 'is-active' : ''}`}
-              title={
-                layoutMode === 'standard'
-                  ? t('game', 'pod_view_hint')
-                  : layoutMode === 'pod'
-                    ? t('game', 'arena_view_hint')
-                    : t('game', 'pod_standard_hint')
-              }
-              onClick={() => {
-                const cycle: Array<'standard' | 'pod' | 'arena'> = isMultiplayer
-                  ? ['standard', 'pod', 'arena']
-                  : ['standard', 'pod']
-                const idx = cycle.indexOf(layoutMode)
-                setSetting('boardLayout', cycle[(idx + 1) % cycle.length] ?? 'standard')
-              }}
-            >
-              <Icon name="grid" size={13} />{' '}
-              {layoutMode === 'pod'
-                ? t('game', 'pod_view_active')
-                : layoutMode === 'arena'
-                  ? t('game', 'arena_view_active')
-                  : t('game', 'pod_view')}
-            </button>
-          )}
-          <button type="button" className="sleeve-picker-btn" onClick={() => setShowAppearance(true)} title={t('lobby', 'appearance_title')}>
-            🎨 {t('lobby', 'appearance_title')}
-          </button>
-          {game?.rollbackTurnsAllowed && !!me && (
-            <button
-              type="button"
-              className="rollback-game-btn"
-              onClick={() => openRollbackDialog()}
-              title={t('game', 'rollback_title')}
-            >
-              ⏪ {t('game', 'rollback')}
-            </button>
-          )}
-          {me && (
-            <button
-              type="button"
-              className="leave-game-btn"
-              onClick={async () => {
-                if (confirm(t('game', 'concede_confirm'))) {
-                  if (gameId) await concedeGame(gameId)
-                }
-              }}
-              title={t('game', 'concede_confirm')}
-            >
-              <Icon name="flag" size={13} /> {t('game', 'concede')}
-            </button>
-          )}
-          <button
-            type="button"
-            className="leave-match-btn"
-            onClick={async () => {
-              const msg = me
-                ? t('game', 'concede_prompt')
-                : t('game', 'leave_spectate_prompt')
-              if (confirm(msg)) {
-                if (me && gameId) {
-                  await concedeMatch(gameId)
-                } else {
-                  returnToLobby()
-                }
-              }
-            }}
-            title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
-          >
-            <Icon name="door" size={13} /> {t('game', 'leave')}
-          </button>
+          <GameMenu />
         </div>
       </header>
       <div className="game-body" ref={gameBodyRef}>
-        <Sidebar />
         <div className="board-wrap">
           {isArenaLayout ? (
-            <ArenaBoard
-              game={game}
-              targetIds={targetIds}
-              chosenTargetIds={chosenTargetIds}
-              onTargetClick={onTargetClick}
-              playableIds={playableIds}
-              onPlayableClick={onPlayableClick}
-              combatSelectable={combat?.selectable ?? []}
-              combatMode={combat?.mode ?? null}
-              combatChosen={combat?.chosen ?? []}
-              onCombatClick={onCombatClick}
-              attackingIds={combatActors.attackingIds}
-              blockingIds={combatActors.blockingIds}
-              crossZonePlayables={crossZone}
-              onPlayCrossZone={onPlayableClick}
-            />
+            <ArenaBoard {...boardProps} />
           ) : isPodLayout ? (
-            <PodBoard
-              game={game}
-              targetIds={targetIds}
-              chosenTargetIds={chosenTargetIds}
-              onTargetClick={onTargetClick}
-              playableIds={playableIds}
-              onPlayableClick={onPlayableClick}
-              combatSelectable={combat?.selectable ?? []}
-              combatMode={combat?.mode ?? null}
-              combatChosen={combat?.chosen ?? []}
-              onCombatClick={onCombatClick}
-              attackingIds={combatActors.attackingIds}
-              blockingIds={combatActors.blockingIds}
-              crossZonePlayables={crossZone}
-              onPlayCrossZone={onPlayableClick}
-            />
+            <PodBoard {...boardProps} />
           ) : (
-            <GameBoard
-              game={game}
-              targetIds={targetIds}
-              chosenTargetIds={chosenTargetIds}
-              onTargetClick={onTargetClick}
-              playableIds={playableIds}
-              onPlayableClick={onPlayableClick}
-              combatSelectable={combat?.selectable ?? []}
-              combatMode={combat?.mode ?? null}
-              combatChosen={combat?.chosen ?? []}
-              onCombatClick={onCombatClick}
-              attackingIds={combatActors.attackingIds}
-              blockingIds={combatActors.blockingIds}
-              crossZonePlayables={crossZone}
-              onPlayCrossZone={onPlayableClick}
-              focusedOpponentId={currentOpp?.playerId}
-            />
+            <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
           )}
           <PriorityOrb
             game={game}
@@ -453,6 +340,7 @@ export default function GameScreen() {
             gameId={gameId}
             canPass={canPass}
             onPass={onResolveClick}
+            onSkip={sendSkip}
             busy={busy}
           />
         </div>
@@ -473,7 +361,6 @@ export default function GameScreen() {
       <ConstructScreen />
       <SideboardScreen />
       <TournamentPanel />
-      {showAppearance && <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />}
     </div>
   )
 }

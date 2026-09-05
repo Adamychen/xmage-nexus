@@ -47,10 +47,12 @@ export function useZoneScale(): ZoneScale {
       const defaultStatusH = isCompactPod ? 32 : 44
       const statusH = statusRow && statusRow.offsetHeight > 0 ? statusRow.offsetHeight : defaultStatusH
 
-      // Zone grid has 2 card rows (1fr each) + 1 status row (auto), or 1 card row if empty
-      const noCreatures = el.classList.contains('no-creatures')
-      const noPermanents = el.classList.contains('no-permanents')
-      const cardRows = isCompactPod && (noCreatures || noPermanents) ? 1 : 2
+      // Zone grid always has 2 card rows (1fr each) + 1 status row (auto).
+      // Bands never collapse (compact-pod included: static division), so cards
+      // are always sized for 2 rows — playing the first land/creature no
+      // longer re-scales the whole zone. (zone-empty hides both bands but
+      // renders no cards, so the row count is irrelevant there.)
+      const cardRows = 2
 
       const verticalOverhead = statusH + (isCompactPod ? 6 : 12)
       const availH = rect.height - verticalOverhead

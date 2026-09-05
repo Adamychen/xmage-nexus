@@ -1,30 +1,13 @@
 import { Fragment, useMemo } from 'react'
-import type { CardView, GameView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
-import { opponentRevealedCards, simpleToCardsView } from './revealedCards'
-import type { CrossZonePlayable } from './crossZone'
+import { opponentRevealedCards } from './revealedCards'
+import { MAX_BOARD_PLAYERS, useSpectatorBottomHand, type BoardProps } from './boardShared'
 import './ArenaBoard.css'
 
-interface ArenaBoardProps {
-  game: GameView | null
-  targetIds?: string[]
-  chosenTargetIds?: string[]
-  onTargetClick?: (id: string) => void
-  playableIds?: string[]
-  onPlayableClick?: (id: string) => void
-  onCardHover?: (card: CardView | null) => void
-  combatSelectable?: string[]
-  combatMode?: 'attack' | 'block' | null
-  combatChosen?: string[]
-  onCombatClick?: (id: string) => void
-  attackingIds?: string[]
-  blockingIds?: string[]
-  crossZonePlayables?: CrossZonePlayable[]
-  onPlayCrossZone?: (id: string) => void
-}
+export type { BoardProps as ArenaBoardProps }
 
 /**
  * Layout "Arena" para multijugador (Commander 3-4): mi campo ocupa la mitad
@@ -47,8 +30,8 @@ export default function ArenaBoard({
   blockingIds = [],
   crossZonePlayables = [],
   onPlayCrossZone,
-}: ArenaBoardProps) {
-  const { me, opps, isSpectator } = useBoardPlayers(game)
+}: BoardProps) {
+  const { me, opps, isSpectator } = useBoardPlayers(game, true)
   const presenter = useBoardPresenter({
     game,
     targetIds,
@@ -68,21 +51,10 @@ export default function ArenaBoard({
   // Espectador: mismo convenio que GameBoard/pod — un jugador abajo (el último)
   // con su mano si es visible, y el resto arriba en columnas.
   const spectatorBottom = isSpectator ? (opps.length >= 2 ? opps[opps.length - 1] : opps[0]) : undefined
-  const spectatorBottomHand = useMemo(() => {
-    if (!isSpectator || !spectatorBottom) return {}
-    const watched =
-      game?.watchedHands?.[spectatorBottom.name] ||
-      game?.watchedHands?.[spectatorBottom.playerId]
-    const oppHand =
-      game?.opponentHands?.[spectatorBottom.playerId] ||
-      game?.opponentHands?.[spectatorBottom.name]
-    if (watched) return simpleToCardsView(watched)
-    if (oppHand) return simpleToCardsView(oppHand)
-    return {}
-  }, [isSpectator, spectatorBottom, game?.watchedHands, game?.opponentHands])
+  const spectatorBottomHand = useSpectatorBottomHand(game, isSpectator, spectatorBottom)
 
   const oppRow = useMemo(
-    () => (isSpectator ? opps.slice(0, Math.max(0, opps.length - 1)).slice(0, 3) : opps.slice(0, 3)),
+    () => (isSpectator ? opps.slice(0, Math.max(0, opps.length - 1)).slice(0, MAX_BOARD_PLAYERS - 1) : opps.slice(0, MAX_BOARD_PLAYERS - 1)),
     [isSpectator, opps]
   )
 

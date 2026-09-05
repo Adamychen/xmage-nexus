@@ -371,13 +371,7 @@ export interface TranslationSchema {
     hold_priority_title: string
     auto_mulligan: string
     auto_pass: string
-    pod_view: string
-    pod_view_active: string
-    pod_view_hint: string
-    pod_standard_hint: string
-    arena_view: string
-    arena_view_active: string
-    arena_view_hint: string
+    board_view: string
     player_left: string
     player_defeated: string
     player_left_desc: string
@@ -670,6 +664,17 @@ export interface TranslationSchema {
     pile_2: string
     pile_summary: string
     card_number: string
+    game_menu: string
+    pass_options: string
+    automation: string
+    skip_turn: string
+    skip_end_step: string
+    skip_next_main: string
+    skip_my_turn: string
+    skip_stack: string
+    skip_before_mine: string
+    skip_cancel: string
+    skip_active_to: string
   }
   wiki: {
     title: string
@@ -708,6 +713,7 @@ export interface TranslationSchema {
     shortcuts_hover: string
     shortcuts_esc: string
     shortcuts_auto_pass: string
+    shortcuts_skips: string
   }
   dialogs: {
     mulligan_title: string

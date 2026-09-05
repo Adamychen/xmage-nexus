@@ -3,7 +3,10 @@ import { useTranslation } from '../i18n'
 import './OpponentSwitcherBar.css'
 
 interface OpponentSwitcherBarProps {
-  opponents: PlayerView[]
+  /** Todos los jugadores en orden de turno (incluido yo): la secuencia de
+   *  píldoras + flechas hace el orden implícito, sin reordenar nunca. */
+  players: PlayerView[]
+  controlledId?: string
   selectedOppId: string
   onSelectOpponent: (id: string) => void
   activePlayerId?: string
@@ -12,8 +15,13 @@ interface OpponentSwitcherBarProps {
   combat?: CombatGroupView[]
 }
 
+function isOut(p: PlayerView): boolean {
+  return p.hasLeft === true || p.life <= 0
+}
+
 export default function OpponentSwitcherBar({
-  opponents,
+  players,
+  controlledId,
   selectedOppId,
   onSelectOpponent,
   activePlayerId,
@@ -22,19 +30,27 @@ export default function OpponentSwitcherBar({
   combat = [],
 }: OpponentSwitcherBarProps) {
   const { t } = useTranslation()
-  if (opponents.length <= 1) return null
+  // Enfocables: rivales en juego. Yo y los derrotados/desconectados salen
+  // como píldoras desactivadas y fuera del ciclo ‹ ›.
+  const focusable = players.filter((p) => p.playerId !== controlledId && !isOut(p))
+  if (focusable.length <= 1) return null
 
-  const currentIndex = opponents.findIndex((p) => p.playerId === selectedOppId)
+  const currentIndex = focusable.findIndex((p) => p.playerId === selectedOppId)
   const currentIdx = currentIndex >= 0 ? currentIndex : 0
 
+  // Flecha de cierre circular (último → primero): el orden es cíclico,
+  // igual que en el anillo de POD.
+  const last = players[players.length - 1]
+  const first = players[0]
+
   const handlePrev = () => {
-    const nextIdx = (currentIdx - 1 + opponents.length) % opponents.length
-    onSelectOpponent(opponents[nextIdx].playerId)
+    const nextIdx = (currentIdx - 1 + focusable.length) % focusable.length
+    onSelectOpponent(focusable[nextIdx].playerId)
   }
 
   const handleNext = () => {
-    const nextIdx = (currentIdx + 1) % opponents.length
-    onSelectOpponent(opponents[nextIdx].playerId)
+    const nextIdx = (currentIdx + 1) % focusable.length
+    onSelectOpponent(focusable[nextIdx].playerId)
   }
 
   return (
@@ -49,12 +65,13 @@ export default function OpponentSwitcherBar({
       </button>
 
       <div className="opp-pills-list">
-        {opponents.map((opp) => {
+        {players.map((opp, idx) => {
           const isSelected = opp.playerId === selectedOppId
           const isTurn = opp.playerId === activePlayerId || opp.isActive
           const isTargetable = targetIds.has(opp.playerId)
+          const isSelf = opp.playerId === controlledId || !!opp.controlled
 
-          const isDefeated = opp.hasLeft === true || opp.life <= 0
+          const isDefeated = isOut(opp)
 
           // Check if this opponent is being attacked or has blockers in combat
           const isInvolvedInCombat = (combat ?? []).some((g) => {
@@ -62,24 +79,29 @@ export default function OpponentSwitcherBar({
             return defs.includes(opp.playerId) || (g as any).defenderId === opp.playerId
           })
 
+          const next = players[idx + 1]
+          const isActiveEdge = opp.playerId === activePlayerId
+
           return (
+            <span key={opp.playerId} className="opp-pill-group">
             <button
-              key={opp.playerId}
               type="button"
+              disabled={isSelf}
               className={[
                 'opp-pill',
                 isSelected ? 'is-selected' : '',
                 isTurn ? 'is-turn' : '',
-                isTargetable ? 'is-targetable' : '',
+                isTargetable && !isSelf ? 'is-targetable' : '',
                 isDefeated ? 'is-defeated' : '',
+                isSelf ? 'is-self' : '',
               ].filter(Boolean).join(' ')}
-              onClick={() => {
+              onClick={isSelf ? undefined : () => {
                 if (isTargetable && onTargetClick) {
                   onTargetClick(opp.playerId)
                 }
                 onSelectOpponent(opp.playerId)
               }}
-              title={`${t('board', 'opp_view', { name: opp.name })}${isDefeated ? (opp.hasLeft ? t('board', 'opp_left_suffix') : t('board', 'opp_defeated_suffix')) : ''}${isTargetable ? t('board', 'opp_target_suffix') : ''}`}
+              title={`${t('board', 'opp_view', { name: opp.name })}${isDefeated ? (opp.hasLeft ? t('board', 'opp_left_suffix') : t('board', 'opp_defeated_suffix')) : ''}${isTargetable && !isSelf ? t('board', 'opp_target_suffix') : ''}`}
             >
               <span>{opp.name}</span>
               <span className="opp-pill-life">
@@ -90,8 +112,27 @@ export default function OpponentSwitcherBar({
                 <span className="opp-pill-tag combat-tag">{t('board', 'opp_combat_tag')}</span>
               )}
             </button>
+            {next && (
+              <span
+                className={`opp-arrow ${isActiveEdge ? 'is-active-edge' : ''}`}
+                data-testid={`opp-arrow-${opp.playerId}-${next.playerId}`}
+                aria-hidden
+              >
+                →
+              </span>
+            )}
+            </span>
           )
         })}
+        {last && first && last.playerId !== first.playerId && (
+          <span
+            className={`opp-arrow opp-arrow--wrap ${last.playerId === activePlayerId ? 'is-active-edge' : ''}`}
+            data-testid={`opp-arrow-${last.playerId}-${first.playerId}`}
+            aria-hidden
+          >
+            ↺
+          </span>
+        )}
       </div>
 
       <button

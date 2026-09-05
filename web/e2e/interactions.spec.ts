@@ -119,10 +119,11 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     await page.mouse.move(0, 0)
     await page.waitForTimeout(200)
 
-    const fullscreenBtn = page.locator('.sidebar-icon-btn[title*="Pantalla completa" i]')
-    await expect(fullscreenBtn, 'botón de pantalla completa en sidebar').toBeVisible({ timeout: 5_000 })
+    await page.locator('[data-testid="game-menu-btn"]').click()
+    const fullscreenBtn = page.locator('[data-testid="game-menu-fullscreen"]')
+    await expect(fullscreenBtn, 'botón de pantalla completa en el menú ⋯').toBeVisible({ timeout: 5_000 })
 
-    const helpBtn = page.locator('.sidebar-icon-btn[title*="Wiki"], .sidebar-icon-btn[title*="Ayuda"]')
+    const helpBtn = page.locator('[data-testid="game-menu-help"]')
     await expect(helpBtn, 'botón de ayuda/wiki').toBeVisible({ timeout: 5_000 })
     await helpBtn.click()
 

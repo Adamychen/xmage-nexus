@@ -451,6 +451,7 @@ export default function BoardZone({
     compactPod ? 'compact-pod' : '',
     noCreatures ? 'no-creatures' : '',
     noPermanents ? 'no-permanents' : '',
+    !hasAnyBoardCards ? 'zone-empty' : '',
     isDefeated ? 'is-defeated' : '',
     className,
   ].filter(Boolean).join(' ')

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
-import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
+import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
 
 describe('PodBoard', () => {
@@ -321,5 +321,92 @@ describe('PodBoard', () => {
   it('does not render ring when no players', () => {
     const { container } = render(<TurnOrderRing players={[]} activePlayerId="" />)
     expect(container.firstChild).toBeNull()
+  })
+
+  it('collapses empty slots with fewer than 4 players (no dead half-board)', () => {
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const { container, getByTestId } = render(<PodBoard game={game} />)
+    expect(getByTestId('pod-board')).not.toBeNull()
+    expect(container.querySelectorAll('.pod-cell').length).toBe(4)
+    expect(container.querySelectorAll('.pod-cell--empty').length).toBe(2)
+  })
+
+  it('spans the hand full-width with 3 players (bottom row collapses to me)', () => {
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', commandList: [] }),
+      ],
+      myHand: {
+        'h-1': makeCard({ id: 'h-1', name: 'Lightning Bolt', parentId: 'h-1' }),
+      },
+    })
+    const { container } = render(<PodBoard game={game} />)
+    const shell = container.querySelector('.pod-board')
+    expect(shell?.classList.contains('pod-board--bottom-full')).toBe(true)
+    expect(shell?.classList.contains('pod-board--top-full')).toBe(false)
+    expect(container.querySelectorAll('.pod-cell--empty').length).toBe(1)
+    expect(container.querySelector('[data-testid="hand-bar"]')).not.toBeNull()
+  })
+
+  it('keeps the half-width hand with 4 players (bottom-right occupied)', () => {
+    const game = fourPlayerGame({
+      myHand: {
+        'h-1': makeCard({ id: 'h-1', name: 'Lightning Bolt', parentId: 'h-1' }),
+      },
+    })
+    const { container } = render(<PodBoard game={game} />)
+    const shell = container.querySelector('.pod-board')
+    expect(shell?.classList.contains('pod-board--bottom-full')).toBe(false)
+    expect(container.querySelectorAll('.pod-cell--empty').length).toBe(0)
+  })
+
+  it('hides orphan column dividers when a row collapses (2 players)', () => {
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const { container } = render(<PodBoard game={game} />)
+    const shell = container.querySelector('.pod-board')
+    expect(shell?.classList.contains('pod-board--bottom-full')).toBe(true)
+    expect(shell?.classList.contains('pod-board--top-full')).toBe(true)
+    expect(container.querySelectorAll('.board-shell-col-divider').length).toBe(0)
+  })
+
+  it('marks empty-board zones so the status row stays visible (avatar/hand/resources)', () => {
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({
+          playerId: 'p2',
+          name: 'Bob',
+          commandList: [],
+          battlefield: {
+            'land-1': makePermanent({ name: 'Forest', cardTypes: ['Land'], parentId: 'land-1' }),
+          },
+        }),
+      ],
+    })
+    const { container } = render(<PodBoard game={game} />)
+    const aliceZone = container.querySelector('.board-zone[data-player-id="p1"]')
+    expect(aliceZone?.classList.contains('zone-empty')).toBe(true)
+    const bobZone = container.querySelector('.board-zone[data-player-id="p2"]')
+    expect(bobZone?.classList.contains('zone-empty')).toBe(false)
+    expect(bobZone?.classList.contains('no-creatures')).toBe(true)
+    // la status row del tablero vacío sigue renderizada
+    expect(aliceZone?.querySelector('.bz-status-row')).not.toBeNull()
+    expect(aliceZone?.querySelector('.player-info-bar')).not.toBeNull()
   })
 })

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
-import { useStore } from '../state/store'
+import { useStore, useSettings, setSetting } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import Modal from '../ui/Modal'
@@ -21,6 +21,7 @@ interface MulliganDialogProps {
 export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganDialogProps) {
   const { t } = useTranslation()
   const game = useStore((s) => s.game)
+  const settings = useSettings()
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
   const isLondon = prompt.isMulliganLondon === true
@@ -150,6 +151,14 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             🔄 {t('dialogs', 'mulligan_btn')}
           </button>
         </div>
+        <label className="toggle mulligan-auto-toggle">
+          <input
+            type="checkbox"
+            checked={settings.autoKeepMulligan}
+            onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
+          />
+          {t('game', 'auto_mulligan')}
+        </label>
     </Modal>
   )
 }

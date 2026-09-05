@@ -1,0 +1,96 @@
+.pass-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  right: 8px;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: #171a21;
+  border: 1px solid #363b46;
+  border-radius: 10px;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.pass-menu-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4a5080;
+  padding: 4px 8px 2px;
+}
+
+.pass-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #c8cae6;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.pass-menu-item:hover {
+  background: #252b4a;
+}
+
+.pass-menu-item.is-active {
+  border-color: rgba(255, 176, 58, 0.6);
+  background: rgba(255, 176, 58, 0.12);
+  color: #ffd27a;
+}
+
+.pass-menu-cancel {
+  color: #ff9ea8;
+}
+
+.pass-menu-cancel:hover {
+  background: #2a1520;
+}
+
+.pass-menu-key {
+  font-family: inherit;
+  font-size: 11px;
+  color: #6b7394;
+  background: #10131c;
+  border: 1px solid #262b3d;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.pass-menu-divider {
+  height: 1px;
+  background: #262b3d;
+  margin: 6px 4px;
+}
+
+.pass-menu-check {
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.pass-menu-check:hover {
+  background: #252b4a;
+}
+
+.pass-menu-check.hold-priority-toggle {
+  color: #ffb03a;
+  font-weight: 600;
+}
+
+.pass-menu-check.hold-priority-toggle.is-active,
+.pass-menu-check.hold-priority-toggle:hover {
+  color: #ffd27a;
+}

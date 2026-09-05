@@ -24,6 +24,13 @@
   box-shadow: 0 0 20px rgba(255, 170, 70, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
+/* Turno activo (quién juega ahora): glow dorado estático, distinto del
+   anillo de prioridad (verde/naranja). Puede coexistir con has-priority. */
+.player-info-bar.is-turn {
+  border-color: rgba(255, 208, 112, 0.85);
+  box-shadow: 0 0 22px rgba(255, 208, 112, 0.45), 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
 /* Compact mode (half-card height) */
 .player-info-bar.compact {
   min-width: auto;
@@ -58,8 +65,39 @@
 }
 
 .compact .player-avatar .avatar-image {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+}
+
+/* Compact details: single line each, ellipsis instead of overflowing the row */
+.player-info-bar.compact {
+  align-items: center;
+}
+
+.player-info-bar.compact .player-details {
+  min-width: 0;
+  overflow: hidden;
+  justify-content: center;
+}
+
+.player-info-bar.compact .player-name-row {
+  min-width: 0;
+}
+
+.player-info-bar.compact .player-name {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-info-bar.compact .life-counter {
+  font-size: 13px;
+}
+
+.player-info-bar.compact .player-counters {
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 
 .player-avatar-flag {
@@ -379,4 +417,10 @@ html.fx-off .life-value {
   background: rgba(140, 150, 190, 0.2);
   color: #a0aec0;
   border: 1px solid rgba(140, 150, 190, 0.4);
+}
+
+.player-status-badge.status-turn {
+  background: rgba(255, 208, 112, 0.22);
+  color: #ffd070;
+  border: 1px solid rgba(255, 208, 112, 0.6);
 }

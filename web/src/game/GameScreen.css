@@ -53,30 +53,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-}
-
-.game-controls button {
-  padding: 4px 10px;
-  font-size: 12px;
-  border-radius: 6px;
-}
-
-.leave-game-btn,
-.leave-match-btn {
-  background: rgba(60, 20, 30, 0.7);
-  border: 1px solid rgba(255, 92, 108, 0.4);
-  color: #ff9ea8;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.leave-game-btn:hover,
-.leave-match-btn:hover {
-  background: rgba(180, 40, 60, 0.85);
-  border-color: #ff5c6c;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(255, 92, 108, 0.4);
+  flex-shrink: 0;
 }
 
 .toggle {
@@ -93,59 +70,10 @@
   height: 14px;
 }
 
-.hold-priority-toggle {
-  color: #ffb03a;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(255, 176, 58, 0.08);
-  border: 1px solid rgba(255, 176, 58, 0.2);
-  transition: all 0.15s ease;
-}
-
-.hold-priority-toggle.is-active,
-.hold-priority-toggle:hover {
-  color: #ffd27a;
-  background: rgba(255, 176, 58, 0.2);
-  border-color: rgba(255, 176, 58, 0.5);
-  box-shadow: 0 0 8px rgba(255, 176, 58, 0.25);
-}
-
-.layout-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font-display);
-  letter-spacing: 0.04em;
-  color: #6b759a;
-  background: rgba(124, 92, 255, 0.06);
-  border: 1px solid rgba(124, 92, 255, 0.2);
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.layout-toggle-btn:hover {
-  color: #c8d0ea;
-  background: rgba(124, 92, 255, 0.15);
-  border-color: rgba(124, 92, 255, 0.4);
-}
-
-.layout-toggle-btn.is-active {
-  color: #a78bfa;
-  background: rgba(124, 92, 255, 0.22);
-  border-color: rgba(124, 92, 255, 0.6);
-  box-shadow: 0 0 8px rgba(124, 92, 255, 0.3);
-}
-
 .game-body {
   position: relative;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 250px;
+  grid-template-columns: minmax(0, 1fr) 250px;
   grid-template-rows: minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;

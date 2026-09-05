@@ -235,6 +235,11 @@ export default function PlayerInfoBar({
   const flagName = rawUserData?.flagName
 
   const hasPriority = !!player.hasPriority
+  // Turno activo (quién juega ahora) ≠ prioridad (quién puede actuar).
+  // Fuente: activePlayerId de la partida, con fallback al flag del jugador.
+  const isTurnActive = game?.activePlayerId
+    ? game.activePlayerId === player.playerId
+    : !!player.isActive
   const timeLeft = useTickingTimer(player.priorityTimeLeftSecs, hasPriority)
   const hasTimer = (player.priorityTimeLeftSecs != null && player.priorityTimeLeftSecs > 0) || !!player.timerActive
   const isTimeLow = hasTimer && timeLeft > 0 && timeLeft <= 30
@@ -249,6 +254,7 @@ export default function PlayerInfoBar({
 
   const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
   const isDefeated = player.hasLeft === true || player.life <= 0
+  const showTurn = isTurnActive && !isDefeated
 
   const ringInfo = getRingInfo(player)
   const dungeonInfo = getDungeonInfo(player)
@@ -282,7 +288,7 @@ export default function PlayerInfoBar({
   return (
     <div
       data-player-id={player.playerId}
-      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${isDefeated ? 'player-defeated' : ''}`}
+      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >
@@ -308,6 +314,8 @@ export default function PlayerInfoBar({
             <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
           ) : player.life <= 0 ? (
             <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
+          ) : showTurn ? (
+            <span className="player-status-badge status-turn">▶ {t('board', 'turn_active_badge')}</span>
           ) : null}
           {showMatchWins && (
             <span className="match-wins-dots" title={`${t('game', 'match_wins')}: ${wins}/${winsNeeded}`}>

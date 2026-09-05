@@ -128,3 +128,34 @@
   color: #ff7878;
   background: rgba(235, 68, 54, 0.2);
 }
+
+/* Mi píldora: visible en el orden pero desactivada (no enfocable). */
+.opp-pill.is-self {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.opp-pill.is-self:hover {
+  background: rgba(22, 28, 56, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #c8cae6;
+  transform: none;
+}
+
+/* Grupo píldora + flecha de orden hacia el siguiente turno. */
+.opp-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.opp-arrow {
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.opp-arrow.is-active-edge {
+  color: #ffd070;
+  text-shadow: 0 0 6px rgba(255, 208, 112, 0.6);
+}
