@@ -62,7 +62,7 @@ export function addIgnoredUser(username: string): { ok: boolean; message: string
   saveList(updated)
   return {
     ok: true,
-    message: `🚫 ${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
+    message: `${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
   }
 }
 
@@ -80,7 +80,7 @@ export function removeIgnoredUser(username: string): { ok: boolean; message: str
   saveList(updated)
   return {
     ok: true,
-    message: `🔓 ${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
+    message: `${t('lobby', 'useraction_ignore')} "${trimmed}" (${updated.length})`,
   }
 }
 
@@ -101,12 +101,12 @@ export function handleIgnoreCommand(text: string): { handled: boolean; message: 
       if (list.length === 0) {
         return {
           handled: true,
-          message: `ℹ️ ${t('lobby', 'useraction_ignore')}: ${t('decks', 'deck_no_cards')}`,
+          message: `${t('lobby', 'useraction_ignore')}: ${t('decks', 'deck_no_cards')}`,
         }
       }
       return {
         handled: true,
-        message: `ℹ️ ${t('lobby', 'useraction_ignore')} (${list.length}): [${list.join(', ')}]`,
+        message: `${t('lobby', 'useraction_ignore')} (${list.length}): [${list.join(', ')}]`,
       }
     }
     const res = addIgnoredUser(targetUser)
@@ -117,7 +117,7 @@ export function handleIgnoreCommand(text: string): { handled: boolean; message: 
     if (!targetUser) {
       return {
         handled: true,
-        message: `ℹ️ ${t('lobby', 'useraction_ignore')}`,
+        message: `${t('lobby', 'useraction_ignore')}`,
       }
     }
     const res = removeIgnoredUser(targetUser)

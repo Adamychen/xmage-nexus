@@ -6,6 +6,7 @@ import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import SearchPanel from './SearchPanel'
 import DeckListPanel from './DeckListPanel'
+import Icon from '../ui/Icon'
 import { ArenaDeckHeader } from './ArenaDeckHeader'
 import { BasicLandAdder } from './BasicLandAdder'
 import { SampleHandModal } from './SampleHandModal'
@@ -290,7 +291,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         >
           {isCollectionDragOver && (
             <div className="arena-remove-drop-hint">
-              <span>🗑️</span> {t('decks', 'builder_drag_hint')}
+              <span><Icon name="trash" size={14} /></span> {t('decks', 'builder_drag_hint')}
             </div>
           )}
           <SearchPanel
@@ -334,7 +335,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             <div className="deck-curve-panel">
               <div className="deck-curve-panel-header">
                 <span className="deck-curve-panel-title">
-                  📊 {t('decks', 'builder_mana_curve')}
+                  <Icon name="chart" size={13} /> {t('decks', 'builder_mana_curve')}
                 </span>
                 <div className="deck-curve-panel-actions">
                   <button
@@ -343,7 +344,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                     onClick={() => setShowInspector(true)}
                     title={t('decks', 'inspect_double_click')}
                   >
-                    🔍 📊
+                    <Icon name="search" size={12} /> <Icon name="chart" size={12} />
                   </button>
                   <button
                     type="button"

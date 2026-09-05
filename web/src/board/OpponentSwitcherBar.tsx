@@ -1,4 +1,5 @@
 import type { CombatGroupView, PlayerView } from '../net/types'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './OpponentSwitcherBar.css'
 
@@ -111,7 +112,7 @@ export default function OpponentSwitcherBar({
             >
               <span>{opp.name}</span>
               <span className="opp-pill-life">
-                {isDefeated ? (opp.hasLeft ? t('board', 'opp_out') : t('board', 'opp_dead')) : `${opp.life} ❤️`}
+                {isDefeated ? (opp.hasLeft ? t('board', 'opp_out') : t('board', 'opp_dead')) : (<>{opp.life} <Icon name="heart" size={11} /></>)}
               </span>
               {isTurn && !isDefeated && <span className="opp-pill-tag turn-tag">{t('board', 'opp_turn_tag')}</span>}
               {isInvolvedInCombat && !isDefeated && (

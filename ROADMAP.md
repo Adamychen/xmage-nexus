@@ -45,7 +45,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Real-time Table & User Broadcasts | ✅ Yes | ✅ Yes | Completed |
 | | Room & Match Chat | ✅ Yes | ✅ Yes | Completed |
 | | 1v1 Table Creation (Human vs Human / Human vs AI) | ✅ Yes | ✅ Yes | Completed |
-| | Table Filters & Private Messaging (Whispers/PM) | ✅ Yes | ❌ No | Phase 3 |
+| | Table Filters & Private Messaging (Whispers/PM) | ✅ Yes | ✅ Yes | Completed |
 | | Match Clocks / Visible Timers | ✅ Yes | ✅ Yes | Completed |
 | **Deck Management** | Predefined / JSON Deck Loading | ✅ Yes | ✅ Yes | Completed |
 | | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ✅ Yes (Scryfall full syntax + help, 9-lang, curve/donut, CMC sort, drag-drop) | Completed |

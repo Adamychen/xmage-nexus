@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { scryfallCardImage } from './scryfallSearch'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CardPrintingsModal.css'
 
@@ -81,7 +82,7 @@ export function CardPrintingsModal({
       <div className="printings-modal" onClick={(e) => e.stopPropagation()}>
         <header className="printings-header">
           <div className="printings-title-wrap">
-            <h2 className="printings-title">🎨 {t('dialogs', 'card_printings_title')}</h2>
+            <h2 className="printings-title"><Icon name="palette" size={17} /> {t('dialogs', 'card_printings_title')}</h2>
             <span className="printings-card-name">{cardName}</span>
           </div>
           <button type="button" className="printings-close-btn" onClick={onClose}>
@@ -99,7 +100,7 @@ export function CardPrintingsModal({
 
           {error && !loading && (
             <div className="printings-status-box error">
-              <span>⚠️ {error}</span>
+              <span><Icon name="alert" size={13} /> {error}</span>
             </div>
           )}
 

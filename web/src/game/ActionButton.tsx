@@ -3,6 +3,7 @@ import type { GameView } from '../net/types'
 import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
 import PassMenu from './PassMenu'
+import Icon, { type IconName } from '../ui/Icon'
 import { activeSkipOf } from './skips'
 import './ActionButton.css'
 
@@ -52,34 +53,34 @@ export default function ActionButton({
   let label = t('game', 'pass_priority')
   let sublabel: string | null = null
   let modeClass = 'action-pass'
-  let modeIcon = '▶️'
+  let modeIcon: IconName = 'play'
 
   if (stackItems > 0) {
     label = t('game', 'resolve')
     sublabel = `${t('game', 'stack')} (${stackItems})`
     modeClass = 'action-resolve'
-    modeIcon = '⚡'
+    modeIcon = 'zap'
   } else if (feedback?.mode === 'combat') {
     const isAtk = feedback.title.toLowerCase().includes('atacan') || feedback.title.toLowerCase().includes('attack')
     label = isAtk
       ? t('game', 'confirm_attackers')
       : t('game', 'confirm_blockers')
     modeClass = 'action-combat'
-    modeIcon = '⚔️'
+    modeIcon = 'swords'
   } else if (me?.hasPriority) {
     label = t('game', 'pass_priority')
     sublabel = me.isActive ? t('game', 'turn') : t('game', 'priority')
     modeClass = 'action-priority'
-    modeIcon = '▶️'
+    modeIcon = 'play'
   } else if (!me?.hasPriority && opp?.hasPriority) {
     label = t('game', 'waiting_opponent')
     sublabel = opp.name
     modeClass = 'action-waiting'
-    modeIcon = '⏳'
+    modeIcon = 'hourglass'
   } else if (!canPass) {
     label = `${t('common', 'loading')}`
     modeClass = 'action-waiting'
-    modeIcon = '⏳'
+    modeIcon = 'hourglass'
   }
 
   if (activeSkip && modeClass !== 'action-waiting') {
@@ -101,7 +102,7 @@ export default function ActionButton({
           <span className="action-btn-glow" aria-hidden="true" />
           <div className="action-btn-content">
             <span className="action-btn-label">
-              <span className="action-btn-icon" aria-hidden="true">{modeIcon}</span>{' '}
+              <span className="action-btn-icon" aria-hidden="true"><Icon name={modeIcon} size={15} /></span>{' '}
               {busy ? t('game', 'action_sending') : label}
             </span>
             {sublabel && !busy && <span className="action-btn-sublabel">{sublabel}</span>}

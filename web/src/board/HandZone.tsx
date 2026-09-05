@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './HandZone.css'
 
@@ -132,7 +133,7 @@ export default function HandZone({
           />
           <span className="hand-stack-badge">×{faceDownEntries.length}</span>
           {viewable && (
-            <span className="hand-view-badge" aria-hidden="true">👁️</span>
+            <span className="hand-view-badge" aria-hidden="true"><Icon name="eye" size={13} /></span>
           )}
         </div>
       )}

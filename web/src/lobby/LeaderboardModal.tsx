@@ -6,6 +6,7 @@ import { appendLocalChatMessage } from '../state/store'
 import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
+import Icon from '../ui/Icon'
 import PingBadge from './PingBadge'
 import { useTranslation } from '../i18n'
 import './LeaderboardModal.css'
@@ -138,7 +139,7 @@ export default function LeaderboardModal({
       >
         <header className="leaderboard-header">
           <div className="leaderboard-header-title">
-            <h2 id="lb-modal-title">🏆 {t('lobby', 'nav_ranking')}</h2>
+            <h2 id="lb-modal-title"><Icon name="trophy" size={18} /> {t('lobby', 'nav_ranking')}</h2>
             <span className="leaderboard-subtitle">
               {t('lobby', 'leaderboard_subtitle')}
             </span>
@@ -155,7 +156,7 @@ export default function LeaderboardModal({
             className={`leaderboard-tab-btn ${activeTab === 'room' ? 'active' : ''}`}
             onClick={() => setActiveTab('room')}
           >
-            <span>🏆 {t('lobby', 'leaderboard_top_room')} ({users.length})</span>
+            <span><Icon name="trophy" size={13} /> {t('lobby', 'leaderboard_top_room')} ({users.length})</span>
           </button>
           <button
             type="button"
@@ -164,8 +165,8 @@ export default function LeaderboardModal({
           >
             <span>
               {isMyProfile
-                ? `👤 ${t('lobby', 'leaderboard_my_profile')}`
-                : `👤 ${t('lobby', 'leaderboard_profile_of')}: ${targetUser?.userName ?? targetUsername}`}
+                ? (<><Icon name="user" size={12} /> {t('lobby', 'leaderboard_my_profile')}</>)
+                : (<><Icon name="user" size={12} /> {t('lobby', 'leaderboard_profile_of')}: {targetUser?.userName ?? targetUsername}</>)}
             </span>
           </button>
           <button
@@ -173,7 +174,7 @@ export default function LeaderboardModal({
             className={`leaderboard-tab-btn ${activeTab === 'tiers' ? 'active' : ''}`}
             onClick={() => setActiveTab('tiers')}
           >
-            <span>📖 {t('lobby', 'leaderboard_rank_guide')}</span>
+            <span><Icon name="bookOpen" size={12} /> {t('lobby', 'leaderboard_rank_guide')}</span>
           </button>
         </nav>
 
@@ -207,7 +208,7 @@ export default function LeaderboardModal({
                     {sortedUsers.map((u, index) => {
                       const isMe = u.userName.toLowerCase() === currentUsername.toLowerCase()
                       const pos = index + 1
-                      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : null
+                      const medalColor = pos === 1 ? '#ffd54a' : pos === 2 ? '#cfd6e4' : pos === 3 ? '#e09a5f' : null
 
                       return (
                         <tr
@@ -221,7 +222,7 @@ export default function LeaderboardModal({
                           title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
                         >
                           <td className="pos-cell">
-                            {medal ? <span className="pos-medal">{medal}</span> : `#${pos}`}
+                            {medalColor ? <span className="pos-medal" style={{ color: medalColor }}><Icon name="medal" size={14} /></span> : `#${pos}`}
                           </td>
                           <td className="user-cell">
                             <div className="user-cell-wrap">
@@ -237,7 +238,7 @@ export default function LeaderboardModal({
                           <td>
                             <RankBadge elo={u.effectiveRating} />
                           </td>
-                          <td className="elo-cell">⭐ {u.effectiveRating}</td>
+                          <td className="elo-cell"><Icon name="star" size={12} /> {u.effectiveRating}</td>
                           <td className="history-cell">{u.stats.formattedHistory}</td>
                           <td className="winrate-cell">
                             {u.stats.winrate !== null ? (
@@ -256,7 +257,7 @@ export default function LeaderboardModal({
                           </td>
                           <td>
                             {u.infoGames ? (
-                              <span className="status-playing">⚔️ {t('lobby', 'in_game')}</span>
+                              <span className="status-playing"><Icon name="swords" size={12} /> {t('lobby', 'in_game')}</span>
                             ) : (
                               <span className="status-idle">{t('lobby', 'in_lobby')}</span>
                             )}
@@ -290,7 +291,7 @@ export default function LeaderboardModal({
                     className="profile-back-my-btn"
                     onClick={() => setTargetUsername(currentUsername)}
                   >
-                    👤 {t('lobby', 'leaderboard_view_own')}
+                    <Icon name="user" size={12} /> {t('lobby', 'leaderboard_view_own')}
                   </button>
                 </div>
               )}
@@ -312,7 +313,7 @@ export default function LeaderboardModal({
                     <span className="profile-rank-tier" style={{ color: displayedRank.color }}>
                       {getRankLabel(displayedRank, t)}
                     </span>
-                    <span className="profile-rank-elo">⭐ {t('lobby', 'leaderboard_official_elo', { elo: String(displayedElo) })}</span>
+                    <span className="profile-rank-elo"><Icon name="star" size={12} /> {t('lobby', 'leaderboard_official_elo', { elo: String(displayedElo) })}</span>
                     <span className="profile-rank-desc">
                       {t('lobby', 'leaderboard_ranked_desc')}
                     </span>
@@ -350,7 +351,7 @@ export default function LeaderboardModal({
               <div className="profile-formats-grid">
                 <div className="format-card">
                   <div className="format-card-header">
-                    <span className="format-icon">⭐</span>
+                    <span className="format-icon"><Icon name="star" size={13} /></span>
                     <span className="format-title">{t('lobby', 'leaderboard_format_constructed')}</span>
                   </div>
                   <div className="format-card-body">
@@ -363,7 +364,7 @@ export default function LeaderboardModal({
 
                 <div className="format-card">
                   <div className="format-card-header">
-                    <span className="format-icon">🎲</span>
+                    <span className="format-icon"><Icon name="dice" size={13} /></span>
                     <span className="format-title">{t('lobby', 'leaderboard_format_limited')}</span>
                   </div>
                   <div className="format-card-body">
@@ -384,7 +385,7 @@ export default function LeaderboardModal({
 
                 <div className="format-card">
                   <div className="format-card-header">
-                    <span className="format-icon">🏆</span>
+                    <span className="format-icon"><Icon name="trophy" size={13} /></span>
                     <span className="format-title">{t('lobby', 'leaderboard_tournaments_played')}</span>
                   </div>
                   <div className="format-card-body">
@@ -403,7 +404,7 @@ export default function LeaderboardModal({
 
                 <div className="format-card">
                   <div className="format-card-header">
-                    <span className="format-icon">🛡️</span>
+                    <span className="format-icon"><Icon name="shield" size={13} /></span>
                     <span className="format-title">{t('lobby', 'leaderboard_fair_play')}</span>
                   </div>
                   <div className="format-card-body">
@@ -447,7 +448,7 @@ export default function LeaderboardModal({
               {isMyProfile && (
                 <div className="profile-ignored-box">
                   <div className="profile-ignored-header">
-                    <h4>🚫 {t('lobby', 'leaderboard_ignored_title', { count: String(ignoredList.length) })}</h4>
+                    <h4><Icon name="ban" size={14} /> {t('lobby', 'leaderboard_ignored_title', { count: String(ignoredList.length) })}</h4>
                     <span className="profile-ignored-hint">
                       {t('lobby', 'leaderboard_ignored_hint')}
                     </span>
@@ -456,14 +457,14 @@ export default function LeaderboardModal({
                     <div className="profile-ignored-list">
                       {ignoredList.map((name) => (
                         <div key={name} className="profile-ignored-item">
-                          <span className="ignored-item-name">🚫 {name}</span>
+                          <span className="ignored-item-name"><Icon name="ban" size={12} /> {name}</span>
                           <button
                             type="button"
                             className="unignore-action-btn"
                             onClick={() => handleUnignoreFromProfile(name)}
                             title={t('lobby', 'leaderboard_unblock') + ' ' + name}
                           >
-                            🔓 {t('lobby', 'leaderboard_unblock')}
+                            <Icon name="unlock" size={12} /> {t('lobby', 'leaderboard_unblock')}
                           </button>
                         </div>
                       ))}
@@ -488,7 +489,12 @@ export default function LeaderboardModal({
                     style={{ borderColor: tier.border }}
                   >
                     <div className="tier-card-header">
-                      <span className="tier-icon">{tier.icon}</span>
+                      <span
+                        className="tier-icon"
+                        style={{ backgroundColor: tier.bg, borderColor: tier.border, color: tier.color }}
+                      >
+                        <Icon name={tier.icon} size={16} />
+                      </span>
                       <span className="tier-name" style={{ color: tier.color }}>
                         {getTierName(tier.tier, t)}
                       </span>

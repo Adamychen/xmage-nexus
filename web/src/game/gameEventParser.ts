@@ -195,7 +195,7 @@ export function parseGameEvent(
       playerName: pName,
       isMe: isMe(pName),
       amount: -amt,
-      description: `${pName} pierde ${amt} vidas (-${amt} ❤️)`,
+      description: `${pName} pierde ${amt} vidas (-${amt})`,
     }
   }
   const lifeGainMatch = text.match(/^([^:]+?)\s+gains\s+(\d+)\s+life/i)
@@ -208,7 +208,7 @@ export function parseGameEvent(
       playerName: pName,
       isMe: isMe(pName),
       amount: amt,
-      description: `${pName} gana ${amt} vidas (+${amt} 💚)`,
+      description: `${pName} gana ${amt} vidas (+${amt})`,
     }
   }
 

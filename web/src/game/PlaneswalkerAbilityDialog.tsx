@@ -2,6 +2,7 @@ import { useStore } from '../state/store'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './PlaneswalkerAbilityDialog.css'
 
@@ -46,7 +47,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
   return (
     <div className="pw-backdrop" role="presentation">
       <section className="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title">
-        <div className="pw-kicker">{t('game', 'planeswalker_choose')}</div>
+        <div className="pw-kicker"><Icon name="sparkles" size={12} /> {t('game', 'planeswalker_choose')}</div>
         <h2 id="pw-title"><FormattedText text={prompt.title} /></h2>
         <p className="pw-msg"><FormattedText text={prompt.message} /></p>
         {pwLoyalty != null && (

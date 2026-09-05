@@ -6,6 +6,7 @@ import { useTickingTimer } from '../utils/timer'
 import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
+import Icon from '../ui/Icon'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
@@ -357,7 +358,7 @@ export default function ConstructScreen() {
             )}
             <div className="construct-card-list construct-arena-list">
               {isPoolDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'construct_pool')}</div>
+                <div className="arena-drop-target-hint"><span><Icon name="sparkles" size={13} /></span> {t('game', 'construct_pool')}</div>
               )}
               {filteredPool.map((card) => {
                 const k = `pool:${deckCardKey(card)}`
@@ -407,7 +408,7 @@ export default function ConstructScreen() {
             )}
             <div className="construct-card-list construct-arena-list">
               {isMainDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_main')}</div>
+                <div className="arena-drop-target-hint"><span><Icon name="sparkles" size={13} /></span> {t('game', 'sideboard_main')}</div>
               )}
               {categoriesOrder.map((cat) => {
                 const list = groupedMain.get(cat) ?? []

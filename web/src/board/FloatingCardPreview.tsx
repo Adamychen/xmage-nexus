@@ -6,6 +6,7 @@ import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import { useStore, isBlockingModal } from '../state/store'
+import Icon from '../ui/Icon'
 import './FloatingCardPreview.css'
 
 interface FloatingCardPreviewProps {
@@ -190,7 +191,7 @@ export default function FloatingCardPreview({
         <div className="floating-card-inner">
           {hasSecondFace && (
             <div className="floating-card-flip-badge" title={t('wiki', 'flip_hint')}>
-              <span className="flip-icon">🔄</span>
+              <span className="flip-icon"><Icon name="refresh" size={12} /></span>
               <span className="flip-label">{showBackFace ? t('wiki', 'face_back') : t('wiki', 'face_front')} (Shift / F)</span>
             </div>
           )}
@@ -226,7 +227,7 @@ export default function FloatingCardPreview({
 
           {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
             <div className="floating-card-loyalty" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
-              🛡️ {perm.loyalty}
+              <Icon name="shield" size={12} /> {perm.loyalty}
             </div>
           )}
 

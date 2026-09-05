@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function DevTab({ form }: { form: CreateTableForm }) {
@@ -6,11 +7,11 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
-        <h3>🛠️ Dev / Test</h3>
+        <h3><Icon name="settings" size={15} /> Dev / Test</h3>
         <p>Solo visible en desarrollo. Opciones de test del motor.</p>
       </div>
       <div className="dev-options-notice">
-        <span>⚠️ Solo para pruebas locales — no afecta a beta.</span>
+        <span><Icon name="alert" size={12} /> Solo para pruebas locales — no afecta a beta.</span>
       </div>
 
       <div className="dev-demo-box">
@@ -22,7 +23,7 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
           onClick={() => void form.runDemoTable()}
           disabled={form.busy}
         >
-          ▶ {t('lobby','watch_btn')} ({t('lobby','ai')} vs {t('lobby','ai')})
+          <Icon name="play" size={13} /> {t('lobby','watch_btn')} ({t('lobby','ai')} vs {t('lobby','ai')})
         </button>
       </div>
 
@@ -33,7 +34,7 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
           onChange={(e) => form.setSkipInitShuffling(e.target.checked)}
         />
         <div className="toggle-text-block">
-          <span className="toggle-title">🃏 {t('lobby','create_toggle_skip_shuffle')}</span>
+          <span className="toggle-title"><Icon name="layers" size={12} /> {t('lobby','create_toggle_skip_shuffle')}</span>
           <span className="toggle-desc">No barajar (útil para tests deterministas).</span>
         </div>
       </label>
@@ -45,7 +46,7 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
           onChange={(e) => form.setSkipStartingPlayerChoice(e.target.checked)}
         />
         <div className="toggle-text-block">
-          <span className="toggle-title">🎲 {t('lobby','create_toggle_skip_starting')}</span>
+          <span className="toggle-title"><Icon name="dice" size={12} /> {t('lobby','create_toggle_skip_starting')}</span>
           <span className="toggle-desc">Salta la elección de quién empieza.</span>
         </div>
       </label>

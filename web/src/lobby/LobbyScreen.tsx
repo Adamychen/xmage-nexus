@@ -10,6 +10,7 @@ import DeckBuilder from '../decks/DeckBuilder'
 import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters } from './TableFilterBar'
+import Icon from '../ui/Icon'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import DownloadImagesDialog from './DownloadImagesDialog'
 import { t as tStatic, translateError } from '../i18n'
@@ -23,6 +24,7 @@ import TournamentBracketModal from './TournamentBracketModal'
 import { useTableActions } from './useTableActions'
 import { useTournamentBracket } from './useTournamentBracket'
 import { extractLobbyUsers, withTimeout, type LobbyTab } from './lobbyUtils'
+import { getIgnoredUsers } from './ignoreList'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
@@ -74,8 +76,10 @@ export default function LobbyScreen() {
   )
 
   const filteredTables = useMemo(() => {
-    return filterTables(tables, filters)
-  }, [tables, filters])
+    let ignored: string[] = []
+    try { ignored = getIgnoredUsers() } catch { ignored = [] }
+    return filterTables(tables, filters, ignored)
+  }, [tables, filters, selectedUser])
 
   // Cachear automáticamente el avatar real del usuario conectado
   useEffect(() => {
@@ -135,7 +139,7 @@ export default function LobbyScreen() {
                   </div>
                   <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? 'Mage Web bolt'}`}>
                     <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
-                    <span className="hero-deck-name">🃏 {myDeck?.name ?? 'Mage Web bolt'}</span>
+                      <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? 'Mage Web bolt'}</span>
                   </div>
                 </div>
 
@@ -160,12 +164,12 @@ export default function LobbyScreen() {
 
                   {filteredTables.length === 0 && tables.length === 0 && (
                     <div className="tables-empty-state">
-                      <span className="empty-icon">🏰</span>
+                      <span className="empty-icon"><Icon name="castle" size={30} /></span>
                       <h3>{t('lobby','empty_tables')}</h3>
                       <p>{t('lobby','tables_deck_hint')}</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
                         <button className="primary" onClick={() => setShowCreate(true)}>
-                          ➕ {t('lobby','create_table_btn')}
+                          <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
                         </button>
                       </div>
                     </div>
@@ -173,7 +177,7 @@ export default function LobbyScreen() {
 
                   {filteredTables.length === 0 && tables.length > 0 && (
                     <div className="tables-empty-match">
-                      <span className="empty-match-icon">🔍</span>
+                      <span className="empty-match-icon"><Icon name="search" size={28} /></span>
                       <span className="empty-match-title">{t('lobby','empty_filtered')}</span>
                       <p className="empty-match-desc">
                         {t('lobby','no_tables_found')}
@@ -239,7 +243,7 @@ export default function LobbyScreen() {
             className="debug-toggle-btn"
             onClick={() => setShowDebug(!showDebug)}
           >
-            <span>🛠️ {t('lobby','debug_title')} ({events.length})</span>
+            <span><Icon name="settings" size={13} /> {t('lobby','debug_title')} ({events.length})</span>
             <span>{showDebug ? `▼ ${t('common','close')}` : `▲ ${t('common','loading')}`}</span>
           </button>
 

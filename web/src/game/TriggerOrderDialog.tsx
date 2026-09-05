@@ -3,6 +3,7 @@ import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
+import Icon from '../ui/Icon'
 import Modal from '../ui/Modal'
 import { useTranslation } from '../i18n'
 import { triggerDisplayName, triggerRuleText, type TriggerRuleScope } from './triggerOrder'
@@ -43,7 +44,7 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
 
   return (
     <Modal backdropClassName="trigger-backdrop" dialogClassName="trigger-dialog" labelledBy="trigger-title">
-      <div className="trigger-kicker">🌀 {t('game', 'trigger_title').toUpperCase()}</div>
+      <div className="trigger-kicker"><Icon name="refresh" size={12} /> {t('game', 'trigger_title').toUpperCase()}</div>
       <h2 id="trigger-title">{t('game', 'trigger_remaining', { count: remaining })}</h2>
       <p className="trigger-hint">{t('game', 'trigger_hint')}</p>
       <div className="trigger-scope" role="group" aria-label={t('game', 'trigger_scope')}>
@@ -89,7 +90,7 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
                   title={t('game', 'trigger_first')}
                   onClick={() => remember(card.id, rule, true)}
                 >
-                  {t('game', 'trigger_first')}
+                  <Icon name="chevronsUp" size={12} /> {t('game', 'trigger_first')}
                 </button>
                 <button
                   type="button"
@@ -98,7 +99,7 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
                   title={t('game', 'trigger_last')}
                   onClick={() => remember(card.id, rule, false)}
                 >
-                  {t('game', 'trigger_last')}
+                  <Icon name="chevronsDown" size={12} /> {t('game', 'trigger_last')}
                 </button>
               </span>
             </li>

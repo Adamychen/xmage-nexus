@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { Deck } from './decks'
 import { applySuggestion, fetchDeckIssues } from '../decks/deckIssues'
 import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckIssuesDialog.css'
 
@@ -87,7 +88,7 @@ export default function DeckIssuesDialog() {
     <div className="modal-backdrop" data-testid="deck-issues-backdrop">
       <div className="deck-issues-modal panel" role="dialog" aria-modal="true" data-testid="deck-issues-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="deck-issues-header">
-          <h2 data-testid="deck-issues-title">⚠️ {t('decks', 'issues_title')}</h2>
+          <h2 data-testid="deck-issues-title"><Icon name="alert" size={17} /> {t('decks', 'issues_title')}</h2>
           <p className="deck-issues-intro">{t('decks', 'issues_intro')}</p>
         </div>
 

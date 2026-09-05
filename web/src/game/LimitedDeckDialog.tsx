@@ -1,5 +1,6 @@
 import { useStore, setState } from '../state/store'
 import CardSlot from '../board/CardSlot'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 
 export default function LimitedDeckDialog() {
@@ -20,7 +21,7 @@ export default function LimitedDeckDialog() {
       >
         <header className="card-grid-header">
           <div className="feedback-kicker">
-            <span className="kicker-icon">🗂️</span> {t('dialogs', 'viewer_title')}
+            <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'viewer_title')}
           </div>
           <div className="card-grid-title-row">
             <h2 id="viewer-title">{viewer.title}</h2>

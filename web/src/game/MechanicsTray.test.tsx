@@ -62,8 +62,8 @@ describe('MechanicsTray', () => {
       } as unknown as GameView,
     })
 
-    const { getByText, container } = render(<MechanicsTray />)
-    expect(getByText('💍 El Anillo te tienta')).toBeDefined()
+    const { getAllByText, getByText, container } = render(<MechanicsTray />)
+    expect(getAllByText('El Anillo te tienta').length).toBeGreaterThan(0)
     expect(getByText('Nivel 2 / 4')).toBeDefined()
     expect(getByText(/Samwise Gamgee/)).toBeDefined()
 
@@ -95,7 +95,7 @@ describe('MechanicsTray', () => {
     })
 
     const { getByText, container } = render(<MechanicsTray />)
-    expect(getByText('🗺️ Undercity')).toBeDefined()
+    expect(getByText('Undercity')).toBeDefined()
     expect(container.querySelector('.dungeon-room-node.active-room')).toBeDefined()
   })
 

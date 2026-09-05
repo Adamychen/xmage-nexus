@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './ArenaCardGrid.css'
 
@@ -89,7 +90,7 @@ export function ArenaCardGrid({
     return (
       <div className="arena-card-grid-container">
         <div className="arena-grid-status-box" style={{ color: '#fc8181' }}>
-          <span>⚠️ {error}</span>
+          <span><Icon name="alert" size={13} /> {error}</span>
         </div>
       </div>
     )
@@ -200,7 +201,7 @@ export function ArenaCardGrid({
               onClick={() => onLoadMore?.()}
               title={t('common', 'loading')}
             >
-              ⚡ {t('common', 'loading')}
+              <Icon name="zap" size={13} /> {t('common', 'loading')}
             </button>
           ) : cards.length > 0 ? (
             <span className="arena-footer-done">✓ {t('common', 'done')}</span>

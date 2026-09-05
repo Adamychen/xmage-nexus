@@ -1,4 +1,5 @@
 import { getRankInfo, getTierName, getRankLabel } from './ranking'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './RankBadge.css'
 
@@ -26,7 +27,7 @@ export default function RankBadge({ elo, showElo = false, compact = false, class
       }}
       title={`${t('lobby', 'leaderboard_col_tier')}: ${label} (${numericElo} ELO)`}
     >
-      <span className="rank-badge-icon">{rank.icon}</span>
+      <span className="rank-badge-icon"><Icon name={rank.icon} size={compact ? 10 : 12} /></span>
       <span className="rank-badge-name">{compact ? tierName : label}</span>
       {showElo && <span className="rank-badge-elo">({numericElo})</span>}
     </div>

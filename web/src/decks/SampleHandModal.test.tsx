@@ -46,7 +46,7 @@ describe('SampleHandModal functions', () => {
       />
     )
 
-    expect(screen.getByText('🖐️ Simulador de Mano Inicial')).toBeDefined()
+    expect(screen.getByText('Simulador de Mano Inicial')).toBeDefined()
     expect(screen.getByText('Burn Deck')).toBeDefined()
     expect(screen.getByText(/Cartas:\s*7/)).toBeDefined()
     expect(screen.getByText(/Biblioteca:\s*17/)).toBeDefined()

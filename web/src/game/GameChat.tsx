@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import QuickReactions from './QuickReactions'
 import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
+import Icon from '../ui/Icon'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import './GameChat.css'
@@ -68,7 +69,7 @@ export default function GameChat() {
       <div className="game-chat-messages">
         {chatEntries.length === 0 ? (
           <div className="game-chat-empty">
-            💬 {t('game', 'chat_empty')}
+            <Icon name="chat" size={16} /> {t('game', 'chat_empty')}
           </div>
         ) : (
           chatEntries.map((entry) => (
@@ -98,7 +99,7 @@ export default function GameChat() {
             title={t('game', 'insert_emoji')}
             onClick={() => setPickerOpen((v) => !v)}
           >
-            😊
+            <Icon name="smile" size={15} />
           </button>
           {pickerOpen && (
             <div className="game-chat-emoji-picker">

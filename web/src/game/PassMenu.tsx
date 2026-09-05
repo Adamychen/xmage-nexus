@@ -3,6 +3,7 @@ import { useSettings, setSetting, useStore } from '../state/store'
 import type { GameView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { SKIPS, CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, activeSkipOf } from './skips'
+import Icon from '../ui/Icon'
 import './PassMenu.css'
 
 interface PassMenuProps {
@@ -57,7 +58,7 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
             if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
           }}
         />
-        ⚡ {t('game', 'hold_priority')}
+        <Icon name="zap" size={12} /> {t('game', 'hold_priority')}
       </label>
       <label className="toggle pass-menu-check" onClick={(e) => e.stopPropagation()}>
         <input

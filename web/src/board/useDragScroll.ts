@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 const DRAG_THRESHOLD_PX = 5
 
 /**
- * useDragScroll provides smooth click-and-drag horizontal panning ("Hand tool" ✋)
+ * useDragScroll provides smooth click-and-drag horizontal panning ("Hand tool")
  * for battlefield card bands, while preserving standard card click interactions.
  * Also converts vertical mouse wheel into horizontal scroll when overflowing.
  */

@@ -3,6 +3,7 @@ import type { CardView, PermanentView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
+import Icon, { type IconName } from '../ui/Icon'
 import DungeonMap from './DungeonMap'
 import {
   dungeonProgressKey,
@@ -176,14 +177,14 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   }, [])
 
   const availableTabs = useMemo(() => {
-    const tabs: Array<{ id: string; label: string; icon: string }> = []
-    if (ringStates.length > 0) tabs.push({ id: 'ring', label: t('game', 'mechanics_ring_title'), icon: '💍' })
-    if (dungeonStates.length > 0) tabs.push({ id: 'dungeon', label: t('game', 'mechanics_dungeon_title'), icon: '🗺️' })
-    if (dayNightState) tabs.push({ id: 'daynight', label: dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day'), icon: dayNightState.isNight ? '🌙' : '☀️' })
-    if (monarchPlayer) tabs.push({ id: 'monarch', label: t('game', 'mechanics_monarch'), icon: '👑' })
-    if (initiativePlayer) tabs.push({ id: 'initiative', label: t('game', 'mechanics_initiative'), icon: '⚔️' })
-    if (cityBlessingPlayers.length > 0) tabs.push({ id: 'blessing', label: t('game', 'mechanics_blessing'), icon: '🏛️' })
-    if (speedPlayers.length > 0) tabs.push({ id: 'speed', label: t('game', 'mechanics_speed_title'), icon: '🏎️' })
+    const tabs: Array<{ id: string; label: string; icon: IconName }> = []
+    if (ringStates.length > 0) tabs.push({ id: 'ring', label: t('game', 'mechanics_ring_title'), icon: 'circle' })
+    if (dungeonStates.length > 0) tabs.push({ id: 'dungeon', label: t('game', 'mechanics_dungeon_title'), icon: 'map' })
+    if (dayNightState) tabs.push({ id: 'daynight', label: dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day'), icon: dayNightState.isNight ? 'moon' : 'sun' })
+    if (monarchPlayer) tabs.push({ id: 'monarch', label: t('game', 'mechanics_monarch'), icon: 'crown' })
+    if (initiativePlayer) tabs.push({ id: 'initiative', label: t('game', 'mechanics_initiative'), icon: 'zap' })
+    if (cityBlessingPlayers.length > 0) tabs.push({ id: 'blessing', label: t('game', 'mechanics_blessing'), icon: 'landmark' })
+    if (speedPlayers.length > 0) tabs.push({ id: 'speed', label: t('game', 'mechanics_speed_title'), icon: 'gauge' })
     return tabs
   }, [ringStates, dungeonStates, dayNightState, monarchPlayer, initiativePlayer, cityBlessingPlayers, speedPlayers, t])
 
@@ -201,16 +202,16 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     return (
       <div className="mechanics-tray empty">
         <div className="mechanics-empty-box">
-          <span className="empty-icon">📜</span>
+          <span className="empty-icon"><Icon name="scrollText" size={26} /></span>
           <h4>{t('game', 'mechanics_title')}</h4>
           <p>{t('game', 'mechanics_empty')}</p>
           <div className="mechanics-glossary-hint">
             <span>{t('game', 'mechanics_title')}:</span>
             <ul>
-              <li>💍 <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
-              <li>🗺️ <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
-              <li>☀️/🌙 <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
-              <li>👑 <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
+              <li><Icon name="circle" size={12} /> <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
+              <li><Icon name="map" size={12} /> <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
+              <li><Icon name="sun" size={12} />/<Icon name="moon" size={12} /> <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
+              <li><Icon name="crown" size={12} /> <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
             </ul>
           </div>
         </div>
@@ -228,7 +229,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
             className={`mechanic-tab-btn ${effectiveTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-icon"><Icon name={tab.icon} size={13} /></span>
             <span className="tab-label">{tab.label}</span>
           </button>
         ))}
@@ -239,13 +240,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           <div className="mechanic-panel panel-ring">
             <div className="mechanic-header-card">
               <div className="mechanic-title-row">
-                <h3>💍 {t('game', 'mechanics_ring_title')}</h3>
+                <h3><Icon name="circle" size={15} /> {t('game', 'mechanics_ring_title')}</h3>
                 <span className="ring-level-badge">{t('game', 'mechanics_ring_level', { level: myRing.level })}</span>
               </div>
               <div className="ring-bearer-row">
                 <span className="bearer-label">{t('game', 'mechanics_ring_bearer')}</span>
                 <span className="bearer-value">
-                  {myRing.bearerName ? `⚔️ ${myRing.bearerName}` : t('game', 'no_target')}
+                  {myRing.bearerName ? (<><Icon name="swords" size={12} /> {myRing.bearerName}</>) : t('game', 'no_target')}
                 </span>
                 <span className="player-tag">({myRing.player.name})</span>
               </div>
@@ -265,7 +266,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                         <span className="level-num">{item.level}.</span>
                         <h4 className="level-title">{item.title}</h4>
                       </div>
-                      <span className="level-status">{isActive ? `✓ ${t('common', 'online')}` : `🔒 ${t('common', 'offline')}`}</span>
+                      <span className="level-status">{isActive ? (<><Icon name="check" size={11} /> {t('common', 'online')}</>) : (<><Icon name="lock" size={11} /> {t('common', 'offline')}</>)}</span>
                     </div>
                     <p className="level-rule">{item.rule}</p>
                   </div>
@@ -306,7 +307,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               <div key={`${dungeon.player.playerId}-${dungeon.name}`} className="mechanic-panel panel-dungeon">
                 <div className="mechanic-header-card">
                   <div className="mechanic-title-row">
-                    <h3>🗺️ {dungeon.name}</h3>
+                    <h3><Icon name="map" size={15} /> {dungeon.name}</h3>
                     <span className="player-tag">({dungeon.player.name})</span>
                   </div>
                   <p className="dungeon-sub">{t('game', 'mechanics_dungeon_active')} {dungeon.name}</p>
@@ -317,7 +318,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
                     <div key={idx} className={`dungeon-room-node ${idx === 0 ? 'active-room' : ''}`}>
                       <span className="room-step">#{idx + 1}</span>
                       <span className="room-name">{room.label}</span>
-                      {idx === 0 && <span className="current-marker">📍 {t('game', 'mechanics_dungeon_active')}</span>}
+                      {idx === 0 && <span className="current-marker"><Icon name="pin" size={11} /> {t('game', 'mechanics_dungeon_active')}</span>}
                     </div>
                   ))}
                 </div>
@@ -328,7 +329,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'daynight' && dayNightState && (
           <div className="mechanic-panel panel-daynight">
             <div className={`daynight-banner ${dayNightState.isNight ? 'night-active' : 'day-active'}`}>
-              <span className="daynight-giant-icon">{dayNightState.isNight ? '🌙' : '☀️'}</span>
+              <span className="daynight-giant-icon"><Icon name={dayNightState.isNight ? 'moon' : 'sun'} size={30} /></span>
               <div className="daynight-giant-text">
                 <h3>{dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day')}</h3>
                 <span className="daynight-hint">
@@ -340,13 +341,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
             </div>
 
             <div className="daynight-rules-box">
-              <h4>🔄 {t('game', 'mechanics_title')}:</h4>
+              <h4><Icon name="refresh" size={13} /> {t('game', 'mechanics_title')}:</h4>
               <div className="rule-card">
-                <span className="rule-badge">☀️ → 🌙 {t('game', 'mechanics_night')}</span>
+                <span className="rule-badge"><Icon name="sun" size={11} /> → <Icon name="moon" size={11} /> {t('game', 'mechanics_night')}</span>
                 <p>{t('wiki', 'phases_priority')}</p>
               </div>
               <div className="rule-card">
-                <span className="rule-badge">🌙 → ☀️ {t('game', 'mechanics_day')}</span>
+                <span className="rule-badge"><Icon name="moon" size={11} /> → <Icon name="sun" size={11} /> {t('game', 'mechanics_day')}</span>
                 <p>{t('wiki', 'phases_stack')}</p>
               </div>
             </div>
@@ -356,7 +357,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'monarch' && monarchPlayer && (
           <div className="mechanic-panel panel-monarch">
             <div className="mechanic-header-card monarch-header">
-              <span className="crown-large">👑</span>
+              <span className="crown-large"><Icon name="crown" size={26} /></span>
               <h3>{t('game', 'mechanics_monarch')}</h3>
               <p className="holder-row">
                 {t('common', 'player')}: <strong>{monarchPlayer.name}</strong> {monarchPlayer.controlled ? `(${t('game', 'you')})` : ''}
@@ -365,14 +366,14 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
 
             <div className="mechanic-rules-box">
               <div className="rule-item">
-                <span className="rule-icon">🃏</span>
+                <span className="rule-icon"><Icon name="layers" size={13} /></span>
                 <div>
                   <strong>{t('game', 'monarch_hint')}</strong>
                   <p>{t('game', 'monarch_hint')}</p>
                 </div>
               </div>
               <div className="rule-item">
-                <span className="rule-icon">⚔️</span>
+                <span className="rule-icon"><Icon name="swords" size={13} /></span>
                 <div>
                   <strong>{t('game', 'mechanics_monarch')}</strong>
                   <p>{t('game', 'monarch_hint')}</p>
@@ -385,7 +386,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'initiative' && initiativePlayer && (
           <div className="mechanic-panel panel-initiative">
             <div className="mechanic-header-card initiative-header">
-              <span className="crown-large">⚔️</span>
+              <span className="crown-large"><Icon name="zap" size={26} /></span>
               <h3>{t('game', 'mechanics_initiative')}</h3>
               <p className="holder-row">
                 {t('common', 'player')}: <strong>{initiativePlayer.name}</strong> {initiativePlayer.controlled ? `(${t('game', 'you')})` : ''}
@@ -394,14 +395,14 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
 
             <div className="mechanic-rules-box">
               <div className="rule-item">
-                <span className="rule-icon">🏰</span>
+                <span className="rule-icon"><Icon name="castle" size={13} /></span>
                 <div>
                   <strong>{t('game', 'dungeon_active')}</strong>
                   <p>{t('game', 'initiative_hint')}</p>
                 </div>
               </div>
               <div className="rule-item">
-                <span className="rule-icon">⚔️</span>
+                <span className="rule-icon"><Icon name="swords" size={13} /></span>
                 <div>
                   <strong>{t('game', 'mechanics_initiative')}</strong>
                   <p>{t('game', 'initiative_hint')}</p>
@@ -414,13 +415,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'blessing' && (
           <div className="mechanic-panel panel-blessing">
             <div className="mechanic-header-card">
-              <h3>🏛️ {t('game', 'mechanics_blessing')}</h3>
+              <h3><Icon name="landmark" size={15} /> {t('game', 'mechanics_blessing')}</h3>
               <p>{t('game', 'mechanics_blessing')}</p>
             </div>
             <div className="blessing-players-list">
               {cityBlessingPlayers.map((p) => (
                 <div key={p.playerId} className="blessing-player-row">
-                  <span>★ {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
+                  <span><Icon name="star" size={12} /> {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
                   <span className="badge-ascended">{t('game', 'blessing_ascend_ok')}</span>
                 </div>
               ))}
@@ -431,13 +432,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
         {effectiveTab === 'speed' && (
           <div className="mechanic-panel panel-speed">
             <div className="mechanic-header-card">
-              <h3>🏎️ {t('game', 'mechanics_speed_title')}</h3>
+              <h3><Icon name="gauge" size={15} /> {t('game', 'mechanics_speed_title')}</h3>
               <p>{t('game', 'mechanics_speed_title')}</p>
             </div>
             <div className="speed-players-list">
               {speedPlayers.map((p) => (
                 <div key={p.playerId} className="speed-player-row">
-                  <span>🏎️ {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
+                  <span><Icon name="gauge" size={12} /> {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
                 </div>
               ))}
             </div>

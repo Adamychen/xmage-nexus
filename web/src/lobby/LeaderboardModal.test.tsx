@@ -64,7 +64,7 @@ describe('LeaderboardModal Component', () => {
     expect(screen.getByText('player1')).toBeDefined()
 
     // Highest ELO player gets 1st medal
-    expect(screen.getByText('🥇')).toBeDefined()
+    expect(document.querySelector('.pos-medal svg')).not.toBeNull()
   })
 
   it('switches between tabs: profile and tiers guide', () => {
@@ -73,7 +73,7 @@ describe('LeaderboardModal Component', () => {
 
     // Switch to profile tab
     fireEvent.click(screen.getByText(/Mi Rango & Estadísticas/i))
-    expect(screen.getByText(/⭐ 1650 ELO/i)).toBeDefined()
+    expect(screen.getAllByText(/1650 ELO/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Oro II').length).toBeGreaterThan(0)
 
     // Switch to tiers guide tab
@@ -107,7 +107,7 @@ describe('LeaderboardModal Component', () => {
 
     expect(screen.getByText(/Estás inspeccionando el perfil de/i)).toBeDefined()
     expect(screen.getAllByText('mythic_player').length).toBeGreaterThan(0)
-    expect(screen.getByText(/⭐ 2050 ELO/i)).toBeDefined()
+    expect(screen.getAllByText(/2050 ELO/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Mítico').length).toBeGreaterThan(0)
   })
 
@@ -127,7 +127,7 @@ describe('LeaderboardModal Component', () => {
     expect(screen.getByText(/annoying_guy/i)).toBeDefined()
 
     // Click unlock / unignore
-    fireEvent.click(screen.getByText('🔓 Desbloquear'))
+    fireEvent.click(screen.getByText('Desbloquear'))
     expect(screen.getByText(/No tienes a ningún jugador en tu lista/i)).toBeDefined()
   })
 })

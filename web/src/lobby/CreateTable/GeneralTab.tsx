@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Icon from '../../ui/Icon'
 import {
   SKILL_LEVEL_OPTIONS,
   DEFAULT_TOURNAMENT_TYPES,
@@ -12,7 +13,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
-        <h3>⚙️ {t('lobby','create_tab_general')}</h3>
+        <h3><Icon name="settings" size={15} /> {t('lobby','create_tab_general')}</h3>
         <p>Nombre, formato y estructura del match.</p>
       </div>
       <label>
@@ -83,7 +84,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
       )}
 
       {form.compatibilityError && (
-        <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,80,80,0.4)', color: '#ff9a9a' }}>⚠️ {form.compatibilityError}</div>
+        <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,80,80,0.4)', color: '#ff9a9a' }}><Icon name="alert" size={13} /> {form.compatibilityError}</div>
       )}
 
       <div className="field">
@@ -98,7 +99,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                 className={`chip ${form.skillLevel === opt.value ? 'on' : ''}`}
                 onClick={() => form.setSkillLevel(opt.value as any)}
               >
-                {opt.icon} {label}
+                {Array.from({ length: opt.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {label}
               </button>
             )
           })}
@@ -112,14 +113,14 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
           onChange={(e) => form.setRated(e.target.checked)}
         />
         <div className="toggle-text-block">
-          <span className="toggle-title">⭐ {t('lobby','create_field_rated')}</span>
+          <span className="toggle-title"><Icon name="star" size={12} /> {t('lobby','create_field_rated')}</span>
           <span className="toggle-desc">Partida puntuada para ranking. Desactívalo para juego casual sin ELO.</span>
         </div>
       </label>
 
       {form.deckType === 'Limited' && (
         <div className="create-multiplayer-box" style={{ marginTop: 4 }}>
-          <span className="multiplayer-box-title">🃏 {t('lobby','create_field_draft_type')}</span>
+          <span className="multiplayer-box-title"><Icon name="layers" size={13} /> {t('lobby','create_field_draft_type')}</span>
           <label className="toggle-label-row">
             <input
               type="checkbox"

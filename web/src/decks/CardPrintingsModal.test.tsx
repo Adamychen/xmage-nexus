@@ -59,7 +59,7 @@ describe('CardPrintingsModal', () => {
       />
     )
 
-    expect(screen.getByText('🎨 Seleccionar Edición & Arte')).toBeDefined()
+    expect(screen.getByText('Seleccionar Edición & Arte')).toBeDefined()
     expect(screen.getByText('Lightning Bolt')).toBeDefined()
 
     await waitFor(() => {

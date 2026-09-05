@@ -105,10 +105,10 @@ export const DEFAULT_PLAYER_TYPES: string[] = [
   'COMPUTER_DRAFT',
 ]
 
-export const SKILL_LEVEL_OPTIONS = [
-  { label: 'Novato', value: 'BEGINNER', icon: '⭐' },
-  { label: 'Casual', value: 'CASUAL', icon: '⭐⭐' },
-  { label: 'Competitivo', value: 'SERIOUS', icon: '⭐⭐⭐' },
+export const SKILL_LEVEL_OPTIONS: Array<{ label: string; value: string; stars: number }> = [
+  { label: 'Novato', value: 'BEGINNER', stars: 1 },
+  { label: 'Casual', value: 'CASUAL', stars: 2 },
+  { label: 'Competitivo', value: 'SERIOUS', stars: 3 },
 ]
 
 export const DEFAULT_TOURNAMENT_TYPES: string[] = [
@@ -256,11 +256,11 @@ export interface SeatConfig {
   deckName: string
 }
 
-export type WizardStep = { id: CreateTab; icon: string; labelKey: string; titleFallback: string }
+export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName; labelKey: string; titleFallback: string }
 
 export const WIZARD_STEPS_BASE: WizardStep[] = [
-  { id: 'general', icon: '⚙️', labelKey: 'create_tab_general', titleFallback: 'General' },
-  { id: 'timing', icon: '⏱️', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
-  { id: 'security', icon: '🛡️', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
-  { id: 'seats', icon: '🤖', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
+  { id: 'general', icon: 'settings', labelKey: 'create_tab_general', titleFallback: 'General' },
+  { id: 'timing', icon: 'clock', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
+  { id: 'security', icon: 'shield', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
+  { id: 'seats', icon: 'bot', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
 ]

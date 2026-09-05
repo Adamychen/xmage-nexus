@@ -1,6 +1,7 @@
 import { useStore, setState } from '../state/store'
 import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 
 export default function UserRequestDialog() {
@@ -28,7 +29,7 @@ export default function UserRequestDialog() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="feedback-kicker">
-          <span className="kicker-icon">🤝</span> {t('dialogs', 'userrequest_title')}
+          <span className="kicker-icon"><Icon name="info" size={13} /></span> {t('dialogs', 'userrequest_title')}
         </div>
         <h2 id="user-request-title"><FormattedText text={request.title} /></h2>
         {request.message && <p className="feedback-prompt-message"><FormattedText text={request.message} /></p>}

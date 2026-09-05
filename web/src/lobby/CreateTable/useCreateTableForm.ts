@@ -136,7 +136,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   const wizardSteps: WizardStep[] = useMemo(() => {
     const steps = [...WIZARD_STEPS_BASE]
-    if (import.meta.env.DEV) steps.push({ id: 'dev', icon: '🛠️', labelKey: '', titleFallback: 'Dev' })
+    if (import.meta.env.DEV) steps.push({ id: 'dev', icon: 'settings', labelKey: '', titleFallback: 'Dev' })
     return steps
   }, [])
 

@@ -6,6 +6,7 @@ import { loadDeckFromOnlineSource } from './onlineDeckService'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { ManaPip } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckBrowser.css'
 
@@ -99,14 +100,14 @@ export function DeckBrowser({
           className={`browser-tab-btn ${tab === 'catalog' ? 'active' : ''}`}
           onClick={() => setTab('catalog')}
         >
-          🏆 {t('decks', 'popular_meta')} ({filteredCatalog.length})
+          <Icon name="trophy" size={13} /> {t('decks', 'popular_meta')} ({filteredCatalog.length})
         </button>
         <button
           type="button"
           className={`browser-tab-btn ${tab === 'import' ? 'active' : ''}`}
           onClick={() => setTab('import')}
         >
-          🌐 {t('decks', 'import_deck')}
+          <Icon name="globe" size={13} /> {t('decks', 'import_deck')}
         </button>
       </nav>
 
@@ -203,14 +204,14 @@ export function DeckBrowser({
                         className="browser-deck-btn"
                         onClick={() => setInspectingDeck(deck)}
                       >
-                        👁️ {t('common', 'search')}
+                        <Icon name="eye" size={12} /> {t('common', 'search')}
                       </button>
                       <button
                         type="button"
                         className="browser-deck-btn primary"
                         onClick={() => handleCopy(deck)}
                       >
-                        📋 {t('common', 'copy')}
+                        <Icon name="copy" size={12} /> {t('common', 'copy')}
                       </button>
                     </div>
                   </div>
@@ -263,7 +264,7 @@ export function DeckBrowser({
             disabled={importLoading || !importInput.trim()}
             onClick={handleOnlineImport}
           >
-            {importLoading ? t('common', 'loading') : `🚀 ${t('decks', 'import_deck')}`}
+            {importLoading ? t('common', 'loading') : (<><Icon name="download" size={12} /> {t('decks', 'import_deck')}</>)}
           </button>
         </div>
       )}

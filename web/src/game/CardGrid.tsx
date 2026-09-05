@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import CardSlot from '../board/CardSlot'
+import Icon, { type IconName } from '../ui/Icon'
 import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
@@ -56,14 +57,14 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
   const cardGridTitle = isDiscard
     ? t('game', 'choose_discard')
     : (prompt.sourceName ?? (prompt.method === 'GAME_TARGET' ? t('game', 'choose_target') : t('game', 'choose_cards')))
-  const kickerIcon = prompt.method === 'GAME_TARGET' ? (isDiscard ? '🗑️' : '🎯') : '🃏'
+  const kickerIcon: IconName = prompt.method === 'GAME_TARGET' ? (isDiscard ? 'trash' : 'target') : 'layers'
 
   return (
     <div className="feedback-backdrop" role="presentation">
       <section className="feedback-dialog card-grid-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
         <header className="card-grid-header">
           <div className="feedback-kicker">
-            <span className="kicker-icon">{kickerIcon}</span>{' '}
+            <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span>{' '}
             {prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
           </div>
           <div className="card-grid-title-row">
@@ -77,7 +78,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
           {prompt.message && <p className="card-grid-message">{localizeServerMessage(prompt.message, t as any)}</p>}
 
           <div className="card-grid-search-wrap">
-            <span className="card-grid-search-icon">🔍</span>
+            <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
             <input
               className="card-grid-filter"
               type="text"
@@ -121,7 +122,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
 
           {filtered.length === 0 && (
             <div className="card-grid-empty">
-              <span>🔍</span>
+              <span><Icon name="search" size={12} /></span>
               <p>{t('dialogs','cardgrid_empty', { filter })}</p>
             </div>
           )}

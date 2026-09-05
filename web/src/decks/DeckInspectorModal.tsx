@@ -3,6 +3,7 @@ import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
 import { ArenaCardStrip, type CardStripMeta } from './ArenaCardStrip'
 import CurveChart from './CurveChart'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import './DeckInspectorModal.css'
@@ -162,11 +163,11 @@ export function DeckInspectorModal({
 
         <footer className="deck-inspector-footer">
           <button type="button" className="inspector-edit-btn" onClick={() => onEdit(deck)}>
-            ✏️ {t('decks', 'deck_builder')}
+            <Icon name="pencil" size={13} /> {t('decks', 'deck_builder')}
           </button>
 
           <button type="button" className="inspector-copy-btn" onClick={handleCopy}>
-            {copied ? `✓ ${t('common', 'copied')}` : `📋 ${t('common', 'copy')}`}
+            {copied ? (<><Icon name="check" size={12} /> {t('common', 'copied')}</>) : (<><Icon name="copy" size={12} /> {t('common', 'copy')}</>)}
           </button>
         </footer>
       </div>

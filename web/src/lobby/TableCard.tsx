@@ -1,5 +1,6 @@
 import { openStagingTable } from '../state/store'
 import type { TableView, UsersView } from '../net/types'
+import Icon from '../ui/Icon'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
@@ -50,23 +51,36 @@ export default function TableCard({
   const canReenter = mySeat || stagingTableId === tTable.tableId
 
   return (
-    <div className={`table-card table-row ${statusClass}`}>
+    <div
+      className={`table-card table-row ${statusClass}`}
+      onDoubleClick={() => {
+        if (canReenter) {
+          openStagingTable(tTable.tableId)
+          return
+        }
+        if (hasHumanSeat) {
+          onJoinHuman(tTable)
+          return
+        }
+        onWatch(tTable)
+      }}
+    >
       <div className="table-card-main">
         <div className="table-card-top-bar">
           <div className="table-badges-left">
             {tTable.isTournament ? (
-              <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}>🏆 {t('lobby.tournament_badge')}</span>
+              <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}><Icon name="trophy" size={12} /> {t('lobby.tournament_badge')}</span>
             ) : (
-              <span className="table-type-badge match" title={t('lobby','match_badge')}>⚔️ {t('lobby','match_badge')}</span>
+              <span className="table-type-badge match" title={t('lobby','match_badge')}><Icon name="swords" size={12} /> {t('lobby','match_badge')}</span>
             )}
             {tTable.passworded && (
-              <span className="table-badge-lock" title={t('lobby','tag_private')}>🔒 {t('lobby','tag_private')}</span>
+              <span className="table-badge-lock" title={t('lobby','tag_private')}><Icon name="lock" size={12} /> {t('lobby','tag_private')}</span>
             )}
           </div>
           <div className="table-header-right">
             {timeAgo && (
               <span className="table-time-ago" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString() : undefined}>
-                ⏱️ {timeAgo}
+                <Icon name="clock" size={12} /> {timeAgo}
               </span>
             )}
             <span className={`table-state-badge ${statusClass}`}>{tTable.tableStateText}</span>
@@ -78,42 +92,42 @@ export default function TableCard({
         </div>
 
         <div className="table-meta-row">
-          <span className="table-game-tag">🎮 {tTable.gameType}</span>
+          <span className="table-game-tag"><Icon name="gamepad" size={12} /> {tTable.gameType}</span>
           <span
             className="table-deck-tag"
             title={formatDeckTypeName(tTable.deckType).full}
           >
-            📜 {formatDeckTypeName(tTable.deckType).short}
+            <Icon name="scrollText" size={12} /> {formatDeckTypeName(tTable.deckType).short}
           </span>
-          <span className="table-seats-count table-seats">👥 {tTable.seatsInfo}</span>
+          <span className="table-seats-count table-seats"><Icon name="users" size={12} /> {tTable.seatsInfo}</span>
           {skill && (
             <span className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
-              {skill.icon} {skill.label}
+              {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {skill.label}
             </span>
           )}
           {tTable.rated ? (
-            <span className="table-tag-rated" title={t('lobby','tag_rated')}>🏅 {t('lobby','tag_rated')}</span>
+            <span className="table-tag-rated" title={t('lobby','tag_rated')}><Icon name="medal" size={12} /> {t('lobby','tag_rated')}</span>
           ) : (
             <span className="table-tag-unrated" title={t('lobby','tag_unrated')}>{t('lobby','tag_unrated')}</span>
           )}
           {tTable.spectatorsAllowed && (
-            <span className="table-tag-spectate" title={t('lobby','tag_spectators')}>👁️ {t('lobby','spectators')}</span>
+            <span className="table-tag-spectate" title={t('lobby','tag_spectators')}><Icon name="eye" size={12} /> {t('lobby','spectators')}</span>
           )}
           {Number(tTable.minimumRating) > 0 && (
             <span className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>
-              ⭐ Min {tTable.minimumRating}
+              <Icon name="star" size={12} /> Min {tTable.minimumRating}
             </span>
           )}
           {Number(String(tTable.quitRatio ?? '100').replace('%', '')) < 100 && (
             <span className="table-tag-restriction" title={`${t('lobby','create_field_quit_ratio')}: ${tTable.quitRatio}`}>
-              🚫 Max Quit {tTable.quitRatio}
+              <Icon name="ban" size={12} /> Max Quit {tTable.quitRatio}
             </span>
           )}
         </div>
 
         {tTable.additionalInfoShort && (
           <div className="table-info-strip" title={tTable.additionalInfoFull || tTable.additionalInfoShort}>
-            <span className="info-strip-icon">ℹ️</span>
+            <span className="info-strip-icon"><Icon name="info" size={12} /></span>
             <span className="info-strip-text">{tTable.additionalInfoShort}</span>
           </div>
         )}
@@ -156,7 +170,7 @@ export default function TableCard({
                   {s.playerName ? (
                     <AvatarImage avatarId={seatAvatarId} username={s.playerName} size="small" />
                   ) : (
-                    <span className="seat-icon empty-circle">⭕</span>
+                    <span className="seat-icon empty-circle"><Icon name="circle" size={14} /></span>
                   )}
                   {s.flagName && <CountryFlag flagName={s.flagName} className="seat-flag" />}
                 </div>
@@ -166,8 +180,8 @@ export default function TableCard({
                     <span className="seat-player-name">
                       {s.playerName || t('lobby.open_seat')}
                     </span>
-                    {isOwner && <span className="seat-crown" title={t('lobby.host')}>👑 {t('lobby.host')}</span>}
-                    {!isHuman && <span className="seat-bot-tag" title={t('lobby.ai')}>🤖 {s.playerType || t('lobby.ai')}</span>}
+                    {isOwner && <span className="seat-crown" title={t('lobby.host')}><Icon name="crown" size={12} /> {t('lobby.host')}</span>}
+                    {!isHuman && <span className="seat-bot-tag" title={t('lobby.ai')}><Icon name="bot" size={12} /> {s.playerType || t('lobby.ai')}</span>}
                   </div>
 
                   {s.playerName && (rating || historyInfo.short) && (
@@ -175,7 +189,7 @@ export default function TableCard({
                       {rating && <RankBadge elo={rating} compact showElo />}
                       {historyInfo.short && (
                         <span className="seat-history-pill" title={historyInfo.full || `${t('lobby','leaderboard_col_history')}: ${historyInfo.short}`}>
-                          🏆 {historyInfo.short}
+                          <Icon name="trophy" size={11} /> {historyInfo.short}
                         </span>
                       )}
                     </div>
@@ -205,7 +219,7 @@ export default function TableCard({
             data-testid="return-to-table"
             onClick={() => openStagingTable(tTable.tableId)}
           >
-            🪑 {t('lobby','staging_return_table')}
+            <Icon name="chair" size={13} /> {t('lobby','staging_return_table')}
           </button>
         )}
         {isReady && (
@@ -240,7 +254,7 @@ export default function TableCard({
           disabled={busyTable === tTable.tableId}
           onClick={() => onWatch(tTable)}
         >
-          👁️ {t('lobby.watch_btn')}
+          <Icon name="eye" size={13} /> {t('lobby.watch_btn')}
         </button>
         {tTable.isTournament && (
           <button
@@ -249,7 +263,7 @@ export default function TableCard({
             onClick={() => void onOpenBracket(tTable)}
             data-testid="open-bracket"
           >
-            🏆 {t('lobby.view_bracket')}
+            <Icon name="trophy" size={13} /> {t('lobby.view_bracket')}
           </button>
         )}
       </div>

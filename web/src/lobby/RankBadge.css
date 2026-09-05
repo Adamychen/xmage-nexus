@@ -23,6 +23,8 @@
 .rank-badge-icon {
   font-size: 11px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .rank-badge.compact .rank-badge-icon {

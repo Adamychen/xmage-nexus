@@ -47,7 +47,7 @@ describe('DeckBox', () => {
 
     render(<DeckBox deck={deck} />)
     expect(screen.getByText('Incomplete Deck')).toBeDefined()
-    expect(screen.getByText('⚠️ 30/60')).toBeDefined()
+    expect(screen.getByText('30/60')).toBeDefined()
   })
 
   it('triggers onDoubleClick when double clicked', () => {

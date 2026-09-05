@@ -4,6 +4,7 @@ import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import PingBadge from './PingBadge'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { fallbackActionUser } from './lobbyUtils'
 
@@ -30,7 +31,7 @@ export default function LobbyAside({
       <aside className={`lobby-aside ${mobileChatOpen ? 'mobile-open' : ''}`}>
         <section className="aside-chat-section">
           <div className="aside-section-header">
-            <span className="aside-section-title">💬 {t('lobby','global_chat')}</span>
+            <span className="aside-section-title"><Icon name="chat" size={13} /> {t('lobby','global_chat')}</span>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {unreadChat > 0 && (
                 <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
@@ -55,14 +56,14 @@ export default function LobbyAside({
 
         <section className="aside-users-section">
           <div className="aside-section-header">
-            <span className="aside-section-title">👥 {t('lobby.online_users')} ({users.length})</span>
+            <span className="aside-section-title"><Icon name="users" size={13} /> {t('lobby.online_users')} ({users.length})</span>
             <button
               type="button"
               className="view-leaderboard-btn"
               onClick={onOpenRoomLeaderboard}
               title={t('lobby','nav_ranking')}
             >
-              🏆
+              <Icon name="trophy" size={13} />
             </button>
           </div>
           <ul className="users-list aside-users-list">
@@ -87,7 +88,7 @@ export default function LobbyAside({
                   </div>
                 </div>
                 {u.infoGames ? (
-                  <span className="game-info-badge">⚔️</span>
+                  <span className="game-info-badge"><Icon name="swords" size={13} /></span>
                 ) : (
                   <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>
                 )}

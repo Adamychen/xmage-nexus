@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
+import Icon from '../ui/Icon'
 import FloatingCardPreview from './FloatingCardPreview'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
@@ -59,7 +60,7 @@ export default function PileOverlay({
             {isLibrary && (
               <span className="pile-header-subtitle">
                 {knownCount > 0
-                  ? `👁️ ${knownCount} ${t('board', 'zone_revealed').toLowerCase()} · #1 ${t('board', 'zone_library')}`
+                  ? (<><Icon name="eye" size={11} /> {knownCount} {t('board', 'zone_revealed').toLowerCase()} · #1 {t('board', 'zone_library')}</>)
                   : `${t('board', 'zone_library')}: #1 ${t('board', 'pile_top')}`}
               </span>
             )}
@@ -77,8 +78,8 @@ export default function PileOverlay({
               <div key={id} className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}`}>
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>
-                    {isTop ? `★ #1 ${t('board', 'pile_top')}` : `#${index + 1}`}
-                    {isRevealed && <span className="revealed-icon"> 👁️</span>}
+                    {isTop ? (<><Icon name="star" size={10} /> #1 {t('board', 'pile_top')}</>) : `#${index + 1}`}
+                    {isRevealed && <span className="revealed-icon"><Icon name="eye" size={10} /></span>}
                   </div>
                 )}
                 <CardSlot

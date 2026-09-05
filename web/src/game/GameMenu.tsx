@@ -145,7 +145,7 @@ export default function GameMenu() {
                 }}
                 title={t('game', 'rollback_title')}
               >
-                ⏪ {t('game', 'rollback')}
+                <Icon name="undo" size={13} /> {t('game', 'rollback')}
               </button>
             )}
             {!!me && !!gameId && (
@@ -159,7 +159,7 @@ export default function GameMenu() {
                   close()
                 }}
               >
-                🌀 {t('game', 'trigger_menu_reset')}
+                <Icon name="refresh" size={13} /> {t('game', 'trigger_menu_reset')}
               </button>
             )}
             {!!me && (
@@ -217,7 +217,7 @@ export default function GameMenu() {
                       close()
                     }}
                   >
-                    🗑️ {t('game', 'auto_answers_clear')}
+                    <Icon name="trash" size={13} /> {t('game', 'auto_answers_clear')}
                   </button>
                 )}
               </>
@@ -252,7 +252,7 @@ export default function GameMenu() {
               onClick={() => setShowAppearance(true)}
               title={t('lobby', 'appearance_title')}
             >
-              🎨 {t('lobby', 'appearance_title')}
+              <Icon name="palette" size={13} /> {t('lobby', 'appearance_title')}
             </button>
             <button
               type="button"
@@ -261,7 +261,7 @@ export default function GameMenu() {
               aria-expanded={showFx}
               onClick={() => setShowFx((prev) => !prev)}
             >
-              ⚙️ {t('common', 'settings')}
+              <Icon name="settings" size={13} /> {t('common', 'settings')}
             </button>
             {showFx && (
               <div className="game-menu-fx" onClick={(e) => e.stopPropagation()}>
@@ -365,7 +365,7 @@ export default function GameMenu() {
               title={t('game', 'help_wiki')}
               onClick={() => setShowHelp(true)}
             >
-              ❓ {t('game', 'help_wiki')}
+              <Icon name="bookOpen" size={13} /> {t('game', 'help_wiki')}
             </button>
             <button
               type="button"
@@ -374,7 +374,7 @@ export default function GameMenu() {
               title={isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
               onClick={() => void toggleFullscreen()}
             >
-              ⛶ {isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
+              <Icon name="maximize" size={13} /> {isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
             </button>
           </div>
         </>

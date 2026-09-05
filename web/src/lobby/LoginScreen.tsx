@@ -4,6 +4,7 @@ import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
 import LanguageSelector from '../i18n/LanguageSelector'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './LoginScreen.css'
 
@@ -130,7 +131,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('local')}
               title={t('login.server_local')}
             >
-              <span className="preset-icon">🏠</span>
+              <span className="preset-icon"><Icon name="home" size={15} /></span>
               <span>{t('login.server_local')}</span>
             </button>
             <button
@@ -139,7 +140,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('official')}
               title={t('login.server_official')}
             >
-              <span className="preset-icon">🌐</span>
+              <span className="preset-icon"><Icon name="globe" size={15} /></span>
               <span>{t('login.server_official')}</span>
             </button>
             <button
@@ -148,7 +149,7 @@ export default function LoginScreen() {
               onClick={() => handleSelectPreset('custom')}
               title={t('login.server_custom')}
             >
-              <span className="preset-icon">⚙️</span>
+              <span className="preset-icon"><Icon name="settings" size={15} /></span>
               <span>{t('login.server_custom')}</span>
             </button>
           </div>
@@ -166,7 +167,7 @@ export default function LoginScreen() {
             <div className="user-avatar-flag-pill">
               <CountryFlag flagName={flagName} />
             </div>
-            <span className="user-avatar-badge-edit">✏️</span>
+            <span className="user-avatar-badge-edit"><Icon name="pencil" size={12} /></span>
           </div>
           <div className="user-inputs-col">
             <div className="user-name-and-flag-grid">
@@ -250,7 +251,7 @@ export default function LoginScreen() {
 
         {error && (
           <div className="error-box">
-            <span className="error-icon">⚠️</span>
+            <span className="error-icon"><Icon name="alert" size={14} /></span>
             <span className="error-msg">{tError(error)}</span>
             <button type="button" onClick={clearError} title={t('common.close')}>
               ✕

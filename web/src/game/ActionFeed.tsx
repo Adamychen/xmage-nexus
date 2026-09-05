@@ -3,6 +3,7 @@ import { useStore, isBlockingModal } from '../state/store'
 import { parseGameEvent, type ActionFeedItem } from './gameEventParser'
 import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
+import Icon from '../ui/Icon'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
@@ -99,7 +100,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             onClick={() => setViewMode('visual')}
             title={t('game', 'visual_feed')}
           >
-            🎨 {t('game', 'visual_feed')}
+            <Icon name="palette" size={12} /> {t('game', 'visual_feed')}
           </button>
           <button
             type="button"
@@ -107,7 +108,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             onClick={() => setViewMode('raw')}
             title={t('game', 'text_feed')}
           >
-            📜 {t('game', 'text_feed')}
+            <Icon name="scrollText" size={12} /> {t('game', 'text_feed')}
           </button>
         </div>
         <span className="action-count-tag">{t('game', 'feed_events', { count: feedItems.length })}</span>

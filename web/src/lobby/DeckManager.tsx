@@ -3,6 +3,7 @@ import { DECKS, loadSavedCustomDecks, saveCustomDecks, type Deck } from './decks
 import { setMyDeck, useStore } from '../state/store'
 import { parseAnyDeck } from '../decks/parseDck'
 import { useTranslation } from '../i18n'
+import Icon from '../ui/Icon'
 import './DeckManager.css'
 
 /** @deprecated Use parseAnyDeck from '../decks/parseDck' — kept for backwards compat (tests + JoinTableDialog legacy). */
@@ -73,7 +74,7 @@ export default function DeckManager() {
             className="deck-import-btn"
             onClick={() => setShowImportModal(true)}
           >
-            📥 {t('decks','import_deck')}
+            <Icon name="download" size={13} /> {t('decks','import_deck')}
           </button>
         </div>
 
@@ -127,7 +128,7 @@ export default function DeckManager() {
             className="primary deck-select-primary"
             onClick={() => handleSelectActive(selectedDeck)}
           >
-            {currentStoreDeck?.name === selectedDeck.name ? `⭐ ${t('common','done')}` : t('common','confirm')}
+            {currentStoreDeck?.name === selectedDeck.name ? (<><Icon name="check" size={12} /> {t('common','done')}</>) : t('common','confirm')}
           </button>
         </div>
 
@@ -166,7 +167,7 @@ export default function DeckManager() {
       {showImportModal && (
         <div className="overlay">
           <div className="dialog panel import-dialog">
-            <h2>📥 {t('decks','import_deck')}</h2>
+            <h2><Icon name="download" size={17} /> {t('decks','import_deck')}</h2>
             <p className="import-desc">{t('decks','import_hint')}</p>
 
             <label>

@@ -74,11 +74,11 @@ describe('SpectatorStagingScreen', () => {
     const { getByText } = render(<SpectatorStagingScreen table={MOCK_DUEL_TABLE} />)
 
     expect(getByText("Alice's Showdown")).not.toBeNull()
-    expect(getByText('👁️ MODO ESPECTADOR')).not.toBeNull()
+    expect(getByText('MODO ESPECTADOR')).not.toBeNull()
     expect(getByText('Alice')).not.toBeNull()
     expect(getByText('VS')).not.toBeNull()
     expect(getByText('Esperando oponente…')).not.toBeNull()
-    expect(getByText('⏳ Esperando a que se completen las plazas de la mesa…')).not.toBeNull()
+    expect(getByText('Esperando a que se completen las plazas de la mesa…')).not.toBeNull()
   })
 
   it('renders multiplayer Commander pod with all 4 players and ready banner', () => {
@@ -89,15 +89,15 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText('Charlie')).not.toBeNull()
     expect(getByText('Diana')).not.toBeNull()
     expect(getByText('Evan')).not.toBeNull()
-    expect(getByText('🔒 Privada')).not.toBeNull()
-    expect(getByText('✨ Todos los jugadores están listos. Esperando a que el anfitrión inicie la partida…')).not.toBeNull()
+    expect(getByText('Privada')).not.toBeNull()
+    expect(getByText('Todos los jugadores están listos. Esperando a que el anfitrión inicie la partida…')).not.toBeNull()
   })
 
   it('triggers onLeave when clicking Leave button', () => {
     const onLeaveSpy = vi.fn()
     const { getByText } = render(<SpectatorStagingScreen table={MOCK_DUEL_TABLE} onLeave={onLeaveSpy} />)
 
-    const leaveBtn = getByText('🚪 Volver al Lobby')
+    const leaveBtn = getByText('Volver al Lobby')
     fireEvent.click(leaveBtn)
     expect(onLeaveSpy).toHaveBeenCalled()
   })

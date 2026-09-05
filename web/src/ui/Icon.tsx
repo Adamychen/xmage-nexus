@@ -1,4 +1,12 @@
 import React from 'react'
+import {
+  ArrowLeftRight, Armchair, AtSign, Award, Ban, Bell, BookOpen, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
+  Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
+  Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
+  Minus, MapPin, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, Save, Scale, ScrollText, Search, Send, Settings,
+  Star, Smile, Square, Tag, Hash, Trash, TriangleAlert, TreePine, Trophy, Undo2, Upload, UserCheck, Users, UserX, VolumeX, Wand, Wind, X, Zap,
+  type LucideIcon,
+} from 'lucide-react'
 
 export type IconName =
   | 'sun'
@@ -25,6 +33,177 @@ export type IconName =
   | 'drop'
   | 'wings'
   | 'trample'
+  | 'trophy'
+  | 'lock'
+  | 'unlock'
+  | 'eye'
+  | 'eyeOff'
+  | 'star'
+  | 'gamepad'
+  | 'scrollText'
+  | 'users'
+  | 'chat'
+  | 'bell'
+  | 'ban'
+  | 'mute'
+  | 'medal'
+  | 'award'
+  | 'history'
+  | 'logout'
+  | 'chevronUp'
+  | 'chevronDown'
+  | 'chevronsUp'
+  | 'chevronsDown'
+  | 'play'
+  | 'swap'
+  | 'dice'
+  | 'hourglass'
+  | 'filter'
+  | 'reset'
+  | 'info'
+  | 'alert'
+  | 'error'
+  | 'clock'
+  | 'refresh'
+  | 'plus'
+  | 'minus'
+  | 'copy'
+  | 'download'
+  | 'upload'
+  | 'pencil'
+  | 'trash'
+  | 'bookOpen'
+  | 'layers'
+  | 'send'
+  | 'atSign'
+  | 'userX'
+  | 'userCheck'
+  | 'settings'
+  | 'search'
+  | 'palette'
+  | 'flame'
+  | 'gem'
+  | 'package'
+  | 'globe'
+  | 'zap'
+  | 'circle'
+  | 'x'
+  | 'chair'
+  | 'key'
+  | 'clipboard'
+  | 'map'
+  | 'save'
+  | 'square'
+  | 'file'
+  | 'chart'
+  | 'pause'
+  | 'tag'
+  | 'hash'
+  | 'scale'
+  | 'wind'
+  | 'tree'
+  | 'gauge'
+  | 'landmark'
+  | 'smile'
+  | 'castle'
+  | 'hand'
+  | 'list'
+  | 'layoutGrid'
+  | 'folder'
+  | 'wand'
+  | 'maximize'
+  | 'undo'
+  | 'keyboard'
+  | 'pin'
+  | 'home'
+  | 'inbox'
+
+const LUCIDE_ICONS: Record<string, LucideIcon> = {
+  trophy: Trophy,
+  lock: Lock,
+  unlock: LockOpen,
+  eye: Eye,
+  eyeOff: EyeOff,
+  star: Star,
+  gamepad: Gamepad2,
+  scrollText: ScrollText,
+  users: Users,
+  chat: MessageCircle,
+  bell: Bell,
+  ban: Ban,
+  mute: VolumeX,
+  medal: Medal,
+  award: Award,
+  history: ScrollText,
+  logout: LogOut,
+  chevronUp: ChevronUp,
+  chevronDown: ChevronDown,
+  chevronsUp: ChevronsUp,
+  chevronsDown: ChevronsDown,
+  play: Play,
+  swap: ArrowLeftRight,
+  dice: Dices,
+  hourglass: Hourglass,
+  filter: Funnel,
+  reset: RotateCcw,
+  info: Info,
+  alert: TriangleAlert,
+  error: CircleAlert,
+  clock: Clock,
+  refresh: RefreshCw,
+  plus: Plus,
+  minus: Minus,
+  copy: Copy,
+  download: Download,
+  upload: Upload,
+  pencil: Pencil,
+  trash: Trash,
+  bookOpen: BookOpen,
+  layers: Layers,
+  send: Send,
+  atSign: AtSign,
+  userX: UserX,
+  userCheck: UserCheck,
+  settings: Settings,
+  search: Search,
+  palette: Palette,
+  flame: Flame,
+  gem: Gem,
+  package: Package,
+  globe: Globe,
+  zap: Zap,
+  circle: Circle,
+  x: X,
+  chair: Armchair,
+  key: Key,
+  clipboard: Clipboard,
+  map: Map,
+  save: Save,
+  square: Square,
+  file: File,
+  chart: ChartColumn,
+  pause: Pause,
+  tag: Tag,
+  hash: Hash,
+  scale: Scale,
+  wind: Wind,
+  tree: TreePine,
+  gauge: Gauge,
+  landmark: Landmark,
+  smile: Smile,
+  castle: Castle,
+  hand: Hand,
+  list: List,
+  layoutGrid: LayoutGrid,
+  folder: Folder,
+  wand: Wand,
+  maximize: Maximize,
+  undo: Undo2,
+  keyboard: Keyboard,
+  pin: MapPin,
+  home: House,
+  inbox: Inbox,
+}
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   name: IconName
@@ -41,6 +220,11 @@ export default function Icon({ name, size = 16, className = '', style, ...props 
   }
 
   const s = size
+
+  const Lucide = LUCIDE_ICONS[name]
+  if (Lucide) {
+    return <Lucide size={s} className={className} style={iconStyle} aria-hidden {...props} />
+  }
 
   switch (name) {
     case 'sun':

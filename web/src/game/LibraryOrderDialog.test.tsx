@@ -70,13 +70,13 @@ describe('LibraryOrderDialog', () => {
     )
 
     // Send all to bottom
-    const allToBottomBtn = getByText('⬇️ Todas al fondo')
+    const allToBottomBtn = getByText('Todas al fondo')
     fireEvent.click(allToBottomBtn)
 
     expect(getByText('Confirmar orden (0 arriba, 2 fondo)')).not.toBeNull()
 
     // Send all back to top
-    const allToTopBtn = getByText('⬆️ Todas arriba')
+    const allToTopBtn = getByText('Todas arriba')
     fireEvent.click(allToTopBtn)
 
     expect(getByText('Confirmar orden (2 arriba, 0 fondo)')).not.toBeNull()
@@ -108,8 +108,8 @@ describe('LibraryOrderDialog', () => {
       <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
     )
 
-    expect(getAllByText('⬇️ Al Cementerio').length).toBeGreaterThan(0)
-    expect(getByText('☠️ Todas al cementerio')).not.toBeNull()
+    expect(getAllByText('Al Cementerio').length).toBeGreaterThan(0)
+    expect(getByText('Todas al cementerio')).not.toBeNull()
   })
 
   it('handles cancel button click', () => {

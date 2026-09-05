@@ -1,4 +1,5 @@
 import * as cmds from '../../net/commands'
+import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 
@@ -14,7 +15,7 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
     <div className="action-prompt-bar combat-bar">
       <div className="action-prompt-info">
         <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true">⚔️</span>{' '}
+          <span className="action-prompt-icon" aria-hidden="true"><Icon name="swords" size={14} /></span>{' '}
           {combatTitle}
         </span>
         <span className="action-prompt-hint">

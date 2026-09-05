@@ -8,7 +8,7 @@ import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
 import { useTranslation } from '../i18n'
-import Icon from '../ui/Icon'
+import Icon, { type IconName } from '../ui/Icon'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -103,7 +103,7 @@ function findZoneCard(players: PlayerView[] | undefined, stack: Record<string, C
   return stack[id] ?? null
 }
 
-/** Etiquetas legibles de los objetivos: 👤 nombre si es jugador, nombre de carta si es permanente. */
+/** Etiquetas legibles de los objetivos: nombre de jugador o de carta permanente. */
 function resolveStackTargetLabels(
   ids: string[],
   stack: Record<string, CardView>,
@@ -111,7 +111,7 @@ function resolveStackTargetLabels(
 ): string[] {
   return ids.map((tid) => {
     const pl = players?.find((p) => p.playerId === tid || p.name === tid)
-    if (pl) return `👤 ${pl.name}`
+    if (pl) return pl.name
     const hit = findZoneCard(players, stack, tid)
     return hit?.displayName ?? hit?.name ?? tid
   })
@@ -122,7 +122,7 @@ interface ControllerInfo {
   name: string
   isMe: boolean
   isOpponent: boolean
-  avatarIcon: string
+  avatarIcon: IconName
 }
 
 function getControllerInfo(
@@ -147,7 +147,7 @@ function getControllerInfo(
         name: isMe ? youLabel : matchedPlayer.name,
         isMe,
         isOpponent: !isMe,
-        avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
+        avatarIcon: isMe ? 'user' : (matchedPlayer.isHuman ? 'user' : 'bot'),
       }
     }
   }
@@ -161,7 +161,7 @@ function getControllerInfo(
         name: isMe ? youLabel : matchedPlayer.name,
         isMe,
         isOpponent: !isMe,
-        avatarIcon: isMe ? '👤' : (matchedPlayer.isHuman ? '👤' : '🤖'),
+        avatarIcon: isMe ? 'user' : (matchedPlayer.isHuman ? 'user' : 'bot'),
       }
     }
     // Controller name known but not in the player list (e.g. watcher without full roster) — show it
@@ -169,7 +169,7 @@ function getControllerInfo(
       name: ctrlName,
       isMe: false,
       isOpponent: true,
-      avatarIcon: '🤖',
+      avatarIcon: 'bot',
     }
   }
 
@@ -182,7 +182,7 @@ function getControllerInfo(
           name: isMe ? youLabel : p.name,
           isMe,
           isOpponent: !isMe,
-          avatarIcon: isMe ? '👤' : (p.isHuman ? '👤' : '🤖'),
+          avatarIcon: isMe ? 'user' : (p.isHuman ? 'user' : 'bot'),
         }
       }
     }
@@ -193,7 +193,7 @@ function getControllerInfo(
     name: me ? youLabel : (t ? t('lobby', 'deck_unknown') : 'Unknown'),
     isMe: false,
     isOpponent: !me,
-    avatarIcon: me ? '👤' : '❓',
+    avatarIcon: me ? 'user' : 'info',
   }
 }
 
@@ -225,7 +225,7 @@ function StackThumbnail({ card }: { card: CardView }) {
         <img src={imgUrl} alt="" className="stack-thumb-img" draggable={false} />
       ) : (
         <div className="stack-thumb-placeholder">
-          {isStackAbility(card) ? '⚡' : '🂠'}
+          <Icon name={isStackAbility(card) ? 'zap' : 'layers'} size={18} />
         </div>
       )}
     </div>
@@ -369,7 +369,7 @@ export default function StackZone({
               title={t('game', 'compact_view')}
               onClick={() => setViewMode('compact')}
             >
-              ▤
+              <Icon name="list" size={13} />
             </button>
             <button
               type="button"
@@ -377,7 +377,7 @@ export default function StackZone({
               title={t('game', 'expanded_view')}
               onClick={() => setViewMode('expanded')}
             >
-              ▦
+              <Icon name="layoutGrid" size={13} />
             </button>
           </div>
         </div>
@@ -429,10 +429,10 @@ export default function StackZone({
                 {/* Position and Controller ribbon */}
                 <div className="stack-tl-pos-row">
                   <span className="stack-tl-pos">
-                    {isTop ? '▶ #1' : `#${idx + 1}`}
+                    {isTop ? (<><Icon name="play" size={9} /> #1</>) : `#${idx + 1}`}
                   </span>
                   <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
-                    <span className="ctrl-icon">{ctrlInfo.avatarIcon}</span>
+                    <span className="ctrl-icon"><Icon name={ctrlInfo.avatarIcon} size={12} /></span>
                     <span className="ctrl-name">{ctrlInfo.name}</span>
                   </span>
                 </div>
@@ -451,15 +451,15 @@ export default function StackZone({
                     </div>
                     <div className="stack-tl-type-row">
                       <span className={`stack-tl-type-badge ${isAbility ? 'type-ability' : 'type-spell'}`}>
-                        {isAbility ? (typeLabel.includes('Disparada') ? '🔔' : '⚡') : ''} {typeLabel}
+                        {isAbility ? (<><Icon name={typeLabel.includes('Disparada') ? 'bell' : 'zap'} size={11} /> </>) : ''}{typeLabel}
                       </span>
                       {subtype && <span className="stack-tl-subtype">{subtype}</span>}
                       {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
-                      {isCopy && <span className="stack-tl-copy-badge">✨ {t('game', 'copy_badge')}</span>}
+                      {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
                     </div>
                     {tgtLabels.length > 0 && (
                       <div className="stack-tl-targets" data-testid="stack-targets" title={tgtLabels.join(', ')}>
-                        <span className="stack-target-arrow" aria-hidden="true">🎯 →</span>
+                        <span className="stack-target-arrow" aria-hidden="true"><Icon name="target" size={11} /> →</span>
                         <span className="stack-target-names">{tgtLabels.join(', ')}</span>
                       </div>
                     )}

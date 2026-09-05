@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BASIC_LAND_PRESETS, countManaPips, suggestBasicLands, getBasicLandLabel, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './BasicLandAdder.css'
 
@@ -84,7 +85,7 @@ export function BasicLandAdder({
           onClick={() => setIsOpen(!isOpen)}
           title={t('decks', 'basic_lands')}
         >
-          🪄 {t('decks', 'basic_lands')}
+          <Icon name="wand" size={13} /> {t('decks', 'basic_lands')}
         </button>
       </div>
 

@@ -216,7 +216,7 @@ export default function CardSlot({
 
       {isPlaneswalker && loyaltyVal > 0 && (
         <div className="loyalty-badge" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
-          <span className="loyalty-icon">🛡️</span>
+          <span className="loyalty-icon"><Icon name="shield" size={11} /></span>
           <span className="loyalty-val">{perm.loyalty}</span>
         </div>
       )}

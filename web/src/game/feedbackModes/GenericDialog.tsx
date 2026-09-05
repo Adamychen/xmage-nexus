@@ -9,22 +9,23 @@ import { getState } from '../../state/state'
 import { addAutoAnswer } from '../autoAnswers'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
+import Icon, { type IconName } from '../../ui/Icon'
 
-function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: string; label: string } {
-  if (prompt.isStartingPlayer) return { icon: '🎲', label: t('game', 'who_starts') }
-  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: '✨', label: t('game', 'feedback_kicker_mode') }
-  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: '⚡', label: t('game', 'feedback_kicker_ability') }
-  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: '🎨', label: t('game', 'feedback_kicker_color') }
-  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: '🏷️', label: t('game', 'feedback_kicker_name') }
+function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: IconName; label: string } {
+  if (prompt.isStartingPlayer) return { icon: 'dice', label: t('game', 'who_starts') }
+  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: 'sparkles', label: t('game', 'feedback_kicker_mode') }
+  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: 'zap', label: t('game', 'feedback_kicker_ability') }
+  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: 'palette', label: t('game', 'feedback_kicker_color') }
+  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: 'tag', label: t('game', 'feedback_kicker_name') }
   if (prompt.method === 'GAME_CHOOSE_NUMBER' || prompt.method === 'GAME_GET_AMOUNT' || prompt.method === 'GAME_PLAY_XMANA') {
-    return { icon: '🔢', label: t('game', 'feedback_kicker_amount') }
+    return { icon: 'hash', label: t('game', 'feedback_kicker_amount') }
   }
-  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: '📊', label: t('game', 'feedback_kicker_multi') }
-  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: '👤', label: t('game', 'feedback_kicker_player') }
-  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: '📦', label: t('game', 'feedback_kicker_pile') }
-  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: '⚖️', label: t('game', 'feedback_kicker_choice') }
-  if (prompt.method === 'GAME_ASK') return { icon: '❓', label: t('game', 'feedback_kicker_confirm') }
-  return { icon: '⚔️', label: t('game', 'feedback_kicker_required') }
+  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: 'chart', label: t('game', 'feedback_kicker_multi') }
+  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: 'user', label: t('game', 'feedback_kicker_player') }
+  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: 'package', label: t('game', 'feedback_kicker_pile') }
+  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: 'scale', label: t('game', 'feedback_kicker_choice') }
+  if (prompt.method === 'GAME_ASK') return { icon: 'info', label: t('game', 'feedback_kicker_confirm') }
+  return { icon: 'swords', label: t('game', 'feedback_kicker_required') }
 }
 
 function getLocalizedTitle(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): string {
@@ -103,7 +104,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   return (
     <Modal backdropClassName="feedback-backdrop" dialogClassName="feedback-dialog" labelledBy="feedback-title">
       <div className="feedback-kicker">
-        <span className="kicker-icon">{kicker.icon}</span> {kicker.label}
+        <span className="kicker-icon"><Icon name={kicker.icon} size={13} /></span> {kicker.label}
       </div>
       <h2 id="feedback-title"><FormattedText text={title} /></h2>
       {prompt.sourceName && prompt.sourceName !== title && (
@@ -116,7 +117,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       {prompt.mode === 'string' && (
         <div className="feedback-string-wrap">
           <div className="feedback-input-box">
-            <span className="feedback-input-icon">🏷️</span>
+            <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
             <input
               aria-label={t('common', 'search')}
               type="text"

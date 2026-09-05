@@ -4,6 +4,7 @@ import * as cmds from '../net/commands'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
+import Icon from '../ui/Icon'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './LibraryOrderDialog.css'
 
@@ -111,7 +112,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
       <section className="feedback-dialog library-order-dialog">
         <header className="feedback-header">
           <div className="dialog-title-wrap">
-            <span className="dialog-icon">{isBlockerOrder ? '🛡️' : '🔮'}</span>
+            <span className="dialog-icon"><Icon name={isBlockerOrder ? 'shield' : 'sparkles'} size={16} /></span>
             <span className="dialog-title">
               {isBlockerOrder
                 ? t('dialogs','library_title_blocker')
@@ -159,7 +160,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           onClick={() => moveUp(idx)}
                           title={t('dialogs','library_to_top')}
                         >
-                          ◀
+                          <Icon name="chevronUp" size={11} />
                         </button>
                         <button
                           type="button"
@@ -168,7 +169,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           onClick={() => moveDown(idx)}
                           title={t('dialogs','library_to_top')}
                         >
-                          ▶
+                          <Icon name="chevronDown" size={11} />
                         </button>
                       </div>
                       {!isBlockerOrder && (
@@ -179,7 +180,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           onClick={() => moveToBottom(idx)}
                           title={isSurveil ? t('dialogs','library_to_graveyard') : t('dialogs','library_to_bottom')}
                         >
-                          {isSurveil ? t('dialogs','library_to_graveyard') : t('dialogs','library_to_bottom')}
+                          {isSurveil ? (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_to_graveyard')}</>) : (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_to_bottom')}</>)}
                         </button>
                       )}
                     </div>
@@ -243,7 +244,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                             }}
                             title={t('dialogs','library_to_top')}
                           >
-                            ▶
+                            <Icon name="chevronDown" size={11} />
                           </button>
                         </div>
                         <button
@@ -253,7 +254,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                           onClick={() => moveToTop(idx)}
                           title={t('dialogs','library_to_top')}
                         >
-                          {t('dialogs','library_to_top')}
+                          <Icon name="chevronUp" size={11} /> {t('dialogs','library_to_top')}
                         </button>
                       </div>
                     </div>
@@ -268,10 +269,10 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
           {!isBlockerOrder && (
             <div className="quick-actions">
               <button type="button" disabled={busy || bottomCards.length === 0} onClick={allToTop}>
-                {t('dialogs','library_all_to_top')}
+                <Icon name="chevronUp" size={11} /> {t('dialogs','library_all_to_top')}
               </button>
               <button type="button" disabled={busy || topCards.length === 0} onClick={allToBottom}>
-                {isSurveil ? t('dialogs','library_all_to_graveyard') : t('dialogs','library_all_to_bottom')}
+                {isSurveil ? (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_all_to_graveyard')}</>) : (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_all_to_bottom')}</>)}
               </button>
             </div>
           )}

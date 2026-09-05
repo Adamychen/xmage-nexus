@@ -1,6 +1,7 @@
 import type { PlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { MAX_BOARD_PLAYERS } from './boardShared'
+import Icon from '../ui/Icon'
 import './TurnOrderRing.css'
 
 export interface TurnOrderRingProps {
@@ -44,10 +45,10 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
                 title={`${p.name}${isActive ? t('board', 'turn_active_suffix') : ''}${isPriority ? t('board', 'turn_priority_suffix') : ''} · ${t('board', 'turn_life_label')}: ${p.life}`}
               >
                 <span className="tor-seat-dot" aria-hidden>
-                  {isActive ? '▶' : '●'}
+                  {isActive ? <Icon name="play" size={9} /> : <Icon name="circle" size={7} />}
                 </span>
                 <span className="tor-seat-name">{p.name}</span>
-                <span className="tor-seat-life">{p.life <= 0 || p.hasLeft ? '💀' : p.life}</span>
+                <span className="tor-seat-life">{p.life <= 0 || p.hasLeft ? <Icon name="skull" size={11} /> : p.life}</span>
                 {isActive && <span className="tor-active-badge">{t('board', 'turn_active_badge')}</span>}
               </div>
               {count > 1 && (

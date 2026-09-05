@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { UsersView, TableView } from '../net/types'
 import { isUserIgnored, addIgnoredUser, removeIgnoredUser } from './ignoreList'
+import Icon from '../ui/Icon'
 import { appendLocalChatMessage } from '../state/store'
 import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
@@ -85,16 +86,16 @@ export default function UserActionModal({
             <div className="user-action-badges-row">
               <RankBadge elo={user.constructedRating} compact showElo />
               {user.matchHistory && (
-                <span className="user-action-history-pill">🏆 {user.matchHistory}</span>
+                <span className="user-action-history-pill"><Icon name="trophy" size={12} /> {user.matchHistory}</span>
               )}
               {user.infoPing && <PingBadge infoPing={user.infoPing} compact />}
             </div>
 
             <div className="user-action-status-row">
               {user.infoGames ? (
-                <span className="user-status-playing">⚔️ {user.infoGames}</span>
+                <span className="user-status-playing"><Icon name="swords" size={12} /> {user.infoGames}</span>
               ) : (
-                <span className="user-status-idle">🟢 {t('lobby', 'user_status_available')}</span>
+                <span className="user-status-idle"><Icon name="userCheck" size={12} /> {t('lobby', 'user_status_available')}</span>
               )}
             </div>
           </div>
@@ -108,7 +109,7 @@ export default function UserActionModal({
         <div className="user-action-body">
           {!isMe && (
             <button type="button" className="user-action-btn primary" onClick={handleWhisper}>
-              <span className="action-btn-icon">💬</span>
+              <span className="action-btn-icon"><Icon name="chat" size={16} /></span>
               <div className="action-btn-text">
                 <span className="action-btn-title">{t('lobby', 'useraction_whisper')}</span>
                 <span className="action-btn-desc">{t('lobby', 'useraction_whisper_hint', { username: user.userName })}</span>
@@ -118,7 +119,7 @@ export default function UserActionModal({
 
           {currentTable && currentTable.spectatorsAllowed && onWatchTable && (
             <button type="button" className="user-action-btn spectate-btn" onClick={handleWatchGame}>
-              <span className="action-btn-icon">👁️</span>
+              <span className="action-btn-icon"><Icon name="eye" size={16} /></span>
               <div className="action-btn-text">
                 <span className="action-btn-title">{t('lobby', 'useraction_spectate')}</span>
                 <span className="action-btn-desc">{t('lobby', 'useraction_spectate_hint', { tableName: currentTable.tableName })}</span>
@@ -134,7 +135,7 @@ export default function UserActionModal({
               onClose()
             }}
           >
-            <span className="action-btn-icon">🏆</span>
+            <span className="action-btn-icon"><Icon name="trophy" size={16} /></span>
             <div className="action-btn-text">
               <span className="action-btn-title">{t('lobby', 'useraction_profile_title')}</span>
               <span className="action-btn-desc">{t('lobby', 'useraction_profile_desc')}</span>
@@ -147,7 +148,7 @@ export default function UserActionModal({
               className={`user-action-btn ${isIgnored ? 'unignore-btn' : 'ignore-btn'}`}
               onClick={handleToggleIgnore}
             >
-              <span className="action-btn-icon">{isIgnored ? '🔓' : '🚫'}</span>
+              <span className="action-btn-icon"><Icon name={isIgnored ? 'unlock' : 'ban'} size={16} /></span>
               <div className="action-btn-text">
                 <span className="action-btn-title">
                   {isIgnored ? t('lobby', 'useraction_unignore_title') : t('lobby', 'useraction_ignore_full')}

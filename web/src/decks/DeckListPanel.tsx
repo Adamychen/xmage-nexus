@@ -3,6 +3,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
 import { ArenaCardStrip } from './ArenaCardStrip'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckListPanel.css'
 
@@ -225,7 +226,7 @@ export default function DeckListPanel({
           {/* Drop indicator prompt */}
           {isDragOver && (
             <div className="arena-drop-target-hint">
-              <span>✨</span> {t('decks', 'builder_drag_hint')}
+              <span><Icon name="sparkles" size={13} /></span> {t('decks', 'builder_drag_hint')}
             </div>
           )}
 
@@ -295,7 +296,7 @@ export default function DeckListPanel({
           {/* Empty State */}
           {mainTotal === 0 && (
             <div className="deck-list-empty-hint">
-              <span className="empty-hint-icon">🃏</span>
+              <span className="empty-hint-icon"><Icon name="layers" size={22} /></span>
               <span>{t('decks', 'deck_no_cards')}</span>
               <small>{t('decks', 'builder_drag_hint')}</small>
             </div>

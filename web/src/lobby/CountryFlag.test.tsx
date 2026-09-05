@@ -25,7 +25,7 @@ describe('CountryFlag Component & Utils', () => {
   })
 
   it('renders empty fallback when flagName is missing and showTextFallback is true', () => {
-    render(<CountryFlag flagName="" showTextFallback />)
-    expect(screen.getByText('🌐')).toBeDefined()
+    const { container } = render(<CountryFlag flagName="" showTextFallback />)
+    expect(container.querySelector('.flag-empty svg')).not.toBeNull()
   })
 })

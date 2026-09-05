@@ -3,6 +3,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { isLandCard, fallbackCmc } from './deckUtils'
 import { parseManaSymbols, ManaPip } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CurveChart.css'
 
@@ -131,19 +132,19 @@ export default function CurveChart({
 
       <div className="curve-stats-grid">
         <div className="curve-stat-pill">
-          <span className="curve-stat-name">🏞️ {t('decks', 'builder_lands')}</span>
+          <span className="curve-stat-name"><Icon name="tree" size={12} /> {t('decks', 'builder_lands')}</span>
           <span className="curve-stat-val">{totalLands}</span>
         </div>
         <div className="curve-stat-pill">
-          <span className="curve-stat-name">⚔️ {t('decks', 'builder_creatures')}</span>
+          <span className="curve-stat-name"><Icon name="swords" size={12} /> {t('decks', 'builder_creatures')}</span>
           <span className="curve-stat-val">{totalCreatures}</span>
         </div>
         <div className="curve-stat-pill">
-          <span className="curve-stat-name">✨ {t('decks', 'builder_spells')}</span>
+          <span className="curve-stat-name"><Icon name="sparkles" size={12} /> {t('decks', 'builder_spells')}</span>
           <span className="curve-stat-val">{totalSpells}</span>
         </div>
         <div className="curve-stat-pill">
-          <span className="curve-stat-name">⚖️ {t('decks', 'avg_cmc')}</span>
+          <span className="curve-stat-name"><Icon name="scale" size={12} /> {t('decks', 'avg_cmc')}</span>
           <span className="curve-stat-val">{avgCmc}</span>
         </div>
       </div>

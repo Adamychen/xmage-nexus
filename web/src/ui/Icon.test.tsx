@@ -19,6 +19,12 @@ describe('Icon component', () => {
 
     const { container: c4 } = render(<Icon name="swords" size={16} />)
     expect(c4.querySelector('svg')).not.toBeNull()
+
+    const { container: c5 } = render(<Icon name="trophy" size={16} className="lucide-case" />)
+    const svg5 = c5.querySelector('svg')
+    expect(svg5).not.toBeNull()
+    expect(svg5?.getAttribute('aria-hidden')).toBe('true')
+    expect(svg5?.classList.contains('lucide-case')).toBe(true)
   })
 
   it('renders null for unknown icon names', () => {

@@ -1,8 +1,21 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import FormattedText from './FormattedText'
+import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './HelpWikiModal.css'
+
+const CATEGORY_ICONS: Record<string, IconName> = {
+  all: 'sparkles',
+  combat: 'swords',
+  evasion: 'wind',
+  protection: 'shield',
+  cards: 'layers',
+  counters: 'hash',
+  mana: 'zap',
+  graveyard: 'skull',
+  mechanic: 'bookOpen',
+}
 
 interface HelpWikiModalProps {
   onClose: () => void
@@ -17,15 +30,15 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const categoryLabels: Record<string, string> = useMemo(() => ({
-    all: `✨ ${t('wiki', 'cat_all')}`,
-    combat: `⚔️ ${t('wiki', 'cat_combat')}`,
-    evasion: `🦅 ${t('wiki', 'cat_evasion')}`,
-    protection: `🛡️ ${t('wiki', 'cat_protection')}`,
-    cards: `🔮 ${t('wiki', 'cat_cards')}`,
-    counters: `🧪 ${t('wiki', 'cat_counters')}`,
-    mana: `⚡ ${t('wiki', 'cat_mana')}`,
-    graveyard: `☠️ ${t('wiki', 'cat_graveyard')}`,
-    mechanic: `✨ ${t('wiki', 'cat_mechanic')}`,
+    all: t('wiki', 'cat_all'),
+    combat: t('wiki', 'cat_combat'),
+    evasion: t('wiki', 'cat_evasion'),
+    protection: t('wiki', 'cat_protection'),
+    cards: t('wiki', 'cat_cards'),
+    counters: t('wiki', 'cat_counters'),
+    mana: t('wiki', 'cat_mana'),
+    graveyard: t('wiki', 'cat_graveyard'),
+    mechanic: t('wiki', 'cat_mechanic'),
   }), [t])
 
   useEffect(() => {
@@ -69,7 +82,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
       >
         <header className="wiki-header">
           <div className="wiki-title-group">
-            <span className="wiki-icon">📖</span>
+            <span className="wiki-icon"><Icon name="bookOpen" size={18} /></span>
             <div>
               <h2 id="wiki-modal-title">{t('wiki', 'title')}</h2>
               <p className="wiki-subtitle">{t('wiki', 'subtitle')}</p>
@@ -86,21 +99,21 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
             className={`wiki-tab-btn ${activeTab === 'glossary' ? 'active' : ''}`}
             onClick={() => setActiveTab('glossary')}
           >
-            📚 {t('wiki', 'tab_keywords')} ({MTG_KEYWORDS.length})
+            <Icon name="bookOpen" size={12} /> {t('wiki', 'tab_keywords')} ({MTG_KEYWORDS.length})
           </button>
           <button
             type="button"
             className={`wiki-tab-btn ${activeTab === 'phases' ? 'active' : ''}`}
             onClick={() => setActiveTab('phases')}
           >
-            ⏱️ {t('wiki', 'tab_phases')}
+            <Icon name="clock" size={13} /> {t('wiki', 'tab_phases')}
           </button>
           <button
             type="button"
             className={`wiki-tab-btn ${activeTab === 'shortcuts' ? 'active' : ''}`}
             onClick={() => setActiveTab('shortcuts')}
           >
-            ⌨️ {t('wiki', 'tab_shortcuts')}
+            <Icon name="keyboard" size={12} /> {t('wiki', 'tab_shortcuts')}
           </button>
         </nav>
 
@@ -108,7 +121,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
           {activeTab === 'glossary' && (
             <div className="wiki-glossary-tab">
               <div className="wiki-search-bar-wrap">
-                <span className="wiki-search-icon">🔍</span>
+                <span className="wiki-search-icon"><Icon name="search" size={14} /></span>
                 <input
                   type="text"
                   className="wiki-search-input"
@@ -132,7 +145,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                     className={`wiki-pill ${selectedCategory === catKey ? 'active' : ''}`}
                     onClick={() => setSelectedCategory(catKey)}
                   >
-                    {catLabel}
+                    <Icon name={CATEGORY_ICONS[catKey] ?? 'sparkles'} size={12} /> {catLabel}
                   </button>
                 ))}
               </div>
@@ -142,11 +155,11 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                   <article key={kw.id} className={`wiki-kw-card cat-${kw.category}`}>
                     <div className="wiki-kw-card-header">
                       <div className="wiki-kw-card-title">
-                        <span className="wiki-kw-icon">{kw.icon}</span>
+                        <span className="wiki-kw-icon"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={14} /></span>
                         <strong className="wiki-kw-name-en">{kw.name}</strong>
                         <span className="wiki-kw-name-es">({kw.nameEs})</span>
                       </div>
-                      <span className="wiki-kw-type-badge">{categoryLabels[kw.category] ?? kw.category}</span>
+                      <span className="wiki-kw-type-badge"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={11} /> {categoryLabels[kw.category] ?? kw.category}</span>
                     </div>
                     <p className="wiki-kw-summary">
                       <FormattedText text={kw.summary} />
@@ -161,7 +174,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
 
                 {filteredKeywords.length === 0 && (
                   <div className="wiki-empty">
-                    <span>🔍</span>
+                    <span><Icon name="search" size={13} /></span>
                     <p>{t('dialogs', 'cardgrid_empty', { filter: searchQuery })}</p>
                   </div>
                 )}
@@ -172,7 +185,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
           {activeTab === 'phases' && (
             <div className="wiki-phases-tab">
               <section className="wiki-section">
-                <h3>🔄 {t('wiki', 'tab_phases')}</h3>
+                <h3><Icon name="refresh" size={15} /> {t('wiki', 'tab_phases')}</h3>
                 <div className="wiki-phases-timeline">
                   <div className="phase-block phase-beginning">
                     <div className="phase-title">1. {t('wiki', 'phases_untap')}</div>
@@ -218,7 +231,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
               </section>
 
               <section className="wiki-section">
-                <h3>⚡ {t('wiki', 'phases_stack')}</h3>
+                <h3><Icon name="zap" size={15} /> {t('wiki', 'phases_stack')}</h3>
                 <div className="wiki-stack-card">
                   <p>
                     <strong>{t('wiki', 'phases_stack')}:</strong> {t('wiki', 'phases_priority')}

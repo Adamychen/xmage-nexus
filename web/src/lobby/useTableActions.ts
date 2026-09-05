@@ -6,6 +6,8 @@ import * as cmds from '../net/commands'
 import type { TableView } from '../net/types'
 import { t as tStatic, translateError } from '../i18n'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
+import { isUserIgnored } from './ignoreList'
+import { tableOwnerName } from './TableFilterBar'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import { withTimeout } from './lobbyUtils'
 
@@ -14,9 +16,16 @@ export function useTableActions(conn: ConnectionInfo | null) {
   const [busyTable, setBusyTable] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
+  const ignoredOwnerNotice = (t: TableView): string | null => {
+    const owner = tableOwnerName(t)
+    return owner && isUserIgnored(owner)
+      ? tStatic('lobby', 'join_ignored_owner', { name: owner })
+      : null
+  }
+
   const joinHuman = (t: TableView) => {
     setState({ error: null })
-    setNotice(null)
+    setNotice(ignoredOwnerNotice(t))
     const seat = t.seats.find((s) => !s.playerName)
     if (!seat) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
@@ -65,7 +74,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
   const joinAi = async (t: TableView) => {
     setBusyTable(t.tableId)
     setState({ error: null })
-    setNotice(null)
+    setNotice(ignoredOwnerNotice(t))
     const seat = t.seats.find((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
     if (!seat?.playerType) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
@@ -125,7 +134,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
   const watchTable = async (t: TableView) => {
     setBusyTable(t.tableId)
     setState({ error: null })
-    setNotice(null)
+    setNotice(ignoredOwnerNotice(t))
     try {
       const res = await withTimeout(cmds.watchTable(t.tableId), 15000, 'watchTable')
       if (res.ok) {

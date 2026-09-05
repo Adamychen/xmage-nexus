@@ -217,7 +217,7 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              <span className="chip-icon">📚</span>
+              <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
               <span className="chip-count">{player.libraryCount}</span>
               {player.topCard && (
                 <span className="chip-indicator" title={t('board', 'zone_revealed')}>

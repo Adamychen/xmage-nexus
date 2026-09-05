@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation, type SupportedLanguage } from './index'
+import Icon from '../ui/Icon'
 import './LanguageSelector.css'
 
 export interface LanguageSelectorProps {
@@ -46,7 +47,7 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
       {isOpen && (
         <div className="language-dropdown-menu panel" role="menu">
           <div className="dropdown-section-header">
-            <span>🌐 {t('common.language')}</span>
+            <span><Icon name="globe" size={13} /> {t('common.language')}</span>
           </div>
 
           <div className="dropdown-options-list">
@@ -71,7 +72,7 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
             <>
               <div className="dropdown-divider" />
               <div className="dropdown-section-header">
-                <span>🃏 {t('common.card_language')}</span>
+                <span><Icon name="layers" size={13} /> {t('common.card_language')}</span>
               </div>
               <div className="dropdown-options-list card-lang-list">
                 {cardLanguages.map((cl) => (

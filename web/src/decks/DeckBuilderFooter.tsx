@@ -1,6 +1,7 @@
 import type { DeckV2 } from './types'
 import { useTranslation } from '../i18n'
 import { downloadDeckFile } from './exportDeckFile'
+import Icon from '../ui/Icon'
 
 interface Props {
   deck: DeckV2
@@ -46,7 +47,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           onClick={onImport}
           title={t('decks', 'import_hint')}
         >
-          📥 {t('decks', 'import_deck')}
+          <Icon name="download" size={12} /> {t('decks', 'import_deck')}
         </button>
         <button
           type="button"
@@ -54,7 +55,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           onClick={onSample}
           title={t('decks', 'sample_london')}
         >
-          🖐️ {t('decks', 'builder_sample')}
+          <Icon name="hand" size={12} /> {t('decks', 'builder_sample')}
         </button>
         <button
           type="button"

@@ -31,15 +31,15 @@ export function formatTimeAgo(epochMs?: number): string {
   return tStatic('lobby','time_ago_d', { count: Math.floor(diffHours / 24) })
 }
 
-export function getSkillBadge(skill?: string): { label: string; icon: string; className: string } | null {
+export function getSkillBadge(skill?: string): { label: string; stars: number; className: string } | null {
   if (!skill) return null
   switch (skill.toUpperCase()) {
     case 'BEGINNER':
-      return { label: tStatic('lobby','create_skill_beginner'), icon: '⭐', className: 'skill-beginner' }
+      return { label: tStatic('lobby','create_skill_beginner'), stars: 1, className: 'skill-beginner' }
     case 'CASUAL':
-      return { label: tStatic('lobby','create_skill_casual'), icon: '⭐⭐', className: 'skill-casual' }
+      return { label: tStatic('lobby','create_skill_casual'), stars: 2, className: 'skill-casual' }
     case 'SERIOUS':
-      return { label: tStatic('lobby','create_skill_competitive'), icon: '⭐⭐⭐', className: 'skill-serious' }
+      return { label: tStatic('lobby','create_skill_competitive'), stars: 3, className: 'skill-serious' }
     default:
       return null
   }

@@ -6,6 +6,7 @@ import { MAX_DECKS, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { parseAnyDeck, exportDck, exportArena, exportTxt } from './parseDck'
 import { DECKS, type DeckCard } from '../lobby/decks'
+import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import type { MetaDeckItem } from './metaDeckCatalog'
@@ -316,14 +317,14 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
                 onClick={() => setMainView('my-decks')}
               >
-                📦 {t('decks', 'my_decks')} ({customCount})
+                <Icon name="package" size={13} /> {t('decks', 'my_decks')} ({customCount})
               </button>
               <button
                 type="button"
                 className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
                 onClick={() => setMainView('browser')}
               >
-                🌍 {t('decks', 'popular_meta')}
+                <Icon name="globe" size={13} /> {t('decks', 'popular_meta')}
               </button>
             </div>
           </div>
@@ -390,31 +391,31 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <footer className="decks-footer">
             <div className="decks-footer-left">
               <label className="decks-footer-btn">
-                📥 {t('decks', 'import_deck')}
+                <Icon name="download" size={12} /> {t('decks', 'import_deck')}
                 <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleFile(f)
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}>📝 {t('decks', 'import_hint')}</button>
-              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title={t('decks', 'export_deck')}>📦 {t('common', 'save')}</button>
+              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}><Icon name="clipboard" size={12} /> {t('decks', 'import_hint')}</button>
+              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('common', 'save')}</button>
               <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
-                📥 {t('common', 'refresh')}
+                <Icon name="download" size={12} /> {t('common', 'refresh')}
                 <input type="file" accept=".json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleRestoreBackup(f)
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}>💾 {t('decks', 'export_deck')} .dck</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}>📋 {t('decks', 'export_deck')} Arena</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}>📄 {t('decks', 'export_deck')} Plain</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}>📑 {t('common', 'copy')}</button>
-              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}>🗑️ {t('common', 'delete')}</button>
-              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}>★ {t('common', 'all')}</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}><Icon name="save" size={12} /> {t('decks', 'export_deck')} .dck</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}><Icon name="clipboard" size={12} /> {t('decks', 'export_deck')} Arena</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} Plain</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}><Icon name="copy" size={12} /> {t('common', 'copy')}</button>
+              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
+              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}><Icon name="star" size={12} /> {t('common', 'all')}</button>
             </div>
-            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}>✏️ {t('common', 'edit')}</button>
+            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</button>
           </footer>
         </>
       ) : (
@@ -429,7 +430,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       {showImport && (
         <div className="overlay" onClick={() => setShowImport(false)}>
           <div className="dialog panel decks-import-dialog" onClick={(e) => e.stopPropagation()}>
-            <h2>📥 {t('decks', 'import_deck')}</h2>
+            <h2><Icon name="download" size={17} /> {t('decks', 'import_deck')}</h2>
             <p className="decks-import-hint">{t('decks', 'import_hint')}</p>
             <label>{t('common', 'player')} <input value={importName} onChange={(e) => setImportName(e.target.value)} placeholder={t('decks', 'import_placeholder')} /></label>
             <label>{t('decks', 'total_cards')} <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={12} placeholder={`NAME:${t('decks', 'import_placeholder')}\n4 [M10:146] Lightning Bolt\nSB: 2 [4ED:218] Red Elemental Blast\n\n—o—\nDeck\n4 Lightning Bolt (M10) 146\nSideboard\n2 Red Elemental Blast (4ED) 218`} /></label>

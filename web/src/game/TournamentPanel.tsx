@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useStore } from '../state/store'
 import TournamentBracket from '../lobby/TournamentBracket'
 import * as cmds from '../net/commands'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './TournamentPanel.css'
 
@@ -29,7 +30,7 @@ export default function TournamentPanel() {
         data-testid="tournament-panel-mini"
         title={t('game', 'tournament_view_bracket_tooltip')}
       >
-        🏆 {view.tournamentName} — {view.tournamentState} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
+        <Icon name="trophy" size={13} /> {view.tournamentName} — {view.tournamentState} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
         <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
       </button>
     )
@@ -50,7 +51,7 @@ export default function TournamentPanel() {
       <section className="tournament-panel" role="dialog" aria-modal="true" aria-label={t('game', 'tournament_in_progress')}>
         <header className="tournament-panel-header">
           <div className="tournament-panel-title">
-            <span className="tournament-panel-icon">🏆</span>
+            <span className="tournament-panel-icon"><Icon name="trophy" size={15} /></span>
             <span>{t('game', 'tournament_in_progress')}</span>
             <span className="tournament-panel-name" data-testid="tournament-panel-name">{view.tournamentName}</span>
           </div>

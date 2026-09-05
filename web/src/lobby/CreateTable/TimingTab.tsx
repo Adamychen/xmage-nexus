@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Icon from '../../ui/Icon'
 import { TIME_LIMIT_OPTIONS, BUFFER_TIME_OPTIONS } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
@@ -7,7 +8,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
-        <h3>⏱️ {t('lobby','create_tab_timing')}</h3>
+        <h3><Icon name="clock" size={15} /> {t('lobby','create_tab_timing')}</h3>
         <p>Relojes, mulligans y reglas de mesa multijugador.</p>
       </div>
       <div className="create-grid-2col">
@@ -47,7 +48,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
       </div>
 
       <div className="create-restrictions-box" style={{ background: 'rgba(124,92,255,0.08)', borderColor: 'rgba(124,92,255,0.25)' }}>
-        <span className="restrictions-box-title">🎲 Opciones Custom {(form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase) ? `(${[form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null, form.customStartLifeEnabled ? 'Vida' : null, form.customStartHandSizeEnabled ? 'Mano' : null, form.planeChase ? 'Planechase' : null].filter(Boolean).join(', ')})` : ''}</span>
+        <span className="restrictions-box-title"><Icon name="dice" size={13} /> Opciones Custom {(form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase) ? `(${[form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null, form.customStartLifeEnabled ? 'Vida' : null, form.customStartHandSizeEnabled ? 'Mano' : null, form.planeChase ? 'Planechase' : null].filter(Boolean).join(', ')})` : ''}</span>
         <label>
           Tipo de Mulligan
           <select value={form.mulliganType} onChange={(e) => form.setMulliganType(e.target.value)}>
@@ -74,7 +75,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
         <label className="toggle-label-row">
           <input type="checkbox" checked={form.planeChase} onChange={(e) => form.setPlaneChase(e.target.checked)} />
           <div className="toggle-text-block">
-            <span className="toggle-title">🗺️ Planechase</span>
+            <span className="toggle-title"><Icon name="map" size={12} /> Planechase</span>
             <span className="toggle-desc">Mazo planar compartido + dado de 9 caras (experimental).</span>
           </div>
         </label>
@@ -82,7 +83,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
 
       {form.isMultiplayerGame && (
         <div className="create-multiplayer-box">
-          <span className="multiplayer-box-title">👑 {t('lobby','create_tab_multi')}</span>
+          <span className="multiplayer-box-title"><Icon name="crown" size={13} /> {t('lobby','create_tab_multi')}</span>
           <div className="create-grid-2col">
             <label>
               {t('lobby','create_field_attack_option')}

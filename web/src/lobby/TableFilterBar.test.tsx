@@ -20,7 +20,7 @@ const MOCK_TABLES: TableView[] = [
     deckType: 'Constructed - Modern',
     additionalInfoShort: '',
     additionalInfoFull: '',
-    createTime: Date.now(),
+    createTime: 1000,
     tableState: 'WAITING',
     skillLevel: 'CASUAL',
     tableStateText: 'Waiting for players',
@@ -46,7 +46,7 @@ const MOCK_TABLES: TableView[] = [
     deckType: 'Constructed - Commander',
     additionalInfoShort: 'Casual EDH fun',
     additionalInfoFull: '',
-    createTime: Date.now(),
+    createTime: 2000,
     tableState: 'DUELING',
     skillLevel: 'BEGINNER',
     tableStateText: 'Dueling',
@@ -74,7 +74,7 @@ const MOCK_TABLES: TableView[] = [
     deckType: 'Constructed - Standard',
     additionalInfoShort: '',
     additionalInfoFull: '',
-    createTime: Date.now(),
+    createTime: 3000,
     tableState: 'WAITING',
     skillLevel: 'SERIOUS',
     tableStateText: 'Waiting for players',
@@ -95,9 +95,18 @@ const MOCK_TABLES: TableView[] = [
 ]
 
 describe('filterTables logic', () => {
-  it('returns all tables when initial filters are active', () => {
+  it('returns all tables when initial filters are active, desktop order', () => {
     const res = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS)
     expect(res.length).toBe(3)
+    expect(res.map((t) => t.tableId)).toEqual(['t-3', 't-1', 't-2'])
+  })
+
+  it('sorts newest/oldest explicitly, desktop default keeps free seats first', () => {
+    const newest = filterTables(MOCK_TABLES, { ...INITIAL_TABLE_FILTERS, sort: 'newest' })
+    expect(newest.map((t) => t.tableId)).toEqual(['t-3', 't-2', 't-1'])
+
+    const oldest = filterTables(MOCK_TABLES, { ...INITIAL_TABLE_FILTERS, sort: 'oldest' })
+    expect(oldest.map((t) => t.tableId)).toEqual(['t-1', 't-2', 't-3'])
   })
 
   it('filters by search query matching table name or host', () => {
@@ -138,7 +147,7 @@ describe('filterTables logic', () => {
       availability: 'open',
     })
     expect(open.length).toBe(2)
-    expect(open.map((t) => t.tableId)).toEqual(['t-1', 't-3'])
+    expect(open.map((t) => t.tableId)).toEqual(['t-3', 't-1'])
 
     const dueling = filterTables(MOCK_TABLES, {
       ...INITIAL_TABLE_FILTERS,
@@ -177,7 +186,59 @@ describe('filterTables logic', () => {
       ratedOnly: true,
     })
     expect(ratedOnly.length).toBe(2)
-    expect(ratedOnly.map((t) => t.tableId)).toEqual(['t-2', 't-3'])
+    expect(ratedOnly.map((t) => t.tableId)).toEqual(['t-3', 't-2'])
+  })
+
+  it('supports symmetric unrated-only and passworded-only toggles', () => {
+    const unrated = filterTables(MOCK_TABLES, {
+      ...INITIAL_TABLE_FILTERS,
+      unratedOnly: true,
+    })
+    expect(unrated.map((t) => t.tableId)).toEqual(['t-1'])
+
+    const passworded = filterTables(MOCK_TABLES, {
+      ...INITIAL_TABLE_FILTERS,
+      passwordedOnly: true,
+    })
+    expect(passworded.map((t) => t.tableId)).toEqual(['t-2'])
+  })
+
+  it('hides tables owned by ignored users only when the toggle is on', () => {
+    const shown = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS, ['bob'])
+    expect(shown.map((t) => t.tableId)).toEqual(['t-3', 't-1', 't-2'])
+
+    const hidden = filterTables(
+      MOCK_TABLES,
+      { ...INITIAL_TABLE_FILTERS, hideIgnored: true },
+      ['Bob'],
+    )
+    expect(hidden.map((t) => t.tableId)).toEqual(['t-3', 't-1'])
+  })
+
+  it('splits tournaments into constructed vs limited like the desktop', () => {
+    const base: TableView = {
+      ...MOCK_TABLES[0],
+      isTournament: true,
+      tableState: 'WAITING',
+    }
+    const constructed = { ...base, tableId: 't-c', gameType: 'Tournament Constructed' }
+    const limited = { ...base, tableId: 't-l', gameType: 'Tournament Booster Draft' }
+    const tables = [constructed, limited]
+
+    const all = filterTables(tables, { ...INITIAL_TABLE_FILTERS, mode: 'tourney' })
+    expect(all.map((t) => t.tableId)).toEqual(['t-c', 't-l'])
+
+    const cons = filterTables(
+      tables,
+      { ...INITIAL_TABLE_FILTERS, mode: 'tourney', tourneyKind: 'constructed' },
+    )
+    expect(cons.map((t) => t.tableId)).toEqual(['t-c'])
+
+    const lim = filterTables(
+      tables,
+      { ...INITIAL_TABLE_FILTERS, mode: 'tourney', tourneyKind: 'limited' },
+    )
+    expect(lim.map((t) => t.tableId)).toEqual(['t-l'])
   })
 })
 
@@ -226,7 +287,11 @@ describe('TableFilterBar component', () => {
 
     expect(getByText(/Modo de juego|Combate/i)).not.toBeNull()
     expect(getByText(/Nivel de habilidad/i)).not.toBeNull()
-    expect(getByText(/Ocultar privadas|Privada/i)).not.toBeNull()
+    expect(getByText('Privada')).not.toBeNull()
+    expect(getByText('Solo privadas')).not.toBeNull()
+    expect(getByText(/Solo no puntuadas/i)).not.toBeNull()
+    expect(getByText(/Ocultar ignorados/i)).not.toBeNull()
+    expect(getByText(/Orden/i)).not.toBeNull()
   })
 
   it('formats massive Chaos Draft booster strings cleanly', () => {

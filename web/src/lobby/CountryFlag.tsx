@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { t as tStatic } from '../i18n'
+import Icon from '../ui/Icon'
 import './CountryFlag.css'
 
 export interface CountryFlagProps {
@@ -22,7 +23,7 @@ export default function CountryFlag({ flagName, className = '', showTextFallback
   const code = cleanFlagCode(flagName)
 
   if (!code) {
-    return showTextFallback ? <span className="flag-empty">🌐</span> : null
+    return showTextFallback ? <span className="flag-empty"><Icon name="globe" size={12} /></span> : null
   }
 
   if (errored) {

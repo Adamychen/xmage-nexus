@@ -6,6 +6,7 @@ import { useTickingTimer } from '../utils/timer'
 import type { SideboardCard } from '../state/state'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
+import Icon from '../ui/Icon'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
@@ -392,7 +393,7 @@ export default function SideboardScreen() {
             )}
             <div className="sideboard-card-list sideboard-arena-list">
               {isMainDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_main')}</div>
+                <div className="arena-drop-target-hint"><span><Icon name="sparkles" size={13} /></span> {t('game', 'sideboard_main')}</div>
               )}
               {categoriesOrder.map((cat) => {
                 const list = groupedMain.get(cat) ?? []
@@ -451,7 +452,7 @@ export default function SideboardScreen() {
             )}
             <div className="sideboard-card-list sideboard-arena-list">
               {isSideDragOver && (
-                <div className="arena-drop-target-hint"><span>✨</span> {t('game', 'sideboard_side')}</div>
+                <div className="arena-drop-target-hint"><span><Icon name="sparkles" size={13} /></span> {t('game', 'sideboard_side')}</div>
               )}
               {filteredSide.map((card) => {
                 const k = `sb:${deckCardKey(card)}`
@@ -501,7 +502,7 @@ export default function SideboardScreen() {
               onClick={handleReset}
               title={t('lobby', 'filter_reset')}
             >
-              ↺ {t('lobby', 'filter_reset')}
+              <Icon name="reset" size={12} /> {t('lobby', 'filter_reset')}
             </button>
             <button
               className="primary"

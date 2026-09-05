@@ -27,7 +27,7 @@
     { "category": "Connectivity & Lobby", "feature": "Real-time Table & User Broadcasts", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Connectivity & Lobby", "feature": "Room & Match Chat", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Connectivity & Lobby", "feature": "1v1 Table Creation (Human/AI)", "official": "yes", "nexus": "yes", "phase": "Completed" },
-    { "category": "Connectivity & Lobby", "feature": "Table Filters & Private Messaging", "official": "yes", "nexus": "no", "phase": "Phase 3" },
+    { "category": "Connectivity & Lobby", "feature": "Table Filters & Private Messaging", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Connectivity & Lobby", "feature": "Match Clocks / Visible Timers", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Deck Management", "feature": "Predefined / JSON Deck Loading", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Deck Management", "feature": "Full In-App Deck Builder (Scryfall)", "official": "yes", "nexus": "yes", "phase": "Completed" },

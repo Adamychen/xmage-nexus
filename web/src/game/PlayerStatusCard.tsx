@@ -1,9 +1,10 @@
 import type { PlayerView } from '../net/types'
+import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './PlayerStatusCard.css'
 
 interface BadgeSlot {
-  icon: string
+  icon: IconName
   title: string
 }
 
@@ -12,10 +13,10 @@ export default function PlayerStatusCard({ player, side }: { player: PlayerView;
 
   function badgeSlots(p: PlayerView): (BadgeSlot | null)[] {
     const slots: (BadgeSlot | null)[] = [null, null, null]
-    if (p.monarch) slots[0] = { icon: '♛', title: t('game', 'mechanics_monarch') }
-    if (p.initiative) slots[1] = { icon: '⚔', title: t('game', 'mechanics_initiative') }
+    if (p.monarch) slots[0] = { icon: 'crown', title: t('game', 'mechanics_monarch') }
+    if (p.initiative) slots[1] = { icon: 'zap', title: t('game', 'mechanics_initiative') }
     const designation = p.designationNames?.[0]
-    if (designation) slots[2] = { icon: '★', title: designation }
+    if (designation) slots[2] = { icon: 'star', title: designation }
     return slots
   }
 
@@ -35,7 +36,7 @@ export default function PlayerStatusCard({ player, side }: { player: PlayerView;
       <div className="player-status-badges">
         {slots.map((slot, i) =>
           slot ? (
-            <span key={i} className="player-status-badge filled" title={slot.title}>{slot.icon}</span>
+            <span key={i} className="player-status-badge filled" title={slot.title}><Icon name={slot.icon} size={12} /></span>
           ) : (
             <span key={i} className="player-status-badge" />
           ),

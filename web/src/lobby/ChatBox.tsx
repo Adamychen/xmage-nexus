@@ -4,36 +4,37 @@ import { useStore, appendLocalChatMessage } from '../state/store'
 import FormattedText from '../game/FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { handleIgnoreCommand, isUserIgnored } from './ignoreList'
+import Icon, { type IconName } from '../ui/Icon'
 import type { CardView, ChatMessageEvent } from '../net/types'
 import { useTranslation } from '../i18n'
 import './ChatBox.css'
 
-function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: string; text: string } {
+function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: IconName; text: string } {
   if (text.includes('[NEXUS_READY]')) {
     const user = text.replace(/\[NEXUS_READY\]/g, '').trim()
-    return { icon: '🟢', text: `${user} ${t('lobby', 'staging_chat_ready')}`.trim() }
+    return { icon: 'userCheck', text: `${user} ${t('lobby', 'staging_chat_ready')}`.trim() }
   }
   if (text.includes('[NEXUS_NOT_READY]')) {
     const user = text.replace(/\[NEXUS_NOT_READY\]/g, '').trim()
-    return { icon: '🟡', text: `${user} ${t('lobby', 'staging_chat_not_ready')}`.trim() }
+    return { icon: 'clock', text: `${user} ${t('lobby', 'staging_chat_not_ready')}`.trim() }
   }
   if (text.includes('has joined')) {
     const user = text.replace(/\s+has joined.*$/i, '').trim()
-    return { icon: '🟢', text: `${user} ${t('lobby', 'user_joined')}` }
+    return { icon: 'userCheck', text: `${user} ${t('lobby', 'user_joined')}` }
   }
   if (text.includes('has lost connection')) {
     const user = text.replace(/\s+has lost connection.*$/i, '').trim()
-    return { icon: '🔌', text: `${user} ${t('lobby', 'user_lost_connection')}` }
+    return { icon: 'error', text: `${user} ${t('lobby', 'user_lost_connection')}` }
   }
   if (text.includes('has disconnected')) {
     const user = text.replace(/\s+has disconnected.*$/i, '').trim()
-    return { icon: '🚪', text: `${user} ${t('lobby', 'user_disconnected')}` }
+    return { icon: 'logout', text: `${user} ${t('lobby', 'user_disconnected')}` }
   }
   if (text.includes('has left')) {
     const user = text.replace(/\s+has left.*$/i, '').trim()
-    return { icon: '🚪', text: `${user} ${t('lobby', 'user_left')}` }
+    return { icon: 'logout', text: `${user} ${t('lobby', 'user_left')}` }
   }
-  return { icon: 'ℹ️', text }
+  return { icon: 'info', text }
 }
 
 function isSystemMessage(m: ChatMessageEvent): boolean {
@@ -136,7 +137,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           onClick={() => setHideConnections(!hideConnections)}
           title={hideConnections ? t('lobby', 'show_system_msgs') : t('lobby', 'hide_system_msgs')}
         >
-          {hideConnections ? `🔇 ${t('lobby', 'hide_system_msgs')}` : `👁️ ${t('lobby', 'show_system_msgs')}`}
+          {hideConnections ? (<><Icon name="mute" size={12} /> {t('lobby', 'hide_system_msgs')}</>) : (<><Icon name="eye" size={12} /> {t('lobby', 'show_system_msgs')}</>)}
         </button>
       </div>
 
@@ -152,7 +153,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             const parsed = parseSystemEvent(m.message, t)
             return (
               <div key={i} className="chat-msg system-msg">
-                <span className="sys-icon">{parsed.icon}</span>
+                <span className="sys-icon"><Icon name={parsed.icon} size={12} /></span>
                 <span className="sys-text">
                   <FormattedText text={parsed.text} onHover={handleHover} />
                 </span>

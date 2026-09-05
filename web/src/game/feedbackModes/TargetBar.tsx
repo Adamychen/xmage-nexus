@@ -1,4 +1,5 @@
 import FormattedText from '../FormattedText'
+import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
@@ -20,13 +21,13 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
     : chosenCount > 0
       ? t('game', 'targeting_chosen', { count: chosenCount })
       : (localizedMessage ? <FormattedText text={localizedMessage} /> : t('game', 'targeting_hint'))
-  const icon = prompt.isStartingPlayer ? '🎲' : isDiscard ? '🗑️' : '🎯'
+  const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
 
   return (
     <div className="action-prompt-bar targeting-bar">
       <div className="action-prompt-info">
         <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true">{icon}</span>{' '}
+          <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
           <FormattedText text={titleText} />
         </span>
         <span className="action-prompt-hint">

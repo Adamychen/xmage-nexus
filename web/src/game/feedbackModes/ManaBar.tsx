@@ -1,6 +1,7 @@
 import * as cmds from '../../net/commands'
 import { useStore } from '../../state/store'
 import FormattedText from '../FormattedText'
+import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
@@ -27,7 +28,7 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
     <div className="action-prompt-bar mana-prompt-bar">
       <div className="action-prompt-info">
         <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true">⚡</span>{' '}
+          <span className="action-prompt-icon" aria-hidden="true"><Icon name="zap" size={14} /></span>{' '}
           {t('game', 'pay_mana')}
         </span>
         <span className="action-prompt-msg">

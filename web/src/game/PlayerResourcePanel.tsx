@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n'
 import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
 import { manaTypeOf } from './manaPayment'
+import Icon from '../ui/Icon'
 import './PlayerResourcePanel.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -74,7 +75,7 @@ export default function PlayerResourcePanel({ player, side }: { player: PlayerVi
 
       <div className="resource-library" title={t('game', 'pile_library')}>
         <div className="resource-card-back">
-          <span className="resource-card-back-mark">✦</span>
+          <span className="resource-card-back-mark"><Icon name="sparkles" size={14} /></span>
         </div>
         <span className="resource-library-count">{player.libraryCount}</span>
       </div>

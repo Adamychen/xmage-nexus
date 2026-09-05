@@ -1,4 +1,5 @@
 import { useTranslation } from '../i18n'
+import Icon from '../ui/Icon'
 import type { ServerIssueItem } from './useDeckValidation'
 
 interface Props {
@@ -11,7 +12,7 @@ export default function DeckServerIssues({ issues, onRepair }: Props) {
   if (issues.length === 0) return null
   return (
     <div className="builder-server-issues" data-testid="builder-server-issues">
-      <div className="bsi-title">⚠️ {t('decks', 'issues_banner_title')}</div>
+      <div className="bsi-title"><Icon name="alert" size={14} /> {t('decks', 'issues_banner_title')}</div>
       <ul>
         {issues.map((it, i) => (
           <li key={`${it.name}-${it.set}-${it.num}-${i}`}>

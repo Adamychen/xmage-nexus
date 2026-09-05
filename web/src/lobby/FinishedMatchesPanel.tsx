@@ -3,6 +3,7 @@ import type { MatchView, UsersView } from '../net/types'
 import { getFinishedMatches, replayGame } from '../net/commands'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import './FinishedMatchesPanel.css'
@@ -180,7 +181,7 @@ export default function FinishedMatchesPanel({
       <div className="finished-matches-header">
         <div className="finished-matches-title-wrap">
           <div className="finished-matches-title-row">
-            <span className="finished-matches-icon">📜</span>
+            <span className="finished-matches-icon"><Icon name="scrollText" size={18} /></span>
             <h2 className="finished-matches-title">{t('lobby', 'matches_title')}</h2>
             <span className="finished-matches-count-badge">{filteredMatches.length}</span>
           </div>
@@ -222,14 +223,14 @@ export default function FinishedMatchesPanel({
               className={`filter-chip ${filterType === 'ranked' ? 'active' : ''}`}
               onClick={() => setFilterType('ranked')}
             >
-              ⭐ {t('lobby', 'tag_rated')}
+              <Icon name="star" size={12} /> {t('lobby', 'tag_rated')}
             </button>
             <button
               type="button"
               className={`filter-chip ${filterType === 'tournament' ? 'active' : ''}`}
               onClick={() => setFilterType('tournament')}
             >
-              🏆 {t('lobby', 'tournament_badge')}
+              <Icon name="trophy" size={12} /> {t('lobby', 'tournament_badge')}
             </button>
           </div>
 
@@ -240,7 +241,7 @@ export default function FinishedMatchesPanel({
             disabled={loading}
             title={t('common', 'refresh')}
           >
-            <span className="refresh-icon">🔄</span>
+            <span className="refresh-icon"><Icon name="refresh" size={13} /></span>
             <span>{loading ? t('common', 'loading') : t('common', 'refresh')}</span>
           </button>
         </div>
@@ -264,9 +265,9 @@ export default function FinishedMatchesPanel({
                 </div>
 
                 <div className="match-meta-right">
-                  {m.rated && <span className="match-badge rated">⭐ {t('lobby', 'tag_rated')}</span>}
-                  {m.isTournament && <span className="match-badge tournament">🏆 {t('lobby', 'tournament_badge')}</span>}
-                  {duration && <span className="match-duration">⏱️ {duration}</span>}
+                  {m.rated && <span className="match-badge rated"><Icon name="star" size={11} /> {t('lobby', 'tag_rated')}</span>}
+                  {m.isTournament && <span className="match-badge tournament"><Icon name="trophy" size={11} /> {t('lobby', 'tournament_badge')}</span>}
+                  {duration && <span className="match-duration"><Icon name="clock" size={11} /> {duration}</span>}
                   {relativeTime && <span className="match-time-ago">{relativeTime}</span>}
                 </div>
               </div>
@@ -295,15 +296,15 @@ export default function FinishedMatchesPanel({
                               />
                             )}
                             <span className="player-name">{scores[0].name}</span>
-                            {scores[0].isWinner && <span className="winner-crown">👑</span>}
+                            {scores[0].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
                           </div>
                           {scores[0].quit && (
                             <span className="player-quit-tag">
                               {scores[0].timeoutType === 'timer'
-                                ? `⏱️ ${t('lobby', 'match_quit_timeout')}`
+                                ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
                                 : scores[0].timeoutType === 'idle'
-                                ? `💤 ${t('lobby', 'match_quit_idle')}`
-                                : `🚪 ${t('lobby', 'match_quit_abandon')}`}
+                                ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
+                                : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
                             </span>
                           )}
                         </div>
@@ -326,7 +327,7 @@ export default function FinishedMatchesPanel({
                       >
                         <div className="player-name-col right-align">
                           <div className="player-name-line">
-                            {scores[1].isWinner && <span className="winner-crown">👑</span>}
+                            {scores[1].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
                             <span className="player-name">{scores[1].name}</span>
                             {userMap.get(scores[1].name.toLowerCase())?.flagName && (
                               <CountryFlag
@@ -337,10 +338,10 @@ export default function FinishedMatchesPanel({
                           {scores[1].quit && (
                             <span className="player-quit-tag">
                               {scores[1].timeoutType === 'timer'
-                                ? `⏱️ ${t('lobby', 'match_quit_timeout')}`
+                                ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
                                 : scores[1].timeoutType === 'idle'
-                                ? `💤 ${t('lobby', 'match_quit_idle')}`
-                                : `🚪 ${t('lobby', 'match_quit_abandon')}`}
+                                ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
+                                : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
                             </span>
                           )}
                         </div>
@@ -379,7 +380,7 @@ export default function FinishedMatchesPanel({
                         disabled={replayingGameId === gId}
                         title={`${t('common', 'loading')} #${gIdx + 1}`}
                       >
-                        <span className="replay-icon">🎬</span>
+                        <span className="replay-icon"><Icon name="play" size={12} /></span>
                         <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
                       </button>
                     ))}
@@ -392,7 +393,7 @@ export default function FinishedMatchesPanel({
 
         {filteredMatches.length === 0 && !loading && (
           <div className="matches-empty-state">
-            <span className="empty-icon">📭</span>
+            <span className="empty-icon"><Icon name="inbox" size={26} /></span>
             <h3 className="empty-title">{t('lobby', 'matches_empty')}</h3>
             <p className="empty-desc">
               {searchQuery

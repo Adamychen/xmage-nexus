@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { parseAnyDeck } from './parseDck'
 import type { DeckCard } from '../lobby/decks'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckImportModal.css'
 
@@ -84,7 +85,7 @@ export function DeckImportModal({
       >
         <header className="deck-import-header">
           <div className="deck-import-title-wrap">
-            <h2 className="deck-import-title">📥 {t('decks', 'import_deck')}</h2>
+            <h2 className="deck-import-title"><Icon name="download" size={17} /> {t('decks', 'import_deck')}</h2>
             <span className="deck-import-formats">{t('decks', 'import_formats')}</span>
           </div>
           <button type="button" className="deck-import-close-btn" onClick={onClose}>
@@ -102,14 +103,14 @@ export function DeckImportModal({
                 className={`import-mode-btn ${mode === 'add' ? 'active' : ''}`}
                 onClick={() => setMode('add')}
               >
-                ➕ {t('decks', 'import_mode_add')}
+                <Icon name="plus" size={12} /> {t('decks', 'import_mode_add')}
               </button>
               <button
                 type="button"
                 className={`import-mode-btn ${mode === 'replace' ? 'active' : ''}`}
                 onClick={() => setMode('replace')}
               >
-                🔄 {t('decks', 'import_mode_replace')}
+                <Icon name="refresh" size={12} /> {t('decks', 'import_mode_replace')}
               </button>
             </div>
           </div>
@@ -139,7 +140,7 @@ export function DeckImportModal({
           <div className="deck-import-status-bar">
             <div className="import-status-left">
               <label className="import-file-btn">
-                📂 {t('common', 'search')}
+                <Icon name="folder" size={12} /> {t('common', 'search')}
                 <input
                   type="file"
                   accept=".dck,.txt,.dec,.cod,.o8d"
@@ -173,7 +174,7 @@ export function DeckImportModal({
                 </div>
               ) : text.trim() ? (
                 <div className="import-badge warning">
-                  ⚠️ {t('errors', 'deck_parse_failed')}
+                  <Icon name="alert" size={13} /> {t('errors', 'deck_parse_failed')}
                 </div>
               ) : (
                 <span className="import-hint-text">{t('decks', 'import_waiting')}</span>
@@ -194,7 +195,7 @@ export function DeckImportModal({
             disabled={totalCount === 0}
             onClick={handleSubmit}
           >
-            {mode === 'replace' ? `🔄 ${t('decks', 'import_mode_replace')}` : `➕ ${t('decks', 'import_mode_add')}`}{' '}
+            {mode === 'replace' ? (<><Icon name="refresh" size={12} /> {t('decks', 'import_mode_replace')}</>) : (<><Icon name="plus" size={12} /> {t('decks', 'import_mode_add')}</>)}{' '}
             {totalCount > 0 ? `(${totalCount} ${t('decks', 'total_cards')})` : ''}
           </button>
         </footer>

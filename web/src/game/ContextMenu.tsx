@@ -1,7 +1,9 @@
+import Icon from '../ui/Icon'
+
 export interface ContextMenuItem {
   id: string
   label: string
-  icon?: string
+  icon?: import('../ui/Icon').IconName
   danger?: boolean
   disabled?: boolean
 }
@@ -29,7 +31,7 @@ export default function ContextMenu({ x, y, items, onSelect, onClose }: ContextM
             disabled={item.disabled}
             onClick={() => { onSelect(item.id); onClose() }}
           >
-            {item.icon && <span className="context-menu-icon">{item.icon}</span>}
+            {item.icon && <span className="context-menu-icon"><Icon name={item.icon} size={13} /></span>}
             <span>{item.label}</span>
           </button>
         ))}
@@ -39,12 +41,12 @@ export default function ContextMenu({ x, y, items, onSelect, onClose }: ContextM
 }
 
 export const CARD_CONTEXT_ITEMS: ContextMenuItem[] = [
-  { id: 'tap', label: 'Tap / Girar', icon: '🔄' },
-  { id: 'rotate', label: 'Rotar 90°', icon: '↻' },
-  { id: 'flip', label: 'Voltear', icon: '🔃' },
-  { id: 'move', label: 'Mover a...', icon: '➡' },
-  { id: 'group', label: 'Agrupar', icon: '📋' },
-  { id: 'counter', label: '+1/+1 Contador', icon: '➕' },
-  { id: 'remove-counter', label: 'Quitar contador', icon: '➖' },
-  { id: 'destroy', label: 'Destruir', icon: '💥', danger: true },
+  { id: 'tap', label: 'Tap / Girar', icon: 'refresh' },
+  { id: 'rotate', label: 'Rotar 90°', icon: 'refresh' },
+  { id: 'flip', label: 'Voltear', icon: 'refresh' },
+  { id: 'move', label: 'Mover a...', icon: 'send' },
+  { id: 'group', label: 'Agrupar', icon: 'copy' },
+  { id: 'counter', label: '+1/+1 Contador', icon: 'plus' },
+  { id: 'remove-counter', label: 'Quitar contador', icon: 'minus' },
+  { id: 'destroy', label: 'Destruir', icon: 'trash', danger: true },
 ]

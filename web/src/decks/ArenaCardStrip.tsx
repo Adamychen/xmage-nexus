@@ -3,6 +3,7 @@ import type { DeckCard } from '../lobby/decks'
 import { ManaCost } from './ArenaManaSymbols'
 import { setFloatingStripDragImage } from './arenaDragHelpers'
 import { useLocalizedCardName } from '../cards/cardLocalization'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './ArenaCardStrip.css'
 
@@ -131,7 +132,7 @@ export function ArenaCardStrip({
       onMouseLeave={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      title={issue ? `${hoverTitle} — ⚠️ ${issue}` : (onSwap ? `${hoverTitle} — ${swapLabel ?? '⇄'}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`)}
+      title={issue ? `${hoverTitle} — ! ${issue}` : (onSwap ? `${hoverTitle} — ${swapLabel ?? '⇄'}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`)}
     >
       {/* Background card art crop */}
       {meta?.artCropUrl && (
@@ -147,7 +148,7 @@ export function ArenaCardStrip({
 
       {/* Quantity badge */}
       <div className={`strip-qty ${isCommander ? 'commander-badge' : ''}`}>
-        {isCommander ? '👑' : `${card.amount}x`}
+        {isCommander ? <Icon name="crown" size={13} /> : `${card.amount}x`}
       </div>
 
       {/* Card Name */}
@@ -156,7 +157,7 @@ export function ArenaCardStrip({
       </div>
 
       {/* Issue warning icon */}
-      {issue && <span className="strip-issue-badge" title={issue}>⚠️</span>}
+      {issue && <span className="strip-issue-badge" title={issue}><Icon name="alert" size={12} /></span>}
 
       {/* Mana Cost */}
       <div className="strip-mana">
@@ -172,7 +173,7 @@ export function ArenaCardStrip({
             onClick={() => onSwap(actionKey)}
             title={swapLabel ?? (sideboard ? t('decks', 'strip_move_to_main') : t('decks', 'strip_move_to_side'))}
           >
-            ⇄
+            <Icon name="swap" size={13} />
           </button>
         )}
         <button
@@ -198,7 +199,7 @@ export function ArenaCardStrip({
             onClick={() => onChangePrinting(card)}
             title={t('decks', 'strip_change_art')}
           >
-            🎨
+            <Icon name="palette" size={13} />
           </button>
         )}
         {onSetCover && (

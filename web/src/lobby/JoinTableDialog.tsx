@@ -10,6 +10,7 @@ import {
 import { parseAnyDeck } from '../decks/parseDck'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './JoinTableDialog.css'
@@ -137,17 +138,17 @@ export default function JoinTableDialog({
         {/* Table summary badges */}
         <div className="join-table-meta-bar">
           <span className="meta-badge meta-format">
-            📜 {t('lobby','create_field_format')}: <strong>{table.deckType || t('common','all')}</strong>
+            <Icon name="scrollText" size={12} /> {t('lobby','create_field_format')}: <strong>{table.deckType || t('common','all')}</strong>
           </span>
           <span className="meta-badge meta-mode">
-            🎮 {t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong>
+            <Icon name="gamepad" size={12} /> {t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong>
           </span>
           <span className="meta-badge meta-host">
-            👑 {t('lobby','host')}: <strong>{table.controllerName?.split(',')[0]?.trim() || table.controllerName}</strong>
+            <Icon name="crown" size={12} /> {t('lobby','host')}: <strong>{table.controllerName?.split(',')[0]?.trim() || table.controllerName}</strong>
           </span>
           {table.passworded && (
             <span className="meta-badge meta-lock">
-              🔒 {t('lobby','join_requires_password')}
+              <Icon name="lock" size={12} /> {t('lobby','join_requires_password')}
             </span>
           )}
         </div>
@@ -155,7 +156,7 @@ export default function JoinTableDialog({
         {/* Error Banner if any */}
         {joinError && (
           <div className="join-error-banner">
-            <span className="join-error-icon">⚠️</span>
+            <span className="join-error-icon"><Icon name="alert" size={14} /></span>
             <span className="join-error-text">{tError(joinError)}</span>
           </div>
         )}
@@ -165,7 +166,7 @@ export default function JoinTableDialog({
           {table.passworded && (
             <div className="join-password-section">
               <label className="join-field-label">
-                <span>🔑 {t('lobby','create_field_password')}:</span>
+                <span><Icon name="key" size={12} /> {t('lobby','create_field_password')}:</span>
                 <input
                   type="password"
                   value={password}
@@ -183,14 +184,14 @@ export default function JoinTableDialog({
           <div className="join-deck-section">
             <div className="join-deck-section-header">
               <span className="join-deck-section-title">
-                🃏 {t('lobby','active_deck')}
+                <Icon name="layers" size={13} /> {t('lobby','active_deck')}
               </span>
               <button
                 type="button"
                 className="join-import-toggle-btn"
                 onClick={() => setShowImport(!showImport)}
               >
-                {showImport ? `✕ ${t('lobby','join_import_toggle_close')}` : `📋 ${t('lobby','join_import_toggle_open')}`}
+                {showImport ? (<><Icon name="x" size={12} /> {t('lobby','join_import_toggle_close')}</>) : (<><Icon name="clipboard" size={12} /> {t('lobby','join_import_toggle_open')}</>)}
               </button>
             </div>
 
@@ -259,7 +260,7 @@ export default function JoinTableDialog({
                     </div>
                     <div className="deck-card-content">
                       <div className="deck-card-title-row">
-                        <span className="deck-card-name">🃏 {d.name}</span>
+                        <span className="deck-card-name"><Icon name="layers" size={12} /> {d.name}</span>
                         <span className="deck-card-count-badge">
                           {count} {t('decks','total_cards')} {sbCount > 0 ? `(+${sbCount} sb)` : ''}
                         </span>

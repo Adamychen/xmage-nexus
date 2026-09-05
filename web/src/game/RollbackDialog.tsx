@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore, closeRollbackDialog, requestRollback, requestUndo } from '../state/store'
 import { soundManager } from '../audio/soundManager'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './RollbackDialog.css'
 
@@ -80,14 +81,14 @@ export default function RollbackDialog() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="feedback-kicker">
-          <span className="kicker-icon">⏪</span> {t('dialogs', 'rollback_title')}
+          <span className="kicker-icon"><Icon name="undo" size={13} /></span> {t('dialogs', 'rollback_title')}
         </div>
         <h2 id="rollback-title">{t('dialogs', 'rollback_title')}</h2>
         <p className="rollback-description">{t('dialogs', 'rollback_desc')}</p>
 
         {!hasPriority && (
           <div className="rollback-priority-notice" role="alert">
-            ⚠️ {t('dialogs', 'rollback_priority_warn')}
+            <Icon name="alert" size={13} /> {t('dialogs', 'rollback_priority_warn')}
           </div>
         )}
 
@@ -120,7 +121,7 @@ export default function RollbackDialog() {
             onClick={handleUndo}
             disabled={sending}
           >
-            ↺ Undo
+            <Icon name="undo" size={12} /> Undo
           </button>
         </div>
 
@@ -131,7 +132,7 @@ export default function RollbackDialog() {
             onClick={handleConfirm}
             disabled={sending}
           >
-            ⏪ {t('dialogs', 'rollback_confirm')}
+            <Icon name="undo" size={13} /> {t('dialogs', 'rollback_confirm')}
           </button>
           <button
             type="button"

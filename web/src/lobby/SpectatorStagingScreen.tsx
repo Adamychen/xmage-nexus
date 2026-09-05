@@ -5,6 +5,7 @@ import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
 import ChatBox from './ChatBox'
 import JoinTableDialog from './JoinTableDialog'
+import Icon from '../ui/Icon'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
 import { useTranslation } from '../i18n'
@@ -177,15 +178,15 @@ export default function SpectatorStagingScreen({
     setShowChangeDeck(false)
   }
 
-  const getSkillBadge = (skill?: string): { label: string; icon: string; className: string } | null => {
+  const getSkillBadge = (skill?: string): { label: string; stars: number; className: string } | null => {
     if (!skill) return null
     switch (skill.toUpperCase()) {
       case 'BEGINNER':
-        return { label: t('lobby', 'create_skill_beginner'), icon: '⭐', className: 'skill-beginner' }
+        return { label: t('lobby', 'create_skill_beginner'), stars: 1, className: 'skill-beginner' }
       case 'CASUAL':
-        return { label: t('lobby', 'create_skill_casual'), icon: '⭐⭐', className: 'skill-casual' }
+        return { label: t('lobby', 'create_skill_casual'), stars: 2, className: 'skill-casual' }
       case 'SERIOUS':
-        return { label: t('lobby', 'create_skill_competitive'), icon: '⭐⭐⭐', className: 'skill-serious' }
+        return { label: t('lobby', 'create_skill_competitive'), stars: 3, className: 'skill-serious' }
       default:
         return null
     }
@@ -221,7 +222,7 @@ export default function SpectatorStagingScreen({
           data-testid="staging-back"
           title={mode === 'player' ? t('lobby','staging_back_hint') : t('lobby','staging_leave_hint')}
         >
-          <span>🚪 {t('lobby','staging_back_lobby')}</span>
+          <span><Icon name="logout" size={13} /> {t('lobby','staging_back_lobby')}</span>
         </button>
       </header>
 
@@ -231,27 +232,27 @@ export default function SpectatorStagingScreen({
           {/* Table Header Info */}
           <div className="staging-card-header">
             <div className="staging-title-row">
-              <span className="staging-status-pill">{mode === 'player' ? `🪑 ${t('lobby','staging_mode_player')}` : `👁️ ${t('lobby','staging_mode_spectator')}`}</span>
+              <span className="staging-status-pill">{mode === 'player' ? (<><Icon name="chair" size={12} /> {t('lobby','staging_mode_player')}</>) : (<><Icon name="eye" size={12} /> {t('lobby','staging_mode_spectator')}</>)}</span>
               <h2 className="staging-table-name">{activeTable?.tableName || `${t('lobby','staging_waiting_fallback')} ${t('lobby','staging_title') && ''}`}</h2>
             </div>
 
             <div className="staging-tags-row">
-              <span className="staging-tag tag-game">🎮 {activeTable?.gameType || t('lobby','staging_duel_fallback')}</span>
-              <span className="staging-tag tag-deck">📜 {activeTable?.deckType || 'Constructed'}</span>
+              <span className="staging-tag tag-game"><Icon name="gamepad" size={12} /> {activeTable?.gameType || t('lobby','staging_duel_fallback')}</span>
+              <span className="staging-tag tag-deck"><Icon name="scrollText" size={12} /> {activeTable?.deckType || 'Constructed'}</span>
               {skill && (
                 <span className={`staging-tag tag-skill ${skill.className}`}>
-                  {skill.icon} {skill.label}
+                  {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {skill.label}
                 </span>
               )}
               {activeTable?.rated ? (
-                <span className="staging-tag tag-rated">🏅 {t('lobby','tag_rated')}</span>
+                <span className="staging-tag tag-rated"><Icon name="medal" size={12} /> {t('lobby','tag_rated')}</span>
               ) : (
                 <span className="staging-tag tag-unrated">{t('lobby','tag_unrated')}</span>
               )}
               {activeTable?.passworded && (
-                <span className="staging-tag tag-private">🔒 {t('lobby','tag_private')}</span>
+                <span className="staging-tag tag-private"><Icon name="lock" size={12} /> {t('lobby','tag_private')}</span>
               )}
-              <span className="staging-tag tag-seats">👥 {activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</span>
+              <span className="staging-tag tag-seats"><Icon name="users" size={12} /> {activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</span>
             </div>
           </div>
 
@@ -263,16 +264,16 @@ export default function SpectatorStagingScreen({
                 <div className={`staging-player-card ${seats[0]?.playerName ? 'occupied' : 'empty'}`}>
                   <div className="player-avatar-circle">
                     {seats[0]?.playerName ? (
-                      seats[0]?.playerType === 'HUMAN' || !seats[0]?.playerType ? '👤' : '🤖'
+                      seats[0]?.playerType === 'HUMAN' || !seats[0]?.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />
                     ) : (
-                      '⭕'
+                      <Icon name="circle" size={22} />
                     )}
                   </div>
                   <div className="player-meta">
                     <span className="player-card-name">
                       {seats[0]?.playerName || t('lobby','staging_waiting_player')}
                       {hostName && seats[0]?.playerName?.toLowerCase() === hostName.toLowerCase() && (
-                        <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>
+                        <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>
                       )}
                     </span>
                     {(() => {
@@ -300,16 +301,16 @@ export default function SpectatorStagingScreen({
                 <div className={`staging-player-card ${seats[1]?.playerName ? 'occupied' : 'empty'}`}>
                   <div className="player-avatar-circle">
                     {seats[1]?.playerName ? (
-                      seats[1]?.playerType === 'HUMAN' || !seats[1]?.playerType ? '👤' : '🤖'
+                      seats[1]?.playerType === 'HUMAN' || !seats[1]?.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />
                     ) : (
-                      '⭕'
+                      <Icon name="circle" size={22} />
                     )}
                   </div>
                   <div className="player-meta">
                     <span className="player-card-name">
                       {seats[1]?.playerName || t('lobby','staging_waiting_opponent')}
                       {hostName && seats[1]?.playerName?.toLowerCase() === hostName.toLowerCase() && (
-                        <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>
+                        <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>
                       )}
                     </span>
                     {(() => {
@@ -337,12 +338,12 @@ export default function SpectatorStagingScreen({
                   return (
                     <div key={idx} className={`staging-player-card ${isOccupied ? 'occupied' : 'empty'}`}>
                       <div className="player-avatar-circle">
-                        {isOccupied ? (s.playerType === 'HUMAN' || !s.playerType ? '👤' : '🤖') : '⭕'}
+                        {isOccupied ? (s.playerType === 'HUMAN' || !s.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />) : <Icon name="circle" size={22} />}
                       </div>
                       <div className="player-meta">
                         <span className="player-card-name">
                           {s.playerName || t('lobby','staging_seat_number', { number: idx + 1 })}
-                          {isHost && <span className="player-crown" title={t('lobby','staging_host_crown')}>👑</span>}
+                          {isHost && <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>}
                         </span>
                         <span className={`player-status-tag ${readiness}`}>
                           {readiness === 'empty'
@@ -366,11 +367,11 @@ export default function SpectatorStagingScreen({
               <span className="pulse-headline">
                 {isReady
                   ? allPlayersReady
-                    ? `✨ ${t('lobby','staging_all_ready')}`
-                    : `⏳ ${t('lobby','staging_waiting_players_ready')}`
+                    ? (<><Icon name="sparkles" size={13} /> {t('lobby','staging_all_ready')}</>)
+                    : (<><Icon name="hourglass" size={13} /> {t('lobby','staging_waiting_players_ready')}</>)
                   : hasEmptySeats
-                  ? `⏳ ${t('lobby','staging_waiting_seats')}`
-                  : `⏳ ${t('lobby','staging_preparing')}`}
+                  ? (<><Icon name="hourglass" size={13} /> {t('lobby','staging_waiting_seats')}</>)
+                  : (<><Icon name="hourglass" size={13} /> {t('lobby','staging_preparing')}</>)}
               </span>
               <span className="pulse-subline">
                 {mode === 'player'
@@ -391,7 +392,7 @@ export default function SpectatorStagingScreen({
                   disabled={!allPlayersReady}
                   title={!allPlayersReady ? t('lobby','staging_start_blocked_not_ready') : undefined}
                 >
-                  ▶️ {t('lobby','start_match_btn')}
+                  <Icon name="play" size={13} /> {t('lobby','start_match_btn')}
                 </button>
               )}
               <button
@@ -400,7 +401,7 @@ export default function SpectatorStagingScreen({
                 data-testid="staging-toggle-ready"
                 onClick={handleToggleReady}
               >
-                {myIsReady ? `⏳ ${t('lobby','staging_btn_not_ready')}` : `✅ ${t('lobby','staging_btn_ready')}`}
+                {myIsReady ? (<><Icon name="hourglass" size={13} /> {t('lobby','staging_btn_not_ready')}</>) : (<><Icon name="check" size={13} /> {t('lobby','staging_btn_ready')}</>)}
               </button>
               <button
                 type="button"
@@ -408,7 +409,7 @@ export default function SpectatorStagingScreen({
                 data-testid="staging-change-deck"
                 onClick={() => setShowChangeDeck(true)}
               >
-                🃏 {t('lobby','staging_btn_change_deck')}
+                <Icon name="layers" size={13} /> {t('lobby','staging_btn_change_deck')}
               </button>
               <button
                 type="button"
@@ -416,7 +417,7 @@ export default function SpectatorStagingScreen({
                 data-testid="staging-leave"
                 onClick={() => void leaveStagingTable()}
               >
-                🚪 {t('lobby','staging_leave_table')}
+                <Icon name="logout" size={13} /> {t('lobby','staging_leave_table')}
               </button>
               {isOwner && (
                 <button
@@ -425,7 +426,7 @@ export default function SpectatorStagingScreen({
                   data-testid="staging-remove"
                   onClick={() => void removeStagingTable()}
                 >
-                  🗑️ {t('lobby','staging_remove_table')}
+                  <Icon name="trash" size={13} /> {t('lobby','staging_remove_table')}
                 </button>
               )}
             </div>
@@ -435,7 +436,7 @@ export default function SpectatorStagingScreen({
         {/* Embedded Global Chat */}
         <div className="staging-chat-card panel">
           <div className="staging-chat-header">
-            <h3>💬 {t('lobby','staging_chat_title')}</h3>
+            <h3><Icon name="chat" size={15} /> {t('lobby','staging_chat_title')}</h3>
             <span className="chat-hint">{t('lobby','staging_chat_hint')}</span>
           </div>
           <div className="staging-chat-body">

@@ -128,8 +128,8 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={designatedPlayer} side="my" onHover={onHover} />)
     const badges = container.querySelectorAll('.badge-designation')
     expect(badges.length).toBe(2)
-    expect(badges[0].textContent).toContain('🏛️')
-    expect(badges[1].textContent).toContain('🏎️')
+    expect(badges[0].querySelector('svg')).not.toBeNull()
+    expect(badges[1].querySelector('svg')).not.toBeNull()
 
     fireEvent.mouseEnter(badges[0])
     expect(onHover).toHaveBeenCalledWith(

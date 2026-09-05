@@ -21,7 +21,7 @@ export default function StartingPlayerDialog({ form }: { form: UseFeedbackForm }
             disabled={busy}
             onClick={() => void send(() => sendValue(prompt, option.value), t('errors', 'send_failed'))}
           >
-            <span className="sp-avatar">🧙</span>
+            <span className="sp-avatar"><Icon name="user" size={20} /></span>
             <span className="sp-name"><FormattedText text={option.label} /></span>
             <span className="sp-action">{t('game', 'starting_player_starts_first')}</span>
           </button>

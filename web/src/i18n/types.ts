@@ -96,6 +96,16 @@ export interface TranslationSchema {
     filter_only_open: string
     filter_hide_playing: string
     filter_reset: string
+    filter_sort_label: string
+    filter_sort_desktop: string
+    filter_sort_newest: string
+    filter_sort_oldest: string
+    filter_passworded_only: string
+    filter_unrated_only: string
+    filter_hide_ignored: string
+    filter_tourney_constructed: string
+    filter_tourney_limited: string
+    join_ignored_owner: string
     no_tables_found: string
     select_deck_prompt: string
     tournament_badge: string

@@ -2,6 +2,7 @@ import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import Modal from '../ui/Modal'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './VotingDialog.css'
 
@@ -28,7 +29,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
 
   return (
     <Modal backdropClassName="voting-backdrop" dialogClassName="voting-dialog" labelledBy="voting-title">
-        <div className="voting-kicker">🗳️ {t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
+        <div className="voting-kicker"><Icon name="check" size={13} /> {t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
         <h2 id="voting-title"><FormattedText text={prompt.title} /></h2>
         <p className="voting-msg"><FormattedText text={prompt.message} /></p>
         {hasTwo ? (
@@ -38,7 +39,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
               disabled={busy}
               onClick={() => choose(left.value)}
             >
-              <span className="voting-btn-icon">✅</span>
+              <span className="voting-btn-icon"><Icon name="check" size={16} /></span>
               <span className="voting-btn-label"><FormattedText text={left.label} /></span>
             </button>
             <span className="voting-vs">VS</span>
@@ -47,7 +48,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
               disabled={busy}
               onClick={() => choose(right.value)}
             >
-              <span className="voting-btn-icon">🔵</span>
+              <span className="voting-btn-icon"><Icon name="circle" size={15} /></span>
               <span className="voting-btn-label"><FormattedText text={right.label} /></span>
             </button>
           </div>

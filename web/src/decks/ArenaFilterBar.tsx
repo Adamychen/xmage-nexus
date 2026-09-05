@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { ManaPip } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import type { Rarity, StatFilter, StatOp } from './filterQuery'
 import './ArenaFilterBar.css'
@@ -115,7 +116,7 @@ export function ArenaFilterBar({
     <div className="arena-filter-bar">
       <div className="filter-bar-top">
         <div className="arena-search-box">
-          <span className="arena-search-icon">🔍</span>
+          <span className="arena-search-icon"><Icon name="search" size={14} /></span>
           <input
             className="arena-search-input search-input"
             value={query}

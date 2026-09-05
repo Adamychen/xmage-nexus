@@ -329,7 +329,7 @@ describe('StackZone', () => {
     const line = container.querySelector('[data-testid="stack-targets"]')
     expect(line).not.toBeNull()
     expect(line?.textContent).toContain('Acererak, el Archiliche')
-    expect(line?.textContent).toContain('👤 SimBot')
+    expect(line?.textContent).toContain('SimBot')
   })
 
   it('hides the target line when the spell has no targets', () => {

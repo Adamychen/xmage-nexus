@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { TableView } from '../net/types'
+import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './TableFilterBar.css'
 
@@ -8,11 +9,16 @@ export interface TableFilters {
   format: string
   availability: 'all' | 'open' | 'dueling'
   mode: 'all' | '1v1' | 'multi' | 'tourney'
+  tourneyKind: 'all' | 'constructed' | 'limited'
   skill: 'all' | 'BEGINNER' | 'CASUAL' | 'SERIOUS'
   hidePassworded: boolean
+  passwordedOnly: boolean
   ratedOnly: boolean
+  unratedOnly: boolean
   spectatorsOnly: boolean
   aiSeatsOnly: boolean
+  hideIgnored: boolean
+  sort: 'desktop' | 'newest' | 'oldest'
 }
 
 export const INITIAL_TABLE_FILTERS: TableFilters = {
@@ -20,21 +26,34 @@ export const INITIAL_TABLE_FILTERS: TableFilters = {
   format: 'ALL',
   availability: 'all',
   mode: 'all',
+  tourneyKind: 'all',
   skill: 'all',
   hidePassworded: false,
+  passwordedOnly: false,
   ratedOnly: false,
+  unratedOnly: false,
   spectatorsOnly: false,
   aiSeatsOnly: false,
+  hideIgnored: false,
+  sort: 'desktop',
 }
 
-export const POPULAR_FORMATS = [
-  { id: 'ALL', label: 'Todos', icon: '🌐' },
-  { id: 'Commander', label: 'Commander', icon: '👑' },
-  { id: 'Modern', label: 'Modern', icon: '⚡' },
-  { id: 'Pioneer', label: 'Pioneer', icon: '🛡️' },
-  { id: 'Standard', label: 'Standard', icon: '📜' },
-  { id: 'Pauper', label: 'Pauper', icon: '💎' },
-  { id: 'Limited', label: 'Limitado', icon: '📦' },
+export function tableOwnerName(t: TableView): string {
+  return (t.controllerName ?? '').split(',')[0].trim()
+}
+
+function hasFreeSeat(t: TableView): boolean {
+  return t.seats?.some((s) => !s.playerName) ?? false
+}
+
+export const POPULAR_FORMATS: Array<{ id: string; label: string; icon: IconName }> = [
+  { id: 'ALL', label: 'Todos', icon: 'globe' },
+  { id: 'Commander', label: 'Commander', icon: 'crown' },
+  { id: 'Modern', label: 'Modern', icon: 'zap' },
+  { id: 'Pioneer', label: 'Pioneer', icon: 'shield' },
+  { id: 'Standard', label: 'Standard', icon: 'scrollText' },
+  { id: 'Pauper', label: 'Pauper', icon: 'gem' },
+  { id: 'Limited', label: 'Limitado', icon: 'package' },
 ]
 
 export const OTHER_COMMON_FORMATS = [
@@ -48,8 +67,9 @@ export const OTHER_COMMON_FORMATS = [
   'Constructed - Tiny Leaders',
 ]
 
-export function filterTables(tables: TableView[], filters: TableFilters): TableView[] {
-  return tables.filter((t) => {
+export function filterTables(tables: TableView[], filters: TableFilters, ignored: string[] = []): TableView[] {
+  const ignoredSet = new Set(ignored.map((u) => u.toLowerCase()))
+  const list = tables.filter((t) => {
     // 1. Search Query (matches name, controller, formats, seats)
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase().trim()
@@ -117,6 +137,9 @@ export function filterTables(tables: TableView[], filters: TableFilters): TableV
       if (!isMulti) return false
     } else if (filters.mode === 'tourney') {
       if (!t.isTournament) return false
+      const gt = t.gameType?.toLowerCase() ?? ''
+      if (filters.tourneyKind === 'constructed' && !gt.includes('constructed')) return false
+      if (filters.tourneyKind === 'limited' && !/booster|sealed|jumpstart/.test(gt)) return false
     }
 
     // 5. Skill Level
@@ -126,8 +149,11 @@ export function filterTables(tables: TableView[], filters: TableFilters): TableV
 
     // 6. Modifiers
     if (filters.hidePassworded && t.passworded) return false
+    if (filters.passwordedOnly && !t.passworded) return false
     if (filters.ratedOnly && !t.rated) return false
+    if (filters.unratedOnly && t.rated) return false
     if (filters.spectatorsOnly && !t.spectatorsAllowed) return false
+    if (filters.hideIgnored && ignoredSet.has(tableOwnerName(t).toLowerCase())) return false
     if (filters.aiSeatsOnly) {
       const hasAiSeat =
         (t.tableState === 'WAITING' || t.tableState === 'READY_TO_START') &&
@@ -137,6 +163,11 @@ export function filterTables(tables: TableView[], filters: TableFilters): TableV
 
     return true
   })
+
+  const byCreatedDesc = (a: TableView, b: TableView) => (b.createTime ?? 0) - (a.createTime ?? 0)
+  if (filters.sort === 'newest') return list.sort(byCreatedDesc)
+  if (filters.sort === 'oldest') return list.sort((a, b) => -byCreatedDesc(a, b))
+  return list.sort((a, b) => Number(hasFreeSeat(b)) - Number(hasFreeSeat(a)) || byCreatedDesc(a, b))
 }
 
 interface TableFilterBarProps {
@@ -189,11 +220,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
     if (filters.format !== 'ALL') c++
     if (filters.availability !== 'all') c++
     if (filters.mode !== 'all') c++
+    if (filters.mode === 'tourney' && filters.tourneyKind !== 'all') c++
     if (filters.skill !== 'all') c++
     if (filters.hidePassworded) c++
+    if (filters.passwordedOnly) c++
     if (filters.ratedOnly) c++
+    if (filters.unratedOnly) c++
     if (filters.spectatorsOnly) c++
     if (filters.aiSeatsOnly) c++
+    if (filters.hideIgnored) c++
+    if (filters.sort !== 'desktop') c++
     return c
   }, [filters])
 
@@ -205,7 +241,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
       {/* Row 1: Search & Quick Status Toggles */}
       <div className="tfb-row tfb-top-row">
         <div className="tfb-search-box">
-          <span className="tfb-search-icon">🔍</span>
+          <span className="tfb-search-icon"><Icon name="search" size={14} /></span>
           <input
             type="text"
             className="tfb-search-input"
@@ -255,7 +291,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
             }
             title={t('lobby.in_game')}
           >
-            <span>👁️ {t('lobby.in_game')}</span>
+            <span><Icon name="eye" size={13} /> {t('lobby.in_game')}</span>
           </button>
 
           <button
@@ -264,7 +300,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
             onClick={() => setShowAdvanced((v) => !v)}
             title={t('common', 'settings')}
           >
-            <span>⚙️ {t('common', 'settings')}</span>
+            <span><Icon name="settings" size={13} /> {t('common', 'settings')}</span>
             {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
             <span className="tfb-arrow-icon">{showAdvanced ? '▴' : '▾'}</span>
           </button>
@@ -295,7 +331,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 className={`tfb-format-chip ${isActive ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, format: pf.id })}
               >
-                <span className="tfb-chip-icon">{pf.icon}</span>
+                <span className="tfb-chip-icon"><Icon name={pf.icon} size={13} /></span>
                 <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.label}</span>
                 <span className="tfb-chip-count">{count}</span>
               </button>
@@ -329,6 +365,34 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
       {/* Row 3: Advanced Collapsible Drawer */}
       {showAdvanced && (
         <div className="tfb-advanced-drawer">
+          {/* Sort group */}
+          <div className="tfb-drawer-section">
+            <span className="tfb-section-label">{t('lobby', 'filter_sort_label')}:</span>
+            <div className="tfb-button-group">
+              <button
+                type="button"
+                className={`tfb-sub-pill ${filters.sort === 'desktop' ? 'active' : ''}`}
+                onClick={() => onChange({ ...filters, sort: 'desktop' })}
+              >
+                {t('lobby', 'filter_sort_desktop')}
+              </button>
+              <button
+                type="button"
+                className={`tfb-sub-pill ${filters.sort === 'newest' ? 'active' : ''}`}
+                onClick={() => onChange({ ...filters, sort: 'newest' })}
+              >
+                {t('lobby', 'filter_sort_newest')}
+              </button>
+              <button
+                type="button"
+                className={`tfb-sub-pill ${filters.sort === 'oldest' ? 'active' : ''}`}
+                onClick={() => onChange({ ...filters, sort: 'oldest' })}
+              >
+                {t('lobby', 'filter_sort_oldest')}
+              </button>
+            </div>
+          </div>
+
           {/* Mode group */}
           <div className="tfb-drawer-section">
             <span className="tfb-section-label">{t('game', 'combat')}:</span>
@@ -345,23 +409,48 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 className={`tfb-sub-pill ${filters.mode === '1v1' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: '1v1' })}
               >
-                ⚔️ 1v1
+                <Icon name="swords" size={13} /> 1v1
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === 'multi' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: 'multi' })}
               >
-                👥 {t('lobby', 'create_tab_multi')}
+                <Icon name="users" size={13} /> {t('lobby', 'create_tab_multi')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.mode === 'tourney' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, mode: 'tourney' })}
               >
-                🏆 {t('lobby', 'tournament_badge')}
+                <Icon name="trophy" size={13} /> {t('lobby', 'tournament_badge')}
               </button>
             </div>
+            {filters.mode === 'tourney' && (
+              <div className="tfb-button-group">
+                <button
+                  type="button"
+                  className={`tfb-sub-pill ${filters.tourneyKind === 'all' ? 'active' : ''}`}
+                  onClick={() => onChange({ ...filters, tourneyKind: 'all' })}
+                >
+                  {t('common', 'all')}
+                </button>
+                <button
+                  type="button"
+                  className={`tfb-sub-pill ${filters.tourneyKind === 'constructed' ? 'active' : ''}`}
+                  onClick={() => onChange({ ...filters, tourneyKind: 'constructed' })}
+                >
+                  {t('lobby', 'filter_tourney_constructed')}
+                </button>
+                <button
+                  type="button"
+                  className={`tfb-sub-pill ${filters.tourneyKind === 'limited' ? 'active' : ''}`}
+                  onClick={() => onChange({ ...filters, tourneyKind: 'limited' })}
+                >
+                  {t('lobby', 'filter_tourney_limited')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Skill group */}
@@ -380,21 +469,21 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                 className={`tfb-sub-pill ${filters.skill === 'BEGINNER' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'BEGINNER' })}
               >
-                ⭐ {t('lobby', 'create_skill_beginner')}
+                <Icon name="star" size={12} /> {t('lobby', 'create_skill_beginner')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'CASUAL' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'CASUAL' })}
               >
-                ⭐⭐ {t('lobby', 'create_skill_casual')}
+                <Icon name="star" size={12} /><Icon name="star" size={12} /> {t('lobby', 'create_skill_casual')}
               </button>
               <button
                 type="button"
                 className={`tfb-sub-pill ${filters.skill === 'SERIOUS' ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, skill: 'SERIOUS' })}
               >
-                ⭐⭐⭐ {t('lobby', 'create_skill_competitive')}
+                <Icon name="star" size={12} /><Icon name="star" size={12} /><Icon name="star" size={12} /> {t('lobby', 'create_skill_competitive')}
               </button>
             </div>
           </div>
@@ -409,7 +498,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.hidePassworded}
                   onChange={(e) => onChange({ ...filters, hidePassworded: e.target.checked })}
                 />
-                <span>🔓 {t('lobby','tag_private')}</span>
+                <span><Icon name="unlock" size={12} /> {t('lobby','tag_private')}</span>
+              </label>
+
+              <label className="tfb-switch-label">
+                <input
+                  type="checkbox"
+                  checked={filters.passwordedOnly}
+                  onChange={(e) => onChange({ ...filters, passwordedOnly: e.target.checked })}
+                />
+                <span><Icon name="lock" size={12} /> {t('lobby', 'filter_passworded_only')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -418,7 +516,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.ratedOnly}
                   onChange={(e) => onChange({ ...filters, ratedOnly: e.target.checked })}
                 />
-                <span>🏅 {t('lobby','tag_rated')}</span>
+                <span><Icon name="medal" size={12} /> {t('lobby', 'tag_rated')}</span>
+              </label>
+
+              <label className="tfb-switch-label">
+                <input
+                  type="checkbox"
+                  checked={filters.unratedOnly}
+                  onChange={(e) => onChange({ ...filters, unratedOnly: e.target.checked })}
+                />
+                <span><Icon name="medal" size={12} /> {t('lobby', 'filter_unrated_only')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -427,7 +534,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.spectatorsOnly}
                   onChange={(e) => onChange({ ...filters, spectatorsOnly: e.target.checked })}
                 />
-                <span>👁️ {t('lobby','create_field_spectators')}</span>
+                <span><Icon name="eye" size={12} /> {t('lobby','create_field_spectators')}</span>
               </label>
 
               <label className="tfb-switch-label">
@@ -436,7 +543,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
                   checked={filters.aiSeatsOnly}
                   onChange={(e) => onChange({ ...filters, aiSeatsOnly: e.target.checked })}
                 />
-                <span>🤖 {t('lobby','ai')}</span>
+                <span><Icon name="bot" size={12} /> {t('lobby', 'ai')}</span>
+              </label>
+
+              <label className="tfb-switch-label">
+                <input
+                  type="checkbox"
+                  checked={filters.hideIgnored}
+                  onChange={(e) => onChange({ ...filters, hideIgnored: e.target.checked })}
+                />
+                <span><Icon name="ban" size={12} /> {t('lobby', 'filter_hide_ignored')}</span>
               </label>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './GameEndDialog.css'
 
@@ -24,7 +25,7 @@ export default function GameEndDialog() {
     <div className="end-backdrop" role="presentation">
       <section className="end-dialog panel" role="dialog" aria-modal="true" aria-labelledby="end-title">
         <h2 id="end-title">
-          {isSpectator ? `🏆 ${t('game', 'game_over')}` : (end.won ? `🎉 ${t('game', 'victory')}` : `💀 ${t('game', 'defeat')}`)}
+          {isSpectator ? (<><Icon name="trophy" size={20} /> {t('game', 'game_over')}</>) : (end.won ? (<><Icon name="trophy" size={20} /> {t('game', 'victory')}</>) : (<><Icon name="skull" size={20} /> {t('game', 'defeat')}</>))}
         </h2>
 
         {winnerName && (

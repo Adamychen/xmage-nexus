@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import { commanderTax } from './commanders'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommandZone.css'
 
@@ -193,11 +194,11 @@ export default function CommandZone({
             />
             {item.isCompanion ? (
               <div className="companion-badge" title={t('board', 'zone_command')}>
-                🦄
+                <Icon name="star" size={13} />
               </div>
             ) : (
               <div className="commander-badge" title={t('board', 'zone_command')}>
-                👑
+                <Icon name="crown" size={13} />
               </div>
             )}
             {tax > 0 && (

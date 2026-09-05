@@ -64,7 +64,7 @@ describe('JoinTableDialog', () => {
       <JoinTableDialog table={MOCK_PASSWORD_TABLE} onClose={onClose} onJoin={onJoin} />
     )
 
-    expect(getByText('🔒 Requiere contraseña')).not.toBeNull()
+    expect(getByText('Requiere contraseña')).not.toBeNull()
     const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…')
     fireEvent.change(passwordInput, { target: { value: 'secret123' } })
 
@@ -88,7 +88,7 @@ describe('JoinTableDialog', () => {
       <JoinTableDialog table={MOCK_TABLE} onClose={onClose} onJoin={onJoin} />
     )
 
-    const importToggle = getByText('📋 Pegar mazo nuevo…')
+    const importToggle = getByText('Pegar mazo nuevo…')
     fireEvent.click(importToggle)
 
     const nameInput = getByPlaceholderText(/Mazo Importado|Imported Deck/)

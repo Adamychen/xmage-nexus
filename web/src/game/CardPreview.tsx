@@ -3,6 +3,7 @@ import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardIm
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { ManaCost } from '../decks/ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import './CardPreview.css'
 
 interface Props {
@@ -15,14 +16,15 @@ export default function CardPreview({ card, onClose }: Props) {
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number>(0)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
 
-  function abilityBadgeLabel(c: CardView): string {
+  function abilityBadge(c: CardView): { icon: import('../ui/Icon').IconName; label: string } {
     const at = c.abilityType ?? ''
-    if (at === 'Triggered' || at === 'Triggered Mana') return t('game', 'ability_badge_triggered')
-    if (at === 'Activated' || at === 'Mana') return t('game', 'ability_badge_activated')
-    if (at === 'Loyalty') return t('game', 'ability_badge_loyalty')
-    if (at === 'Static') return t('game', 'ability_badge_static')
-    return t('game', 'ability_badge_general')
+    if (at === 'Triggered' || at === 'Triggered Mana') return { icon: 'bell', label: t('game', 'ability_badge_triggered') }
+    if (at === 'Activated' || at === 'Mana') return { icon: 'zap', label: t('game', 'ability_badge_activated') }
+    if (at === 'Loyalty') return { icon: 'crown', label: t('game', 'ability_badge_loyalty') }
+    if (at === 'Static') return { icon: 'shield', label: t('game', 'ability_badge_static') }
+    return { icon: 'zap', label: t('game', 'ability_badge_general') }
   }
+  const abilityBadgeInfo = card ? abilityBadge(card) : null
 
   // Reset face selection when card changes
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function CardPreview({ card, onClose }: Props) {
       {/* Banner for abilities */}
       {isAbility && (
         <div className="card-preview-ability-banner">
-          <span className="ability-banner-type">{abilityBadgeLabel(card)}</span>
+          <span className="ability-banner-type">{abilityBadgeInfo && <><Icon name={abilityBadgeInfo.icon} size={12} /> </>}{abilityBadgeInfo?.label}</span>
           <span className="ability-banner-source">{t('game', 'card_source_label')} {getSourceCardName(card)}</span>
         </div>
       )}
@@ -97,7 +99,7 @@ export default function CardPreview({ card, onClose }: Props) {
             className={`face-tab-btn ${selectedFaceIndex === 1 ? 'active' : ''}`}
             onClick={() => setSelectedFaceIndex(1)}
           >
-            🔄 {card.secondCardFace?.name || t('game', 'card_preview_face2')}
+            <Icon name="refresh" size={12} /> {card.secondCardFace?.name || t('game', 'card_preview_face2')}
           </button>
         </div>
       )}

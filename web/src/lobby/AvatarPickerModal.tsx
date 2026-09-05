@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
 import AvatarImage from './AvatarImage'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './AvatarPickerModal.css'
 
@@ -60,7 +61,7 @@ export default function AvatarPickerModal({
             className={`chip ${filter === 'special' ? 'on' : ''}`}
             onClick={() => setFilter('special')}
           >
-            ✨ Animados (GIF)
+            <Icon name="sparkles" size={12} /> Animados (GIF)
           </button>
         </div>
 
@@ -80,7 +81,7 @@ export default function AvatarPickerModal({
                 <div className="avatar-item-img-wrap">
                   <AvatarImage avatarId={a.id} size="large" />
                   {isSelected && <span className="avatar-selected-check">✓</span>}
-                  {a.isSpecial && <span className="avatar-special-spark">✨</span>}
+                  {a.isSpecial && <span className="avatar-special-spark"><Icon name="sparkles" size={12} /></span>}
                 </div>
                 <span className="avatar-item-name">{a.name}</span>
               </div>

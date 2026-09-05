@@ -198,7 +198,7 @@ export default function FormattedText({ text, className = '', onHover }: Formatt
               key={idx}
               className={`formatted-colored ${isCard ? 'is-card' : ''} ${isPlayer ? 'is-player' : ''}`.trim()}
               style={token.color ? { color: token.color } : undefined}
-              title={isPlayer ? `👤 ${tStatic('common','player')}: ${token.content}` : `🃏 ${token.content}`}
+              title={isPlayer ? `${tStatic('common','player')}: ${token.content}` : `${token.content}`}
               onMouseEnter={(e) => {
                 if (isCard && onHover) {
                   onHover(

@@ -4,6 +4,7 @@ import PodBoard from '../board/PodBoard'
 import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
+import Icon from '../ui/Icon'
 import * as cmds from '../net/commands'
 import { maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
@@ -290,7 +291,7 @@ export default function GameScreen() {
                 onClick={() => setRightTab('commander')}
                 title={t('game', 'commander_damage')}
               >
-                👑 {t('game', 'tab_commander')}
+                <Icon name="crown" size={13} /> {t('game', 'tab_commander')}
               </button>
             )}
             <button

@@ -1,3 +1,5 @@
+import type { IconName } from '../ui/Icon'
+
 export type RankTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'MYTHIC'
 
 export interface RankInfo {
@@ -5,7 +7,7 @@ export interface RankInfo {
   name: string
   subTier: string // 'IV', 'III', 'II', 'I' or 'Top'
   label: string // e.g. 'Oro II', 'Mítico'
-  icon: string
+  icon: IconName
   color: string
   bg: string
   border: string
@@ -22,7 +24,7 @@ export const RANK_TIERS_CONFIG: Array<{
   name: string
   minElo: number
   maxElo: number
-  icon: string
+  icon: IconName
   color: string
   bg: string
   border: string
@@ -32,7 +34,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Bronce',
     minElo: 0,
     maxElo: 1399,
-    icon: '🟤',
+    icon: 'medal',
     color: '#d97706',
     bg: 'rgba(217, 119, 6, 0.15)',
     border: 'rgba(217, 119, 6, 0.4)',
@@ -42,7 +44,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Plata',
     minElo: 1400,
     maxElo: 1549,
-    icon: '⚪',
+    icon: 'medal',
     color: '#e5e7eb',
     bg: 'rgba(229, 231, 235, 0.15)',
     border: 'rgba(229, 231, 235, 0.35)',
@@ -52,7 +54,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Oro',
     minElo: 1550,
     maxElo: 1699,
-    icon: '🟡',
+    icon: 'medal',
     color: '#facc15',
     bg: 'rgba(250, 204, 21, 0.15)',
     border: 'rgba(250, 204, 21, 0.45)',
@@ -62,7 +64,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Platino',
     minElo: 1700,
     maxElo: 1849,
-    icon: '💠',
+    icon: 'award',
     color: '#38bdf8',
     bg: 'rgba(56, 189, 248, 0.15)',
     border: 'rgba(56, 189, 248, 0.45)',
@@ -72,7 +74,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Diamante',
     minElo: 1850,
     maxElo: 1999,
-    icon: '💎',
+    icon: 'gem',
     color: '#818cf8',
     bg: 'rgba(129, 140, 248, 0.18)',
     border: 'rgba(129, 140, 248, 0.5)',
@@ -82,7 +84,7 @@ export const RANK_TIERS_CONFIG: Array<{
     name: 'Mítico',
     minElo: 2000,
     maxElo: 3000,
-    icon: '🟠',
+    icon: 'crown',
     color: '#fb923c',
     bg: 'rgba(251, 146, 60, 0.2)',
     border: 'rgba(251, 146, 60, 0.6)',
@@ -97,9 +99,9 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
     return {
       tier: 'MYTHIC',
       name: 'Mítico',
-      subTier: 'Top',
-      label: 'Mítico',
-      icon: '🟠',
+    subTier: 'Top',
+    label: 'Mítico',
+    icon: 'crown',
       color: '#fb923c',
       bg: 'rgba(251, 146, 60, 0.2)',
       border: 'rgba(251, 146, 60, 0.6)',

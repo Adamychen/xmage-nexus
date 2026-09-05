@@ -33,7 +33,7 @@ describe('GameEndDialog', () => {
     })
 
     render(<GameEndDialog />)
-    expect(screen.getByText('🎉 ¡Victoria!')).toBeDefined()
+    expect(screen.getByText('¡Victoria!')).toBeDefined()
     expect(screen.getAllByText(/Hero/).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Volver al lobby/i })).toBeDefined()
   })
@@ -55,7 +55,7 @@ describe('GameEndDialog', () => {
     })
 
     render(<GameEndDialog />)
-    expect(screen.getByText('💀 Derrota')).toBeDefined()
+    expect(screen.getByText('Derrota')).toBeDefined()
     expect(screen.getByText(/Marcador: 0–2/i)).toBeDefined()
   })
 
@@ -76,7 +76,7 @@ describe('GameEndDialog', () => {
     })
 
     render(<GameEndDialog />)
-    expect(screen.getByText('🏆 Partida finalizada')).toBeDefined()
+    expect(screen.getByText('Partida finalizada')).toBeDefined()
     expect(screen.getByText('Alice')).toBeDefined()
     expect(screen.queryByText(/Marcador:/i)).toBeNull()
 

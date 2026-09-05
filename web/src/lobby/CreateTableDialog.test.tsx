@@ -31,7 +31,7 @@ describe('CreateTableDialog', () => {
     expect(screen.getByRole('heading', { name: /Crear Mesa|Create Table/ })).toBeDefined()
     expect(screen.getAllByText(/General/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/Tiempos & Reglas|Timers & Rules/).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/🛡️/)).toBeDefined()
+    expect(screen.getByText(/Restricciones|Restrictions/)).toBeDefined()
     expect(screen.getAllByText(/Multijugador|Multiplayer/).length).toBeGreaterThanOrEqual(1)
   })
 
@@ -54,7 +54,7 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     // Switch to Security tab
-    const securityTab = screen.getByText(/🛡️/)
+    const securityTab = screen.getByText(/Restricciones|Restrictions/)
     fireEvent.click(securityTab)
 
     expect(screen.getByText(/Contraseña de la Mesa/i)).toBeDefined()

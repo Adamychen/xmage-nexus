@@ -43,10 +43,10 @@ describe('ChatBox component', () => {
 
     expect(getByText('di2aco se ha conectado')).not.toBeNull()
 
-    const toggleBtn = getByText('👁️ Avisos visibles')
+    const toggleBtn = getByText('Avisos visibles')
     fireEvent.click(toggleBtn)
 
-    expect(getByText('🔇 Avisos ocultos')).not.toBeNull()
+    expect(getByText('Avisos ocultos')).not.toBeNull()
     expect(queryByText('di2aco se ha conectado')).toBeNull()
     expect(queryByText('cardzigger ha perdido la conexión')).toBeNull()
     expect(getByText('Hello everyone!')).not.toBeNull()

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { ManaCost } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './SampleHandModal.css'
 
@@ -179,14 +180,14 @@ export function SampleHandModal({
         {/* Header */}
         <header className="sample-hand-header">
           <div className="sample-hand-title-wrap">
-            <h2 className="sample-hand-title">🖐️ {t('decks', 'sample_hand')}</h2>
+            <h2 className="sample-hand-title"><Icon name="hand" size={17} /> {t('decks', 'sample_hand')}</h2>
             <span className="sample-hand-deck-name">{deckName}</span>
           </div>
 
           <div className="sample-hand-stats-chips">
             <span className="stats-chip">{t('decks', 'total_cards')}: {hand.length}</span>
-            <span className="stats-chip lands">🏝️ {t('decks', 'lands')}: {landsInHand}</span>
-            <span className="stats-chip spells">✨ {t('decks', 'spells')}: {spellsInHand}</span>
+            <span className="stats-chip lands"><Icon name="tree" size={11} /> {t('decks', 'lands')}: {landsInHand}</span>
+            <span className="stats-chip spells"><Icon name="sparkles" size={11} /> {t('decks', 'spells')}: {spellsInHand}</span>
             <span className="stats-chip">{t('board', 'zone_library')}: {library.length}</span>
             <span className="stats-chip turn">{t('game', 'turn')}: {turn}</span>
           </div>
@@ -299,7 +300,7 @@ export function SampleHandModal({
               onClick={handleMulligan}
               title={t('decks', 'sample_london')}
             >
-              🔄 {t('decks', 'sample_mulligan')} {mulliganCount > 0 ? `(a ${Math.max(1, 7 - mulliganCount - 1)})` : '(a 6)'}
+              <Icon name="refresh" size={13} /> {t('decks', 'sample_mulligan')} {mulliganCount > 0 ? `(a ${Math.max(1, 7 - mulliganCount - 1)})` : '(a 6)'}
             </button>
             <button
               type="button"
@@ -308,7 +309,7 @@ export function SampleHandModal({
               disabled={library.length === 0}
               title={t('board', 'zone_library')}
             >
-              📥 {t('game', 'draw_card')} ({t('game', 'turn')} {turn + 1})
+              <Icon name="plus" size={13} /> {t('game', 'draw_card')} ({t('game', 'turn')} {turn + 1})
             </button>
           </div>
 
@@ -319,7 +320,7 @@ export function SampleHandModal({
               onClick={startNewHand}
               title={t('common', 'refresh')}
             >
-              ✨ {t('common', 'refresh')}
+              <Icon name="refresh" size={13} /> {t('common', 'refresh')}
             </button>
           </div>
         </footer>

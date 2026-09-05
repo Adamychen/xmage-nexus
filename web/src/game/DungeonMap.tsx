@@ -1,5 +1,6 @@
 import type { DungeonGraph } from './dungeons'
 import { nextRooms, roomLabel } from './dungeons'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 
 interface DungeonMapProps {
@@ -20,7 +21,7 @@ export default function DungeonMap({ graph, dungeonName, playerName, visited }: 
     <div className="mechanic-panel panel-dungeon">
       <div className="mechanic-header-card">
         <div className="mechanic-title-row">
-          <h3>🗺️ {dungeonName}</h3>
+          <h3><Icon name="map" size={15} /> {dungeonName}</h3>
           <span className="player-tag">({playerName})</span>
         </div>
         <p className="dungeon-sub">{t('game', 'mechanics_dungeon_active')} {dungeonName}</p>
@@ -50,7 +51,7 @@ export default function DungeonMap({ graph, dungeonName, playerName, visited }: 
                         → {leads.join(' / ')}
                       </span>
                     )}
-                    {isCurrent && <span className="current-marker">📍 {tt('game', 'mechanics_dungeon_active')}</span>}
+                    {isCurrent && <span className="current-marker"><Icon name="pin" size={11} /> {tt('game', 'mechanics_dungeon_active')}</span>}
                     {isVisited && !isCurrent && <span className="visited-marker">✓</span>}
                   </div>
                 )

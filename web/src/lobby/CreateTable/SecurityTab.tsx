@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function SecurityTab({ form }: { form: CreateTableForm }) {
@@ -6,7 +7,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
-        <h3>🛡️ {t('lobby','create_tab_restrictions')}</h3>
+        <h3><Icon name="shield" size={15} /> {t('lobby','create_tab_restrictions')}</h3>
         <p>Privacidad y filtros de acceso a la mesa.</p>
       </div>
       <label>
@@ -19,13 +20,13 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             placeholder={t('lobby','placeholder_password')}
           />
           <button type="button" className="password-toggle-btn" onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? 'Ocultar' : 'Mostrar'}>
-            {form.showPassword ? '🙈' : '👁️'}
+            {form.showPassword ? <Icon name="eyeOff" size={14} /> : <Icon name="eye" size={14} />}
           </button>
         </div>
       </label>
 
       <div className="create-restrictions-box">
-        <span className="restrictions-box-title">🛡️ {t('lobby','create_tab_restrictions')}</span>
+        <span className="restrictions-box-title"><Icon name="shield" size={13} /> {t('lobby','create_tab_restrictions')}</span>
         <div className="create-grid-2col">
           <label>
             {t('lobby','create_field_min_rating')}
@@ -88,7 +89,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
           onChange={(e) => form.setSpectatorsAllowed(e.target.checked)}
         />
         <div className="toggle-text-block">
-          <span className="toggle-title">👁️ {t('lobby','create_field_spectators')}</span>
+          <span className="toggle-title"><Icon name="eye" size={12} /> {t('lobby','create_field_spectators')}</span>
           <span className="toggle-desc">Permite que otros usuarios observen la partida en vivo.</span>
         </div>
       </label>
@@ -100,7 +101,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
           onChange={(e) => form.setRollbackTurnsAllowed(e.target.checked)}
         />
         <div className="toggle-text-block">
-          <span className="toggle-title">⏪ {t('lobby','create_field_rollback')}</span>
+          <span className="toggle-title"><Icon name="undo" size={12} /> {t('lobby','create_field_rollback')}</span>
           <span className="toggle-desc">Permite solicitar rebobinar la partida a un turno anterior.</span>
         </div>
       </label>

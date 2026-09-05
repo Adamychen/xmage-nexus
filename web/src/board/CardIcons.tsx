@@ -12,6 +12,7 @@ function abbrev(hint: string): string {
 }
 
 import { t as tStatic } from '../i18n'
+import Icon from '../ui/Icon'
 
 /**
  * Renders the restriction / ability icons the server sends on each card
@@ -35,7 +36,7 @@ export default function CardIcons({ icons }: { icons?: CardIcon[] }) {
           className="card-icon restriction"
           title={r.hint?.replace(/<br>/g, '\n') ?? tStatic('board', 'restriction_fallback')}
         >
-          {r.text || '⚠'}
+          {r.text || <Icon name="alert" size={11} />}
         </span>
       ))}
       {others.map((o, i) => (

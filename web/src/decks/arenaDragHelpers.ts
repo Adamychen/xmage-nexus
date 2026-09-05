@@ -69,7 +69,7 @@ export function setFloatingStripDragImage(
     <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;padding:0 12px;color:#ffffff;font-weight:800;font-size:13px;background:rgba(25,12,12,0.95);">
       ${artCropUrl ? `<div style="position:absolute;top:0;right:0;bottom:0;width:70%;background-image:url(${artCropUrl});background-size:cover;background-position:center;opacity:0.35;"></div>` : ''}
       <span style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;">
-        <span style="font-size:16px;">🗑️</span> Quitar: ${cardName}
+        <span style="font-size:16px;">✕</span> Quitar: ${cardName}
       </span>
     </div>
   `

@@ -5,6 +5,7 @@ import SecurityTab from './CreateTable/SecurityTab'
 import SeatsTab from './CreateTable/SeatsTab'
 import DevTab from './CreateTable/DevTab'
 import SummaryStrip from './CreateTable/SummaryStrip'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CreateTableDialog.css'
 
@@ -21,7 +22,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       <div className="dialog panel create-table-dialog">
         <div className="create-table-header">
           <div className="create-table-header-title">
-            <h2>⚔️ {t('lobby.create_table_btn')}</h2>
+            <h2><Icon name="swords" size={18} /> {t('lobby.create_table_btn')}</h2>
             <span className="create-table-subtitle">{t('lobby','create_header_subtitle')}</span>
           </div>
           <button type="button" className="create-dialog-close-btn" onClick={onClose}>
@@ -54,7 +55,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   {isCompleted ? '✓' : idx + 1}
                 </span>
                 <span className="wizard-step-label">
-                  <span className="wizard-step-icon">{step.icon}</span>
+                  <span className="wizard-step-icon"><Icon name={step.icon} size={13} /></span>
                   <span className="wizard-step-text">{label}</span>
                 </span>
                 {idx < wizardSteps.length - 1 && <span className={`wizard-connector ${isCompleted ? 'done' : ''}`} />}
@@ -73,7 +74,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
 
         <SummaryStrip form={form} />
 
-        {form.error && <div className="error-box">⚠️ {tError(form.error)}</div>}
+        {form.error && <div className="error-box"><Icon name="alert" size={14} /> {tError(form.error)}</div>}
 
         <div className="dialog-actions wizard-actions">
           <div className="wizard-actions-left">
@@ -93,7 +94,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
               </button>
             ) : (
               <button type="button" className="primary create-submit-btn" disabled={form.busy || !!form.compatibilityError || !form.name.trim()} onClick={() => void form.submit()} title={form.compatibilityError || undefined}>
-                {form.busy ? `${t('lobby','create_table_btn')}…` : form.isDraftLimited ? `${t('lobby','create_submit_draft')} 🃏` : `${t('lobby','create_table_btn')} 🚀`}
+                {form.busy ? `${t('lobby','create_table_btn')}…` : form.isDraftLimited ? (<><Icon name="layers" size={13} /> {t('lobby','create_submit_draft')}</>) : (<><Icon name="play" size={13} /> {t('lobby','create_table_btn')}</>)}
               </button>
             )}
           </div>

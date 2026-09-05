@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import type { TournamentView, RoundView, TournamentGameView } from '../net/types'
 import * as cmds from '../net/commands'
+import Icon from '../ui/Icon'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
 import { useTranslation } from '../i18n'
@@ -59,19 +60,19 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
           <span className="tournament-type" data-testid="tournament-type">{view.tournamentType}</span>
           <span className="tournament-state-badge" data-testid="tournament-state">{view.tournamentState}</span>
           {view.watchingAllowed ? (
-            <span className="tournament-watching-badge" data-testid="tournament-watching">👁️ {t('lobby', 'tag_spectators')}</span>
+            <span className="tournament-watching-badge" data-testid="tournament-watching"><Icon name="eye" size={12} /> {t('lobby', 'tag_spectators')}</span>
           ) : (
-            <span className="tournament-watching-badge off">🔒 {t('lobby', 'tag_private')}</span>
+            <span className="tournament-watching-badge off"><Icon name="lock" size={12} /> {t('lobby', 'tag_private')}</span>
           )}
         </div>
         <div className="tournament-header-actions">
           {timerLabel && (
             <span className="tournament-timer" data-testid="tournament-timer" title={`serverTime ${view.serverTime} stepStart ${view.stepStartTime}`}>
-              ⏱️ {timerLabel}
+              <Icon name="clock" size={12} /> {timerLabel}
             </span>
           )}
           {view.constructionTime > 0 && (
-            <span className="tournament-construction">🧱 {Math.floor(view.constructionTime / 60)}m {t('game', 'construct_title').toLowerCase()}</span>
+            <span className="tournament-construction"><Icon name="hourglass" size={12} /> {Math.floor(view.constructionTime / 60)}m {t('game', 'construct_title').toLowerCase()}</span>
           )}
           {onClose && (
             <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}>✕</button>
@@ -115,7 +116,7 @@ function BracketRound({ round, index, watchingAllowed }: { round: RoundView; ind
             <div className="bracket-game-meta">
               {g.roundNum != null && <span className="bracket-round-num">#R{g.roundNum}</span>}
               {g.tableId && <span className="bracket-table-id" title={g.tableId}>{t('lobby', 'create_table_btn')} {g.tableId.slice(0, 6)}</span>}
-              {watchingAllowed && g.gameId && <span className="bracket-watchable">👁️</span>}
+              {watchingAllowed && g.gameId && <span className="bracket-watchable"><Icon name="eye" size={12} /></span>}
             </div>
           </div>
         ))}

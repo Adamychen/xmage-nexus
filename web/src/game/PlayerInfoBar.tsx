@@ -187,31 +187,31 @@ function getCurseInfo(player: PlayerView, game: GameView | null): { count: numbe
   }
 }
 
-function getDesignationDetails(d: string): { icon: string; title: string; card: CardView } {
+function getDesignationDetails(d: string): { icon: import('../ui/Icon').IconName; title: string; card: CardView } {
   const dl = d.toLowerCase()
   if (dl.includes("city's blessing") || dl.includes("citys blessing") || dl.includes('blessing')) {
     return {
-      icon: '🏛️',
+      icon: 'landmark',
       title: 'City\'s Blessing (Ascend)',
       card: { name: "City's Blessing", displayName: "City's Blessing", manaValue: 0 } as CardView,
     }
   }
   if (dl.includes('speed')) {
     return {
-      icon: '🏎️',
+      icon: 'gauge',
       title: 'Speed',
       card: { name: 'Speed', displayName: 'Speed', manaValue: 0 } as CardView,
     }
   }
   if (dl.includes('enduring story') || dl.includes('story')) {
     return {
-      icon: '📖',
+      icon: 'bookOpen',
       title: 'Enduring Story',
       card: { name: 'Enduring Story', displayName: 'Enduring Story', manaValue: 0 } as CardView,
     }
   }
   return {
-    icon: '★',
+    icon: 'star',
     title: `Designation: ${d}`,
     card: { name: d, displayName: d, manaValue: 0 } as CardView,
   }
@@ -453,7 +453,7 @@ export default function PlayerInfoBar({
                 onMouseEnter={(e) => handleMouseEnter(details.card, e)}
                 onMouseLeave={handleMouseLeave}
               >
-                {details.icon}
+                <Icon name={details.icon} size={12} />
               </span>
             )
           })}

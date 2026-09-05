@@ -8,6 +8,7 @@ import {
   type CacheStats,
 } from '../services/imageDownloader'
 import { useTranslation } from '../i18n'
+import Icon from '../ui/Icon'
 import './DownloadImagesDialog.css'
 
 export interface DownloadImagesDialogProps {
@@ -87,7 +88,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
       <div className="download-dialog panel" role="dialog" aria-label={t('dialogs','download_title')}>
         <header className="download-dialog-header">
           <div className="download-dialog-title">
-            <span className="download-header-icon">📥</span>
+            <span className="download-header-icon"><Icon name="download" size={17} /></span>
             <h2>{t('dialogs','download_title')} (XMage Downloader)</h2>
           </div>
           <button type="button" className="download-dialog-close" onClick={onClose} title={t('common','close')} aria-label={t('common','close')}>
@@ -188,7 +189,7 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
 
           <div className="download-symbology-box">
             <div className="symbology-info">
-              <span className="symbology-icon">🔮</span>
+              <span className="symbology-icon"><Icon name="sparkles" size={14} /></span>
               <div>
                 <strong>{t('dialogs','download_symbology_title')}</strong>
                 <p>{t('dialogs','download_symbology_desc')}</p>
@@ -235,23 +236,23 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
 
             <div className="download-metrics-row">
               <div className="metric-pill">
-                <span className="metric-icon">⚡</span>
+                <span className="metric-icon"><Icon name="zap" size={13} /></span>
                 <span className="metric-label">{t('dialogs','download_metrics_speed')}:</span>
                 <span className="metric-val">{progress.speedCardsPerSec} c/s</span>
               </div>
               <div className="metric-pill">
-                <span className="metric-icon">💾</span>
+                <span className="metric-icon"><Icon name="save" size={13} /></span>
                 <span className="metric-label">{t('dialogs','download_metrics_disk')}:</span>
                 <span className="metric-val">{cacheStats.cardCount} ({mbInDisk} MB)</span>
               </div>
               <div className="metric-pill">
-                <span className="metric-icon">🔮</span>
+                <span className="metric-icon"><Icon name="sparkles" size={13} /></span>
                 <span className="metric-label">{t('dialogs','download_metrics_symbols')}:</span>
                 <span className="metric-val">{cacheStats.symbolCount}</span>
               </div>
               {progress.failed > 0 && (
                 <div className="metric-pill error">
-                  <span className="metric-icon">⚠️</span>
+                  <span className="metric-icon"><Icon name="alert" size={13} /></span>
                   <span className="metric-label">{t('dialogs','download_metrics_errors')}:</span>
                   <span className="metric-val">{progress.failed}</span>
                 </div>
@@ -268,17 +269,17 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             onClick={handleClearCache}
             title={t('dialogs','download_clear_cache')}
           >
-            🧹 {t('dialogs','download_clear_cache')}
+            <Icon name="trash" size={12} /> {t('dialogs','download_clear_cache')}
           </button>
 
           <div className="footer-action-buttons">
             {isRunning && (
               <>
                 <button type="button" className="download-btn-pause" onClick={handlePause}>
-                  ⏸ {t('dialogs','download_pause_btn')}
+                  <Icon name="pause" size={12} /> {t('dialogs','download_pause_btn')}
                 </button>
                 <button type="button" className="download-btn-cancel" onClick={handleCancel}>
-                  ⏹ {t('dialogs','download_cancel_btn')}
+                  <Icon name="square" size={12} /> {t('dialogs','download_cancel_btn')}
                 </button>
               </>
             )}
@@ -286,17 +287,17 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             {isPaused && (
               <>
                 <button type="button" className="download-btn-primary" onClick={handleResume}>
-                  ▶ {t('dialogs','download_resume_btn')}
+                  <Icon name="play" size={13} /> {t('dialogs','download_resume_btn')}
                 </button>
                 <button type="button" className="download-btn-cancel" onClick={handleCancel}>
-                  ⏹ {t('dialogs','download_cancel_btn')}
+                  <Icon name="square" size={12} /> {t('dialogs','download_cancel_btn')}
                 </button>
               </>
             )}
 
             {!isRunning && !isPaused && (
               <button type="button" className="download-btn-primary" onClick={handleStart}>
-                ▶ {t('dialogs','download_start_btn')}
+                <Icon name="play" size={13} /> {t('dialogs','download_start_btn')}
               </button>
             )}
 

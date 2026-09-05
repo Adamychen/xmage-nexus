@@ -3,6 +3,7 @@ import type { DeckV2 } from './types'
 import { deckMainCount } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
 import { ManaPip } from './ArenaManaSymbols'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckBox.css'
 
@@ -88,7 +89,7 @@ export function DeckBox({
           {isValid ? (
             <span className="format-badge-valid">✓ {deck.format}</span>
           ) : (
-            <span className="format-badge-invalid">⚠️ {total}/{minRequired}</span>
+            <span className="format-badge-invalid"><Icon name="alert" size={11} /> {total}/{minRequired}</span>
           )}
         </div>
       </div>

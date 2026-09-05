@@ -32,7 +32,7 @@ describe('ActionFeed & ActionFeedCard', () => {
 
     expect(getByText('Lightning Bolt')).not.toBeNull()
     expect(getByText('➔ Bob')).not.toBeNull()
-    expect(getByText('-3 ❤️')).not.toBeNull()
+    expect(container.querySelector('.action-damage-badge svg')).not.toBeNull()
 
     // Hover triggers preview
     const cardEl = container.querySelector('.action-feed-card')
@@ -59,7 +59,7 @@ describe('ActionFeed & ActionFeedCard', () => {
     }
 
     const { getByText } = render(<ActionFeedCard item={turnItem} />)
-    expect(getByText('⏱️ Turno 2 · Alice')).not.toBeNull()
+    expect(getByText(/Turno 2 · Alice/)).not.toBeNull()
   })
 
   it('toggles between Visual Feed and Raw Text Log in ActionFeed', () => {
@@ -79,13 +79,13 @@ describe('ActionFeed & ActionFeedCard', () => {
     expect(getByText('Lightning Bolt')).not.toBeNull()
 
     // Switch to Raw Log mode
-    const textBtn = getByText('📜 Texto')
+    const textBtn = getByText('Texto')
     fireEvent.click(textBtn)
 
     expect(getByText('Alice casts Lightning Bolt [target: Bob]')).not.toBeNull()
 
     // Switch back to Visual
-    const visualBtn = getByText('🎨 Visual')
+    const visualBtn = getByText('Visual')
     fireEvent.click(visualBtn)
 
     expect(getByText('Lightning Bolt')).not.toBeNull()

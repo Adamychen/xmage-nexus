@@ -2,6 +2,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './ArenaDeckHeader.css'
 
@@ -90,7 +91,7 @@ export function ArenaDeckHeader({
           >
             {mainCount}/{requiredCount} {t('decks', 'total_cards')} {sideCount > 0 && `(SB: ${sideCount})`}
             {issues.length > 0 && (
-              <span style={{ marginLeft: '4px', cursor: 'help' }}>⚠️</span>
+              <span style={{ marginLeft: '4px', cursor: 'help' }}><Icon name="alert" size={12} /></span>
             )}
           </span>
           <select
@@ -119,7 +120,7 @@ export function ArenaDeckHeader({
             title={`${t('decks', 'builder_mana_curve')}${onOpenInspector ? ' (' + t('decks', 'inspect_double_click') + ')' : ''}`}
             onDoubleClick={onOpenInspector}
           >
-            📊
+            <Icon name="chart" size={15} />
           </button>
         )}
 

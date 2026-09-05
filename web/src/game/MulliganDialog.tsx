@@ -5,6 +5,7 @@ import { useStore, useSettings, setSetting } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import Modal from '../ui/Modal'
+import Icon from '../ui/Icon'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { useTranslation } from '../i18n'
@@ -75,7 +76,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     return (
       <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog mulligan-london" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
           <div className="mulligan-kicker">
-            <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_london_title')}
+            <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'mulligan_london_title')}
           </div>
           <h2 id="mulligan-title">{t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}</h2>
           <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
@@ -123,7 +124,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   return (
     <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
         <div className="mulligan-kicker">
-          <span className="kicker-icon">🃏</span> {t('dialogs', 'mulligan_decision_title')}
+          <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'mulligan_decision_title')}
         </div>
         <h2 id="mulligan-title"><FormattedText text={prompt.title === 'Mulligan' ? t('dialogs', 'mulligan_title') : prompt.title} /></h2>
         <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
@@ -145,10 +146,10 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
         <div className="mulligan-actions">
           <button className="mulligan-keep" disabled={busy} onClick={keep}>
-            ✋ {t('dialogs', 'mulligan_keep_btn', { count: cardCount })}
+            <Icon name="hand" size={13} /> {t('dialogs', 'mulligan_keep_btn', { count: cardCount })}
           </button>
           <button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
-            🔄 {t('dialogs', 'mulligan_btn')}
+            <Icon name="refresh" size={13} /> {t('dialogs', 'mulligan_btn')}
           </button>
         </div>
         <label className="toggle mulligan-auto-toggle">

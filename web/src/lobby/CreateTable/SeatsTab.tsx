@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function SeatsTab({ form }: { form: CreateTableForm }) {
@@ -6,19 +7,19 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
-        <h3>🤖 {t('lobby','create_tab_multi')}</h3>
+        <h3><Icon name="bot" size={15} /> {t('lobby','create_tab_multi')}</h3>
         <p>Tu asiento, tu mazo y los bots rivales.</p>
       </div>
       <div className="create-seats-section">
         <div className="create-seat-box human-seat-box">
           <div className="seat-box-header">
-            <span className="seat-title">👤 {t('common','player')}</span>
+            <span className="seat-title"><Icon name="user" size={13} /> {t('common','player')}</span>
             <button
               type="button"
               className={`chip ${form.humanSeat ? 'on' : ''}`}
               onClick={() => form.setHumanSeat(!form.humanSeat)}
             >
-              {form.humanSeat ? `✓ ${t('common','player')}` : `👁️ ${t('lobby','spectators')}`}
+              {form.humanSeat ? (<><Icon name="check" size={12} /> {t('common','player')}</>) : (<><Icon name="eye" size={12} /> {t('lobby','spectators')}</>)}
             </button>
           </div>
           {form.humanSeat && (
@@ -41,7 +42,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
 
         <div className="create-seat-box ai-seat-box">
           <div className="seat-box-header">
-            <span className="seat-title">🤖 {t('lobby','ai')} — {form.seatConfigs.length} {form.seatConfigs.length === 1 ? 'plaza' : 'plazas'} BOT ({form.numPlayers} total)</span>
+            <span className="seat-title"><Icon name="bot" size={13} /> {t('lobby','ai')} — {form.seatConfigs.length} {form.seatConfigs.length === 1 ? 'plaza' : 'plazas'} BOT ({form.numPlayers} total)</span>
             {form.numPlayers !== (form.selectedGameTypeInfo?.maxPlayers ?? form.numPlayers) && form.selectedGameTypeInfo && (
               <span className="wizard-warn-badge">Config: {form.numPlayers} / {form.selectedGameTypeInfo.maxPlayers} max</span>
             )}
@@ -60,7 +61,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   <div className="seat-box-header">
                     <span className="seat-title">Plaza {idx + 2} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
                     <select value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
-                      <option value="SIM">🤖 SIM</option>
+                      <option value="SIM">SIM</option>
                       {form.playerTypes.map((pt) => (
                         <option key={pt} value={pt}>{pt}</option>
                       ))}
@@ -87,7 +88,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
             <div className="field">
               <span>Atajo: aplicar a todas las plazas BOT</span>
               <div className="chip-row">
-                <button type="button" className={form.playerTypesSel.includes('SIM') ? 'chip on' : 'chip'} onClick={() => form.toggleAi('SIM')}>🤖 SIM</button>
+                <button type="button" className={form.playerTypesSel.includes('SIM') ? 'chip on' : 'chip'} onClick={() => form.toggleAi('SIM')}><Icon name="bot" size={12} /> SIM</button>
                 {form.playerTypes.map((pt) => (
                   <button key={pt} type="button" className={form.playerTypesSel.includes(pt) ? 'chip on' : 'chip'} onClick={() => {
                     form.toggleAi(pt)

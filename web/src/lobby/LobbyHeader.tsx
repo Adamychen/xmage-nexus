@@ -6,6 +6,7 @@ import type { UsersView } from '../net/types'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
 import RankBadge from './RankBadge'
+import Icon from '../ui/Icon'
 import LanguageSelector from '../i18n/LanguageSelector'
 import { useTranslation } from '../i18n'
 import { useFullscreen } from '../utils/fullscreen'
@@ -70,7 +71,7 @@ export default function LobbyHeader({
           aria-label={t('lobby','global_chat')}
           data-testid="toggle-mobile-chat"
         >
-          💬
+          <Icon name="chat" size={16} />
           {unreadChat > 0 && <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>}
         </button>
 
@@ -81,7 +82,7 @@ export default function LobbyHeader({
           title={t('lobby', 'appearance_title')}
           data-testid="open-appearance-settings"
         >
-          🎨
+          <Icon name="palette" size={16} />
         </button>
 
         <button
@@ -117,7 +118,7 @@ export default function LobbyHeader({
           </div>
         ) : (
           <button className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
-            🚪
+            <Icon name="logout" size={15} />
           </button>
         )}
       </div>
