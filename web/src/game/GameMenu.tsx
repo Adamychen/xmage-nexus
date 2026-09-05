@@ -14,7 +14,9 @@ import { useFullscreen } from '../utils/fullscreen'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import Icon from '../ui/Icon'
-import { sendTriggerAutoOrder } from '../net/commands'
+import { sendTriggerAutoOrder, sendManaPaymentMode } from '../net/commands'
+import type { ManaPaymentAction } from '../net/commands'
+import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import HelpWikiModal from './HelpWikiModal'
@@ -40,6 +42,34 @@ export default function GameMenu() {
       : settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena')
         ? 'pod'
         : 'standard'
+
+  const toggleManaPayment = (key: keyof ManaPaymentStored) => {
+    const next = { ...settings.manaPayment, [key]: !settings.manaPayment[key] }
+    setSetting('manaPayment', next)
+    if (!gameId) return
+    const action: ManaPaymentAction | null =
+      key === 'auto'
+        ? next.auto
+          ? 'MANA_AUTO_PAYMENT_ON'
+          : 'MANA_AUTO_PAYMENT_OFF'
+        : key === 'restricted'
+          ? next.restricted
+            ? 'MANA_AUTO_PAYMENT_RESTRICTED_ON'
+            : 'MANA_AUTO_PAYMENT_RESTRICTED_OFF'
+          : key === 'useFirstAbility'
+            ? next.useFirstAbility
+              ? 'USE_FIRST_MANA_ABILITY_ON'
+              : 'USE_FIRST_MANA_ABILITY_OFF'
+            : null
+    if (action) void sendManaPaymentMode(action, gameId)
+  }
+
+  const manaRows: Array<{ key: keyof ManaPaymentStored; label: string; tip: string; testid: string }> = [
+    { key: 'auto', label: t('game', 'mana_payment_auto'), tip: t('game', 'mana_payment_auto_tip'), testid: 'game-menu-mana-auto' },
+    { key: 'restricted', label: t('game', 'mana_payment_restricted'), tip: t('game', 'mana_payment_restricted_tip'), testid: 'game-menu-mana-restricted' },
+    { key: 'useFirstAbility', label: t('game', 'mana_payment_first'), tip: t('game', 'mana_payment_first_tip'), testid: 'game-menu-mana-first' },
+    { key: 'confirmEmptyPool', label: t('game', 'mana_payment_confirm'), tip: t('game', 'mana_payment_confirm_tip'), testid: 'game-menu-mana-confirm' },
+  ]
 
   const close = () => {
     setOpen(false)
@@ -127,6 +157,24 @@ export default function GameMenu() {
               >
                 🌀 {t('game', 'trigger_menu_reset')}
               </button>
+            )}
+            {!!me && (
+              <>
+                <div className="game-menu-divider" />
+                <div className="game-menu-section-label" data-testid="game-menu-mana-label">
+                  {t('game', 'mana_payment_title')}
+                </div>
+                {manaRows.map((row) => (
+                  <label key={row.key} className="game-menu-check" title={row.tip} data-testid={row.testid}>
+                    <input
+                      type="checkbox"
+                      checked={settings.manaPayment[row.key]}
+                      onChange={() => toggleManaPayment(row.key)}
+                    />
+                    <span>{row.label}</span>
+                  </label>
+                ))}
+              </>
             )}
             {!!me && (
               <>

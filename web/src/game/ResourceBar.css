@@ -110,6 +110,22 @@
   border-radius: 4px;
 }
 
+button.mana-pip.is-clickable,
+button.mana-inline-pip {
+  background: none;
+  border: none;
+  padding: 3px 8px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.mana-pip.is-clickable:hover,
+button.mana-inline-pip:hover {
+  outline: 1px solid #7c5cff;
+  border-radius: 4px;
+}
+
 .mana-symbol {
   width: 20px;
   height: 20px;

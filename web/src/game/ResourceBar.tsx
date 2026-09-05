@@ -8,6 +8,9 @@ import CardSlot from '../board/CardSlot'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { ManaPip } from '../decks/ArenaManaSymbols'
+import { useStore } from '../state/store'
+import { sendPlayerManaType } from '../net/commands'
+import { manaTypeOf } from './manaPayment'
 import './ResourceBar.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -49,8 +52,14 @@ export default function ResourceBar({
   const { t } = useTranslation()
   const [manaOpen, setManaOpen] = useState(false)
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
+  const gameId = useStore((s) => s.gameId)
   const pool = player.manaPool ?? {}
   const manaTotal = MANA_COLORS.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
+  const canPayMana = side === 'my' && !!gameId
+  const payMana = (key: keyof PlayerView['manaPool']) => {
+    const manaType = manaTypeOf(key)
+    if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
+  }
 
   const graveyardCards = useMemo(() => extractCards(player.graveyard), [player.graveyard])
   const graveyardCount = graveyardCards.length
@@ -114,10 +123,28 @@ export default function ResourceBar({
           >
             {MANA_COLORS.map((c) => {
               const count = pool[c.key] ?? 0
-              return (
-                <span key={c.key} className={`mana-inline-pip ${c.className} ${count === 0 ? 'is-zero' : ''}`}>
+              const clickable = canPayMana && count > 0
+              const pip = (
+                <>
                   <ManaPip symbol={c.symbol} size={12} />
                   <span className="mana-inline-count">{count}</span>
+                </>
+              )
+              return clickable ? (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`mana-inline-pip ${c.className}`}
+                  data-testid={`mana-pay-${c.symbol}`}
+                  title={t('game', 'mana_payment_restricted_tip')}
+                  aria-label={`${t('game', 'mana_title')}: ${c.symbol} (${count})`}
+                  onClick={() => payMana(c.key)}
+                >
+                  {pip}
+                </button>
+              ) : (
+                <span key={c.key} className={`mana-inline-pip ${c.className} ${count === 0 ? 'is-zero' : ''}`}>
+                  {pip}
                 </span>
               )
             })}
@@ -137,15 +164,36 @@ export default function ResourceBar({
             </button>
             {manaOpen && (
               <div className="mana-breakdown">
-                {MANA_COLORS.map((c) => (
-                  <div key={c.key} className={`mana-pip ${c.className}`}>
-                    <span className="mana-symbol">
-                      <ManaPip symbol={c.symbol} size={18} />
-                      <span className="visually-hidden">{c.symbol}</span>
-                    </span>
-                    <span className="mana-count">{pool[c.key] ?? 0}</span>
-                  </div>
-                ))}
+                {MANA_COLORS.map((c) => {
+                  const count = pool[c.key] ?? 0
+                  const clickable = canPayMana && count > 0
+                  const pip = (
+                    <>
+                      <span className="mana-symbol">
+                        <ManaPip symbol={c.symbol} size={18} />
+                        <span className="visually-hidden">{c.symbol}</span>
+                      </span>
+                      <span className="mana-count">{count}</span>
+                    </>
+                  )
+                  return clickable ? (
+                    <button
+                      key={c.key}
+                      type="button"
+                      className={`mana-pip ${c.className} is-clickable`}
+                      data-testid={`mana-pay-${c.symbol}`}
+                      title={t('game', 'mana_payment_restricted_tip')}
+                      aria-label={`${t('game', 'mana_title')}: ${c.symbol} (${count})`}
+                      onClick={() => payMana(c.key)}
+                    >
+                      {pip}
+                    </button>
+                  ) : (
+                    <div key={c.key} className={`mana-pip ${c.className}`}>
+                      {pip}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </>

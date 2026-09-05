@@ -171,8 +171,21 @@
   border-color: #6b2c2c;
 }
 
-.game-menu-auto-delete {
-  flex: 0 0 auto;
+.game-menu-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #c6cde6;
+  cursor: pointer;
+}
+
+.game-menu-check input {
+  accent-color: #7c5cff;
+}
+
+.game-menu-auto-delete {  flex: 0 0 auto;
   border: none;
   background: transparent;
   color: #6b7394;

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import type { PlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
+import { useStore } from '../state/store'
+import { sendPlayerManaType } from '../net/commands'
+import { manaTypeOf } from './manaPayment'
 import './PlayerResourcePanel.css'
 
 const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
@@ -15,8 +18,14 @@ const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; cl
 export default function PlayerResourcePanel({ player, side }: { player: PlayerView; side: 'opp' | 'my' }) {
   const { t } = useTranslation()
   const [manaOpen, setManaOpen] = useState(false)
+  const gameId = useStore((s) => s.gameId)
   const pool = player.manaPool
   const manaTotal = MANA_COLORS.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
+  const canPayMana = side === 'my' && !!gameId
+  const payMana = (key: keyof PlayerView['manaPool']) => {
+    const manaType = manaTypeOf(key)
+    if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
+  }
   const graveyardCount = Object.keys(player.graveyard ?? {}).length
   const exileCount = Object.keys(player.exile ?? {}).length
 
@@ -34,12 +43,31 @@ export default function PlayerResourcePanel({ player, side }: { player: PlayerVi
         </button>
         {manaOpen && (
           <div className="resource-mana-breakdown">
-            {MANA_COLORS.map((c) => (
-              <div key={c.key} className={`mana-pip ${c.className}`}>
-                <span>{c.symbol}</span>
-                <b>{pool[c.key] ?? 0}</b>
-              </div>
-            ))}
+            {MANA_COLORS.map((c) => {
+              const count = pool[c.key] ?? 0
+              if (canPayMana && count > 0) {
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    className={`mana-pip ${c.className} is-clickable`}
+                    data-testid={`mana-pay-${c.symbol}`}
+                    title={t('game', 'mana_payment_restricted_tip')}
+                    aria-label={`${t('game', 'mana_title')}: ${c.symbol} (${count})`}
+                    onClick={() => payMana(c.key)}
+                  >
+                    <span>{c.symbol}</span>
+                    <b>{count}</b>
+                  </button>
+                )
+              }
+              return (
+                <div key={c.key} className={`mana-pip ${c.className}`}>
+                  <span>{c.symbol}</span>
+                  <b>{count}</b>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

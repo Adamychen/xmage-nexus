@@ -133,6 +133,13 @@ export class HumanHelper {
     return this.send('sendPlayerAction', { gameId: this.gameId, action })
   }
 
+  /** Pago manual de maná del pool (clic en símbolo): prueba el passthrough
+   *  proxy→servidor de `sendPlayerManaType` (ManaType.valueOf en el proxy). */
+  async payManaType(playerId: string, manaType: string): Promise<boolean> {
+    if (!this.gameId) return false
+    return this.send('sendPlayerManaType', { gameId: this.gameId, playerId, manaType })
+  }
+
   // ============================ protocolo ============================
 
   private send(action: string, args: Record<string, unknown>): Promise<boolean> {

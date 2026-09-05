@@ -488,6 +488,17 @@ export interface TranslationSchema {
     auto_answers_empty: string
     auto_answers_clear: string
     auto_answers_delete: string
+    mana_payment_title: string
+    mana_payment_auto: string
+    mana_payment_auto_tip: string
+    mana_payment_restricted: string
+    mana_payment_restricted_tip: string
+    mana_payment_first: string
+    mana_payment_first_tip: string
+    mana_payment_confirm: string
+    mana_payment_confirm_tip: string
+    mana_confirm_title: string
+    mana_confirm_message: string
     amount_title: string
     multi_amount_title: string
     string_placeholder: string

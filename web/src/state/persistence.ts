@@ -197,6 +197,47 @@ export function saveAutoAnswers(rules: AutoAnswerStored[]) {
   } catch {}
 }
 
+export interface ManaPaymentStored {
+  auto: boolean
+  restricted: boolean
+  useFirstAbility: boolean
+  confirmEmptyPool: boolean
+}
+
+const MANA_PAYMENT_KEY = 'mage-web-mana-payment'
+export const DEFAULT_MANA_PAYMENT: ManaPaymentStored = {
+  auto: true,
+  restricted: true,
+  useFirstAbility: false,
+  confirmEmptyPool: true,
+}
+
+export function loadManaPayment(): ManaPaymentStored {
+  try {
+    const raw = getStorage().getItem(MANA_PAYMENT_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<ManaPaymentStored>
+      return {
+        auto: typeof parsed.auto === 'boolean' ? parsed.auto : DEFAULT_MANA_PAYMENT.auto,
+        restricted: typeof parsed.restricted === 'boolean' ? parsed.restricted : DEFAULT_MANA_PAYMENT.restricted,
+        useFirstAbility:
+          typeof parsed.useFirstAbility === 'boolean' ? parsed.useFirstAbility : DEFAULT_MANA_PAYMENT.useFirstAbility,
+        confirmEmptyPool:
+          typeof parsed.confirmEmptyPool === 'boolean'
+            ? parsed.confirmEmptyPool
+            : DEFAULT_MANA_PAYMENT.confirmEmptyPool,
+      }
+    }
+  } catch {}
+  return { ...DEFAULT_MANA_PAYMENT }
+}
+
+export function saveManaPayment(mana: ManaPaymentStored) {
+  try {
+    getStorage().setItem(MANA_PAYMENT_KEY, JSON.stringify(mana))
+  } catch {}
+}
+
 export interface AudioSettings {
   soundEnabled: boolean
   masterVolume: number

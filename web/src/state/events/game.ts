@@ -1,6 +1,7 @@
 import * as cmds from '../../net/commands'
 import type { GameEndInfo } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
+import { manaPaymentActions } from '../../game/manaPayment'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry } from '../actions'
 import { t as tStatic } from '../../i18n'
@@ -58,6 +59,11 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
           setState({ gameChatId: cid ?? null })
           if (cid) void cmds.joinChat(cid)
         })
+      }
+      if (objectId && (embeddedGame.players ?? []).some((p) => p.controlled)) {
+        for (const action of manaPaymentActions(getState().settings.manaPayment)) {
+          void cmds.sendManaPaymentMode(action, objectId)
+        }
       }
     }
     if (method === 'GAME_SELECT') {

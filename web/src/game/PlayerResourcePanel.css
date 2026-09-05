@@ -80,6 +80,18 @@
 
 .mana-pip b { color: #c8cae6; }
 
+button.mana-pip.is-clickable {
+  background: none;
+  border: none;
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.mana-pip.is-clickable:hover {
+  outline: 1px solid #7c5cff;
+}
+
 .mana-w span { background: #e8eaf6; }
 .mana-u span { background: #5c70ff; color: #fff; }
 .mana-b span { background: #9945cc; color: #fff; }

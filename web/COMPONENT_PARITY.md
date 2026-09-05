@@ -132,7 +132,7 @@ confirm-empty-pool.
 | Declarar atacantes/bloqueadores + `Atacar con todo` + confirmar | `CombatBar` + selección en campo + `ActionButton` (`combat*.spec.ts` ✅) | ✅ |
 | Flechas combate con colores por estado | `CombatArrowsOverlay` (roja/cian, curva SVG) | ✅ |
 | Pago manual por color WUBRG+C | `ManaBar` (botones pool + special + cancelar) + clicks en tablero en modo maná (`complex-costs.spec.ts` ✅) | ✅ |
-| Prefs auto-pago on/off, restringido (no usar flotante), primera habilidad al girar, confirmar vaciar pool | Sin equivalente (grep `AUTO_PAYMENT` → 0) | ❌ G13-1 (único gap; gameplay) |
+| Prefs auto-pago on/off, restringido (no usar flotante), primera habilidad al girar, confirmar vaciar pool | Sección *"Pago de maná"* en `GameMenu` ⋯ (3 checks con tooltips = `PlayAreaPanel.java:227-274` + confirm pool 100% cliente); cada toggle → `sendPlayerAction` (`MANA_AUTO_PAYMENT_*`, `USE_FIRST_MANA_ABILITY_*`, `data=null`) + re-emisión al `GAME_INIT`; pips del pool propio clicables → `sendPlayerManaType` (`WHITE/…`, `ManaType.valueOf`); pase con pool>0 → `ManaPoolConfirmDialog` local (botón/Espacio/F-keys) | ✅ G13-1 cerrado 2026-09-05 |
 | Highlight cementerio/exilio jugables | Dot jugable + cross-zone (`ResourceBar`) | ✅ |
 
 Veredicto: un solo gap, **G13-1** (prefs maná en ajustes + respetarlas en `ManaBar`).

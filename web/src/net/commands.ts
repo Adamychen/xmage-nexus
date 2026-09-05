@@ -227,6 +227,12 @@ export async function sendTriggerAutoOrder(kind: TriggerAutoOrderKind, gameId: s
   return sendPlayerAction(kind, gameId, data ?? null)
 }
 
+export type { ManaPaymentAction } from '../game/manaPayment'
+
+export async function sendManaPaymentMode(kind: import('../game/manaPayment').ManaPaymentAction, gameId: string) {
+  return sendPlayerAction(kind, gameId, null)
+}
+
 export async function sendPlayerManaType(gameId: string, playerId: string, manaType: string) {
   return getGateway().send('sendPlayerManaType', { gameId, playerId, manaType })
 }
