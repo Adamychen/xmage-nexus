@@ -490,8 +490,6 @@ export const ja: TranslationSchema = {
     mana_payment_first_tip: '土地をタップしてマナを出す際、最初のマナ能力を使う。',
     mana_payment_confirm: 'プールにマナがあるままパスを確認',
     mana_payment_confirm_tip: 'プールにマナが残ったまま優先権をパスする前に確認する。',
-    mana_confirm_title: 'プールにマナ',
-    mana_confirm_message: 'プールにまだ{count}点のマナがあります。通過しますか？',
     amount_title: '数値を選ぶ',
     multi_amount_title: '数値を割り振る',
     string_placeholder: 'カード名またはタイプを入力…',

@@ -30,12 +30,3 @@ const POOL_TO_MANA_TYPE: Record<PoolKey, string> = {
 export function manaTypeOf(poolKey: string): string | null {
   return (POOL_TO_MANA_TYPE as Record<string, string>)[poolKey] ?? null
 }
-
-export function poolTotal(pool: Partial<Record<PoolKey, number>> | null | undefined): number {
-  if (!pool || typeof pool !== 'object') return 0
-  return (Object.keys(POOL_TO_MANA_TYPE) as PoolKey[]).reduce((sum, key) => sum + (pool[key] ?? 0), 0)
-}
-
-export function shouldConfirmEmptyPool(pool: Partial<Record<PoolKey, number>> | null | undefined, mana: ManaPaymentStored): boolean {
-  return mana.confirmEmptyPool && poolTotal(pool) > 0
-}

@@ -17,6 +17,39 @@ final class GameCommands {
     private GameCommands() {
     }
 
+    static UserData userDataFromPreferences(JsonObject args) {
+        UserData userData = UserData.getDefaultUserDataView();
+        userData.setConfirmEmptyManaPool(JsonArgs.getBool(args, "confirmEmptyManaPool", true));
+        JsonObject phases = args.getAsJsonObject("phases");
+        if (phases != null) {
+            UserSkipPrioritySteps skips = new UserSkipPrioritySteps();
+            JsonObject yourTurn = phases.getAsJsonObject("yourTurn");
+            JsonObject opponentTurn = phases.getAsJsonObject("opponentTurn");
+            if (yourTurn != null) {
+                SkipPrioritySteps yt = skips.getYourTurn();
+                yt.setUpkeep(JsonArgs.getBool(yourTurn, "upkeep", false));
+                yt.setDraw(JsonArgs.getBool(yourTurn, "draw", false));
+                yt.setMain1(JsonArgs.getBool(yourTurn, "main1", true));
+                yt.setBeforeCombat(JsonArgs.getBool(yourTurn, "beginCombat", false));
+                yt.setEndOfCombat(JsonArgs.getBool(yourTurn, "endCombat", false));
+                yt.setMain2(JsonArgs.getBool(yourTurn, "main2", true));
+                yt.setEndOfTurn(JsonArgs.getBool(yourTurn, "endStep", false));
+            }
+            if (opponentTurn != null) {
+                SkipPrioritySteps ot = skips.getOpponentTurn();
+                ot.setUpkeep(JsonArgs.getBool(opponentTurn, "upkeep", false));
+                ot.setDraw(JsonArgs.getBool(opponentTurn, "draw", false));
+                ot.setMain1(JsonArgs.getBool(opponentTurn, "main1", true));
+                ot.setBeforeCombat(JsonArgs.getBool(opponentTurn, "beginCombat", false));
+                ot.setEndOfCombat(JsonArgs.getBool(opponentTurn, "endCombat", false));
+                ot.setMain2(JsonArgs.getBool(opponentTurn, "main2", true));
+                ot.setEndOfTurn(JsonArgs.getBool(opponentTurn, "endStep", false));
+            }
+            userData.setUserSkipPrioritySteps(skips);
+        }
+        return userData;
+    }
+
     static boolean handle(String action, WebSocket conn, String requestId, JsonObject args, CommandContext ctx) throws Exception {
         switch (action) {
             case "replayGame": {
@@ -97,34 +130,7 @@ final class GameCommands {
                 return true;
             }
             case "updatePreferences": {
-                UserData userData = UserData.getDefaultUserDataView();
-                JsonObject phases = args.getAsJsonObject("phases");
-                if (phases != null) {
-                    UserSkipPrioritySteps skips = new UserSkipPrioritySteps();
-                    JsonObject yourTurn = phases.getAsJsonObject("yourTurn");
-                    JsonObject opponentTurn = phases.getAsJsonObject("opponentTurn");
-                    if (yourTurn != null) {
-                        SkipPrioritySteps yt = skips.getYourTurn();
-                        yt.setUpkeep(JsonArgs.getBool(yourTurn, "upkeep", false));
-                        yt.setDraw(JsonArgs.getBool(yourTurn, "draw", false));
-                        yt.setMain1(JsonArgs.getBool(yourTurn, "main1", true));
-                        yt.setBeforeCombat(JsonArgs.getBool(yourTurn, "beginCombat", false));
-                        yt.setEndOfCombat(JsonArgs.getBool(yourTurn, "endCombat", false));
-                        yt.setMain2(JsonArgs.getBool(yourTurn, "main2", true));
-                        yt.setEndOfTurn(JsonArgs.getBool(yourTurn, "endStep", false));
-                    }
-                    if (opponentTurn != null) {
-                        SkipPrioritySteps ot = skips.getOpponentTurn();
-                        ot.setUpkeep(JsonArgs.getBool(opponentTurn, "upkeep", false));
-                        ot.setDraw(JsonArgs.getBool(opponentTurn, "draw", false));
-                        ot.setMain1(JsonArgs.getBool(opponentTurn, "main1", true));
-                        ot.setBeforeCombat(JsonArgs.getBool(opponentTurn, "beginCombat", false));
-                        ot.setEndOfCombat(JsonArgs.getBool(opponentTurn, "endCombat", false));
-                        ot.setMain2(JsonArgs.getBool(opponentTurn, "main2", true));
-                        ot.setEndOfTurn(JsonArgs.getBool(opponentTurn, "endStep", false));
-                    }
-                    userData.setUserSkipPrioritySteps(skips);
-                }
+                UserData userData = userDataFromPreferences(args);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().updatePreferencesForServer(userData), null, null));
                 return true;
             }

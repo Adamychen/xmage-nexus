@@ -64,6 +64,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
         for (const action of manaPaymentActions(getState().settings.manaPayment)) {
           void cmds.sendManaPaymentMode(action, objectId)
         }
+        void cmds.updateManaConfirmPreference(getState().settings.manaPayment.confirmEmptyPool)
       }
     }
     if (method === 'GAME_SELECT') {

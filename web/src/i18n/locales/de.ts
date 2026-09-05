@@ -490,8 +490,6 @@ export const de: TranslationSchema = {
     mana_payment_first_tip: 'Nutzt die erste Manafähigkeit beim Tappen von Ländern für Mana.',
     mana_payment_confirm: 'Passen mit Mana im Pool bestätigen',
     mana_payment_confirm_tip: 'Nachfragen, bevor du bei Mana im Pool Priorität passt.',
-    mana_confirm_title: 'Mana im Pool',
-    mana_confirm_message: 'Du hast noch {count} Mana im Pool. Trotzdem passen?',
     amount_title: 'Betrag wählen',
     multi_amount_title: 'Beträge wählen',
     string_placeholder: 'Kartenname oder Typ eingeben…',

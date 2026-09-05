@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
-import { manaPaymentScenario, MANA_ACTIONS, MANA_TYPES } from '../fixtures/scenarios/manaPayment'
+import { manaPaymentScenario, MANA_ACTIONS, MANA_TYPES, MANA_PREFS } from '../fixtures/scenarios/manaPayment'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
 
@@ -65,7 +65,8 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
     })
   })
 
-  test('passing with pool mana asks for confirmation first', async ({ page }) => {
+  test('confirm checkbox syncs the server flag and pass goes straight through', async ({ page }) => {
+    MANA_PREFS.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mp',
@@ -75,23 +76,21 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
       })
       expect(pageErrors).toEqual([])
 
+      await expect.poll(() => MANA_PREFS.length, { timeout: 5000 }).toBeGreaterThan(0)
+      expect(MANA_PREFS[0]).toBe(true)
+
       await page.locator('.big-action-btn.interactive').click()
-      const confirm = page.locator('.mana-confirm-dialog')
-      await expect(confirm).toBeVisible()
-      await expect(confirm).toContainText('3')
-      await confirm.locator('[data-testid="mana-confirm-no"]').click()
-      await expect(confirm).toBeHidden()
+      await page.waitForTimeout(800)
+      await expect(page.locator('.mana-confirm-dialog')).toHaveCount(0)
 
       const menu = await openMenu(page)
       const confirmPref = menu.locator('[data-testid="game-menu-mana-confirm"] input')
       await expect(confirmPref).toBeChecked()
       await confirmPref.uncheck()
+      await expect.poll(() => MANA_PREFS.length, { timeout: 5000 }).toBeGreaterThan(1)
+      expect(MANA_PREFS[MANA_PREFS.length - 1]).toBe(false)
       await page.locator('.game-menu-overlay').click()
       await expect(menu).toBeHidden()
-
-      await page.locator('.big-action-btn.interactive').click()
-      await page.waitForTimeout(800)
-      await expect(page.locator('.mana-confirm-dialog')).toHaveCount(0)
     })
   })
 })

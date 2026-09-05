@@ -167,6 +167,7 @@ empty.
 | `sendPlayerString` | `{gameId, value}` | Choose a string option |
 | `sendPlayerManaType` | `{gameId, value}` | Choose mana type |
 | `sendPlayerAction` | `{gameId, action, data}` | Advanced actions (e.g., `PASS_PRIORITY_UNTIL_STACK_RESOLVED`) |
+| `updatePreferences` | `{phases?, confirmEmptyManaPool?}` | Sync user prefs to server (`UserData`, applied live via in-place `update()`): phase-stop matrix and/or empty-mana-pool pass confirm (`HumanPlayer.passWithManaPoolCheck`) |
 
 ### Chat
 

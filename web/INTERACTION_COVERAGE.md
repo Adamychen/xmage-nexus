@@ -159,7 +159,7 @@ Lista actual (de `engine-view-gap.json`):
 | Pasar / Hold priority / Stop-until-* | ✅ | ✅ | `stack-priority.spec.ts` (+ `USER_REQUEST_DIALOG` para stop) | 2026-08-24 |
 | Orden de triggers (`GAME_TARGET` PICK_ABILITY) | ✅ | ✅ | `TriggerOrderDialog` (Elegir + ⏫/⏬ por carta o texto + reset; `sendTriggerAutoOrder`; proxy String→UUID en ability) + `TriggerOrderDialog.test.tsx` + `trigger-order.spec.ts` (`@triggers`) | 2026-09-05 |
 | Auto-respuestas Sí/No (`GAME_ASK` texto exacto) | ✅ | ✅ | Solo-cliente: `autoAnswers.ts` + `prompts.ts handleGameAsk` (excluye mulligan/voting/starting) + checkbox `GenericDialog` + sección `GameMenu` ⋯; `autoAnswers.test.ts` + `prompts.autoAnswers.test.ts` + `auto-answers.spec.ts` (`@autoanswers`) | 2026-09-05 |
-| Prefs pago de maná (`sendPlayerAction` MANA_*/USE_FIRST_* + `sendPlayerManaType`) | ✅ | ✅ | `manaPayment.ts` + sección `GameMenu` ⋯ + re-emisión en `GAME_INIT` (`events/game.ts`) + pips clicables (`ResourceBar`/`PlayerResourcePanel`) + `ManaPoolConfirmDialog` local; `manaPayment.test.ts` + `mana-payment.spec.ts` (`@manapayment`) | 2026-09-05 |
+| Prefs pago de maná (`sendPlayerAction` MANA_*/USE_FIRST_* + `sendPlayerManaType` + `updatePreferences {confirmEmptyManaPool}`) | ✅ | ✅ | `manaPayment.ts` + sección `GameMenu` ⋯ + re-emisión en `GAME_INIT` (`events/game.ts`) + pips clicables (`ResourceBar`/`PlayerResourcePanel`); el confirm lo emite el servidor (`GAME_ASK` en `passWithManaPoolCheck`, se apaga con el flag); `manaPayment.test.ts` + `mana-payment.spec.ts` (`@manapayment`) | 2026-09-06 |
 
 ### H. Maná y costes
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

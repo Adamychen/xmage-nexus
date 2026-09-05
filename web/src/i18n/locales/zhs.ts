@@ -490,8 +490,6 @@ export const zhs: TranslationSchema = {
     mana_payment_first_tip: '横置地以产生法术力时使用第一个法术力异能。',
     mana_payment_confirm: '池中有法术力时确认让过',
     mana_payment_confirm_tip: '在法术力池仍有法术力时让过优先权前进行确认。',
-    mana_confirm_title: '法术力池有剩余',
-    mana_confirm_message: '你的法术力池中还有{count}点法术力。仍要让过吗？',
     amount_title: '选择数量',
     multi_amount_title: '分配数量',
     string_placeholder: '输入卡牌名称或类别…',

@@ -490,8 +490,6 @@ export const pt: TranslationSchema = {
     mana_payment_first_tip: 'Usa a primeira habilidade de mana ao virar terrenos para mana.',
     mana_payment_confirm: 'Confirmar passar com mana na reserva',
     mana_payment_confirm_tip: 'Perguntar antes de passar prioridade com mana na reserva.',
-    mana_confirm_title: 'Mana na reserva',
-    mana_confirm_message: 'Ainda tens {count} de mana na reserva. Passar mesmo assim?',
     amount_title: 'Escolha o valor',
     multi_amount_title: 'Escolha os valores',
     string_placeholder: 'Digite o nome de um card ou tipo…',

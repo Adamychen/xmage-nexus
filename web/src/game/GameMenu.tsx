@@ -14,7 +14,7 @@ import { useFullscreen } from '../utils/fullscreen'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import Icon from '../ui/Icon'
-import { sendTriggerAutoOrder, sendManaPaymentMode } from '../net/commands'
+import { sendTriggerAutoOrder, sendManaPaymentMode, updateManaConfirmPreference } from '../net/commands'
 import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
@@ -46,6 +46,10 @@ export default function GameMenu() {
   const toggleManaPayment = (key: keyof ManaPaymentStored) => {
     const next = { ...settings.manaPayment, [key]: !settings.manaPayment[key] }
     setSetting('manaPayment', next)
+    if (key === 'confirmEmptyPool') {
+      void updateManaConfirmPreference(next.confirmEmptyPool)
+      return
+    }
     if (!gameId) return
     const action: ManaPaymentAction | null =
       key === 'auto'

@@ -6,6 +6,7 @@ import { GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID
 
 export const MANA_ACTIONS: string[] = []
 export const MANA_TYPES: Array<{ playerId: string; manaType: string }> = []
+export const MANA_PREFS: boolean[] = []
 
 export function manaPaymentScenario(): Scenario {
   const gameId = GAME_ID
@@ -46,6 +47,12 @@ export function manaPaymentScenario(): Scenario {
       activeConn?.broadcast('GAME_UPDATE', { gameView: getGameView() }, gameId)
     },
     onExtra: (conn, action, args, requestId) => {
+      if (action === 'updatePreferences') {
+        track(conn)
+        MANA_PREFS.push(args.confirmEmptyManaPool !== false)
+        conn.ok(requestId, action, {})
+        return true
+      }
       if (action !== 'sendPlayerManaType') return false
       track(conn)
       MANA_TYPES.push({ playerId: String(args.playerId ?? ''), manaType: String(args.manaType ?? '') })

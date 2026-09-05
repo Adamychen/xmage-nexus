@@ -490,8 +490,6 @@ export const en: TranslationSchema = {
     mana_payment_first_tip: 'Use the first mana ability when tapping lands for mana.',
     mana_payment_confirm: 'Confirm passing with mana in pool',
     mana_payment_confirm_tip: 'Ask before passing priority while there is still mana in your pool.',
-    mana_confirm_title: 'Mana left in pool',
-    mana_confirm_message: 'You still have {count} mana in your pool. Pass anyway?',
     amount_title: 'Choose amount',
     multi_amount_title: 'Choose amounts',
     string_placeholder: 'Type a card name or type…',

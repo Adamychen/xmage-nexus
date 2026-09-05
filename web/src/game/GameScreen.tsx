@@ -33,11 +33,8 @@ import { combatActorsFrom } from '../state/gameUtils'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
-import ManaPoolConfirmDialog from './ManaPoolConfirmDialog'
-import { poolTotal, shouldConfirmEmptyPool } from './manaPayment'
 import './GameScreen.css'
 import './TournamentPanel.css'
-import './ManaPoolConfirmDialog.css'
 
 export default function GameScreen() {
   const { t } = useTranslation()
@@ -50,7 +47,6 @@ export default function GameScreen() {
   const gameBodyRef = useRef<HTMLDivElement>(null)
   const [rightTab, setRightTab] = useState<'stack' | 'log' | 'commander' | 'mechanics' | 'chat'>('log')
   const [busy, setBusy] = useState(false)
-  const [pendingPass, setPendingPass] = useState<{ kind: 'resolve' } | { kind: 'skip', action: string } | null>(null)
   const stackCount = Object.keys(game?.stack ?? {}).length
   const prevStackCountRef = useRef(0)
 
@@ -127,10 +123,6 @@ export default function GameScreen() {
 
   const onResolveClick = useCallback(async () => {
     if (!gameId || busy) return
-    if (shouldConfirmEmptyPool(me?.manaPool, settings.manaPayment)) {
-      setPendingPass({ kind: 'resolve' })
-      return
-    }
     setBusy(true)
     try {
       const result = await cmds.sendPlayerBoolean(false, gameId)
@@ -138,7 +130,7 @@ export default function GameScreen() {
     } finally {
       setBusy(false)
     }
-  }, [gameId, busy, t, me?.manaPool, settings.manaPayment])
+  }, [gameId, busy, t])
 
   // Space activates main action / pass priority
   useEffect(() => {
@@ -158,10 +150,6 @@ export default function GameScreen() {
   // Sin F6: el propio desktop lo tiene desactivado ("Skip action don't used").
   const sendSkip = useCallback(async (action: string) => {
     if (!gameId || busy) return
-    if (action !== CANCEL_SKIP_ACTION && shouldConfirmEmptyPool(me?.manaPool, settings.manaPayment)) {
-      setPendingPass({ kind: 'skip', action })
-      return
-    }
     setBusy(true)
     try {
       const result = await cmds.sendPlayerAction(action, gameId)
@@ -169,23 +157,7 @@ export default function GameScreen() {
     } finally {
       setBusy(false)
     }
-  }, [gameId, busy, t, me?.manaPool, settings.manaPayment])
-
-  const confirmPendingPass = useCallback(async () => {
-    const pending = pendingPass
-    setPendingPass(null)
-    if (!pending || !gameId || busy) return
-    setBusy(true)
-    try {
-      const result =
-        pending.kind === 'resolve'
-          ? await cmds.sendPlayerBoolean(false, gameId)
-          : await cmds.sendPlayerAction(pending.action, gameId)
-      if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
-    } finally {
-      setBusy(false)
-    }
-  }, [pendingPass, gameId, busy, t])
+  }, [gameId, busy, t])
 
   useEffect(() => {
     const handleSkipKeys = (e: KeyboardEvent) => {
@@ -382,13 +354,6 @@ export default function GameScreen() {
         />
       </div>
       <FeedbackDialog />
-      {pendingPass && (
-        <ManaPoolConfirmDialog
-          count={poolTotal(me?.manaPool)}
-          onConfirm={() => void confirmPendingPass()}
-          onCancel={() => setPendingPass(null)}
-        />
-      )}
       <UserRequestDialog />
       <RollbackDialog />
       <LimitedDeckDialog />

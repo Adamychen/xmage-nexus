@@ -490,8 +490,6 @@ export const ru: TranslationSchema = {
     mana_payment_first_tip: 'Использовать первую мана-способность при повороте земель ради маны.',
     mana_payment_confirm: 'Подтверждать пас с маной в запасе',
     mana_payment_confirm_tip: 'Спрашивать перед пасом приоритета, если в запасе осталась мана.',
-    mana_confirm_title: 'Мана в запасе',
-    mana_confirm_message: 'В запасе осталось {count} маны. Пасовать всё равно?',
     amount_title: 'Выберите количество',
     multi_amount_title: 'Выберите количества',
     string_placeholder: 'Введите имя карты или тип…',

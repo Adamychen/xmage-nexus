@@ -192,6 +192,10 @@ export async function updatePreferences(phases: PhaseStops) {
   return getGateway().send('updatePreferences', { phases })
 }
 
+export async function updateManaConfirmPreference(confirmEmptyManaPool: boolean) {
+  return getGateway().send('updatePreferences', { confirmEmptyManaPool })
+}
+
 export async function quitMatch(gameId: string) {
   return getGateway().send('quitMatch', { gameId })
 }
