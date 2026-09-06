@@ -148,6 +148,36 @@ describe('CreateTableDialog', () => {
     })
   })
 
+  it('HUMAN: plaza en espera para humanos, sin bot ni mazo SIM', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Humans Only' } })
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
+    fireEvent.change(seatType, { target: { value: 'HUMAN' } })
+
+    for (let i = 0; i < 5; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear Mesa/ }))
+
+    await waitFor(() => {
+      expect(cmds.createTable).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerTypes: ['HUMAN', 'HUMAN'],
+        }),
+      )
+      const sent = (cmds.createTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
+      expect(sent.simDecks).toBeUndefined()
+      expect(cmds.joinTable).toHaveBeenCalledWith(expect.objectContaining({ playerType: 'HUMAN' }))
+      expect(onClose).toHaveBeenCalled()
+    })
+  })
+
   it('U8: draft tournament exposes number of rounds', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 

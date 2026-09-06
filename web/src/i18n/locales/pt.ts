@@ -197,7 +197,7 @@ export const pt: TranslationSchema = {
     create_field_seat_skill: 'Habilidade',
     create_field_my_skill: 'Minha habilidade',
     create_err_name_required: 'A mesa precisa de um nome',
-    create_err_no_seats: 'Adicione pelo menos um ocupante (você ou um bot)',
+    create_err_no_seats: 'Adicione pelo menos um ocupante (você ou uma vaga)',
     create_warn_seat_deck_empty: 'Deck vazio ou ausente',
     create_toggle_skip_shuffle: 'Não embaralhar o baralho inicial',
     create_toggle_skip_starting: 'Pular a escolha do jogador inicial',

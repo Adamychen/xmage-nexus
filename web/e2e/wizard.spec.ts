@@ -58,6 +58,29 @@ test.describe('Wizard crear mesa (U3)', () => {
       expect(pageErrorsOf(buffers)).toEqual([])
     })
   })
+
+  test('HUMAN: plaza en espera llega al submit sin simDecks', async ({ page }) => {
+    await withFakeServer(wizardScenario, async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
+      await login(page, 'wiz')
+      await openWizard(page)
+      await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('humans-only')
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByTestId('seat-type-0').selectOption('HUMAN')
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Crear Mesa/ }).click()
+      await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
+      const createFrame = buffers.sent.find(
+        (f) => f && (f as { action?: string }).action === 'createTable',
+      ) as unknown as { args?: { playerTypes?: string[]; simDecks?: unknown } } | undefined
+      expect(createFrame?.args?.playerTypes).toEqual(['HUMAN', 'HUMAN'])
+      expect(createFrame?.args?.simDecks).toBeUndefined()
+      expect(pageErrorsOf(buffers)).toEqual([])
+    })
+  })
 })
 
 function pageErrorsOf(buffers: CaptureBuffers): Error[] {

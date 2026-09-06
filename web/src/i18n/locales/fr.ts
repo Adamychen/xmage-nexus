@@ -197,7 +197,7 @@ export const fr: TranslationSchema = {
     create_field_seat_skill: 'Niveau',
     create_field_my_skill: 'Mon niveau',
     create_err_name_required: 'La table a besoin d’un nom',
-    create_err_no_seats: 'Ajoutez au moins un occupant (vous ou un bot)',
+    create_err_no_seats: 'Ajoutez au moins un occupant (vous ou une place)',
     create_warn_seat_deck_empty: 'Deck vide ou introuvable',
     create_toggle_skip_shuffle: 'Ne pas mélanger le deck initial',
     create_toggle_skip_starting: 'Ignorer le choix du joueur initial',

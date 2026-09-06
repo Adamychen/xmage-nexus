@@ -197,7 +197,7 @@ export const de: TranslationSchema = {
     create_field_seat_skill: 'Skill',
     create_field_my_skill: 'Mein Skill',
     create_err_name_required: 'Der Tisch braucht einen Namen',
-    create_err_no_seats: 'Mindestens ein Teilnehmer (eigener Platz oder Bot)',
+    create_err_no_seats: 'Mindestens ein Teilnehmer (eigener Platz oder ein Platz)',
     create_warn_seat_deck_empty: 'Deck leer oder nicht gefunden',
     create_toggle_skip_shuffle: 'Anfangsdeck nicht mischen',
     create_toggle_skip_starting: 'Auswahl des Startspielers überspringen',

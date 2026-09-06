@@ -14,7 +14,12 @@ import {
   DEFAULT_PLAYER_TYPES,
   DEFAULT_TOURNAMENT_TYPES,
   DEFAULT_DRAFT_CUBES,
+  HUMAN_SEAT,
+  SIM_SEAT,
+  aiSeatTypes,
   buildLimitedOptions,
+  isSimSeatType,
+  normalizeSeatType,
   parseLimitedSetCodes,
   type CreateTab,
   type SeatConfig,
@@ -285,7 +290,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const j = JSON.parse(raw)
-        if (Array.isArray(j.seatConfigs)) return (j.seatConfigs as SeatConfig[]).map((s) => ({ ...s, skill: typeof s.skill === 'number' ? s.skill : 2 }))
+        if (Array.isArray(j.seatConfigs)) return (j.seatConfigs as SeatConfig[]).map((s) => ({ type: normalizeSeatType(String(s.type ?? SIM_SEAT)), deckName: s.deckName, skill: typeof s.skill === 'number' ? s.skill : 2 }))
       }
     } catch {}
     return []
@@ -357,7 +362,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           if (!d.some((x) => x === deckType)) setDeckType(d[0])
         }
         if (p && p.length > 0) {
-          setPlayerTypes(p)
+          setPlayerTypes(aiSeatTypes(p))
         }
         if (tt && tt.length > 0) {
           setTournamentTypes(tt)
@@ -455,13 +460,16 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   }, [name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, mySkill, bannedUsersRaw, numberRounds, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase])
 
   const toggleAi = (pt: string) => {
-    setPlayerTypesSel((cur) => (cur.includes(pt) ? cur.filter((x) => x !== pt) : [...cur, pt]))
+    const n = normalizeSeatType(pt)
+    setPlayerTypesSel((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]))
   }
   const applySeatTypeToAll = (pt: string) => {
-    setSeatConfigs((prev) => prev.map((s) => ({ ...s, type: pt })))
+    const n = normalizeSeatType(pt)
+    setSeatConfigs((prev) => prev.map((s) => ({ ...s, type: n })))
   }
   const setSeatType = (idx: number, type: string) => {
-    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type } : s)))
+    const n = normalizeSeatType(type)
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type: n } : s)))
   }
   const setSeatDeck = (idx: number, deckName: string) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName } : s)))
@@ -475,7 +483,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const selectGlobalSimDeck = (deckName: string) => {
     const d = availableDecks.find((x) => x.name === deckName) ?? LANDS_DECK
     setSimDeck(d)
-    setSeatConfigs((prev) => prev.map((s) => s.type === 'SIM' ? { ...s, deckName: d.name } : s))
+    setSeatConfigs((prev) => prev.map((s) => isSimSeatType(s.type) ? { ...s, deckName: d.name } : s))
   }
 
   const runDemoTable = async () => {
@@ -569,18 +577,18 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       onClose()
       return
     }
-    const seatTypes = seatConfigs.map((s) => s.type)
+    const seatTypes = seatConfigs.map((s) => normalizeSeatType(s.type))
     // fallback para mesas 2p clásicas sin seatConfigs inicializado: usa chips antiguos
-    const fallbackTypes = (playerTypesSel.length ? playerTypesSel : ['SIM'])
+    const fallbackTypes = (playerTypesSel.length ? playerTypesSel : [SIM_SEAT]).map(normalizeSeatType)
     const effectiveSeatTypes = seatTypes.length > 0 ? seatTypes : fallbackTypes.slice(0, Math.max(0, numPlayers - (humanSeat ? 1 : 0)))
-    const playerTypesFinal = humanSeat ? ['HUMAN', ...effectiveSeatTypes] : effectiveSeatTypes
+    const playerTypesFinal = humanSeat ? [HUMAN_SEAT, ...effectiveSeatTypes] : effectiveSeatTypes
     // validar numPlayers coherente con playerTypesFinal
     if (playerTypesFinal.length !== numPlayers) {
       // truncar o rellenar con SIM si hay mismatch (ej. datos persistidos viejos)
-      while (playerTypesFinal.length < numPlayers) playerTypesFinal.push('SIM')
+      while (playerTypesFinal.length < numPlayers) playerTypesFinal.push(SIM_SEAT)
       while (playerTypesFinal.length > numPlayers) playerTypesFinal.pop()
     }
-    const simSeats = effectiveSeatTypes.filter((pt) => pt === 'SIM').length
+    const simSeats = effectiveSeatTypes.filter(isSimSeatType).length
 
     // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
     // Transformación invisible para Commander: XMage espera comandante en banquillo
@@ -608,7 +616,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     const simDecksBySeat: typeof finalSimDeck[] = []
     if (simSeats > 0) {
       for (let i = 0; i < effectiveSeatTypes.length; i++) {
-        if (effectiveSeatTypes[i] === 'SIM') {
+        if (isSimSeatType(effectiveSeatTypes[i])) {
           const cfg = seatConfigs[i]
           const deckForSeat = cfg?.deckName ? (availableDecks.find((d) => d.name === cfg.deckName) ?? finalSimDeck as unknown as Deck) : (finalSimDeck as unknown as Deck)
           const xmageDeckForSeat = prepareDeckForXMage(deckForSeat as Deck, deckType, gameType)

@@ -102,8 +102,66 @@ export const DEFAULT_DECK_TYPES: string[] = [
 export const DEFAULT_PLAYER_TYPES: string[] = [
   'SIM',
   'COMPUTER_MAD',
-  'COMPUTER_DRAFT',
+  'COMPUTER_MONTE_CARLO',
+  'COMPUTER_DRAFT_BOT',
 ]
+
+export const HUMAN_SEAT = 'HUMAN'
+export const SIM_SEAT = 'SIM'
+
+const SEAT_TYPE_ALIASES: Record<string, string> = {
+  HUMAN: HUMAN_SEAT,
+  SIM: SIM_SEAT,
+  SIMULATED: SIM_SEAT,
+  COMPUTER_MAD: 'COMPUTER_MAD',
+  COMPUTER_MAD_AI: 'COMPUTER_MAD',
+  COMPUTER_MONTE_CARLO: 'COMPUTER_MONTE_CARLO',
+  COMPUTER_MONTECARLO: 'COMPUTER_MONTE_CARLO',
+  COMPUTER_MCTS: 'COMPUTER_MONTE_CARLO',
+  COMPUTER_DRAFT: 'COMPUTER_DRAFT_BOT',
+  COMPUTER_DRAFT_BOT: 'COMPUTER_DRAFT_BOT',
+  COMPUTER_DRAFTBOT: 'COMPUTER_DRAFT_BOT',
+}
+
+function seatTypeKey(raw: string): string {
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+}
+
+export function normalizeSeatType(raw: string): string {
+  const key = seatTypeKey(raw)
+  return SEAT_TYPE_ALIASES[key] ?? raw
+}
+
+export function isHumanSeatType(t: string): boolean {
+  return seatTypeKey(t) === HUMAN_SEAT
+}
+
+export function isSimSeatType(t: string): boolean {
+  return seatTypeKey(t) === SIM_SEAT
+}
+
+export function aiSeatTypes(playerTypes: string[]): string[] {
+  const out: string[] = []
+  for (const pt of playerTypes) {
+    const n = normalizeSeatType(pt)
+    if (isHumanSeatType(n) || isSimSeatType(n)) continue
+    if (!out.includes(n)) out.push(n)
+  }
+  return out
+}
+
+const SEAT_TYPE_LABELS: Record<string, string> = {
+  [HUMAN_SEAT]: 'Humano — espera rival',
+  [SIM_SEAT]: 'SIM',
+  COMPUTER_MAD: 'IA Mad',
+  COMPUTER_MONTE_CARLO: 'IA Montecarlo',
+  COMPUTER_DRAFT_BOT: 'IA Draftbot',
+}
+
+export function seatTypeLabel(t: string): string {
+  const n = normalizeSeatType(t)
+  return SEAT_TYPE_LABELS[n] ?? t
+}
 
 export const SKILL_LEVEL_OPTIONS: Array<{ label: string; value: string; stars: number }> = [
   { label: 'Novato', value: 'BEGINNER', stars: 1 },

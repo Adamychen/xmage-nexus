@@ -1,14 +1,17 @@
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
+import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function SeatsTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const humansWaiting = form.seatConfigs.filter((s) => isHumanSeatType(s.type)).length
+  const bots = form.seatConfigs.length - humansWaiting
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
         <h3><Icon name="bot" size={15} /> {t('lobby','create_tab_multi')}</h3>
-        <p>Tu asiento, tu mazo y los bots rivales.</p>
+        <p>Tu asiento, tu mazo y el resto de plazas (humanos en espera o bots).</p>
       </div>
       <div className="create-seats-section">
         <div className="create-seat-box human-seat-box">
@@ -52,31 +55,33 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
 
         <div className="create-seat-box ai-seat-box">
           <div className="seat-box-header">
-            <span className="seat-title"><Icon name="bot" size={13} /> {t('lobby','ai')} — {form.seatConfigs.length} {form.seatConfigs.length === 1 ? 'plaza' : 'plazas'} BOT ({form.numPlayers} total)</span>
+            <span className="seat-title"><Icon name="bot" size={13} /> Plazas — {form.seatConfigs.length} ({humansWaiting} 👤 en espera · {bots} 🤖 bot, {form.numPlayers} total)</span>
             {form.numPlayers !== (form.selectedGameTypeInfo?.maxPlayers ?? form.numPlayers) && form.selectedGameTypeInfo && (
               <span className="wizard-warn-badge">Config: {form.numPlayers} / {form.selectedGameTypeInfo.maxPlayers} max</span>
             )}
           </div>
           {form.numPlayers > 2 && (
             <div className="wizard-hint-box" style={{ marginBottom: 8 }}>
-              {form.isMultiplayerGame ? 'Modo multijugador: cada plaza extra es un bot. Ajusta número de jugadores en la pestaña General.' : 'Ajusta el número de jugadores en General para añadir plazas.'}
+              {form.isMultiplayerGame ? 'Modo multijugador: cada plaza extra es un humano en espera o un bot. Ajusta número de jugadores en la pestaña General.' : 'Ajusta el número de jugadores en General para añadir plazas.'}
             </div>
           )}
           {form.seatConfigs.length === 0 ? (
-            <div className="wizard-hint-box">Sin plazas BOT — entrarás solo (útil para tests). Añade jugadores en General o activa tu asiento.</div>
+            <div className="wizard-hint-box">Sin plazas extra — entrarás solo (útil para tests). Añade jugadores en General o activa tu asiento.</div>
           ) : (
             <div className="create-seats-section">
               {form.seatConfigs.map((cfg, idx) => (
                 <div key={idx} className="create-seat-box" style={{ background: 'rgba(22,28,56,0.5)' }}>
                   <div className="seat-box-header">
                     <span className="seat-title">Plaza {idx + 2} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
-                    <select value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
-                      <option value="SIM">SIM</option>
+                    <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
+                      <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT)}</option>
+                      <option value={SIM_SEAT}>{seatTypeLabel(SIM_SEAT)}</option>
                       {form.playerTypes.map((pt) => (
-                        <option key={pt} value={pt}>{pt}</option>
+                        <option key={pt} value={pt}>{seatTypeLabel(pt)}</option>
                       ))}
                     </select>
                   </div>
+                  {!isHumanSeatType(cfg.type) && (
                   <label>
                     {t('lobby','create_field_seat_skill')}
                     <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} style={{ width: 'auto', minWidth: 80 }}>
@@ -85,7 +90,9 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                       ))}
                     </select>
                   </label>
-                  {cfg.type === 'SIM' && (() => {
+                  )}
+                  {isHumanSeatType(cfg.type) && <span className="wizard-hint-box">👤 Espera a que un humano se una desde el lobby.</span>}
+                  {isSimSeatType(cfg.type) && (() => {
                     const deck = form.availableDecks.find((d) => d.name === cfg.deckName)
                     const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
                     return (
@@ -108,21 +115,25 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                       </>
                     )
                   })()}
-                  {cfg.type !== 'SIM' && <span className="wizard-hint-box">Bot {cfg.type} — usa mazo interno del servidor</span>}
+                  {!isSimSeatType(cfg.type) && !isHumanSeatType(cfg.type) && <span className="wizard-hint-box">Bot {seatTypeLabel(cfg.type)} — usa mazo interno del servidor</span>}
                 </div>
               ))}
             </div>
           )}
           <div style={{ marginTop: 10, borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: 10 }}>
             <div className="field">
-              <span>Atajo: aplicar a todas las plazas BOT</span>
+              <span>Atajo: aplicar a todas las plazas</span>
               <div className="chip-row">
-                <button type="button" className={form.playerTypesSel.includes('SIM') ? 'chip on' : 'chip'} onClick={() => form.toggleAi('SIM')}><Icon name="bot" size={12} /> SIM</button>
+                <button type="button" className={form.playerTypesSel.includes(HUMAN_SEAT) ? 'chip on' : 'chip'} onClick={() => {
+                  form.toggleAi(HUMAN_SEAT)
+                  form.applySeatTypeToAll(HUMAN_SEAT)
+                }}><Icon name="user" size={12} /> Humano</button>
+                <button type="button" className={form.playerTypesSel.includes(SIM_SEAT) ? 'chip on' : 'chip'} onClick={() => form.toggleAi(SIM_SEAT)}><Icon name="bot" size={12} /> SIM</button>
                 {form.playerTypes.map((pt) => (
                   <button key={pt} type="button" className={form.playerTypesSel.includes(pt) ? 'chip on' : 'chip'} onClick={() => {
                     form.toggleAi(pt)
                     form.applySeatTypeToAll(pt)
-                  }}>{pt}</button>
+                  }}>{seatTypeLabel(pt)}</button>
                 ))}
               </div>
             </div>

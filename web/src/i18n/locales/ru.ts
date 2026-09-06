@@ -197,7 +197,7 @@ export const ru: TranslationSchema = {
     create_field_seat_skill: 'Скилл',
     create_field_my_skill: 'Мой скилл',
     create_err_name_required: 'Столу нужно название',
-    create_err_no_seats: 'Добавьте хотя бы одного участника (вы или бот)',
+    create_err_no_seats: 'Добавьте хотя бы одного участника (вы или место)',
     create_warn_seat_deck_empty: 'Колода пуста или не найдена',
     create_toggle_skip_shuffle: 'Не перемешивать начальную колоду',
     create_toggle_skip_starting: 'Пропустить выбор первого игрока',

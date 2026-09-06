@@ -197,7 +197,7 @@ export const zhs: TranslationSchema = {
     create_field_seat_skill: '技术分',
     create_field_my_skill: '我的技术分',
     create_err_name_required: '牌桌需要名称',
-    create_err_no_seats: '至少添加一名参与者（自己或bot）',
+    create_err_no_seats: '至少添加一名参与者（自己或席位）',
     create_warn_seat_deck_empty: '套牌为空或未找到',
     create_toggle_skip_shuffle: '不洗初始牌库',
     create_toggle_skip_starting: '跳过先手玩家选择',

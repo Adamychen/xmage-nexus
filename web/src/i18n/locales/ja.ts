@@ -197,7 +197,7 @@ export const ja: TranslationSchema = {
     create_field_seat_skill: 'スキル',
     create_field_my_skill: '自分のスキル',
     create_err_name_required: 'テーブル名が必要です',
-    create_err_no_seats: '参加者を1人以上追加（自分またはbot）',
+    create_err_no_seats: '参加者を1人以上追加（自分または空き席）',
     create_warn_seat_deck_empty: 'デッキが空または見つかりません',
     create_toggle_skip_shuffle: '初期デッキをシャッフルしない',
     create_toggle_skip_starting: '先攻プレイヤーの選択をスキップ',

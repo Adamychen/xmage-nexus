@@ -197,7 +197,7 @@ export const it: TranslationSchema = {
     create_field_seat_skill: 'Livello',
     create_field_my_skill: 'Il mio livello',
     create_err_name_required: 'Il tavolo ha bisogno di un nome',
-    create_err_no_seats: 'Aggiungi almeno un occupante (tu o un bot)',
+    create_err_no_seats: 'Aggiungi almeno un occupante (tu o un posto)',
     create_warn_seat_deck_empty: 'Mazzo vuoto o mancante',
     create_toggle_skip_shuffle: 'Non mescolare il mazzo iniziale',
     create_toggle_skip_starting: 'Salta la scelta del giocatore iniziale',

@@ -1,13 +1,15 @@
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
-import { parseLimitedSetCodes } from './constants'
+import { isHumanSeatType, parseLimitedSetCodes } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function SummaryStrip({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const humansWaiting = form.seatConfigs.filter((s) => isHumanSeatType(s.type)).length
   return (
     <div className="create-table-summary-strip">
       <span className="summary-pill">{form.gameType} · {form.numPlayers}p</span>
+      {humansWaiting > 0 && <span className="summary-pill">👤 +{humansWaiting} en espera</span>}
       <span className="summary-pill">{form.deckType}</span>
       <span className="summary-pill">Bo{form.wins === 1 ? '1' : form.wins === 2 ? '3' : form.wins === 3 ? '5' : form.wins === 4 ? '7' : '9'} ({form.wins})</span>
       <span className="summary-pill">{form.timeLimit === 'NONE' ? t('lobby','create_summary_no_clock') : form.timeLimit.replace('MIN__', '') + 'm'}</span>
