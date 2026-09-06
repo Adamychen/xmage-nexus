@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { login } from './support/start-game'
+import { login, startGame } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
+import { DECK } from '../fixtures/deck-names'
+import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
 fakeOnly()
 
@@ -52,6 +54,35 @@ test.describe('UI zoom (browser-like)', () => {
       await page.getByTestId('settings-zoom-1-15').click()
       await expect(current).toHaveText('115%')
       expect(await zoomOf(page)).toBe('1.15')
+    })
+  })
+
+  test('el tablero neutraliza el zoom global y pinta sin errores con 150%', async ({ page }) => {
+    await withFakeServer(() => replayRecordedScenario('mutate.json'), async () => {
+      await page.addInitScript(() => {
+        localStorage.setItem(
+          'mage-web-appearance',
+          JSON.stringify({ sleeveId: 'classic', boardLayout: 'standard', uiScale: 1.5, cjkBoost: false }),
+        )
+      })
+      const { pageErrors } = await startGame(page, {
+        prefix: 'zm',
+        tableName: REPLAY_TABLE_NAME,
+        deck: DECK.advanced,
+      })
+
+      expect(pageErrors).toEqual([])
+      expect(await zoomOf(page)).toBe('1.5')
+      const gameZoom = await page.evaluate(
+        () => (document.querySelector('.game') as HTMLElement | null)?.style.zoom,
+      )
+      expect(gameZoom).toBe('0.667')
+
+      const myCard = page.locator('.player-zone .card-slot').first()
+      await expect(myCard).toBeVisible()
+      const cardBox = await myCard.boundingBox()
+      expect(cardBox?.width).toBeGreaterThan(0)
+      expect(cardBox?.height).toBeGreaterThan(0)
     })
   })
 })

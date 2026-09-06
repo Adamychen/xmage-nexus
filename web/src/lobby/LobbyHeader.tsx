@@ -1,10 +1,11 @@
-import { reset } from '../state/store'
+import { reset, setSetting, useSettings } from '../state/store'
 import type { ConnectionInfo } from '../state/persistence'
 import type { UsersView } from '../net/types'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import { ZOOM_DEFAULT, zoomPercent } from '../appearance/zoom'
 import { useTranslation } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
 
@@ -31,6 +32,7 @@ export default function LobbyHeader({
   tableCount, onCreate, onDownloadImages,
 }: Props) {
   const { t } = useTranslation()
+  const settings = useSettings()
 
   return (
     <header className="lobby-topstrip">
@@ -117,6 +119,14 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
+        <button
+          type="button"
+          className="lobby-scale-readout"
+          onClick={() => setSetting('uiScale', ZOOM_DEFAULT)}
+          title={t('lobby', 'zoom_reset')}
+        >
+          {zoomPercent(settings.uiScale)}%
+        </button>
         <button
           type="button"
           className="lobby-appearance-btn"

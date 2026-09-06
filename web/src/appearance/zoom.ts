@@ -29,3 +29,9 @@ export function zoomPercent(value: number): number {
 export function isZoomPreset(value: number, preset: number): boolean {
   return Math.abs(clampZoom(value) - preset) < ZOOM_PRESET_EPSILON
 }
+
+export function inverseZoom(value: number): number {
+  const z = clampZoom(value)
+  if (z === ZOOM_DEFAULT) return ZOOM_DEFAULT
+  return Math.round((1 / z) * 1000) / 1000
+}

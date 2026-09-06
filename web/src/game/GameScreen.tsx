@@ -33,6 +33,7 @@ import { crossZonePlayables } from '../board/crossZone'
 import { combatActorsFrom } from '../state/gameUtils'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
+import { inverseZoom } from '../appearance/zoom'
 import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
 import './GameScreen.css'
 import './TournamentPanel.css'
@@ -217,7 +218,7 @@ export default function GameScreen() {
   const isPodLayout = !isArenaLayout && (settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena'))
 
   return (
-    <div className="game">
+    <div className="game" style={{ zoom: inverseZoom(settings.uiScale) }}>
       <header className="game-top">
         <div className="game-top-left">
           {game && (

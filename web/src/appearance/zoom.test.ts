@@ -4,6 +4,7 @@ import {
   ZOOM_MAX,
   ZOOM_MIN,
   clampZoom,
+  inverseZoom,
   isZoomPreset,
   normalizeZoom,
   roundZoom,
@@ -43,6 +44,14 @@ describe('zoom helpers', () => {
     expect(zoomPercent(1.15)).toBe(115)
     expect(isZoomPreset(1.15, 1.15)).toBe(true)
     expect(isZoomPreset(1.2, 1.15)).toBe(false)
+  })
+
+  it('inverts zoom so the game board nets to scale 1', () => {
+    expect(inverseZoom(1)).toBe(1)
+    expect(inverseZoom(1.1)).toBeCloseTo(1 / 1.1, 3)
+    expect(inverseZoom(0.5)).toBe(2)
+    expect(inverseZoom(2)).toBe(0.5)
+    expect(inverseZoom(NaN)).toBe(1)
   })
 })
 
