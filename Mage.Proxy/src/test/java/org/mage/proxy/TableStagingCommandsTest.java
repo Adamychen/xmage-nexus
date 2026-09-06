@@ -19,6 +19,7 @@ class TableStagingCommandsTest {
 
     private static final UUID ROOM = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID TABLE = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID CHAT = UUID.fromString("00000000-0000-0000-0000-000000000003");
 
     static final class StubSession extends SessionImpl {
         UUID swapRoom;
@@ -58,6 +59,11 @@ class TableStagingCommandsTest {
             startRoom = roomId;
             startTable = tableId;
             return startResult;
+        }
+
+        @Override
+        public java.util.Optional<UUID> getTableChatId(UUID tableId) {
+            return TABLE.equals(tableId) ? java.util.Optional.of(CHAT) : java.util.Optional.empty();
         }
     }
 
@@ -163,5 +169,26 @@ class TableStagingCommandsTest {
         boolean routed = TournamentCommands.handle("startTournament", null, "r5", args("{}"), ctx);
         assertTrue(routed);
         assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void getTableChatIdReturnsSessionChatId() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = InfoCommands.handle("getTableChatId", null, "r6",
+                args("{\"tableId\":\"" + TABLE + "\"}"), ctx);
+        assertTrue(routed);
+        JsonObject res = lastResult(ctx);
+        assertTrue(res.get("ok").getAsBoolean());
+        assertEquals(CHAT.toString(), res.get("data").getAsString());
+    }
+
+    @Test
+    void getTableChatIdWithoutTableIdReturnsNull() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = InfoCommands.handle("getTableChatId", null, "r7", args("{}"), ctx);
+        assertTrue(routed);
+        JsonObject res = lastResult(ctx);
+        assertTrue(res.get("ok").getAsBoolean());
+        assertTrue(!res.has("data") || res.get("data").isJsonNull());
     }
 }

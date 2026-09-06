@@ -424,7 +424,16 @@ public class ProxyClient implements MageClient, CommandContext {
             }
             Object data = callback.getData();
             if (data != null) {
-                ev.add("data", JsonParser.parseString(JsonUtil.toJson(data)));
+                JsonElement dataJson = JsonParser.parseString(JsonUtil.toJson(data));
+                // El ChatMessage del servidor no trae su chatId (viaja en el objectId
+                // del callback): inyectarlo para cumplir el contrato ChatMessageEvent.
+                if (callback.getMethod() == ClientCallbackMethod.CHATMESSAGE
+                        && callbackObjectId != null
+                        && dataJson.isJsonObject()
+                        && !dataJson.getAsJsonObject().has("chatId")) {
+                    dataJson.getAsJsonObject().addProperty("chatId", callbackObjectId.toString());
+                }
+                ev.add("data", dataJson);
             }
             if (logger.isLoggable(Level.FINE) || !isGameUpdate(callback)) {
                 logger.info("event >> " + callback.getMethod() + " (msgId=" + callback.getMessageId()

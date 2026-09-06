@@ -31,6 +31,7 @@ export default function SpectatorStagingScreen({
   const conn = useStore((s) => s.conn)
   const messages = useStore((s) => s.chatMessages)
   const chatId = useStore((s) => s.roomChatId)
+  const tableChatId = useStore((s) => s.tableChatId)
   const stagingTableId = useStore((s) => s.stagingTableId)
   const stagedTable = useMemo(
     () => (mode === 'player' && stagingTableId ? lobby?.tables.find((tb) => tb.tableId === stagingTableId) ?? null : null),
@@ -47,7 +48,9 @@ export default function SpectatorStagingScreen({
 
   const playerReadyMap = useMemo(() => {
     const map: Record<string, boolean> = {}
+    const scopeId = tableChatId ?? chatId
     for (const m of messages) {
+      if (scopeId && m.chatId && m.chatId !== scopeId) continue
       if (m.message?.includes('[NEXUS_READY]')) {
         const u = (m.username || m.message.replace(/.*\[NEXUS_READY\]\s*/, '')).trim().toLowerCase()
         if (u) map[u] = true
@@ -57,16 +60,17 @@ export default function SpectatorStagingScreen({
       }
     }
     return map
-  }, [messages])
+  }, [messages, tableChatId, chatId])
 
   const myUsername = conn?.username?.toLowerCase()
   const myIsReady = myUsername && playerReadyMap[myUsername] !== undefined ? playerReadyMap[myUsername] : myReadyState
   const handleToggleReady = () => {
     const next = !myIsReady
     setMyReadyState(next)
-    if (chatId && conn?.username) {
+    const target = tableChatId ?? chatId
+    if (target && conn?.username) {
       const code = next ? `[NEXUS_READY] ${conn.username}` : `[NEXUS_NOT_READY] ${conn.username}`
-      void cmds.sendChatMessage(chatId, code)
+      void cmds.sendChatMessage(target, code)
     }
   }
 
@@ -654,14 +658,14 @@ export default function SpectatorStagingScreen({
           )}
         </div>
 
-        {/* Embedded Global Chat */}
+        {/* Chat propio de la mesa (paridad desktop; el global queda en el lobby) */}
         <div className="staging-chat-card panel">
           <div className="staging-chat-header">
-            <h3><Icon name="chat" size={15} /> {t('lobby','staging_chat_title')}</h3>
-            <span className="chat-hint">{t('lobby','staging_chat_hint')}</span>
+            <h3><Icon name="chat" size={15} /> {t('lobby', tableChatId ? 'staging_table_chat_title' : 'staging_chat_title')}</h3>
+            <span className="chat-hint">{t('lobby', tableChatId ? 'staging_table_chat_hint' : 'staging_table_chat_unavailable')}</span>
           </div>
           <div className="staging-chat-body">
-            <ChatBox />
+            <ChatBox chatIdOverride={tableChatId} />
           </div>
         </div>
       </main>

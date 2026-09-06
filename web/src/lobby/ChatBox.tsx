@@ -62,11 +62,14 @@ interface ChatBoxProps {
   onPrefillUsed?: () => void
   onUserClick?: (username: string) => void
   onMessage?: () => void
+  /** Canal propio (p. ej. chat de mesa en staging). Por defecto, el chat de sala. */
+  chatIdOverride?: string | null
 }
 
-export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage }: ChatBoxProps = {}) {
+export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage, chatIdOverride }: ChatBoxProps = {}) {
   const { t } = useTranslation()
-  const chatId = useStore((s) => s.roomChatId)
+  const roomChatId = useStore((s) => s.roomChatId)
+  const chatId = chatIdOverride ?? roomChatId
   const messages = useStore((s) => s.chatMessages)
   const [text, setText] = useState('')
   const [hideConnections, setHideConnections] = useState(false)

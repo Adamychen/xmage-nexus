@@ -6,7 +6,7 @@ export { getState, setState } from './state'
 export { useStore, usePhase, useLobby, useGame, useSettings, isBlockingModal } from './selectors'
 export { attachGateway, detachGateway, doConnect, reset } from './gateway'
 export { handleMessage } from './eventHandler'
-export { clearError, setStoreError, clearFeedback, setMyDeck, clearGameEnd, returnToLobby, concedeGame, concedeMatch, setSetting, maybeAutoPass, setWatchingTable, openStagingTable, hideStaging, leaveStagingTable, removeStagingTable, startStagedMatch, appendLocalChatMessage, openRollbackDialog, closeRollbackDialog, requestRollback, requestUndo, recordDungeonRoom, sniffDungeonEntry } from './actions'
+export { clearError, setStoreError, clearFeedback, setMyDeck, clearGameEnd, returnToLobby, concedeGame, concedeMatch, setSetting, maybeAutoPass, setWatchingTable, openStagingTable, hideStaging, leaveStagingTable, removeStagingTable, startStagedMatch, appendLocalChatMessage, openRollbackDialog, closeRollbackDialog, requestRollback, requestUndo, recordDungeonRoom, sniffDungeonEntry, enterTableChat, exitTableChat } from './actions'
 
 // gancho de depuración para E2E (estado del store en vivo)
 import { getState as _getState, setState as _setState } from './state'

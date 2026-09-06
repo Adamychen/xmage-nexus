@@ -175,6 +175,10 @@ empty.
 
 | Action | Args | Description |
 |---|---|---|
+| `getRoomChatId` | `{roomId?}` | Chat id of the main room |
+| `getTableChatId` | `{tableId}` | Chat id of a table waiting room |
+| `getGameChatId` | `{gameId}` | Chat id of a running game |
+| `getTournamentChatId` | `{tournamentId}` | Chat id of a tournament |
 | `joinChat` | `{chatId}` | Join chat room |
 | `leaveChat` | `{chatId}` | Leave chat room |
 | `sendChatMessage` | `{chatId, text}` | Send message |
@@ -250,7 +254,7 @@ These are the core events the web client must handle. Every event has:
 | Event | Data | When |
 |---|---|---|
 | `JOINED_TABLE` | `{tableId, tableName}` | Joined a table |
-| `CHATMESSAGE` | `{chatId, username, message, messageType}` | Chat / game-log / status message. `messageType` is the XMage `ChatMessage.MessageType` (`GAME` = game log, `TALK` = player chat, `STATUS`/`USER_INFO` = system noise, `WHISPER_FROM`/`WHISPER_TO` = private). The proxy forwards the whole `ChatMessage` payload as-is. |
+| `CHATMESSAGE` | `{chatId, username, message, messageType}` | Chat / game-log / status message. `messageType` is the XMage `ChatMessage.MessageType` (`GAME` = game log, `TALK` = player chat, `STATUS`/`USER_INFO` = system noise, `WHISPER_FROM`/`WHISPER_TO` = private). The proxy forwards the whole `ChatMessage` payload as-is, plus injects `chatId` from the callback envelope (the server payload carries no chat id). |
 | `SERVER_MESSAGE` | (string or object) | Server announcement |
 | `WATCHGAME` | `{gameId}` | Watching a game |
 

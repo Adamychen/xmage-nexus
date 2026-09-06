@@ -252,6 +252,28 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           conn.ok(requestId, action, opts.onValidateDeck?.(deck) ?? { ready: true, missing: [], mismatches: [] })
           return
         }
+        case 'getRoomChatId':
+          conn.ok(requestId, action, 'room-fake')
+          return
+        case 'getTableChatId':
+          conn.ok(requestId, action, `table-chat-${table.tableId}`)
+          return
+        case 'getGameChatId':
+          conn.ok(requestId, action, `game-chat-${opts.gameId}`)
+          return
+        case 'joinChat':
+        case 'leaveChat':
+          conn.ok(requestId, action, true)
+          return
+        case 'sendChatMessage': {
+          const text = String((args as Record<string, unknown>).text ?? '')
+          const scopeChatId = String((args as Record<string, unknown>).chatId ?? '')
+          conn.ok(requestId, action, true)
+          if (text && scopeChatId) {
+            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: 'mesa-rival', message: text }, scopeChatId)
+          }
+          return
+        }
         default:
           if (opts.onExtra?.(conn, action, args, requestId)) return
           conn.ok(requestId, action, {})

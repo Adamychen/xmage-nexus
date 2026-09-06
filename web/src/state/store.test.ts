@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { joinGame, sendPlayerBoolean, sendPlayerUUID } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
 import { getState, setState } from './state'
-import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby } from './store'
-import { leaveChat } from '../net/commands'
+import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable } from './store'
+import { getTableChatId, joinChat, leaveChat } from '../net/commands'
 import { loadActiveGame } from './persistence'
 
 vi.mock('../net/commands', () => ({
@@ -16,6 +16,7 @@ vi.mock('../net/commands', () => ({
   getDeckTypes: vi.fn(),
   getRoomChatId: vi.fn(),
   getGameChatId: vi.fn().mockResolvedValue(undefined),
+  getTableChatId: vi.fn().mockResolvedValue(undefined),
   joinChat: vi.fn(),
   leaveChat: vi.fn(),
   sendChatMessage: vi.fn(),
@@ -836,3 +837,95 @@ describe('active game persistence in store', () => {
   })
 })
 
+
+describe('table chat (U4-11)', () => {
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+  })
+
+  it('enterTableChat resolves the table chat id and joins it', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-1')
+    await enterTableChat('table-1')
+    expect(getTableChatId).toHaveBeenCalledWith('table-1')
+    expect(joinChat).toHaveBeenCalledWith('chat-table-1')
+    expect(getState().tableChatId).toBe('chat-table-1')
+    expect(getState().tableChatTableId).toBe('table-1')
+  })
+
+  it('enterTableChat is a no-op when already on that table chat', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-1')
+    await enterTableChat('table-1')
+    await enterTableChat('table-1')
+    expect(getTableChatId).toHaveBeenCalledTimes(1)
+    expect(joinChat).toHaveBeenCalledTimes(1)
+  })
+
+  it('enterTableChat leaves the previous table chat when switching tables', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-1')
+    await enterTableChat('table-1')
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-2')
+    await enterTableChat('table-2')
+    expect(leaveChat).toHaveBeenCalledWith('chat-table-1')
+    expect(joinChat).toHaveBeenCalledWith('chat-table-2')
+    expect(getState().tableChatTableId).toBe('table-2')
+  })
+
+  it('exitTableChat leaves the chat and clears the state', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-1')
+    await enterTableChat('table-1')
+    exitTableChat()
+    expect(leaveChat).toHaveBeenCalledWith('chat-table-1')
+    expect(getState().tableChatId).toBeNull()
+    expect(getState().tableChatTableId).toBeNull()
+  })
+
+  it('openStagingTable enters the table chat; leaveStagingTable exits it', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-9')
+    setState({ lobby: { tables: [], users: [], rooms: [] } as never })
+    openStagingTable('table-9')
+    await vi.waitFor(() => expect(getState().tableChatId).toBe('chat-table-9'))
+    await leaveStagingTable()
+    expect(leaveChat).toHaveBeenCalledWith('chat-table-9')
+    expect(getState().tableChatId).toBeNull()
+    expect(getState().phase).toBe('lobby')
+  })
+
+  it('CHATMESSAGE from the table chat is accepted in staging, strays are dropped', () => {
+    setState({ phase: 'staging', roomChatId: 'chat-room-global', tableChatId: 'chat-table-1', chatMessages: [] })
+    handleMessage({
+      type: 'event',
+      method: 'CHATMESSAGE',
+      messageId: 1,
+      objectId: 'chat-table-1',
+      data: { chatId: 'chat-table-1', username: 'Rival', message: 'gl hf' },
+    })
+    handleMessage({
+      type: 'event',
+      method: 'CHATMESSAGE',
+      messageId: 2,
+      objectId: 'chat-other',
+      data: { chatId: 'chat-other', username: 'Stranger', message: 'otra mesa' },
+    })
+    expect(getState().chatMessages).toHaveLength(1)
+    expect(getState().chatMessages[0].message).toBe('gl hf')
+  })
+
+  it('returnToLobby leaves the table chat and drops its messages', async () => {
+    vi.mocked(getTableChatId).mockResolvedValue('chat-table-1')
+    await enterTableChat('table-1')
+    setState({
+      roomChatId: 'chat-room-global',
+      chatMessages: [
+        { chatId: 'chat-room-global', username: 'Alice', message: 'Lobby hello' },
+        { chatId: 'chat-table-1', username: 'Rival', message: 'gl hf' },
+      ],
+    })
+    returnToLobby()
+    expect(leaveChat).toHaveBeenCalledWith('chat-table-1')
+    expect(getState().tableChatId).toBeNull()
+    expect(getState().chatMessages).toEqual([
+      { chatId: 'chat-room-global', username: 'Alice', message: 'Lobby hello' },
+    ])
+  })
+})

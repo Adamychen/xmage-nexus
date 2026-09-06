@@ -72,6 +72,11 @@ export async function getGameChatId(gameId: string): Promise<string | undefined>
   return res.ok ? res.data : undefined
 }
 
+export async function getTableChatId(tableId: string): Promise<string | undefined> {
+  const res = await getGateway().send<string>('getTableChatId', { tableId })
+  return res.ok ? res.data : undefined
+}
+
 export async function joinChat(chatId: string) {
   return getGateway().send('joinChat', { chatId })
 }

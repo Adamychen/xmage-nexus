@@ -256,6 +256,9 @@ export interface TranslationSchema {
     staging_auto_connect: string
     staging_chat_title: string
     staging_chat_hint: string
+    staging_table_chat_title: string
+    staging_table_chat_hint: string
+    staging_table_chat_unavailable: string
     staging_back_lobby: string
     staging_leave_hint: string
     staging_host_crown: string

@@ -3,7 +3,7 @@ import type { GameEndInfo } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { getState, setState, addLog } from '../state'
-import { sniffDungeonEntry } from '../actions'
+import { sniffDungeonEntry, enterTableChat, exitTableChat } from '../actions'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame } from '../persistence'
 import {
@@ -20,6 +20,7 @@ export function handleJoinedTable(data: unknown, s: Snapshot): void {
   addLog('mesa', `${tStatic('lobby','join_human_btn')} "${name}"`)
   if (tableId && (s.phase === 'lobby' || s.phase === 'staging')) {
     setState({ phase: 'staging', stagingTableId: tableId, stagingIsTournament: d?.flag === true, error: null })
+    void enterTableChat(tableId)
   }
 }
 
@@ -28,6 +29,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   const d = data as { gameId?: string; tableName?: string } | null
   const isNewGame = !!d?.gameId && d.gameId !== s.gameId
   if (d?.gameId) saveActiveGame(d.gameId)
+  exitTableChat()
   setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {

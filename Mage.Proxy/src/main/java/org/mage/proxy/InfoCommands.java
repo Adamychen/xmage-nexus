@@ -90,6 +90,12 @@ final class InfoCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, chatId));
                 return true;
             }
+            case "getTableChatId": {
+                UUID tableId = JsonArgs.uuid(args, "tableId", null);
+                UUID chatId = tableId != null ? ctx.session().getTableChatId(tableId).orElse(null) : null;
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, chatId));
+                return true;
+            }
             case "sendChatMessage": {
                 UUID chatId = JsonArgs.uuid(args, "chatId", null);
                 String text = JsonArgs.str(args, "text", "");

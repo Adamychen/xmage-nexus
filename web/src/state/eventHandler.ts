@@ -27,7 +27,7 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ phase: 'lobby', connecting: false, error: null })
       break
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null })
+      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null })
       break
     case 'info':
       addLog('servidor', msg.message)
