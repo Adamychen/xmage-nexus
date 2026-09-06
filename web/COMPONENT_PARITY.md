@@ -26,7 +26,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U1 | Shell / Conexión | `mage/client/MageFrame.java`, `MagePane.java`, `dialog/ConnectDialog.java`, `RegisterUserDialog.java`, `ResetPasswordDialog.java` | `src/App.tsx`, `lobby/LoginScreen.tsx` | ✅ | Login supera al desktop (presets, split proxy/servidor, avatar, i18n). Registro/reset **no aplican**: el servidor lleva `authenticationActivated=false` por defecto (`config.xml:58`, *"user need not to register"*); `Session.registerUser` responde `REGISTRATION_DISABLED_MESSAGE` y el login ignora la pass (`Session.java:88-93,246-255`; `Main.java:87` "no password check"). Solo tendrían sentido contra un servidor con auth activada | 2026-09-05 |
 | U2 | Lobby mesas | `table/TablesPanel.java`, `TablesPane.java`, `TablesTableModel.java`, `MatchesTableModel.java` | `lobby/LobbyScreen.tsx`, `TableCard.tsx`, `TableFilterBar.tsx`, `FinishedMatchesPanel.tsx` | ✅ | Filtros desktop (rated/unrated, abierta/privada, torneo constructed/limited, ocultar ignorados con toggle OFF por defecto + aviso en join) + orden desktop-default (libres primero, recientes) con selector + búsqueda propia por texto (el desktop no la tiene) + PM/whisper/ignore + doble-clic unirse/espectar (`TableFilterBar.test.tsx` 13 tests) | 2026-09-06 |
 | U3 | Crear mesa | `dialog/NewTableDialog.java`, `table/TablePlayerPanel.java`, `NewPlayerPanel.java` | `lobby/CreateTableDialog.tsx` + `lobby/CreateTable/` | ✅ | Paridad cerrada 2026-09-06 (delta sobre §F): skill por plaza 1-10 default 2 (`seatSkills` web→`SimManager`→`SimPlayer` + skill propia) como `NewPlayerPanel.spnLevel`, bannedUsers con UI (proxy ya lo parseaba), numberRounds con UI (0=auto), range/attack por flags del servidor (`GameTypeView.useRange/useAttackOption`, fallback heurística), validación por paso (nombre+compat+ocupantes), hint vivo por plaza (cartas del mazo + aviso vacío). F11 2026-09-06: plazas HUMAN en espera (`Humano — espera rival` por plaza + chip global, como `TablePlayerPanel=HUMAN`; tipos normalizados a enum canónico). Fuera de alcance: F6 emblemas `.dck` (experimental desktop, 3 capas). Tests: `CreateTableDialog.test` 8/8 + `constants.test` 4/4 + `wizard.spec.ts` 3/3 fake con aserción del frame WS | 2026-09-06 |
-| U4 | Unirse / Espera / Staging | `dialog/JoinTableDialog.java`, `TableWaitingDialog.java` | `lobby/JoinTableDialog.tsx`, `SpectatorStagingScreen.tsx` | ❓ | `JOINED_TABLE` ✅ (`staging.spec.ts`); comparativa fina pendiente | — |
+| U4 | Unirse / Espera / Staging | `dialog/JoinTableDialog.java`, `TableWaitingDialog.java` | `lobby/JoinTableDialog.tsx`, `SpectatorStagingScreen.tsx` | ✅ | Auditada 2026-09-06 (ver § U4): swapSeats (proxy+↑/↓ dueño en READY), torneo (bypass join sin mazo en limitado + `startTournament`), roster rico (rating limited/constructed + history + flag), start con confirm si falta ready (aviso, no bloqueo). Stretch: caché password, sonidos, chat por mesa. Tests: `TableStagingCommandsTest` 5/5 java + `SpectatorStagingScreen.test` 17/17 + `staging.spec.ts` 8/8 fake | 2026-09-06 |
 | U5 | Chat | `chat/ChatPanelBasic.java`, `ChatPanelSeparated.java`, `table/PlayersChatPanel.java` | `game/GameChat.tsx`, `lobby/ChatBox.tsx` | ❓ | `CHATMESSAGE` ✅ (`chat.spec.ts`); PM y ventana separada por auditar | — |
 | U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (27 ficheros) | ❓ | Phase 3 done (`content.json`); comparativa fina pendiente | — |
 | U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ❓ | export+clipboard ✅ (Phase 3); comparativa fina pendiente | — |
@@ -140,6 +140,27 @@ Veredicto: un solo gap, **G13-1** (prefs maná en ajustes + respetarlas en `Mana
 ### U3 — Crear mesa (AUDITADA 2026-09-04, CERRADA 2026-09-06)
 
 Ver `lobby_roadmap.md` §F (tablas F1–F10, U1–U8 + delta 2026-09-06). F6 emblemas declarado fuera de alcance.
+
+### U4 — Unirse / Espera / Staging (AUDITADA 2026-09-06, CERRADA)
+
+Base desktop: `JoinTableDialog.java` (158 lín., nombre bloqueado, mazo `.dck`+Generate, password recordada, skill oculto=1, sin validación, bypass torneo limitado sin password) · `TableWaitingDialog.java` (461 lín., roster Seat/Loc/Name/Rating/Type/History, Move Up/Down dueño en READY, Start dueño en READY, chat por mesa, polling 1 s + sonidos, sin ready-toggle, sin cambio de mazo, sin kick).
+Base web: `JoinTableDialog.tsx` (galería+import+pre-validación `validateDeck`) · `SpectatorStagingScreen.tsx` (modos player/spectator, toggle Listo, cambio de mazo en vivo, re-entrada "Ir a la mesa").
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Join: nombre fijo, skill 1, HUMAN fijo, sin validación | Idéntico + pre-validación viva del mazo | ✅ (supera) |
+| Join: password siempre visible + recordada | Solo si `passworded`, sin caché | ⚠️ U4-2 menor (stretch) |
+| Join: mazo `.dck` + Generate | Galería + import inline | ✅ (Generate cae en U8) |
+| Join: bypass torneo limitado sin password | `isDirectTournamentJoin` en `lobbyUtils` + `joinTournamentDirect` | ✅ U4-4 cerrado 2026-09-06 |
+| Espera: roster con Rating/History/Loc | Rating (limited?limited:constructed) + history + `CountryFlag` por asiento (`RankBadge` compact) | ✅ U4-7 cerrado 2026-09-06 (ratings añadidos al contrato `SeatView`) |
+| Espera: Move Up/Down (`swapSeats`, dueño, READY) | Acción proxy `swapSeats` + botones ↑/↓ por asiento ocupado | ✅ U4-8 cerrado 2026-09-06 |
+| Espera: Start dueño en READY, sin ready-toggle | Start habilitado en READY; sin readys → `confirm` (aviso, no bloqueo) | ✅ U4-9 cerrado 2026-09-06 (decisión: no bloquear) |
+| Espera: `startTournament` en torneo | Acción proxy `startTournament`; `startStagedMatch` elige por `isTournament`/`flag` de `JOINED_TABLE` | ✅ U4-10 cerrado 2026-09-06 |
+| Espera: chat por mesa | Chat global de sala | ⚠️ U4-11 (stretch, la más cara) |
+| Espera: polling + sonidos join/leave/start | Broadcast lobby, sin sonidos | ⚠️ U4-12 menor (stretch) |
+| Espera: sin cambio de mazo, sin kick | Cambio de mazo en vivo (dueño recrea con confirm) | ✅ (supera; kick tampoco existe en desktop) |
+
+Evidencia: `Mage.Proxy/TableStagingCommandsTest.java` 5/5 + `SpectatorStagingScreen.test.tsx` 17/17 + `lobbyUtils.test.ts` 4/4 + `staging.spec.ts` 8/8 fake (swap round-trip, confirm accept/dismiss, bypass torneo).
 
 ### U8 — Generador mazos (gap confirmado)
 

@@ -9,7 +9,7 @@ import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { isUserIgnored } from './ignoreList'
 import { tableOwnerName } from './TableFilterBar'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
-import { withTimeout } from './lobbyUtils'
+import { isDirectTournamentJoin, withTimeout } from './lobbyUtils'
 
 export function useTableActions(conn: ConnectionInfo | null) {
   const [joiningTable, setJoiningTable] = useState<TableView | null>(null)
@@ -31,7 +31,40 @@ export function useTableActions(conn: ConnectionInfo | null) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
       return
     }
+    if (isDirectTournamentJoin(t)) {
+      void joinTournamentDirect(t)
+      return
+    }
     setJoiningTable(t)
+  }
+
+  /** Bypass del diálogo para torneos limitados sin password (desktop: joinTournamentTable con deck null). */
+  const joinTournamentDirect = async (t: TableView) => {
+    setBusyTable(t.tableId)
+    try {
+      const res = await withTimeout(
+        cmds.joinTournamentTable({
+          tableId: t.tableId,
+          playerName: conn?.username ?? 'player',
+          playerType: 'HUMAN',
+          skill: 1,
+        }),
+        15000,
+        'joinTournamentTable',
+      )
+      if (res.ok) {
+        setNotice(tStatic('lobby','waiting_players'))
+      } else {
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','join_table_failed')
+        setState({ error: translateError(raw, 'joinTournamentTable', code) })
+      }
+    } catch (e) {
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'joinTournamentTable', (err as { errorCode?: string }).errorCode) })
+    } finally {
+      setBusyTable(null)
+    }
   }
 
   const handleJoinWithDeck = async (t: TableView, deck: Deck, password?: string) => {

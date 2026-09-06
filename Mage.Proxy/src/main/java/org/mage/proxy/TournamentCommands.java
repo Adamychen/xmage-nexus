@@ -53,6 +53,13 @@ final class TournamentCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().watchTournamentTable(tableId), null, null));
                 return true;
             }
+            case "startTournament": {
+                UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
+                UUID tableId = JsonArgs.uuid(args, "tableId", null);
+                boolean ok = tableId != null && ctx.session().startTournament(roomId, tableId);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, null, null));
+                return true;
+            }
             case "getTournament": {
                 UUID tournamentId = JsonArgs.uuid(args, "tournamentId", null);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, tournamentId != null, tournamentId == null ? ProxyProtocol.ERR_INVALID_ARGUMENT : null, tournamentId != null ? ctx.session().getTournament(tournamentId) : null));

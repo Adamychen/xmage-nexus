@@ -4,9 +4,25 @@ import SpectatorStagingScreen from './SpectatorStagingScreen'
 import { setState } from '../state/store'
 import type { TableView } from '../net/types'
 
+const { swapSeatsMock, startMatchMock, startTournamentMock } = vi.hoisted(() => ({
+  swapSeatsMock: vi.fn(async () => ({ ok: true })),
+  startMatchMock: vi.fn(async () => ({ ok: true })),
+  startTournamentMock: vi.fn(async () => ({ ok: true })),
+}))
+
+vi.mock('../net/commands', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../net/commands')>()),
+  swapSeats: swapSeatsMock,
+  startMatch: startMatchMock,
+  startTournament: startTournamentMock,
+}))
+
 afterEach(() => {
   cleanup()
-  setState({ conn: null, stagingTableId: null, lobby: null, phase: 'idle' })
+  swapSeatsMock.mockClear()
+  startMatchMock.mockClear()
+  startTournamentMock.mockClear()
+  setState({ conn: null, stagingTableId: null, stagingIsTournament: false, lobby: null, phase: 'idle', chatMessages: [] })
 })
 
 vi.mock('./ChatBox', () => ({
@@ -164,20 +180,63 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText(/Preparándose/i)).not.toBeNull()
   })
 
-  it('deshabilita el botón Empezar si algún jugador no está listo mediante mensaje chat', () => {
+  it('Empezar sigue habilitado sin readys pero pide confirmación (aviso, no bloqueo)', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    try {
+      setState({
+        conn: { username: 'Bob' } as never,
+        stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+        lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+        chatMessages: [
+          { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+        ],
+      })
+      const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+      const startBtn = getByTestId('staging-start') as HTMLButtonElement
+      expect(startBtn.disabled).toBe(false)
+      fireEvent.click(startBtn)
+      expect(confirmSpy).toHaveBeenCalled()
+      expect(startMatchMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId)
+    } finally {
+      confirmSpy.mockRestore()
+    }
+  })
+
+  it('cancelar la confirmación no arranca la partida', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    try {
+      setState({
+        conn: { username: 'Bob' } as never,
+        stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+        lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+        chatMessages: [
+          { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+        ],
+      })
+      const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+      fireEvent.click(getByTestId('staging-start'))
+      expect(confirmSpy).toHaveBeenCalled()
+      expect(startMatchMock).not.toHaveBeenCalled()
+    } finally {
+      confirmSpy.mockRestore()
+    }
+  })
+
+  it('mesa de torneo arranca con startTournament', () => {
+    const tourneyTable: TableView = { ...MOCK_COMMANDER_TABLE, isTournament: true }
     setState({
       conn: { username: 'Bob' } as never,
-      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
-      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
-      chatMessages: [
-        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
-      ],
+      stagingTableId: tourneyTable.tableId,
+      stagingIsTournament: true,
+      lobby: { type: 'lobby', tables: [tourneyTable] } as never,
     })
-    const { getByTestId, getByText } = render(<SpectatorStagingScreen mode="player" />)
+    const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
 
-    const startBtn = getByTestId('staging-start') as HTMLButtonElement
-    expect(startBtn.disabled).toBe(true)
-    expect(getByText(/Esperando a que todos los jugadores confirmen/i)).not.toBeNull()
+    fireEvent.click(getByTestId('staging-start'))
+    expect(startTournamentMock).toHaveBeenCalledWith(tourneyTable.tableId)
+    expect(startMatchMock).not.toHaveBeenCalled()
   })
 
   it('abre el diálogo de cambiar baraja al pulsar Cambiar baraja', () => {
@@ -192,5 +251,120 @@ describe('SpectatorStagingScreen', () => {
     fireEvent.click(changeDeckBtn)
 
     expect(getByText(/CAMBIAR BARAJA DE LA MESA/i)).not.toBeNull()
+  })
+
+  it('dueño en READY ve botones de orden por asiento con bordes deshabilitados', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect((getByTestId('staging-seat-up-0') as HTMLButtonElement).disabled).toBe(true)
+    expect((getByTestId('staging-seat-down-0') as HTMLButtonElement).disabled).toBe(false)
+    expect((getByTestId('staging-seat-up-3') as HTMLButtonElement).disabled).toBe(false)
+    expect((getByTestId('staging-seat-down-3') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('pulsar bajar en el asiento 0 llama a swapSeats con (0, 1)', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    fireEvent.click(getByTestId('staging-seat-down-0'))
+    expect(swapSeatsMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId, 0, 1)
+  })
+
+  it('arrastrar el asiento 3 sobre el 0 llama a swapSeats con (3, 0)', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { container } = render(<SpectatorStagingScreen mode="player" />)
+
+    const store: Record<string, string> = {}
+    const dataTransfer = {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: (k: string, v: string) => { store[k] = v },
+      getData: (k: string) => store[k] ?? '',
+    }
+    const occupied = container.querySelectorAll('.ring-seat.occupied')
+    expect(occupied.length).toBe(4)
+    fireEvent.dragStart(occupied[3], { dataTransfer } as never)
+    fireEvent.dragOver(occupied[0], { dataTransfer } as never)
+    expect(occupied[0].className).toContain('seat-drop-target')
+    fireEvent.drop(occupied[0], { dataTransfer } as never)
+    expect(swapSeatsMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId, 3, 0)
+  })
+
+  it('no dueño no ve botones de orden', () => {
+    setState({
+      conn: { username: 'Charlie' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    })
+    const { queryByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(queryByTestId('staging-seat-up-0')).toBeNull()
+    expect(queryByTestId('staging-seat-down-0')).toBeNull()
+  })
+
+  it('dueño en WAITING ve botones de orden deshabilitados con aviso (no ocultos)', () => {
+    setState({
+      conn: { username: 'Alice' } as never,
+      stagingTableId: MOCK_DUEL_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_DUEL_TABLE] } as never,
+    })
+    const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    const up = getByTestId('staging-seat-up-0') as HTMLButtonElement
+    expect(up.disabled).toBe(true)
+    expect(up.title).toMatch(/completa/i)
+  })
+
+  it('muestra rating, historial y bandera de cada asiento ocupado', () => {
+    const richTable: TableView = {
+      ...MOCK_COMMANDER_TABLE,
+      seats: [
+        { playerName: 'Bob', seatIndex: 0, playerType: 'HUMAN', flagName: 'es', constructedRating: 1720, history: '12-3' },
+        ...MOCK_COMMANDER_TABLE.seats.slice(1),
+      ],
+    }
+    setState({
+      conn: { username: 'Zed' } as never,
+      stagingTableId: richTable.tableId,
+      lobby: { type: 'lobby', tables: [richTable] } as never,
+    })
+    const { container, getByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(getByText('(1720)')).not.toBeNull()
+    expect(getByText('12-3')).not.toBeNull()
+    expect(container.querySelector('img[alt="ES"]')).not.toBeNull()
+  })
+
+  it('mesa limited muestra el rating limited', () => {
+    const limitedTable: TableView = {
+      ...MOCK_COMMANDER_TABLE,
+      limited: true,
+      seats: [
+        { playerName: 'Bob', seatIndex: 0, playerType: 'HUMAN', constructedRating: 1600, limitedRating: 1480 },
+        ...MOCK_COMMANDER_TABLE.seats.slice(1),
+      ],
+    }
+    setState({
+      conn: { username: 'Zed' } as never,
+      stagingTableId: limitedTable.tableId,
+      lobby: { type: 'lobby', tables: [limitedTable] } as never,
+    })
+    const { getByText, queryByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(getByText('(1480)')).not.toBeNull()
+    expect(queryByText('(1600)')).toBeNull()
   })
 })

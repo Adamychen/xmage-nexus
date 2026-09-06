@@ -477,6 +477,9 @@
         "playerType": { "type": "string" },
         "flagName": { "type": "string" },
         "history": { "type": "string" },
+        "generalRating": { "type": "number" },
+        "constructedRating": { "type": "number" },
+        "limitedRating": { "type": "number" },
         "joinedInRound": { "type": "string" },
         "bowingOut": { "type": "boolean" },
         "isExtraSeat": { "type": "boolean" }

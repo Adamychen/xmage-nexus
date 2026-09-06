@@ -73,6 +73,16 @@ final class TableCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().startMatch(roomId, tableId), null, null));
                 return true;
             }
+            case "swapSeats": {
+                UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
+                UUID tableId = JsonArgs.uuid(args, "tableId", null);
+                int seatNum1 = JsonArgs.getInt(args, "seatNum1", -1);
+                int seatNum2 = JsonArgs.getInt(args, "seatNum2", -1);
+                boolean ok = tableId != null && seatNum1 >= 0 && seatNum2 >= 0
+                        && ctx.session().swapSeats(roomId, tableId, seatNum1, seatNum2);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, null, null));
+                return true;
+            }
             case "watchTable": {
                 UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
                 UUID tableId = JsonArgs.uuid(args, "tableId", null);

@@ -17,6 +17,8 @@ export interface LobbySlice {
   chatMessages: ChatMessageEvent[]
   watchingTable: TableView | null
   stagingTableId: string | null
+  /** flag isTournament del JOINED_TABLE (el lobby puede ir desfasado al entrar) */
+  stagingIsTournament: boolean
   log: LogEntry[]
   events: { method: string; time: number }[]
 }
@@ -27,6 +29,7 @@ export const initialLobby: LobbySlice = {
   chatMessages: [],
   watchingTable: null,
   stagingTableId: null,
+  stagingIsTournament: false,
   log: [],
   events: [],
 }

@@ -54,7 +54,8 @@ export function setWatchingTable(table: import('../net/types').TableView | null)
 
 /** Abre la sala de espera de la partida (paridad con el TableWaitingDialog de desktop). */
 export function openStagingTable(tableId: string) {
-  setState({ phase: 'staging', stagingTableId: tableId, error: null })
+  const t = getState().lobby?.tables.find((tb) => tb.tableId === tableId)
+  setState({ phase: 'staging', stagingTableId: tableId, stagingIsTournament: t?.isTournament ?? false, error: null })
 }
 
 /** Vuelve al lobby sin abandonar el asiento (se puede regresar con "Ir a la mesa"). */
@@ -65,7 +66,7 @@ export function hideStaging() {
 async function exitStagingVia(action: (tableId: string) => Promise<unknown>) {
   const s = getState()
   const tableId = s.stagingTableId
-  setState({ phase: 'lobby', stagingTableId: null, error: null })
+  setState({ phase: 'lobby', stagingTableId: null, stagingIsTournament: false, error: null })
   if (tableId) {
     try {
       await action(tableId)
@@ -87,7 +88,12 @@ export function removeStagingTable() {
 export async function startStagedMatch() {
   const s = getState()
   if (!s.stagingTableId) return
-  await cmds.startMatch(s.stagingTableId)
+  const staged = s.lobby?.tables.find((tb) => tb.tableId === s.stagingTableId)
+  if (staged?.isTournament ?? s.stagingIsTournament) {
+    await cmds.startTournament(s.stagingTableId)
+  } else {
+    await cmds.startMatch(s.stagingTableId)
+  }
 }
 
 /**
@@ -168,6 +174,7 @@ export function returnToLobby() {
     phase: 'lobby',
     watchingTable: null,
     stagingTableId: null,
+    stagingIsTournament: false,
     game: null,
     gameId: null,
     gameChatId: null,

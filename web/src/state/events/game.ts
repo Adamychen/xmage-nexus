@@ -19,7 +19,7 @@ export function handleJoinedTable(data: unknown, s: Snapshot): void {
   const name = d?.tableName ?? tableId ?? ''
   addLog('mesa', `${tStatic('lobby','join_human_btn')} "${name}"`)
   if (tableId && (s.phase === 'lobby' || s.phase === 'staging')) {
-    setState({ phase: 'staging', stagingTableId: tableId, error: null })
+    setState({ phase: 'staging', stagingTableId: tableId, stagingIsTournament: d?.flag === true, error: null })
   }
 }
 
@@ -28,7 +28,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   const d = data as { gameId?: string; tableName?: string } | null
   const isNewGame = !!d?.gameId && d.gameId !== s.gameId
   if (d?.gameId) saveActiveGame(d.gameId)
-  setState({ phase: 'game', watchingTable: null, stagingTableId: null, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
+  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
     void cmds.joinGame(d!.gameId!)

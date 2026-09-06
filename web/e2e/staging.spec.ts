@@ -66,17 +66,73 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
 
       await toggleBtn.click()
       await expect(toggleBtn).toContainText(/Estoy listo|ready/i)
-      await expect(page.getByTestId('staging-start')).toBeDisabled()
-
-      await toggleBtn.click()
-      await expect(toggleBtn).toContainText(/No estoy listo|Not ready/i)
-      await expect(page.getByTestId('staging-start')).toBeEnabled()
 
       await page.getByTestId('staging-change-deck').click()
       await expect(page.getByTestId('join-table-dialog')).toBeVisible()
       await expect(page.getByTestId('join-target-pill')).toContainText(/CAMBIAR BARAJA|CHANGE TABLE DECK/i)
       await page.getByTestId('join-cancel-btn').click()
       await expect(page.getByTestId('join-table-dialog')).toBeHidden()
+    })
+  })
+
+  test('el dueño puede reordenar asientos con subir/bajar (swapSeats)', async ({ page }) => {
+    await withFakeServer(stagingScenario, async () => {
+      await createAndWaitStaging(page)
+      const firstCard = page.locator('.staging-duel-roster .staging-player-card').first()
+      await expect(firstCard).toContainText('e2e')
+
+      await expect(page.getByTestId('staging-seat-up-0')).toBeDisabled()
+      await page.getByTestId('staging-seat-down-0').click()
+      await expect(firstCard).toContainText('sim')
+
+      await page.getByTestId('staging-seat-up-1').click()
+      await expect(firstCard).toContainText('e2e')
+    })
+  })
+
+  test('empezar sin readys pide confirmación y arranca al aceptar', async ({ page }) => {
+    await withFakeServer(stagingScenario, async () => {
+      await createAndWaitStaging(page)
+      await page.getByTestId('staging-toggle-ready').click()
+      await expect(page.getByTestId('staging-toggle-ready')).toContainText(/Estoy listo|ready/i)
+
+      page.on('dialog', (d) => void d.accept())
+      await page.getByTestId('staging-start').click()
+      await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 15_000 })
+    })
+  })
+
+  test('empezar sin readys se cancela al rechazar la confirmación', async ({ page }) => {
+    await withFakeServer(stagingScenario, async () => {
+      await createAndWaitStaging(page)
+      await page.getByTestId('staging-toggle-ready').click()
+
+      page.on('dialog', (d) => void d.dismiss())
+      await page.getByTestId('staging-start').click()
+      await expect(page.getByTestId('staging-player-actions')).toBeVisible()
+      await expect(page.getByTestId('game-status')).toBeHidden()
+    })
+  })
+
+  test('unirse a torneo limitado sin password entra directo sin diálogo de mazo', async ({ page }) => {
+    const tournamentScenario = () =>
+      makeBaseScenario({
+        tableId: 'table-tny-1',
+        tableName: 'tourney-e2e',
+        gameId: 'game-tny-1',
+        gameView: playerGameView,
+        gameType: 'Booster Draft',
+        isTournament: true,
+        seats: [
+          { playerName: 'host', seatIndex: 0, playerType: 'HUMAN' },
+          { playerName: '', seatIndex: 1, playerType: 'HUMAN' },
+        ],
+      })
+    await withFakeServer(tournamentScenario, async () => {
+      await login(page, 'e2e')
+      await page.getByRole('button', { name: /Unirse \(Humano\)|Join \(Human\)/ }).click()
+      await expect(page.getByTestId('join-table-dialog')).toBeHidden()
+      await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
     })
   })
 })

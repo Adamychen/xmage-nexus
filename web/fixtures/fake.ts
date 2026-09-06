@@ -67,6 +67,7 @@ export interface MakeTableOptions {
   deckType?: string
   controllerName?: string
   seats?: SeatView[]
+  isTournament?: boolean
 }
 
 export function makeTable(opts: MakeTableOptions): TableView {
@@ -87,7 +88,7 @@ export function makeTable(opts: MakeTableOptions): TableView {
     skillLevel: 'Casual',
     tableStateText: 'Lista',
     seatsInfo: '2/2',
-    isTournament: false,
+    isTournament: opts.isTournament ?? false,
     seats,
     games: [opts.gameId],
     quitRatio: '100',
@@ -119,6 +120,8 @@ export interface BaseScenarioOptions {
   gameId: string
   gameView?: GameView
   seats?: SeatView[]
+  gameType?: string
+  isTournament?: boolean
   getGameView?: () => GameView
   selectMessage?: string
   onConnect?: (conn: FakeConn) => void
@@ -144,7 +147,7 @@ const argString = (args: Record<string, unknown>, ...keys: string[]): string => 
 }
 
 export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
-  const table = makeTable({ tableId: opts.tableId, tableName: opts.tableName, gameId: opts.gameId, seats: opts.seats })
+  const table = makeTable({ tableId: opts.tableId, tableName: opts.tableName, gameId: opts.gameId, seats: opts.seats, gameType: opts.gameType, isTournament: opts.isTournament })
   const getGv = opts.getGameView ?? (() => opts.gameView as GameView)
   const selectMessage = opts.selectMessage ?? 'Main 1: Cast spells or activate abilities'
   let activeConn: FakeConn | null = null
@@ -174,7 +177,28 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           conn.ok(requestId, action, {})
           conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: false })
           return
-        case 'startMatch': {
+        case 'joinTournamentTable':
+          conn.ok(requestId, action, {})
+          conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: true })
+          return
+        case 'swapSeats': {
+          const a = Number((args as Record<string, unknown>).seatNum1)
+          const b = Number((args as Record<string, unknown>).seatNum2)
+          const seats = table.seats ?? []
+          const okSwap = Number.isInteger(a) && Number.isInteger(b) && a >= 0 && b >= 0 && a < seats.length && b < seats.length
+          if (okSwap) {
+            const tmp = seats[a]
+            seats[a] = seats[b]
+            seats[b] = tmp
+            conn.ok(requestId, action, {})
+            conn.lobby([table])
+          } else {
+            conn.fail(requestId, action, 'bad seat indices')
+          }
+          return
+        }
+        case 'startMatch':
+        case 'startTournament': {
           conn.ok(requestId, action, {})
           conn.broadcast('START_GAME', { gameId: opts.gameId, tableName: table.tableName }, opts.gameId)
           conn.broadcast('GAME_INIT', { gameView: gv() }, opts.gameId)

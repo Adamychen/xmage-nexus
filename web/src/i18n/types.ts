@@ -274,6 +274,14 @@ export interface TranslationSchema {
     staging_chat_not_ready: string
     staging_waiting_players_ready: string
     staging_start_blocked_not_ready: string
+    staging_start_unready_confirm: string
+    staging_seat_move_up: string
+    staging_seat_move_down: string
+    staging_seat_move_locked: string
+    staging_step_table: string
+    staging_step_players: string
+    staging_step_ready: string
+    staging_step_play: string
     join_requires_password: string
     join_password_enter_placeholder: string
     join_import_toggle_open: string

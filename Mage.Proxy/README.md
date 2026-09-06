@@ -87,6 +87,8 @@ sesión solo llegan a sus propias conexiones.
 | `leaveTable` | `{tableId}` | Leave a table |
 | `removeTable` | `{tableId}` | Remove a table |
 | `startMatch` | `{tableId}` | Start the match |
+| `startTournament` | `{tableId}` | Start the tournament (tournament tables) |
+| `swapSeats` | `{tableId, seatNum1, seatNum2}` | Swap two seats (owner, READY_TO_START only) |
 | `watchTable` | `{tableId}` | Watch a table |
 | `watchGame` | `{gameId}` | Watch a specific game |
 | `stopWatching` | `{gameId}` | Stop watching |

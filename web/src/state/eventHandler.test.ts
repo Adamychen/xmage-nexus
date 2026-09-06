@@ -57,6 +57,20 @@ describe('eventHandler — callbacks críticos', () => {
     } as never)
     expect(getState().phase).toBe('staging')
     expect(getState().stagingTableId).toBe('table-9')
+    expect(getState().stagingIsTournament).toBe(false)
+  })
+
+  it('JOINED_TABLE propaga el flag de torneo al staging', () => {
+    setState({ phase: 'lobby' })
+    handleMessage({
+      type: 'event',
+      method: 'JOINED_TABLE',
+      objectId: null,
+      data: { roomId: 'room-1', currentTableId: 'table-t', parentTableId: null, flag: true },
+    } as never)
+    expect(getState().phase).toBe('staging')
+    expect(getState().stagingTableId).toBe('table-t')
+    expect(getState().stagingIsTournament).toBe(true)
   })
 
   it('JOINED_TABLE no interrumpe una partida en curso', () => {

@@ -140,7 +140,7 @@ export default function TableCard({
             const foundUser = s.playerName
               ? users.find((u) => u.userName.toLowerCase() === s.playerName.toLowerCase())
               : undefined
-            const rating = foundUser?.constructedRating ?? (s as any).constructedRating
+            const rating = foundUser?.constructedRating ?? s.constructedRating
             const historyInfo = formatSeatHistory(s.history, foundUser?.matchHistory)
             const seatAvatarId = isHuman
               ? s.playerName === username
@@ -158,7 +158,7 @@ export default function TableCard({
                     foundUser ?? {
                       ...fallbackActionUser(s.playerName),
                       flagName: s.flagName ?? '',
-                      constructedRating: (s as any).constructedRating || 1500,
+                      constructedRating: s.constructedRating || 1500,
                       matchHistory: s.history || '',
                     },
                   )

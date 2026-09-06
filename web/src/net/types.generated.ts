@@ -341,6 +341,9 @@ export interface SeatView {
   playerType?: string
   flagName?: string
   history?: string
+  generalRating?: number
+  constructedRating?: number
+  limitedRating?: number
   joinedInRound?: string
   bowingOut?: boolean
   isExtraSeat?: boolean

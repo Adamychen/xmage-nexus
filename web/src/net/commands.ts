@@ -143,6 +143,15 @@ export async function startMatch(tableId: string) {
   return getGateway().send('startMatch', { tableId })
 }
 
+export async function startTournament(tableId: string) {
+  return getGateway().send('startTournament', { tableId })
+}
+
+/** Reordena dos asientos (solo dueño, mesa READY_TO_START) — paridad con Move Up/Down del desktop. */
+export async function swapSeats(tableId: string, seatNum1: number, seatNum2: number) {
+  return getGateway().send('swapSeats', { tableId, seatNum1, seatNum2 })
+}
+
 export async function watchTable(tableId: string) {
   return getGateway().send('watchTable', { tableId })
 }

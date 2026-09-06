@@ -21,7 +21,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `CHATMESSAGE` | ✅ | — | ✅ | chat.spec.ts | 2026-08-24 |
 | `SHOW_USERMESSAGE` | ✅ | — | — | — | 2026-08-24 |
 | `SERVER_MESSAGE` | ✅ | — | — | — | 2026-08-24 |
-| `JOINED_TABLE` | ✅ | ✅ | ✅ | eventHandler.test.ts / staging.spec.ts · multi-user.spec.ts (real) | 2026-09-02 |
+| `JOINED_TABLE` | ✅ | ✅ | ✅ | eventHandler.test.ts / staging.spec.ts · multi-user.spec.ts (real) | 2026-09-06 |
 | `START_TOURNAMENT` | ✅ | — | ✅ | tournament.spec.ts / TournamentBracket | 2026-08-26 |
 | `TOURNAMENT_INIT` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
 | `TOURNAMENT_UPDATE` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
@@ -192,10 +192,10 @@ Lista actual (de `engine-view-gap.json`):
 ### L. Modos de juego
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Commander (zona / tax / eminence / pod 4-max) | ✅ | ✅ | `PodBoard.tsx` (2x2 clamp 4) + `TurnOrderRing` + `CommanderDamageMatrix` (`PodBoard.test.tsx` 12) + `CommandZone` ×4 | 2026-08-26 |
+| Commander (zona / tax / eminence / pod 4-max en tablero) | ✅ | ✅ | `PodBoard.tsx` (2x2 clamp 4 SOLO de pintado — el servidor soporta FFA 3-10, `CommanderFreeForAllType.java`) + `TurnOrderRing` + `CommanderDamageMatrix` (`PodBoard.test.tsx` 12) + `CommandZone` ×4 | 2026-08-26 |
 | Draft / Sealed (8-player) | ✅ | ✅ | `DraftScreen.tsx` + `ConstructScreen.tsx` + `DraftScreen.test.tsx` + `draft.spec.ts` (`@draft` 8→4) | 2026-08-26 |
 | Torneo Swiss / Bracket | ✅ | ✅ | `TournamentBracket.tsx` + `TournamentPanel.tsx` + `TournamentBracket.test.tsx` + `tournament.spec.ts` | 2026-08-26 |
-| Two-Headed Giant / multijugador | ✅ | ✅ | `TwoHeadedBoard` (`PodBoard`) 2×2 pod — Commander FFA 4-max (XMage no soporta >4) | 2026-08-26 |
+| Two-Headed Giant / multijugador | ✅ | ✅ | `TwoHeadedBoard` (`PodBoard`) 2×2 pod — clamp 4 solo de pintado web (el servidor XMage soporta FFA 3-10) | 2026-08-26 |
 
 ### M. Miscelánea
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -210,5 +210,5 @@ Lista actual (de `engine-view-gap.json`):
 - **Slice A — Draft / Limited** ✅: `START_DRAFT`, `DRAFT_INIT`, `DRAFT_PICK`, `DRAFT_UPDATE`, `DRAFT_OVER`, `CONSTRUCT` → `DraftScreen`/`ConstructScreen`.
 - **Slice B — Torneo** ✅: `START_TOURNAMENT`, `TOURNAMENT_INIT`, `TOURNAMENT_UPDATE`, `TOURNAMENT_OVER`, `SHOW_TOURNAMENT` → `TournamentBracket`/`TournamentPanel`.
 - **Slice C — Replay viewer** ✅: `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE` → `replayViewer` + `GameView`.
-- **Slice D — Sala de espera de jugador** ✅: `JOINED_TABLE` → fase `staging` (`SpectatorStagingScreen mode="player"`), paridad con el `TableWaitingDialog` de desktop: salto automático al crear/unirse, Empezar (dueño+ready), Salir (`leaveTable`), Eliminar mesa (dueño, `removeTable`), toggle Listo/No listo (`staging-toggle-ready` con badges 🟢/🟡 y sincronización reactiva por chat de sala), cambiar baraja en vivo (`staging-change-deck`) y re-entrada "Ir a la mesa" desde la tarjeta (asiento propio o `stagingTableId`). E2E: staging.spec.ts (fake) / multi-user.spec.ts (real). Nota desktop: si el join falla tras crear, el dueño limpia con `removeTable` (mismo flujo en `NewTableDialog`).
+- **Slice D — Sala de espera de jugador** ✅: `JOINED_TABLE` → fase `staging` (`SpectatorStagingScreen mode="player"`), paridad con el `TableWaitingDialog` de desktop: salto automático al crear/unirse, Empezar (dueño+ready), Salir (`leaveTable`), Eliminar mesa (dueño, `removeTable`), toggle Listo/No listo (`staging-toggle-ready` con badges 🟢/🟡 y sincronización reactiva por chat de sala), cambiar baraja en vivo (`staging-change-deck`) y re-entrada "Ir a la mesa" desde la tarjeta (asiento propio o `stagingTableId`). Cierre U4 2026-09-06: reordenar asientos (`swapSeats`, ↑/↓ dueño en READY), bypass de torneo limitado sin password (`joinTournamentTable` directo), `startTournament` en torneo (flag `JOINED_TABLE`→`stagingIsTournament`), start con confirm si falta ready, roster con rating/history/flag. E2E: staging.spec.ts (fake, 8/8) / multi-user.spec.ts (real). Nota desktop: si el join falla tras crear, el dueño limpia con `removeTable` (mismo flujo en `NewTableDialog`).
 - **Trivial**: `GAME_REDRAW_GUI` (log-only; el tablero ya reacciona a `GAME_UPDATE`).

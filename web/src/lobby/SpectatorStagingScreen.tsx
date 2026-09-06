@@ -5,7 +5,10 @@ import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
 import ChatBox from './ChatBox'
 import JoinTableDialog from './JoinTableDialog'
+import CountryFlag from './CountryFlag'
+import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import { formatSeatHistory } from './lobbyUtils'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
 import { useTranslation } from '../i18n'
@@ -58,7 +61,6 @@ export default function SpectatorStagingScreen({
 
   const myUsername = conn?.username?.toLowerCase()
   const myIsReady = myUsername && playerReadyMap[myUsername] !== undefined ? playerReadyMap[myUsername] : myReadyState
-
   const handleToggleReady = () => {
     const next = !myIsReady
     setMyReadyState(next)
@@ -68,12 +70,97 @@ export default function SpectatorStagingScreen({
     }
   }
 
+  const canOrder = mode === 'player' && isOwner && !!activeTable
+  const dndEnabled = canOrder && isReady
+  const [lastSwap, setLastSwap] = useState<{ a: number; b: number } | null>(null)
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [dropIdx, setDropIdx] = useState<number | null>(null)
+
+  const handleSwapPair = async (a: number, b: number) => {
+    if (!activeTable || a === b) return
+    const res = await cmds.swapSeats(activeTable.tableId, a, b)
+    if (!res.ok) {
+      const code = (res as { errorCode?: string }).errorCode
+      setState({ error: translateError(res.error || code || '', 'swapSeats', code) })
+      return
+    }
+    setLastSwap({ a, b })
+    window.setTimeout(() => setLastSwap(null), 700)
+  }
+
+  const handleSwapSeats = async (idx: number, dir: -1 | 1) => {
+    await handleSwapPair(idx, idx + dir)
+  }
+
+  const seatDnD = (idx: number, occupied: boolean) => {
+    if (!dndEnabled || !occupied) return {}
+    return {
+      draggable: true,
+      onDragStart: (e: React.DragEvent) => {
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', String(idx))
+        setDragIdx(idx)
+      },
+      onDragOver: (e: React.DragEvent) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        setDropIdx(idx)
+      },
+      onDragLeave: () => setDropIdx((cur) => (cur === idx ? null : cur)),
+      onDrop: (e: React.DragEvent) => {
+        e.preventDefault()
+        const from = dragIdx ?? Number(e.dataTransfer.getData('text/plain'))
+        setDragIdx(null)
+        setDropIdx(null)
+        if (Number.isInteger(from)) void handleSwapPair(from, idx)
+      },
+      onDragEnd: () => {
+        setDragIdx(null)
+        setDropIdx(null)
+      },
+    }
+  }
+
+  const dropClass = (idx: number) => (dropIdx === idx && dragIdx !== idx ? ' seat-drop-target' : '')
+
+  const swappedClass = (idx: number) =>
+    lastSwap && (lastSwap.a === idx || lastSwap.b === idx) ? ' seat-just-moved' : ''
+
+  const renderSeatOrder = (idx: number, occupied: boolean, variant: 'linear' | 'ring' = 'linear') => {
+    if (!canOrder || !occupied) return null
+    const locked = !isReady
+    const title = (labelKey: 'staging_seat_move_up' | 'staging_seat_move_down') =>
+      locked ? t('lobby', 'staging_seat_move_locked') : t('lobby', labelKey)
+    const btn = (dir: -1 | 1, testId: string, labelKey: 'staging_seat_move_up' | 'staging_seat_move_down') => (
+      <button
+        type="button"
+        className="seat-order-btn"
+        data-testid={testId}
+        title={title(labelKey)}
+        aria-label={title(labelKey)}
+        disabled={locked || (dir < 0 ? idx <= 0 : idx >= seats.length - 1)}
+        onClick={() => void handleSwapSeats(idx, dir)}
+      >
+        <Icon
+          name={variant === 'ring' ? (dir < 0 ? 'rotateCcw' : 'rotateCw') : dir < 0 ? 'chevronUp' : 'chevronDown'}
+          size={12}
+        />
+      </button>
+    )
+    return (
+      <span className="seat-order-btns">
+        {btn(-1, `staging-seat-up-${idx}`, 'staging_seat_move_up')}
+        {btn(1, `staging-seat-down-${idx}`, 'staging_seat_move_down')}
+      </span>
+    )
+  }
+
   const seats = useMemo(() => activeTable?.seats ?? [], [activeTable?.seats])
+  const filledSeats = seats.filter((s) => !!s.playerName).length
   const is1v1 = (activeTable?.seats.length ?? 0) <= 2 && !activeTable?.gameType?.toLowerCase().includes('commander')
   const hasEmptySeats = seats.some((s) => !s.playerName)
 
-  const getSeatReadiness = (seat?: SeatView) => {
-    if (!seat?.playerName) return 'empty'
+  const getSeatReadiness = (seat?: SeatView) => {    if (!seat?.playerName) return 'empty'
     if (seat.playerType && seat.playerType !== 'HUMAN') return 'ready'
     const lower = seat.playerName.toLowerCase()
     if (lower === myUsername) {
@@ -83,8 +170,26 @@ export default function SpectatorStagingScreen({
     return 'ready'
   }
 
-  const allPlayersReady = useMemo(() => {
-    if (!isReady) return false
+  /** Rating (limited?limited:constructed, como el desktop) + historial + bandera por asiento. */
+  const renderSeatMeta = (seat?: SeatView) => {
+    if (!seat?.playerName) return null
+    const rating = activeTable?.limited ? (seat.limitedRating ?? 0) : (seat.constructedRating ?? 0)
+    const historyInfo = formatSeatHistory(seat.history)
+    if (!seat.flagName && !rating && !historyInfo.short) return null
+    return (
+      <span className="player-seat-meta">
+        {seat.flagName ? <CountryFlag flagName={seat.flagName} className="seat-flag" /> : null}
+        {rating > 0 ? <RankBadge elo={rating} compact showElo /> : null}
+        {historyInfo.short ? (
+          <span className="player-seat-history" title={historyInfo.full || `${t('lobby','leaderboard_col_history')}: ${historyInfo.short}`}>
+            <Icon name="trophy" size={11} /> {historyInfo.short}
+          </span>
+        ) : null}
+      </span>
+    )
+  }
+
+  const allPlayersReady = useMemo(() => {    if (!isReady) return false
     for (const s of seats) {
       if (!s.playerName) continue
       if (s.playerType && s.playerType !== 'HUMAN') continue
@@ -203,6 +308,14 @@ export default function SpectatorStagingScreen({
     else returnToLobby()
   }
 
+  const handleStart = () => {
+    if (!allPlayersReady) {
+      const ok = window.confirm(t('lobby','staging_start_unready_confirm'))
+      if (!ok) return
+    }
+    void startStagedMatch()
+  }
+
   return (
     <div className="spectator-staging-screen">
       {/* Top Header */}
@@ -261,7 +374,8 @@ export default function SpectatorStagingScreen({
             {is1v1 ? (
               <div className="staging-duel-roster">
                 {/* Player 1 (Host / Left) */}
-                <div className={`staging-player-card ${seats[0]?.playerName ? 'occupied' : 'empty'}`}>
+                <div className={`staging-player-card ${seats[0]?.playerName ? 'occupied' : 'empty'}${seats[0]?.playerName && myUsername && seats[0]?.playerName?.toLowerCase() === myUsername ? ' my-seat' : ''}${swappedClass(0)}${dropClass(0)}`} {...seatDnD(0, !!seats[0]?.playerName)}>
+                  <span className="seat-index" title={t('lobby', 'staging_seat_number', { number: 1 })}>1</span>
                   <div className="player-avatar-circle">
                     {seats[0]?.playerName ? (
                       seats[0]?.playerType === 'HUMAN' || !seats[0]?.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />
@@ -275,7 +389,9 @@ export default function SpectatorStagingScreen({
                       {hostName && seats[0]?.playerName?.toLowerCase() === hostName.toLowerCase() && (
                         <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>
                       )}
+                      {renderSeatOrder(0, !!seats[0]?.playerName)}
                     </span>
+                    {renderSeatMeta(seats[0])}
                     {(() => {
                       const readiness = getSeatReadiness(seats[0])
                       return (
@@ -298,7 +414,8 @@ export default function SpectatorStagingScreen({
                 </div>
 
                 {/* Player 2 (Challenger / Right) */}
-                <div className={`staging-player-card ${seats[1]?.playerName ? 'occupied' : 'empty'}`}>
+                <div className={`staging-player-card ${seats[1]?.playerName ? 'occupied' : 'empty'}${seats[1]?.playerName && myUsername && seats[1]?.playerName?.toLowerCase() === myUsername ? ' my-seat' : ''}${swappedClass(1)}${dropClass(1)}`} {...seatDnD(1, !!seats[1]?.playerName)}>
+                  <span className="seat-index" title={t('lobby', 'staging_seat_number', { number: 2 })}>2</span>
                   <div className="player-avatar-circle">
                     {seats[1]?.playerName ? (
                       seats[1]?.playerType === 'HUMAN' || !seats[1]?.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />
@@ -312,7 +429,9 @@ export default function SpectatorStagingScreen({
                       {hostName && seats[1]?.playerName?.toLowerCase() === hostName.toLowerCase() && (
                         <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>
                       )}
+                      {renderSeatOrder(1, !!seats[1]?.playerName)}
                     </span>
+                    {renderSeatMeta(seats[1])}
                     {(() => {
                       const readiness = getSeatReadiness(seats[1])
                       return (
@@ -328,27 +447,100 @@ export default function SpectatorStagingScreen({
                   </div>
                 </div>
               </div>
+            ) : seats.length <= 6 ? (
+              /* Pod ring (3-6 players): seats around the table in turn order */
+              <div className="staging-ring" data-testid="staging-ring">
+                <div className="ring-center">
+                  <span className="ring-count">{filledSeats}/{seats.length}</span>
+                  <span className="ring-label">{t('lobby', 'staging_seats_count', { count: seats.length })}</span>
+                </div>
+                {seats.map((s, idx) => {
+                  const angle = (idx / seats.length) * Math.PI * 2 - Math.PI / 2
+                  const x = 50 + 38 * Math.cos(angle)
+                  const y = 50 + 42 * Math.sin(angle)
+                  const isHost = !!hostName && !!s.playerName && s.playerName.toLowerCase() === hostName.toLowerCase()
+                  const isOccupied = !!s.playerName
+                  const isMe = isOccupied && !!myUsername && (s.playerName as string).toLowerCase() === myUsername
+                  const readiness = getSeatReadiness(s)
+                  if (!isOccupied) {
+                    return (
+                      <div
+                        key={idx}
+                        className="ring-seat empty"
+                        data-testid={`staging-seat-empty-${idx}`}
+                        style={{ left: `${x}%`, top: `${y}%` }}
+                        title={t('lobby', 'staging_seat_number', { number: idx + 1 })}
+                      >
+                        <span className="ring-seat-index">{idx + 1}</span>
+                        <span className="ring-empty-plus"><Icon name="plus" size={12} /></span>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className={`ring-seat occupied ${readiness}${isMe ? ' my-seat' : ''}${swappedClass(idx)}${dropClass(idx)}`}
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                      title={s.playerName}
+                      {...seatDnD(idx, true)}
+                    >
+                      <span className="ring-seat-index">{idx + 1}</span>
+                      <span className="ring-avatar">
+                        {s.playerType === 'HUMAN' || !s.playerType ? <Icon name="user" size={18} /> : <Icon name="bot" size={18} />}
+                      </span>
+                      <span className="ring-name">
+                        {s.playerName}
+                        {isHost && <span className="player-crown" title={t('lobby', 'staging_host_crown')}><Icon name="crown" size={11} /></span>}
+                      </span>
+                      {renderSeatMeta(s)}
+                      {readiness === 'preparing' && (
+                        <span className="player-status-tag mini preparing">
+                          {t('lobby', 'staging_status_preparing')}
+                        </span>
+                      )}
+                      {renderSeatOrder(idx, true, 'ring')}
+                    </div>
+                  )
+                })}
+              </div>
             ) : (
               /* Multiplayer Grid (Commander / FFA) */
               <div className="staging-multi-grid">
                 {seats.map((s, idx) => {
                   const isHost = !!hostName && !!s.playerName && s.playerName.toLowerCase() === hostName.toLowerCase()
                   const isOccupied = !!s.playerName
+                  const isMe = isOccupied && !!myUsername && (s.playerName as string).toLowerCase() === myUsername
                   const readiness = getSeatReadiness(s)
+                  if (!isOccupied) {
+                    return (
+                      <div
+                        key={idx}
+                        className="staging-seat-empty-chip"
+                        data-testid={`staging-seat-empty-${idx}`}
+                        title={t('lobby', 'staging_seat_number', { number: idx + 1 })}
+                      >
+                        <span className="seat-empty-plus"><Icon name="plus" size={13} /></span>
+                        <span className="seat-empty-label">
+                          {t('lobby', 'staging_seat_number', { number: idx + 1 })} · {t('lobby', 'staging_available')}
+                        </span>
+                      </div>
+                    )
+                  }
                   return (
-                    <div key={idx} className={`staging-player-card ${isOccupied ? 'occupied' : 'empty'}`}>
+                    <div key={idx} className={`staging-player-card occupied${isMe ? ' my-seat' : ''}${swappedClass(idx)}${dropClass(idx)}`} {...seatDnD(idx, true)}>
+                      <span className="seat-index" title={t('lobby', 'staging_seat_number', { number: idx + 1 })}>{idx + 1}</span>
                       <div className="player-avatar-circle">
-                        {isOccupied ? (s.playerType === 'HUMAN' || !s.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />) : <Icon name="circle" size={22} />}
+                        {s.playerType === 'HUMAN' || !s.playerType ? <Icon name="user" size={22} /> : <Icon name="bot" size={22} />}
                       </div>
                       <div className="player-meta">
                         <span className="player-card-name">
-                          {s.playerName || t('lobby','staging_seat_number', { number: idx + 1 })}
+                          {s.playerName}
                           {isHost && <span className="player-crown" title={t('lobby','staging_host_crown')}><Icon name="crown" size={13} /></span>}
+                      {renderSeatOrder(idx, true)}
                         </span>
+                        {renderSeatMeta(s)}
                         <span className={`player-status-tag ${readiness}`}>
-                          {readiness === 'empty'
-                            ? t('lobby','staging_available')
-                            : readiness === 'preparing'
+                          {readiness === 'preparing'
                             ? t('lobby','staging_status_preparing')
                             : t('lobby','staging_status_ready')}
                         </span>
@@ -358,6 +550,36 @@ export default function SpectatorStagingScreen({
                 })}
               </div>
             )}
+          </div>
+
+          {/* Progress stepper: Table → Players → Ready → Play */}
+          <div className="staging-stepper" data-testid="staging-stepper">
+            {[
+              { key: 'table', label: t('lobby', 'staging_step_table'), state: 'done' as const },
+              {
+                key: 'players',
+                label: t('lobby', 'staging_step_players', { filled: filledSeats, total: seats.length }),
+                state: (isReady || allPlayersReady ? 'done' : 'active') as 'done' | 'active',
+              },
+              {
+                key: 'ready',
+                label: t('lobby', 'staging_step_ready'),
+                state: (allPlayersReady ? 'done' : isReady ? 'active' : 'todo') as 'done' | 'active' | 'todo',
+              },
+              {
+                key: 'play',
+                label: t('lobby', 'staging_step_play'),
+                state: (allPlayersReady ? 'active' : 'todo') as 'active' | 'todo',
+              },
+            ].map((step, i, arr) => (
+              <div key={step.key} className={`staging-step ${step.state}`}>
+                <span className="staging-step-dot">
+                  {step.state === 'done' ? <Icon name="check" size={11} /> : <span>{i + 1}</span>}
+                </span>
+                <span className="staging-step-label">{step.label}</span>
+                {i < arr.length - 1 && <span className="staging-step-line" />}
+              </div>
+            ))}
           </div>
 
           {/* Status Message & Pulse Indicator */}
@@ -388,9 +610,8 @@ export default function SpectatorStagingScreen({
                   type="button"
                   className="staging-action-btn primary"
                   data-testid="staging-start"
-                  onClick={() => void startStagedMatch()}
-                  disabled={!allPlayersReady}
-                  title={!allPlayersReady ? t('lobby','staging_start_blocked_not_ready') : undefined}
+                  onClick={handleStart}
+                  title={!allPlayersReady ? t('lobby','staging_start_unready_confirm') : undefined}
                 >
                   <Icon name="play" size={13} /> {t('lobby','start_match_btn')}
                 </button>

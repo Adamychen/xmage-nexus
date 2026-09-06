@@ -1,7 +1,15 @@
-import type { UsersView } from '../net/types'
+import type { TableView, UsersView } from '../net/types'
 import { t as tStatic } from '../i18n'
 
 export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches'
+
+/**
+ * Paridad con TablesPanel.openTableAction (desktop): un torneo limitado
+ * no-construido sin password se une directo, sin diálogo de mazo.
+ */
+export function isDirectTournamentJoin(t: TableView): boolean {
+  return !!t.isTournament && !(t.gameType ?? '').startsWith('Constructed') && !t.passworded
+}
 
 /** Las promesas del proxy no deben colgar la UI: todo con timeout explícito. */
 export function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
