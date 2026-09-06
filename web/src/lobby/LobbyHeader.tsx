@@ -1,15 +1,12 @@
-import { reset, setSetting } from '../state/store'
-import { useSettings } from '../state/selectors'
+import { reset } from '../state/store'
 import type { ConnectionInfo } from '../state/persistence'
-import { ZOOM_DEFAULT, isZoomPreset, zoomPercent } from '../appearance/zoom'
 import type { UsersView } from '../net/types'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
-import LanguageSelector from '../i18n/LanguageSelector'
 import { useTranslation } from '../i18n'
-import { useFullscreen } from '../utils/fullscreen'
+import type { LobbyTab } from './lobbyUtils'
 
 export type LeaderboardTab = 'room' | 'profile' | 'tiers'
 
@@ -17,21 +14,23 @@ interface Props {
   conn: ConnectionInfo | null
   myUser: UsersView | undefined
   onlineCount: number
-  unreadChat: number
   confirmDisconnect: boolean
   onConfirmDisconnect: (v: boolean) => void
-  onToggleMobileChat: () => void
   onOpenSettings: () => void
   onOpenLeaderboard: (target?: string, tab?: LeaderboardTab) => void
+  activeTab: LobbyTab
+  onTabChange: (tab: LobbyTab) => void
+  tableCount: number
+  onCreate: () => void
+  onDownloadImages: () => void
 }
 
 export default function LobbyHeader({
-  conn, myUser, onlineCount, unreadChat, confirmDisconnect, onConfirmDisconnect,
-  onToggleMobileChat, onOpenSettings, onOpenLeaderboard,
+  conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
+  onOpenSettings, onOpenLeaderboard, activeTab, onTabChange,
+  tableCount, onCreate, onDownloadImages,
 }: Props) {
   const { t } = useTranslation()
-  const settings = useSettings()
-  const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   return (
     <header className="lobby-topstrip">
@@ -41,73 +40,73 @@ export default function LobbyHeader({
           <h1 className="lobby-main-heading">XMage Nexus</h1>
           <span className="conn-info">
             <span className="conn-status-dot" />
-            {conn?.serverHost}:{conn?.port} · {onlineCount} {t('lobby','online_count')}
+            {conn?.serverHost}:{conn?.port} · {onlineCount} {t('lobby', 'online_count')}
           </span>
         </div>
       </div>
 
+      <nav className="lobby-top-nav" aria-label="Main navigation">
+        <button
+          type="button"
+          className="top-nav-btn top-nav-create"
+          onClick={onCreate}
+          title={t('lobby.nav_new')}
+        >
+          <Icon name="plus" size={14} />
+          <span>{t('lobby.nav_new')}</span>
+        </button>
+        <button
+          type="button"
+          className={`top-nav-btn ${activeTab === 'tables' ? 'active' : ''}`}
+          onClick={() => onTabChange('tables')}
+          title={`${t('lobby.nav_tables')} (${tableCount})`}
+        >
+          <Icon name="swords" size={14} />
+          <span>{t('lobby.nav_tables')}{tableCount > 0 ? ` (${tableCount})` : ''}</span>
+        </button>
+        <button
+          type="button"
+          className={`top-nav-btn ${activeTab === 'decks' ? 'active' : ''}`}
+          onClick={() => onTabChange('decks')}
+          title={t('lobby.nav_decks')}
+        >
+          <Icon name="layers" size={14} />
+          <span>{t('lobby.nav_decks')}</span>
+        </button>
+        <button
+          type="button"
+          className={`top-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
+          onClick={() => onTabChange('matches')}
+          title={t('lobby.nav_history')}
+        >
+          <Icon name="scrollText" size={14} />
+          <span>{t('lobby.nav_history')}</span>
+        </button>
+        <button
+          type="button"
+          className="top-nav-btn"
+          onClick={() => onOpenLeaderboard(conn?.username, 'room')}
+          title={t('lobby.nav_ranking')}
+        >
+          <Icon name="trophy" size={14} />
+          <span>{t('lobby.nav_ranking')}</span>
+        </button>
+        <button
+          type="button"
+          className="top-nav-btn"
+          onClick={onDownloadImages}
+          title={t('dialogs', 'download_title')}
+        >
+          <Icon name="download" size={14} />
+          <span>{t('lobby.nav_downloads')}</span>
+        </button>
+      </nav>
+
       <div className="lobby-user-actions">
-        <LanguageSelector showCardLangToggle={true} />
-
-        <div className="lobby-scale-quick" role="group" aria-label="UI scale">
-          {([1, 1.15, 1.5]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={isZoomPreset(settings.uiScale, s) ? 'active' : ''}
-              onClick={() => setSetting('uiScale', s)}
-              title={`${Math.round(s*100)}%`}
-              aria-pressed={isZoomPreset(settings.uiScale, s)}
-            >
-              {s === 1 ? 'Aa' : s === 1.15 ? 'A+' : 'A++'}
-            </button>
-          ))}
-          <button
-            type="button"
-            className="lobby-scale-readout"
-            onClick={() => setSetting('uiScale', ZOOM_DEFAULT)}
-            title={t('lobby', 'zoom_reset')}
-          >
-            {zoomPercent(settings.uiScale)}%
-          </button>
-        </div>
-
-        <button
-          type="button"
-          className="lobby-mobile-chat-toggle"
-          onClick={onToggleMobileChat}
-          aria-label={t('lobby','global_chat')}
-          data-testid="toggle-mobile-chat"
-        >
-          <Icon name="chat" size={16} />
-          {unreadChat > 0 && <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>}
-        </button>
-
-        <button
-          type="button"
-          className="lobby-appearance-btn"
-          onClick={onOpenSettings}
-          title={t('common', 'settings')}
-          data-testid="open-settings"
-        >
-          <Icon name="settings" size={16} />
-        </button>
-
-        <button
-          type="button"
-          className={`lobby-fullscreen-btn ${isFullscreenActive ? 'active' : ''}`}
-          onClick={toggleFullscreen}
-          title={isFullscreenActive ? t('game','exit_fullscreen') : t('game','enter_fullscreen')}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d={isFullscreenActive ? 'M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3' : 'M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3'} />
-          </svg>
-        </button>
-
         <div
           className="lobby-user-badge"
           onClick={() => onOpenLeaderboard(conn?.username, 'profile')}
-          title={`${t('lobby','view_profile_hint')} ${conn?.username ?? ''}`}
+          title={`${t('lobby', 'view_profile_hint')} ${conn?.username ?? ''}`}
         >
           <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
           <div className="lobby-user-col">
@@ -118,6 +117,16 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
+        <button
+          type="button"
+          className="lobby-appearance-btn"
+          onClick={onOpenSettings}
+          title={t('common', 'settings')}
+          data-testid="open-settings"
+        >
+          <Icon name="settings" size={16} />
+        </button>
+
         {confirmDisconnect ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>{t('lobby', 'disconnect_confirm')}</span>

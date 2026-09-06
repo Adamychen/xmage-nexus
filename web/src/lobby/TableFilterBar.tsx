@@ -170,14 +170,34 @@ export function filterTables(tables: TableView[], filters: TableFilters, ignored
   return list.sort((a, b) => Number(hasFreeSeat(b)) - Number(hasFreeSeat(a)) || byCreatedDesc(a, b))
 }
 
+export function countActiveFilters(filters: TableFilters): number {
+  let c = 0
+  if (filters.searchQuery.trim()) c++
+  if (filters.format !== 'ALL') c++
+  if (filters.availability !== 'all') c++
+  if (filters.mode !== 'all') c++
+  if (filters.mode === 'tourney' && filters.tourneyKind !== 'all') c++
+  if (filters.skill !== 'all') c++
+  if (filters.hidePassworded) c++
+  if (filters.passwordedOnly) c++
+  if (filters.ratedOnly) c++
+  if (filters.unratedOnly) c++
+  if (filters.spectatorsOnly) c++
+  if (filters.aiSeatsOnly) c++
+  if (filters.hideIgnored) c++
+  if (filters.sort !== 'desktop') c++
+  return c
+}
+
 interface TableFilterBarProps {
   tables: TableView[]
   filters: TableFilters
   onChange: (newFilters: TableFilters) => void
   onReset: () => void
+  className?: string
 }
 
-export default function TableFilterBar({ tables, filters, onChange, onReset }: TableFilterBarProps) {
+export default function TableFilterBar({ tables, filters, onChange, onReset, className }: TableFilterBarProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Count active tables per popular format
@@ -214,30 +234,13 @@ export default function TableFilterBar({ tables, filters, onChange, onReset }: T
   }, [tables])
 
   // Count active filters (excluding defaults)
-  const activeCount = useMemo(() => {
-    let c = 0
-    if (filters.searchQuery.trim()) c++
-    if (filters.format !== 'ALL') c++
-    if (filters.availability !== 'all') c++
-    if (filters.mode !== 'all') c++
-    if (filters.mode === 'tourney' && filters.tourneyKind !== 'all') c++
-    if (filters.skill !== 'all') c++
-    if (filters.hidePassworded) c++
-    if (filters.passwordedOnly) c++
-    if (filters.ratedOnly) c++
-    if (filters.unratedOnly) c++
-    if (filters.spectatorsOnly) c++
-    if (filters.aiSeatsOnly) c++
-    if (filters.hideIgnored) c++
-    if (filters.sort !== 'desktop') c++
-    return c
-  }, [filters])
+  const activeCount = useMemo(() => countActiveFilters(filters), [filters])
 
   const { t } = useTranslation()
   const isOtherFormatSelected = !POPULAR_FORMATS.some((p) => p.id === filters.format)
 
   return (
-    <div className="table-filter-bar-container">
+    <div className={`table-filter-bar-container${className ? ` ${className}` : ''}`}>
       {/* Row 1: Search & Quick Status Toggles */}
       <div className="tfb-row tfb-top-row">
         <div className="tfb-search-box">

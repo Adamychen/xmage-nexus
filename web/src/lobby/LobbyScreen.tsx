@@ -9,7 +9,7 @@ import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
 import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
-import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, type TableFilters } from './TableFilterBar'
+import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import DownloadImagesDialog from './DownloadImagesDialog'
@@ -17,9 +17,10 @@ import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
 import LobbyHeader, { type LeaderboardTab } from './LobbyHeader'
-import LobbySidebar, { LobbyMobileNav } from './LobbySidebar'
+import { LobbyMobileNav } from './LobbySidebar'
+import FloatingChat from './FloatingChat'
 import TableCard from './TableCard'
-import LobbyAside from './LobbyAside'
+import './FloatingChat.css'
 import TournamentBracketModal from './TournamentBracketModal'
 import { useTableActions } from './useTableActions'
 import { useTournamentBracket } from './useTournamentBracket'
@@ -55,8 +56,17 @@ export default function LobbyScreen() {
       return saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
     } catch { return INITIAL_TABLE_FILTERS }
   })
-  const [mobileChatOpen, setMobileChatOpen] = useState(false)
+  const [mobileChatOpen, setMobileChatOpen] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
+  const [showFilters, setShowFilters] = useState(() => {
+    try {
+      const savedOpen = localStorage.getItem('tables_filters_open')
+      if (savedOpen !== null) return savedOpen === '1'
+      const saved = localStorage.getItem('lobby_filters')
+      const parsed = saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
+      return countActiveFilters(parsed) > 0
+    } catch { return false }
+  })
 
   const tableActions = useTableActions(conn)
   const { joiningTable, setJoiningTable, busyTable, notice, setNotice } = tableActions
@@ -94,40 +104,27 @@ export default function LobbyScreen() {
         conn={conn}
         myUser={myUser}
         onlineCount={users.length}
-        unreadChat={unreadChat}
         confirmDisconnect={confirmDisconnect}
         onConfirmDisconnect={setConfirmDisconnect}
-        onToggleMobileChat={() => setMobileChatOpen((v) => !v)}
         onOpenSettings={() => setShowSettings(true)}
         onOpenLeaderboard={openLeaderboard}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        tableCount={tables.length}
+        onCreate={() => setShowCreate(true)}
+        onDownloadImages={() => setShowDownloadImages(true)}
       />
 
       {error && <div className="error-box panel lobby-error-banner">{tError(error)}</div>}
       {notice && <div className="notice panel lobby-notice-banner">{notice}</div>}
 
-      {/* 3-Column main area */}
-      <div className="lobby-columns">
-
-        <LobbySidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tableCount={tables.length}
-          onCreate={() => setShowCreate(true)}
-          onDownloadImages={() => setShowDownloadImages(true)}
-          onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
-        />
+      {/* Single-column main area: nav lives in the topstrip, chat is floating */}
+      <div className="lobby-columns lobby-columns-single">
 
         {/* CENTER: Main tab content */}
         <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : ''}`}>
           {activeTab === 'tables' && (
             <div className="lobby-tables-view">
-              <TableFilterBar
-                tables={tables}
-                filters={filters}
-                onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
-                onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
-              />
-
               <section className="panel tables-panel">
                 <div className="tables-panel-header">
                   <div className="tables-header-title-row">
@@ -137,9 +134,41 @@ export default function LobbyScreen() {
                     </h2>
                     <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                   </div>
-                  <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? 'Mage Web bolt'}`}>
-                    <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
+                  <div className="tables-header-actions">
+                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? 'Mage Web bolt'}`}>
+                      <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
                       <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? 'Mage Web bolt'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
+                      onClick={() => {
+                        setShowFilters((v) => {
+                          try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
+                          return !v
+                        })
+                      }}
+                      aria-expanded={showFilters}
+                      title={t('lobby.filter_search_placeholder')}
+                    >
+                      <Icon name="filter" size={14} />
+                      {countActiveFilters(filters) > 0 && (
+                        <span className="tables-filter-count">{countActiveFilters(filters)}</span>
+                      )}
+                      <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
+                  <div className="tables-filter-collapse-inner">
+                    <TableFilterBar
+                      className="in-panel"
+                      tables={tables}
+                      filters={filters}
+                      onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
+                      onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
+                    />
                   </div>
                 </div>
 
@@ -212,16 +241,16 @@ export default function LobbyScreen() {
           )}
         </main>
 
-        <LobbyAside
+        <FloatingChat
           users={users}
           chatPrefill={chatPrefill}
           onPrefillUsed={() => setChatPrefill('')}
           unreadChat={unreadChat}
           onMessageRead={() => setUnreadChat(0)}
           onSelectUser={setSelectedUser}
-          mobileChatOpen={mobileChatOpen}
-          onCloseMobile={() => setMobileChatOpen(false)}
           onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
+          open={mobileChatOpen}
+          onOpenChange={setMobileChatOpen}
         />
 
         <LobbyMobileNav
@@ -287,7 +316,7 @@ export default function LobbyScreen() {
           currentUsername={conn?.username ?? ''}
           tables={tables}
           onWhisper={(username) => {
-            setActiveTab('community')
+            setMobileChatOpen(true)
             setChatPrefill(`/w ${username} `)
           }}
           onViewLeaderboard={(username) => {
