@@ -18,6 +18,7 @@ export function ArenaCardGrid({
   onLoadMore,
   onHover,
   onLeave,
+  cardMinPx,
 }: {
   cards: ScryfallSearchCard[]
   loading: boolean
@@ -30,6 +31,7 @@ export function ArenaCardGrid({
   onLoadMore?: () => void
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
+  cardMinPx?: number
 }) {
   const { t } = useTranslation()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -67,6 +69,7 @@ export function ArenaCardGrid({
       cmc: card.cmc,
       typeLine: card.printed_type_line || card.type_line,
       colors: card.colors || card.color_identity || [],
+      oracleText: card.oracle_text ?? '',
       source: 'search',
     }))
     e.dataTransfer.effectAllowed = 'copy'
@@ -107,7 +110,11 @@ export function ArenaCardGrid({
 
   return (
     <div className="arena-card-grid-container search-panel">
-      <div className="arena-card-grid-scroll" onScroll={handleScroll}>
+      <div
+        className="arena-card-grid-scroll"
+        onScroll={handleScroll}
+        style={cardMinPx ? { gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinPx}px, 1fr))` } : undefined}
+      >
         {cards.map((card) => {
           const imgUrl = scryfallCardImage(card)
           const count = getDeckCount(card)

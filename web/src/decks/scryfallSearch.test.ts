@@ -87,5 +87,55 @@ describe('scryfallSearch', () => {
     )
     fetchSpy.mockRestore()
   })
+
+  it('defaults to order=cmc&dir=asc (U6-1)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], has_more: false }),
+    } as any)
+
+    const { searchScryfall } = await import('./scryfallSearch')
+    await searchScryfall('bolt')
+    const url = String(fetchSpy.mock.calls[0][0])
+    expect(url).toContain('order=cmc')
+    expect(url).toContain('dir=asc')
+    fetchSpy.mockRestore()
+  })
+
+  it('passes order and dir to Scryfall (U6-1)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], has_more: false }),
+    } as any)
+
+    const { searchScryfall } = await import('./scryfallSearch')
+    await searchScryfall('bolt', 1, undefined, 'name', 'desc')
+    const url = String(fetchSpy.mock.calls[0][0])
+    expect(url).toContain('order=name')
+    expect(url).toContain('dir=desc')
+    await searchScryfall('bolt', 2, undefined, 'edhrec', 'asc')
+    const url2 = String(fetchSpy.mock.calls[1][0])
+    expect(url2).toContain('order=edhrec')
+    expect(url2).toContain('dir=asc')
+    expect(url2).toContain('page=2')
+    fetchSpy.mockRestore()
+  })
+
+  it('does not refetch unfiltered when a later page is empty (U6-1)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], has_more: false }),
+    } as any)
+
+    const { searchScryfall } = await import('./scryfallSearch')
+    const res = await searchScryfall('bolt', 3, 'es')
+    expect(res.data).toHaveLength(0)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(String(fetchSpy.mock.calls[0][0])).toContain('lang%3Aes')
+    fetchSpy.mockRestore()
+  })
 })
 

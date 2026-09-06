@@ -143,7 +143,7 @@ export function DeckImportModal({
                 <Icon name="folder" size={12} /> {t('common', 'search')}
                 <input
                   type="file"
-                  accept=".dck,.txt,.dec,.cod,.o8d"
+                  accept=".dck,.txt,.dec,.cod,.o8d,.dek"
                   hidden
                   onChange={async (e) => {
                     const f = e.target.files?.[0]

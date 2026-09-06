@@ -42,6 +42,8 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
         ? 'Pioneer'
         : formatRaw.toLowerCase() === 'pauper'
         ? 'Pauper'
+        : formatRaw.toLowerCase() === 'oathbreaker'
+        ? 'Oathbreaker'
         : 'Standard'
 
     const mainCards: DeckCard[] = []

@@ -4,6 +4,8 @@ import {
   colorsFromManaCost,
   countManaPips,
   suggestBasicLands,
+  basicLandKind,
+  isManaSourceCard,
 } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 
@@ -82,5 +84,25 @@ describe('deckUtils basic calculations', () => {
     expect(getBasicLandLabel('Island', 'ja')).toBe('島')
     expect(getBasicLandLabel('Forest', 'de')).toBe('Wald')
     expect(getBasicLandLabel('Plains', 'fr')).toBe('Plaine')
+  })
+
+  it('classifies basic lands in 9 languages (U6-2)', () => {
+    expect(basicLandKind('Mountain')).toBe('Mountain')
+    expect(basicLandKind('Montaña')).toBe('Mountain')
+    expect(basicLandKind('山')).toBe('Mountain')
+    expect(basicLandKind('Yermos')).toBe('Wastes')
+    expect(basicLandKind('Steam Vents')).toBeNull()
+    expect(basicLandKind('Lightning Bolt')).toBeNull()
+  })
+
+  it('detects mana sources: lands plus mana-ability text (U6-2)', () => {
+    expect(isManaSourceCard('Land', undefined)).toBe(true)
+    expect(isManaSourceCard('Basic Land — Forest', undefined)).toBe(true)
+    expect(isManaSourceCard('Artifact', '{T}: Add {C}.')).toBe(true)
+    expect(isManaSourceCard('Creature — Elf Druid', '{T}: Add {G}.')).toBe(true)
+    expect(isManaSourceCard('Creature — Goblin Scout', 'Haste')).toBe(false)
+    expect(isManaSourceCard('Instant', 'Lightning Bolt deals 3 damage.')).toBe(false)
+    expect(isManaSourceCard('Sorcery', 'Search your library for a basic land card.')).toBe(false)
+    expect(isManaSourceCard(undefined, undefined)).toBe(false)
   })
 })

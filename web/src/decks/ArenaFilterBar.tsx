@@ -3,6 +3,7 @@ import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import type { Rarity, StatFilter, StatOp } from './filterQuery'
+import type { ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
 import './ArenaFilterBar.css'
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
@@ -12,6 +13,15 @@ const RARITY_LABEL: Record<Rarity, string> = { common: 'C', uncommon: 'U', rare:
 const KEYWORDS_PRIMARY = ['Flying', 'Haste', 'Trample', 'Deathtouch', 'Lifelink', 'Vigilance', 'Hexproof', 'Menace', 'Reach', 'First Strike', 'Double Strike', 'Ward'] as const
 const KEYWORDS_EXTRA = ['Flash', 'Defender', 'Indestructible', 'Prowess', 'Toxic', 'Backup', 'Convoke', 'Delve', 'Evolve', 'Cascade', 'Kicker', 'Cycling'] as const
 const QUICK_SETS = ['mh3', 'blb', 'dsk', 'otj', 'mkm', 'lci', 'woe', 'one'] as const
+const SORT_ORDERS: ScryfallSortOrder[] = ['cmc', 'name', 'rarity', 'color', 'edhrec', 'released']
+const SORT_LABEL_KEYS: Record<ScryfallSortOrder, keyof import('../i18n').TranslationSchema['decks']> = {
+  cmc: 'sort_cmc',
+  name: 'sort_name',
+  rarity: 'sort_rarity',
+  color: 'sort_color',
+  edhrec: 'sort_edhrec',
+  released: 'sort_released',
+}
 
 const TYPE_LABEL_KEYS: Record<(typeof TYPES)[number], keyof import('../i18n').TranslationSchema['game']> = {
   Creature: 'type_creature',
@@ -47,6 +57,12 @@ export function ArenaFilterBar({
   searchLang = 'any',
   onSearchLangChange,
   loading = false,
+  sortOrder,
+  onSortOrderChange,
+  sortDir = 'asc',
+  onSortDirChange,
+  gridSize,
+  onGridSizeChange,
 }: {
   query: string
   onQueryChange: (q: string) => void
@@ -70,6 +86,12 @@ export function ArenaFilterBar({
   searchLang?: string
   onSearchLangChange?: (lang: string) => void
   loading?: boolean
+  sortOrder?: ScryfallSortOrder
+  onSortOrderChange?: (order: ScryfallSortOrder) => void
+  sortDir?: ScryfallSortDir
+  onSortDirChange?: (dir: ScryfallSortDir) => void
+  gridSize?: number
+  onGridSizeChange?: (size: number) => void
 }) {
   const { t, cardLanguages } = useTranslation()
   const [langMenuOpen, setLangMenuOpen] = useState(false)
@@ -226,6 +248,49 @@ export function ArenaFilterBar({
         <button type="button" className={`filter-advanced-toggle ${advancedOpen ? 'open' : ''}`} onClick={() => setAdvancedOpen((v) => !v)} aria-expanded={advancedOpen}>
           {t('decks', 'filter_advanced')} {advancedOpen ? '▴' : '▾'}
         </button>
+
+        {onSortOrderChange && sortOrder && (
+          <div className="arena-sort-wrap">
+            <span className="arena-chip-label">{t('decks', 'sort_by')}</span>
+            <select
+              className="arena-sort-select"
+              value={sortOrder}
+              onChange={(e) => onSortOrderChange(e.target.value as ScryfallSortOrder)}
+              aria-label={t('decks', 'sort_by')}
+            >
+              {SORT_ORDERS.map((o) => (
+                <option key={o} value={o}>{t('decks', SORT_LABEL_KEYS[o])}</option>
+              ))}
+            </select>
+            {onSortDirChange && (
+              <button
+                type="button"
+                className="arena-sort-dir-btn"
+                onClick={() => onSortDirChange(sortDir === 'desc' ? 'asc' : 'desc')}
+                title={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
+                aria-label={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
+              >
+                {sortDir === 'desc' ? '↓' : '↑'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {onGridSizeChange && gridSize !== undefined && (
+          <div className="arena-sort-wrap">
+            <span className="arena-chip-label">{t('decks', 'grid_size')}</span>
+            <input
+              type="range"
+              className="arena-grid-size-slider"
+              min={0}
+              max={100}
+              step={5}
+              value={gridSize}
+              onChange={(e) => onGridSizeChange(Number(e.target.value))}
+              aria-label={t('decks', 'grid_size')}
+            />
+          </div>
+        )}
 
         {hasActiveFilters && (
           <button type="button" className="filter-reset-btn" onClick={onReset}>

@@ -115,6 +115,72 @@
   color: #e2e8f0;
 }
 
+.curve-mana-section {
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.curve-mana-section .curve-pips-row {
+  padding-top: 6px;
+  border-top: none;
+}
+
+.curve-section-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a0aec0;
+}
+
+.curve-section-sub {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.curve-dist-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 6px;
+}
+
+.curve-dist-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.curve-dist-label {
+  width: 14px;
+  text-align: right;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #a0aec0;
+  flex-shrink: 0;
+}
+
+.curve-dist-track {
+  display: flex;
+  flex: 1;
+  height: 10px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.curve-dist-seg {
+  height: 100%;
+}
+
+.curve-dist-total {
+  min-width: 20px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
 .curve-color-donut {
   width: 38px;
   height: 38px;

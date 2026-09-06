@@ -419,6 +419,51 @@
   color: #f6e05e;
 }
 
+.arena-sort-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+}
+
+.arena-sort-select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.arena-sort-select option {
+  background: #1a202c;
+}
+
+.arena-sort-dir-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #a0aec0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.arena-sort-dir-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.arena-grid-size-slider {
+  width: 90px;
+  accent-color: #ecc94b;
+  cursor: pointer;
+}
+
 .filter-advanced-panel {
   display: flex;
   flex-direction: column;

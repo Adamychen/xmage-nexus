@@ -1,19 +1,21 @@
-import { exportDck, exportArena, exportTxt } from './parseDck'
+import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import type { DeckV2 } from './types'
 
-export type DeckExportKind = 'dck' | 'arena' | 'txt'
+export type DeckExportKind = 'dck' | 'arena' | 'txt' | 'dek'
 
 /**
  * Exporta el mazo a fichero (y al portapapeles si está disponible), con
  * feedback visual en el botón que lanzó la acción.
  */
 export async function downloadDeckFile(deck: DeckV2, kind: DeckExportKind, copiedText: string): Promise<void> {
-  const text = kind === 'dck' ? exportDck(deck) : kind === 'arena' ? exportArena(deck) : exportTxt(deck)
+  const text = kind === 'dck' ? exportDck(deck) : kind === 'arena' ? exportArena(deck) : kind === 'dek' ? exportDek(deck) : exportTxt(deck)
   const filename = kind === 'dck'
     ? `${deck.name}.dck`
     : kind === 'arena'
       ? `${deck.name}.txt`
-      : `${deck.name}-plain.txt`
+      : kind === 'dek'
+        ? `${deck.name}.dek`
+        : `${deck.name}-plain.txt`
   let copied = false
   try { await navigator.clipboard.writeText(text); copied = true } catch {}
   const blob = new Blob([text], { type: 'text/plain' })

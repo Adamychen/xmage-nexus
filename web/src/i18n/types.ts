@@ -983,6 +983,22 @@ export interface TranslationSchema {
     filter_search_placeholder: string
     filter_more: string
     filter_less: string
+    sort_by: string
+    sort_cmc: string
+    sort_name: string
+    sort_rarity: string
+    sort_color: string
+    sort_edhrec: string
+    sort_released: string
+    sort_asc: string
+    sort_desc: string
+    mana_sources: string
+    mana_from_lands: string
+    mana_from_nonlands: string
+    mana_basic_lands: string
+    mana_nonbasic_lands: string
+    mana_distribution: string
+    grid_size: string
   }
   errors: {
     connection_failed: string

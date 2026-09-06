@@ -13,6 +13,7 @@ export interface ScryfallSearchCard {
   printed_type_line?: string
   colors: string[]
   color_identity: string[]
+  oracle_text?: string
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
   image_uris?: { small: string; normal: string; art_crop: string }
   card_faces?: {
@@ -41,13 +42,17 @@ async function throttleSearch() {
   lastSearchAt = Date.now()
 }
 
-export async function searchScryfall(query: string, page = 1, lang?: string): Promise<ScryfallSearchResult> {
+export type ScryfallSortOrder = 'cmc' | 'name' | 'rarity' | 'color' | 'edhrec' | 'released'
+export type ScryfallSortDir = 'asc' | 'desc'
+export const DEFAULT_SORT_ORDER: ScryfallSortOrder = 'cmc'
+
+export async function searchScryfall(query: string, page = 1, lang?: string, order: ScryfallSortOrder = DEFAULT_SORT_ORDER, dir: ScryfallSortDir = 'asc'): Promise<ScryfallSearchResult> {
   const q = query.trim()
   if (!q) return { data: [], has_more: false }
 
   const execute = async (searchQuery: string): Promise<ScryfallSearchResult> => {
     await throttleSearch()
-    const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&unique=cards&order=cmc&page=${page}`
+    const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&unique=cards&order=${order}&dir=${dir}&page=${page}`
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 10000)
     try {
@@ -75,12 +80,13 @@ export async function searchScryfall(query: string, page = 1, lang?: string): Pr
     if (page === 1) {
       return execute(`lang:any ${q}`)
     }
+    return primary
   }
 
   return execute(q)
 }
 
-export function useScryfallSearch(query: string, lang?: string, debounceMs = 350) {
+export function useScryfallSearch(query: string, lang?: string, debounceMs = 350, order: ScryfallSortOrder = DEFAULT_SORT_ORDER, dir: ScryfallSortDir = 'asc') {
   const [cards, setCards] = useState<ScryfallSearchCard[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -89,11 +95,15 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
   const [error, setError] = useState<string | null>(null)
   const queryRef = useRef(query)
   const langRef = useRef(lang)
+  const orderRef = useRef(order)
+  const dirRef = useRef(dir)
   const pageRef = useRef(1)
 
   useEffect(() => {
     queryRef.current = query
     langRef.current = lang
+    orderRef.current = order
+    dirRef.current = dir
     pageRef.current = 1
     if (!query.trim()) {
       setCards([])
@@ -107,29 +117,29 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
       setLoading(true)
       setError(null)
       try {
-        const r = await searchScryfall(queryRef.current, 1, langRef.current)
-        if (queryRef.current === query && langRef.current === lang) {
+        const r = await searchScryfall(queryRef.current, 1, langRef.current, orderRef.current, dirRef.current)
+        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) {
           setCards(r.data)
           setHasMore(r.has_more)
           setTotalCards(r.total_cards)
           pageRef.current = 1
         }
       } catch (e) {
-        if (queryRef.current === query && langRef.current === lang) setError((e as Error).message)
+        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) setError((e as Error).message)
       } finally {
-        if (queryRef.current === query && langRef.current === lang) setLoading(false)
+        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) setLoading(false)
       }
     }, debounceMs)
     return () => clearTimeout(t)
-  }, [query, lang, debounceMs])
+  }, [query, lang, debounceMs, order, dir])
 
   const loadMore = async () => {
     if (loading || loadingMore || !hasMore) return
     const nextPage = pageRef.current + 1
     setLoadingMore(true)
     try {
-      const r = await searchScryfall(queryRef.current, nextPage, langRef.current)
-      if (queryRef.current === query && langRef.current === lang) {
+      const r = await searchScryfall(queryRef.current, nextPage, langRef.current, orderRef.current, dirRef.current)
+      if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) {
         setCards((prev) => [...prev, ...r.data])
         setHasMore(r.has_more)
         pageRef.current = nextPage

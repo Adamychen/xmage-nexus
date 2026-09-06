@@ -140,8 +140,50 @@ test.describe('Decks Gallery', () => {
     })
   })
 
-  test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {
-    await page.setViewportSize({ width: 1366, height: 768 })
+  test('U6: sort control, card-size slider, .cod import and .dek export @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      const username = `deck_u6_${Date.now()}`
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-search-panel')).toBeVisible({ timeout: 5000 })
+
+      // U6-1: sort select with 6 orders + direction toggle
+      const sortSelect = page.locator('.arena-sort-select')
+      await expect(sortSelect).toBeVisible()
+      await expect(sortSelect.locator('option')).toHaveCount(6)
+      await sortSelect.selectOption('name')
+      await expect(page.locator('.arena-sort-dir-btn')).toBeVisible()
+      await page.locator('.arena-sort-dir-btn').click()
+      await expect(page.locator('.arena-sort-dir-btn')).toHaveText('↓')
+
+      // U6 minor: card-size slider changes the grid min column width
+      const slider = page.locator('.arena-grid-size-slider')
+      await expect(slider).toBeVisible()
+      await slider.fill('100')
+      await expect(page.locator('.arena-card-grid-scroll')).toHaveAttribute('style', /minmax\(190px/)
+
+      // U6-4: paste .cod XML into the import modal (local parse, no Scryfall needed)
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill(
+        '<?xml version="1.0"?>\n<cockatrice_deck version="1">\n<deckname>Burn</deckname>\n<zone name="main">\n<card number="4" name="Lightning Bolt"/>\n</zone>\n<zone name="side">\n<card number="2" name="Pyroblast"/>\n</zone>\n</cockatrice_deck>',
+      )
+      await page.locator('.import-submit-btn').click()
+      await expect(page.locator('.strip-name', { hasText: /Lightning Bolt/ })).toBeVisible({ timeout: 3000 })
+      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Pyroblast/ })).toBeVisible({ timeout: 3000 })
+
+      // U6-5: .dek export button present in the footer
+      await expect(page.getByRole('button', { name: /Export \.DEK/i })).toBeVisible()
+    })
+  })
+
+  test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {    await page.setViewportSize({ width: 1366, height: 768 })
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       const username = `deck_resp_${Date.now()}`

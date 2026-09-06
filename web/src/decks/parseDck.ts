@@ -53,6 +53,18 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
 }
 
 export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  if (/<Cards\s[^>]*Name="/i.test(text)) {
+    const dek = parseDekXml(text, fallbackName)
+    if (dek) return dek
+  }
+  if (/<cockatrice_deck[\s>]/i.test(text)) {
+    const cod = parseCodXml(text, fallbackName)
+    if (cod) return cod
+  }
+  if (/<deck[\s>]/i.test(text) && /<section[^>]*name="/i.test(text)) {
+    const o8d = parseO8dXml(text, fallbackName)
+    if (o8d) return o8d
+  }
   if (/^\s*NAME:/m.test(text) || /\[.*:.*\].*\n/.test(text) && /SB:/.test(text)) {
     const dck = parseDck(text, fallbackName)
     if (dck) return dck
@@ -62,6 +74,99 @@ export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_pla
     if (dck) return dck
   }
   return parseArenaLike(text, fallbackName)
+}
+
+/**
+ * Import MTGO .dek (XML de una línea por carta, paridad con DekDeckImporter):
+ * `<Cards CatID="..." Quantity="N" Sideboard="true|false" Name="..." />`.
+ * Sin impresión conocida: setCode/vacío y el meta se resuelve por nombre.
+ */
+export function parseDekXml(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  const cards: DeckCard[] = []
+  const sideboard: DeckCard[] = []
+  const attr = (line: string, name: string): string | null => {
+    const m = line.match(new RegExp(`${name}="([^"]*)"`, 'i'))
+    return m ? m[1] : null
+  }
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line.includes('<Cards ')) continue
+    const qty = parseInt(attr(line, 'Quantity') ?? '1', 10)
+    let name = attr(line, 'Name') ?? ''
+    if (!name) continue
+    if (!name.includes('//') && name.includes('/')) name = name.replace('/', ' // ')
+    const cardName = normalizeBasicLandName(name) || name
+    const entry = normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: Math.min(100, Math.max(1, qty || 1)) })
+    if ((attr(line, 'Sideboard') ?? '').toLowerCase() === 'true') sideboard.push(entry)
+    else cards.push(entry)
+  }
+  if (cards.length === 0 && sideboard.length === 0) return null
+  return { name: fallbackName, cards, sideboard }
+}
+
+function parseXmlDoc(text: string): Document | null {
+  try {
+    const doc = new DOMParser().parseFromString(text, 'text/xml')
+    if (doc.getElementsByTagName('parsererror').length > 0) return null
+    return doc
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Import Cockatrice .cod (paridad con CodDeckImporter): zonas main/side con
+ * `<card number="N" name="..." />` + `<deckname>`.
+ */
+export function parseCodXml(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  const doc = parseXmlDoc(text)
+  if (!doc) return null
+  const readZone = (zoneName: string): DeckCard[] => {
+    const out: DeckCard[] = []
+    doc.querySelectorAll('cockatrice_deck > zone').forEach((zone) => {
+      if ((zone.getAttribute('name') ?? '').toLowerCase() !== zoneName) return
+      zone.querySelectorAll(':scope > card').forEach((node) => {
+        const name = node.getAttribute('name')?.trim() ?? ''
+        if (!name) return
+        const qty = Math.min(100, Math.max(1, parseInt(node.getAttribute('number') ?? '1', 10) || 1))
+        const cardName = normalizeBasicLandName(name) || name
+        out.push(normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: qty }))
+      })
+    })
+    return out
+  }
+  const cards = readZone('main')
+  const sideboard = readZone('side')
+  if (cards.length === 0 && sideboard.length === 0) return null
+  const deckName = doc.querySelector('cockatrice_deck > deckname')?.textContent?.trim()
+  return { name: deckName || fallbackName, cards, sideboard }
+}
+
+/**
+ * Import OCTGN .o8d (paridad con O8dDeckImporter): secciones Main/Sideboard
+ * con `<card qty="N">Nombre</card>`.
+ */
+export function parseO8dXml(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  const doc = parseXmlDoc(text)
+  if (!doc) return null
+  const readSection = (sectionName: string): DeckCard[] => {
+    const out: DeckCard[] = []
+    doc.querySelectorAll('deck > section').forEach((section) => {
+      if ((section.getAttribute('name') ?? '').toLowerCase() !== sectionName) return
+      section.querySelectorAll(':scope > card').forEach((node) => {
+        const name = node.textContent?.trim() ?? ''
+        if (!name) return
+        const qty = Math.min(100, Math.max(1, parseInt(node.getAttribute('qty') ?? '1', 10) || 1))
+        const cardName = normalizeBasicLandName(name) || name
+        out.push(normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: qty }))
+      })
+    })
+    return out
+  }
+  const cards = readSection('main')
+  const sideboard = readSection('sideboard')
+  if (cards.length === 0 && sideboard.length === 0) return null
+  return { name: fallbackName, cards, sideboard }
 }
 
 function parseArenaLike(text: string, fallbackName: string): Deck | null {
@@ -162,6 +267,10 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
 export function exportDck(deck: Deck): string {
   const out: string[] = []
   out.push(`NAME:${deck.name}`)
+  const printEntry = (prefix: string, c: DeckCard) => {
+    const printing = c.setCode && c.cardNumber ? ` [${c.setCode}:${c.cardNumber}]` : ''
+    out.push(`${prefix}${c.amount}${printing} ${c.cardName}`)
+  }
   const grouped = new Map<string, DeckCard>()
   for (const c of deck.cards) {
     const k = `M@${c.setCode}:${c.cardNumber}:${c.cardName}`
@@ -170,7 +279,7 @@ export function exportDck(deck: Deck): string {
     else grouped.set(k, { ...c })
   }
   for (const c of grouped.values()) {
-    out.push(`${c.amount} [${c.setCode}:${c.cardNumber}] ${c.cardName}`)
+    printEntry('', c)
   }
   const groupedSb = new Map<string, DeckCard>()
   for (const c of deck.sideboard) {
@@ -180,7 +289,7 @@ export function exportDck(deck: Deck): string {
     else groupedSb.set(k, { ...c })
   }
   for (const c of groupedSb.values()) {
-    out.push(`SB: ${c.amount} [${c.setCode}:${c.cardNumber}] ${c.cardName}`)
+    printEntry('SB: ', c)
   }
   return out.join('\n') + '\n'
 }
@@ -207,6 +316,20 @@ export function exportTxt(deck: Deck): string {
   if (deck.sideboard.length > 0) {
     out.push('')
     for (const c of deck.sideboard) out.push(`SB: ${c.amount} ${c.cardName}`)
+  }
+  return out.join('\n') + '\n'
+}
+
+/**
+ * Export MTGO .dek (paridad con MtgOnlineDeckExporter): `N Nombre` por línea,
+ * banquillo tras línea en blanco SIN prefijo SB:.
+ */
+export function exportDek(deck: Deck): string {
+  const out: string[] = []
+  for (const c of deck.cards) out.push(`${c.amount} ${c.cardName}`)
+  if (deck.sideboard.length > 0) {
+    out.push('')
+    for (const c of deck.sideboard) out.push(`${c.amount} ${c.cardName}`)
   }
   return out.join('\n') + '\n'
 }

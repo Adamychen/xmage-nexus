@@ -28,7 +28,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U3 | Crear mesa | `dialog/NewTableDialog.java`, `table/TablePlayerPanel.java`, `NewPlayerPanel.java` | `lobby/CreateTableDialog.tsx` + `lobby/CreateTable/` | ✅ | Paridad cerrada 2026-09-06 (delta sobre §F): skill por plaza 1-10 default 2 (`seatSkills` web→`SimManager`→`SimPlayer` + skill propia) como `NewPlayerPanel.spnLevel`, bannedUsers con UI (proxy ya lo parseaba), numberRounds con UI (0=auto), range/attack por flags del servidor (`GameTypeView.useRange/useAttackOption`, fallback heurística), validación por paso (nombre+compat+ocupantes), hint vivo por plaza (cartas del mazo + aviso vacío). F11 2026-09-06: plazas HUMAN en espera (`Humano — espera rival` por plaza + chip global, como `TablePlayerPanel=HUMAN`; tipos normalizados a enum canónico). Fuera de alcance: F6 emblemas `.dck` (experimental desktop, 3 capas). Tests: `CreateTableDialog.test` 8/8 + `constants.test` 4/4 + `wizard.spec.ts` 3/3 fake con aserción del frame WS | 2026-09-06 |
 | U4 | Unirse / Espera / Staging | `dialog/JoinTableDialog.java`, `TableWaitingDialog.java` | `lobby/JoinTableDialog.tsx`, `SpectatorStagingScreen.tsx` | ✅ | Auditada 2026-09-06 (ver § U4): swapSeats (proxy+↑/↓ dueño en READY), torneo (bypass join sin mazo en limitado + `startTournament`), roster rico (rating limited/constructed + history + flag), start con confirm si falta ready (aviso, no bloqueo). 2026-09-07: chat por mesa U4-11 cerrado (proxy `getTableChatId` + `joinChat/leaveChat` por ciclo de sala + `ChatBox chatIdOverride` + marcas Listo a la mesa). Stretch restante: caché password (U4-2), sonidos (U4-12). Tests: `TableStagingCommandsTest` 7/7 java + `store.test` 7 nuevos + `staging.spec.ts` 8/8 + `staging-chat.spec.ts` 2/2 fake + verificación real 11/11 (2 sesiones + espectador + aislamiento entre mesas) | 2026-09-07 |
 | U5 | Chat | `chat/ChatPanelBasic.java`, `ChatPanelSeparated.java`, `table/PlayersChatPanel.java` | `game/GameChat.tsx`, `lobby/ChatBox.tsx` | ✅ | Auditada 2026-09-07: envío/recepción sala+mesa+partida ✅, whisper `/w` (envío por parser del servidor + `WHISPER_FROM/TO` diferenciados con sonido) ✅, `/history`/`/me`/`/card`/`/list` (responden `USER_INFO` → sistema) ✅, `[Carta]` + hover ✅ (supera), split Talk/System ≈ toggle + canales ✅, usuarios (flag/rank/ping) + `UserActionModal` ✅, ventana separada ≈ `FloatingChat` arrastrable ✅. Delta: hora tenue por mensaje (U5-2, `time` del evento), propio en verde (U5-4), límite 500 con aviso i18n (U5-3, `GameChat` ya lo tenía). Diferencias declaradas: ignore solo-cliente (el desktop bloquea joins; cubrir con password/vetados), profanity fuera de alcance. Tests: `ChatBox.test` +3 + `chat.spec`/`staging-chat.spec` asserts de hora + verificación real 8/8 (whisper A↔B, `/history`, `/card`, >500 lo acepta el servidor) | 2026-09-07 |
-| U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (27 ficheros) | ❓ | Phase 3 done (`content.json`); comparativa fina pendiente | — |
+| U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (69 ficheros) | ✅ | Auditada 2026-09-07 (ver § U6): sort resultados (6 órdenes + dirección, U6-1), Mana Analyser completo (fuentes/básicas/distribución, U6-2), +4 formatos (Oathbreaker, PD Commander, Highlander EU/CA, U6-3), import `.dek`/`.cod`/`.o8d` + export `.dek` (U6-4/5), slider tamaño carta. Supera: sintaxis Scryfall, sample hand London + goldfish, catálogo meta + Moxfield/Archidekt, reparación de issues del servidor. No-aplica: `CollectionViewer/MageBook` (sin DB local), Open Booster, Bling, Draft Rating, LAYOUT posicional. Resto import/export (`.mwdeck/.draft/.json`) → U7. Tests: unit 883 + `decks-gallery.spec` 5/5 (nuevo test U6) + `deckvalidation` 3/3 | 2026-09-07 |
 | U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ❓ | export+clipboard ✅ (Phase 3); comparativa fina pendiente | — |
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ❓ | `DRAFT_*` ✅ (`draft.spec.ts`); comparativa fina pendiente | — |
@@ -72,7 +72,7 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U6 · U7 · U9 · U10 · U15 — pendientes (U4/U5 cerradas)
+### U1 · U2 · U7 · U9 · U10 · U15 — pendientes (U4/U5/U6 cerradas)
 
 ### U11 — Núcleo partida (AUDITADA 2026-09-05)
 
@@ -165,6 +165,29 @@ Evidencia: `Mage.Proxy/TableStagingCommandsTest.java` 7/7 + `SpectatorStagingScr
 ### U8 — Generador mazos (gap confirmado)
 
 Sin equivalente web. Decidir: implementar (nueva feature) o declarar fuera de alcance.
+
+### U6 — Editor mazos (AUDITADA 2026-09-07, CERRADA)
+
+Base desktop: `DeckEditorPanel.java` (1706 lín., modos FREE/LIMITED/SIDEBOARD, botones NEW/Generate/LOAD/Import/SAVE/Export/SUBMIT/Lands/Validate/Exit + timer) · `CardSelector.java` (1686, filtros color/tipo/rareza/set + sintaxis AND + SortBy + Piles + Open Booster) · `DeckArea.java` (2 `DragCardGrid` main/side + card-size) · `DeckLegalityPanel.java` (15 formatos + semáforo + clic-selecciona-ilegales) · `ManaPieChart/ManaBarChart` (4 gráficos) · importers (`dec/mwdeck/txt/dck/dek/cod/o8d/json/draft/mtga`) / exporters (`dck/dck_info/dek/mtga`) · `AddLandDialog` (spinners + Suggest) · `collection/viewer` (MageBook).
+Base web: `DeckBuilder.tsx` + `decks/*` (69 ficheros: Scryfall full-syntax, `CurveChart`, `SampleHandModal`, `DeckImportModal`, catálogo meta + Moxfield/Archidekt, validación local + servidor con reparación).
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Búsqueda AND + `"frase"` + ámbito Names/Types/Rules + Unique | Sintaxis Scryfall (`t:/c:/o:""/pow/set/f:`, 24 keywords, 9 idiomas) | ✅ (supera) |
+| Filtros color/tipo/rareza/set + Penny + multiselect | `ArenaFilterBar` (WUBRGC, 8 tipos, CMC, rarezas, keywords, P/T, set + QUICK_SETS) | ✅ |
+| SortBy (Type/Cost/Color/Identity/Name/Rarity/Unsorted/EDH) + Piles | Selector 6 órdenes (Coste/Nombre/Rareza/Color/EDHREC/Lanzamiento) + ↑/↓ (`order`+`dir` Scryfall) | ✅ U6-1 (Type/Identity/Unsorted sin soporte servidor — documentado) |
+| Vista lista/imágenes + slider tamaño 0.5–2.0x | Grid + tira + lista V/H + preview flotante + slider 90–190px | ✅ U6-1 (slider añadido) |
+| Añadir (doble-clic, botones, DnD, SET_NUMBER, Hide/Duplicate) + `Lands...` + Suggest | Click Arena, DnD search→mazo y main↔side, `BasicLandAdder` + auto-reparto | ✅ |
+| Contadores main/side, counts por tipo, CMC default | Totales, side n/15, categorías bilingües, ⚠ por carta | ✅ |
+| Validate 15 formatos + semáforo + clic-selecciona | 15 formatos (11 + Oathbreaker/PD Commander/Highlander EU/CA) + banner servidor **reparable** | ✅ U6-3 (CanLander puntos y firma Oathbreaker no validables — documentado) |
+| Mana Analyser 4 gráficos (pips, básicas, fuentes, distribución) | `CurveChart` + 3 bloques (fuentes tierras/no-tierras, donut 6 básicas + no-básicas, barras apiladas pips×CMC) | ✅ U6-2 (`oracleText` añadido al meta; heurística fuentes documentada en `deckUtils`) |
+| Sample hand — no existe | `SampleHandModal` (mano 7, London mulligan, goldfish T1–3) | ✅ (supera) |
+| Import 10 formatos + clipboard + drag SO | `.dck`/Arena/txt + **`.dec`(=.txt)/`.dek`(XML MTGO)/`.cod`/`.o8d`** + clipboard + drag + online | ✅ U6-4 (resto `.mwdeck/.draft/.json` → U7) |
+| Export `dck/dck_info/dek/mtga` + clipboard | `.dck`/Arena/txt + **`.dek`** + clipboard + backup JSON | ✅ U6-5 (`dck_info` = metadatos internos, no-aplica) |
+| Nombre editable, NEW/LOAD/SAVE local | Input nombre + IndexedDB + galería + backup/restore | ✅ |
+| `CollectionViewer/MageBook`, Open Booster, Bling, Draft Rating, LAYOUT posicional, Generate | Sin equivalente | — no-aplica (DB local / grid posicional; Generate → U8) |
+
+Evidencia: `scryfallSearch.test` +3 (U6-1, incl. fix doble-fetch pág≥2 con idioma), `deckUtils.test` +2, `CurveChart.test` +1, `formatRules.test` +3, `parseDck.test` +6, `decks-gallery.spec` test U6 (sort/slider/`.cod`/`.dek`), `DeckBuilder.css` 4 botones/fila (el 7º botón rompía el hover del e2e).
 
 ## Exclusiones (no aplican al web)
 

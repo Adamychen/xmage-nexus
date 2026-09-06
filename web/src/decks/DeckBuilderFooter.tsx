@@ -44,6 +44,14 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         <button
           type="button"
           className="builder-act"
+          title={`${t('decks', 'export_deck')} MTGO .dek — ${t('common', 'copied')}`}
+          onClick={() => void downloadDeckFile(deck, 'dek', `✓ ${t('common', 'copied')}`)}
+        >
+          Export .DEK
+        </button>
+        <button
+          type="button"
+          className="builder-act"
           onClick={onImport}
           title={t('decks', 'import_hint')}
         >

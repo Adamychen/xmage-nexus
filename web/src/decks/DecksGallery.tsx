@@ -4,7 +4,7 @@ import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { MAX_DECKS, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
-import { parseAnyDeck, exportDck, exportArena, exportTxt } from './parseDck'
+import { parseAnyDeck, exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { DECKS, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
@@ -221,15 +221,15 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     setSelectedId(clone.id)
   }
 
-  const handleExport = async (fmt: 'dck' | 'arena' | 'plain') => {
+  const handleExport = async (fmt: 'dck' | 'arena' | 'plain' | 'dek') => {
     if (!selected) return
-    const text = fmt === 'dck' ? exportDck(selected) : fmt === 'arena' ? exportArena(selected) : exportTxt(selected)
+    const text = fmt === 'dck' ? exportDck(selected) : fmt === 'arena' ? exportArena(selected) : fmt === 'dek' ? exportDek(selected) : exportTxt(selected)
     try { await navigator.clipboard.writeText(text) } catch {}
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    const ext = fmt === 'dck' ? 'dck' : fmt === 'arena' ? 'txt' : 'plain.txt'
+    const ext = fmt === 'dck' ? 'dck' : fmt === 'arena' ? 'txt' : fmt === 'dek' ? 'dek' : 'plain.txt'
     a.download = `${selected.name.replace(/[^a-z0-9\-_ ]/gi, '_')}.${ext}`
     document.body.appendChild(a); a.click(); a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 2000)
@@ -297,7 +297,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleFile = async (f: File) => {
     const text = await f.text()
-    const name = f.name.replace(/\.(dck|txt|cod|dec)$/i, '')
+    const name = f.name.replace(/\.(dck|txt|cod|dec|o8d|dek)$/i, '')
     const parsed = parseAnyDeck(text, name || t('decks', 'import_placeholder'))
     if (!parsed) { setImportError(`${t('errors', 'deck_read_failed')}: ${f.name}`); setShowImport(true); return }
     const v2: DeckV2 = { ...parsed, id: makeDeckId(), format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform', colors: [], coverCard: parsed.cards[0], createdAt: Date.now(), updatedAt: Date.now(), source: 'imported' }
@@ -392,7 +392,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             <div className="decks-footer-left">
               <label className="decks-footer-btn">
                 <Icon name="download" size={12} /> {t('decks', 'import_deck')}
-                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d" hidden onChange={async (e) => {
+                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d,.dek" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleFile(f)
                   e.currentTarget.value = ''
@@ -411,6 +411,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}><Icon name="save" size={12} /> {t('decks', 'export_deck')} .dck</button>
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}><Icon name="clipboard" size={12} /> {t('decks', 'export_deck')} Arena</button>
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} Plain</button>
+              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dek')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} .dek</button>
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}><Icon name="copy" size={12} /> {t('common', 'copy')}</button>
               <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
               <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}><Icon name="star" size={12} /> {t('common', 'all')}</button>

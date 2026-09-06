@@ -102,6 +102,7 @@ export function useDeckMutations(deps: Deps) {
           cmc: cardData.cmc ?? 0,
           typeLine: cardData.typeLine ?? '',
           colors: cardData.colors ?? [],
+          oracleText: cardData.oracleText ?? '',
           legalities: cardData.legalities,
         }
         nxt.set(`${setCode}/${cardNumber}`, meta)

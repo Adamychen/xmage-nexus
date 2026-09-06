@@ -20,6 +20,10 @@ describe('formatRules', () => {
     expect(ALL_FORMATS).toContain('Brawl')
     expect(ALL_FORMATS).toContain('Historic')
     expect(ALL_FORMATS).toContain('Timeless')
+    expect(ALL_FORMATS).toContain('Oathbreaker')
+    expect(ALL_FORMATS).toContain('PennyDreadfulCommander')
+    expect(ALL_FORMATS).toContain('EuropeanHighlander')
+    expect(ALL_FORMATS).toContain('CanadianHighlander')
     expect(ALL_FORMATS).toContain('Freeform')
 
     for (const f of ALL_FORMATS) {
@@ -170,5 +174,87 @@ describe('formatRules', () => {
     const report = validateDeckForFormat(freeDeck, new Map())
     expect(report.isValid).toBe(true)
     expect(report.issues.length).toBe(0)
+  })
+
+  it('validates Oathbreaker as 60-card singleton with commander identity (U6-3)', () => {
+    const base: DeckV2 = {
+      id: 'test-oath',
+      name: 'Oathbreaker',
+      format: 'Oathbreaker',
+      cards: [
+        { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+        { cardName: 'Island', setCode: 'LEA', cardNumber: '286', amount: 58 },
+        { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 },
+      ],
+      sideboard: [],
+      colors: ['U'],
+      coverCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('WWK/31', { manaCost: '{2}{U}{U}', colors: ['U'], legalities: { oathbreaker: 'legal' } })
+    metaMap.set('M10/146', { manaCost: '{R}', colors: ['R'], legalities: { oathbreaker: 'legal' } })
+
+    const report = validateDeckForFormat(base, metaMap)
+    expect(report.isValid).toBe(false)
+    expect(report.issues.some((i) => i.type === 'color_identity')).toBe(true)
+
+    const legal = { ...base, cards: base.cards.filter((c) => c.cardName !== 'Lightning Bolt').concat([{ cardName: 'Counterspell', setCode: 'EMA', cardNumber: '43', amount: 1 }]) }
+    metaMap.set('EMA/43', { manaCost: '{U}{U}', colors: ['U'], legalities: { oathbreaker: 'legal' } })
+    const ok = validateDeckForFormat(legal, metaMap)
+    expect(ok.issues.filter((i) => i.severity === 'error')).toHaveLength(0)
+  })
+
+  it('validates Highlander formats by size and singleton without a Scryfall key (U6-3)', () => {
+    for (const format of ['EuropeanHighlander', 'CanadianHighlander'] as const) {
+      const deck: DeckV2 = {
+        id: `test-${format}`,
+        name: format,
+        format,
+        cards: [
+          { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+          { cardName: 'Island', setCode: 'LEA', cardNumber: '286', amount: 97 },
+          { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 2 },
+        ],
+        sideboard: [],
+        colors: ['U'],
+        coverCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        source: 'custom',
+      }
+      const metaMap = new Map<string, CardStripMeta>()
+      metaMap.set('WWK/31', { manaCost: '{2}{U}{U}', colors: ['U'] })
+      const report = validateDeckForFormat(deck, metaMap)
+      expect(report.isValid).toBe(false)
+      expect(report.issues.some((i) => i.type === 'copy_limit')).toBe(true)
+    }
+  })
+
+  it('validates Penny Dreadful Commander against penny legality (U6-3)', () => {
+    const deck: DeckV2 = {
+      id: 'test-pdc',
+      name: 'PDC',
+      format: 'PennyDreadfulCommander',
+      cards: [
+        { cardName: 'Zada, Hedron Grinder', setCode: 'ORI', cardNumber: '301', amount: 1 },
+        { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 98 },
+        { cardName: 'Black Lotus', setCode: 'LEA', cardNumber: '232', amount: 1 },
+      ],
+      sideboard: [],
+      colors: ['R'],
+      coverCard: { cardName: 'Zada, Hedron Grinder', setCode: 'ORI', cardNumber: '301', amount: 1 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('ORI/301', { manaCost: '{3}{R}', colors: ['R'], legalities: { penny: 'legal' } })
+    metaMap.set('LEA/232', { manaCost: '{0}', colors: [], legalities: { penny: 'not_legal' } })
+    const report = validateDeckForFormat(deck, metaMap)
+    expect(report.isValid).toBe(false)
+    expect(report.issues.some((i) => i.type === 'not_legal' && i.cardName === 'Black Lotus')).toBe(true)
   })
 })

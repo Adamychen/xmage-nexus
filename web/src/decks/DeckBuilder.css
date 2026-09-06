@@ -304,7 +304,7 @@
 }
 
 .builder-act {
-  flex: 1 1 calc(33.333% - 4px);
+  flex: 1 1 calc(25% - 4px);
   min-width: 70px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);

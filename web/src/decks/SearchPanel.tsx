@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import type { ScryfallSearchCard } from './scryfallSearch'
-import { useScryfallSearch } from './scryfallSearch'
+import type { ScryfallSearchCard, ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
+import { useScryfallSearch, DEFAULT_SORT_ORDER } from './scryfallSearch'
 import { ArenaFilterBar } from './ArenaFilterBar'
 import { ArenaCardGrid } from './ArenaCardGrid'
 import type { DeckFormat } from './types'
@@ -33,6 +33,9 @@ export default function SearchPanel({
   const [powerFilter, setPowerFilter] = useState<StatFilter | null>(null)
   const [toughnessFilter, setToughnessFilter] = useState<StatFilter | null>(null)
   const [setFilter, setSetFilter] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<ScryfallSortOrder>(DEFAULT_SORT_ORDER)
+  const [sortDir, setSortDir] = useState<ScryfallSortDir>('asc')
+  const [gridSize, setGridSize] = useState(50)
 
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
 
@@ -53,7 +56,7 @@ export default function SearchPanel({
     [rawQuery, config.scryfallKey, colorFilter, typeFilter, cmcFilter, rarityFilter, keywordFilter, powerFilter, toughnessFilter, setFilter],
   )
 
-  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery, searchLang)
+  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore } = useScryfallSearch(scryfallQuery, searchLang, 350, sortOrder, sortDir)
 
   const handleSearchLangChange = (nextLang: string) => {
     setSearchLang(nextLang)
@@ -93,6 +96,9 @@ export default function SearchPanel({
     setPowerFilter(null)
     setToughnessFilter(null)
     setSetFilter(null)
+    setSortOrder(DEFAULT_SORT_ORDER)
+    setSortDir('asc')
+    setGridSize(50)
   }
 
   return (
@@ -117,6 +123,12 @@ export default function SearchPanel({
         setFilter={setFilter}
         onSetChange={setSetFilter}
         onReset={handleReset}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        gridSize={gridSize}
+        onGridSizeChange={setGridSize}
         searchLang={searchLang}
         onSearchLangChange={handleSearchLangChange}
         loading={loading}
@@ -133,6 +145,7 @@ export default function SearchPanel({
         onLoadMore={loadMore}
         onHover={onHover}
         onLeave={onLeave}
+        cardMinPx={90 + gridSize}
       />
     </div>
   )

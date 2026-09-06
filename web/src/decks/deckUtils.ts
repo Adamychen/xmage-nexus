@@ -134,6 +134,26 @@ export function cardKey(c: DeckCard): string {
   return `${c.setCode}/${c.cardNumber}:${c.cardName}`
 }
 
+export type BasicLandKind = 'Plains' | 'Island' | 'Swamp' | 'Mountain' | 'Forest' | 'Wastes'
+
+/** Clasifica una tierra básica por su nombre (9 idiomas) o null si no es básica. */
+export function basicLandKind(cardName: string): BasicLandKind | null {
+  const kind = normalizeBasicLandName(cardName)
+  return (kind as BasicLandKind | null) ?? null
+}
+
+/**
+ * Heurística de "fuente de maná" para el Mana Analyser (U6-2, paridad con el
+ * ManaPieChart del desktop): toda tierra + no-tierra cuyo texto de reglas
+ * produce maná (`{T}: Add ...`). Los fetch/tutores de tierra se excluyen
+ * (adelgazan el mazo, no producen maná directamente).
+ */
+export function isManaSourceCard(typeLine: string | undefined, oracleText: string | undefined): boolean {
+  if (typeLine && /land/i.test(typeLine)) return true
+  if (!oracleText) return false
+  return /\badd\s+(\{[WUBRGCXYZ0-9/]+\}|one mana|an amount of)/i.test(oracleText)
+}
+
 export interface BasicLandPreset {
   name: string
   color: 'W' | 'U' | 'B' | 'R' | 'G' | 'C'

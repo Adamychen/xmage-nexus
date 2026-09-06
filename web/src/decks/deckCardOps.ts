@@ -144,6 +144,7 @@ export function stripMetaFromSearch(card: ScryfallSearchCard): CardStripMeta {
     cmc: card.cmc ?? 0,
     typeLine: card.printed_type_line ?? card.type_line ?? '',
     colors: card.colors || card.color_identity || [],
+    oracleText: card.oracle_text ?? '',
     legalities: card.legalities,
   }
 }
@@ -154,6 +155,7 @@ export interface ScryfallJson {
   cmc?: number
   type_line?: string
   printed_type_line?: string
+  oracle_text?: string
   colors?: string[]
   color_identity?: string[]
   legalities?: CardStripMeta['legalities']
@@ -162,6 +164,7 @@ export interface ScryfallJson {
     printed_name?: string
     mana_cost?: string
     type_line?: string
+    oracle_text?: string
     image_uris?: { art_crop?: string; normal?: string }
   }[]
 }
@@ -176,6 +179,7 @@ export function stripMetaFromJson(data: ScryfallJson): CardStripMeta {
     cmc: data.cmc ?? 0,
     typeLine: data.printed_type_line ?? data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
     colors: data.colors ?? data.color_identity ?? [],
+    oracleText: data.oracle_text ?? data.card_faces?.[0]?.oracle_text ?? '',
     legalities: data.legalities,
   }
 }

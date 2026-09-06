@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseDck, exportDck, exportArena, parseAnyDeck } from './parseDck'
+import { parseDck, exportDck, exportArena, exportDek, parseAnyDeck, parseDekXml, parseCodXml, parseO8dXml } from './parseDck'
 
 describe('parseDck', () => {
   it('parses NAME and main+SB lines', () => {
@@ -91,6 +91,95 @@ Banquillo
     expect(dJapanese.cards[0].cardName).toBe('Counterspell')
     expect(dJapanese.cards[1].cardName).toBe('Island') // 島 -> Island
     expect(dJapanese.sideboard[0].cardName).toBe('Spell Pierce')
+  })
+
+  it('parses MTGO .dek XML via parseAnyDeck (U6-4)', () => {
+    const text = `<?xml version="1.0" encoding="utf-8"?>
+<Deck>
+<Cards CatID="61202" Quantity="4" Sideboard="false" Name="Lightning Bolt" />
+<Cards CatID="100" Quantity="20" Sideboard="false" Name="Mountain" />
+<Cards CatID="200" Quantity="2" Sideboard="true" Name="Pyroblast" />
+<Cards CatID="300" Quantity="1" Sideboard="false" Name="Refuse/Cooperate" />
+</Deck>
+`
+    const d = parseAnyDeck(text)!
+    expect(d.cards).toHaveLength(3)
+    expect(d.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', amount: 4 })
+    expect(d.sideboard).toHaveLength(1)
+    expect(d.sideboard[0].cardName).toBe('Pyroblast')
+    expect(d.cards[2].cardName).toBe('Refuse // Cooperate')
+  })
+
+  it('parses Cockatrice .cod XML (U6-4)', () => {
+    const text = `<?xml version="1.0" encoding="UTF-8"?>
+<cockatrice_deck version="1">
+<deckname>Burn</deckname>
+<comments></comments>
+<zone name="main">
+<card number="4" name="Lightning Bolt"/>
+<card number="20" name="Mountain"/>
+</zone>
+<zone name="side">
+<card number="2" name="Pyroblast"/>
+</zone>
+</cockatrice_deck>
+`
+    const d = parseCodXml(text)!
+    expect(d.name).toBe('Burn')
+    expect(d.cards).toHaveLength(2)
+    expect(d.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', amount: 4 })
+    expect(d.sideboard).toHaveLength(1)
+    expect(parseAnyDeck(text)!.name).toBe('Burn')
+  })
+
+  it('parses OCTGN .o8d XML (U6-4)', () => {
+    const text = `<?xml version="1.0" encoding="utf-8"?>
+<deck game="5830">
+<section name="Main">
+<card qty="4">Lightning Bolt</card>
+<card qty="20">Mountain</card>
+</section>
+<section name="Sideboard">
+<card qty="2">Pyroblast</card>
+</section>
+</deck>
+`
+    const d = parseO8dXml(text)!
+    expect(d.cards).toHaveLength(2)
+    expect(d.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', amount: 4 })
+    expect(d.sideboard).toHaveLength(1)
+    expect(parseAnyDeck(text)!.sideboard[0].cardName).toBe('Pyroblast')
+  })
+
+  it('rejects malformed XML (U6-4)', () => {
+    expect(parseCodXml('not xml at all {{{')).toBeNull()
+    expect(parseO8dXml('<deck><section>unclosed')).toBeNull()
+    expect(parseDekXml('4 Lightning Bolt')).toBeNull()
+  })
+
+  it('exports MTGO .dek shape: sideboard without SB: prefix (U6-5)', () => {
+    const deck = {
+      name: 'Burn',
+      cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }],
+      sideboard: [{ cardName: 'Pyroblast', setCode: '5ED', cardNumber: '150', amount: 2 }],
+    }
+    const out = exportDek(deck)
+    expect(out).toBe('4 Lightning Bolt\n\n2 Pyroblast\n')
+    expect(out).not.toContain('SB:')
+  })
+
+  it('roundtrips printing-less imports through exportDck (U6-5)', () => {
+    const imported = parseCodXml(`<?xml version="1.0"?>
+<cockatrice_deck version="1">
+<zone name="main"><card number="4" name="Lightning Bolt"/></zone>
+<zone name="side"><card number="2" name="Pyroblast"/></zone>
+</cockatrice_deck>
+`)!
+    const out = exportDck({ name: 'X', cards: imported.cards, sideboard: imported.sideboard })
+    expect(out).toContain('4 Lightning Bolt')
+    const back = parseAnyDeck(out)!
+    expect(back.cards[0].cardName).toBe('Lightning Bolt')
+    expect(back.sideboard[0].cardName).toBe('Pyroblast')
   })
 })
 
