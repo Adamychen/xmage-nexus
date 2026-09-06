@@ -65,4 +65,27 @@ class SimPlayerTest {
     private static Set<Character> setOf(Character... values) {
         return new LinkedHashSet<>(Arrays.asList(values));
     }
+
+    @Test
+    void seatSkillAtReadsByBotIndex() {
+        JsonArray skills = new JsonArray();
+        skills.add(2);
+        skills.add(7);
+        assertEquals(2, SimManager.seatSkillAt(skills, 0));
+        assertEquals(7, SimManager.seatSkillAt(skills, 1));
+        assertEquals(0, SimManager.seatSkillAt(skills, 2));
+        assertEquals(0, SimManager.seatSkillAt(null, 0));
+        assertEquals(0, SimManager.seatSkillAt(skills, -1));
+    }
+
+    @Test
+    void normalizeHostMapsLocalhostToLoopback() {
+        // Gateway.handleConnect y ProxyClient.connect deben calcular la misma
+        // clave host|username: si difieren, el segundo connect duplica la
+        // sesión y el servidor expulsa a la primera (mismo host).
+        assertEquals("127.0.0.1", ProxyClient.normalizeHost("localhost"));
+        assertEquals("127.0.0.1", ProxyClient.normalizeHost("LOCALHOST"));
+        assertEquals("127.0.0.1", ProxyClient.normalizeHost("127.0.0.1"));
+        assertEquals("beta.xmage.today", ProxyClient.normalizeHost("beta.xmage.today"));
+    }
 }

@@ -58,6 +58,8 @@ export interface CreateTableForm {
   setDraftConstructionTime: (v: number) => void
   tournamentType: string
   setTournamentType: (v: string) => void
+  numberRounds: number
+  setNumberRounds: (v: number) => void
   draftCubeName: string
   setDraftCubeName: (v: string) => void
   timeLimit: string
@@ -86,6 +88,8 @@ export interface CreateTableForm {
   setPassword: (v: string) => void
   showPassword: boolean
   setShowPassword: (v: boolean) => void
+  bannedUsersRaw: string
+  setBannedUsersRaw: (v: string) => void
   spectatorsAllowed: boolean
   setSpectatorsAllowed: (v: boolean) => void
   rollbackTurnsAllowed: boolean
@@ -112,6 +116,9 @@ export interface CreateTableForm {
   applySeatTypeToAll: (pt: string) => void
   setSeatType: (idx: number, type: string) => void
   setSeatDeck: (idx: number, deckName: string) => void
+  setSeatSkill: (idx: number, skill: number) => void
+  mySkill: number
+  setMySkill: (v: number) => void
   skipInitShuffling: boolean
   setSkipInitShuffling: (v: boolean) => void
   skipStartingPlayerChoice: boolean
@@ -122,9 +129,11 @@ export interface CreateTableForm {
   effectiveDeckTypes: string[]
   selectedGameTypeInfo: GameTypeInfo | undefined
   isMultiplayerGame: boolean
+  showRangeAttack: boolean
   isLimited: boolean
   isDraftLimited: boolean
   compatibilityError: string | null
+  validateStep: (tab: CreateTab) => string | null
   submit: () => Promise<void>
   runDemoTable: () => Promise<void>
 }
@@ -150,7 +159,15 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     if (idx < 0 || idx >= wizardSteps.length) return
     setActiveTab(wizardSteps[idx].id)
   }
-  const goNext = () => goToIndex(activeIndex + 1)
+  const goNext = () => {
+    const err = validateStep(activeTab)
+    if (err) {
+      setError(err)
+      return
+    }
+    setError(null)
+    goToIndex(activeIndex + 1)
+  }
   const goPrev = () => goToIndex(activeIndex - 1)
   const isLastStep = activeIndex === wizardSteps.length - 1
   const isFirstStep = activeIndex === 0
@@ -227,6 +244,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [draftBoosters, setDraftBoosters] = useState<3 | 6>(3)
   const [draftConstructionTime, setDraftConstructionTime] = useState(600)
   const [tournamentType, setTournamentType] = useState('Booster Draft')
+  const [numberRounds, setNumberRounds] = useState(0)
   const [draftCubeName, setDraftCubeName] = useState('')
 
   // Timing tab
@@ -245,6 +263,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   // Security & Permissions tab
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [bannedUsersRaw, setBannedUsersRaw] = useState('')
   const [spectatorsAllowed, setSpectatorsAllowed] = useState(true)
   const [rollbackTurnsAllowed, setRollbackTurnsAllowed] = useState(true)
   const [minimumRating, setMinimumRating] = useState(0)
@@ -266,10 +285,20 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const j = JSON.parse(raw)
-        if (Array.isArray(j.seatConfigs)) return j.seatConfigs as SeatConfig[]
+        if (Array.isArray(j.seatConfigs)) return (j.seatConfigs as SeatConfig[]).map((s) => ({ ...s, skill: typeof s.skill === 'number' ? s.skill : 2 }))
       }
     } catch {}
     return []
+  })
+  const [mySkill, setMySkill] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const j = JSON.parse(raw)
+        if (typeof j.mySkill === 'number' && j.mySkill >= 1 && j.mySkill <= 10) return j.mySkill as number
+      }
+    } catch {}
+    return 2
   })
 
   // Seats & Decks tab
@@ -371,10 +400,33 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     return (selectedGameTypeInfo?.maxPlayers ?? 2) > 2 || gameType.toLowerCase().includes('commander')
   }, [selectedGameTypeInfo, gameType])
 
+  const showRangeAttack = useMemo(() => {
+    const useRange = (selectedGameTypeInfo as { useRange?: unknown } | undefined)?.useRange
+    const useAttackOption = (selectedGameTypeInfo as { useAttackOption?: unknown } | undefined)?.useAttackOption
+    if (typeof useRange === 'boolean' || typeof useAttackOption === 'boolean') {
+      return Boolean(useRange || useAttackOption)
+    }
+    return isMultiplayerGame
+  }, [selectedGameTypeInfo, isMultiplayerGame])
+
   const isLimited = isLimitedDeckType(deckType)
   const isDraftLimited = deckType === 'Limited' && useDraftTournament
 
   const compatibilityError = useMemo(() => validateDeckGameCompatibility(deckType, gameType), [deckType, gameType])
+
+  const validateStep = (tab: CreateTab): string | null => {
+    if (tab === 'general') {
+      if (!name.trim()) return t('lobby', 'create_err_name_required')
+      if (compatibilityError) return compatibilityError
+      return null
+    }
+    if (tab === 'seats') {
+      const occupants = (humanSeat ? 1 : 0) + seatConfigs.length
+      if (occupants < 1) return t('lobby', 'create_err_no_seats')
+      return null
+    }
+    return null
+  }
 
   useEffect(() => {
     const min = selectedGameTypeInfo?.minPlayers ?? 2
@@ -388,7 +440,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setSeatConfigs((prev) => {
       if (prev.length === target) return prev
       if (prev.length < target) {
-        const add = Array.from({ length: target - prev.length }, () => ({ type: 'SIM', deckName: simDeck.name }))
+        const add = Array.from({ length: target - prev.length }, () => ({ type: 'SIM', deckName: simDeck.name, skill: 2 }))
         return [...prev, ...add]
       }
       return prev.slice(0, target)
@@ -397,10 +449,10 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   useEffect(() => {
     try {
-      const payload = { name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase }
+      const payload = { name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, mySkill, bannedUsersRaw, numberRounds, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch {}
-  }, [name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase])
+  }, [name, gameType, deckType, wins, skillLevel, rated, numPlayers, seatConfigs, mySkill, bannedUsersRaw, numberRounds, freeMulligans, mulliganType, customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize, planeChase])
 
   const toggleAi = (pt: string) => {
     setPlayerTypesSel((cur) => (cur.includes(pt) ? cur.filter((x) => x !== pt) : [...cur, pt]))
@@ -413,6 +465,9 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   }
   const setSeatDeck = (idx: number, deckName: string) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName } : s)))
+  }
+  const setSeatSkill = (idx: number, skill: number) => {
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, skill: Math.min(10, Math.max(1, skill)) } : s)))
   }
   const selectMyDeck = (deckName: string) => {
     setMyDeckState(availableDecks.find((d) => d.name === deckName) ?? DEFAULT_DECK)
@@ -486,6 +541,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         password: password.trim() || undefined,
         watchingAllowed: spectatorsAllowed,
         winsNeeded: wins,
+        ...(numberRounds > 0 ? { numberRounds } : {}),
       }
       const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
       setBusy(false)
@@ -501,7 +557,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           tableId,
           playerName: username,
           playerType: 'HUMAN',
-          skill: 1,
+          skill: mySkill,
         })
         if (!join.ok) {
           const code = (join as { errorCode?: string }).errorCode
@@ -561,6 +617,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       }
       while (simDecksBySeat.length < simSeats) simDecksBySeat.push(finalSimDeck)
     }
+    const bannedUsers = bannedUsersRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    const seatSkills = effectiveSeatTypes.map((_, i) => seatConfigs[i]?.skill ?? 2)
     const res = await cmds.createTable({
       name: name || `${username}'s table`,
       gameType,
@@ -575,11 +633,13 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       timeLimit: timeLimit === 'NONE' ? undefined : timeLimit,
       bufferTime: bufferTime === 'NONE' ? undefined : bufferTime,
       freeMulligans,
-      attackOption: isMultiplayerGame ? attackOption : undefined,
-      range: isMultiplayerGame ? range : undefined,
+      attackOption: showRangeAttack ? attackOption : undefined,
+      range: showRangeAttack ? range : undefined,
       minimumRating: minimumRating > 0 ? minimumRating : undefined,
       quitRatio: quitRatio < 100 ? quitRatio : undefined,
       edhPowerLevel: edhPowerLevel < 100 ? edhPowerLevel : undefined,
+      bannedUsers: bannedUsers.length > 0 ? bannedUsers : undefined,
+      seatSkills,
       skipInitShuffling,
       skipStartingPlayerChoice,
       limited: isLimitedDeckType(deckType) || undefined,
@@ -606,7 +666,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         tableId,
         playerName: username,
         playerType: 'HUMAN',
-        skill: 1,
+        skill: mySkill,
         deck: finalMyDeck,
         deckType,
         gameType,
@@ -659,6 +719,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setDraftConstructionTime,
     tournamentType,
     setTournamentType,
+    numberRounds,
+    setNumberRounds,
     draftCubeName,
     setDraftCubeName,
     timeLimit,
@@ -687,6 +749,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setPassword,
     showPassword,
     setShowPassword,
+    bannedUsersRaw,
+    setBannedUsersRaw,
     spectatorsAllowed,
     setSpectatorsAllowed,
     rollbackTurnsAllowed,
@@ -713,6 +777,9 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     applySeatTypeToAll,
     setSeatType,
     setSeatDeck,
+    setSeatSkill,
+    mySkill,
+    setMySkill,
     skipInitShuffling,
     setSkipInitShuffling,
     skipStartingPlayerChoice,
@@ -723,9 +790,11 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     effectiveDeckTypes,
     selectedGameTypeInfo,
     isMultiplayerGame,
+    showRangeAttack,
     isLimited,
     isDraftLimited,
     compatibilityError,
+    validateStep,
     submit,
     runDemoTable,
   }

@@ -1,7 +1,6 @@
 package org.mage.proxy;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import mage.cards.decks.DeckCardLists;
 
@@ -38,18 +37,22 @@ final class SimManager {
             return;
         }
         JsonArray types = args.getAsJsonArray("playerTypes");
-        int simSeats = 0;
-        for (JsonElement e : types) {
-            if ("SIM".equalsIgnoreCase(e.getAsString())) {
-                simSeats++;
-            }
-        }
-        if (simSeats == 0) {
-            return;
-        }
         JsonArray simDecks = args.has("simDecks") && args.get("simDecks").isJsonArray()
                 ? args.getAsJsonArray("simDecks") : null;
-        for (int i = 0; i < simSeats; i++) {
+        JsonArray seatSkills = args.has("seatSkills") && args.get("seatSkills").isJsonArray()
+                ? args.getAsJsonArray("seatSkills") : null;
+        int botIdx = -1;
+        int simIdx = 0;
+        for (int t = 0; t < types.size(); t++) {
+            String raw = types.get(t).getAsString();
+            if ("HUMAN".equalsIgnoreCase(raw)) {
+                continue;
+            }
+            botIdx++;
+            if (!"SIM".equalsIgnoreCase(raw)) {
+                continue;
+            }
+            int i = simIdx++;
             DeckCardLists deck = null;
             if (simDecks != null && i < simDecks.size() && simDecks.get(i).isJsonObject()) {
                 deck = DeckJson.parse(simDecks.get(i).getAsJsonObject());
@@ -60,7 +63,7 @@ final class SimManager {
             // un asiento SIM con cartas no implementadas dejaría la mesa sin bot y sin
             // señal: quitarlas (la validación es la misma que la del servidor oficial)
             deck = DeckValidation.stripMissing(deck);
-            SimPlayer sim = new SimPlayer(nextSimUsername(), config.getPassword(), deck, serverHost, serverPort);
+            SimPlayer sim = new SimPlayer(nextSimUsername(), config.getPassword(), deck, serverHost, serverPort, seatSkillAt(seatSkills, botIdx));
             sims.put(tableId + "#" + i, sim);
             boolean joined = sim.startAndJoin(roomId, tableId);
             logger.info("sim seat " + i + " for table " + tableId + " (" + sim.getUsername() + ") joined=" + joined);
@@ -74,6 +77,18 @@ final class SimManager {
 
     private String nextSimUsername() {
         return "sim-" + String.format("%06d", ++simCounter) + "-" + (System.currentTimeMillis() % 1000);
+    }
+
+    /** Skill 1-10 del asiento bot (orden de plazas no-humanas); 0 si ausente/inválido. */
+    static int seatSkillAt(JsonArray seatSkills, int botIdx) {
+        if (seatSkills == null || botIdx < 0 || botIdx >= seatSkills.size()) {
+            return 0;
+        }
+        try {
+            return seatSkills.get(botIdx).getAsInt();
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     /** Mazo por defecto del asiento simulado: solo tierras (partida determinista). */

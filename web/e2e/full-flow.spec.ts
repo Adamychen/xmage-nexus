@@ -57,7 +57,8 @@ test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero av
   await expect(page.getByRole('heading', { name: /Mesas/ })).toBeVisible({ timeout: 15_000 })
 
   // (e) crear mesa IA vs IA y entrar como espectador desde el modal de creación
-  await page.locator('.hero-create-btn').click()
+  // (rediseño 2026-09: la sidebar desktop ya no existe; se entra por el topstrip)
+  await page.getByRole('button', { name: /Nueva Mesa/i }).click()
   await page.getByRole('button', { name: /Dev/i }).click()
   await page.getByRole('button', { name: /Espectar \(Bot IA vs Bot IA\)/i }).click()
 

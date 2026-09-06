@@ -1,9 +1,11 @@
 import { test, expect } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { manaPaymentScenario, MANA_ACTIONS, MANA_TYPES, MANA_PREFS } from '../fixtures/scenarios/manaPayment'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
+fakeOnly()
 
 async function openMenu(page: import('@playwright/test').Page) {
   await page.locator('[data-testid="game-menu-btn"]').click()

@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.logging.Logger;
 import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Collection;
@@ -29,6 +30,7 @@ import com.google.gson.JsonParser;
  */
 public class Gateway extends WebSocketServer {
 
+    private static final Logger logger = Logger.getLogger(Gateway.class.getName());
     private final Config config;
     /** conn -> su ProxyClient (sesión propia o compartida por cuenta). */
     private final Map<WebSocket, ProxyClient> byConn = Collections.synchronizedMap(new IdentityHashMap<WebSocket, ProxyClient>());
@@ -164,14 +166,18 @@ public class Gateway extends WebSocketServer {
             conn.send(ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
             return;
         }
-        String key = host + "|" + username;
+        String key = ProxyClient.normalizeHost(host) + "|" + username;
+        host = ProxyClient.normalizeHost(host);
         ProxyClient existing = byAccount.get(key);
         if (existing != null && existing.isConnected() && existing.isSameSession(host, port, username)) {
-            // Misma cuenta: adjuntar a la sesión existente (varias ventanas = una sesión).
+            logger.info("connect: attach conn to existing session key=" + key);
             byConn.put(conn, existing);
             existing.attach(conn, requestId);
             return;
         }
+        logger.info("connect: NEW ProxyClient key=" + key + " (existing="
+                + (existing == null ? "null" : ("connected=" + existing.isConnected()
+                        + " sameSession=" + existing.isSameSession(host, port, username))) + ")");
         ProxyClient pc = new ProxyClient(config, this);
         byConn.put(conn, pc);
         pc.onClientMessage(conn, message);

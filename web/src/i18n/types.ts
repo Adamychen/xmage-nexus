@@ -197,6 +197,14 @@ export interface TranslationSchema {
     create_field_quit_ratio: string
     create_field_spectators: string
     create_field_rollback: string
+    create_field_banned_users: string
+    placeholder_banned_users: string
+    create_field_number_rounds: string
+    create_field_seat_skill: string
+    create_field_my_skill: string
+    create_err_name_required: string
+    create_err_no_seats: string
+    create_warn_seat_deck_empty: string
     create_toggle_skip_shuffle: string
     create_toggle_skip_starting: string
     create_summary_no_clock: string

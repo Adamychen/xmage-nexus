@@ -113,6 +113,8 @@ export interface CreateTableArgs {
   customStartHandSize?: number
   planeChase?: boolean
   bannedUsers?: string[]
+  /** skill 1-10 por plaza (desktop NewPlayerPanel.spnLevel, default 2) */
+  seatSkills?: number[]
   /** mazos de los asientos "SIM" (oponentes simulados que une el proxy) */
   simDecks?: DeckJson[]
 }

@@ -1,9 +1,11 @@
 import { TABLE } from '../fixtures/table-names'
 import { expect, test } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
 import { stackPriorityScenario } from '../fixtures/scenarios/stackPriority'
 import { SIM_PLAYER_ID } from '../fixtures/humanGameConstants'
+fakeOnly()
 
 test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
   test('Hold Priority, APNAP Trigger Stacking y Tormenta con copias @spells', async ({ page }) => {

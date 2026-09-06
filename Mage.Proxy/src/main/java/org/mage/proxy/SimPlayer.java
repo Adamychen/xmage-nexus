@@ -60,6 +60,7 @@ public class SimPlayer implements MageClient {
     private final String host;
     private final int port;
     private final DeckCardLists deck;
+    private final int skill;
     private final MageVersion version;
     private final SessionImpl session;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -74,11 +75,16 @@ public class SimPlayer implements MageClient {
     private String lastCastSignature = null;
 
     public SimPlayer(String username, String password, DeckCardLists deck, String host, int port) {
+        this(username, password, deck, host, port, 0);
+    }
+
+    public SimPlayer(String username, String password, DeckCardLists deck, String host, int port, int skill) {
         this.username = username;
         this.password = password;
         this.host = host;
         this.port = port;
         this.deck = deck;
+        this.skill = Math.min(10, Math.max(0, skill));
         this.version = new MageVersion(SimPlayer.class);
         this.session = new SessionImpl(this);
     }
@@ -178,7 +184,7 @@ public class SimPlayer implements MageClient {
             return;
         }
         UUID room = roomId != null ? roomId : session.getMainRoomId();
-        boolean joined = session.joinTable(room, tableId, username, PlayerType.HUMAN, 0, deck, "");
+        boolean joined = session.joinTable(room, tableId, username, PlayerType.HUMAN, skill, deck, "");
         logger.info("sim " + username + " joined table " + tableId + " => " + joined);
         ready.complete(joined);
     }

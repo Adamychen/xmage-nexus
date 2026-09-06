@@ -1,7 +1,6 @@
 import { test, expect } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
-import { getFakePort } from './support/fake-port'
-import { FAKE_MODE, BACKEND_PORT } from './dual'
+import { proxyPort } from './dual'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
 import { startGame } from './support/start-game'
 import { TABLE } from '../fixtures/table-names'
@@ -10,7 +9,7 @@ import { DECK } from '../fixtures/deck-names'
 test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
-      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
       const username = `deck_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -90,7 +89,7 @@ test.describe('Decks Gallery', () => {
   })
   test('import .dck text creates deck in gallery @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
-      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
       const username = `deck2_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -110,7 +109,7 @@ test.describe('Decks Gallery', () => {
 
   test('explores online & meta decks catalog in Deck Browser @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
-      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
       const username = `deck3_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -144,7 +143,7 @@ test.describe('Decks Gallery', () => {
   test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 768 })
     await withFakeServer(decksGalleryScenario, async () => {
-      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
       const username = `deck_resp_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -176,9 +175,11 @@ test.describe('Decks Gallery', () => {
       })
       expect(overlapFound).toBeNull()
 
-      // Open DeckBuilder and verify persistent chat & users panel stays visible
+      // Open DeckBuilder and verify the floating chat panel can stay visible
+      // alongside it (content reserves its space, buttons stay clickable)
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await page.locator('.floating-chat-fab').click()
       await expect(page.locator('.lobby-aside')).toBeVisible()
 
       // Verify done button works cleanly

@@ -1,9 +1,11 @@
 import { test, expect } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
+fakeOnly()
 
 test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
   test('renders keyword badges on card and hover shows keyword boxes', async ({ page }) => {

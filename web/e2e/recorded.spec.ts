@@ -3,6 +3,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
@@ -14,6 +15,7 @@ const manifest = JSON.parse(
 
 // Smoke test anti-deriva: cada frame real grabado se reemite en el FakeServer y
 // el web debe pintarlo sin errores. No depende del servidor real ni de beta.
+fakeOnly()
 test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, () => {
   for (const entry of manifest) {
     test(`${entry.mechanic} (${entry.file}) renderiza sin errores`, async ({ page }) => {

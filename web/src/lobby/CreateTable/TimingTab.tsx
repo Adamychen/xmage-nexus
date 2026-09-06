@@ -81,7 +81,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
         </label>
       </div>
 
-      {form.isMultiplayerGame && (
+      {form.showRangeAttack && (
         <div className="create-multiplayer-box">
           <span className="multiplayer-box-title"><Icon name="crown" size={13} /> {t('lobby','create_tab_multi')}</span>
           <div className="create-grid-2col">
@@ -104,7 +104,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
           </div>
         </div>
       )}
-      {!form.isMultiplayerGame && (
+      {!form.showRangeAttack && (
         <div className="wizard-hint-box">Las opciones de ataque y rango aparecen automáticamente al elegir un formato multijugador (Commander / Free For All).</div>
       )}
     </div>

@@ -1,8 +1,7 @@
 import { expect } from './fixtures'
 import { test } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
-import { getFakePort } from './support/fake-port'
-import { FAKE_MODE, BACKEND_PORT } from './dual'
+import { proxyPort, FAKE_MODE } from './dual'
 import { deckIssuesScenario } from '../fixtures/scenarios/deckIssues'
 import { TABLE } from '../fixtures/table-names'
 import { installCapture, type CaptureBuffers } from './support/start-game'
@@ -17,7 +16,7 @@ import { installCapture, type CaptureBuffers } from './support/start-game'
 async function openJoinDialogWithBadDeck(page: import('@playwright/test').Page): Promise<CaptureBuffers> {
   const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
   installCapture(page, buffers)
-  await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+  await page.goto(`/?proxyPort=${proxyPort()}`)
   const username = `dv_${Date.now()}`.slice(0, 13)
   await page.getByPlaceholder(/Usuario|Username/i).fill(username)
   await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -49,6 +48,11 @@ async function waitJoinSent(buffers: CaptureBuffers): Promise<Record<string, unk
 
 test.describe('Deck validation pre-join @deckvalidation', () => {
   test('shows missing cards dialog and repairs via suggestion', async ({ page }) => {
+    // Solo fake: en real la mesa la tendría que crear otro humano (el dueño no
+    // puede abandonarla sin eliminarla — TableController.leaveTable borra la
+    // mesa sin empezar del creador). La validación real sí se cubre en el
+    // tercer test (re-validación en vivo del builder contra la BD real).
+    test.skip(!FAKE_MODE, 'requiere una mesa ajena con asiento libre (solo el escenario fake la provee)')
     await withFakeServer(deckIssuesScenario, async () => {
       const buffers = await openJoinDialogWithBadDeck(page)
 
@@ -71,6 +75,7 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
   })
 
   test('remove-and-play joins with the fixed deck', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'requiere una mesa ajena con asiento libre (solo el escenario fake la provee)')
     await withFakeServer(deckIssuesScenario, async () => {
       const buffers = await openJoinDialogWithBadDeck(page)
 
@@ -88,7 +93,7 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
 
   test('deck builder re-validates live: badge appears on edit and clears when fixed', async ({ page }) => {
     await withFakeServer(deckIssuesScenario, async () => {
-      await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : BACKEND_PORT}`)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
       await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()

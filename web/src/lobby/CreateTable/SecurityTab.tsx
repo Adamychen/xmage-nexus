@@ -82,6 +82,15 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         )}
       </div>
 
+      <label>
+        {t('lobby','create_field_banned_users')}
+        <input
+          value={form.bannedUsersRaw}
+          onChange={(e) => form.setBannedUsersRaw(e.target.value)}
+          placeholder={t('lobby','placeholder_banned_users')}
+        />
+      </label>
+
       <label className="toggle-label-row">
         <input
           type="checkbox"

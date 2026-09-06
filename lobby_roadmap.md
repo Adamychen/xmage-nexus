@@ -65,6 +65,31 @@
 
 ### F. Wizard Crear Mesa — Auditoría vs desktop `Mage.Client` (2026-09-04)
 > Análisis exhaustivo: `web/src/lobby/CreateTableDialog.tsx` (640 líneas, 4 pasos + Dev) vs `Mage.Client/dialog/NewTableDialog.java` (1126 líneas) + `CustomOptionsDialog.java` (631 líneas) vs `Mage/src/main/java/mage/game/match/MatchOptions.java` vs `Mage.Proxy/ProxyClient.parseMatchOptions` (1142-1292). Oráculo anti-drift: `Mage.Server/config/config.xml` → `web/fixtures/server-state-schema.json` (17 gameTypes, 45 deckTypes, 21 tournamentTypes, 41 draftCubes).
+>
+> **Delta 2026-09-06 (re-auditoría contra código)**: el wizard se partió en `CreateTable/` (6 tabs, `useCreateTableForm.ts` 732 líneas) y los commits `2dde1a731b` + `3d520b7808` cerraron la mayoría de gaps sin actualizar este doc. Estado verificado hoy:
+>
+> | # | Gap original | Estado hoy | Evidencia |
+> |---|---|---|---|
+> | F1 | `numPlayers` sin selector | ✅ hecho | `GeneralTab.tsx:73-82` selector min/max del oráculo |
+> | F2 | Asientos sin skill/deck por plaza | 🟡 parcial — tipo+mazo por plaza ✅, **skill por plaza ❌** (`skill: 1` hardcodeado en joins; SIMs entran con skill 0 en `SimPlayer.java:181`) | `SeatsTab.tsx`, `useCreateTableForm.ts:504,609` |
+> | F3 | `mulliganType` no enviado | ✅ hecho (UI + proxy) | `TimingTab.tsx:54`, `MatchOptionsParser.java:78-83` |
+> | F4 | vida/mano custom | ✅ hecho (UI + proxy) | `TimingTab.tsx:65-72`, `MatchOptionsParser.java:84-91` |
+> | F5 | `planeChase` | ✅ hecho (UI + proxy) | `TimingTab.tsx:76`, `MatchOptionsParser.java:92-94` |
+> | F6 | emblem cards (`.dck`) | ⬜ fuera de alcance (experimental desktop, 3 capas) | decisión 2026-09-06 |
+> | F7 | `bannedUsers` | 🟡 proxy ✅ (`MatchOptionsParser.java:95-99`), **UI ❌** | `CreateTableArgs.bannedUsers` existe, sin input |
+> | F8 | `limited` Freeform Unlimited Commander | ✅ hecho | `isLimitedDeckType()` en `formatRules.ts:189` |
+> | F9 | gating `range`/`attackOption` | ⚠️ heurística `maxPlayers>2 \|\| commander`; el servidor YA manda `useRange`/`useAttackOption` en `GameTypeView` (`Mage.Common/.../view/GameTypeView.java:20-21`, serializado por reflexión) — falta leerlo | `useCreateTableForm.ts:370-372` |
+> | F10 | `tournamentType` (21) + cubes | ✅ hecho (+ `numberBoosters`/`constructionTime`/sets; `numberRounds` lo acepta el proxy pero sin UI) | `GeneralTab.tsx:140-159`, `parseTournamentOptions` |
+> | U1 | validación `deckType ↔ gameType` | ✅ hecho | `validateDeckGameCompatibility` + `compatibilityError` |
+> | U2 | `goNext` sin validar | ❌ pendiente — `goToIndex` avanza libre (`useCreateTableForm.ts:149-154`) | — |
+> | U3 | `freeMulligans` auto→1 silencioso | ✅ hecho — chips 0-5, default 0, hint Commander/FFA | `TimingTab.tsx` |
+> | U4 | persistencia | ✅ hecho | `STORAGE_KEY='mage_createTable_v1'` |
+> | U5 | sin pre-validación viva por plaza | ❌ pendiente — solo `requestDeckValidation` en submit | `useCreateTableForm.ts:529` |
+> | U6 | summary incompleto + i18n | ✅ hecho | `SummaryStrip.tsx` con i18n + chip Custom(n) |
+> | U7 | `winsNeeded` solo 1/2/3 | ✅ hecho — 1-5 (Bo7/Bo9) | `GeneralTab.tsx:55-70` |
+> | U8 | `numberRounds`/cube | 🟡 cube ✅, **`numberRounds` sin UI** (proxy lo acepta) | `parseTournamentOptions:134` |
+>
+> **Restante (lote U3, 2026-09-06)**: U2, U5, U8-UI, F9 (leer flags del servidor), F2-skill (spinner 1-10 default 2 como `NewPlayerPanel.spnLevel`, cablear `seatSkills` web→`SimManager`→`SimPlayer` + skill propia), F7-UI (input en SecurityTab → `bannedUsers`).
 
 **Gaps funcionales que el usuario ve como "faltan cosas":**
 

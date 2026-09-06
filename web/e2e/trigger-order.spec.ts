@@ -1,9 +1,11 @@
 import { test, expect } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { triggerOrderScenario, TRIGGER_ACTIONS } from '../fixtures/scenarios/triggerOrder'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
+fakeOnly()
 
 test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
   test('renders one row per trigger and chooses with Elegir', async ({ page }) => {

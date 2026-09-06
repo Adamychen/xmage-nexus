@@ -23,19 +23,29 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
             </button>
           </div>
           {form.humanSeat && (
-            <label>
-              {t('lobby','active_deck')}
-              <select
-                value={form.myDeck.name}
-                onChange={(e) => form.selectMyDeck(e.target.value)}
-              >
-                {form.availableDecks.map((d) => (
-                  <option key={d.name} value={d.name}>
-                    {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
-                  </option>
-                ))}
-              </select>
-            </label>
+            <>
+              <label>
+                {t('lobby','active_deck')}
+                <select
+                  value={form.myDeck.name}
+                  onChange={(e) => form.selectMyDeck(e.target.value)}
+                >
+                  {form.availableDecks.map((d) => (
+                    <option key={d.name} value={d.name}>
+                      {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t('lobby','create_field_my_skill')}
+                <select data-testid="my-skill" value={form.mySkill} onChange={(e) => form.setMySkill(Number(e.target.value))}>
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </label>
+            </>
           )}
           {!form.humanSeat && <span className="wizard-hint-box">Entrarás como espectador. Podrás unirte luego desde la sala de espera.</span>}
         </div>
@@ -67,18 +77,37 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                       ))}
                     </select>
                   </div>
-                  {cfg.type === 'SIM' && (
-                    <label>
-                      Mazo plaza {idx + 2}
-                      <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)}>
-                        {form.availableDecks.map((d) => (
-                          <option key={d.name} value={d.name}>
-                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
+                  <label>
+                    {t('lobby','create_field_seat_skill')}
+                    <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} style={{ width: 'auto', minWidth: 80 }}>
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {cfg.type === 'SIM' && (() => {
+                    const deck = form.availableDecks.find((d) => d.name === cfg.deckName)
+                    const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
+                    return (
+                      <>
+                        <label>
+                          Mazo plaza {idx + 2}
+                          <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)}>
+                            {form.availableDecks.map((d) => (
+                              <option key={d.name} value={d.name}>
+                                {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        {(!deck || total === 0) ? (
+                          <span className="wizard-warn-badge"><Icon name="alert" size={11} /> {t('lobby','create_warn_seat_deck_empty')}</span>
+                        ) : (
+                          <span className="wizard-hint-box">{total} {t('decks','total_cards')}</span>
+                        )}
+                      </>
+                    )
+                  })()}
                   {cfg.type !== 'SIM' && <span className="wizard-hint-box">Bot {cfg.type} — usa mazo interno del servidor</span>}
                 </div>
               ))}

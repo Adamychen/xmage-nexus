@@ -158,6 +158,15 @@
   overflow: hidden;
 }
 
+/* El panel flotante solapa el contenido: cuando está abierto, el main
+   reserva su hueco (360px + 20px de margen) para que ningún botón quede
+   tapado (ej. Exportar/Importar del DeckBuilder). Solo desktop. */
+@media (min-width: 601px) {
+  .lobby-columns-single:has(> aside.lobby-aside.floating-chat) > .lobby-main {
+    margin-right: 380px;
+  }
+}
+
 @media (max-width: 900px) {
   .lobby-top-nav {
     justify-content: flex-start;

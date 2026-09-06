@@ -144,6 +144,18 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   </select>
                 </label>
                 <label>
+                  {t('lobby','create_field_number_rounds')}
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={form.numberRounds}
+                    onChange={(e) => form.setNumberRounds(Math.min(10, Math.max(0, parseInt(e.target.value, 10) || 0)))}
+                  />
+                </label>
+              </div>
+              <div className="create-grid-2col">
+                <label>
                   {t('lobby', 'create_field_boosters')}
                   <select value={form.draftBoosters} onChange={(e) => form.setDraftBoosters(Number(e.target.value) as 3 | 6)}>
                     <option value={3}>{t('lobby', 'create_option_boosters_3')}</option>

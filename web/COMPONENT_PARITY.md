@@ -25,7 +25,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 |---|---|---|---|---|---|---|
 | U1 | Shell / Conexión | `mage/client/MageFrame.java`, `MagePane.java`, `dialog/ConnectDialog.java`, `RegisterUserDialog.java`, `ResetPasswordDialog.java` | `src/App.tsx`, `lobby/LoginScreen.tsx` | ✅ | Login supera al desktop (presets, split proxy/servidor, avatar, i18n). Registro/reset **no aplican**: el servidor lleva `authenticationActivated=false` por defecto (`config.xml:58`, *"user need not to register"*); `Session.registerUser` responde `REGISTRATION_DISABLED_MESSAGE` y el login ignora la pass (`Session.java:88-93,246-255`; `Main.java:87` "no password check"). Solo tendrían sentido contra un servidor con auth activada | 2026-09-05 |
 | U2 | Lobby mesas | `table/TablesPanel.java`, `TablesPane.java`, `TablesTableModel.java`, `MatchesTableModel.java` | `lobby/LobbyScreen.tsx`, `TableCard.tsx`, `TableFilterBar.tsx`, `FinishedMatchesPanel.tsx` | ✅ | Filtros desktop (rated/unrated, abierta/privada, torneo constructed/limited, ocultar ignorados con toggle OFF por defecto + aviso en join) + orden desktop-default (libres primero, recientes) con selector + búsqueda propia por texto (el desktop no la tiene) + PM/whisper/ignore + doble-clic unirse/espectar (`TableFilterBar.test.tsx` 13 tests) | 2026-09-06 |
-| U3 | Crear mesa | `dialog/NewTableDialog.java`, `table/TablePlayerPanel.java`, `NewPlayerPanel.java` | `lobby/CreateTableDialog.tsx` + `lobby/CreateTable/` | ⚠️ | Auditado en `lobby_roadmap.md` §F; Fases 1–4 pendientes de implementar | 2026-09-04 |
+| U3 | Crear mesa | `dialog/NewTableDialog.java`, `table/TablePlayerPanel.java`, `NewPlayerPanel.java` | `lobby/CreateTableDialog.tsx` + `lobby/CreateTable/` | ✅ | Paridad cerrada 2026-09-06 (delta sobre §F): skill por plaza 1-10 default 2 (`seatSkills` web→`SimManager`→`SimPlayer` + skill propia) como `NewPlayerPanel.spnLevel`, bannedUsers con UI (proxy ya lo parseaba), numberRounds con UI (0=auto), range/attack por flags del servidor (`GameTypeView.useRange/useAttackOption`, fallback heurística), validación por paso (nombre+compat+ocupantes), hint vivo por plaza (cartas del mazo + aviso vacío). Fuera de alcance: F6 emblemas `.dck` (experimental desktop, 3 capas). Tests: `CreateTableDialog.test` 7/7 + `wizard.spec.ts` 2/2 fake con aserción del frame WS | 2026-09-06 |
 | U4 | Unirse / Espera / Staging | `dialog/JoinTableDialog.java`, `TableWaitingDialog.java` | `lobby/JoinTableDialog.tsx`, `SpectatorStagingScreen.tsx` | ❓ | `JOINED_TABLE` ✅ (`staging.spec.ts`); comparativa fina pendiente | — |
 | U5 | Chat | `chat/ChatPanelBasic.java`, `ChatPanelSeparated.java`, `table/PlayersChatPanel.java` | `game/GameChat.tsx`, `lobby/ChatBox.tsx` | ❓ | `CHATMESSAGE` ✅ (`chat.spec.ts`); PM y ventana separada por auditar | — |
 | U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (27 ficheros) | ❓ | Phase 3 done (`content.json`); comparativa fina pendiente | — |
@@ -137,9 +137,9 @@ confirm-empty-pool.
 
 Veredicto: un solo gap, **G13-1** (prefs maná en ajustes + respetarlas en `ManaBar`).
 
-### U3 — Crear mesa (auditada, implementación parcial)
+### U3 — Crear mesa (AUDITADA 2026-09-04, CERRADA 2026-09-06)
 
-Ver `lobby_roadmap.md` §F (tablas F1–F10, U1–U8, plan Fases 1–4).
+Ver `lobby_roadmap.md` §F (tablas F1–F10, U1–U8 + delta 2026-09-06). F6 emblemas declarado fuera de alcance.
 
 ### U8 — Generador mazos (gap confirmado)
 

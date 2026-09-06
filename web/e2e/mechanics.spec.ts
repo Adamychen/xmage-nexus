@@ -4,10 +4,11 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
+import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
+fakeOnly()
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 

@@ -35,6 +35,9 @@ chatTest(
     // lobby visible
     await expect(page.getByRole('heading', { name: /Lobby|XMage Nexus/i })).toBeVisible({ timeout: 15_000 })
 
+    // el chat global vive en el panel flotante (cerrado por defecto): abrirlo vía FAB
+    await page.locator('.floating-chat-fab').click()
+
     // el chat global vive en el panel lateral derecho del lobby (o en la pestaña Comunidad)
     const communityTab = page.getByRole('button', { name: /Comunidad & Chat/i })
     if (await communityTab.count() > 0 && await communityTab.isVisible()) {

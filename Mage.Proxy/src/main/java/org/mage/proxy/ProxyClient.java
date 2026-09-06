@@ -88,6 +88,17 @@ public class ProxyClient implements MageClient, CommandContext {
     private ScheduledFuture<?> graceDisconnectTimer = null;
     public static final int DISCONNECT_GRACE_PERIOD_SECS = 60;
 
+    /**
+     * Normaliza el host del servidor para que la clave de sesión
+     * (Gateway.handleConnect) y el accountKey coincidan. Ver detalle en connect().
+     */
+    static String normalizeHost(String host) {
+        if ("localhost".equalsIgnoreCase(host)) {
+            return "127.0.0.1";
+        }
+        return host;
+    }
+
     public ProxyClient(Config config, Gateway gateway) {
         this.config = config;
         this.gateway = gateway;
@@ -603,9 +614,9 @@ public class ProxyClient implements MageClient, CommandContext {
         // Con interfaces bridge/túnel de VMs activas (p.ej. 192.168.97.0) construye un
         // locator bisocket inalcanzable y el login muere en "client lease". El literal
         // 127.0.0.1 se usa tal cual y siempre es correcto en el host del proxy.
-        if ("localhost".equals(host)) {
-            host = "127.0.0.1";
-        }
+        // (La misma normalización se aplica en Gateway.handleConnect para que la
+        // clave host|username coincida con el accountKey registrado aquí.)
+        host = normalizeHost(host);
         if (graceDisconnectTimer != null) {
             graceDisconnectTimer.cancel(false);
             graceDisconnectTimer = null;

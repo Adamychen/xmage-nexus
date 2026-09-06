@@ -10,7 +10,11 @@ import { startGame } from './support/start-game'
 
 // Solo modo real: verifica contra beta.xmage.today que el servidor emite
 // `mutateView` en el PermanentView y que el web lo pinta como pila mutada.
-test.skip(FAKE_MODE, 'Solo real (beta.xmage.today): el fake ya lo cubre mutate.spec.ts')
+const REAL_HOST = process.env.E2E_SERVER_HOST || 'beta.xmage.today'
+test.skip(
+  FAKE_MODE || REAL_HOST !== 'beta.xmage.today',
+  'Solo real contra beta.xmage.today (juego mutate real; el fake ya lo cubre mutate.spec.ts)',
+)
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 

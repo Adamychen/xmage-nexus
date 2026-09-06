@@ -56,7 +56,12 @@ export default function LobbyScreen() {
       return saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
     } catch { return INITIAL_TABLE_FILTERS }
   })
-  const [mobileChatOpen, setMobileChatOpen] = useState(true)
+  const [mobileChatOpen, setMobileChatOpen] = useState(() => {
+    try { return localStorage.getItem('floating_chat_open') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('floating_chat_open', mobileChatOpen ? '1' : '0') } catch {}
+  }, [mobileChatOpen])
   const [showSettings, setShowSettings] = useState(false)
   const [showFilters, setShowFilters] = useState(() => {
     try {

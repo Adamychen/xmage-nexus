@@ -254,6 +254,7 @@ export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo
 export interface SeatConfig {
   type: string
   deckName: string
+  skill: number
 }
 
 export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName; labelKey: string; titleFallback: string }
