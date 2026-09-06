@@ -267,29 +267,35 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     setTimeout(() => URL.revokeObjectURL(url), 2000)
   }
 
+  const restoreBackupText = async (text: string): Promise<number> => {
+    const json = JSON.parse(text)
+    const deckList: DeckV2[] = Array.isArray(json) ? json : (Array.isArray(json.decks) ? json.decks : [])
+    let count = 0
+    for (const d of deckList) {
+      if (d && typeof d === 'object' && d.name && Array.isArray(d.cards)) {
+        const v2: DeckV2 = {
+          ...d,
+          id: d.id || makeDeckId(),
+          createdAt: d.createdAt || Date.now(),
+          updatedAt: Date.now(),
+          source: 'custom',
+        }
+        await storage.put(v2)
+        count += 1
+      }
+    }
+    return count
+  }
+
   const handleRestoreBackup = async (f: File) => {
     try {
-      const text = await f.text()
-      const json = JSON.parse(text)
-      const deckList: DeckV2[] = Array.isArray(json) ? json : (Array.isArray(json.decks) ? json.decks : [])
-      if (deckList.length === 0) {
+      const count = await restoreBackupText(await f.text())
+      if (count === 0) {
         alert(t('errors', 'deck_read_failed'))
         return
       }
-      for (const d of deckList) {
-        if (d && typeof d === 'object' && d.name && Array.isArray(d.cards)) {
-          const v2: DeckV2 = {
-            ...d,
-            id: d.id || makeDeckId(),
-            createdAt: d.createdAt || Date.now(),
-            updatedAt: Date.now(),
-            source: 'custom',
-          }
-          await storage.put(v2)
-        }
-      }
       await load()
-      alert(`${t('common', 'done')}: ${deckList.length}`)
+      alert(`${t('common', 'done')}: ${count}`)
     } catch {
       alert(t('errors', 'deck_read_failed'))
     }
@@ -297,7 +303,18 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleFile = async (f: File) => {
     const text = await f.text()
-    const name = f.name.replace(/\.(dck|txt|cod|dec|o8d|dek)$/i, '')
+    const name = f.name.replace(/\.(dck|txt|cod|dec|o8d|dek|mtga|mwdeck|draft|json)$/i, '')
+    if (/\.json$/i.test(f.name)) {
+      try {
+        const count = await restoreBackupText(text)
+        if (count > 0) {
+          await load()
+          return
+        }
+      } catch {
+        // no es backup: probar como mazo mtgjson
+      }
+    }
     const parsed = parseAnyDeck(text, name || t('decks', 'import_placeholder'))
     if (!parsed) { setImportError(`${t('errors', 'deck_read_failed')}: ${f.name}`); setShowImport(true); return }
     const v2: DeckV2 = { ...parsed, id: makeDeckId(), format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform', colors: [], coverCard: parsed.cards[0], createdAt: Date.now(), updatedAt: Date.now(), source: 'imported' }
@@ -392,7 +409,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             <div className="decks-footer-left">
               <label className="decks-footer-btn">
                 <Icon name="download" size={12} /> {t('decks', 'import_deck')}
-                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d,.dek" hidden onChange={async (e) => {
+                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d,.dek,.mtga,.mwdeck,.draft,.json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleFile(f)
                   e.currentTarget.value = ''

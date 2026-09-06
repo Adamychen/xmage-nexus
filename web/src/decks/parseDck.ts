@@ -53,6 +53,14 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
 }
 
 export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  if (/(^|\n)\s*------\s*\S+\s*------/.test(text) && /-->\s*.+/.test(text)) {
+    const draft = parseDraftLog(text, fallbackName)
+    if (draft) return draft
+  }
+  if (/^\s*\{/.test(text) && /"mainBoard"/.test(text)) {
+    const json = parseMtgjson(text, fallbackName)
+    if (json) return json
+  }
   if (/<Cards\s[^>]*Name="/i.test(text)) {
     const dek = parseDekXml(text, fallbackName)
     if (dek) return dek
@@ -169,99 +177,195 @@ export function parseO8dXml(text: string, fallbackName = t('decks', 'import_plac
   return { name: fallbackName, cards, sideboard }
 }
 
+/**
+ * Marcas explícitas de banquillo (paridad con DeckImporter.haveSideboardSection:
+ * `SB:` y `//sideboard`). Si no hay ninguna, la primera línea vacía tras cartas
+ * divide principal/banquillo (paridad con TxtDeckImporter.switchSideboardByEmptyLine,
+ * formato MTGO). Se pre-escanea todo el texto, como el desktop.
+ */
+function hasExplicitSideboardMark(text: string): boolean {
+  return /^SB:|^\/\/\s*sideboard|^\s*sideboard(\s*\(\d+\))?\s*$/im.test(text)
+}
+
+const BRACKET_SET_LINE = /^(\d+)x?\s+\[([^\]]+)\]\s*(.+?)\s*$/
+
+/**
+ * Import log de draft XMage (.draft, paridad con DraftLogImporter):
+ * secciones `------ SET ------` + picks `--> Nombre` → principal.
+ * Sin nombre en el log: se usa el fallback.
+ */
+export function parseDraftLog(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  const SET_RE = /^------\s*(\S+)\s*------$/
+  const PICK_RE = /^-->\s*(.+?)\s*$/
+  let currentSet = ''
+  const grouped = new Map<string, DeckCard>()
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line) continue
+    const setMatch = line.match(SET_RE)
+    if (setMatch) {
+      currentSet = setMatch[1]
+      continue
+    }
+    const pickMatch = line.match(PICK_RE)
+    if (!pickMatch) continue
+    const name = pickMatch[1]
+    if (!name) continue
+    const cardName = normalizeBasicLandName(name) || name
+    const key = `${cardName}@@${currentSet}`
+    const prev = grouped.get(key)
+    if (prev) prev.amount += 1
+    else grouped.set(key, normalizeDeckCard({ cardName, setCode: currentSet, cardNumber: '', amount: 1 }))
+  }
+  const cards = [...grouped.values()]
+  if (cards.length === 0) return null
+  return { name: fallbackName, cards, sideboard: [] }
+}
+
+interface MtgjsonBoardEntry {
+  name?: string
+  setCode?: string
+  count?: number
+}
+
+/**
+ * Import mtgjson (.json, paridad con MtgjsonDeckImporter):
+ * `{data:{name,code,mainBoard,sideBoard,commander}}` con entradas
+ * `{name,setCode,count}`. Commander → principal en cabeza (U7-6).
+ */
+export function parseMtgjson(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
+  let json: any
+  try {
+    json = JSON.parse(text)
+  } catch {
+    return null
+  }
+  const data = json?.data
+  if (!data || typeof data !== 'object') return null
+  const defaultSet = typeof data.code === 'string' ? data.code : ''
+  const readBoard = (board: unknown): DeckCard[] => {
+    if (!Array.isArray(board)) return []
+    const out: DeckCard[] = []
+    for (const entry of board as MtgjsonBoardEntry[]) {
+      if (!entry || typeof entry.name !== 'string' || !entry.name.trim()) continue
+      const cardName = normalizeBasicLandName(entry.name.trim()) || entry.name.trim()
+      const amount = Math.min(100, Math.max(1, Math.floor(entry.count ?? 1) || 1))
+      out.push(normalizeDeckCard({ cardName, setCode: entry.setCode || defaultSet, cardNumber: '', amount }))
+    }
+    return out
+  }
+  const commander = readBoard(data.commander)
+  const cards = [...commander, ...readBoard(data.mainBoard)]
+  const sideboard = readBoard(data.sideBoard)
+  if (cards.length === 0 && sideboard.length === 0) return null
+  const name = typeof data.name === 'string' && data.name.trim() ? data.name.trim() : fallbackName
+  return { name, cards, sideboard }
+}
+
 function parseArenaLike(text: string, fallbackName: string): Deck | null {
-  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
-  if (lines.length === 0) return null
+  const rawLines = text.split('\n')
   const cards: DeckCard[] = []
+  const commanders: DeckCard[] = []
   const sideboard: DeckCard[] = []
   let isSideboard = false
-  let headerSeen = false
+  let inCommander = false
+  let blankSwitchArmed = !hasExplicitSideboardMark(text)
+  let cardsSeen = false
 
-  for (const line of lines) {
+  const pushCard = (target: DeckCard[], amount: number, rawName: string, setCode: string, cardNumber: string) => {
+    const cleaned = rawName
+      .trim()
+      .replace(/\s+#.*$/, '')
+      .replace(/\s*\/\/.*$/, '')
+      .trim()
+    if (!cleaned || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(cleaned)) return
+    const cardName = normalizeBasicLandName(cleaned) || cleaned
+    target.push(normalizeDeckCard({ cardName, setCode, cardNumber, amount }))
+    cardsSeen = true
+  }
+
+  const pushBracketOrArena = (target: DeckCard[], rest: string, defaultSet: string, defaultNumber: string) => {
+    const b = rest.match(BRACKET_SET_LINE)
+    if (b) {
+      pushCard(target, parseInt(b[1], 10) || 1, b[3], b[2].trim() || defaultSet, defaultNumber)
+      return
+    }
+    const m = rest.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?\s*$/)
+    if (m) {
+      pushCard(target, parseInt(m[1], 10) || 1, m[2], m[3] || defaultSet, m[4] || defaultNumber)
+      return
+    }
+    const dck = rest.match(/^(\d+)\s*\[([^:]+):([^\]]+)\]\s*(.+)$/)
+    if (dck) {
+      pushCard(target, parseInt(dck[1], 10) || 1, dck[4], dck[2].trim(), dck[3].trim())
+    }
+  }
+
+  for (const raw of rawLines) {
+    const line = raw.replace(/\t/g, ' ').trim()
+    if (!line) {
+      if (blankSwitchArmed && cardsSeen && !isSideboard) {
+        isSideboard = true
+        inCommander = false
+      }
+      continue
+    }
     const low = line.toLowerCase()
+    const headerWithCount = low.match(/^(deck|main|mainboard|sideboard|commander|maybeboard|companion)\s*\(\d+\)$/)
+    const header = headerWithCount ? headerWithCount[1] : low
+    if (/^[a-z ]+\(\d+\)$/.test(low) && !headerWithCount) continue
     if (
-      low === 'deck' || low === 'main' || low === 'mainboard' || low === '[main]' || low === 'maindeck' ||
+      header === 'deck' || header === 'main' || header === 'mainboard' || header === '[main]' || header === 'maindeck' ||
+      low === '[main]' ||
       low === 'mazo' || low === 'mazzo' || low === 'колода' || low === 'デッキ' || low === '套牌'
     ) {
       isSideboard = false
-      headerSeen = true
+      inCommander = false
       continue
     }
     if (
-      low === 'sideboard' || low === '[sideboard]' || low === 'companion' || low === '[companion]' ||
+      header === 'sideboard' || low === '[sideboard]' || header === 'companion' || low === '[companion]' ||
+      header === 'maybeboard' || low === '[maybeboard]' ||
       low === 'banquillo' || low === 'réserve' || low === 'reserve' || low === 'reserva' ||
       low === 'compagnon' || low === 'compagno' || low === 'companheiro' || low === 'compañero' ||
       low === 'сайдборд' || low === 'спутник' || low === 'サイドボード' || low === '相棒' ||
       low === '备牌' || low === '行侣' || low === 'gefährte'
     ) {
       isSideboard = true
-      headerSeen = true
+      inCommander = false
       continue
     }
     if (
-      low === 'commander' || low === 'commandant' || low === 'kommandeur' || low === 'comandante' ||
+      header === 'commander' || low === 'commandant' || low === 'kommandeur' || low === 'comandante' ||
       low === 'командир' || low === '統率者' || low === '指挥官'
     ) {
       isSideboard = false
-      headerSeen = true
+      inCommander = true
       continue
     }
     if (low.startsWith('//')) {
       if (low.includes('sideboard') || low.includes('banquillo') || low.includes('reserva') || low.includes('réserve')) {
         isSideboard = true
-        headerSeen = true
       }
       continue
     }
     if (line.startsWith('SB:')) {
-      const rest = line.slice(3).trim()
-      const m = rest.match(/^(\d+)x?\s+(.+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?\s*$/)
-      if (m) {
-        const amount = parseInt(m[1], 10) || 1
-        const rawName = m[2].trim()
-        const cardName = normalizeBasicLandName(rawName) || rawName
-        sideboard.push(normalizeDeckCard({ cardName, setCode: m[3] || 'M10', cardNumber: m[4] || '1', amount }))
-      } else {
-        const m2 = rest.match(/^(.+)$/)
-        if (m2) {
-          const rawName = m2[1].trim()
-          const cardName = normalizeBasicLandName(rawName) || rawName
-          sideboard.push(normalizeDeckCard({ cardName, setCode: 'M10', cardNumber: '1', amount: 1 }))
-        }
+      const before = sideboard.length
+      pushBracketOrArena(sideboard, line.slice(3).trim(), 'M10', '1')
+      if (sideboard.length === before) {
+        const m2 = line.slice(3).trim().match(/^(.+)$/)
+        if (m2) pushCard(sideboard, 1, m2[1], 'M10', '1')
       }
       continue
     }
 
-    const m = line.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?$/)
-    if (m) {
-      const amount = parseInt(m[1], 10) || 1
-      const rawName = m[2].trim().replace(/\s*\/\/.*$/, '').trim()
-      if (!rawName || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(rawName)) continue
-      const cardName = normalizeBasicLandName(rawName) || rawName
-      const setCode = m[3] || 'M10'
-      const cardNumber = m[4] || '1'
-      const item = normalizeDeckCard({ cardName, setCode, cardNumber, amount })
-      if (isSideboard) sideboard.push(item)
-      else cards.push(item)
-      continue
-    }
-    if (/^\d+\s+\[.*:.*\]/.test(line)) {
-      const dck = line.match(/^(\d+)\s*\[([^:]+):([^\]]+)\]\s*(.+)$/)
-      if (dck) {
-        const item = normalizeDeckCard({ cardName: dck[4].trim(), setCode: dck[2].trim(), cardNumber: dck[3].trim(), amount: parseInt(dck[1], 10) || 1 })
-        if (isSideboard) sideboard.push(item)
-        else cards.push(item)
-      }
-      continue
-    }
+    const target = inCommander ? commanders : isSideboard ? sideboard : cards
+    pushBracketOrArena(target, line, 'M10', '1')
   }
 
-  if (!headerSeen && lines.some((l) => l.trim() === '')) {
-    // fallback handled via SB: already
-  }
-
-  if (cards.length === 0 && sideboard.length === 0) return null
-  return { name: fallbackName, cards, sideboard }
+  const allCards = [...commanders, ...cards]
+  if (allCards.length === 0 && sideboard.length === 0) return null
+  return { name: fallbackName, cards: allCards, sideboard }
 }
 
 export function exportDck(deck: Deck): string {

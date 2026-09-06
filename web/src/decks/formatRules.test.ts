@@ -155,6 +155,35 @@ describe('formatRules', () => {
     expect(report.issues.some((i) => i.type === 'color_identity')).toBe(true)
   })
 
+  it('unions color identity over Partner commanders (U7-7)', () => {
+    const partnerDeck: DeckV2 = {
+      id: 'test-partner',
+      name: 'Sidar+Tana',
+      format: 'Commander',
+      cards: [
+        { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+        { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 },
+        { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 1 },
+        { cardName: 'Counterspell', setCode: 'EMA', cardNumber: '43', amount: 1 }, // Blue outside G/R identity!
+      ],
+      sideboard: [],
+      colors: ['G', 'R'],
+      coverCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('PC2/1', { colors: ['G', 'W'], keywords: ['Partner'], legalities: { commander: 'legal' } })
+    metaMap.set('C16/56', { colors: ['R', 'G'], keywords: ['Partner'], legalities: { commander: 'legal' } })
+    metaMap.set('EMA/43', { colors: ['U'], legalities: { commander: 'legal' } })
+
+    const report = validateDeckForFormat(partnerDeck, metaMap)
+    expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Counterspell')).toBe(true)
+    expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Forest')).toBe(false)
+  })
+
   it('allows any card in Freeform format', () => {
     const freeDeck: DeckV2 = {
       id: 'test-free',

@@ -37,6 +37,45 @@ export function normalizeBasicLandName(name: string): string | null {
   return BASIC_LAND_NORMALIZATION_MAP[clean] || null
 }
 
+/** Meta mínima necesaria para detectar Partner (datos del oráculo, no reglas a mano). */
+export interface PartnerMeta {
+  keywords?: string[]
+  oracleText?: string
+}
+
+export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
+  if (!meta) return false
+  if (meta.keywords?.some((k) => k.toLowerCase() === 'partner' || k.toLowerCase().startsWith('partner with'))) return true
+  return /\bpartner(\s+with\s+.+)?\b/i.test(meta.oracleText ?? '')
+}
+
+function metaKey(c: DeckCard): string {
+  return `${c.setCode}/${c.cardNumber}`
+}
+
+/**
+ * Comandantes a mostrar (U7-7): la portada (o primera carta) + un segundo
+ * Partner si existe. Sin Partner: una sola carta (comportamiento anterior).
+ */
+export function commanderCardsFor(
+  cards: DeckCard[],
+  coverCard: DeckCard | undefined | null,
+  metaMap: Map<string, PartnerMeta>,
+): DeckCard[] {
+  if (cards.length === 0) return []
+  const first = (coverCard && cards.some((c) => metaKey(c) === metaKey(coverCard) && c.cardName === coverCard.cardName)
+    ? coverCard
+    : cards[0])!
+  const out = [first]
+  const firstMeta = metaMap.get(metaKey(first)) ?? metaMap.get(first.cardName.toLowerCase())
+  if (isPartnerCard(firstMeta)) {
+    const second = cards.find((c) => (c.cardName !== first.cardName || metaKey(c) !== metaKey(first)) &&
+      isPartnerCard(metaMap.get(metaKey(c)) ?? metaMap.get(c.cardName.toLowerCase())))
+    if (second) out.push(second)
+  }
+  return out
+}
+
 export function getBasicLandLabel(landName: string, lang = 'en'): string {
   const map = BASIC_LAND_NAMES[landName]
   if (!map) return landName

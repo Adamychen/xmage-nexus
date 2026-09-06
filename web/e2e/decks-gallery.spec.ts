@@ -183,6 +183,41 @@ test.describe('Decks Gallery', () => {
     })
   })
 
+  test('U7: commander/maybeboard sections, draft log and paste button @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      const username = `deck_u7_${Date.now()}`
+      await page.getByPlaceholder(/Usuario|Username/i).fill(username)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+
+      // U7-5: paste button present in the import modal
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await expect(page.locator('.import-paste-btn')).toBeVisible()
+
+      // U7-6: Commander first in main, Maybeboard to sideboard
+      await page.locator('.deck-import-textarea').fill(
+        'Commander\n1 Atraxa, Praetors\' Voice\nDeck\n1 Sol Ring\nMaybeboard\n1 Doubling Season\n',
+      )
+      await expect(page.locator('.import-badge.success')).toBeVisible()
+      await page.locator('.import-submit-btn').click()
+      await expect(page.locator('.deck-category-section:not(.deck-sideboard-section) .strip-name').first()).toHaveText(/Atraxa/)
+      await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Doubling Season/ })).toBeVisible({ timeout: 3000 })
+
+      // U7-1: draft log recognized by the modal badge
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill(
+        '------ NEO ------\n--> Light-Paws, Emperor\'s Voice\n--> Mountain\n',
+      )
+      await expect(page.locator('.import-badge.success')).toContainText('2')
+    })
+  })
+
   test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {    await page.setViewportSize({ width: 1366, height: 768 })
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)

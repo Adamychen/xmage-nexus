@@ -35,6 +35,20 @@ export function DeckImportModal({
   const sideCount = parsed?.sideboard.reduce((sum, c) => sum + c.amount, 0) ?? 0
   const totalCount = mainCount + sideCount
 
+  const handlePaste = async () => {
+    try {
+      const clip = await navigator.clipboard.readText()
+      if (typeof clip === 'string' && clip.trim()) {
+        setText(clip)
+        setError(null)
+        return
+      }
+      setError(t('errors', 'deck_read_failed'))
+    } catch {
+      setError(t('errors', 'deck_read_failed'))
+    }
+  }
+
   const handleFile = async (f: File) => {
     try {
       const content = await f.text()
@@ -143,7 +157,7 @@ export function DeckImportModal({
                 <Icon name="folder" size={12} /> {t('common', 'search')}
                 <input
                   type="file"
-                  accept=".dck,.txt,.dec,.cod,.o8d,.dek"
+                  accept=".dck,.txt,.dec,.cod,.o8d,.dek,.mtga,.mwdeck,.draft,.json"
                   hidden
                   onChange={async (e) => {
                     const f = e.target.files?.[0]
@@ -165,6 +179,14 @@ export function DeckImportModal({
                   {t('common', 'clear')}
                 </button>
               )}
+              <button
+                type="button"
+                className="import-paste-btn"
+                title={t('decks', 'import_paste')}
+                onClick={() => void handlePaste()}
+              >
+                <Icon name="clipboard" size={12} /> {t('decks', 'import_paste')}
+              </button>
             </div>
 
             <div className="import-status-right">

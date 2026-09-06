@@ -6,6 +6,8 @@ import {
   suggestBasicLands,
   basicLandKind,
   isManaSourceCard,
+  isPartnerCard,
+  commanderCardsFor,
 } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 
@@ -104,5 +106,32 @@ describe('deckUtils basic calculations', () => {
     expect(isManaSourceCard('Instant', 'Lightning Bolt deals 3 damage.')).toBe(false)
     expect(isManaSourceCard('Sorcery', 'Search your library for a basic land card.')).toBe(false)
     expect(isManaSourceCard(undefined, undefined)).toBe(false)
+  })
+
+  it('detects Partner from keywords or oracle text (U7-7)', () => {
+    expect(isPartnerCard({ keywords: ['Partner'] })).toBe(true)
+    expect(isPartnerCard({ keywords: ['Partner with Akroma'] })).toBe(true)
+    expect(isPartnerCard({ oracleText: 'Partner (You can have two commanders …)' })).toBe(true)
+    expect(isPartnerCard({ oracleText: 'Flying' })).toBe(false)
+    expect(isPartnerCard(undefined)).toBe(false)
+    expect(isPartnerCard(null)).toBe(false)
+  })
+
+  it('returns one commander normally, two with Partner (U7-7)', () => {
+    const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }
+    const solRing = { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '264', amount: 1 }
+    const sidar = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
+    const tana = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 }
+    const noMeta = new Map()
+    expect(commanderCardsFor([atraxa, solRing], atraxa, noMeta)).toEqual([atraxa])
+    expect(commanderCardsFor([solRing, atraxa], null, noMeta)).toEqual([solRing])
+    expect(commanderCardsFor([], null, noMeta)).toEqual([])
+    const partnerMeta = new Map([
+      ['PC2/1', { keywords: ['Partner'] }],
+      ['sidar kondo of jamuraa', { keywords: ['Partner'] }],
+      ['C16/56', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
+      ['tana, the bloodsower', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
+    ])
+    expect(commanderCardsFor([sidar, tana, solRing], sidar, partnerMeta)).toEqual([sidar, tana])
   })
 })

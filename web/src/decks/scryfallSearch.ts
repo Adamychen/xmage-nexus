@@ -14,6 +14,7 @@ export interface ScryfallSearchCard {
   colors: string[]
   color_identity: string[]
   oracle_text?: string
+  keywords?: string[]
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
   image_uris?: { small: string; normal: string; art_crop: string }
   card_faces?: {

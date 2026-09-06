@@ -16,6 +16,7 @@ export interface CardStripMeta {
   typeLine?: string
   colors?: string[]
   oracleText?: string
+  keywords?: string[]
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
 }
 

@@ -1,5 +1,6 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
+import { commanderCardsFor } from './deckUtils'
 import { t } from '../i18n'
 
 export interface FormatRuleConfig {
@@ -394,14 +395,15 @@ export function validateDeckForFormat(
     combinedCounts.set(name, (combinedCounts.get(name) ?? 0) + c.amount)
   }
 
-  // 3. Commander identification and color identity
+  // 3. Commander identification and color identity (union over Partners, U7-7)
   let commanderColors: Set<string> | null = null
   if (config.hasCommander) {
-    const commander = deck.coverCard ?? deck.cards[0]
-    if (commander) {
-      const meta = metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase())
-      if (meta?.colors) {
-        commanderColors = new Set(meta.colors.map((c) => c.toUpperCase()))
+    const commanders = commanderCardsFor(deck.cards, deck.coverCard ?? null, metaMap)
+    if (commanders.length > 0) {
+      commanderColors = new Set()
+      for (const commander of commanders) {
+        const meta = metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase())
+        for (const c of meta?.colors ?? []) commanderColors.add(c.toUpperCase())
       }
     } else {
       issues.push({

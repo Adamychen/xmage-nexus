@@ -34,8 +34,7 @@ describe('DeckImportModal', () => {
     expect(screen.getByText(/24/)).toBeDefined() // 4 + 20
   })
 
-  it('supports toggling between add and replace mode', () => {
-    const onImport = vi.fn()
+  it('supports toggling between add and replace mode', () => {    const onImport = vi.fn()
     const onClose = vi.fn()
 
     render(
@@ -68,5 +67,25 @@ describe('DeckImportModal', () => {
       mode: 'replace',
     })
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('pastes deck text from the clipboard (U7-5)', async () => {
+    const onImport = vi.fn()
+    const onClose = vi.fn()
+    const readText = vi.fn().mockResolvedValue('4 Lightning Bolt\nSB: 2 Pyroblast')
+    Object.defineProperty(navigator, 'clipboard', { value: { readText }, configurable: true })
+
+    render(
+      <DeckImportModal
+        deckName="Burn"
+        onImport={onImport}
+        onClose={onClose}
+      />
+    )
+
+    fireEvent.click(screen.getByText(/portapapeles|clipboard/i))
+    await screen.findByText(/Reconocidas:|Recognized:/)
+    const textarea = screen.getByPlaceholderText(/Importar mazo|Import deck/i) as HTMLTextAreaElement
+    expect(textarea.value).toContain('Lightning Bolt')
   })
 })

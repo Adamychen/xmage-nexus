@@ -29,7 +29,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U4 | Unirse / Espera / Staging | `dialog/JoinTableDialog.java`, `TableWaitingDialog.java` | `lobby/JoinTableDialog.tsx`, `SpectatorStagingScreen.tsx` | ✅ | Auditada 2026-09-06 (ver § U4): swapSeats (proxy+↑/↓ dueño en READY), torneo (bypass join sin mazo en limitado + `startTournament`), roster rico (rating limited/constructed + history + flag), start con confirm si falta ready (aviso, no bloqueo). 2026-09-07: chat por mesa U4-11 cerrado (proxy `getTableChatId` + `joinChat/leaveChat` por ciclo de sala + `ChatBox chatIdOverride` + marcas Listo a la mesa). Stretch restante: caché password (U4-2), sonidos (U4-12). Tests: `TableStagingCommandsTest` 7/7 java + `store.test` 7 nuevos + `staging.spec.ts` 8/8 + `staging-chat.spec.ts` 2/2 fake + verificación real 11/11 (2 sesiones + espectador + aislamiento entre mesas) | 2026-09-07 |
 | U5 | Chat | `chat/ChatPanelBasic.java`, `ChatPanelSeparated.java`, `table/PlayersChatPanel.java` | `game/GameChat.tsx`, `lobby/ChatBox.tsx` | ✅ | Auditada 2026-09-07: envío/recepción sala+mesa+partida ✅, whisper `/w` (envío por parser del servidor + `WHISPER_FROM/TO` diferenciados con sonido) ✅, `/history`/`/me`/`/card`/`/list` (responden `USER_INFO` → sistema) ✅, `[Carta]` + hover ✅ (supera), split Talk/System ≈ toggle + canales ✅, usuarios (flag/rank/ping) + `UserActionModal` ✅, ventana separada ≈ `FloatingChat` arrastrable ✅. Delta: hora tenue por mensaje (U5-2, `time` del evento), propio en verde (U5-4), límite 500 con aviso i18n (U5-3, `GameChat` ya lo tenía). Diferencias declaradas: ignore solo-cliente (el desktop bloquea joins; cubrir con password/vetados), profanity fuera de alcance. Tests: `ChatBox.test` +3 + `chat.spec`/`staging-chat.spec` asserts de hora + verificación real 8/8 (whisper A↔B, `/history`, `/card`, >500 lo acepta el servidor) | 2026-09-07 |
 | U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (69 ficheros) | ✅ | Auditada 2026-09-07 (ver § U6): sort resultados (6 órdenes + dirección, U6-1), Mana Analyser completo (fuentes/básicas/distribución, U6-2), +4 formatos (Oathbreaker, PD Commander, Highlander EU/CA, U6-3), import `.dek`/`.cod`/`.o8d` + export `.dek` (U6-4/5), slider tamaño carta. Supera: sintaxis Scryfall, sample hand London + goldfish, catálogo meta + Moxfield/Archidekt, reparación de issues del servidor. No-aplica: `CollectionViewer/MageBook` (sin DB local), Open Booster, Bling, Draft Rating, LAYOUT posicional. Resto import/export (`.mwdeck/.draft/.json`) → U7. Tests: unit 883 + `decks-gallery.spec` 5/5 (nuevo test U6) + `deckvalidation` 3/3 | 2026-09-07 |
-| U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ❓ | export+clipboard ✅ (Phase 3); comparativa fina pendiente | — |
+| U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ✅ | Auditada 2026-09-07 (ver § U7): import 9 ext desktop cubiertas (U7-1 `.draft`, U7-2 mtgjson `.json` con backup-restore desambiguado, U7-3 `.mwdeck` bracket/set + switch banquillo por línea vacía MTGO + comentarios `#` + cabeceras con conteo), botón pegar-portapapeles (U7-5), Commander→principal+cover y Maybeboard→banquillo (U7-6), Partner 2 coronas + unión identidad por datos oráculo (U7-7, supera: desktop sin zona). Export 4 formatos ✅ (dck_info no-aplica). Supera: URLs Moxfield/Archidekt, sample London+goldfish, badge live. Tests: unit 894 + `decks-gallery.spec` 6/6 (test U7) + `deckvalidation` 3/3 | 2026-09-07 |
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ❓ | `DRAFT_*` ✅ (`draft.spec.ts`); comparativa fina pendiente | — |
 | U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ❓ | `TOURNAMENT_*` ✅ (`tournament.spec.ts`); `RandomPacksSelector` por auditar | — |
@@ -72,7 +72,7 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U7 · U9 · U10 · U15 — pendientes (U4/U5/U6 cerradas)
+### U1 · U2 · U9 · U10 · U15 — pendientes (U4/U5/U6/U7 cerradas)
 
 ### U11 — Núcleo partida (AUDITADA 2026-09-05)
 
@@ -165,6 +165,26 @@ Evidencia: `Mage.Proxy/TableStagingCommandsTest.java` 7/7 + `SpectatorStagingScr
 ### U8 — Generador mazos (gap confirmado)
 
 Sin equivalente web. Decidir: implementar (nueva feature) o declarar fuera de alcance.
+
+### U7 — Import / Export / Sample (AUDITADA 2026-09-07, CERRADA)
+
+Base desktop: `DeckImportClipboardDialog.java` (ejemplos MTGO/MTGA-moxfield-archidekt, pre-relleno con portapapeles, botón Pegar, detección `MtgaImporter.isMTGA`, modos nuevo/añadir) · `DeckExportClipboardDialog.java` (combo 4 formatos `DeckFormats`: dck/dck_info/dek/mtga + preview + copiar) · `DeckImporter.getDeckImporter` (9 ext: dec/mwdeck/txt/dck/dek/cod/o8d/json/draft/mtga) · `TxtDeckImporter` (switch a banquillo por primera línea vacía, `SB:`, comentarios `#` deckstats, ignora categorías) · `MtgaImporter` (Commander/Maybeboard→banquillo) · `MWSDeckImporter` (`N [SET] Nombre`) · `DraftLogImporter` (`------ SET ------` + `--> pick`) · `MtgjsonDeckImporter` (`data.mainBoard/sideBoard/commander`) · exportadores sin cabeceras, ext `.mtga`.
+Base web: `DeckImportModal.tsx` (modos añadir/reemplazar, drag&drop, badge live) + `parseDck.ts` (`parseAnyDeck`) + `downloadDeckFile` (descarga Y copia) + `SampleHandModal` + `onlineDeckService` (URLs).
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Fichero 9 ext + clipboard nuevo/añadir + botón Pegar SO | Modal añadir/reemplazar + pickers 10 ext (U7-4: +`.mtga/.mwdeck/.draft/.json`) + botón pegar-portapapeles `readText` con fallback (U7-5) + drag&drop | ✅ |
+| Detección MTGA-vs-texto, errores en diálogo, auto-fix fichero | Parseo uniforme por contenido + badge live + normalización básicas | ✅ equivalente |
+| `.draft` log → principal con set | `parseDraftLog` (agrupa picks, setCode por sección) | ✅ U7-1 |
+| mtgjson `.json` (commander→banquillo) | `parseMtgjson` (commander→principal en cabeza, U7-6; `.json` en galería desambigua backup vs mazo) | ✅ U7-2 |
+| `.mwdeck` `N [SET] Nombre`, `SB:`, `//` | Variante bracket + `SB:` + `//` + comentarios `#` (U7-3) | ✅ |
+| `.txt` switch banquillo por línea vacía | `hasExplicitSideboardMark` + primera línea vacía (U7-3; reimporta bien el propio `.dek`; tolera `Sideboard (15)` y categorías `Creatures (10)`) | ✅ |
+| `Commander/Maybeboard`→banquillo | Commander→principal **en cabeza** (=`coverCard`→zona 👑, la web SÍ muestra zona y el desktop no) + Maybeboard→banquillo (U7-6) | ✅ (divergencia justificada) |
+| Sin zona comandante / sin Partner | Banner 1 corona, o 2 con Partner (detección por `keywords`/oráculo, unión de identidad; U7-7) | ✅ (supera; sin mantenimiento manual ante cartas/reglas nuevas) |
+| Export fichero dck/dck_info/dek/mtga; export clipboard con preview | Footer dck/arena/txt/dek (descarga+copia) + `.dek` (U6-5); `dck_info` no-aplica; Arena con cabeceras (compatible) | ✅ |
+| Import URL / sample hand — no existen | Moxfield/Archidekt por URL, London mulligan + goldfish T1–T3 | ✅ (supera) |
+
+Evidencia: `parseDck.test` +7 (draft, mtgjson, bracket, blank-switch, roundtrip `.dek`, commander/maybeboard, categorías), `deckUtils.test` +2 (partner), `formatRules.test` +1 (unión identidad), `DeckImportModal.test` +1 (pegado), `decks-gallery.spec` test U7 (commander/maybeboard/`.draft`/botón pegar).
 
 ### U6 — Editor mazos (AUDITADA 2026-09-07, CERRADA)
 

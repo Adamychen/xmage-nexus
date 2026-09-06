@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
+import { commanderCardsFor } from './deckUtils'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -129,13 +130,14 @@ export default function DeckListPanel({
     }
   }
 
-  // Commander card identification (first card or cover card if commander format)
-  const commanderCard = isCommanderFormat && cards.length > 0
-    ? (coverKey ? cards.find((c) => getCardKey(c) === coverKey) ?? cards[0] : cards[0])
-    : null
+  // Commander cards (cover + second Partner, U7-7) or empty outside commander formats
+  const commanderCards = isCommanderFormat && cards.length > 0
+    ? commanderCardsFor(cards, cards.find((c) => getCardKey(c) === coverKey) ?? null, metaMap)
+    : []
+  const commanderKeys = new Set(commanderCards.map(getCardKey))
 
-  const mainCardsWithoutCommander = commanderCard
-    ? cards.filter((c) => getCardKey(c) !== getCardKey(commanderCard))
+  const mainCardsWithoutCommander = commanderCards.length > 0
+    ? cards.filter((c) => !commanderKeys.has(getCardKey(c)))
     : cards
 
   // Group main cards by category
@@ -230,13 +232,14 @@ export default function DeckListPanel({
             </div>
           )}
 
-          {/* Commander Banner (if applicable) */}
-          {commanderCard && (
+          {/* Commander Banner (1 card, or 2 with Partner — U7-7) */}
+          {commanderCards.length > 0 && (
             <div className="deck-category-section">
               <div className="deck-category-header">
                 <span>{t('decks', 'commander')}</span>
-                <span className="deck-category-count">1</span>
+                <span className="deck-category-count">{commanderCards.length}</span>
               </div>
+              {commanderCards.map((commanderCard) => (
               <ArenaCardStrip
                 key={getCardKey(commanderCard)}
                 card={commanderCard}
@@ -251,6 +254,7 @@ export default function DeckListPanel({
                 onLeave={onLeave}
                 onChangePrinting={onChangePrinting}
               />
+              ))}
             </div>
           )}
 

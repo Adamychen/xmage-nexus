@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseDck, exportDck, exportArena, exportDek, parseAnyDeck, parseDekXml, parseCodXml, parseO8dXml } from './parseDck'
+import { parseDck, exportDck, exportArena, exportDek, parseAnyDeck, parseDekXml, parseCodXml, parseO8dXml, parseDraftLog, parseMtgjson } from './parseDck'
 
 describe('parseDck', () => {
   it('parses NAME and main+SB lines', () => {
@@ -180,6 +180,98 @@ Banquillo
     const back = parseAnyDeck(out)!
     expect(back.cards[0].cardName).toBe('Lightning Bolt')
     expect(back.sideboard[0].cardName).toBe('Pyroblast')
+  })
+
+  it('parses draft logs via parseAnyDeck (U7-1)', () => {
+    const text = `------ NEO ------
+--> Light-Paws, Emperor's Voice
+-->  Unstoppable Ogre
+------ SNC ------
+--> Light-Paws, Emperor's Voice
+--> Mountain
+`
+    const d = parseAnyDeck(text, 'Draft')!
+    expect(d.name).toBe('Draft')
+    expect(d.sideboard).toHaveLength(0)
+    const paws = d.cards.filter((c) => c.cardName === "Light-Paws, Emperor's Voice")
+    expect(paws).toHaveLength(2)
+    expect(paws[0].setCode).toBe('NEO')
+    expect(paws[1].setCode).toBe('SNC')
+    expect(parseDraftLog('no picks here')).toBeNull()
+  })
+
+  it('parses mtgjson via parseAnyDeck (U7-2)', () => {
+    const text = JSON.stringify({
+      data: {
+        name: 'Atraxa',
+        code: 'C16',
+        mainBoard: [{ name: 'Sol Ring', setCode: 'C16', count: 1 }],
+        sideBoard: [{ name: 'Pyroblast', setCode: '', count: 2 }],
+        commander: [{ name: "Atraxa, Praetors' Voice", count: 1 }],
+      },
+    })
+    const d = parseAnyDeck(text)!
+    expect(d.name).toBe('Atraxa')
+    expect(d.cards[0].cardName).toBe("Atraxa, Praetors' Voice")
+    expect(d.cards).toHaveLength(2)
+    expect(d.sideboard[0]).toMatchObject({ cardName: 'Pyroblast', setCode: 'C16', amount: 2 })
+    expect(parseMtgjson('{"nope":true}')).toBeNull()
+    expect(parseMtgjson('{invalid')).toBeNull()
+  })
+
+  it('parses MWS bracket printing + deckstats comments (U7-3)', () => {
+    const d = parseAnyDeck(`4 [M10] Lightning Bolt #removal
+20 [LEA] Mountain
+`)!
+    expect(d.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', setCode: 'M10' })
+    expect(d.cards[1]).toMatchObject({ cardName: 'Mountain', setCode: 'LEA', amount: 20 })
+  })
+
+  it('switches to sideboard on first blank line without marks, MTGO-style (U7-3)', () => {
+    const d = parseAnyDeck(`4 Lightning Bolt
+20 Mountain
+
+2 Pyroblast
+`)!
+    expect(d.cards).toHaveLength(2)
+    expect(d.sideboard).toHaveLength(1)
+    expect(d.sideboard[0].cardName).toBe('Pyroblast')
+  })
+
+  it('roundtrips own .dek export (U7-3)', () => {
+    const deck = {
+      name: 'Burn',
+      cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }],
+      sideboard: [{ cardName: 'Pyroblast', setCode: '5ED', cardNumber: '150', amount: 2 }],
+    }
+    const back = parseAnyDeck(exportDek(deck))!
+    expect(back.cards[0].cardName).toBe('Lightning Bolt')
+    expect(back.sideboard[0].cardName).toBe('Pyroblast')
+  })
+
+  it('routes Commander first and Maybeboard to sideboard (U7-6)', () => {    const d = parseAnyDeck(`Commander
+1 Atraxa, Praetors' Voice
+Deck
+99 Sol Ring
+Maybeboard
+1 Doubling Season
+`)!
+    expect(d.cards[0].cardName).toBe("Atraxa, Praetors' Voice")
+    expect(d.cards).toHaveLength(2)
+    expect(d.sideboard).toHaveLength(1)
+    expect(d.sideboard[0].cardName).toBe('Doubling Season')
+  })
+
+  it('tolerates categorized exports with counts (U7-3)', () => {
+    const d = parseAnyDeck(`Creatures (4)
+4 Lightning Bolt
+
+Sideboard (2)
+2 Pyroblast
+`)!
+    expect(d.cards).toHaveLength(1)
+    expect(d.sideboard).toHaveLength(1)
+    expect(d.sideboard[0].cardName).toBe('Pyroblast')
   })
 })
 
