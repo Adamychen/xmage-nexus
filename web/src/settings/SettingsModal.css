@@ -191,18 +191,6 @@
   color: #fff;
 }
 
-.settings-check {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 8px 0;
-  font-size: 13px;
-  color: #c4cae8;
-  cursor: pointer;
-}
-
-.settings-check input { width: 15px; height: 15px; accent-color: #7c5cff; }
-
 .settings-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

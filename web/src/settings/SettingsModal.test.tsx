@@ -31,13 +31,18 @@ describe('SettingsModal', () => {
     setSetting('uiScale', 1)
   })
 
-  it('exposes sound controls and gameplay prefs', () => {
+  it('exposes sound controls and gameplay toggles', () => {
     render(<SettingsModal onClose={() => {}} />)
     fireEvent.click(screen.getByTestId('settings-nav-sound'))
     expect(screen.getByTestId('settings-sound-card')).toBeTruthy()
     expect(document.querySelector('.settings-content .audio-slider')).toBeTruthy()
     fireEvent.click(screen.getByTestId('settings-nav-gameplay'))
-    expect(document.querySelector('.settings-content input[type="checkbox"]')).toBeTruthy()
+    const toggles = document.querySelectorAll('.settings-content .ui-toggle[role="switch"]')
+    expect(toggles.length).toBeGreaterThan(0)
+    const first = toggles[0] as HTMLElement
+    const wasOn = first.classList.contains('on')
+    fireEvent.click(first)
+    expect(first.classList.contains('on')).toBe(!wasOn)
   })
 
   it('calls onClose from the close button', () => {

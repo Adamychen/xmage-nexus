@@ -1,0 +1,45 @@
+.ui-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #c4cae8;
+  cursor: pointer;
+}
+
+.ui-toggle {
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid #303541;
+  background: #1a1f3a;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ui-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6b7394;
+  transition: transform 0.15s ease, background 0.15s;
+}
+
+.ui-toggle.on {
+  background: #253a2b;
+  border-color: #2f5c3d;
+}
+
+.ui-toggle.on .ui-toggle-knob {
+  transform: translateX(18px);
+  background: #4cd07d;
+}
+
+.ui-toggle-label { flex: 1; }

@@ -6,6 +6,7 @@ import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
 import SoundFxControls from './SoundFxControls'
+import Toggle from '../ui/Toggle'
 import '../appearance/SleevePickerModal.css'
 import '../game/GameMenu.css'
 import './SettingsModal.css'
@@ -111,14 +112,11 @@ function InterfaceSection() {
           </button>
         ))}
       </div>
-      <label className="settings-check">
-        <input
-          type="checkbox"
-          checked={settings.cjkBoost}
-          onChange={(e) => setSetting('cjkBoost', e.target.checked)}
-        />
-        <span>Boost automático CJK (+15% en 日本語/中文)</span>
-      </label>
+      <Toggle
+        checked={settings.cjkBoost}
+        onChange={(v) => setSetting('cjkBoost', v)}
+        label="Boost automático CJK (+15% en 日本語/中文)"
+      />
     </div>
   )
 }
@@ -193,40 +191,31 @@ function GameplaySection() {
   return (
     <div>
       <h3 className="settings-section-title">{t('game', 'automation')}</h3>
-      <label className="settings-check" title={t('game', 'hold_priority_title')}>
-        <input
-          type="checkbox"
-          checked={settings.holdPriority}
-          onChange={(e) => setSetting('holdPriority', e.target.checked)}
-        />
-        <span>{t('game', 'hold_priority')}</span>
-      </label>
-      <label className="settings-check">
-        <input
-          type="checkbox"
-          checked={settings.autoPass}
-          onChange={(e) => setSetting('autoPass', e.target.checked)}
-        />
-        <span>{t('game', 'auto_pass')}</span>
-      </label>
-      <label className="settings-check">
-        <input
-          type="checkbox"
-          checked={settings.autoKeepMulligan}
-          onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
-        />
-        <span>{t('game', 'auto_mulligan')}</span>
-      </label>
+      <Toggle
+        checked={settings.holdPriority}
+        onChange={(v) => setSetting('holdPriority', v)}
+        label={t('game', 'hold_priority')}
+        title={t('game', 'hold_priority_title')}
+      />
+      <Toggle
+        checked={settings.autoPass}
+        onChange={(v) => setSetting('autoPass', v)}
+        label={t('game', 'auto_pass')}
+      />
+      <Toggle
+        checked={settings.autoKeepMulligan}
+        onChange={(v) => setSetting('autoKeepMulligan', v)}
+        label={t('game', 'auto_mulligan')}
+      />
       <h3 className="settings-section-title">{t('game', 'mana_payment_title')}</h3>
       {manaRows.map((row) => (
-        <label key={row.key} className="settings-check" title={row.tip}>
-          <input
-            type="checkbox"
-            checked={settings.manaPayment[row.key]}
-            onChange={() => setSetting('manaPayment', { ...settings.manaPayment, [row.key]: !settings.manaPayment[row.key] })}
-          />
-          <span>{row.label}</span>
-        </label>
+        <Toggle
+          key={row.key}
+          checked={settings.manaPayment[row.key]}
+          onChange={() => setSetting('manaPayment', { ...settings.manaPayment, [row.key]: !settings.manaPayment[row.key] })}
+          label={row.label}
+          title={row.tip}
+        />
       ))}
       <h3 className="settings-section-title">{t('game', 'auto_answers_title', { count: settings.autoAnswers.length })}</h3>
       {settings.autoAnswers.length === 0 && (
