@@ -51,7 +51,7 @@
   border-radius: 10px;
   background: rgba(18, 22, 44, 0.9);
   color: #e8eaf6;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 800;
   font-family: var(--font-display);
   cursor: pointer;
@@ -62,7 +62,7 @@
 .compact .resource-mana {
   height: 40px;
   padding: 0 10px;
-  font-size: 15px;
+  font-size: 0.938rem;
   flex-shrink: 0;
 }
 
@@ -106,7 +106,7 @@
   align-items: center;
   gap: 8px;
   padding: 3px 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
   border-radius: 4px;
 }
 
@@ -133,7 +133,7 @@ button.mana-inline-pip:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
 }
 
@@ -233,7 +233,7 @@ button.mana-inline-pip:hover {
 }
 
 .stack-mark {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #ffb03a;
   opacity: 0.7;
 }
@@ -289,7 +289,7 @@ button.mana-inline-pip:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 900;
   color: #ffffff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.9);
@@ -298,7 +298,7 @@ button.mana-inline-pip:hover {
 }
 
 .compact .stack-count {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 /* When stack has a card image or revealed top, position count as a bottom-right pill */
@@ -314,7 +314,7 @@ button.mana-inline-pip:hover {
   border-radius: 9px;
   background: rgba(10, 14, 28, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.35);
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   line-height: 18px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
@@ -332,7 +332,7 @@ button.mana-inline-pip:hover {
   border-radius: 9px;
   background: #63e6be;
   color: #0b1e17;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -351,7 +351,7 @@ button.mana-inline-pip:hover {
   border-radius: 50%;
   background: linear-gradient(135deg, #ffc04d 0%, #ff9010 100%);
   color: #1a1000;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -399,7 +399,7 @@ button.mana-inline-pip:hover {
   position: absolute;
   top: 3px;
   left: 3px;
-  font-size: 12px;
+  font-size: 0.75rem;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
   z-index: 5;
 }
@@ -434,7 +434,7 @@ button.mana-inline-pip:hover {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -468,7 +468,7 @@ button.mana-inline-pip:hover {
   background: rgba(18, 22, 44, 0.92);
   border: 1.5px solid rgba(255, 255, 255, 0.14);
   color: #e8eaf6;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   font-family: var(--font-display);
   cursor: pointer;
@@ -500,14 +500,14 @@ button.mana-inline-pip:hover {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  font-size: 12px;
+  font-size: 0.75rem;
   opacity: 0.9;
 }
 
 .chip-count {
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  font-size: 11.5px;
+  font-size: 0.719rem;
 }
 
 .chip-playable-dot {
@@ -521,7 +521,7 @@ button.mana-inline-pip:hover {
 }
 
 .chip-indicator {
-  font-size: 10px;
+  font-size: 0.625rem;
   line-height: 1;
   margin-left: 1px;
 }

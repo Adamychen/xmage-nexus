@@ -5,16 +5,18 @@ interface Props {
   onChange: (next: boolean) => void
   label: React.ReactNode
   title?: string
+  disabled?: boolean
 }
 
-export default function Toggle({ checked, onChange, label, title }: Props) {
+export default function Toggle({ checked, onChange, label, title, disabled }: Props) {
   return (
-    <label className="ui-toggle-row" title={title}>
+    <label className={`ui-toggle-row${disabled ? ' is-disabled' : ''}`} title={title}>
       <span className="ui-toggle-label">{label}</span>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
+        disabled={disabled}
         className={`ui-toggle ${checked ? 'on' : ''}`}
         onClick={(e) => {
           e.preventDefault()

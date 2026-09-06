@@ -33,7 +33,7 @@
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   background: #181c2e;
   color: #9aa1c0;
-  font-size: 13px;
+  font-size: 0.812rem;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -76,7 +76,7 @@
 }
 
 .action-btn-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -90,18 +90,18 @@
   display: inline-flex;
   align-items: center;
   margin-right: 5px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .action-btn-sublabel {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.75);
   margin-top: 2px;
 }
 
 .action-btn-shortcut {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   font-family: monospace;
   padding: 2px 6px;

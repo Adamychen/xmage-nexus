@@ -34,7 +34,7 @@
 .player-status-badge.filled {
   border-color: #ffb03a;
   background: rgba(255, 176, 58, 0.15);
-  font-size: 9px;
+  font-size: 0.562rem;
   color: #ffb03a;
 }
 
@@ -54,7 +54,7 @@
 
 .player-status-name {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #c8cae6;
   background: #1d2140;
@@ -73,7 +73,7 @@
   flex: 1;
   padding: 8px 0;
   text-align: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 800;
   font-family: var(--font-display);
   color: #e8eaf6;

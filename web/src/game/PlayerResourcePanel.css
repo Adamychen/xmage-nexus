@@ -31,7 +31,7 @@
   border-radius: 8px;
   background: #171b30;
   color: #e8eaf6;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   font-family: var(--font-display);
   cursor: pointer;
@@ -62,7 +62,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 2px 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-radius: 4px;
 }
 
@@ -73,7 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   color: #10131f;
 }
@@ -119,7 +119,7 @@ button.mana-pip.is-clickable:hover {
 }
 
 .resource-card-back-mark {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #ffb03a;
   opacity: 0.7;
 }
@@ -130,7 +130,7 @@ button.mana-pip.is-clickable:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 2px 6px rgb(0 0 0 / 80%);
@@ -154,6 +154,6 @@ button.mana-pip.is-clickable:hover {
   background: #171b30;
   border: 1px solid #2e3560;
   color: #c8cae6;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
 }

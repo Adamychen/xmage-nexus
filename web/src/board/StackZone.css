@@ -31,19 +31,19 @@
 }
 
 .stack-empty-icon {
-  font-size: 32px;
+  font-size: 2rem;
   opacity: 0.5;
 }
 
 .stack-empty-title {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #8c96c0;
 }
 
 .stack-empty-desc {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #5d668c;
   line-height: 1.4;
   max-width: 220px;
@@ -69,7 +69,7 @@
 
 .stack-header-title {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #ffd070;
   letter-spacing: 0.04em;
@@ -87,7 +87,7 @@
   border: 1px solid rgba(99, 230, 190, 0.5);
   border-radius: 6px;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   padding: 4px 10px;
   cursor: pointer;
@@ -115,7 +115,7 @@
   background: transparent;
   border: none;
   color: #8c96c0;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 3px;
@@ -236,7 +236,7 @@
 }
 
 .stack-tl-pos {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #6b7280;
@@ -251,7 +251,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 9.5px;
+  font-size: 0.594rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -275,7 +275,7 @@
 }
 
 .stack-controller-pill .ctrl-icon {
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .stack-tl-card {
@@ -340,7 +340,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 1.125rem;
   opacity: 0.5;
 }
 
@@ -361,7 +361,7 @@
 }
 
 .stack-tl-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #f1f5f9;
   white-space: nowrap;
@@ -379,7 +379,7 @@
   align-items: center;
   gap: 1px;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 0.688rem;
 }
 
 .stack-tl-type-row {
@@ -390,7 +390,7 @@
 }
 
 .stack-tl-type-badge {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
@@ -410,13 +410,13 @@
 }
 
 .stack-tl-subtype {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   color: #94a3b8;
   font-style: italic;
 }
 
 .stack-tl-pt {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   color: #fbbf24;
   padding: 0 3px;
@@ -425,7 +425,7 @@
 }
 
 .stack-tl-copy-badge {
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
@@ -438,7 +438,7 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 600;
   color: #ffd070;
   min-width: 0;
@@ -456,7 +456,7 @@
 }
 
 .stack-tl-rules {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   line-height: 1.4;
   color: #cbd5e1;
   white-space: pre-wrap;
@@ -472,7 +472,7 @@
 }
 
 .view-mode-expanded .stack-tl-name {
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 /* ── Deprecated selectors kept for test compatibility ── */

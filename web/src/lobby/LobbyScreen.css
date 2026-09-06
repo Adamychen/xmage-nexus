@@ -60,7 +60,7 @@
 
 .lobby-main-heading {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.938rem;
   font-family: var(--font-display);
   font-weight: 900;
   letter-spacing: 0.05em;
@@ -76,7 +76,7 @@
   align-items: center;
   gap: 5px;
   color: #8c96c0;
-  font-size: 10.5px;
+  font-size: 0.656rem;
 }
 
 .conn-status-dot {
@@ -111,7 +111,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: #7a82a8;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -244,14 +244,14 @@ html:lang(ja) .seat-crown,
 html:lang(zh) .seat-crown,
 html:lang(ja) .table-state-badge,
 html:lang(zh) .table-state-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   line-height: 1.45;
 }
 html:lang(ja) .conn-info,
 html:lang(zh) .conn-info,
 html:lang(ja) .hero-deck-label,
 html:lang(zh) .hero-deck-label {
-  font-size: 11.5px;
+  font-size: 0.719rem;
 }
 
 /* LEFT: Icon Sidebar */
@@ -298,12 +298,12 @@ html:lang(zh) .hero-deck-label {
 }
 
 .sidebar-btn-icon {
-  font-size: 20px;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .sidebar-btn-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   line-height: 1;
@@ -407,7 +407,7 @@ html:lang(zh) .hero-deck-label {
 }
 
 .aside-section-title {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -419,7 +419,7 @@ html:lang(zh) .hero-deck-label {
   color: #fff;
   border-radius: 10px;
   padding: 1px 6px;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 900;
   line-height: 1.4;
 }
@@ -445,7 +445,7 @@ html:lang(zh) .hero-deck-label {
 
 .aside-users-list .user-list-item {
   padding: 6px 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   gap: 8px;
   min-height: 44px;
   flex-shrink: 0;
@@ -453,7 +453,7 @@ html:lang(zh) .hero-deck-label {
 }
 
 .aside-users-list .user-name-text {
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 700;
   color: #ffffff;
 }
@@ -479,7 +479,7 @@ html:lang(zh) .hero-deck-label {
 .aside-users-list .game-info-badge,
 .aside-users-list .lobby-idle-badge {
   flex-shrink: 0;
-  font-size: 10.5px;
+  font-size: 0.656rem;
 }
 
 /* Nav tabs (kept for backward compat, hidden in new layout) */
@@ -507,7 +507,7 @@ html:lang(zh) .hero-deck-label {
   background: rgba(124,92,255,0.14);
   border: 1px solid rgba(124,92,255,0.3);
   color: #c4cae8;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   position: relative;
 }
@@ -539,7 +539,7 @@ html:lang(zh) .hero-deck-label {
 
 .lobby-scale-quick button {
   padding: 3px 7px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: transparent;
@@ -566,7 +566,7 @@ html:lang(zh) .hero-deck-label {
 
 .lobby-user-actions .lobby-scale-readout {
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: transparent;
@@ -609,7 +609,7 @@ html:lang(zh) .hero-deck-label {
   background: transparent;
   border: 1px solid transparent;
   color: #7a82a8;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   min-height: 48px;
   cursor: pointer;
@@ -621,7 +621,7 @@ html:lang(zh) .hero-deck-label {
   color: #fff;
 }
 
-.lobby-mobile-bottom-nav .mobile-nav-btn .mobile-nav-icon { font-size: 18px; line-height: 1; }
+.lobby-mobile-bottom-nav .mobile-nav-btn .mobile-nav-icon { font-size: 1.125rem; line-height: 1; }
 
 .lobby-fullscreen-btn {
   display: flex;
@@ -698,7 +698,7 @@ html:lang(zh) .hero-deck-label {
   color: #ffd070;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -718,13 +718,13 @@ html:lang(zh) .hero-deck-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 900;
   color: #ffd070;
 }
 
 .lobby-username {
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 700;
   color: #e2e6f8;
 }
@@ -738,7 +738,7 @@ html:lang(zh) .hero-deck-label {
   height: 32px;
   padding: 0 9px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -790,13 +790,13 @@ html:lang(zh) .hero-deck-label {
 }
 
 .hero-deck-label {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96ba;
   font-weight: 600;
 }
 
 .hero-deck-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffd070;
 }
@@ -851,7 +851,7 @@ html:lang(zh) .hero-deck-label {
   background: rgba(10, 13, 28, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #9aa2c8;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -886,7 +886,7 @@ html:lang(zh) .hero-deck-label {
   color: #0a0d1a;
   border-radius: 10px;
   padding: 1px 6px;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 900;
   line-height: 1.4;
 }
@@ -940,7 +940,7 @@ html:lang(zh) .hero-deck-label {
 }
 
 .tables-deck-hint {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #8c96c0;
 }
 
@@ -989,7 +989,7 @@ html:lang(zh) .tables-list {
     padding: 2px;
   }
   .table-card { padding: 12px; }
-  .table-name-text { font-size: 15px; }
+  .table-name-text { font-size: 0.938rem; }
 }
 
 /* Table Cards */
@@ -1056,7 +1056,7 @@ html:lang(zh) .tables-list {
 }
 
 .table-name-text {
-  font-size: 16.5px;
+  font-size: 1.031rem;
   font-weight: 800;
   color: #ffffff;
   margin: 0;
@@ -1066,7 +1066,7 @@ html:lang(zh) .tables-list {
 }
 
 .table-type-badge {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   text-transform: uppercase;
   padding: 2px 7px;
@@ -1088,7 +1088,7 @@ html:lang(zh) .tables-list {
 }
 
 .table-badge-lock {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.15);
@@ -1106,14 +1106,14 @@ html:lang(zh) .tables-list {
 }
 
 .table-time-ago {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   font-family: var(--font-mono, monospace);
   white-space: nowrap;
 }
 
 .table-state-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -1143,7 +1143,7 @@ html:lang(zh) .tables-list {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #9aa2c8;
 }
 
@@ -1158,7 +1158,7 @@ html:lang(zh) .tables-list {
   padding: 2px 7px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 11px;
+  font-size: 0.688rem;
   white-space: nowrap;
 }
 
@@ -1211,7 +1211,7 @@ html:lang(zh) .tables-list {
   color: #fbbf24;
   padding: 2px 7px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 0.688rem;
   white-space: nowrap;
   font-weight: 600;
 }
@@ -1233,12 +1233,12 @@ html:lang(zh) .tables-list {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #a5b0d8;
 }
 
 .info-strip-icon {
-  font-size: 11px;
+  font-size: 0.688rem;
   opacity: 0.8;
 }
 
@@ -1307,7 +1307,7 @@ html:lang(zh) .tables-list {
 }
 
 .empty-circle {
-  font-size: 14px;
+  font-size: 0.875rem;
   opacity: 0.6;
 }
 
@@ -1332,7 +1332,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-player-name {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #ffffff;
   line-height: 1.25;
@@ -1348,7 +1348,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-crown {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.15);
@@ -1360,7 +1360,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-bot-tag {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   color: #c4b5fd;
   background: rgba(124, 92, 255, 0.18);
@@ -1405,7 +1405,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-history-pill {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   color: #a5b4fc;
   background: rgba(99, 102, 241, 0.15);
@@ -1423,7 +1423,7 @@ html:lang(zh) .tables-list {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #63e6be;
   background: rgba(99, 230, 190, 0.1);
@@ -1442,7 +1442,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-open-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.12);
@@ -1453,7 +1453,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-icon {
-  font-size: 11px;
+  font-size: 0.688rem;
 }
 
 /* Table Card Action Buttons */
@@ -1471,7 +1471,7 @@ html:lang(zh) .tables-list {
 
 .table-action-btn {
   padding: 5px 11px;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   font-weight: 700;
   border-radius: 6px;
   cursor: pointer;
@@ -1530,20 +1530,20 @@ html:lang(zh) .tables-list {
 }
 
 .empty-icon {
-  font-size: 40px;
+  font-size: 2.5rem;
   margin-bottom: 4px;
 }
 
 .tables-empty-state h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   color: #ffffff;
 }
 
 .tables-empty-state p {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 /* Community & Chat Grid */
@@ -1579,7 +1579,7 @@ html:lang(zh) .tables-list {
 .chat-panel h2,
 .users-panel h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1637,7 +1637,7 @@ html:lang(zh) .tables-list {
 }
 
 .user-name-text {
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 600;
   color: #e2e6f8;
   white-space: nowrap;
@@ -1648,7 +1648,7 @@ html:lang(zh) .tables-list {
 }
 
 .user-flag-tag {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
@@ -1658,7 +1658,7 @@ html:lang(zh) .tables-list {
 }
 
 .user-rating-pill {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.12);
@@ -1667,7 +1667,7 @@ html:lang(zh) .tables-list {
 }
 
 .user-history-text {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #8c96c0;
   font-family: var(--font-mono, monospace);
 }
@@ -1697,7 +1697,7 @@ html:lang(zh) .tables-list {
 }
 
 .game-info-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.15);
@@ -1707,7 +1707,7 @@ html:lang(zh) .tables-list {
 }
 
 .lobby-idle-badge {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #7c84a8;
   white-space: nowrap;
 }
@@ -1733,7 +1733,7 @@ html:lang(zh) .tables-list {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #8c96c0;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1770,13 +1770,13 @@ html:lang(zh) .tables-list {
 
 .debug-drawer-header h3 {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #c4cae8;
 }
 
 .debug-count {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #8c96c0;
 }
 
@@ -1788,7 +1788,7 @@ html:lang(zh) .tables-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-family: var(--font-mono, monospace);
 }
 

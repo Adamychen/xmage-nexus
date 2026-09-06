@@ -33,12 +33,12 @@
 }
 
 .finished-matches-icon {
-  font-size: 22px;
+  font-size: 1.375rem;
 }
 
 .finished-matches-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.01em;
@@ -48,7 +48,7 @@
   background: rgba(99, 102, 241, 0.2);
   border: 1px solid rgba(99, 102, 241, 0.4);
   color: #c7d2fe;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 12px;
@@ -57,7 +57,7 @@
 
 .finished-matches-subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #8c96c0;
 }
 
@@ -80,7 +80,7 @@
   border-radius: 8px;
   padding: 8px 30px 8px 12px;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   min-width: 220px;
   outline: none;
   transition: all 0.15s ease;
@@ -97,7 +97,7 @@
   background: none;
   border: none;
   color: #8c96c0;
-  font-size: 12px;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -112,7 +112,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #8c96c0;
   cursor: pointer;
@@ -138,7 +138,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #e0e7ff;
   cursor: pointer;
@@ -201,13 +201,13 @@
 }
 
 .match-game-type {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .match-deck-type {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #a5b4fc;
   background: rgba(99, 102, 241, 0.12);
   padding: 2px 8px;
@@ -222,7 +222,7 @@
 }
 
 .match-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 6px;
@@ -241,13 +241,13 @@
 }
 
 .match-duration {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   font-weight: 600;
 }
 
 .match-time-ago {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #636e92;
 }
 
@@ -303,17 +303,17 @@
 }
 
 .player-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .winner-crown {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .player-quit-tag {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #ff7675;
   font-weight: 700;
 }
@@ -327,7 +327,7 @@
   background: rgba(14, 18, 38, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 900;
   font-family: var(--font-mono, monospace);
   color: #ffffff;
@@ -346,7 +346,7 @@
 }
 
 .vs-text {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 900;
   color: #636e92;
   letter-spacing: 0.1em;
@@ -357,7 +357,7 @@
   text-align: center;
   padding: 8px;
   color: #8c96c0;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 /* Match Card Footer */
@@ -375,7 +375,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .result-label {
@@ -403,7 +403,7 @@
   color: #ffffff;
   padding: 6px 12px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -421,7 +421,7 @@
 }
 
 .replay-icon {
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 /* Empty State */
@@ -439,20 +439,20 @@
 }
 
 .empty-icon {
-  font-size: 40px;
+  font-size: 2.5rem;
   opacity: 0.8;
 }
 
 .empty-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .empty-desc {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #8c96c0;
   max-width: 440px;
 }

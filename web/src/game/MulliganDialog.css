@@ -26,7 +26,7 @@
 }
 
 .mulligan-kicker {
-  font-size: 11px;
+  font-size: 0.688rem;
   letter-spacing: 0.24em;
   font-weight: 700;
   color: #ffb454;
@@ -37,14 +37,14 @@
 
 .mulligan-dialog h2 {
   margin: 0 0 6px;
-  font-size: 22px;
+  font-size: 1.375rem;
   color: #fff;
 }
 
 .mulligan-msg {
   margin: 0 0 18px;
   color: #b9c2da;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
@@ -116,7 +116,7 @@ html.fx-off .mulligan-card-wrap {
   border-radius: 50%;
   background: #ffb454;
   color: #1a0f00;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   font-family: var(--font-display);
   display: flex;
@@ -129,7 +129,7 @@ html.fx-off .mulligan-card-wrap {
 
 /* ── Counter and actions ─────────────────────────────────────── */
 .mulligan-counter {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #9fb0d6;
   margin: 6px 0 16px;
   min-height: 20px;
@@ -143,7 +143,7 @@ html.fx-off .mulligan-card-wrap {
 }
 
 .mulligan-actions button {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   padding: 13px 28px;
   border-radius: 12px;

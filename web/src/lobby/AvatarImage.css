@@ -29,23 +29,23 @@
 .avatar-size-small {
   width: 20px;
   height: 20px;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .avatar-size-medium {
   width: 28px;
   height: 28px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .avatar-size-large {
   width: 48px;
   height: 48px;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .avatar-size-huge {
   width: 64px;
   height: 64px;
-  font-size: 28px;
+  font-size: 1.75rem;
 }

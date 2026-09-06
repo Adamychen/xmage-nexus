@@ -15,13 +15,13 @@
   margin-bottom: 12px;
 }
 
-.settings-header h2 { margin: 0; font-size: 16px; }
+.settings-header h2 { margin: 0; font-size: 1rem; }
 
 .settings-close {
   background: transparent;
   border: none;
   color: #8a90b8;
-  font-size: 15px;
+  font-size: 0.938rem;
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -50,7 +50,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: #9aa1c0;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -72,7 +72,7 @@
 
 .settings-section-title {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #e8eaf6;
 }
@@ -81,7 +81,7 @@
 
 .settings-hint {
   margin: 0 0 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7a82a6;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .settings-field-label {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #e8eaf6;
 }
@@ -110,7 +110,7 @@
   background-repeat: no-repeat;
   border: 1.5px solid rgba(255,255,255,0.12);
   color: #e8eaf6;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 600;
   cursor: pointer;
   max-width: 320px;
@@ -137,7 +137,7 @@
   background: #14182e;
   border: 1.5px solid rgba(255,255,255,0.12);
   color: #e8eaf6;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   cursor: pointer;
   line-height: 1;
@@ -156,7 +156,7 @@
   background: rgba(124,92,255,0.14);
   border: 1.5px solid rgba(124,92,255,0.4);
   color: #fff;
-  font-size: 15px;
+  font-size: 0.938rem;
   font-weight: 800;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
@@ -179,7 +179,7 @@
   background: #14182e;
   border: 1.5px solid transparent;
   color: #c4cae8;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
@@ -213,8 +213,8 @@
 
 .settings-card.selected { border-color: #7c5cff; }
 
-.settings-card-label { font-size: 13px; font-weight: 800; color: #e8eaf6; }
-.settings-card-desc { font-size: 10px; color: #8a90b8; }
+.settings-card-label { font-size: 0.812rem; font-weight: 800; color: #e8eaf6; }
+.settings-card-desc { font-size: 0.625rem; color: #8a90b8; }
 
 .settings-card-check {
   position: absolute;
@@ -225,7 +225,7 @@
   border-radius: 50%;
   background: #7c5cff;
   color: #fff;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -240,7 +240,7 @@
   border-radius: 8px;
   background: #14182e;
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .settings-auto-text {
@@ -253,7 +253,7 @@
 }
 
 .settings-auto-badge {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
@@ -267,7 +267,7 @@
   border: none;
   color: #8a90b8;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 0.688rem;
   padding: 2px 6px;
 }
 
@@ -277,7 +277,7 @@
   background: transparent;
   border: none;
   color: #8a90b8;
-  font-size: 12px;
+  font-size: 0.75rem;
   cursor: pointer;
   padding: 6px 0;
   text-decoration: underline;

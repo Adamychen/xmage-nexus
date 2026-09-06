@@ -56,7 +56,7 @@
   .login-logo-img { width: 96px; height: 96px; }
   .user-name-and-flag-grid { grid-template-columns: 1fr; }
   .login-presets-row { gap: 6px; }
-  .preset-btn { padding: 7px 2px; font-size: 10px; }
+  .preset-btn { padding: 7px 2px; font-size: 0.625rem; }
   .network-field-row { grid-template-columns: 1fr; }
   .login-user-section { flex-direction: column; align-items: stretch; }
   .user-avatar-preview { align-self: center; }
@@ -162,7 +162,7 @@
 .login-card .subtitle {
   margin: 0;
   color: #9aa2c8;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   letter-spacing: 0.02em;
 }
 
@@ -176,7 +176,7 @@
 }
 
 .login-presets-title {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -202,7 +202,7 @@
   background: rgba(26, 32, 64, 0.7);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   color: #c4cae8;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -233,7 +233,7 @@
 }
 
 .preset-icon {
-  font-size: 13px;
+  font-size: 0.812rem;
   flex-shrink: 0;
 }
 
@@ -271,7 +271,7 @@
   justify-content: center;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.55);
-  font-size: 16px;
+  font-size: 1rem;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -292,7 +292,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 0.625rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -327,7 +327,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -345,7 +345,7 @@
   background: rgba(18, 22, 45, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
@@ -390,7 +390,7 @@
 }
 
 .network-box-title {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -402,7 +402,7 @@
 }
 
 .network-box-hint {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #63e6be;
   font-family: var(--font-mono, monospace);
   font-weight: 600;
@@ -431,7 +431,7 @@
   border: 1.5px solid #ff5252;
   border-radius: 10px;
   padding: 10px 12px;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   color: #ffb8c0;
   display: flex;
   align-items: center;
@@ -440,7 +440,7 @@
 }
 
 .error-icon {
-  font-size: 16px;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
@@ -455,14 +455,14 @@
   border-radius: 4px;
   color: #ffb8c0;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 /* Submit Button */
 .login-submit-btn {
   padding: 12px 0;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   background: linear-gradient(135deg, #1c6b50 0%, #17543f 100%);
@@ -534,7 +534,7 @@
 
 
 .login-attribution {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #7a82a8;
   text-align: center;
   line-height: 1.4;

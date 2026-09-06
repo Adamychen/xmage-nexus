@@ -4,7 +4,7 @@
   gap: 5px;
   padding: 2px 7px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -66,5 +66,5 @@
 
 .ping-compact {
   padding: 1px 5px;
-  font-size: 10px;
+  font-size: 0.625rem;
 }

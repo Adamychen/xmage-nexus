@@ -5,6 +5,7 @@ import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import LanguageSelector from '../i18n/LanguageSelector'
 import { ZOOM_DEFAULT, zoomPercent } from '../appearance/zoom'
 import { useTranslation } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
@@ -105,6 +106,7 @@ export default function LobbyHeader({
       </nav>
 
       <div className="lobby-user-actions">
+        <LanguageSelector compact />
         <div
           className="lobby-user-badge"
           onClick={() => onOpenLeaderboard(conn?.username, 'profile')}

@@ -37,7 +37,7 @@
 
 .create-table-header-title h2 {
   margin: 0 0 2px;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-family: var(--font-display);
   font-weight: 900;
   letter-spacing: 0.03em;
@@ -48,7 +48,7 @@
 }
 
 .create-table-subtitle {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
 }
 
@@ -56,7 +56,7 @@
   background: transparent;
   border: none;
   color: #8c96c0;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -83,7 +83,7 @@
   transition: width 0.3s ease;
 }
 .wizard-step-counter {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #9aa3c2;
   letter-spacing: 0.02em;
@@ -131,7 +131,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   background: rgba(22, 28, 56, 0.8);
   border: 1.5px solid rgba(255,255,255,0.12);
@@ -160,11 +160,11 @@
   text-align: center;
 }
 .wizard-step-icon {
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1;
 }
 .wizard-step-text {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -191,14 +191,14 @@
 }
 .wizard-step-heading h3 {
   margin: 0 0 2px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   color: #e8e9ff;
   letter-spacing: 0.02em;
 }
 .wizard-step-heading p {
   margin: 0;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
 }
 
@@ -207,13 +207,13 @@
   background: rgba(255,255,255,0.04);
   border: 1px dashed rgba(255,255,255,0.1);
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #9aa3c2;
   line-height: 1.4;
 }
 
 .wizard-warn-badge {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   color: #ff9f43;
   background: rgba(255,159,67,0.15);
@@ -238,7 +238,7 @@
   border-radius: 8px;
   padding: 6px 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: all 0.15s ease;
 }
 .password-toggle-btn:hover {
@@ -267,7 +267,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -282,7 +282,7 @@
   background: rgba(10, 13, 28, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: all 0.15s ease;
   box-sizing: border-box;
@@ -295,7 +295,7 @@
   background: rgba(18, 22, 45, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: all 0.15s ease;
   box-sizing: border-box;
@@ -325,7 +325,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -340,7 +340,7 @@
 
 .chip {
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   border-radius: 20px;
   background: rgba(22, 28, 56, 0.6);
@@ -399,7 +399,7 @@
 }
 
 .toggle-title {
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 700;
   color: #ffffff;
   text-transform: none;
@@ -407,7 +407,7 @@
 }
 
 .toggle-desc {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   text-transform: none;
   letter-spacing: normal;
@@ -426,7 +426,7 @@
 }
 
 .multiplayer-box-title {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #c4b5fd;
   letter-spacing: 0.05em;
@@ -445,7 +445,7 @@
 }
 
 .restrictions-box-title {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #93c5fd;
   letter-spacing: 0.05em;
@@ -453,7 +453,7 @@
 }
 
 .create-field-hint {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 500;
   color: #9ca3af;
   text-transform: none;
@@ -484,7 +484,7 @@
 }
 
 .seat-title {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #ffd070;
@@ -496,7 +496,7 @@
   background: rgba(60, 40, 10, 0.6);
   border: 1px solid rgba(255, 180, 0, 0.3);
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #ffd070;
 }
 
@@ -513,7 +513,7 @@
 }
 
 .summary-pill {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 4px;
@@ -557,7 +557,7 @@
 
 .create-submit-btn {
   padding: 8px 20px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   letter-spacing: 0.03em;
 }
@@ -575,13 +575,13 @@
 
 .dev-demo-box h4 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 0.844rem;
   color: #c7d2fe;
 }
 
 .dev-demo-box p {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #94a3b8;
   line-height: 1.4;
 }
@@ -590,7 +590,7 @@
   align-self: flex-start;
   margin-top: 4px;
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);

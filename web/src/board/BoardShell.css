@@ -57,7 +57,7 @@
 }
 
 .board-shell-divider-diamond {
-  font-size: 9px;
+  font-size: 0.562rem;
   color: #ffd070;
   text-shadow: 0 0 8px rgba(255, 208, 112, 0.8);
   line-height: 1;
@@ -68,7 +68,7 @@
 .board-shell-divider.with-labels::after {
   position: absolute;
   font-family: var(--font-display);
-  font-size: 7.5px;
+  font-size: 0.469rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;

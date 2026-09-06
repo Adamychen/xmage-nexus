@@ -61,9 +61,10 @@ function LanguageSection() {
 }
 
 function InterfaceSection() {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const settings = useSettings()
   const stops = ZOOM_PRESETS.map((value) => ({ value, label: `${Math.round(value * 100)}%` }))
+  const cjkLang = lang === 'ja' || lang === 'zhs'
   return (
     <div>
       <h3 className="settings-section-title">Tamaño de interfaz</h3>
@@ -116,6 +117,8 @@ function InterfaceSection() {
         checked={settings.cjkBoost}
         onChange={(v) => setSetting('cjkBoost', v)}
         label="Boost automático CJK (+15% en 日本語/中文)"
+        disabled={!cjkLang}
+        title={cjkLang ? undefined : 'Solo aplica con la interfaz en 日本語/中文'}
       />
     </div>
   )

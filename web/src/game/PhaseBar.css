@@ -17,7 +17,7 @@
 
 .phase-sep {
   color: rgba(255, 255, 255, 0.15);
-  font-size: 11px;
+  font-size: 0.688rem;
   margin: 0 4px;
   user-select: none;
 }
@@ -32,7 +32,7 @@
   min-width: 24px;
   height: 24px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   font-family: var(--font-display, sans-serif);
   color: #8c96bc;

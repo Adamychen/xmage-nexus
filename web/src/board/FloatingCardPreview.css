@@ -84,23 +84,23 @@
 }
 
 .kw-box-icon {
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .kw-box-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #ffd070;
   font-family: var(--font-display, serif);
 }
 
 .kw-box-es {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #94a3b8;
 }
 
 .kw-box-summary {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   line-height: 1.35;
   color: #e2e8f0;
   margin: 0;
@@ -158,23 +158,23 @@
 .floating-card-name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 0.938rem;
   color: #ffffff;
 }
 
 .floating-card-mana {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #ffca58;
   font-weight: 700;
 }
 
 .floating-card-type {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #9aa2c8;
 }
 
 .floating-card-rules {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
   color: #d8ddf0;
   flex: 1;
@@ -193,7 +193,7 @@
   border: 1.5px solid #ffca58;
   color: #ffffff;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 2px 8px;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
@@ -207,7 +207,7 @@
   border: 1.5px solid #a855f7;
   color: #c084fc;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 0.812rem;
   padding: 2px 8px;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
@@ -221,7 +221,7 @@
   border: 1.5px solid #8cb4ff;
   color: #ffffff;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
@@ -234,7 +234,7 @@
   background: linear-gradient(135deg, #d4af37 0%, #aa8010 100%);
   color: #000000;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.05em;
   padding: 2px 6px;
   border-radius: 4px;
@@ -251,7 +251,7 @@
   background: rgba(14, 18, 36, 0.9);
   border: 1.5px solid rgba(255, 208, 112, 0.8);
   color: #ffd070;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 12px;
@@ -267,5 +267,5 @@
 }
 
 .floating-card-flip-badge .flip-icon {
-  font-size: 11px;
+  font-size: 0.688rem;
 }

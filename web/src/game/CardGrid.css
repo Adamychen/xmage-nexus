@@ -50,7 +50,7 @@
 .card-grid-search-icon {
   position: absolute;
   left: 12px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-dim, #94a3b8);
   pointer-events: none;
 }
@@ -62,7 +62,7 @@
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.35);
   color: var(--text, #f8fafc);
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -80,7 +80,7 @@
   color: var(--text-dim, #94a3b8);
   cursor: pointer;
   padding: 4px 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-radius: 4px;
 }
 
@@ -155,7 +155,7 @@
 }
 
 .card-grid-label {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 500;
   color: var(--text-dim, #cbd5e1);
   text-align: center;
@@ -178,7 +178,7 @@
 }
 
 .card-grid-empty span {
-  font-size: 28px;
+  font-size: 1.75rem;
   opacity: 0.6;
 }
 

@@ -7,7 +7,7 @@
 
 .gamelog h2 {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-dim);
@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .gamelog-entry {

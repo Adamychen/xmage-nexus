@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   color: #ffd070;
   font-family: var(--font-display, serif);
@@ -73,7 +73,7 @@
 }
 
 .zone-name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #e4e8f8;
 }
@@ -87,7 +87,7 @@
 }
 
 .zone-hint {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #94a3b8;
 }
 
@@ -114,7 +114,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   color: rgba(255, 255, 255, 0.45);
   font-style: italic;
   padding: 14px 16px;
@@ -140,7 +140,7 @@
   border-radius: 6px;
   background: rgba(14, 18, 36, 0.92);
   color: #63e6be;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   z-index: 15;
   border: 1.5px solid rgba(99, 230, 190, 0.7);
@@ -162,7 +162,7 @@
 }
 
 .order-card-name {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #f1f5f9;
   text-align: center;
@@ -190,7 +190,7 @@
 .btn-arrow {
   flex: 1;
   padding: 6px 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   background: rgba(40, 50, 90, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
@@ -212,7 +212,7 @@
 .btn-switch-zone {
   width: 100%;
   padding: 4px 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 4px;
   cursor: pointer;
@@ -258,7 +258,7 @@
 
 .quick-actions button {
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   background: rgba(30, 36, 70, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;

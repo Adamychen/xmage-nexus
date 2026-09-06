@@ -5,7 +5,7 @@
   padding: 2px 7px;
   border-radius: 6px;
   border: 1px solid transparent;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -16,29 +16,29 @@
 
 .rank-badge.compact {
   padding: 1px 5px;
-  font-size: 10px;
+  font-size: 0.625rem;
   gap: 3px;
 }
 
 .rank-badge-icon {
-  font-size: 11px;
+  font-size: 0.688rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
 }
 
 .rank-badge.compact .rank-badge-icon {
-  font-size: 9.5px;
+  font-size: 0.594rem;
 }
 
 .rank-badge-name {
   font-weight: 800;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .rank-badge-elo {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   opacity: 0.85;
   font-family: var(--font-mono, monospace);
   font-weight: 600;

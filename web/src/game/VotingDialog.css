@@ -22,7 +22,7 @@
 }
 
 .voting-kicker {
-  font-size: 11px;
+  font-size: 0.688rem;
   letter-spacing: 0.24em;
   font-weight: 700;
   color: #ffd070;
@@ -32,14 +32,14 @@
 
 .voting-dialog h2 {
   margin: 0 0 8px;
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #fff;
 }
 
 .voting-msg {
   margin: 0 0 18px;
   color: #b9c2da;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
@@ -59,7 +59,7 @@
   min-width: 180px;
   padding: 14px 20px;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 0.938rem;
   font-weight: 700;
   font-family: var(--font-display);
   border: 1.5px solid transparent;
@@ -94,11 +94,11 @@
 }
 
 .voting-btn-icon {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .voting-vs {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #8ea0ff;
   letter-spacing: 0.1em;
@@ -106,6 +106,6 @@
 
 .voting-hint {
   margin-top: 14px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7a82a8;
 }

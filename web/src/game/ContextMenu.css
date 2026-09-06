@@ -24,7 +24,7 @@
   background: none;
   border: none;
   color: #c8cae6;
-  font-size: 13px;
+  font-size: 0.812rem;
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
@@ -48,7 +48,7 @@
 }
 
 .context-menu-icon {
-  font-size: 14px;
+  font-size: 0.875rem;
   width: 18px;
   text-align: center;
 }

@@ -25,14 +25,14 @@
   height: 100%;
   padding: 24px;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #64748b;
   font-style: italic;
   line-height: 1.5;
 }
 
 .game-chat-entry {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
   color: #8890b0;
   word-break: break-word;
@@ -61,7 +61,7 @@
   border-radius: 6px;
   padding: 6px 10px;
   color: #e8eaf6;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
 }
 
@@ -76,7 +76,7 @@
   border-radius: 6px;
   background: #7c5cff;
   color: #fff;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -102,7 +102,7 @@
   border: 1px solid #1e2444;
   border-radius: 6px;
   padding: 4px 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -132,7 +132,7 @@
 .game-chat-emoji-picker button {
   background: transparent;
   border: none;
-  font-size: 18px;
+  font-size: 1.125rem;
   padding: 6px;
   border-radius: 6px;
   cursor: pointer;

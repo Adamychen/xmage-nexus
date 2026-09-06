@@ -52,7 +52,7 @@
 
 .leaderboard-header-title h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 900;
   font-family: var(--font-display);
   color: #ffd070;
@@ -60,7 +60,7 @@
 }
 
 .leaderboard-subtitle {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
 }
 
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: all 0.15s ease;
 }
 
@@ -103,7 +103,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: #8c96c0;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -141,7 +141,7 @@
   background: rgba(18, 22, 45, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   box-sizing: border-box;
 }
@@ -159,14 +159,14 @@
   width: 100%;
   min-width: 820px;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   text-align: left;
 }
 
 .leaderboard-table th {
   background: rgba(22, 28, 56, 0.85);
   padding: 11px 14px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   text-transform: uppercase;
   color: #8c96c0;
@@ -199,7 +199,7 @@
 }
 
 .pos-medal {
-  font-size: 15px;
+  font-size: 0.938rem;
 }
 
 .user-cell-wrap {
@@ -217,7 +217,7 @@
 .me-badge {
   background: #ffd070;
   color: #0b0f24;
-  font-size: 9.5px;
+  font-size: 0.594rem;
   font-weight: 900;
   padding: 1px 5px;
   border-radius: 4px;
@@ -252,7 +252,7 @@
 
 .winrate-text {
   font-weight: 700;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #63e6be;
   font-family: var(--font-mono, monospace);
 }
@@ -274,12 +274,12 @@
 .status-playing {
   color: #ffd070;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 0.688rem;
 }
 
 .status-idle {
   color: #8c96c0;
-  font-size: 11px;
+  font-size: 0.688rem;
 }
 
 .leaderboard-empty-cell {
@@ -298,7 +298,7 @@
   border: 1px solid rgba(124, 92, 255, 0.35);
   border-radius: 8px;
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #e0d7ff;
 }
 
@@ -306,7 +306,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 6px;
@@ -345,7 +345,7 @@
 
 .profile-rank-username {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   color: #ffffff;
 }
@@ -362,7 +362,7 @@
 }
 
 .rank-emblem-icon {
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .profile-rank-title-col {
@@ -372,21 +372,21 @@
 }
 
 .profile-rank-tier {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 900;
   font-family: var(--font-display);
   letter-spacing: 0.02em;
 }
 
 .profile-rank-elo {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #ffd070;
   font-family: var(--font-mono, monospace);
 }
 
 .profile-rank-desc {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
 }
 
@@ -402,7 +402,7 @@
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   font-weight: 700;
   color: #c4cae8;
 }
@@ -431,7 +431,7 @@
   border-radius: 8px;
   color: #fb923c;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.75rem;
   text-align: center;
 }
 
@@ -465,7 +465,7 @@
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 900;
   font-family: var(--font-mono, monospace);
   color: #ffffff;
@@ -484,7 +484,7 @@
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #8c96c0;
@@ -527,11 +527,11 @@
 }
 
 .format-icon {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .format-title {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #c4cae8;
   text-transform: uppercase;
@@ -548,14 +548,14 @@
 }
 
 .format-elo {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 900;
   font-family: var(--font-mono, monospace);
   color: #ffffff;
 }
 
 .format-tier {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
 }
 
@@ -582,13 +582,13 @@
 
 .profile-ignored-header h4 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   color: #ff7675;
 }
 
 .profile-ignored-hint {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
 }
 
@@ -609,7 +609,7 @@
 }
 
 .ignored-item-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffcdd2;
   font-family: var(--font-mono, monospace);
@@ -619,7 +619,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 5px;
@@ -635,7 +635,7 @@
 
 .profile-ignored-empty {
   margin: 0;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
   font-style: italic;
 }
@@ -676,7 +676,7 @@
 }
 
 .tier-icon {
-  font-size: 20px;
+  font-size: 1.25rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -688,13 +688,13 @@
 }
 
 .tier-name {
-  font-size: 15px;
+  font-size: 0.938rem;
   font-weight: 900;
   font-family: var(--font-display);
 }
 
 .tier-elo-range {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffd070;
   font-family: var(--font-mono, monospace);
@@ -702,7 +702,7 @@
 
 .tier-desc {
   margin: 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   line-height: 1.4;
 }

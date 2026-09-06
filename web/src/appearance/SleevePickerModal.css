@@ -17,19 +17,19 @@
   gap: 12px;
 }
 
-.sleeve-picker-header h2 { margin: 0; font-size: 16px; }
+.sleeve-picker-header h2 { margin: 0; font-size: 1rem; }
 
 .sleeve-picker-close {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
 }
 
 .sleeve-picker-subtitle {
   margin: 6px 0 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #9aa1c0;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .sleeve-preview-emblem {
-  font-size: 28px;
+  font-size: 1.75rem;
   text-shadow: 0 0 10px currentColor, 0 2px 8px rgba(0,0,0,0.7);
 }
 
@@ -101,14 +101,14 @@
   border-radius: 50%;
   background: #ffb03a;
   color: #10131f;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.sleeve-name { font-size: 11px; font-weight: 600; text-align: center; word-break: break-word; }
+.sleeve-name { font-size: 0.688rem; font-weight: 600; text-align: center; word-break: break-word; }
 .sleeve-picker-footer { margin-top: 14px; display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
 
 @media (max-width: 480px) {

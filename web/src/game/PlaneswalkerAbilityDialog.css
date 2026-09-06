@@ -22,7 +22,7 @@
 }
 
 .pw-kicker {
-  font-size: 11px;
+  font-size: 0.688rem;
   letter-spacing: 0.22em;
   font-weight: 700;
   color: #c084fc;
@@ -32,19 +32,19 @@
 
 .pw-dialog h2 {
   margin: 0 0 8px;
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #fff;
 }
 
 .pw-msg {
   margin: 0 0 12px;
   color: #b9c2da;
-  font-size: 13px;
+  font-size: 0.812rem;
   line-height: 1.5;
 }
 
 .pw-loyalty-now {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #d8b4fe;
   margin-bottom: 14px;
 }
@@ -71,7 +71,7 @@
   gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -112,7 +112,7 @@
   padding: 4px 8px;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.35);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .delta-pos .pw-delta {
@@ -135,13 +135,13 @@
 }
 
 .pw-after {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #94a3b8;
   font-weight: 700;
 }
 
 .pw-hint {
   margin-top: 14px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7a82a8;
 }

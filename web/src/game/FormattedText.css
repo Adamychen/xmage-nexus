@@ -49,7 +49,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   font-family: var(--font-display, sans-serif);
   line-height: 1;
@@ -117,7 +117,7 @@
 .mana-badge.mana-tap {
   background: linear-gradient(135deg, #9da4b8 0%, #687084 100%);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   border-color: #404858;
 }
 
@@ -131,7 +131,7 @@
 /* Phyrexian mana badges */
 .mana-badge.mana-phyrexian {
   font-family: serif, var(--font-display, sans-serif);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 900;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
@@ -180,7 +180,7 @@
 
 /* Hybrid mana badges */
 .mana-badge.mana-hybrid {
-  font-size: 9px;
+  font-size: 0.562rem;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #707890 0%, #384050 100%);
   color: #ffffff;

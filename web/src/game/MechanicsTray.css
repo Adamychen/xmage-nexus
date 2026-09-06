@@ -29,20 +29,20 @@
 }
 
 .mechanics-empty-box .empty-icon {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 .mechanics-empty-box h4 {
   margin: 0;
   color: #e2e8f0;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   font-family: var(--font-display, serif);
 }
 
 .mechanics-empty-box p {
   margin: 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #64748b;
   line-height: 1.4;
 }
@@ -50,7 +50,7 @@
 .mechanics-glossary-hint {
   margin-top: 8px;
   text-align: left;
-  font-size: 10px;
+  font-size: 0.625rem;
   background: rgba(0, 0, 0, 0.3);
   padding: 8px 10px;
   border-radius: 6px;
@@ -96,7 +96,7 @@
   gap: 4px;
   padding: 3px 8px;
   border-radius: 12px;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -153,14 +153,14 @@
 
 .mechanic-title-row h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #ffd070;
   font-family: var(--font-display, serif);
 }
 
 .ring-level-badge {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 6px;
@@ -174,7 +174,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 0.688rem;
   margin-top: 4px;
   flex-wrap: wrap;
 }
@@ -190,7 +190,7 @@
 
 .player-tag {
   color: #64748b;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 /* Ring Levels List */
@@ -240,7 +240,7 @@
 }
 
 .level-num {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 900;
   font-family: var(--font-display, serif);
   color: #ffd070;
@@ -248,7 +248,7 @@
 
 .level-title {
   margin: 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #e2e8f0;
 }
@@ -258,7 +258,7 @@
 }
 
 .level-status {
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   padding: 1px 5px;
@@ -275,7 +275,7 @@
 
 .level-rule {
   margin: 0;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #94a3b8;
   line-height: 1.35;
 }
@@ -302,7 +302,7 @@
 /* Dungeon Panel */
 .panel-dungeon .dungeon-sub {
   margin: 4px 0 0 0;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #64748b;
 }
 
@@ -320,7 +320,7 @@
   border-radius: 6px;
   background: rgba(15, 25, 45, 0.7);
   border: 1px solid rgba(99, 230, 190, 0.2);
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #cbd5e1;
 }
 
@@ -339,7 +339,7 @@
 
 .current-marker {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 800;
   color: #63e6be;
 }
@@ -357,7 +357,7 @@
 }
 
 .dungeon-fork-glyph {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #63e6be;
   opacity: 0.8;
 }
@@ -386,7 +386,7 @@
 
 .dungeon-room-node .dungeon-leads {
   display: block;
-  font-size: 9px;
+  font-size: 0.562rem;
   color: #7d8aa0;
 }
 
@@ -396,7 +396,7 @@
 
 .visited-marker {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 800;
   color: #63e6be;
 }
@@ -428,18 +428,18 @@
 }
 
 .daynight-giant-icon {
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .daynight-giant-text h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .daynight-hint {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #cbd5e1;
   line-height: 1.3;
 }
@@ -453,13 +453,13 @@
 
 .daynight-rules-box h4 {
   margin: 0 0 6px 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #ffd070;
 }
 
 .rule-card {
   margin-bottom: 6px;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #94a3b8;
 }
 
@@ -481,13 +481,13 @@
 }
 
 .crown-large {
-  font-size: 28px;
+  font-size: 1.75rem;
   margin-bottom: 4px;
 }
 
 .holder-row {
   margin: 4px 0 0 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #e2e8f0;
 }
 
@@ -503,7 +503,7 @@
   padding: 6px 8px;
   background: rgba(15, 20, 38, 0.7);
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #94a3b8;
 }
 
@@ -517,7 +517,7 @@
 }
 
 .rule-icon {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* City's Blessing & Speed */
@@ -536,12 +536,12 @@
   padding: 6px 8px;
   background: rgba(15, 20, 38, 0.7);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #e2e8f0;
 }
 
 .badge-ascended {
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 800;
   padding: 2px 5px;
   border-radius: 4px;

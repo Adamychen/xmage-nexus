@@ -35,12 +35,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   color: #e2e8f0;
 }
 
-.tournament-panel-icon { font-size: 16px; }
+.tournament-panel-icon { font-size: 1rem; }
 
 .tournament-panel-name {
   color: #ffd070;
@@ -55,7 +55,7 @@
 
 .tournament-panel-collapse {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: rgba(255,255,255,0.06);
@@ -67,7 +67,7 @@
 
 .tournament-panel-quit {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: rgba(60,20,30,0.6);
@@ -113,7 +113,7 @@
   background: rgba(124,92,255,0.9);
   border: 1px solid rgba(255,255,255,0.18);
   color: #fff;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(0,0,0,0.45);
@@ -125,5 +125,5 @@
   background: rgba(255,255,255,0.18);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
 }

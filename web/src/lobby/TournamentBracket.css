@@ -36,13 +36,13 @@
 
 .tournament-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   color: #fff;
 }
 
 .tournament-type {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffd070;
   background: rgba(255,208,112,0.14);
@@ -52,7 +52,7 @@
 }
 
 .tournament-state-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -64,7 +64,7 @@
 }
 
 .tournament-watching-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   background: rgba(99,230,190,0.12);
   border: 1px solid rgba(99,230,190,0.3);
@@ -86,7 +86,7 @@
 }
 
 .tournament-timer {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   color: #ffd070;
@@ -97,7 +97,7 @@
 }
 
 .tournament-construction {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #a5b4fc;
   background: rgba(99,102,241,0.12);
   border: 1px solid rgba(99,102,241,0.25);
@@ -115,7 +115,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   color: #cbd5e1;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .tournament-close-btn:hover {
   background: rgba(255,92,108,0.2);
@@ -124,7 +124,7 @@
 }
 
 .tournament-running-info {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #cbd5e1;
   background: rgba(10,13,28,0.45);
   border: 1px solid rgba(255,255,255,0.06);
@@ -134,7 +134,7 @@
 }
 
 .tournament-state-hint {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #f6ad55;
   font-weight: 600;
 }
@@ -147,14 +147,14 @@
 }
 
 .tournament-meta {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   font-weight: 600;
 }
 
 .tournament-quit-btn {
   padding: 5px 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: rgba(60,20,30,0.6);
@@ -182,7 +182,7 @@
 
 .tournament-section-title {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -220,7 +220,7 @@
 
 .bracket-round-title {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #ffd070;
   text-align: center;
@@ -235,7 +235,7 @@
 }
 
 .bracket-empty {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   text-align: center;
   padding: 12px 0;
@@ -259,7 +259,7 @@
 }
 
 .bracket-game-players {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #e2e8f0;
   word-break: break-word;
@@ -267,7 +267,7 @@
 }
 
 .bracket-game-state {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   text-transform: uppercase;
   padding: 2px 6px;
@@ -282,7 +282,7 @@
 .bracket-game-state.state-ready { background: rgba(255,208,112,0.14); color: #ffd070; border: 1px solid rgba(255,208,112,0.3); }
 
 .bracket-game-result {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #94a3b8;
   font-style: italic;
 }
@@ -290,7 +290,7 @@
 .bracket-game-meta {
   display: flex;
   gap: 6px;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #64748b;
   align-items: center;
 }
@@ -302,7 +302,7 @@
 }
 
 .tournament-empty {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #8c96c0;
   text-align: center;
   padding: 18px 0;
@@ -315,12 +315,12 @@
 .tournament-standings-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .tournament-standings-table th {
   text-align: left;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -358,14 +358,14 @@
 }
 
 .standings-flag {
-  font-size: 10px;
+  font-size: 0.625rem;
   background: rgba(255,255,255,0.08);
   padding: 1px 4px;
   border-radius: 4px;
 }
 
 .standings-quit-badge {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   background: rgba(255,92,108,0.18);
   border: 1px solid rgba(255,92,108,0.35);
@@ -381,13 +381,13 @@
 }
 
 .standings-state {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #94a3b8;
 }
 
 .standings-results,
 .standings-history {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #8c96c0;
   max-width: 110px;
   overflow: hidden;
@@ -399,7 +399,7 @@
   padding: 16px;
   text-align: center;
   color: #8c96c0;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .tournament-modal-backdrop {
@@ -438,7 +438,7 @@
   padding: 24px;
   text-align: center;
   color: #94a3b8;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .tournament-bracket-toolbar {
@@ -452,7 +452,7 @@
 
 .tournament-refresh-btn {
   padding: 5px 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border-radius: 6px;
   background: rgba(124,92,255,0.14);

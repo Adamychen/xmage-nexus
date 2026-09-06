@@ -27,7 +27,7 @@
 
 .deck-sidebar-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 
 .deck-import-btn {
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   border-radius: 8px;
   background: rgba(124, 92, 255, 0.2);
@@ -94,7 +94,7 @@
 }
 
 .deck-item-name {
-  font-size: 13.5px;
+  font-size: 0.844rem;
   font-weight: 700;
   color: #ffffff;
   white-space: nowrap;
@@ -103,12 +103,12 @@
 }
 
 .deck-item-meta {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
 }
 
 .deck-active-badge {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 6px;
@@ -121,7 +121,7 @@
   background: transparent;
   border: none;
   color: #ff8888;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 2px 6px;
   cursor: pointer;
   border-radius: 4px;
@@ -156,7 +156,7 @@
 
 .deck-view-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 800;
   color: #ffd070;
   letter-spacing: 0.03em;
@@ -164,13 +164,13 @@
 
 .deck-view-subtitle {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #9aa2c8;
 }
 
 .deck-select-primary {
   padding: 10px 18px;
-  font-size: 13.5px;
+  font-size: 0.844rem;
   font-weight: 800;
 }
 
@@ -194,7 +194,7 @@
 
 .deck-section-box h3 {
   margin: 0 0 10px;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 800;
   text-transform: uppercase;
   color: #8c96c0;
@@ -220,7 +220,7 @@
 }
 
 .card-amount-pill {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
@@ -236,14 +236,14 @@
 }
 
 .card-row-name {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 600;
   color: #e2e6f8;
   flex: 1;
 }
 
 .card-row-set {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7c84a8;
   font-family: var(--font-mono, monospace);
 }
@@ -255,7 +255,7 @@
 }
 
 .import-desc {
-  font-size: 12.5px;
+  font-size: 0.781rem;
   color: #9aa2c8;
   margin: -4px 0 10px;
 }
@@ -268,7 +268,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
   font-family: var(--font-mono, monospace);
-  font-size: 12px;
+  font-size: 0.75rem;
   resize: vertical;
   box-sizing: border-box;
 }

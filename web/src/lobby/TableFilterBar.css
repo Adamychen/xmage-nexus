@@ -34,7 +34,7 @@
 .tfb-search-icon {
   position: absolute;
   left: 12px;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #8c96c0;
   pointer-events: none;
 }
@@ -46,7 +46,7 @@
   background: rgba(8, 10, 24, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: all 0.15s ease;
 }
@@ -70,7 +70,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #8c96c0;
-  font-size: 14px;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,7 +101,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #a2acd4;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -142,12 +142,12 @@
   border-radius: 10px;
   background: #7c5cff;
   color: #ffffff;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 800;
 }
 
 .tfb-arrow-icon {
-  font-size: 10px;
+  font-size: 0.625rem;
   opacity: 0.7;
 }
 
@@ -157,7 +157,7 @@
   background: rgba(255, 80, 80, 0.12);
   border: 1px solid rgba(255, 80, 80, 0.3);
   color: #ff9999;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -191,7 +191,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #929dbf;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -211,11 +211,11 @@
 }
 
 .tfb-chip-icon {
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .tfb-chip-count {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   padding: 1px 5px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.3);
@@ -238,7 +238,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #929dbf;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -291,7 +291,7 @@
 }
 
 .tfb-section-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #8c96ba;
   min-width: 120px;
@@ -309,7 +309,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #929dbf;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -342,7 +342,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #b0badc;
   cursor: pointer;
   user-select: none;
@@ -372,18 +372,18 @@
 }
 
 .empty-match-icon {
-  font-size: 32px;
+  font-size: 2rem;
   opacity: 0.7;
 }
 
 .empty-match-title {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   color: #d1c4ff;
 }
 
 .empty-match-desc {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #8c96c0;
   max-width: 420px;
 }
@@ -395,7 +395,7 @@
   background: rgba(124, 92, 255, 0.2);
   border: 1px solid rgba(124, 92, 255, 0.5);
   color: #d1c4ff;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;

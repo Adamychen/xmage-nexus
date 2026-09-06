@@ -17,7 +17,7 @@
 }
 
 .pass-menu-section-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
   border: 1px solid transparent;
   border-radius: 6px;
   color: #c8cae6;
-  font-size: 13px;
+  font-size: 0.812rem;
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
@@ -62,7 +62,7 @@
 
 .pass-menu-key {
   font-family: inherit;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #6b7394;
   background: #10131c;
   border: 1px solid #262b3d;

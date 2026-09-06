@@ -39,17 +39,17 @@
 
 .draft-title h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .draft-subtitle {
   color: var(--text-dim, #94a3b8);
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .draft-set-names {
   color: var(--text-dim, #94a3b8);
-  font-size: 11px;
+  font-size: 0.688rem;
   opacity: 0.8;
 }
 
@@ -94,13 +94,13 @@
   z-index: 1;
   font-weight: 800;
   font-family: var(--font-display, sans-serif);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .draft-timer-label {
   position: relative;
   z-index: 1;
-  font-size: 10px;
+  font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-dim, #94a3b8);
@@ -116,7 +116,7 @@
   border: 1px solid rgba(255,92,108,0.3);
   background: rgba(60,20,30,0.5);
   color: #ff9ea8;
-  font-size: 12px;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -137,19 +137,19 @@
 
 .draft-status-picking {
   color: #63e6be;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
 .draft-status-waiting {
   color: #f6ad55;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
 .draft-status-count {
   color: var(--text-dim, #94a3b8);
-  font-size: 11px;
+  font-size: 0.688rem;
 }
 
 .draft-booster-area,
@@ -172,7 +172,7 @@
 
 .draft-section-title {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-dim, #94a3b8);
@@ -243,14 +243,14 @@
 }
 
 .draft-card-placeholder-name {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: var(--text, #e2e8f0);
   word-break: break-word;
 }
 
 .draft-card-placeholder-set {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-dim, #94a3b8);
 }
 
@@ -265,7 +265,7 @@
   background: #ecc94b;
   color: #1a202c;
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
@@ -277,7 +277,7 @@
   place-items: center;
   background: rgba(0,0,0,0.5);
   color: #fff;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .draft-card-name-overlay {
@@ -288,7 +288,7 @@
   padding: 4px 6px;
   background: linear-gradient(transparent, rgba(0,0,0,0.85));
   color: #fff;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -320,7 +320,7 @@
   padding: 24px;
   text-align: center;
   color: var(--text-dim, #94a3b8);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .draft-picks-empty {

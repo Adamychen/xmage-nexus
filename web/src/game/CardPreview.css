@@ -17,7 +17,7 @@
 
 .card-preview-hint {
   color: #4a5080;
-  font-size: 13px;
+  font-size: 0.812rem;
   text-align: center;
 }
 
@@ -33,7 +33,7 @@
 }
 
 .ability-banner-type {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #ffca58;
   letter-spacing: 0.03em;
@@ -41,7 +41,7 @@
 }
 
 .ability-banner-source {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #e0e4f8;
   font-weight: 600;
 }
@@ -59,7 +59,7 @@
   border: 1px solid #283060;
   border-radius: 4px;
   color: #8c96c0;
-  font-size: 11px;
+  font-size: 0.688rem;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -96,7 +96,7 @@
   align-items: center;
   justify-content: center;
   color: #4a5080;
-  font-size: 14px;
+  font-size: 0.875rem;
   text-align: center;
   padding: 12px;
 }
@@ -116,28 +116,28 @@
 
 .card-preview-name {
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
-  font-size: 15px;
+  font-size: 0.938rem;
   font-weight: 700;
   color: #e8eaf6;
   flex: 1;
 }
 
 .card-preview-mana {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #ffd070;
   letter-spacing: 0.05em;
 }
 
 .card-preview-type {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #7c84a8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .card-preview-text {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #b0b8d8;
   line-height: 1.45;
   white-space: pre-wrap;
@@ -154,21 +154,21 @@
 }
 
 .ability-box-label {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   color: #ffca58;
   text-transform: uppercase;
 }
 
 .ability-box-rules {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #ffffff;
   line-height: 1.4;
   white-space: pre-wrap;
 }
 
 .card-preview-flavor {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #6b7394;
   font-style: italic;
   line-height: 1.4;
@@ -179,7 +179,7 @@
 
 .card-preview-pt {
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #ffb03a;
   align-self: flex-end;
@@ -195,7 +195,7 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   color: #a0a8c8;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;

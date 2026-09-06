@@ -152,7 +152,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   color: var(--accent-2);
   text-align: center;
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .board-error {
@@ -163,7 +163,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   color: var(--text-dim);
   padding: 24px;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .board-error code { color: var(--bad); }
 
@@ -173,7 +173,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: rgba(232, 234, 246, 0.45);
   background: rgba(10, 13, 28, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -225,7 +225,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   gap: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 600;
   box-shadow: 0 8px 24px rgba(0,0,0,0.55);
   backdrop-filter: blur(12px);
@@ -257,7 +257,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   color: #c4cae8;
 }
 
-.toast-icon { font-size: 15px; flex-shrink: 0; }
+.toast-icon { font-size: 0.938rem; flex-shrink: 0; }
 .toast-msg { flex: 1; }
 .toast-close {
   background: none;
@@ -266,7 +266,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   opacity: 0.6;
   cursor: pointer;
   padding: 0 2px;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1;
   flex-shrink: 0;
 }

@@ -33,7 +33,7 @@
 }
 
 .wiki-icon {
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 .wiki-header h2 {
@@ -54,7 +54,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 8px;
@@ -130,7 +130,7 @@
   position: absolute;
   left: 12px;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .wiki-search-input {
@@ -140,7 +140,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   color: #f8fafc;
-  font-size: 13px;
+  font-size: 0.812rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -157,7 +157,7 @@
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 4px;
 }
 
@@ -239,7 +239,7 @@
 }
 
 .wiki-kw-icon {
-  font-size: 15px;
+  font-size: 0.938rem;
 }
 
 .wiki-kw-name-en {
@@ -285,7 +285,7 @@
 }
 
 .wiki-empty span {
-  font-size: 32px;
+  font-size: 2rem;
   opacity: 0.5;
 }
 

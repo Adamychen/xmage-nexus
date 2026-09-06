@@ -19,19 +19,19 @@
   gap: 12px;
 }
 
-.appearance-header h2 { margin: 0; font-size: 16px; }
+.appearance-header h2 { margin: 0; font-size: 1rem; }
 
 .appearance-close {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
 }
 
 .appearance-subtitle {
   margin: 6px 0 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #9aa1c0;
 }
 
@@ -47,14 +47,14 @@
 
 .appearance-section-title {
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #e8eaf6;
 }
 
 .appearance-section-hint {
   margin: 0 0 10px;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7a82a6;
 }
 
@@ -89,17 +89,17 @@
 }
 
 .board-layout-icon {
-  font-size: 22px;
+  font-size: 1.375rem;
   line-height: 1;
 }
 
 .board-layout-label {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
 }
 
 .board-layout-desc {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #8a90b8;
   text-align: center;
   line-height: 1.3;
@@ -114,7 +114,7 @@
   border-radius: 50%;
   background: #7c5cff;
   color: #fff;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -150,7 +150,7 @@
   background: #14182e;
   border: 1.5px solid rgba(255,255,255,0.12);
   color: #e8eaf6;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   cursor: pointer;
   line-height: 1;
@@ -169,7 +169,7 @@
   background: rgba(124,92,255,0.14);
   border: 1.5px solid rgba(124,92,255,0.4);
   color: #fff;
-  font-size: 15px;
+  font-size: 0.938rem;
   font-weight: 800;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
@@ -207,8 +207,8 @@
   box-shadow: 0 0 12px rgba(124,92,255,0.35);
 }
 
-.ui-scale-label { font-size: 13px; font-weight: 800; }
-.ui-scale-desc { font-size: 10px; color: #8a90b8; text-align: center; }
+.ui-scale-label { font-size: 0.812rem; font-weight: 800; }
+.ui-scale-desc { font-size: 0.625rem; color: #8a90b8; text-align: center; }
 
 .ui-scale-check {
   position: absolute;
@@ -219,7 +219,7 @@
   border-radius: 50%;
   background: #7c5cff;
   color: #fff;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -231,7 +231,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #c4cae8;
   cursor: pointer;
 }
@@ -240,7 +240,7 @@
 
 .ui-scale-hint {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #7a82a6;
 }
 

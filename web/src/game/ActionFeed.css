@@ -27,7 +27,7 @@
 
 .mode-btn {
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   border: none;
   background: transparent;
@@ -44,7 +44,7 @@
 }
 
 .action-count-tag {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #64748b;
 }
 
@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #64748b;
   font-style: italic;
   padding: 24px;

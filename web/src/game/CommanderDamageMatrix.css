@@ -25,7 +25,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   min-width: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .commander-damage-matrix.is-empty {
@@ -50,14 +50,14 @@
 .cdm-title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #ffd070;
 }
 
 .cdm-lethal-hint {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   color: #ff7878;
   background: rgba(255, 120, 120, 0.12);
@@ -77,7 +77,7 @@
   border-radius: 6px;
   color: #94a3b8;
   padding: 2px 7px;
-  font-size: 11px;
+  font-size: 0.688rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -106,7 +106,7 @@
   gap: 6px;
   padding: 4px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   line-height: 1.2;
 }
 
@@ -171,7 +171,7 @@
 }
 
 .cdm-player-dot {
-  font-size: 8px;
+  font-size: 0.5rem;
   color: #64748b;
 }
 
@@ -182,14 +182,14 @@
 .cdm-player-title {
   font-weight: 700;
   color: #f1f5f9;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .cdm-badge-you {
-  font-size: 8.5px;
+  font-size: 0.531rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #6ee7b7;
@@ -203,7 +203,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   font-weight: 700;
   color: #cbd5e1;
   background: rgba(0, 0, 0, 0.35);
@@ -221,7 +221,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   color: #ffd070;
   background: rgba(255, 208, 112, 0.1);
@@ -231,7 +231,7 @@
 }
 
 .cdm-tax-badge {
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 800;
   color: #ef4444;
   background: rgba(239, 68, 68, 0.15);
@@ -247,7 +247,7 @@
 }
 
 .cdm-no-opponents {
-  font-size: 10.5px;
+  font-size: 0.656rem;
   color: #64748b;
   font-style: italic;
 }
@@ -278,7 +278,7 @@
 }
 
 .cdm-source-name {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 600;
   color: #e2e8f0;
   overflow: hidden;
@@ -287,13 +287,13 @@
 }
 
 .cdm-source-owner {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   color: #94a3b8;
   white-space: nowrap;
 }
 
 .cdm-damage-metric {
-  font-size: 11px;
+  font-size: 0.688rem;
   white-space: nowrap;
 }
 
@@ -302,7 +302,7 @@
 }
 
 .cdm-denom {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   color: #64748b;
 }
 
@@ -311,7 +311,7 @@
 }
 
 .cdm-lethal-badge {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   font-weight: 800;
   color: #ef4444;
   background: rgba(239, 68, 68, 0.2);
@@ -367,7 +367,7 @@
   width: 100%;
   border-collapse: collapse;
   min-width: 260px;
-  font-size: 11.5px;
+  font-size: 0.719rem;
 }
 
 .cdm-table th,
@@ -383,7 +383,7 @@
   color: #a78bfa;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 9.5px;
+  font-size: 0.594rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -399,14 +399,14 @@
 
 .cdm-cmd-name {
   display: block;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   line-height: 1.2;
   color: #fff;
 }
 
 .cdm-cmd-owner {
   display: block;
-  font-size: 9px;
+  font-size: 0.562rem;
   font-weight: 600;
   color: #8c96c0;
   margin-top: 1px;
@@ -472,7 +472,7 @@
 }
 
 .cdm-footer-hint {
-  font-size: 9.5px;
+  font-size: 0.594rem;
   color: #64748b;
   font-style: italic;
 }

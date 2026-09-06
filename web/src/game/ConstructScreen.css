@@ -41,11 +41,11 @@
 
 .construct-deck-name {
   color: var(--text-dim, #94a3b8);
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .construct-pool-info {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: var(--text-dim, #94a3b8);
   background: rgba(255,255,255,0.06);
   padding: 2px 8px;
@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   font-family: var(--font-display, sans-serif);
 }
@@ -114,12 +114,12 @@
 
 .construct-col-header h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: var(--text-dim, #94a3b8);
 }
 
 .construct-col-count {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
@@ -144,7 +144,7 @@
   border-radius: 6px;
   background: var(--bg, #0a0d1a);
   color: var(--text, #e2e8f0);
-  font-size: 12px;
+  font-size: 0.75rem;
   outline: none;
 }
 
@@ -187,7 +187,7 @@
 .construct-counts {
   display: flex;
   gap: 16px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-dim, #94a3b8);
 }
 
@@ -205,7 +205,7 @@
   border-radius: 6px;
   background: rgba(99,179,237,0.08);
   color: #63b3ed;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -218,7 +218,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 4px 4px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -229,7 +229,7 @@
   background: rgba(255,255,255,0.08);
   padding: 1px 6px;
   border-radius: 10px;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .construct-screen .deck-list-empty-hint {
@@ -239,6 +239,6 @@
   gap: 4px;
   padding: 20px;
   color: var(--text-dim, #94a3b8);
-  font-size: 12px;
+  font-size: 0.75rem;
   text-align: center;
 }

@@ -36,14 +36,14 @@
 }
 
 .pile-header-subtitle {
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #8c96ba;
   font-weight: 500;
 }
 
 .pile-overlay-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   color: #c8cae6;
   font-family: var(--font-display);
@@ -56,7 +56,7 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: #8890b0;
-  font-size: 20px;
+  font-size: 1.25rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@
 }
 
 .pile-position-badge {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -145,7 +145,7 @@
 
 .pile-overlay-empty {
   color: #6b7394;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 24px;
   text-align: center;
 }
@@ -164,7 +164,7 @@
 }
 
 .cross-zone-source {
-  font-size: 10px;
+  font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #ffb03a;

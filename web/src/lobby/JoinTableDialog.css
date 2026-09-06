@@ -52,7 +52,7 @@
 }
 
 .join-target-pill {
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -65,7 +65,7 @@
 
 .join-table-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #ffffff;
   font-family: var(--font-display);
@@ -75,7 +75,7 @@
   background: transparent;
   border: none;
   color: #8c96ba;
-  font-size: 18px;
+  font-size: 1.125rem;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -98,7 +98,7 @@
 }
 
 .meta-badge {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 4px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -143,7 +143,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #ffd070;
 }
@@ -154,7 +154,7 @@
   background: rgba(10, 13, 30, 0.8);
   border: 1.5px solid rgba(255, 208, 112, 0.4);
   color: #ffffff;
-  font-size: 14px;
+  font-size: 0.875rem;
   outline: none;
 }
 
@@ -177,13 +177,13 @@
 }
 
 .join-deck-section-title {
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   color: #b0badc;
 }
 
 .join-import-toggle-btn {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
@@ -212,7 +212,7 @@
 
 .join-inline-importer h4 {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   color: #ffffff;
 }
 
@@ -223,7 +223,7 @@
   background: rgba(10, 13, 30, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .import-textarea {
@@ -234,13 +234,13 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #e8eaf6;
   font-family: monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
   resize: vertical;
 }
 
 .import-error-msg {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #ff7777;
 }
 
@@ -251,7 +251,7 @@
 
 .import-submit-btn {
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 /* Deck Cards List */
@@ -306,7 +306,7 @@
 }
 
 .deck-card-name {
-  font-size: 13.5px;
+  font-size: 0.844rem;
   font-weight: 700;
   color: #ffffff;
   overflow: hidden;
@@ -315,13 +315,13 @@
 }
 
 .deck-card-count-badge {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #8c96c0;
   font-weight: 600;
 }
 
 .deck-card-sample {
-  font-size: 11.5px;
+  font-size: 0.719rem;
   color: #7b85aa;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -338,7 +338,7 @@
   background: rgba(255, 77, 77, 0.15);
   border: 1px solid rgba(255, 77, 77, 0.4);
   color: #ff9999;
-  font-size: 12.5px;
+  font-size: 0.781rem;
   margin: 0 24px;
 }
 
@@ -356,7 +356,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #8c96ba;
   cursor: pointer;
 }
@@ -373,7 +373,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #b0badc;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -385,7 +385,7 @@
 
 .join-submit-btn {
   padding: 9px 20px;
-  font-size: 13.5px;
+  font-size: 0.844rem;
   font-weight: 800;
   box-shadow: 0 4px 14px rgba(28, 107, 80, 0.4);
 }

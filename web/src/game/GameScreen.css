@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .game-turn {
@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   flex-shrink: 0;
 }
 
@@ -62,7 +62,7 @@
   gap: 5px;
   color: #6b7394;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .toggle input {
@@ -107,7 +107,7 @@
 
 .right-tab-btn {
   padding: 7px 6px;
-  font-size: 10.5px;
+  font-size: 0.656rem;
   font-weight: 700;
   font-family: var(--font-display);
   letter-spacing: 0.04em;
@@ -144,7 +144,7 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 800;
   background: #ffb03a;
   color: #10131f;
@@ -181,7 +181,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
@@ -265,7 +265,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -319,13 +319,13 @@
 }
 
 .sp-avatar {
-  font-size: 36px;
+  font-size: 2.25rem;
   line-height: 1;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
 }
 
 .sp-name {
-  font-size: 17px;
+  font-size: 1.062rem;
   font-weight: 700;
   font-family: var(--font-display);
   color: #fff;
@@ -334,7 +334,7 @@
 }
 
 .sp-action {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #a78bfa;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -402,7 +402,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -420,7 +420,7 @@
 .choice-checkbox {
   color: #a78bfa;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 0.938rem;
 }
 
 /* ── Stepper & Numeric Inputs ───────────────────────────────── */
@@ -449,7 +449,7 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   display: grid;
   place-items: center;
@@ -471,7 +471,7 @@
 .stepper-btn.mini {
   width: 28px;
   height: 28px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .stepper-display {
@@ -510,7 +510,7 @@
 }
 
 .stepper-range {
-  font-size: 11px;
+  font-size: 0.688rem;
   color: #94a3b8;
   margin-top: 4px;
 }
@@ -522,7 +522,7 @@
 
 .quick-val-btn {
   padding: 5px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -599,7 +599,7 @@
 .feedback-input-icon {
   position: absolute;
   left: 14px;
-  font-size: 16px;
+  font-size: 1rem;
   pointer-events: none;
 }
 
@@ -633,7 +633,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 14px;
-  font-size: 13px;
+  font-size: 0.812rem;
   color: #9aa3c0;
   cursor: pointer;
 }
@@ -644,7 +644,7 @@
 
 .feedback-dialog-actions button {
   padding: 10px 22px;
-  font-size: 13px;
+  font-size: 0.812rem;
   font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
@@ -692,7 +692,7 @@
   border: 1.5px solid rgba(130, 160, 230, 0.35);
   border-radius: 12px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.18);
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #ffffff;
   pointer-events: auto;
   backdrop-filter: blur(12px);
@@ -721,7 +721,7 @@
   color: #ffd070;
   font-weight: 700;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1.2;
@@ -731,19 +731,19 @@
   display: inline-flex;
   align-items: center;
   margin-right: 3px;
-  font-size: 13px;
+  font-size: 0.812rem;
 }
 
 .action-prompt-msg {
   color: #ffffff;
   font-weight: 500;
-  font-size: 11.5px;
+  font-size: 0.719rem;
   line-height: 1.3;
 }
 
 .action-prompt-hint {
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 0.688rem;
   line-height: 1.3;
 }
 
@@ -758,7 +758,7 @@
 .action-prompt-actions button {
   flex: 1 1 auto;
   padding: 6px 12px;
-  font-size: 11px;
+  font-size: 0.688rem;
   font-weight: 600;
   border-radius: 7px;
   background: #252e60;
