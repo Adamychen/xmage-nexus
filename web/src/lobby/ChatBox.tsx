@@ -57,6 +57,16 @@ function isConnectionEvent(text: string): boolean {
   )
 }
 
+export const MAX_CHAT_MESSAGE_SIZE = 500
+
+export function formatChatTime(time?: number): string {
+  try {
+    return new Date(time ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return ''
+  }
+}
+
 interface ChatBoxProps {
   prefill?: string
   onPrefillUsed?: () => void
@@ -69,6 +79,7 @@ interface ChatBoxProps {
 export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage, chatIdOverride }: ChatBoxProps = {}) {
   const { t } = useTranslation()
   const roomChatId = useStore((s) => s.roomChatId)
+  const myName = useStore((s) => s.conn?.username)
   const chatId = chatIdOverride ?? roomChatId
   const messages = useStore((s) => s.chatMessages)
   const [text, setText] = useState('')
@@ -117,6 +128,10 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
   const send = (e: React.FormEvent) => {
     e.preventDefault()
     if (!text.trim()) return
+    if (text.length > MAX_CHAT_MESSAGE_SIZE) {
+      appendLocalChatMessage(t('lobby', 'chat_too_long'), chatId)
+      return
+    }
 
     // Intercept client-side ignore / unignore commands
     const ignoreResult = handleIgnoreCommand(text)
@@ -151,11 +166,13 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             m.messageType === 'WHISPER_FROM' ||
             m.messageType === 'WHISPER_TO' ||
             m.message.toLowerCase().startsWith('whisper')
+          const isOwn = !!myName && !!m.username && m.username.toLowerCase() === myName.toLowerCase()
 
           if (sys) {
             const parsed = parseSystemEvent(m.message, t)
             return (
               <div key={i} className="chat-msg system-msg">
+                <span className="chat-time">{formatChatTime(m.time)}</span>
                 <span className="sys-icon"><Icon name={parsed.icon} size={12} /></span>
                 <span className="sys-text">
                   <FormattedText text={parsed.text} onHover={handleHover} />
@@ -164,7 +181,8 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             )
           }
           return (
-            <div key={i} className={`chat-msg user-msg ${isWhisper ? 'whisper-msg' : ''}`}>
+            <div key={i} className={`chat-msg user-msg${isWhisper ? ' whisper-msg' : ''}${isOwn ? ' own-msg' : ''}`}>
+              <span className="chat-time">{formatChatTime(m.time)}</span>
               <span
                 className="chat-from"
                 onClick={() => onUserClick?.(m.username)}
@@ -192,6 +210,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t('lobby', 'chat_input_placeholder')}
+          maxLength={MAX_CHAT_MESSAGE_SIZE + 1}
         />
         <button className="primary" disabled={!chatId} type="submit">
           {t('common', 'send')}

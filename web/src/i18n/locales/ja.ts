@@ -107,6 +107,7 @@ export const ja: TranslationSchema = {
     hide_system_msgs: '通知を隠す',
     show_system_msgs: '通知を表示',
     chat_input_placeholder: 'メッセージまたはコマンド (/w, /card, /history, /help)…',
+    chat_too_long: 'メッセージが長すぎます（最大500文字）',
     no_messages: 'メッセージはありません',
     user_joined: 'が参加しました',
     user_lost_connection: 'の接続が切れました',

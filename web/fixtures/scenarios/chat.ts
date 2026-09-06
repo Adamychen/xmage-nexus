@@ -83,7 +83,7 @@ export function chatScenario(): Scenario {
             chatSeq++
             conn.broadcast(
               'CHATMESSAGE',
-              { chatId, username: 'player-1', message: text },
+              { chatId, username: 'player-1', message: text, time: Date.now() },
               chatId,
             )
           }

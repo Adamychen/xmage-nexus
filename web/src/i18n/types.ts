@@ -113,6 +113,7 @@ export interface TranslationSchema {
     hide_system_msgs: string
     show_system_msgs: string
     chat_input_placeholder: string
+    chat_too_long: string
     no_messages: string
     user_joined: string
     user_lost_connection: string

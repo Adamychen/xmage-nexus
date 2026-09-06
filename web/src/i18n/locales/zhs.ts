@@ -107,6 +107,7 @@ export const zhs: TranslationSchema = {
     hide_system_msgs: '隐藏系统提示',
     show_system_msgs: '显示系统提示',
     chat_input_placeholder: '输入消息或指令 (/w, /card, /history, /help)…',
+    chat_too_long: '消息过长（最多500个字符）',
     no_messages: '暂无消息',
     user_joined: '进入了房间',
     user_lost_connection: '断开了连接',

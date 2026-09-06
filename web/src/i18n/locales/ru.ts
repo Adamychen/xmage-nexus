@@ -107,6 +107,7 @@ export const ru: TranslationSchema = {
     hide_system_msgs: 'Скрыть системные',
     show_system_msgs: 'Показать системные',
     chat_input_placeholder: 'Сообщение или команда (/w, /card, /history, /help)…',
+    chat_too_long: 'Сообщение слишком длинное (макс. 500 символов)',
     no_messages: 'Нет сообщений',
     user_joined: 'подключился',
     user_lost_connection: 'потерял связь',

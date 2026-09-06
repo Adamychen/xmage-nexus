@@ -77,6 +77,8 @@ export interface ChatMessageEvent {
   message: string
   messageType?: string
   soundToPlay?: string
+  /** epoch ms del servidor (puede faltar en mensajes locales/antiguos: usar hora de recepción) */
+  time?: number
 }
 
 // ─── Mazo JSON (proxy) ───────────────────────────────────────────────────────

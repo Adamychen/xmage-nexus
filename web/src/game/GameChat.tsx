@@ -5,6 +5,7 @@ import QuickReactions from './QuickReactions'
 import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import Icon from '../ui/Icon'
+import { formatChatTime } from '../lobby/ChatBox'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import './GameChat.css'
@@ -15,6 +16,7 @@ const EMOJI_PICKS = ['😊', '😂', '😮', '👀', '🙏', '😅', '🤔', '�
 
 export default function GameChat() {
   const { t } = useTranslation()
+  const myName = useStore((s) => s.conn?.username)
   const gameChatId = useStore((s) => s.gameChatId)
   const roomChatId = useStore((s) => s.roomChatId)
   const log = useStore((s) => s.log)
@@ -73,7 +75,8 @@ export default function GameChat() {
           </div>
         ) : (
           chatEntries.map((entry) => (
-            <div key={entry.id} className="game-chat-entry">
+            <div key={entry.id} className={`game-chat-entry${myName && entry.from && entry.from.toLowerCase() === myName.toLowerCase() ? ' own-msg' : ''}`}>
+              <span className="game-chat-time">{formatChatTime(entry.time)}</span>
               {entry.from && <span className="game-chat-player">{entry.from}:</span>}
               <span className="game-chat-text">
                 <FormattedText text={entry.text} onHover={handleHover} />

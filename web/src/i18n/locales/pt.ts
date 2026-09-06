@@ -107,6 +107,7 @@ export const pt: TranslationSchema = {
     hide_system_msgs: 'Ocultar avisos',
     show_system_msgs: 'Mostrar avisos',
     chat_input_placeholder: 'Mensagem ou comando (/w, /card, /history, /help)…',
+    chat_too_long: 'Mensagem muito longa (máx. 500 caracteres)',
     no_messages: 'Sem mensagens',
     user_joined: 'entrou na sala',
     user_lost_connection: 'perdeu a conexão',

@@ -58,6 +58,8 @@ chatTest(
       // el eco de otro usuario solo existe en el escenario chatScenario
       await expect(page.locator('.chat-list')).toContainText('player-1:', { timeout: 5_000 })
     }
+    // U5-2: cada mensaje muestra su hora tenue
+    await expect(page.locator('.chat-list .chat-time').first()).toContainText(/\d{1,2}:\d{2}/, { timeout: 5_000 })
   },
 )
 

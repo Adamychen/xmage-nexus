@@ -107,6 +107,7 @@ export const de: TranslationSchema = {
     hide_system_msgs: 'Meldungen verbergen',
     show_system_msgs: 'Meldungen anzeigen',
     chat_input_placeholder: 'Nachricht oder Befehl (/w, /card, /history, /help)...',
+    chat_too_long: 'Nachricht zu lang (max. 500 Zeichen)',
     no_messages: 'Keine Nachrichten',
     user_joined: 'hat den Raum betreten',
     user_lost_connection: 'hat die Verbindung verloren',

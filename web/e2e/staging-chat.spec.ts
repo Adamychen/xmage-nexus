@@ -34,6 +34,7 @@ test.describe('Staging table chat (U4-11)', () => {
       await chatBody.locator('.chat-input button[type="submit"]').click()
       await expect(chatBody.locator('.chat-list')).toContainText('mesa-rival:', { timeout: 5_000 })
       await expect(chatBody.locator('.chat-list')).toContainText('hola mesa', { timeout: 5_000 })
+      await expect(chatBody.locator('.chat-list .chat-time').first()).toContainText(/\d{1,2}:\d{2}/, { timeout: 5_000 })
     })
   })
 

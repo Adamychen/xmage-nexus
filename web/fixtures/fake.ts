@@ -270,7 +270,7 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           const scopeChatId = String((args as Record<string, unknown>).chatId ?? '')
           conn.ok(requestId, action, true)
           if (text && scopeChatId) {
-            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: 'mesa-rival', message: text }, scopeChatId)
+            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: 'mesa-rival', message: text, time: Date.now() }, scopeChatId)
           }
           return
         }
