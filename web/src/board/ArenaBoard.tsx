@@ -66,6 +66,7 @@ export default function ArenaBoard({
       handBar={!isSpectator ? {
         cards: game?.myHand ?? {},
         onCardClick: onPlayableClick,
+        onHover: handleCardHover,
         playableIds: playableIdSet,
         targetIds: targetIdSet,
       } : null}

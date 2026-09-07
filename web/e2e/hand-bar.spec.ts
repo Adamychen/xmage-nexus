@@ -125,6 +125,46 @@ test('la mano propia flota como overlay anclado al fondo sin consumir layout (st
   })
 })
 
+test('el hover en la mano propia muestra la carta en grande y legible (preview flotante) @fullflow @hand-bar', async ({ page }) => {
+  await withFakeServer(() => spellsScenario('blaze'), async () => {
+    const { pageErrors } = await startGame(page, {
+      prefix: 'hbh',
+      tableName: TABLE.spellsBlaze,
+      skipAsks: true,
+    })
+    const slots = page.locator('[data-testid="hand-bar"] .hand-card-slot')
+    await expect(slots.first()).toBeVisible({ timeout: 30_000 })
+    const preview = page.locator('.floating-card-preview')
+    await expect(preview).toHaveCount(0)
+
+    await slots.first().hover()
+    await expect(preview).toBeVisible({ timeout: 10_000 })
+    const boxes = await page.evaluate(() => {
+      const rectOf = (el: Element) => {
+        const r = el.getBoundingClientRect()
+        return { y: r.y, height: r.height }
+      }
+      const pv = document.querySelector('.floating-card-preview') as HTMLElement | null
+      const slot = document.querySelector('[data-testid="hand-bar"] .hand-card-slot')
+      if (!pv || !slot) throw new Error('preview o slot no encontrado')
+      // offsetWidth ignora la escala transitoria de la animación de entrada
+      return { pv: { ...rectOf(pv), width: pv.offsetWidth }, slot: rectOf(slot) }
+    })
+    expect(
+      boxes.pv.width,
+      'el preview es grande y legible (320px frente a ~136px de la carta en mano)',
+    ).toBeGreaterThanOrEqual(300)
+    expect(
+      boxes.pv.y + boxes.pv.height,
+      'el preview flota por encima de la carta (no la tapa)',
+    ).toBeLessThanOrEqual(boxes.slot.y + 40)
+
+    await page.locator('.board-shell-divider-diamond').hover()
+    await expect(preview).toHaveCount(0)
+    expect(pageErrors).toEqual([])
+  })
+})
+
 test('la mano propia ocupa toda la fila inferior del pod 1v1 @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {

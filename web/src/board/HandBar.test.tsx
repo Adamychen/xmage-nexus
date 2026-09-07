@@ -51,6 +51,19 @@ describe('HandBar', () => {
     expect(onCardClick).toHaveBeenCalledWith('h-2')
   })
 
+  it('emits hover with card + anchor rect, and clears on leave', () => {
+    const onHover = vi.fn()
+    const { container } = render(<HandBar cards={hand()} onHover={onHover} />)
+    const slots = container.querySelectorAll('.hand-card-slot')
+    fireEvent.mouseEnter(slots[1])
+    expect(onHover).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'h-2', name: 'Counterspell' }),
+      expect.anything(),
+    )
+    fireEvent.mouseLeave(slots[1])
+    expect(onHover).toHaveBeenLastCalledWith(null)
+  })
+
   it('marks playable and targetable cards', () => {
     const { container } = render(
       <HandBar cards={hand()} playableIds={new Set(['h-1'])} targetIds={new Set(['h-3'])} />,

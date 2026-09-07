@@ -16,6 +16,7 @@ import './HandBar.css'
 interface HandBarProps {
   cards: Record<string, CardView>
   onCardClick?: (id: string) => void
+  onHover?: (card: CardView | null, rect?: DOMRect) => void
   playableIds?: Set<string>
   targetIds?: Set<string>
 }
@@ -23,6 +24,7 @@ interface HandBarProps {
 export default function HandBar({
   cards,
   onCardClick,
+  onHover,
   playableIds = new Set(),
   targetIds = new Set(),
 }: HandBarProps) {
@@ -79,6 +81,8 @@ export default function HandBar({
             key={id}
             className="hand-card-slot"
             style={{ '--rot': `${arc.rot}deg`, '--rise': `${rise}px` } as React.CSSProperties}
+            onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
+            onMouseLeave={onHover ? () => onHover(null) : undefined}
           >
             <CardSlot
               cardId={id}

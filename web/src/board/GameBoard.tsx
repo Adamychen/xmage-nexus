@@ -74,6 +74,7 @@ export default function GameBoard({
       handBar={!isSpectator ? {
         cards: game?.myHand ?? {},
         onCardClick: onPlayableClick,
+        onHover: handleCardHover,
         playableIds: playableIdSet,
         targetIds: targetIdSet,
       } : null}

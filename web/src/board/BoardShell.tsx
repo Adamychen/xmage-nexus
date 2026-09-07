@@ -15,6 +15,7 @@ export interface BoardShellProps {
   handBar?: {
     cards: Record<string, CardView>
     onCardClick?: (id: string) => void
+    onHover?: (card: CardView | null, rect?: DOMRect) => void
     playableIds?: Set<string>
     targetIds?: Set<string>
   } | null
@@ -46,6 +47,7 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         <HandBar
           cards={handBar.cards}
           onCardClick={handBar.onCardClick}
+          onHover={handBar.onHover}
           playableIds={handBar.playableIds}
           targetIds={handBar.targetIds}
         />
