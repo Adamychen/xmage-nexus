@@ -46,14 +46,14 @@ function hasFreeSeat(t: TableView): boolean {
   return t.seats?.some((s) => !s.playerName) ?? false
 }
 
-export const POPULAR_FORMATS: Array<{ id: string; label: string; icon: IconName }> = [
+export const POPULAR_FORMATS: Array<{ id: string; label: string; icon: IconName; labelKey?: 'filter_format_limited' }> = [
   { id: 'ALL', label: 'Todos', icon: 'globe' },
   { id: 'Commander', label: 'Commander', icon: 'crown' },
   { id: 'Modern', label: 'Modern', icon: 'zap' },
   { id: 'Pioneer', label: 'Pioneer', icon: 'shield' },
   { id: 'Standard', label: 'Standard', icon: 'scrollText' },
   { id: 'Pauper', label: 'Pauper', icon: 'gem' },
-  { id: 'Limited', label: 'Limitado', icon: 'package' },
+  { id: 'Limited', label: 'Limitado', icon: 'package', labelKey: 'filter_format_limited' },
 ]
 
 export const OTHER_COMMON_FORMATS = [
@@ -335,7 +335,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 onClick={() => onChange({ ...filters, format: pf.id })}
               >
                 <span className="tfb-chip-icon"><Icon name={pf.icon} size={13} /></span>
-                <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.label}</span>
+                <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.labelKey ? t('lobby', pf.labelKey) : pf.label}</span>
                 <span className="tfb-chip-count">{count}</span>
               </button>
             )
@@ -353,7 +353,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
               }}
             >
               <option value="" disabled>
-                {isOtherFormatSelected ? `Formato: ${filters.format}` : t('lobby', 'filter_more_formats')}
+                {isOtherFormatSelected ? t('lobby', 'filter_selected_format', { format: filters.format }) : t('lobby', 'filter_more_formats')}
               </option>
               {extraFormats.map((fmt) => (
                 <option key={fmt} value={fmt}>

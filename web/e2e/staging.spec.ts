@@ -69,7 +69,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
 
       await page.getByTestId('staging-change-deck').click()
       await expect(page.getByTestId('join-table-dialog')).toBeVisible()
-      await expect(page.getByTestId('join-target-pill')).toContainText(/CAMBIAR BARAJA|CHANGE TABLE DECK/i)
+      await expect(page.getByTestId('join-table-dialog').locator('.dlg-kicker')).toContainText(/CAMBIAR BARAJA|CHANGE TABLE DECK/i)
       await page.getByTestId('join-cancel-btn').click()
       await expect(page.getByTestId('join-table-dialog')).toBeHidden()
     })
@@ -111,6 +111,38 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
       await page.getByTestId('staging-start').click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible()
       await expect(page.getByTestId('game-status')).toBeHidden()
+    })
+  })
+
+  test('la meta del asiento (badge + historial) no desborda la tarjeta del anillo', async ({ page }) => {
+    const ringScenario = () =>
+      makeBaseScenario({
+        tableId: 'table-stg-ring',
+        tableName: 'staging-ring-e2e',
+        gameId: 'game-stg-ring',
+        gameView: playerGameView,
+        gameType: 'Commander Free For All',
+        seats: [
+          { playerName: 'e2e', seatIndex: 0, playerType: 'HUMAN', constructedRating: 800, history: '720 (I:15 T:8 Q:3)' },
+          { playerName: 'sim-000002-340', seatIndex: 1, playerType: 'SIM', constructedRating: 800, history: '720 (I:15 T:8 Q:3)' },
+        ],
+      })
+    await withFakeServer(ringScenario, async () => {
+      await login(page, 'e2e')
+      await createTable(page, 'staging-ring-e2e')
+      await expect(page.locator('.staging-ring')).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator('.ring-seat .player-seat-meta').first()).toBeVisible()
+      const overflowing = await page.evaluate(() => {
+        const bad: string[] = []
+        document.querySelectorAll('.ring-seat').forEach((card) => {
+          const meta = card.querySelector('.player-seat-meta')
+          if (meta && meta.scrollWidth > (card as HTMLElement).clientWidth + 1) {
+            bad.push((card.textContent ?? '').slice(0, 40))
+          }
+        })
+        return bad
+      })
+      expect(overflowing).toEqual([])
     })
   })
 

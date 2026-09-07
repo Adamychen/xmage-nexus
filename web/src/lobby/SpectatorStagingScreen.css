@@ -495,6 +495,15 @@
   gap: 5px;
   font-size: 0.719rem;
   color: #9aa3c7;
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 3px;
+}
+
+.player-seat-meta > * {
+  min-width: 0;
 }
 
 .player-seat-history {

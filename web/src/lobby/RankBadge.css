@@ -9,6 +9,9 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   transition: all 0.15s ease;
   vertical-align: middle;
