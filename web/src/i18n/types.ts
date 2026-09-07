@@ -688,6 +688,8 @@ export interface TranslationSchema {
     construct_cards_in_pool: string
     construct_limited_label: string
     phase_stops: string
+    phase_stops_default_title: string
+    phase_stops_default_hint: string
     phase_you: string
     phase_opp: string
     booster_label: string
@@ -1108,5 +1110,25 @@ export interface TranslationSchema {
     pile_top: string
     pile_empty: string
     card_fallback: string
+  }
+  system: {
+    about_title: string
+    about_tab: string
+    news_tab: string
+    app_version: string
+    app_tagline: string
+    nexus_link: string
+    xmage_link: string
+    news_nexus: string
+    news_xmage: string
+    news_empty: string
+    news_offline: string
+    news_open: string
+    news_new: string
+    log_autosave: string
+    log_autosave_hint: string
+    log_download: string
+    match_duration: string
+    land_set: string
   }
 }

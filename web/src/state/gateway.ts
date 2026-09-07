@@ -2,6 +2,7 @@ import { Gateway } from '../net/Gateway'
 import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
+import { clonePhaseStops } from '../game/phaseStops'
 import { saveConn, loadActiveGame, clearActiveGame, type ConnectionInfo } from './persistence'
 
 let gateway: Gateway | null = null
@@ -109,7 +110,7 @@ export async function doConnect(
     const chatId = await cmds.getRoomChatId()
     setState({ roomChatId: chatId ?? null })
     if (chatId) void cmds.sendChatMessage(chatId, '¡Hola desde el cliente web!')
-    void cmds.updatePreferences(getState().phaseStops)
+    void cmds.updatePreferences(clonePhaseStops(getState().settings.phaseStops))
   } else {
     setState({ phase: 'idle', connecting: false, error: res.error ?? 'login fallido' })
   }

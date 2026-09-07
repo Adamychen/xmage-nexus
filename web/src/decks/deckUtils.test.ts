@@ -8,6 +8,9 @@ import {
   isManaSourceCard,
   isPartnerCard,
   commanderCardsFor,
+  landPrinting,
+  loadBasicLandSet,
+  DEFAULT_BASIC_LAND_SET,
 } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 
@@ -133,5 +136,34 @@ describe('deckUtils basic calculations', () => {
       ['tana, the bloodsower', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
     ])
     expect(commanderCardsFor([sidar, tana, solRing], sidar, partnerMeta)).toEqual([sidar, tana])
+  })
+})
+
+describe('basic land sets (U15 G15-7)', () => {
+  it('resolves verified full-art printings per set', () => {
+    expect(landPrinting('Plains', 'UST')).toEqual({ setCode: 'UST', cardNumber: '212' })
+    expect(landPrinting('Forest', 'UST')).toEqual({ setCode: 'UST', cardNumber: '216' })
+    expect(landPrinting('Island', 'BFZ')).toEqual({ setCode: 'BFZ', cardNumber: '255' })
+    expect(landPrinting('Mountain', 'BFZ')).toEqual({ setCode: 'BFZ', cardNumber: '265' })
+    expect(landPrinting('Swamp', 'UNH')).toEqual({ setCode: 'UNH', cardNumber: '138' })
+    expect(landPrinting('Forest', 'ZEN')).toEqual({ setCode: 'ZEN', cardNumber: '246' })
+    expect(landPrinting('Plains', 'DMU')).toEqual({ setCode: 'DMU', cardNumber: '277' })
+  })
+
+  it('falls back to the default printing for unknown sets and Wastes', () => {
+    expect(landPrinting('Plains', 'XXX')).toEqual({ setCode: 'DMU', cardNumber: '277' })
+    expect(landPrinting('Wastes', 'UST')).toEqual({ setCode: 'OGW', cardNumber: '183' })
+  })
+
+  it('suggestBasicLands honors the selected set', () => {
+    const pips = { W: 4, U: 0, B: 0, R: 0, G: 0 }
+    const suggested = suggestBasicLands(pips, 4, 'ZEN')
+    expect(suggested).toEqual([{ name: 'Plains', setCode: 'ZEN', cardNumber: '230', amount: 4 }])
+    const def = suggestBasicLands(pips, 4)
+    expect(def[0]).toMatchObject({ setCode: 'DMU', cardNumber: '277' })
+  })
+
+  it('defaults to DMU without stored preference', () => {
+    expect(loadBasicLandSet()).toBe(DEFAULT_BASIC_LAND_SET)
   })
 })

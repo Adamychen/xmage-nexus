@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { joinGame, sendPlayerBoolean, sendPlayerUUID } from '../net/commands'
+import { joinGame, sendPlayerBoolean, sendPlayerUUID, updatePreferences } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
+import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
 import { getState, setState } from './state'
 import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
@@ -39,6 +40,8 @@ vi.mock('../net/commands', () => ({
   sendPlayerInteger: vi.fn(),
   sendPlayerString: vi.fn(),
   sendPlayerUUID: vi.fn(),
+  sendManaPaymentMode: vi.fn(),
+  updateManaConfirmPreference: vi.fn(),
 }))
 
 describe('handleMessage', () => {
@@ -81,6 +84,18 @@ describe('handleMessage', () => {
     handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 2, objectId: 'g-watch', data: after })
 
     expect(getState().game?.stack?.['s-1']?.controllerName).toBe('Alice')
+  })
+
+  it('GAME_INIT seeds session phase stops from the lobby defaults and pushes them to the server', () => {
+    const custom = clonePhaseStops(DEFAULT_PHASE_STOPS)
+    custom.opponentTurn.main1 = false
+    setSetting('phaseStops', custom)
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
+    const game = makeGameView({ players: [me] })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-stops', data: game })
+    expect(getState().phaseStops).toEqual(custom)
+    expect(updatePreferences).toHaveBeenCalledWith(custom)
+    setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
   })
 
   it('starts stack attribution fresh on GAME_INIT of another game', () => {
@@ -630,20 +645,20 @@ describe('phaseStops', () => {
     vi.clearAllMocks()
   })
 
-  it('has default phase stops with main1 and main2 disabled', () => {
+  it('has every default phase stop enabled', () => {
     const stops = getState().phaseStops
-    expect(stops.yourTurn.main1).toBe(false)
-    expect(stops.yourTurn.main2).toBe(false)
-    expect(stops.yourTurn.upkeep).toBe(true)
-    expect(stops.yourTurn.draw).toBe(true)
-    expect(stops.yourTurn.beginCombat).toBe(true)
-    expect(stops.yourTurn.endStep).toBe(true)
+    for (const key of ['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep']) {
+      expect(stops.yourTurn[key]).toBe(true)
+      expect(stops.opponentTurn[key]).toBe(true)
+    }
   })
 
   it('default phase stops are independent for your turn and opponent turn', () => {
     const stops = getState().phaseStops
-    expect(stops.opponentTurn.main1).toBe(false)
-    expect(stops.opponentTurn.upkeep).toBe(true)
+    const toggled = togglePhaseStop(stops, 'opponentTurn', 'main1')
+    expect(toggled.opponentTurn.main1).toBe(false)
+    expect(toggled.yourTurn.main1).toBe(true)
+    expect(stops.opponentTurn.main1).toBe(true)
   })
 })
 
@@ -835,6 +850,49 @@ describe('active game persistence in store', () => {
     expect(end).not.toBeNull()
     expect(end?.gameInfo).toBe('Alice has won the game')
     expect(end?.matchView?.endTime).toBeDefined()
+  })
+
+  it('GAME_OVER autosaves the game log when enabled, and skips when disabled', async () => {
+    const { gameLogStore } = await import('../system/gameLogs')
+    setSetting('gameLogAutoSave', true)
+    setState({
+      phase: 'game',
+      gameId: 'g-log-1',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-a', name: 'Alice', controlled: true }),
+          makePlayer({ playerId: 'p-b', name: 'Bob', controlled: false }),
+        ],
+      }),
+      log: [{ id: 1, time: 5, from: 'partida', text: 'hola', gameId: 'g-log-1' }],
+    })
+    const before = (await gameLogStore.list()).length
+
+    handleMessage({
+      type: 'event',
+      method: 'GAME_OVER',
+      messageId: 51,
+      objectId: 'g-log-1',
+      data: { message: 'Alice has won the game' },
+    })
+    await vi.waitFor(async () => {
+      expect((await gameLogStore.list()).length).toBe(before + 1)
+    })
+    const latest = await gameLogStore.getLatest()
+    expect(latest?.gameId).toBe('g-log-1')
+    expect(latest?.entries.map((e) => e.text)).toEqual(['hola', 'Alice has won the game'])
+
+    setSetting('gameLogAutoSave', false)
+    handleMessage({
+      type: 'event',
+      method: 'GAME_OVER',
+      messageId: 52,
+      objectId: 'g-log-1',
+      data: { message: 'Alice has won the game' },
+    })
+    await new Promise((r) => setTimeout(r, 20))
+    expect((await gameLogStore.list()).length).toBe(before + 1)
+    setSetting('gameLogAutoSave', true)
   })
 })
 

@@ -1,12 +1,15 @@
 import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
+import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
 import './GameEndDialog.css'
 
 export default function GameEndDialog() {
   const end = useStore((s) => s.gameEnd)
   const sideboardScreen = useStore((s) => s.sideboardScreen)
   const game = useGame()
+  const log = useStore((s) => s.log)
   const { t } = useTranslation()
 
   if (!end || sideboardScreen) return null
@@ -14,6 +17,14 @@ export default function GameEndDialog() {
   const me = game?.players?.find((p) => p.controlled)
   const isSpectator = !me
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '') || isSpectator
+  const duration = formatMatchDuration(end.startTime, end.endTime ?? end.matchView?.endTime ?? undefined)
+
+  const handleDownloadLog = () => {
+    void downloadLatestGameLog({
+      title: end.matchInfo ?? end.gameInfo ?? 'game',
+      entries: toSavedEntries(log),
+    })
+  }
 
   let winnerName: string | null = null
   const wonMatch = (end.gameInfo || end.matchInfo || '').match(/(.+?)\s+(?:has won the game|has won the match|won the match|won the game|ha ganado)/i)
@@ -42,6 +53,18 @@ export default function GameEndDialog() {
             {t('game', 'score')} {end.wins ?? 0}–{end.loses ?? 0} ({t('game', 'match_wins')}: {end.winsNeeded ?? 1})
           </p>
         )}
+
+        {duration && (
+          <p className="end-duration">
+            {t('system', 'match_duration')}: {duration}
+          </p>
+        )}
+
+        <div className="end-actions">
+          <button type="button" data-testid="end-download-log" onClick={handleDownloadLog}>
+            {t('system', 'log_download')}
+          </button>
+        </div>
 
         {matchOver ? (
           <button className="primary" onClick={returnToLobby}>

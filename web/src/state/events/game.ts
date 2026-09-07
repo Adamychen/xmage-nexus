@@ -2,6 +2,7 @@ import * as cmds from '../../net/commands'
 import type { GameEndInfo } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
+import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry, enterTableChat, exitTableChat } from '../actions'
 import { t as tStatic } from '../../i18n'
@@ -11,6 +12,7 @@ import {
   isCombatStep, combatChosenFrom, emptyCombat,
 } from '../gameUtils'
 import { soundManager } from '../../audio/soundManager'
+import { gameLogStore, toSavedEntries } from '../../system/gameLogs'
 import type { Snapshot, EmbeddedGame } from './context'
 
 export function handleJoinedTable(data: unknown, s: Snapshot): void {
@@ -67,6 +69,9 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
           void cmds.sendManaPaymentMode(action, objectId)
         }
         void cmds.updateManaConfirmPreference(getState().settings.manaPayment.confirmEmptyPool)
+        const sessionStops = clonePhaseStops(getState().settings.phaseStops)
+        patch.phaseStops = sessionStops
+        void cmds.updatePreferences(sessionStops)
       }
     }
     if (method === 'GAME_SELECT') {
@@ -110,6 +115,7 @@ export function handleGameOver(data: unknown, objectId: string | null): void {
   const msg = typeof d === 'string' ? d : (d?.message ?? 'Fin de la partida')
   clearActiveGame()
   addLog('partida', msg, objectId ?? undefined)
+  autosaveGameLog(objectId ?? getState().gameId, msg)
 
   const fresh = getState()
   const me = fresh.game?.players?.find((p) => p.controlled)
@@ -134,6 +140,7 @@ export function handleEndGameInfo(data: unknown): void {
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '')
   addLog('partida', matchOver ? (end.matchInfo ?? 'Fin del match') : (end.matchInfo ?? 'Fin de la partida'))
   if (matchOver) {
+    autosaveGameLog(getState().gameId, end.matchInfo ?? end.gameInfo ?? 'Fin del match')
     clearActiveGame()
     setState({
       game: null,
@@ -162,4 +169,16 @@ export function handleGameError(data: unknown, objectId: string | null): void {
 
 export function handleRedrawGui(): void {
   addLog('partida', 'Redibujar GUI')
+}
+
+function autosaveGameLog(gameId: string | null, title: string): void {
+  try {
+    const s = getState()
+    if (!s.settings.gameLogAutoSave) return
+    const entries = toSavedEntries(
+      s.log.filter((e) => !gameId || !e.gameId || e.gameId === gameId),
+    )
+    if (entries.length === 0) return
+    void gameLogStore.save({ gameId, title, entries }).catch(() => {})
+  } catch {}
 }

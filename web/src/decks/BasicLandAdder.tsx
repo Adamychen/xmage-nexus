@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BASIC_LAND_PRESETS, countManaPips, suggestBasicLands, getBasicLandLabel, type BasicLandPreset } from './deckUtils'
+import { BASIC_LAND_PRESETS, BASIC_LAND_SETS, countManaPips, suggestBasicLands, getBasicLandLabel, landPrinting, loadBasicLandSet, saveBasicLandSet, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
@@ -26,9 +26,20 @@ export function BasicLandAdder({
   const defaultTarget = isCommander ? 36 : (format === 'Limited' ? 17 : 24)
   const [targetCount, setTargetCount] = useState<number>(defaultTarget)
   const [isOpen, setIsOpen] = useState(false)
+  const [landSet, setLandSet] = useState<string>(() => loadBasicLandSet())
 
   const pips = countManaPips(cards, metaMap)
   const totalPips = pips.W + pips.U + pips.B + pips.R + pips.G
+
+  const withPrinting = (preset: BasicLandPreset): BasicLandPreset => {
+    const printing = landPrinting(preset.name, landSet)
+    return { ...preset, setCode: printing.setCode, cardNumber: printing.cardNumber }
+  }
+
+  const handleLandSetChange = (code: string) => {
+    setLandSet(code)
+    saveBasicLandSet(code)
+  }
 
   const getLandCount = (name: string): number => {
     const found = cards.find((c) => c.cardName.toLowerCase() === name.toLowerCase())
@@ -36,7 +47,7 @@ export function BasicLandAdder({
   }
 
   const handleSuggest = () => {
-    const suggested = suggestBasicLands(pips, targetCount)
+    const suggested = suggestBasicLands(pips, targetCount, landSet)
     if (suggested.length > 0) {
       onApplySuggestedLands(suggested)
       setIsOpen(false)
@@ -57,7 +68,7 @@ export function BasicLandAdder({
                 <button
                   type="button"
                   className={`basic-land-btn pip-${preset.color.toLowerCase()}`}
-                  onClick={() => onAddLand(preset)}
+                  onClick={() => onAddLand(withPrinting(preset))}
                   title={`+1 ${label} (${preset.name})`}
                 >
                   <ManaPip symbol={preset.symbol} size={16} />
@@ -111,6 +122,19 @@ export function BasicLandAdder({
           </div>
 
           <div className="suggester-action-row">
+            <label className="suggester-target-label">
+              {t('system', 'land_set')}:
+              <select
+                value={landSet}
+                onChange={(e) => handleLandSetChange(e.target.value)}
+                className="suggester-input"
+                data-testid="land-set-select"
+              >
+                {BASIC_LAND_SETS.map((s) => (
+                  <option key={s.code} value={s.code}>{s.label}</option>
+                ))}
+              </select>
+            </label>
             <label className="suggester-target-label">
               {t('decks', 'total_cards')}:
               <input

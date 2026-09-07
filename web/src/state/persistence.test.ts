@@ -9,6 +9,8 @@ import {
   saveFxSettings,
   loadAudioSettings,
   saveAudioSettings,
+  loadPhaseStops,
+  savePhaseStops,
   DEFAULT_AUDIO_SETTINGS,
   type ConnectionInfo,
   type FxSettings,
@@ -198,6 +200,39 @@ describe('persistence', () => {
     it('falls back to defaults for corrupt payloads', () => {
       mockStorage['mage-web-audio'] = '{invalid json'
       expect(loadAudioSettings()).toEqual(DEFAULT_AUDIO_SETTINGS)
+    })
+  })
+
+  describe('phase stops persistence', () => {
+    it('returns all-true defaults when nothing is stored', () => {
+      const stops = loadPhaseStops()
+      for (const turn of ['yourTurn', 'opponentTurn'] as const) {
+        for (const key of ['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep']) {
+          expect(stops[turn][key]).toBe(true)
+        }
+      }
+    })
+
+    it('saves and loads phase stops correctly', () => {
+      const stops = loadPhaseStops()
+      stops.yourTurn.main1 = false
+      stops.opponentTurn.endStep = false
+      savePhaseStops(stops)
+      expect(loadPhaseStops()).toEqual(stops)
+    })
+
+    it('merges partial payloads over the defaults', () => {
+      mockStorage['mage-web-phase-stops'] = JSON.stringify({ yourTurn: { main1: false } })
+      const stops = loadPhaseStops()
+      expect(stops.yourTurn.main1).toBe(false)
+      expect(stops.yourTurn.upkeep).toBe(true)
+      expect(stops.opponentTurn.main1).toBe(true)
+    })
+
+    it('falls back to defaults for corrupt payloads', () => {
+      mockStorage['mage-web-phase-stops'] = '{invalid json'
+      expect(loadPhaseStops()).toEqual(loadPhaseStops())
+      expect(loadPhaseStops().yourTurn.upkeep).toBe(true)
     })
   })
 })

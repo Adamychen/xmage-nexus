@@ -17,8 +17,11 @@ import { sendTriggerAutoOrder, sendManaPaymentMode, updateManaConfirmPreference 
 import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
+import PhaseStopSelector from './PhaseStopSelector'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import HelpWikiModal from './HelpWikiModal'
+import AboutModal from '../system/AboutModal'
+import { useNewsBadge } from '../system/useNewsBadge'
 import SoundFxControls from '../settings/SoundFxControls'
 import './GameMenu.css'
 
@@ -31,6 +34,8 @@ export default function GameMenu() {
   const [showFx, setShowFx] = useState(false)
   const [showAppearance, setShowAppearance] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
+  const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   const me = game?.players?.find((p) => p.controlled)
@@ -183,6 +188,14 @@ export default function GameMenu() {
             {!!me && (
               <>
                 <div className="game-menu-divider" />
+                <div className="game-menu-stops" data-testid="game-menu-phase-stops" onClick={(e) => e.stopPropagation()}>
+                  <PhaseStopSelector />
+                </div>
+              </>
+            )}
+            {!!me && (
+              <>
+                <div className="game-menu-divider" />
                 <div className="game-menu-section-label" data-testid="game-menu-auto-answers-label">
                   {t('game', 'auto_answers_title', { count: settings.autoAnswers.length })}
                 </div>
@@ -280,6 +293,18 @@ export default function GameMenu() {
             <button
               type="button"
               className="game-menu-item"
+              data-testid="game-menu-about"
+              title={t('system', 'about_title')}
+              onClick={() => setShowAbout(true)}
+            >
+              <Icon name="info" size={13} /> {t('system', 'about_tab')}
+              {unseenNews && (
+                <span className="game-menu-news-dot" data-testid="game-menu-news-dot" aria-hidden="true">●</span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="game-menu-item"
               data-testid="game-menu-fullscreen"
               title={isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
               onClick={() => void toggleFullscreen()}
@@ -291,6 +316,14 @@ export default function GameMenu() {
       )}
       {showAppearance && <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />}
       {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
+      {showAbout && (
+        <AboutModal
+          onClose={() => {
+            setShowAbout(false)
+            refreshNews()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -5,6 +5,8 @@ import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
 import LanguageSelector from '../i18n/LanguageSelector'
 import SettingsModal from '../settings/SettingsModal'
+import AboutModal from '../system/AboutModal'
+import { useNewsBadge } from '../system/useNewsBadge'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './LoginScreen.css'
@@ -48,6 +50,8 @@ export default function LoginScreen() {
   const [avatarId, setAvatarId] = useState(10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
+  const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [preset, setPreset] = useState<ServerPreset>('local')
 
   useEffect(() => {
@@ -121,6 +125,19 @@ export default function LoginScreen() {
           data-testid="open-settings"
         >
           <Icon name="settings" size={16} />
+        </button>
+        <button
+          type="button"
+          className="login-settings-btn"
+          onClick={() => setShowAbout(true)}
+          title={t('system', 'about_title')}
+          aria-label={t('system', 'about_title')}
+          data-testid="open-about"
+        >
+          <Icon name="info" size={16} />
+          {unseenNews && (
+            <span className="login-news-dot" data-testid="login-news-dot" aria-hidden="true">●</span>
+          )}
         </button>
       </div>
 
@@ -295,6 +312,14 @@ export default function LoginScreen() {
       )}
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+      {showAbout && (
+        <AboutModal
+          onClose={() => {
+            setShowAbout(false)
+            refreshNews()
+          }}
+        />
       )}
     </div>
   )

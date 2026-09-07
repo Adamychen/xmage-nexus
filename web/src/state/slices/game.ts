@@ -1,6 +1,7 @@
 import type { DeckCardEntry, DeckJson, GameEndInfo, GameView } from '../../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
 import type { PhaseStops } from '../../net/commands'
+import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
 
 export interface CombatState {
   mode: 'attack' | 'block'
@@ -95,8 +96,5 @@ export const initialGame: GameSlice = {
   viewer: null,
   playerMenu: null,
   dungeonProgress: {},
-  phaseStops: {
-    yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
-    opponentTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },
-  },
+  phaseStops: clonePhaseStops(DEFAULT_PHASE_STOPS),
 }

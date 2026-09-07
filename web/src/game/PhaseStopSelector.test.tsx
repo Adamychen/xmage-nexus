@@ -37,11 +37,11 @@ describe('PhaseStopSelector', () => {
     expect(allBtns.length).toBe(14)
   })
 
-  it('default state has main1 and main2 off', () => {
+  it('default state has every stop on (your turn and opponent turn)', () => {
     const { container } = render(<PhaseStopSelector />)
     const btns = container.querySelectorAll('.phase-stop-btn')
     const activeCount = Array.from(btns).filter((b) => b.classList.contains('active')).length
-    // 4 active per row (UP, DR, BC, ET) × 2 rows = 8
-    expect(activeCount).toBe(8)
+    // 7 active per row × 2 rows = 14
+    expect(activeCount).toBe(14)
   })
 })

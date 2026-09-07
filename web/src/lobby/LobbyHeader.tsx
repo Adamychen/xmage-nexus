@@ -25,12 +25,14 @@ interface Props {
   tableCount: number
   onCreate: () => void
   onDownloadImages: () => void
+  onOpenAbout: () => void
+  hasNews: boolean
 }
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenLeaderboard, activeTab, onTabChange,
-  tableCount, onCreate, onDownloadImages,
+  tableCount, onCreate, onDownloadImages, onOpenAbout, hasNews,
 }: Props) {
   const { t } = useTranslation()
   const settings = useSettings()
@@ -137,6 +139,18 @@ export default function LobbyHeader({
           data-testid="open-settings"
         >
           <Icon name="settings" size={16} />
+        </button>
+        <button
+          type="button"
+          className="lobby-appearance-btn"
+          onClick={onOpenAbout}
+          title={t('system', 'about_title')}
+          data-testid="open-about"
+        >
+          <Icon name="info" size={16} />
+          {hasNews && (
+            <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
+          )}
         </button>
 
         {confirmDisconnect ? (

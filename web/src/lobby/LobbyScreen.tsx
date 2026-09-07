@@ -27,6 +27,8 @@ import { useTournamentBracket } from './useTournamentBracket'
 import { extractLobbyUsers, withTimeout, type LobbyTab } from './lobbyUtils'
 import { getIgnoredUsers } from './ignoreList'
 import SettingsModal from '../settings/SettingsModal'
+import AboutModal from '../system/AboutModal'
+import { useNewsBadge } from '../system/useNewsBadge'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
 
@@ -44,6 +46,8 @@ export default function LobbyScreen() {
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showDownloadImages, setShowDownloadImages] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
+  const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
   const [leaderboardTab, setLeaderboardTab] = useState<LeaderboardTab>('room')
@@ -118,6 +122,8 @@ export default function LobbyScreen() {
         tableCount={tables.length}
         onCreate={() => setShowCreate(true)}
         onDownloadImages={() => setShowDownloadImages(true)}
+        onOpenAbout={() => setShowAbout(true)}
+        hasNews={unseenNews}
       />
 
       {error && <div className="error-box panel lobby-error-banner">{tError(error)}</div>}
@@ -362,6 +368,14 @@ export default function LobbyScreen() {
       )}
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+      {showAbout && (
+        <AboutModal
+          onClose={() => {
+            setShowAbout(false)
+            refreshNews()
+          }}
+        />
       )}
     </div>
   )

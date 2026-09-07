@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import SettingsModal from './SettingsModal'
 import { setSetting } from '../state/store'
+import { loadPhaseStops } from '../state/persistence'
 
 afterEach(() => cleanup())
 
@@ -43,6 +44,24 @@ describe('SettingsModal', () => {
     const wasOn = first.classList.contains('on')
     fireEvent.click(first)
     expect(first.classList.contains('on')).toBe(!wasOn)
+  })
+
+  it('exposes persistent default phase stops in the gameplay section', () => {
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-gameplay'))
+    const block = screen.getByTestId('settings-phase-stops')
+    const btns = block.querySelectorAll('.phase-stop-btn')
+    expect(btns).toHaveLength(14)
+    for (const b of Array.from(btns)) {
+      expect(b.classList.contains('active')).toBe(true)
+    }
+    const main1 = screen.getByTestId('settings-stop-your-main1') as HTMLElement
+    fireEvent.click(main1)
+    expect(main1.classList.contains('active')).toBe(false)
+    expect(loadPhaseStops().yourTurn.main1).toBe(false)
+    fireEvent.click(main1)
+    expect(main1.classList.contains('active')).toBe(true)
+    expect(loadPhaseStops().yourTurn.main1).toBe(true)
   })
 
   it('calls onClose from the close button', () => {

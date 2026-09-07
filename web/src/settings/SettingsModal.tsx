@@ -4,11 +4,15 @@ import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import type { ManaPaymentStored } from '../state/persistence'
+import { saveGameLogAutoSave } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
+import { PhaseStopGrid } from '../game/PhaseStopSelector'
+import { togglePhaseStop } from '../game/phaseStops'
 import SoundFxControls from './SoundFxControls'
 import Toggle from '../ui/Toggle'
 import '../appearance/SleevePickerModal.css'
 import '../game/GameMenu.css'
+import '../game/PhaseStopSelector.css'
 import './SettingsModal.css'
 
 type SettingsSection = 'language' | 'interface' | 'board' | 'sound' | 'gameplay'
@@ -210,6 +214,15 @@ function GameplaySection() {
         onChange={(v) => setSetting('autoKeepMulligan', v)}
         label={t('game', 'auto_mulligan')}
       />
+      <Toggle
+        checked={settings.gameLogAutoSave}
+        onChange={(v) => {
+          setSetting('gameLogAutoSave', v)
+          saveGameLogAutoSave(v)
+        }}
+        label={t('system', 'log_autosave')}
+        title={t('system', 'log_autosave_hint')}
+      />
       <h3 className="settings-section-title">{t('game', 'mana_payment_title')}</h3>
       {manaRows.map((row) => (
         <Toggle
@@ -220,6 +233,15 @@ function GameplaySection() {
           title={row.tip}
         />
       ))}
+      <h3 className="settings-section-title">{t('game', 'phase_stops_default_title')}</h3>
+      <p className="settings-hint">{t('game', 'phase_stops_default_hint')}</p>
+      <div className="phase-stop-selector" data-testid="settings-phase-stops">
+        <PhaseStopGrid
+          value={settings.phaseStops}
+          onToggle={(turn, key) => setSetting('phaseStops', togglePhaseStop(settings.phaseStops, turn, key))}
+          idPrefix="settings"
+        />
+      </div>
       <h3 className="settings-section-title">{t('game', 'auto_answers_title', { count: settings.autoAnswers.length })}</h3>
       {settings.autoAnswers.length === 0 && (
         <p className="settings-hint">{t('game', 'auto_answers_empty')}</p>

@@ -36,6 +36,15 @@
   color: #cbd5e1;
   padding: 5px 8px;
   cursor: pointer;
+  position: relative;
+}
+
+.login-news-dot {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 8px;
+  color: #ffd070;
 }
 
 .login-settings-btn:hover {

@@ -335,3 +335,9 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.game-menu-item .game-menu-news-dot {
+  margin-left: auto;
+  font-size: 9px;
+  color: #ffd070;
+}

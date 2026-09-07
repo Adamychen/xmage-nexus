@@ -64,6 +64,35 @@ chatTest(
 )
 
 chatTest(
+  'lobby chat: opening the floating panel does not squeeze the tables view',
+  { tag: '@chat' },
+  async ({ page, chatServer }) => {
+    void chatServer
+    const username = `chat-layout-${String(Date.now()).slice(-10)}`
+    cleanupUser(username)
+
+    await login(page, username)
+    await expect(page.getByRole('heading', { name: /Lobby|XMage Nexus/i })).toBeVisible({ timeout: 15_000 })
+
+    const mainBox = () => page.evaluate(() => {
+      const el = document.querySelector('.lobby-main')
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return { width: r.width, marginRight: getComputedStyle(el).marginRight }
+    })
+    const before = await mainBox()
+    expect(before).not.toBeNull()
+
+    await page.locator('.floating-chat-fab').click()
+    await expect(page.locator('.lobby-aside.floating-chat')).toBeVisible({ timeout: 10_000 })
+
+    const after = await mainBox()
+    expect(after?.marginRight).toBe('0px')
+    expect(Math.abs((after?.width ?? 0) - (before?.width ?? 0))).toBeLessThanOrEqual(1)
+  },
+)
+
+chatTest(
   'game chat: send and receive messages while watching a game',
   { tag: '@chat' },
   async ({ page, chatServer }) => {

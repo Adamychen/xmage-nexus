@@ -13,7 +13,8 @@ export function useDeckMetadata() {
     const toFetch: DeckCard[] = []
     for (const c of cards) {
       const k = `${c.setCode}/${c.cardNumber}`
-      if (!m.has(k) && !m.has(c.cardName.toLowerCase())) {
+      const hasSetAndNum = !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
+      if (hasSetAndNum ? !m.has(k) : !m.has(c.cardName.toLowerCase())) {
         toFetch.push(c)
       }
     }

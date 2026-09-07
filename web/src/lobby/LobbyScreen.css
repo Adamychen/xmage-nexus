@@ -158,11 +158,12 @@
   overflow: hidden;
 }
 
-/* El panel flotante solapa el contenido: cuando está abierto, el main
-   reserva su hueco (360px + 20px de margen) para que ningún botón quede
-   tapado (ej. Exportar/Importar del DeckBuilder). Solo desktop. */
-@media (min-width: 601px) {
-  .lobby-columns-single:has(> aside.lobby-aside.floating-chat) > .lobby-main {
+/* El panel flotante solapa el contenido sin desplazarlo: solo dentro del
+   DeckBuilder y en pantallas anchas el main reserva su hueco (360px + 20px
+   de margen) para que Exportar/Importar no queden tapados. En el resto de
+   vistas (mesas, partidas) abrir el chat no debe encoger el contenido. */
+@media (min-width: 1100px) {
+  .lobby-columns-single:has(> aside.lobby-aside.floating-chat) > .lobby-main.has-deck-builder {
     margin-right: 380px;
   }
 }
@@ -762,6 +763,18 @@ html:lang(zh) .hero-deck-label {
 .lobby-appearance-btn:hover {
   background: rgba(22, 28, 56, 0.9);
   border-color: rgba(255, 208, 112, 0.4);
+  color: #ffd070;
+}
+
+.lobby-appearance-btn {
+  position: relative;
+}
+
+.lobby-news-dot {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 8px;
   color: #ffd070;
 }
 

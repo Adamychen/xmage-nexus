@@ -1,3 +1,6 @@
+import type { PhaseStops } from '../net/commands'
+import { mergePhaseStops } from '../game/phaseStops'
+
 export interface ConnectionInfo {
   /** Host del proxy WebSocket (ws://wsHost:proxyPort). */
   wsHost: string
@@ -251,6 +254,37 @@ export function loadHandRequestsAllowed(): boolean {
 export function saveHandRequestsAllowed(allowed: boolean) {
   try {
     getStorage().setItem(HAND_REQUESTS_KEY, JSON.stringify(allowed))
+  } catch {}
+}
+
+const PHASE_STOPS_KEY = 'mage-web-phase-stops'
+export function loadPhaseStops(): PhaseStops {
+  try {
+    const raw = getStorage().getItem(PHASE_STOPS_KEY)
+    if (raw) return mergePhaseStops(JSON.parse(raw))
+  } catch {}
+  return mergePhaseStops(null)
+}
+
+export function savePhaseStops(stops: PhaseStops) {
+  try {
+    getStorage().setItem(PHASE_STOPS_KEY, JSON.stringify(stops))
+  } catch {}
+}
+
+const GAME_LOG_AUTOSAVE_KEY = 'mage-web-game-log'
+
+export function loadGameLogAutoSave(): boolean {
+  try {
+    const raw = getStorage().getItem(GAME_LOG_AUTOSAVE_KEY)
+    if (raw != null) return JSON.parse(raw) === true
+  } catch {}
+  return true
+}
+
+export function saveGameLogAutoSave(enabled: boolean) {
+  try {
+    getStorage().setItem(GAME_LOG_AUTOSAVE_KEY, JSON.stringify(enabled))
   } catch {}
 }
 

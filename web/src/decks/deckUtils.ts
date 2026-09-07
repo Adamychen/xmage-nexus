@@ -211,6 +211,85 @@ export const BASIC_LAND_PRESETS: BasicLandPreset[] = [
   { name: 'Wastes', color: 'C', symbol: 'C', label: 'Yermos', setCode: 'OGW', cardNumber: '183' },
 ]
 
+export interface BasicLandSet {
+  code: string
+  label: string
+  fullArt: boolean
+  printings: Record<string, string>
+}
+
+export const BASIC_LAND_SETS: BasicLandSet[] = [
+  {
+    code: 'DMU',
+    label: 'Dominaria United',
+    fullArt: false,
+    printings: { Plains: '277', Island: '278', Swamp: '279', Mountain: '280', Forest: '281' },
+  },
+  {
+    code: 'ZEN',
+    label: 'Zendikar · full-art',
+    fullArt: true,
+    printings: { Plains: '230', Island: '234', Swamp: '238', Mountain: '242', Forest: '246' },
+  },
+  {
+    code: 'BFZ',
+    label: 'Battle for Zendikar · full-art',
+    fullArt: true,
+    printings: { Plains: '250', Island: '255', Swamp: '260', Mountain: '265', Forest: '270' },
+  },
+  {
+    code: 'UNH',
+    label: 'Unhinged · full-art',
+    fullArt: true,
+    printings: { Plains: '136', Island: '137', Swamp: '138', Mountain: '139', Forest: '140' },
+  },
+  {
+    code: 'UST',
+    label: 'Unstable · full-art',
+    fullArt: true,
+    printings: { Plains: '212', Island: '213', Swamp: '214', Mountain: '215', Forest: '216' },
+  },
+]
+
+export const DEFAULT_BASIC_LAND_SET = 'DMU'
+const BASIC_LAND_SET_KEY = 'mage-web-basic-land-set'
+
+export function loadBasicLandSet(): string {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(BASIC_LAND_SET_KEY)
+      if (raw && BASIC_LAND_SETS.some((s) => s.code === raw)) return raw
+    }
+  } catch {}
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(BASIC_LAND_SET_KEY)
+      if (raw && BASIC_LAND_SETS.some((s) => s.code === raw)) return raw
+    }
+  } catch {}
+  return DEFAULT_BASIC_LAND_SET
+}
+
+export function saveBasicLandSet(code: string) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(BASIC_LAND_SET_KEY, code)
+      return
+    }
+  } catch {}
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(BASIC_LAND_SET_KEY, code)
+  } catch {}
+}
+
+export function landPrinting(name: string, setCode: string): { setCode: string; cardNumber: string } {
+  const preset = BASIC_LAND_PRESETS.find((p) => p.name === name)
+  const set = BASIC_LAND_SETS.find((s) => s.code === setCode)
+  const cardNumber = set?.printings[name]
+  if (cardNumber) return { setCode: set.code, cardNumber }
+  return { setCode: preset?.setCode ?? 'DMU', cardNumber: preset?.cardNumber ?? '0' }
+}
+
 export function countManaPips(
   cards: DeckCard[],
   metaMap: Map<string, { manaCost?: string; typeLine?: string }>,
@@ -240,6 +319,7 @@ export function countManaPips(
 export function suggestBasicLands(
   pips: Record<'W' | 'U' | 'B' | 'R' | 'G', number>,
   targetLandCount = 24,
+  setCode: string = DEFAULT_BASIC_LAND_SET,
 ): { name: string; setCode: string; cardNumber: string; amount: number }[] {
   const activeColors = (['W', 'U', 'B', 'R', 'G'] as const).filter((col) => pips[col] > 0)
   if (activeColors.length === 0 || targetLandCount <= 0) {
@@ -272,10 +352,11 @@ export function suggestBasicLands(
     .filter((q) => q.floored > 0)
     .map((q) => {
       const preset = BASIC_LAND_PRESETS.find((p) => p.color === q.col)!
+      const printing = landPrinting(preset.name, setCode)
       return {
         name: preset.name,
-        setCode: preset.setCode,
-        cardNumber: preset.cardNumber,
+        setCode: printing.setCode,
+        cardNumber: printing.cardNumber,
         amount: q.floored,
       }
     })

@@ -70,7 +70,7 @@ const WHITELIST = new Set<string>([
   'lobby.leaderboard_progress_value',
   'login.avatar',
   'login.proxy',
-  'login.server_local',
+  'system.news_nexus',  'login.server_local',
   'wiki.shortcuts_esc',
   'common.error',
   'common.no',

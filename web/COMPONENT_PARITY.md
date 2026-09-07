@@ -33,11 +33,11 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ✅ | Auditada 2026-09-08 (ver § U9): ocultar pickeadas (Hide+F9, `hiddenCards` en el pick — el proxy ya lo soportaba) U9-1, confirm quit U9-2, mesa/asientos + dirección de paso (usa `players` antes ignorado) U9-3, timer naranja ≤30s + tick audio 6s + aviso con pestaña oculta U9-4, anti-doble-pick 1.5s U9-5, descarga log `.draft` reimportable por U7-1 U9-6, sobre ordenado por rareza como desktop U9-7. Supera: hover doble-cara, imágenes Scryfall, i18n. Fix colateral: `DraftScreen`/`ConstructScreen` montados 2× (`App`+`GameScreen`) → solo `App`. Tests: unit 903 + `draft.spec` 3/3 | 2026-09-08 |
 | U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ✅ (AUDITADA 2026-09-08, CERRADA; ver §U10) | `TOURNAMENT_*` ✅ (`tournament.spec.ts` 4/4: bracket/modal, T1 watch, T4 chat, T5 packs; Fase A `849ec37f20` + Fase B) | 2026-09-08 |
-| U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ⚠️ | Auditada 2026-09-05: 4 gaps (skips F5/F6/F7/F10/F11/F3, trigger-order, auto-answers, macros), resto ✅ | 2026-09-05 |
+| U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ✅ | Auditada 2026-09-05, **cerrada 2026-09-08**: G11-1 skips, G11-2 trigger-order, G11-3 auto-answers; G11-4 macros declarado no-aplica (botón vestigial sin consumidor en motor/servidor); G11-5 paradas de fase con defaults persistentes todo-marcados | 2026-09-08 |
 | U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ✅ | Cerrada 2026-09-08 (ver § U12): G12-1 menú clic-derecho por bando + flujo permiso completo + Switch Hands (verify real 19/19), G12-2 disparadores deck/sideboard + InfoWindows auto (e2e), G12-3 `CARD_CONTEXT_ITEMS` eliminado (sin menú de carta en desktop para gameplay), G12-4 filtro `phasedIn` (unit+e2e). Supera en layouts + HandViewer | 2026-09-08 |
 | U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ✅ | Auditada 2026-09-05: G13-1 cerrado (fix 2026-09-06), resto ✅ | 2026-09-06 |
 | U14 | Preguntas al jugador | `dialog/Pick*.java` (5), `ShowCardsDialog.java`, `CustomOptionsDialog.java`, `UserRequestDialog.java`, `game/FeedbackPanel.java`, `components/ability/AbilityPicker.java` | `game/feedback/*`, `game/feedbackModes/*`, `FeedbackDialog.tsx`, `UserRequestDialog.tsx` | ⚠️ | Sin gaps bloqueantes; 6 gaps menores UX (P14-1…P14-6, ver auditoría) | 2026-09-05 |
-| U15 | Sistema | `dialog/PreferencesDialog.java`, `DownloadImagesDialog.java`, `GameEndDialog.java`, `AddLandDialog.java`, `CardInfoWindowDialog.java`, `AboutDialog.java`, `WhatsNewDialog.java` | `appearance/AppearanceSettingsModal.tsx`, `lobby/DownloadImagesDialog.tsx`, `game/GameEndDialog.tsx`, `game/HelpWikiModal.tsx` | ❓ | mapeo parcial visible; auditoría pendiente | — |
+| U15 | Sistema | `dialog/PreferencesDialog.java`, `DownloadImagesDialog.java`, `GameEndDialog.java`, `AddLandDialog.java`, `CardInfoWindowDialog.java`, `AboutDialog.java`, `WhatsNewDialog.java` | `settings/SettingsModal.tsx`, `lobby/DownloadImagesDialog.tsx`, `game/GameEndDialog.tsx`, `game/HelpWikiModal.tsx`, `system/AboutModal.tsx`, `system/news.ts`, `system/gameLogs.ts` | ✅ | Auditada y cerrada 2026-09-08 (ver § U15): prefs esenciales ✅ + atajos fijos (diferencia declarada), imágenes ✅ (supera), fin partida ✅ + duración + auto-log, tierras ✅ + set picker full-art, InfoWindows ✅ (U12), About ✅ + news remoto doble feed (Nexus+XMage vía GitHub releases, gratis) | 2026-09-08 |
 
 ## Auditorías por unidad
 
@@ -72,7 +72,34 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U15 — pendientes (U4/U5/U6/U7/U9/U10 cerradas)
+### U1 · U2 — nota (U4/U5/U6/U7/U9/U10/U15 cerradas)
+
+### U15 — Sistema (AUDITADA 2026-09-08, CERRADA)
+
+Base desktop: `PreferencesDialog.java` (4311 lín., 9 pestañas) · `DownloadImagesDialog.java`
+(485) · `GameEndDialog.java` (330: Result + Statistics + autoguardado HTML a `gamelogs/`) ·
+`AddLandDialog.java` (519: set + 5 spinners + full-art + Suggest) · `CardInfoWindowDialog.java`
+(261) · `AboutDialog.java` (159) · `WhatsNewDialog.java` (407: news remoto en WebView).
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Prefs: Main (log-autosave, card, game) | `SettingsModal` gameplay (auto-log ON default) + tablero/sonido; log-autosave ≈ G15-3 | ✅ esenc.; sin `showCardName/tooltipDelay` (siempre visibles/instantáneo) |
+| Prefs: avatar 6×4, GUI size, sounds | Avatar en login, `uiScale` presets + CJK, 3 buses + volúmenes (sin música de carpeta: sin FS) | ✅ esencial |
+| Prefs: theme + fondos de mesa | `boardLayout` + `sleeveId`; playmats → ROADMAP 3.4 | ⚠️ diferido (ya roadmap) |
+| Prefs: phases 7×2 + 10 skips | `PhaseStopGrid` persistente + skips F4–F11 (G11-1/G11-5) | ✅ |
+| Prefs: 11 hotkeys custom | Atajos fijos documentados (`HelpWikiModal`) | — diferencia declarada |
+| Prefs: proxy SOCKS | No-aplica navegador (proxy/servidor en login) | — no-aplica |
+| Descarga imágenes | `DownloadImagesDialog` (Cache Storage, scopes, concurrencia, símbolos) | ✅ (supera) |
+| Fin partida: Result + Statistics + autoguardado | Resultado + score + **duración** (`startTime/endTime` ya en contrato, G15-4) + **auto-guardado** a IndexedDB (tope 20, toggle) + botón descargar HTML (G15-3) | ✅ (vida final no viaja en contrato: declarado) |
+| Añadir tierras: set + full-art | `BasicLandAdder` + **selector de set** (DMU/ZEN/BFZ/UNH/UST full-art con nºs verificados en Scryfall, G15-7) + asistente por pips | ✅ |
+| CardInfo windows | `InfoWindows` (U12 G12-2) | ✅ |
+| About + Novedades remoto | `AboutModal` (versión de `package.json`, créditos, links) + **news doble feed** (`system/news.ts`: releases GitHub `Adamychen/xmage-nexus` + `magefree/mage`, caché 24h, badge ●, offline-first; coste 0) | ✅ (supera: el desktop solo trae feed XMage) |
+
+Evidencia: `news.test` 7 (caché/TTL, mapeo API, seen por repo, md-lite anti-XSS) +
+`AboutModal.test` 3 + `gameLogs.test` 4 (rotación, escape HTML) + `deckUtils.test` +4
+(printings verificados, fallback, suggest por set) + `store.test` +1 (autosave on/off en
+`GAME_OVER`) + e2e `about.spec` (badge → feeds mockeados → badge limpiado); i18n `system.*`
+×9 (`news_nexus` en whitelist por nombre propio); unit total 984.
 
 ### U10 — Torneo (AUDITADA 2026-09-08, CERRADA)
 
@@ -104,7 +131,8 @@ Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `Ga
 | Skips F5 (hasta end step), F7 (hasta próxima main), F10 (saltar pila), F11 (end previo a mi turno), F3 (cancelar skips), F2 (confirmar) + botones con borde activo. Sin F6: el propio desktop lo tiene desactivado (`GamePanel.java:2897-2904`) | `Pasar ▾` split-button (`ActionButton` + `PassMenu`: 6 skips + F3 cancela solo con skip activo) + atajos F4/F5/F7/F9/F10/F11/F3 (`GameScreen.tsx`); skip activo con borde dorado + sublabel `skip_active_to` leído de los flags `passed*` del contrato; `e2e/skips.spec.ts` dual (fake: teclas+clics+DOM; real local: ok proxy a las 7 acciones + eco `passedAllTurns` + limpieza F3). Nota: F10 con pila vacía es no-op en el servidor (`PlayerImpl`) | ✅ G11-1 cerrado 2026-09-05 |
 | Trigger order: menú first/last/name + prefs `TRIGGER_AUTO_ORDER_*` | Diálogo dedicado `TriggerOrderDialog` (ruta `isTriggerOrder` en `FeedbackDialog`): 1 fila por trigger (arte+regla) con Elegir + ⏫/⏬ por carta o por texto + alcance carta/texto + ↺ reset; `sendTriggerAutoOrder` en `commands.ts`; proxy convierte data String→UUID en `TRIGGER_AUTO_ORDER_ABILITY_*` (`JsonArgs.parseActionData`, `JsonArgsTest` 5); reset también en `GameMenu` ⋯ | ✅ G11-2 cerrado 2026-09-05 |
 | Auto-answers (reemplazos, yes/no por texto) `automaticConfirmsMenu` | Solo-cliente (sin servidor): reglas `{texto→Sí/No}` en `game/autoAnswers.ts` (match exacto normalizado), persistidas `mage-web-auto-answers` vía slice `settings`; intercepción en `prompts.ts handleGameAsk` (nunca mulligan/voting/starting, rastro `auto:` en log); creación con checkbox en `GenericDialog` boolean; gestión en `GameMenu` ⋯ (lista+badge+✕+borrar todas) | ✅ G11-3 cerrado 2026-09-05 |
-| Macros `T` (grabar/repetir) | Sin equivalente | ❌ G11-4 menor |
+| Macros `T` (grabar/repetir) | Sin equivalente | — no-aplica (2026-09-08: botón vestigial — envía `TOGGLE_RECORD_MACRO` (`GamePanel.java:2855`) que nada consume: 0 referencias a `Macro` en el motor `Mage/` y el servidor `Mage.Server/`; el caso de uso ya lo cubren skips G11-1 + auto-pass + auto-respuestas G11-3) |
+| Paradas de fase (click en barra: propio/rival) + defaults persistentes | `PhaseBar` (click/shift+derecho, sesión) + `PhaseStopSelector` en menú ⋯ (sesión) + defaults todo-marcados en ajustes lobby/Jugabilidad (`mage-web-phase-stops`); seed en `GAME_INIT` + push al login desde settings | ✅ G11-5 cerrado 2026-09-08 |
 | Concede game/match, stop watching, hold priority Ctrl+click, rollback votado 0-3, Undo (solo con pila vacía) | `concedeGame/concedeMatch/stopWatching`, hold-priority, `RollbackDialog`, UNDO (menú ⋯ `GameMenu` + `state/actions`) | ✅ |
 | Replay (play/next/prev/skip10/stop) | Replay viewer (`TournamentPanel`, F5) | ✅ |
 | Reloj chess + aviso <5min + sonido si app inactiva | Timer prioridad + buffer en header + `timer-low` + tick ≤10s (`GameScreen/PlayerInfoBar`) | ✅ |
@@ -112,7 +140,7 @@ Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `Ga
 | Fin partida auto-cierre 8s | `GameEndDialog` manual (decisión UX, no gap) | — |
 | Cheat solo testMode | Sin equivalente (solo dev; no aplica a release) | — |
 
-Veredicto: ~~priorizar **G11-1** (skips), luego G11-2/G11-3. G11-4 menor.~~ **G11-1 cerrado 2026-09-05** (skips + rediseño pantalla: `GameMenu`, `PassMenu`, header de estado); **G11-2 cerrado 2026-09-05** (diálogo trigger order); **G11-3 cerrado 2026-09-05** (auto-respuestas solo-cliente); queda G11-4 menor.
+Veredicto: ~~priorizar **G11-1** (skips), luego G11-2/G11-3. G11-4 menor.~~ **G11-1 cerrado 2026-09-05** (skips + rediseño pantalla: `GameMenu`, `PassMenu`, header de estado); **G11-2 cerrado 2026-09-05** (diálogo trigger order); **G11-3 cerrado 2026-09-05** (auto-respuestas solo-cliente); **G11-4 declarado no-aplica 2026-09-08** (macro desktop vestigial sin consumidor en motor/servidor; caso de uso cubierto por G11-1+G11-3). **U11 CERRADA**.
 
 ### U12 — Zonas y jugador (AUDITADA 2026-09-05)
 
