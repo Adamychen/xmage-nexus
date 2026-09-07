@@ -72,6 +72,7 @@ sesión solo llegan a sus propias conexiones.
 | `getGameTypes` | `{}` | Available game types |
 | `getDeckTypes` | `{}` | Available deck types |
 | `getPlayerTypes` | `{}` | Available player types (HUMAN, SIM, etc.) |
+| `getExpansionsWithBoosters` | `{}` | Sets with boosters (`{code, name, releaseDate}`), release-date order; `[]` while the card DB is still building |
 | `getRoomUsers` | `{}` | Users in the room |
 | `getRoomChatId` | `{}` | Chat room ID |
 | `getTables` | `{}` | All tables |

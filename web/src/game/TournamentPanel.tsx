@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../state/store'
+import { enterTournamentChat, exitTournamentChat } from '../state/actions'
 import TournamentBracket from '../lobby/TournamentBracket'
+import ChatBox from '../lobby/ChatBox'
 import { watchTournamentMatch } from '../lobby/useTournamentBracket'
 import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
@@ -10,12 +12,20 @@ import './TournamentPanel.css'
 export default function TournamentPanel() {
   const { t } = useTranslation()
   const tournament = useStore((s) => s.tournament)
+  const tournamentChatId = useStore((s) => s.tournamentChatId)
   const [expanded, setExpanded] = useState(true)
   const [quitting, setQuitting] = useState(false)
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
 
   useEffect(() => {
     if (tournament) setExpanded(true)
+  }, [tournament?.tournamentId])
+
+  useEffect(() => {
+    const tid = tournament?.tournamentId
+    if (!tid) return
+    void enterTournamentChat(tid)
+    return () => exitTournamentChat()
   }, [tournament?.tournamentId])
 
   if (!tournament) return null
@@ -104,6 +114,11 @@ export default function TournamentPanel() {
             onWatchMatch={(id) => void handleWatchMatch(id)}
             watchingMatchId={watchingMatchId}
           />
+          {tournamentChatId && (
+            <div className="tournament-panel-chat" data-testid="tournament-panel-chat">
+              <ChatBox chatIdOverride={tournamentChatId} />
+            </div>
+          )}
         </div>
       </section>
     </div>

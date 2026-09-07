@@ -1,4 +1,5 @@
 import { setState, addLog } from '../state'
+import { exitTournamentChat } from '../actions'
 import type { TournamentView } from '../../net/types.generated'
 
 export function handleStartTournament(data: unknown): void {
@@ -16,6 +17,7 @@ export function handleTournamentUpdate(objectId: string | null, data: unknown): 
 
 export function handleTournamentOver(data: unknown): void {
   const text = typeof data === 'string' ? data : (data as { message?: string } | null)?.message ?? 'Torneo terminado'
+  exitTournamentChat()
   addLog('torneo', text)
 }
 

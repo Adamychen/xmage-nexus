@@ -261,6 +261,11 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
         case 'getGameChatId':
           conn.ok(requestId, action, `game-chat-${opts.gameId}`)
           return
+        case 'getTournamentChatId': {
+          const tid = String((args as Record<string, unknown>).tournamentId ?? 'tournament')
+          conn.ok(requestId, action, `tournament-chat-${tid}`)
+          return
+        }
         case 'joinChat':
         case 'leaveChat':
           conn.ok(requestId, action, true)

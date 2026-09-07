@@ -169,6 +169,22 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
         case 'watchTournamentTable':
           conn.ok(requestId, action, {})
           return
+        case 'getTournamentChatId':
+          conn.ok(requestId, action, `tournament-chat-${argStr('tournamentId') || TOURNAMENT_ID}`)
+          return
+        case 'joinChat':
+        case 'leaveChat':
+          conn.ok(requestId, action, true)
+          return
+        case 'sendChatMessage': {
+          const text = String((args as Record<string, unknown>).text ?? '')
+          const scopeChatId = String((args as Record<string, unknown>).chatId ?? '')
+          conn.ok(requestId, action, true)
+          if (text && scopeChatId) {
+            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: 'mesa-rival', message: text, time: Date.now() }, scopeChatId)
+          }
+          return
+        }
         case 'getGameTypes':
           conn.ok(requestId, action, [
             { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
@@ -176,7 +192,16 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
           ])
           return
         case 'getDeckTypes':
-          conn.ok(requestId, action, ['Variant Magic - Commander'])
+          conn.ok(requestId, action, ['Variant Magic - Commander', 'Limited'])
+          return
+        case 'getExpansionsWithBoosters':
+          conn.ok(requestId, action, [
+            { code: 'M21', name: 'Core Set 2021', releaseDate: 1594252800000 },
+            { code: 'MH3', name: 'Modern Horizons 3', releaseDate: 1717718400000 },
+            { code: 'BLB', name: 'Bloomburrow', releaseDate: 1722556800000 },
+            { code: 'DSK', name: 'Duskmourn', releaseDate: 1727395200000 },
+            { code: 'OTJ', name: 'Outlaws of Thunder Junction', releaseDate: 1712880000000 },
+          ])
           return
         default:
           conn.ok(requestId, action, {})

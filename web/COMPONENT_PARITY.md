@@ -32,7 +32,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ✅ | Auditada 2026-09-07 (ver § U7): import 9 ext desktop cubiertas (U7-1 `.draft`, U7-2 mtgjson `.json` con backup-restore desambiguado, U7-3 `.mwdeck` bracket/set + switch banquillo por línea vacía MTGO + comentarios `#` + cabeceras con conteo), botón pegar-portapapeles (U7-5), Commander→principal+cover y Maybeboard→banquillo (U7-6), Partner 2 coronas + unión identidad por datos oráculo (U7-7, supera: desktop sin zona). Export 4 formatos ✅ (dck_info no-aplica). Supera: URLs Moxfield/Archidekt, sample London+goldfish, badge live. Tests: unit 894 + `decks-gallery.spec` 6/6 (test U7) + `deckvalidation` 3/3 | 2026-09-07 |
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ✅ | Auditada 2026-09-08 (ver § U9): ocultar pickeadas (Hide+F9, `hiddenCards` en el pick — el proxy ya lo soportaba) U9-1, confirm quit U9-2, mesa/asientos + dirección de paso (usa `players` antes ignorado) U9-3, timer naranja ≤30s + tick audio 6s + aviso con pestaña oculta U9-4, anti-doble-pick 1.5s U9-5, descarga log `.draft` reimportable por U7-1 U9-6, sobre ordenado por rareza como desktop U9-7. Supera: hover doble-cara, imágenes Scryfall, i18n. Fix colateral: `DraftScreen`/`ConstructScreen` montados 2× (`App`+`GameScreen`) → solo `App`. Tests: unit 903 + `draft.spec` 3/3 | 2026-09-08 |
-| U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ❓ | `TOURNAMENT_*` ✅ (`tournament.spec.ts`); `RandomPacksSelector` por auditar | — |
+| U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ✅ (AUDITADA 2026-09-08, CERRADA; ver §U10) | `TOURNAMENT_*` ✅ (`tournament.spec.ts` 4/4: bracket/modal, T1 watch, T4 chat, T5 packs; Fase A `849ec37f20` + Fase B) | 2026-09-08 |
 | U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ⚠️ | Auditada 2026-09-05: 4 gaps (skips F5/F6/F7/F10/F11/F3, trigger-order, auto-answers, macros), resto ✅ | 2026-09-05 |
 | U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ⚠️ | Auditada 2026-09-05: 4 gaps (permisos de mano, visores looked-at/companion/sideboard, menú contextual sin cablear, phased-out), resto ✅ | 2026-09-05 |
 | U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ✅ | Auditada 2026-09-05: G13-1 cerrado (fix 2026-09-06), resto ✅ | 2026-09-06 |
@@ -72,7 +72,24 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U10 · U15 — pendientes (U4/U5/U6/U7/U9 cerradas)
+### U1 · U2 · U15 — pendientes (U4/U5/U6/U7/U9/U10 cerradas)
+
+### U10 — Torneo (AUDITADA 2026-09-08, CERRADA)
+
+Base desktop: `TournamentPanel.java` (chat tipo TOURNAMENT: `getTournamentChatId` + `joinTournament` + `joinChat`, leave al cerrar; bracket + standings; quit con confirmación; ojo Watch por match; fechas inicio/fin; cuenta atrás de construcción; nº rondas) · `NewTournamentDialog.java` (flags skill/rated/rollback/relojes/minRating/quitRatio/vetados/single-game, `DraftOptions(TimingOption)` BEGINNER×2.0/REGULAR×1.5/PROFESSIONAL×1.0 solo tipos draft, pool `RandomPacksSelectorDialog` sobre `ExpansionRepository.getWithBoostersSortedByReleaseDate()` con shuffle+truncado `3×(jugadores+1)`/RichMan 36).
+Base web: `TournamentPanel.tsx` + `TournamentBracket.tsx`/Modal/`useTournamentBracket.ts` + wizard `CreateTable`.
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Ojo Watch por match | Botón `bracket-watch` → `watchTournamentTable(matchTableId)` (modal lobby + panel partida; semántica = `tableManager().watchTable`, igual que desktop) | ✅ T1 |
+| Flags de creación (skill/rated/rollback/relojes/minRating/quitRatio/vetados/single-game) | `tArgs` completos + `rated/bannedUsers/rollbackTurnsAllowed` en `MatchOptionsParser` + checkbox single-game i18n ×9 | ✅ T2 |
+| Quit con confirm, fechas, countdown construcción, rondas solo Swiss | `confirm` i18n ×9 (lobby+partida), `tournament-dates`, cuenta atrás solo en Constructing, `numberRounds` solo tipos Swiss | ✅ T3 |
+| Chat de torneo | `getTournamentChatId` + `enter/exitTournamentChat` + `<ChatBox chatIdOverride>` solo en `TournamentPanel` + allowlist `chat.ts`; salida en unmount/TOURNAMENT_OVER/lobby/disconnect | ✅ T4 |
+| RandomPacksSelector | `getExpansionsWithBoosters` (proxy→`ExpansionRepository`, `[]` si la BD no está lista) + diálogo multiselector (todos marcados, all/none, shuffle+truncado desktop, `;`-join) | ✅ T5 |
+| Timing de draft | Select BEGINNER/REGULAR/PROFESSIONAL (def. REGULAR) solo tipos con `Draft` + `timing` en `limitedOptions` + `DraftOptions` en el proxy (sin fork) | ✅ T6 |
+| Cube From Deck / Jumpstart Custom, multi-seat bots | Fuera de alcance declarado | — |
+
+Evidencia: `TournamentBracket.test` 12 (T1+T3), `CreateTableDialog.test` 11 (T2+T3+T6), `store.test` +5 (T4), `RandomPacksSelector.test` 7 (T5), `SimPlayerTest` 9 (+timing), `ExpansionsCommandTest` 1; `tournament.spec` 4/4 (panel/modal, T1, T4 chat con eco, T5 diálogo→input).
 
 ### U11 — Núcleo partida (AUDITADA 2026-09-05)
 

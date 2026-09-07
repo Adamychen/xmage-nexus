@@ -81,4 +81,61 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       await expect(modal.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
     })
   })
+
+  test('tournament panel joins the tournament chat over WS (T4)', async ({ page }) => {
+    await withFakeServer(() => tournamentScenario(), async () => {
+      await login(page, 'e2e')
+      await page.evaluate(() => {
+        const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
+        const now = Date.now()
+        store?.setState({
+          phase: 'game',
+          tournament: {
+            tournamentId: 'tournament-test-1',
+            view: {
+              tournamentName: 'Commander Clash',
+              tournamentType: 'Swiss',
+              tournamentState: 'Dueling',
+              startTime: now - 3600_000,
+              endTime: null,
+              stepStartTime: now - 90000,
+              serverTime: now,
+              constructionTime: 600,
+              watchingAllowed: true,
+              rounds: [
+                { games: [{ roundNum: 1, state: 'Finished', players: 'alice vs bob', result: '2-0', tableId: 'table-g1' }] },
+              ],
+              players: [{ name: 'alice', state: 'Dueling', points: 6, results: '2-0', history: 'W-W', quit: false }],
+              runningInfo: '',
+            },
+          },
+        })
+      })
+      const panel = page.locator('[data-testid="tournament-panel"]').first()
+      await expect(panel).toBeVisible({ timeout: 10_000 })
+      const chat = panel.locator('[data-testid="tournament-panel-chat"]').first()
+      await expect(chat).toBeVisible({ timeout: 10_000 })
+      await chat.locator('.chat-input input').fill('gl en el torneo')
+      await chat.locator('.chat-input button[type="submit"]').click()
+      await expect(chat.locator('.chat-list')).toContainText('gl en el torneo', { timeout: 10_000 })
+    })
+  })
+
+  test('random packs selector fills the draft sets over WS (T5)', async ({ page }) => {
+    await withFakeServer(() => tournamentScenario(), async () => {
+      await login(page, 'e2e')
+      await page.locator('.top-nav-create').click()
+      const selects = page.locator('.create-tab-content select')
+      await selects.nth(1).selectOption('Limited')
+      await page.getByText(/Crear como torneo Draft/i).click()
+      await selects.nth(2).selectOption('Booster Draft Elimination (Random)')
+      await page.getByTestId('random-packs-open').click()
+      const dialog = page.locator('[data-testid="random-packs-selector"]')
+      await expect(dialog).toBeVisible({ timeout: 10_000 })
+      await expect(dialog).toContainText('M21')
+      await dialog.getByTestId('random-packs-apply').click()
+      const setsInput = page.getByPlaceholder(/M21, MH3, BLB/)
+      await expect(setsInput).not.toHaveValue('', { timeout: 10_000 })
+    })
+  })
 })

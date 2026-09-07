@@ -244,4 +244,33 @@ describe('CreateTableDialog', () => {
       expect(onClose).toHaveBeenCalled()
     })
   })
+
+  it('T6: draft tournament sends timing only for Draft types', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Timed Draft' } })
+    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
+    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
+    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'Sealed Swiss' } })
+    // timing selector hidden for non-draft types
+    expect(screen.queryByText(/Draft pick time|Tiempo por pick/i)).toBeNull()
+    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    const timingSelect = screen.getByLabelText(/Draft pick time|Tiempo por pick/i) as HTMLSelectElement
+    expect(timingSelect.value).toBe('REGULAR')
+    fireEvent.change(timingSelect, { target: { value: 'PROFESSIONAL' } })
+
+    for (let i = 0; i < 6; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo|Create Draft/i }))
+
+    await waitFor(() => {
+      const sent = (cmds.createTournamentTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
+      expect((sent.limitedOptions as Record<string, unknown>).timing).toBe('PROFESSIONAL')
+    })
+  })
 })

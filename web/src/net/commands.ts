@@ -57,6 +57,17 @@ export async function getDraftCubes(): Promise<string[]> {
   return res.ok ? (res.data ?? []) : []
 }
 
+export interface BoosterSetInfo {
+  code: string
+  name: string
+  releaseDate: number
+}
+
+export async function getExpansionsWithBoosters(): Promise<BoosterSetInfo[]> {
+  const res = await getGateway().send<BoosterSetInfo[]>('getExpansionsWithBoosters')
+  return res.ok ? (res.data ?? []) : []
+}
+
 export async function getTournamentGameTypes(): Promise<GameTypeInfo[]> {
   const res = await getGateway().send<GameTypeInfo[]>('getTournamentGameTypes')
   return res.ok ? (res.data ?? []) : []
@@ -74,6 +85,11 @@ export async function getGameChatId(gameId: string): Promise<string | undefined>
 
 export async function getTableChatId(tableId: string): Promise<string | undefined> {
   const res = await getGateway().send<string>('getTableChatId', { tableId })
+  return res.ok ? res.data : undefined
+}
+
+export async function getTournamentChatId(tournamentId: string): Promise<string | undefined> {
+  const res = await getGateway().send<string>('getTournamentChatId', { tournamentId })
   return res.ok ? res.data : undefined
 }
 

@@ -69,6 +69,41 @@ class SimPlayerTest {
     }
 
     @Test
+    void parseTournamentOptionsBuildsDraftOptionsWhenTimingPresent() {
+        JsonObject args = new JsonObject();
+        args.addProperty("name", "Draft Night");
+        args.addProperty("tournamentType", "Booster Draft Elimination");
+        JsonObject lo = new JsonObject();
+        lo.addProperty("constructionTime", 600);
+        lo.addProperty("numberBoosters", 3);
+        lo.addProperty("timing", "PROFESSIONAL");
+        JsonArray codes = new JsonArray();
+        codes.add("M21");
+        lo.add("setCodes", codes);
+        args.add("limitedOptions", lo);
+
+        mage.game.tournament.TournamentOptions tOpts = MatchOptionsParser.parseTournamentOptions(args);
+
+        assertTrue(tOpts.getLimitedOptions() instanceof mage.game.draft.DraftOptions);
+        assertEquals(mage.game.draft.DraftOptions.TimingOption.PROFESSIONAL,
+                ((mage.game.draft.DraftOptions) tOpts.getLimitedOptions()).getTiming());
+    }
+
+    @Test
+    void parseTournamentOptionsKeepsBaseLimitedOptionsWithoutTiming() {
+        JsonObject args = new JsonObject();
+        args.addProperty("name", "Sealed Night");
+        args.addProperty("tournamentType", "Sealed Elimination");
+        JsonObject lo = new JsonObject();
+        lo.addProperty("constructionTime", 600);
+        args.add("limitedOptions", lo);
+
+        mage.game.tournament.TournamentOptions tOpts = MatchOptionsParser.parseTournamentOptions(args);
+
+        assertTrue(!(tOpts.getLimitedOptions() instanceof mage.game.draft.DraftOptions));
+    }
+
+    @Test
     void mulliganAskDetection() {
         assertTrue(SimPlayer.isMulliganAsk("Do you want to keep your hand? (Mulligan)"));
         assertTrue(!SimPlayer.isMulliganAsk("Do you want to pass priority? You have mana in your mana pool"));

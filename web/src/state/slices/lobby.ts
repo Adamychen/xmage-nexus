@@ -18,6 +18,10 @@ export interface LobbySlice {
   tableChatId: string | null
   /** mesa a la que pertenece tableChatId (evita re-joins y cruces al cambiar de mesa) */
   tableChatTableId: string | null
+  /** chat del torneo en el panel de partida (T4, paridad con el chatPanel del TournamentPanel) */
+  tournamentChatId: string | null
+  /** torneo al que pertenece tournamentChatId (evita re-joins y cruces) */
+  tournamentChatTournamentId: string | null
   chatMessages: ChatMessageEvent[]
   watchingTable: TableView | null
   stagingTableId: string | null
@@ -32,6 +36,8 @@ export const initialLobby: LobbySlice = {
   roomChatId: null,
   tableChatId: null,
   tableChatTableId: null,
+  tournamentChatId: null,
+  tournamentChatTournamentId: null,
   chatMessages: [],
   watchingTable: null,
   stagingTableId: null,

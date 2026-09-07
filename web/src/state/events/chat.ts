@@ -11,10 +11,10 @@ export function handleChatMessage(data: unknown, objectId: string | null, s: Sna
   } else if (m.soundToPlay === 'PlayerLeft') {
     soundManager.play('ui_click', 'ui')
   }
-  if (s.phase !== 'game' && m.chatId && s.roomChatId && m.chatId !== s.roomChatId && m.chatId !== s.tableChatId) {
+  if (s.phase !== 'game' && m.chatId && s.roomChatId && m.chatId !== s.roomChatId && m.chatId !== s.tableChatId && m.chatId !== s.tournamentChatId) {
     return
   }
-  if (s.phase === 'game' && m.chatId && s.gameChatId && s.roomChatId && m.chatId !== s.gameChatId && m.chatId !== s.roomChatId && m.chatId !== s.tableChatId) {
+  if (s.phase === 'game' && m.chatId && s.gameChatId && s.roomChatId && m.chatId !== s.gameChatId && m.chatId !== s.roomChatId && m.chatId !== s.tableChatId && m.chatId !== s.tournamentChatId) {
     return
   }
   setState({ chatMessages: [...s.chatMessages, m].slice(-300) })

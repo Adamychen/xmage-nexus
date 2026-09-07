@@ -1,0 +1,71 @@
+.random-packs-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.random-packs-dialog {
+  background: var(--panel-bg, #1c1f2a);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 18px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.random-packs-dialog h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.random-packs-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.random-packs-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+.random-packs-grid {
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-height: 120px;
+}
+
+.random-packs-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.random-packs-cell:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.random-packs-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

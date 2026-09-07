@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { joinGame, sendPlayerBoolean, sendPlayerUUID } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
 import { getState, setState } from './state'
-import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable } from './store'
-import { getTableChatId, joinChat, leaveChat } from '../net/commands'
+import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
+import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
 import { loadActiveGame } from './persistence'
 
 vi.mock('../net/commands', () => ({
@@ -17,6 +17,7 @@ vi.mock('../net/commands', () => ({
   getRoomChatId: vi.fn(),
   getGameChatId: vi.fn().mockResolvedValue(undefined),
   getTableChatId: vi.fn().mockResolvedValue(undefined),
+  getTournamentChatId: vi.fn().mockResolvedValue(undefined),
   joinChat: vi.fn(),
   leaveChat: vi.fn(),
   sendChatMessage: vi.fn(),
@@ -927,5 +928,67 @@ describe('table chat (U4-11)', () => {
     expect(getState().chatMessages).toEqual([
       { chatId: 'chat-room-global', username: 'Alice', message: 'Lobby hello' },
     ])
+  })
+})
+
+describe('tournament chat (T4)', () => {
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+  })
+
+  it('enterTournamentChat resolves the tournament chat id and joins it', async () => {
+    vi.mocked(getTournamentChatId).mockResolvedValue('chat-tourney-1')
+    await enterTournamentChat('tourney-1')
+    expect(getTournamentChatId).toHaveBeenCalledWith('tourney-1')
+    expect(joinChat).toHaveBeenCalledWith('chat-tourney-1')
+    expect(getState().tournamentChatId).toBe('chat-tourney-1')
+    expect(getState().tournamentChatTournamentId).toBe('tourney-1')
+  })
+
+  it('enterTournamentChat is a no-op when already on that tournament chat', async () => {
+    vi.mocked(getTournamentChatId).mockResolvedValue('chat-tourney-1')
+    await enterTournamentChat('tourney-1')
+    await enterTournamentChat('tourney-1')
+    expect(getTournamentChatId).toHaveBeenCalledTimes(1)
+    expect(joinChat).toHaveBeenCalledTimes(1)
+  })
+
+  it('exitTournamentChat leaves the chat and clears the state', async () => {
+    vi.mocked(getTournamentChatId).mockResolvedValue('chat-tourney-1')
+    await enterTournamentChat('tourney-1')
+    exitTournamentChat()
+    expect(leaveChat).toHaveBeenCalledWith('chat-tourney-1')
+    expect(getState().tournamentChatId).toBeNull()
+    expect(getState().tournamentChatTournamentId).toBeNull()
+  })
+
+  it('CHATMESSAGE from the tournament chat is accepted in game, strays are dropped', () => {
+    setState({ phase: 'game', roomChatId: 'chat-room-global', gameChatId: 'chat-game-1', tournamentChatId: 'chat-tourney-1', chatMessages: [] })
+    handleMessage({
+      type: 'event',
+      method: 'CHATMESSAGE',
+      messageId: 1,
+      objectId: 'chat-tourney-1',
+      data: { chatId: 'chat-tourney-1', username: 'Rival', message: 'gl en el torneo' },
+    })
+    handleMessage({
+      type: 'event',
+      method: 'CHATMESSAGE',
+      messageId: 2,
+      objectId: 'chat-other',
+      data: { chatId: 'chat-other', username: 'Stranger', message: 'otra mesa' },
+    })
+    expect(getState().chatMessages).toHaveLength(1)
+    expect(getState().chatMessages[0].message).toBe('gl en el torneo')
+  })
+
+  it('returnToLobby leaves the tournament chat', async () => {
+    vi.mocked(getTournamentChatId).mockResolvedValue('chat-tourney-1')
+    await enterTournamentChat('tourney-1')
+    setState({ roomChatId: 'chat-room-global', chatMessages: [] })
+    returnToLobby()
+    expect(leaveChat).toHaveBeenCalledWith('chat-tourney-1')
+    expect(getState().tournamentChatId).toBeNull()
   })
 })

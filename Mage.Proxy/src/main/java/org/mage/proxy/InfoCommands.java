@@ -40,6 +40,26 @@ final class InfoCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, ctx.session().getDraftCubes()));
                 return true;
             }
+            case "getExpansionsWithBoosters": {
+                com.google.gson.JsonArray sets = new com.google.gson.JsonArray();
+                try {
+                    mage.cards.repository.ExpansionInfo[] exps =
+                            mage.cards.repository.ExpansionRepository.instance.getWithBoostersSortedByReleaseDate();
+                    if (exps != null) {
+                        for (mage.cards.repository.ExpansionInfo e : exps) {
+                            JsonObject o = new JsonObject();
+                            o.addProperty("code", e.getCode());
+                            o.addProperty("name", e.getName());
+                            o.addProperty("releaseDate", e.getReleaseDate() != null ? e.getReleaseDate().getTime() : 0);
+                            sets.add(o);
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // BD de cartas aún no lista: el cliente degrada al campo de texto libre
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, sets));
+                return true;
+            }
             case "getDeckTypes": {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, Arrays.asList(ctx.session().getDeckTypes())));
                 return true;

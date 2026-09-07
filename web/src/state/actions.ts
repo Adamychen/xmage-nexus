@@ -77,6 +77,29 @@ export function exitTableChat() {
   if (s.tableChatId || s.tableChatTableId) setState({ tableChatId: null, tableChatTableId: null })
 }
 
+/** Une al chat propio del torneo (T4, paridad con el chatPanel del TournamentPanel). */
+export async function enterTournamentChat(tournamentId: string) {
+  const s = getState()
+  if (s.tournamentChatTournamentId === tournamentId && s.tournamentChatId) return
+  exitTournamentChat()
+  try {
+    const cid = await cmds.getTournamentChatId(tournamentId)
+    if (!cid) return
+    if (getState().tournamentChatTournamentId) return
+    setState({ tournamentChatId: cid, tournamentChatTournamentId: tournamentId })
+    void cmds.joinChat(cid)
+  } catch {
+    // sin chat de torneo: el panel degrada a solo bracket
+  }
+}
+
+/** Abandona el chat del torneo y limpia el estado. */
+export function exitTournamentChat() {
+  const s = getState()
+  if (s.tournamentChatId) void Promise.resolve(cmds.leaveChat(s.tournamentChatId)).catch(() => {})
+  if (s.tournamentChatId || s.tournamentChatTournamentId) setState({ tournamentChatId: null, tournamentChatTournamentId: null })
+}
+
 /** Abre la sala de espera de la partida (paridad con el TableWaitingDialog de desktop). */
 export function openStagingTable(tableId: string) {
   const t = getState().lobby?.tables.find((tb) => tb.tableId === tableId)
@@ -194,6 +217,7 @@ export function returnToLobby() {
     void cmds.leaveTable(s.stagingTableId)
   }
   exitTableChat()
+  exitTournamentChat()
   // Filter out match-specific chat messages, preserving only lobby room chat
   const preservedChat = s.roomChatId
     ? s.chatMessages.filter((m) => !m.chatId || m.chatId === s.roomChatId)
@@ -205,6 +229,8 @@ export function returnToLobby() {
     stagingIsTournament: false,
     tableChatId: null,
     tableChatTableId: null,
+    tournamentChatId: null,
+    tournamentChatTournamentId: null,
     game: null,
     gameId: null,
     gameChatId: null,

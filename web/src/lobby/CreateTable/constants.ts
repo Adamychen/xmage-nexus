@@ -242,11 +242,20 @@ export const DEFAULT_DRAFT_CUBES: string[] = [
   'MTGO Vintage Cube October 2023',
 ]
 
+export type DraftTiming = 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL'
+
+export const DRAFT_TIMING_OPTIONS: { value: DraftTiming; label: string }[] = [
+  { value: 'BEGINNER', label: 'Beginner (x2.0)' },
+  { value: 'REGULAR', label: 'Regular (x1.5)' },
+  { value: 'PROFESSIONAL', label: 'Professional (x1.0)' },
+]
+
 export interface LimitedDraftOptions {
   numberBoosters: number
   constructionTime: number
   setCodes: string[]
   draftCubeName?: string
+  timing?: DraftTiming
 }
 
 export const LIMITED_BOOSTER_OPTIONS = [3, 6] as const
@@ -264,6 +273,7 @@ export function buildLimitedOptions(opts: LimitedDraftOptions): Record<string, u
     setCodes: opts.setCodes,
     sets: opts.setCodes,
     ...(opts.draftCubeName ? { draftCubeName: opts.draftCubeName } : {}),
+    ...(opts.timing ? { timing: opts.timing } : {}),
   }
 }
 
@@ -295,7 +305,11 @@ export function buildDraftTournamentArgs(args: {
 }
 
 export function parseLimitedSetCodes(raw: string): string[] {
-  return raw.split(/[,\s]+/).map((s) => s.trim().toUpperCase()).filter(Boolean)
+  return raw.split(/[,\s;]+/).map((s) => s.trim().toUpperCase()).filter(Boolean)
+}
+
+export function isDraftTournamentType(tournamentType: string): boolean {
+  return tournamentType.includes('Draft')
 }
 
 export const MAX_COMMANDER_PLAYERS = 4

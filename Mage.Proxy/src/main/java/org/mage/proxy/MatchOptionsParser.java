@@ -180,7 +180,19 @@ final class MatchOptionsParser {
         // limitedOptions
         if (args.has("limitedOptions") && args.get("limitedOptions").isJsonObject()) {
             JsonObject lo = args.getAsJsonObject("limitedOptions");
-            mage.game.tournament.LimitedOptions lim = new mage.game.tournament.LimitedOptions();
+            mage.game.tournament.LimitedOptions lim;
+            if (lo.has("timing")) {
+                try {
+                    mage.game.draft.DraftOptions draftOpts = new mage.game.draft.DraftOptions();
+                    draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.valueOf(
+                            JsonArgs.str(lo, "timing", "REGULAR").toUpperCase(Locale.ROOT)));
+                    lim = draftOpts;
+                } catch (Exception ignored) {
+                    lim = new mage.game.tournament.LimitedOptions();
+                }
+            } else {
+                lim = new mage.game.tournament.LimitedOptions();
+            }
             if (lo.has("constructionTime")) lim.setConstructionTime(JsonArgs.getInt(lo, "constructionTime", 600));
             if (lo.has("numberBoosters")) lim.setNumberBoosters(JsonArgs.getInt(lo, "numberBoosters", 3));
             if (lo.has("draftCubeName")) lim.setDraftCubeName(JsonArgs.str(lo, "draftCubeName", ""));

@@ -190,6 +190,19 @@ export interface TranslationSchema {
     create_field_draft_sets: string
     create_field_single_game: string
     create_desc_single_game: string
+    create_field_draft_timing: string
+    create_desc_draft_timing: string
+    random_packs_open: string
+    random_packs_title_random: string
+    random_packs_title_reshuffled: string
+    random_packs_hint_random: string
+    random_packs_hint_reshuffled: string
+    random_packs_select_all: string
+    random_packs_select_none: string
+    random_packs_apply: string
+    random_packs_cancel: string
+    random_packs_loading: string
+    random_packs_empty: string
     create_field_timing_limit: string
     create_field_free_mulligans: string
     create_field_attack_option: string

@@ -18,10 +18,12 @@ import {
   SIM_SEAT,
   aiSeatTypes,
   buildLimitedOptions,
+  isDraftTournamentType,
   isSimSeatType,
   normalizeSeatType,
   parseLimitedSetCodes,
   type CreateTab,
+  type DraftTiming,
   type SeatConfig,
   type WizardStep,
   WIZARD_STEPS_BASE,
@@ -67,6 +69,8 @@ export interface CreateTableForm {
   setNumberRounds: (v: number) => void
   draftCubeName: string
   setDraftCubeName: (v: string) => void
+  draftTiming: DraftTiming
+  setDraftTiming: (v: DraftTiming) => void
   singleGame: boolean
   setSingleGame: (v: boolean) => void
   timeLimit: string
@@ -253,6 +257,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [tournamentType, setTournamentType] = useState('Booster Draft')
   const [numberRounds, setNumberRounds] = useState(0)
   const [draftCubeName, setDraftCubeName] = useState('')
+  const [draftTiming, setDraftTiming] = useState<DraftTiming>('REGULAR')
   const [singleGame, setSingleGame] = useState(false)
 
   // Timing tab
@@ -541,6 +546,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         constructionTime: draftConstructionTime,
         setCodes,
         ...(draftCubeName ? { draftCubeName } : {}),
+        ...(isDraftTournamentType(tournamentType) ? { timing: draftTiming } : {}),
       })
       const bannedUsers = bannedUsersRaw.split(',').map((s) => s.trim()).filter(Boolean)
       const tArgs = {
@@ -745,6 +751,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setNumberRounds,
     draftCubeName,
     setDraftCubeName,
+    draftTiming,
+    setDraftTiming,
     singleGame,
     setSingleGame,
     timeLimit,

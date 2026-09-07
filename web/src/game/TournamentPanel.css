@@ -99,6 +99,12 @@
   gap: 12px;
 }
 
+.tournament-panel-chat {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
 .tournament-panel-mini {
   position: fixed;
   top: 52px;

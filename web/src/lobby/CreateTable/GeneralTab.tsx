@@ -1,15 +1,19 @@
+import { useState } from 'react'
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
+import RandomPacksSelector, { isRandomPacksType } from './RandomPacksSelector'
 import {
   SKILL_LEVEL_OPTIONS,
   DEFAULT_TOURNAMENT_TYPES,
   DEFAULT_DRAFT_CUBES,
   CONSTRUCTION_TIME_OPTIONS,
+  DRAFT_TIMING_OPTIONS,
 } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
 export default function GeneralTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const [showPacks, setShowPacks] = useState(false)
   return (
     <div className="create-tab-content">
       <div className="wizard-step-heading">
@@ -184,6 +188,25 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   placeholder={t('lobby','placeholder_draft_sets')}
                 />
               </label>
+              {isRandomPacksType(form.tournamentType) && (
+                <div>
+                  <button type="button" onClick={() => setShowPacks(true)} data-testid="random-packs-open">
+                    {t('lobby','random_packs_open')}
+                  </button>
+                </div>
+              )}
+              {showPacks && (
+                <RandomPacksSelector
+                  tournamentType={form.tournamentType}
+                  numPlayers={form.numPlayers}
+                  initialRaw={form.draftSetsRaw}
+                  onApply={(codes) => {
+                    form.setDraftSetsRaw(codes.join('; '))
+                    setShowPacks(false)
+                  }}
+                  onClose={() => setShowPacks(false)}
+                />
+              )}
               <label>
                 Tiempo de construcción
                 <select value={form.draftConstructionTime} onChange={(e) => form.setDraftConstructionTime(Number(e.target.value))}>
@@ -192,6 +215,16 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   ))}
                 </select>
               </label>
+              {form.tournamentType.includes('Draft') && (
+                <label>
+                  {t('lobby','create_field_draft_timing')}
+                  <select value={form.draftTiming} onChange={(e) => form.setDraftTiming(e.target.value as 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL')}>
+                    {DRAFT_TIMING_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="toggle-label-row">
                 <input
                   type="checkbox"
