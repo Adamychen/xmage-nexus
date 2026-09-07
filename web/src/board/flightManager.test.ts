@@ -9,6 +9,7 @@ import {
   markFlightLanded,
   clearFlights,
   normalizeFlightRect,
+  getFlightDiagnostics,
 } from './flightManager'
 import type { CardView } from '../net/types'
 
@@ -126,10 +127,26 @@ describe('flightManager', () => {
     expect(hasFlightFor('card-1')).toBe(false)
   })
 
-  it('deduplicates: second flight for the same cardId cancels the first', () => {
+  it('chains: second flight for the same cardId redirects the in-flight ghost', () => {
     const firstId = startCardFlight(dummyCard, fromRect, toRect, 500)
     expect(firstId).not.toBeNull()
     expect(getActiveFlights().length).toBe(1)
+
+    const altDest = { ...toRect, left: 700, top: 100 } as DOMRect
+    const secondId = startCardFlight(dummyCard, fromRect, altDest, 500)
+    expect(secondId).not.toBeNull()
+
+    const active = getActiveFlights()
+    expect(active.length).toBe(1)
+    expect(active[0].flightId).toBe(firstId)
+    expect(active[0].toRect.left).toBe(700)
+    expect(getFlightDiagnostics().some((e) => e.kind === 'chain')).toBe(true)
+  })
+
+  it('replaces (cancels) the flight when the previous one already aged out', () => {
+    const firstId = startCardFlight(dummyCard, fromRect, toRect, 100)
+    expect(firstId).not.toBeNull()
+    vi.advanceTimersByTime(500)
 
     const altDest = { ...toRect, left: 700, top: 100 } as DOMRect
     const secondId = startCardFlight(dummyCard, fromRect, altDest, 500)
@@ -159,16 +176,17 @@ describe('flightManager', () => {
     expect(landed).toHaveBeenCalledTimes(1)
   })
 
-  it('drops landed listeners when the dedupe replaces a flight', () => {
+  it('keeps landed listeners when a burst chains onto the flight', () => {
     const landed = vi.fn()
     const firstId = startCardFlight(dummyCard, fromRect, toRect, 500)
     onFlightLanded(firstId!, landed)
 
     const altDest = { ...toRect, left: 700, top: 100 } as DOMRect
-    startCardFlight(dummyCard, fromRect, altDest, 500)
+    const chainedId = startCardFlight(dummyCard, fromRect, altDest, 500)
+    expect(chainedId).toBe(firstId)
 
     markFlightLanded(firstId!)
-    expect(landed).not.toHaveBeenCalled()
+    expect(landed).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -16,6 +16,8 @@ export interface FlightRecord {
   duration: number
   /** El origen era una carta girada 90° (tapped): el clon debe partir rotado. */
   rotated90?: boolean
+  /** Timers de backstop/limpieza: se reprograman al encadenar un redirect. */
+  timers?: Array<ReturnType<typeof setTimeout>>
 }
 
 let activeFlights: FlightRecord[] = []
@@ -106,6 +108,54 @@ export interface FlightOptions {
   sourceSize?: CardSourceSize | null
 }
 
+// ── Diagnóstico de vuelos (F0 animaciones): cada skip silencioso deja una
+// entrada con su motivo para poder cazar "a veces no va" en E2E/real. ──
+export type FlightSkipReason =
+  | 'zero-rect'
+  | 'fx-off'
+  | 'reduced-motion'
+  | 'short-distance'
+  | 'dedupe-cancel'
+  | 'no-prev'
+  | 'same-zone'
+  | 'no-source'
+  | 'no-dest'
+  | 'guard-active-flight'
+
+export interface FlightDiagEntry {
+  t: number
+  kind: 'skip' | 'start' | 'cancel' | 'chain'
+  reason?: FlightSkipReason
+  cardId: string
+  detail?: string
+}
+
+const flightDiag: FlightDiagEntry[] = []
+const FLIGHT_DIAG_CAP = 80
+
+export function noteFlightEvent(e: Omit<FlightDiagEntry, 't'>): void {
+  flightDiag.push({ t: Date.now(), ...e })
+  if (flightDiag.length > FLIGHT_DIAG_CAP) {
+    flightDiag.splice(0, flightDiag.length - FLIGHT_DIAG_CAP)
+  }
+}
+
+export function getFlightDiagnostics(): FlightDiagEntry[] {
+  return [...flightDiag]
+}
+
+export function clearFlightDiagnostics(): void {
+  flightDiag.length = 0
+}
+
+if (typeof window !== 'undefined') {
+  ;(window as unknown as { __mageFlights?: unknown }).__mageFlights = {
+    log: getFlightDiagnostics,
+    clear: clearFlightDiagnostics,
+    active: getActiveFlights,
+  }
+}
+
 export function startCardFlight(
   card: CardView | PermanentView,
   fromRect: DOMRect,
@@ -114,32 +164,80 @@ export function startCardFlight(
   toSelector?: string,
   options?: FlightOptions
 ): string | null {
-  if (!fromRect || !toRect) return null
-  if (fromRect.width <= 0 || toRect.width <= 0) return null
-  if (prefersReducedMotion()) return null
-  if (!fxEnabled()) return null
+  const cardId = (card as any)?.id || (card as any)?.parentId || ''
+  const cardName = (card as any)?.name ?? ''
+  if (!fromRect || !toRect) {
+    noteFlightEvent({ kind: 'skip', reason: 'zero-rect', cardId, detail: `missing-${!fromRect ? 'from' : 'to'}:${cardName}` })
+    return null
+  }
+  if (fromRect.width <= 0 || toRect.width <= 0) {
+    noteFlightEvent({ kind: 'skip', reason: 'zero-rect', cardId, detail: `w${fromRect.width}x${toRect.width}:${cardName}` })
+    return null
+  }
+  if (prefersReducedMotion()) {
+    noteFlightEvent({ kind: 'skip', reason: 'reduced-motion', cardId, detail: cardName })
+    return null
+  }
+  if (!fxEnabled()) {
+    noteFlightEvent({ kind: 'skip', reason: 'fx-off', cardId, detail: cardName })
+    return null
+  }
 
   const from = normalizeFlightRect(fromRect, options?.sourceSize)
   const to = normalizeFlightRect(toRect)
+  const scaledDuration = fxDuration(duration)
 
   // Distance check sobre los rects crudos (esquinas), igual que siempre: evita
   // vuelos intra-elemento (p.ej. origen = la propia entrada del stack).
   const dx = toRect.left - fromRect.left
   const dy = toRect.top - fromRect.top
-  if (!options?.static && Math.hypot(dx, dy) < 25) return null
-
-  const cardId = (card as any).id || (card as any).parentId || ''
+  const dist = Math.hypot(dx, dy)
+  if (!options?.static && dist < 25) {
+    noteFlightEvent({ kind: 'skip', reason: 'short-distance', cardId, detail: `${Math.round(dist)}px:${cardName}` })
+    return null
+  }
 
   if (cardId) {
     const existing = activeFlights.find((f) => f.cardId === cardId)
     if (existing) {
+      const age = performance.now() - existing.startTime
+      const sameDest =
+        Math.hypot(
+          to.rect.left + to.rect.width / 2 - (existing.toRect.left + existing.toRect.width / 2),
+          to.rect.top + to.rect.height / 2 - (existing.toRect.top + existing.toRect.height / 2),
+        ) < 8
+      if (age < 120 && sameDest) {
+        // Carrera A-vs-B de la misma actualización (el slot montó y el engine
+        // confirma el mismo destino ms después): no hacer nada.
+        noteFlightEvent({ kind: 'skip', reason: 'guard-active-flight', cardId, detail: `same-dest:${cardName}` })
+        return existing.flightId
+      }
+      if (age < existing.duration) {
+        // Ráfaga: redirigir el fantasma en vuelo en vez de cancelarlo. El
+        // overlay re-ancla el tramo final vía toSelector en cada frame, así
+        // que la curva se dobla suavemente al nuevo destino sin parpadeo.
+        existing.toRect = to.rect
+        existing.toSelector = toSelector ?? existing.toSelector
+        existing.card = card
+        existing.duration = Math.min(age + Math.round(scaledDuration * 0.8), age + 1200)
+        existing.timers?.forEach((t) => clearTimeout(t))
+        existing.timers = scheduleFlightTimers(existing)
+        activeFlights = [...activeFlights]
+        notify()
+        noteFlightEvent({ kind: 'chain', cardId, detail: `age-${Math.round(age)}ms:${cardName}` })
+        return existing.flightId
+      }
+      noteFlightEvent({
+        kind: 'cancel', reason: 'dedupe-cancel', cardId,
+        detail: `age-${Math.round(age)}ms-of-${existing.duration}ms`,
+      })
+      existing.timers?.forEach((t) => clearTimeout(t))
       activeFlights = activeFlights.filter((f) => f.flightId !== existing.flightId)
       landedListeners.delete(existing.flightId)
     }
   }
 
   const flightId = `flight-${++flightCounter}-${Date.now()}`
-  const scaledDuration = fxDuration(duration)
   const record: FlightRecord = {
     flightId,
     cardId: cardId || flightId,
@@ -154,6 +252,10 @@ export function startCardFlight(
 
   activeFlights = [...activeFlights, record]
   notify()
+  noteFlightEvent({
+    kind: 'start', cardId: record.cardId,
+    detail: `${Math.round(Math.hypot(to.rect.left - from.rect.left, to.rect.top - from.rect.top))}px:${(card as any)?.name ?? ''}${options?.static ? ':static' : ''}`,
+  })
 
   if (toSelector?.includes('hand') || toSelector?.includes('hand-bar') || toSelector?.includes('hand-zone')) {
     soundManager.play('draw', 'game')
@@ -167,16 +269,24 @@ export function startCardFlight(
 
   // Backstop: si el clon no llega a notificar el aterrizaje (cancel/unmount),
   // la carta real nunca queda oculta.
-  setTimeout(() => markFlightLanded(flightId), scaledDuration + 120)
-
-  // El clon permanece montado durante el fade-out posterior al aterrizaje.
-  setTimeout(() => {
-    activeFlights = activeFlights.filter((f) => f.flightId !== flightId)
-    landedListeners.delete(flightId)
-    notify()
-  }, scaledDuration + 240)
+  record.timers = scheduleFlightTimers(record)
 
   return flightId
+}
+
+/** Timers de backstop + limpieza de un vuelo. Se guardan en el record para
+ *  poder reprogramarlos al encadenar un redirect en ráfaga. */
+function scheduleFlightTimers(record: FlightRecord): Array<ReturnType<typeof setTimeout>> {
+  const { flightId, duration } = record
+  return [
+    setTimeout(() => markFlightLanded(flightId), duration + 120),
+    // El clon permanece montado durante el fade-out posterior al aterrizaje.
+    setTimeout(() => {
+      activeFlights = activeFlights.filter((f) => f.flightId !== flightId)
+      landedListeners.delete(flightId)
+      notify()
+    }, duration + 240),
+  ]
 }
 
 export function getFlightFor(cardId: string): FlightRecord | null {
@@ -229,6 +339,7 @@ export function useActiveFlights(): FlightRecord[] {
 }
 
 export function clearFlights() {
+  activeFlights.forEach((f) => f.timers?.forEach((t) => clearTimeout(t)))
   activeFlights = []
   landedListeners.clear()
   notify()

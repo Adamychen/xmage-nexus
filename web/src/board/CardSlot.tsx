@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
-import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights } from './flightManager'
+import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
@@ -100,10 +100,13 @@ export default function CardSlot({
               })
             }
           } else {
+            noteFlightEvent({ kind: 'skip', reason: 'same-zone', cardId: String(effectiveId), detail: `slot:${prevZone || '?'}>${curZoneClass || '?'}` })
             setEntering(true)
             enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
           }
         } else {
+          const mountZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
+          noteFlightEvent({ kind: 'skip', reason: 'no-prev', cardId: String(effectiveId), detail: `slot-mount:${mountZone ? mountZone.className.split(' ')[0] : '?'}` })
           setEntering(true)
           enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
         }

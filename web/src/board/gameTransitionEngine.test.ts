@@ -257,7 +257,12 @@ describe('gameTransitionEngine', () => {
     })
     const prevGame = makeGameView({ players: [alice1] })
 
-    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const alice2 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: {},
+      graveyard: { 'perm-grizzly': grizzly },
+    })
     const nextGame = makeGameView({ players: [alice2] })
 
     detectAndAnimateTransitions(prevGame, nextGame)
@@ -265,6 +270,24 @@ describe('gameTransitionEngine', () => {
 
     const flights = getActiveFlights()
     expect(flights.some((f) => f.card.name === 'Grizzly Bears')).toBe(true)
+  })
+
+  it('does not fly a ghost to the graveyard when a token vanishes without arrival', () => {
+    const token = makePermanent({ id: 'perm-token', name: 'Goblin Token' })
+    const alice1 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: { 'perm-token': token },
+    })
+    const prevGame = makeGameView({ players: [alice1] })
+
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    expect(getActiveFlights().some((f) => f.card.name === 'Goblin Token')).toBe(false)
   })
 
   it('detects creatures dying via cardPositionRegistry when DOM slot is already unmounted', () => {
@@ -280,7 +303,12 @@ describe('gameTransitionEngine', () => {
     })
     const prevGame = makeGameView({ players: [alice1] })
 
-    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const alice2 = makePlayer({
+      playerId: 'p-alice',
+      name: 'Alice',
+      battlefield: {},
+      graveyard: { 'perm-gone': grizzly },
+    })
     const nextGame = makeGameView({ players: [alice2] })
 
     detectAndAnimateTransitions(prevGame, nextGame)
@@ -299,7 +327,7 @@ describe('gameTransitionEngine', () => {
     })
     const prevGame = makeGameView({ players: [alice1] })
 
-    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {}, graveyard: { 'perm-grizzly': grizzly } })
     const nextGame = makeGameView({ players: [alice2] })
 
     const preexistingId = startCardFlight(grizzly, mockRect(450, 400), mockRect(900, 100, 80, 112), 340)
@@ -311,7 +339,9 @@ describe('gameTransitionEngine', () => {
     const flights = getActiveFlights()
     expect(flights.length).toBe(1)
     expect(flights[0].flightId).toBe(preexistingId)
-    expect(flights[0].toRect.left).toBe(900)
+    // La ráfaga encadena: el mismo fantasma se redirige al destino real
+    // (cementerio) en vez de duplicarse.
+    expect(flights[0].toRect.left).toBe(200)
   })
 
   it('shakes creatures whose damage increased', () => {

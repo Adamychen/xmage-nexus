@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
-import { startCardFlight, hasFlightFor } from './flightManager'
+import { startCardFlight, noteFlightEvent } from './flightManager'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { stringList } from '../state/gameUtils'
@@ -44,10 +44,9 @@ function getPlayerSelector(playerId?: string, playerName?: string): string {
   return ''
 }
 
-/** Vuela solo si ninguna otra parte (CardSlot al montar) ya lanzó un vuelo
- *  para esta carta; evita clones duplicados y destinos contradictorios.
- *  Mide el destino tras asentar el layout y usa el slot real de la carta
- *  (selectores concretos) en vez del centro del contenedor de zona. */
+/** Vuelo diferido tras asentar el layout. Si el camino A (montaje del slot)
+ *  u otro vuelo ya cubre esta carta, `startCardFlight` encadena o ignora
+ *  (mismo destino) sin duplicar fantasmas. */
 function flyAfterLayout(
   cardId: string,
   card: CardView,
@@ -57,12 +56,17 @@ function flyAfterLayout(
   duration: number,
   sourceSize?: CardSourceSize | null
 ): void {
-  if (!fromRect) return
+  if (!fromRect) {
+    noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId, detail: `engine:${card.name ?? ''}` })
+    return
+  }
   scheduleAfterLayout(() => {
-    if (hasFlightFor(cardId)) return
     const dest = getDestRect(destSelectors)
     const toRect = dest?.rect ?? fallbackRect
-    if (!toRect) return
+    if (!toRect) {
+      noteFlightEvent({ kind: 'skip', reason: 'no-dest', cardId, detail: `engine:${card.name ?? ''}:${destSelectors[0] ?? '?'}` })
+      return
+    }
     startCardFlight(card, fromRect, toRect, duration, dest?.selector, { sourceSize })
   })
 }
@@ -135,6 +139,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           `[data-card-id="${spellId}"] .stack-tl-card`,
           `[data-card-id="${spellId}"]`,
         ], stackRect, 380, sourceSize)
+      } else if (!sourceRect) {
+        noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: `stack-enter:${spell.name ?? ''}` })
       }
     }
   }
@@ -209,6 +215,36 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
     }
 
+    // G) Descartes y molino (-> cementerio sin pasar por el campo): la pila
+    //    del cementerio actualiza su top in-place (sin montar slot), así que
+    //    el camino A nunca dispara y hace falta vuelo del engine. Se excluyen
+    //    las llegadas ya cubiertas por C (campo) y E (stack).
+    const prevGraveIds = prevP.graveyard ?? {}
+    const nextGraveIds = nextP.graveyard ?? {}
+    const graveArrivals = Object.keys(nextGraveIds).filter((id) => !(id in prevGraveIds))
+    if (graveArrivals.length > 0 && graveRect) {
+      graveArrivals.slice(0, 3).forEach((id, i) => {
+        if (id in (prevP.battlefield ?? {}) || id in prevStack) return
+        const arrived = (nextGraveIds as Record<string, CardView>)[id]
+        setTimeout(() => {
+          const registered = getPreviousCardPosition(id)
+          const originRect =
+            registered ??
+            getRect(`[data-card-id="${id}"]`) ??
+            handRect ??
+            libRect
+          if (!originRect) {
+            noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: id, detail: 'discard' })
+            return
+          }
+          flyAfterLayout(id, arrived, originRect, [
+            `${pSel} .graveyard-stack [data-card-id="${id}"]`,
+            `${pSel} .graveyard-stack`,
+          ], graveRect, 350, registered ? getPreviousCardSize(id) : null)
+        }, i * 70)
+      })
+    }
+
     // B) Permanent Enters Battlefield (Stack -> Battlefield, or Hand -> Battlefield for Lands)
     const prevBattlefield = prevP.battlefield ?? {}
     const nextBattlefield = nextP.battlefield ?? {}
@@ -227,6 +263,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           originSize = getPreviousCardSize(permId)
         } else if (wasInStack) {
           originRect = stackRect
+        } else if (permId in (prevP.graveyard ?? {})) {
+          // Reanimar: el origen real es la pila del cementerio, no la mano.
+          originRect = graveRect
         } else {
           originRect = handRect
         }
@@ -237,23 +276,48 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             `${pSel} .creatures-band [data-card-id="${permId}"]`,
             `${pSel} .creatures-band`,
             `${pSel} .permanents-band`,
-          ], null, 350, originSize)
+          ], getRect(`${pSel} .creatures-band`) ?? getRect(`${pSel} .permanents-band`), 350, originSize)
+        } else {
+          noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: permId, detail: `bf-enter:${(perm as { name?: string }).name ?? ''}` })
         }
       }
     }
 
-    // C) Permanent Leaves Battlefield -> Graveyard (Dies)
+    // C) El permanente sale del campo: cementerio, exilio o mano (bounce).
+    //    Cada destino tiene su vuelo; lo que no llega a ningún lado visible
+    //    (token que deja de existir, carta a la biblioteca) no vuela — antes
+    //    volaba un fantasma erróneo al cementerio en todos los casos.
+    const myHandIds = nextGame.myHand ?? {}
     for (const [permId, perm] of Object.entries(prevBattlefield)) {
-      if (!(permId in nextBattlefield) && graveRect) {
-        const registered = getPreviousCardPosition(permId)
-        const prevCardRect = registered ?? getRect(`[data-card-id="${permId}"]`)
-        if (prevCardRect) {
-          // Destino con ámbito al cementerio: el id puede seguir presente como
-          // top-card del propio montón del cementerio (nunca el slot de origen).
-          flyAfterLayout(permId, perm, prevCardRect, [
-            `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
-          ], graveRect, 350, registered ? getPreviousCardSize(permId) : null)
-        }
+      if (permId in nextBattlefield) continue
+      const inGrave = permId in (nextP.graveyard ?? {})
+      const inExile = permId in (nextP.exile ?? {})
+      const bouncedToHand = permId in myHandIds
+      if (!inGrave && !inExile && !bouncedToHand) continue
+      const registered = getPreviousCardPosition(permId)
+      const prevCardRect = registered ?? getRect(`[data-card-id="${permId}"]`)
+      if (!prevCardRect) {
+        noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: permId, detail: 'bf-leave' })
+        continue
+      }
+      const prevSize = registered ? getPreviousCardSize(permId) : null
+      if (inExile) {
+        flyAfterLayout(permId, perm, prevCardRect, [
+          `${pSel} .exile-stack [data-card-id="${permId}"]`,
+          `${pSel} .exile-stack`,
+        ], getRect(`${pSel} .exile-stack`), 350, prevSize)
+      } else if (bouncedToHand) {
+        flyAfterLayout(permId, perm, prevCardRect, [
+          `[data-card-id="${permId}"]`,
+          '.hand-bar .hand-card-slot:last-child',
+          `${pSel} .hand-zone .hand-card-slot:last-child`,
+        ], getRect('.hand-bar') ?? getRect(`${pSel} .hand-zone`), 350, prevSize)
+      } else {
+        // Destino con ámbito al cementerio: el id puede seguir presente como
+        // top-card del propio montón del cementerio (nunca el slot de origen).
+        flyAfterLayout(permId, perm, prevCardRect, [
+          `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
+        ], graveRect, 350, prevSize)
       }
     }
 
@@ -307,7 +371,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
 
     const registered = getPreviousCardPosition(spellId)
     const prevRect = registered ?? getRect(`[data-card-id="${spellId}"]`)
-    if (!prevRect) continue
+    if (!prevRect) {
+      noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: 'stack-resolve' })
+      continue
+    }
     const prevSize = registered ? getPreviousCardSize(spellId) : null
 
     let destSelectors: string[] = []
