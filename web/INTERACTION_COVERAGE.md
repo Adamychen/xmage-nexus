@@ -47,8 +47,8 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `GAME_UPDATE` | ✅ | — | ✅ | (todas las partidas E2E) | 2026-08-24 |
 | `GAME_TARGET` | ✅ | ✅ | ✅ | feedback.test.ts / targeting.spec.ts / combat*.spec.ts | 2026-09-02 |
 | `GAME_CHOOSE_ABILITY` | ✅ | ✅ | ✅ | feedback.test.ts / complex-costs.spec.ts | 2026-08-24 |
-| `GAME_CHOOSE_PILE` | ✅ | ✅ | — | feedback.test.ts | 2026-08-24 |
-| `GAME_CHOOSE_CHOICE` | ✅ | ✅ | — | feedback.test.ts | 2026-09-02 |
+| `GAME_CHOOSE_PILE` | ✅ | ✅ | — | feedback.test.ts + `PileDialog.tsx` (`pile-visual.spec.ts`, `interactions.spec.ts` §3) | 2026-09-08 |
+| `GAME_CHOOSE_CHOICE` | ✅ | ✅ | — | feedback.test.ts + sort/hints/remember (`choice-memory.spec.ts`) + grid search/Enter (`grid-search.spec.ts`) | 2026-09-08 |
 | `GAME_ASK` | ✅ | ✅ | ✅ | feedback.test.ts / spells.spec.ts / combat*.spec.ts | 2026-09-02 |
 | `GAME_SELECT` | ✅ | — | ✅ | full-flow.spec.ts / interactions.spec.ts | 2026-08-24 |
 | `GAME_PLAY_MANA` | ✅ | — | ✅ | complex-costs.spec.ts / stack-priority.spec.ts / mechanics.spec.ts | 2026-08-24 |
@@ -172,7 +172,7 @@ Lista actual (de `engine-view-gap.json`):
 ### I. Elecciones modales / Voting
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| `GAME_CHOOSE_MODE` / `_ONE` / `_CHOICE` / `_ABILITY` / `_PILE` | ✅ | ✅ | `VotingDialog.tsx` + `feedback.test.ts` (ability/pile/choice) + `missing-prompts.spec.ts` + `voting.spec.ts` (`@voting`) `GAME_ASK` con `isVoting` + `complex-costs.spec.ts` | 2026-08-26 |
+| `GAME_CHOOSE_MODE` / `_ONE` / `_CHOICE` / `_ABILITY` / `_PILE` | ✅ | ✅ | `VotingDialog.tsx` + `feedback.test.ts` (ability/pile/choice) + `missing-prompts.spec.ts` + `voting.spec.ts` (`@voting`) `GAME_ASK` con `isVoting` + `complex-costs.spec.ts` + `grid-search.spec.ts` / `choice-memory.spec.ts` / `pile-visual.spec.ts` (`@feedback`) | 2026-09-08 |
 | Voting (Council's judgment, Fact or Fiction) | ✅ | ✅ | `VotingDialog.tsx` dedicado (`🗳️ VOTACIÓN`, step `1/2`, `GAME_ASK` `isVoting` → `boolean`); `feedback.test.ts` (`isVoting`) + `VotingDialog.test.tsx` + `voting.spec.ts` (`@voting`) `fixtures/scenarios/voting.ts` | 2026-08-26 |
 
 ### J. Biblioteca

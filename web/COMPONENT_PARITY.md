@@ -36,7 +36,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ✅ | Auditada 2026-09-05, **cerrada 2026-09-08**: G11-1 skips, G11-2 trigger-order, G11-3 auto-answers; G11-4 macros declarado no-aplica (botón vestigial sin consumidor en motor/servidor); G11-5 paradas de fase con defaults persistentes todo-marcados | 2026-09-08 |
 | U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ✅ | Cerrada 2026-09-08 (ver § U12): G12-1 menú clic-derecho por bando + flujo permiso completo + Switch Hands (verify real 19/19), G12-2 disparadores deck/sideboard + InfoWindows auto (e2e), G12-3 `CARD_CONTEXT_ITEMS` eliminado (sin menú de carta en desktop para gameplay), G12-4 filtro `phasedIn` (unit+e2e). Supera en layouts + HandViewer | 2026-09-08 |
 | U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ✅ | Auditada 2026-09-05: G13-1 cerrado (fix 2026-09-06), resto ✅ | 2026-09-06 |
-| U14 | Preguntas al jugador | `dialog/Pick*.java` (5), `ShowCardsDialog.java`, `CustomOptionsDialog.java`, `UserRequestDialog.java`, `game/FeedbackPanel.java`, `components/ability/AbilityPicker.java` | `game/feedback/*`, `game/feedbackModes/*`, `FeedbackDialog.tsx`, `UserRequestDialog.tsx` | ⚠️ | Sin gaps bloqueantes; 6 gaps menores UX (P14-1…P14-6, ver auditoría) | 2026-09-05 |
+| U14 | Preguntas al jugador | `dialog/Pick*.java` (5), `ShowCardsDialog.java`, `CustomOptionsDialog.java`, `UserRequestDialog.java`, `game/FeedbackPanel.java`, `components/ability/AbilityPicker.java` | `game/feedback/*`, `game/feedbackModes/*`, `FeedbackDialog.tsx`, `UserRequestDialog.tsx` | ✅ | **Cerrada 2026-09-08**: P14-1 búsqueda en grid + teclado, P14-2 `sortData`, P14-3 `hintData`, P14-4 `choiceMemory`, P14-5 por construcción, P14-6 doble-click/Enter, `PileDialog` visual, ShowCards por combinación (ver auditoría) | 2026-09-08 |
 | U15 | Sistema | `dialog/PreferencesDialog.java`, `DownloadImagesDialog.java`, `GameEndDialog.java`, `AddLandDialog.java`, `CardInfoWindowDialog.java`, `AboutDialog.java`, `WhatsNewDialog.java` | `settings/SettingsModal.tsx`, `lobby/DownloadImagesDialog.tsx`, `game/GameEndDialog.tsx`, `game/HelpWikiModal.tsx`, `system/AboutModal.tsx`, `system/news.ts`, `system/gameLogs.ts` | ✅ | Auditada y cerrada 2026-09-08 (ver § U15): prefs esenciales ✅ + atajos fijos (diferencia declarada), imágenes ✅ (supera), fin partida ✅ + duración + auto-log, tierras ✅ + set picker full-art, InfoWindows ✅ (U12), About ✅ + news remoto doble feed (Nexus+XMage vía GitHub releases, gratis) | 2026-09-08 |
 
 ## Auditorías por unidad
@@ -52,25 +52,25 @@ dedicados + `MulliganDialog/VotingDialog/UserRequestDialog`).
 |---|---|---|
 | `PickChoiceDialog` básico (lista + Choose/Cancel, `required`, ESC) | `GenericDialog` grid de opciones + `required`/`finishOptionalTarget` | ✅ |
 | `message` + `subMessage` (doble cabecera) | `message` + subtítulo `sourceName` (`options.secondMessage`, HTML strip) — `feedback.test.ts:75` | ✅ |
-| Búsqueda incremental (filtrado + ↑/↓ + auto-select si queda 1) | Modo `string`: sugerencias filtradas + Enter ✅; grid de opciones: **sin caja de búsqueda** | ⚠️ P14-1 (listas grandes, ej. choose-card-name) |
-| Orden custom (`sortData`) | Orden del servidor, sin re-sort | ⚠️ P14-2 menor |
-| Hints por ítem (popup carta / tooltip texto / dungeon / game-object al hover) | Etiquetas `FormattedText`; sin preview-on-hover en opciones evidenciado | ⚠️ P14-3 menor |
-| Checkbox `special` ("remember choose" — auto-responder igual la próxima vez) | Sin equivalente (`special` web = botón de acción en combat/maná, otro concepto) | ❌ P14-4 menor |
-| `startSelectionValue` (preselección) | Sin evidencia | ❌ P14-5 menor |
-| Doble-click elige | Single-click; sin auto-single tras filtrar evidenciado | ⚠️ P14-6 menor UX |
+| Búsqueda incremental (filtrado + ↑/↓ + auto-select si queda 1) | Modo `string`: sugerencias filtradas + Enter ✅; grid `uuid/boolean`: caja de búsqueda (>7 opciones) + ↑/↓ + Enter + auto-highlight si queda 1 (`GenericDialog` + slot `search` del `DialogShell`, `grid-search.spec.ts` 2/2) | ✅ P14-1 cerrado 2026-09-08 |
+| Orden custom (`sortData`) | `sortData` del `Choice` viaja por reflexión → ordenado en `parse.ts` (`choiceSortRank`, `choice-memory.spec.ts`) | ✅ P14-2 cerrado 2026-09-08 |
+| Hints por ítem (popup carta / tooltip texto / dungeon / game-object al hover) | `hintData` (`value → [type, hint]`) viaja → tooltip `title` en sugerencias (`choice-memory.spec.ts`); hover-preview de carta ya existía en mulligan/piles/CardGrid | ✅ P14-3 cerrado 2026-09-08 |
+| Checkbox `special` ("remember choose" — auto-responder igual la próxima vez) | `choiceMemory` solo-cliente (patrón `autoAnswers`): checkbox cuando `specialEnabled` viaja, auto-respuesta en `eventHandler`, gestión en GameMenu, persistido `mage-web-choice-memory` (tope 50). Diferencia declarada: el flag `isSpecial` del servidor no se reenvía (el auto-ask local cubre el caso de uso) | ✅ P14-4 cerrado 2026-09-08 |
+| `startSelectionValue` (preselección) | No viaja por red (argumento del diálogo desktop, ausente en `ChoiceImpl`) → cubierto por construcción: Enter confirma la opción única en rama string y grid (`FeedbackDialog.test.tsx`) | ✅ P14-5 cerrado 2026-09-08 (por construcción) |
+| Doble-click elige | Single-click ya enviaba en elección única; doble-click + Enter con navegación de teclado en grid (`grid-search.spec.ts`) | ✅ P14-6 cerrado 2026-09-08 |
 | `PickNumberDialog` (spinner min/max, etiqueta límites, flag cancel) | Stepper `integer` + quick Mín/Máx + rango visible (`GenericDialog.tsx:144-203`) | ✅ (supera) |
 | `PickMultiNumberDialog` (N spinners) | Modo `multiString` por ítem (`GenericDialog.tsx:205-241`) | ✅ |
 | `PickCheckBoxDialog` (multi + search + sort) | `uuid max>1` multi + confirm con contador | ✅ básico; hereda P14-1/P14-2 |
-| `PickPileDialog` (dos grids de cartas lado a lado) | Booleano pile1/pile2 con resumen de texto (`parse.ts:172-176`) | ⚠️ funcional, menos visual |
-| `ShowCardsDialog` (revelar) | ❓ ver U12 (Thoughtseize interactivo ✅ sugiere cobertura parcial) | ❓ |
+| `PickPileDialog` (dos grids de cartas lado a lado) | `PileDialog.tsx` sobre `DialogShell`: dos columnas clicables con `CardSlot` + hover-preview + conteos (`pile-visual.spec.ts`); fallback textual si no llegan cartas | ✅ cerrado 2026-09-08 |
+| `ShowCardsDialog` (revelar) | Sin callback SHOW/REVEAL en el protocolo: reveal pasivo vía `GAME_UPDATE` (bandeja Known Info) + interactivo vía `CHOOSE_CARDS` (CardGrid, Thoughtseize) | ✅ (por combinación, ver U12/reveal) |
 | `AbilityPicker` (`GAME_CHOOSE_ABILITY`) | `GenericDialog` kicker ⚡ + `feedback.test.ts` | ✅ |
 | `UserRequestDialog` | `UserRequestDialog.tsx` + `missing-prompts.spec.ts` | ✅ |
 | `FeedbackPanel/HelperPanel` (Done/Undo) | `ActionButton` + `RollbackDialog` (UNDO testeado, `RollbackDialog.test.tsx:71`) | ✅ |
 
 Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
-`RollbackDialog.test.tsx`, `missing-prompts.spec.ts`, `complex-costs.spec.ts`.
-Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
-(búsqueda en grid) si aparecen listas largas en juego real.
+`RollbackDialog.test.tsx`, `missing-prompts.spec.ts`, `complex-costs.spec.ts`,
+`grid-search.spec.ts`, `choice-memory.spec.ts`, `pile-visual.spec.ts`, `choiceMemory.test.ts`.
+Veredicto: **U14 CERRADA 2026-09-08** — P14-1…P14-6 + PickPile visual + ShowCards (ver filas).
 
 ### U1 · U2 — nota (U4/U5/U6/U7/U9/U10/U15 cerradas)
 
