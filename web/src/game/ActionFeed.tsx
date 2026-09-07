@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useStore, isBlockingModal } from '../state/store'
-import { parseGameEvent, type ActionFeedItem } from './gameEventParser'
+import { parseGameEvent, toFeedItem, type ActionFeedItem } from './gameEventParser'
 import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
 import Icon from '../ui/Icon'
@@ -62,7 +62,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
       const parsed = parseGameEvent(entry.text, myPlayerName, `log-${entry.id ?? i}`)
       if (parsed) {
-        items.push(parsed)
+        items.push(toFeedItem(parsed, t))
       } else if (entry.text) {
         items.push({
           id: `log-sys-${entry.id ?? i}`,
@@ -75,7 +75,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     }
 
     return items
-  }, [log, myPlayerName])
+  }, [log, myPlayerName, t])
 
   const handleScroll = () => {
     if (!containerRef.current) return

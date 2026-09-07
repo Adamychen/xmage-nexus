@@ -93,6 +93,8 @@ export interface TranslationSchema {
     disconnect_confirm: string
     filter_search_placeholder: string
     filter_format_all: string
+    filter_format_limited: string
+    filter_selected_format: string
     filter_only_open: string
     filter_hide_playing: string
     filter_reset: string
@@ -381,6 +383,17 @@ export interface TranslationSchema {
     zoom_out: string
     zoom_in: string
     zoom_reset: string
+    ui_scale_title: string
+    ui_scale_hint: string
+    ui_scale_hint_lobby: string
+    ui_scale_compact: string
+    ui_scale_normal: string
+    ui_scale_large: string
+    ui_scale_xlarge: string
+    ui_scale_cjk: string
+    cjk_boost_label: string
+    cjk_boost_only: string
+    cjk_boost_combo_hint: string
     board_standard: string
     board_standard_desc: string
     board_pod: string
@@ -478,6 +491,51 @@ export interface TranslationSchema {
     expanded_view: string
     visual_feed: string
     text_feed: string
+    feed_turn: string
+    feed_turn_player: string
+    feed_cast: string
+    feed_cast_target: string
+    feed_land: string
+    feed_attack: string
+    feed_attack_alone: string
+    feed_attack_target: string
+    feed_attack_vs: string
+    feed_attack_one: string
+    feed_attack_n: string
+    feed_attack_vs_one: string
+    feed_attack_vs_n: string
+    feed_block: string
+    feed_damage: string
+    feed_lose_life: string
+    feed_gain_life: string
+    feed_ability_trigger: string
+    feed_ability_trigger_desc: string
+    feed_ability_trigger_target: string
+    feed_activate: string
+    feed_draw: string
+    feed_draw_n: string
+    feed_discard: string
+    feed_token_one: string
+    feed_token_n: string
+    feed_waiting_for: string
+    feed_attacker_unblocked: string
+    feed_attacker_blocked: string
+    feed_attacker_blocked_by: string
+    feed_attacked_player: string
+    feed_reveals: string
+    feed_puts: string
+    feed_puts_source: string
+    feed_puts_hidden: string
+    feed_puts_hidden_source: string
+    feed_enters_battlefield: string
+    feed_dest_hand: string
+    feed_dest_graveyard: string
+    feed_dest_exile: string
+    feed_dest_top: string
+    feed_dest_bottom: string
+    feed_won_game: string
+    feed_won_match: string
+    feed_conceded: string
     chat_empty: string
     chat_placeholder: string
     insert_emoji: string
@@ -542,6 +600,11 @@ export interface TranslationSchema {
     auto_answers_empty: string
     auto_answers_clear: string
     auto_answers_delete: string
+    choice_remember: string
+    choice_memory_title: string
+    choice_memory_empty: string
+    choice_memory_clear: string
+    choice_memory_delete: string
     mana_payment_title: string
     mana_payment_auto: string
     mana_payment_auto_tip: string
@@ -555,6 +618,8 @@ export interface TranslationSchema {
     multi_amount_title: string
     string_placeholder: string
     string_confirm: string
+    grid_search_placeholder: string
+    grid_no_results: string
     string_cancel: string
     integer_confirm: string
     multi_confirm: string

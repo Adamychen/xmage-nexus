@@ -1,3 +1,5 @@
+import type { TranslationSchema } from '../i18n/types'
+
 export type ActionFeedType =
   | 'turn'
   | 'phase'
@@ -24,6 +26,72 @@ export interface ActionFeedItem {
   amount?: number
   description: string
   rawText: string
+}
+
+/** Clave i18n (sección `game`) para el texto visible de un evento del feed. */
+export type GameFeedKey = keyof TranslationSchema['game']
+
+export interface FeedI18nText {
+  kind: 'i18n'
+  key: GameFeedKey
+  params: Record<string, string | number>
+}
+
+export interface FeedVerbatimText {
+  kind: 'verbatim'
+  text: string
+}
+
+/**
+ * Evento parseado pero SIN localizar: el texto visible se resuelve con
+ * `formatFeedText` / `toFeedItem` en el idioma activo de la UI. Los nombres
+ * de jugadores y cartas viajan en `params` y jamás se traducen.
+ */
+export interface ParsedGameEvent {
+  id: string
+  timestamp: number
+  type: ActionFeedType
+  playerName?: string
+  isMe?: boolean
+  cardName?: string
+  targetName?: string
+  amount?: number
+  rawText: string
+  text: FeedI18nText | FeedVerbatimText
+}
+
+/** Función `t` mínima que necesita el formateo del feed. */
+export type FeedT = (category: 'game', key: GameFeedKey, params?: Record<string, string | number>) => string
+
+/**
+ * Convención de sub-claves: un param cuyo valor empieza por `@` se traduce
+ * primero como clave de la sección `game` (p. ej. nombres de fase/paso o de
+ * zona destino, que también están localizados).
+ */
+export function formatFeedText(parsed: ParsedGameEvent, t: FeedT): string {
+  const { text } = parsed
+  if (text.kind === 'verbatim') return text.text
+  const params: Record<string, string | number> = {}
+  for (const [k, v] of Object.entries(text.params)) {
+    params[k] = typeof v === 'string' && v.startsWith('@') ? t('game', v.slice(1) as GameFeedKey) : v
+  }
+  return t('game', text.key, params)
+}
+
+/** Convierte un evento parseado en item renderizable con `description` localizada. */
+export function toFeedItem(parsed: ParsedGameEvent, t: FeedT): ActionFeedItem {
+  return {
+    id: parsed.id,
+    timestamp: parsed.timestamp,
+    type: parsed.type,
+    playerName: parsed.playerName,
+    isMe: parsed.isMe,
+    cardName: parsed.cardName,
+    targetName: parsed.targetName,
+    amount: parsed.amount,
+    rawText: parsed.rawText,
+    description: formatFeedText(parsed, t),
+  }
 }
 
 /** Strip XML/HTML tags, object ID suffixes [abc], and normalize spaces */
@@ -54,15 +122,43 @@ const NOISE_PATTERNS = [
   /has left the game/i,
 ]
 
+/** Fase/paso del servidor ("… - Waiting for X") → clave `step_*` existente. */
+const WAITING_PHASE_STEP: Record<string, GameFeedKey> = {
+  upkeep: 'step_upkeep',
+  draw: 'step_draw',
+  'precombat main': 'step_main1',
+  'begin combat': 'step_begin_combat',
+  'declare attackers': 'step_attackers',
+  'declare blockers': 'step_blockers',
+  'combat damage': 'step_end_combat',
+  'end combat': 'step_end_combat',
+  'postcombat main': 'step_main2',
+  'end turn': 'step_end_step',
+  cleanup: 'step_cleanup',
+}
+
+/** Destino en inglés ("… into their graveyard") → sub-clave de zona. */
+function putsDestKey(dest: string): GameFeedKey | null {
+  const d = dest.toLowerCase().replace(/^the\s+/, '').trim()
+  if (d.includes('graveyard')) return 'feed_dest_graveyard'
+  if (d.includes('exile')) return 'feed_dest_exile'
+  if (d.includes('battlefield')) return 'feed_enters_battlefield'
+  if (d.includes('top of') && d.includes('library')) return 'feed_dest_top'
+  if (d.includes('bottom of') && d.includes('library')) return 'feed_dest_bottom'
+  if (d === 'hand' || d.endsWith(' hand')) return 'feed_dest_hand'
+  if (d === 'library' || d.endsWith(' library')) return 'feed_dest_top'
+  return null
+}
+
 /**
- * Parses raw XMage chat / game log lines into structured ActionFeedItems.
+ * Parses raw XMage chat / game log lines into structured ParsedGameEvents.
  * Returns null for internal engine noise or unparseable debug lines.
  */
 export function parseGameEvent(
   raw: string,
   myPlayerName?: string,
   idPrefix = 'act'
-): ActionFeedItem | null {
+): ParsedGameEvent | null {
   const text = cleanMageText(raw)
   if (!text) return null
 
@@ -78,25 +174,27 @@ export function parseGameEvent(
     return n === m || n === 'you' || n === 'tú'
   }
 
-  const base: Omit<ActionFeedItem, 'type' | 'description'> = {
+  const base = {
     id: `${idPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     timestamp: Date.now(),
     rawText: text,
   }
+
+  const i18n = (
+    type: ActionFeedType,
+    key: GameFeedKey,
+    params: Record<string, string | number>,
+    extra: Partial<ParsedGameEvent> = {}
+  ): ParsedGameEvent => ({ ...base, type, text: { kind: 'i18n', key, params }, ...extra })
 
   // 1. Turn announcements: "Turn 1 Player (0 - 20)" or "Turn 2 (Alice)" or "Turn 3 Bob"
   const turnMatch = text.match(/^Turn\s+(\d+)\s*([^:(]+?)(?:\s*\([^)]*\))?$/i)
   if (turnMatch) {
     const turnNum = Number(turnMatch[1])
     const pName = turnMatch[2].trim()
-    return {
-      ...base,
-      type: 'turn',
-      playerName: pName || undefined,
-      isMe: isMe(pName),
-      amount: turnNum,
-      description: `Turno ${turnNum}${pName ? ` · ${pName}` : ''}`,
-    }
+    return pName
+      ? i18n('turn', 'feed_turn_player', { turn: turnNum, player: pName }, { playerName: pName, isMe: isMe(pName), amount: turnNum })
+      : i18n('turn', 'feed_turn', { turn: turnNum }, { amount: turnNum })
   }
 
   // 2. Cast spells: "Player casts CardName [target: TargetName] from Zone" or "Player casts CardName from Zone"
@@ -107,15 +205,9 @@ export function parseGameEvent(
     const pName = castMatch[1].trim()
     const card = castMatch[2].trim()
     const target = castMatch[3]?.trim()
-    return {
-      ...base,
-      type: 'cast',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: card,
-      targetName: target,
-      description: `${pName} lanza ${card}${target ? ` ➔ ${target}` : ''}`,
-    }
+    return target
+      ? i18n('cast', 'feed_cast_target', { player: pName, card, target }, { playerName: pName, isMe: isMe(pName), cardName: card, targetName: target })
+      : i18n('cast', 'feed_cast', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })
   }
 
   // 3. Play Lands: "Player plays LandName from Hand" or "Player plays LandName"
@@ -123,31 +215,36 @@ export function parseGameEvent(
   if (landMatch && !landMatch[2].toLowerCase().includes('spell') && !landMatch[2].toLowerCase().includes('ability')) {
     const pName = landMatch[1].trim()
     const land = landMatch[2].trim()
-    return {
-      ...base,
-      type: 'land',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: land,
-      description: `${pName} juega ${land}`,
-    }
+    return i18n('land', 'feed_land', { player: pName, land }, { playerName: pName, isMe: isMe(pName), cardName: land })
   }
 
-  // 4. Attacks: "Player attacks with Creature1, Creature2" or "Player attacks with Creature"
-  const attackMatch = text.match(/^([^:]+?)\s+attacks(?:\s+with\s+(.+?))?(?:\s+targeting\s+(.+))?$/i)
+  // 4. Attacks: "Player attacks with Creatures", "Player attacks Defender with N creatures",
+  //    "Player attacks" or "… targeting Target"
+  const attackMatch = text.match(
+    /^([^:]+?)\s+attacks(?:\s+(?:with\s+(.+?)|(.+?)\s+with\s+(.+?)))?(?:\s+targeting\s+(.+))?$/i
+  )
   if (attackMatch) {
     const pName = attackMatch[1].trim()
-    const creatures = attackMatch[2]?.trim() || 'criaturas'
-    const target = attackMatch[3]?.trim()
-    return {
-      ...base,
-      type: 'attack',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: creatures,
-      targetName: target,
-      description: `${pName} ataca con ${creatures}${target ? ` ➔ ${target}` : ''}`,
+    const creatures = (attackMatch[2] ?? attackMatch[4])?.trim()
+    const defender = attackMatch[3]?.trim()
+    const target = attackMatch[5]?.trim()
+    const countMatch = creatures?.match(/^(\d+)\s+creatures?$/i)
+    const count = countMatch ? Number(countMatch[1]) : null
+    const extra = { playerName: pName, isMe: isMe(pName), cardName: creatures, targetName: target ?? defender }
+    if (count !== null) {
+      if (defender) {
+        return count === 1
+          ? i18n('attack', 'feed_attack_vs_one', { player: pName, defender }, extra)
+          : i18n('attack', 'feed_attack_vs_n', { player: pName, defender, count }, { ...extra, amount: count })
+      }
+      return count === 1
+        ? i18n('attack', 'feed_attack_one', { player: pName }, extra)
+        : i18n('attack', 'feed_attack_n', { player: pName, count }, { ...extra, amount: count })
     }
+    if (!creatures) return i18n('attack', 'feed_attack_alone', { player: pName }, extra)
+    if (defender) return i18n('attack', 'feed_attack_vs', { player: pName, defender, creatures }, extra)
+    if (target) return i18n('attack', 'feed_attack_target', { player: pName, creatures, target }, extra)
+    return i18n('attack', 'feed_attack', { player: pName, creatures }, extra)
   }
 
   // 5. Blocks: "Player blocks Attacker with Blocker"
@@ -156,15 +253,7 @@ export function parseGameEvent(
     const pName = blockMatch[1].trim()
     const attacker = blockMatch[2].trim()
     const blocker = blockMatch[3].trim()
-    return {
-      ...base,
-      type: 'block',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: blocker,
-      targetName: attacker,
-      description: `${pName} bloquea a ${attacker} con ${blocker}`,
-    }
+    return i18n('block', 'feed_block', { player: pName, attacker, blocker }, { playerName: pName, isMe: isMe(pName), cardName: blocker, targetName: attacker })
   }
 
   // 6. Damage: "Source deals N damage to Target" or "Target takes N damage from Source"
@@ -173,15 +262,7 @@ export function parseGameEvent(
     const src = dmgMatch[1].trim()
     const dmg = Number(dmgMatch[2])
     const tgt = dmgMatch[3].trim()
-    return {
-      ...base,
-      type: 'damage',
-      cardName: src,
-      targetName: tgt,
-      amount: dmg,
-      isMe: isMe(tgt),
-      description: `${src} inflige ${dmg} de daño a ${tgt}`,
-    }
+    return i18n('damage', 'feed_damage', { source: src, amount: dmg, target: tgt }, { cardName: src, targetName: tgt, amount: dmg, isMe: isMe(tgt) })
   }
 
   // 7. Life Changes: "Player loses N life" / "Player gains N life"
@@ -189,53 +270,36 @@ export function parseGameEvent(
   if (lifeLossMatch) {
     const pName = lifeLossMatch[1].trim()
     const amt = Number(lifeLossMatch[2])
-    return {
-      ...base,
-      type: 'life',
-      playerName: pName,
-      isMe: isMe(pName),
-      amount: -amt,
-      description: `${pName} pierde ${amt} vidas (-${amt})`,
-    }
+    return i18n('life', 'feed_lose_life', { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: -amt })
   }
   const lifeGainMatch = text.match(/^([^:]+?)\s+gains\s+(\d+)\s+life/i)
   if (lifeGainMatch) {
     const pName = lifeGainMatch[1].trim()
     const amt = Number(lifeGainMatch[2])
-    return {
-      ...base,
-      type: 'life',
-      playerName: pName,
-      isMe: isMe(pName),
-      amount: amt,
-      description: `${pName} gana ${amt} vidas (+${amt})`,
-    }
+    return i18n('life', 'feed_gain_life', { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: amt })
   }
 
-  // 8. Abilities: "Ability triggers: CardName" or "Player activates ability of CardName" or "Player activates: ..."
-  const abilityTriggerMatch = text.match(/^Ability\s+triggers:\s*([^-]+)(?:\s*-\s*(.+))?/i)
+  // 8. Abilities: "[Player - ]Ability triggers: CardName [- desc] [- targeting Target]"
+  //    or "Player activates ability of CardName"
+  const abilityTriggerMatch = text.match(/^(?:(.+?)\s+-\s+)?Ability\s+triggers:\s*([^-]+?)(?:\s*-\s*(.+))?$/i)
   if (abilityTriggerMatch) {
-    const card = abilityTriggerMatch[1].trim()
-    const desc = abilityTriggerMatch[2]?.trim()
-    return {
-      ...base,
-      type: 'ability',
-      cardName: card,
-      description: `Habilidad disparada: ${card}${desc ? ` (${desc})` : ''}`,
+    const card = abilityTriggerMatch[2].trim()
+    const rest = abilityTriggerMatch[3]?.trim() ?? ''
+    const targetingMatch = rest.match(/^(.*?)(?:\s+-\s+targeting\s+(.+))?$/i)
+    const desc = targetingMatch?.[1]?.trim() ?? ''
+    const target = targetingMatch?.[2]?.trim()
+    if (target) {
+      return i18n('ability', 'feed_ability_trigger_target', { card, target }, { cardName: card, targetName: target })
     }
+    return desc
+      ? i18n('ability', 'feed_ability_trigger_desc', { card, desc }, { cardName: card })
+      : i18n('ability', 'feed_ability_trigger', { card }, { cardName: card })
   }
   const abilityActMatch = text.match(/^([^:]+?)\s+activates\s+(?:an\s+ability\s+of|the\s+ability\s+of|ability\s+of)\s+([^-]+)/i)
   if (abilityActMatch) {
     const pName = abilityActMatch[1].trim()
     const card = abilityActMatch[2].trim()
-    return {
-      ...base,
-      type: 'ability',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: card,
-      description: `${pName} activa habilidad de ${card}`,
-    }
+    return i18n('ability', 'feed_activate', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })
   }
 
   // 9. Draws / Discards: "Player draws a card" / "Player discards CardName"
@@ -243,27 +307,15 @@ export function parseGameEvent(
   if (drawMatch) {
     const pName = drawMatch[1].trim()
     const count = drawMatch[2] ? Number(drawMatch[2]) : 1
-    return {
-      ...base,
-      type: 'draw',
-      playerName: pName,
-      isMe: isMe(pName),
-      amount: count,
-      description: `${pName} roba ${count > 1 ? `${count} cartas` : '1 carta'}`,
-    }
+    return count > 1
+      ? i18n('draw', 'feed_draw_n', { player: pName, count }, { playerName: pName, isMe: isMe(pName), amount: count })
+      : i18n('draw', 'feed_draw', { player: pName }, { playerName: pName, isMe: isMe(pName), amount: count })
   }
   const discardMatch = text.match(/^([^:]+?)\s+discards?\s+(.+)$/i)
   if (discardMatch) {
     const pName = discardMatch[1].trim()
     const card = discardMatch[2].trim()
-    return {
-      ...base,
-      type: 'discard',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: card,
-      description: `${pName} descarta ${card}`,
-    }
+    return i18n('discard', 'feed_discard', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })
   }
 
   // 10. Token creations: "Player creates a Wizard Token token" or "Player creates 2 Goblin tokens"
@@ -272,17 +324,79 @@ export function parseGameEvent(
     const pName = tokenMatch[1].trim()
     const count = tokenMatch[2] ? Number(tokenMatch[2]) : 1
     const tokenName = tokenMatch[3].trim()
-    return {
-      ...base,
-      type: 'ability',
-      playerName: pName,
-      isMe: isMe(pName),
-      cardName: tokenName,
-      description: `${pName} crea ${count > 1 ? `${count} fichas` : 'una ficha'} ${tokenName}`,
+    return count > 1
+      ? i18n('ability', 'feed_token_n', { player: pName, count, token: tokenName }, { playerName: pName, isMe: isMe(pName), cardName: tokenName, amount: count })
+      : i18n('ability', 'feed_token_one', { player: pName, token: tokenName }, { playerName: pName, isMe: isMe(pName), cardName: tokenName })
+  }
+
+  // 11. Phase/step waiting: "Upkeep - Waiting for Alice", "Declare Attackers - Waiting for Bob"
+  const waitingMatch = text.match(
+    /^(Upkeep|Draw|Precombat Main|Begin Combat|Declare Attackers|Declare Blockers|Combat Damage|End Combat|Postcombat Main|End Turn|Cleanup)\s*-\s*Waiting for\s+(.+)$/i
+  )
+  if (waitingMatch) {
+    const phaseKey = WAITING_PHASE_STEP[waitingMatch[1].trim().toLowerCase()]
+    const pName = waitingMatch[2].trim()
+    if (phaseKey) {
+      return i18n('phase', 'feed_waiting_for', { phase: `@${phaseKey}`, player: pName }, { playerName: pName, isMe: isMe(pName) })
     }
   }
 
-  // 11. Meaningful game announcements: game start, game over, concession, win
+  // 12. Combat status: "Attacker: Grizzly Bears (2/2) unblocked", "Attacked player: Bob"
+  const attackerMatch = text.match(/^Attacker:\s*(.+?)\s+(unblocked|blocked(?:\s+by\s+(.+?))?)\.?$/i)
+  if (attackerMatch) {
+    const attacker = attackerMatch[1].trim()
+    const how = attackerMatch[2].trim().toLowerCase()
+    const blocker = attackerMatch[3]?.trim()
+    if (how === 'unblocked') {
+      return i18n('attack', 'feed_attacker_unblocked', { attacker }, { cardName: attacker })
+    }
+    return blocker
+      ? i18n('attack', 'feed_attacker_blocked_by', { attacker, blocker }, { cardName: attacker, targetName: blocker })
+      : i18n('attack', 'feed_attacker_blocked', { attacker }, { cardName: attacker })
+  }
+  const attackedMatch = text.match(/^Attacked player:\s*(.+?)\.?$/i)
+  if (attackedMatch) {
+    const pName = attackedMatch[1].trim()
+    return i18n('attack', 'feed_attacked_player', { player: pName }, { playerName: pName, isMe: isMe(pName) })
+  }
+
+  // 13. Reveals: "Player reveals CardA, CardB, CardC"
+  const revealMatch = text.match(/^([^:]+?)\s+reveals?\s+(.+)$/i)
+  if (revealMatch) {
+    const pName = revealMatch[1].trim()
+    const cards = revealMatch[2].trim()
+    return i18n('ability', 'feed_reveals', { player: pName, cards }, { playerName: pName, isMe: isMe(pName), cardName: cards })
+  }
+
+  // 14. Zone moves: "Player puts Card from library into their graveyard (source: X)",
+  //     "Player puts a card from hand to the top of their library", "… onto the Battlefield"
+  // Nota: sin `in` suelto como preposición (rompería cartas con "in" en el
+  // nombre); `on` cubre "on the bottom/top of their library".
+  const putsMatch = text.match(
+    /^([^:]+?)\s+puts?\s+(.+?)(?:\s+from\s+(.+?))?\s+(into|onto|on to|on|to)\s+(.+?)(?:\s*\(source:\s*([^)]+)\))?$/i
+  )
+  if (putsMatch) {
+    const pName = putsMatch[1].trim()
+    const card = putsMatch[2].trim()
+    const destRaw = putsMatch[5].trim()
+    const source = putsMatch[6]?.trim()
+    const destKey = putsDestKey(destRaw)
+    if (destKey) {
+      if (destKey === 'feed_enters_battlefield') {
+        return i18n('land', 'feed_enters_battlefield', { card }, { playerName: pName, isMe: isMe(pName), cardName: card })
+      }
+      const hidden = /^(a\s+card|a\s+cards?|\d+\s+cards?|cards?)$/i.test(card)
+      const params: Record<string, string | number> = source
+        ? { player: pName, ...(hidden ? {} : { card }), dest: `@${destKey}`, source }
+        : { player: pName, ...(hidden ? {} : { card }), dest: `@${destKey}` }
+      const key: GameFeedKey = hidden
+        ? (source ? 'feed_puts_hidden_source' : 'feed_puts_hidden')
+        : (source ? 'feed_puts_source' : 'feed_puts')
+      return i18n('ability', key, params, { playerName: pName, isMe: isMe(pName), cardName: hidden ? undefined : card })
+    }
+  }
+
+  // 15. Meaningful game announcements: game start, game over, concession, win
   if (
     text.startsWith('¡Partida') ||
     text.toLowerCase().includes('ha ganado') ||
@@ -291,11 +405,18 @@ export function parseGameEvent(
     text.toLowerCase().includes('has conceded') ||
     text.toLowerCase().includes('fin de partida')
   ) {
-    return {
-      ...base,
-      type: 'system',
-      description: text,
+    const wonMatch = text.match(/^(.*?)\s+won the (game|match)\b/i)
+    if (wonMatch) {
+      const pName = wonMatch[1].trim()
+      const isMatch = wonMatch[2].toLowerCase() === 'match'
+      return i18n('system', isMatch ? 'feed_won_match' : 'feed_won_game', { player: pName }, { playerName: pName, isMe: isMe(pName) })
     }
+    const concededMatch = text.match(/^(.*?)\s+has conceded\b/i)
+    if (concededMatch) {
+      const pName = concededMatch[1].trim()
+      return i18n('system', 'feed_conceded', { player: pName }, { playerName: pName, isMe: isMe(pName) })
+    }
+    return { ...base, type: 'system', text: { kind: 'verbatim', text } }
   }
 
   return null
