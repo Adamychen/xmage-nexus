@@ -43,8 +43,10 @@ test.describe('multi-user: dos cuentas en un mismo proxy', () => {
       // A crea una mesa; B (otra cuenta, otra pestaña) debe verla en su lobby.
       // Prueba que ambas cuentas cuelgan del mismo server vía el mismo proxy, pero
       // con sesiones independientes (multi-tenant).
+      // Deck legal en Modern: el deck e2e por defecto lleva 16 Bolts y el servidor
+      // rechaza el join humano (solo los SIM esquivan la validación).
       const tableName = `mu${stamp}`
-      await createTable(pageA, tableName)
+      await createTable(pageA, tableName, { deck: 'Mage Web starter' })
 
       // A (creador + asiento) salta automáticamente a la sala de espera (JOINED_TABLE);
       // paridad con el TableWaitingDialog del cliente desktop.

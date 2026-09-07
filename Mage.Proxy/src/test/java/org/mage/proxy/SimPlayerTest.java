@@ -104,6 +104,19 @@ class SimPlayerTest {
     }
 
     @Test
+    void parseTournamentOptionsDefaultsPasswordAndLimitedOptions() {
+        JsonObject args = new JsonObject();
+        args.addProperty("name", "No Extras");
+        args.addProperty("tournamentType", "Constructed Elimination");
+
+        mage.game.tournament.TournamentOptions tOpts = MatchOptionsParser.parseTournamentOptions(args);
+
+        assertEquals("", tOpts.getPassword());
+        assertTrue(tOpts.getLimitedOptions() != null);
+        assertTrue(!(tOpts.getLimitedOptions() instanceof mage.game.draft.DraftOptions));
+    }
+
+    @Test
     void mulliganAskDetection() {
         assertTrue(SimPlayer.isMulliganAsk("Do you want to keep your hand? (Mulligan)"));
         assertTrue(!SimPlayer.isMulliganAsk("Do you want to pass priority? You have mana in your mana pool"));

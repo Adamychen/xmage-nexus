@@ -132,7 +132,7 @@ final class MatchOptionsParser {
         mage.game.tournament.TournamentOptions tOpts = new mage.game.tournament.TournamentOptions(name, matchType, isSingleMultiplayerGame);
         tOpts.setTournamentType(tournamentType);
         if (args.has("numberRounds")) tOpts.setNumberRounds(JsonArgs.getInt(args, "numberRounds", 0));
-        if (args.has("password")) tOpts.setPassword(JsonArgs.str(args, "password", ""));
+        tOpts.setPassword(JsonArgs.str(args, "password", ""));
         if (args.has("quitRatio")) tOpts.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
         if (args.has("minimumRating")) tOpts.setMinimumRating(JsonArgs.getInt(args, "minimumRating", 0));
         if (args.has("watchingAllowed")) tOpts.setWatchingAllowed(JsonArgs.getBool(args, "watchingAllowed", true));
@@ -208,6 +208,9 @@ final class MatchOptionsParser {
                 }
             } catch (Exception ignored) {}
             tOpts.setLimitedOptions(lim);
+        }
+        if (tOpts.getLimitedOptions() == null) {
+            tOpts.setLimitedOptions(new mage.game.tournament.LimitedOptions());
         }
         return tOpts;
     }
