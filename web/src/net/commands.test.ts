@@ -63,4 +63,20 @@ describe('commands', () => {
     expect(send).toHaveBeenCalledWith('quitMatch', { gameId: 'game-1' })
     expect(send).toHaveBeenCalledWith('disconnect')
   })
+
+  it('maps hand-permission and viewer actions (G12-1/G12-2)', async () => {
+    await commands.requestHandPermission('game-1', 'player-2')
+    await commands.setHandRequestsAllowed('game-1', true)
+    await commands.setHandRequestsAllowed('game-1', false)
+    await commands.revokeHandPermissions('game-1')
+    await commands.viewSideboard('game-1', 'player-1')
+    await commands.viewLimitedDeck('game-1', 'player-1')
+
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'REQUEST_PERMISSION_TO_SEE_HAND_CARDS', gameId: 'game-1', data: 'player-2' })
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'PERMISSION_REQUESTS_ALLOWED_ON', gameId: 'game-1', data: null })
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'PERMISSION_REQUESTS_ALLOWED_OFF', gameId: 'game-1', data: null })
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'REVOKE_PERMISSIONS_TO_SEE_HAND_CARDS', gameId: 'game-1', data: null })
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'VIEW_SIDEBOARD', gameId: 'game-1', data: 'player-1' })
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'VIEW_LIMITED_DECK', gameId: 'game-1', data: 'player-1' })
+  })
 })

@@ -41,4 +41,29 @@ class JsonArgsTest {
     void nullDataStaysNull() {
         assertNull(JsonArgs.parseActionData(null, "TRIGGER_AUTO_ORDER_ABILITY_FIRST"));
     }
+
+    @Test
+    void handPermissionActionsConvertUuidStringToUuid() {
+        String id = "123e4567-e89b-12d3-a456-426614174000";
+        for (String action : new String[]{
+                "REQUEST_PERMISSION_TO_SEE_HAND_CARDS",
+                "ADD_PERMISSION_TO_SEE_HAND_CARDS",
+                "VIEW_SIDEBOARD",
+                "VIEW_LIMITED_DECK"}) {
+            Object parsed = JsonArgs.parseActionData(JsonParser.parseString("\"" + id + "\""), action);
+            assertTrue(parsed instanceof UUID, action);
+            assertEquals(UUID.fromString(id), parsed);
+        }
+    }
+
+    @Test
+    void handPermissionActionsKeepNonUuidString() {
+        Object parsed = JsonArgs.parseActionData(JsonParser.parseString("\"not-a-uuid\""), "REQUEST_PERMISSION_TO_SEE_HAND_CARDS");
+        assertEquals("not-a-uuid", parsed);
+    }
+
+    @Test
+    void handPermissionNullDataStaysNull() {
+        assertNull(JsonArgs.parseActionData(null, "VIEW_SIDEBOARD"));
+    }
 }

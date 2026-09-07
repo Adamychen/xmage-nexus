@@ -11,6 +11,8 @@ import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
+import PlayerContextMenu from './PlayerContextMenu'
+import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
 import GameChat from './GameChat'
@@ -357,6 +359,8 @@ export default function GameScreen() {
       <UserRequestDialog />
       <RollbackDialog />
       <LimitedDeckDialog />
+      <PlayerContextMenu />
+      <InfoWindows />
       <SideboardScreen />
       <TournamentPanel />
     </div>

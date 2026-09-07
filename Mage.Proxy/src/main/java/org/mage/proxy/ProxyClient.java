@@ -676,6 +676,9 @@ public class ProxyClient implements MageClient, CommandContext {
         UserData userData = UserData.getDefaultUserDataView();
         userData.setFlagName(cleanFlag);
         userData.setAvatarId(avatar);
+        // Paridad con el desktop (PreferencesDialog KEY_GAME_ALLOW_REQUEST_SHOW_HAND_CARDS = "true"):
+        // sin esto el servidor rechaza de oficio cualquier REQUEST_PERMISSION_TO_SEE_HAND_CARDS.
+        userData.setAllowRequestShowHandCards(true);
         connection.setUserData(userData);
         connection.setProxyType(Connection.ProxyType.NONE);
 

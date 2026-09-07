@@ -752,6 +752,12 @@ export interface TranslationSchema {
     card_number: string
     opp_hand_stack: string
     opp_hand_view: string
+    player_menu_request_hand: string
+    player_menu_allow_hand_on: string
+    player_menu_allow_hand_off: string
+    player_menu_revoke_hand: string
+    player_menu_view_deck: string
+    player_menu_view_sideboard: string
     game_menu: string
     pass_options: string
     automation: string
@@ -763,6 +769,9 @@ export interface TranslationSchema {
     skip_before_mine: string
     skip_cancel: string
     skip_active_to: string
+    switch_hand: string
+    looked_at_window: string
+    companion_window: string
   }
   wiki: {
     title: string

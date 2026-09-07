@@ -1,4 +1,5 @@
 import Icon from '../ui/Icon'
+import './ContextMenu.css'
 
 export interface ContextMenuItem {
   id: string
@@ -14,19 +15,22 @@ interface ContextMenuProps {
   items: ContextMenuItem[]
   onSelect: (id: string) => void
   onClose: () => void
+  menuRef?: React.Ref<HTMLDivElement>
 }
 
-export default function ContextMenu({ x, y, items, onSelect, onClose }: ContextMenuProps) {
+export default function ContextMenu({ x, y, items, onSelect, onClose, menuRef }: ContextMenuProps) {
   return (
     <>
       <div className="context-menu-overlay" onClick={onClose} />
       <div
+        ref={menuRef}
         className="context-menu"
         style={{ left: x, top: y }}
       >
         {items.map((item) => (
           <button
             key={item.id}
+            data-testid={`ctx-${item.id}`}
             className={`context-menu-item ${item.danger ? 'danger' : ''}`}
             disabled={item.disabled}
             onClick={() => { onSelect(item.id); onClose() }}
@@ -39,14 +43,3 @@ export default function ContextMenu({ x, y, items, onSelect, onClose }: ContextM
     </>
   )
 }
-
-export const CARD_CONTEXT_ITEMS: ContextMenuItem[] = [
-  { id: 'tap', label: 'Tap / Girar', icon: 'refresh' },
-  { id: 'rotate', label: 'Rotar 90°', icon: 'refresh' },
-  { id: 'flip', label: 'Voltear', icon: 'refresh' },
-  { id: 'move', label: 'Mover a...', icon: 'send' },
-  { id: 'group', label: 'Agrupar', icon: 'copy' },
-  { id: 'counter', label: '+1/+1 Contador', icon: 'plus' },
-  { id: 'remove-counter', label: 'Quitar contador', icon: 'minus' },
-  { id: 'destroy', label: 'Destruir', icon: 'trash', danger: true },
-]

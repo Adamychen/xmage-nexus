@@ -35,9 +35,9 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `DRAFT_UPDATE` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
 | `SHOW_TOURNAMENT` | ✅ | — | ✅ | TournamentBracket / tournament.spec.ts | 2026-08-26 |
 | `WATCHGAME` | ✅ | — | ✅ | self-test (real) | 2026-08-24 |
-| `VIEW_LIMITED_DECK` | ✅ | ✅ | — | eventHandler.test.ts | 2026-08-24 |
-| `VIEW_SIDEBOARD` | ✅ | ✅ | — | eventHandler.test.ts | 2026-08-24 |
-| `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts | 2026-08-24 |
+| `VIEW_LIMITED_DECK` | ✅ | ✅ | ✅ | eventHandler.test.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
+| `VIEW_SIDEBOARD` | ✅ | ✅ | ✅ | eventHandler.test.ts / player-menu.spec.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
+| `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts / UserRequestDialog.test.tsx / verify-hand-permission.mjs (real: permiso de mano) | 2026-09-08 |
 | `GAME_REDRAW_GUI` | ⚠️ log-only | — | — | — | 2026-08-24 |
 | `START_GAME` | ✅ | — | ✅ | full-flow.spec.ts | 2026-08-24 |
 | `GAME_INIT` | ✅ | — | ✅ | full-flow.spec.ts / spells.spec.ts | 2026-08-24 |

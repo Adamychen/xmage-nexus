@@ -42,6 +42,27 @@ describe('eventHandler — callbacks críticos', () => {
     expect(req?.buttons[0]).toEqual({ text: 'Rebobinar turno', action: 'ROLLBACK_TURN' })
   })
 
+  it('propaga relatedUserId del USER_REQUEST_DIALOG (permiso de mano)', () => {
+    handleMessage({
+      type: 'event',
+      method: 'USER_REQUEST_DIALOG',
+      objectId: 'g1',
+      data: {
+        title: 'User request',
+        message: 'Allow user X to see your hand cards?',
+        relatedUserId: '123e4567-e89b-12d3-a456-426614174000',
+        button1Text: 'Accept',
+        button1Action: 'ADD_PERMISSION_TO_SEE_HAND_CARDS',
+        button2Text: 'Reject',
+        button2Action: 'DENY_PERMISSION_TO_SEE_HAND_CARDS',
+        gameId: 'g1',
+      },
+    } as never)
+    const req = getState().userRequest
+    expect(req?.relatedUserId).toBe('123e4567-e89b-12d3-a456-426614174000')
+    expect(req?.buttons[0]).toEqual({ text: 'Accept', action: 'ADD_PERMISSION_TO_SEE_HAND_CARDS' })
+  })
+
   it('registra GAME_ERROR en el estado de error', () => {
     handleMessage({ type: 'event', method: 'GAME_ERROR', objectId: 'g1', data: { message: 'Mana pool vacío' } } as never)
     expect(getState().error).toBe('Mana pool vacío')

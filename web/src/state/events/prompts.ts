@@ -61,6 +61,7 @@ export function handleUserRequestDialog(data: unknown, objectId: string | null, 
     title?: string
     message?: string
     gameId?: string
+    relatedUserId?: string
     button1Text?: string
     button1Action?: string
     button2Text?: string
@@ -73,6 +74,7 @@ export function handleUserRequestDialog(data: unknown, objectId: string | null, 
   if (d?.button1Text && d?.button1Action) buttons.push({ text: d.button1Text, action: d.button1Action })
   if (d?.button2Text && d?.button2Action) buttons.push({ text: d.button2Text, action: d.button2Action })
   if (d?.button3Text && d?.button3Action) buttons.push({ text: d.button3Text, action: d.button3Action })
-  setState({ userRequest: { title: d?.title ?? 'Solicitud', message: d?.message ?? '', gameId, buttons } })
+  const relatedUserId = typeof d?.relatedUserId === 'string' && d.relatedUserId !== '' ? d.relatedUserId : undefined
+  setState({ userRequest: { title: d?.title ?? 'Solicitud', message: d?.message ?? '', gameId, relatedUserId, buttons } })
   addLog('partida', `Solicitud del servidor: ${d?.title ?? ''}`)
 }

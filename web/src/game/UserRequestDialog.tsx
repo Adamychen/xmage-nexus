@@ -13,7 +13,7 @@ export default function UserRequestDialog() {
 
   const onButton = async (action: string) => {
     if (request.gameId) {
-      const result = await cmds.sendPlayerAction(action, request.gameId)
+      const result = await cmds.sendPlayerAction(action, request.gameId, request.relatedUserId)
       if (!result.ok) setState({ error: result.error ?? t('dialogs', 'userrequest_error') })
     }
     close()

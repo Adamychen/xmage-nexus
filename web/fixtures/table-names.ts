@@ -48,4 +48,6 @@ export const TABLE = {
   autoAnswers: 'auto-answers-test',
   manaPayment: 'mana-payment-test',
   deckIssues: 'deck-issues-test',
+  playerMenu: 'player-menu-test',
+  infoWindows: 'info-windows-test',
 } as const

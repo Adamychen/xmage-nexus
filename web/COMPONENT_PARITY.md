@@ -34,7 +34,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ✅ | Auditada 2026-09-08 (ver § U9): ocultar pickeadas (Hide+F9, `hiddenCards` en el pick — el proxy ya lo soportaba) U9-1, confirm quit U9-2, mesa/asientos + dirección de paso (usa `players` antes ignorado) U9-3, timer naranja ≤30s + tick audio 6s + aviso con pestaña oculta U9-4, anti-doble-pick 1.5s U9-5, descarga log `.draft` reimportable por U7-1 U9-6, sobre ordenado por rareza como desktop U9-7. Supera: hover doble-cara, imágenes Scryfall, i18n. Fix colateral: `DraftScreen`/`ConstructScreen` montados 2× (`App`+`GameScreen`) → solo `App`. Tests: unit 903 + `draft.spec` 3/3 | 2026-09-08 |
 | U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ✅ (AUDITADA 2026-09-08, CERRADA; ver §U10) | `TOURNAMENT_*` ✅ (`tournament.spec.ts` 4/4: bracket/modal, T1 watch, T4 chat, T5 packs; Fase A `849ec37f20` + Fase B) | 2026-09-08 |
 | U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ⚠️ | Auditada 2026-09-05: 4 gaps (skips F5/F6/F7/F10/F11/F3, trigger-order, auto-answers, macros), resto ✅ | 2026-09-05 |
-| U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ⚠️ | Auditada 2026-09-05: 4 gaps (permisos de mano, visores looked-at/companion/sideboard, menú contextual sin cablear, phased-out), resto ✅ | 2026-09-05 |
+| U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ✅ | Cerrada 2026-09-08 (ver § U12): G12-1 menú clic-derecho por bando + flujo permiso completo + Switch Hands (verify real 19/19), G12-2 disparadores deck/sideboard + InfoWindows auto (e2e), G12-3 `CARD_CONTEXT_ITEMS` eliminado (sin menú de carta en desktop para gameplay), G12-4 filtro `phasedIn` (unit+e2e). Supera en layouts + HandViewer | 2026-09-08 |
 | U13 | Combate / Maná | `combat/CombatManager.java`, `game/ManaPool.java` | `game/feedbackModes/CombatBar.tsx`, `ManaBar.tsx`, `ResourceBar.tsx` | ✅ | Auditada 2026-09-05: G13-1 cerrado (fix 2026-09-06), resto ✅ | 2026-09-06 |
 | U14 | Preguntas al jugador | `dialog/Pick*.java` (5), `ShowCardsDialog.java`, `CustomOptionsDialog.java`, `UserRequestDialog.java`, `game/FeedbackPanel.java`, `components/ability/AbilityPicker.java` | `game/feedback/*`, `game/feedbackModes/*`, `FeedbackDialog.tsx`, `UserRequestDialog.tsx` | ⚠️ | Sin gaps bloqueantes; 6 gaps menores UX (P14-1…P14-6, ver auditoría) | 2026-09-05 |
 | U15 | Sistema | `dialog/PreferencesDialog.java`, `DownloadImagesDialog.java`, `GameEndDialog.java`, `AddLandDialog.java`, `CardInfoWindowDialog.java`, `AboutDialog.java`, `WhatsNewDialog.java` | `appearance/AppearanceSettingsModal.tsx`, `lobby/DownloadImagesDialog.tsx`, `game/GameEndDialog.tsx`, `game/HelpWikiModal.tsx` | ❓ | mapeo parcial visible; auditoría pendiente | — |
@@ -153,6 +153,40 @@ confirm-empty-pool.
 | Highlight cementerio/exilio jugables | Dot jugable + cross-zone (`ResourceBar`) | ✅ |
 
 Veredicto: un solo gap, **G13-1** (prefs maná en ajustes + respetarlas en `ManaBar`).
+
+### U12 — Zonas y jugador (AUDITADA 2026-09-05, CERRADA 2026-09-08)
+
+Base desktop: `PlayAreaPanel.java` (menú clic-derecho por jugador) · `BattlefieldPanel.java`
+(`phasedIn` se salta, `:149`) · `GamePanel.java` (botón Switch Hands + ventanas
+`lookedAt`/`companion`/`sideboardWindows` vivas por `GameView`) · `MageFrame.sendUserReplay`
+(Accept envía `relatedUserId` como `data`, `:1856-1859`).
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Menú jugador: pedir/ver/autorizar/revocar mano + ver mazo/sideboard (`PlayAreaPanel.java:403-481`) | `PlayerInfoBar onContextMenu` → `PlayerContextMenu` (portal) + `playerMenu.ts` puro por bando (self: allow-toggle/revoke/deck/sideboard; rival: request; espectador: request; IA: +deck/sideboard) | ✅ G12-1/G12-2-menú |
+| `PERMISSION_REQUESTS_ALLOWED_ON/OFF` (checkbox, default ON) + `REQUEST/REVOKE/ADD_PERMISSION_*` | `commands.ts` (5 wrappers) + `allowHandRequests` en settings (persistido `mage-web-hand-requests`, default true) + `UserRequestDialog` envía `relatedUserId` como `data` | ✅ G12-1 |
+| Switch Hands al controlar otro turno (`GamePanel.java:1118`) | Toggle ⟲ en la zona propia cuando `opponentHands` trae manos (`handSwitch.ts` + `BoardZone`, badge con el nombre) | ✅ G12-1 |
+| Ventanas looked-at/companion vivas + ver mazo/sideboard bajo demanda | `InfoWindows.tsx` (auto por presencia en la vista, cierre con firma anti-reapertura) sobre `PileOverlay`; `VIEW_SIDEBOARD/VIEW_LIMITED_DECK` ya pintaban (`LimitedDeckDialog`) — faltaban los disparadores | ✅ G12-2 |
+| Menú contextual sobre carta | No existe en desktop para gameplay → `CARD_CONTEXT_ITEMS` (tap/destruir… sin respaldo en protocolo) eliminado; el gesto vive a nivel jugador | ✅ G12-3 (veredicto: no-aplica) |
+| `phasedIn` (oculta faseados) | Filtro `p.phasedIn !== false` en `BoardZone` (ausente = dentro, como el motor) | ✅ G12-4 |
+
+Fixes colaterales del cierre (todos con test que los caza): (1) el proxy enviaba
+`allowRequestShowHandCards=false` (`getDefaultUserDataView`; desktop default true) → el
+servidor rechazaba de oficio los requests (`ProxyClient.java`, 1 línea); (2) `JsonArgs`
+solo convertía String→UUID para `TRIGGER_*` y el servidor exige `instanceof UUID` en las
+4 acciones de mano/visores (verificado en real: sin esto el grant es no-op silencioso);
+(3) `useStore` casero exige snapshots cacheados — `?? []` DENTRO del selector = loop
+infinito (`InfoWindows`, "Maximum update depth exceeded" en e2e); (4) `ContextMenu.css`
+existía pero nadie lo importaba (menú como tira sin estilos al fondo del body) + clamp
+del menú al viewport (`clampMenuPos`, corrección post-paint desde el cursor).
+
+Evidencia: `JsonArgsTest` +3, `SimPlayerTest` intacto (java 167); `playerMenu.test` 8,
+`UserRequestDialog.test` 2, `handSwitch.test` 3, `BoardZone.handSwitch.test` 3,
+`BoardZone.phased.test` 3, `InfoWindows.test` 5, `eventHandler.test` +1; e2e
+`player-menu.spec` 2/2 + `info-windows.spec` 1/1 (fake); `verify-hand-permission.mjs`
+**19/19 real ×2** (request→diálogo con `relatedUserId`→concede→`watchedHands` 7 cartas,
+`VIEW_SIDEBOARD`+`VIEW_LIMITED_DECK`); i18n 7 claves ×9 (`player_menu_*`, `switch_hand`,
+`looked_at/companion_window`).
 
 ### U3 — Crear mesa (AUDITADA 2026-09-04, CERRADA 2026-09-06)
 

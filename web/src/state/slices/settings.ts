@@ -1,4 +1,4 @@
-import { loadAutoAnswers, loadFxSettings, loadAudioSettings, loadAppearanceSettings, loadManaPayment } from '../persistence'
+import { loadAutoAnswers, loadFxSettings, loadAudioSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed } from '../persistence'
 import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { AutoAnswerRule } from '../../game/autoAnswers'
 
@@ -9,6 +9,7 @@ export interface SettingsState {
   holdPriority: boolean
   autoAnswers: AutoAnswerRule[]
   manaPayment: ManaPaymentStored
+  allowHandRequests: boolean
   boardLayout: 'standard' | 'pod' | 'arena'
   effects: boolean
   animationSpeed: number
@@ -32,6 +33,7 @@ export const initialSettings: SettingsSlice = {
     holdPriority: false,
     autoAnswers: loadAutoAnswers().map((entry, index) => ({ id: `auto-${index}`, ...entry })),
     manaPayment: loadManaPayment(),
+    allowHandRequests: loadHandRequestsAllowed(),
     ...loadFxSettings(),
     ...loadAudioSettings(),
     ...loadAppearanceSettings(),

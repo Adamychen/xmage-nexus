@@ -8,6 +8,8 @@
   position: fixed;
   z-index: 200;
   min-width: 180px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
   background: #171a21;
   border: 1px solid #363b46;
   border-radius: 7px;

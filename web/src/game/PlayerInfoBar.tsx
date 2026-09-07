@@ -16,6 +16,7 @@ interface PlayerInfoBarProps {
   onClick?: () => void
   isTarget?: boolean
   onHover?: (card: CardView | null, rect?: DOMRect) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 function renderCounterIcon(name: string): React.ReactNode {
@@ -224,6 +225,7 @@ export default function PlayerInfoBar({
   onClick,
   isTarget = false,
   onHover,
+  onContextMenu,
 }: PlayerInfoBarProps) {
   const myConn = useStore((s) => s.conn)
   const game = useStore((s) => s.game)
@@ -290,6 +292,7 @@ export default function PlayerInfoBar({
       data-player-id={player.playerId}
       className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''}`}
       onClick={onClick}
+      onContextMenu={onContextMenu}
       role={onClick ? 'button' : undefined}
     >
       <div

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import HandZone from './HandZone'
@@ -10,8 +10,10 @@ import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
+import { switchableHandKeys } from './handSwitch'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import { setState, useStore } from '../state/store'
 import './BoardZone.css'
 
 export interface BoardZoneProps {
@@ -101,6 +103,19 @@ export default function BoardZone({
   const permanentsBandRef = useDragScroll<HTMLDivElement>()
   const { t } = useTranslation()
 
+  // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
+  const opponentHands = useStore((s) => s.game?.opponentHands)
+  const gamePlayers = useStore((s) => s.game?.players)
+  const switchKeys = useMemo(() => switchableHandKeys(opponentHands), [opponentHands])
+  const [switchedHandKey, setSwitchedHandKey] = useState<string | null>(null)
+  useEffect(() => {
+    if (switchedHandKey && !switchKeys.includes(switchedHandKey)) setSwitchedHandKey(null)
+  }, [switchedHandKey, switchKeys])
+  const canSwitchHands = effectiveControlled && switchKeys.length > 0
+  const switchedPlayerName = switchedHandKey
+    ? (gamePlayers?.find((p) => p.playerId === switchedHandKey || p.name === switchedHandKey)?.name ?? switchedHandKey)
+    : null
+
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
@@ -108,6 +123,17 @@ export default function BoardZone({
 
   const finalHand = useMemo((): CardsView => {
     if (!player) return {}
+    // Mano controlada ajena (Switch Hands, Mindslaver): sustituye a la propia.
+    if (switchedHandKey) {
+      const switched = opponentHands?.[switchedHandKey]
+      if (switched) {
+        const res: Record<string, CardView> = {}
+        for (const [id, card] of Object.entries(switched)) {
+          res[id] = { ...(card as CardView), id, faceDown: false }
+        }
+        return res
+      }
+    }
     const handCount = player.handCount ?? 0
 
     // 1. Explicit full hand passed (e.g. human player or spectator bottom)
@@ -178,7 +204,7 @@ export default function BoardZone({
     }
 
     return {}
-  }, [hand, revealedCards, player?.handCount, player?.playerId])
+  }, [hand, revealedCards, player?.handCount, player?.playerId, switchedHandKey, opponentHands])
 
   const handEntries = useMemo(() => Object.entries(finalHand), [finalHand])
   const knownHandEntries = useMemo(
@@ -210,7 +236,8 @@ export default function BoardZone({
   const isDefeated = player.hasLeft === true || player.life <= 0
 
   const battlefield = player.battlefield ?? {}
-  const permanents = Object.entries(battlefield)
+  // Phasing (G12-4): lo faseado se trata como si no existiera (desktop: BattlefieldPanel.java:149).
+  const permanents = Object.entries(battlefield).filter(([, p]) => p.phasedIn !== false)
 
   // Track attachments to nest them under host permanents
   const attachedIds = new Set<string>()
@@ -374,6 +401,10 @@ export default function BoardZone({
         onClick={onCardClick ? () => onCardClick(player.playerId) : undefined}
         isTarget={targetIds.has(player.playerId)}
         onHover={onCardHover}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setState({ playerMenu: { playerId: player.playerId, x: e.clientX, y: e.clientY } })
+        }}
       />
       {showHand && (
         <HandZone
@@ -388,6 +419,25 @@ export default function BoardZone({
           viewKnownCount={knownHandEntries.length}
           onViewHand={() => setHandViewerOpen(true)}
         />
+      )}
+      {canSwitchHands && (
+        <button
+          type="button"
+          data-testid="hand-switch-btn"
+          data-switched={switchedHandKey ?? undefined}
+          className={`hand-switch-btn ${switchedHandKey ? 'is-switched' : ''}`}
+          title={t('game', 'switch_hand')}
+          onClick={() => {
+            if (switchedHandKey) {
+              setSwitchedHandKey(null)
+            } else {
+              setSwitchedHandKey(switchKeys[0])
+            }
+          }}
+        >
+          <Icon name="swap" size={13} />
+          <span>{switchedHandKey && switchedPlayerName ? switchedPlayerName : t('game', 'switch_hand')}</span>
+        </button>
       )}
       <ResourceBar
         player={player}

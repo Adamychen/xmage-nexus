@@ -39,6 +39,8 @@ export interface UserRequestView {
   title: string
   message: string
   gameId?: string
+  /** Solicitant (UserRequestMessage.relatedUserId): viaja como `data` en la respuesta (ej. Accept del permiso de mano). */
+  relatedUserId?: string
   buttons: UserRequestButton[]
 }
 
@@ -46,6 +48,13 @@ export interface UserRequestView {
 export interface CardViewerState {
   title: string
   cards: FeedbackCard[]
+}
+
+/** Open player context menu (right-click on a PlayerInfoBar). */
+export interface PlayerMenuState {
+  playerId: string
+  x: number
+  y: number
 }
 
 export interface GameSlice {
@@ -63,6 +72,7 @@ export interface GameSlice {
   userRequest: UserRequestView | null
   rollbackDialogOpen: boolean
   viewer: CardViewerState | null
+  playerMenu: PlayerMenuState | null
   phaseStops: PhaseStops
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
@@ -83,6 +93,7 @@ export const initialGame: GameSlice = {
   userRequest: null,
   rollbackDialogOpen: false,
   viewer: null,
+  playerMenu: null,
   dungeonProgress: {},
   phaseStops: {
     yourTurn: { upkeep: true, draw: true, main1: false, beginCombat: true, endCombat: false, main2: false, endStep: true },

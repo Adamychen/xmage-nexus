@@ -238,6 +238,22 @@ export function saveManaPayment(mana: ManaPaymentStored) {
   } catch {}
 }
 
+const HAND_REQUESTS_KEY = 'mage-web-hand-requests'
+
+export function loadHandRequestsAllowed(): boolean {
+  try {
+    const raw = getStorage().getItem(HAND_REQUESTS_KEY)
+    if (raw != null) return JSON.parse(raw) === true
+  } catch {}
+  return true
+}
+
+export function saveHandRequestsAllowed(allowed: boolean) {
+  try {
+    getStorage().setItem(HAND_REQUESTS_KEY, JSON.stringify(allowed))
+  } catch {}
+}
+
 export interface AudioSettings {
   soundEnabled: boolean
   masterVolume: number

@@ -41,7 +41,7 @@ final class JsonArgs {
 
     static Object parseActionData(JsonElement data, String action) {
         Object parsed = parseActionDataValue(data);
-        if (parsed instanceof String && action != null && action.startsWith("TRIGGER_AUTO_ORDER_ABILITY_")) {
+        if (parsed instanceof String && action != null && (action.startsWith("TRIGGER_AUTO_ORDER_ABILITY_") || isUuidDataAction(action))) {
             try {
                 return UUID.fromString((String) parsed);
             } catch (IllegalArgumentException ex) {
@@ -49,6 +49,14 @@ final class JsonArgs {
             }
         }
         return parsed;
+    }
+
+    /** Acciones cuyo `data` es un UUID en el servidor (GameController exige `data instanceof UUID`). */
+    private static boolean isUuidDataAction(String action) {
+        return "REQUEST_PERMISSION_TO_SEE_HAND_CARDS".equals(action)
+                || "ADD_PERMISSION_TO_SEE_HAND_CARDS".equals(action)
+                || "VIEW_SIDEBOARD".equals(action)
+                || "VIEW_LIMITED_DECK".equals(action);
     }
 
     private static Object parseActionDataValue(JsonElement data) {

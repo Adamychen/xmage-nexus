@@ -263,6 +263,33 @@ export async function sendTriggerAutoOrder(kind: TriggerAutoOrderKind, gameId: s
   return sendPlayerAction(kind, gameId, data ?? null)
 }
 
+export type HandPermissionAction =
+  | 'REQUEST_PERMISSION_TO_SEE_HAND_CARDS'
+  | 'PERMISSION_REQUESTS_ALLOWED_ON'
+  | 'PERMISSION_REQUESTS_ALLOWED_OFF'
+  | 'REVOKE_PERMISSIONS_TO_SEE_HAND_CARDS'
+  | 'ADD_PERMISSION_TO_SEE_HAND_CARDS'
+
+export async function requestHandPermission(gameId: string, playerId: string) {
+  return sendPlayerAction('REQUEST_PERMISSION_TO_SEE_HAND_CARDS', gameId, playerId)
+}
+
+export async function setHandRequestsAllowed(gameId: string, allowed: boolean) {
+  return sendPlayerAction(allowed ? 'PERMISSION_REQUESTS_ALLOWED_ON' : 'PERMISSION_REQUESTS_ALLOWED_OFF', gameId, null)
+}
+
+export async function revokeHandPermissions(gameId: string) {
+  return sendPlayerAction('REVOKE_PERMISSIONS_TO_SEE_HAND_CARDS', gameId, null)
+}
+
+export async function viewSideboard(gameId: string, playerId: string) {
+  return sendPlayerAction('VIEW_SIDEBOARD', gameId, playerId)
+}
+
+export async function viewLimitedDeck(gameId: string, playerId: string) {
+  return sendPlayerAction('VIEW_LIMITED_DECK', gameId, playerId)
+}
+
 export type { ManaPaymentAction } from '../game/manaPayment'
 
 export async function sendManaPaymentMode(kind: import('../game/manaPayment').ManaPaymentAction, gameId: string) {

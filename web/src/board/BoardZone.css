@@ -131,6 +131,29 @@
   padding-bottom: 0;
 }
 
+.hand-switch-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--gold-dim, #8a6d2f);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--gold, #d8b45a);
+  cursor: pointer;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hand-switch-btn.is-switched {
+  border-color: var(--gold, #d8b45a);
+  box-shadow: 0 0 6px rgba(216, 180, 90, 0.55);
+}
+
 .zone-top .bz-status-row > .hand-zone,
 .oz-top-row > .hand-zone {
   align-self: flex-start !important;
