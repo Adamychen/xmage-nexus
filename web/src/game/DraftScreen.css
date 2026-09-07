@@ -89,6 +89,11 @@
   opacity: 0.35;
 }
 
+.draft-timer.warn .draft-timer-bar {
+  background: #ffa94d;
+  opacity: 0.3;
+}
+
 .draft-timer-text {
   position: relative;
   z-index: 1;
@@ -110,6 +115,10 @@
   color: #ff5c6c;
 }
 
+.draft-timer.warn .draft-timer-text {
+  color: #ffa94d;
+}
+
 .draft-quit-btn {
   padding: 6px 12px;
   border-radius: 6px;
@@ -123,6 +132,91 @@
 .draft-quit-btn:hover {
   background: rgba(180,40,60,0.8);
   color: #fff;
+}
+
+.draft-log-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(124,92,255,0.35);
+  background: rgba(40,30,80,0.5);
+  color: #c4b5fd;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.draft-log-btn:hover {
+  background: rgba(90,70,180,0.8);
+  color: #fff;
+}
+
+.draft-table {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px 12px 8px;
+}
+
+.draft-table-dir {
+  font-weight: 800;
+  color: var(--accent, #7c5cff);
+  margin-right: 4px;
+}
+
+.draft-seat {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  font-size: 0.6875rem;
+  color: var(--text-dim, #94a3b8);
+}
+
+.draft-pick-hide {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.65);
+  font-size: 0.6875rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.draft-pick-card:hover .draft-pick-hide,
+.draft-pick-hide:focus-visible {
+  opacity: 1;
+}
+
+.draft-hidden-link {
+  margin: 0 12px 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.25);
+  background: transparent;
+  color: var(--text-dim, #94a3b8);
+  font-size: 0.6875rem;
+  cursor: pointer;
+}
+
+.draft-hidden-link:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.5);
+}
+
+.arena-floating-preview {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.arena-floating-preview img {
+  max-width: 255px;
+  border-radius: 12px;
 }
 
 .draft-status {
@@ -302,6 +396,7 @@
 }
 
 .draft-pick-card {
+  position: relative;
   border-radius: 8px;
   overflow: hidden;
   background: #1a1d2e;

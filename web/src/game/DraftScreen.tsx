@@ -1,11 +1,34 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
 import type { SimpleCardView } from '../net/types'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
+import { soundManager } from '../audio/soundManager'
+import { buildDraftLog, type DraftLogData } from './draftLog'
 import { useTranslation } from '../i18n'
 import './DraftScreen.css'
+
+const PICK_PROTECTION_MS = 1500
+const COUNTDOWN_WARN_SECS = 30
+const COUNTDOWN_AUDIO_SECS = 6
+
+const RARITY_RANK: Record<string, number> = {
+  common: 2,
+  uncommon: 3,
+  rare: 4,
+  mythic: 5,
+  special: 6,
+  bonus: 7,
+}
+
+function rarityRankOf(card: SimpleCardView, metaMap: Map<string, CardStripMeta>): number {
+  const set = card.expansionSetCode ?? ''
+  const num = card.cardNumber ?? ''
+  const meta = (set && num ? metaMap.get(`${set}/${num}`) : null) ?? (card.name ? metaMap.get(card.name.toLowerCase()) : null)
+  const rarity = meta?.rarity?.toLowerCase() ?? ''
+  return RARITY_RANK[rarity] ?? 0
+}
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -23,10 +46,12 @@ export default function DraftScreen() {
   const pickView = draft?.message.draftPickView ?? null
 
   const draftId = draft?.draftId ?? ''
+  const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const boosterCards: SimpleCardView[] = useMemo(() => {
     if (!pickView?.booster) return []
-    return Object.values(pickView.booster as Record<string, SimpleCardView>)
-  }, [pickView?.booster])
+    const cards = Object.values(pickView.booster as Record<string, SimpleCardView>)
+    return [...cards].sort((a, b) => rarityRankOf(a, metaMap) - rarityRankOf(b, metaMap))
+  }, [pickView?.booster, metaMap])
 
   const pickCards: SimpleCardView[] = useMemo(() => {
     if (!pickView?.picks) return []
@@ -39,8 +64,19 @@ export default function DraftScreen() {
   const [timeLeft, setTimeLeft] = useState(timeout)
   const [busyPick, setBusyPick] = useState<string | null>(null)
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
-  const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
+  const lastPickAt = useRef(0)
+  const audioFiredFor = useRef('')
+  const logRef = useRef<DraftLogData | null>(null)
+
+  useEffect(() => {
+    setHiddenIds(new Set())
+    setMarkedIds(new Set())
+    lastPickAt.current = 0
+    audioFiredFor.current = ''
+    logRef.current = null
+  }, [draftId])
 
   useEffect(() => {
     setTimeLeft(timeout)
@@ -96,6 +132,7 @@ export default function DraftScreen() {
             cmc: data.cmc ?? 0,
             typeLine: data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
             colors: data.colors ?? data.color_identity ?? [],
+            rarity: data.rarity ?? '',
             legalities: data.legalities,
           }
           setMetaMap((prev) => {
@@ -140,9 +177,25 @@ export default function DraftScreen() {
 
   const handlePick = useCallback(async (cardId: string) => {
     if (!draftId || !picking || busyPick) return
+    const now = Date.now()
+    if (now - lastPickAt.current < PICK_PROTECTION_MS) return
+    lastPickAt.current = now
+    const picked = boosterCards.find((c) => c.id === cardId)
+    const pickName = picked?.name ?? cardId
+    const setCode = draftView?.setCodes?.[(draftView?.boosterNum ?? 1) - 1] ?? draftView?.setCodes?.[0] ?? ''
+    if (!logRef.current) {
+      logRef.current = { draftId, startedAt: new Date(), players: draftView?.players ?? [], entries: [] }
+    }
+    logRef.current.entries.push({
+      setCode,
+      packNo: draftView?.boosterNum ?? 0,
+      pickNo: draftView?.cardNum ?? 0,
+      booster: boosterCards.map((c) => c.name ?? c.id),
+      pick: pickName,
+    })
     setBusyPick(cardId)
     try {
-      const res = await cmds.sendCardPick(draftId, cardId)
+      const res = await cmds.sendCardPick(draftId, cardId, hiddenIds.size > 0 ? [...hiddenIds] : undefined)
       if (!res.ok) {
         // eslint-disable-next-line no-console
         console.warn('sendCardPick failed', res.error)
@@ -151,7 +204,7 @@ export default function DraftScreen() {
     } finally {
       setBusyPick(null)
     }
-  }, [draftId, picking, busyPick])
+  }, [draftId, picking, busyPick, boosterCards, draftView, hiddenIds])
 
   const handleMark = useCallback(async (cardId: string) => {
     if (!draftId) return
@@ -168,8 +221,77 @@ export default function DraftScreen() {
 
   const handleQuit = useCallback(async () => {
     if (!draftId) return
+    if (!window.confirm(t('game', 'draft_quit_confirm'))) return
     await cmds.quitDraft(draftId)
-  }, [draftId])
+  }, [draftId, t])
+
+  const handleHidePick = useCallback((cardId: string) => {
+    setHiddenIds((prev) => {
+      const nxt = new Set(prev)
+      nxt.add(cardId)
+      return nxt
+    })
+  }, [])
+
+  const handleShowAllHidden = useCallback(() => {
+    setHiddenIds(new Set())
+  }, [])
+
+  useEffect(() => {
+    if (!draft) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'F9') {
+        e.preventDefault()
+        setHiddenIds(new Set())
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [draft])
+
+  const handleDownloadLog = useCallback(() => {
+    const log = logRef.current
+    if (!log || log.entries.length === 0) return
+    const text = buildDraftLog(log)
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Draft_${log.startedAt.toISOString().slice(0, 10)}_${log.draftId.slice(0, 8)}.draft`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }, [])
+
+  useEffect(() => {
+    if (!picking || boosterCards.length === 0 || !pickView) return
+    const windowKey = `${draftId}|${draftView?.boosterNum ?? 0}|${draftView?.cardNum ?? 0}`
+    if (timeLeft === COUNTDOWN_AUDIO_SECS && audioFiredFor.current !== windowKey) {
+      audioFiredFor.current = windowKey
+      try {
+        soundManager.play('timer_tick', 'game')
+      } catch {}
+    }
+  }, [timeLeft, picking, boosterCards.length, pickView, draftId, draftView])
+
+  useEffect(() => {
+    if (!picking || boosterCards.length === 0 || typeof document === 'undefined' || !document.hidden) return
+    const prev = document.title
+    document.title = `(${formatTime(timeLeft)}) Draft`
+    const timer = setTimeout(() => {
+      document.title = prev
+    }, 4000)
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Draft', { body: t('game', 'draft_pick_hint') })
+      }
+    } catch {}
+    return () => {
+      clearTimeout(timer)
+      document.title = prev
+    }
+  }, [pickView, picking, boosterCards.length, timeLeft, t])
 
   if (!draft || !draftView) return null
 
@@ -177,6 +299,11 @@ export default function DraftScreen() {
   const setNamesLabel = draftView.setNames?.join(', ') ?? ''
   const pct = timeout > 0 ? Math.max(0, (timeLeft / timeout) * 100) : 0
   const urgent = timeLeft <= 10 && picking
+  const warn = !urgent && timeLeft <= COUNTDOWN_WARN_SECS && picking
+  const players = draftView.players ?? []
+  const passLeft = (draftView.boosterNum ?? 1) % 2 === 1
+  const visiblePicks = pickCards.filter((c) => !hiddenIds.has(c.id))
+  const hiddenCount = pickCards.length - visiblePicks.length
 
   return (
     <div className="draft-backdrop" role="presentation">
@@ -194,12 +321,15 @@ export default function DraftScreen() {
           </div>
           <div className="draft-header-right">
             {pickView && (
-              <div className={`draft-timer ${urgent ? 'urgent' : ''} ${picking ? 'picking' : 'waiting'}`}>
+              <div className={`draft-timer ${urgent ? 'urgent' : ''} ${warn ? 'warn' : ''} ${picking ? 'picking' : 'waiting'}`}>
                 <div className="draft-timer-bar" style={{ width: `${pct}%` }} />
                 <span className="draft-timer-text" data-testid="draft-timeout">{formatTime(timeLeft)}</span>
                 <span className="draft-timer-label">{picking ? t('game', 'draft_your_turn') : t('game', 'draft_waiting')}</span>
               </div>
             )}
+            <button type="button" className="draft-log-btn" onClick={() => handleDownloadLog()} title={t('game', 'draft_download_log')}>
+              {t('game', 'draft_download_log')}
+            </button>
             <button type="button" className="draft-quit-btn" onClick={() => void handleQuit()} title={t('game', 'draft_quit_title')}>
               {t('game', 'draft_quit')}
             </button>
@@ -214,6 +344,14 @@ export default function DraftScreen() {
           )}
           <span className="draft-status-count">{t('game', 'draft_status_count', { booster: String(boosterCards.length), boosterPlural: boosterCards.length !== 1 ? 's' : '', picks: String(pickCards.length), picksPlural: pickCards.length !== 1 ? 's' : '' })}</span>
         </div>
+        {players.length > 0 && (
+          <div className="draft-table" title={t('game', 'draft_table_title')} data-testid="draft-table">
+            <span className="draft-table-dir" aria-hidden="true">{passLeft ? '←' : '→'}</span>
+            {players.map((p, i) => (
+              <span key={`${i}-${p}`} className="draft-seat">{p}</span>
+            ))}
+          </div>
+        )}
 
         <div className="draft-booster-area">
           <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
@@ -262,13 +400,18 @@ export default function DraftScreen() {
           )}
         </div>
 
-        <div className="draft-picks-area">
+        <div className="draft-picks-area" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
           <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(pickCards.length) })}</h3>
-          {pickCards.length === 0 ? (
+          {hiddenCount > 0 && (
+            <button type="button" className="draft-hidden-link" onClick={() => handleShowAllHidden()} title={t('game', 'draft_show_all')}>
+              {t('game', 'draft_hidden', { count: String(hiddenCount) })}
+            </button>
+          )}
+          {visiblePicks.length === 0 ? (
             <div className="draft-picks-empty">{t('game', 'draft_empty')}</div>
           ) : (
             <div className="draft-picks-grid" data-testid="draft-picks">
-              {pickCards.map((card) => {
+              {visiblePicks.map((card) => {
                 const set = card.expansionSetCode ?? ''
                 const num = card.cardNumber ?? ''
                 const name = card.name ?? ''
@@ -292,6 +435,17 @@ export default function DraftScreen() {
                         <span className="draft-card-placeholder-name">{name || key.slice(0, 8)}</span>
                       </div>
                     )}
+                    <button
+                      type="button"
+                      className="draft-pick-hide"
+                      title={t('game', 'draft_hide_pick')}
+                      aria-label={t('game', 'draft_hide_pick')}
+                      data-testid="draft-pick-hide"
+                      onClick={(e) => { e.stopPropagation(); handleHidePick(key) }}
+                      onMouseEnter={(e) => e.stopPropagation()}
+                    >
+                      👁
+                    </button>
                   </div>
                 )
               })}

@@ -594,6 +594,12 @@ export interface TranslationSchema {
     draft_empty: string
     draft_quit: string
     draft_quit_title: string
+    draft_quit_confirm: string
+    draft_hide_pick: string
+    draft_show_all: string
+    draft_hidden: string
+    draft_download_log: string
+    draft_table_title: string
     draft_pick_long: string
     draft_status_count: string
     draft_picks_title: string

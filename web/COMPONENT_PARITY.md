@@ -31,7 +31,7 @@ resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
 | U6 | Editor mazos | `deckeditor/DeckEditorPanel.java`, `CardSelector.java`, `DeckArea.java`, `DeckLegalityPanel.java`, `collection/viewer/` | `decks/DeckBuilder.tsx` + `decks/*` (69 ficheros) | ✅ | Auditada 2026-09-07 (ver § U6): sort resultados (6 órdenes + dirección, U6-1), Mana Analyser completo (fuentes/básicas/distribución, U6-2), +4 formatos (Oathbreaker, PD Commander, Highlander EU/CA, U6-3), import `.dek`/`.cod`/`.o8d` + export `.dek` (U6-4/5), slider tamaño carta. Supera: sintaxis Scryfall, sample hand London + goldfish, catálogo meta + Moxfield/Archidekt, reparación de issues del servidor. No-aplica: `CollectionViewer/MageBook` (sin DB local), Open Booster, Bling, Draft Rating, LAYOUT posicional. Resto import/export (`.mwdeck/.draft/.json`) → U7. Tests: unit 883 + `decks-gallery.spec` 5/5 (nuevo test U6) + `deckvalidation` 3/3 | 2026-09-07 |
 | U7 | Import / Export / Sample | `deckeditor/DeckImportClipboardDialog.java`, `DeckExportClipboardDialog.java` | `decks/DeckImportModal.tsx`, `exportDeckFile.ts`, `SampleHandModal.tsx` | ✅ | Auditada 2026-09-07 (ver § U7): import 9 ext desktop cubiertas (U7-1 `.draft`, U7-2 mtgjson `.json` con backup-restore desambiguado, U7-3 `.mwdeck` bracket/set + switch banquillo por línea vacía MTGO + comentarios `#` + cabeceras con conteo), botón pegar-portapapeles (U7-5), Commander→principal+cover y Maybeboard→banquillo (U7-6), Partner 2 coronas + unión identidad por datos oráculo (U7-7, supera: desktop sin zona). Export 4 formatos ✅ (dck_info no-aplica). Supera: URLs Moxfield/Archidekt, sample London+goldfish, badge live. Tests: unit 894 + `decks-gallery.spec` 6/6 (test U7) + `deckvalidation` 3/3 | 2026-09-07 |
 | U8 | Generador mazos | `deck/generator/DeckGenerator*.java` (5), `RatioAdjustingSliderPanel.java` | — (sin equivalente en `web/src`) | ❌ | grep `*generat*deck*|*random*deck*` en `web/src` → 0 resultados | 2026-09-05 |
-| U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ❓ | `DRAFT_*` ✅ (`draft.spec.ts`); comparativa fina pendiente | — |
+| U9 | Draft | `draft/DraftPanel.java`, `DraftGrid.java` | `game/DraftScreen.tsx` | ✅ | Auditada 2026-09-08 (ver § U9): ocultar pickeadas (Hide+F9, `hiddenCards` en el pick — el proxy ya lo soportaba) U9-1, confirm quit U9-2, mesa/asientos + dirección de paso (usa `players` antes ignorado) U9-3, timer naranja ≤30s + tick audio 6s + aviso con pestaña oculta U9-4, anti-doble-pick 1.5s U9-5, descarga log `.draft` reimportable por U7-1 U9-6, sobre ordenado por rareza como desktop U9-7. Supera: hover doble-cara, imágenes Scryfall, i18n. Fix colateral: `DraftScreen`/`ConstructScreen` montados 2× (`App`+`GameScreen`) → solo `App`. Tests: unit 903 + `draft.spec` 3/3 | 2026-09-08 |
 | U10 | Torneo | `tournament/TournamentPanel.java`, `dialog/NewTournamentDialog.java`, `RandomPacksSelectorDialog.java` | `game/TournamentPanel.tsx`, `lobby/TournamentBracket.tsx`, `TournamentStandings.tsx` | ❓ | `TOURNAMENT_*` ✅ (`tournament.spec.ts`); `RandomPacksSelector` por auditar | — |
 | U11 | Núcleo partida | `game/GamePanel.java`, `GamePane.java` | `game/GameScreen.tsx`, `state/eventHandler.ts`, `state/events/` | ⚠️ | Auditada 2026-09-05: 4 gaps (skips F5/F6/F7/F10/F11/F3, trigger-order, auto-answers, macros), resto ✅ | 2026-09-05 |
 | U12 | Zonas y jugador | `game/PlayAreaPanel.java`, `BattlefieldPanel.java`, `HandPanel.java`, `PlayerPanelExt.java`, `cards/*` | `board/*` (37: `BoardZone`, `HandBar`, `StackZone`, `CommandZone`, `Pile`…) | ⚠️ | Auditada 2026-09-05: 4 gaps (permisos de mano, visores looked-at/companion/sideboard, menú contextual sin cablear, phased-out), resto ✅ | 2026-09-05 |
@@ -72,7 +72,7 @@ Evidencia: `feedback.test.ts`, `detect.test.ts`, `FeedbackDialog.test.tsx`,
 Veredicto: **sin gaps bloqueantes** — P14-1…P14-6 son pulido UX, priorizar P14-1
 (búsqueda en grid) si aparecen listas largas en juego real.
 
-### U1 · U2 · U9 · U10 · U15 — pendientes (U4/U5/U6/U7 cerradas)
+### U1 · U2 · U10 · U15 — pendientes (U4/U5/U6/U7/U9 cerradas)
 
 ### U11 — Núcleo partida (AUDITADA 2026-09-05)
 
@@ -165,6 +165,26 @@ Evidencia: `Mage.Proxy/TableStagingCommandsTest.java` 7/7 + `SpectatorStagingScr
 ### U8 — Generador mazos (gap confirmado)
 
 Sin equivalente web. Decidir: implementar (nueva feature) o declarar fuera de alcance.
+
+### U9 — Draft (AUDITADA 2026-09-08, CERRADA)
+
+Base desktop: `DraftPanel.java` (mesa 16 asientos + dirección ←/→ por nº de sobre, progreso por sobre, timer MM:SS naranja ≤30s/rojo ≤10s + audio 6s + tray-ping, protección anti-doble-pick 1.5s, ocultar pickeadas Hide/F9 enviadas en `sendCardPick`, log `.draft` opt-in, quit con confirmación) · `DraftGrid.java` (sobre ordenado por rareza, clic=mark, doble-clic=pick) · `DraftPane.java` (contenedor MDI) · `DraftPickLogger.java` (formato `------ SET ------` / `Pack X pick Y:` / `--> pick`).
+Base web: `DraftScreen.tsx` (grid + bandeja picks, timer, pick 1 clic, mark clic-derecho, hover doble-cara, Scryfall, i18n).
+
+| Desktop | Web | Estado |
+|---|---|---|
+| Ocultar pickeadas (Hide + F9 + viajan en el pick) | Botón 👁 por pick + F9 + enlace "N ocultas" + clic-derecho en zona; `hiddenCards` en `sendCardPick` (el proxy/commands ya lo aceptaban) | ✅ U9-1 |
+| Quit con confirmación | `confirm` i18n ×9 | ✅ U9-2 |
+| Mesa/asientos + dirección de paso | Tira `draft-table` con `players` del contrato (antes ignorado) + flecha ←/→ por paridad del sobre | ✅ U9-3 |
+| Naranja ≤30s + audio 6s + tray-ping inactivo | Clase `warn` + `timer_tick` 1× por ventana + flash de título/`Notification` con pestaña oculta | ✅ U9-4 |
+| Protección 1.5s anti-doble-pick | `lastPickAt`, ignora picks <1500ms | ✅ U9-5 |
+| Log `.draft` a fichero (opt-in prefs) | `draftLog.ts` + botón descarga (siempre disponible; formato idéntico, reimportable por `parseDraftLog` U7-1, test roundtrip) | ✅ U9-6 (supera) |
+| Sobre ordenado por rareza | Orden cliente por `rarity` Scryfall (mismo ranking `Rarity.getSorting()`); el servidor no ordena (`SimpleCardView` sin rareza) | ✅ U9-7 |
+| Contenedor MDI/temas, tray nativo, `SortSettingDraft` (sin UI en desktop) | No-aplica (tray ≈ U9-4) | — |
+
+Fix colateral: `DraftScreen`+`ConstructScreen` montados 2× (`App.tsx:97` + `GameScreen.tsx:362`) → solo `App` (doble timer, doble `setBoosterLoaded`, e2e ambiguo).
+
+Evidencia: `DraftScreen.test` 6→14 (hide+hiddenCards, F9, confirm, mesa, warn+tick, protección, rareza), `draftLog.test` 2 (roundtrip), `draft.spec` test U9 (mesa/ocultar/F9/log).
 
 ### U7 — Import / Export / Sample (AUDITADA 2026-09-07, CERRADA)
 

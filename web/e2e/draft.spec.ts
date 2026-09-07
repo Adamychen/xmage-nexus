@@ -37,8 +37,7 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(card).toBeVisible()
   })
 
-  test('después del draft aparece CONSTRUCT', async ({ page }) => {
-    await page.goto('/')
+  test('después del draft aparece CONSTRUCT', async ({ page }) => {    await page.goto('/')
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(500)
     await page.evaluate(() => {
@@ -65,5 +64,48 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(construct).toBeVisible({ timeout: 10_000 })
     await expect(page.getByTestId('construct-submit').first()).toBeVisible()
     await expect(page.locator('.construct-screen').first()).toContainText(/Pool/)
+  })
+
+  test('U9: mesa, ocultar pick con F9 y botón de log', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
+    await page.waitForTimeout(500)
+    await page.evaluate(() => {
+      const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
+      store?.setState({
+        draft: {
+          draftId: 'draft-test-u9',
+          message: {
+            draftView: { setNames: ['Core Set 2021'], setCodes: ['M21'], boosterNum: 1, cardNum: 2, players: ['a','b','c','d','e','f','g','h'] },
+            draftPickView: {
+              booster: {
+                'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Lightning Bolt' },
+              },
+              picks: {
+                'p-1': { id: 'p-1', expansionSetCode: 'M21', cardNumber: '99', name: 'Grizzly Bears' },
+              },
+              picking: true,
+              timeout: 60,
+            },
+          },
+        },
+        phase: 'game',
+      })
+    })
+    const draft = page.locator('.draft-screen').first()
+    await expect(draft).toBeVisible({ timeout: 10_000 })
+    const table = page.getByTestId('draft-table').first()
+    await expect(table).toBeVisible()
+    await expect(table).toContainText('←')
+    await expect(table.locator('.draft-seat')).toHaveCount(8)
+    await expect(page.locator('.draft-log-btn').first()).toBeVisible()
+
+    const pick = page.getByTestId('draft-pick-card').first()
+    await expect(pick).toBeVisible()
+    await page.getByTestId('draft-pick-hide').first().click()
+    await expect(page.getByTestId('draft-pick-card')).toHaveCount(0)
+    await expect(page.locator('.draft-hidden-link').first()).toBeVisible()
+    await page.keyboard.press('F9')
+    await expect(page.getByTestId('draft-pick-card')).toHaveCount(1)
   })
 })

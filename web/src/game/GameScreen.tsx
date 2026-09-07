@@ -12,8 +12,6 @@ import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
 import SideboardScreen from './SideboardScreen'
-import DraftScreen from './DraftScreen'
-import ConstructScreen from './ConstructScreen'
 import GameMenu from './GameMenu'
 import GameChat from './GameChat'
 import PhaseBar from './PhaseBar'
@@ -359,8 +357,6 @@ export default function GameScreen() {
       <UserRequestDialog />
       <RollbackDialog />
       <LimitedDeckDialog />
-      <DraftScreen />
-      <ConstructScreen />
       <SideboardScreen />
       <TournamentPanel />
     </div>
