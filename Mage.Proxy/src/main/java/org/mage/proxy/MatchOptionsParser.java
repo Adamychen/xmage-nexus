@@ -157,6 +157,12 @@ final class MatchOptionsParser {
         mOpts.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
         mOpts.setPassword(JsonArgs.str(args, "password", ""));
         mOpts.setSpectatorsAllowed(JsonArgs.getBool(args, "spectatorsAllowed", true));
+        if (args.has("rollbackTurnsAllowed")) {
+            mOpts.setRollbackTurnsAllowed(JsonArgs.getBool(args, "rollbackTurnsAllowed", true));
+        }
+        if (args.has("rated")) {
+            mOpts.setRated(JsonArgs.getBool(args, "rated", false));
+        }
         if (args.has("skillLevel")) {
             try { mOpts.setSkillLevel(mage.constants.SkillLevel.valueOf(JsonArgs.str(args, "skillLevel", "CASUAL").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
         }
@@ -165,6 +171,11 @@ final class MatchOptionsParser {
         }
         if (args.has("bufferTime")) {
             try { mOpts.setMatchBufferTime(mage.constants.MatchBufferTime.valueOf(JsonArgs.str(args, "bufferTime", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
+        }
+        if (args.has("bannedUsers") && args.get("bannedUsers").isJsonArray()) {
+            java.util.Set<String> banned = new java.util.HashSet<>();
+            for (JsonElement e : args.getAsJsonArray("bannedUsers")) banned.add(e.getAsString());
+            mOpts.setBannedUsers(banned);
         }
         // limitedOptions
         if (args.has("limitedOptions") && args.get("limitedOptions").isJsonObject()) {

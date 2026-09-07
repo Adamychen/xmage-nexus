@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../state/store'
 import TournamentBracket from '../lobby/TournamentBracket'
+import { watchTournamentMatch } from '../lobby/useTournamentBracket'
 import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -11,6 +12,7 @@ export default function TournamentPanel() {
   const tournament = useStore((s) => s.tournament)
   const [expanded, setExpanded] = useState(true)
   const [quitting, setQuitting] = useState(false)
+  const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
 
   useEffect(() => {
     if (tournament) setExpanded(true)
@@ -38,11 +40,22 @@ export default function TournamentPanel() {
 
   const handleQuit = async () => {
     if (quitting) return
+    if (!window.confirm(t('game', 'tournament_quit_confirm'))) return
     setQuitting(true)
     try {
       await cmds.quitTournament(tid)
     } finally {
       setQuitting(false)
+    }
+  }
+
+  const handleWatchMatch = async (tableId: string) => {
+    if (watchingMatchId) return
+    setWatchingMatchId(tableId)
+    try {
+      await watchTournamentMatch(tableId)
+    } finally {
+      setWatchingMatchId(null)
     }
   }
 
@@ -84,7 +97,13 @@ export default function TournamentPanel() {
           </div>
         </header>
         <div className="tournament-panel-scroll">
-          <TournamentBracket view={view} tournamentId={tid} compact />
+          <TournamentBracket
+            view={view}
+            tournamentId={tid}
+            compact
+            onWatchMatch={(id) => void handleWatchMatch(id)}
+            watchingMatchId={watchingMatchId}
+          />
         </div>
       </section>
     </div>

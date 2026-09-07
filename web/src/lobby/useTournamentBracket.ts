@@ -4,12 +4,23 @@ import * as cmds from '../net/commands'
 import type { TableView, TournamentView } from '../net/types'
 import { withTimeout } from './lobbyUtils'
 
+/** Ve una partida del torneo por su tableId (botón ojo del bracket, como el desktop). */
+export async function watchTournamentMatch(tableId: string): Promise<boolean> {
+  try {
+    const res = await withTimeout(cmds.watchTournamentTable(tableId), 15000, 'watchTournamentTable')
+    return !!res.ok
+  } catch {
+    return false
+  }
+}
+
 export function useTournamentBracket() {
   const tournamentState = useStore((s) => s.tournament)
   const [bracketTable, setBracketTable] = useState<TableView | null>(null)
   const [bracketView, setBracketView] = useState<TournamentView | null>(null)
   const [bracketLoading, setBracketLoading] = useState(false)
   const [bracketError, setBracketError] = useState<string | null>(null)
+  const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
 
   const openBracket = async (t: TableView) => {
     setBracketTable(t)
@@ -41,6 +52,18 @@ export function useTournamentBracket() {
     setBracketTable(null)
     setBracketView(null)
     setBracketError(null)
+  }
+
+  const watchMatch = async (tableId: string) => {
+    if (watchingMatchId) return
+    setWatchingMatchId(tableId)
+    setBracketError(null)
+    try {
+      const ok = await watchTournamentMatch(tableId)
+      if (!ok) setBracketError(`watchTournamentTable: ${tableId}`)
+    } finally {
+      setWatchingMatchId(null)
+    }
   }
 
   const refreshBracket = async () => {
@@ -83,6 +106,6 @@ export function useTournamentBracket() {
 
   return {
     bracketTable, bracketView, bracketLoading, bracketError,
-    openBracket, closeBracket, refreshBracket,
+    openBracket, closeBracket, refreshBracket, watchMatch, watchingMatchId,
   }
 }

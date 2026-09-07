@@ -67,6 +67,8 @@ export interface CreateTableForm {
   setNumberRounds: (v: number) => void
   draftCubeName: string
   setDraftCubeName: (v: string) => void
+  singleGame: boolean
+  setSingleGame: (v: boolean) => void
   timeLimit: string
   setTimeLimit: (v: string) => void
   bufferTime: string
@@ -251,6 +253,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [tournamentType, setTournamentType] = useState('Booster Draft')
   const [numberRounds, setNumberRounds] = useState(0)
   const [draftCubeName, setDraftCubeName] = useState('')
+  const [singleGame, setSingleGame] = useState(false)
 
   // Timing tab
   const [timeLimit, setTimeLimit] = useState('MIN__25')
@@ -539,6 +542,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         setCodes,
         ...(draftCubeName ? { draftCubeName } : {}),
       })
+      const bannedUsers = bannedUsersRaw.split(',').map((s) => s.trim()).filter(Boolean)
       const tArgs = {
         name: name || `${username}'s table`,
         tournamentType,
@@ -548,8 +552,18 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         playerTypes: ['HUMAN'],
         password: password.trim() || undefined,
         watchingAllowed: spectatorsAllowed,
+        spectatorsAllowed,
         winsNeeded: wins,
         ...(numberRounds > 0 ? { numberRounds } : {}),
+        skillLevel,
+        rated,
+        rollbackTurnsAllowed,
+        timeLimit: timeLimit === 'NONE' ? undefined : timeLimit,
+        bufferTime: bufferTime === 'NONE' ? undefined : bufferTime,
+        minimumRating: minimumRating > 0 ? minimumRating : undefined,
+        quitRatio: quitRatio < 100 ? quitRatio : undefined,
+        bannedUsers: bannedUsers.length > 0 ? bannedUsers : undefined,
+        isSingleMultiplayerGame: singleGame || undefined,
       }
       const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
       setBusy(false)
@@ -731,6 +745,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setNumberRounds,
     draftCubeName,
     setDraftCubeName,
+    singleGame,
+    setSingleGame,
     timeLimit,
     setTimeLimit,
     bufferTime,

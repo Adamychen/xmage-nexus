@@ -12,6 +12,8 @@ vi.mock('../net/commands', () => ({
   getPlayerTypes: vi.fn().mockResolvedValue(['COMPUTER_MAD', 'COMPUTER_DRAFT']),
   createTable: vi.fn().mockResolvedValue({ ok: true, data: { tableId: 'table-123' } }),
   joinTable: vi.fn().mockResolvedValue({ ok: true }),
+  createTournamentTable: vi.fn().mockResolvedValue({ ok: true, data: { tableId: 'table-t1' } }),
+  joinTournamentTable: vi.fn().mockResolvedValue({ ok: true }),
 }))
 
 describe('CreateTableDialog', () => {
@@ -184,8 +186,62 @@ describe('CreateTableDialog', () => {
     const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
     fireEvent.change(formatSelect, { target: { value: 'Limited' } })
     fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
     const rounds = screen.getByLabelText(/rondas|rounds/i) as HTMLInputElement
     fireEvent.change(rounds, { target: { value: '5' } })
     expect(rounds.value).toBe('5')
+  })
+
+  it('T3: number of rounds only shows for Swiss tournament types', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+
+    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
+    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
+    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    // default 'Booster Draft' is not a server type → rounds hidden until Swiss is picked
+    expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
+    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
+    fireEvent.change(typeSelect, { target: { value: 'Sealed Swiss' } })
+    expect(screen.getByLabelText(/rondas|rounds/i)).toBeDefined()
+  })
+
+  it('T2: draft tournament sends lobby flags (skill/rated/rollback/clocks/single)', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft Night' } })
+    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
+    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
+    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    fireEvent.click(screen.getByText(/Jugar como partida única|Play as single game/i))
+
+    for (let i = 0; i < 6; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo|Create Draft/i }))
+
+    await waitFor(() => {
+      expect(cmds.createTournamentTable).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tournamentType: 'Booster Draft',
+          deckType: 'Limited',
+          skillLevel: 'CASUAL',
+          rated: false,
+          rollbackTurnsAllowed: true,
+          timeLimit: 'MIN__25',
+          isSingleMultiplayerGame: true,
+        }),
+      )
+      const sent = (cmds.createTournamentTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
+      expect(sent.bufferTime).toBeUndefined()
+      expect(sent.bannedUsers).toBeUndefined()
+      expect(sent.minimumRating).toBeUndefined()
+      expect(cmds.joinTournamentTable).toHaveBeenCalledWith(expect.objectContaining({ tableId: 'table-t1' }))
+      expect(onClose).toHaveBeenCalled()
+    })
   })
 })

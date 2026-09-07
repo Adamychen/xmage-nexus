@@ -301,6 +301,31 @@
   border-radius: 4px;
 }
 
+.bracket-watchable {
+  display: inline-flex;
+  align-items: center;
+  color: #8c96c0;
+}
+
+button.bracket-watch-btn {
+  background: rgba(124,92,255,0.12);
+  border: 1px solid rgba(124,92,255,0.35);
+  border-radius: 4px;
+  padding: 1px 5px;
+  cursor: pointer;
+  color: #c4b5fd;
+}
+
+button.bracket-watch-btn:hover:not(:disabled) {
+  background: rgba(124,92,255,0.28);
+  color: #fff;
+}
+
+button.bracket-watch-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .tournament-empty {
   font-size: 0.75rem;
   color: #8c96c0;

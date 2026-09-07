@@ -10,9 +10,11 @@ interface Props {
   error: string | null
   onClose: () => void
   onRefresh: () => void
+  onWatchMatch?: (tableId: string) => void
+  watchingMatchId?: string | null
 }
 
-export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh }: Props) {
+export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh, onWatchMatch, watchingMatchId }: Props) {
   const { t } = useTranslation()
   return (
     <div className="tournament-modal-backdrop" role="presentation" onClick={onClose} data-testid="tournament-modal-backdrop">
@@ -34,6 +36,8 @@ export default function TournamentBracketModal({ table, view, loading, error, on
               view={view}
               tournamentId={table.tableId}
               onClose={onClose}
+              onWatchMatch={onWatchMatch}
+              watchingMatchId={watchingMatchId}
             />
           )}
           {!view && !loading && !error && (

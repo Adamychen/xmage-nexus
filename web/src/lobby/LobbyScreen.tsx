@@ -353,6 +353,8 @@ export default function LobbyScreen() {
           error={bracket.bracketError}
           onClose={bracket.closeBracket}
           onRefresh={() => void bracket.refreshBracket()}
+          onWatchMatch={(id) => void bracket.watchMatch(id)}
+          watchingMatchId={bracket.watchingMatchId}
         />
       )}
       {showDownloadImages && (

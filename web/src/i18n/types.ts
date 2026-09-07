@@ -188,6 +188,8 @@ export interface TranslationSchema {
     create_field_rated: string
     create_field_draft_type: string
     create_field_draft_sets: string
+    create_field_single_game: string
+    create_desc_single_game: string
     create_field_timing_limit: string
     create_field_free_mulligans: string
     create_field_attack_option: string
@@ -228,6 +230,7 @@ export interface TranslationSchema {
     create_option_wins_bo3: string
     create_option_wins_bo5: string
     tournament_quit: string
+    tournament_quit_confirm: string
     tournament_round_label: string
     bracket_title: string
     bracket_no_rounds: string
@@ -681,6 +684,7 @@ export interface TranslationSchema {
     tournament_minimize: string
     tournament_close: string
     tournament_quit_short: string
+    tournament_quit_confirm: string
     tournament_leaving: string
     ring_level_1_title: string
     ring_level_1_rule: string

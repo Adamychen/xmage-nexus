@@ -1,5 +1,8 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { withFakeServer } from './support/fake-backend'
+import { tournamentScenario } from '../fixtures/scenarios/tournament'
+import { login } from './support/start-game'
 fakeOnly()
 
 test.describe('Tournament', { tag: '@tournament' }, () => {
@@ -25,7 +28,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
             watchingAllowed: true,
             rounds: [
               { games: [{ roundNum: 1, state: 'Finished', players: 'alice vs bob', result: '2-0', tableId: 'table-g1' }] },
-              { games: [{ roundNum: 2, state: 'Dueling', players: 'alice vs diana', result: '', tableId: 'table-g2' }] },
+              { games: [{ roundNum: 2, state: 'Dueling', players: 'alice vs diana', result: '', tableId: 'table-g2', gameId: 'game-g2' }] },
             ],
             players: [
               { name: 'alice', state: 'Dueling', points: 6, results: '2-0', history: 'W-W', quit: false },
@@ -56,83 +59,26 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
     await expect(panel.locator('[data-testid="bracket-round"]').first()).toBeVisible()
     await expect(panel.locator('[data-testid="standings-row"]').first()).toBeVisible()
     await expect(panel.locator('[data-testid="standings-quit"]').first()).toBeVisible()
+    // T1: eye per live match watches it (FakeServer acks watchTournamentTable)
+    const eye = panel.locator('[data-testid="bracket-watch"]').first()
+    await expect(eye).toBeVisible()
+    await eye.click()
+    await expect(panel.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
   })
 
-  test('bracket modal via Ver bracket button for tournament table', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
-    await page.waitForTimeout(400)
-    // Inject a lobby with a tournament table
-    await page.evaluate(() => {
-      const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
-      const now = Date.now()
-      const tables = [
-        {
-          tableId: 'table-tourney-1',
-          gameType: 'Commander / Free For All',
-          deckType: 'Commander',
-          tableName: 'Mesa Torneo Commander',
-          controllerName: 'host',
-          additionalInfoShort: '3/4',
-          additionalInfoFull: '',
-          createTime: now,
-          tableState: 'WAITING',
-          skillLevel: 'Casual',
-          tableStateText: 'Esperando',
-          seatsInfo: '3/4',
-          isTournament: true,
-          seats: [
-            { playerName: 'host', seatIndex: 0, playerType: 'HUMAN' },
-            { playerName: 'alice', seatIndex: 1, playerType: 'HUMAN' },
-            { playerName: '', seatIndex: 2, playerType: 'HUMAN' },
-            { playerName: '', seatIndex: 3, playerType: 'HUMAN' },
-          ],
-          games: [],
-          quitRatio: '100',
-          minimumRating: '0',
-          limited: false,
-          rated: false,
-          passworded: false,
-          spectatorsAllowed: true,
-        },
-      ]
-      store?.setState({
-        lobby: {
-          type: 'lobby',
-          tables,
-          users: { numberActiveGames: 0, numberGameThreads: 0, numberMaxGames: 10, usersView: [] },
-          serverMessages: [],
-        },
-        tournament: {
-          tournamentId: 'table-tourney-1',
-          view: {
-            tournamentName: 'Mesa Torneo Commander',
-            tournamentType: 'Swiss',
-            tournamentState: 'Waiting',
-            startTime: now,
-            endTime: null,
-            stepStartTime: now - 30000,
-            serverTime: now,
-            constructionTime: 300,
-            watchingAllowed: true,
-            rounds: [{ games: [{ roundNum: 1, state: 'Ready', players: 'host vs alice', result: '' }] }],
-            players: [
-              { name: 'host', state: 'Waiting', points: 0, quit: false },
-              { name: 'alice', state: 'Waiting', points: 0, quit: false },
-            ],
-            runningInfo: 'Esperando jugadores',
-          },
-        },
-        phase: 'lobby',
-      })
+  test('bracket modal eye watches a live match over WS (T1)', async ({ page }) => {
+    await withFakeServer(() => tournamentScenario(), async () => {
+      await login(page, 'e2e')
+      const bracketBtn = page.getByTestId('open-bracket').first()
+      await expect(bracketBtn).toBeVisible({ timeout: 10_000 })
+      await bracketBtn.click()
+      const modal = page.locator('[data-testid="tournament-bracket"]').first()
+      await expect(modal).toBeVisible({ timeout: 10_000 })
+      // server view has 4 games with gameIds → 4 watch buttons
+      const eyes = modal.locator('[data-testid="bracket-watch"]')
+      await expect(eyes).toHaveCount(4, { timeout: 10_000 })
+      await eyes.first().click()
+      await expect(modal.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
     })
-    await page.waitForTimeout(300)
-    const bracketBtn = page.getByTestId('open-bracket').first()
-    await expect(bracketBtn).toBeVisible({ timeout: 10_000 })
-    await bracketBtn.click()
-    await page.waitForTimeout(300)
-    const modal = page.locator('[data-testid="tournament-bracket"]').first()
-    await expect(modal).toBeVisible({ timeout: 10_000 })
-    await expect(modal.locator('[data-testid="tournament-name"]').first()).toContainText(/Torneo|Mesa Torneo Commander|Commander/i)
   })
 })

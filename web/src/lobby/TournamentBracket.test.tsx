@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { describe, it, expect, afterEach, vi } from 'vitest'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import TournamentBracket from './TournamentBracket'
 import type { TournamentView, TournamentPlayerView, RoundView, TournamentGameView } from '../net/types'
 
@@ -125,5 +125,79 @@ describe('TournamentBracket', () => {
     expect(view.players.length).toBe(4)
     render(<TournamentBracket view={view} />)
     expect(screen.getAllByTestId('standings-row').length).toBe(4)
+  })
+
+  it('calls onWatchMatch with the match tableId when clicking the eye (T1)', () => {
+    const view = sampleTournamentView()
+    const onWatchMatch = vi.fn()
+    render(<TournamentBracket view={view} onWatchMatch={onWatchMatch} />)
+    const btns = screen.getAllByTestId('bracket-watch')
+    expect(btns.length).toBe(4)
+    fireEvent.click(btns[2])
+    expect(onWatchMatch).toHaveBeenCalledWith('table-g3')
+  })
+
+  it('disables the eye of the match being watched (T1)', () => {
+    const view = sampleTournamentView()
+    render(<TournamentBracket view={view} onWatchMatch={() => {}} watchingMatchId="table-g3" />)
+    const btns = screen.getAllByTestId('bracket-watch')
+    const watching = btns.find((b) => b.getAttribute('data-table') === 'table-g3')
+    expect(watching).toBeDefined()
+    expect((watching as HTMLElement).hasAttribute('disabled')).toBe(true)
+    expect(btns.filter((b) => !(b as HTMLElement).hasAttribute('disabled')).length).toBe(3)
+  })
+
+  it('renders a plain eye without handler as fallback (T1)', () => {
+    const view = sampleTournamentView()
+    render(<TournamentBracket view={view} />)
+    expect(screen.queryByTestId('bracket-watch')).toBeNull()
+  })
+
+  it('hides the eye when watching is not allowed (T1)', () => {
+    const view = sampleTournamentView({ watchingAllowed: false })
+    const onWatchMatch = vi.fn()
+    render(<TournamentBracket view={view} onWatchMatch={onWatchMatch} />)
+    expect(screen.queryByTestId('bracket-watch')).toBeNull()
+  })
+
+  it('asks for confirmation before quitting (T3)', () => {
+    const view = sampleTournamentView()
+    const onQuit = vi.fn()
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    try {
+      render(<TournamentBracket view={view} tournamentId="t-1" onQuit={onQuit} />)
+      fireEvent.click(screen.getByTestId('tournament-quit'))
+      expect(confirmSpy).toHaveBeenCalled()
+      expect(onQuit).not.toHaveBeenCalled()
+      confirmSpy.mockReturnValue(true)
+      fireEvent.click(screen.getByTestId('tournament-quit'))
+      expect(onQuit).toHaveBeenCalledWith('t-1')
+    } finally {
+      confirmSpy.mockRestore()
+    }
+  })
+
+  it('shows start date when present (T3)', () => {
+    const view = sampleTournamentView()
+    render(<TournamentBracket view={view} />)
+    const dates = screen.getByTestId('tournament-dates')
+    expect(dates.textContent!.length).toBeGreaterThan(0)
+  })
+
+  it('counts down construction time while constructing, static otherwise (T3)', () => {
+    const now = Date.now()
+    const constructing = sampleTournamentView({
+      tournamentState: 'Constructing',
+      constructionTime: 600,
+      stepStartTime: now - 120_000,
+      serverTime: now,
+    })
+    const { unmount } = render(<TournamentBracket view={constructing} />)
+    expect(screen.getByTestId('tournament-construction').textContent).toContain('8:00')
+    unmount()
+    cleanup()
+    const dueling = sampleTournamentView({ tournamentState: 'Dueling' })
+    render(<TournamentBracket view={dueling} />)
+    expect(screen.getByTestId('tournament-construction').textContent).toContain('10m')
   })
 })

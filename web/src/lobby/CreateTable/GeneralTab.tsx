@@ -143,16 +143,18 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                     ))}
                   </select>
                 </label>
-                <label>
-                  {t('lobby','create_field_number_rounds')}
-                  <input
-                    type="number"
-                    min={0}
-                    max={10}
-                    value={form.numberRounds}
-                    onChange={(e) => form.setNumberRounds(Math.min(10, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                  />
-                </label>
+                {form.tournamentType.includes('Swiss') && (
+                  <label>
+                    {t('lobby','create_field_number_rounds')}
+                    <input
+                      type="number"
+                      min={0}
+                      max={10}
+                      value={form.numberRounds}
+                      onChange={(e) => form.setNumberRounds(Math.min(10, Math.max(0, parseInt(e.target.value, 10) || 0)))}
+                    />
+                  </label>
+                )}
               </div>
               <div className="create-grid-2col">
                 <label>
@@ -189,6 +191,17 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
+              </label>
+              <label className="toggle-label-row">
+                <input
+                  type="checkbox"
+                  checked={form.singleGame}
+                  onChange={(e) => form.setSingleGame(e.target.checked)}
+                />
+                <div className="toggle-text-block">
+                  <span className="toggle-title">{t('lobby','create_field_single_game')}</span>
+                  <span className="toggle-desc">{t('lobby','create_desc_single_game')}</span>
+                </div>
               </label>
             </div>
           )}

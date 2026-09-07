@@ -49,6 +49,26 @@ class SimPlayerTest {
     }
 
     @Test
+    void parseTournamentOptionsForwardsLobbyFlags() {
+        JsonObject args = new JsonObject();
+        args.addProperty("name", "Draft Night");
+        args.addProperty("tournamentType", "Booster Draft");
+        args.addProperty("rated", true);
+        args.addProperty("rollbackTurnsAllowed", false);
+        args.addProperty("isSingleMultiplayerGame", true);
+        JsonArray banned = new JsonArray();
+        banned.add("griefer");
+        args.add("bannedUsers", banned);
+
+        mage.game.tournament.TournamentOptions tOpts = MatchOptionsParser.parseTournamentOptions(args);
+
+        assertTrue(tOpts.getMatchOptions().isRated());
+        assertTrue(!tOpts.getMatchOptions().isRollbackTurnsAllowed());
+        assertTrue(tOpts.getMatchOptions().isSingleGameTourney());
+        assertTrue(tOpts.getMatchOptions().getBannedUsers().contains("griefer"));
+    }
+
+    @Test
     void mulliganAskDetection() {
         assertTrue(SimPlayer.isMulliganAsk("Do you want to keep your hand? (Mulligan)"));
         assertTrue(!SimPlayer.isMulliganAsk("Do you want to pass priority? You have mana in your mana pool"));
