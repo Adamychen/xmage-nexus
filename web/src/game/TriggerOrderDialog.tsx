@@ -4,7 +4,7 @@ import type { FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
 import Icon from '../ui/Icon'
-import Modal from '../ui/Modal'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { triggerDisplayName, triggerRuleText, type TriggerRuleScope } from './triggerOrder'
 import './TriggerOrderDialog.css'
@@ -43,11 +43,16 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
   }
 
   return (
-    <Modal backdropClassName="trigger-backdrop" dialogClassName="trigger-dialog" labelledBy="trigger-title">
-      <div className="trigger-kicker"><Icon name="refresh" size={12} /> {t('game', 'trigger_title').toUpperCase()}</div>
-      <h2 id="trigger-title">{t('game', 'trigger_remaining', { count: remaining })}</h2>
-      <p className="trigger-hint">{t('game', 'trigger_hint')}</p>
-      <div className="trigger-scope" role="group" aria-label={t('game', 'trigger_scope')}>
+    <DialogShell
+      labelledBy="trigger-title"
+      titleId="trigger-title"
+      legacyBackdropClass="trigger-backdrop"
+      legacyPanelClass="trigger-dialog"
+      kickerIcon="refresh"
+      kickerLabel={t('game', 'trigger_title').toUpperCase()}
+      title={t('game', 'trigger_remaining', { count: remaining })}
+      message={t('game', 'trigger_hint')}
+    >      <div className="trigger-scope" role="group" aria-label={t('game', 'trigger_scope')}>
         <span className="trigger-scope-label">{t('game', 'trigger_scope')}:</span>
         {(['card', 'name'] as const).map((value) => (
           <button
@@ -117,6 +122,6 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
           {t('game', 'targeting_cancel')}
         </button>
       </footer>
-    </Modal>
+    </DialogShell>
   )
 }

@@ -12,56 +12,11 @@
   box-sizing: border-box;
 }
 
-.leaderboard-dialog,
-.feedback-dialog.leaderboard-dialog {
-  width: min(1080px, 95vw) !important;
-  max-width: 1080px !important;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  background: rgba(14, 18, 38, 0.98);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85), 0 0 30px rgba(124, 92, 255, 0.25);
-  border-radius: 16px;
-  overflow: hidden;
-  padding: 0 !important;
-  box-sizing: border-box;
-  animation: lbDialogIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes lbDialogIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.leaderboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: rgba(22, 28, 56, 0.6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.leaderboard-header-title h2 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 900;
-  font-family: var(--font-display);
-  color: #ffd070;
-  letter-spacing: 0.02em;
-}
-
-.leaderboard-subtitle {
-  font-size: 0.719rem;
-  color: #8c96c0;
+/* Body */
+.leaderboard-body {
+  padding: 16px 4px 4px;
+  overflow-y: auto;
+  max-height: min(52vh, 480px);
 }
 
 .leaderboard-close-btn {

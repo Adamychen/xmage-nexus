@@ -1,29 +1,3 @@
-.card-grid-dialog {
-  width: min(1080px, 94vw);
-  max-height: min(820px, 88vh);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 20px 24px;
-}
-
-.card-grid-header {
-  flex-shrink: 0;
-}
-
-.card-grid-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.card-grid-title-row h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
 .card-grid-count-badge {
   font-size: 0.8rem;
   padding: 3px 9px;
@@ -32,12 +6,6 @@
   color: var(--accent, #a78bfa);
   border: 1px solid rgba(124, 92, 255, 0.3);
   font-weight: 500;
-}
-
-.card-grid-message {
-  margin: 6px 0 10px;
-  color: var(--text-dim, #94a3b8);
-  font-size: 0.9rem;
 }
 
 .card-grid-search-wrap {

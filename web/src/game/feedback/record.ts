@@ -154,11 +154,10 @@ export function cardSummary(value: unknown, fallback: string, summarize: (fallba
   return cards.length ? summarize(fallback, cards.length) : fallback
 }
 
-/** Card data from the server for visual card grid rendering. */
-export function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {
-  const raw = data.cardsView1
-  if (!raw || typeof raw !== 'object') return undefined
-  const entries = Object.entries(asRecord(raw))
+/** Card data from a single cardsView (cardsView1/cardsView2) for visual rendering. */
+export function feedbackCardsFrom(view: unknown): FeedbackCard[] | undefined {
+  if (!view || typeof view !== 'object') return undefined
+  const entries = Object.entries(asRecord(view))
   if (entries.length === 0) return undefined
   return entries.map(([id, item]) => {
     const c = asRecord(item)
@@ -180,4 +179,9 @@ export function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {
       faceDown: c.faceDown === true,
     }
   })
+}
+
+/** Card data from the server for visual card grid rendering. */
+export function feedbackCards(data: JsonRecord): FeedbackCard[] | undefined {
+  return feedbackCardsFrom(data.cardsView1)
 }

@@ -11,50 +11,6 @@
   animation: fadeIn 150ms ease;
 }
 
-.sample-hand-modal {
-  background: #0d121d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 1100px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  position: relative;
-}
-
-.sample-hand-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  background: rgba(20, 26, 38, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.sample-hand-title-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.sample-hand-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #f7fafc;
-}
-
-.sample-hand-deck-name {
-  font-size: 0.85rem;
-  color: #ffd070;
-  font-weight: 700;
-}
-
 .sample-hand-stats-chips {
   display: flex;
   align-items: center;

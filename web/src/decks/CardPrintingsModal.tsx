@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { scryfallCardImage } from './scryfallSearch'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './CardPrintingsModal.css'
 
@@ -78,18 +79,22 @@ export function CardPrintingsModal({
   }, [cardName])
 
   return (
-    <div className="printings-backdrop" onClick={onClose}>
-      <div className="printings-modal" onClick={(e) => e.stopPropagation()}>
-        <header className="printings-header">
-          <div className="printings-title-wrap">
-            <h2 className="printings-title"><Icon name="palette" size={17} /> {t('dialogs', 'card_printings_title')}</h2>
-            <span className="printings-card-name">{cardName}</span>
-          </div>
-          <button type="button" className="printings-close-btn" onClick={onClose}>
-            ×
-          </button>
-        </header>
-
+    <DialogShell
+      labelledBy="printings-title"
+      titleId="printings-title"
+      size="lg"
+      legacyBackdropClass="printings-backdrop"
+      legacyPanelClass="printings-modal"
+      kickerIcon="palette"
+      kickerLabel={cardName}
+      title={t('dialogs', 'card_printings_title')}
+      topRight={(
+        <button type="button" className="printings-close-btn" onClick={onClose}>
+          ×
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="printings-body">
           {loading && (
             <div className="printings-status-box">
@@ -156,7 +161,6 @@ export function CardPrintingsModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

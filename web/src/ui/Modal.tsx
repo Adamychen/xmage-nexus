@@ -1,4 +1,4 @@
-import type { MouseEvent, ReactNode } from 'react'
+import type { HTMLAttributes, MouseEvent, ReactNode } from 'react'
 
 interface ModalProps {
   backdropClassName: string
@@ -9,6 +9,7 @@ interface ModalProps {
   onBackdropClick?: (e: MouseEvent<HTMLDivElement>) => void
   children: ReactNode
   trailing?: ReactNode
+  sectionProps?: Omit<HTMLAttributes<HTMLElement>, 'className'>
 }
 
 export default function Modal({
@@ -20,9 +21,13 @@ export default function Modal({
   onBackdropClick,
   children,
   trailing,
+  sectionProps,
 }: ModalProps) {
+  const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onBackdropClick?.(e)
+  }
   return (
-    <div className={backdropClassName} role="presentation" onClick={onBackdropClick}>
+    <div className={backdropClassName} role="presentation" onClick={handleBackdropClick}>
       <section
         className={dialogClassName}
         role="dialog"
@@ -30,6 +35,7 @@ export default function Modal({
         aria-labelledby={labelledBy}
         aria-label={label}
         data-testid={testId}
+        {...sectionProps}
       >
         {children}
       </section>

@@ -1,55 +1,3 @@
-.wiki-backdrop {
-  z-index: 1000;
-  backdrop-filter: blur(12px);
-  background: rgba(4, 6, 18, 0.82);
-}
-
-.wiki-dialog {
-  width: min(920px, 94vw) !important;
-  max-height: min(840px, 90vh) !important;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  background: rgba(14, 18, 38, 0.98);
-  border: 1.5px solid rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 40px rgba(168, 85, 247, 0.25), 0 24px 64px rgba(0, 0, 0, 0.9);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.wiki-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.wiki-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.wiki-icon {
-  font-size: 2rem;
-}
-
-.wiki-header h2 {
-  margin: 0;
-  font-size: 1.35rem;
-  color: #f8fafc;
-  font-family: var(--font-display, serif);
-  letter-spacing: 0.02em;
-}
-
-.wiki-subtitle {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  color: #94a3b8;
-}
-
 .wiki-close-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -71,7 +19,6 @@
 .wiki-nav-tabs {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 8px;
 }

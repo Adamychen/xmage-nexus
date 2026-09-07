@@ -1,6 +1,6 @@
 import FormattedText from '../FormattedText'
 import Icon from '../../ui/Icon'
-import Modal from '../../ui/Modal'
+import DialogShell from '../../ui/DialogShell'
 import { useTranslation } from '../../i18n'
 import { sendValue, type UseFeedbackForm } from '../useFeedbackForm'
 
@@ -9,10 +9,16 @@ export default function StartingPlayerDialog({ form }: { form: UseFeedbackForm }
   const { prompt, busy, send } = form
   if (!prompt) return null
   return (
-    <Modal backdropClassName="feedback-backdrop" dialogClassName="feedback-dialog starting-player-dialog" labelledBy="sp-title">
-      <div className="feedback-kicker"><Icon name="swords" size={13} /> {t('game', 'turn')}</div>
-      <h2 id="sp-title">{t('game', 'who_starts')}</h2>
-      <p><FormattedText text={prompt.message} /></p>
+    <DialogShell
+      labelledBy="sp-title"
+      titleId="sp-title"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog starting-player-dialog"
+      kickerIcon="swords"
+      kickerLabel={t('game', 'turn')}
+      title={t('game', 'who_starts')}
+      message={<FormattedText text={prompt.message} />}
+    >
       <div className="starting-player-options">
         {prompt.options.map((option) => (
           <button
@@ -27,6 +33,6 @@ export default function StartingPlayerDialog({ form }: { form: UseFeedbackForm }
           </button>
         ))}
       </div>
-    </Modal>
+    </DialogShell>
   )
 }

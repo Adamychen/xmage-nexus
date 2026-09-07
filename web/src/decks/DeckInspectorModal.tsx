@@ -4,6 +4,7 @@ import type { DeckV2 } from './types'
 import { ArenaCardStrip, type CardStripMeta } from './ArenaCardStrip'
 import CurveChart from './CurveChart'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import './DeckInspectorModal.css'
@@ -90,21 +91,27 @@ export function DeckInspectorModal({
   }
 
   return (
-    <div className="deck-inspector-backdrop" onClick={onClose}>
-      <div className="deck-inspector-modal" onClick={(e) => e.stopPropagation()}>
-        <header className="deck-inspector-head">
-          <div className="deck-inspector-title-area">
-            <h2 className="deck-inspector-name">{deck.name}</h2>
-            <div className="deck-inspector-badges">
-              <span className="inspector-format-badge">{deck.format}</span>
-              {archetype && <span className="inspector-archetype-badge">{archetype}</span>}
-              {tier && <span className="inspector-format-badge" style={{ borderColor: '#68d391', color: '#68d391' }}>{tier}</span>}
-            </div>
-          </div>
-          <button type="button" className="inspector-close-btn" onClick={onClose}>
-            ×
-          </button>
-        </header>
+    <DialogShell
+      labelledBy="deck-inspector-name"
+      titleId="deck-inspector-name"
+      size="lg"
+      legacyBackdropClass="deck-inspector-backdrop"
+      legacyPanelClass="deck-inspector-modal"
+      kickerIcon="layers"
+      kickerLabel={deck.format}
+      title={deck.name}
+      topRight={(
+        <button type="button" className="inspector-close-btn" onClick={onClose}>
+          ×
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
+        <div className="deck-inspector-badges">
+          <span className="inspector-format-badge">{deck.format}</span>
+          {archetype && <span className="inspector-archetype-badge">{archetype}</span>}
+          {tier && <span className="inspector-format-badge" style={{ borderColor: '#68d391', color: '#68d391' }}>{tier}</span>}
+        </div>
 
         <div className="deck-inspector-body">
           <div className="inspector-cards-column">
@@ -170,7 +177,6 @@ export function DeckInspectorModal({
             {copied ? (<><Icon name="check" size={12} /> {t('common', 'copied')}</>) : (<><Icon name="copy" size={12} /> {t('common', 'copy')}</>)}
           </button>
         </footer>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

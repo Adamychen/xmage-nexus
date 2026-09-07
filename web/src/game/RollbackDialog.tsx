@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore, closeRollbackDialog, requestRollback, requestUndo } from '../state/store'
 import { soundManager } from '../audio/soundManager'
+import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './RollbackDialog.css'
@@ -72,20 +73,17 @@ export default function RollbackDialog() {
   }
 
   return (
-    <div className="feedback-backdrop" role="presentation" onClick={handleClose}>
-      <section
-        className="feedback-dialog rollback-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="rollback-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="feedback-kicker">
-          <span className="kicker-icon"><Icon name="undo" size={13} /></span> {t('dialogs', 'rollback_title')}
-        </div>
-        <h2 id="rollback-title">{t('dialogs', 'rollback_title')}</h2>
-        <p className="rollback-description">{t('dialogs', 'rollback_desc')}</p>
-
+    <DialogShell
+      labelledBy="rollback-title"
+      titleId="rollback-title"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog rollback-dialog"
+      kickerIcon="undo"
+      kickerLabel={t('dialogs', 'rollback_undo_btn')}
+      title={t('dialogs', 'rollback_title')}
+      message={t('dialogs', 'rollback_desc')}
+      onBackdropClick={handleClose}
+    >
         {!hasPriority && (
           <div className="rollback-priority-notice" role="alert">
             <Icon name="alert" size={13} /> {t('dialogs', 'rollback_priority_warn')}
@@ -143,7 +141,6 @@ export default function RollbackDialog() {
             {t('dialogs', 'rollback_cancel')}
           </button>
         </div>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

@@ -1,6 +1,6 @@
 import { useStore, setState } from '../state/store'
 import CardSlot from '../board/CardSlot'
-import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 
 export default function LimitedDeckDialog() {
@@ -11,25 +11,19 @@ export default function LimitedDeckDialog() {
   const close = () => setState({ viewer: null })
 
   return (
-    <div className="feedback-backdrop" role="presentation" onClick={close}>
-      <section
-        className="feedback-dialog card-grid-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="viewer-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="card-grid-header">
-          <div className="feedback-kicker">
-            <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'viewer_title')}
-          </div>
-          <div className="card-grid-title-row">
-            <h2 id="viewer-title">{viewer.title}</h2>
-            <span className="card-grid-count-badge">
-              {viewer.cards.length} {viewer.cards.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')}
-            </span>
-          </div>
-        </header>
+    <DialogShell
+      labelledBy="viewer-title"
+      titleId="viewer-title"
+      size="lg"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog card-grid-dialog"
+      kickerIcon="layers"
+      kickerLabel={t('dialogs', 'viewer_title')}
+      title={<>{viewer.title} <span className="card-grid-count-badge">
+        {viewer.cards.length} {viewer.cards.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')}
+      </span></>}
+      onBackdropClick={close}
+    >
         <div className="card-grid-scroll-area">
           <div className="card-grid">
             {viewer.cards.map((card) => (
@@ -48,7 +42,6 @@ export default function LimitedDeckDialog() {
         <footer className="card-grid-actions">
           <button onClick={close}>{t('dialogs', 'viewer_close')}</button>
         </footer>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

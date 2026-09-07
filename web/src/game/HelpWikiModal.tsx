@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import FormattedText from './FormattedText'
+import DialogShell from '../ui/DialogShell'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './HelpWikiModal.css'
@@ -72,27 +73,23 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
   }, [searchQuery, selectedCategory])
 
   return (
-    <div className="feedback-backdrop wiki-backdrop" role="presentation" onClick={onClose}>
-      <section
-        className="feedback-dialog wiki-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wiki-modal-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="wiki-header">
-          <div className="wiki-title-group">
-            <span className="wiki-icon"><Icon name="bookOpen" size={18} /></span>
-            <div>
-              <h2 id="wiki-modal-title">{t('wiki', 'title')}</h2>
-              <p className="wiki-subtitle">{t('wiki', 'subtitle')}</p>
-            </div>
-          </div>
-          <button type="button" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-            ✕
-          </button>
-        </header>
-
+    <DialogShell
+      labelledBy="wiki-modal-title"
+      titleId="wiki-modal-title"
+      size="lg"
+      legacyBackdropClass="feedback-backdrop wiki-backdrop"
+      legacyPanelClass="feedback-dialog wiki-dialog"
+      kickerIcon="bookOpen"
+      kickerLabel={t('game', 'help_wiki')}
+      title={t('wiki', 'title')}
+      message={t('wiki', 'subtitle')}
+      topRight={(
+        <button type="button" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         <nav className="wiki-nav-tabs">
           <button
             type="button"
@@ -329,7 +326,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
             {t('common', 'done')}
           </button>
         </footer>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

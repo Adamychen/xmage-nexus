@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { APP_VERSION } from './version'
 import { getNews, markNewsSeen, renderNewsMarkdown, type NewsRelease } from './news'
 import './AboutModal.css'
@@ -77,15 +78,29 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
   )
 
   return (
-    <div className="feedback-backdrop about-backdrop" role="presentation" onClick={onClose}>
-      <div
-        className="about-modal panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="about-modal-title"
-        data-testid="about-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <DialogShell
+      labelledBy="about-modal-title"
+      titleId="about-modal-title"
+      testId="about-modal"
+      legacyBackdropClass="feedback-backdrop about-backdrop"
+      legacyPanelClass="about-modal"
+      kickerIcon="info"
+      kickerLabel={`${t('system', 'app_version')}: ${APP_VERSION}`}
+      title={activeTab === 'about' ? t('system', 'about_title') : t('system', 'news_tab')}
+      message={activeTab === 'about' ? t('system', 'app_tagline') : undefined}
+      topRight={(
+        <button
+          type="button"
+          className="about-close-btn"
+          aria-label={t('common', 'close')}
+          data-testid="about-close"
+          onClick={onClose}
+        >
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="about-tabs">
           <button
             type="button"
@@ -103,24 +118,10 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
           >
             {t('system', 'news_tab')}
           </button>
-          <button
-            type="button"
-            className="about-close-btn"
-            aria-label={t('common', 'close')}
-            data-testid="about-close"
-            onClick={onClose}
-          >
-            ✕
-          </button>
         </div>
 
         {activeTab === 'about' ? (
           <div className="about-pane">
-            <h2 id="about-modal-title">{t('system', 'about_title')}</h2>
-            <p className="about-tagline">{t('system', 'app_tagline')}</p>
-            <p className="about-version">
-              {t('system', 'app_version')}: <strong>{APP_VERSION}</strong>
-            </p>
             <div className="about-links">
               <a
                 href="https://github.com/Adamychen/xmage-nexus"
@@ -136,14 +137,12 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
           </div>
         ) : (
           <div className="about-pane">
-            <h2 id="about-modal-title">{t('system', 'news_tab')}</h2>
             {offline && <p className="about-offline">{t('system', 'news_offline')}</p>}
             {loadingNews && releases.length === 0 && <p>{t('common', 'loading')}</p>}
             {renderFeed(nexusReleases, t('system', 'news_nexus'), 'about-feed-nexus')}
             {renderFeed(xmageReleases, t('system', 'news_xmage'), 'about-feed-xmage')}
           </div>
         )}
-      </div>
-    </div>
+    </DialogShell>
   )
 }

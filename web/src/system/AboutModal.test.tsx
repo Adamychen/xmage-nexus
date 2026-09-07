@@ -42,7 +42,7 @@ describe('AboutModal', () => {
   it('shows version and repo links on the about tab', () => {
     render(<AboutModal onClose={() => {}} />)
     expect(screen.getByTestId('about-modal')).toBeTruthy()
-    expect(screen.getByText(APP_VERSION)).toBeTruthy()
+    expect(screen.getByText(APP_VERSION, { exact: false })).toBeTruthy()
     expect(screen.getByTestId('about-tab-about')).toBeTruthy()
     expect(screen.getByTestId('about-tab-news')).toBeTruthy()
   })

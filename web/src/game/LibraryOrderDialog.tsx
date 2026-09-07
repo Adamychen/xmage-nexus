@@ -5,6 +5,7 @@ import type { FeedbackOption, FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './LibraryOrderDialog.css'
 
@@ -107,25 +108,24 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
     )
   }
 
-  return (
-    <div className="feedback-overlay library-order-overlay" role="dialog" aria-modal="true">
-      <section className="feedback-dialog library-order-dialog">
-        <header className="feedback-header">
-          <div className="dialog-title-wrap">
-            <span className="dialog-icon"><Icon name={isBlockerOrder ? 'shield' : 'sparkles'} size={16} /></span>
-            <span className="dialog-title">
-              {isBlockerOrder
-                ? t('dialogs','library_title_blocker')
-                : isSurveil
-                ? t('dialogs','library_title_surveil')
-                : prompt.title || t('dialogs','library_title_scry')}
-            </span>
-          </div>
-          <div className="dialog-message">
-            <FormattedText text={localizeServerMessage(prompt.message, t as any)} />
-          </div>
-        </header>
+  const dialogTitle = isBlockerOrder
+    ? t('dialogs', 'library_title_blocker')
+    : isSurveil
+      ? t('dialogs', 'library_title_surveil')
+      : prompt.title || t('dialogs', 'library_title_scry')
 
+  return (
+    <DialogShell
+      labelledBy="library-title"
+      titleId="library-title"
+      size="lg"
+      legacyBackdropClass="feedback-overlay library-order-overlay"
+      legacyPanelClass="feedback-dialog library-order-dialog"
+      kickerIcon={isBlockerOrder ? 'shield' : 'sparkles'}
+      kickerLabel={t('game', 'choose_order')}
+      title={dialogTitle}
+      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+    >
         <div className="library-order-body">
           <div className="order-zone top-zone">
             <div className="order-zone-header">
@@ -287,7 +287,6 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
             </button>
           </div>
         </footer>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

@@ -2,7 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import FeedbackDialog from './FeedbackDialog'
-import { clearFeedback, handleMessage } from '../state/store'
+import { clearFeedback, handleMessage, setSetting } from '../state/store'
+import { getState } from '../state/state'
 import { setGateway, getGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
 
@@ -208,5 +209,140 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.getByRole('button', { name: /Sí/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
     expect(screen.queryByText('ASK')).toBeNull()
+  })
+
+  function openGridPrompt(count = 10, method = 'GAME_CHOOSE_MODE') {
+    const choices: Record<string, string> = {}
+    for (let i = 0; i < count; i++) choices[`k${i}`] = i === 3 ? 'Ancient Dragon' : `Option ${i}`
+    handleMessage({
+      type: 'event',
+      method,
+      messageId: 20,
+      objectId: 'game-1',
+      data: { message: 'Choose a mode', choices },
+    } as never)
+  }
+
+  it('muestra búsqueda en el grid con más de 7 opciones y filtra al escribir', () => {
+    openGridPrompt()
+    render(<FeedbackDialog />)
+    const search = screen.getByPlaceholderText('Filtrar opciones…')
+    expect(search).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Option|Dragon/ })).toHaveLength(10)
+    fireEvent.change(search, { target: { value: 'dragon' } })
+    expect(screen.getAllByRole('button', { name: /Option|Dragon/ })).toHaveLength(1)
+    expect(screen.getByRole('button', { name: /Ancient Dragon/ })).toBeTruthy()
+  })
+
+  it('Enter elige la opción filtrada en el grid', async () => {
+    openGridPrompt()
+    render(<FeedbackDialog />)
+    fireEvent.change(screen.getByPlaceholderText('Filtrar opciones…'), { target: { value: 'dragon' } })
+    fireEvent.keyDown(screen.getByPlaceholderText('Filtrar opciones…'), { key: 'Enter' })
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerUUID', expect.objectContaining({ value: 'k3', gameId: 'game-1' }))
+    })
+  })
+
+  it('doble-click elige en el grid de elección única', async () => {
+    openGridPrompt()
+    render(<FeedbackDialog />)
+    fireEvent.doubleClick(screen.getByRole('button', { name: /Ancient Dragon/ }))
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerUUID', expect.objectContaining({ value: 'k3' }))
+    })
+  })
+
+  it('no muestra búsqueda con 4 o menos opciones', () => {
+    openGridPrompt(4)
+    render(<FeedbackDialog />)
+    expect(screen.queryByPlaceholderText('Filtrar opciones…')).toBeNull()
+  })
+
+  function openChoicePrompt() {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_CHOICE',
+      messageId: 30,
+      objectId: 'game-1',
+      data: {
+        choice: {
+          message: 'Choose a tactic',
+          keyChoices: { 't-a': 'Alpha strike', 't-b': 'Beta defense' },
+          hintData: { 't-a': ['text', 'Fast and early'] },
+          specialEnabled: true,
+        },
+      },
+    } as never)
+  }
+
+  it('muestra hint y checkbox de recordar en Choice con metadatos del servidor', () => {
+    openChoicePrompt()
+    render(<FeedbackDialog />)
+    expect(screen.getByRole('button', { name: /Alpha strike/ }).getAttribute('title')).toBe('Fast and early')
+    expect(screen.getByRole('checkbox', { name: 'Recordar esta elección' })).toBeTruthy()
+  })
+
+  it('marcar recordar guarda la elección y la segunda aparición se auto-responde', async () => {
+    openChoicePrompt()
+    render(<FeedbackDialog />)
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Recordar esta elección' }))
+    fireEvent.click(screen.getByRole('button', { name: /Beta defense/ }))
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerString', expect.objectContaining({ value: 't-b', gameId: 'game-1' }))
+    })
+    expect(getState().settings.choiceMemory).toHaveLength(1)
+    cleanup()
+    clearFeedback()
+
+    openChoicePrompt()
+    render(<FeedbackDialog />)
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerString', expect.objectContaining({ value: 't-b', gameId: 'game-1' }))
+    })
+    expect(document.querySelector('.feedback-dialog')).toBeNull()
+    setSetting('choiceMemory', [])
+  })
+
+  it('Enter con una sola opción la envía directamente (preselección)', async () => {    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_CHOICE',
+      messageId: 31,
+      objectId: 'game-1',
+      data: { choice: { message: 'Only way', keyChoices: { 'only': 'The only path' } } },
+    } as never)
+    render(<FeedbackDialog />)
+    fireEvent.keyDown(screen.getByLabelText(/Buscar/), { key: 'Enter' })
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerString', expect.objectContaining({ value: 'only' }))
+    })
+  })
+
+  it('GAME_CHOOSE_PILE con cartas pinta dos columnas y elegir envía booleano', async () => {
+    const card = (id: string, name: string) => ({ id, name, displayName: name })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_CHOOSE_PILE',
+      messageId: 40,
+      objectId: 'game-1',
+      data: {
+        message: 'Separate into two piles',
+        cardsView1: { 'c1': card('c1', 'Grizzly Bears') },
+        cardsView2: { 'c2': card('c2', 'Lightning Bolt') },
+      },
+    } as never)
+    render(<FeedbackDialog />)
+    expect(screen.getByTestId('pile-column-1')).toBeTruthy()
+    expect(screen.getByTestId('pile-column-2')).toBeTruthy()
+    fireEvent.click(screen.getByTestId('pile-column-1'))
+    await waitFor(() => {
+      const send = getGateway().send as ReturnType<typeof vi.fn>
+      expect(send).toHaveBeenCalledWith('sendPlayerBoolean', expect.objectContaining({ value: true, gameId: 'game-1' }))
+    })
   })
 })

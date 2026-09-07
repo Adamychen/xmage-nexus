@@ -1,12 +1,15 @@
 import * as cmds from '../../net/commands'
 import { parseFeedback } from '../../game/feedback'
+import type { FeedbackPrompt } from '../../game/feedback'
 import { findAutoAnswer } from '../../game/autoAnswers'
+import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { setState, addLog } from '../state'
 import { targetFirstId } from '../gameUtils'
 import type { Snapshot } from './context'
 
 export function handleGameTarget(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
+
   const d = data as { message?: string; options?: { targets?: unknown }; gameId?: string } | null
   const question = d?.message ?? ''
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
@@ -54,6 +57,17 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
     if (feedback) setState({ feedback })
     addLog('partida', `¿${question || 'pregunta'}?`)
   }
+}
+
+export function applyChoiceMemory(feedback: FeedbackPrompt, gameId: string | null, s: Snapshot): boolean {
+  if (!gameId || feedback.mode !== 'string' || !feedback.choiceSpecial) return false
+  const rule = findChoiceMemory(s.settings.choiceMemory ?? [], feedback.message)
+  if (!rule) return false
+  if (!feedback.options.some((opt) => opt.value === rule.value)) return false
+  void cmds.sendPlayerString(rule.value, gameId)
+  setState({ feedback: null })
+  addLog('tú', `auto: ${rule.value} → ${feedback.message}`)
+  return true
 }
 
 export function handleUserRequestDialog(data: unknown, objectId: string | null, s: Snapshot): void {

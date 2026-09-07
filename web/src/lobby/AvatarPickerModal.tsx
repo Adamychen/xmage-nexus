@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
 import AvatarImage from './AvatarImage'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './AvatarPickerModal.css'
 
@@ -26,20 +27,23 @@ export default function AvatarPickerModal({
   })
 
   return (
-    <div className="overlay">
-      <div className="dialog panel avatar-picker-dialog">
-        <div className="avatar-picker-header">
-          <div className="avatar-picker-title">
-            <h2>{t('lobby', 'avatar_pick_title')}</h2>
-            <span className="avatar-picker-subtitle">
-              Planeswalkers, leyendas y avatares animados oficiales de Magic
-            </span>
-          </div>
-          <button type="button" className="avatar-picker-close-btn" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
+    <DialogShell
+      labelledBy="avatar-picker-title"
+      titleId="avatar-picker-title"
+      size="lg"
+      legacyBackdropClass="overlay"
+      legacyPanelClass="dialog avatar-picker-dialog"
+      kickerIcon="user"
+      kickerLabel={filter === 'all' ? `Todos (${OFFICIAL_AVATARS.length})` : filter === 'standard' ? 'Planeswalkers Clásicos' : 'Animados (GIF)'}
+      title={t('lobby', 'avatar_pick_title')}
+      message="Planeswalkers, leyendas y avatares animados oficiales de Magic"
+      topRight={(
+        <button type="button" className="avatar-picker-close-btn" onClick={onClose}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         {/* Filter Chips */}
         <div className="avatar-picker-tabs">
           <button
@@ -94,7 +98,6 @@ export default function AvatarPickerModal({
             Cancelar
           </button>
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

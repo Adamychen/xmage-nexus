@@ -1,22 +1,3 @@
-.settings-modal {
-  width: 720px;
-  max-width: 94vw;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  padding: 18px 20px;
-  box-sizing: border-box;
-}
-
-.settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.settings-header h2 { margin: 0; font-size: 1rem; }
-
 .settings-close {
   background: transparent;
   border: none;

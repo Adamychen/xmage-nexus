@@ -182,6 +182,49 @@ describe('parseFeedback', () => {
     expect(choice?.options).toEqual([{ id: 'mode-a', label: 'First mode', value: 'mode-a' }])
   })
 
+  it('applies sortData order and extracts hintData/special/search flags from Choice', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5b', {
+      choice: {
+        message: 'Choose a tactic',
+        keyChoices: { 'a': 'Alpha', 'b': 'Beta', 'c': 'Gamma' },
+        sortData: { 'c': 1, 'a': 2, 'b': 3 },
+        hintData: { 'a': ['text', 'Fast and early'], 'c': ['card', 'Lightning Bolt'] },
+        specialEnabled: true,
+        specialText: 'Always pick this',
+        searchEnabled: false,
+      },
+    })
+    expect(prompt?.options.map((o) => o.id)).toEqual(['c', 'a', 'b'])
+    expect(prompt?.choiceHints).toEqual({ 'a': 'Fast and early', 'c': 'Lightning Bolt' })
+    expect(prompt?.choiceSpecial).toBe(true)
+    expect(prompt?.choiceSearch).toBe(false)
+  })
+
+  it('leaves Choice metadata undefined when the server sends none', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5c', {
+      choice: { message: 'Choose a mode', keyChoices: { 'mode-a': 'First mode' } },
+    })
+    expect(prompt?.choiceHints).toBeUndefined()
+    expect(prompt?.choiceSpecial).toBeUndefined()
+    expect(prompt?.choiceSearch).toBeUndefined()
+  })
+
+  it('parses pile card views into pileCards, else falls back to text options', () => {
+    const card = (id: string, name: string) => ({ id, name, displayName: name })
+    const withCards = parseFeedback('GAME_CHOOSE_PILE', 'game-5d', {
+      message: 'Separate the piles',
+      cardsView1: { 'c1': card('c1', 'Grizzly Bears') },
+      cardsView2: { 'c2': card('c2', 'Lightning Bolt'), 'c3': card('c3', 'Shock') },
+    })
+    expect(withCards?.pileCards?.pile1.map((c) => c.name)).toEqual(['Grizzly Bears'])
+    expect(withCards?.pileCards?.pile2.map((c) => c.name)).toEqual(['Lightning Bolt', 'Shock'])
+    expect(withCards?.options).toHaveLength(2)
+
+    const withoutCards = parseFeedback('GAME_CHOOSE_PILE', 'game-5e', { message: 'Separate the piles' })
+    expect(withoutCards?.pileCards).toBeUndefined()
+    expect(withoutCards?.options).toHaveLength(2)
+  })
+
   it('extracts cards from cardsView1 into the cards field', () => {
     const prompt = parseFeedback('GAME_TARGET', 'game-6', {
       message: 'Search your library for a creature card',

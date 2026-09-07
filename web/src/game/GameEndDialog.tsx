@@ -1,5 +1,5 @@
 import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
-import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
 import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
@@ -33,12 +33,16 @@ export default function GameEndDialog() {
   }
 
   return (
-    <div className="end-backdrop" role="presentation">
-      <section className="end-dialog panel" role="dialog" aria-modal="true" aria-labelledby="end-title">
-        <h2 id="end-title">
-          {isSpectator ? (<><Icon name="trophy" size={20} /> {t('game', 'game_over')}</>) : (end.won ? (<><Icon name="trophy" size={20} /> {t('game', 'victory')}</>) : (<><Icon name="skull" size={20} /> {t('game', 'defeat')}</>))}
-        </h2>
-
+    <DialogShell
+      labelledBy="end-title"
+      titleId="end-title"
+      size="sm"
+      legacyBackdropClass="end-backdrop"
+      legacyPanelClass="end-dialog"
+      kickerIcon={isSpectator || end.won ? 'trophy' : 'skull'}
+      kickerLabel={t('lobby', 'match_result_label')}
+      title={isSpectator ? t('game', 'game_over') : (end.won ? t('game', 'victory') : t('game', 'defeat'))}
+    >
         {winnerName && (
           <div className="end-winner-badge">
             <span>{t('game', 'winner')} <strong>{winnerName}</strong></span>
@@ -78,7 +82,6 @@ export default function GameEndDialog() {
             </button>
           </div>
         )}
-      </section>
-    </div>
+    </DialogShell>
   )
 }

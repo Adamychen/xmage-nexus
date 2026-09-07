@@ -3,6 +3,7 @@ import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
+import DialogShell from '../ui/DialogShell'
 import './AppearanceSettingsModal.css'
 import './SleevePickerModal.css'
 
@@ -16,16 +17,16 @@ const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descK
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc', icon: '⬒' },
 ]
 
-const UI_SCALE_DESCS: Record<string, string> = {
-  '90%': 'Compacto',
-  '100%': 'Normal',
-  '115%': 'Grande',
-  '130%': 'Muy grande',
-  '150%': 'Extra (CJK)',
+const UI_SCALE_DESC_KEYS: Record<string, 'ui_scale_compact' | 'ui_scale_normal' | 'ui_scale_large' | 'ui_scale_xlarge' | 'ui_scale_cjk'> = {
+  '90%': 'ui_scale_compact',
+  '100%': 'ui_scale_normal',
+  '115%': 'ui_scale_large',
+  '130%': 'ui_scale_xlarge',
+  '150%': 'ui_scale_cjk',
 }
 const UI_SCALES = ZOOM_PRESETS.map((value) => {
   const label = `${Math.round(value * 100)}%`
-  return { value, label, desc: UI_SCALE_DESCS[label] ?? '' }
+  return { value, label, descKey: UI_SCALE_DESC_KEYS[label] }
 })
 
 export default function AppearanceSettingsModal({ onClose }: Props) {
@@ -33,17 +34,23 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
   const settings = useSettings()
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="dialog panel appearance-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="appearance-header">
-          <h2>{t('lobby', 'appearance_title')}</h2>
-          <button type="button" className="appearance-close" onClick={onClose}>✕</button>
-        </div>
-        <p className="appearance-subtitle">{t('lobby', 'appearance_subtitle')}</p>
-
+    <DialogShell
+      labelledBy="appearance-title"
+      titleId="appearance-title"
+      legacyBackdropClass="overlay"
+      legacyPanelClass="dialog appearance-modal"
+      kickerIcon="palette"
+      kickerLabel={t('lobby', 'settings_interface')}
+      title={t('lobby', 'appearance_title')}
+      message={t('lobby', 'appearance_subtitle')}
+      topRight={(
+        <button type="button" className="appearance-close" onClick={onClose}>✕</button>
+      )}
+      onBackdropClick={onClose}
+    >
         <section className="appearance-section">
-          <h3 className="appearance-section-title">Tamaño de interfaz</h3>
-          <p className="appearance-section-hint">Escala global del lobby/login. 115-150% recomendado para chino/japonés (caracteres más densos).</p>
+          <h3 className="appearance-section-title">{t('lobby', 'ui_scale_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'ui_scale_hint_lobby')}</p>
           <div className="ui-scale-stepper">
             <button
               type="button"
@@ -87,7 +94,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                   data-testid={`ui-scale-${String(o.value).replace('.', '-')}`}
                 >
                   <span className="ui-scale-label">{o.label}</span>
-                  <span className="ui-scale-desc">{o.desc}</span>
+                  <span className="ui-scale-desc">{o.descKey ? t('lobby', o.descKey) : ''}</span>
                   {isSelected && <span className="ui-scale-check">✓</span>}
                 </button>
               )
@@ -100,9 +107,9 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
               onChange={(e) => setSetting('cjkBoost', e.target.checked)}
               data-testid="cjk-boost-toggle"
             />
-            <span>Boost automático CJK (+15% en 日本語/中文)</span>
+            <span>{t('lobby', 'cjk_boost_label')}</span>
           </label>
-          <p className="ui-scale-hint">Se combina con la escala manual: 1.5× + CJK = ~1.72× en japonés/chino.</p>
+          <p className="ui-scale-hint">{t('lobby', 'cjk_boost_combo_hint')}</p>
         </section>
 
         <section className="appearance-section">
@@ -162,7 +169,6 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
         <div className="appearance-footer">
           <button type="button" className="primary" onClick={onClose}>{t('common', 'close')}</button>
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

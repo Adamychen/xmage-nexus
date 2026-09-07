@@ -1,0 +1,77 @@
+.pile-columns {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+}
+
+.pile-column {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pile-column:hover:not(:disabled) {
+  border-color: rgba(124, 92, 255, 0.6);
+  background: rgba(124, 92, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.pile-column:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pile-column-name {
+  font-size: 0.812rem;
+  font-weight: 700;
+  color: #ffd070;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pile-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pile-card-wrap {
+  --card-w: 84px;
+  flex-shrink: 0;
+}
+
+.pile-card-wrap .card-slot {
+  width: var(--card-w, 84px);
+  height: calc(var(--card-w, 84px) * 1.4);
+  pointer-events: auto;
+}
+
+.pile-vs {
+  align-self: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #8ea0ff;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 640px) {
+  .pile-columns {
+    flex-direction: column;
+  }
+  .pile-vs {
+    align-self: center;
+  }
+}

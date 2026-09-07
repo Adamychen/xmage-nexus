@@ -1,38 +1,9 @@
-.appearance-modal {
-  width: min(560px, 92vw);
-  max-width: 560px;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: rgba(14,18,38,0.96);
-  border: 1px solid #2e3560;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
-}
-
-.appearance-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.appearance-header h2 { margin: 0; font-size: 1rem; }
-
 .appearance-close {
   background: none;
   border: none;
   font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
-}
-
-.appearance-subtitle {
-  margin: 6px 0 14px;
-  font-size: 0.75rem;
-  color: #9aa1c0;
 }
 
 .appearance-section {

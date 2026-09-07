@@ -16,7 +16,8 @@ describe('SettingsModal', () => {
     expect(screen.getByTestId('settings-ui-lang').tagName).toBe('SELECT')
     expect(screen.getByTestId('settings-card-lang').tagName).toBe('SELECT')
     expect(screen.queryByTestId('settings-section-interface')).toBeNull()
-    expect(document.querySelector('.settings-modal svg')).toBeNull()
+    expect(document.querySelector('.settings-nav svg')).toBeNull()
+    expect(document.querySelector('.dlg-kicker svg')).not.toBeNull()
   })
 
   it('switches sections and steps zoom from the interface section', () => {

@@ -1,7 +1,7 @@
 import { useStore, setState } from '../state/store'
 import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
-import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 
 export default function UserRequestDialog() {
@@ -20,19 +20,17 @@ export default function UserRequestDialog() {
   }
 
   return (
-    <div className="feedback-backdrop" role="presentation" onClick={close}>
-      <section
-        className="feedback-dialog user-request-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="user-request-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="feedback-kicker">
-          <span className="kicker-icon"><Icon name="info" size={13} /></span> {t('dialogs', 'userrequest_title')}
-        </div>
-        <h2 id="user-request-title"><FormattedText text={request.title} /></h2>
-        {request.message && <p className="feedback-prompt-message"><FormattedText text={request.message} /></p>}
+    <DialogShell
+      labelledBy="user-request-title"
+      titleId="user-request-title"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog user-request-dialog"
+      kickerIcon="info"
+      kickerLabel={t('dialogs', 'userrequest_title')}
+      title={<FormattedText text={request.title} />}
+      message={request.message ? <FormattedText text={request.message} /> : undefined}
+      onBackdropClick={close}
+    >
         <div className="feedback-dialog-actions user-request-actions">
           {request.buttons.map((button, index) => (
             <button
@@ -44,7 +42,6 @@ export default function UserRequestDialog() {
             </button>
           ))}
         </div>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

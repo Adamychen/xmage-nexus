@@ -11,6 +11,7 @@ import { parseAnyDeck } from '../decks/parseDck'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './JoinTableDialog.css'
@@ -116,25 +117,22 @@ export default function JoinTableDialog({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose} data-testid="join-modal-backdrop">
-      <div
-        className="join-table-modal panel"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        data-testid="join-table-dialog"
-      >
-        {/* Header */}
-        <div className="join-modal-header">
-          <div className="join-header-titles">
-            <span className="join-target-pill" data-testid="join-target-pill">{title ? title.toUpperCase() : t('lobby','join_human_btn').toUpperCase()}</span>
-            <h2 className="join-table-title">{table.tableName}</h2>
-          </div>
-          <button type="button" className="close-btn" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
+    <DialogShell
+      labelledBy="join-table-title"
+      titleId="join-table-title"
+      testId="join-table-dialog"
+      legacyBackdropClass="modal-backdrop"
+      legacyPanelClass="join-table-modal"
+      kickerIcon="swords"
+      kickerLabel={title ? title.toUpperCase() : t('lobby', 'join_human_btn').toUpperCase()}
+      title={table.tableName}
+      topRight={(
+        <button type="button" className="close-btn" onClick={onClose}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         {/* Table summary badges */}
         <div className="join-table-meta-bar">
           <span className="meta-badge meta-format">
@@ -304,7 +302,6 @@ export default function JoinTableDialog({
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

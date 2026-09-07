@@ -17,6 +17,7 @@ import { sendTriggerAutoOrder, sendManaPaymentMode, updateManaConfirmPreference 
 import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
+import { clearChoiceMemory, removeChoiceMemory } from './choiceMemory'
 import PhaseStopSelector from './PhaseStopSelector'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import HelpWikiModal from './HelpWikiModal'
@@ -231,6 +232,40 @@ export default function GameMenu() {
                     }}
                   >
                     <Icon name="trash" size={13} /> {t('game', 'auto_answers_clear')}
+                  </button>
+                )}
+                <div className="game-menu-section-label" data-testid="game-menu-choice-memory-label">
+                  {t('game', 'choice_memory_title', { count: settings.choiceMemory.length })}
+                </div>
+                {settings.choiceMemory.length === 0 && (
+                  <div className="game-menu-auto-empty">{t('game', 'choice_memory_empty')}</div>
+                )}
+                {settings.choiceMemory.map((rule) => (
+                  <div key={rule.id} className="game-menu-auto-row" data-testid={`game-menu-choice-rule-${rule.id}`}>
+                    <span className="game-menu-auto-text" title={`${rule.pattern} → ${rule.value}`}>{rule.value}</span>
+                    <button
+                      type="button"
+                      className="game-menu-auto-delete"
+                      title={t('common', 'delete') ?? ''}
+                      aria-label={t('game', 'choice_memory_delete', { pattern: rule.pattern })}
+                      data-testid={`game-menu-choice-delete-${rule.id}`}
+                      onClick={() => setSetting('choiceMemory', removeChoiceMemory(settings.choiceMemory, rule.id))}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {settings.choiceMemory.length > 0 && (
+                  <button
+                    type="button"
+                    className="game-menu-item"
+                    data-testid="game-menu-choice-clear"
+                    onClick={() => {
+                      setSetting('choiceMemory', clearChoiceMemory())
+                      close()
+                    }}
+                  >
+                    <Icon name="trash" size={13} /> {t('game', 'choice_memory_clear')}
                   </button>
                 )}
               </>

@@ -52,6 +52,10 @@ export interface FeedbackPrompt {
   isPlaneswalkerAbility?: boolean
   loyaltyDeltas?: (number | null)[]
   isTriggerOrder?: boolean
+  choiceHints?: Record<string, string>
+  choiceSpecial?: boolean
+  choiceSearch?: boolean
+  pileCards?: { pile1: FeedbackCard[]; pile2: FeedbackCard[] }
 }
 
 export type JsonRecord = Record<string, unknown>

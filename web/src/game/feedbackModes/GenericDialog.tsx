@@ -1,15 +1,18 @@
 import * as cmds from '../../net/commands'
 import type { FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
-import Modal from '../../ui/Modal'
-import { useEffect, useState } from 'react'
+import DialogShell from '../../ui/DialogShell'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../i18n'
 import { setSetting } from '../../state/store'
 import { getState } from '../../state/state'
 import { addAutoAnswer } from '../autoAnswers'
+import { addChoiceMemory } from '../choiceMemory'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Icon, { type IconName } from '../../ui/Icon'
+
+const GRID_SEARCH_THRESHOLD = 7
 
 function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: IconName; label: string } {
   if (prompt.isStartingPlayer) return { icon: 'dice', label: t('game', 'who_starts') }
@@ -85,7 +88,40 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   useEffect(() => {
     setRememberAnswer(false)
   }, [form.prompt?.method, form.prompt?.gameId, form.prompt?.message])
+  const [gridQuery, setGridQuery] = useState('')
+  const [activeIdx, setActiveIdx] = useState(0)
+  useEffect(() => {
+    setGridQuery('')
+    setActiveIdx(0)
+  }, [form.prompt?.method, form.prompt?.gameId, form.prompt?.message])
   if (!prompt) return null
+  const isGridBranch = prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string'
+  const isMultiGrid = prompt.mode === 'uuid' && prompt.max > 1
+  const gridOptions = useMemo(() => {
+    const q = gridQuery.trim().toLowerCase()
+    if (!q) return prompt.options
+    return prompt.options.filter((opt) => opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q))
+  }, [prompt, gridQuery])
+  useEffect(() => {
+    setActiveIdx((i) => Math.min(i, Math.max(gridOptions.length - 1, 0)))
+  }, [gridOptions.length])
+  const chooseActive = () => {
+    const opt = gridOptions[activeIdx]
+    if (!opt || busy) return
+    selectOption(opt)
+  }
+  const onGridKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIdx((i) => Math.min(i + 1, gridOptions.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIdx((i) => Math.max(i - 1, 0))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      chooseActive()
+    }
+  }
   const kicker = getFeedbackKicker(prompt, t as any)
   const title = getLocalizedTitle(prompt, t as any)
   const autoAnswerable =
@@ -100,22 +136,53 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true'))
     }
   }
+  const sendChoice = (value: string) => {
+    if (rememberAnswer && prompt.choiceSpecial) {
+      const rules = getState().settings.choiceMemory ?? []
+      setSetting('choiceMemory', addChoiceMemory(rules, prompt.message, value))
+    }
+    void send(() => cmds.sendPlayerString(value, prompt.gameId), t('errors', 'send_failed_choice'))
+  }
+  const sendChoiceFromInput = () => {
+    const query = textValue.trim()
+    if (query === '' && filteredStringOptions.length === 1 && filteredStringOptions[0]) {
+      sendChoice(filteredStringOptions[0].value)
+      return
+    }
+    if (query === '') return
+    sendChoice(query)
+  }
 
   return (
-    <Modal backdropClassName="feedback-backdrop" dialogClassName="feedback-dialog" labelledBy="feedback-title">
-      <div className="feedback-kicker">
-        <span className="kicker-icon"><Icon name={kicker.icon} size={13} /></span> {kicker.label}
-      </div>
-      <h2 id="feedback-title"><FormattedText text={title} /></h2>
-      {prompt.sourceName && prompt.sourceName !== title && (
-        <div className="feedback-source-subtitle">
-          <FormattedText text={prompt.sourceName} />
+    <DialogShell
+      labelledBy="feedback-title"
+      titleId="feedback-title"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog"
+      kickerIcon={kicker.icon}
+      kickerLabel={kicker.label}
+      title={<FormattedText text={title} />}
+      sourceName={prompt.sourceName && prompt.sourceName !== title
+        ? <FormattedText text={prompt.sourceName} />
+        : undefined}
+      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      search={isGridBranch && prompt.options.length > GRID_SEARCH_THRESHOLD ? (
+        <div className="feedback-input-box">
+          <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
+          <input
+            aria-label={t('common', 'search')}
+            type="text"
+            value={gridQuery}
+            placeholder={t('game', 'grid_search_placeholder')}
+            onChange={(event) => setGridQuery(event.target.value)}
+            onKeyDown={onGridKeyDown}
+          />
         </div>
-      )}
-      <p className="feedback-prompt-message"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
-
+      ) : undefined}
+    >
       {prompt.mode === 'string' && (
         <div className="feedback-string-wrap">
+          {prompt.choiceSearch !== false && (
           <div className="feedback-input-box">
             <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
             <input
@@ -126,12 +193,13 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               autoFocus
               onChange={(event) => setTextValue(event.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && textValue.trim() !== '' && !busy) {
-                  void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), t('errors', 'send_failed_choice'))
+                if (e.key === 'Enter' && !busy) {
+                  sendChoiceFromInput()
                 }
               }}
             />
           </div>
+          )}
           {filteredStringOptions.length > 0 && (
             <div className="feedback-options feedback-options-wrap">
               <div className={`feedback-options-grid ${filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}>
@@ -140,7 +208,8 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                     key={option.id}
                     className="feedback-choice-card"
                     disabled={busy}
-                    onClick={() => void send(() => cmds.sendPlayerString(option.value, prompt.gameId), t('errors', 'send_failed_choice'))}
+                    title={prompt.choiceHints?.[option.id] ?? prompt.choiceHints?.[option.value]}
+                    onClick={() => sendChoice(option.value)}
                   >
                     <span className="choice-number">{idx + 1}</span>
                     <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
@@ -149,11 +218,22 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               </div>
             </div>
           )}
+          {prompt.choiceSpecial && (
+            <label className="feedback-remember-answer">
+              <input
+                type="checkbox"
+                checked={rememberAnswer}
+                disabled={busy}
+                onChange={(event) => setRememberAnswer(event.target.checked)}
+              />
+              {t('game', 'choice_remember')}
+            </label>
+          )}
           <div className="feedback-dialog-actions">
             <button
               className="primary send-btn"
               disabled={busy || textValue.trim() === ''}
-              onClick={() => void send(() => cmds.sendPlayerString(textValue.trim(), prompt.gameId), t('errors', 'send_failed_choice'))}
+              onClick={() => sendChoice(textValue.trim())}
             >
               {t('game', 'string_confirm')}
             </button>
@@ -264,13 +344,17 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       {prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string' && (
         <div className="feedback-options feedback-options-wrap">
           <div className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}>
-            {prompt.options.map((option, idx) => {
+            {gridOptions.map((option, idx) => {
               const isSel = selected.includes(option.value)
               return (
                 <button
                   key={option.id}
-                  className={`feedback-choice-card ${isSel ? 'selected' : ''}`}
+                  className={`feedback-choice-card ${isSel ? 'selected' : ''} ${idx === activeIdx && gridQuery.trim() !== '' ? 'kb-active' : ''}`}
                   disabled={busy}
+                  onMouseEnter={() => setActiveIdx(idx)}
+                  onDoubleClick={() => {
+                    if (!isMultiGrid) selectOption(option)
+                  }}
                   onClick={() => {
                     if (autoAnswerable) chooseBoolean(option)
                     selectOption(option)
@@ -284,6 +368,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 </button>
               )
             })}
+            {gridOptions.length === 0 && (
+              <div className="grid-no-results">{t('game', 'grid_no_results')}</div>
+            )}
           </div>
           {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
             <div className="feedback-dialog-actions">
@@ -310,6 +397,6 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           )}
         </div>
       )}
-    </Modal>
+    </DialogShell>
   )
 }

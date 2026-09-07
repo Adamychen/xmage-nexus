@@ -11,52 +11,9 @@
   animation: fadeIn 150ms ease;
 }
 
-.deck-import-modal {
-  background: #0d121d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 680px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  position: relative;
-  transition: border-color 150ms ease;
-}
-
 .deck-import-modal.drag-over {
   border-color: #ffd070;
   box-shadow: 0 0 30px rgba(255, 208, 112, 0.3);
-}
-
-.deck-import-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px;
-  background: rgba(20, 26, 38, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 16px;
-}
-
-.deck-import-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.deck-import-title {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #f7fafc;
-}
-
-.deck-import-formats {
-  font-size: 0.76rem;
-  color: #a0aec0;
-  font-weight: 600;
 }
 
 .deck-import-close-btn {

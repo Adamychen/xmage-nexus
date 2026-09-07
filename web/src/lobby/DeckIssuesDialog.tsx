@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { Deck } from './decks'
 import { applySuggestion, fetchDeckIssues } from '../decks/deckIssues'
 import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
-import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './DeckIssuesDialog.css'
 
@@ -85,13 +85,17 @@ export default function DeckIssuesDialog() {
   }
 
   return (
-    <div className="modal-backdrop" data-testid="deck-issues-backdrop">
-      <div className="deck-issues-modal panel" role="dialog" aria-modal="true" data-testid="deck-issues-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="deck-issues-header">
-          <h2 data-testid="deck-issues-title"><Icon name="alert" size={17} /> {t('decks', 'issues_title')}</h2>
-          <p className="deck-issues-intro">{t('decks', 'issues_intro')}</p>
-        </div>
-
+    <DialogShell
+      labelledBy="deck-issues-title"
+      titleId="deck-issues-title"
+      testId="deck-issues-dialog"
+      legacyBackdropClass="modal-backdrop"
+      legacyPanelClass="deck-issues-modal"
+      kickerIcon="alert"
+      kickerLabel={deck.name}
+      title={t('decks', 'issues_title')}
+      message={t('decks', 'issues_intro')}
+    >
         <div className="deck-issues-body">
           {missing.length > 0 && (
             <section className="deck-issues-section">
@@ -182,7 +186,6 @@ export default function DeckIssuesDialog() {
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

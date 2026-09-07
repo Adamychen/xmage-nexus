@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import Modal from '../../ui/Modal'
+import DialogShell from '../../ui/DialogShell'
 import { useTranslation } from '../../i18n'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
 import { parseLimitedSetCodes } from './constants'
@@ -79,14 +79,17 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
   }
 
   return (
-    <Modal
-      backdropClassName="random-packs-backdrop"
-      dialogClassName="random-packs-dialog"
-      label={t('lobby', reshuffled ? 'random_packs_title_reshuffled' : 'random_packs_title_random')}
+    <DialogShell
+      labelledBy="random-packs-title"
+      titleId="random-packs-title"
       testId="random-packs-selector"
+      legacyBackdropClass="random-packs-backdrop"
+      legacyPanelClass="random-packs-dialog"
+      kickerIcon="package"
+      kickerLabel={tournamentType}
+      title={t('lobby', reshuffled ? 'random_packs_title_reshuffled' : 'random_packs_title_random')}
       onBackdropClick={onClose}
     >
-      <h3>{t('lobby', reshuffled ? 'random_packs_title_reshuffled' : 'random_packs_title_random')}</h3>
       {!sets && !failed && <p>{t('lobby', 'random_packs_loading')}</p>}
       {(failed || (sets && sets.length === 0)) && <p>{t('lobby', 'random_packs_empty')}</p>}
       {sets && sets.length > 0 && (
@@ -128,6 +131,6 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
           </div>
         </>
       )}
-    </Modal>
+    </DialogShell>
   )
 }

@@ -9,6 +9,7 @@ import {
 } from '../services/imageDownloader'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import './DownloadImagesDialog.css'
 
 export interface DownloadImagesDialogProps {
@@ -84,18 +85,22 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
   const mbInDisk = (cacheStats.estimatedBytes / (1024 * 1024)).toFixed(1)
 
   return (
-    <div className="download-dialog-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="download-dialog panel" role="dialog" aria-label={t('dialogs','download_title')}>
-        <header className="download-dialog-header">
-          <div className="download-dialog-title">
-            <span className="download-header-icon"><Icon name="download" size={17} /></span>
-            <h2>{t('dialogs','download_title')} (XMage Downloader)</h2>
-          </div>
-          <button type="button" className="download-dialog-close" onClick={onClose} title={t('common','close')} aria-label={t('common','close')}>
-            ✕
-          </button>
-        </header>
-
+    <DialogShell
+      labelledBy="download-title"
+      titleId="download-title"
+      size="lg"
+      legacyBackdropClass="download-dialog-backdrop"
+      legacyPanelClass="download-dialog"
+      kickerIcon="download"
+      kickerLabel={t('dialogs', 'download_source')}
+      title={<>{t('dialogs', 'download_title')} (XMage Downloader)</>}
+      topRight={(
+        <button type="button" className="download-dialog-close" onClick={onClose} title={t('common', 'close')} aria-label={t('common', 'close')}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="download-dialog-body">
           <div className="download-form-grid">
             <div className="form-group">
@@ -306,7 +311,6 @@ export default function DownloadImagesDialog({ onClose }: DownloadImagesDialogPr
             </button>
           </div>
         </footer>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

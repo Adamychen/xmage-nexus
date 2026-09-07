@@ -57,13 +57,15 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     // 3. GAME_CHOOSE_PILE (Elección de pila, ej. Fact or Fiction)
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_CHOOSE_PILE', 'GAME_CHOOSE_PILE de Fact or Fiction', 15_000, cursor)
-    const pile1Btn = page.locator('.feedback-dialog .feedback-options').getByRole('button', { name: /pila 1|pile 1/i }).first()
-    await expect(pile1Btn, 'elección de pila visible').toBeVisible({ timeout: 15_000 })
+    const pileDialog = page.locator('.pile-dialog')
+    await expect(pileDialog, 'diálogo visual de piles visible').toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('pile-column-1').locator('.card-slot'), 'pila 1 con 3 cartas').toHaveCount(3)
+    await expect(page.getByTestId('pile-column-2').locator('.card-slot'), 'pila 2 con 2 cartas').toHaveCount(2)
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'interaction-03-choose-pile.png'), await page.screenshot({ fullPage: true }))
 
     cursor = parsedLen(page)
-    await pile1Btn.click()
+    await page.getByTestId('pile-column-1').click()
 
     // ─────────────────────────────────────────────────────────────
     // 4. GAME_TARGET con CardGrid (Tutor / Búsqueda en biblioteca)

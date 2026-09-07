@@ -2,19 +2,10 @@
   z-index: 1200;
 }
 
-.about-modal {
-  max-width: 560px;
-  width: min(92vw, 560px);
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 .about-tabs {
   display: flex;
   gap: 4px;
-  padding: 10px 12px 0;
+  padding: 4px 4px 0;
   border-bottom: 1px solid var(--border, #333);
 }
 
@@ -38,22 +29,9 @@
 }
 
 .about-pane {
-  padding: 16px;
+  padding: 16px 4px 4px;
   overflow-y: auto;
-}
-
-.about-pane h2 {
-  margin: 0 0 8px;
-  font-size: 18px;
-}
-
-.about-tagline {
-  opacity: 0.8;
-  margin: 0 0 8px;
-}
-
-.about-version {
-  margin: 0 0 12px;
+  max-height: min(56vh, 520px);
 }
 
 .about-links {

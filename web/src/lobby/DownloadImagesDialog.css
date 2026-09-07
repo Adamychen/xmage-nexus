@@ -16,52 +16,6 @@
   to   { opacity: 1; }
 }
 
-.download-dialog {
-  width: 100%;
-  max-width: 680px;
-  background: linear-gradient(180deg, #13172e 0%, #0d1022 100%);
-  border: 1px solid rgba(124, 92, 255, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 32px rgba(124, 92, 255, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: dlSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes dlSlideUp {
-  from { transform: translateY(20px) scale(0.97); opacity: 0; }
-  to   { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-.download-dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: rgba(124, 92, 255, 0.08);
-  border-bottom: 1px solid rgba(124, 92, 255, 0.2);
-}
-
-.download-dialog-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.download-header-icon {
-  font-size: 1.25rem;
-}
-
-.download-dialog-title h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  color: #fff;
-}
-
 .download-dialog-close {
   background: transparent;
   border: none;

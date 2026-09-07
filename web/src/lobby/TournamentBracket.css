@@ -427,32 +427,10 @@ button.bracket-watch-btn:disabled {
   font-size: 0.75rem;
 }
 
-.tournament-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgb(4 6 16 / 82%);
-  backdrop-filter: blur(6px);
-}
-
-.tournament-modal {
-  width: min(1100px, 100%);
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  background: var(--panel, #0f1226);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-  overflow: hidden;
-}
-
 .tournament-modal-scroll {
   overflow-y: auto;
-  padding: 16px;
+  max-height: min(62vh, 600px);
+  padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -464,15 +442,6 @@ button.bracket-watch-btn:disabled {
   text-align: center;
   color: #94a3b8;
   font-size: 0.812rem;
-}
-
-.tournament-bracket-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(10,13,28,0.8);
 }
 
 .tournament-refresh-btn {

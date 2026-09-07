@@ -3,6 +3,7 @@ import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { ManaCost } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './SampleHandModal.css'
 
@@ -175,27 +176,29 @@ export function SampleHandModal({
   }, [hand, landsInHand, turn])
 
   return (
-    <div className="sample-hand-backdrop" onClick={onClose}>
-      <div className="sample-hand-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <header className="sample-hand-header">
-          <div className="sample-hand-title-wrap">
-            <h2 className="sample-hand-title"><Icon name="hand" size={17} /> {t('decks', 'sample_hand')}</h2>
-            <span className="sample-hand-deck-name">{deckName}</span>
-          </div>
-
-          <div className="sample-hand-stats-chips">
-            <span className="stats-chip">{t('decks', 'total_cards')}: {hand.length}</span>
-            <span className="stats-chip lands"><Icon name="tree" size={11} /> {t('decks', 'lands')}: {landsInHand}</span>
-            <span className="stats-chip spells"><Icon name="sparkles" size={11} /> {t('decks', 'spells')}: {spellsInHand}</span>
-            <span className="stats-chip">{t('board', 'zone_library')}: {library.length}</span>
-            <span className="stats-chip turn">{t('game', 'turn')}: {turn}</span>
-          </div>
-
-          <button type="button" className="sample-hand-close-btn" onClick={onClose}>
-            ×
-          </button>
-        </header>
+    <DialogShell
+      labelledBy="sample-hand-title"
+      titleId="sample-hand-title"
+      size="lg"
+      legacyBackdropClass="sample-hand-backdrop"
+      legacyPanelClass="sample-hand-modal"
+      kickerIcon="hand"
+      kickerLabel={deckName}
+      title={t('decks', 'sample_hand')}
+      topRight={(
+        <button type="button" className="sample-hand-close-btn" onClick={onClose}>
+          ×
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
+        <div className="sample-hand-stats-chips">
+          <span className="stats-chip">{t('decks', 'total_cards')}: {hand.length}</span>
+          <span className="stats-chip lands"><Icon name="tree" size={11} /> {t('decks', 'lands')}: {landsInHand}</span>
+          <span className="stats-chip spells"><Icon name="sparkles" size={11} /> {t('decks', 'spells')}: {spellsInHand}</span>
+          <span className="stats-chip">{t('board', 'zone_library')}: {library.length}</span>
+          <span className="stats-chip turn">{t('game', 'turn')}: {turn}</span>
+        </div>
 
         {/* London Mulligan Prompt Banner */}
         {mulliganCount > 0 && !isKeeping && (
@@ -324,7 +327,6 @@ export function SampleHandModal({
             </button>
           </div>
         </footer>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

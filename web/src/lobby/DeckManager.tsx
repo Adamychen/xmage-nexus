@@ -4,6 +4,7 @@ import { setMyDeck, useStore } from '../state/store'
 import { parseAnyDeck } from '../decks/parseDck'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import './DeckManager.css'
 
 /** @deprecated Use parseAnyDeck from '../decks/parseDck' — kept for backwards compat (tests + JoinTableDialog legacy). */
@@ -165,11 +166,17 @@ export default function DeckManager() {
 
       {/* Import Modal */}
       {showImportModal && (
-        <div className="overlay">
-          <div className="dialog panel import-dialog">
-            <h2><Icon name="download" size={17} /> {t('decks','import_deck')}</h2>
-            <p className="import-desc">{t('decks','import_hint')}</p>
-
+        <DialogShell
+          labelledBy="deck-manager-import-title"
+          titleId="deck-manager-import-title"
+          legacyBackdropClass="overlay"
+          legacyPanelClass="dialog import-dialog"
+          kickerIcon="download"
+          kickerLabel={t('decks', 'import_formats')}
+          title={t('decks', 'import_deck')}
+          message={t('decks', 'import_hint')}
+          onBackdropClick={() => setShowImportModal(false)}
+        >
             <label>
               {t('decks','import_placeholder')}
               <input
@@ -201,8 +208,7 @@ export default function DeckManager() {
                 {t('common','save')}
               </button>
             </div>
-          </div>
-        </div>
+        </DialogShell>
       )}
     </div>
   )

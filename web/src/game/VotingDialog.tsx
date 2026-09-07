@@ -1,7 +1,7 @@
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
-import Modal from '../ui/Modal'
+import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './VotingDialog.css'
@@ -28,11 +28,16 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
   const stepMatch = /step\s+(\d+)\s+of\s+(\d+)/i.exec(prompt.message)
 
   return (
-    <Modal backdropClassName="voting-backdrop" dialogClassName="voting-dialog" labelledBy="voting-title">
-        <div className="voting-kicker"><Icon name="check" size={13} /> {t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</div>
-        <h2 id="voting-title"><FormattedText text={prompt.title} /></h2>
-        <p className="voting-msg"><FormattedText text={prompt.message} /></p>
-        {hasTwo ? (
+    <DialogShell
+      labelledBy="voting-title"
+      titleId="voting-title"
+      legacyBackdropClass="voting-backdrop"
+      legacyPanelClass="voting-dialog"
+      kickerIcon="check"
+      kickerLabel={<>{t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</>}
+      title={<FormattedText text={prompt.title} />}
+      message={<FormattedText text={prompt.message} />}
+    >        {hasTwo ? (
           <div className="voting-options">
             <button
               className="voting-btn voting-left"
@@ -62,6 +67,6 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
           </div>
         )}
         <div className="voting-hint">{t('dialogs', 'voting_hint')}</div>
-    </Modal>
+    </DialogShell>
   )
 }

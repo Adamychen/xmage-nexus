@@ -7,6 +7,7 @@ import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import PingBadge from './PingBadge'
 import { useTranslation } from '../i18n'
 import './LeaderboardModal.css'
@@ -129,26 +130,27 @@ export default function LeaderboardModal({
   }, [users, searchQuery])
 
   return (
-    <div className="feedback-backdrop leaderboard-backdrop" role="presentation" onClick={onClose}>
-      <section
-        className="leaderboard-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="lb-modal-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="leaderboard-header">
-          <div className="leaderboard-header-title">
-            <h2 id="lb-modal-title"><Icon name="trophy" size={18} /> {t('lobby', 'nav_ranking')}</h2>
-            <span className="leaderboard-subtitle">
-              {t('lobby', 'leaderboard_subtitle')}
-            </span>
-          </div>
-          <button type="button" className="leaderboard-close-btn" onClick={onClose}>
-            ✕
-          </button>
-        </header>
-
+    <DialogShell
+      labelledBy="lb-modal-title"
+      titleId="lb-modal-title"
+      size="lg"
+      legacyBackdropClass="feedback-backdrop leaderboard-backdrop"
+      legacyPanelClass="leaderboard-dialog"
+      kickerIcon="trophy"
+      kickerLabel={activeTab === 'room'
+        ? t('lobby', 'leaderboard_top_room')
+        : activeTab === 'profile'
+          ? t('lobby', 'leaderboard_my_profile')
+          : t('lobby', 'leaderboard_rank_guide')}
+      title={t('lobby', 'nav_ranking')}
+      message={t('lobby', 'leaderboard_subtitle')}
+      topRight={(
+        <button type="button" className="leaderboard-close-btn" onClick={onClose}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         {/* Modal Tabs */}
         <nav className="leaderboard-tabs">
           <button
@@ -518,7 +520,6 @@ export default function LeaderboardModal({
             </div>
           )}
         </div>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { parseAnyDeck } from './parseDck'
 import type { DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './DeckImportModal.css'
 
@@ -83,30 +84,34 @@ export function DeckImportModal({
   }
 
   return (
-    <div className="deck-import-backdrop" onClick={onClose}>
-      <div
-        className={`deck-import-modal ${isDragOver ? 'drag-over' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-        onDragOver={(e) => {
+    <DialogShell
+      labelledBy="deck-import-title"
+      titleId="deck-import-title"
+      size="lg"
+      legacyBackdropClass="deck-import-backdrop"
+      legacyPanelClass={`deck-import-modal${isDragOver ? ' drag-over' : ''}`}
+      kickerIcon="download"
+      kickerLabel={mode === 'replace' ? t('decks', 'import_mode_replace') : t('decks', 'import_mode_add')}
+      title={t('decks', 'import_deck')}
+      message={t('decks', 'import_formats')}
+      topRight={(
+        <button type="button" className="deck-import-close-btn" onClick={onClose}>
+          ×
+        </button>
+      )}
+      onBackdropClick={onClose}
+      sectionProps={{
+        onDragOver: (e) => {
           e.preventDefault()
           setIsDragOver(true)
-        }}
-        onDragLeave={(e) => {
+        },
+        onDragLeave: (e) => {
           if (e.currentTarget.contains(e.relatedTarget as Node)) return
           setIsDragOver(false)
-        }}
-        onDrop={handleDrop}
-      >
-        <header className="deck-import-header">
-          <div className="deck-import-title-wrap">
-            <h2 className="deck-import-title"><Icon name="download" size={17} /> {t('decks', 'import_deck')}</h2>
-            <span className="deck-import-formats">{t('decks', 'import_formats')}</span>
-          </div>
-          <button type="button" className="deck-import-close-btn" onClick={onClose}>
-            ×
-          </button>
-        </header>
-
+        },
+        onDrop: handleDrop,
+      }}
+    >
         <div className="deck-import-body">
           {/* Mode Selector Row */}
           <div className="deck-import-mode-row">
@@ -221,7 +226,6 @@ export function DeckImportModal({
             {totalCount > 0 ? `(${totalCount} ${t('decks', 'total_cards')})` : ''}
           </button>
         </footer>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

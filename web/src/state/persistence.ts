@@ -200,6 +200,37 @@ export function saveAutoAnswers(rules: AutoAnswerStored[]) {
   } catch {}
 }
 
+export interface ChoiceMemoryStored {
+  pattern: string
+  value: string
+}
+
+const CHOICE_MEMORY_KEY = 'mage-web-choice-memory'
+
+export function loadChoiceMemory(): ChoiceMemoryStored[] {
+  try {
+    const raw = getStorage().getItem(CHOICE_MEMORY_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((entry): entry is ChoiceMemoryStored => {
+            const record = entry as Partial<ChoiceMemoryStored>
+            return typeof record?.pattern === 'string' && typeof record?.value === 'string'
+          })
+          .map((entry) => ({ pattern: entry.pattern, value: entry.value }))
+      }
+    }
+  } catch {}
+  return []
+}
+
+export function saveChoiceMemory(rules: ChoiceMemoryStored[]) {
+  try {
+    getStorage().setItem(CHOICE_MEMORY_KEY, JSON.stringify(rules))
+  } catch {}
+}
+
 export interface ManaPaymentStored {
   auto: boolean
   restricted: boolean

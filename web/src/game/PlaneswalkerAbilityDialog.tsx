@@ -2,7 +2,7 @@ import { useStore } from '../state/store'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
-import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './PlaneswalkerAbilityDialog.css'
 
@@ -45,12 +45,16 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
   })()
 
   return (
-    <div className="pw-backdrop" role="presentation">
-      <section className="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title">
-        <div className="pw-kicker"><Icon name="sparkles" size={12} /> {t('game', 'planeswalker_choose')}</div>
-        <h2 id="pw-title"><FormattedText text={prompt.title} /></h2>
-        <p className="pw-msg"><FormattedText text={prompt.message} /></p>
-        {pwLoyalty != null && (
+    <DialogShell
+      labelledBy="pw-title"
+      titleId="pw-title"
+      legacyBackdropClass="pw-backdrop"
+      legacyPanelClass="pw-dialog"
+      kickerIcon="sparkles"
+      kickerLabel={t('game', 'planeswalker_choose')}
+      title={<FormattedText text={prompt.title} />}
+      message={<FormattedText text={prompt.message} />}
+    >        {pwLoyalty != null && (
           <div className="pw-loyalty-now">{t('game', 'planeswalker_loyalty_now')} <span className="pw-loyalty-val">{pwLoyalty}</span></div>
         )}
         <div className="pw-options">
@@ -72,7 +76,6 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
           })}
         </div>
         <div className="pw-hint">{t('game', 'planeswalker_hint')}</div>
-      </section>
-    </div>
+    </DialogShell>
   )
 }

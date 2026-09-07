@@ -1,36 +1,9 @@
-.sleeve-picker-dialog {
-  width: min(560px, 92vw);
-  max-width: 560px;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: rgba(14,18,38,0.96);
-  border: 1px solid #2e3560;
-  box-sizing: border-box;
-}
-
-.sleeve-picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.sleeve-picker-header h2 { margin: 0; font-size: 1rem; }
-
 .sleeve-picker-close {
   background: none;
   border: none;
   font-size: 1rem;
   cursor: pointer;
   padding: 4px 8px;
-}
-
-.sleeve-picker-subtitle {
-  margin: 6px 0 14px;
-  font-size: 0.75rem;
-  color: #9aa1c0;
 }
 
 .sleeve-picker-grid {

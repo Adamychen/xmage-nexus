@@ -10,48 +10,6 @@
   padding: 20px;
 }
 
-.deck-inspector-modal {
-  background: #11161f;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(236, 201, 75, 0.2);
-  overflow: hidden;
-  animation: inspector-pop 150ms cubic-bezier(0.1, 0.9, 0.2, 1);
-}
-
-@keyframes inspector-pop {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.deck-inspector-head {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: rgba(20, 26, 36, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.deck-inspector-title-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.deck-inspector-name {
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 0;
-}
-
 .deck-inspector-badges {
   display: flex;
   align-items: center;
@@ -102,9 +60,9 @@
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 16px 4px 4px;
   overflow-y: auto;
-  flex: 1;
+  max-height: min(62vh, 620px);
 }
 
 @media (max-width: 768px) {

@@ -6,6 +6,7 @@ import SeatsTab from './CreateTable/SeatsTab'
 import DevTab from './CreateTable/DevTab'
 import SummaryStrip from './CreateTable/SummaryStrip'
 import Icon from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './CreateTableDialog.css'
 
@@ -18,23 +19,25 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
   const { wizardSteps, activeTab, setActiveTab, activeIndex, goNext, goPrev, isLastStep, isFirstStep } = form
 
   return (
-    <div className="overlay">
-      <div className="dialog panel create-table-dialog">
-        <div className="create-table-header">
-          <div className="create-table-header-title">
-            <h2><Icon name="swords" size={18} /> {t('lobby.create_table_btn')}</h2>
-            <span className="create-table-subtitle">{t('lobby','create_header_subtitle')}</span>
-          </div>
-          <button type="button" className="create-dialog-close-btn" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
+    <DialogShell
+      labelledBy="create-table-title"
+      titleId="create-table-title"
+      size="lg"
+      legacyBackdropClass="overlay"
+      legacyPanelClass="dialog create-table-dialog"
+      kickerIcon="swords"
+      kickerLabel={<>Paso {activeIndex + 1} de {wizardSteps.length} · {wizardSteps[activeIndex]?.icon} {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}</>}
+      title={t('lobby.create_table_btn')}
+      message={t('lobby', 'create_header_subtitle')}
+      topRight={(
+        <button type="button" className="create-dialog-close-btn" onClick={onClose}>
+          ✕
+        </button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="wizard-progress-track" aria-hidden>
           <div className="wizard-progress-fill" style={{ width: `${((activeIndex + 1) / wizardSteps.length) * 100}%` }} />
-        </div>
-        <div className="wizard-step-counter">
-          Paso {activeIndex + 1} de {wizardSteps.length} · {wizardSteps[activeIndex]?.icon} {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}
         </div>
 
         <nav className="wizard-stepper" aria-label="Pasos de creación de mesa">
@@ -99,7 +102,6 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

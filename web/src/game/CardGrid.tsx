@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import CardSlot from '../board/CardSlot'
 import Icon, { type IconName } from '../ui/Icon'
+import DialogShell from '../ui/DialogShell'
 import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
@@ -60,46 +61,44 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
   const kickerIcon: IconName = prompt.method === 'GAME_TARGET' ? (isDiscard ? 'trash' : 'target') : 'layers'
 
   return (
-    <div className="feedback-backdrop" role="presentation">
-      <section className="feedback-dialog card-grid-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-        <header className="card-grid-header">
-          <div className="feedback-kicker">
-            <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span>{' '}
-            {prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
-          </div>
-          <div className="card-grid-title-row">
-            <h2 id="feedback-title">{cardGridTitle}</h2>
-            <span className="card-grid-count-badge">
-              {filtered.length === cards.length
-                ? `${cards.length} ${t('board','zone_hand')}`
-                : `${filtered.length} / ${cards.length}`}
-            </span>
-          </div>
-          {prompt.message && <p className="card-grid-message">{localizeServerMessage(prompt.message, t as any)}</p>}
-
-          <div className="card-grid-search-wrap">
-            <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
-            <input
-              className="card-grid-filter"
-              type="text"
-              placeholder={t('dialogs','cardgrid_search_placeholder')}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              autoFocus
-            />
-            {filter && (
-              <button
-                type="button"
-                className="card-grid-clear-btn"
-                onClick={() => setFilter('')}
-                title={t('common','clear')}
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </header>
-
+    <DialogShell
+      labelledBy="feedback-title"
+      titleId="feedback-title"
+      size="lg"
+      legacyBackdropClass="feedback-backdrop"
+      legacyPanelClass="feedback-dialog card-grid-dialog"
+      kickerIcon={kickerIcon}
+      kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
+      title={<>{cardGridTitle} <span className="card-grid-count-badge">
+        {filtered.length === cards.length
+          ? `${cards.length} ${t('board','zone_hand')}`
+          : `${filtered.length} / ${cards.length}`}
+      </span></>}
+      message={prompt.message ? localizeServerMessage(prompt.message, t as any) : undefined}
+      search={(
+        <div className="card-grid-search-wrap">
+          <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
+          <input
+            className="card-grid-filter"
+            type="text"
+            placeholder={t('dialogs','cardgrid_search_placeholder')}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            autoFocus
+          />
+          {filter && (
+            <button
+              type="button"
+              className="card-grid-clear-btn"
+              onClick={() => setFilter('')}
+              title={t('common','clear')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+    >
         <div className="card-grid-scroll-area">
           <div className="card-grid">
             {filtered.map((card) => (
@@ -147,8 +146,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
           )}
           <button disabled={busy} onClick={cancel}>{t('dialogs','cardgrid_cancel')}</button>
         </footer>
-      </section>
-    </div>
+    </DialogShell>
   )
 }
 

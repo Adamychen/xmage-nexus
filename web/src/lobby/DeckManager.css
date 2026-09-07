@@ -249,16 +249,6 @@
 }
 
 /* Import Dialog */
-.import-dialog {
-  width: 520px;
-  max-width: 90vw;
-}
-
-.import-desc {
-  font-size: 0.781rem;
-  color: #9aa2c8;
-  margin: -4px 0 10px;
-}
 
 .import-dialog textarea {
   width: 100%;

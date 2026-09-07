@@ -2,6 +2,7 @@ import { SLEEVES } from './sleeves'
 import { useTranslation } from '../i18n'
 import { getState } from '../state/state'
 import { setSetting } from '../state/actions'
+import DialogShell from '../ui/DialogShell'
 import './SleevePickerModal.css'
 
 interface Props {
@@ -13,13 +14,20 @@ export default function SleevePickerModal({ onClose }: Props) {
   const current = getState().settings.sleeveId
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="dialog panel sleeve-picker-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="sleeve-picker-header">
-          <h2>{t('lobby', 'sleeve_pick_title')}</h2>
-          <button type="button" className="sleeve-picker-close" onClick={onClose}>✕</button>
-        </div>
-        <p className="sleeve-picker-subtitle">{t('lobby', 'sleeve_pick_subtitle')}</p>
+    <DialogShell
+      labelledBy="sleeve-title"
+      titleId="sleeve-title"
+      legacyBackdropClass="overlay"
+      legacyPanelClass="dialog sleeve-picker-dialog"
+      kickerIcon="layers"
+      kickerLabel={SLEEVES.find((s) => s.id === current)?.name ?? t('lobby', 'sleeve_pick_title')}
+      title={t('lobby', 'sleeve_pick_title')}
+      message={t('lobby', 'sleeve_pick_subtitle')}
+      topRight={(
+        <button type="button" className="sleeve-picker-close" onClick={onClose}>✕</button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="sleeve-picker-grid">
           {SLEEVES.map((s) => {
             const isSelected = s.id === current
@@ -48,7 +56,6 @@ export default function SleevePickerModal({ onClose }: Props) {
         <div className="sleeve-picker-footer">
           <button type="button" onClick={onClose}>{t('common', 'close')}</button>
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

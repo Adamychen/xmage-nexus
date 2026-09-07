@@ -1,6 +1,7 @@
 import CardGrid from './CardGrid'
 import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
+import PileDialog from './PileDialog'
 import TriggerOrderDialog from './TriggerOrderDialog'
 import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
@@ -71,6 +72,11 @@ export default function FeedbackDialog() {
   // ── Declaración de combate: barra flotante no-modal
   if (prompt.mode === 'combat') {
     return <CombatBar form={form} />
+  }
+
+  // ── GAME_CHOOSE_PILE con cartas: dos piles visuales lado a lado
+  if (prompt.method === 'GAME_CHOOSE_PILE' && prompt.pileCards) {
+    return <PileDialog prompt={prompt} send={send} busy={busy} />
   }
 
   return <GenericDialog form={form} />

@@ -23,6 +23,41 @@
   --fx-speed: 1;
   --cjk-boost: 1;
 
+  /* ── Dialog system (D0: feedback-dialog wins; additive only) ── */
+  --dlg-backdrop: rgba(3, 6, 14, 0.78);
+  --dlg-backdrop-blur: 8px;
+  --dlg-z: 90;
+  --dlg-radius: 18px;
+  --dlg-padding: 24px 28px 28px;
+  --dlg-bg: linear-gradient(180deg, #161b2e 0%, #0d1222 100%);
+  --dlg-border: 1px solid rgba(130, 150, 220, 0.22);
+  --dlg-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --dlg-anim: dialogIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --dlg-width-sm: min(440px, 94vw);
+  --dlg-width-md: min(600px, 94vw);
+  --dlg-width-lg: min(1100px, 96vw);
+  --dlg-max-h: min(780px, 90vh);
+  --dlg-kicker-fg: #ffd070;
+  --dlg-kicker-bg: rgba(255, 208, 112, 0.12);
+  --dlg-kicker-border: rgba(255, 208, 112, 0.25);
+  --dlg-title-fg: #ffffff;
+  --dlg-source-fg: #38bdf8;
+  --dlg-msg-fg: #94a3b8;
+  --dlg-primary-bg: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  --dlg-primary-border: #60a5fa;
+  --dlg-primary-fg: #ffffff;
+  --dlg-cancel-bg: rgba(255, 255, 255, 0.06);
+  --dlg-cancel-border: rgba(255, 255, 255, 0.15);
+  --dlg-cancel-fg: #94a3b8;
+  --dlg-choice-bg: rgba(255, 255, 255, 0.04);
+  --dlg-choice-border: rgba(255, 255, 255, 0.1);
+  --dlg-choice-hover-bg: rgba(124, 92, 255, 0.15);
+  --dlg-choice-hover-border: rgba(124, 92, 255, 0.6);
+  --dlg-choice-selected-border: #a78bfa;
+  --dlg-bar-w: 234px;
+  --dlg-bar-radius: 12px;
+  --dlg-bar-blur: 12px;
+
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 

@@ -12,7 +12,7 @@ import {
   handleJoinedTable, handleStartGame, handleGameUpdate, handleWatchGame,
   handleGameInform, handleGameOver, handleEndGameInfo, handleGameError, handleRedrawGui,
 } from './events/game'
-import { handleGameTarget, handleGameAsk, handleUserRequestDialog } from './events/prompts'
+import { handleGameTarget, handleGameAsk, handleUserRequestDialog, applyChoiceMemory } from './events/prompts'
 import { handleSideboard } from './events/sideboard'
 import { handleStartDraft, handleDraftUpdate, handleDraftOver, handleConstruct } from './events/draft'
 import {
@@ -98,7 +98,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
   }
   if (method !== 'GAME_ASK') {
     const feedback = parseFeedback(method, objectId ?? s.gameId, data)
-    if (feedback) setState({ feedback })
+    if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) setState({ feedback })
   }
   switch (method) {
     case 'CHATMESSAGE': {

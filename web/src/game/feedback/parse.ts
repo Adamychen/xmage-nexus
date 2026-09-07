@@ -26,6 +26,7 @@ import {
   cleanChoices,
   controlledPlayerId,
   feedbackCards,
+  feedbackCardsFrom,
   multiAmountItems,
   optionEntries,
   secondMessageOf,
@@ -171,15 +172,24 @@ export function parseFeedback(
       } else if (listChoices.length > 0) {
         choices = listChoices.map((c, i) => ({ id: String(i), label: String(c), value: String(c) }))
       }
-      return prompt(method, gameId, t('game', 'choose_option'), stringValue(choice.message) ?? message, 'string', choices, bounds)
+      const sortRank = choiceSortRank(asRecord(choice.sortData))
+      if (sortRank) {
+        choices = [...choices].sort((a, b) => (sortRank(a) ?? Number.MAX_SAFE_INTEGER) - (sortRank(b) ?? Number.MAX_SAFE_INTEGER))
+      }
+      return prompt(method, gameId, t('game', 'choose_option'), stringValue(choice.message) ?? message, 'string', choices, bounds,
+        undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        choiceHints(asRecord(choice.hintData)), choice.specialEnabled === true, choice.searchEnabled !== false)
     }
     case 'GAME_CHOOSE_PILE': {
       const pile1 = cardSummary(data.cardsView1, t('game', 'pile_1'), (fallback, count) => t('game', 'pile_summary', { fallback, count: String(count) }))
       const pile2 = cardSummary(data.cardsView2, t('game', 'pile_2'), (fallback, count) => t('game', 'pile_summary', { fallback, count: String(count) }))
+      const pile1Cards = feedbackCardsFrom(data.cardsView1)
+      const pile2Cards = feedbackCardsFrom(data.cardsView2)
+      const pileCards = pile1Cards && pile2Cards ? { pile1: pile1Cards, pile2: pile2Cards } : undefined
       return prompt(method, gameId, t('game', 'choose_pile'), message, 'boolean', [
         { id: 'pile1', label: pile1, value: 'true' },
         { id: 'pile2', label: pile2, value: 'false' },
-      ], bounds)
+      ], bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, pileCards)
     }
     case 'GAME_PLAY_MANA':
       // El servidor NO manda los colores de maná: options solo trae {queryType: "PLAY_MANA"}.
@@ -246,6 +256,27 @@ export function parseFeedback(
   }
 }
 
+function choiceSortRank(sortData: Record<string, unknown>): ((opt: FeedbackOption) => number | undefined) | null {
+  const entries = Object.entries(sortData)
+  if (entries.length === 0) return null
+  const rank = new Map<string, number>()
+  for (const [key, value] of entries) {
+    if (typeof value === 'number') rank.set(key, value)
+  }
+  if (rank.size === 0) return null
+  return (opt) => rank.get(opt.id) ?? rank.get(opt.label) ?? rank.get(opt.value)
+}
+
+function choiceHints(hintData: Record<string, unknown>): Record<string, string> | undefined {
+  const out: Record<string, string> = {}
+  for (const [key, value] of Object.entries(hintData)) {
+    const parts = Array.isArray(value) ? value : [value]
+    const hint = parts.length > 1 ? parts[1] : parts[0]
+    if (hint != null && String(hint) !== '') out[key] = String(hint)
+  }
+  return Object.keys(out).length > 0 ? out : undefined
+}
+
 function prompt(
   method: string,
   gameId: string,
@@ -268,6 +299,10 @@ function prompt(
   loyaltyDeltas?: (number | null)[],
   isPlaneswalkerAbility?: boolean,
   isTriggerOrder?: boolean,
+  choiceHints?: Record<string, string>,
+  choiceSpecial?: boolean,
+  choiceSearch?: boolean,
+  pileCards?: { pile1: FeedbackCard[]; pile2: FeedbackCard[] },
 ): FeedbackPrompt {
   const fp: FeedbackPrompt = { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
   if (isVoting) fp.isVoting = true
@@ -275,5 +310,9 @@ function prompt(
   if (loyaltyDeltas) fp.loyaltyDeltas = loyaltyDeltas
   if (isPlaneswalkerAbility && loyaltyDeltas) fp.isPlaneswalkerAbility = true
   if (isTriggerOrder) fp.isTriggerOrder = true
+  if (choiceHints) fp.choiceHints = choiceHints
+  if (choiceSpecial) fp.choiceSpecial = true
+  if (choiceSearch === false) fp.choiceSearch = false
+  if (pileCards) fp.pileCards = pileCards
   return fp
 }

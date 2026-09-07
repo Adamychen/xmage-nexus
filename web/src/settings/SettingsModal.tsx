@@ -10,6 +10,7 @@ import { PhaseStopGrid } from '../game/PhaseStopSelector'
 import { togglePhaseStop } from '../game/phaseStops'
 import SoundFxControls from './SoundFxControls'
 import Toggle from '../ui/Toggle'
+import DialogShell from '../ui/DialogShell'
 import '../appearance/SleevePickerModal.css'
 import '../game/GameMenu.css'
 import '../game/PhaseStopSelector.css'
@@ -71,8 +72,8 @@ function InterfaceSection() {
   const cjkLang = lang === 'ja' || lang === 'zhs'
   return (
     <div>
-      <h3 className="settings-section-title">Tamaño de interfaz</h3>
-      <p className="settings-hint">Escala global. 115-150% recomendado para chino/japonés (caracteres más densos).</p>
+      <h3 className="settings-section-title">{t('lobby', 'ui_scale_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'ui_scale_hint')}</p>
       <div className="settings-stepper">
         <button
           type="button"
@@ -120,9 +121,9 @@ function InterfaceSection() {
       <Toggle
         checked={settings.cjkBoost}
         onChange={(v) => setSetting('cjkBoost', v)}
-        label="Boost automático CJK (+15% en 日本語/中文)"
+        label={t('lobby', 'cjk_boost_label')}
         disabled={!cjkLang}
-        title={cjkLang ? undefined : 'Solo aplica con la interfaz en 日本語/中文'}
+        title={cjkLang ? undefined : t('lobby', 'cjk_boost_only')}
       />
     </div>
   )
@@ -287,12 +288,20 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
   ]
 
   return (
-    <div className="overlay" onClick={onClose} data-testid="settings-modal">
-      <div className="dialog panel settings-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('common', 'settings')}>
-        <div className="settings-header">
-          <h2>{t('common', 'settings')}</h2>
-          <button type="button" className="settings-close" onClick={onClose} data-testid="settings-close">✕</button>
-        </div>
+    <DialogShell
+      labelledBy="settings-title"
+      titleId="settings-title"
+      size="lg"
+      testId="settings-modal"
+      legacyPanelClass="settings-modal"
+      kickerIcon="settings"
+      kickerLabel={nav.find((item) => item.id === section)?.label ?? t('common', 'settings')}
+      title={t('common', 'settings')}
+      topRight={(
+        <button type="button" className="settings-close" onClick={onClose} data-testid="settings-close">✕</button>
+      )}
+      onBackdropClick={onClose}
+    >
         <div className="settings-body">
           <nav className="settings-nav" aria-label={t('common', 'settings')}>
             {nav.map((item) => (
@@ -316,7 +325,6 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
             {section === 'gameplay' && <GameplaySection />}
           </div>
         </div>
-      </div>
-    </div>
+    </DialogShell>
   )
 }

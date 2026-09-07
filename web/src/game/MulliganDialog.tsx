@@ -4,7 +4,7 @@ import type { CardView } from '../net/types'
 import { useStore, useSettings, setSetting } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
-import Modal from '../ui/Modal'
+import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
@@ -74,13 +74,18 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   if (isLondon) {
     const handleCardClick = prompt.max > 1 ? toggle : pickOne
     return (
-      <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog mulligan-london" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
-          <div className="mulligan-kicker">
-            <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'mulligan_london_title')}
-          </div>
-          <h2 id="mulligan-title">{t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}</h2>
-          <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
-
+      <DialogShell
+        labelledBy="mulligan-title"
+        titleId="mulligan-title"
+        size="lg"
+        legacyBackdropClass="mulligan-backdrop"
+        legacyPanelClass="mulligan-dialog mulligan-london"
+        kickerIcon="layers"
+        kickerLabel={t('dialogs', 'mulligan_london_title')}
+        title={t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}
+        message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+        trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
+      >
           {cardCount > 0 && (
             <div className="mulligan-hand-grid">
               {handEntries.map(([id, card], i) => (
@@ -117,18 +122,33 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
               <button disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</button>
             )}
           </div>
-      </Modal>
+      </DialogShell>
     )
   }
 
   return (
-    <Modal backdropClassName="mulligan-backdrop" dialogClassName="mulligan-dialog" labelledBy="mulligan-title" trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}>
-        <div className="mulligan-kicker">
-          <span className="kicker-icon"><Icon name="layers" size={13} /></span> {t('dialogs', 'mulligan_decision_title')}
-        </div>
-        <h2 id="mulligan-title"><FormattedText text={prompt.title === 'Mulligan' ? t('dialogs', 'mulligan_title') : prompt.title} /></h2>
-        <p className="mulligan-msg"><FormattedText text={localizeServerMessage(prompt.message, t as any)} /></p>
-
+    <DialogShell
+      labelledBy="mulligan-title"
+      titleId="mulligan-title"
+      size="lg"
+      legacyBackdropClass="mulligan-backdrop"
+      legacyPanelClass="mulligan-dialog"
+      kickerIcon="layers"
+      kickerLabel={t('dialogs', 'mulligan_decision_title')}
+      title={<FormattedText text={prompt.title === 'Mulligan' ? t('dialogs', 'mulligan_title') : prompt.title} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
+      aside={
+        <label className="toggle mulligan-auto-toggle">
+          <input
+            type="checkbox"
+            checked={settings.autoKeepMulligan}
+            onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
+          />
+          {t('game', 'auto_mulligan')}
+        </label>
+      }
+    >
         {cardCount > 0 && (
           <div className="mulligan-hand-grid">
             {handEntries.map(([id, card], i) => (
@@ -152,14 +172,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             <Icon name="refresh" size={13} /> {t('dialogs', 'mulligan_btn')}
           </button>
         </div>
-        <label className="toggle mulligan-auto-toggle">
-          <input
-            type="checkbox"
-            checked={settings.autoKeepMulligan}
-            onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
-          />
-          {t('game', 'auto_mulligan')}
-        </label>
-    </Modal>
+    </DialogShell>
   )
 }
