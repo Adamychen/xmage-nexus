@@ -127,7 +127,7 @@ export default function DeckTrackerPanel() {
           <div className="tracker-odds-grid">
             <div className="tracker-odd-cell cell-lands" title={t('game', 'tracker_lands')}>
               <div className="odd-cell-header">
-                <span className="odd-icon">🏔️</span>
+                <Icon name="mountain" size={12} className="odd-icon" />
                 <span className="odd-label">{t('game', 'tracker_lands')}</span>
               </div>
               <div className="odd-cell-values">
@@ -138,7 +138,7 @@ export default function DeckTrackerPanel() {
 
             <div className="tracker-odd-cell cell-creatures" title={t('game', 'tracker_creatures')}>
               <div className="odd-cell-header">
-                <span className="odd-icon">⚔️</span>
+                <Icon name="swords" size={12} className="odd-icon" />
                 <span className="odd-label">{t('game', 'tracker_creatures')}</span>
               </div>
               <div className="odd-cell-values">
@@ -149,7 +149,7 @@ export default function DeckTrackerPanel() {
 
             <div className="tracker-odd-cell cell-spells" title={t('game', 'tracker_spells')}>
               <div className="odd-cell-header">
-                <span className="odd-icon">✨</span>
+                <Icon name="sparkles" size={12} className="odd-icon" />
                 <span className="odd-label">{t('game', 'tracker_spells')}</span>
               </div>
               <div className="odd-cell-values">
@@ -160,7 +160,7 @@ export default function DeckTrackerPanel() {
 
             <div className="tracker-odd-cell cell-other" title={t('game', 'tracker_other')}>
               <div className="odd-cell-header">
-                <span className="odd-icon">🏺</span>
+                <Icon name="gem" size={12} className="odd-icon" />
                 <span className="odd-label">{t('game', 'tracker_other')}</span>
               </div>
               <div className="odd-cell-values">
@@ -173,7 +173,7 @@ export default function DeckTrackerPanel() {
 
         {stats.faceDownExileCount > 0 && (
           <div className="tracker-warning-chip" title={t('game', 'tracker_face_down_exile')}>
-            ❓ {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
+            <Icon name="alert" size={12} /> {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
           </div>
         )}
 
@@ -196,7 +196,7 @@ export default function DeckTrackerPanel() {
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
                 >
-                  ✕
+                  <Icon name="x" size={11} />
                 </button>
               )}
             </div>
@@ -269,7 +269,7 @@ export default function DeckTrackerPanel() {
                   {c.manaCost ? (
                     <ManaCost manaCost={c.manaCost} size={13} className="tracker-row-mana" />
                   ) : c.isLand ? (
-                    <span className="tracker-land-icon" aria-hidden="true">🏔️</span>
+                    <Icon name="mountain" size={12} className="tracker-land-icon" aria-hidden="true" />
                   ) : (
                     <span className="tracker-zero-pip">0</span>
                   )}
@@ -282,7 +282,7 @@ export default function DeckTrackerPanel() {
                   </span>
                   {c.isTopCard && (
                     <span className="tracker-top-badge" title={t('game', 'tracker_top_revealed')}>
-                      👁️ TOP
+                      <Icon name="eye" size={10} /> TOP
                     </span>
                   )}
                 </div>

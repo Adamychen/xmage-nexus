@@ -13,6 +13,7 @@ import { isDirectTournamentJoin, withTimeout } from './lobbyUtils'
 
 export function useTableActions(conn: ConnectionInfo | null) {
   const [joiningTable, setJoiningTable] = useState<TableView | null>(null)
+  const [joinPassword, setJoinPassword] = useState<string | undefined>(undefined)
   const [busyTable, setBusyTable] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -23,9 +24,10 @@ export function useTableActions(conn: ConnectionInfo | null) {
       : null
   }
 
-  const joinHuman = (t: TableView) => {
+  const joinHuman = (t: TableView, presetPassword?: string) => {
     setState({ error: null })
     setNotice(ignoredOwnerNotice(t))
+    setJoinPassword(presetPassword)
     const seat = t.seats.find((s) => !s.playerName)
     if (!seat) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
@@ -90,6 +92,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
       if (res.ok) {
         setNotice(tStatic('lobby','waiting_players'))
         setJoiningTable(null)
+        setJoinPassword(undefined)
       } else {
         const code = (res as { errorCode?: string }).errorCode
         const raw = res.error || code || tStatic('errors','join_table_failed')
@@ -187,7 +190,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
   }
 
   return {
-    joiningTable, setJoiningTable,
+    joiningTable, setJoiningTable, joinPassword, setJoinPassword,
     busyTable, notice, setNotice,
     joinHuman, handleJoinWithDeck, joinAi, startTable, watchTable,
   }

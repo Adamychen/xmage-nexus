@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useLobby, useStore } from '../state/store'
+import { useLobby, useStore, openStagingTable } from '../state/store'
 import * as cmds from '../net/commands'
 import type { UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
@@ -20,11 +20,13 @@ import LobbyHeader, { type LeaderboardTab } from './LobbyHeader'
 import { LobbyMobileNav } from './LobbySidebar'
 import FloatingChat from './FloatingChat'
 import TableCard from './TableCard'
+import ActiveTablesBar from './ActiveTablesBar'
 import './FloatingChat.css'
 import TournamentBracketModal from './TournamentBracketModal'
 import { useTableActions } from './useTableActions'
+import { useInviteLink } from './useInviteLink'
 import { useTournamentBracket } from './useTournamentBracket'
-import { extractLobbyUsers, withTimeout, type LobbyTab } from './lobbyUtils'
+import { extractLobbyUsers, getMyActiveTables, withTimeout, type LobbyTab } from './lobbyUtils'
 import { getIgnoredUsers } from './ignoreList'
 import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
@@ -78,7 +80,7 @@ export default function LobbyScreen() {
   })
 
   const tableActions = useTableActions(conn)
-  const { joiningTable, setJoiningTable, busyTable, notice, setNotice } = tableActions
+  const { joiningTable, setJoiningTable, joinPassword, setJoinPassword, busyTable, notice, setNotice } = tableActions
   const bracket = useTournamentBracket()
 
   const openLeaderboard = (target?: string, tab: LeaderboardTab = 'room') => {
@@ -94,11 +96,24 @@ export default function LobbyScreen() {
     [users, conn?.username],
   )
 
+  const myActiveTables = useMemo(
+    () => getMyActiveTables(tables, conn?.username, stagingTableId),
+    [tables, conn?.username, stagingTableId],
+  )
+  useInviteLink({
+    conn,
+    tables,
+    hasLobby: lobby !== null,
+    joinHuman: tableActions.joinHuman,
+    watchTable: tableActions.watchTable,
+    setNotice,
+  })
+
   const filteredTables = useMemo(() => {
     let ignored: string[] = []
     try { ignored = getIgnoredUsers() } catch { ignored = [] }
-    return filterTables(tables, filters, ignored)
-  }, [tables, filters, selectedUser])
+    return filterTables(tables, filters, ignored, conn?.username, stagingTableId)
+  }, [tables, filters, conn?.username, stagingTableId, selectedUser])
 
   // Cachear automáticamente el avatar real del usuario conectado
   useEffect(() => {
@@ -120,6 +135,18 @@ export default function LobbyScreen() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         tableCount={tables.length}
+        activeTableCount={myActiveTables.length}
+        onGoToActiveTable={() => {
+          setActiveTab('tables')
+          if (myActiveTables.length === 1) {
+            const only = myActiveTables[0]
+            if (only.tableState === 'DUELING') {
+              tableActions.watchTable(only)
+            } else {
+              openStagingTable(only.tableId)
+            }
+          }
+        }}
         onCreate={() => setShowCreate(true)}
         onDownloadImages={() => setShowDownloadImages(true)}
         onOpenAbout={() => setShowAbout(true)}
@@ -182,6 +209,15 @@ export default function LobbyScreen() {
                     />
                   </div>
                 </div>
+
+                {myActiveTables.length > 0 && (
+                  <ActiveTablesBar
+                    tables={myActiveTables}
+                    onOpenStaging={(tableId) => openStagingTable(tableId)}
+                    onStart={tableActions.startTable}
+                    onWatch={tableActions.watchTable}
+                  />
+                )}
 
                 <div className="tables-list">
                   {filteredTables.map((tTable) => (
@@ -347,7 +383,8 @@ export default function LobbyScreen() {
         <JoinTableDialog
           table={joiningTable}
           busy={busyTable === joiningTable.tableId}
-          onClose={() => setJoiningTable(null)}
+          initialPassword={joinPassword}
+          onClose={() => { setJoiningTable(null); setJoinPassword(undefined) }}
           onJoin={tableActions.handleJoinWithDeck}
         />
       )}

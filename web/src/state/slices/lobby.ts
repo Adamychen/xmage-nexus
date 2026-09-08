@@ -1,4 +1,5 @@
 import type { ChatMessageEvent, LobbyEnvelope, TableView } from '../../net/types'
+import type { DeepLink } from '../../lobby/deepLink'
 
 export type LogChannel = 'game' | 'chat' | 'system'
 
@@ -27,6 +28,8 @@ export interface LobbySlice {
   stagingTableId: string | null
   /** flag isTournament del JOINED_TABLE (el lobby puede ir desfasado al entrar) */
   stagingIsTournament: boolean
+  /** invitación pendiente vía deep link (#join= / #watch=); la consume el lobby */
+  pendingDeepLink: DeepLink | null
   log: LogEntry[]
   events: { method: string; time: number }[]
 }
@@ -42,6 +45,7 @@ export const initialLobby: LobbySlice = {
   watchingTable: null,
   stagingTableId: null,
   stagingIsTournament: false,
+  pendingDeepLink: null,
   log: [],
   events: [],
 }

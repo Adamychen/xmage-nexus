@@ -5,7 +5,7 @@ import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import { useTranslation } from '../i18n'
-import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge } from './lobbyUtils'
+import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable } from './lobbyUtils'
 
 interface Props {
   tTable: TableView
@@ -46,14 +46,19 @@ export default function TableCard({
 
   const timeAgo = formatTimeAgo(tTable.createTime)
   const skill = getSkillBadge(tTable.skillLevel)
+  const isMine = isMyTable(tTable, username, stagingTableId)
   const mySeat = !!username
     && tTable.seats.some((s) => s.playerName?.toLowerCase() === username.toLowerCase())
-  const canReenter = mySeat || stagingTableId === tTable.tableId
+  const canReenter = isMine || mySeat || stagingTableId === tTable.tableId
 
   return (
     <div
-      className={`table-card table-row ${statusClass}`}
+      className={`table-card table-row ${statusClass}${isMine ? ' is-my-table' : ''}`}
       onDoubleClick={() => {
+        if (isPlaying) {
+          onWatch(tTable)
+          return
+        }
         if (canReenter) {
           openStagingTable(tTable.tableId)
           return
@@ -68,6 +73,11 @@ export default function TableCard({
       <div className="table-card-main">
         <div className="table-card-top-bar">
           <div className="table-badges-left">
+            {isMine && (
+              <span className="table-badge-mine" title={t('lobby', 'active_table_my_badge')}>
+                <Icon name="user" size={11} /> {t('lobby', 'active_table_my_badge')}
+              </span>
+            )}
             {tTable.isTournament ? (
               <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}><Icon name="trophy" size={12} /> {t('lobby.tournament_badge')}</span>
             ) : (

@@ -279,6 +279,21 @@
   border-color: rgba(255, 100, 100, 0.3);
 }
 
+button.staging-tag.tag-invite {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(130, 170, 255, 0.1);
+  color: #82aaff;
+  border-color: rgba(130, 170, 255, 0.3);
+}
+
+button.staging-tag.tag-invite:hover {
+  background: rgba(130, 170, 255, 0.2);
+}
+
 /* Roster Area */
 .staging-roster-area {
   flex: 1;

@@ -145,9 +145,14 @@
 }
 
 .odd-icon {
-  font-size: 0.6875rem;
-  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0.9;
 }
+
+.cell-lands .odd-icon { color: #34d399; }
+.cell-creatures .odd-icon { color: #fb923c; }
+.cell-spells .odd-icon { color: #60a5fa; }
+.cell-other .odd-icon { color: #c084fc; }
 
 .odd-label {
   white-space: nowrap;
@@ -406,8 +411,7 @@
 }
 
 .tracker-land-icon {
-  font-size: 11px;
-  line-height: 1;
+  color: #a8a29e;
   opacity: 0.85;
 }
 
@@ -446,6 +450,9 @@
 }
 
 .tracker-top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 0.5625rem;
   font-weight: 800;
   background: rgba(234, 179, 8, 0.2);

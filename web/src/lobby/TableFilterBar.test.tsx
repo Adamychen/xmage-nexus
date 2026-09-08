@@ -240,6 +240,14 @@ describe('filterTables logic', () => {
     )
     expect(lim.map((t) => t.tableId)).toEqual(['t-l'])
   })
+
+  it('pins user active tables to top when myUsername is provided in desktop sort', () => {
+    // In MOCK_TABLES, t-2 is Bob's Commander Pod (DUELING, no free seats, created at 2000).
+    // Normally t-3 (free seat, created at 3000) or t-1 (free seat, created at 1000) comes before t-2 because t-2 has no free seats.
+    // But with myUsername='Bob', t-2 should be pinned to the top!
+    const res = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS, [], 'Bob')
+    expect(res[0].tableId).toBe('t-2')
+  })
 })
 
 describe('TableFilterBar component', () => {

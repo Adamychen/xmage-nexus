@@ -23,6 +23,8 @@ interface Props {
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
   tableCount: number
+  activeTableCount?: number
+  onGoToActiveTable?: () => void
   onCreate: () => void
   onDownloadImages: () => void
   onOpenAbout: () => void
@@ -32,7 +34,7 @@ interface Props {
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenLeaderboard, activeTab, onTabChange,
-  tableCount, onCreate, onDownloadImages, onOpenAbout, hasNews,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onDownloadImages, onOpenAbout, hasNews,
 }: Props) {
   const { t } = useTranslation()
   const settings = useSettings()
@@ -60,6 +62,18 @@ export default function LobbyHeader({
           <Icon name="plus" size={14} />
           <span>{t('lobby.nav_new')}</span>
         </button>
+        {activeTableCount > 0 && (
+          <button
+            type="button"
+            className="top-nav-btn top-nav-active-table"
+            onClick={onGoToActiveTable}
+            title={t('lobby', 'active_table_header_hint')}
+          >
+            <span className="top-nav-active-pulse" />
+            <Icon name="chair" size={14} />
+            <span>{t('lobby', 'active_table_header_btn')}{activeTableCount > 1 ? ` (${activeTableCount})` : ''}</span>
+          </button>
+        )}
         <button
           type="button"
           className={`top-nav-btn ${activeTab === 'tables' ? 'active' : ''}`}

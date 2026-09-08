@@ -60,6 +60,7 @@ Inspirado en herramientas como *17Lands*, *Untap Companion* o *MTG Arena Tool*. 
 Capacidades exclusivas de la web que una aplicación monolítica de escritorio en Java nunca podrá ofrecer.
 
 ### 2.1 Deep Linking e Invitaciones Directas ("One-Click Join")
+> ✅ **Implementado 2026-09-08** — `lobby/deepLink.ts` + `useInviteLink` + `InviteLinkButton` en staging; formato `#join=<tableId>&pwd=…&server=host:port` / `#watch=…`; join abre el diálogo de mazo con password pre-rellenada; servidor distinto pide confirmación (el proxy no cambia).
 * **Descripción**: URLs directas para unirse o espectar mesas sin pasar por el explorador del lobby.
 * **Mecánica**:
   * Botón *"Copiar enlace de invitación"* en la sala de espera (`SpectatorStagingScreen`) o dentro de la partida.

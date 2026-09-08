@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { setState } from './state/state'
+import { parseDeepLink } from './lobby/deepLink'
 import { setSetting } from './state/actions'
 import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { useTranslation } from './i18n'
@@ -20,6 +22,20 @@ export default function App() {
   const connecting = useStore((s) => s.connecting)
   const wsAlive = useStore((s) => s.wsAlive)
   const settings = useStore((s) => s.settings)
+
+  useEffect(() => {
+    const captureHash = () => {
+      const link = parseDeepLink(window.location.hash)
+      if (!link) return
+      setState({ pendingDeepLink: link })
+      try {
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+      } catch {}
+    }
+    captureHash()
+    window.addEventListener('hashchange', captureHash)
+    return () => window.removeEventListener('hashchange', captureHash)
+  }, [])
 
   useEffect(() => {
     soundManager.init(loadAudioSettings())

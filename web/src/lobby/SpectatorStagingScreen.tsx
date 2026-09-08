@@ -8,6 +8,7 @@ import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import InviteLinkButton from './InviteLinkButton'
 import { formatSeatHistory } from './lobbyUtils'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
@@ -370,6 +371,7 @@ export default function SpectatorStagingScreen({
                 <span className="staging-tag tag-private"><Icon name="lock" size={12} /> {t('lobby','tag_private')}</span>
               )}
               <span className="staging-tag tag-seats"><Icon name="users" size={12} /> {activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</span>
+              <InviteLinkButton tableId={activeTable?.tableId} />
             </div>
           </div>
 

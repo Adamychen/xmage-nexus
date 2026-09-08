@@ -114,6 +114,14 @@ export interface TranslationSchema {
     spectators: string
     hide_system_msgs: string
     show_system_msgs: string
+    active_table_waiting: string
+    active_table_ready: string
+    active_table_dueling: string
+    active_table_return: string
+    active_table_resume: string
+    active_table_my_badge: string
+    active_table_header_btn: string
+    active_table_header_hint: string
     chat_input_placeholder: string
     chat_too_long: string
     no_messages: string
@@ -280,6 +288,12 @@ export interface TranslationSchema {
     staging_table_chat_unavailable: string
     staging_back_lobby: string
     staging_leave_hint: string
+    invite_copy_join: string
+    invite_copy_watch: string
+    invite_copied: string
+    invite_login_hint: string
+    invite_table_not_found: string
+    invite_server_switch: string
     staging_host_crown: string
     staging_waiting_fallback: string
     staging_seats_count: string

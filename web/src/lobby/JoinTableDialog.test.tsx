@@ -80,6 +80,33 @@ describe('JoinTableDialog', () => {
     })
   })
 
+  it('prefills the password from an invite deep link', async () => {
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+    const onClose = vi.fn()
+
+    const { getByPlaceholderText, getByRole } = render(
+      <JoinTableDialog
+        table={MOCK_PASSWORD_TABLE}
+        initialPassword="invite-pwd"
+        onClose={onClose}
+        onJoin={onJoin}
+      />
+    )
+
+    const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…') as HTMLInputElement
+    expect(passwordInput.value).toBe('invite-pwd')
+
+    const submitBtn = getByRole('button', { name: /Unirse con/i })
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(onJoin).toHaveBeenCalledWith(
+        MOCK_PASSWORD_TABLE,
+        expect.objectContaining({ name: expect.any(String) }),
+        'invite-pwd'
+      )
+    })
+  })
   it('allows quick inline import of a new deck list', async () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()

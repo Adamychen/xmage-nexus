@@ -171,3 +171,25 @@ export function fallbackActionUser(userName: string): UsersView {
     limitedRating: 1500,
   }
 }
+
+/** Comprueba si el usuario conectado es el creador o un jugador de la mesa. */
+export function isMyTable(table: TableView, username?: string, stagingTableId?: string | null): boolean {
+  if (!table) return false
+  if (stagingTableId && table.tableId === stagingTableId) return true
+  if (!username) return false
+  const norm = username.trim().toLowerCase()
+  if (!norm) return false
+  const isOwner = (table.controllerName ?? '').toLowerCase().includes(norm)
+  const isSeated = table.seats?.some((s) => s.playerName?.toLowerCase() === norm) ?? false
+  return isOwner || isSeated
+}
+
+/** Devuelve las mesas activas del usuario (en espera, listas o en juego). */
+export function getMyActiveTables(tables: TableView[], username?: string, stagingTableId?: string | null): TableView[] {
+  if (!tables || tables.length === 0) return []
+  return tables.filter((t) => {
+    if (t.tableState === 'FINISHED') return false
+    return isMyTable(t, username, stagingTableId)
+  })
+}
+

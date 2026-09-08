@@ -53,6 +53,7 @@ export default function LoginScreen() {
   const [showAbout, setShowAbout] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [preset, setPreset] = useState<ServerPreset>('local')
+  const pendingDeepLink = useStore((s) => s.pendingDeepLink)
 
   useEffect(() => {
     const urlPort = urlProxyPort()
@@ -149,6 +150,13 @@ export default function LoginScreen() {
           <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
           <p className="subtitle">{t('login.subtitle')}</p>
         </div>
+
+        {pendingDeepLink && (
+          <div className="login-invite-banner" data-testid="login-invite-banner">
+            <span className="invite-icon"><Icon name="send" size={14} /></span>
+            <span>{t('lobby', 'invite_login_hint')}</span>
+          </div>
+        )}
 
         {/* Server Preset Selector */}
         <div className="login-presets-container">

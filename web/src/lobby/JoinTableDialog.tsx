@@ -21,6 +21,8 @@ interface JoinTableDialogProps {
   busy?: boolean
   title?: string
   submitLabel?: string
+  /** contraseña pre-rellenada (deep link de invitación) */
+  initialPassword?: string
   onClose: () => void
   onJoin: (table: TableView, deck: Deck, password?: string) => Promise<void>
 }
@@ -30,6 +32,7 @@ export default function JoinTableDialog({
   busy = false,
   title,
   submitLabel,
+  initialPassword,
   onClose,
   onJoin,
 }: JoinTableDialogProps) {
@@ -60,7 +63,7 @@ export default function JoinTableDialog({
     })()
     return () => { cancelled = true }
   }, [])
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState(initialPassword ?? '')
   const [setAsDefault, setSetAsDefault] = useState(true)
 
   // Quick inline import state

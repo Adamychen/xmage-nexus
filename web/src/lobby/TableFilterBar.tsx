@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import type { TableView } from '../net/types'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { isMyTable } from './lobbyUtils'
 import './TableFilterBar.css'
 
 export interface TableFilters {
@@ -67,7 +68,13 @@ export const OTHER_COMMON_FORMATS = [
   'Constructed - Tiny Leaders',
 ]
 
-export function filterTables(tables: TableView[], filters: TableFilters, ignored: string[] = []): TableView[] {
+export function filterTables(
+  tables: TableView[],
+  filters: TableFilters,
+  ignored: string[] = [],
+  myUsername?: string,
+  stagingTableId?: string | null,
+): TableView[] {
   const ignoredSet = new Set(ignored.map((u) => u.toLowerCase()))
   const list = tables.filter((t) => {
     // 1. Search Query (matches name, controller, formats, seats)
@@ -167,6 +174,16 @@ export function filterTables(tables: TableView[], filters: TableFilters, ignored
   const byCreatedDesc = (a: TableView, b: TableView) => (b.createTime ?? 0) - (a.createTime ?? 0)
   if (filters.sort === 'newest') return list.sort(byCreatedDesc)
   if (filters.sort === 'oldest') return list.sort((a, b) => -byCreatedDesc(a, b))
+
+  // Desktop default sort: Pin user's active tables first, then open seats, then newest
+  if (myUsername || stagingTableId) {
+    return list.sort((a, b) => {
+      const aMine = Number(isMyTable(a, myUsername, stagingTableId) && a.tableState !== 'FINISHED')
+      const bMine = Number(isMyTable(b, myUsername, stagingTableId) && b.tableState !== 'FINISHED')
+      if (aMine !== bMine) return bMine - aMine
+      return Number(hasFreeSeat(b)) - Number(hasFreeSeat(a)) || byCreatedDesc(a, b)
+    })
+  }
   return list.sort((a, b) => Number(hasFreeSeat(b)) - Number(hasFreeSeat(a)) || byCreatedDesc(a, b))
 }
 
