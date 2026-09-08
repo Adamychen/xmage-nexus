@@ -46,7 +46,7 @@ describe('keywordExtractor', () => {
 
     expect(ward).toBeDefined()
     expect(ward?.name).toBe('Ward {3}')
-    expect(ward?.summary).toContain('{3}')
+    expect(ward?.parameter).toBe('{3}')
 
     expect(scry).toBeDefined()
     expect(scry?.name).toBe('Scry 2')

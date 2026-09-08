@@ -10,6 +10,13 @@ const KEYWORDS_DIR = path.join(ROOT, 'Mage/src/main/java/mage/abilities/keyword'
 const ABILITYWORDS_DIR = path.join(ROOT, 'Mage/src/main/java/mage/abilities/abilityword')
 const OUTPUT_FILE = path.join(ROOT, 'web/src/data/mtgKeywords.ts')
 
+// NOTA (2026-09-08): el display de keywords ya NO usa nameEs/summary de este
+// fichero. La fuente de verdad de traducciones es web/src/i18n locales,
+// sección `keywords` (<id>_name/<id>_summary ×9), generada con
+// scripts/gen-keywords-i18n.mjs desde scripts/keywords-i18n/*.mjs
+// (wording oficial verificado contra Scryfall printed_text) + este fichero
+// como fallback inglés. Si regeneras este fichero, re-ejecuta gen-keywords-i18n.
+
 // Diccionario de traducciones, categorías e iconos para enriquecer los datos extraídos de XMage
 const ENRICHMENT = {
   // Combate

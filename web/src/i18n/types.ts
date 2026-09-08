@@ -878,6 +878,8 @@ export interface TranslationSchema {
     shortcuts_esc: string
     shortcuts_auto_pass: string
     shortcuts_skips: string
+    rule_official: string
+    rule_ability_word: string
   }
   dialogs: {
     mulligan_title: string
@@ -1196,4 +1198,5 @@ export interface TranslationSchema {
     match_duration: string
     land_set: string
   }
+  keywords: Record<string, string>
 }

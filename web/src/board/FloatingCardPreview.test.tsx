@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FloatingCardPreview from './FloatingCardPreview'
+import { setLanguage } from '../i18n'
 import type { CardView, PermanentView } from '../net/types'
 
 vi.mock('../cards/cardImages', () => ({
@@ -148,12 +149,24 @@ describe('FloatingCardPreview', () => {
       rules: ['Flying, vigilance, deathtouch, lifelink, trample'],
     }
     const kwAnchor = { left: 200, top: 200, right: 290, bottom: 326, width: 90, height: 126 } as DOMRect
-    const { container: kwContainer } = render(
+    setLanguage('es')
+    const { container: kwContainer, unmount } = render(
       <FloatingCardPreview card={kwCard} anchorRect={kwAnchor} boardRect={dummyBoardRect} />,
     )
     expect(kwContainer.querySelector('.floating-card-keywords')).not.toBeNull()
     expect(kwContainer.textContent).toContain('Volar')
     expect(kwContainer.textContent).toContain('Toque mortal')
+    unmount()
+
+    setLanguage('en')
+    const { container: enContainer, unmount: unmountEn } = render(
+      <FloatingCardPreview card={kwCard} anchorRect={kwAnchor} boardRect={dummyBoardRect} />,
+    )
+    expect(enContainer.textContent).toContain('Flying')
+    expect(enContainer.textContent).toContain('Deathtouch')
+    expect(enContainer.textContent).not.toContain('Volar')
+    unmountEn()
+    setLanguage('es')
 
     const pwCard: PermanentView = {
       name: 'Jace, the Mind Sculptor',

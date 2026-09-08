@@ -78,6 +78,11 @@ const WHITELIST = new Set<string>([
   'board.pile_top',
   'lobby.board_pod',
   'lobby.board_arena',
+  'keywords.bushido_name',
+  'keywords.indestructible_name',
+  'keywords.mentor_name',
+  'keywords.modular_name',
+  'keywords.ninjutsu_name',
 ])
 
 function flatten(obj: TranslationSchema): Record<string, string> {

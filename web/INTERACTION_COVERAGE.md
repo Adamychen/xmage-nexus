@@ -138,7 +138,7 @@ Lista actual (de `engine-view-gap.json`):
 ### D. Keyword badges
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Flying / Deathtouch / Trample / Haste / etc. | ✅ | ✅ | `CardSlot` badges `.keyword-badges` + `FloatingCardPreview` hover `.floating-card-keywords`; `keywordExtractor.test.ts` + `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `keywords.spec.ts` (`@keywords`) / `mechanics.ts` `Keyword Beast` | 2026-08-26 |
+| Flying / Deathtouch / Trample / Haste / etc. | ✅ | ✅ | `CardSlot` badges `.keyword-badges` + `FloatingCardPreview` hover `.floating-card-keywords`; 267 keywords con nombre+resumen ×9 en `i18n.keywords` (`scripts/keywords-i18n/*.mjs` + `gen-keywords-i18n.mjs`, wording oficial verificado vía `printed_text` de Scryfall con `verify-keywords-scryfall.py`); display vía `data/keywordI18n.ts` (plantillas `{param}`, fallback EN); `keywordExtractor.test.ts` + `keywordI18n.test.ts` + `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `keywords.spec.ts` (`@keywords`) / `mechanics.ts` `Keyword Beast` | 2026-09-08 |
 | Goad (estado "goaded" en criatura) | ✅ | ✅ | `CardIcons.tsx` renderiza `cardIcons.OTHER_HAS_RESTRICTIONS` (texto "Goaded by X (must attack)" vía `rules`+icono); badge de restricción en `CardSlot` + `keywords.spec.ts` | 2026-08-25 |
 
 ### E. Información revelada / Known cards

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { keywordDisplayName } from '../data/keywordI18n'
 import type { Rarity, StatFilter, StatOp } from './filterQuery'
 import type { ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
 import './ArenaFilterBar.css'
@@ -12,6 +13,7 @@ const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'mythic']
 const RARITY_LABEL: Record<Rarity, string> = { common: 'C', uncommon: 'U', rare: 'R', mythic: 'M' }
 const KEYWORDS_PRIMARY = ['Flying', 'Haste', 'Trample', 'Deathtouch', 'Lifelink', 'Vigilance', 'Hexproof', 'Menace', 'Reach', 'First Strike', 'Double Strike', 'Ward'] as const
 const KEYWORDS_EXTRA = ['Flash', 'Defender', 'Indestructible', 'Prowess', 'Toxic', 'Backup', 'Convoke', 'Delve', 'Evolve', 'Cascade', 'Kicker', 'Cycling'] as const
+const keywordIdOfLabel = (label: string): string => label.toLowerCase().replace(/ /g, '_')
 const QUICK_SETS = ['mh3', 'blb', 'dsk', 'otj', 'mkm', 'lci', 'woe', 'one'] as const
 const SORT_ORDERS: ScryfallSortOrder[] = ['cmc', 'name', 'rarity', 'color', 'edhrec', 'released']
 const SORT_LABEL_KEYS: Record<ScryfallSortOrder, keyof import('../i18n').TranslationSchema['decks']> = {
@@ -318,8 +320,8 @@ export function ArenaFilterBar({
               {(moreKeywords ? [...KEYWORDS_PRIMARY, ...KEYWORDS_EXTRA] : [...KEYWORDS_PRIMARY]).map((kw) => {
                 const active = keywordFilter.has(kw)
                 return (
-                  <button key={kw} type="button" className={`keyword-chip ${active ? 'active' : ''}`} onClick={() => onToggleKeyword(kw)}>
-                    {kw}
+                  <button key={kw} type="button" className={`keyword-chip ${active ? 'active' : ''}`} onClick={() => onToggleKeyword(kw)} title={kw}>
+                    {keywordDisplayName(keywordIdOfLabel(kw), kw, (k) => t('keywords', k))}
                   </button>
                 )
               })}

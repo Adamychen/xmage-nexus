@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
+import { keywordDisplayName, keywordRuleRef, keywordSummary } from '../data/keywordI18n'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import Icon, { type IconName } from '../ui/Icon'
@@ -25,7 +26,7 @@ interface HelpWikiModalProps {
 type TabType = 'glossary' | 'phases' | 'shortcuts'
 
 export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>('glossary')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -61,16 +62,20 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-      list = list.filter((k) =>
-        k.name.toLowerCase().includes(q) ||
-        k.nameEs.toLowerCase().includes(q) ||
-        k.summary.toLowerCase().includes(q) ||
-        (k.ruleSnippet && k.ruleSnippet.toLowerCase().includes(q))
-      )
+      list = list.filter((k) => {
+        const locName = keywordDisplayName(k.id, k.name, (key) => t('keywords', key)).toLowerCase()
+        const locSummary = keywordSummary(k.id, (key) => t('keywords', key)).toLowerCase()
+        return (
+          k.name.toLowerCase().includes(q) ||
+          locName.includes(q) ||
+          locSummary.includes(q) ||
+          (k.ruleSnippet && k.ruleSnippet.toLowerCase().includes(q))
+        )
+      })
     }
 
     return list
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, lang, t])
 
   return (
     <DialogShell
@@ -148,26 +153,32 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
               </div>
 
               <div className="wiki-keywords-grid">
-                {filteredKeywords.map((kw) => (
-                  <article key={kw.id} className={`wiki-kw-card cat-${kw.category}`}>
-                    <div className="wiki-kw-card-header">
-                      <div className="wiki-kw-card-title">
-                        <span className="wiki-kw-icon"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={14} /></span>
-                        <strong className="wiki-kw-name-en">{kw.name}</strong>
-                        <span className="wiki-kw-name-es">({kw.nameEs})</span>
+                {filteredKeywords.map((kw) => {
+                  const locName = keywordDisplayName(kw.id, kw.name, (key) => t('keywords', key))
+                  const showEn = lang !== 'en' && locName !== kw.name
+                  const locSummary = keywordSummary(kw.id, (key) => t('keywords', key))
+                  const ruleRef = keywordRuleRef(kw.ruleSnippet, (path) => t(path))
+                  return (
+                    <article key={kw.id} className={`wiki-kw-card cat-${kw.category}`}>
+                      <div className="wiki-kw-card-header">
+                        <div className="wiki-kw-card-title">
+                          <span className="wiki-kw-icon"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={14} /></span>
+                          <strong className="wiki-kw-name-en">{locName}</strong>
+                          {showEn && <span className="wiki-kw-name-es">({kw.name})</span>}
+                        </div>
+                        <span className="wiki-kw-type-badge"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={11} /> {categoryLabels[kw.category] ?? kw.category}</span>
                       </div>
-                      <span className="wiki-kw-type-badge"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={11} /> {categoryLabels[kw.category] ?? kw.category}</span>
-                    </div>
-                    <p className="wiki-kw-summary">
-                      <FormattedText text={kw.summary} />
-                    </p>
-                    {kw.ruleSnippet && (
-                      <div className="wiki-kw-rule-ref">
-                        <FormattedText text={kw.ruleSnippet} />
-                      </div>
-                    )}
-                  </article>
-                ))}
+                      <p className="wiki-kw-summary">
+                        <FormattedText text={locSummary} />
+                      </p>
+                      {ruleRef && (
+                        <div className="wiki-kw-rule-ref">
+                          <FormattedText text={ruleRef} />
+                        </div>
+                      )}
+                    </article>
+                  )
+                })}
 
                 {filteredKeywords.length === 0 && (
                   <div className="wiki-empty">

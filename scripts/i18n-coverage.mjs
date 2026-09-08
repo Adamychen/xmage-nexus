@@ -70,6 +70,11 @@ const WHITELIST = new Set([
   'common.no',
   'lobby.staging_vs',
   'board.pile_top',
+  'keywords.bushido_name',
+  'keywords.indestructible_name',
+  'keywords.mentor_name',
+  'keywords.modular_name',
+  'keywords.ninjutsu_name',
 ])
 
 function parseLocale(filePath) {

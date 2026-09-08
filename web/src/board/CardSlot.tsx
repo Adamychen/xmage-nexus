@@ -4,6 +4,7 @@ import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -49,7 +50,7 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
 }: CardSlotProps) {
-  const { t, lang } = useTranslation()
+  const { t } = useTranslation()
   const settings = useSettings()
   const sleeve = getSleeveDef(settings.sleeveId)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
@@ -324,7 +325,7 @@ export default function CardSlot({
             <span
               key={kw.id}
               className={`keyword-badge cat-${kw.category}`}
-              title={`${lang === 'es' ? kw.nameEs : kw.name} — ${kw.summary}`}
+              title={`${keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)} — ${keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)}`}
             >
               {kw.icon}
             </span>

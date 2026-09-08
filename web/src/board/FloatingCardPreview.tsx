@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName, getSourceCardName, isAbilityCard } from '../cards/cardImages'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
@@ -246,8 +247,8 @@ export default function FloatingCardPreview({
       {keywords.length > 0 && (
         <aside className="floating-card-keywords" aria-label={t('wiki', 'tab_keywords')}>
           {keywords.map((kw) => {
-            const primaryName = lang === 'es' ? kw.nameEs : kw.name
-            const secondaryName = lang === 'es' ? kw.name : (lang !== 'en' ? kw.nameEs : null)
+            const primaryName = keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)
+            const secondaryName = lang !== 'en' && kw.name !== primaryName ? kw.name : null
 
             return (
               <div key={kw.id} className={`floating-card-kw-box cat-${kw.category}`}>
@@ -257,7 +258,7 @@ export default function FloatingCardPreview({
                   {secondaryName && <span className="kw-box-es">({secondaryName})</span>}
                 </div>
                 <p className="kw-box-summary">
-                  <FormattedText text={kw.summary} />
+                  <FormattedText text={keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)} />
                 </p>
               </div>
             )
