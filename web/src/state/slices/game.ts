@@ -2,6 +2,7 @@ import type { DeckCardEntry, DeckJson, GameEndInfo, GameView } from '../../net/t
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
 import type { PhaseStops } from '../../net/commands'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
+import { loadActiveDeck } from '../persistence'
 
 export interface CombatState {
   mode: 'attack' | 'block'
@@ -87,7 +88,7 @@ export const initialGame: GameSlice = {
   playableWindow: null,
   combat: null,
   gameEnd: null,
-  myDeck: null,
+  myDeck: loadActiveDeck(),
   feedback: null,
   sideboard: [],
   sideboardScreen: null,

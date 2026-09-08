@@ -56,6 +56,8 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         card={presenter.floatingCard}
         anchorRect={presenter.anchorRect}
         boardRect={presenter.boardRef.current?.getBoundingClientRect() ?? null}
+        leaving={presenter.previewLeaving}
+        fromHand={presenter.previewFromHand}
       />
       <FlyingCardOverlay />
     </div>

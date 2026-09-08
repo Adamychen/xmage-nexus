@@ -12,6 +12,7 @@ import {
   isCombatStep, combatChosenFrom, emptyCombat,
 } from '../gameUtils'
 import { soundManager } from '../../audio/soundManager'
+import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { gameLogStore, toSavedEntries } from '../../system/gameLogs'
 import type { Snapshot, EmbeddedGame } from './context'
 
@@ -76,6 +77,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     }
     if (method === 'GAME_SELECT') {
       const selectFeedback = parseFeedback(method, objectId ?? s.gameId, data)
+      if (selectFeedback) notifyFeedbackOpened(selectFeedback)
       patch.feedback = selectFeedback ?? null
     } else if ((method === 'GAME_UPDATE' || method === 'GAME_UPDATE_AND_INFORM') && fresh.feedback?.method === 'GAME_PLAY_MANA') {
       if (Object.keys(embeddedGame.stack ?? {}).length > 0) {

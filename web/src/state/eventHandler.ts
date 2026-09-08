@@ -7,6 +7,7 @@ import {
   gameViewFrom, isOlderThanCurrentGame,
 } from './gameUtils'
 import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
+import { notifyFeedbackOpened } from '../audio/promptSound'
 import { handleChatMessage, handleShowUserMessage, handleServerMessage } from './events/chat'
 import {
   handleJoinedTable, handleStartGame, handleGameUpdate, handleWatchGame,
@@ -98,7 +99,10 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
   }
   if (method !== 'GAME_ASK') {
     const feedback = parseFeedback(method, objectId ?? s.gameId, data)
-    if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) setState({ feedback })
+    if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) {
+      notifyFeedbackOpened(feedback)
+      setState({ feedback })
+    }
   }
   switch (method) {
     case 'CHATMESSAGE': {

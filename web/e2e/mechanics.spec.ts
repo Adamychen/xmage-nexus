@@ -13,6 +13,55 @@ fakeOnly()
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
 test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
+  test('sagas, planeswalkers and battles dock in the marquee dock @mechanics', async ({ page }) => {
+    await withFakeServer(mechanicsScenario, async () => {
+      const { pageErrors } = await startGame(page, {
+        prefix: 'mechq',
+        tableName: TABLE.mechanics,
+        deck: DECK.advanced,
+      })
+
+      const myZone = page.locator('.player-zone:not(.mirrored)')
+      await expect(myZone).toBeVisible({ timeout: 30_000 })
+
+      const dock = myZone.locator('.bz-marquee')
+      await expect(dock, 'dock marquee visible').toBeVisible({ timeout: 30_000 })
+      await expect(dock.locator('.card-slot', { hasText: 'Jace' })).toHaveCount(1)
+      await expect(dock.locator('.card-slot', { hasText: 'Invasion of Zendikar' })).toHaveCount(1)
+
+      // Bard Class (encantamiento normal) se queda en la banda de permanentes.
+      await expect(myZone.locator('.permanents-band .card-slot', { hasText: 'Bard Class' })).toHaveCount(1)
+      await expect(myZone.locator('.permanents-band .card-slot', { hasText: 'Jace' })).toHaveCount(0)
+
+      expect(pageErrors).toEqual([])
+    })
+  })
+
+  test('mana pips are always visible inline, no dropdown @mechanics', async ({ page }) => {
+    await withFakeServer(mechanicsScenario, async () => {
+      const { pageErrors } = await startGame(page, {
+        prefix: 'mechm',
+        tableName: TABLE.mechanics,
+        deck: DECK.advanced,
+      })
+
+      const myZone = page.locator('.player-zone:not(.mirrored)')
+      await expect(myZone).toBeVisible({ timeout: 30_000 })
+
+      const pool = myZone.locator('[data-testid="mana-inline"]')
+      await expect(pool, 'pips inline siempre visibles').toBeVisible({ timeout: 30_000 })
+      expect(await pool.locator('.mana-inline-pip').count()).toBe(6)
+      await expect(myZone.locator('.resource-mana')).toHaveCount(0)
+      await expect(myZone.locator('.mana-breakdown')).toHaveCount(0)
+
+      const shotsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots', 'mana-unified')
+      fs.mkdirSync(shotsDir, { recursive: true })
+      await page.screenshot({ path: path.join(shotsDir, 'mana-inline.png') })
+
+      expect(pageErrors).toEqual([])
+    })
+  })
+
   test('displays badges, hover card previews, and full interactive Mechanics Tray tabs', async ({ page }) => {
     fs.mkdirSync(SHOTS_DIR, { recursive: true })
 

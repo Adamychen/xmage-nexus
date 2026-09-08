@@ -13,6 +13,7 @@ export type SoundKey =
   | 'defeat'
   | 'timer_tick'
   | 'ui_click'
+  | 'prompt_open'
   | 'whisper'
 
 export type SoundCategory = 'game' | 'ui'

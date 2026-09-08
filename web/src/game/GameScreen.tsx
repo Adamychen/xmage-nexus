@@ -20,6 +20,7 @@ import PhaseBar from './PhaseBar'
 import ActionButton from './ActionButton'
 import PriorityOrb from './PriorityOrb'
 import ActionFeed from './ActionFeed'
+import DeckTrackerPanel from './DeckTrackerPanel'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
@@ -47,7 +48,7 @@ export default function GameScreen() {
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
   const gameBodyRef = useRef<HTMLDivElement>(null)
-  const [rightTab, setRightTab] = useState<'stack' | 'log' | 'commander' | 'mechanics' | 'chat'>('log')
+  const [rightTab, setRightTab] = useState<'stack' | 'log' | 'tracker' | 'commander' | 'mechanics' | 'chat'>('log')
   const [busy, setBusy] = useState(false)
   const stackCount = Object.keys(game?.stack ?? {}).length
   const prevStackCountRef = useRef(0)
@@ -280,6 +281,14 @@ export default function GameScreen() {
             </button>
             <button
               type="button"
+              className={`right-tab-btn ${rightTab === 'tracker' ? 'active' : ''}`}
+              onClick={() => setRightTab('tracker')}
+              title={t('game', 'tab_tracker')}
+            >
+              <Icon name="layers" size={13} /> {t('game', 'tab_tracker')}
+            </button>
+            <button
+              type="button"
               className={`right-tab-btn ${rightTab === 'log' ? 'active' : ''}`}
               onClick={() => setRightTab('log')}
             >
@@ -323,6 +332,8 @@ export default function GameScreen() {
                 players={game?.players}
                 myPlayerId={me?.playerId}
               />
+            ) : rightTab === 'tracker' ? (
+              <DeckTrackerPanel />
             ) : rightTab === 'log' ? (
               <ActionFeed />
             ) : rightTab === 'commander' ? (

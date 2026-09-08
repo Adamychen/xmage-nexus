@@ -2,20 +2,21 @@ import * as cmds from '../../net/commands'
 import { useStore } from '../../state/store'
 import FormattedText from '../FormattedText'
 import Icon from '../../ui/Icon'
+import ManaPoolView, { type ManaPoolKey } from '../ManaPoolView'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 
-const POOL_COLORS = ['white', 'blue', 'black', 'red', 'green', 'colorless'] as const
-const COLOR_SYMBOLS: Record<string, string> = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G', colorless: 'C' }
+const POOL_COLORS: ManaPoolKey[] = ['white', 'blue', 'black', 'red', 'green', 'colorless']
 
 /** Maná disponible en la reserva del jugador controlado para pagar desde el pool. */
-function poolMana(game: { players?: unknown[] | null } | null) {
+function poolOf(game: { players?: unknown[] | null } | null): Record<ManaPoolKey, number> {
   const players = (game?.players ?? []) as { controlled?: boolean; manaPool?: Record<string, number> }[]
   const me = players.find((p) => p.controlled)
   const pool = (me?.manaPool ?? {}) as Record<string, number>
-  return POOL_COLORS.filter((color) => (pool[color] ?? 0) > 0)
-    .map((color) => ({ color: color.toUpperCase(), label: `${COLOR_SYMBOLS[color]}${pool[color] ?? 0}` }))
+  const res = {} as Record<ManaPoolKey, number>
+  for (const color of POOL_COLORS) res[color] = pool[color] ?? 0
+  return res
 }
 
 export default function ManaBar({ form }: { form: UseFeedbackForm }) {
@@ -37,16 +38,14 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
         <span className="action-prompt-hint">{t('game', 'mana_hint')}</span>
       </div>
       <div className="action-prompt-actions">
-        {prompt.playerId && poolMana(game).map((mana) => (
-          <button
-            key={mana.color}
-            className="mana-pool-btn"
-            disabled={busy}
-            onClick={() => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, mana.color), t('errors', 'send_failed_mana'))}
-          >
-            {t('game', 'mana_pool_pay', { label: mana.label })}
-          </button>
-        ))}
+        {prompt.playerId && (
+          <ManaPoolView
+            pool={poolOf(game)}
+            size={18}
+            canPay={!busy}
+            onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
+          />
+        )}
         <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
           {t('game', 'mana_special')}
         </button>

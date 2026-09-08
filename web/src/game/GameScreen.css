@@ -741,12 +741,6 @@
   color: #ffffff;
 }
 
-.action-prompt-actions .mana-pool-btn {
-  background: #14532d;
-  border-color: #22c55e;
-  color: #86efac;
-}
-
 .mana-prompt-bar {
   border-color: rgba(255, 208, 112, 0.6);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 208, 112, 0.25);

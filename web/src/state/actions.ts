@@ -3,9 +3,10 @@ import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
-import { clearActiveGame, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument } from './persistence'
+import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument } from './persistence'
 import { getLanguage } from '../i18n'
 import { soundManager } from '../audio/soundManager'
+import { resetPromptSound } from '../audio/promptSound'
 import type { AppState } from './state'
 
 export function clearError() {
@@ -17,6 +18,7 @@ export function setStoreError(error: string) {
 }
 
 export function clearFeedback() {
+  resetPromptSound()
   setState({ feedback: null })
 }
 
@@ -37,6 +39,7 @@ export function sniffDungeonEntry(message: string, gameId: string | null) {
 }
 
 export function setMyDeck(deck: DeckJson | null) {
+  saveActiveDeck(deck)
   setState({ myDeck: deck, sideboard: deck?.sideboard ?? [] })
 }
 

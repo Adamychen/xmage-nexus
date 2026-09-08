@@ -26,22 +26,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
-.action-feed-system-banner {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 6px 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(40, 30, 10, 0.7);
-  border: 1px solid rgba(255, 208, 112, 0.3);
-  color: #ffd070;
-  font-size: 0.688rem;
-  font-weight: 600;
-}
-
 .action-feed-card {
   flex-shrink: 0;
   position: relative;
@@ -76,6 +60,30 @@
   mask-image: linear-gradient(to right, transparent, black 70%);
   -webkit-mask-image: linear-gradient(to right, transparent, black 70%);
   pointer-events: none;
+}
+
+.action-card-bg--tint {
+  background-size: auto;
+  background-position: initial;
+  opacity: 1;
+}
+
+.tint-cast { background: linear-gradient(to right, transparent, rgba(96, 165, 250, 0.35) 70%); }
+.tint-land { background: linear-gradient(to right, transparent, rgba(52, 211, 153, 0.35) 70%); }
+.tint-attack { background: linear-gradient(to right, transparent, rgba(248, 113, 113, 0.35) 70%); }
+.tint-block { background: linear-gradient(to right, transparent, rgba(56, 189, 248, 0.35) 70%); }
+.tint-damage { background: linear-gradient(to right, transparent, rgba(239, 68, 68, 0.4) 70%); }
+.tint-life { background: linear-gradient(to right, transparent, rgba(52, 211, 153, 0.3) 70%); }
+.tint-ability { background: linear-gradient(to right, transparent, rgba(251, 191, 36, 0.35) 70%); }
+.tint-draw { background: linear-gradient(to right, transparent, rgba(167, 139, 250, 0.35) 70%); }
+.tint-discard { background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.3) 70%); }
+.tint-phase { background: linear-gradient(to right, transparent, rgba(255, 208, 112, 0.3) 70%); }
+.tint-system { background: linear-gradient(to right, transparent, rgba(255, 208, 112, 0.35) 70%); }
+.tint-chat { background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.3) 70%); }
+
+.action-feed-card.no-art {
+  min-height: 0;
+  padding: 6px 10px;
 }
 
 .action-card-content {
@@ -202,5 +210,21 @@
 }
 
 .action-feed-card.type-discard {
+  border-left: 3px solid #94a3b8;
+}
+
+.action-feed-card.type-phase {
+  border-left: 3px solid #ffd070;
+}
+
+.action-feed-card.type-system {
+  border-left: 3px solid #ffd070;
+}
+
+.action-feed-card.type-life {
+  border-left: 3px solid #34d399;
+}
+
+.action-feed-card.type-chat {
   border-left: 3px solid #94a3b8;
 }

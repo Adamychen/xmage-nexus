@@ -41,121 +41,12 @@
   align-items: flex-start;
 }
 
-.resource-mana {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 42px;
-  padding: 0 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  background: rgba(18, 22, 44, 0.9);
-  color: #e8eaf6;
-  font-size: 1rem;
-  font-weight: 800;
-  font-family: var(--font-display);
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-  transition: all 0.15s ease;
-}
-
-.compact .resource-mana {
-  height: 40px;
-  padding: 0 10px;
-  font-size: 0.938rem;
-  flex-shrink: 0;
-}
-
-.resource-mana:hover {
-  background: #252b52;
-  border-color: rgba(255, 208, 112, 0.6);
-  transform: translateY(-2px);
-}
-
-.resource-bar.opp .resource-mana:hover {
-  transform: translateY(2px);
-}
-
-.mana-total {
-  color: #ffd070;
-}
-
-.mana-breakdown {
-  position: absolute;
-  bottom: 50px;
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 8px;
-  background: #171b30;
-  border: 1.5px solid #3a4478;
-  border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
-}
-
-/* Opponent mana breakdown opens downward */
-.resource-bar.opp .mana-breakdown {
-  top: 48px;
-  bottom: auto;
-}
-
-.mana-pip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px;
-  font-size: 0.812rem;
-  border-radius: 4px;
-}
-
-button.mana-pip.is-clickable,
-button.mana-inline-pip {
-  background: none;
-  border: none;
-  padding: 3px 8px;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-button.mana-pip.is-clickable:hover,
-button.mana-inline-pip:hover {
-  outline: 1px solid #7c5cff;
-  border-radius: 4px;
-}
-
-.mana-symbol {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.688rem;
-  font-weight: 800;
-}
-
-.mana-count {
-  font-weight: 800;
-  color: #ffffff;
-  min-width: 18px;
-  text-align: right;
-}
-
 .mana-w { color: #e8eaf6; }
-.mana-w .mana-symbol { background: #e8eaf6; color: #10131f; }
 .mana-u { color: #5c70ff; }
-.mana-u .mana-symbol { background: #5c70ff; color: #fff; }
 .mana-b { color: #9945cc; }
-.mana-b .mana-symbol { background: #9945cc; color: #fff; }
 .mana-r { color: #ff5c6c; }
-.mana-r .mana-symbol { background: #ff5c6c; color: #fff; }
 .mana-g { color: #4cd07d; }
-.mana-g .mana-symbol { background: #4cd07d; color: #fff; }
 .mana-c { color: #8a93b8; }
-.mana-c .mana-symbol { background: #8a93b8; color: #fff; }
 
 /* Piles container */
 .resource-piles {
@@ -418,36 +309,6 @@ button.mana-inline-pip:hover {
 .resource-bar.opp.micro {
   align-items: center;
   align-self: center;
-}
-
-.mana-inline {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  gap: 2px 6px;
-  padding: 3px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 7px;
-  background: rgba(18, 22, 44, 0.9);
-}
-
-.mana-inline-pip {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 0.656rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.mana-inline-pip.is-zero {
-  opacity: 0.32;
-  filter: grayscale(0.6);
-}
-
-.mana-inline-count {
-  color: #e8eaf6;
-  min-width: 8px;
-  text-align: right;
 }
 
 .resource-piles.micro {

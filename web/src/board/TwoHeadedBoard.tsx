@@ -92,7 +92,7 @@ export default function TwoHeadedBoard({
       handBar={!isSpectator ? {
         cards: game?.myHand ?? {},
         onCardClick: onPlayableClick,
-        onHover: handleCardHover,
+        onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
         targetIds: targetIdSet,
       } : null}

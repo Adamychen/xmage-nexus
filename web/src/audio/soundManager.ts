@@ -133,7 +133,7 @@ class SoundManager {
 
     const now = Date.now()
     const last = this.lastPlayed.get(key) ?? 0
-    const throttle = key === 'draw' ? 90 : THROTTLE_MS
+    const throttle = key === 'draw' ? 90 : key === 'prompt_open' ? 150 : THROTTLE_MS
     if (now - last < throttle) return
     this.lastPlayed.set(key, now)
 

@@ -514,6 +514,10 @@ export interface TranslationSchema {
     feed_activate: string
     feed_draw: string
     feed_draw_n: string
+    feed_keep_hand: string
+    feed_skip_step: string
+    feed_first_turn: string
+    feed_waiting_player: string
     feed_discard: string
     feed_token_one: string
     feed_token_n: string
@@ -716,6 +720,24 @@ export interface TranslationSchema {
     tab_log: string
     tab_mechanics: string
     tab_chat: string
+    tab_tracker: string
+    tracker_title: string
+    tracker_no_deck: string
+    tracker_remaining: string
+    tracker_lands: string
+    tracker_creatures: string
+    tracker_spells: string
+    tracker_other: string
+    tracker_sort_cmc: string
+    tracker_sort_name: string
+    tracker_sort_count: string
+    tracker_sort_odds: string
+    tracker_hide_empty: string
+    tracker_show_all: string
+    tracker_search_placeholder: string
+    tracker_no_results: string
+    tracker_top_revealed: string
+    tracker_face_down_exile: string
     winner: string
     score: string
     match_continues: string

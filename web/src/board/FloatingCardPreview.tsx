@@ -16,6 +16,13 @@ interface FloatingCardPreviewProps {
   boardRect?: DOMRect | null
   fixedSide?: 'left' | 'right' | 'auto'
   inModal?: boolean
+  /** Fase de salida: el preview vuelve a la pose inicial (sobre la carta)
+   *  antes de desmontarse. La pone el presenter al abandonar el hover. */
+  leaving?: boolean
+  /** El hover viene de la mano propia: el preview hace morph desde la carta.
+   *  Sin esto nunca hay morph (la posición sola no basta: las tierras del
+   *  campo también viven en la franja inferior del tablero). */
+  fromHand?: boolean
 }
 
 const PREVIEW_WIDTH = 320
@@ -28,11 +35,56 @@ export default function FloatingCardPreview({
   boardRect,
   fixedSide = 'auto',
   inModal = false,
+  leaving = false,
+  fromHand = false,
 }: FloatingCardPreviewProps) {
   const modalOpen = useStore(isBlockingModal)
   const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [showBackFace, setShowBackFace] = useState(false)
+  /** `open` pasa a true dos frames después de montar: el primer pintado usa
+   *  la pose inicial (encima de la carta) y la transición CSS hace el morph. */
+  const [morphOpen, setMorphOpen] = useState(false)
+
+  const prefersReducedMotion = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  )
+  const isHandAnchor =
+    !!boardRect && !!anchorRect && anchorRect.bottom - boardRect.top > boardRect.height - 140
+  const morphActive = fromHand && isHandAnchor && !prefersReducedMotion
+
+  useEffect(() => {
+    if (!card) {
+      setMorphOpen(false)
+      return
+    }
+    if (!morphActive) return
+    setMorphOpen(false)
+    let cancelled = false
+    let raf2 = 0
+    const hasRaf =
+      typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+    const schedule = (cb: () => void): number =>
+      hasRaf ? window.requestAnimationFrame(() => cb()) : window.setTimeout(cb, 16)
+    const cancel = (h: number) => {
+      if (hasRaf) window.cancelAnimationFrame(h)
+      else window.clearTimeout(h)
+    }
+    const raf1 = schedule(() => {
+      raf2 = schedule(() => {
+        if (!cancelled) setMorphOpen(true)
+      })
+    })
+    return () => {
+      cancelled = true
+      cancel(raf1)
+      cancel(raf2)
+    }
+  }, [card?.id, morphActive])
 
   useEffect(() => {
     setShowBackFace(false)
@@ -110,6 +162,9 @@ export default function FloatingCardPreview({
 
   let style: React.CSSProperties = {}
   const totalWidth = keywords.length > 0 ? PREVIEW_WIDTH + KEYWORDS_WIDTH + 10 : PREVIEW_WIDTH
+  /** Geometría final (coords de tablero) para el morph: la carta principal
+   *  mapeada sobre el anchor al inicio de la transición. */
+  let morphTarget: { left: number; top: number; mainOffsetX: number } | null = null
 
   if (boardRect) {
     const relLeft = anchorRect.left - boardRect.left
@@ -131,6 +186,7 @@ export default function FloatingCardPreview({
         bottom: `${bottom}px`,
         height: `${PREVIEW_HEIGHT}px`,
       }
+      morphTarget = { left, top: boardRect.height - bottom - PREVIEW_HEIGHT, mainOffsetX: 0 }
     } else {
       const fitsRight = relRight + 16 + totalWidth <= boardRect.width - 12
       const left = fitsRight
@@ -183,9 +239,32 @@ export default function FloatingCardPreview({
 
   const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + PREVIEW_WIDTH + KEYWORDS_WIDTH > (boardRect?.width ?? window.innerWidth) - 20 : false
 
+  const isMorphStart = morphActive && (!morphOpen || leaving)
+  if (morphTarget) {
+    morphTarget.mainOffsetX =
+      isNearRightEdge && keywords.length > 0 ? KEYWORDS_WIDTH + 10 : 0
+  }
+  if (isMorphStart && morphTarget && anchorRect && boardRect) {
+    // FLIP: mapea el rect final de la carta principal sobre el anchor para
+    // que el preview nazca exactamente encima de la carta en mano (mismo
+    // ratio 1:1.4, escala uniforme, sin deformar).
+    const s = anchorRect.width / PREVIEW_WIDTH
+    const anchorCx = anchorRect.left - boardRect.left + anchorRect.width / 2
+    const anchorCy = anchorRect.top - boardRect.top + anchorRect.height / 2
+    const tx = anchorCx - morphTarget.left - morphTarget.mainOffsetX - s * (PREVIEW_WIDTH / 2)
+    const ty = anchorCy - morphTarget.top - s * (PREVIEW_HEIGHT / 2)
+    style = {
+      ...style,
+      transform: `translate(${tx}px, ${ty}px) scale(${s})`,
+      transformOrigin: `${morphTarget.mainOffsetX}px 0px`,
+    }
+  }
+
+  const isMorphOpen = morphActive && morphOpen && !leaving
+
   return (
     <div
-      className={`floating-card-preview ${isNearRightEdge ? 'flip-keywords' : ''}`}
+      className={`floating-card-preview ${isNearRightEdge ? 'flip-keywords' : ''}${morphActive ? ' is-morph' : ''}${isMorphOpen ? ' is-open' : ''}${morphActive && leaving ? ' is-leaving' : ''}`}
       style={style}
     >
       <div className="floating-card-main">

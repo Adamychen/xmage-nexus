@@ -88,7 +88,7 @@ describe('FeedbackDialog (componente)', () => {
     } as never)
     render(<FeedbackDialog />)
     expect(screen.getByText(/Haz clic en tus fuentes de maná/)).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Pagar reserva: R1/ })).toBeTruthy()
+    expect(screen.getByTestId('mana-pay-R')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Acción especial' })).toBeTruthy()
   })
 

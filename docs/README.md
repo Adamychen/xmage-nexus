@@ -14,6 +14,7 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 7. `docs/testing.md` — how to run and interpret the suite.
 8. `docs/user-manual.md` — how to play (for users, also useful for testers).
 9. `docs/deployment.md` — running the stack and publishing the dashboard.
+10. `docs/enhancements.md` — high-value feature proposals beyond desktop parity (Deck Tracker, Deep Linking, Commander pings, Touch/iPad, EDHREC).
 
 ## Status docs (what is authoritative for what)
 

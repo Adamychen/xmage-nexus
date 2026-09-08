@@ -62,6 +62,35 @@ describe('ActionFeed & ActionFeedCard', () => {
     expect(getByText(/Turno 2 · Alice/)).not.toBeNull()
   })
 
+  it('renders system and card-less events as compact cards with type tint (no banner)', () => {
+    const waiting: ActionFeedItem = {
+      id: 'sys-1',
+      timestamp: Date.now(),
+      type: 'phase',
+      playerName: 'sim-00001-307',
+      isMe: false,
+      description: 'Esperando a sim-00001-307',
+      rawText: 'Waiting for sim-00001-307',
+    }
+    const { container, getByText } = render(<ActionFeedCard item={waiting} />)
+    expect(container.querySelector('.action-feed-system-banner')).toBeNull()
+    const card = container.querySelector('.action-feed-card.type-phase.no-art')
+    expect(card).not.toBeNull()
+    expect(card?.querySelector('.action-card-bg--tint.tint-phase')).not.toBeNull()
+    expect(getByText('sim-00001-307')).not.toBeNull()
+
+    cleanup()
+    const start: ActionFeedItem = {
+      id: 'sys-2',
+      timestamp: Date.now(),
+      type: 'system',
+      description: 'Start Match',
+      rawText: 'Start Match',
+    }
+    const r2 = render(<ActionFeedCard item={start} />)
+    expect(r2.container.querySelector('.action-feed-card.type-system.no-art')).not.toBeNull()
+    expect(r2.container.querySelector('.action-player-tag')).toBeNull()
+  })
   it('toggles between Visual Feed and Raw Text Log in ActionFeed', () => {
     handleMessage({
       type: 'event',

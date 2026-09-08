@@ -104,6 +104,16 @@ describe('ResourceBar', () => {
     expect(rayCard?.getAttribute('data-card-name')).toBe('Faithless Looting')
   })
 
+  it('shows the six mana pips inline in standard mode, without any dropdown', () => {
+    const { container } = render(<ResourceBar player={basePlayer} side="my" />)
+
+    expect(container.querySelector('[data-testid="mana-inline"]')).toBeTruthy()
+    expect(container.querySelector('.resource-mana')).toBeNull()
+    expect(container.querySelector('.mana-breakdown')).toBeNull()
+    const counts = Array.from(container.querySelectorAll('.mana-inline-count')).map((el) => el.textContent)
+    expect(counts).toEqual(['0', '1', '0', '2', '0', '0'])
+  })
+
   it('renders compact micro chips when micro={true}', () => {
     const playerWithPiles: PlayerView = {
       ...basePlayer,
@@ -123,7 +133,7 @@ describe('ResourceBar', () => {
     // Resource bar has micro class
     expect(container.querySelector('.resource-bar.micro')).toBeTruthy()
 
-    // Mana renders as always-visible inline pips (no popup button)
+    // Mana renders as always-visible inline pips in every mode (no popup button)
     const manaInline = container.querySelector('[data-testid="mana-inline"]')
     expect(manaInline).toBeTruthy()
     expect(container.querySelector('.resource-mana')).toBeNull()

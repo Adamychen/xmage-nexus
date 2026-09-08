@@ -7,20 +7,11 @@ import type { CrossZonePlayable } from '../board/crossZone'
 import CardSlot from '../board/CardSlot'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
-import { ManaPip } from '../decks/ArenaManaSymbols'
+import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
 import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
 import { manaTypeOf } from './manaPayment'
 import './ResourceBar.css'
-
-const MANA_COLORS: Array<{ key: keyof PlayerView['manaPool']; symbol: string; className: string }> = [
-    { key: 'white', symbol: 'W', className: 'mana-w' },
-    { key: 'blue', symbol: 'U', className: 'mana-u' },
-    { key: 'black', symbol: 'B', className: 'mana-b' },
-    { key: 'red', symbol: 'R', className: 'mana-r' },
-    { key: 'green', symbol: 'G', className: 'mana-g' },
-    { key: 'colorless', symbol: 'C', className: 'mana-c' },
-]
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
@@ -50,13 +41,11 @@ export default function ResourceBar({
   onCardHover,
 }: ResourceBarProps) {
   const { t } = useTranslation()
-  const [manaOpen, setManaOpen] = useState(false)
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const gameId = useStore((s) => s.gameId)
   const pool = player.manaPool ?? {}
-  const manaTotal = MANA_COLORS.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
   const canPayMana = side === 'my' && !!gameId
-  const payMana = (key: keyof PlayerView['manaPool']) => {
+  const payMana = (key: ManaPoolKey) => {
     const manaType = manaTypeOf(key)
     if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
   }
@@ -115,89 +104,7 @@ export default function ResourceBar({
   return (
     <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
       <div className="resource-mana-wrap">
-        {micro ? (
-          <div
-            className="mana-inline"
-            title={`${t('game', 'mana_title')}: ${manaTotal}`}
-            data-testid="mana-inline"
-          >
-            {MANA_COLORS.map((c) => {
-              const count = pool[c.key] ?? 0
-              const clickable = canPayMana && count > 0
-              const pip = (
-                <>
-                  <ManaPip symbol={c.symbol} size={12} />
-                  <span className="mana-inline-count">{count}</span>
-                </>
-              )
-              return clickable ? (
-                <button
-                  key={c.key}
-                  type="button"
-                  className={`mana-inline-pip ${c.className}`}
-                  data-testid={`mana-pay-${c.symbol}`}
-                  title={t('game', 'mana_payment_restricted_tip')}
-                  aria-label={`${t('game', 'mana_title')}: ${c.symbol} (${count})`}
-                  onClick={() => payMana(c.key)}
-                >
-                  {pip}
-                </button>
-              ) : (
-                <span key={c.key} className={`mana-inline-pip ${c.className} ${count === 0 ? 'is-zero' : ''}`}>
-                  {pip}
-                </span>
-              )
-            })}
-          </div>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="resource-mana"
-              onClick={() => setManaOpen((v) => !v)}
-              title={t('game', 'mana_title')}
-            >
-              <span className="mana-total">{manaTotal}</span>
-              <svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor">
-                <path d="M7 10l5 5 5-5z" />
-              </svg>
-            </button>
-            {manaOpen && (
-              <div className="mana-breakdown">
-                {MANA_COLORS.map((c) => {
-                  const count = pool[c.key] ?? 0
-                  const clickable = canPayMana && count > 0
-                  const pip = (
-                    <>
-                      <span className="mana-symbol">
-                        <ManaPip symbol={c.symbol} size={18} />
-                        <span className="visually-hidden">{c.symbol}</span>
-                      </span>
-                      <span className="mana-count">{count}</span>
-                    </>
-                  )
-                  return clickable ? (
-                    <button
-                      key={c.key}
-                      type="button"
-                      className={`mana-pip ${c.className} is-clickable`}
-                      data-testid={`mana-pay-${c.symbol}`}
-                      title={t('game', 'mana_payment_restricted_tip')}
-                      aria-label={`${t('game', 'mana_title')}: ${c.symbol} (${count})`}
-                      onClick={() => payMana(c.key)}
-                    >
-                      {pip}
-                    </button>
-                  ) : (
-                    <div key={c.key} className={`mana-pip ${c.className}`}>
-                      {pip}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
+        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} />
       </div>
 
       <div className={`resource-piles ${micro ? 'micro' : ''}`}>

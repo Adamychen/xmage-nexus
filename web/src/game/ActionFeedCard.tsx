@@ -23,6 +23,7 @@ const TYPE_ICONS: Record<string, IconName> = {
   draw: 'plus',
   discard: 'trash',
   ability: 'sparkles',
+  chat: 'chat',
   system: 'trophy',
 }
 
@@ -54,19 +55,9 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
     )
   }
 
-  if (item.type === 'system') {
-    return (
-      <div className="action-feed-system-banner game-log-entry">
-        <span className="system-icon"><Icon name={icon} size={13} /></span>
-        <span className="system-text">
-          <FormattedText text={item.description} onHover={onHover} />
-        </span>
-      </div>
-    )
-  }
-
   const isDamage = item.type === 'damage'
   const isLife = item.type === 'life'
+  const hasArt = !!item.cardName
 
   const cardForHover = item.cardName
     ? {
@@ -89,24 +80,27 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
 
   return (
     <div
-      className={`action-feed-card type-${item.type} ${item.isMe ? 'is-me' : 'is-opp'}`}
+      className={`action-feed-card type-${item.type} ${item.isMe ? 'is-me' : 'is-opp'}${hasArt ? '' : ' no-art'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Background card art highlight */}
-      {imgUrl && (
+      {imgUrl ? (
         <div
           className="action-card-bg"
           style={{ backgroundImage: `url(${imgUrl})` }}
         />
+      ) : (
+        <div className={`action-card-bg action-card-bg--tint tint-${item.type}`} />
       )}
 
       <div className="action-card-content">
         <div className="action-card-header">
           <span className="action-icon"><Icon name={icon} size={14} /></span>
-          <span className={`action-player-tag ${item.isMe ? 'me' : 'opp'}`}>
-            {item.isMe ? t('game','you') : item.playerName || t('lobby','tables_heading')}
-          </span>
+          {item.playerName && (
+            <span className={`action-player-tag ${item.isMe ? 'me' : 'opp'}`}>
+              {item.isMe ? t('game','you') : item.playerName}
+            </span>
+          )}
           {/* Life / Damage badge */}
           {isDamage && item.amount !== undefined && (
             <span className="action-damage-badge">-{item.amount} <Icon name="heart" size={11} /></span>

@@ -5,6 +5,7 @@ import { findAutoAnswer } from '../../game/autoAnswers'
 import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { setState, addLog } from '../state'
+import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
 import type { Snapshot } from './context'
 
@@ -23,7 +24,10 @@ export function handleGameTarget(method: string, data: unknown, objectId: string
     }
   }
   const feedback = parseFeedback(method, currentGameId, data)
-  if (feedback) setState({ feedback })
+  if (feedback) {
+    notifyFeedbackOpened(feedback)
+    setState({ feedback })
+  }
 }
 
 export function handleGameAsk(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
@@ -50,11 +54,17 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
       return
     }
     const feedback = parseFeedback(method, currentGameId, data)
-    if (feedback) setState({ feedback })
+    if (feedback) {
+      notifyFeedbackOpened(feedback)
+      setState({ feedback })
+    }
     addLog('partida', `¿${question || 'pregunta'}?`)
   } else {
     const feedback = parseFeedback(method, currentGameId, data)
-    if (feedback) setState({ feedback })
+    if (feedback) {
+      notifyFeedbackOpened(feedback)
+      setState({ feedback })
+    }
     addLog('partida', `¿${question || 'pregunta'}?`)
   }
 }

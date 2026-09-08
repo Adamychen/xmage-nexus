@@ -14,6 +14,9 @@ import { switchableHandKeys } from './handSwitch'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import { setState, useStore } from '../state/store'
+import { groupStackables } from './stackGroups'
+import type { StackGroup } from './stackGroups'
+import { isMarqueePermanent } from './marquee'
 import './BoardZone.css'
 
 export interface BoardZoneProps {
@@ -48,27 +51,6 @@ function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
   return 'other'
 }
 
-interface LandGroup {
-  name: string
-  items: [string, PermanentView][]
-}
-
-function groupLands(lands: [string, PermanentView][]): LandGroup[] {
-  const groups: LandGroup[] = []
-  const map = new Map<string, [string, PermanentView][]>()
-  for (const item of lands) {
-    const name = item[1].name || 'Land'
-    let list = map.get(name)
-    if (!list) {
-      list = []
-      map.set(name, list)
-      groups.push({ name, items: list })
-    }
-    list.push(item)
-  }
-  return groups
-}
-
 export default function BoardZone({
   player,
   position,
@@ -101,6 +83,7 @@ export default function BoardZone({
   const { cardW, ref: zoneRef } = useZoneScale()
   const creaturesBandRef = useDragScroll<HTMLDivElement>()
   const permanentsBandRef = useDragScroll<HTMLDivElement>()
+  const marqueeRef = useDragScroll<HTMLDivElement>()
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -120,6 +103,13 @@ export default function BoardZone({
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
   const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
+  const busyIds = useMemo(() => {
+    const busy = new Set<string>()
+    for (const s of [combatSelectableSet, combatChosenSet, attackingSet, blockingSet]) {
+      for (const id of s) busy.add(id)
+    }
+    return busy
+  }, [combatSelectableSet, combatChosenSet, attackingSet, blockingSet])
 
   const finalHand = useMemo((): CardsView => {
     if (!player) return {}
@@ -250,6 +240,11 @@ export default function BoardZone({
   const creatures = permanents.filter(([id, p]) => permanentKind(p) === 'creatures' && !attachedIds.has(id))
   const others = permanents.filter(([id, p]) => permanentKind(p) === 'other' && !attachedIds.has(id))
   const lands = permanents.filter(([id, p]) => permanentKind(p) === 'lands' && !attachedIds.has(id))
+  // Dock marquee (sagas/planeswalkers/batallas): sale de `others` antes del
+  // stacking; tiene lealtad/defensa/lore individuales y nunca se apila.
+  const marqueeEntries = others.filter(([, p]) => isMarqueePermanent(p))
+  const marqueeIds = new Set(marqueeEntries.map(([id]) => id))
+  const restOthers = others.filter(([id]) => !marqueeIds.has(id))
 
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
     const isSelectable = combatSelectableSet.has(id)
@@ -387,7 +382,26 @@ export default function BoardZone({
     )
   }
 
-  const landGroups = groupLands(lands)
+  const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands')
+  const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other')
+  const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { busyIds })
+
+  const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
+    const count = group.items.length
+    return (
+      <div
+        key={`sg-${group.key}`}
+        className={`stack-group${group.kind === 'land' ? ' land-group' : ''} stack-group--${group.kind}`}
+        data-stack-name={group.name}
+        data-count={count}
+        {...(group.kind === 'land' ? { 'data-land-name': group.name } : {})}
+        title={`${group.name} (×${count})`}
+      >
+        {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature))}
+        <span className="stack-group-badge land-group-badge">×{count}</span>
+      </div>
+    )
+  }
 
   const statusRow = (
     <div
@@ -457,24 +471,10 @@ export default function BoardZone({
       className="bz-row bz-permanents-row oz-permanents-row pz-permanents-row"
     >
       <div ref={permanentsBandRef} className="bz-band oz-band pz-band permanents-band full-width">
-        {landGroups.map(({ name, items }) => {
-          if (items.length === 1) {
-            return renderCardItem(items[0][0], items[0][1], false)
-          }
-          return (
-            <div
-              key={`lg-${name}-${items[0][0]}`}
-              className="land-group"
-              data-land-name={name}
-              data-count={items.length}
-              title={`${name} (×${items.length})`}
-            >
-              {items.map(([id, perm]) => renderCardItem(id, perm, false))}
-              <span className="land-group-badge">×{items.length}</span>
-            </div>
-          )
-        })}
-        {others.map(([id, perm]) => renderCardItem(id, perm, false))}
+        {landGroups.map((group) => renderStackGroup(group, false))}
+        {tokenGroups.map((group) => renderStackGroup(group, false))}
+        {landSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
+        {otherSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
       </div>
     </div>
   )
@@ -498,9 +498,15 @@ export default function BoardZone({
           />
         </div>
       )}
-      <div ref={creaturesBandRef} className={`bz-band oz-band pz-band creatures-band ${!hasCommander ? 'full-width' : ''}`}>
-        {creatures.map(([id, perm]) => renderCardItem(id, perm, true))}
+      <div ref={creaturesBandRef} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && marqueeEntries.length === 0 ? 'full-width' : ''}`}>
+        {creatureTokenGroups.map((group) => renderStackGroup(group, true))}
+        {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>
+      {marqueeEntries.length > 0 && (
+        <div ref={marqueeRef} className="bz-marquee oz-marquee pz-marquee">
+          {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
+        </div>
+      )}
     </div>
   )
 

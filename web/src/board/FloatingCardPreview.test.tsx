@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FloatingCardPreview from './FloatingCardPreview'
 import { setLanguage } from '../i18n'
@@ -12,13 +12,28 @@ vi.mock('../cards/cardImages', () => ({
 }))
 
 describe('FloatingCardPreview', () => {
+  let rafQueue: FrameRequestCallback[] = []
+
   beforeEach(() => {
     vi.clearAllMocks()
+    rafQueue = []
+    window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      rafQueue.push(cb)
+      return rafQueue.length
+    }) as typeof window.requestAnimationFrame
+    window.cancelAnimationFrame = (() => {}) as typeof window.cancelAnimationFrame
   })
 
   afterEach(() => {
     cleanup()
   })
+
+  const flushRaf = async () => {
+    await act(async () => {
+      const q = rafQueue.splice(0, rafQueue.length)
+      q.forEach((cb) => cb(0))
+    })
+  }
 
   const dummyBoardRect = {
     left: 0,
@@ -228,8 +243,7 @@ describe('FloatingCardPreview', () => {
     )
   })
 
-  it('suppresses preview when modal is open and inModal is false', async () => {
-    const card: PermanentView = {
+  it('suppresses preview when modal is open and inModal is false', async () => {    const card: PermanentView = {
       name: 'Raging Goblin',
       manaValue: 1,
       cardTypes: ['CREATURE'],
@@ -254,5 +268,123 @@ describe('FloatingCardPreview', () => {
     expect(allowed.querySelector('.floating-card-preview')).toBeTruthy()
 
     clearFeedback()
+  })
+
+  const handAnchor = {
+    left: 500,
+    top: 680,
+    right: 590,
+    bottom: 790,
+    width: 90,
+    height: 110,
+  } as DOMRect
+
+  it('morphs a hand card preview from the anchor rect to full size', async () => {
+    const card: CardView = {
+      name: 'Mountain',
+      manaValue: 0,
+      cardTypes: ['LAND'],
+    }
+    const { container } = render(
+      <FloatingCardPreview card={card} anchorRect={handAnchor} boardRect={dummyBoardRect} fromHand />,
+    )
+
+    const preview = container.querySelector('.floating-card-preview') as HTMLElement
+    expect(preview.classList.contains('is-morph')).toBe(true)
+    expect(preview.classList.contains('is-open')).toBe(false)
+    expect(preview.style.transform).toBe('translate(115px, 452px) scale(0.28125)')
+
+    await flushRaf()
+    await flushRaf()
+
+    const opened = container.querySelector('.floating-card-preview') as HTMLElement
+    expect(opened.classList.contains('is-morph')).toBe(true)
+    expect(opened.classList.contains('is-open')).toBe(true)
+    expect(opened.style.transform).toBe('')
+  })
+
+  it('does not morph battlefield card previews', () => {
+    const card: PermanentView = {
+      name: 'Raging Goblin',
+      manaValue: 1,
+      cardTypes: ['CREATURE'],
+      power: '1',
+      toughness: '1',
+    }
+    const anchorRect = {
+      left: 300,
+      top: 300,
+      right: 390,
+      bottom: 426,
+      width: 90,
+      height: 126,
+    } as DOMRect
+    const { container } = render(
+      <FloatingCardPreview card={card} anchorRect={anchorRect} boardRect={dummyBoardRect} />,
+    )
+    const preview = container.querySelector('.floating-card-preview') as HTMLElement
+    expect(preview.classList.contains('is-morph')).toBe(false)
+    expect(preview.style.transform).toBe('')
+  })
+
+  it('returns to the start pose while leaving', async () => {
+    const card: CardView = {
+      name: 'Mountain',
+      manaValue: 0,
+      cardTypes: ['LAND'],
+    }
+    const { container, rerender } = render(
+      <FloatingCardPreview card={card} anchorRect={handAnchor} boardRect={dummyBoardRect} fromHand />,
+    )
+    await flushRaf()
+    await flushRaf()
+    expect(
+      (container.querySelector('.floating-card-preview') as HTMLElement).classList.contains('is-open'),
+    ).toBe(true)
+
+    rerender(
+      <FloatingCardPreview card={card} anchorRect={handAnchor} boardRect={dummyBoardRect} fromHand leaving />,
+    )
+    const preview = container.querySelector('.floating-card-preview') as HTMLElement
+    expect(preview.classList.contains('is-leaving')).toBe(true)
+    expect(preview.classList.contains('is-open')).toBe(false)
+    expect(preview.style.transform).toBe('translate(115px, 452px) scale(0.28125)')
+  })
+
+  it('skips the morph under prefers-reduced-motion', () => {    const prevMatchMedia = window.matchMedia
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+    try {
+      const card: CardView = {
+        name: 'Mountain',
+        manaValue: 0,
+        cardTypes: ['LAND'],
+      }
+      const { container } = render(
+        <FloatingCardPreview card={card} anchorRect={handAnchor} boardRect={dummyBoardRect} />,
+      )
+      const preview = container.querySelector('.floating-card-preview') as HTMLElement
+      expect(preview.classList.contains('is-morph')).toBe(false)
+      expect(preview.style.transform).toBe('')
+    } finally {
+      window.matchMedia = prevMatchMedia
+    }
+  })
+
+  it('never morphs without fromHand, even at hand position (e.g. battlefield lands)', async () => {
+    const card: CardView = {
+      name: 'Mountain',
+      manaValue: 0,
+      cardTypes: ['LAND'],
+    }
+    const { container } = render(
+      <FloatingCardPreview card={card} anchorRect={handAnchor} boardRect={dummyBoardRect} />,
+    )
+    await flushRaf()
+    await flushRaf()
+    const preview = container.querySelector('.floating-card-preview') as HTMLElement
+    expect(preview.classList.contains('is-morph')).toBe(false)
+    expect(preview.classList.contains('is-open')).toBe(false)
+    expect(preview.style.transform).toBe('')
+    expect(preview.style.bottom).toBeTruthy()
   })
 })

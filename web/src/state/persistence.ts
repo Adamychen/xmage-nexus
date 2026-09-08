@@ -1,4 +1,5 @@
 import type { PhaseStops } from '../net/commands'
+import type { DeckJson } from '../net/types'
 import { mergePhaseStops } from '../game/phaseStops'
 
 export interface ConnectionInfo {
@@ -135,6 +136,36 @@ export function clearActiveGame() {
   try {
     const storage = getStorage()
     storage.removeItem(ACTIVE_GAME_KEY)
+  } catch {}
+}
+
+const ACTIVE_DECK_KEY = 'mage-web-active-deck'
+
+export function saveActiveDeck(deck: DeckJson | null) {
+  try {
+    const storage = getStorage()
+    if (deck) {
+      storage.setItem(ACTIVE_DECK_KEY, JSON.stringify(deck))
+    } else {
+      clearActiveDeck()
+    }
+  } catch {}
+}
+
+export function loadActiveDeck(): DeckJson | null {
+  try {
+    const storage = getStorage()
+    const raw = storage.getItem(ACTIVE_DECK_KEY)
+    if (raw) {
+      return JSON.parse(raw) as DeckJson
+    }
+  } catch {}
+  return null
+}
+
+export function clearActiveDeck() {
+  try {
+    getStorage().removeItem(ACTIVE_DECK_KEY)
   } catch {}
 }
 

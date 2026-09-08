@@ -232,6 +232,21 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       return buf
     }
 
+    case 'prompt_open': {
+      const duration = 0.16
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const env = Math.exp(-t * 16)
+        const f1 = Math.sin(2 * Math.PI * 659.25 * t) * (t < 0.07 ? 0.55 : 0.1)
+        const f2 = t >= 0.06 ? Math.sin(2 * Math.PI * 987.77 * (t - 0.06)) * 0.65 : 0
+        data[i] = (f1 + f2) * env * 0.5
+      }
+      return buf
+    }
+
     case 'whisper': {
       const duration = 0.14
       const buf = makeBuffer(ctx, duration)

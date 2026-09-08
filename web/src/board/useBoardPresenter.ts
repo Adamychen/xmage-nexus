@@ -5,6 +5,11 @@ import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
 import { useStore, isBlockingModal } from '../state/store'
 
+export interface HoverOptions {
+  /** El hover viene de la mano propia (HandBar): el preview hace morph. */
+  fromHand?: boolean
+}
+
 export interface BoardPresenterArgs {
   game: GameView | null
   targetIds?: string[]
@@ -24,13 +29,21 @@ export interface BoardPresenter {
   boardRef: React.RefObject<HTMLDivElement | null>
   floatingCard: CardView | PermanentView | null
   anchorRect: DOMRect | null
-  handleCardHover: (card: CardView | PermanentView | null, rect?: DOMRect) => void
+  /** Salida en curso: el preview vuelve sobre la carta antes de desmontar. */
+  previewLeaving: boolean
+  /** El hover activo viene de la mano propia (permite el morph del preview). */
+  previewFromHand: boolean
+  handleCardHover: (card: CardView | PermanentView | null, rect?: DOMRect, opts?: HoverOptions) => void
   /** Dispatcher de clicks de zona con la prioridad combat → target → playable,
    *  idéntica en los tres modos de tablero. */
   handleCardClick: (id: string) => void
   targetIdSet: Set<string>
   playableIdSet: Set<string>
 }
+
+/** Espera antes de desmontar el preview al abandonar el hover: cubre la
+ *  transición inversa (0.18s) con margen. */
+export const PREVIEW_LEAVE_MS = 200
 
 /** Lógica común a los tres layouts de tablero (GameBoard/TwoHeaded/Arena):
  *  hover con preview flotante, dispatcher de clicks, sets memoizados y el
@@ -54,6 +67,8 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
   const boardRef = useRef<HTMLDivElement>(null)
   const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [previewLeaving, setPreviewLeaving] = useState(false)
+  const [previewFromHand, setPreviewFromHand] = useState(false)
   const hoverTimeoutRef = useRef<number | null>(null)
 
   const modalOpen = useStore(isBlockingModal)
@@ -65,11 +80,13 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       }
       setFloatingCard(null)
       setAnchorRect(null)
+      setPreviewLeaving(false)
+      setPreviewFromHand(false)
     }
   }, [modalOpen])
 
   const handleCardHover = useCallback(
-    (card: CardView | PermanentView | null, rect?: DOMRect) => {
+    (card: CardView | PermanentView | null, rect?: DOMRect, opts?: HoverOptions) => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current)
         hoverTimeoutRef.current = null
@@ -78,19 +95,26 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       if (modalOpen) {
         setFloatingCard(null)
         setAnchorRect(null)
+        setPreviewLeaving(false)
+        setPreviewFromHand(false)
         return
       }
 
       if (card && rect) {
+        setPreviewLeaving(false)
+        setPreviewFromHand(opts?.fromHand === true)
         setFloatingCard(card)
         setAnchorRect(rect)
         onCardHover?.(card as CardView | null)
       } else {
+        setPreviewLeaving(true)
         hoverTimeoutRef.current = window.setTimeout(() => {
           setFloatingCard(null)
           setAnchorRect(null)
+          setPreviewLeaving(false)
+          setPreviewFromHand(false)
           onCardHover?.(null)
-        }, 50)
+        }, PREVIEW_LEAVE_MS)
       }
     },
     [onCardHover, modalOpen]
@@ -125,6 +149,8 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     boardRef,
     floatingCard,
     anchorRect,
+    previewLeaving,
+    previewFromHand,
     handleCardHover,
     handleCardClick,
     targetIdSet,

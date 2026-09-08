@@ -209,6 +209,101 @@ describe('OpponentZone', () => {
     expect(container.querySelector('.resource-bar.micro')).toBeTruthy()
   })
 
+  it('stacks fungible tokens from x3 and leaves pairs and divergent tokens solo', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'TokenLord',
+      life: 20,
+      handCount: 0,
+      controlled: false,
+      battlefield: {
+        't-1': { id: 't-1', name: 'Treasure', cardTypes: ['Artifact'], isToken: true } as any,
+        't-2': { id: 't-2', name: 'Treasure', cardTypes: ['Artifact'], isToken: true } as any,
+        't-3': { id: 't-3', name: 'Treasure', cardTypes: ['Artifact'], isToken: true } as any,
+        't-4': { id: 't-4', name: 'Treasure', cardTypes: ['Artifact'], isToken: true, tapped: true } as any,
+        't-5': { id: 't-5', name: 'Treasure', cardTypes: ['Artifact'], isToken: true, tapped: true } as any,
+        's-1': { id: 's-1', name: 'Soldier', cardTypes: ['Creature'], power: '1', toughness: '1', isToken: true } as any,
+        's-2': { id: 's-2', name: 'Soldier', cardTypes: ['Creature'], power: '1', toughness: '1', isToken: true } as any,
+        's-3': { id: 's-3', name: 'Soldier', cardTypes: ['Creature'], power: '1', toughness: '1', isToken: true } as any,
+        's-4': { id: 's-4', name: 'Soldier', cardTypes: ['Creature'], power: '1', toughness: '1', isToken: true, damage: 1 } as any,
+      },
+    }
+
+    const { container } = render(
+      <OpponentZone player={oppPlayer as PlayerView} compactPod />
+    )
+
+    const treasureGroup = container.querySelector('.stack-group[data-stack-name="Treasure"]')
+    expect(treasureGroup).toBeTruthy()
+    expect(treasureGroup?.getAttribute('data-count')).toBe('3')
+    expect(treasureGroup?.querySelector('.stack-group-badge')?.textContent).toBe('×3')
+
+    const soldierGroup = container.querySelector('.stack-group[data-stack-name="Soldier"]')
+    expect(soldierGroup).toBeTruthy()
+    expect(soldierGroup?.getAttribute('data-count')).toBe('3')
+
+    // Tapped pair below threshold and damaged soldier stay solo (outside any stack-group)
+    const soloSlots = [...container.querySelectorAll('.bz-band .card-slot')].filter(
+      (el) => !el.closest('.stack-group'),
+    )
+    expect(soloSlots.length).toBe(3)
+  })
+
+  it('docks sagas, planeswalkers and battles in the marquee dock, right of the creatures band', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'MarqueeLord',
+      life: 20,
+      handCount: 0,
+      controlled: false,
+      battlefield: {
+        'saga-1': { id: 'saga-1', name: 'The Akroan War', cardTypes: ['Enchantment', 'Saga'] } as any,
+        'pw-1': { id: 'pw-1', name: 'Jace, the Mind Sculptor', cardTypes: ['Planeswalker'] } as any,
+        'battle-1': { id: 'battle-1', name: 'Invasion of Ravnica', cardTypes: ['Battle', 'Siege'] } as any,
+        'beast-1': { id: 'beast-1', name: 'Saga Beast', cardTypes: ['Enchantment', 'Creature', 'Saga'] } as any,
+        'bear-1': { id: 'bear-1', name: 'Grizzly Bears', cardTypes: ['Creature'] } as any,
+      },
+    }
+
+    const { container } = render(
+      <OpponentZone player={oppPlayer as PlayerView} compactPod />
+    )
+
+    const dock = container.querySelector('.bz-marquee')
+    expect(dock).toBeTruthy()
+    expect(dock?.querySelectorAll('.card-slot').length).toBe(3)
+
+    // Marquee cards leave the permanents band…
+    expect(container.querySelector('.permanents-band .card-slot')).toBeNull()
+    // …while the saga-creature stays with the creatures (combat rules).
+    const creaturesBand = container.querySelector('.creatures-band')
+    expect(creaturesBand?.querySelectorAll('.card-slot').length).toBe(2)
+    // The dock sits after the band (right side) and the band loses full-width.
+    expect(dock?.previousElementSibling?.classList.contains('creatures-band')).toBe(true)
+    expect(creaturesBand?.classList.contains('full-width')).toBe(false)
+  })
+
+  it('renders no marquee dock without sagas, planeswalkers or battles', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-plain',
+      name: 'PlainOpponent',
+      life: 20,
+      handCount: 0,
+      controlled: false,
+      battlefield: {
+        'bear-1': { id: 'bear-1', name: 'Grizzly Bears', cardTypes: ['Creature'] } as any,
+        'rock-1': { id: 'rock-1', name: 'Sol Ring', cardTypes: ['Artifact'] } as any,
+      },
+    }
+
+    const { container } = render(
+      <OpponentZone player={oppPlayer as PlayerView} compactPod />
+    )
+
+    expect(container.querySelector('.bz-marquee')).toBeNull()
+    expect(container.querySelector('.creatures-band')?.classList.contains('full-width')).toBe(true)
+  })
+
   it('renders multiple partner commanders with multi-commander and compact classes', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-partner',

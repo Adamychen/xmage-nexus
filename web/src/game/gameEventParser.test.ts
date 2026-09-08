@@ -167,6 +167,39 @@ describe('gameEventParser', () => {
     )
   })
 
+  it('parses draws with number-words, keeps, skips and bare waiting', () => {
+    const seven = parsed('player1 draws seven cards', 'player1')
+    expect(seven.type).toBe('draw')
+    expect(seven.amount).toBe(7)
+    expect(seven.isMe).toBe(true)
+    expect(esText('player1 draws seven cards', 'player1')).toBe('player1 roba 7 cartas')
+    expect(esText('sim-00001-307 draws seven cards', 'player1')).toBe('sim-00001-307 roba 7 cartas')
+
+    expect(esText('player1 keeps hand', 'player1')).toBe('player1 se queda la mano')
+    const keep = parsed('sim-00001-307 keeps hand', 'player1')
+    expect(keep.type).toBe('draw')
+    expect(keep.playerName).toBe('sim-00001-307')
+    expect(keep.isMe).toBe(false)
+
+    expect(esText('player1 skips Draw step', 'player1')).toBe('player1 salta Robo')
+    const skip = parsed('player1 skips the Draw step', 'player1')
+    expect(skip.type).toBe('phase')
+    expect(skip.playerName).toBe('player1')
+
+    expect(esText('Waiting for sim-00001-307', 'player1')).toBe('Esperando a sim-00001-307')
+    const wait = parsed('Waiting for sim-00001-307', 'player1')
+    expect(wait.type).toBe('phase')
+    expect(wait.playerName).toBe('sim-00001-307')
+  })
+
+  it('parses first-turn choice', () => {
+    const res = parsed('sim-00001-307 chooses that player1 take the first turn', 'player1')
+    expect(res.type).toBe('system')
+    expect(res.playerName).toBe('sim-00001-307')
+    expect(esText('sim-00001-307 chooses that player1 take the first turn', 'player1')).toBe(
+      'sim-00001-307 elige que player1 juegue primero'
+    )
+  })
   it('parses wins and concessions', () => {
     expect(esText('Alice won the game', 'Alice')).toBe('Alice gana la partida')
     expect(esText('Bob won the match', 'Alice')).toBe('Bob gana el match')

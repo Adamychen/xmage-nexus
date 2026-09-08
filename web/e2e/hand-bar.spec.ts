@@ -4,6 +4,7 @@ import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
+import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { HAND_BAR_REST_OVERLAP_RATIO } from '../src/board/handSizing'
 import type { Page } from '@playwright/test'
 
@@ -139,6 +140,8 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
 
     await slots.first().hover()
     await expect(preview).toBeVisible({ timeout: 10_000 })
+    await expect(preview, 'el preview nace de la carta en mano (morph)').toHaveClass(/is-morph/)
+    await expect(preview, 'el morph termina en tamaño completo').toHaveClass(/is-open/, { timeout: 10_000 })
     const boxes = await page.evaluate(() => {
       const rectOf = (el: Element) => {
         const r = el.getBoundingClientRect()
@@ -154,10 +157,44 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
       boxes.pv.width,
       'el preview es grande y legible (320px frente a ~136px de la carta en mano)',
     ).toBeGreaterThanOrEqual(300)
-    expect(
-      boxes.pv.y + boxes.pv.height,
-      'el preview flota por encima de la carta (no la tapa)',
-    ).toBeLessThanOrEqual(boxes.slot.y + 40)
+    // La caja final solo es estable al terminar la transición del morph:
+    // se sondea hasta que el borde inferior deja de moverse por encima de la carta.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const pv = document.querySelector('.floating-card-preview') as HTMLElement | null
+            const slot = document.querySelector('[data-testid="hand-bar"] .hand-card-slot')
+            if (!pv || !slot) throw new Error('preview o slot no encontrado')
+            const r = pv.getBoundingClientRect()
+            return r.y + r.height - (slot.getBoundingClientRect().y + 40)
+          }),
+        { timeout: 10_000 },
+      )
+      .toBeLessThanOrEqual(0)
+
+    await page.locator('.board-shell-divider-diamond').hover()
+    await expect(preview).toHaveCount(0)
+    expect(pageErrors).toEqual([])
+  })
+})
+
+test('el hover en tierras del campo no hace morph (preview clásico) @fullflow @hand-bar', async ({ page }) => {
+  await withFakeServer(mechanicsScenario, async () => {
+    const { pageErrors } = await startGame(page, {
+      prefix: 'hbl',
+      tableName: TABLE.mechanics,
+      skipAsks: true,
+    })
+    // La Mountain propia vive en la fila de permanentes, pegada a la mano.
+    const landSlot = page.locator('.player-zone:not(.mirrored) .permanents-band .card-slot').first()
+    await expect(landSlot).toBeVisible({ timeout: 30_000 })
+    const preview = page.locator('.floating-card-preview')
+    await expect(preview).toHaveCount(0)
+
+    await landSlot.hover()
+    await expect(preview).toBeVisible({ timeout: 10_000 })
+    await expect(preview, 'las tierras del campo no usan el morph de la mano').not.toHaveClass(/is-morph/)
 
     await page.locator('.board-shell-divider-diamond').hover()
     await expect(preview).toHaveCount(0)

@@ -122,9 +122,14 @@ const NOISE_PATTERNS = [
   /has left the game/i,
 ]
 
+/** Números en palabra que envía el servidor ("draws seven cards") → dígito. */
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+}
+
 /** Fase/paso del servidor ("… - Waiting for X") → clave `step_*` existente. */
-const WAITING_PHASE_STEP: Record<string, GameFeedKey> = {
-  upkeep: 'step_upkeep',
+const WAITING_PHASE_STEP: Record<string, GameFeedKey> = {  upkeep: 'step_upkeep',
   draw: 'step_draw',
   'precombat main': 'step_main1',
   'begin combat': 'step_begin_combat',
@@ -302,14 +307,21 @@ export function parseGameEvent(
     return i18n('ability', 'feed_activate', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })
   }
 
-  // 9. Draws / Discards: "Player draws a card" / "Player discards CardName"
-  const drawMatch = text.match(/^([^:]+?)\s+draws?\s+(?:a\s+card|(\d+)\s+cards?)/i)
+  // 9. Draws / Discards: "Player draws a card" / "Player draws seven cards" / "Player discards CardName"
+  const drawMatch = text.match(/^([^:]+?)\s+draws?\s+(?:an?\s+card|(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+cards?)/i)
   if (drawMatch) {
     const pName = drawMatch[1].trim()
-    const count = drawMatch[2] ? Number(drawMatch[2]) : 1
+    const rawCount = drawMatch[2]?.toLowerCase()
+    const count = rawCount ? (NUMBER_WORDS[rawCount] ?? Number(rawCount)) : 1
     return count > 1
       ? i18n('draw', 'feed_draw_n', { player: pName, count }, { playerName: pName, isMe: isMe(pName), amount: count })
       : i18n('draw', 'feed_draw', { player: pName }, { playerName: pName, isMe: isMe(pName), amount: count })
+  }
+  // 9b. Mulligan keep: "Player keeps hand"
+  const keepMatch = text.match(/^([^:]+?)\s+keeps?(?:\s+hand)?$/i)
+  if (keepMatch) {
+    const pName = keepMatch[1].trim()
+    return i18n('draw', 'feed_keep_hand', { player: pName }, { playerName: pName, isMe: isMe(pName) })
   }
   const discardMatch = text.match(/^([^:]+?)\s+discards?\s+(.+)$/i)
   if (discardMatch) {
@@ -339,6 +351,32 @@ export function parseGameEvent(
     if (phaseKey) {
       return i18n('phase', 'feed_waiting_for', { phase: `@${phaseKey}`, player: pName }, { playerName: pName, isMe: isMe(pName) })
     }
+  }
+
+  // 11b. Skipped steps: "Player skips Draw step" / "Player skips the Draw step"
+  const skipMatch = text.match(/^([^:]+?)\s+skips?\s+(?:the\s+)?(.+?)\s+steps?$/i)
+  if (skipMatch) {
+    const pName = skipMatch[1].trim()
+    const stepKey = WAITING_PHASE_STEP[skipMatch[2].trim().toLowerCase()]
+    if (stepKey) {
+      return i18n('phase', 'feed_skip_step', { player: pName, phase: `@${stepKey}` }, { playerName: pName, isMe: isMe(pName) })
+    }
+    return { ...base, type: 'phase', text: { kind: 'verbatim', text }, playerName: pName, isMe: isMe(pName) }
+  }
+
+  // 11c. Bare waiting: "Waiting for Alice" (sin prefijo de fase)
+  const bareWaitMatch = text.match(/^waiting\s+for\s+(.+)$/i)
+  if (bareWaitMatch) {
+    const pName = bareWaitMatch[1].trim()
+    return i18n('phase', 'feed_waiting_player', { player: pName }, { playerName: pName, isMe: isMe(pName) })
+  }
+
+  // 11d. First turn choice: "Sim chooses that Alice take the first turn"
+  const firstTurnMatch = text.match(/^([^:]+?)\s+chooses?\s+that\s+(.+?)\s+takes?\s+the\s+first\s+turn$/i)
+  if (firstTurnMatch) {
+    const pName = firstTurnMatch[1].trim()
+    const chosen = firstTurnMatch[2].trim()
+    return i18n('system', 'feed_first_turn', { player: pName, chosen }, { playerName: pName, isMe: isMe(pName) })
   }
 
   // 12. Combat status: "Attacker: Grizzly Bears (2/2) unblocked", "Attacked player: Bob"

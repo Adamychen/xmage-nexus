@@ -214,11 +214,12 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 999px;
   padding: 2px 10px;
-  pointer-events: auto;
+  pointer-events: none;
   backdrop-filter: blur(6px);
 }
 
 .app-attribution a {
+  pointer-events: auto;
   color: rgba(142, 160, 255, 0.85);
   text-decoration: none;
 }

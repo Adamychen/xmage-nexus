@@ -1,0 +1,44 @@
+.mana-inline {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 4px 10px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(18, 22, 44, 0.9);
+}
+
+.mana-inline-pip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.mana-inline-pip.is-zero {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+.mana-inline-count {
+  color: #e8eaf6;
+  min-width: 12px;
+  text-align: right;
+}
+
+button.mana-inline-pip {
+  background: none;
+  border: none;
+  padding: 3px 6px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.mana-inline-pip:hover {
+  outline: 1px solid #7c5cff;
+  border-radius: 4px;
+}
