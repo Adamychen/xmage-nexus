@@ -48,6 +48,67 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     expect(container.querySelector('.keyword-badges')).toBeNull()
   })
+
+  it('renders designation badges for live monstrous/renowned hints', () => {
+    const card = {
+      id: 'c3',
+      name: 'Polukranos, World Eater',
+      cardTypes: ['Creature'],
+      rules: ['Trample', '<br/><hintstart/>', 'ICON_GOOD{this} is monstrous'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-monstrous')).not.toBeNull()
+    expect(container.querySelector('.designation-badge.is-renowned')).toBeNull()
+  })
+
+  it('renders no designation badge for the negative hint branch', () => {
+    const card = {
+      id: 'c4',
+      name: "Consul's Lieutenant",
+      cardTypes: ['Creature'],
+      rules: ['First strike', 'Renown 1', "ICON_BAD{this} isn't renowned"],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge')).toBeNull()
+  })
+
+  it('renders suspected badge from the engine info line', () => {
+    const card = {
+      id: 'c5',
+      name: 'Shady Informant',
+      cardTypes: ['Creature'],
+      rules: ['Deathtouch', "<font color = 'blue'>Suspected (has menace and can't block)</font>"],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-suspected')).not.toBeNull()
+  })
+
+  it('renders paired badge with partner name in title', () => {
+    const card = {
+      id: 'c6',
+      name: 'Silverblade Paladin',
+      cardTypes: ['Creature'],
+      rules: ['Soulbond', "Paired with <font color='#B0C4DE'>Grizzly Bears [a1b]</font>"],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const badge = container.querySelector('.designation-badge.is-paired')
+    expect(badge).not.toBeNull()
+    expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
+  })
+
+  it('renders class level badge with the live level', () => {
+    const card = {
+      id: 'c7',
+      name: 'Bard Class',
+      cardTypes: ['Enchantment'],
+      rules: ['Level 2 — Whenever you cast a legendary spell, ...', 'Class level: 2'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const badge = container.querySelector('.designation-badge.is-classlevel')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toContain('2')
+    expect(badge?.getAttribute('title')).toContain('2/3')
+  })
 })
 
 describe('CardSlot entering lifecycle', () => {

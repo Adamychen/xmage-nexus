@@ -214,7 +214,7 @@ export default function FloatingCardPreview({
               )}
               {rules.length > 0 && (
                 <div className="floating-card-rules">
-                  <FormattedText text={rules.join('\n')} />
+                  <FormattedText text={rules.join('\n')} cardName={name} />
                 </div>
               )}
             </div>

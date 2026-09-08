@@ -100,9 +100,46 @@ Rastreados por `engineViewCoverage.test.ts` (baseline `engine-view-gap.baseline.
 Lista actual (de `engine-view-gap.json`):
 - **Can't be targeted** (criatura y jugador): `PermanentImpl.canBeTargetedBy` / `PlayerImpl`
   (gate por método, no campo) — invisible.
-- **Harnessed** (Unfinity): `PermanentImpl.harnessed` — invisible.
-- **Monstrous**: `PermanentImpl.monstrous` — invisible.
-- **Renowned**: `PermanentImpl.renowned` — invisible.
+- **Harnessed** (Unfinity): `PermanentImpl.harnessed` — invisible. `HarnessedHint`
+  existe pero nada lo adjunta y no hay contadores/iconos: sin señal cliente.
+  **Fix fork/upstream** (2 líneas + import por carta): en
+  `Mage.Sets/.../t/TheMindStone.java:54` y `t/TheSoulStone.java:47`, tras construir
+  la `SimpleActivatedAbility` con `HarnessSourceEffect`, añadir
+  `ability.addHint(HarnessedHint.instance)` (+ `import mage.abilities.hint.common.HarnessedHint`).
+- **Soulbond** (pareja) — **visible vía línea `info` + badge (2026-09-08)**: `PermanentImpl.setPairedWith` añade `addInfo("soulbond", "Paired with <nombre>")` en ambas criaturas (y `setUnpaired` la retira); `getRules` la vuelca en `rules`. El web parsea el partner (`pairedPartnerName`) a `.designation-badge.is-paired` con tooltip "Emparejada con X" (i18n ×9). Las stats llegan computadas.
+- **Solved** (Casos MKM): `CaseSolvedHint` existe pero está huérfano — nada lo
+  adjunta en `CaseAbility`. **Fix fork/upstream** (1 línea + import): en
+  `Mage/.../abilities/common/CaseAbility.java`, ctor (tras `super(Zone.ALL, null)`),
+  añadir `this.addHint(new CaseSolvedHint(SolvedSourceCondition.SOLVED))`
+  (+ `import mage.abilities.hint.common.CaseSolvedHint`; `SolvedSourceCondition`
+  ya importado). La hint es bipolar ("Case is solved./unsolved."), igual que monstrous.
+- **Can't be targeted** (criatura y jugador): `canBeTargetedBy` es gate por método,
+  no campo — invisible. Aceptado: el servidor rechaza objetivos ilegales.
+- **Habilidades de jugador** (hexproof/shroud/daño/vida): `PlayerImpl` sin campo
+  `rules`/abilities — invisible. Aceptado (baja frecuencia, el servidor lo impone).
+- **Monstrous / Renowned — NO son gaps de campo** (verificado en vivo 2026-09-08):
+  `MonstrosityAbility:69` y `RenownAbility:28` adjuntan `MonstrousHint`/`RenownedHint`;
+  `ConditionHint` emite siempre una rama en `rules`: `ICON_GOOD{this} is monstrous` /
+  `ICON_BAD{this} isn't monstrous` (idem renowned). El web parsea la rama positiva
+  (`board/designations.ts`) a badges `.designation-badge` en `CardSlot` (i18n ×9) y
+  sustituye `{this}`/`ICON_GOOD|BAD` en `FormattedText` (hover + pila).
+- **Suspect — visible vía línea `info` (verificado en código)**: `setSuspected`
+  añade `IS_SUSPECTED` ("Suspected (has menace and can't block)") y `getRules`
+  vuelca `info.values()` en `rules`; menace llega como habilidad concedida
+  (`ApplyStatusEffect`). Badge propio solo-cliente: `cardDesignations` parsea la
+  línea a `.designation-badge.is-suspected` (`keywords.spec.ts`, Keyword Beast).
+- **ClassLevel — badge solo-cliente**: `ClassLevelHint` (`"Class level: N"`,
+  adjunto en `ClassReminderAbility`) parseado a `.designation-badge.is-classlevel`
+  con nivel (`Nv. 2`, tooltip `…/3`).
+- **Resto del baseline, descartado como bookkeeping o cubierto**: `deathtouched`,
+  `markedDamage/markedLifelink`, `dealtDamageByThisTurn` (bookkeeping de combate);
+  `attacking/blocking` (vía `gv.combat`), `summoningSickness` (campo propio),
+  `flipped/nightCard/morphCard/mutateView` (caras/mutate), `ringBearerFlag`
+  (icono RINGBEARER), `maxBlockedBy/minBlockedBy/maxBlocks` (texto estático de la
+  carta), `prototyped` (inferible por características), `roomWasUnlockedOnCast`
+  (mazmorra interna), `loyaltyActivationsAvailable/canBeSacrificed` (el servidor
+  lo impone; se descubre por oferta/rechazo), resto de `PlayerView`/`GameView`
+  (timers, zonas ocultas, ids).
 - **Habilidades de jugador** (hexproof/shroud/can't be dealt damage/can't lose):
   `PlayerImpl` no tiene campo `rules`/abilities — invisible.
 - **Day/Night**: el flag de juego no va en `GameView`, pero se infiere vía la carta
@@ -140,6 +177,7 @@ Lista actual (de `engine-view-gap.json`):
 |---|---|---|---|---|
 | Flying / Deathtouch / Trample / Haste / etc. | ✅ | ✅ | `CardSlot` badges `.keyword-badges` + `FloatingCardPreview` hover `.floating-card-keywords`; 267 keywords con nombre+resumen ×9 en `i18n.keywords` (`scripts/keywords-i18n/*.mjs` + `gen-keywords-i18n.mjs`, wording oficial verificado vía `printed_text` de Scryfall con `verify-keywords-scryfall.py`); display vía `data/keywordI18n.ts` (plantillas `{param}`, fallback EN); `keywordExtractor.test.ts` + `keywordI18n.test.ts` + `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `keywords.spec.ts` (`@keywords`) / `mechanics.ts` `Keyword Beast` | 2026-09-08 |
 | Goad (estado "goaded" en criatura) | ✅ | ✅ | `CardIcons.tsx` renderiza `cardIcons.OTHER_HAS_RESTRICTIONS` (texto "Goaded by X (must attack)" vía `rules`+icono); badge de restricción en `CardSlot` + `keywords.spec.ts` | 2026-08-25 |
+| Monstrous / Renowned / Suspected / Paired (designaciones en vivo) | ✅ | ✅ | `board/designations.ts` parsea la hint (`ICON_GOOD{this} is monstrous/renowned`, línea `info` "Suspected (…)", "Paired with X" con partner) a `.designation-badge` en `CardSlot` (i18n `board.designation_*` ×9) + sustitución `{this}`/`ICON_*` en `FormattedText`; `designations.test.ts` + `CardSlot.test.tsx` + `keywords.spec.ts` (Keyword Beast + Consul's Lieutenant) | 2026-09-08 |
 
 ### E. Información revelada / Known cards
 | Mecánica | Implementado | Testeado | Ref | Última verif. |

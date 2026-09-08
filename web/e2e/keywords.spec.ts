@@ -26,6 +26,29 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
       const goadIcon = beast.locator('.card-icon.restriction')
       await expect(goadIcon).toBeVisible()
 
+      const monoBadge = beast.locator('.designation-badge.is-monstrous')
+      await expect(monoBadge).toBeVisible()
+      expect(await monoBadge.getAttribute('title')).toContain('Monstruosidad')
+
+      const suspectBadge = beast.locator('.designation-badge.is-suspected')
+      await expect(suspectBadge).toBeVisible()
+
+      const pairBadge = beast.locator('.designation-badge.is-paired')
+      await expect(pairBadge).toBeVisible()
+      expect(await pairBadge.getAttribute('title')).toContain("Consul's Lieutenant")
+
+      const bard = page.locator('[data-card-name="Bard Class"]').first()
+      await expect(bard).toBeVisible()
+      const classBadge = bard.locator('.designation-badge.is-classlevel')
+      await expect(classBadge).toBeVisible()
+      expect(await classBadge.textContent()).toContain('2')
+
+      const reno = page.locator('[data-card-name="Consul\'s Lieutenant"]').first()
+      await expect(reno).toBeVisible()
+      const renoBadge = reno.locator('.designation-badge.is-renowned')
+      await expect(renoBadge).toBeVisible()
+      expect(await renoBadge.getAttribute('title')).toContain('Renombre')
+
       await beast.hover()
       const kwBox = page.locator('.floating-card-keywords')
       await expect(kwBox).toBeVisible({ timeout: 3000 })

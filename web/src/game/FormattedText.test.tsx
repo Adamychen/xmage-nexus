@@ -95,4 +95,17 @@ describe('FormattedText', () => {
     fireEvent.mouseLeave(cardSpan!)
     expect(onHover).toHaveBeenCalledWith(null)
   })
+
+  it('substitutes {this} and ICON markers when cardName is given', () => {
+    const { container } = render(
+      <FormattedText text="ICON_GOOD{this} is monstrous" cardName="Polukranos, World Eater" />
+    )
+    expect(container.textContent).toBe('✓Polukranos, World Eater is monstrous')
+    expect(container.querySelector('.mana-badge')).toBeNull()
+  })
+
+  it('leaves {this} untouched without cardName (feed/chat behavior unchanged)', () => {
+    const { container } = render(<FormattedText text="Player1: hola" />)
+    expect(container.textContent).toBe('Player1: hola')
+  })
 })

@@ -1,6 +1,7 @@
 import React from 'react'
 import type { CardView } from '../net/types'
 import { t as tStatic } from '../i18n'
+import { substituteCardRefs } from '../board/designations'
 import { symbolToSvgPath } from '../decks/ArenaManaSymbols'
 import './FormattedText.css'
 
@@ -8,6 +9,8 @@ interface FormattedTextProps {
   text: string | null | undefined
   className?: string
   onHover?: (card: CardView | null, rect?: DOMRect) => void
+  /** Nombre de carta para sustituir {this} y los marcadores ICON_GOOD/BAD del servidor */
+  cardName?: string
 }
 
 /**
@@ -178,10 +181,11 @@ export function ManaBadge({ symbol }: { symbol: string }) {
   )
 }
 
-export default function FormattedText({ text, className = '', onHover }: FormattedTextProps) {
+export default function FormattedText({ text, className = '', onHover, cardName }: FormattedTextProps) {
   if (!text) return null
 
-  const tokens = parseMageTextTokens(text)
+  const source = cardName ? substituteCardRefs(text, cardName) : text
+  const tokens = parseMageTextTokens(source)
 
   return (
     <span className={`formatted-text ${className}`.trim()}>

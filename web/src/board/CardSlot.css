@@ -457,6 +457,38 @@ html.fx-off .counter-badge {
 .facedown-type-badge.disguise { border-color: #10b981; color: #6ee7b7; }
 .facedown-type-badge.cloak { border-color: #6366f1; color: #a5b4fc; }
 
+/* Live engine designations (MonstrousHint / RenownedHint in rules) */
+.designation-badges {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-end;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.designation-badge {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.562rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(18, 22, 42, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.designation-badge.is-monstrous { border-color: #f59e0b; color: #fcd34d; }
+.designation-badge.is-renowned { border-color: #eab308; color: #fef08a; }
+.designation-badge.is-suspected { border-color: #fb7185; color: #fecdd3; }
+.designation-badge.is-paired { border-color: #38bdf5; color: #bae6fd; }
+.designation-badge.is-classlevel { border-color: #c084fc; color: #e9d5ff; }
+
 .copy-badge {
   position: absolute;
   top: 4px;

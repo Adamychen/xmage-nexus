@@ -209,6 +209,18 @@ export async function runRecorder(driver) {
     sendAction(action, args) {
       ws.send(JSON.stringify({ action, args }))
     },
+    dumpEvent(m) {
+      if (process.env.REC_DUMP_EVENTS !== '1') return
+      try {
+        const d = m.data ?? {}
+        const slim = { t: new Date().toISOString(), method: m.method }
+        if (d.message !== undefined) slim.message = d.message
+        if (d.question !== undefined) slim.question = d.question
+        const ch = d.choices ?? d.choice?.keyChoices ?? d.choice?.choices
+        if (ch !== undefined) slim.choices = optionList(ch).map((o) => o.label)
+        fs.appendFileSync(`${OUT_DIR}/${driver.name}.events.jsonl`, JSON.stringify(slim) + '\n')
+      } catch {}
+    },
     send,
     playLand() {
       const land = firstBasicLand(lastGV?.myHand ?? lastGV?.hand)
@@ -257,6 +269,11 @@ export async function runRecorder(driver) {
     if (method === 'GAME_TARGET') {
       const val = driver.onTarget ? driver.onTarget(ctx) : undefined
       if (val) ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: val } }))
+      return
+    }
+    if (method === 'GAME_TARGET_AMOUNT' || method === 'GAME_GET_AMOUNT') {
+      const val = driver.onTargetAmount ? driver.onTargetAmount(m.data, ctx) : (m.data?.min ?? 1)
+      ws.send(JSON.stringify({ action: 'sendPlayerInteger', args: { gameId, value: val } }))
       return
     }
     if (method === 'GAME_PLAY_MANA') {
@@ -345,6 +362,7 @@ export async function runRecorder(driver) {
     }
     if (m.type === 'event') {
       if (DEBUG) log('EVENT', m.method, 'prio/active=', getMe(m.data?.gameView)?.hasPriority, getMe(m.data?.gameView)?.isActive)
+      ctx.dumpEvent(m)
       if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_'))) {
         if (!gameId) gameId = String(m.objectId)
       }

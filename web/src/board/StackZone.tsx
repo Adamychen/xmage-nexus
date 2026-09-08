@@ -465,7 +465,7 @@ export default function StackZone({
                     )}
                     {rulesText && viewMode === 'expanded' && (
                       <div className="stack-tl-rules">
-                        <FormattedText text={rulesText} />
+                        <FormattedText text={rulesText} cardName={card.displayName ?? card.name} />
                       </div>
                     )}
                   </div>

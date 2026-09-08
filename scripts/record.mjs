@@ -150,6 +150,17 @@ function makeCreatureDriver() {
   }
 }
 
+// Sonda de señal Monstruosidad (no es fixture de CI): Polukranos en cabeza +
+// Forests. Turnos: tierra, castear (2GG), activar Monstruosidad X=1 (1GG).
+const MONSTROSITY_DECK = {
+  name: 'Mage Web monstrosity probe',
+  cards: [
+    { cardName: 'Polukranos, World Eater', setCode: 'THS', cardNumber: '172', amount: 3 },
+    { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 57 },
+  ],
+  sideboard: [],
+}
+
 function makeCombatDriver() {
   return {
     name: 'combat',
@@ -225,7 +236,67 @@ function makeCombatDriver() {
   }
 }
 
-const REGISTRY = { mutate: makeMutateDriver, creature: makeCreatureDriver, combat: makeCombatDriver }
+function makeMonstrosityDriver() {
+  return {
+    name: 'monstrosity',
+    outFile: 'monstrosity.probe.json',
+    deck: MONSTROSITY_DECK,
+    gameType: 'Constructed - Pioneer',
+    maxMs: 420_000,
+    _landTurn: -1,
+    _cast: false,
+    _activated: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      const turn = gv.turn ?? 0
+      if (turn !== this._landTurn) {
+        const land = ctx.playLand()
+        if (land) {
+          this._landTurn = turn
+          return
+        }
+      }
+      const poloId = ctx.findOnBattlefield('Polukranos, World Eater')
+      if (!this._cast && !poloId && ctx.cardInHand('Polukranos') && ctx.untappedMana() >= 4) {
+        this._cast = true
+        ctx.playCardByName('Polukranos')
+        return
+      }
+      if (this._cast && poloId && !this._activated && ctx.untappedMana() >= 4) {
+        this._activated = true
+        ctx.sendAction('sendPlayerUUID', { gameId: ctx.gameId, value: poloId })
+        return
+      }
+      ctx.pass()
+    },
+    onChooseAbility(opts) {
+      return (opts.find((o) => /monstrosity/i.test(o.label)) ?? opts[0])?.value
+    },
+    onTarget(ctx) {
+      ctx.sendAction('sendPlayerBoolean', { gameId: ctx.gameId, value: false })
+      return undefined
+    },
+    onTargetAmount() {
+      return 1
+    },
+    captureWhen(gv) {
+      const me = getMe(gv)
+      for (const c of Object.values(me?.battlefield ?? {})) {
+        if ((c?.name ?? '') === 'Polukranos, World Eater' && (c?.counters ?? []).some((k) => (k?.count ?? 0) >= 1)) return true
+      }
+      return false
+    },
+  }
+}
+
+const REGISTRY = { mutate: makeMutateDriver, creature: makeCreatureDriver, combat: makeCombatDriver, monstrosity: makeMonstrosityDriver }
 const NAMES = Object.keys(REGISTRY)
 
 async function runOne(name) {

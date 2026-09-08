@@ -1158,6 +1158,16 @@ export interface TranslationSchema {
     manifest: string
     disguise: string
     cloak: string
+    designation_monstrous: string
+    designation_monstrous_title: string
+    designation_renowned: string
+    designation_renowned_title: string
+    designation_suspected: string
+    designation_suspected_title: string
+    designation_paired: string
+    designation_paired_title: string
+    designation_classlevel: string
+    designation_classlevel_title: string
     turn_order_label: string
     turn_active_badge: string
     turn_active_suffix: string

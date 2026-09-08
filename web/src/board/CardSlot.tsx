@@ -5,6 +5,7 @@ import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, reco
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
+import { cardDesignations, pairedPartnerName, classLevelOf, type Designation } from './designations'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -164,6 +165,26 @@ export default function CardSlot({
     return kws.filter((k) => ['combat', 'evasion', 'protection'].includes(k.category)).slice(0, 4)
   }, [card.rules, (card as unknown as { abilities?: unknown }).abilities, card.name])
 
+  const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
+  const pairPartner = useMemo(() => pairedPartnerName(card.rules), [card.rules])
+  const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
+
+  const designationTexts = (d: Designation): { label: string; title: string } => {
+    if (d === 'paired' && pairPartner) {
+      return {
+        label: t('board', 'designation_paired'),
+        title: t('board', 'designation_paired_title', { name: pairPartner }),
+      }
+    }
+    if (d === 'classlevel' && classLevel != null) {
+      return {
+        label: t('board', 'designation_classlevel', { level: String(classLevel) }),
+        title: t('board', 'designation_classlevel_title', { level: String(classLevel) }),
+      }
+    }
+    return { label: t('board', `designation_${d}`), title: t('board', `designation_${d}_title`) }
+  }
+
   return (
     <div
       ref={slotRef}
@@ -318,6 +339,19 @@ export default function CardSlot({
       )}
 
       <CardIcons icons={card.cardIcons} />
+
+      {designations.length > 0 && (
+        <div className="designation-badges">
+          {designations.map((d) => {
+            const texts = designationTexts(d)
+            return (
+              <span key={d} className={`designation-badge is-${d}`} title={texts.title}>
+                {texts.label}
+              </span>
+            )
+          })}
+        </div>
+      )}
 
       {keywordBadges.length > 0 && (
         <div className="keyword-badges" aria-label={t('wiki', 'tab_keywords')}>
