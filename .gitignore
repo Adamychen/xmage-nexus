@@ -56,6 +56,8 @@ Utils/data
 
 # build tools
 mage-bundle.zip
+# regenerable proxy bundles (see scripts/build.mjs proxy)
+Mage.Proxy.zip
 .env
 
 # build targets

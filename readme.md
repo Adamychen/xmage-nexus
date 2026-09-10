@@ -202,8 +202,11 @@ npm run test:e2e:fullflow
 
 ## Documentation
 
+- **[docs/](docs/)** — onboarding index: reading order, ports, and what each doc is authoritative for.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to add an event, action, type, or mechanic; enforced rules; file map.
 - **[PROJECT.md](PROJECT.md)** — master document: roadmap, phases, technical decisions, project status.
 - **[AGENTS.md](AGENTS.md)** — development rules, commands, conventions, known bugs.
+- **[Mage.Proxy/README.md](Mage.Proxy/README.md)** — full protocol reference (actions, events, serialization).
 
 ## License
 

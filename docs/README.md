@@ -23,8 +23,8 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | `PROJECT.md` | Master status: phases, lessons, quality table, dated work log | Update on every finished task (header date + work-log row) |
 | `ROADMAP.md` | Vision, parity matrix, phased plan | Historical narrative; can lag `PROJECT.md` by design, but flag divergences |
 | `web/INTERACTION_COVERAGE.md` | Per-callback and per-mechanic coverage: implemented + tested + test ref + date | Update with every handler/interaction change; enforced by `callbackCoverage.test.ts` |
-| `lobby_roadmap.md` | Lobby feature matrix + Create-Table audit vs desktop `NewTableDialog` | Feature slice doc, referenced from `PROJECT.md` |
-| `tcg-arena-ui-replica-spec.md` | Early visual spec (2472 lines) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures |
+| `docs/lobby_roadmap.md` | Lobby feature matrix + Create-Table audit vs desktop `NewTableDialog` | Feature slice doc, referenced from `PROJECT.md` |
+| `docs/history/tcg-arena-ui-replica-spec.md` | Early visual spec (2472 lines) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures |
 | `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `PROJECT.md`/`ROADMAP.md` when phases change |
 
 ## Ports (do not change without updating `AGENTS.md`, `scripts/lib.mjs`, `docs/deployment.md`)

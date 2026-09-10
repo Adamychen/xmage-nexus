@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributor docs (start here)
+    url: https://github.com/Adamychen/xmage-nexus/blob/main/docs/README.md
+    about: Onboarding path, architecture, testing, and protocol docs
+  - name: Troubleshooting (players & testers)
+    url: https://github.com/Adamychen/xmage-nexus/blob/main/docs/testing.md
+    about: Test layers, fake vs real E2E, and known flakes

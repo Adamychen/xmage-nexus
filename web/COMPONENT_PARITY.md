@@ -218,7 +218,7 @@ Evidencia: `JsonArgsTest` +3, `SimPlayerTest` intacto (java 167); `playerMenu.te
 
 ### U3 — Crear mesa (AUDITADA 2026-09-04, CERRADA 2026-09-06)
 
-Ver `lobby_roadmap.md` §F (tablas F1–F10, U1–U8 + delta 2026-09-06). F6 emblemas declarado fuera de alcance.
+Ver `../docs/lobby_roadmap.md` §F (tablas F1–F10, U1–U8 + delta 2026-09-06). F6 emblemas declarado fuera de alcance.
 
 ### U4 — Unirse / Espera / Staging (AUDITADA 2026-09-06, CERRADA)
 

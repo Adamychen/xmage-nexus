@@ -1,187 +1,158 @@
-# Contributing to Mage.Proxy
+# Contributing to XMage Nexus
 
-Guide for developers working on the web client or the proxy.
+Guide for developers working on the web client or the proxy. If you are new,
+read in this order: `readme.md` → `docs/README.md` (onboarding path) → this
+file (hands-on recipes and enforced rules). Scoped guides live next to the
+code: `web/AGENTS.md`, `Mage.Proxy/AGENTS.md`.
 
-## Quick Reference
+## Quick start
+
+Pick what matches your task — `web/` is fully isolated, you do **not** need
+Java/Maven to work on the client alone:
+
+- **Variant A — web-only** (UI, board, lobby, deterministic tests): `npm --prefix web install`, then `npm --prefix web run dev`. Full steps in `readme.md` ("Variant A").
+- **Variant B — full stack** (real games, protocol work): `node scripts/install.mjs`, then `node scripts/ctl.mjs start all`. Full steps in `readme.md` ("Variant B").
+
+## Everyday commands
 
 ```bash
-node scripts/ctl.mjs start all     # start server + proxy + vite
-node scripts/ctl.mjs stop all      # stop everything
-node scripts/test.mjs              # full test suite
-node scripts/tail.mjs proxy        # tail proxy logs
+node scripts/ctl.mjs start|stop|restart|status [server|proxy|vite|all]
+node scripts/tail.mjs [server|proxy|vite|all] [lines]   # logs in .run/*.log
+node scripts/test.mjs [layer...]                        # unit coverage typecheck build java self-test human-test e2e i18n
 ```
 
-## Architecture in 30 Seconds
+After touching `web/`: run `unit` + `typecheck` (`build` if the build changed).
+After touching proxy Java: run `java` + `node scripts/build.mjs proxy` +
+`node scripts/ctl.mjs restart proxy`. Before declaring anything done, run the
+full suite with the stack up (`node scripts/test.mjs`). See `docs/testing.md`.
 
-```
-XMage Server (Java) ──jboss-serialization──▶ Mage.Proxy (Java) ──WebSocket JSON──▶ Web Client (React/TS)
-```
+## Recipes
 
-- **Server**: game rules engine. We don't modify it (except test mode patches).
-- **Proxy**: thin bridge. Forwards everything. No game logic.
-- **Client**: UI implementation. All features live here.
+### Adding a game event handler
 
-The proxy serializes Java objects to JSON field-by-field (`JsonUtil.java`). Field
-names are camelCase (from Java reflection). The TypeScript types mirror this exactly.
+The server sends callbacks like `GAME_ASK`, `GAME_TARGET`,
+`GAME_TARGET_PLAYER`, `GAME_CHOOSE_MODE`, `GAME_SELECT` (full list:
+`EVENT_METHODS` in `web/src/net/types.ts`).
 
-## Common Tasks
+1. Decide: does it ask the player for input, or only update state?
+2. **Player interaction** → `web/src/game/feedback/parse.ts` (`parseFeedback`)
+   for parsing + a component under `web/src/game/feedbackModes/` (or a dialog),
+   routed by `web/src/game/FeedbackDialog.tsx`.
+3. **State update** → `web/src/state/eventHandler.ts` (keeps the `case` order;
+   bodies live in `web/src/state/events/<domain>.ts`: `chat/game/prompts/`
+   `sideboard/draft/tournament/replay/views`).
+4. Add/refresh its row in `web/INTERACTION_COVERAGE.md` (callback, mechanic,
+   test ref, date). The `callbackCoverage.test.ts` guard fails otherwise.
 
-### Adding a new game event handler
+### Adding a Java view type
 
-The server sends events like `GAME_SELECT_PLAYER`, `GAME_CHOOSE_ONE`, etc. If the
-web client doesn't handle them, they fall through to the default case (logged but ignored).
+When the XMage server introduces a new view class (e.g. `NewThingView`):
 
-**Step 1**: Check if the event needs feedback (player interaction) or just state update.
-
-**Step 2a**: If it's a player interaction (asks user to choose something):
-- Add parsing in `src/game/feedback.ts` (the `parseFeedback` switch)
-- Add UI rendering in the appropriate component
-
-**Step 2b**: If it's a state update:
-- Add handling in `src/state/eventHandler.ts` (the `handleEvent` switch)
-
-**Step 3**: Add the event method name to `EVENT_METHODS` in `src/net/types.ts`.
-
-### Adding a new Java view type
-
-When the XMage server introduces a new view class (e.g., `NewThingView`):
-
-**Step 1**: Add the definition to `web/schema/contract.schema.json`:
-```json
-{
-  "NewThingView": {
-    "type": "object",
-    "properties": {
-      "field1": { "type": "string" },
-      "field2": { "type": "number" }
-    },
-    "required": ["field1"]
-  }
-}
-```
-
-**Step 2**: Regenerate TypeScript:
 ```bash
+# 1. Model it in web/schema/contract.schema.json (source of truth for the wire)
+# 2. Regenerate:
 cd web
-npm run gen-types
+npm run gen-types && npm run gen-zod && npm run gen-server-state
+npm run gen-types:validate && npm run gen-zod:validate && npm run gen-server-state:validate
 ```
 
-**Step 3**: Use the new type in your code. It's automatically exported from `types.ts`.
+Never hand-edit `web/src/net/types.generated.ts` or
+`web/fixtures/schema.generated.ts`. The `mechanicsCoverage` guard verifies
+that every field the server can emit is modeled in the contract.
 
-### Adding a new proxy action
+### Adding a proxy action
 
 When the client needs to send a new action to the server:
 
-**Step 1**: Add handling in `Mage.Proxy/src/main/java/org/mage/proxy/ProxyClient.java`
-(the `switch (action)` block in the action handler).
+1. Route it in `Mage.Proxy/src/main/java/org/mage/proxy/CommandDispatch.java`
+   → implement it in the matching `InfoCommands` / `TableCommands` /
+   `TournamentCommands` / `GameCommands.java`. Parse args defensively with
+   `JsonArgs`, answer with the `ProxyProtocol` envelope.
+2. Add the TypeScript wrapper in `web/src/net/commands.ts` and call it from the client.
+3. Rebuild + restart: `node scripts/build.mjs proxy` then `node scripts/ctl.mjs restart proxy`.
 
-**Step 2**: Add the TypeScript type/interface in `src/net/types.ts` if needed.
+### Adding a mechanic (recorded-frame workflow)
 
-**Step 3**: Call the action from the web client using the commands module.
+New mechanics ship with a real-protocol golden frame so CI replays them
+without depending on the public server:
 
-### Syncing types after XMage upstream update
+1. Register a driver in `scripts/record.mjs` (deck + `onSelect` script + `captureWhen`).
+2. Run it against the local server; it dumps `web/fixtures/recorded/<mechanic>.json` + a `manifest.json` invariant.
+3. `web/fixtures/recorded.test.ts` validates the frame against the contract; `web/e2e/recorded.spec.ts` replays it in the `FakeServer`.
 
-When XMage releases a new version with changed view classes:
+## Rules that CI enforces (or humans will ask about)
 
-```bash
-# 1. Update the schema (manually diff the Java changes)
-# Edit web/schema/contract.schema.json
+- **Generated files are read-only**: `types.generated.ts`, `schema.generated.ts`
+  (and friends under `gen-*:validate`). Regenerate, then fix the code.
+- **i18n ×9 locales**: every user-facing string goes into all 9 locales in
+  `web/src/i18n/` — the `i18n` test layer checks parity.
+- **Docs duties on every finished task**: add a row to the `PROJECT.md` work
+  log (and bump its header date) · update `web/INTERACTION_COVERAGE.md` for
+  handler/interaction changes · update `web/COMPONENT_PARITY.md` when closing a
+  parity unit · mirror phase/feature changes into `site/content.json`.
+- **No comments in code** unless requested. Never commit generated or runtime
+  output: `dist/`, `.run/`, `target/`, `local-server/`, `node_modules/`.
+- Do not commit unless explicitly requested.
 
-# 2. Regenerate types
-cd web
-npm run gen-types
+## File map
 
-# 3. Verify no type errors
-npx tsc -b --noEmit
-
-# 4. Run tests
-npx vitest run
-```
-
-## File Map
-
-### Proxy (Java)
-
-| File | Purpose |
-|---|---|
-| `Mage.Proxy/src/.../ProxyClient.java` | Core: session management, action routing, event forwarding |
-| `Mage.Proxy/src/.../JsonUtil.java` | Reflection-based Java → JSON serializer |
-| `Mage.Proxy/src/.../SimPlayer.java` | Bot player for E2E tests (SIM seat) |
-
-### Web Client (TypeScript)
+### Proxy (Java, `Mage.Proxy/src/main/java/org/mage/proxy/`)
 
 | File | Purpose |
 |---|---|
-| `web/src/net/types.ts` | Protocol types (barrel: generated + proxy-specific) |
-| `web/src/net/types.generated.ts` | Auto-generated view types (DO NOT EDIT) |
-| `web/src/net/Gateway.ts` | WebSocket connection management |
-| `web/src/net/commands.ts` | Action wrappers (connect, joinGame, etc.) |
-| `web/src/state/eventHandler.ts` | Server event routing (the big switch) |
-| `web/src/state/store.ts` | State management barrel |
-| `web/src/game/feedback.ts` | Player interaction parsing (GAME_TARGET, GAME_ASK, etc.) |
-| `web/src/game/FeedbackDialog.tsx` | UI for player interactions |
-| `web/src/board/` | Game board rendering |
+| `ProxyClient.java` | `MageClient` bridge: session lifecycle, callback forwarding, command router |
+| `Gateway.java` | WS transport: `byConn`/`byAccount`, origin check, rate limit |
+| `CommandDispatch.java` + `Info/Table/Tournament/GameCommands.java` | Action routing + implementations |
+| `CommandContext.java` / `JsonArgs.java` / `ProxyProtocol.java` / `ErrorClassifier.java` | Router context, defensive arg readers, envelopes, error codes |
+| `MatchOptionsParser.java` / `SimManager.java` / `SimPlayer.java` | Match/tournament options, SIM bot lifecycle, deterministic test bot |
+| `JsonUtil.java` | Reflection Java → JSON serializer (camelCase 1:1, see `Mage.Proxy/README.md`) |
+| `DeckJson.java` / `DeckValidation.java` | Deck JSON parsing + advisory pre-validation (`validateDeck`) |
+| `Main.java` / `Config.java` | Entrypoint (WS + HTTP test page) and CLI flags |
 
-### Schema & Codegen
+### Web client (TypeScript, `web/src/`)
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `web/schema/contract.schema.json` | Wire format definition (source of truth for types) |
-| `scripts/gen-types.mjs` | JSON Schema → TypeScript generator |
-| `scripts/view-schema.mjs` | Java source → JSON Schema oracle (`mage.view.*` → `server-view-schema.json`) |
+| `net/types.ts` | Hand-written protocol surface (envelopes + `EVENT_METHODS`) |
+| `net/types.generated.ts` | Generated view types (DO NOT EDIT) |
+| `net/Gateway.ts` / `net/commands.ts` | WS connection + reconnect; action wrappers |
+| `state/eventHandler.ts` + `state/events/` | Server event router + per-domain bodies |
+| `state/state.ts` + `state/slices/` + `store.ts` | `AppState` composed of slices; store facade |
+| `game/feedback/` (`parse/detect/record/text`) + `feedbackModes/` | Prompt parsing + per-mode UI, routed by `FeedbackDialog.tsx` |
+| `board/` | Battlefield rendering (`BoardScene` publishes `window.__mageScene` for E2E) |
+| `lobby/` / `decks/` / `i18n/` / `audio/` / `cards/` | Login/lobby/wizard, DeckBuilder + Scryfall, 9 locales, sounds, card art |
 
-### E2E Testing
+### Schema, codegen & E2E
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `web/fixtures/fake.ts` | FakeServer: deterministic mock of the proxy |
-| `web/fixtures/scenarios/` | Test scenarios (spells, targeting, combat, etc.) |
-| `web/e2e/support/` | Test helpers (start game, game screen, scene assertions) |
-| `web/e2e/wshelper.ts` | HumanHelper: plays via WebSocket for E2E |
+| `web/schema/contract.schema.json` | Wire format source of truth |
+| `scripts/gen-types.mjs` / `gen-zod.mjs` / `server-state-schema.mjs` | Contract → TS / zod / server-state generators (+ `:validate`) |
+| `scripts/view-schema.mjs` / `engine-view-schema.mjs` | Java `mage.view.*` oracle and engine→view gap baseline |
+| `scripts/record.mjs` / `rec-lib.mjs` | Real-frame recorder → `web/fixtures/recorded/` |
+| `web/fixtures/fake.ts` / `fixtures/scenarios/` / `fixtures/schema.ts` | Deterministic FakeServer, declarative scenarios, zod frame validation |
+| `web/e2e/support/` / `web/e2e/wshelper.ts` | Test helpers; `HumanHelper` WS driver for fragile actions |
+| `web/e2e/readme.md` | E2E modes, domain tags, failure artefacts |
 
-## Testing
+## Commits & pull requests
 
-```bash
-# Unit tests (vitest)
-cd web && npx vitest run
+- Commit style: `fix(web): …`, `feat(proxy): …`, `test(…)`, `docs`, `refactor`
+  (see recent `git log` for examples).
+- Open PRs against `main`/`master` with the PR template checklist
+  (`.github/PULL_REQUEST_TEMPLATE.md`): layers run, docs updated, no generated files.
+- Protocol reference: `Mage.Proxy/README.md` (actions, events, serialization).
+  Architecture and testing details: `docs/architecture.md`, `docs/protocol.md`, `docs/testing.md`.
 
-# Type checking
-cd web && npx tsc -b --noEmit
+## Common pitfalls
 
-# Full suite (all layers)
-node scripts/test.mjs
-
-# Specific layers
-node scripts/test.mjs unit
-node scripts/test.mjs typecheck
-node scripts/test.mjs build
-node scripts/test.mjs java
-
-# E2E (fake mode, no Java needed)
-cd web && npx playwright test
-
-# E2E (real mode, requires stack)
-cd web && E2E_BACKEND=real npx playwright test
-```
-
-## Common Pitfalls
-
-1. **Stale types**: If you see runtime errors about missing fields, the TypeScript
-   types may be out of sync with the Java server. Run `npm run gen-types` and check.
-
-2. **Event not reaching the client**: The proxy drops outdated events on reconnect
-   and events for games the session never joined. Check `proxy.err.log`.
-
-3. **Type errors after schema change**: Always run `npx tsc -b --noEmit` after
-   modifying `types.ts` or `types.generated.ts`.
-
-4. **E2E flakes**: The fake server is deterministic. If E2E fails in fake mode,
-   it's a real bug. If it fails only in real mode, it's a timing issue.
-
-## Protocol Version
-
-The server's protocol version is available via `getServerInfo.protocolVersion`.
-The proxy's version is in the jar filename (`mage-proxy-1.4.61.jar`).
-
-When the server version changes, the proxy may need recompilation and the
-types may need regeneration.
+1. **Stale types**: runtime errors about missing fields mean the TS contract is
+   out of sync — regenerate (`gen-types` + `gen-zod`) and check the guards.
+2. **Event not reaching the client**: the proxy drops outdated events on
+   reconnect and events for games the session never joined. Check `proxy.err.log`.
+3. **E2E fails only in real mode**: fake is deterministic, so a real-only
+   failure is timing or protocol drift — never "fix" it by weakening the test.
+4. **First game after a cold start**: `self-test` WATCHGAME may flake once
+   (`SESSION CALLBACK EXCEPTION`). Retry warm; persistent failure is a real bug.
+5. **Restart server + proxy together** (`ctl.mjs restart all`); restarting only
+   the proxy leaves the first login hanging. Anonymous login to
+   `beta.xmage.today` is intermittent — the local server is the reliable oracle.
