@@ -91,7 +91,9 @@ async function startAll(only) {
   if (list.includes('server')) {
     stopPid('server')
     if (!startServer()) process.exit(1)
-    await waitForRequiredPort(PORTS.server, 'servidor XMage', 60_000)
+    // CI (runner frío) hace el escaneo completo de cartas la primera vez:
+    // el wait por defecto es amplio; local arranca con DB cacheada y no lo nota.
+    await waitForRequiredPort(PORTS.server, 'servidor XMage', Number(process.env.NEXUS_SERVER_WAIT_MS ?? 600_000))
     log(`servidor OK (puerto ${PORTS.server})`)
   }
 

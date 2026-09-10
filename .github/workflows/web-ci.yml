@@ -98,6 +98,12 @@ jobs:
           ref: nexus
           path: xmage-fork
           fetch-depth: 1
+        id: fork
+      - name: Cache XMage server card DB (avoid full cold scan)
+        uses: actions/cache@v4
+        with:
+          path: local-server/db
+          key: xmage-db-${{ steps.fork.outputs.commit }}
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
