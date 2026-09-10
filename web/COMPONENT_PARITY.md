@@ -123,7 +123,7 @@ Evidencia: `TournamentBracket.test` 12 (T1+T3), `CreateTableDialog.test` 11 (T2+
 Base desktop: `GamePanel.java` (tablero + skips F2–F11 + macros + trigger-order +
 botones concede/replay) · `FeedbackPanel.java` (OK/Undo/Special, coloreado por fase) ·
 `HelperPanel.java` (auto-answers, aviso sonoro) · `GamePane.java` (modos show/watch/replay).
-Base web: `GameScreen.tsx` + `ActionButton/PriorityOrb` + `RollbackDialog` + `GameEndDialog`.
+Base web: `GameScreen.tsx` + `ActionButton` + `RollbackDialog` + `GameEndDialog`.
 
 | Desktop | Web | Estado |
 |---|---|---|
