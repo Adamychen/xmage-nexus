@@ -1369,7 +1369,7 @@ export const zhs: TranslationSchema = {
     done_title: '一切就绪',
     done_desc: '现在可以连接并开始游玩。随时可以在设置中重新打开本向导。',
     enter: '进入',
-    skip: '使用默认值跳过',
+    skip: '保存并退出',
     review: '回顾首次设置',
     first_time: '第一次来？打开设置向导',
   },

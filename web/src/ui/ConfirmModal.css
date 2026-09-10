@@ -1,5 +1,5 @@
 .confirm-backdrop {
-  z-index: 2000;
+  pointer-events: auto;
 }
 
 .confirm-modal .confirm-ok-danger {

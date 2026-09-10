@@ -1,7 +1,3 @@
-.about-backdrop {
-  z-index: 1200;
-}
-
 .about-tabs {
   display: flex;
   gap: 4px;

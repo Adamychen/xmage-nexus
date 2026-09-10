@@ -67,4 +67,50 @@ describe('Modal', () => {
     fireEvent.click(backdrop)
     expect(screen.getByRole('dialog')).toBeDefined()
   })
+
+  it('stacks later modals above earlier ones (auto z-index)', () => {
+    render(
+      <>
+        <Modal backdropClassName="a-backdrop" dialogClassName="a-dialog" labelledBy="a" testId="modal-a"><span>a</span></Modal>
+        <Modal backdropClassName="b-backdrop" dialogClassName="b-dialog" labelledBy="b" testId="modal-b"><span>b</span></Modal>
+      </>,
+    )
+    const za = Number(screen.getByTestId('modal-a').parentElement?.style.zIndex)
+    const zb = Number(screen.getByTestId('modal-b').parentElement?.style.zIndex)
+    expect(za).toBeGreaterThanOrEqual(500)
+    expect(zb).toBeGreaterThan(za)
+  })
+
+  it('honors an explicit zIndex override', () => {
+    render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t" testId="modal-top" zIndex={2000}>
+        <span>top</span>
+      </Modal>,
+    )
+    expect(screen.getByTestId('modal-top').parentElement?.style.zIndex).toBe('2000')
+  })
+
+  it('runs onEscape only for the topmost modal', () => {
+    const onEscapeBottom = vi.fn()
+    const onEscapeTop = vi.fn()
+    render(
+      <>
+        <Modal backdropClassName="a-backdrop" dialogClassName="a-dialog" labelledBy="a" testId="modal-a" onEscape={onEscapeBottom}><span>a</span></Modal>
+        <Modal backdropClassName="b-backdrop" dialogClassName="b-dialog" labelledBy="b" testId="modal-b" onEscape={onEscapeTop}><span>b</span></Modal>
+      </>,
+    )
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onEscapeTop).toHaveBeenCalledTimes(1)
+    expect(onEscapeBottom).not.toHaveBeenCalled()
+  })
+
+  it('does not run onEscape after the modal unmounts', () => {
+    const onEscape = vi.fn()
+    const { unmount } = render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t" onEscape={onEscape}><span>x</span></Modal>,
+    )
+    unmount()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onEscape).not.toHaveBeenCalled()
+  })
 })

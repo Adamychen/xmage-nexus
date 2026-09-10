@@ -1369,7 +1369,7 @@ export const fr: TranslationSchema = {
     done_title: 'Tout est prêt',
     done_desc: 'Tu peux te connecter et jouer. Tu peux revoir cet assistant à tout moment depuis les Réglages.',
     enter: 'Entrer',
-    skip: 'Passer avec les valeurs par défaut',
+    skip: 'Enregistrer et quitter',
     review: 'Revoir l’assistant de démarrage',
     first_time: 'Première fois ici ? Ouvre l’assistant de démarrage',
   },

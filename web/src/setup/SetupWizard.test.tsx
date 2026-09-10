@@ -112,4 +112,23 @@ describe('SetupWizard', () => {
     expect(screen.getByTestId('setup-server-host')).toBeTruthy()
     expect(screen.getByTestId('setup-port')).toBeTruthy()
   })
+
+  it('✕ close button closes without saving or marking setup done', () => {
+    const onClose = vi.fn()
+    render(<SetupWizard onClose={onClose} />)
+    next()
+    fireEvent.change(screen.getByTestId('setup-username'), { target: { value: 'sin-guardar' } })
+    fireEvent.click(screen.getByTestId('setup-wizard-close'))
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(isSetupDone()).toBe(false)
+    expect(loadConn()).toBeNull()
+  })
+
+  it('Escape closes without saving (topmost-modal aware)', () => {
+    const onClose = vi.fn()
+    render(<SetupWizard onClose={onClose} />)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(isSetupDone()).toBe(false)
+  })
 })

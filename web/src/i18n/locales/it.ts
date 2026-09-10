@@ -1369,7 +1369,7 @@ export const it: TranslationSchema = {
     done_title: 'Tutto pronto',
     done_desc: 'Ora puoi connetterti e giocare. Puoi rivedere questa procedura quando vuoi dalle Impostazioni.',
     enter: 'Entra',
-    skip: 'Salta e usa i valori predefiniti',
+    skip: 'Salva ed esci',
     review: 'Rivedi configurazione iniziale',
     first_time: 'Prima volta qui? Apri la configurazione iniziale',
   },

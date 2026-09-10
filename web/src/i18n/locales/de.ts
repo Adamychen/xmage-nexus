@@ -1369,7 +1369,7 @@ export const de: TranslationSchema = {
     done_title: 'Alles bereit',
     done_desc: 'Du kannst dich jetzt verbinden und spielen. Du kannst diesen Assistenten jederzeit in den Einstellungen erneut öffnen.',
     enter: 'Starten',
-    skip: 'Mit Standardwerten überspringen',
+    skip: 'Speichern & beenden',
     review: 'Ersteinrichtung erneut ansehen',
     first_time: 'Erstes Mal hier? Öffne den Einrichtungsassistenten',
   },

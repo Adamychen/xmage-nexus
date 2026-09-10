@@ -103,6 +103,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
       size="lg"
       testId="setup-wizard"
       legacyPanelClass="setup-wizard"
+      onClose={onClose}
       kickerIcon="sparkles"
       kickerLabel={t('setup', 'title')}
       title={t('setup', stepId === 'language' ? 'welcome_title' : stepId === 'done' ? 'done_title' : `step_${stepId}` as 'step_language')}

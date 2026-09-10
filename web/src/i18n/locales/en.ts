@@ -1369,7 +1369,7 @@ export const en: TranslationSchema = {
     done_title: 'All set',
     done_desc: 'You can connect and play now. Revisit this wizard anytime from Settings.',
     enter: 'Enter',
-    skip: 'Skip with default values',
+    skip: 'Save & exit',
     review: 'Review first-time setup',
     first_time: 'First time here? Open the setup wizard',
   },

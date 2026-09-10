@@ -1369,7 +1369,7 @@ export const ja: TranslationSchema = {
     done_title: '準備完了',
     done_desc: '接続してプレイできます。このウィザードは設定からいつでも開けます。',
     enter: '入る',
-    skip: 'デフォルト値でスキップ',
+    skip: '保存して終了',
     review: '初回セットアップを確認',
     first_time: '初めてですか？セットアップウィザードを開く',
   },

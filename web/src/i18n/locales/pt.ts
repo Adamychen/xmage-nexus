@@ -1369,7 +1369,7 @@ export const pt: TranslationSchema = {
     done_title: 'Tudo pronto',
     done_desc: 'Já podes ligar-te e jogar. Podes rever este assistente quando quiseres nas Definições.',
     enter: 'Entrar',
-    skip: 'Saltar e usar valores predefinidos',
+    skip: 'Guardar e sair',
     review: 'Rever assistente inicial',
     first_time: 'Primeira vez aqui? Abre o assistente inicial',
   },
