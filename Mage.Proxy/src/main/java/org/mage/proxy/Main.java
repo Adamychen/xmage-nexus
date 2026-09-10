@@ -147,18 +147,67 @@ public class Main {
         }
     }
 
-    private static String contentType(String name) {
-        if (name.endsWith(".html")) {
+    static String contentType(String name) {
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        if (lower.endsWith(".html") || lower.endsWith(".htm")) {
             return "text/html; charset=utf-8";
         }
-        if (name.endsWith(".js")) {
+        if (lower.endsWith(".js") || lower.endsWith(".mjs")) {
             return "application/javascript; charset=utf-8";
         }
-        if (name.endsWith(".css")) {
+        if (lower.endsWith(".css")) {
             return "text/css; charset=utf-8";
         }
-        if (name.endsWith(".json")) {
+        if (lower.endsWith(".json") || lower.endsWith(".map")) {
             return "application/json; charset=utf-8";
+        }
+        if (lower.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".gif")) {
+            return "image/gif";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".ico")) {
+            return "image/x-icon";
+        }
+        if (lower.endsWith(".woff2")) {
+            return "font/woff2";
+        }
+        if (lower.endsWith(".woff")) {
+            return "font/woff";
+        }
+        if (lower.endsWith(".ttf")) {
+            return "font/ttf";
+        }
+        if (lower.endsWith(".otf")) {
+            return "font/otf";
+        }
+        if (lower.endsWith(".wav")) {
+            return "audio/wav";
+        }
+        if (lower.endsWith(".mp3")) {
+            return "audio/mpeg";
+        }
+        if (lower.endsWith(".ogg") || lower.endsWith(".oga")) {
+            return "audio/ogg";
+        }
+        if (lower.endsWith(".wasm")) {
+            return "application/wasm";
+        }
+        if (lower.endsWith(".txt")) {
+            return "text/plain; charset=utf-8";
+        }
+        if (lower.endsWith(".xml")) {
+            return "application/xml; charset=utf-8";
         }
         return "application/octet-stream";
     }

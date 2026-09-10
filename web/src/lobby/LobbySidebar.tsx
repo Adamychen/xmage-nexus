@@ -7,12 +7,11 @@ interface SidebarProps {
   onTabChange: (tab: LobbyTab) => void
   tableCount: number
   onCreate: () => void
-  onDownloadImages: () => void
   onOpenRoomLeaderboard: () => void
 }
 
 export default function LobbySidebar({
-  activeTab, onTabChange, tableCount, onCreate, onDownloadImages, onOpenRoomLeaderboard,
+  activeTab, onTabChange, tableCount, onCreate, onOpenRoomLeaderboard,
 }: SidebarProps) {
   const { t } = useTranslation()
   return (
@@ -67,18 +66,6 @@ export default function LobbySidebar({
       >
         <span className="sidebar-btn-icon"><Icon name="trophy" size={16} /></span>
         <span className="sidebar-btn-label">{t('lobby.nav_ranking')}</span>
-      </button>
-
-      <div className="sidebar-divider" />
-
-      <button
-        type="button"
-        className="sidebar-btn"
-        onClick={onDownloadImages}
-        title={t('dialogs','download_title')}
-      >
-        <span className="sidebar-btn-icon"><Icon name="download" size={16} /></span>
-        <span className="sidebar-btn-label">{t('lobby.nav_downloads')}</span>
       </button>
     </nav>
   )

@@ -12,7 +12,6 @@ import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
-import DownloadImagesDialog from './DownloadImagesDialog'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
@@ -47,7 +46,6 @@ export default function LobbyScreen() {
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [showDownloadImages, setShowDownloadImages] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [showLeaderboard, setShowLeaderboard] = useState(false)
@@ -148,7 +146,6 @@ export default function LobbyScreen() {
           }
         }}
         onCreate={() => setShowCreate(true)}
-        onDownloadImages={() => setShowDownloadImages(true)}
         onOpenAbout={() => setShowAbout(true)}
         hasNews={unseenNews}
       />
@@ -399,9 +396,6 @@ export default function LobbyScreen() {
           onWatchMatch={(id) => void bracket.watchMatch(id)}
           watchingMatchId={bracket.watchingMatchId}
         />
-      )}
-      {showDownloadImages && (
-        <DownloadImagesDialog onClose={() => setShowDownloadImages(false)} />
       )}
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />

@@ -33,7 +33,7 @@ function next(times = 1) {
 }
 
 describe('SetupWizard', () => {
-  it('walks the seven steps with back/next and a live counter', () => {
+  it('walks the six steps with back/next and a live counter', () => {
     render(<SetupWizard onClose={() => {}} />)
     expect(screen.getByTestId('setup-wizard')).toBeTruthy()
     expect(screen.getByTestId('setup-counter').textContent).toContain('1')
@@ -55,11 +55,8 @@ describe('SetupWizard', () => {
     expect(screen.getByTestId('settings-sound-card')).toBeTruthy()
 
     next()
-    expect(screen.getByTestId('setup-counter').textContent).toContain('6')
-
-    next()
     expect(screen.getByTestId('setup-enter')).toBeTruthy()
-    expect(screen.getByTestId('setup-counter').textContent).toContain('7')
+    expect(screen.getByTestId('setup-counter').textContent).toContain('6')
   })
 
   it('skip marks setup done with defaults and closes', () => {
@@ -81,7 +78,7 @@ describe('SetupWizard', () => {
       fireEvent.change(screen.getByTestId('setup-username'), { target: { value: 'nuevo' } })
       next()
       fireEvent.click(screen.getByTestId('setup-preset-official'))
-      next(4)
+      next(3)
       fireEvent.click(screen.getByTestId('setup-enter'))
     } finally {
       window.removeEventListener('nexus:setup-conn', listener)

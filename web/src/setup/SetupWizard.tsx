@@ -3,7 +3,6 @@ import { useTranslation } from '../i18n'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import { LanguageSection, InterfaceSection, BoardSection, SoundSection, GameplayQuickSection } from '../settings/sections'
-import DownloadPanel from '../lobby/DownloadPanel'
 import AvatarImage from '../lobby/AvatarImage'
 import AvatarPickerModal from '../lobby/AvatarPickerModal'
 import CountryFlag from '../lobby/CountryFlag'
@@ -12,9 +11,9 @@ import { loadConn, saveConn, type ConnectionInfo } from '../state/persistence'
 import { markSetupDone, SETUP_CONN_EVENT } from './setupFlag'
 import './SetupWizard.css'
 
-type StepId = 'language' | 'identity' | 'server' | 'board' | 'soundplay' | 'cards' | 'done'
+type StepId = 'language' | 'identity' | 'server' | 'board' | 'soundplay' | 'done'
 
-const STEPS: StepId[] = ['language', 'identity', 'server', 'board', 'soundplay', 'cards', 'done']
+const STEPS: StepId[] = ['language', 'identity', 'server', 'board', 'soundplay', 'done']
 
 interface ServerDraft {
   preset: ServerPreset
@@ -195,13 +194,6 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
             <p className="setup-lead">{t('setup', 'step_soundplay_desc')}</p>
             <SoundSection />
             <GameplayQuickSection />
-          </>
-        )}
-        {stepId === 'cards' && (
-          <>
-            <p className="setup-lead">{t('setup', 'step_cards_desc')}</p>
-            <p className="setup-hint">★ {t('setup', 'cards_recommended')}: MY_DECKS · {t('setup', 'cards_bg_note')}</p>
-            <DownloadPanel initialScope="MY_DECKS" />
           </>
         )}
         {stepId === 'done' && (

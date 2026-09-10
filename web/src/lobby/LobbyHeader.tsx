@@ -24,7 +24,6 @@ interface Props {
   activeTableCount?: number
   onGoToActiveTable?: () => void
   onCreate: () => void
-  onDownloadImages: () => void
   onOpenAbout: () => void
   hasNews: boolean
 }
@@ -32,7 +31,7 @@ interface Props {
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenLeaderboard, activeTab, onTabChange,
-  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onDownloadImages, onOpenAbout, hasNews,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onOpenAbout, hasNews,
 }: Props) {
   const { t } = useTranslation()
 
@@ -106,15 +105,6 @@ export default function LobbyHeader({
         >
           <Icon name="trophy" size={14} />
           <span>{t('lobby.nav_ranking')}</span>
-        </button>
-        <button
-          type="button"
-          className="top-nav-btn"
-          onClick={onDownloadImages}
-          title={t('dialogs', 'download_title')}
-        >
-          <Icon name="download" size={14} />
-          <span>{t('lobby.nav_downloads')}</span>
         </button>
       </nav>
 
