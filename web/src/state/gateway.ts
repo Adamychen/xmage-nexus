@@ -119,7 +119,6 @@ export async function doConnect(
     }
     const chatId = await cmds.getRoomChatId()
     setState({ roomChatId: chatId ?? null })
-    if (chatId) void cmds.sendChatMessage(chatId, '¡Hola desde el cliente web!')
     void cmds.updatePreferences(clonePhaseStops(getState().settings.phaseStops))
   } else {
     setState({ phase: 'idle', connecting: false, error: res.error ?? 'login fallido' })

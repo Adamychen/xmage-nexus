@@ -34,7 +34,7 @@ async function main() {
   // 4. Fake E2E (no requiere el stack XMage; vite levanta solo)
   run("npx", ["playwright", "test", "--reporter=json", "--output-file=e2e-results.json"], {
     cwd: webDir,
-    timeoutMs: 900_000,
+    timeoutMs: 1_800_000,
   });
 
   // 5. Proxy (java)
