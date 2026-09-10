@@ -19,6 +19,14 @@ XMage `17171` (testMode) · proxy WS `8787` · proxy HTTP page `8788/index.html`
 - Requirements: JDK 17 (Homebrew `openjdk@17`; `/usr/bin/java` stub breaks daemons — `scripts/lib.mjs` resolves the real binary), Maven 3.9, Node 20+. Server and proxy must run with `--add-opens=java.base/java.io=ALL-UNNAMED` (jboss-serialization on JDK 17).
 - XMage version `1.4.61-V1` (upstream tag `xmage_1.4.61V1`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
 
+## Public multi-user deployment (playit.gg)
+
+See **`docs/deploy-playit.md`** for the full English guide: run one `Mage.Proxy`
+(multi-tenant) on an always-on machine, expose its two ports through playit.gg
+TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
+`node scripts/deploy-bundle.mjs`; start scripts live in `scripts/deploy/`
+(`start-proxy.sh` for Linux/macOS, `start-proxy.bat` for Windows).
+
 ## Dashboard (GitHub Pages, zero-build static `site/`)
 
 - `site/content.json` — canonical dashboard copy (project, phases, features, guards). Keep in sync with `PROJECT.md`/`ROADMAP.md`.
