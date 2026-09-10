@@ -38,12 +38,14 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   proxy test page `http://127.0.0.1:8788/index.html`, Vite dev `http://localhost:5173`
 - Rebuild the proxy jar: `node scripts/build.mjs proxy` (requires stopping
   the proxy; `build.mjs` stops it on its own) — afterwards `node scripts/ctl.mjs restart proxy`
-- Full build (server + plugins + proxy): `node scripts/build.mjs`
+- Full build (server + plugins + proxy): `node scripts/build.mjs` (engine
+  steps run inside the fork checkout; the proxy builds standalone in this repo)
 - XMage version: **1.4.61-V1** (upstream magefree/mage; merge of tag `xmage_1.4.61V1`).
   Proxy jar: `Mage.Proxy/target/mage-proxy-1.4.61.jar`. The proxy's default
   server is **`beta.xmage.today:17171`** (current official server; `beta.xmage.de` is obsolete).
   If the remote server changes release (strict version check `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`),
-  the proxy won't connect: the fork must be updated (fetch upstream + merge) and everything rebuilt.
+  the proxy won't connect: the fork must be updated (fetch upstream + merge, in
+  `../xmage-fork`) and everything rebuilt.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
   Note: **anonymous login to `beta.xmage.today` is intermittent** — the fatal
   `Can't receive server state before other data` / `connectStart=false` originates in the *remote*
@@ -87,11 +89,17 @@ This repo has three independent concerns, each developable on its own:
 - **`web/`** — React/Vite/TS client. **No Java, no fork, no proxy needed.**
   Runs against the bundled `FakeServer` for all `unit`/`typecheck`/`build`/
   `e2e-fake`. Scoped doc: `web/AGENTS.md`.
-- **`Mage.Proxy/`** — Java WebSocket bridge. Needs the XMage fork built into
-  `~/.m2` (once per XMage release); develop standalone after that. Scoped doc:
-  `Mage.Proxy/AGENTS.md`.
-- **XMage fork (`Mage.*`)** — the rules engine. Large; only rebuilt when the
-  XMage version changes or the test-mode patches need adjusting.
+- **`Mage.Proxy/`** — Java WebSocket bridge. Needs the XMage fork artifacts in
+  `~/.m2` (once per XMage release; `ensureMageArtifacts()` installs them from
+  the fork checkout automatically); develop standalone after that. Standalone
+  pom (`mvn -f Mage.Proxy/pom.xml test`). Scoped doc: `Mage.Proxy/AGENTS.md`.
+- **XMage fork (`Mage.*`)** — the rules engine, in a SEPARATE checkout, NOT in
+  this repo. Resolution order (`scripts/lib.mjs` `forkDir()`):
+  `NEXUS_FORK_DIR` env → `../xmage-fork` → error with instructions. Clone it
+  once: `git clone https://github.com/Adamychen/xmage-nexus.git -b nexus ../xmage-fork`
+  (branch `nexus` = upstream tag `xmage_1.4.61V1` + our test-mode/view patches;
+  upstream releases merge cleanly there). Rebuild only when the XMage version
+  changes or the test-mode patches change.
 
 ## Multi-tenant proxy (one process, many users)
 

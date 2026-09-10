@@ -4,12 +4,58 @@
 
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import os from 'node:os'
 import fs from 'node:fs'
 import { spawn, spawnSync } from 'node:child_process'
 import net from 'node:net'
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export const runDir = path.join(repoRoot, '.run')
+
+/** Versión XMage del fork (coincide con los artefactos org.mage del ~/.m2). */
+export const XMAGE_VERSION = '1.4.61'
+
+/**
+ * Resuelve el checkout del fork XMage (motor + servidor + plugins).
+ * Orden: NEXUS_FORK_DIR → ../xmage-fork → este mismo repo (mientras el fork
+ * siga vendido aquí). Lanza error con instrucciones si no hay fork en ninguno.
+ */
+export function forkDir() {
+  if (process.env.NEXUS_FORK_DIR) return path.resolve(process.env.NEXUS_FORK_DIR)
+  const sibling = path.resolve(repoRoot, '..', 'xmage-fork')
+  if (fs.existsSync(path.join(sibling, 'Mage', 'pom.xml'))) return sibling
+  if (fs.existsSync(path.join(repoRoot, 'Mage', 'pom.xml'))) return repoRoot
+  throw new Error(
+    'No encuentro el fork XMage. Clónalo con: git clone https://github.com/Adamychen/xmage-nexus.git -b nexus ../xmage-fork  (o define NEXUS_FORK_DIR)',
+  )
+}
+
+/** Ruta absoluta dentro del fork: forkPath('Mage/target/classes'). */
+export function forkPath(rel) {
+  return path.join(forkDir(), rel)
+}
+
+/** ¿Están los artefactos org.mage instalados en ~/.m2? */
+export function mageArtifactsPresent() {
+  return fs.existsSync(path.join(os.homedir(), '.m2', 'repository', 'org', 'mage', 'mage', XMAGE_VERSION, `mage-${XMAGE_VERSION}.jar`))
+}
+
+/**
+ * Garantiza mage/mage-common/mage-sets en ~/.m2 (dependencias del build del
+ * proxy). Si faltan, instala desde el checkout del fork (una vez por release).
+ */
+export function ensureMageArtifacts() {
+  if (mageArtifactsPresent()) return
+  log('artefactos org.mage ausentes en ~/.m2 — instalando desde el fork…')
+  const res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], {
+    cwd: forkDir(),
+    timeoutMs: 1_800_000,
+    quiet: true,
+  })
+  if (res.code !== 0) {
+    throw new Error(`mvn install del fork falló: ${res.stderr.slice(0, 400)}`)
+  }
+}
 
 export const PORTS = {
   server: 17171,
@@ -323,7 +369,7 @@ export function buildServerClasspath() {
     'Mage.Common/pom.xml',
     'Mage.Sets/pom.xml',
     'Mage.Server.Plugins/Mage.Player.AI/pom.xml',
-  ].map((p) => path.join(repoRoot, p))
+  ].map((p) => forkPath(p))
 
   let cached = false
   try {
@@ -334,7 +380,10 @@ export function buildServerClasspath() {
   }
 
   if (!cached) {
-    const res = mvn(['-q', '-pl', 'Mage.Server', 'dependency:build-classpath', `-Dmdep.outputFile=${cpFile}`], { quiet: true })
+    const res = mvn(['-q', '-pl', 'Mage.Server', 'dependency:build-classpath', `-Dmdep.outputFile=${cpFile}`], {
+      cwd: forkDir(),
+      quiet: true,
+    })
     if (res.code !== 0) {
       throw new Error(`mvn dependency:build-classpath falló: ${res.stderr.slice(0, 400)}`)
     }
@@ -347,9 +396,9 @@ export function buildServerClasspath() {
     .filter((p) => p && !/([\\/])org([\\/])mage([\\/])/.test(p))
 
   const classes = MODULE_CLASSES.map((p) => {
-    const abs = path.join(repoRoot, p)
+    const abs = forkPath(p)
     if (!fs.existsSync(abs)) {
-      throw new Error(`falta ${p} — ejecuta: node scripts/build.mjs`)
+      throw new Error(`falta ${abs} — ejecuta: node scripts/build.mjs`)
     }
     return abs
   })
@@ -357,11 +406,11 @@ export function buildServerClasspath() {
   return classes.concat(deps).join(path.delimiter)
 }
 
-/** Copia los jars de los módulos plugin a local-server/plugins/. */
+/** Copia los jars de los módulos plugin (del fork) a local-server/plugins/. */
 export function copyPluginJars() {
   const pluginsDir = path.join(repoRoot, 'local-server', 'plugins')
   fs.mkdirSync(pluginsDir, { recursive: true })
-  const root = path.join(repoRoot, 'Mage.Server.Plugins')
+  const root = forkPath('Mage.Server.Plugins')
   let count = 0
   for (const moduleDir of fs.readdirSync(root)) {
     const target = path.join(root, moduleDir, 'target')

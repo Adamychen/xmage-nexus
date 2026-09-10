@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { run, binName, repoRoot } from "./lib.mjs";
+import { run, binName, repoRoot, ensureMageArtifacts } from "./lib.mjs";
 import { build } from "./gen-dashboard.mjs";
 
 const webDir = path.join(repoRoot, "web");
@@ -37,8 +37,10 @@ async function main() {
     timeoutMs: 1_800_000,
   });
 
-  // 5. Proxy (java)
-  run(binName("mvn"), ["-pl", "Mage.Proxy", "-am", "test"], { timeoutMs: 900_000 });
+  // 5. Proxy (java) — necesita los artefactos org.mage en ~/.m2 (release del
+  //    fork descargada en CI, build local en máquina de desarrollo)
+  ensureMageArtifacts();
+  run(binName("mvn"), ["-f", "Mage.Proxy/pom.xml", "test"], { timeoutMs: 900_000 });
 
   // 6. Generar status.json
   build();

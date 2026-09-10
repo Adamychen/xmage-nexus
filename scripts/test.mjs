@@ -5,7 +5,7 @@
 // Capas: unit, coverage, typecheck, build, java, self-test, human-test, e2e, i18n
 
 import path from 'node:path'
-import { binName, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
+import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
 
 const WEB_DIR = path.join(repoRoot, 'web')
 const STACK_HINT = 'el stack no está corriendo — ejecuta primero: node scripts/ctl.mjs start'
@@ -15,7 +15,7 @@ const LAYERS = [
   { name: 'coverage', desc: 'vitest run --coverage (web)' },
   { name: 'typecheck', desc: 'tsc -b --noEmit (web)' },
   { name: 'build', desc: 'tsc -b && vite build (web)' },
-  { name: 'java', desc: 'mvn -pl Mage.Proxy -am test' },
+  { name: 'java', desc: 'mvn -f Mage.Proxy/pom.xml test (con artefactos del fork en ~/.m2)' },
   { name: 'self-test', desc: 'E2E headless (ws://127.0.0.1:8787)' },
   { name: 'human-test', desc: 'E2E jugador humano contra IA (ws://127.0.0.1:8787)' },
   { name: 'e2e', desc: 'playwright test (web)' },
@@ -140,7 +140,8 @@ async function main() {
         res = run(binName('npm'), ['--prefix', 'web', 'run', 'build'])
         break
       case 'java':
-        res = run(binName('mvn'), ['-pl', 'Mage.Proxy', '-am', 'test'])
+        ensureMageArtifacts()
+        res = run(binName('mvn'), ['-f', 'Mage.Proxy/pom.xml', 'test'])
         break
       case 'self-test': {
         const upServer = await stackUp(PORTS.server, 'servidor')

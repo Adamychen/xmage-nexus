@@ -1,6 +1,6 @@
 # Project: XMage Nexus (Web) — Master Working Document
 
-> Last updated: 2026-09-10 (bandera por defecto según locale del navegador; DialogShell: contador del wizard en su sitio; altura de header contenida por zoom-150%).
+> Last updated: 2026-09-10 (**fork XMage aislado**: `Mage.*` movido a checkout hermano `../xmage-fork` (rama `nexus` = tag `xmage_1.4.61V1` + parches test-mode, backup en `origin/nexus`); `Mage.Proxy` pom standalone; scripts resuelven el fork vía `NEXUS_FORK_DIR`/`../xmage-fork`; suite verde post-split; jars publicados en release `engine-1.4.61-v1`. Modales: z-index dinámico + cierre claro ✕/Esc).
 
 ---
 

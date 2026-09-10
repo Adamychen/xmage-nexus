@@ -17,13 +17,16 @@ on the XMage fork (`mage` + `mage-common`) via the parent pom.
   (serialized by reflection in `JsonUtil`, so new view fields need no proxy
   change), `mage.constants.*`, `mage.players.*`. It does **not** use engine
   internals, so the churning `mage.game`/card code never affects it.
-- The version is inherited from the parent `<version>` (e.g. `1.4.61`) — a
-  XMage release bump is a one-line pom change + recompile, not a code edit.
-- Build the fork **once** into your local `~/.m2` (see below); you do **not**
-  need the fork source checked out for day-to-day proxy work.
-- The only fork-side code we carry is 2–3 `isTestMode()` guards in
-  `Mage.Server/src/main/java/mage/server/TableController.java` (lets the proxy
-  join without deck validation). Adjust only when changing test mode.
+- The fork lives in a SEPARATE checkout (`../xmage-fork` or `NEXUS_FORK_DIR`,
+  resolved by `scripts/lib.mjs` `forkDir()`); it is NOT part of this repo.
+- The pom is **standalone**: `mvn -f Mage.Proxy/pom.xml test` against the
+  `org.mage` artifacts in `~/.m2` (`ensureMageArtifacts()` installs them from
+  the fork checkout when missing). A XMage release bump is a one-line version
+  change + recompile, not a code edit.
+- The only fork-side code we carry is the test-mode propagation in
+  `Mage.Server/src/main/java/mage/server/TableController.java`
+  (`skipInitShuffling` / `skipStartingPlayerChoice`). Adjust only when changing
+  test mode.
 
 ## Build & run
 

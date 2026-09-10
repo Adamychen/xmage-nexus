@@ -4,7 +4,7 @@
 //   (sin argumentos: compila servidor + plugins y empaqueta el proxy)
 //   (arg "proxy": solo empaqueta el proxy, asumiendo el resto ya compilado)
 
-import { copyPluginJars, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
+import { copyPluginJars, ensureMageArtifacts, forkDir, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
 
 function fail(step, res) {
   logError(`FALLÓ en: ${step}`)
@@ -17,12 +17,12 @@ async function main() {
 
   if (!onlyProxy) {
     log('== paso 1/4: compilar módulos base (Mage.Common, Mage, Mage.Sets, Mage.Server) ==')
-    let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'])
+    let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], { cwd: forkDir() })
     if (res.code !== 0) fail('compilación de módulos base', res)
     log('  OK')
 
     log('== paso 2/4: compilar módulos plugin ==')
-    res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'])
+    res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'], { cwd: forkDir() })
     if (res.code !== 0) fail('compilación de plugins', res)
     log('  OK')
 
@@ -33,10 +33,11 @@ async function main() {
   }
 
   log('== paso final: empaquetar Mage.Proxy (clean package) ==')
+  ensureMageArtifacts()
   // el jar abierto por el proxy en marcha bloquea el clean en Windows
   stopPid('proxy')
   await new Promise((r) => setTimeout(r, 1000))
-  const res = mvn(['-q', '-pl', 'Mage.Proxy', 'clean', 'package', '-DskipTests'])
+  const res = mvn(['-q', '-f', 'Mage.Proxy/pom.xml', 'clean', 'package', '-DskipTests'])
   if (res.code !== 0) fail('empaquetado del proxy', res)
 
   log('')

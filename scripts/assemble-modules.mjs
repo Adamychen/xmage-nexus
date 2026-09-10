@@ -13,6 +13,8 @@ import {
   MODULE_CLASSES,
   SERVER_ADD_OPENS,
   buildServerClasspath,
+  forkDir,
+  forkPath,
   log,
   logError,
 } from './lib.mjs'
@@ -41,9 +43,9 @@ function main() {
   const classesDir = path.join(serverDir, 'classes')
   const classNames = []
   for (const rel of MODULE_CLASSES) {
-    const src = path.join(repoRoot, rel)
+    const src = forkPath(rel)
     if (!fs.existsSync(src)) {
-      logError(`falta ${rel} — ejecuta: node scripts/build.mjs`)
+      logError(`falta ${src} — ejecuta: node scripts/build.mjs`)
       process.exit(1)
     }
     const parts = rel.split('/')
@@ -70,7 +72,7 @@ function main() {
 
   const pluginsDir = path.join(serverDir, 'plugins')
   fs.mkdirSync(pluginsDir, { recursive: true })
-  const pluginsRoot = path.join(repoRoot, 'Mage.Server.Plugins')
+  const pluginsRoot = forkPath('Mage.Server.Plugins')
   // Los target/ acumulan jars de versiones viejas (1.4.60 junto a 1.4.61):
   // quedarse con la versión mayor por artefacto.
   const newest = new Map()
@@ -101,10 +103,10 @@ function main() {
   // Seed de config: la release con ${project.version} sustituido (la de
   // local-server/ está anclada a 1.4.60). Política del launcher: solo
   // localhost + hilos del local.
-  const pomXml = fs.readFileSync(path.join(repoRoot, 'Mage.Server', 'pom.xml'), 'utf8')
+  const pomXml = fs.readFileSync(forkPath('Mage.Server/pom.xml'), 'utf8')
   const pomVer = pomXml.match(/<version>(\d+\.\d+[^<]*)<\/version>/)[1]
   let seedConfig = fs.readFileSync(
-    path.join(repoRoot, 'Mage.Server', 'release', 'config', 'config.xml'), 'utf8')
+    forkPath('Mage.Server/release/config/config.xml'), 'utf8')
     .replaceAll('${project.version}', pomVer)
     .replace('serverAddress="0.0.0.0"', 'serverAddress="127.0.0.1"')
     .replace('maxGameThreads="10"', 'maxGameThreads="20"')

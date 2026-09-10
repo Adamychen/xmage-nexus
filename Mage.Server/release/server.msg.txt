@@ -1,3 +1,0 @@
-You are playing XMage version ${project.version}. Changes: https://github.com/magefree/mage/wiki/Release-changes
-Report problems by discord, reddit or by github: https://github.com/magefree/mage/issues
-Contact us on the XMage forum at https://www.slightlymagic.net/forum/viewforum.php?f=70

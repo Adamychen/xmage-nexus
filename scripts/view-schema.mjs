@@ -15,13 +15,14 @@
  * web client actually models, surfacing any server state the client ignores.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs'
-import { dirname, resolve, join } from 'node:path'
+import { dirname, resolve, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { forkDir, forkPath } from './lib.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ROOTS = [
-  resolve(here, '../Mage.Common/src/main/java'),
-  resolve(here, '../Mage/src/main/java'),
+  forkPath('Mage.Common/src/main/java'),
+  forkPath('Mage/src/main/java'),
 ]
 
 // Fields the serializer itself ignores (JsonUtil.isWritableField).
@@ -111,7 +112,7 @@ function main() {
     meta: {
       generatedAt: new Date().toISOString(),
       note: 'Exhaustive serializable instance fields of the XMage view classes (oracle for mechanics reverse-drift). Derived from JsonUtil reflection rules.',
-      sources: ROOTS.map((r) => r.replace(resolve(here, '..') + '/', '')),
+      sources: ROOTS.map((r) => relative(forkDir(), r)),
     },
     cardFields,
     playerFields,

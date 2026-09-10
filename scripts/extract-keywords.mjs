@@ -1,13 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { forkPath } from './lib.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname, '..')
 
-const KEYWORDS_DIR = path.join(ROOT, 'Mage/src/main/java/mage/abilities/keyword')
-const ABILITYWORDS_DIR = path.join(ROOT, 'Mage/src/main/java/mage/abilities/abilityword')
+const KEYWORDS_DIR = forkPath('Mage/src/main/java/mage/abilities/keyword')
+const ABILITYWORDS_DIR = forkPath('Mage/src/main/java/mage/abilities/abilityword')
 const OUTPUT_FILE = path.join(ROOT, 'web/src/data/mtgKeywords.ts')
 
 // NOTA (2026-09-08): el display de keywords ya NO usa nameEs/summary de este

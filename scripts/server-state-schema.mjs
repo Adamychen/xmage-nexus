@@ -17,15 +17,16 @@
  * No Java/server needed: purely file-based, deterministic.
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
-import { dirname, resolve, join } from 'node:path'
+import { dirname, resolve, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { forkDir, forkPath } from './lib.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const CONFIG_PATHS = [
-  resolve(here, '../Mage.Server/config/config.xml'),
-  resolve(here, '../Mage.Server/release/config/config.xml'),
+  forkPath('Mage.Server/config/config.xml'),
+  forkPath('Mage.Server/release/config/config.xml'),
 ]
-const PLUGINS_ROOT = resolve(here, '../Mage.Server.Plugins')
+const PLUGINS_ROOT = forkPath('Mage.Server.Plugins')
 
 function pickConfig() {
   for (const p of CONFIG_PATHS) if (existsSync(p)) return p
@@ -163,7 +164,7 @@ function main() {
     meta: {
       generatedAt: new Date().toISOString(),
       note: 'Exhaustive ServerState enumerations for the current fork version. Derived from Mage.Server/config/config.xml (canonical for this release) + MatchType Java limits. Oracle for serverStateCoverage.test.ts.',
-      configPath: configPath.replace(resolve(here, '..') + '/', ''),
+      configPath: relative(forkDir(), configPath),
       version: '1.4.61-V1',
     },
     gameTypes,

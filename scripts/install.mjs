@@ -3,7 +3,7 @@
 // Uso: node scripts/install.mjs
 // NOTA: no arranca el stack ni empaqueta el proxy (eso lo hace dev.mjs/build.mjs).
 
-import { binName, copyPluginJars, log, logError, mvn, PLUGIN_MODULES, run } from './lib.mjs'
+import { binName, copyPluginJars, forkDir, log, logError, mvn, PLUGIN_MODULES, run } from './lib.mjs'
 
 function fail(step, res) {
   logError(`FALLÓ en: ${step}`)
@@ -29,12 +29,12 @@ async function main() {
   log(`  Java ${javaVer} — Node ${nodeVer}`)
 
   log('== paso 2/5: mvn install de módulos base ==')
-  let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'])
+  let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], { cwd: forkDir() })
   if (res.code !== 0) fail('instalación de módulos base', res)
   log('  OK')
 
   log('== paso 3/5: mvn install de plugins ==')
-  res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'])
+  res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'], { cwd: forkDir() })
   if (res.code !== 0) fail('instalación de plugins', res)
   log('  OK')
 
