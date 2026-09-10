@@ -87,6 +87,22 @@
     var secondary = document.getElementById("hero-secondary");
     if (secondary && h.secondaryCta) secondary.textContent = h.secondaryCta;
 
+    var playUrl = (d.project && d.project.playUrl) || rel.playUrl || "";
+    var play = document.getElementById("hero-play");
+    if (play) {
+      if (playUrl) {
+        play.href = playUrl;
+        play.textContent = h.playCta || "Play now";
+      } else {
+        play.style.display = "none";
+      }
+    }
+    var playNote = document.getElementById("hero-play-note");
+    if (playNote) {
+      if (playUrl && h.playNote) playNote.textContent = h.playNote;
+      else playNote.style.display = "none";
+    }
+
     var ver = document.getElementById("hero-version");
     if (ver && rel.version) ver.textContent = "v" + rel.version + (rel.status ? " · " + rel.status : "");
 
@@ -132,6 +148,16 @@
     grid.innerHTML = "";
     var rel = d.release || {};
     var os = detectOS();
+    var playUrl = (d.project && d.project.playUrl) || "";
+    if (playUrl) {
+      var play = el("a", "download-card play");
+      play.href = playUrl;
+      play.target = "_blank";
+      play.rel = "noopener";
+      play.appendChild(el("span", "dl-os", esc(t.downloadPlay || "Play in your browser →")));
+      play.appendChild(el("span", "dl-arch muted", esc(t.downloadPlaySub || "Try without installing")));
+      grid.appendChild(play);
+    }
     (rel.downloads || []).forEach(function (dl) {
       var a = el("a", "download-card");
       a.href = dl.url || rel.releasesUrl || "#";

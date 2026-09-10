@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T11:51:33.758Z",
+  "generatedAt": "2026-09-10T15:18:45.835Z",
   "commit": null,
   "runUrl": null,
   "project": {
@@ -7,6 +7,7 @@
     "tagline": "Modern, Arena-grade web client for XMage (React 19 + TypeScript + WebSocket proxy).",
     "version": "0.1.0",
     "repo": "Adamychen/xmage-nexus",
+    "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
@@ -68,6 +69,8 @@
           "subtitle": "Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas sobre el motor probado de XMage.",
           "primaryCta": "Descargar para",
           "secondaryCta": "Ver en GitHub",
+          "playCta": "Probar ahora",
+          "playNote": "Demo en vivo en tu navegador · servidor comunitario beta.xmage.today",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",
@@ -122,6 +125,8 @@
         "downloadSubtitle": "Juega al instante en el navegador o descarga el launcher de escritorio.",
         "downloadAll": "Todas las versiones →",
         "downloadAllSub": "GitHub Releases",
+        "downloadPlay": "Jugar en el navegador →",
+        "downloadPlaySub": "Probar sin instalar",
         "recommended": "Recomendado",
         "roadmapTitle": "Roadmap",
         "statusTeaserTitle": "Estado del proyecto",
@@ -163,6 +168,8 @@
           "subtitle": "Live lobby, HD-art battlefield, visual targeting, audio and 9 languages on top of XMage's battle-tested engine.",
           "primaryCta": "Download for",
           "secondaryCta": "View on GitHub",
+          "playCta": "Play now",
+          "playNote": "Live demo in your browser · community server beta.xmage.today",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",
@@ -217,6 +224,8 @@
         "downloadSubtitle": "Play instantly in the browser or grab the desktop launcher.",
         "downloadAll": "All versions →",
         "downloadAllSub": "GitHub Releases",
+        "downloadPlay": "Play in your browser →",
+        "downloadPlaySub": "Try without installing",
         "recommended": "Recommended",
         "roadmapTitle": "Roadmap",
         "statusTeaserTitle": "Project status",

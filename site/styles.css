@@ -112,6 +112,7 @@ img { max-width: 100%; }
 }
 .btn-ghost:hover { border-color: var(--accent); }
 .btn-sm { padding: 9px 16px; font-size: 14px; }
+.hero-play-note { margin: 14px 0 0; font-size: 13px; }
 
 /* ------------------------------ Hero ----------------------------- */
 .hero {
@@ -279,6 +280,8 @@ img { max-width: 100%; }
 .download-card.is-current { border-color: var(--accent); box-shadow: 0 14px 34px rgba(96, 108, 255, 0.28); }
 .download-card.is-current .dl-os { padding-right: 92px; }
 .download-card.secondary { border-style: dashed; }
+.download-card.play { border-color: rgba(255, 215, 0, 0.55); }
+.download-card.play .dl-os { color: var(--gold); }
 .dl-os { font-size: 16px; font-weight: 600; }
 .dl-arch { font-size: 13px; }
 .dl-badge {
