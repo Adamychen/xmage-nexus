@@ -29,7 +29,7 @@ async function main() {
   log(`  Java ${javaVer} — Node ${nodeVer}`)
 
   log('== paso 2/5: mvn install de módulos base ==')
-  let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', 'install', '-DskipTests'])
+  let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'])
   if (res.code !== 0) fail('instalación de módulos base', res)
   log('  OK')
 

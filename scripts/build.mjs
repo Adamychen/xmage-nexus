@@ -17,7 +17,7 @@ async function main() {
 
   if (!onlyProxy) {
     log('== paso 1/4: compilar módulos base (Mage.Common, Mage, Mage.Sets, Mage.Server) ==')
-    let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', 'install', '-DskipTests'])
+    let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'])
     if (res.code !== 0) fail('compilación de módulos base', res)
     log('  OK')
 

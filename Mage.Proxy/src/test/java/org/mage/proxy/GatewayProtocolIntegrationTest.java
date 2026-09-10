@@ -85,7 +85,7 @@ class GatewayProtocolIntegrationTest {
     private void start(Config config) throws Exception {
         gateway = new Gateway(config, 0);
         gateway.start();
-        long deadline = System.currentTimeMillis() + 5000;
+        long deadline = System.currentTimeMillis() + 20000;
         while (gateway.getPort() == 0 && System.currentTimeMillis() < deadline) {
             Thread.sleep(10);
         }

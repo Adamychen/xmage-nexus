@@ -51,7 +51,7 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Build base modules
-        run: mvn -B -q -pl Mage.Common,Mage,Mage.Sets,Mage.Server install -DskipTests
+        run: mvn -B -q -pl Mage.Common,Mage,Mage.Sets,Mage.Server -am install -DskipTests
       - name: Build plugins
         run: mvn -B -q -pl Mage.Server.Plugins/Mage.Player.AI,Mage.Server.Plugins/Mage.Player.AI.MAD,Mage.Server.Plugins/Mage.Player.AI.DraftBot,Mage.Server.Plugins/Mage.Player.Human,Mage.Server.Plugins/Mage.Game.TwoPlayerDuel,Mage.Server.Plugins/Mage.Deck.Constructed install -DskipTests
       - name: Package proxy
