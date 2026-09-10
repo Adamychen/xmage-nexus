@@ -8,7 +8,6 @@ on:
       - "Mage.Proxy/**"
       - "scripts/**"
       - "site/**"
-      - "pom.xml"
       - ".github/workflows/pages.yml"
   schedule:
     # Nightly: incluye el suite de integración con el stack real.
@@ -30,8 +29,16 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/checkout@v6
+        with:
+          ref: nexus
+          path: xmage-fork
+          fetch-depth: 1
 
       - uses: actions/setup-node@v5
         with:
