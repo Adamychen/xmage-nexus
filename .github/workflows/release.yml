@@ -174,13 +174,20 @@ jobs:
             --repo '${{ github.repository }}' --target-key '${{ matrix.updater_key }}' \
             --bundle-dir launcher/target/release/bundle \
             --out latest-${{ matrix.updater_key }}.json
+      - name: Stage release assets (flat)
+        run: |
+          mkdir -p dist-assets
+          find launcher/target/release/bundle -maxdepth 2 -type f \
+            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.AppImage.tar.gz' \
+               -o -name '*.exe' -o -name '*.msi' -o -name '*.app.tar.gz' -o -name '*.dmg' \
+               -o -name '*.zip' -o -name '*.sig' \) -exec cp {} dist-assets/ \;
+          cp latest-${{ matrix.updater_key }}.json dist-assets/
+          ls -1 dist-assets
       - name: Upload bundles
         uses: actions/upload-artifact@v4
         with:
           name: nexus-bundle-${{ matrix.tag }}
-          path: |
-            launcher/target/release/bundle/
-            latest-${{ matrix.updater_key }}.json
+          path: dist-assets/
           retention-days: 90
 
   publish:
@@ -236,4 +243,4 @@ jobs:
           NOTES: ${{ inputs.notes }}
         run: |
           gh release create "$TAG" --draft --title "$TAG" --notes "$NOTES" || true
-          gh release upload "$TAG" release-assets/* --clobber
+          find release-assets -maxdepth 1 -type f -print0 | xargs -0 gh release upload "$TAG" --clobber
