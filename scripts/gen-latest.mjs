@@ -36,9 +36,17 @@ function main() {
     process.exit(1)
   }
   const files = walk(bundleDir).map((f) => path.basename(f))
-  const archive = files.find(
-    (f) => f.endsWith('.app.tar.gz') || f.endsWith('.AppImage.tar.gz') || f.endsWith('.nsis.zip'),
-  )
+  const os = targetKey.split('-')[0]
+  const suffixes = {
+    darwin: ['.app.tar.gz'],
+    linux: ['.AppImage.tar.gz', '.AppImage'],
+    windows: ['.nsis.zip', '-setup.exe'],
+  }[os] || []
+  let archive
+  for (const suffix of suffixes) {
+    archive = files.find((f) => f.endsWith(suffix))
+    if (archive) break
+  }
   if (!archive) {
     console.error(`sin bundle de updater en ${bundleDir} (${files.join(', ')})`)
     process.exit(1)
