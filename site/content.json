@@ -37,7 +37,7 @@
         "nav": { "features": "Features", "formats": "Formatos", "download": "Descarga", "roadmap": "Roadmap", "status": "Status", "cta": "Descargar" },
         "hero": {
           "eyebrow": "Cliente web moderno para XMage",
-          "title": "Magic en tu navegador, sin instalar Java",
+          "title": "XMage en tu navegador, sin instalar Java",
           "subtitle": "Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas sobre el motor probado de XMage.",
           "primaryCta": "Descargar para",
           "secondaryCta": "Ver en GitHub",
@@ -90,7 +90,7 @@
         "nav": { "features": "Features", "formats": "Formats", "download": "Download", "roadmap": "Roadmap", "status": "Status", "cta": "Download" },
         "hero": {
           "eyebrow": "Modern web client for XMage",
-          "title": "Magic in your browser, no Java install",
+          "title": "XMage in your browser, no Java install",
           "subtitle": "Live lobby, HD-art battlefield, visual targeting, audio and 9 languages on top of XMage's battle-tested engine.",
           "primaryCta": "Download for",
           "secondaryCta": "View on GitHub",
