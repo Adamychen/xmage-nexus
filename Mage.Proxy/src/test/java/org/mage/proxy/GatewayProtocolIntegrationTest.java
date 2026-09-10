@@ -86,7 +86,9 @@ class GatewayProtocolIntegrationTest {
         gateway = new Gateway(config, 0);
         gateway.start();
         long deadline = System.currentTimeMillis() + 20000;
-        while (gateway.getPort() == 0 && System.currentTimeMillis() < deadline) {
+        // getPort() devuelve 0 (selector aún no arrancó) o -1 (canal creado sin
+        // bind aún, ServerSocket.getLocalPort()=-1): tratar ambos como "pendiente".
+        while (gateway.getPort() <= 0 && System.currentTimeMillis() < deadline) {
             Thread.sleep(10);
         }
         assertTrue(gateway.getPort() > 0, "gateway did not bind an ephemeral port");
