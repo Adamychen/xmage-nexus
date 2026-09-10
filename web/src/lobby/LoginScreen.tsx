@@ -19,7 +19,7 @@ function urlProxyPort(): number | null {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
-import { POPULAR_FLAGS, type ServerPreset } from './flags'
+import { POPULAR_FLAGS, countryName, type ServerPreset } from './flags'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
 // remote proxy host, a stale "local" connection saved in localStorage must not
@@ -30,7 +30,7 @@ const isLoopbackHost = (h: string) => h === 'localhost' || h === '127.0.0.1' || 
 const REMOTE_PROXY = !!BAKED_PROXY_HOST && !isLoopbackHost(BAKED_PROXY_HOST)
 
 export default function LoginScreen() {
-  const { t, tError } = useTranslation()
+  const { t, tError, lang } = useTranslation()
   const phase = useStore((s) => s.phase)
   const error = useStore((s) => s.error)
   const [proxyHost, setProxyHost] = useState(import.meta.env.VITE_DEFAULT_PROXY_HOST ?? 'localhost')
@@ -239,7 +239,7 @@ export default function LoginScreen() {
                 <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
                   {POPULAR_FLAGS.map((f) => (
                     <option key={f.code} value={f.code}>
-                      {f.name}
+                      {f.emoji} {countryName(f.code, lang)}
                     </option>
                   ))}
                 </select>

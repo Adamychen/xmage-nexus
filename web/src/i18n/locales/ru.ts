@@ -38,6 +38,7 @@ export const ru: TranslationSchema = {
   },
   login: {
     subtitle: 'Современный высокопроизводительный веб-клиент для XMage',
+    world: 'Глобально / Весь мир',
     server_target: 'Сервер XMage:',
     server_local: 'Локальный',
     server_official: 'Официальный',

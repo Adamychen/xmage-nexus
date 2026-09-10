@@ -44,6 +44,7 @@ export interface TranslationSchema {
   }
   login: {
     subtitle: string
+    world: string
     server_target: string
     server_local: string
     server_official: string

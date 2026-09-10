@@ -38,6 +38,7 @@ export const ja: TranslationSchema = {
   },
   login: {
     subtitle: 'XMage用モダン高速Webクライアント',
+    world: 'グローバル / 世界',
     server_target: 'XMageサーバー:',
     server_local: 'ローカル',
     server_official: '公式ベータ',

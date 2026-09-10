@@ -38,6 +38,7 @@ export const fr: TranslationSchema = {
   },
   login: {
     subtitle: 'Client web moderne et performant pour XMage',
+    world: 'Global / Monde',
     server_target: 'Serveur XMage :',
     server_local: 'Local',
     server_official: 'Officiel Bêta',

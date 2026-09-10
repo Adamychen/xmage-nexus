@@ -38,6 +38,7 @@ export const zhs: TranslationSchema = {
   },
   login: {
     subtitle: 'XMage 现代高性能网页客户端',
+    world: '全局 / 世界',
     server_target: 'XMage 服务器：',
     server_local: '本地',
     server_official: '官方测试服',

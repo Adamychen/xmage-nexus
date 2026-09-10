@@ -7,7 +7,7 @@ import AvatarImage from '../lobby/AvatarImage'
 import AvatarPickerModal from '../lobby/AvatarPickerModal'
 import CountryFlag from '../lobby/CountryFlag'
 import { guessDefaultFlag } from '../lobby/defaultFlag'
-import { POPULAR_FLAGS, type ServerPreset } from '../lobby/flags'
+import { POPULAR_FLAGS, countryName, type ServerPreset } from '../lobby/flags'
 import { loadConn, saveConn, type ConnectionInfo } from '../state/persistence'
 import { markSetupDone, SETUP_CONN_EVENT } from './setupFlag'
 import './SetupWizard.css'
@@ -53,7 +53,7 @@ function applyPreset(p: ServerPreset, prev: ServerDraft): ServerDraft {
 }
 
 export default function SetupWizard({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [step, setStep] = useState(0)
   const [username, setUsername] = useState(() => loadConn()?.username ?? (import.meta.env.DEV ? 'player1' : ''))
   const [password, setPassword] = useState(() => loadConn()?.password ?? (import.meta.env.DEV ? 'password' : ''))
@@ -142,7 +142,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                   {t('login', 'flag')}
                   <select value={flagName} onChange={(e) => setFlagName(e.target.value)} data-testid="setup-flag">
                     {POPULAR_FLAGS.map((f) => (
-                      <option key={f.code} value={f.code}>{f.name}</option>
+                      <option key={f.code} value={f.code}>{f.emoji} {countryName(f.code, lang)}</option>
                     ))}
                   </select>
                 </label>
