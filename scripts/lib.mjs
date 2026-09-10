@@ -330,7 +330,7 @@ export function waitForLog(file, pattern, timeoutMs = 30000, since = Date.now())
 }
 
 /** Ejecuta un comando en primer plano y devuelve { code, stdout, stderr }. */
-export function run(cmd, args, { cwd = repoRoot, timeoutMs = 600_000, quiet = false } = {}) {
+export function run(cmd, args, { cwd = repoRoot, timeoutMs = 600_000, quiet = false, env } = {}) {
   const started = Date.now()
   try {
     const res = spawnSync(cmd, args, {
@@ -339,6 +339,7 @@ export function run(cmd, args, { cwd = repoRoot, timeoutMs = 600_000, quiet = fa
       timeout: timeoutMs,
       windowsHide: true,
       shell: true,
+      env: env ? { ...process.env, ...env } : process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     const code = res.status ?? 1

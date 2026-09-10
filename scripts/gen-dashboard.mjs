@@ -176,11 +176,14 @@ function readProxy() {
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith(".xml")) continue;
     const txt = fs.readFileSync(path.join(dir, f), "utf8");
-    const m = txt.match(/<testsuite[^>]*\btests="(\d+)"[^>]*\bfailures="(\d+)"[^>]*\berrors="(\d+)"/);
-    if (!m) continue;
-    tests += Number(m[1]);
-    failures += Number(m[2]);
-    errors += Number(m[3]);
+    // surefire 3.x escribe los atributos en otro orden que 2.x: extraer
+    // cada atributo de forma independiente (no depender del orden).
+    const attr = (name) => Number((txt.match(new RegExp(`\\b${name}="(\\d+)"`)) || [])[1] ?? 0);
+    const t = attr("tests");
+    if (!t) continue;
+    tests += t;
+    failures += attr("failures");
+    errors += attr("errors");
   }
   if (!tests) return null;
   return { total: tests, passed: tests - failures - errors, failed: failures + errors, durationMs: null };
