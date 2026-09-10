@@ -59,12 +59,24 @@ describe('SetupWizard', () => {
     expect(screen.getByTestId('setup-counter').textContent).toContain('6')
   })
 
-  it('skip marks setup done with defaults and closes', () => {
+  it('skip persists the guessed flag and closes', () => {
+    const prevLang = window.navigator.language
+    Object.defineProperty(window.navigator, 'language', { value: 'de-DE', configurable: true })
     const onClose = vi.fn()
-    render(<SetupWizard onClose={onClose} />)
-    fireEvent.click(screen.getByTestId('setup-skip'))
+    const seen: Event[] = []
+    const listener = (e: Event) => seen.push(e)
+    window.addEventListener('nexus:setup-conn', listener)
+    try {
+      render(<SetupWizard onClose={onClose} />)
+      fireEvent.click(screen.getByTestId('setup-skip'))
+    } finally {
+      window.removeEventListener('nexus:setup-conn', listener)
+      Object.defineProperty(window.navigator, 'language', { value: prevLang, configurable: true })
+    }
     expect(isSetupDone()).toBe(true)
     expect(onClose).toHaveBeenCalledTimes(1)
+    expect(loadConn()?.flagName).toBe('de')
+    expect(seen).toHaveLength(1)
   })
 
   it('finish saves identity+server, notifies login and closes', () => {

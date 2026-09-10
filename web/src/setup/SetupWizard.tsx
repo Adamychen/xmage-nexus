@@ -6,6 +6,7 @@ import { LanguageSection, InterfaceSection, BoardSection, SoundSection, Gameplay
 import AvatarImage from '../lobby/AvatarImage'
 import AvatarPickerModal from '../lobby/AvatarPickerModal'
 import CountryFlag from '../lobby/CountryFlag'
+import { guessDefaultFlag } from '../lobby/defaultFlag'
 import { POPULAR_FLAGS, type ServerPreset } from '../lobby/flags'
 import { loadConn, saveConn, type ConnectionInfo } from '../state/persistence'
 import { markSetupDone, SETUP_CONN_EVENT } from './setupFlag'
@@ -56,7 +57,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
   const [username, setUsername] = useState(() => loadConn()?.username ?? (import.meta.env.DEV ? 'player1' : ''))
   const [password, setPassword] = useState(() => loadConn()?.password ?? (import.meta.env.DEV ? 'password' : ''))
-  const [flagName, setFlagName] = useState(() => loadConn()?.flagName ?? 'es')
+  const [flagName, setFlagName] = useState(() => loadConn()?.flagName ?? guessDefaultFlag())
   const [avatarId, setAvatarId] = useState(() => loadConn()?.avatarId ?? 10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [server, setServer] = useState<ServerDraft>(initialServerDraft)
@@ -64,17 +65,19 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   const stepId = STEPS[step]
   const isLast = stepId === 'done'
 
+  const buildConn = (): ConnectionInfo => ({
+    wsHost: server.proxyHost.trim() || 'localhost',
+    proxyPort: server.proxyPort,
+    serverHost: server.serverHost.trim() || server.proxyHost.trim() || 'localhost',
+    port: parseInt(server.port, 10) || 17171,
+    username: username.trim(),
+    password,
+    flagName,
+    avatarId,
+  })
+
   const finish = () => {
-    const conn: ConnectionInfo = {
-      wsHost: server.proxyHost.trim() || 'localhost',
-      proxyPort: server.proxyPort,
-      serverHost: server.serverHost.trim() || server.proxyHost.trim() || 'localhost',
-      port: parseInt(server.port, 10) || 17171,
-      username: username.trim(),
-      password,
-      flagName,
-      avatarId,
-    }
+    const conn = buildConn()
     saveConn(conn)
     window.dispatchEvent(new CustomEvent(SETUP_CONN_EVENT, { detail: conn }))
     markSetupDone()
@@ -82,6 +85,9 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   }
 
   const skip = () => {
+    const conn = buildConn()
+    saveConn(conn)
+    window.dispatchEvent(new CustomEvent(SETUP_CONN_EVENT, { detail: conn }))
     markSetupDone()
     onClose()
   }

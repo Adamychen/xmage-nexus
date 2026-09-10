@@ -3,6 +3,7 @@ import { clearError, doConnect, useStore, loadConn, clearActiveGame } from '../s
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
+import { guessDefaultFlag } from './defaultFlag'
 import LanguageSelector from '../i18n/LanguageSelector'
 import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
@@ -38,7 +39,7 @@ export default function LoginScreen() {
   const [port, setPort] = useState(import.meta.env.VITE_DEFAULT_SERVER_PORT ?? '17171')
   const [username, setUsername] = useState(import.meta.env.DEV ? 'player1' : '')
   const [password, setPassword] = useState(import.meta.env.DEV ? 'password' : '')
-  const [flagName, setFlagName] = useState('es')
+  const [flagName, setFlagName] = useState(() => loadConn()?.flagName ?? guessDefaultFlag())
   const [avatarId, setAvatarId] = useState(10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
