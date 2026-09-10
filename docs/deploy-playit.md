@@ -27,8 +27,9 @@ You do **not** run an XMage server on the host machine.
 ## Prerequisites
 
 - A machine that stays on (no sleep), with a modern **JRE 17** (`java -version`).
-- A free [playit.gg](https://playit.gg) account and the playit agent installed on
-  that machine.
+- A [playit.gg](https://playit.gg) account with the **playit agent** installed on
+  that machine. Custom **TCP** tunnels (what this guide needs) require the paid
+  playit tier — the free tier only allows UDP + the Minecraft preset.
 - Two files built from this repo (see Part 1): `mage-proxy-1.4.61.jar` and the
   `web/dist` folder.
 
@@ -147,6 +148,68 @@ Give players `http://<web-tunnel>`. Each player needs an account on
 `beta.xmage.today`. If you built the client with the `VITE_*` variables in Part 1,
 the login screen is already pointed at your tunnels and they only enter
 user/password.
+
+## Alternative — host builds from the repo (clone + rebuild)
+
+Instead of the prebuilt bundle (Parts 1–5), the host can keep a clone of this
+repository and rebuild in place. Handy when you want a single
+`git pull && rebuild` workflow, but the host then needs the full toolchain
+(JDK 17 + Maven + Node) and the first build is heavy (it compiles the XMage
+engine and card sets).
+
+One-time setup on the host:
+
+```bash
+git clone https://github.com/Adamychen/xmage-nexus.git
+cd xmage-nexus
+
+cat > web/.env.production.local <<'EOF'
+VITE_DEFAULT_PROXY_HOST=<ws-tunnel-host>
+VITE_DEFAULT_PROXY_PORT=<ws-tunnel-port>
+VITE_DEFAULT_SERVER_HOST=beta.xmage.today
+VITE_DEFAULT_SERVER_PORT=17171
+EOF
+
+node scripts/build.mjs                 # engine + plugins + proxy jar
+npm --prefix web install && npm --prefix web run build
+ln -sf "$PWD/Mage.Proxy/target/mage-proxy-1.4.61.jar" ~/xmage-proxy.jar
+```
+
+Create `/etc/systemd/system/xmage-proxy.service` pointing at the stable symlink:
+
+```ini
+[Unit]
+Description=XMage Nexus proxy
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=<your-user>
+WorkingDirectory=/home/<your-user>/xmage-nexus
+ExecStart=/path/to/jdk-17/bin/java --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED -cp /home/<your-user>/xmage-proxy.jar org.mage.proxy.Main --host beta.xmage.today --port 17171 --wsPort 8787 --httpPort 8788 --bind 127.0.0.1 --webDir /home/<your-user>/xmage-nexus/web/dist --allowedOrigins http://<web-tunnel>
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable --now xmage-proxy
+```
+
+Update to a new release with the helper — it pulls, rebuilds engine + web,
+refreshes the jar symlink and restarts the service:
+
+```bash
+scripts/host-deploy.sh
+```
+
+> **Laptop as host:** disable suspend so it survives a closed lid. Set
+> `HandleLidSwitch=ignore` (plus `HandleLidSwitchExternalPower` / `Docked`) in
+> `/etc/systemd/logind.conf`, restart `systemd-logind`, then mask
+> `sleep.target suspend.target hibernate.target hybrid-sleep.target`.
 
 ## Autostart
 
