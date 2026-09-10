@@ -69,6 +69,13 @@ mage-bundle.zip
 /local-server
 /Mage.Proxy/target
 
+# assembled launcher modules (local output of scripts/assemble-modules.mjs,
+# rebuilt by CI in modules.yml — 370MB of regenerable binaries)
+/staging
+
+# vitest cache
+node_modules/.vite
+
 
 # runtime folders (client image cache etc.)
 /plugins
