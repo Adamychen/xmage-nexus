@@ -5,6 +5,7 @@
 // Capas: unit, coverage, typecheck, build, java, self-test, human-test, e2e, i18n
 
 import path from 'node:path'
+import fs from 'node:fs'
 import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
 
 const WEB_DIR = path.join(repoRoot, 'web')
@@ -142,6 +143,19 @@ async function main() {
       case 'java':
         ensureMageArtifacts()
         res = run(binName('mvn'), ['-f', 'Mage.Proxy/pom.xml', 'test'])
+        if (res.code !== 0) {
+          try {
+            const dir = path.join(repoRoot, 'Mage.Proxy', 'target', 'surefire-reports')
+            for (const f of fs.readdirSync(dir)) {
+              if (!f.endsWith('.xml')) continue
+              const txt = fs.readFileSync(path.join(dir, f), 'utf8')
+              const name = (txt.match(/<testsuite[^>]*\bname="([^"]+)"/) || [])[1]
+              const attr = (n) => Number((txt.match(new RegExp(`\\b${n}="(\\d+)"`)) || [])[1] ?? 0)
+              const bad = attr('failures') + attr('errors')
+              if (name && bad > 0) console.log(`  ✗ ${name} (failures=${attr('failures')}, errors=${attr('errors')})`)
+            }
+          } catch { /* sin surefire-reports */ }
+        }
         break
       case 'self-test': {
         const upServer = await stackUp(PORTS.server, 'servidor')

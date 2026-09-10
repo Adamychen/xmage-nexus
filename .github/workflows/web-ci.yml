@@ -79,6 +79,12 @@ jobs:
           cache: maven
       - name: Maven proxy tests (installs org.mage artifacts from the fork checkout)
         run: node scripts/test.mjs java
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mage-proxy-surefire
+          path: Mage.Proxy/target/surefire-reports/**
 
   integration:
     runs-on: ubuntu-latest
