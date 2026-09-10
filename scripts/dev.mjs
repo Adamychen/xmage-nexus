@@ -5,7 +5,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { daemon, isAlive, log, logError, logFileFor, PORTS, readPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPort, buildServerClasspath } from './lib.mjs'
+import { daemon, forkPath, isAlive, log, logError, logFileFor, PORTS, readPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPort, buildServerClasspath } from './lib.mjs'
 
 const arg = process.argv[2] ?? 'status'
 const target = process.argv[3] ?? 'all'
@@ -25,9 +25,33 @@ function targetsOf() {
   return list
 }
 
+/** local-server/ es runtime (gitignored): en CI o máquina nueva solo existe plugins/.
+ *  Sin config/config.xml el servidor no arranca → sembrar desde el fork. */
+function ensureLocalServerDirs() {
+  const dir = `${import.meta.dirname}/../local-server`
+  for (const sub of ['config', 'db', 'extensions', 'gamesHistory', 'plugins', 'saved']) {
+    fs.mkdirSync(path.join(dir, sub), { recursive: true })
+  }
+  const cfg = path.join(dir, 'config', 'config.xml')
+  if (fs.existsSync(cfg)) return
+  const pomXml = fs.readFileSync(forkPath('Mage.Server/pom.xml'), 'utf8')
+  const pomVer = pomXml.match(/<version>(\d+\.\d+[^<]*)<\/version>/)?.[1] ?? ''
+  const seed = fs.readFileSync(forkPath('Mage.Server/release/config/config.xml'), 'utf8')
+    .replaceAll('${project.version}', pomVer)
+    .replace('serverAddress="0.0.0.0"', 'serverAddress="127.0.0.1"')
+    .replace('maxGameThreads="10"', 'maxGameThreads="20"')
+  if (seed.includes('${project.version}')) {
+    logError('placeholders sin sustituir en el seed de config.xml del fork')
+    process.exit(1)
+  }
+  fs.writeFileSync(cfg, seed)
+  log(`config seed creada: ${cfg} (versión ${pomVer})`)
+}
+
 function startServer() {
   log('arrancando servidor XMage (headless, testMode)…')
   try {
+    ensureLocalServerDirs()
     const cp = buildServerClasspath()
     const args = [...SERVER_ADD_OPENS, '-cp', cp, 'mage.server.Main', '-testMode']
     daemon('server', 'java', args, { cwd: `${import.meta.dirname}/../local-server` })
