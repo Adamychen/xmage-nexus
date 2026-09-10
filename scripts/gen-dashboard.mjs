@@ -30,6 +30,20 @@ function layer(name, label, status, extra) {
   return Object.assign({ name, label, status: status || "pending" }, extra || {});
 }
 
+// Version autoritativa de la app (la misma que verifica release.yml en el tag).
+function readLauncherVersion() {
+  try {
+    const txt = fs.readFileSync(
+      path.join(repoRoot, "launcher", "src-tauri", "Cargo.toml"),
+      "utf8",
+    );
+    const m = txt.match(/\[package\][\s\S]*?version\s*=\s*"([^"]+)"/);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 function readVitest() {
   const d = readJson(path.join(webDir, "test-results.json"));
   if (!d) return null;
@@ -174,7 +188,16 @@ function readProxy() {
 
 function build() {
   const content = readJson(path.join(siteDir, "content.json")) || {};
-  const thresholds = (content.project && content.project.coverageThresholds) || {};
+  const thresholds =
+    content.coverageThresholds || (content.project && content.project.coverageThresholds) || {};
+
+  // Release: content.json es la fuente de highlights/downloads; la version se
+  // deriva del Cargo.toml del launcher para que no quede desfasada del tag.
+  const launcherVersion = readLauncherVersion();
+  const release = content.release ? { ...content.release } : null;
+  if (release && launcherVersion) release.version = launcherVersion;
+  const project = { ...(content.project || {}) };
+  if (release && release.version) project.version = release.version;
 
   const vitest = readVitest();
   const pw = readPlaywright();
@@ -214,7 +237,9 @@ function build() {
     generatedAt: new Date().toISOString(),
     commit: process.env.GITHUB_SHA || null,
     runUrl: process.env.GITHUB_RUN_URL || null,
-    project: content.project || {},
+    project,
+    release,
+    marketing: content.marketing || null,
     layers,
     coverage: cov,
     coverageThresholds: thresholds,

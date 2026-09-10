@@ -6,6 +6,131 @@
     "repo": "Adamychen/xmage-nexus",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
+  "release": {
+    "version": "0.1.0",
+    "date": "2026-09-10",
+    "tag": "v0.1.0",
+    "status": "draft",
+    "notes": "Primera build publica de XMage Nexus: cliente web moderno para XMage sobre un proxy WebSocket multi-usuario.",
+    "highlights": [
+      "Lobby completo: mesas en vivo, chat de sala/partida, filtros, perfiles y clanes",
+      "Juego 1v1 y Commander (hasta 4 en tablero): prioridad, targeting visual, pago de mana, combate multibloqueo y stack",
+      "Deck Builder in-app (Scryfall) con import/export texto, Arena y .dck",
+      "Draft y Sealed de 8 jugadores, torneos Suizo/Eliminacion y visor de repeticiones",
+      "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena",
+      "Launcher de escritorio (Tauri) con servidor + proxy + JRE integrados"
+    ],
+    "downloads": [
+      { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },
+      { "os": "macOS", "arch": "arm64", "label": "macOS (Apple Silicon)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },
+      { "os": "Linux", "arch": "x64", "label": "Linux (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" }
+    ],
+    "releasesUrl": "https://github.com/Adamychen/xmage-nexus/releases"
+  },
+  "marketing": {
+    "defaultLang": "es",
+    "langs": ["es", "en"],
+    "i18n": {
+      "es": {
+        "skip": "Saltar al contenido",
+        "nav": { "features": "Features", "formats": "Formatos", "download": "Descarga", "roadmap": "Roadmap", "status": "Status", "cta": "Descargar" },
+        "hero": {
+          "eyebrow": "Cliente web moderno para XMage",
+          "title": "Magic en tu navegador, sin instalar Java",
+          "subtitle": "Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas sobre el motor probado de XMage.",
+          "primaryCta": "Descargar para",
+          "secondaryCta": "Ver en GitHub",
+          "trust": ["React 19 + TypeScript", "XMage 1.4.61-V1", "Proxy multi-tenant", "Web o escritorio"]
+        },
+        "featuresTitle": "Todo lo que esperas de un cliente moderno",
+        "featuresSubtitle": "Experiencia de nivel Arena sobre las reglas de XMage.",
+        "features": [
+          { "icon": "users", "title": "Lobby en vivo", "desc": "Mesas, jugadores, filtros y chat de sala y partida en tiempo real." },
+          { "icon": "board", "title": "Tablero HD", "desc": "Mano, battlefield con arte en alta resolución, stack, cementerio y exilio." },
+          { "icon": "target", "title": "Interacción completa", "desc": "Prioridad, targeting visual animado, pago de maná, combate multibloqueo y hechizos complejos." },
+          { "icon": "deck", "title": "Deck Builder", "desc": "Constructor in-app con Scryfall e import/export en texto, Arena y .dck." },
+          { "icon": "trophy", "title": "Todos los formatos", "desc": "Commander, Draft y Sealed de 8 jugadores, torneos Suizo/Eliminación y repeticiones." },
+          { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena." }
+        ],
+        "formatsTitle": "Formatos y modos",
+        "formats": ["Commander", "Draft & Sealed", "Torneos Suizo/SE", "Bo3 + Sideboard", "Replay viewer", "1v1 contra IA"],
+        "downloadTitle": "Descarga XMage Nexus",
+        "downloadSubtitle": "Juega al instante en el navegador o descarga el launcher de escritorio.",
+        "downloadAll": "Todas las versiones →",
+        "downloadAllSub": "GitHub Releases",
+        "recommended": "Recomendado",
+        "roadmapTitle": "Roadmap",
+        "statusTeaserTitle": "Estado del proyecto",
+        "statusTeaserDesc": "Tests, cobertura, anti-drift y matriz de paridad actualizados automáticamente.",
+        "seeStatus": "Ver dashboard técnico",
+        "footerNote": "Imágenes de cartas cortesía de Scryfall. No afiliado a Wizards of the Coast. Magic: The Gathering es una marca registrada de Wizards of the Coast.",
+        "health": { "all": "● Todos los sistemas operativos", "fail": "● %n capa(s) en fallo" },
+        "statusPage": {
+          "pageTitle": "Estado del proyecto",
+          "backLabel": "← Inicio",
+          "updated": "actualizado",
+          "headings": {
+            "layers": "Test & CI Status",
+            "coverage": "Cobertura",
+            "phases": "Roadmap — Fases",
+            "guards": "Guards anti-drift",
+            "gaps": "Gaps motor → vista",
+            "reverse": "Cobertura reversa",
+            "features": "Matriz de paridad"
+          }
+        }
+      },
+      "en": {
+        "skip": "Skip to content",
+        "nav": { "features": "Features", "formats": "Formats", "download": "Download", "roadmap": "Roadmap", "status": "Status", "cta": "Download" },
+        "hero": {
+          "eyebrow": "Modern web client for XMage",
+          "title": "Magic in your browser, no Java install",
+          "subtitle": "Live lobby, HD-art battlefield, visual targeting, audio and 9 languages on top of XMage's battle-tested engine.",
+          "primaryCta": "Download for",
+          "secondaryCta": "View on GitHub",
+          "trust": ["React 19 + TypeScript", "XMage 1.4.61-V1", "Multi-tenant proxy", "Web or desktop"]
+        },
+        "featuresTitle": "Everything you expect from a modern client",
+        "featuresSubtitle": "Arena-grade experience on XMage's rules.",
+        "features": [
+          { "icon": "users", "title": "Live lobby", "desc": "Tables, players, filters and room/match chat in real time." },
+          { "icon": "board", "title": "HD battlefield", "desc": "Hand, high-resolution battlefield art, stack, graveyard and exile." },
+          { "icon": "target", "title": "Full interaction", "desc": "Priority, animated visual targeting, mana payment, multi-block combat and complex spells." },
+          { "icon": "deck", "title": "Deck Builder", "desc": "In-app builder with Scryfall and text, Arena and .dck import/export." },
+          { "icon": "trophy", "title": "All formats", "desc": "Commander, 8-player Draft & Sealed, Swiss/Single-Elim tournaments and replays." },
+          { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine, VFX and an Arena-style deck tracker." }
+        ],
+        "formatsTitle": "Formats & modes",
+        "formats": ["Commander", "Draft & Sealed", "Swiss/SE Tournaments", "Bo3 + Sideboard", "Replay viewer", "1v1 vs AI"],
+        "downloadTitle": "Download XMage Nexus",
+        "downloadSubtitle": "Play instantly in the browser or grab the desktop launcher.",
+        "downloadAll": "All versions →",
+        "downloadAllSub": "GitHub Releases",
+        "recommended": "Recommended",
+        "roadmapTitle": "Roadmap",
+        "statusTeaserTitle": "Project status",
+        "statusTeaserDesc": "Tests, coverage, anti-drift and the parity matrix, updated automatically.",
+        "seeStatus": "View technical dashboard",
+        "footerNote": "Card images courtesy of Scryfall. Not affiliated with Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast.",
+        "health": { "all": "● All systems operational", "fail": "● %n layer(s) failing" },
+        "statusPage": {
+          "pageTitle": "Project status",
+          "backLabel": "← Home",
+          "updated": "updated",
+          "headings": {
+            "layers": "Test & CI Status",
+            "coverage": "Coverage",
+            "phases": "Roadmap — Phases",
+            "guards": "Anti-Drift Guards",
+            "gaps": "Engine → View Gaps",
+            "reverse": "Reverse-Drift Coverage",
+            "features": "Feature Parity Matrix"
+          }
+        }
+      }
+    }
+  },
   "coverageThresholds": {
     "lines": 70,
     "functions": 70,

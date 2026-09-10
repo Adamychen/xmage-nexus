@@ -1,78 +1,130 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>XMage Nexus — Project Status</title>
+    <title>XMage Nexus — Magic en el navegador</title>
+    <meta
+      name="description"
+      content="XMage Nexus: cliente web moderno para XMage. Lobby en vivo, tablero HD, targeting visual, audio y 9 idiomas. Sin instalar Java."
+    />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="XMage Nexus" />
+    <meta property="og:description" content="Cliente web moderno para XMage. Juega en el navegador." />
+    <meta property="og:image" content="./assets/logo.jpg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
-    <div id="app">
-      <header class="topbar">
+  <body class="landing">
+    <a class="skip" id="skip-link" href="#features">Saltar al contenido</a>
+
+    <header class="nav" id="nav">
+      <a class="brand" href="#top">
+        <img src="./assets/logo.jpg" alt="XMage Nexus" class="brand-logo" />
+        <span>XMage <b>Nexus</b></span>
+      </a>
+      <nav class="nav-links" aria-label="Principal">
+        <a href="#features" id="nav-features">Features</a>
+        <a href="#formats" id="nav-formats">Formatos</a>
+        <a href="#download" id="nav-download">Descarga</a>
+        <a href="#roadmap" id="nav-roadmap">Roadmap</a>
+        <a href="./status.html" id="nav-status">Status</a>
+      </nav>
+      <button type="button" class="btn btn-ghost btn-sm" id="lang-toggle" aria-label="Change language">EN</button>
+      <a class="btn btn-primary btn-sm" href="#download" id="nav-cta">Descargar</a>
+    </header>
+
+    <main>
+      <section class="hero" id="top">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <span class="eyebrow" id="hero-eyebrow">Cliente web moderno para XMage</span>
+            <h1 id="hero-title">Magic en tu navegador,<br />sin instalar Java</h1>
+            <p class="hero-sub" id="hero-sub">
+              Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas
+              sobre el motor probado de XMage.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" id="hero-primary" href="#download">Descargar</a>
+              <a
+                class="btn btn-ghost"
+                id="hero-secondary"
+                href="https://github.com/Adamychen/xmage-nexus"
+                target="_blank"
+                rel="noopener"
+                >Ver en GitHub</a
+              >
+              <span class="ver-chip" id="hero-version"></span>
+            </div>
+            <ul class="trust" id="hero-trust"></ul>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <img class="gcard card-a" src="./assets/card-back.svg" alt="" />
+            <img class="gcard card-b" src="./assets/card-back.svg" alt="" />
+            <img class="gcard card-c" src="./assets/card-back.svg" alt="" />
+            <div class="hero-logo"><img src="./assets/logo.jpg" alt="" /></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-head">
+          <h2 id="features-title">Todo lo que esperas de un cliente moderno</h2>
+          <p id="features-sub" class="muted">Experiencia de nivel Arena sobre las reglas de XMage.</p>
+        </div>
+        <div class="feature-grid" id="feature-grid"></div>
+      </section>
+
+      <section class="section" id="formats">
+        <div class="section-head"><h2 id="formats-title">Formatos y modos</h2></div>
+        <div class="chip-row" id="format-chips"></div>
+      </section>
+
+      <section class="section" id="download">
+        <div class="section-head">
+          <h2 id="download-title">Descarga XMage Nexus</h2>
+          <p id="download-sub" class="muted">Juega al instante en el navegador o descarga el launcher de escritorio.</p>
+        </div>
+        <div class="download-grid" id="download-grid"></div>
+      </section>
+
+      <section class="section" id="roadmap">
+        <div class="section-head"><h2 id="roadmap-title">Roadmap</h2></div>
+        <ol class="timeline" id="timeline"></ol>
+      </section>
+
+      <section class="section status-teaser">
         <div>
-          <h1 id="proj-name">XMage Nexus</h1>
-          <p id="proj-tagline" class="muted"></p>
+          <h2 id="status-teaser-title">Estado del proyecto</h2>
+          <p class="muted" id="status-teaser-desc">
+            Tests, cobertura, anti-drift y matriz de paridad actualizados automáticamente.
+          </p>
         </div>
-        <div class="meta">
-          <span id="generated" class="muted"></span>
-          <a id="commit" class="badge" href="#" target="_blank" rel="noopener">commit</a>
-          <a id="repo" class="badge" href="#" target="_blank" rel="noopener">repo</a>
-        </div>
-      </header>
-
-      <section>
-        <h2>Test &amp; CI Status</h2>
-        <div id="layers" class="grid"></div>
-      </section>
-
-      <section>
-        <h2>Coverage</h2>
-        <div id="coverage" class="grid"></div>
-      </section>
-
-      <section>
-        <h2>Roadmap — Phases</h2>
-        <div id="phases" class="grid"></div>
-      </section>
-
-      <section>
-        <h2>Anti-Drift Guards</h2>
-        <div id="guards" class="grid"></div>
-      </section>
-
-      <section>
-        <h2>Engine&rarr;View Gaps <span id="gaps-total" class="muted"></span></h2>
-        <div class="scroll">
-          <table id="gaps">
-            <thead>
-              <tr><th>Mechanic</th><th>Field</th><th>View</th><th>Status</th><th>Via</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="status-teaser-actions">
+          <a class="btn btn-ghost" href="./status.html" id="status-teaser-link">Ver dashboard técnico</a>
+          <span class="health" id="health">•</span>
         </div>
       </section>
+    </main>
 
-      <section>
-        <h2>Reverse-Drift Coverage <span id="rev-total" class="muted"></span></h2>
-        <div id="reverse" class="grid"></div>
-      </section>
-
-      <section>
-        <h2>Feature Parity Matrix</h2>
-        <div class="scroll">
-          <table id="features">
-            <thead>
-              <tr><th>Category</th><th>Feature</th><th>Official XMage</th><th>XMage Nexus</th><th>Phase</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+    <footer class="footer">
+      <div class="footer-brand">
+        <img src="./assets/logo.jpg" alt="" class="brand-logo" />
+        <div>
+          <div class="footer-name">XMage Nexus</div>
+          <div class="muted" id="footer-stack"></div>
         </div>
-      </section>
-
-      <footer class="muted">
-        <span id="stack"></span>
-      </footer>
-    </div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Adamychen/xmage-nexus" target="_blank" rel="noopener">GitHub</a>
+        <a href="./status.html">Status</a>
+        <a href="https://github.com/Adamychen/xmage-nexus/releases" target="_blank" rel="noopener">Releases</a>
+      </div>
+      <p class="footer-note muted" id="footer-note">
+        Imágenes de cartas cortesía de Scryfall. No afiliado a Wizards of the Coast. Magic: The
+        Gathering es una marca registrada de Wizards of the Coast.
+      </p>
+    </footer>
 
     <script src="./app.js"></script>
   </body>
