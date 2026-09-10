@@ -308,6 +308,8 @@ export default function StackZone({
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
   const { t } = useTranslation()
 
+  const zoneRef = useRef<HTMLDivElement>(null)
+
   const modalOpen = useStore(isBlockingModal)
   useEffect(() => {
     if (modalOpen) {
@@ -315,6 +317,29 @@ export default function StackZone({
       setHoverRect(null)
     }
   }, [modalOpen])
+
+  /** El hover solo se limpia con mouseLeave, pero la carta con hover puede
+   *  desaparecer de la pila (se resuelve) sin que el navegador emita leave:
+   *  su DOM se desmonta. Sin esta validación, el preview obsoleto reaparece
+   *  al entrar la siguiente carta en la pila. También refresca el objeto
+   *  (targets/reglas) y re-ancla el rect si la lista se recompone. */
+  useLayoutEffect(() => {
+    if (!hoverCard) return
+    const id = hoverCard.id
+    if (id == null) return
+    const current: Record<string, CardView> = stack ?? {}
+    if (!(id in current)) {
+      setHoverCard(null)
+      setHoverRect(null)
+      onHover?.(null)
+      return
+    }
+    const latest = current[id]
+    if (latest && latest !== hoverCard) setHoverCard(latest)
+    const safeId = id.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    const el = zoneRef.current?.querySelector<HTMLElement>(`[data-card-id="${safeId}"]`)
+    if (el) setHoverRect(el.getBoundingClientRect())
+  }, [stack, hoverCard, viewMode, onHover])
 
   const handleHover = useCallback(
     (card: CardView | null, rect?: DOMRect) => {
@@ -347,7 +372,7 @@ export default function StackZone({
   const ordered = entries
 
   return (
-    <div className={`stack-zone view-mode-${viewMode}`}>
+    <div ref={zoneRef} className={`stack-zone view-mode-${viewMode}`}>
       <div className="stack-header">
         <div className="stack-header-left">
           <span className="stack-header-title">{t('game', 'stack')} ({ordered.length})</span>

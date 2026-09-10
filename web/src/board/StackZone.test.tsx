@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
 import type { CardView, PlayerView } from '../net/types'
@@ -338,5 +338,73 @@ describe('StackZone', () => {
     }
     const { container } = render(<StackZone stack={stack} />)
     expect(container.querySelector('[data-testid="stack-targets"]')).toBeNull()
+  })
+
+  it('clears the hover preview when the hovered card leaves the stack', () => {
+    const onHover = vi.fn()
+    const stack: Record<string, CardView> = {
+      'spell-2': { id: 'spell-2', name: 'Counterspell', cardTypes: ['INSTANT'], manaValue: 2 },
+      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+
+    const { container, rerender } = render(<StackZone stack={stack} onHover={onHover} />)
+    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
+    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
+
+    // Counterspell se resuelve: la pila sigue viva pero sin spell-2
+    rerender(<StackZone stack={{ 'spell-1': stack['spell-1'] }} onHover={onHover} />)
+    expect(container.querySelector('.floating-card-preview')).toBeNull()
+    expect(onHover).toHaveBeenCalledWith(null)
+  })
+
+  it('does not resurrect the stale card when the stack empties and refills', async () => {
+    const stack: Record<string, CardView> = {
+      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+
+    const { container, rerender } = render(<StackZone stack={stack} />)
+    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
+    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
+
+    // La pila se resuelve por completo...
+    rerender(<StackZone stack={{}} />)
+    expect(container.querySelector('.stack-zone.empty')).toBeTruthy()
+
+    // ...y una carta NUEVA abre una pila fresca: el Bolt resuelto no debe reaparecer
+    rerender(
+      <StackZone
+        stack={{
+          'spell-9': { id: 'spell-9', name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
+        }}
+      />,
+    )
+    expect(container.querySelector('.floating-card-preview')).toBeNull()
+
+    // Hover sobre la nueva carta muestra la carta nueva (no el Bolt viejo)
+    await act(async () => {
+      fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
+    })
+    const img = container.querySelector('.floating-card-img')
+    expect(img?.getAttribute('alt')).toBe('Giant Growth')
+  })
+
+  it('keeps the preview when the hovered card stays while a new card enters', () => {
+    const stack1: Record<string, CardView> = {
+      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container, rerender } = render(<StackZone stack={stack1} />)
+    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
+    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
+
+    // Entra una nueva carta: el Bolt sigue en pila → el preview no debe cerrarse
+    rerender(
+      <StackZone
+        stack={{
+          'spell-2': { id: 'spell-2', name: 'Counterspell', cardTypes: ['INSTANT'], manaValue: 2 },
+          'spell-1': stack1['spell-1'],
+        }}
+      />,
+    )
+    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
   })
 })

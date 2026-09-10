@@ -3,6 +3,7 @@ import type { CardView, GameView, PermanentView, PlayerView } from '../net/types
 import { useSceneBridge } from './sceneBridge'
 import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
+import { findCardViewInGame, looksLikeBattlefieldPermanent } from './boardShared'
 import { useStore, isBlockingModal } from '../state/store'
 
 export interface HoverOptions {
@@ -122,6 +123,42 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
 
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
+
+  /** El preview grande también puede quedar huérfano: si la carta con hover
+   *  sale del juego (criatura destruida, token que fizzle, mulligan...) su
+   *  slot se desmonta sin mouseLeave y el preview persiste pegado al rect
+   *  viejo. Se valida contra el GameView actual: battlefield-shaped que ya no
+   *  está en campo → clear (murió/revoteó); id inexistente → clear; si sigue,
+   *  se refresca la vista (P/T/contadores al día). Cards sin id (fixtures) no
+   *  se tocan: no se puede rastrear y limpiarlas rompería hovers legítimos. */
+  useEffect(() => {
+    if (!floatingCard) return
+    const id = floatingCard.id
+    if (id == null) return
+
+    const clear = () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+        hoverTimeoutRef.current = null
+      }
+      setFloatingCard(null)
+      setAnchorRect(null)
+      setPreviewLeaving(false)
+      setPreviewFromHand(false)
+      onCardHover?.(null)
+    }
+
+    if (!game) {
+      clear()
+      return
+    }
+    const hit = findCardViewInGame(game, id)
+    if (!hit || (looksLikeBattlefieldPermanent(floatingCard) && !hit.inBattlefield)) {
+      clear()
+      return
+    }
+    if (hit.view !== floatingCard) setFloatingCard(hit.view)
+  }, [game, floatingCard, onCardHover])
 
   const handleCardClick = useCallback(
     (id: string) => {
