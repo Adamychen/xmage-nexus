@@ -57,6 +57,29 @@ public class CardView extends SimpleCardView {
     private static final long serialVersionUID = 1L;
 
     protected UUID parentId;
+
+    // Protocol: identity of the object's controller, sent to clients so the UI can attribute
+    // stack/battlefield objects to a player without guessing from the card's own id.
+    @Expose
+    protected String controllerId;
+    @Expose
+    protected String controllerName;
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
+    public String getControllerName() {
+        return controllerName;
+    }
+
+    public void setControllerName(String controllerName) {
+        this.controllerName = controllerName;
+    }
     @Expose
     protected String name; // TODO: remove duplicated field name/displayName???
     @Expose
@@ -186,6 +209,8 @@ public class CardView extends SimpleCardView {
         // generetate new ID (TODO: why new ID?)
         this.id = UUID.randomUUID();
         this.parentId = cardView.parentId;
+        this.controllerId = cardView.controllerId;
+        this.controllerName = cardView.controllerName;
 
         this.name = cardView.name;
         this.displayName = cardView.displayName;
@@ -666,6 +691,27 @@ public class CardView extends SimpleCardView {
 
             // add card icons at the end, so it will have full card view data
             this.generateCardIcons(null, card, game);
+        }
+
+        // controller identification for stack / battlefield objects (protocol field)
+        if (game != null) {
+            UUID controllerId = null;
+            if (sourceCard instanceof Spell) {
+                controllerId = ((Spell) sourceCard).getControllerId();
+            } else if (sourceCard instanceof Permanent) {
+                controllerId = ((Permanent) sourceCard).getControllerId();
+            } else if (sourceCard instanceof StackAbility) {
+                controllerId = ((StackAbility) sourceCard).getControllerId();
+            } else if (card instanceof Permanent) {
+                controllerId = ((Permanent) card).getControllerId();
+            }
+            if (controllerId != null) {
+                this.controllerId = controllerId.toString();
+                Player controller = game.getPlayer(controllerId);
+                if (controller != null) {
+                    this.controllerName = controller.getName();
+                }
+            }
         }
     }
 

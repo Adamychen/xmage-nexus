@@ -2,6 +2,7 @@ package mage.view;
 
 import mage.MageObject;
 import mage.abilities.Mode;
+import mage.players.Player;
 import mage.abilities.Modes;
 import mage.abilities.effects.Effect;
 import mage.abilities.hint.Hint;
@@ -147,6 +148,16 @@ public class StackAbilityView extends CardView {
                         this.rules.add("<span color='green'><i>Target on stack: " + stackObjectTarget.getIdName());
                     }
                 }
+            }
+        }
+
+        // controller identification for the stack (protocol field)
+        UUID abilityControllerId = ability.getControllerId();
+        if (abilityControllerId != null) {
+            this.controllerId = abilityControllerId.toString();
+            Player abilityController = game.getPlayer(abilityControllerId);
+            if (abilityController != null) {
+                this.controllerName = abilityController.getName();
             }
         }
     }
