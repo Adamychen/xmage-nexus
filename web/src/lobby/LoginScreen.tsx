@@ -20,6 +20,14 @@ function urlProxyPort(): number | null {
 
 import { POPULAR_FLAGS, type ServerPreset } from './flags'
 
+// Deployment defaults baked at build time. When a public/hosted build bakes a
+// remote proxy host, a stale "local" connection saved in localStorage must not
+// override it (otherwise the browser tries ws://localhost:8787 and fails).
+const BAKED_PROXY_HOST = (import.meta.env.VITE_DEFAULT_PROXY_HOST as string | undefined) ?? ''
+const BAKED_PROXY_PORT = Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787
+const isLoopbackHost = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '::1'
+const REMOTE_PROXY = !!BAKED_PROXY_HOST && !isLoopbackHost(BAKED_PROXY_HOST)
+
 export default function LoginScreen() {
   const { t, tError } = useTranslation()
   const phase = useStore((s) => s.phase)
@@ -36,13 +44,14 @@ export default function LoginScreen() {
   const [showSettings, setShowSettings] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
-  const [preset, setPreset] = useState<ServerPreset>('local')
+  const [preset, setPreset] = useState<ServerPreset>(REMOTE_PROXY ? 'official' : 'local')
   const pendingDeepLink = useStore((s) => s.pendingDeepLink)
 
   useEffect(() => {
     const urlPort = urlProxyPort()
     const saved = loadConn()
-    if (saved) {
+    const staleLocalConn = !!saved && REMOTE_PROXY && isLoopbackHost(saved.wsHost)
+    if (saved && !staleLocalConn) {
       setProxyHost(saved.wsHost)
       setProxyPort(urlPort ?? saved.proxyPort)
       setServerHost(saved.serverHost)
@@ -93,8 +102,8 @@ export default function LoginScreen() {
       setServerHost('localhost')
       setPort('17171')
     } else if (nextPreset === 'official') {
-      setProxyHost('localhost')
-      setProxyPort(8787)
+      setProxyHost(REMOTE_PROXY ? BAKED_PROXY_HOST : 'localhost')
+      setProxyPort(REMOTE_PROXY ? BAKED_PROXY_PORT : 8787)
       setServerHost('beta.xmage.today')
       setPort('17171')
     }
