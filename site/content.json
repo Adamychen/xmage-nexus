@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "XMage Nexus",
-    "tagline": "Modern, Arena-grade web client for XMage (React 19 + TypeScript + WebSocket proxy).",
+    "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
     "version": "0.1.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
@@ -18,7 +18,7 @@
       "Juego 1v1 y Commander (hasta 4 en tablero): prioridad, targeting visual, pago de mana, combate multibloqueo y stack",
       "Deck Builder in-app (Scryfall) con import/export texto, Arena y .dck",
       "Draft y Sealed de 8 jugadores, torneos Suizo/Eliminacion y visor de repeticiones",
-      "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena",
+      "9 idiomas, motor de sonido, VFX y deck tracker integrado",
       "Launcher de escritorio (Tauri) con servidor + proxy + JRE integrados"
     ],
     "downloads": [
@@ -46,14 +46,14 @@
           "trust": ["React 19 + TypeScript", "XMage 1.4.61-V1", "Proxy multi-tenant", "Web o escritorio"]
         },
         "featuresTitle": "Todo lo que esperas de un cliente moderno",
-        "featuresSubtitle": "Experiencia de nivel Arena sobre las reglas de XMage.",
+        "featuresSubtitle": "Experiencia moderna y pulida sobre las reglas de XMage.",
         "features": [
           { "icon": "users", "title": "Lobby en vivo", "desc": "Mesas, jugadores, filtros y chat de sala y partida en tiempo real." },
           { "icon": "board", "title": "Tablero HD", "desc": "Mano, battlefield con arte en alta resolución, stack, cementerio y exilio." },
           { "icon": "target", "title": "Interacción completa", "desc": "Prioridad, targeting visual animado, pago de maná, combate multibloqueo y hechizos complejos." },
           { "icon": "deck", "title": "Deck Builder", "desc": "Constructor in-app con Scryfall e import/export en texto, Arena y .dck." },
           { "icon": "trophy", "title": "Todos los formatos", "desc": "Commander, Draft y Sealed de 8 jugadores, torneos Suizo/Eliminación y repeticiones." },
-          { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena." }
+          { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido, VFX y deck tracker integrado." }
         ],
         "formatsTitle": "Formatos y modos",
         "formats": ["Commander", "Draft & Sealed", "Torneos Suizo/SE", "Bo3 + Sideboard", "Replay viewer", "1v1 contra IA"],
@@ -99,14 +99,14 @@
           "trust": ["React 19 + TypeScript", "XMage 1.4.61-V1", "Multi-tenant proxy", "Web or desktop"]
         },
         "featuresTitle": "Everything you expect from a modern client",
-        "featuresSubtitle": "Arena-grade experience on XMage's rules.",
+        "featuresSubtitle": "A polished, modern experience on XMage's rules.",
         "features": [
           { "icon": "users", "title": "Live lobby", "desc": "Tables, players, filters and room/match chat in real time." },
           { "icon": "board", "title": "HD battlefield", "desc": "Hand, high-resolution battlefield art, stack, graveyard and exile." },
           { "icon": "target", "title": "Full interaction", "desc": "Priority, animated visual targeting, mana payment, multi-block combat and complex spells." },
           { "icon": "deck", "title": "Deck Builder", "desc": "In-app builder with Scryfall and text, Arena and .dck import/export." },
           { "icon": "trophy", "title": "All formats", "desc": "Commander, 8-player Draft & Sealed, Swiss/Single-Elim tournaments and replays." },
-          { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine, VFX and an Arena-style deck tracker." }
+          { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine, VFX and an integrated deck tracker." }
         ],
         "formatsTitle": "Formats & modes",
         "formats": ["Commander", "Draft & Sealed", "Swiss/SE Tournaments", "Bo3 + Sideboard", "Replay viewer", "1v1 vs AI"],

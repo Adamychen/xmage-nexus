@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-10T15:22:14.612Z",
+  "generatedAt": "2026-09-10T15:24:01.519Z",
   "commit": null,
   "runUrl": null,
   "project": {
     "name": "XMage Nexus",
-    "tagline": "Modern, Arena-grade web client for XMage (React 19 + TypeScript + WebSocket proxy).",
+    "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
     "version": "0.1.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
@@ -21,7 +21,7 @@
       "Juego 1v1 y Commander (hasta 4 en tablero): prioridad, targeting visual, pago de mana, combate multibloqueo y stack",
       "Deck Builder in-app (Scryfall) con import/export texto, Arena y .dck",
       "Draft y Sealed de 8 jugadores, torneos Suizo/Eliminacion y visor de repeticiones",
-      "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena",
+      "9 idiomas, motor de sonido, VFX y deck tracker integrado",
       "Launcher de escritorio (Tauri) con servidor + proxy + JRE integrados"
     ],
     "downloads": [
@@ -79,7 +79,7 @@
           ]
         },
         "featuresTitle": "Todo lo que esperas de un cliente moderno",
-        "featuresSubtitle": "Experiencia de nivel Arena sobre las reglas de XMage.",
+        "featuresSubtitle": "Experiencia moderna y pulida sobre las reglas de XMage.",
         "features": [
           {
             "icon": "users",
@@ -109,7 +109,7 @@
           {
             "icon": "palette",
             "title": "A tu gusto",
-            "desc": "9 idiomas, motor de sonido, VFX y deck tracker estilo Arena."
+            "desc": "9 idiomas, motor de sonido, VFX y deck tracker integrado."
           }
         ],
         "formatsTitle": "Formatos y modos",
@@ -178,7 +178,7 @@
           ]
         },
         "featuresTitle": "Everything you expect from a modern client",
-        "featuresSubtitle": "Arena-grade experience on XMage's rules.",
+        "featuresSubtitle": "A polished, modern experience on XMage's rules.",
         "features": [
           {
             "icon": "users",
@@ -208,7 +208,7 @@
           {
             "icon": "palette",
             "title": "Your way",
-            "desc": "9 languages, sound engine, VFX and an Arena-style deck tracker."
+            "desc": "9 languages, sound engine, VFX and an integrated deck tracker."
           }
         ],
         "formatsTitle": "Formats & modes",
