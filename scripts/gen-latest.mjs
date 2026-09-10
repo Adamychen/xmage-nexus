@@ -59,7 +59,7 @@ function main() {
   const partial = {
     [targetKey]: {
       signature: fs.readFileSync(sigFile, 'utf8').trim(),
-      url: `https://github.com/${repo}/releases/download/${tag}/${encodeURIComponent(archive)}`,
+      url: `https://github.com/${repo}/releases/download/${tag}/${encodeURIComponent(archive.replace(/ /g, '.'))}`,
     },
   }
   fs.writeFileSync(out, `${JSON.stringify(partial, null, 2)}\n`)
