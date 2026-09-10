@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XMage Nexus</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #0d1021;
+    color: #e8eaf6;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    cursor: default;
+  }
+  .card { width: 340px; text-align: center; padding: 24px; }
+  .logo { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 32px rgba(76,111,255,.35); }
+  h1 { font-size: 1.1rem; margin: 14px 0 4px; letter-spacing: .04em; }
+  .status-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; min-height: 2.4em; }
+  .status { font-size: .8rem; color: #9aa0c7; line-height: 1.5; }
+  .spin { display: none; width: 14px; height: 14px; flex: none; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.15); border-top-color: #8a5cf6; animation: rot .8s linear infinite; }
+  .spin.on { display: inline-block; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .bar { height: 8px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .fill { height: 100%; width: 0%; border-radius: 6px; background: linear-gradient(90deg,#4c6fff,#8a5cf6); transition: width .2s; }
+  .pct { font-size: .72rem; color: #8a90b8; margin-top: 6px; min-height: 1.2em; }
+  .error { display: none; margin-top: 12px; font-size: .78rem; color: #ff9a9a; background: rgba(255,60,60,.08);
+    border: 1px solid rgba(255,60,60,.3); border-radius: 8px; padding: 8px 10px; line-height: 1.5; word-break: break-word; }
+  .actions { display: none; margin-top: 12px; gap: 8px; justify-content: center; }
+  .actions.show { display: flex; }
+  button { border-radius: 8px; cursor: pointer; font-size: .82rem; padding: 7px 16px; }
+  .primary { background: #4c6fff; border: 1px solid #4c6fff; color: #fff; }
+  .ghost { background: transparent; border: 1px solid rgba(255,255,255,.25); color: #c3c8e8; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="logo" src="./logo.jpeg" alt="XMage Nexus" draggable="false" />
+  <h1>XMage Nexus</h1>
+  <div class="status-row"><span class="spin on" id="spin"></span><span class="status" id="status"></span></div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div class="pct" id="pct"></div>
+  <div class="error" id="error"></div>
+  <div class="actions" id="actions">
+    <button class="primary" id="retry"></button>
+    <button class="ghost" id="quit"></button>
+  </div>
+  <div class="actions" id="update-actions">
+    <button class="primary" id="update"></button>
+    <button class="ghost" id="continue"></button>
+  </div>
+</div>
+<script src="./splash-i18n.js"></script>
+<script>
+(function () {
+  var I18N = window.__SPLASH_I18N || {};
+  var pickLang = window.__SPLASH_PICK_LANG || function () { return 'en'; };
+  var lang = pickLang(navigator.language);
+  var T = I18N[lang] || I18N.en;
+  document.documentElement.lang = lang === 'zhs' ? 'zh-CN' : lang;
+  var statusEl = document.getElementById('status');
+  var spinEl = document.getElementById('spin');
+  var fillEl = document.getElementById('fill');
+  var pctEl = document.getElementById('pct');
+  var errorEl = document.getElementById('error');
+  var actionsEl = document.getElementById('actions');
+  var updateActionsEl = document.getElementById('update-actions');
+  document.getElementById('retry').textContent = T.retry;
+  document.getElementById('quit').textContent = T.quit;
+  document.getElementById('update').textContent = T.update_btn;
+  document.getElementById('continue').textContent = T.continue_btn;
+
+  function fill(tpl, params) {
+    var out = tpl;
+    for (var k in params) out = out.split('{' + k + '}').join(params[k]);
+    return out;
+  }
+  function setProgress(done, total) {
+    if (!total) { pctEl.textContent = fmtBytes(done); return; }
+    var p = Math.min(100, Math.round(done / total * 100));
+    fillEl.style.width = p + '%';
+    pctEl.textContent = p + '% · ' + fmtBytes(done) + ' / ' + fmtBytes(total);
+  }
+  function fmtBytes(n) {
+    if (n > 1048576) return (n / 1048576).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(n / 1024)) + ' KB';
+  }
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+    actionsEl.classList.add('show');
+  }
+  function hideError() {
+    errorEl.style.display = 'none';
+    actionsEl.classList.remove('show');
+  }
+  function translateError(raw) {
+    var msg = String(raw || 'error');
+    if (msg.indexOf('ERR_') !== 0) return msg;
+    var parts = msg.split('|');
+    var key = parts[0].toLowerCase();
+    if (typeof T[key] !== 'string') return msg;
+    return fill(T[key], { detail: parts.slice(1).join('|') });
+  }
+  function onState(s) {
+    hideError();
+    updateActionsEl.classList.remove('show');
+    fillEl.style.width = '0%';
+    pctEl.textContent = '';
+    if (s.state === 'ready') {
+      spinEl.classList.remove('on');
+      statusEl.textContent = T.ready;
+      return;
+    }
+    if (s.state === 'error') {
+      spinEl.classList.remove('on');
+      statusEl.textContent = '';
+      showError(translateError(s.message));
+      return;
+    }
+    spinEl.classList.add('on');
+    if (s.state === 'update-available') {
+      var ver = String(s.message || '').split('|')[0];
+      statusEl.textContent = T.update_available + (ver ? ' (v' + ver + ')' : '');
+      updateActionsEl.classList.add('show');
+      return;
+    }
+    if (s.state === 'update-downloading') { statusEl.textContent = T.updating; }
+    else if (s.state === 'checking-update') { statusEl.textContent = T.checking_update; }
+    else if (s.state === 'checking') { statusEl.textContent = T.checking; }
+    else if (s.state === 'starting-server') { statusEl.textContent = T.starting_server; }
+    else if (s.state === 'starting-proxy') { statusEl.textContent = T.starting_proxy; }
+    else if (s.state === 'warming') { statusEl.textContent = T.warming; }
+    else if (s.component) {
+      var c = s.component;
+      statusEl.textContent = s.state === 'downloading' ? fill(T.downloading, { component: c })
+        : s.state === 'verifying' ? fill(T.verifying, { component: c })
+        : fill(T.extracting, { component: c });
+    }
+    else { statusEl.textContent = s.state; }
+  }
+  function invoke(cmd) {
+    if (window.__TAURI__ && window.__TAURI__.core) return window.__TAURI__.core.invoke(cmd);
+    return Promise.reject(new Error('no tauri'));
+  }
+  document.getElementById('retry').addEventListener('click', function () { invoke('retry_bootstrap'); });
+  document.getElementById('quit').addEventListener('click', function () { invoke('quit_app'); });
+  document.getElementById('update').addEventListener('click', function () { updateActionsEl.classList.remove('show'); invoke('apply_update'); });
+  document.getElementById('continue').addEventListener('click', function () { updateActionsEl.classList.remove('show'); invoke('skip_update'); });
+
+  function hook() {
+    if (!(window.__TAURI__ && window.__TAURI__.event)) { setTimeout(hook, 100); return; }
+    bridgeFound = true;
+    var listen = window.__TAURI__.event.listen;
+    listen('bootstrap://state', function (e) { onState(e.payload); });
+    listen('bootstrap://progress', function (e) { setProgress(e.payload.done, e.payload.total); });
+    invoke('splash_ready');
+    var lastSig = '';
+    setInterval(function () {
+      invoke('bootstrap_status').then(function (s) {
+        if (!s || typeof s.state !== 'string') return;
+        var sig = s.state + '|' + (s.component || '') + '|' + (s.message || '');
+        if (sig !== lastSig) { lastSig = sig; onState(s); }
+      }, function () {});
+    }, 1000);
+  }
+  onState({ state: 'checking-update' });
+  var bridgeFound = false;
+  setTimeout(function () {
+    if (!bridgeFound) {
+      spinEl.classList.remove('on');
+      statusEl.textContent = '';
+      showError(T.bridge_missing);
+    }
+  }, window.__SPLASH_BRIDGE_TIMEOUT_MS || 15000);
+  hook();
+})();
+</script>
+</body>
+</html>

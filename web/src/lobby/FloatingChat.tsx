@@ -50,7 +50,37 @@ export default function FloatingChat({
   const dragRef = useRef<{ startX: number; startY: number; origLeft: number; origTop: number } | null>(null)
 
   useEffect(() => {
-    setPos(loadPos())
+    const raw = loadPos()
+    if (!raw || !Number.isFinite(raw.left) || !Number.isFinite(raw.top)) return
+    const apply = () => {
+      const el = panelRef.current
+      const w = el?.offsetWidth || 360
+      const h = el?.offsetHeight || 480
+      setPos({
+        left: Math.min(Math.max(8, raw.left), Math.max(8, window.innerWidth - w - 8)),
+        top: Math.min(Math.max(8, raw.top), Math.max(8, window.innerHeight - Math.min(h, 120) - 8)),
+      })
+    }
+    apply()
+    const raf = requestAnimationFrame(apply)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  useEffect(() => {
+    const onResize = () => {
+      setPos((prev) => {
+        if (!prev) return prev
+        const el = panelRef.current
+        const w = el?.offsetWidth || 360
+        const h = el?.offsetHeight || 480
+        return {
+          left: Math.min(Math.max(8, prev.left), Math.max(8, window.innerWidth - w - 8)),
+          top: Math.min(Math.max(8, prev.top), Math.max(8, window.innerHeight - Math.min(h, 120) - 8)),
+        }
+      })
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   const onHeaderPointerDown = (e: React.PointerEvent) => {

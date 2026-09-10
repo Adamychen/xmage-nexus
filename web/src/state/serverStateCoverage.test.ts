@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error node specifiers
 import { readFileSync, existsSync } from 'node:fs'
-// @ts-expect-error node specifiers
 import { fileURLToPath } from 'node:url'
-// @ts-expect-error node specifiers
 import { dirname, resolve } from 'node:path'
 // @ts-expect-error no types for oracle generator
 import { computeServerStateSchema } from '../../../scripts/server-state-schema.mjs'

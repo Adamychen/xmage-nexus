@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { dismissSetupWizard } from './support/start-game'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -60,6 +61,7 @@ function commanderGame() {
 test('arena layout: mi campo a ancho completo, rivales en columnas, mano overlay @arena', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await page.goto('/')
+  await dismissSetupWizard(page)
   await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
   await page.waitForTimeout(400)
   // Inyectar GameView de 3 jugadores + modo arena

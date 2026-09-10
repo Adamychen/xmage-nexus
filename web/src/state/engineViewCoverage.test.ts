@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { readFileSync } from 'node:fs'
-// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { fileURLToPath } from 'node:url'
-// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { dirname, resolve } from 'node:path'
 // @ts-expect-error no type declarations for the oracle script (plain node .mjs)
 import { computeEngineViewGap } from '../../../scripts/engine-view-schema.mjs'

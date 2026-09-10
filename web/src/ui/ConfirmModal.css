@@ -1,0 +1,14 @@
+.confirm-backdrop {
+  z-index: 2000;
+}
+
+.confirm-modal .confirm-ok-danger {
+  background: linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%);
+  border: 1px solid #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.4);
+}
+
+.confirm-modal .confirm-ok-danger:hover:not(:disabled) {
+  filter: brightness(1.12);
+}

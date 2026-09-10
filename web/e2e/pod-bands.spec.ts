@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { dismissSetupWizard } from './support/start-game'
 import type { Page } from '@playwright/test'
 
 fakeOnly()
@@ -58,6 +59,7 @@ function podGame(myBattlefield: Record<string, unknown>, bobHandCount = 0, revea
 
 async function loadPodGame(page: Page, gameView: unknown) {
   await page.goto('/')
+  await dismissSetupWizard(page)
   await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
   await page.waitForTimeout(400)
   await page.evaluate((gv) => {

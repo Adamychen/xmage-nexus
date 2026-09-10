@@ -81,6 +81,9 @@ export function useSceneBridge({
     }, [])
 
   useEffect(() => {
+    // Publicación del estado de escena para E2E: solo builds dev (en prod
+    // ni el intervalo de 500ms ni el volcado del gameView existen).
+    if (!import.meta.env.DEV) return
     const publish = () => {
       const s = stateRef.current
       const me = s.game?.players?.find((p) => p.controlled)

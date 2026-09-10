@@ -23,8 +23,8 @@ const DEFAULT_DECK = {
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
     { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
     { cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 20 },
-    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 16 },
-    { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 20 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 12 },
   ],
   sideboard: [],
 }
@@ -67,9 +67,10 @@ async function main() {
   // offset de logs capturado ANTES del flujo: las comprobaciones del paso 7
   // solo miran lo escrito durante el test (los logs son append-only)
   const proxyLogs = [
+    process.env.PROXY_LOG,
     path.join(repoRoot, '.run', 'proxy.err.log'),
     path.join(repoRoot, 'Mage.Proxy', 'proxy.err.log'),
-  ].filter((f) => fs.existsSync(f))
+  ].filter((f) => !!f && fs.existsSync(f))
   const logOffsets = Object.fromEntries(
     proxyLogs.map((f) => {
       try {

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import TournamentBracket from './TournamentBracket'
+import ConfirmHost from '../ui/ConfirmHost'
 import type { TournamentView, TournamentPlayerView, RoundView, TournamentGameView } from '../net/types'
 
 function sampleTournamentView(overrides: Partial<TournamentView> = {}): TournamentView {
@@ -160,21 +161,20 @@ describe('TournamentBracket', () => {
     expect(screen.queryByTestId('bracket-watch')).toBeNull()
   })
 
-  it('asks for confirmation before quitting (T3)', () => {
+  it('asks for confirmation before quitting (T3)', async () => {
     const view = sampleTournamentView()
     const onQuit = vi.fn()
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    try {
-      render(<TournamentBracket view={view} tournamentId="t-1" onQuit={onQuit} />)
-      fireEvent.click(screen.getByTestId('tournament-quit'))
-      expect(confirmSpy).toHaveBeenCalled()
-      expect(onQuit).not.toHaveBeenCalled()
-      confirmSpy.mockReturnValue(true)
-      fireEvent.click(screen.getByTestId('tournament-quit'))
-      expect(onQuit).toHaveBeenCalledWith('t-1')
-    } finally {
-      confirmSpy.mockRestore()
-    }
+    render(<><TournamentBracket view={view} tournamentId="t-1" onQuit={onQuit} /><ConfirmHost /></>)
+    fireEvent.click(screen.getByTestId('tournament-quit'))
+    expect(await screen.findByTestId('confirm-modal')).not.toBeNull()
+    expect(onQuit).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByTestId('confirm-modal-cancel'))
+    await waitFor(() => expect(screen.queryByTestId('confirm-modal')).toBeNull())
+    expect(onQuit).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByTestId('tournament-quit'))
+    expect(await screen.findByTestId('confirm-modal')).not.toBeNull()
+    fireEvent.click(screen.getByTestId('confirm-modal-ok'))
+    await waitFor(() => expect(onQuit).toHaveBeenCalledWith('t-1'))
   })
 
   it('shows start date when present (T3)', () => {

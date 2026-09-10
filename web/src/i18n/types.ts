@@ -230,15 +230,98 @@ export interface TranslationSchema {
     create_field_my_skill: string
     create_err_name_required: string
     create_err_no_seats: string
+    create_err_no_deck: string
+    create_err_bad_tournament_type: string
     create_warn_seat_deck_empty: string
     create_toggle_skip_shuffle: string
     create_toggle_skip_starting: string
     create_summary_no_clock: string
     create_summary_limited: string
+    create_limited_match_hint: string
     create_submit: string
     create_submit_draft: string
+    create_mode_duel: string
+    create_mode_duel_desc: string
+    create_mode_multi: string
+    create_mode_multi_desc: string
+    create_mode_tourney: string
+    create_mode_tourney_desc: string
+    create_wizard_step_of: string
+    create_wizard_nav_aria: string
+    create_presets_title: string
+    create_tourney_kind: string
+    create_tourney_limited: string
+    create_tourney_constructed: string
+    create_tourney_structure: string
+    create_tourney_elimination: string
+    create_tourney_swiss: string
+    create_tourney_players: string
+    create_tourney_draft_timing_desc: string
+    create_submit_tournament: string
+    create_submit_tournament_constructed: string
     placeholder_table_name: string
     placeholder_draft_sets: string
+    draft_sets_popular: string
+    draft_sets_search_placeholder: string
+    draft_sets_mode_same: string
+    draft_sets_mode_custom: string
+    draft_sets_booster_n: string
+    draft_sets_manual_toggle: string
+    draft_sets_all_sets: string
+    wizard_back: string
+    wizard_next: string
+    create_step_desc_general: string
+    create_step_desc_timing: string
+    create_step_desc_security: string
+    create_step_desc_seats: string
+    create_field_as_draft_tourney: string
+    create_desc_as_draft_tourney: string
+    create_field_construction_time: string
+    create_field_cube: string
+    create_cube_random: string
+    create_desc_rated: string
+    create_field_buffer_time: string
+    create_mulligan_recommended_commander: string
+    create_custom_options: string
+    create_custom_life_tag: string
+    create_custom_hand_tag: string
+    create_field_mulligan_type: string
+    create_mulligan_format_default: string
+    create_field_custom_life: string
+    create_field_custom_hand: string
+    create_planechase_desc: string
+    create_hint_range_attack: string
+    create_password_show: string
+    create_password_hide: string
+    create_field_edh_power: string
+    create_edh_no_limit: string
+    create_desc_spectators: string
+    create_desc_rollback: string
+    create_enter_as_spectator: string
+    create_seats_title: string
+    create_seats_waiting_count: string
+    create_seats_bot_count: string
+    create_seats_total_count: string
+    create_seats_hint_tourney: string
+    create_seats_hint_multi: string
+    create_seats_hint_duel: string
+    create_seats_no_extra: string
+    create_seat_number: string
+    create_seat_human_waiting: string
+    create_seat_deck_label: string
+    create_seat_bot_internal: string
+    create_seats_apply_all_shortcut: string
+    create_seat_human_short: string
+    create_sim_deck_global_shortcut: string
+    create_seat_human_waiting_label: string
+    create_summary_waiting: string
+    create_time_none: string
+    create_time_standard: string
+    create_time_long: string
+    create_time_minutes: string
+    create_buffer_none: string
+    create_buffer_seconds: string
+    create_construction_minutes: string
     placeholder_password: string
     create_option_booster_draft: string
     create_option_sealed: string
@@ -382,6 +465,23 @@ export interface TranslationSchema {
     match_replay_number: string
     time_just_now: string
     avatar_pick_title: string
+    avatar_desc: string
+    avatar_filter_all: string
+    avatar_filter_standard: string
+    avatar_filter_special: string
+    avatar_sp_arcane_orb: string
+    avatar_sp_mythic_dragon: string
+    avatar_sp_elemental_mage: string
+    avatar_sp_mana_spark: string
+    avatar_sp_dimensional_portal: string
+    avatar_sp_sacred_flame: string
+    avatar_sp_necromancer: string
+    avatar_sp_shadow_lord: string
+    avatar_sp_celestial_spark: string
+    avatar_sp_astral_vortex: string
+    avatar_sp_red_lightning: string
+    avatar_sp_light_orb: string
+    avatar_sp_cosmic_crystal: string
     sleeve_pick_title: string
     sleeve_pick_subtitle: string
     sleeve_btn: string
@@ -682,6 +782,8 @@ export interface TranslationSchema {
     draft_waiting: string
     draft_pick_hint: string
     draft_loading: string
+    draft_stalled: string
+    draft_retry: string
     sideboard_title: string
     sideboard_main: string
     sideboard_side: string
@@ -694,6 +796,8 @@ export interface TranslationSchema {
     draft_quit: string
     draft_quit_title: string
     draft_quit_confirm: string
+    draft_pick_failed: string
+    draft_pick_expired: string
     draft_hide_pick: string
     draft_show_all: string
     draft_hidden: string
@@ -723,6 +827,7 @@ export interface TranslationSchema {
     commander_damage_dealt: string
     construct_title: string
     construct_pool: string
+    construct_pool_empty: string
     construct_total: string
     pile_graveyard: string
     pile_exile: string
@@ -800,6 +905,7 @@ export interface TranslationSchema {
     tournament_minimize: string
     tournament_close: string
     tournament_quit_short: string
+    tournament_construct_stalled: string
     tournament_quit_confirm: string
     tournament_leaving: string
     ring_level_1_title: string
@@ -1150,6 +1256,8 @@ export interface TranslationSchema {
     join_table_failed: string
     start_game_failed: string
     draft_no_sets: string
+    draft_sets_count_mismatch: string
+    draft_bots_no_submit: string
     draft_create_failed: string
     deck_parse_failed: string
     deck_read_failed: string
@@ -1243,6 +1351,57 @@ export interface TranslationSchema {
     log_download: string
     match_duration: string
     land_set: string
+  }
+  setup: {
+    title: string
+    welcome_title: string
+    welcome_desc: string
+    step_of: string
+    step_language: string
+    step_identity: string
+    step_identity_desc: string
+    avatar_change: string
+    step_server: string
+    step_server_desc: string
+    step_board: string
+    step_board_desc: string
+    step_soundplay: string
+    step_soundplay_desc: string
+    step_cards: string
+    step_cards_desc: string
+    cards_bg_note: string
+    cards_recommended: string
+    done_title: string
+    done_desc: string
+    enter: string
+    skip: string
+    review: string
+    first_time: string
+  }
+  splash: {
+    checking: string
+    checking_update: string
+    downloading: string
+    verifying: string
+    extracting: string
+    starting_server: string
+    starting_proxy: string
+    warming: string
+    update_available: string
+    updating: string
+    ready: string
+    retry: string
+    quit: string
+    update_btn: string
+    continue_btn: string
+    step: string
+    err_mac_intel: string
+    err_platform: string
+    err_offline: string
+    err_incomplete: string
+    err_no_update: string
+    err_update_failed: string
+    bridge_missing: string
   }
   keywords: Record<string, string>
 }

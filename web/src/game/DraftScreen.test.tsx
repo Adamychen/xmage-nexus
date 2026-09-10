@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { cleanup, render, fireEvent, waitFor } from '@testing-library/react'
+import { cleanup, render, fireEvent, waitFor, act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DraftScreen from './DraftScreen'
+import ConfirmHost from '../ui/ConfirmHost'
 import { reset } from '../state/store'
 import { setState } from '../state/state'
 import { soundManager } from '../audio/soundManager'
@@ -11,12 +12,16 @@ const mockSendCardPick = vi.fn().mockResolvedValue({ ok: true })
 const mockSendCardMark = vi.fn().mockResolvedValue({ ok: true })
 const mockSetBoosterLoaded = vi.fn().mockResolvedValue({ ok: true })
 const mockQuitDraft = vi.fn().mockResolvedValue({ ok: true })
+const mockJoinDraft = vi.fn().mockResolvedValue({ ok: true })
+const mockJoinTournament = vi.fn().mockResolvedValue({ ok: true })
 
 vi.mock('../net/commands', () => ({
   sendCardPick: (...args: unknown[]) => mockSendCardPick(...args),
   sendCardMark: (...args: unknown[]) => mockSendCardMark(...args),
   setBoosterLoaded: (...args: unknown[]) => mockSetBoosterLoaded(...args),
   quitDraft: (...args: unknown[]) => mockQuitDraft(...args),
+  joinDraft: (...args: unknown[]) => mockJoinDraft(...args),
+  joinTournament: (...args: unknown[]) => mockJoinTournament(...args),
 }))
 
 function makeDraftMessage(overrides: Partial<DraftClientMessage> = {}): DraftClientMessage {
@@ -45,6 +50,10 @@ describe('DraftScreen', () => {
   beforeEach(() => {
     reset()
     vi.clearAllMocks()
+    mockSendCardPick.mockResolvedValue({ ok: true })
+    mockSendCardMark.mockResolvedValue({ ok: true })
+    mockSetBoosterLoaded.mockResolvedValue({ ok: true })
+    mockQuitDraft.mockResolvedValue({ ok: true })
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -71,7 +80,7 @@ describe('DraftScreen', () => {
   })
 
   it('renders booster and timeout', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container, getByTestId } = render(<DraftScreen />)
     expect(container.querySelector('.draft-backdrop')).toBeTruthy()
     expect(getByTestId('draft-booster')).toBeTruthy()
@@ -93,7 +102,7 @@ describe('DraftScreen', () => {
   })
 
   it('click card triggers sendCardPick', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container } = render(<DraftScreen />)
     const card = container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement
     expect(card).toBeTruthy()
@@ -103,7 +112,7 @@ describe('DraftScreen', () => {
   })
 
   it('right click triggers sendCardMark', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container } = render(<DraftScreen />)
     const card = container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement
     expect(card).toBeTruthy()
@@ -113,6 +122,7 @@ describe('DraftScreen', () => {
 
   it('shows picks tray', () => {
     setState({
+      lastDraftMethod: 'DRAFT_PICK',
       draft: {
         draftId: 'draft-1',
         message: makeDraftMessage({
@@ -131,13 +141,14 @@ describe('DraftScreen', () => {
   })
 
   it('calls setBoosterLoaded on mount when booster exists', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     render(<DraftScreen />)
     await waitFor(() => expect(mockSetBoosterLoaded).toHaveBeenCalledWith('draft-1'))
   })
 
   it('hides a pick and sends hiddenCards with the next pick (U9-1)', async () => {
     setState({
+      lastDraftMethod: 'DRAFT_PICK',
       draft: {
         draftId: 'draft-1',
         message: makeDraftMessage({
@@ -181,20 +192,22 @@ describe('DraftScreen', () => {
   })
 
   it('quit asks for confirmation (U9-2)', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
-    const { container } = render(<DraftScreen />)
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container } = render(<><DraftScreen /><ConfirmHost /></>)
     await fireEvent.click(container.querySelector('.draft-quit-btn')!)
-    expect(confirmSpy).toHaveBeenCalled()
+    await waitFor(() => expect(container.querySelector('[data-testid="confirm-modal"]')).not.toBeNull())
     expect(mockQuitDraft).not.toHaveBeenCalled()
-    confirmSpy.mockReturnValue(true)
+    await fireEvent.click(container.querySelector('[data-testid="confirm-modal-cancel"]')!)
+    await waitFor(() => expect(container.querySelector('[data-testid="confirm-modal"]')).toBeNull())
+    expect(mockQuitDraft).not.toHaveBeenCalled()
     await fireEvent.click(container.querySelector('.draft-quit-btn')!)
+    await waitFor(() => expect(container.querySelector('[data-testid="confirm-modal"]')).not.toBeNull())
+    await fireEvent.click(container.querySelector('[data-testid="confirm-modal-ok"]')!)
     await waitFor(() => expect(mockQuitDraft).toHaveBeenCalledWith('draft-1'))
-    confirmSpy.mockRestore()
   })
 
   it('renders table seats with passing direction (U9-3)', () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container, getByTestId } = render(<DraftScreen />)
     const table = getByTestId('draft-table')
     expect(table.textContent).toContain('←')
@@ -203,7 +216,7 @@ describe('DraftScreen', () => {
   })
 
   it('ignores a second pick within the protection window (U9-5)', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container } = render(<DraftScreen />)
     const cards = container.querySelectorAll('[data-testid="draft-card"]')
     await fireEvent.click(cards[0] as HTMLButtonElement)
@@ -253,8 +266,7 @@ describe('DraftScreen', () => {
     }
   })
 
-  it('sorts the booster by rarity once known (U9-7)', async () => {
-    globalThis.fetch = vi.fn(async (url: unknown) => ({
+  it('sorts the booster by rarity once known (U9-7)', async () => {    globalThis.fetch = vi.fn(async (url: unknown) => ({
       ok: true,
       json: async () => ({
         name: 'Mock Card',
@@ -267,11 +279,100 @@ describe('DraftScreen', () => {
         image_uris: { normal: 'https://img.test/n.jpg', art_crop: 'https://img.test/a.jpg' },
       }),
     }) as unknown as Response)
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() } })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container } = render(<DraftScreen />)
     await waitFor(() => {
       const cards = container.querySelectorAll('[data-testid="draft-card"]')
       expect(cards[0].getAttribute('data-card-id')).toBe('c-2')
     })
+  })
+
+  it('pick rechazado muestra aviso visible (antes: silencio)', async () => {
+    mockSendCardPick.mockResolvedValueOnce({ ok: false, error: 'rejected' })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container } = render(<DraftScreen />)
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    await waitFor(() => expect(container.querySelector('[data-testid="draft-pick-error"]')).toBeTruthy())
+    expect(mockSetBoosterLoaded).toHaveBeenCalledWith('draft-1')
+  })
+
+  it('pick colgado se libera a los 15s con aviso (anti-cuelgue busyPick)', async () => {
+    vi.useFakeTimers()
+    try {
+      mockSendCardPick.mockImplementationOnce(() => new Promise(() => {}))
+      setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+      const { container } = render(<DraftScreen />)
+      const card = container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement
+      fireEvent.click(card)
+      expect(card.disabled).toBe(true)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15000)
+      })
+      vi.useRealTimers()
+      await waitFor(() => expect(container.querySelector('[data-testid="draft-pick-error"]')).toBeTruthy())
+      expect((container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement).disabled).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a 0s bloquea clicks y avisa de pick automático', async () => {
+    vi.useFakeTimers()
+    try {
+      setState({
+        lastDraftMethod: 'DRAFT_PICK',
+        draft: {
+          draftId: 'draft-1',
+          message: makeDraftMessage({
+            draftPickView: {
+              booster: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Bolt' } },
+              picks: {},
+              picking: true,
+              timeout: 2,
+            },
+          }),
+        },
+      })
+      const { container } = render(<DraftScreen />)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2500)
+      })
+      expect(container.textContent).toContain('servidor elige por ti')
+      const card = container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement
+      expect(card.disabled).toBe(true)
+      await fireEvent.click(card)
+      expect(mockSendCardPick).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('muestra aviso si el draft lleva parado (watchdog de cuña)', () => {
+    setState({
+      draft: { draftId: 'draft-1', message: makeDraftMessage() },
+      lastDraftEventAt: Date.now() - 200000,
+    })
+    const { queryByTestId } = render(<DraftScreen />)
+    expect(queryByTestId('draft-stalled')).toBeTruthy()
+    cleanup()
+    reset()
+    setState({
+      draft: { draftId: 'draft-1', message: makeDraftMessage() },
+      lastDraftEventAt: Date.now(),
+    })
+    const fresh = render(<DraftScreen />)
+    expect(fresh.queryByTestId('draft-stalled')).toBeNull()
+  })
+
+  it('el aviso ofrece Reintentar y re-une al draft', async () => {
+    setState({
+      draft: { draftId: 'draft-9', message: makeDraftMessage() },
+      tournament: { tournamentId: 't-9', view: {} },
+      lastDraftEventAt: Date.now() - 200000,
+    } as never)
+    const { getByTestId } = render(<DraftScreen />)
+    await fireEvent.click(getByTestId('draft-retry'))
+    expect(mockJoinTournament).toHaveBeenCalledWith('t-9')
+    expect(mockJoinDraft).toHaveBeenCalledWith('draft-9')
   })
 })

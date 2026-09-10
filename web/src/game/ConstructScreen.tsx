@@ -6,6 +6,9 @@ import { useTickingTimer } from '../utils/timer'
 import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
+import { BasicLandAdder } from '../decks/BasicLandAdder'
+import type { BasicLandPreset } from '../decks/deckUtils'
+import { replaceBasicLands, type SuggestedLand } from '../decks/deckCardOps'
 import Icon from '../ui/Icon'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
@@ -195,8 +198,7 @@ export default function ConstructScreen() {
     })
   }, [pool])
 
-  const moveOneToPool = useCallback((actionKey: string) => {
-    const key = actionKey.startsWith('pool:') ? actionKey.slice(5) : actionKey
+  const moveOneToPool = useCallback((actionKey: string) => {    const key = actionKey.startsWith('pool:') ? actionKey.slice(5) : actionKey
     const src = main.find((c) => deckCardKey(c) === key)
     if (!src) return
     setMain((prev) => prev.flatMap((c) => (deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c])))
@@ -206,6 +208,29 @@ export default function ConstructScreen() {
       return [...prev, { cardName: src.cardName, setCode: src.setCode, cardNumber: src.cardNumber, amount: 1 }]
     })
   }, [main])
+
+  const addLandToMain = useCallback((preset: BasicLandPreset) => {
+    const land: DeckCard = { cardName: preset.name, setCode: preset.setCode, cardNumber: preset.cardNumber, amount: 1 }
+    setMain((prev) => {
+      const idx = prev.findIndex((c) => c.cardName.toLowerCase() === preset.name.toLowerCase())
+      if (idx >= 0) return prev.map((c, i) => (i === idx ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
+      return [...prev, land]
+    })
+    updateMetaForCards([land])
+  }, [updateMetaForCards])
+
+  const removeLandFromMain = useCallback((preset: BasicLandPreset) => {
+    setMain((prev) => prev.flatMap((c) => (
+      c.cardName.toLowerCase() === preset.name.toLowerCase()
+        ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }])
+        : [c]
+    )))
+  }, [])
+
+  const applySuggestedLandsToMain = useCallback((suggested: SuggestedLand[]) => {
+    setMain((prev) => replaceBasicLands(prev, suggested))
+    updateMetaForCards(suggested.map((s) => ({ cardName: s.name, setCode: s.setCode, cardNumber: s.cardNumber, amount: s.amount })))
+  }, [updateMetaForCards])
 
   const handleDropOnMain = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -382,7 +407,7 @@ export default function ConstructScreen() {
                 )
               })}
               {filteredPool.length === 0 && (
-                <div className="deck-list-empty-hint"><small>{t('game', 'construct_pool')}</small></div>
+                <div className="deck-list-empty-hint"><small>{t('game', poolSize === 0 ? 'construct_pool_empty' : 'construct_pool')}</small></div>
               )}
             </div>
           </div>
@@ -397,6 +422,14 @@ export default function ConstructScreen() {
               <h3>{t('game', 'sideboard_main')}</h3>
               <span className={`construct-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
             </div>
+            <BasicLandAdder
+              cards={main}
+              metaMap={metaMap}
+              format="Limited"
+              onAddLand={addLandToMain}
+              onRemoveLand={removeLandFromMain}
+              onApplySuggestedLands={applySuggestedLandsToMain}
+            />
             {main.length > 10 && (
               <input
                 className="construct-filter"

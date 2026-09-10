@@ -55,13 +55,13 @@ const memoryStorage = new MemoryStorage()
 function getStorage(): Storage {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.getItem('__mage_test__')
+      window.localStorage.getItem('__mage_probe__')
       return window.localStorage
     }
   } catch {}
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.getItem('__mage_test__')
+      localStorage.getItem('__mage_probe__')
       return localStorage
     }
   } catch {}

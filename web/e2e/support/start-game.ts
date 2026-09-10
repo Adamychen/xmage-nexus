@@ -56,8 +56,20 @@ export interface LoginOptions {
   retryLobby?: boolean
 }
 
+export async function dismissSetupWizard(page: Page): Promise<void> {
+  const wizard = page.getByTestId('setup-wizard')
+  // El wizard se auto-abre en contextos frescos: esperar a que React monte
+  // (si ya estaba hecho no hay wizard y es no-op).
+  await wizard.waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {})
+  if (await wizard.isVisible().catch(() => false)) {
+    await page.getByTestId('setup-skip').click()
+    await expect(wizard).toBeHidden({ timeout: 5_000 })
+  }
+}
+
 export async function login(page: Page, username: string, opts: LoginOptions = {}): Promise<void> {
   await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : 8787}`)
+  await dismissSetupWizard(page)
   if (await page.locator('details.login-network-box:not([open])').count() > 0) {
     await page.locator('summary.login-network-header').click()
   }
@@ -107,9 +119,9 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
 
   if (opts.winsNeeded && opts.winsNeeded > 1) {
     if (opts.winsNeeded === 2) {
-      await page.getByRole('button', { name: /Bo3/i }).click()
+      await page.getByRole('button', { name: /^Bo3/i }).click()
     } else if (opts.winsNeeded === 3) {
-      await page.getByRole('button', { name: /Bo5/i }).click()
+      await page.getByRole('button', { name: /^Bo5/i }).click()
     }
   }
 
@@ -117,8 +129,9 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
       await page.getByLabel(/Formato/i).selectOption({ value: opts.deckType })
     }
     if (opts.deck || opts.simDeck) {
-      // paso del wizard (rediseño 2026-09): "🤖 Multijugador"
-      await page.getByRole('button', { name: /Multijugador/i }).click()
+      // paso del wizard (rediseño 2026-09): "🤖 Multijugador" (scope al
+      // wizard-step: la tarjeta de modo "Commander / Multijugador" también matchea)
+      await page.locator('button.wizard-step', { hasText: /Multijugador/i }).click()
       if (opts.deck) {
         await page.getByLabel(/Mazo activo/i).selectOption({ value: opts.deck })
       }

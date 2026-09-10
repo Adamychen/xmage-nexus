@@ -59,7 +59,7 @@ function getInitialLanguage(): SupportedLanguage {
     const browserLang = navigator.language.slice(0, 2).toLowerCase()
     if (browserLang in LOCALES) return browserLang as SupportedLanguage
   } catch {}
-  return 'es'
+  return 'en'
 }
 
 function getInitialCardLanguage(): string {
@@ -267,9 +267,9 @@ export function translateError(error: string | null | undefined, action?: string
     return `${t('errors.create_table_failed')}: ${t('errors.invalid_game_type')}`
   }
   if (str === 'FAILED' || lower === 'failed') {
-    if (action === 'joinTable' || action === 'joinTournamentTable') return t('errors.join_table_failed')
+    if (action === 'joinTable' || action === 'joinTournamentTable' || action === 'joinTournament' || action === 'joinDraft') return t('errors.join_table_failed')
     if (action === 'watchTable' || action === 'watchTournamentTable') return t('errors.table_not_found')
-    if (action === 'startMatch') return t('errors.start_game_failed')
+    if (action === 'startMatch' || action === 'startTournament') return t('errors.start_game_failed')
     return t('errors.create_table_failed')
   }
 

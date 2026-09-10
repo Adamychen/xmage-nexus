@@ -2,12 +2,13 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { tournamentScenario } from '../fixtures/scenarios/tournament'
-import { login } from './support/start-game'
+import { dismissSetupWizard, login } from './support/start-game'
 fakeOnly()
 
 test.describe('Tournament', { tag: '@tournament' }, () => {
   test('tournament bracket renders via injected state', async ({ page }) => {
     await page.goto('/')
+    await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(400)
     await page.evaluate(() => {
@@ -124,11 +125,13 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
   test('random packs selector fills the draft sets over WS (T5)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
       await login(page, 'e2e')
-      await page.locator('.top-nav-create').click()
-      const selects = page.locator('.create-tab-content select')
-      await selects.nth(1).selectOption('Limited')
-      await page.getByText(/Crear como torneo Draft/i).click()
-      await selects.nth(2).selectOption('Booster Draft Elimination (Random)')
+      await page.getByRole('button', { name: /Nueva/i }).first().click()
+      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+      await page.getByRole('button', { name: /^Torneo/i }).first().click()
+      await page.getByRole('button', { name: /Draft \/ Limitado/i }).click()
+      await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')
+      const draftToggle = page.getByLabel(/Crear como torneo Draft/i)
+      if (!(await draftToggle.isChecked())) await draftToggle.check()
       await page.getByTestId('random-packs-open').click()
       const dialog = page.locator('[data-testid="random-packs-selector"]')
       await expect(dialog).toBeVisible({ timeout: 10_000 })

@@ -23,22 +23,19 @@ async function zoomOf(page: import('@playwright/test').Page) {
 }
 
 test.describe('UI zoom (browser-like)', () => {
-  test('Ctrl+= / Ctrl+0 cambian el zoom y el % se muestra en el header', async ({ page }) => {
+  test('Ctrl+= / Ctrl+0 cambian el zoom global', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
-      const readout = page.locator('.lobby-scale-readout')
-      await expect(readout).toBeVisible({ timeout: 15_000 })
-      await expect(readout).toHaveText('100%')
+      await expect(page.getByTestId('open-settings')).toBeVisible({ timeout: 15_000 })
+      expect(await zoomOf(page)).toBe('1')
       await page.keyboard.down('Control')
       await page.keyboard.press('=')
       await page.keyboard.up('Control')
-      await expect(readout).toHaveText('110%')
-      expect(await zoomOf(page)).toBe('1.1')
+      await expect.poll(() => zoomOf(page)).toBe('1.1')
       await page.keyboard.down('Control')
       await page.keyboard.press('0')
       await page.keyboard.up('Control')
-      await expect(readout).toHaveText('100%')
-      expect(await zoomOf(page)).toBe('1')
+      await expect.poll(() => zoomOf(page)).toBe('1')
     })
   })
 

@@ -5,6 +5,7 @@ import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument } from './persistence'
 import { getLanguage } from '../i18n'
+import { translateError } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { resetPromptSound } from '../audio/promptSound'
 import type { AppState } from './state'
@@ -138,14 +139,24 @@ export function removeStagingTable() {
 }
 
 /** Arranca la partida de la mesa en staging (solo dueño, la UI lo gatea). */
-export async function startStagedMatch() {
+export async function startStagedMatch(): Promise<boolean> {
   const s = getState()
-  if (!s.stagingTableId) return
+  if (!s.stagingTableId) return false
   const staged = s.lobby?.tables.find((tb) => tb.tableId === s.stagingTableId)
-  if (staged?.isTournament ?? s.stagingIsTournament) {
-    await cmds.startTournament(s.stagingTableId)
-  } else {
-    await cmds.startMatch(s.stagingTableId)
+  const isTourney = staged?.isTournament ?? s.stagingIsTournament
+  const action = isTourney ? 'startTournament' : 'startMatch'
+  setState({ error: null })
+  try {
+    const res = (isTourney
+      ? await cmds.startTournament(s.stagingTableId)
+      : await cmds.startMatch(s.stagingTableId)) as { ok?: boolean; error?: string; errorCode?: string }
+    if (res?.ok) return true
+    setState({ error: translateError(res?.error || res?.errorCode || 'FAILED', action, res?.errorCode) })
+    return false
+  } catch (e) {
+    const err = e as Error & { errorCode?: string }
+    setState({ error: translateError(err.message, action, err.errorCode) })
+    return false
   }
 }
 
@@ -186,6 +197,10 @@ export async function requestRollback(gameId: string, turnsToRollback = 0) {
   const res = await cmds.sendPlayerAction('ROLLBACK_TURNS', gameId, turnsToRollback)
   if (!res.ok) {
     setState({ error: res.error ?? 'Error requesting rollback' })
+  } else {
+    // El ok del proxy solo confirma el envío: el servidor puede negar después.
+    // Armar ya (sin carreras) para aceptar la vista restaurada cuando ejecute.
+    armRollbackPending(gameId)
   }
   return res
 }
@@ -196,6 +211,18 @@ export async function requestUndo(gameId: string) {
     setState({ error: res.error ?? 'Error requesting undo' })
   }
   return res
+}
+
+/** Marca que hay un rollback en curso para gameId: la próxima vista con posición
+ * vieja (turno/paso hacia atrás) se acepta como restaurada en vez de descartarse.
+ * Se arma con la acción propia (pedir/aceptar) o el anuncio del servidor, y se
+ * desarma al consumir, al denegarse o al cerrar la partida. */
+export function armRollbackPending(gameId: string | null | undefined): void {
+  if (gameId) setState({ rollbackPendingFor: gameId })
+}
+
+export function disarmRollbackPending(): void {
+  if (getState().rollbackPendingFor != null) setState({ rollbackPendingFor: null })
 }
 
 export function returnToLobby() {

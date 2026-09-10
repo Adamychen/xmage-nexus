@@ -14,6 +14,7 @@ import { requestDeckValidation } from './DeckIssuesDialog'
 import type { Deck } from './decks'
 import { useTranslation } from '../i18n'
 import { translateError } from '../i18n'
+import { confirmDialog } from '../ui/confirmDialog'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './SpectatorStagingScreen.css'
 
@@ -26,8 +27,9 @@ export default function SpectatorStagingScreen({
   onLeave?: () => void
   mode?: 'spectator' | 'player'
 }) {
-  const { t } = useTranslation()
+  const { t, tError } = useTranslation()
   const storeTable = useStore((s) => s.watchingTable)
+  const stagingError = useStore((s) => s.error)
   const lobby = useStore((s) => s.lobby)
   const conn = useStore((s) => s.conn)
   const messages = useStore((s) => s.chatMessages)
@@ -46,6 +48,7 @@ export default function SpectatorStagingScreen({
 
   const [showChangeDeck, setShowChangeDeck] = useState(false)
   const [myReadyState, setMyReadyState] = useState(true)
+  const [starting, setStarting] = useState(false)
 
   const playerReadyMap = useMemo(() => {
     const map: Record<string, boolean> = {}
@@ -215,7 +218,7 @@ export default function SpectatorStagingScreen({
     if (isOwner) {
       const otherHumans = seats.some((s) => s.playerName && s.playerName.toLowerCase() !== conn?.username?.toLowerCase() && (!s.playerType || s.playerType === 'HUMAN'))
       if (otherHumans) {
-        const ok = window.confirm(t('lobby', 'staging_change_deck_host_warn'))
+        const ok = await confirmDialog(t('lobby', 'staging_change_deck_host_warn'))
         if (!ok) return
       }
       await cmds.removeTable(tTable.tableId)
@@ -313,12 +316,14 @@ export default function SpectatorStagingScreen({
     else returnToLobby()
   }
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (starting) return
     if (!allPlayersReady) {
-      const ok = window.confirm(t('lobby','staging_start_unready_confirm'))
+      const ok = await confirmDialog(t('lobby','staging_start_unready_confirm'))
       if (!ok) return
     }
-    void startStagedMatch()
+    setStarting(true)
+    void startStagedMatch().finally(() => setStarting(false))
   }
 
   return (
@@ -559,6 +564,11 @@ export default function SpectatorStagingScreen({
           </div>
 
           {/* Progress stepper: Table → Players → Ready → Play */}
+          {stagingError && (
+            <div className="error-box panel staging-error-banner" data-testid="staging-error">
+              {tError(stagingError)}
+            </div>
+          )}
           <div className="staging-stepper" data-testid="staging-stepper">
             {[
               { key: 'table', label: t('lobby', 'staging_step_table'), state: 'done' as const },
@@ -617,6 +627,7 @@ export default function SpectatorStagingScreen({
                   className="staging-action-btn primary"
                   data-testid="staging-start"
                   onClick={handleStart}
+                  disabled={starting}
                   title={!allPlayersReady ? t('lobby','staging_start_unready_confirm') : undefined}
                 >
                   <Icon name="play" size={13} /> {t('lobby','start_match_btn')}

@@ -86,6 +86,22 @@ describe('RollbackDialog', () => {
     expect(cmds.sendPlayerAction).toHaveBeenCalledWith('UNDO', 'g-1')
   })
 
+  it('deshabilita solicitar sin prioridad (el servidor lo rechazaría)', () => {
+    setState({
+      rollbackDialogOpen: true,
+      gameId: 'g-1',
+      game: makeGameView({
+        turn: 3,
+        rollbackTurnsAllowed: true,
+        players: [makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true, hasPriority: false })],
+      }),
+    })
+
+    render(<RollbackDialog />)
+    const confirmBtn = screen.getByRole('button', { name: /Solicitar Rebobinado|Request Rollback/i })
+    expect((confirmBtn as HTMLButtonElement).disabled).toBe(true)
+  })
+
   it('closes when cancel is clicked', () => {
     setState({
       rollbackDialogOpen: true,

@@ -24,6 +24,7 @@ final class ProxyProtocol {
     static final String ERR_INVALID_DECK_TYPE = "INVALID_DECK_TYPE";
     static final String ERR_PASSWORD = "PASSWORD";
     static final String ERR_SEAT = "SEAT";
+    static final String ERR_WARMING_UP = "WARMING_UP";
 
     private ProxyProtocol() {
     }

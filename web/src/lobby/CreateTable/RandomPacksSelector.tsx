@@ -6,12 +6,14 @@ import { parseLimitedSetCodes } from './constants'
 import './RandomPacksSelector.css'
 
 /** Tipos de torneo que usan pool aleatorio de sobres (paridad con NewTournamentDialog). */
-export function isRandomPacksType(tournamentType: string): boolean {
-  return /random|reshuffled|rich man/i.test(tournamentType)
+export function isRandomPacksType(tournamentType: unknown): boolean {
+  const str = typeof tournamentType === 'string' ? tournamentType : (tournamentType as { name?: string })?.name ?? ''
+  return /random|reshuffled|rich man/i.test(str)
 }
 
-export function maxRandomPacks(tournamentType: string, numPlayers: number): number {
-  if (/rich man/i.test(tournamentType)) return 36
+export function maxRandomPacks(tournamentType: unknown, numPlayers: number): number {
+  const str = typeof tournamentType === 'string' ? tournamentType : (tournamentType as { name?: string })?.name ?? ''
+  if (/rich man/i.test(str)) return 36
   return 3 * (numPlayers + 1)
 }
 

@@ -5,13 +5,14 @@ import type { DeckV2 } from './types'
 import { MAX_DECKS, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { parseAnyDeck, exportDck, exportArena, exportTxt, exportDek } from './parseDck'
-import { DECKS, type DeckCard } from '../lobby/decks'
+import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
+import { alertDialog, confirmDialog } from '../ui/confirmDialog'
 import './DecksGallery.css'
 
 function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
@@ -34,7 +35,7 @@ function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
 
 function preconToV2(): DeckV2[] {
   const now = Date.now()
-  return DECKS.map((d, i) => ({
+  return bundledDecks().map((d, i) => ({
     ...d,
     id: `precon-${i}-${d.name}`,
     format: d.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' as const : 'Freeform' as const,
@@ -207,7 +208,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleDelete = async () => {
     if (!selected || selected.source === 'precon') return
-    if (!confirm(`${t('common', 'delete')} "${selected.name}"?`)) return
+    if (!(await confirmDialog(`${t('common', 'delete')} "${selected.name}"?`, { danger: true }))) return
     await storage.del(selected.id)
     setSelectedId(null)
     await load()
@@ -246,7 +247,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const handleBackupAll = async () => {
     const customDecks = await storage.list()
     if (customDecks.length === 0) {
-      alert(t('decks', 'deck_no_cards'))
+      await alertDialog(t('decks', 'deck_no_cards'))
       return
     }
     const payload = {
@@ -291,13 +292,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     try {
       const count = await restoreBackupText(await f.text())
       if (count === 0) {
-        alert(t('errors', 'deck_read_failed'))
+        await alertDialog(t('errors', 'deck_read_failed'))
         return
       }
       await load()
-      alert(`${t('common', 'done')}: ${count}`)
+      await alertDialog(`${t('common', 'done')}: ${count}`)
     } catch {
-      alert(t('errors', 'deck_read_failed'))
+      await alertDialog(t('errors', 'deck_read_failed'))
     }
   }
 

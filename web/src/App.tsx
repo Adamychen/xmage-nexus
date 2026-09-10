@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
 import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
@@ -11,8 +11,11 @@ import LoginScreen from './lobby/LoginScreen'
 import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
 import DeckIssuesDialog from './lobby/DeckIssuesDialog'
+import SetupWizard from './setup/SetupWizard'
+import { isSetupDone, OPEN_SETUP_EVENT } from './setup/setupFlag'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
+import ConfirmHost from './ui/ConfirmHost'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 
@@ -22,6 +25,13 @@ export default function App() {
   const connecting = useStore((s) => s.connecting)
   const wsAlive = useStore((s) => s.wsAlive)
   const settings = useStore((s) => s.settings)
+  const [showSetup, setShowSetup] = useState(() => !isSetupDone())
+
+  useEffect(() => {
+    const open = () => setShowSetup(true)
+    window.addEventListener(OPEN_SETUP_EVENT, open)
+    return () => window.removeEventListener(OPEN_SETUP_EVENT, open)
+  }, [])
 
   useEffect(() => {
     const captureHash = () => {
@@ -39,6 +49,7 @@ export default function App() {
 
   useEffect(() => {
     soundManager.init(loadAudioSettings())
+    if (!isSetupDone()) return
     const saved = loadConn()
     if (saved && saved.username && phase === 'idle') {
       void doConnect(
@@ -113,7 +124,9 @@ export default function App() {
       <DraftScreen />
       <ConstructScreen />
       <GameEndDialog />
+      <ConfirmHost />
       <DeckIssuesDialog />
+      {showSetup && <SetupWizard onClose={() => setShowSetup(false)} />}
       <footer className="app-attribution">
         {(() => {
           const attr = t('common', 'attribution_scryfall')

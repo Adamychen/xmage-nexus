@@ -3,6 +3,7 @@ import { parseGameEvent } from '../../game/gameEventParser'
 import { setState, addLog } from '../state'
 import { soundManager } from '../../audio/soundManager'
 import type { Snapshot } from './context'
+import { sniffRollbackAnnounce } from './game'
 
 export function handleChatMessage(data: unknown, objectId: string | null, s: Snapshot): void {
   const m = data as ChatMessageEvent
@@ -24,6 +25,9 @@ export function handleChatMessage(data: unknown, objectId: string | null, s: Sna
   else if (mt === 'TALK') channel = 'chat'
   else if (mt) channel = 'system'
   else channel = parseGameEvent(m.message) ? 'game' : (m.username ? 'chat' : 'system')
+  // El anuncio de rollback del servidor solo viaja por el chat de la partida:
+  // señal secundaria para aceptar la vista restaurada (ver sniffRollbackAnnounce).
+  if (channel === 'game' && s.gameId) sniffRollbackAnnounce(m.message, s.gameId)
   addLog(m.username, m.message, objectId ?? undefined, channel)
 }
 

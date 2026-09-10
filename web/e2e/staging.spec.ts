@@ -96,8 +96,9 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
       await page.getByTestId('staging-toggle-ready').click()
       await expect(page.getByTestId('staging-toggle-ready')).toContainText(/Estoy listo|ready/i)
 
-      page.on('dialog', (d) => void d.accept())
       await page.getByTestId('staging-start').click()
+      await expect(page.getByTestId('confirm-modal')).toBeVisible({ timeout: 15_000 })
+      await page.getByTestId('confirm-modal-ok').click()
       await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 15_000 })
     })
   })
@@ -107,8 +108,9 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
       await createAndWaitStaging(page)
       await page.getByTestId('staging-toggle-ready').click()
 
-      page.on('dialog', (d) => void d.dismiss())
       await page.getByTestId('staging-start').click()
+      await expect(page.getByTestId('confirm-modal')).toBeVisible({ timeout: 15_000 })
+      await page.getByTestId('confirm-modal-cancel').click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible()
       await expect(page.getByTestId('game-status')).toBeHidden()
     })

@@ -28,7 +28,7 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ phase: 'lobby', connecting: false, error: null })
       break
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null })
+      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, rollbackPendingFor: null })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -51,7 +51,7 @@ export function handleMessage(msg: ProxyMessage) {
     }
     case 'result': {
       if (!msg.ok && msg.action !== 'disconnect') {
-        const delegated = new Set(['createTable', 'createTournamentTable', 'joinTable', 'joinTournamentTable', 'watchTable', 'startMatch'])
+        const delegated = new Set(['createTable', 'createTournamentTable', 'joinTable', 'joinTournamentTable', 'watchTable', 'startMatch', 'startTournament'])
         if (delegated.has(msg.action)) {
           const detail = msg.error ?? (typeof msg.data === 'string' ? msg.data : undefined) ?? msg.errorCode
           const code = (msg as { errorCode?: string }).errorCode
@@ -89,10 +89,30 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
   }
 
   const embeddedGame = gameViewFrom(data)
-  if (embeddedGame && !isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)) {
-    dispatchGameSounds(s.game, embeddedGame, method)
+  if (embeddedGame) {
+    const staleByPosition = isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)
     const sameGame = !!objectId && objectId === s.gameId
-    setState({ game: attributeStackControllers(sameGame ? s.game : null, embeddedGame), phase: 'game', watchingTable: null, gameId: objectId ?? s.gameId })
+    // Rollback del servidor: la vista restaurada va hacia atrás en turno/paso pero es
+    // la vigente. Sin esto ambos clientes se congelan en la vista pre-rollback (partida muerta).
+    // El flag se arma con la acción propia (pedir/aceptar) o el anuncio del servidor.
+    const rollbackRestored = staleByPosition && sameGame && !!s.game
+      && s.rollbackPendingFor != null && s.rollbackPendingFor === s.gameId
+    if (!staleByPosition || rollbackRestored) {
+      dispatchGameSounds(s.game, embeddedGame, method)
+      setState({
+        game: attributeStackControllers(sameGame ? s.game : null, embeddedGame),
+        phase: 'game',
+        watchingTable: null,
+        gameId: objectId ?? s.gameId,
+        // Solo se limpia al consumir el rollback: un accept normal no debe tumbar
+        // un flag recién armado (el aviso por chat puede llegar tarde).
+        ...(rollbackRestored ? { rollbackPendingFor: null } : null),
+        // La UI apuntaba al estado pre-rollback: diálogo de prioridad, jugables y
+        // combate viejos hay que tirarlos para que lleguen los frescos.
+        ...(rollbackRestored ? { feedback: null, playableIds: [], playableWindow: null, combat: null } : null),
+      })
+      if (rollbackRestored) addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
+    }
   }
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {
     setState({ events: [...s.events, { method, time: Date.now() }].slice(-12) })
@@ -155,7 +175,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'START_DRAFT': {
-      handleStartDraft(data)
+      handleStartDraft(objectId, data)
       break
     }
     case 'DRAFT_INIT':
@@ -173,7 +193,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'START_TOURNAMENT': {
-      handleStartTournament(data)
+      handleStartTournament(objectId, data)
       break
     }
     case 'TOURNAMENT_INIT':

@@ -11,7 +11,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
     <div className="create-tab-content">
       <div className="wizard-step-heading">
         <h3><Icon name="bot" size={15} /> {t('lobby','create_tab_multi')}</h3>
-        <p>Tu asiento, tu mazo y el resto de plazas (humanos en espera o bots).</p>
+        <p>{t('lobby','create_step_desc_seats')}</p>
       </div>
       <div className="create-seats-section">
         <div className="create-seat-box human-seat-box">
@@ -27,19 +27,31 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
           </div>
           {form.humanSeat && (
             <>
-              <label>
-                {t('lobby','active_deck')}
-                <select
-                  value={form.myDeck.name}
-                  onChange={(e) => form.selectMyDeck(e.target.value)}
-                >
-                  {form.availableDecks.map((d) => (
-                    <option key={d.name} value={d.name}>
-                      {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {form.isDraftLimited ? (
+                <div className="wizard-hint-box" style={{ borderColor: 'rgba(92,160,255,0.4)', color: '#90caf9', marginBottom: 8 }}>
+                  <Icon name="layers" size={13} /> {t('lobby', 'create_tourney_draft_timing_desc')}
+                </div>
+              ) : (
+                <>
+                  <label>
+                    {t('lobby','active_deck')}
+                    <select
+                      value={form.myDeck?.name ?? ''}
+                      onChange={(e) => form.selectMyDeck(e.target.value)}
+                      disabled={form.availableDecks.length === 0}
+                    >
+                      {form.availableDecks.map((d) => (
+                        <option key={d.name} value={d.name}>
+                          {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {!form.myDeck && (
+                    <span className="wizard-warn-badge"><Icon name="alert" size={11} /> {t('lobby','create_err_no_deck')}</span>
+                  )}
+                </>
+              )}
               <label>
                 {t('lobby','create_field_my_skill')}
                 <select data-testid="my-skill" value={form.mySkill} onChange={(e) => form.setMySkill(Number(e.target.value))}>
@@ -50,34 +62,34 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
               </label>
             </>
           )}
-          {!form.humanSeat && <span className="wizard-hint-box">Entrarás como espectador. Podrás unirte luego desde la sala de espera.</span>}
+          {!form.humanSeat && <span className="wizard-hint-box">{t('lobby','create_enter_as_spectator')}</span>}
         </div>
 
         <div className="create-seat-box ai-seat-box">
           <div className="seat-box-header">
-            <span className="seat-title"><Icon name="bot" size={13} /> Plazas — {form.seatConfigs.length} ({humansWaiting} 👤 en espera · {bots} 🤖 bot, {form.numPlayers} total)</span>
+            <span className="seat-title"><Icon name="bot" size={13} /> {t('lobby','create_seats_title')} — {form.seatConfigs.length} ({t('lobby','create_seats_waiting_count',{count:humansWaiting})} · {t('lobby','create_seats_bot_count',{count:bots})}, {t('lobby','create_seats_total_count',{total:form.numPlayers})})</span>
             {form.numPlayers !== (form.selectedGameTypeInfo?.maxPlayers ?? form.numPlayers) && form.selectedGameTypeInfo && (
               <span className="wizard-warn-badge">Config: {form.numPlayers} / {form.selectedGameTypeInfo.maxPlayers} max</span>
             )}
           </div>
           {form.numPlayers > 2 && (
             <div className="wizard-hint-box" style={{ marginBottom: 8 }}>
-              {form.isMultiplayerGame ? 'Modo multijugador: cada plaza extra es un humano en espera o un bot. Ajusta número de jugadores en la pestaña General.' : 'Ajusta el número de jugadores en General para añadir plazas.'}
+              {form.isTournament ? t('lobby','create_seats_hint_tourney') : form.isMultiplayerGame ? t('lobby','create_seats_hint_multi') : t('lobby','create_seats_hint_duel')}
             </div>
           )}
           {form.seatConfigs.length === 0 ? (
-            <div className="wizard-hint-box">Sin plazas extra — entrarás solo (útil para tests). Añade jugadores en General o activa tu asiento.</div>
+            <div className="wizard-hint-box">{t('lobby','create_seats_no_extra')}</div>
           ) : (
             <div className="create-seats-section">
               {form.seatConfigs.map((cfg, idx) => (
                 <div key={idx} className="create-seat-box" style={{ background: 'rgba(22,28,56,0.5)' }}>
                   <div className="seat-box-header">
-                    <span className="seat-title">Plaza {idx + 2} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
+                    <span className="seat-title">{t('lobby','create_seat_number',{num:idx+2})} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
                     <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
-                      <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT)}</option>
-                      <option value={SIM_SEAT}>{seatTypeLabel(SIM_SEAT)}</option>
+                      <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT, t)}</option>
+                      <option value={SIM_SEAT}>{seatTypeLabel(SIM_SEAT, t)}</option>
                       {form.playerTypes.map((pt) => (
-                        <option key={pt} value={pt}>{seatTypeLabel(pt)}</option>
+                        <option key={pt} value={pt}>{seatTypeLabel(pt, t)}</option>
                       ))}
                     </select>
                   </div>
@@ -91,15 +103,15 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                     </select>
                   </label>
                   )}
-                  {isHumanSeatType(cfg.type) && <span className="wizard-hint-box">👤 Espera a que un humano se una desde el lobby.</span>}
-                  {isSimSeatType(cfg.type) && (() => {
+                  {isHumanSeatType(cfg.type) && <span className="wizard-hint-box"><Icon name="user" size={11} /> {t('lobby','create_seat_human_waiting')}</span>}
+                  {!isHumanSeatType(cfg.type) && !form.isDraftLimited && (() => {
                     const deck = form.availableDecks.find((d) => d.name === cfg.deckName)
                     const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
                     return (
                       <>
                         <label>
-                          Mazo plaza {idx + 2}
-                          <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)}>
+                          {t('lobby','create_seat_deck_label',{num:idx+2})}
+                          <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)} disabled={form.availableDecks.length === 0}>
                             {form.availableDecks.map((d) => (
                               <option key={d.name} value={d.name}>
                                 {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
@@ -115,31 +127,31 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                       </>
                     )
                   })()}
-                  {!isSimSeatType(cfg.type) && !isHumanSeatType(cfg.type) && <span className="wizard-hint-box">Bot {seatTypeLabel(cfg.type)} — usa mazo interno del servidor</span>}
+                  {!isSimSeatType(cfg.type) && !isHumanSeatType(cfg.type) && <span className="wizard-hint-box">{t('lobby','create_seat_bot_internal',{type:seatTypeLabel(cfg.type, t)})}</span>}
                 </div>
               ))}
             </div>
           )}
           <div style={{ marginTop: 10, borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: 10 }}>
             <div className="field">
-              <span>Atajo: aplicar a todas las plazas</span>
+              <span>{t('lobby','create_seats_apply_all_shortcut')}</span>
               <div className="chip-row">
                 <button type="button" className={form.playerTypesSel.includes(HUMAN_SEAT) ? 'chip on' : 'chip'} onClick={() => {
                   form.toggleAi(HUMAN_SEAT)
                   form.applySeatTypeToAll(HUMAN_SEAT)
-                }}><Icon name="user" size={12} /> Humano</button>
+                }}><Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}</button>
                 <button type="button" className={form.playerTypesSel.includes(SIM_SEAT) ? 'chip on' : 'chip'} onClick={() => form.toggleAi(SIM_SEAT)}><Icon name="bot" size={12} /> SIM</button>
                 {form.playerTypes.map((pt) => (
                   <button key={pt} type="button" className={form.playerTypesSel.includes(pt) ? 'chip on' : 'chip'} onClick={() => {
                     form.toggleAi(pt)
                     form.applySeatTypeToAll(pt)
-                  }}>{seatTypeLabel(pt)}</button>
+                  }}>{seatTypeLabel(pt, t)}</button>
                 ))}
               </div>
             </div>
             <label style={{ marginTop: 8 }}>
-              Mazo global para SIM (atajo)
-              <select value={form.simDeck.name} onChange={(e) => form.selectGlobalSimDeck(e.target.value)}>
+              {t('lobby','create_sim_deck_global_shortcut')}
+              <select value={form.simDeck?.name ?? ''} onChange={(e) => form.selectGlobalSimDeck(e.target.value)} disabled={form.availableDecks.length === 0}>
                 {form.availableDecks.map((d) => (
                   <option key={d.name} value={d.name}>
                     {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})

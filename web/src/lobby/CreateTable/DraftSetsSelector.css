@@ -1,0 +1,214 @@
+.draft-sets-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(15, 20, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.draft-sets-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.draft-sets-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.draft-sets-mode-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.draft-sets-mode-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.draft-sets-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.draft-sets-mode-btn.active {
+  background: rgba(124, 92, 255, 0.25);
+  border-color: #ffd070;
+  color: #ffd070;
+  font-weight: 700;
+}
+
+.draft-sets-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.draft-sets-chips-label {
+  font-size: 0.7rem;
+  color: #8c96c0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.draft-set-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: monospace;
+  color: #cbd5e0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.draft-set-chip:hover {
+  background: rgba(124, 92, 255, 0.2);
+  border-color: rgba(255, 208, 112, 0.5);
+  color: #ffd070;
+  transform: translateY(-1px);
+}
+
+.draft-set-chip.active {
+  background: rgba(255, 208, 112, 0.18);
+  border-color: #ffd070;
+  color: #ffd070;
+  box-shadow: 0 0 6px rgba(255, 208, 112, 0.2);
+}
+
+.draft-sets-picker-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.draft-sets-search-box {
+  flex: 1;
+  min-width: 140px;
+}
+
+.draft-sets-search-box input {
+  width: 100%;
+  background: rgba(10, 14, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+.draft-sets-search-box input:focus {
+  border-color: #ffd070;
+  outline: none;
+}
+
+.draft-sets-select-box {
+  flex: 2;
+  min-width: 200px;
+}
+
+.draft-sets-select-box select {
+  width: 100%;
+  background: rgba(10, 14, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+.draft-sets-select-box select:focus {
+  border-color: #ffd070;
+  outline: none;
+}
+
+.draft-sets-boosters-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.draft-sets-booster-item {
+  background: rgba(20, 26, 54, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.draft-sets-booster-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffd070;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.draft-sets-booster-select {
+  background: rgba(10, 14, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.75rem;
+  color: #fff;
+  width: 100%;
+}
+
+.draft-sets-manual-wrap {
+  margin-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.draft-sets-manual-label-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.draft-sets-manual-label {
+  font-size: 0.7rem;
+  color: #8c96c0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.draft-sets-manual-input-el {
+  width: 100%;
+  background: rgba(10, 14, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-family: monospace;
+  color: #ffd070;
+}
+
+.draft-sets-manual-input-el:focus {
+  border-color: #ffd070;
+  outline: none;
+}

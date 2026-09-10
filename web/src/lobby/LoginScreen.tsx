@@ -9,6 +9,8 @@ import AboutModal from '../system/AboutModal'
 import { useNewsBadge } from '../system/useNewsBadge'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
+import type { ConnectionInfo } from '../state/persistence'
 import './LoginScreen.css'
 
 function urlProxyPort(): number | null {
@@ -16,36 +18,18 @@ function urlProxyPort(): number | null {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
-export type ServerPreset = 'local' | 'official' | 'custom'
-
-export const POPULAR_FLAGS = [
-  { code: 'world', name: '🌐 Global / Mundo' },
-  { code: 'es', name: '🇪🇸 España' },
-  { code: 'us', name: '🇺🇸 Estados Unidos' },
-  { code: 'mx', name: '🇲🇽 México' },
-  { code: 'ar', name: '🇦🇷 Argentina' },
-  { code: 'cl', name: '🇨🇱 Chile' },
-  { code: 'co', name: '🇨🇴 Colombia' },
-  { code: 'de', name: '🇩🇪 Alemania' },
-  { code: 'fr', name: '🇫🇷 Francia' },
-  { code: 'gb', name: '🇬🇧 Reino Unido' },
-  { code: 'it', name: '🇮🇹 Italia' },
-  { code: 'jp', name: '🇯🇵 Japón' },
-  { code: 'br', name: '🇧🇷 Brasil' },
-  { code: 'ca', name: '🇨🇦 Canadá' },
-  { code: 'au', name: '🇦🇺 Australia' },
-]
+import { POPULAR_FLAGS, type ServerPreset } from './flags'
 
 export default function LoginScreen() {
   const { t, tError } = useTranslation()
   const phase = useStore((s) => s.phase)
   const error = useStore((s) => s.error)
-  const [proxyHost, setProxyHost] = useState('localhost')
-  const [proxyPort, setProxyPort] = useState(8787)
-  const [serverHost, setServerHost] = useState('localhost')
-  const [port, setPort] = useState('17171')
-  const [username, setUsername] = useState('player1')
-  const [password, setPassword] = useState('password')
+  const [proxyHost, setProxyHost] = useState(import.meta.env.VITE_DEFAULT_PROXY_HOST ?? 'localhost')
+  const [proxyPort, setProxyPort] = useState(Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787)
+  const [serverHost, setServerHost] = useState(import.meta.env.VITE_DEFAULT_SERVER_HOST ?? 'localhost')
+  const [port, setPort] = useState(import.meta.env.VITE_DEFAULT_SERVER_PORT ?? '17171')
+  const [username, setUsername] = useState(import.meta.env.DEV ? 'player1' : '')
+  const [password, setPassword] = useState(import.meta.env.DEV ? 'password' : '')
   const [flagName, setFlagName] = useState('es')
   const [avatarId, setAvatarId] = useState(10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -78,6 +62,27 @@ export default function LoginScreen() {
     } else if (urlPort !== null) {
       setProxyPort(urlPort)
     }
+    const applySetupConn = (e: Event) => {
+      const conn = (e as CustomEvent<ConnectionInfo>).detail
+      if (!conn) return
+      setProxyHost(conn.wsHost)
+      setProxyPort(conn.proxyPort)
+      setServerHost(conn.serverHost)
+      setPort(String(conn.port))
+      setUsername(conn.username)
+      setPassword(conn.password)
+      if (conn.flagName) setFlagName(conn.flagName)
+      if (conn.avatarId) setAvatarId(conn.avatarId)
+      if (conn.serverHost === 'beta.xmage.today') {
+        setPreset('official')
+      } else if (conn.serverHost === 'localhost' || conn.serverHost === '127.0.0.1') {
+        setPreset('local')
+      } else {
+        setPreset('custom')
+      }
+    }
+    window.addEventListener(SETUP_CONN_EVENT, applySetupConn)
+    return () => window.removeEventListener(SETUP_CONN_EVENT, applySetupConn)
   }, [])
 
   const handleSelectPreset = (nextPreset: ServerPreset) => {
@@ -305,6 +310,9 @@ export default function LoginScreen() {
           ) : (
             <span>{t('login.connect_btn')}</span>
           )}
+        </button>
+        <button type="button" className="login-firsttime" onClick={openSetupWizard} data-testid="login-open-setup">
+          {t('setup', 'first_time')}
         </button>
         <div className="login-attribution">
           {t('login.attribution')}

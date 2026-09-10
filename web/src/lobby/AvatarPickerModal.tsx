@@ -34,9 +34,9 @@ export default function AvatarPickerModal({
       legacyBackdropClass="overlay"
       legacyPanelClass="dialog avatar-picker-dialog"
       kickerIcon="user"
-      kickerLabel={filter === 'all' ? `Todos (${OFFICIAL_AVATARS.length})` : filter === 'standard' ? 'Planeswalkers Clásicos' : 'Animados (GIF)'}
+      kickerLabel={filter === 'all' ? t('lobby', 'avatar_filter_all', { count: OFFICIAL_AVATARS.length }) : filter === 'standard' ? t('lobby', 'avatar_filter_standard') : t('lobby', 'avatar_filter_special')}
       title={t('lobby', 'avatar_pick_title')}
-      message="Planeswalkers, leyendas y avatares animados oficiales de Magic"
+      message={t('lobby', 'avatar_desc')}
       topRight={(
         <button type="button" className="avatar-picker-close-btn" onClick={onClose}>
           ✕
@@ -51,21 +51,21 @@ export default function AvatarPickerModal({
             className={`chip ${filter === 'all' ? 'on' : ''}`}
             onClick={() => setFilter('all')}
           >
-            Todos ({OFFICIAL_AVATARS.length})
+            {t('lobby', 'avatar_filter_all', { count: OFFICIAL_AVATARS.length })}
           </button>
           <button
             type="button"
             className={`chip ${filter === 'standard' ? 'on' : ''}`}
             onClick={() => setFilter('standard')}
           >
-            Planeswalkers Clásicos
+            {t('lobby', 'avatar_filter_standard')}
           </button>
           <button
             type="button"
             className={`chip ${filter === 'special' ? 'on' : ''}`}
             onClick={() => setFilter('special')}
           >
-            <Icon name="sparkles" size={12} /> Animados (GIF)
+            <Icon name="sparkles" size={12} /> {t('lobby', 'avatar_filter_special')}
           </button>
         </div>
 
@@ -87,7 +87,7 @@ export default function AvatarPickerModal({
                   {isSelected && <span className="avatar-selected-check">✓</span>}
                   {a.isSpecial && <span className="avatar-special-spark"><Icon name="sparkles" size={12} /></span>}
                 </div>
-                <span className="avatar-item-name">{a.name}</span>
+                <span className="avatar-item-name">{a.nameKey ? t(`lobby.${a.nameKey}`) : a.name}</span>
               </div>
             )
           })}
@@ -95,7 +95,7 @@ export default function AvatarPickerModal({
 
         <div className="avatar-picker-footer">
           <button type="button" onClick={onClose}>
-            Cancelar
+            {t('common', 'cancel')}
           </button>
         </div>
     </DialogShell>

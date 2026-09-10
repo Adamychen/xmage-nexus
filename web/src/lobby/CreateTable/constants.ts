@@ -24,6 +24,22 @@ export const BUFFER_TIME_OPTIONS = [
   { label: '30 Segundos', value: 'SEC__30' },
 ]
 
+export function getTimeLimitLabel(opt: { value: string; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+  if (!t) return opt.label
+  if (opt.value === 'NONE') return t('lobby', 'create_time_none')
+  const min = opt.value.replace('MIN__', '')
+  if (opt.value === 'MIN__25') return t('lobby', 'create_time_standard', { min })
+  if (opt.value === 'MIN__60') return t('lobby', 'create_time_long', { min })
+  return t('lobby', 'create_time_minutes', { min })
+}
+
+export function getBufferTimeLabel(opt: { value: string; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+  if (!t) return opt.label
+  if (opt.value === 'NONE') return t('lobby', 'create_buffer_none')
+  const sec = opt.value.replace('SEC__', '')
+  return t('lobby', 'create_buffer_seconds', { sec })
+}
+
 export const DEFAULT_GAME_TYPES: GameTypeInfo[] = [
   { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
   { name: 'Free For All', minPlayers: 3, maxPlayers: 10 },
@@ -140,6 +156,11 @@ export function isSimSeatType(t: string): boolean {
   return seatTypeKey(t) === SIM_SEAT
 }
 
+export function isNativeAiSeatType(t: string): boolean {
+  const k = seatTypeKey(t)
+  return k !== HUMAN_SEAT && k !== SIM_SEAT
+}
+
 export function aiSeatTypes(playerTypes: string[]): string[] {
   const out: string[] = []
   for (const pt of playerTypes) {
@@ -158,9 +179,10 @@ const SEAT_TYPE_LABELS: Record<string, string> = {
   COMPUTER_DRAFT_BOT: 'IA Draftbot',
 }
 
-export function seatTypeLabel(t: string): string {
-  const n = normalizeSeatType(t)
-  return SEAT_TYPE_LABELS[n] ?? t
+export function seatTypeLabel(tName: string, t?: (cat: any, key: any) => string): string {
+  const n = normalizeSeatType(tName)
+  if (t && n === HUMAN_SEAT) return t('lobby', 'create_seat_human_waiting_label')
+  return SEAT_TYPE_LABELS[n] ?? tName
 }
 
 export const SKILL_LEVEL_OPTIONS: Array<{ label: string; value: string; stars: number }> = [
@@ -191,6 +213,65 @@ export const DEFAULT_TOURNAMENT_TYPES: string[] = [
   'Jumpstart Elimination',
   'Jumpstart Swiss',
   'Jumpstart Elimination (Custom)',
+]
+
+export type TableCategory = 'duel' | 'multi' | 'tourney'
+export type TournamentCategory = 'limited' | 'constructed'
+
+export const CONSTRUCTED_TOURNAMENT_TYPES = [
+  'Constructed Swiss',
+  'Constructed Elimination',
+]
+
+export const DEFAULT_DRAFT_TOURNAMENT_TYPE = 'Booster Draft Elimination'
+
+export function tournamentTypeNameOf(t: unknown): string {
+  if (typeof t === 'string') return t
+  if (t && typeof t === 'object' && 'name' in t && typeof (t as { name: unknown }).name === 'string') {
+    return (t as { name: string }).name
+  }
+  return ''
+}
+
+export function normalizeTournamentType(raw: string, known: string[]): string {
+  if (!raw) return known.includes(DEFAULT_DRAFT_TOURNAMENT_TYPE) ? DEFAULT_DRAFT_TOURNAMENT_TYPE : (known[0] ?? DEFAULT_DRAFT_TOURNAMENT_TYPE)
+  if (known.includes(raw)) return raw
+  if (raw === 'Booster Draft') {
+    return known.find((n) => n === DEFAULT_DRAFT_TOURNAMENT_TYPE)
+      ?? known.find((n) => n.startsWith('Booster Draft'))
+      ?? known.find((n) => isDraftTournamentType(n))
+      ?? raw
+  }
+  return raw
+}
+
+export function defaultTournamentType(known: string[]): string {
+  return known.includes(DEFAULT_DRAFT_TOURNAMENT_TYPE)
+    ? DEFAULT_DRAFT_TOURNAMENT_TYPE
+    : (known.find((n) => isDraftTournamentType(n)) ?? known[0] ?? DEFAULT_DRAFT_TOURNAMENT_TYPE)
+}
+
+export const LIMITED_TOURNAMENT_TYPES = DEFAULT_TOURNAMENT_TYPES.filter(
+  (t) => typeof t === 'string' && !t.startsWith('Constructed'),
+)
+
+export function isConstructedTournamentType(t: unknown): boolean {
+  if (typeof t === 'string') return t.startsWith('Constructed')
+  if (t && typeof t === 'object' && 'name' in t && typeof (t as { name: unknown }).name === 'string') {
+    return ((t as { name: string }).name).startsWith('Constructed')
+  }
+  return false
+}
+
+export const POPULAR_CONSTRUCTED_DECK_TYPES = [
+  'Constructed - Modern',
+  'Constructed - Standard',
+  'Constructed - Pioneer',
+  'Constructed - Pauper',
+  'Constructed - Legacy',
+  'Constructed - Vintage',
+  'Variant Magic - Commander',
+  'Variant Magic - Brawl',
 ]
 
 export const DEFAULT_DRAFT_CUBES: string[] = [
@@ -244,6 +325,44 @@ export const DEFAULT_DRAFT_CUBES: string[] = [
 
 export type DraftTiming = 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL'
 
+export interface BoosterSetItem {
+  code: string
+  name: string
+}
+
+export const DEFAULT_BOOSTER_SETS: BoosterSetItem[] = [
+  { code: 'FDN', name: 'Foundations' },
+  { code: 'DSK', name: 'Duskmourn: House of Horror' },
+  { code: 'BLB', name: 'Bloomburrow' },
+  { code: 'MH3', name: 'Modern Horizons 3' },
+  { code: 'OTJ', name: 'Outlaws of Thunder Junction' },
+  { code: 'MKM', name: 'Murders at Karlov Manor' },
+  { code: 'LCI', name: 'The Lost Caverns of Ixalan' },
+  { code: 'WOE', name: 'Wilds of Eldraine' },
+  { code: 'MOM', name: 'March of the Machine' },
+  { code: 'ONE', name: 'Phyrexia: All Will Be One' },
+  { code: 'BRO', name: "The Brothers' War" },
+  { code: 'DMU', name: 'Dominaria United' },
+  { code: '2X2', name: 'Double Masters 2022' },
+  { code: 'SNC', name: 'Streets of New Capenna' },
+  { code: 'NEO', name: 'Kamigawa: Neon Dynasty' },
+  { code: 'VOW', name: 'Innistrad: Crimson Vow' },
+  { code: 'MID', name: 'Innistrad: Midnight Hunt' },
+  { code: 'MH2', name: 'Modern Horizons 2' },
+  { code: 'STX', name: 'Strixhaven: School of Mages' },
+  { code: 'KHM', name: 'Kaldheim' },
+  { code: 'ZNR', name: 'Zendikar Rising' },
+  { code: '2XM', name: 'Double Masters' },
+  { code: 'M21', name: 'Core Set 2021' },
+  { code: 'IKO', name: 'Ikoria: Lair of Behemoths' },
+  { code: 'THB', name: 'Theros Beyond Death' },
+  { code: 'ELD', name: 'Throne of Eldraine' },
+  { code: 'WAR', name: 'War of the Spark' },
+  { code: 'RNA', name: 'Ravnica Allegiance' },
+  { code: 'GRN', name: 'Guilds of Ravnica' },
+  { code: 'DOM', name: 'Dominaria' },
+]
+
 export const DRAFT_TIMING_OPTIONS: { value: DraftTiming; label: string }[] = [
   { value: 'BEGINNER', label: 'Beginner (x2.0)' },
   { value: 'REGULAR', label: 'Regular (x1.5)' },
@@ -265,6 +384,12 @@ export const CONSTRUCTION_TIME_OPTIONS = [
   { label: '15 minutos', value: 900 },
   { label: '25 minutos', value: 1500 },
 ] as const
+
+export function getConstructionTimeLabel(opt: { value: number; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+  if (!t) return opt.label
+  const min = String(Math.round(opt.value / 60))
+  return t('lobby', 'create_construction_minutes', { min })
+}
 
 export function buildLimitedOptions(opts: LimitedDraftOptions): Record<string, unknown> {
   return {
@@ -308,12 +433,17 @@ export function parseLimitedSetCodes(raw: string): string[] {
   return raw.split(/[,\s;]+/).map((s) => s.trim().toUpperCase()).filter(Boolean)
 }
 
-export function isDraftTournamentType(tournamentType: string): boolean {
-  return tournamentType.includes('Draft')
+export function isDraftTournamentType(tournamentType: unknown): boolean {
+  if (typeof tournamentType === 'string') return tournamentType.includes('Draft')
+  if (tournamentType && typeof tournamentType === 'object' && 'name' in tournamentType && typeof (tournamentType as { name: unknown }).name === 'string') {
+    return ((tournamentType as { name: string }).name).includes('Draft')
+  }
+  return false
 }
 
 export const MAX_COMMANDER_PLAYERS = 4
 export const MAX_DRAFT_PLAYERS = 8
+export const MAX_TOURNAMENT_PLAYERS = 32
 
 export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo[], isDraft: boolean): number {
   if (isDraft) return MAX_DRAFT_PLAYERS

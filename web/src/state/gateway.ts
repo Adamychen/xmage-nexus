@@ -24,6 +24,16 @@ export function attachGateway(g: Gateway) {
         s.conn.avatarId,
       )
       if (res.ok) {
+        const draftId = getState().draft?.draftId
+        if (draftId) {
+          addLog('conexión', 'Restaurando draft en curso…')
+          void cmds.joinDraft(draftId)
+        }
+        const tournamentId = getState().tournament?.tournamentId
+        if (tournamentId) {
+          addLog('conexión', 'Restaurando torneo en curso…')
+          void cmds.joinTournament(tournamentId)
+        }
         const active = loadActiveGame()
         if (active?.gameId) {
           if (active.role === 'watcher') {

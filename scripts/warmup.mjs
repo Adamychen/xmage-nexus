@@ -21,8 +21,8 @@ const DEFAULT_DECK = {
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
     { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
     { cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 20 },
-    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 16 },
-    { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 20 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 12 },
   ],
   sideboard: [],
 }

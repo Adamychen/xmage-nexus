@@ -166,6 +166,12 @@ public class Gateway extends WebSocketServer {
             conn.send(ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
             return;
         }
+        DeckValidation.State dbState = DeckValidation.getState();
+        if (dbState == DeckValidation.State.NOT_STARTED || dbState == DeckValidation.State.BUILDING) {
+            conn.send(ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_WARMING_UP,
+                    "Proxy is still loading card data, retry in a few seconds"));
+            return;
+        }
         String key = ProxyClient.normalizeHost(host) + "|" + username;
         host = ProxyClient.normalizeHost(host);
         ProxyClient existing = byAccount.get(key);

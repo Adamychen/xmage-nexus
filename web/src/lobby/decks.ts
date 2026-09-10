@@ -21,17 +21,18 @@ export const STABLE_DECK: Deck = {
   sideboard: [],
 }
 
-// Mazo para partidas humanas: mucha tierra + muchos Bolts, para poder jugar
+// Mazo para partidas humanas: mucha tierra + Bolts, para poder jugar
 // hechizos con objetivo en los primeros turnos (usado por los E2E de interacción).
 // ORDENADO para partidas deterministas (skipInitShuffling): mano inicial con
 // 4 Mountain + 3 Bolt → Bolt jugable en el turno 2.
+// LEGAL en Construido (60 cartas, máximo 4 copias): el servidor en modo normal
+// (y beta) rechaza los mazos de test con 8-16 copias que aceptaba el testMode.
 export const DEFAULT_DECK: Deck = {
   name: 'Mage Web bolt',
   cards: [
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
     { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
-    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 40 },
-    { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 12 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 52 },
   ],
   sideboard: [],
 }
@@ -41,6 +42,7 @@ export const DEFAULT_DECK: Deck = {
 // ORDENADO para partidas deterministas (skipInitShuffling): las 7 primeras cartas
 // son la mano inicial (3 Mountain + Plains + 3 hechizos), la 8ª (Ballista) llega
 // al turno 1, y los turnos 2-8 roban tierras para el Ballista X=4 (8 maná).
+// LEGAL en Construido (4 copias máximo por carta, 60 cartas): ver DEFAULT_DECK.
 export const ADVANCED_DECK: Deck = {
   name: 'Mage Web advanced',
   cards: [
@@ -51,12 +53,12 @@ export const ADVANCED_DECK: Deck = {
     { cardName: 'Boros Charm', setCode: 'FDN', cardNumber: '721', amount: 1 },
     { cardName: 'Walking Ballista', setCode: '2XM', cardNumber: '306', amount: 1 },
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 7 },
-    { cardName: 'Blaze', setCode: '6ED', cardNumber: '168', amount: 7 },
-    { cardName: 'Plains', setCode: 'LEA', cardNumber: '287', amount: 7 },
-    { cardName: 'Arc Trail', setCode: 'SOM', cardNumber: '81', amount: 7 },
-    { cardName: 'Boros Charm', setCode: 'FDN', cardNumber: '721', amount: 7 },
-    { cardName: 'Walking Ballista', setCode: '2XM', cardNumber: '306', amount: 7 },
-    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 16 },
+    { cardName: 'Blaze', setCode: '6ED', cardNumber: '168', amount: 3 },
+    { cardName: 'Plains', setCode: 'LEA', cardNumber: '287', amount: 3 },
+    { cardName: 'Arc Trail', setCode: 'SOM', cardNumber: '81', amount: 3 },
+    { cardName: 'Boros Charm', setCode: 'FDN', cardNumber: '721', amount: 3 },
+    { cardName: 'Walking Ballista', setCode: '2XM', cardNumber: '306', amount: 3 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 30 },
   ],
   sideboard: [],
 }
@@ -87,13 +89,15 @@ export const LANDS_DECK: Deck = {
 // ORDENADO para partidas deterministas: la mano inicial es 4 Mountain + 2 Raging
 // Goblin + Mountain; el Sim juega tierra en el turno 1, lanza un Goblin en el turno
 // 2 (haste: ataca ese mismo turno) y ataca con todo cada turno.
+// LEGAL en Construido (4 Goblins máximo, 60 cartas): ver DEFAULT_DECK.
 export const COMBAT_OPPONENT_DECK: Deck = {
   name: 'Mage Web combat sim',
   cards: [
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
     { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 2 },
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 26 },
-    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 18 },
+    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 2 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 26 },
   ],
   sideboard: [],
 }
@@ -102,28 +106,32 @@ export const COMBAT_OPPONENT_DECK: Deck = {
 // haste). ORDENADO para partidas deterministas (skipInitShuffling): mano inicial
 // con 4 Mountain + 1 Goblin → el humano lanza el Goblin en el turno 1-2 y puede
 // atacar ese mismo turno (haste) o bloquear el ataque del Sim.
+// LEGAL en Construido (60 cartas, 4 copias máximo): ver DEFAULT_DECK.
 export const COMBAT_HUMAN_DECK: Deck = {
   name: 'Mage Web combat human',
   cards: [
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
     { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 1 },
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 26 },
-    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 19 },
+    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 2 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 27 },
   ],
   sideboard: [],
 }
 
-// Mazo del oponente Sim en el E2E de bloqueo humano: tierras + UN solo Raging
-// Goblin en la mano inicial (1/1 haste). ORDENADO (skipInitShuffling): el Sim
+// Mazo del oponente Sim en el E2E de bloqueo humano: tierras + Raging Goblin
+// (1/1 haste) en la mano inicial. ORDENADO (skipInitShuffling): el Sim
 // lanza el Goblin en su turno 1 y ataca SOLO con él cada turno (un atacante por
 // combate → el bloqueo del humano es de asignación automática, sin GAME_TARGET).
+// LEGAL en Construido (60 cartas, 4 copias máximo): ver DEFAULT_DECK.
 export const COMBAT_BLOCK_SIM_DECK: Deck = {
   name: 'Mage Web block sim',
   cards: [
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 5 },
     { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 1 },
     { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 20 },
-    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 24 },
+    { cardName: 'Raging Goblin', setCode: 'M10', cardNumber: '153', amount: 2 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 32 },
   ],
   sideboard: [],
 }
@@ -147,6 +155,15 @@ export const MUTATE_DECK: Deck = {
 }
 
 export const DECKS = [DEFAULT_DECK, ADVANCED_DECK, STABLE_DECK, AI_OPPONENT_DECK, COMBAT_OPPONENT_DECK, COMBAT_HUMAN_DECK, COMBAT_BLOCK_SIM_DECK, LANDS_DECK, MUTATE_DECK]
+
+/**
+ * Mazos fijos de desarrollo/pruebas: visibles solo en builds dev. En prod
+ * la v1 no trae ningún mazo fijo: el usuario aporta los suyos (crear/importar).
+ * (El e2e fake/real corre sobre `vite dev`, así que la suite no se ve afectada.)
+ */
+export function bundledDecks(): Deck[] {
+  return import.meta.env.DEV ? DECKS : []
+}
 
 export const CUSTOM_DECKS_STORAGE_KEY = 'mage_custom_decks'
 
@@ -177,7 +194,7 @@ export function getAllAvailableDecks(): Deck[] {
     }
   } catch {}
   const merged = new Map<string, Deck>()
-  for (const d of [...DECKS, ...legacy, ...v2]) merged.set(d.name, d)
+  for (const d of [...bundledDecks(), ...legacy, ...v2]) merged.set(d.name, d)
   return [...merged.values()]
 }
 

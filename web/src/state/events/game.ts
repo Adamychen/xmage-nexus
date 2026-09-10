@@ -33,7 +33,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   const isNewGame = !!d?.gameId && d.gameId !== s.gameId
   if (d?.gameId) saveActiveGame(d.gameId)
   exitTableChat()
-  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null })
+  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, rollbackPendingFor: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
     void cmds.joinGame(d!.gameId!)
@@ -49,6 +49,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
   if (method === 'GAME_UPDATE_AND_INFORM' && (data as any)?.message) {
     addLog('partida', (data as any).message, objectId ?? undefined)
     sniffDungeonEntry((data as any).message, objectId ?? s.gameId)
+    sniffRollbackAnnounce((data as any).message, objectId ?? s.gameId)
   }
   if (embeddedGame) {
     const fresh = getState()
@@ -108,7 +109,29 @@ export function handleGameInform(data: unknown, objectId: string | null): void {
   const msg = typeof d === 'string' ? d : d?.message
   if (msg) {
     sniffDungeonEntry(msg, objectId ?? getState().gameId)
+    sniffRollbackAnnounce(msg, objectId ?? getState().gameId)
     addLog('partida', msg, objectId ?? undefined)
+  }
+}
+
+/** Anuncio del servidor al ejecutar un rollback (GameImpl.rollbackTurnsExecution):
+ * "Player request: Rolling back to start of turn N". Ojo: a los jugadores solo
+ * les llega por el chat de la partida (GameController reenvía el evento INFO a
+ * chatManager.broadcast, no como callback), así que es señal secundaria: la
+ * principal es armar el flag con la acción propia (ver armRollbackPending). */
+const ROLLBACK_ANNOUNCE_RE = /rolling back to start of turn/i
+
+/** Negativas del servidor a un rollback pedido/aceptado: desarman el flag para
+ * no dejarlo colgado (el ok del proxy solo confirma el envío). */
+const ROLLBACK_DENY_RE = /rollback request denied|not possible to rollback|only request a rollback|not available for rollback/i
+
+export function sniffRollbackAnnounce(message: string, gameId: string | null | undefined): void {
+  if (!gameId) return
+  if (ROLLBACK_ANNOUNCE_RE.test(message)) {
+    setState({ rollbackPendingFor: gameId })
+  } else if (ROLLBACK_DENY_RE.test(message)) {
+    const s = getState()
+    if (s.rollbackPendingFor === gameId) setState({ rollbackPendingFor: null })
   }
 }
 
@@ -154,6 +177,7 @@ export function handleEndGameInfo(data: unknown): void {
       feedback: null,
       phase: 'lobby',
       gameEnd: end,
+      rollbackPendingFor: null,
     })
   } else {
     setState({ gameEnd: end })

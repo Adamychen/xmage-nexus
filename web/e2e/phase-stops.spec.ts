@@ -78,13 +78,15 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       expect(seeded.opponentTurn.main1).toBe(true)
 
       await page.locator('[data-testid="game-menu-btn"]').click()
-      const stops = page.locator('[data-testid="game-menu-phase-stops"]')
-      await expect(stops).toBeVisible()
-      const main1 = stops.getByTestId('session-stop-your-main1')
-      await expect(main1).not.toHaveClass(/active/)
+      await expect(page.locator('[data-testid="game-menu-settings"]')).toBeVisible()
+      await page.locator('.game-menu-overlay').click()
+      await expect(page.locator('[data-testid="game-menu"]')).toHaveCount(0)
+      const m1 = page.getByTestId('phase-bar-step-PRECOMBAT_MAIN')
+      await expect(m1).toBeVisible()
+      await expect(m1.locator('.stop-dot-you')).toHaveCount(0)
       const before = PHASE_PREFS.length
-      await main1.click()
-      await expect(main1).toHaveClass(/active/)
+      await m1.click()
+      await expect(m1.locator('.stop-dot-you')).toHaveCount(1)
       await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(before)
       const pushed = PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }
       expect(pushed.yourTurn.main1).toBe(true)

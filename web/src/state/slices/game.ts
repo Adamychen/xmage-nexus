@@ -73,6 +73,8 @@ export interface GameSlice {
   sideboardScreen: SideboardScreenState | null
   userRequest: UserRequestView | null
   rollbackDialogOpen: boolean
+  /** gameId con rollback pendiente: lo pedí/acepté yo o el servidor lo anunció (ver armRollbackPending). */
+  rollbackPendingFor: string | null
   viewer: CardViewerState | null
   playerMenu: PlayerMenuState | null
   phaseStops: PhaseStops
@@ -94,6 +96,7 @@ export const initialGame: GameSlice = {
   sideboardScreen: null,
   userRequest: null,
   rollbackDialogOpen: false,
+  rollbackPendingFor: null,
   viewer: null,
   playerMenu: null,
   dungeonProgress: {},

@@ -24,6 +24,12 @@ export interface ConstructState {
 
 export interface LimitedSlice {
   draft: DraftState | null
+  /** ms epoch del último DRAFT_OVER sin CONSTRUCT (watchdog de cuña draft→construcción). */
+  draftOverAt: number | null
+  /** ms epoch del último evento de draft (watchdog de cuña en mitad del draft). */
+  lastDraftEventAt: number | null
+  /** Método del último evento de draft (frescura: solo un DRAFT_PICK habilita el pick). */
+  lastDraftMethod: string | null
   tournament: TournamentState | null
   construct: ConstructState | null
   replayViewer: { gameView: GameView | null; result?: string } | null
@@ -31,6 +37,9 @@ export interface LimitedSlice {
 
 export const initialLimited: LimitedSlice = {
   draft: null,
+  draftOverAt: null,
+  lastDraftEventAt: null,
+  lastDraftMethod: null,
   tournament: null,
   construct: null,
   replayViewer: null,

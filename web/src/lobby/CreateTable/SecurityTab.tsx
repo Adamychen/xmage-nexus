@@ -8,7 +8,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
     <div className="create-tab-content">
       <div className="wizard-step-heading">
         <h3><Icon name="shield" size={15} /> {t('lobby','create_tab_restrictions')}</h3>
-        <p>Privacidad y filtros de acceso a la mesa.</p>
+        <p>{t('lobby','create_step_desc_security')}</p>
       </div>
       <label>
         {t('lobby','create_field_password')}
@@ -19,7 +19,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             onChange={(e) => form.setPassword(e.target.value)}
             placeholder={t('lobby','placeholder_password')}
           />
-          <button type="button" className="password-toggle-btn" onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? 'Ocultar' : 'Mostrar'}>
+          <button type="button" className="password-toggle-btn" onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')}>
             {form.showPassword ? <Icon name="eyeOff" size={14} /> : <Icon name="eye" size={14} />}
           </button>
         </div>
@@ -64,7 +64,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         {form.isMultiplayerGame && (
           <div style={{ marginTop: 10 }}>
             <label>
-              Potencia EDH (solo Commander, 0-100)
+              {t('lobby','create_field_edh_power')}
               <input
                 type="number"
                 min={0}
@@ -75,7 +75,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
                 placeholder={t('common','all')}
               />
               <span className="create-field-hint">
-                {form.edhPowerLevel < 100 ? `EDH Power: ${form.edhPowerLevel}` : t('common','all') + ' — sin límite'}
+                {form.edhPowerLevel < 100 ? `EDH Power: ${form.edhPowerLevel}` : `${t('common','all')} ${t('lobby','create_edh_no_limit')}`}
               </span>
             </label>
           </div>
@@ -99,7 +99,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         />
         <div className="toggle-text-block">
           <span className="toggle-title"><Icon name="eye" size={12} /> {t('lobby','create_field_spectators')}</span>
-          <span className="toggle-desc">Permite que otros usuarios observen la partida en vivo.</span>
+          <span className="toggle-desc">{t('lobby','create_desc_spectators')}</span>
         </div>
       </label>
 
@@ -111,7 +111,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         />
         <div className="toggle-text-block">
           <span className="toggle-title"><Icon name="undo" size={12} /> {t('lobby','create_field_rollback')}</span>
-          <span className="toggle-desc">Permite solicitar rebobinar la partida a un turno anterior.</span>
+          <span className="toggle-desc">{t('lobby','create_desc_rollback')}</span>
         </div>
       </label>
     </div>

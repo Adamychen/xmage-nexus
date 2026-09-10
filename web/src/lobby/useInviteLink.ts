@@ -5,6 +5,7 @@ import { doConnect } from '../state/gateway'
 import type { ConnectionInfo } from '../state/persistence'
 import type { TableView } from '../net/types'
 import { t as tStatic } from '../i18n'
+import { confirmDialog } from '../ui/confirmDialog'
 import { serverLabel } from './deepLink'
 
 const MAX_RETRIES = 10
@@ -41,16 +42,20 @@ export function useInviteLink({ conn, tables, hasLobby, joinHuman, watchTable, s
       && (conn.serverHost !== pending.serverHost || conn.port !== pending.serverPort)) {
       handledRef.current = pending
       const label = serverLabel(pending) ?? ''
-      if (!window.confirm(tStatic('lobby', 'invite_server_switch', { server: label }))) {
-        setState({ pendingDeepLink: null })
-        return
-      }
-      setState({ error: null })
-      void doConnect(
-        conn.wsHost, conn.proxyPort,
-        pending.serverHost, pending.serverPort,
-        conn.username, conn.password, conn.flagName, conn.avatarId,
-      )
+      const targetHost = pending.serverHost
+      const targetPort = pending.serverPort
+      void confirmDialog(tStatic('lobby', 'invite_server_switch', { server: label })).then((ok) => {
+        if (!ok) {
+          setState({ pendingDeepLink: null })
+          return
+        }
+        setState({ error: null })
+        void doConnect(
+          conn.wsHost, conn.proxyPort,
+          targetHost, targetPort,
+          conn.username, conn.password, conn.flagName, conn.avatarId,
+        )
+      })
       return
     }
     if (!hasLobby) return

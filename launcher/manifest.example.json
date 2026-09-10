@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "release": "1.4.61-1",
+  "xmage": "1.4.61-V1",
+  "git_sha": "<short-sha>",
+  "min_launcher": "0.1.0",
+  "components": {
+    "jre": {
+      "linux-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-jre-linux-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "win-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-jre-win-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "mac-arm64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-jre-mac-arm64.tar.gz", "sha256": "<hex>", "bytes": 0 }
+    },
+    "server": {
+      "linux-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-server-linux-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "win-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-server-win-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "mac-arm64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-server-mac-arm64.tar.gz", "sha256": "<hex>", "bytes": 0 }
+    },
+    "proxy": {
+      "linux-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-linux-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "win-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-win-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "mac-arm64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-mac-arm64.tar.gz", "sha256": "<hex>", "bytes": 0 }
+    }
+  }
+}

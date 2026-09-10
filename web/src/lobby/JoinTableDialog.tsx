@@ -5,7 +5,6 @@ import {
   saveCustomDecks,
   loadSavedCustomDecks,
   type Deck,
-  DEFAULT_DECK,
 } from './decks'
 import { parseAnyDeck } from '../decks/parseDck'
 import { setMyDeck, useStore } from '../state/store'
@@ -39,7 +38,7 @@ export default function JoinTableDialog({
   const { t, tError } = useTranslation()
   const currentEquippedDeck = useStore((s) => s.myDeck)
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
-  const [selectedDeck, setSelectedDeck] = useState<Deck>(() => currentEquippedDeck ?? allDecks[0] ?? DEFAULT_DECK)
+  const [selectedDeck, setSelectedDeck] = useState<Deck | null>(() => currentEquippedDeck ?? allDecks[0] ?? null)
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -58,7 +57,7 @@ export default function JoinTableDialog({
         }
         const merged = [...maps.values()]
         setAllDecks(merged)
-        if (merged.length && !merged.some((d) => d.name === selectedDeck.name)) setSelectedDeck(merged[0])
+        if (merged.length && (!selectedDeck || !merged.some((d) => d.name === selectedDeck.name))) setSelectedDeck(merged[0])
       } catch {}
     })()
     return () => { cancelled = true }
@@ -66,8 +65,8 @@ export default function JoinTableDialog({
   const [password, setPassword] = useState(initialPassword ?? '')
   const [setAsDefault, setSetAsDefault] = useState(true)
 
-  // Quick inline import state
-  const [showImport, setShowImport] = useState(false)
+  // Quick inline import state (abierto por defecto si no hay ningún mazo)
+  const [showImport, setShowImport] = useState(() => getAllAvailableDecks().length === 0 && !currentEquippedDeck)
   const [importText, setImportText] = useState('')
   const [importName, setImportName] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
@@ -104,6 +103,7 @@ export default function JoinTableDialog({
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault()
     setJoinError(null)
+    if (!selectedDeck) return
     const xmageDeck = prepareDeckForXMage(selectedDeck, table.deckType, table.gameType)
     const finalDeck = await requestDeckValidation(xmageDeck)
     if (!finalDeck) {
@@ -232,8 +232,11 @@ export default function JoinTableDialog({
 
             {/* Deck List Cards */}
             <div className="join-deck-cards-list">
+              {allDecks.length === 0 && !showImport && (
+                <p className="import-error-msg">{t('lobby', 'create_err_no_deck')}</p>
+              )}
               {allDecks.map((d) => {
-                const isSelected = selectedDeck.name === d.name
+                const isSelected = selectedDeck?.name === d.name
                 const count = d.cards.reduce((acc, c) => acc + c.amount, 0)
                 const sbCount = d.sideboard.reduce((acc, c) => acc + c.amount, 0)
                 const sampleCards = d.cards
@@ -298,9 +301,9 @@ export default function JoinTableDialog({
               <button
                 type="submit"
                 className="primary join-submit-btn"
-                disabled={busy || (table.passworded && !password.trim())}
+                disabled={busy || !selectedDeck || (table.passworded && !password.trim())}
               >
-                {busy ? t('common','loading') : (submitLabel || t('lobby','join_with_deck', { name: selectedDeck.name }))}
+                {busy ? t('common','loading') : (submitLabel || (selectedDeck ? t('lobby','join_with_deck', { name: selectedDeck.name }) : t('lobby','join_human_btn')))}
               </button>
             </div>
           </div>

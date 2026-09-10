@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
+import { dismissSetupWizard } from './support/start-game'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
 
 const IMG_A = 'https://img.test/m10-bolt.jpg'
@@ -38,6 +39,7 @@ test.describe('Printing change refreshes hover preview', () => {
       )
 
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `print_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')

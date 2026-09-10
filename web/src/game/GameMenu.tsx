@@ -18,12 +18,9 @@ import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
 import { clearChoiceMemory, removeChoiceMemory } from './choiceMemory'
-import PhaseStopSelector from './PhaseStopSelector'
-import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
+import SettingsModal from '../settings/SettingsModal'
 import HelpWikiModal from './HelpWikiModal'
-import AboutModal from '../system/AboutModal'
-import { useNewsBadge } from '../system/useNewsBadge'
-import SoundFxControls from '../settings/SoundFxControls'
+import { confirmDialog } from '../ui/confirmDialog'
 import './GameMenu.css'
 
 export default function GameMenu() {
@@ -32,22 +29,11 @@ export default function GameMenu() {
   const gameId = useStore((s) => s.gameId)
   const settings = useSettings()
   const [open, setOpen] = useState(false)
-  const [showFx, setShowFx] = useState(false)
-  const [showAppearance, setShowAppearance] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
-  const [showAbout, setShowAbout] = useState(false)
-  const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   const me = game?.players?.find((p) => p.controlled)
-  const opps = game?.players?.filter((p) => !p.controlled) ?? []
-  const isMultiplayer = opps.length >= 2
-  const layoutMode: 'standard' | 'pod' | 'arena' =
-    settings.boardLayout === 'arena' && isMultiplayer
-      ? 'arena'
-      : settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena')
-        ? 'pod'
-        : 'standard'
 
   const toggleManaPayment = (key: keyof ManaPaymentStored) => {
     const next = { ...settings.manaPayment, [key]: !settings.manaPayment[key] }
@@ -83,7 +69,6 @@ export default function GameMenu() {
 
   const close = () => {
     setOpen(false)
-    setShowFx(false)
   }
 
   const toggleMenu = () => {
@@ -113,9 +98,9 @@ export default function GameMenu() {
                 type="button"
                 className="leave-game-btn game-menu-item"
                 onClick={async () => {
-                  if (confirm(t('game', 'concede_confirm'))) {
+                  close()
+                  if (await confirmDialog(t('game', 'concede_confirm'), { danger: true })) {
                     if (gameId) await concedeGame(gameId)
-                    close()
                   }
                 }}
                 title={t('game', 'concede_confirm')}
@@ -128,13 +113,13 @@ export default function GameMenu() {
               className="leave-match-btn game-menu-item"
               onClick={async () => {
                 const msg = me ? t('game', 'concede_prompt') : t('game', 'leave_spectate_prompt')
-                if (confirm(msg)) {
+                close()
+                if (await confirmDialog(msg, { danger: !!me })) {
                   if (me && gameId) {
                     await concedeMatch(gameId)
                   } else {
                     returnToLobby()
                   }
-                  close()
                 }
               }}
               title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
@@ -184,14 +169,6 @@ export default function GameMenu() {
                     <span>{row.label}</span>
                   </label>
                 ))}
-              </>
-            )}
-            {!!me && (
-              <>
-                <div className="game-menu-divider" />
-                <div className="game-menu-stops" data-testid="game-menu-phase-stops" onClick={(e) => e.stopPropagation()}>
-                  <PhaseStopSelector />
-                </div>
               </>
             )}
             {!!me && (
@@ -271,51 +248,17 @@ export default function GameMenu() {
               </>
             )}
             <div className="game-menu-divider" />
-            <div className="game-menu-section-label">{t('game', 'board_view')}</div>
-            {(['standard', 'pod', ...(isMultiplayer ? ['arena' as const] : [])] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                role="radio"
-                aria-checked={layoutMode === mode}
-                className={`game-menu-item game-menu-radio ${layoutMode === mode ? 'is-active' : ''}`}
-                data-testid={`game-menu-layout-${mode}`}
-                onClick={() => {
-                  setSetting('boardLayout', mode)
-                  close()
-                }}
-              >
-                <span className="game-menu-radio-label">
-                  {t('lobby', mode === 'standard' ? 'board_standard' : mode === 'pod' ? 'board_pod' : 'board_arena')}
-                </span>
-                {layoutMode === mode && (
-                  <span className="game-menu-radio-check" aria-hidden="true">✓</span>
-                )}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="sleeve-picker-btn game-menu-item"
-              data-testid="game-menu-appearance"
-              onClick={() => setShowAppearance(true)}
-              title={t('lobby', 'appearance_title')}
-            >
-              <Icon name="palette" size={13} /> {t('lobby', 'appearance_title')}
-            </button>
             <button
               type="button"
               className="game-menu-item"
-              data-testid="game-menu-fx"
-              aria-expanded={showFx}
-              onClick={() => setShowFx((prev) => !prev)}
+              data-testid="game-menu-settings"
+              onClick={() => {
+                setShowSettings(true)
+                close()
+              }}
             >
               <Icon name="settings" size={13} /> {t('common', 'settings')}
             </button>
-            {showFx && (
-              <div className="game-menu-fx" onClick={(e) => e.stopPropagation()}>
-                <SoundFxControls />
-              </div>
-            )}
             <button
               type="button"
               className="game-menu-item"
@@ -324,18 +267,6 @@ export default function GameMenu() {
               onClick={() => setShowHelp(true)}
             >
               <Icon name="bookOpen" size={13} /> {t('game', 'help_wiki')}
-            </button>
-            <button
-              type="button"
-              className="game-menu-item"
-              data-testid="game-menu-about"
-              title={t('system', 'about_title')}
-              onClick={() => setShowAbout(true)}
-            >
-              <Icon name="info" size={13} /> {t('system', 'about_tab')}
-              {unseenNews && (
-                <span className="game-menu-news-dot" data-testid="game-menu-news-dot" aria-hidden="true">●</span>
-              )}
             </button>
             <button
               type="button"
@@ -349,16 +280,8 @@ export default function GameMenu() {
           </div>
         </>
       )}
-      {showAppearance && <AppearanceSettingsModal onClose={() => setShowAppearance(false)} />}
+      {showSettings && <SettingsModal initialSection="gameplay" onClose={() => setShowSettings(false)} />}
       {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
-      {showAbout && (
-        <AboutModal
-          onClose={() => {
-            setShowAbout(false)
-            refreshNews()
-          }}
-        />
-      )}
     </div>
   )
 }

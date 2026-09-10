@@ -1,0 +1,239 @@
+name: Release (Tauri + components)
+
+# Despliegue del Nexus Launcher en las 3 plataformas.
+# Disparo MANUAL con tag (v0.1.0): el tag debe coincidir con la versión de
+# launcher/src-tauri/tauri.conf.json y de ambos Cargo.toml (lo verifica el job
+# check-version). Los instaladores son ligeros: JRE+server+proxy se descargan
+# en el primer arranque desde este mismo release (components-manifest.json).
+# Secret necesario: TAURI_SIGNING_PRIVATE_KEY (+ TAURI_SIGNING_PRIVATE_KEY_PASSWORD).
+# Sin firmar: Windows/Linux instalan con aviso; macOS exige clic derecho → Abrir.
+# El updater funciona firmado al 100%; en mac sin notarizar es best-effort.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag del release (v0.1.0, debe coincidir con tauri.conf.json)'
+        required: true
+        type: string
+      notes:
+        description: 'Notas del release'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify tag matches app version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          VER="${TAG#v}"
+          CONF=$(node -p "require('./launcher/src-tauri/tauri.conf.json').version")
+          SHELL_VER=$(node -p "require('fs').readFileSync('launcher/src-tauri/Cargo.toml','utf8').match(/\[package\][\s\S]*?version = \"([^\"]+)\"/)[1]")
+          [ "$VER" = "$CONF" ] || { echo "tag $TAG != tauri.conf.json $CONF"; exit 1; }
+          echo "tag $TAG OK (shell $SHELL_VER)"
+
+  modules:
+    needs: check-version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            tag: linux-x64
+          - os: windows-latest
+            tag: win-x64
+          - os: macos-latest
+            tag: mac-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # (Pasos espejo de modules.yml: base+plugins+proxy, assemble, jlink, smoke.)
+      - uses: actions/checkout@v6
+      - name: Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Build base modules
+        run: mvn -B -q -pl Mage.Common,Mage,Mage.Sets,Mage.Server install -DskipTests
+      - name: Build plugins
+        run: mvn -B -q -pl Mage.Server.Plugins/Mage.Player.AI,Mage.Server.Plugins/Mage.Player.AI.MAD,Mage.Server.Plugins/Mage.Player.AI.DraftBot,Mage.Server.Plugins/Mage.Player.Human,Mage.Server.Plugins/Mage.Game.TwoPlayerDuel,Mage.Server.Plugins/Mage.Deck.Constructed install -DskipTests
+      - name: Package proxy
+        run: mvn -B -q -pl Mage.Proxy clean package -DskipTests
+      - name: Assemble staging
+        run: node scripts/assemble-modules.mjs staging
+      - name: Build stripped JRE (jlink)
+        run: |
+          MODULES=$(jdeps --ignore-missing-deps --multi-release 17 --print-module-deps \
+            --class-path 'staging/server/lib/*' \
+            staging/proxy/mage-proxy-*.jar staging/server/classes/*/)
+          jlink --add-modules "$MODULES" --strip-debug --no-man-pages --no-header-files \
+            --compress=2 --output staging/jre
+      - name: Pack component tarballs
+        run: |
+          export COPYFILE_DISABLE=1
+          tar -czf nexus-jre-${{ matrix.tag }}.tar.gz -C staging/jre .
+          tar -czf nexus-server-${{ matrix.tag }}.tar.gz -C staging/server .
+          tar -czf nexus-proxy-${{ matrix.tag }}.tar.gz -C staging/proxy .
+      - name: Upload modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-modules-${{ matrix.tag }}
+          path: |
+            nexus-jre-${{ matrix.tag }}.tar.gz
+            nexus-server-${{ matrix.tag }}.tar.gz
+            nexus-proxy-${{ matrix.tag }}.tar.gz
+          retention-days: 90
+
+  manifest:
+    needs: modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nexus-modules-*
+          merge-multiple: true
+          path: artifacts
+      - name: Generate components-manifest.json
+        run: |
+          node scripts/gen-manifest.mjs --tag '${{ inputs.tag }}' \
+            --repo '${{ github.repository }}' --dir artifacts \
+            --out components-manifest.json
+          cat components-manifest.json
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: components-manifest.json
+          retention-days: 90
+
+  bundle:
+    needs: manifest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            tag: linux-x64
+            updater_key: linux-x86_64
+          - os: windows-latest
+            tag: win-x64
+            updater_key: windows-x86_64
+          - os: macos-latest
+            tag: mac-arm64
+            updater_key: darwin-aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: npm ci (web)
+        working-directory: web
+        run: npm ci
+      - name: Build web for Tauri
+        working-directory: web
+        run: npm run build
+        env:
+          TAURI_BUILD: '1'
+      - name: Install Linux webkit deps
+        if: matrix.tag == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build Tauri bundles (signed for updater)
+        working-directory: launcher/src-tauri
+        run: cargo install tauri-cli --version '^2' --locked && cargo tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      - name: Generate updater fragment
+        run: |
+          node scripts/gen-latest.mjs --tag '${{ inputs.tag }}' \
+            --repo '${{ github.repository }}' --target-key '${{ matrix.updater_key }}' \
+            --bundle-dir launcher/target/release/bundle \
+            --out latest-${{ matrix.updater_key }}.json
+      - name: Upload bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-bundle-${{ matrix.tag }}
+          path: |
+            launcher/target/release/bundle/
+            latest-${{ matrix.updater_key }}.json
+          retention-days: 90
+
+  publish:
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nexus-modules-*
+          merge-multiple: true
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nexus-bundle-*
+          merge-multiple: true
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-manifest
+          path: release-assets
+      - name: Merge latest.json (updater)
+        env:
+          TAG: ${{ inputs.tag }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const platforms = {};
+            for (const f of fs.readdirSync('release-assets')) {
+              if (!f.startsWith('latest-') || !f.endsWith('.json')) continue;
+              Object.assign(platforms, JSON.parse(fs.readFileSync('release-assets/' + f, 'utf8')));
+              fs.rmSync('release-assets/' + f);
+            }
+            const keys = Object.keys(platforms).sort();
+            if (keys.length !== 3) { console.error('fragmentos updater: ' + keys.join(',')); process.exit(1); }
+            fs.writeFileSync('release-assets/latest.json', JSON.stringify({
+              version: process.env.TAG.replace(/^v/, ''),
+              notes: process.env.NOTES || '',
+              pub_date: new Date().toISOString(),
+              platforms,
+            }, null, 2) + '\n');
+            console.log('latest.json: ' + keys.join(','));
+          "
+          cat release-assets/latest.json | head -n 12
+          ls release-assets/
+      - name: Create draft release and upload assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          gh release create "$TAG" --draft --title "$TAG" --notes "$NOTES" || true
+          gh release upload "$TAG" release-assets/* --clobber

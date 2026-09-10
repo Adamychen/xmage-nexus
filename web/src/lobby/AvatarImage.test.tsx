@@ -2,7 +2,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
-import { resolveAvatarPath } from './avatars'
+import { resolveAvatarPath, OFFICIAL_AVATARS } from './avatars'
+import { setLanguage } from '../i18n'
 
 describe('Avatar System', () => {
   afterEach(() => {
@@ -52,5 +53,22 @@ describe('Avatar System', () => {
     fireEvent.click(screen.getByText('Chandra Nalaar'))
     expect(onSelect).toHaveBeenCalledWith(11)
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('translates picker chrome and special names (no hardcoded Spanish)', () => {
+    setLanguage('en')
+    try {
+      render(
+        <AvatarPickerModal selectedAvatarId={10} onSelect={() => {}} onClose={() => {}} />
+      )
+      expect(screen.getByText('Choose your Duelist Avatar')).toBeDefined()
+      expect(screen.getAllByText(`All (${OFFICIAL_AVATARS.length})`).length).toBeGreaterThan(0)
+      expect(screen.getByText('Classic Planeswalkers')).toBeDefined()
+      expect(screen.getByText(/Animated \(GIF\)/)).toBeDefined()
+      expect(screen.getByText('Animated: Arcane Orb')).toBeDefined()
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined()
+    } finally {
+      setLanguage('es')
+    }
   })
 })

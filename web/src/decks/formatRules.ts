@@ -254,8 +254,10 @@ export function validateDeckGameCompatibility(deckType: string, gameType: string
     case 'Variant Magic - Duel Commander':
     case 'Variant Magic - MTGO 1v1 Commander':
     case 'Variant Magic - Centurion Commander':
+      if (!gt.includes('Commander')) return 'Deck type Commander needs also a Commander game type'
+      break
     case 'Variant Magic - Penny Dreadful Commander':
-      if (!gt.startsWith('Commander')) return 'Deck type Commander needs also a Commander game type'
+      if (!gt.includes('Commander')) return 'Deck type Commander needs also a Commander game type'
       break
     case 'Variant Magic - Freeform Commander':
       if (!gt.startsWith('Freeform Commander')) return 'Deck type Freeform Commander needs also a Freeform Commander game type'
@@ -293,6 +295,14 @@ export function validateDeckGameCompatibility(deckType: string, gameType: string
         return 'Deck type Commander needs also a Commander game type'
       }
       break
+    case 'Penny Dreadful Commander Free For All':
+      if (
+        dt !== 'Variant Magic - Penny Dreadful Commander' &&
+        dt !== 'Variant Magic - Commander'
+      ) {
+        return 'Deck type Penny Dreadful Commander needs also a Commander game type'
+      }
+      break
     case 'Freeform Commander Two Player Duel':
     case 'Freeform Commander Free For All':
       if (dt !== 'Variant Magic - Freeform Commander') return 'Deck type Freeform Commander needs also a Freeform Commander game type'
@@ -311,10 +321,59 @@ export function validateDeckGameCompatibility(deckType: string, gameType: string
     case 'Oathbreaker Free For All':
       if (dt !== 'Variant Magic - Oathbreaker') return 'Deck type Oathbreaker needs also a Oathbreaker game type'
       break
+    case 'Momir Basic Two Player Duel':
+    case 'Momir Basic Free For All':
+      if (dt !== 'Variant Magic - Momir Basic') return 'Deck type Momir Basic needs also a Momir Basic game type'
+      break
     default:
       break
   }
   return null
+}
+
+export function isGameAndDeckCompatible(deckType: string, gameType: string): boolean {
+  return validateDeckGameCompatibility(deckType, gameType) === null
+}
+
+export function getDefaultDeckTypeForGame(gameType: string): string {
+  const gt = gameType.trim()
+  if (gt.startsWith('Freeform Unlimited Commander')) return 'Variant Magic - Freeform Unlimited Commander'
+  if (gt.startsWith('Freeform Commander')) return 'Variant Magic - Freeform Commander'
+  if (gt.includes('Penny Dreadful Commander')) return 'Variant Magic - Penny Dreadful Commander'
+  if (gt.includes('Commander')) return 'Variant Magic - Commander'
+  if (gt.startsWith('Brawl')) return 'Variant Magic - Brawl'
+  if (gt.startsWith('Tiny Leaders')) return 'Variant Magic - Tiny Leaders'
+  if (gt.startsWith('Oathbreaker')) return 'Variant Magic - Oathbreaker'
+  if (gt.startsWith('Momir Basic')) return 'Variant Magic - Momir Basic'
+  return 'Constructed - Modern'
+}
+
+export function getDefaultGameTypeForDeck(deckType: string, numPlayers = 2): string {
+  const dt = deckType.trim()
+  if (dt === 'Variant Magic - Freeform Unlimited Commander') return 'Freeform Unlimited Commander'
+  if (dt === 'Variant Magic - Freeform Commander') {
+    return numPlayers > 2 ? 'Freeform Commander Free For All' : 'Freeform Commander Two Player Duel'
+  }
+  if (dt === 'Variant Magic - Penny Dreadful Commander') return 'Penny Dreadful Commander Free For All'
+  if (
+    dt.startsWith('Variant Magic - Commander') ||
+    dt === 'Variant Magic - Duel Commander' ||
+    dt === 'Variant Magic - MTGO 1v1 Commander' ||
+    dt === 'Variant Magic - Centurion Commander'
+  ) {
+    return numPlayers > 2 ? 'Commander Free For All' : 'Commander Two Player Duel'
+  }
+  if (dt.startsWith('Variant Magic - Brawl') || dt === 'Variant Magic - Duel Brawl') {
+    return numPlayers > 2 ? 'Brawl Free For All' : 'Brawl Two Player Duel'
+  }
+  if (dt === 'Variant Magic - Tiny Leaders') return 'Tiny Leaders Two Player Duel'
+  if (dt === 'Variant Magic - Oathbreaker') {
+    return numPlayers > 2 ? 'Oathbreaker Free For All' : 'Oathbreaker Two Player Duel'
+  }
+  if (dt === 'Variant Magic - Momir Basic') {
+    return numPlayers > 2 ? 'Momir Basic Free For All' : 'Momir Basic Two Player Duel'
+  }
+  return numPlayers > 2 ? 'Free For All' : 'Two Player Duel'
 }
 
 export interface ValidationIssue {

@@ -250,7 +250,7 @@ export default function TableCard({
             {t('lobby.join_human_btn')}
           </button>
         )}
-        {hasAiSeat && (
+        {hasAiSeat && import.meta.env.DEV && (
           <button
             className="table-action-btn ai-btn"
             disabled={busyTable === tTable.tableId}

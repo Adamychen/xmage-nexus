@@ -56,10 +56,12 @@ export default function DialogShell({
       onBackdropClick={onBackdropClick}
       sectionProps={sectionProps}
     >
-      <div className="dlg-kicker">
-        <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span> {kickerLabel}
+      <div className="dlg-head">
+        <div className="dlg-kicker">
+          <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span> {kickerLabel}
+        </div>
+        {topRight && <div className="dlg-head-right">{topRight}</div>}
       </div>
-      {topRight && <div className="dlg-top-right">{topRight}</div>}
       <h2 id={titleId} className="dlg-title">{title}</h2>
       {sourceName != null && sourceName !== '' && (
         <div className="dlg-source">{sourceName}</div>

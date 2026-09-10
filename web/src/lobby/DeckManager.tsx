@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DECKS, loadSavedCustomDecks, saveCustomDecks, type Deck } from './decks'
+import { bundledDecks, loadSavedCustomDecks, saveCustomDecks, type Deck } from './decks'
 import { setMyDeck, useStore } from '../state/store'
 import { parseAnyDeck } from '../decks/parseDck'
 import { useTranslation } from '../i18n'
@@ -16,23 +16,23 @@ export default function DeckManager() {
   const { t, tError } = useTranslation()
   const currentStoreDeck = useStore((s) => s.myDeck)
   const [customDecks, setCustomDecks] = useState<Deck[]>(loadSavedCustomDecks)
-  const [selectedDeck, setSelectedDeck] = useState<Deck>(currentStoreDeck ?? DECKS[0])
+  const [selectedDeck, setSelectedDeck] = useState<Deck | null>(() => currentStoreDeck ?? bundledDecks()[0] ?? customDecks[0] ?? null)
   const [importText, setImportText] = useState('')
   const [importName, setImportName] = useState('')
   const [showImportModal, setShowImportModal] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
 
-  const allDecks = useMemo(() => [...DECKS, ...customDecks], [customDecks])
+  const allDecks = useMemo(() => [...bundledDecks(), ...customDecks], [customDecks])
 
   const totalCards = useMemo(() => {
-    return selectedDeck.cards.reduce((acc, c) => acc + c.amount, 0)
+    return (selectedDeck?.cards ?? []).reduce((acc, c) => acc + c.amount, 0)
   }, [selectedDeck])
 
   const totalSideboard = useMemo(() => {
-    return selectedDeck.sideboard.reduce((acc, c) => acc + c.amount, 0)
+    return (selectedDeck?.sideboard ?? []).reduce((acc, c) => acc + c.amount, 0)
   }, [selectedDeck])
 
-  const handleSelectActive = (d: Deck) => {
+  const handleSelectActive = (d: Deck | null) => {
     setSelectedDeck(d)
     setMyDeck(d)
   }
@@ -59,8 +59,8 @@ export default function DeckManager() {
     const updated = customDecks.filter((x) => x !== d && x.name !== d.name)
     setCustomDecks(updated)
     saveCustomDecks(updated)
-    if (selectedDeck.name === d.name) {
-      handleSelectActive(DECKS[0])
+    if (selectedDeck?.name === d.name) {
+      handleSelectActive(updated[0] ?? bundledDecks()[0] ?? null)
     }
   }
 
@@ -80,8 +80,16 @@ export default function DeckManager() {
         </div>
 
         <div className="deck-list-items">
+          {allDecks.length === 0 && (
+            <div className="deck-card-item" onClick={() => setShowImportModal(true)}>
+              <div className="deck-item-info">
+                <span className="deck-item-name">{t('decks','import_deck')}</span>
+                <span className="deck-item-meta">{t('lobby','create_err_no_deck')}</span>
+              </div>
+            </div>
+          )}
           {allDecks.map((d) => {
-            const isActive = selectedDeck.name === d.name
+            const isActive = selectedDeck?.name === d.name
             const isCustom = customDecks.some((c) => c.name === d.name)
             const count = d.cards.reduce((sum, c) => sum + c.amount, 0)
 
@@ -117,6 +125,22 @@ export default function DeckManager() {
 
       {/* Main Area: Deck Viewer & Card Breakdown */}
       <div className="deck-content-view">
+        {!selectedDeck ? (
+          <div className="deck-view-header">
+            <div>
+              <h2>{t('decks','my_decks')}</h2>
+              <p className="deck-view-subtitle">{t('lobby','create_err_no_deck')}</p>
+            </div>
+            <button
+              type="button"
+              className="primary deck-select-primary"
+              onClick={() => setShowImportModal(true)}
+            >
+              {t('decks','import_deck')}
+            </button>
+          </div>
+        ) : (
+        <>
         <div className="deck-view-header">
           <div>
             <h2>{selectedDeck.name}</h2>
@@ -162,6 +186,8 @@ export default function DeckManager() {
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       {/* Import Modal */}

@@ -128,7 +128,8 @@ export default function RollbackDialog() {
             type="button"
             className="primary send-btn"
             onClick={handleConfirm}
-            disabled={sending}
+            disabled={sending || !hasPriority}
+            title={!hasPriority ? t('dialogs', 'rollback_priority_warn') : undefined}
           >
             <Icon name="undo" size={13} /> {t('dialogs', 'rollback_confirm')}
           </button>

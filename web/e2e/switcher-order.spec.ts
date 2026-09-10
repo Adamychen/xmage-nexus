@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { dismissSetupWizard } from './support/start-game'
 import type { Page } from '@playwright/test'
 
 fakeOnly()
@@ -54,6 +55,7 @@ async function setGame(page: Page, gameView: unknown, layout = 'standard') {
 
 test('estandar multi: switcher en orden de turnos con flechas y yo desactivado @switcher', async ({ page }) => {
   await page.goto('/')
+  await dismissSetupWizard(page)
   await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
   await page.waitForTimeout(400)
   await setGame(page, stdMulti('p2'))

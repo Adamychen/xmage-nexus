@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import UserRequestDialog from './UserRequestDialog'
-import { setState } from '../state/store'
+import { getState, setState } from '../state/store'
 import { setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
 
@@ -27,7 +27,7 @@ describe('UserRequestDialog (permiso de mano)', () => {
   })
 
   afterEach(() => {
-    setState({ userRequest: null })
+    setState({ userRequest: null, rollbackPendingFor: null })
     setGateway(null)
     cleanup()
   })
@@ -42,7 +42,6 @@ describe('UserRequestDialog (permiso de mano)', () => {
       data: '123e4567-e89b-12d3-a456-426614174000',
     })
   })
-
   it('sin relatedUserId envía data undefined (diálogos sin solicitante)', async () => {
     setState({
       userRequest: {
@@ -60,5 +59,30 @@ describe('UserRequestDialog (permiso de mano)', () => {
       gameId: 'g1',
       data: undefined,
     })
+    expect(getState().rollbackPendingFor).toBeNull()
+  })
+
+  it('Accept de rollback arma la espera de la vista restaurada', async () => {
+    setState({
+      userRequest: {
+        title: 'Request by Hero',
+        message: 'Allow rollback to the start of the previous turn?',
+        gameId: 'g1',
+        relatedUserId: 'u-hero',
+        buttons: [
+          { text: 'Accept', action: 'ADD_PERMISSION_TO_ROLLBACK_TURN' },
+          { text: 'Deny', action: 'DENY_PERMISSION_TO_ROLLBACK_TURN' },
+        ],
+      },
+    })
+    const { getByText } = render(<UserRequestDialog />)
+    fireEvent.click(getByText('Accept'))
+    await vi.waitFor(() => expect(send).toHaveBeenCalled())
+    expect(send).toHaveBeenCalledWith('sendPlayerAction', {
+      action: 'ADD_PERMISSION_TO_ROLLBACK_TURN',
+      gameId: 'g1',
+      data: 'u-hero',
+    })
+    await vi.waitFor(() => expect(getState().rollbackPendingFor).toBe('g1'))
   })
 })

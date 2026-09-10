@@ -4,7 +4,7 @@ import { withFakeServer } from './support/fake-backend'
 import { proxyPort, FAKE_MODE } from './dual'
 import { deckIssuesScenario } from '../fixtures/scenarios/deckIssues'
 import { TABLE } from '../fixtures/table-names'
-import { installCapture, type CaptureBuffers } from './support/start-game'
+import { dismissSetupWizard, installCapture, type CaptureBuffers } from './support/start-game'
 
 /**
  * @deckvalidation — Pre-validación de mazos contra la BD de cartas del proxy.
@@ -17,6 +17,7 @@ async function openJoinDialogWithBadDeck(page: import('@playwright/test').Page):
   const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
   installCapture(page, buffers)
   await page.goto(`/?proxyPort=${proxyPort()}`)
+  await dismissSetupWizard(page)
   const username = `dv_${Date.now()}`.slice(0, 13)
   await page.getByPlaceholder(/Usuario|Username/i).fill(username)
   await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -94,6 +95,7 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
   test('deck builder re-validates live: badge appears on edit and clears when fixed', async ({ page }) => {
     await withFakeServer(deckIssuesScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()

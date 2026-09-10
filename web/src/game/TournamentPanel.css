@@ -10,8 +10,8 @@
 }
 
 .tournament-panel {
-  width: min(1100px, 100%);
-  max-height: 90vh;
+  width: min(1600px, 96vw);
+  max-height: 94vh;
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(255,255,255,0.12);
@@ -29,6 +29,17 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
   background: rgba(124,92,255,0.08);
   gap: 12px;
+}
+
+.tournament-stalled-banner {
+  margin: 10px 16px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(248,113,113,0.5);
+  border-radius: 8px;
+  background: rgba(248,113,113,0.12);
+  color: #fecaca;
+  font-size: 0.812rem;
+  line-height: 1.45;
 }
 
 .tournament-panel-title {
@@ -121,11 +132,16 @@
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   backdrop-filter: blur(8px);
 }
 .tournament-panel-mini:hover { background: rgba(124,92,255,1); transform: translateX(-50%) translateY(-1px); }
+.tournament-panel-mini[style] { transform: none; }
+.tournament-panel-mini[style]:hover { transform: translateY(-1px); }
+.tournament-panel-mini.is-dragging { cursor: grabbing; opacity: 0.92; }
 
 .tournament-mini-expand {
   background: rgba(255,255,255,0.18);

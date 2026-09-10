@@ -75,8 +75,7 @@
 
 .game-menu-panel .leave-game-btn,
 .game-menu-panel .leave-match-btn,
-.game-menu-panel .rollback-game-btn,
-.game-menu-panel .sleeve-picker-btn {
+.game-menu-panel .rollback-game-btn {
   background: none;
   border: none;
   color: #c8cae6;
@@ -93,8 +92,7 @@
   box-shadow: none;
 }
 
-.game-menu-panel .rollback-game-btn:hover,
-.game-menu-panel .sleeve-picker-btn:hover {
+.game-menu-panel .rollback-game-btn:hover {
   background: #252b4a;
   color: #e8eaf6;
   border: none;
@@ -114,19 +112,6 @@
   text-transform: uppercase;
   color: #4a5080;
   padding: 6px 12px 2px;
-}
-
-.game-menu-radio {
-  justify-content: space-between;
-}
-
-.game-menu-radio.is-active {
-  color: #cfc3ff;
-}
-
-.game-menu-radio-check {
-  color: #7c5cff;
-  font-weight: 700;
 }
 
 .game-menu-auto-empty {
@@ -196,148 +181,4 @@
 
 .game-menu-auto-delete:hover {
   color: #f09696;
-}
-
-.game-menu-fx {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 10px 12px 12px;
-  margin: 0 2px 2px;
-  background: #10131c;
-  border: 1px solid #262b3d;
-  border-radius: 6px;
-}
-
-.game-menu-fx .fx-popover-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.game-menu-fx .fx-popover-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.game-menu-fx .fx-popover-label {
-  color: #e8eaf6;
-  font-size: 0.812rem;
-  font-weight: 600;
-}
-
-.game-menu-fx .fx-popover-hint {
-  color: #6b7394;
-  font-size: 0.688rem;
-  line-height: 1.3;
-}
-
-.game-menu-fx .fx-toggle {
-  width: 40px;
-  height: 22px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  border: 1px solid #303541;
-  background: #1a1f3a;
-  cursor: pointer;
-  padding: 0;
-  position: relative;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.game-menu-fx .fx-toggle-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #6b7394;
-  transition: transform calc(0.15s / var(--fx-speed, 1)) ease, background 0.15s;
-}
-
-.game-menu-fx .fx-toggle.on {
-  background: #253a2b;
-  border-color: #2f5c3d;
-}
-
-.game-menu-fx .fx-toggle.on .fx-toggle-knob {
-  transform: translateX(18px);
-  background: #4cd07d;
-}
-
-.game-menu-fx .fx-speed-group {
-  display: flex;
-  gap: 4px;
-}
-
-.game-menu-fx .fx-speed-btn {
-  min-width: 38px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #303541;
-  background: #1a1f3a;
-  color: #9aa1c0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
-
-.game-menu-fx .fx-speed-btn:hover {
-  background: #252b4a;
-  color: #e8eaf6;
-}
-
-.game-menu-fx .fx-speed-btn.active {
-  background: #2d2454;
-  border-color: #7c5cff;
-  color: #cfc3ff;
-}
-
-.game-menu-fx .fx-popover-divider {
-  height: 1px;
-  background: #262b3d;
-  margin: 2px 0;
-}
-
-.game-menu-fx .audio-slider {
-  width: 90px;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #262b3d;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.game-menu-fx .audio-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #7c5cff;
-  cursor: pointer;
-  transition: transform 0.1s, background 0.1s;
-}
-
-.game-menu-fx .audio-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  background: #9a80ff;
-}
-
-.game-menu-fx .audio-slider:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.game-menu-item .game-menu-news-dot {
-  margin-left: auto;
-  font-size: 9px;
-  color: #ffd070;
 }

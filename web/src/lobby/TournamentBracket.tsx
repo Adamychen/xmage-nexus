@@ -5,6 +5,7 @@ import Icon from '../ui/Icon'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
 import { useTranslation } from '../i18n'
+import { confirmDialog } from '../ui/confirmDialog'
 
 export interface TournamentBracketProps {
   view: TournamentView
@@ -55,7 +56,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
   const handleQuit = async () => {
     const tid = tournamentId ?? view.tournamentName
     if (!tid) return
-    if (!window.confirm(t('lobby', 'tournament_quit_confirm'))) return
+    if (!(await confirmDialog(t('lobby', 'tournament_quit_confirm'), { danger: true }))) return
     if (onQuit) {
       onQuit(tid)
       return

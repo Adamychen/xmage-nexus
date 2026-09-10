@@ -14,12 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Cableado de las acciones de staging U4: swapSeats y startTournament. */
+/** Cableado de las acciones de staging U4: swapSeats, startTournament y panel-join (joinTournament/joinDraft). */
 class TableStagingCommandsTest {
 
     private static final UUID ROOM = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID TABLE = UUID.fromString("00000000-0000-0000-0000-000000000002");
     private static final UUID CHAT = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID TOURNAMENT = UUID.fromString("00000000-0000-0000-0000-000000000004");
+    private static final UUID DRAFT = UUID.fromString("00000000-0000-0000-0000-000000000005");
 
     static final class StubSession extends SessionImpl {
         UUID swapRoom;
@@ -59,6 +61,21 @@ class TableStagingCommandsTest {
             startRoom = roomId;
             startTable = tableId;
             return startResult;
+        }
+
+        UUID joinedTournament;
+        UUID joinedDraft;
+
+        @Override
+        public boolean joinTournament(UUID tournamentId) {
+            joinedTournament = tournamentId;
+            return true;
+        }
+
+        @Override
+        public boolean joinDraft(UUID draftId) {
+            joinedDraft = draftId;
+            return true;
         }
 
         @Override
@@ -167,6 +184,42 @@ class TableStagingCommandsTest {
     void startTournamentWithoutTableIdFails() throws Exception {
         StubCtx ctx = new StubCtx();
         boolean routed = TournamentCommands.handle("startTournament", null, "r5", args("{}"), ctx);
+        assertTrue(routed);
+        assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void joinTournamentForwardsIdToSession() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = TournamentCommands.handle("joinTournament", null, "r8",
+                args("{\"tournamentId\":\"" + TOURNAMENT + "\"}"), ctx);
+        assertTrue(routed);
+        assertEquals(TOURNAMENT, ctx.session.joinedTournament);
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void joinTournamentWithoutIdFails() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = TournamentCommands.handle("joinTournament", null, "r9", args("{}"), ctx);
+        assertTrue(routed);
+        assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void joinDraftForwardsIdToSession() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = TournamentCommands.handle("joinDraft", null, "r10",
+                args("{\"draftId\":\"" + DRAFT + "\"}"), ctx);
+        assertTrue(routed);
+        assertEquals(DRAFT, ctx.session.joinedDraft);
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void joinDraftWithoutIdFails() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = TournamentCommands.handle("joinDraft", null, "r11", args("{}"), ctx);
         assertTrue(routed);
         assertFalse(lastResult(ctx).get("ok").getAsBoolean());
     }

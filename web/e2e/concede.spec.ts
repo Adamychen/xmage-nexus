@@ -24,12 +24,13 @@ test('concede: el humano envía CONCEDE y vuelve al lobby', { tag: '@fullflow' }
       simDeck: DECK.aiLands,
     })
 
-    // aceptar el confirm() de "¿Seguro que quieres conceder...?"
-    page.on('dialog', (d) => void d.accept())
-
     await page.locator('[data-testid="game-menu-btn"]').click()
     await expect(page.locator('.leave-game-btn')).toBeVisible({ timeout: 15_000 })
     await page.locator('.leave-game-btn').click()
+
+    // el modal in-app de confirmación sustituye al confirm() nativo (no existe en Tauri)
+    await expect(page.getByTestId('confirm-modal')).toBeVisible({ timeout: 15_000 })
+    await page.getByTestId('confirm-modal-ok').click()
 
     // el servidor recibió CONCEDE y la partida terminó (GAME_OVER emitido)
     await expect

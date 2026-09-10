@@ -48,8 +48,11 @@ export async function getDeckTypes(): Promise<string[]> {
 }
 
 export async function getTournamentTypes(): Promise<string[]> {
-  const res = await getGateway().send<string[]>('getTournamentTypes')
-  return res.ok ? (res.data ?? []) : []
+  const res = await getGateway().send<unknown[]>('getTournamentTypes')
+  if (!res.ok || !Array.isArray(res.data)) return []
+  return res.data
+    .map((item) => (typeof item === 'string' ? item : (item as { name?: string })?.name ?? ''))
+    .filter((s): s is string => typeof s === 'string' && s.length > 0)
 }
 
 export async function getDraftCubes(): Promise<string[]> {
@@ -166,6 +169,14 @@ export async function startMatch(tableId: string) {
 
 export async function startTournament(tableId: string) {
   return getGateway().send('startTournament', { tableId })
+}
+
+export async function joinTournament(tournamentId: string) {
+  return getGateway().send('joinTournament', { tournamentId })
+}
+
+export async function joinDraft(draftId: string) {
+  return getGateway().send('joinDraft', { draftId })
 }
 
 /** Reordena dos asientos (solo dueño, mesa READY_TO_START) — paridad con Move Up/Down del desktop. */

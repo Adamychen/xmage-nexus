@@ -25,8 +25,8 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       size="lg"
       legacyBackdropClass="overlay"
       legacyPanelClass="dialog create-table-dialog"
-      kickerIcon="swords"
-      kickerLabel={<>Paso {activeIndex + 1} de {wizardSteps.length} · {wizardSteps[activeIndex]?.icon} {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}</>}
+      kickerIcon={wizardSteps[activeIndex]?.icon ?? 'settings'}
+      kickerLabel={<>{t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })} · {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}</>}
       title={t('lobby.create_table_btn')}
       message={t('lobby', 'create_header_subtitle')}
       topRight={(
@@ -40,7 +40,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           <div className="wizard-progress-fill" style={{ width: `${((activeIndex + 1) / wizardSteps.length) * 100}%` }} />
         </div>
 
-        <nav className="wizard-stepper" aria-label="Pasos de creación de mesa">
+        <nav className="wizard-stepper" aria-label={t('lobby', 'create_wizard_nav_aria')}>
           {wizardSteps.map((step, idx) => {
             const isActive = idx === activeIndex
             const isCompleted = idx < activeIndex
@@ -83,7 +83,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           <div className="wizard-actions-left">
             {!isFirstStep && (
               <button type="button" onClick={goPrev} disabled={form.busy}>
-                ← Atrás
+                {t('lobby','wizard_back')}
               </button>
             )}
             <button type="button" onClick={onClose} disabled={form.busy}>
@@ -93,11 +93,17 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           <div className="wizard-actions-right">
             {!isLastStep ? (
               <button type="button" className="primary" onClick={goNext} disabled={form.busy}>
-                Siguiente →
+                {t('lobby','wizard_next')}
               </button>
             ) : (
               <button type="button" className="primary create-submit-btn" disabled={form.busy || !!form.compatibilityError || !form.name.trim()} onClick={() => void form.submit()} title={form.compatibilityError || undefined}>
-                {form.busy ? `${t('lobby','create_table_btn')}…` : form.isDraftLimited ? (<><Icon name="layers" size={13} /> {t('lobby','create_submit_draft')}</>) : (<><Icon name="play" size={13} /> {t('lobby','create_table_btn')}</>)}
+                {form.busy
+                  ? `${t('lobby','create_table_btn')}…`
+                  : form.isDraftLimited
+                  ? (<><Icon name="layers" size={13} /> {t('lobby','create_submit_draft')}</>)
+                  : form.isConstructedTournament
+                  ? (<><Icon name="trophy" size={13} /> {t('lobby','create_submit_tournament_constructed')}</>)
+                  : (<><Icon name="play" size={13} /> {t('lobby','create_table_btn')}</>)}
               </button>
             )}
           </div>

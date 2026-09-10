@@ -148,7 +148,7 @@ export function clearFlightDiagnostics(): void {
   flightDiag.length = 0
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   ;(window as unknown as { __mageFlights?: unknown }).__mageFlights = {
     log: getFlightDiagnostics,
     clear: clearFlightDiagnostics,

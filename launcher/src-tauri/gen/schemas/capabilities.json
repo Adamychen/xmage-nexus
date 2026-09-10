@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Splash progress events and window control","local":true,"windows":["splash"],"permissions":["core:default","opener:default","updater:default"]}}

@@ -1,7 +1,5 @@
 import { cleanup, render } from '@testing-library/react'
-// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { readFileSync } from 'node:fs'
-// @ts-expect-error node: specifiers are not in the DOM lib; this test runs in Node under vitest
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'

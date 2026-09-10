@@ -38,10 +38,19 @@
   }
 }
 
+.dlg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 .dlg-kicker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   font-size: 0.688rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -51,7 +60,18 @@
   border: 1px solid var(--dlg-kicker-border);
   padding: 3px 10px;
   border-radius: 999px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
+}
+
+.dlg-head-right {
+  flex: none;
+  display: flex;
+  align-items: center;
+  /* La celda no crece con botones altos (✕): desbordan como con el absolute
+     anterior en vez de empujar el contenido (a zoom alto eso dejaba el submit
+     fuera del viewport). */
+  height: 22px;
+  overflow: visible;
 }
 
 .dlg-title {
@@ -76,12 +96,6 @@
   line-height: 1.5;
   margin: 0 0 18px;
   white-space: pre-wrap;
-}
-
-.dlg-top-right {
-  position: absolute;
-  top: 16px;
-  right: 16px;
 }
 
 .dlg-search {

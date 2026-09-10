@@ -1,10 +1,12 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { dismissSetupWizard } from './support/start-game'
 fakeOnly()
 
 test.describe('Draft', { tag: '@draft' }, () => {
   test('booster se renderiza, timeout y pick', async ({ page }) => {
     await page.goto('/')
+    await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(500)
     await page.evaluate(() => {
@@ -37,7 +39,9 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(card).toBeVisible()
   })
 
-  test('después del draft aparece CONSTRUCT', async ({ page }) => {    await page.goto('/')
+  test('después del draft aparece CONSTRUCT', async ({ page }) => {
+    await page.goto('/')
+    await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(500)
     await page.evaluate(() => {
@@ -68,6 +72,7 @@ test.describe('Draft', { tag: '@draft' }, () => {
 
   test('U9: mesa, ocultar pick con F9 y botón de log', async ({ page }) => {
     await page.goto('/')
+    await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(500)
     await page.evaluate(() => {

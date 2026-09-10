@@ -2,7 +2,7 @@ import { test, expect } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
-import { startGame } from './support/start-game'
+import { dismissSetupWizard, startGame } from './support/start-game'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
 
@@ -10,6 +10,7 @@ test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -90,6 +91,7 @@ test.describe('Decks Gallery', () => {
   test('import .dck text creates deck in gallery @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck2_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -110,6 +112,7 @@ test.describe('Decks Gallery', () => {
   test('explores online & meta decks catalog in Deck Browser @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck3_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -143,6 +146,7 @@ test.describe('Decks Gallery', () => {
   test('U6: sort control, card-size slider, .cod import and .dek export @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck_u6_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -186,6 +190,7 @@ test.describe('Decks Gallery', () => {
   test('U7: commander/maybeboard sections, draft log and paste button @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck_u7_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
@@ -221,6 +226,7 @@ test.describe('Decks Gallery', () => {
   test('responsive layout on laptop viewports prevents deck box overlap @decks', async ({ page }) => {    await page.setViewportSize({ width: 1366, height: 768 })
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
       const username = `deck_resp_${Date.now()}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')

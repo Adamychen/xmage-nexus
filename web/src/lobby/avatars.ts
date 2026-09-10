@@ -5,6 +5,7 @@ export interface AvatarDefinition {
   name: string
   path: string
   isSpecial?: boolean
+  nameKey?: string
 }
 
 export const OFFICIAL_AVATARS: AvatarDefinition[] = [
@@ -32,19 +33,19 @@ export const OFFICIAL_AVATARS: AvatarDefinition[] = [
   { id: 31, name: 'Kaya, Ghost Assassin', path: '/avatars/31.jpg' },
   { id: 32, name: 'Saheeli Rai', path: '/avatars/32.jpg' },
   // Special Animated Avatars (IDs >= 1000)
-  { id: 1000, name: 'Animado: Orbe Arcano', path: '/avatars/special/0.gif', isSpecial: true },
-  { id: 1001, name: 'Animado: Dragón Mítico', path: '/avatars/special/1.gif', isSpecial: true },
-  { id: 1002, name: 'Animado: Mago Elemental', path: '/avatars/special/2.gif', isSpecial: true },
-  { id: 1004, name: 'Animado: Chispa de Maná', path: '/avatars/special/4.gif', isSpecial: true },
-  { id: 1006, name: 'Animado: Portal Dimensional', path: '/avatars/special/6.gif', isSpecial: true },
-  { id: 1008, name: 'Animado: Llama Sagrada', path: '/avatars/special/8.gif', isSpecial: true },
-  { id: 1010, name: 'Animado: Nigromante', path: '/avatars/special/10.gif', isSpecial: true },
-  { id: 1012, name: 'Animado: Señor de las Sombras', path: '/avatars/special/12.gif', isSpecial: true },
-  { id: 1014, name: 'Animado: Chispa Celestial', path: '/avatars/special/14.gif', isSpecial: true },
-  { id: 1016, name: 'Animado: Vórtice Astral', path: '/avatars/special/16.gif', isSpecial: true },
-  { id: 1018, name: 'Animado: Relámpago Rojo', path: '/avatars/special/18.gif', isSpecial: true },
-  { id: 1020, name: 'Animado: Esfera de Luz', path: '/avatars/special/20.gif', isSpecial: true },
-  { id: 1021, name: 'Animado: Cristal Cósmico', path: '/avatars/special/21.gif', isSpecial: true },
+  { id: 1000, name: 'Animated: Arcane Orb', path: '/avatars/special/0.gif', isSpecial: true, nameKey: 'avatar_sp_arcane_orb' },
+  { id: 1001, name: 'Animated: Mythic Dragon', path: '/avatars/special/1.gif', isSpecial: true, nameKey: 'avatar_sp_mythic_dragon' },
+  { id: 1002, name: 'Animated: Elemental Mage', path: '/avatars/special/2.gif', isSpecial: true, nameKey: 'avatar_sp_elemental_mage' },
+  { id: 1004, name: 'Animated: Mana Spark', path: '/avatars/special/4.gif', isSpecial: true, nameKey: 'avatar_sp_mana_spark' },
+  { id: 1006, name: 'Animated: Dimensional Portal', path: '/avatars/special/6.gif', isSpecial: true, nameKey: 'avatar_sp_dimensional_portal' },
+  { id: 1008, name: 'Animated: Sacred Flame', path: '/avatars/special/8.gif', isSpecial: true, nameKey: 'avatar_sp_sacred_flame' },
+  { id: 1010, name: 'Animated: Necromancer', path: '/avatars/special/10.gif', isSpecial: true, nameKey: 'avatar_sp_necromancer' },
+  { id: 1012, name: 'Animated: Lord of Shadows', path: '/avatars/special/12.gif', isSpecial: true, nameKey: 'avatar_sp_shadow_lord' },
+  { id: 1014, name: 'Animated: Celestial Spark', path: '/avatars/special/14.gif', isSpecial: true, nameKey: 'avatar_sp_celestial_spark' },
+  { id: 1016, name: 'Animated: Astral Vortex', path: '/avatars/special/16.gif', isSpecial: true, nameKey: 'avatar_sp_astral_vortex' },
+  { id: 1018, name: 'Animated: Red Lightning', path: '/avatars/special/18.gif', isSpecial: true, nameKey: 'avatar_sp_red_lightning' },
+  { id: 1020, name: 'Animated: Orb of Light', path: '/avatars/special/20.gif', isSpecial: true, nameKey: 'avatar_sp_light_orb' },
+  { id: 1021, name: 'Animated: Cosmic Crystal', path: '/avatars/special/21.gif', isSpecial: true, nameKey: 'avatar_sp_cosmic_crystal' },
 ]
 
 /** Genera un ID de avatar temático determinista a partir del nombre de usuario cuando el servidor no emite avatarId. */

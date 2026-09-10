@@ -79,6 +79,7 @@ export default function PhaseBar({ step }: { step: string }) {
                   type="button"
                   key={s.key}
                   className={cls}
+                  data-testid={`phase-bar-step-${s.key}`}
                   title={`${stepFullName}${s.stopKey ? ` (${t('game', 'you')}: ${hasYourStop ? onLabel : offLabel}, ${t('game', 'opponent')}: ${hasOppStop ? onLabel : offLabel})` : ''}`}
                   onClick={(e) => toggleStop(s.stopKey, e)}
                   onContextMenu={(e) => {

@@ -76,6 +76,16 @@ final class TournamentCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, tournamentId != null && ctx.session().quitTournament(tournamentId), null, null));
                 return true;
             }
+            case "joinTournament": {
+                UUID tournamentId = JsonArgs.uuid(args, "tournamentId", null);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, tournamentId != null && ctx.session().joinTournament(tournamentId), null, null));
+                return true;
+            }
+            case "joinDraft": {
+                UUID draftId = JsonArgs.uuid(args, "draftId", null);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, draftId != null && ctx.session().joinDraft(draftId), null, null));
+                return true;
+            }
             case "quitDraft": {
                 UUID draftId = JsonArgs.uuid(args, "draftId", null);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, draftId != null && ctx.session().quitDraft(draftId), null, null));

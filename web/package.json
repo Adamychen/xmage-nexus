@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run gen-splash-i18n && tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
@@ -24,6 +24,8 @@
     "gen-types:validate": "node ../scripts/gen-types.mjs --validate",
     "gen-server-state": "node ../scripts/server-state-schema.mjs",
     "gen-server-state:validate": "node ../scripts/server-state-schema.mjs --validate",
+    "gen-splash-i18n": "node ../scripts/gen-splash-i18n.mjs",
+    "gen-splash-i18n:validate": "node ../scripts/gen-splash-i18n.mjs --validate",
     "gen": "npm run gen-types && npm run gen-zod && npm run gen-server-state"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.0",
+    "@types/node": "^26.5.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",

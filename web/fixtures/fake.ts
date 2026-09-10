@@ -51,8 +51,16 @@ export const DEFAULT_RESULTS: Record<string, unknown> = {
     { name: 'Free For All', minPlayers: 3, maxPlayers: 10 },
     { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
   ],
-  getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD'],
-  getDeckTypes: ['Constructed - Modern'],
+  getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD', 'COMPUTER_DRAFT_BOT'],
+  getDeckTypes: ['Constructed - Modern', 'Limited'],
+  getTournamentTypes: [
+    'Constructed Elimination',
+    'Constructed Swiss',
+    'Booster Draft Elimination',
+    'Booster Draft Swiss',
+    'Sealed Elimination',
+    'Sealed Swiss',
+  ],
 }
 
 /**
@@ -167,20 +175,34 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
       switch (action) {
         case 'connect':
         case 'createTable':
+        case 'createTournamentTable':
         case 'joinGame':
         case 'watchTable':
         case 'watchGame':
           conn.ok(requestId, action, { tableId: table.tableId })
           conn.lobby([table])
           return
-        case 'joinTable':
+        case 'joinTable': {
           conn.ok(requestId, action, {})
-          conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: false })
+          const isHuman = (args as Record<string, unknown>)?.playerType === 'HUMAN' || !(args as Record<string, unknown>)?.playerType
+          if (isHuman) {
+            conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: false })
+          }
           return
-        case 'joinTournamentTable':
+        }
+        case 'joinTournamentTable': {
           conn.ok(requestId, action, {})
-          conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: true })
+          const isHuman = (args as Record<string, unknown>)?.playerType === 'HUMAN' || !(args as Record<string, unknown>)?.playerType
+          if (isHuman) {
+            conn.event('JOINED_TABLE', { roomId: 'room-fake', currentTableId: table.tableId, parentTableId: null, flag: true })
+          }
           return
+        }
+        case 'joinTournament':
+        case 'joinDraft': {
+          conn.ok(requestId, action, {})
+          return
+        }
         case 'swapSeats': {
           const a = Number((args as Record<string, unknown>).seatNum1)
           const b = Number((args as Record<string, unknown>).seatNum2)

@@ -1,13 +1,14 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import SpectatorStagingScreen from './SpectatorStagingScreen'
+import ConfirmHost from '../ui/ConfirmHost'
 import { setState } from '../state/store'
 import type { TableView } from '../net/types'
 
 const { swapSeatsMock, startMatchMock, startTournamentMock } = vi.hoisted(() => ({
-  swapSeatsMock: vi.fn(async () => ({ ok: true })),
-  startMatchMock: vi.fn(async () => ({ ok: true })),
-  startTournamentMock: vi.fn(async () => ({ ok: true })),
+  swapSeatsMock: vi.fn(async (): Promise<any> => ({ ok: true })),
+  startMatchMock: vi.fn(async (): Promise<any> => ({ ok: true })),
+  startTournamentMock: vi.fn(async (): Promise<any> => ({ ok: true })),
 }))
 
 vi.mock('../net/commands', async (importOriginal) => ({
@@ -180,48 +181,41 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText(/Preparándose/i)).not.toBeNull()
   })
 
-  it('Empezar sigue habilitado sin readys pero pide confirmación (aviso, no bloqueo)', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
-    try {
-      setState({
-        conn: { username: 'Bob' } as never,
-        stagingTableId: MOCK_COMMANDER_TABLE.tableId,
-        lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
-        chatMessages: [
-          { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
-        ],
-      })
-      const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+  it('Empezar sigue habilitado sin readys pero pide confirmación (aviso, no bloqueo)', async () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+      ],
+    })
+    const { getByTestId, findByTestId } = render(<><SpectatorStagingScreen mode="player" /><ConfirmHost /></>)
 
-      const startBtn = getByTestId('staging-start') as HTMLButtonElement
-      expect(startBtn.disabled).toBe(false)
-      fireEvent.click(startBtn)
-      expect(confirmSpy).toHaveBeenCalled()
-      expect(startMatchMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId)
-    } finally {
-      confirmSpy.mockRestore()
-    }
+    const startBtn = getByTestId('staging-start') as HTMLButtonElement
+    expect(startBtn.disabled).toBe(false)
+    fireEvent.click(startBtn)
+    expect(await findByTestId('confirm-modal')).not.toBeNull()
+    fireEvent.click(getByTestId('confirm-modal-ok'))
+    await waitFor(() => expect(startMatchMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId))
   })
 
-  it('cancelar la confirmación no arranca la partida', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    try {
-      setState({
-        conn: { username: 'Bob' } as never,
-        stagingTableId: MOCK_COMMANDER_TABLE.tableId,
-        lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
-        chatMessages: [
-          { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
-        ],
-      })
-      const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+  it('cancelar la confirmación no arranca la partida', async () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+      ],
+    })
+    const { getByTestId, findByTestId, queryByTestId } = render(<><SpectatorStagingScreen mode="player" /><ConfirmHost /></>)
 
-      fireEvent.click(getByTestId('staging-start'))
-      expect(confirmSpy).toHaveBeenCalled()
-      expect(startMatchMock).not.toHaveBeenCalled()
-    } finally {
-      confirmSpy.mockRestore()
-    }
+    fireEvent.click(getByTestId('staging-start'))
+    expect(await findByTestId('confirm-modal')).not.toBeNull()
+    fireEvent.click(getByTestId('confirm-modal-cancel'))
+    await waitFor(() => expect(queryByTestId('confirm-modal')).toBeNull())
+    expect(startMatchMock).not.toHaveBeenCalled()
   })
 
   it('mesa de torneo arranca con startTournament', () => {
@@ -237,6 +231,21 @@ describe('SpectatorStagingScreen', () => {
     fireEvent.click(getByTestId('staging-start'))
     expect(startTournamentMock).toHaveBeenCalledWith(tourneyTable.tableId)
     expect(startMatchMock).not.toHaveBeenCalled()
+  })
+
+  it('arranque fallido muestra el error en staging (antes: silencio)', async () => {
+    startTournamentMock.mockResolvedValueOnce({ ok: false, error: 'Command failed' })
+    const tourneyTable: TableView = { ...MOCK_COMMANDER_TABLE, isTournament: true }
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: tourneyTable.tableId,
+      stagingIsTournament: true,
+      lobby: { type: 'lobby', tables: [tourneyTable] } as never,
+    })
+    const { getByTestId, findByTestId } = render(<SpectatorStagingScreen mode="player" />)
+
+    fireEvent.click(getByTestId('staging-start'))
+    expect(await findByTestId('staging-error')).not.toBeNull()
   })
 
   it('abre el diálogo de cambiar baraja al pulsar Cambiar baraja', () => {

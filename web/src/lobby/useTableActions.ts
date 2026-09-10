@@ -6,6 +6,8 @@ import * as cmds from '../net/commands'
 import type { TableView } from '../net/types'
 import { t as tStatic, translateError } from '../i18n'
 import { AI_OPPONENT_DECK, type Deck } from './decks'
+import { normalizeSeatType } from './CreateTable/constants'
+import { tournamentJoinNeedsDeck } from './CreateTable/tableKind'
 import { isUserIgnored } from './ignoreList'
 import { tableOwnerName } from './TableFilterBar'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
@@ -114,19 +116,33 @@ export function useTableActions(conn: ConnectionInfo | null) {
     const seat = t.seats.find((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
     if (!seat?.playerType) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
+      setBusyTable(null)
       return
     }
     const aiSeats = t.seats.filter((s) => s.playerType && /COMPUTER|AI/i.test(s.playerType))
     const aiIndex = aiSeats.indexOf(seat)
+    const playerName = aiIndex <= 0 ? 'Computer' : `Computer ${aiIndex + 1}`
+    const playerType = normalizeSeatType(seat.playerType)
+    const isTourney = !!t.isTournament
+    const action = isTourney ? 'joinTournamentTable' : 'joinTable'
+    const needsDeck = !isTourney || tournamentJoinNeedsDeck(t.gameType)
     try {
       const res = await withTimeout(
-        cmds.joinTable({
-          tableId: t.tableId,
-          playerName: aiIndex <= 0 ? 'Computer' : `Computer ${aiIndex + 1}`,
-          playerType: seat.playerType,
-          skill: 1,
-          deck: AI_OPPONENT_DECK,
-        }),
+        isTourney
+          ? cmds.joinTournamentTable({
+              tableId: t.tableId,
+              playerName,
+              playerType,
+              skill: 1,
+              ...(needsDeck ? { deck: AI_OPPONENT_DECK, deckType: t.deckType, gameType: t.gameType } : {}),
+            })
+          : cmds.joinTable({
+              tableId: t.tableId,
+              playerName,
+              playerType,
+              skill: 1,
+              deck: AI_OPPONENT_DECK,
+            }),
         15000,
         'joinTable IA',
       )
@@ -135,12 +151,12 @@ export function useTableActions(conn: ConnectionInfo | null) {
       } else {
         const code = (res as { errorCode?: string }).errorCode
         const raw = res.error || code || tStatic('errors','join_table_failed')
-        setState({ error: translateError(raw, 'joinTable', code) })
+        setState({ error: translateError(raw, action, code) })
         return
       }
     } catch (e) {
       const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
+      setState({ error: translateError(err.message, action, (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }
@@ -150,18 +166,24 @@ export function useTableActions(conn: ConnectionInfo | null) {
     setBusyTable(t.tableId)
     setState({ error: null })
     setNotice(null)
+    const isTourney = !!t.isTournament
+    const action = isTourney ? 'startTournament' : 'startMatch'
     try {
-      const res = await withTimeout(cmds.startMatch(t.tableId), 20000, 'startMatch')
+      const res = await withTimeout(
+        isTourney ? cmds.startTournament(t.tableId) : cmds.startMatch(t.tableId),
+        20000,
+        action,
+      )
       if (res.ok) {
         setNotice(tStatic('lobby','start_match_btn'))
       } else {
         const code = (res as { errorCode?: string }).errorCode
         const raw = res.error || code || tStatic('errors','start_game_failed')
-        setState({ error: translateError(raw, 'startMatch', code) })
+        setState({ error: translateError(raw, action, code) })
       }
     } catch (e) {
       const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'startMatch', (err as { errorCode?: string }).errorCode) })
+      setState({ error: translateError(err.message, action, (err as { errorCode?: string }).errorCode) })
     } finally {
       setBusyTable(null)
     }

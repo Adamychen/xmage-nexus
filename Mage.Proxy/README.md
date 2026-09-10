@@ -65,7 +65,7 @@ sesión solo llegan a sus propias conexiones.
 
 | Action | Args | Description |
 |---|---|---|
-| `connect` | `{host, port, username, password}` | Connect to XMage server |
+| `connect` | `{host, port, username, password}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds |
 | `disconnect` | `{}` | Disconnect from server |
 | `ping` | `{}` | Keepalive |
 | `getServerInfo` | `{}` | Server version, protocol version |
@@ -89,6 +89,8 @@ sesión solo llegan a sus propias conexiones.
 | `removeTable` | `{tableId}` | Remove a table |
 | `startMatch` | `{tableId}` | Start the match |
 | `startTournament` | `{tableId}` | Start the tournament (tournament tables) |
+| `joinTournament` | `{tournamentId}` | Panel-join a started tournament (humans must join or the draft never fires) |
+| `joinDraft` | `{draftId}` | Panel-join a started draft |
 | `swapSeats` | `{tableId, seatNum1, seatNum2}` | Swap two seats (owner, READY_TO_START only) |
 | `watchTable` | `{tableId}` | Watch a table |
 | `watchGame` | `{gameId}` | Watch a specific game |

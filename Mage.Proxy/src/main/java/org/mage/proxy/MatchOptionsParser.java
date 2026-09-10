@@ -133,7 +133,7 @@ final class MatchOptionsParser {
         tOpts.setTournamentType(tournamentType);
         if (args.has("numberRounds")) tOpts.setNumberRounds(JsonArgs.getInt(args, "numberRounds", 0));
         tOpts.setPassword(JsonArgs.str(args, "password", ""));
-        if (args.has("quitRatio")) tOpts.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
+        tOpts.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
         if (args.has("minimumRating")) tOpts.setMinimumRating(JsonArgs.getInt(args, "minimumRating", 0));
         if (args.has("watchingAllowed")) tOpts.setWatchingAllowed(JsonArgs.getBool(args, "watchingAllowed", true));
         if (args.has("playerTypes")) {

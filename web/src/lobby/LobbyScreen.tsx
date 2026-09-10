@@ -173,9 +173,9 @@ export default function LobbyScreen() {
                     <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                   </div>
                   <div className="tables-header-actions">
-                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? 'Mage Web bolt'}`}>
+                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? '—'}`}>
                       <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
-                      <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? 'Mage Web bolt'}</span>
+                      <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
                     </div>
                     <button
                       type="button"
