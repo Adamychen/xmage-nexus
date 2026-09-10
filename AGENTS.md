@@ -211,6 +211,15 @@ test window).
   return socket: `SESSION CALLBACK EXCEPTION - Unable to create socket`
   in `server.out.log`). Retry once with a warm server; if it fails
   repeatedly, it's a real bug, not a flake.
+- **Known failure (pre-existing e2e, since the 2026-09-05 → 09-10 window)**:
+  several fake-e2e specs (`skips`, `spells`, `targeting`, …) fail because the
+  user lands in the spectator staging (`Sala de Espera de Espectador`, seats
+  2/2) with no `staging-start` and no lobby start button. NOT caused by the
+  fork split (verified via revert bisect 2026-09-10) nor by the modal work.
+  Repro: `npx playwright test e2e/skips.spec.ts`. Also beware: the desktop
+  launcher (`today.xmage.nexus` JRE) can squat ports 17171/8787 while dev
+  processes fail to bind with a stale `.run/*.pid` — kill those processes
+  before self-tests.
 - **Do not touch** generated files: `dist/`, `.run/`, `local-server/`,
   `node_modules/`, `target/`.
 - No comments in code unless requested.
