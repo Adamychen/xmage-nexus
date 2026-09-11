@@ -101,14 +101,14 @@ public final class DeckValidation {
     }
 
     /**
-     * Semántica exacta del servidor oficial (Deck.load upstream):
-     * CardRepository.findCard(set, number) + createCard(); el nombre de la
-     * entrada no se usa para resolver.
+     * Semántica del servidor oficial (Deck.load upstream): CardRepository
+     * (set, número) y, si la entrada no trae impresión, resolución por nombre
+     * (imports/pegados sin set:número).
      */
     private static CardStatus checkCard(DeckCardInfo info) {
         CardInfo resolved = null;
         try {
-            resolved = CardRepository.instance.findCard(info.getSetCode(), info.getCardNumber());
+            resolved = resolveForCommander(info);
         } catch (Throwable ex) {
             logger.log(Level.WARNING, "card lookup failed for " + info.getCardName() + ": " + ex.getMessage());
             return new CardStatus(false, false, null); // degradar con gracia: dejar pasar
@@ -290,6 +290,22 @@ public final class DeckValidation {
         return arr;
     }
 
+    /**
+     * Resuelve una entrada del mazo como el servidor (Deck.resolveCardInfo):
+     * por (set, número) y, si la entrada no trae impresión, por nombre.
+     */
+    private static CardInfo resolveForCommander(DeckCardInfo info) {
+        if (info == null) return null;
+        String set = info.getSetCode() == null ? "" : info.getSetCode().trim();
+        String num = info.getCardNumber() == null ? "" : info.getCardNumber().trim();
+        String name = info.getCardName() == null ? "" : info.getCardName().trim();
+        if (set.isEmpty() && num.isEmpty() && !name.isEmpty()) {
+            CardInfo byName = CardRepository.instance.findPreferredCoreExpansionCard(name, "");
+            return byName != null ? byName : CardRepository.instance.findCard(name, true);
+        }
+        return CardRepository.instance.findCard(set, num);
+    }
+
     public static boolean isCommanderFormat(String deckType, String gameType) {
         String d = deckType == null ? "" : deckType.toLowerCase(java.util.Locale.ROOT);
         String g = gameType == null ? "" : gameType.toLowerCase(java.util.Locale.ROOT);
@@ -311,7 +327,7 @@ public final class DeckValidation {
             DeckCardInfo info = main.get(i);
             if (info == null) continue;
             try {
-                CardInfo ci = CardRepository.instance.findCard(info.getSetCode(), info.getCardNumber());
+                CardInfo ci = resolveForCommander(info);
                 if (ci == null) continue;
                 mage.cards.Card card = ci.createCard();
                 if (card == null) continue;

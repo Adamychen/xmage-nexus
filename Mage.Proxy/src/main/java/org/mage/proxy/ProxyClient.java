@@ -117,7 +117,8 @@ public class ProxyClient implements MageClient, CommandContext {
     }
 
     // must be less than the server's connection timeout (UserManagerImpl.USER_CONNECTION_TIMEOUTS_CHECK_SECS)
-    private static final int PING_SERVER_SECS = 20;
+    // shared with SimPlayer: its own session also needs periodic pings
+    static final int PING_SERVER_SECS = 20;
 
     private void pingServer() {
         try {

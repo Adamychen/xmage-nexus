@@ -112,6 +112,17 @@ class DeckValidationTest {
     }
 
     @Test
+    void nameOnlyEntryResolvesByNameLikeTheServer() {
+        // Imports/pegados sin set:número: Deck.resolveCardInfo cae al nombre, así
+        // que la validación no debe reportarlas como no encontradas.
+        JsonObject report = DeckValidation.validate(deck(card("Sol Ring", "", "", 1), card("Counterspell", "", "", 4)));
+
+        assertTrue(report.get("ready").getAsBoolean());
+        assertEquals(0, report.getAsJsonArray("missing").size());
+        assertEquals(0, report.getAsJsonArray("mismatches").size());
+    }
+
+    @Test
     void wrongNameOnExistingSetNumberIsMismatchNotRejection() {
         // el servidor oficial ignora el nombre: (C20, 77) es Banisher Priest, así
         // que "Rhystic Tutor - C20 - 77" se acepta PERO carga otra carta; además

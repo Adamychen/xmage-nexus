@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +65,10 @@ public class SimPlayer implements MageClient {
     private final MageVersion version;
     private final SessionImpl session;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    /** Pings the server to keep the bot session alive (same reason as ProxyClient:
+     *  the original XMage client pings from its UI; without it UserManagerImpl
+     *  expires the connection after ~4 min and the bot "quits" mid-game). */
+    private final ScheduledExecutorService pingTimer = Executors.newSingleThreadScheduledExecutor();
     private final CompletableFuture<Boolean> ready = new CompletableFuture<>();
 
     private volatile boolean running = true;
@@ -120,6 +125,7 @@ public class SimPlayer implements MageClient {
 
     public void stop() {
         running = false;
+        pingTimer.shutdownNow();
         executor.shutdownNow();
         try {
             session.connectStop(false, false);
@@ -179,6 +185,7 @@ public class SimPlayer implements MageClient {
             ready.complete(false);
             return;
         }
+        startPingTimer();
         if (tableId == null) {
             ready.complete(true);
             return;
@@ -202,6 +209,21 @@ public class SimPlayer implements MageClient {
         logger.info("sim " + username + " connectStart=" + ok + " host=" + host + ":" + port
                 + " lastError='" + session.getLastError() + "'");
         return ok;
+    }
+
+    private void startPingTimer() {
+        pingTimer.scheduleWithFixedDelay(this::pingServer,
+                ProxyClient.PING_SERVER_SECS, ProxyClient.PING_SERVER_SECS, TimeUnit.SECONDS);
+    }
+
+    private void pingServer() {
+        try {
+            if (running) {
+                session.ping();
+            }
+        } catch (Throwable ex) {
+            logger.log(Level.FINE, "sim " + username + " ping failed", ex);
+        }
     }
 
     // ============================ bot logic ============================

@@ -212,6 +212,19 @@ the source of flakes).
 4. **Port conflict resolved (2026-08-20)**: fake mode now uses port **8789** (dedicated; the earlier 8788 collided with the proxy's HTTP test page),
    real proxy stays on **8787**. No more stop/start race conditions — both modes
    can run simultaneously.
+5. **SIM sessions used to die after ~4 minutes (RESOLVED 2026-09-11)**: `ProxyClient`
+   keeps its session alive with a periodic `session.ping()` (`PING_SERVER_SECS`),
+   but `SimPlayer` had none, so `UserManagerImpl` expired the bot's connection
+   (`sim-... disconnected due connection problems`) and the game declared it
+   lost/quit — any human-vs-SIM game longer than the lease broke. **Fix**:
+   `SimPlayer` schedules the same ping after `connect()` and cancels it in
+   `stop()`. Lesson: every `SessionImpl` in the proxy (web client, SIM, future
+   bots) needs its own keep-alive; the server never pings first.
+6. **Proxy jar had no `Build-Time` manifest entry (RESOLVED 2026-09-11)**:
+   `MageVersion`/`JarVersion` parsed a null attribute and logged an NPE
+   (`Can't read build time in jar manifest`) for `ProxyClient` and every
+   `SimPlayer`. **Fix**: the shaded jar's `ManifestResourceTransformer` now
+   writes `${maven.build.timestamp}` (the ISO format `JarVersion` expects).
 
 ## E2E with simulated opponents (Sim) and WS helper
 
