@@ -182,6 +182,12 @@ Banquillo
     expect(back.sideboard[0].cardName).toBe('Pyroblast')
   })
 
+  it('no inventa impresión M10/1 cuando la línea no trae set:número', () => {
+    const d = parseAnyDeck('1 Sol Ring\nSB: 1 Pyroblast')!
+    expect(d.cards[0]).toEqual({ cardName: 'Sol Ring', setCode: '', cardNumber: '', amount: 1 })
+    expect(d.sideboard[0]).toEqual({ cardName: 'Pyroblast', setCode: '', cardNumber: '', amount: 1 })
+  })
+
   it('parses draft logs via parseAnyDeck (U7-1)', () => {
     const text = `------ NEO ------
 --> Light-Paws, Emperor's Voice

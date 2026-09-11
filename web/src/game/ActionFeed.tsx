@@ -111,7 +111,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             <Icon name="scrollText" size={12} /> {t('game', 'text_feed')}
           </button>
         </div>
-        <span className="action-count-tag">{t('game', 'feed_events', { count: feedItems.length })}</span>
+        <span className="action-count-tag">{feedItems.length === 1 ? t('game', 'feed_events_one') : t('game', 'feed_events', { count: feedItems.length })}</span>
       </div>
 
       <div

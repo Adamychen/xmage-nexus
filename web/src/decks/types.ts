@@ -9,6 +9,7 @@ export interface DeckV2 extends Deck {
   colors: ('W' | 'U' | 'B' | 'R' | 'G')[]
   favorite?: boolean
   coverCard?: DeckCard
+  commanderCard?: DeckCard
   createdAt: number
   updatedAt: number
   source: 'custom' | 'imported' | 'precon'

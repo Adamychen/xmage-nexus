@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { localizeServerMessage, localizeOptionLabel } from './serverMessageTranslation'
+import { localizeServerMessage, localizeOptionLabel, localizeGameEndMessage } from './serverMessageTranslation'
 import { es } from '../i18n/locales/es'
 
 function t(ns: string, key: string, params?: Record<string, string | number>): string {
@@ -16,6 +16,7 @@ describe('serverMessageTranslation', () => {
   it('localizes pay mana costs', () => {
     expect(localizeServerMessage('Pay {1}{R}', t as any)).toBe('Pagar maná {1}{R}')
     expect(localizeServerMessage('Pay {0}', t as any)).toBe('Pagar maná {0}')
+    expect(localizeServerMessage('Pay {R} Lightning Bolt.', t as any)).toBe('Pagar maná {R} · Lightning Bolt')
   })
 
   it('localizes pay life prompt', () => {
@@ -26,6 +27,7 @@ describe('serverMessageTranslation', () => {
   it('localizes select target messages', () => {
     expect(localizeServerMessage('Select a target', t as any)).toBe('Elige objetivo')
     expect(localizeServerMessage('Choose a target', t as any)).toBe('Elige objetivo')
+    expect(localizeServerMessage('Select any target', t as any)).toBe('Elige objetivo')
     expect(localizeServerMessage('Select target for Lightning Bolt', t as any)).toBe('Elige objetivo: Lightning Bolt')
     expect(localizeServerMessage('Select target creature', t as any)).toBe('Elige objetivo (creature)')
   })
@@ -37,8 +39,18 @@ describe('serverMessageTranslation', () => {
 
   it('localizes mulligan prompts', () => {
     expect(localizeServerMessage('Take a mulligan?', t as any)).toBe('Hacer Mulligan?')
+    expect(localizeServerMessage('Mulligan down to 6 cards?', t as any)).toBe('Hacer Mulligan (6)')
     expect(localizeServerMessage('Select a card to put on the bottom of your library', t as any)).toBe('Elige cartas para poner en el fondo de tu biblioteca')
     expect(localizeServerMessage('Select 2 cards to put on the bottom of your library', t as any)).toBe('Elige cartas para poner en el fondo de tu biblioteca (2)')
+  })
+
+  it('localizes game end messages', () => {
+    expect(localizeGameEndMessage('You won the game on turn 1.', t as any)).toBe('Tú gana la partida en el turno 1')
+    expect(localizeGameEndMessage('sim-000001-670 won the game on turn 2.', t as any)).toBe('sim-000001-670 gana la partida en el turno 2')
+    expect(localizeGameEndMessage('sim-000001-670 has won the game on turn 3.', t as any)).toBe('sim-000001-670 gana la partida en el turno 3')
+    expect(localizeGameEndMessage('You lost the game on turn 2.', t as any)).toBe('Tú pierde la partida en el turno 2')
+    expect(localizeGameEndMessage('You won the match!', t as any)).toBe('Tú gana el match')
+    expect(localizeGameEndMessage('sim-000001-670 won the match!', t as any)).toBe('sim-000001-670 gana el match')
   })
 
   it('localizes discard messages', () => {

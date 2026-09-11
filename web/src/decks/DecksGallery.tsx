@@ -160,7 +160,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     onEdit(empty.id)
   }
 
-  const handleCloneFromBrowser = async (d: MetaDeckItem | DeckV2) => {
+  const handleCloneFromBrowser = async (d: MetaDeckItem | DeckV2): Promise<DeckV2> => {
     const v2: DeckV2 = {
       id: makeDeckId(),
       name: d.name,
@@ -176,6 +176,19 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await storage.put(v2)
     await load()
     setSelectedId(v2.id)
+    return v2
+  }
+
+  // Los precons viven solo en memoria (bundled) y los MetaDeckItem no están en
+  // storage: al editar hay que clonarlos primero, o el builder queda en
+  // "Cargando..." porque no existen en storage.
+  const openForEdit = async (d: DeckV2 | MetaDeckItem) => {
+    if ('source' in d && d.source !== 'precon') {
+      onEdit(d.id)
+      return
+    }
+    const cloned = await handleCloneFromBrowser(d)
+    onEdit(cloned.id)
   }
 
   const handleImport = async () => {
@@ -434,7 +447,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
               <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}><Icon name="star" size={12} /> {t('common', 'all')}</button>
             </div>
-            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && onEdit(selected.id)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</button>
+            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && void openForEdit(selected)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</button>
           </footer>
         </>
       ) : (
@@ -468,7 +481,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           onClose={() => setInspectingDeck(null)}
           onEdit={(deckToEdit) => {
             setInspectingDeck(null)
-            onEdit(deckToEdit.id)
+            void openForEdit(deckToEdit)
           }}
           onCopy={handleClone}
         />

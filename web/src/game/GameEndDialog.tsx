@@ -3,6 +3,7 @@ import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
 import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
+import { localizeGameEndMessage } from './serverMessageTranslation'
 import './GameEndDialog.css'
 
 export default function GameEndDialog() {
@@ -27,10 +28,17 @@ export default function GameEndDialog() {
   }
 
   let winnerName: string | null = null
-  const wonMatch = (end.gameInfo || end.matchInfo || '').match(/(.+?)\s+(?:has won the game|has won the match|won the match|won the game|ha ganado)/i)
+  const rawEndInfo = end.gameInfo || end.matchInfo || ''
+  const wonMatch = rawEndInfo.match(/(.+?)\s+(?:has won the game|has won the match|won the match|won the game|ha ganado)/i)
   if (wonMatch) {
     winnerName = wonMatch[1].trim()
+    if (/^you$/i.test(winnerName)) {
+      winnerName = t('game', 'you')
+    }
   }
+
+  const gameInfoText = localizeGameEndMessage(end.gameInfo, t)
+  const matchInfoText = localizeGameEndMessage(end.matchInfo, t)
 
   return (
     <DialogShell
@@ -49,8 +57,8 @@ export default function GameEndDialog() {
           </div>
         )}
 
-        {end.gameInfo && <p className="end-info">{end.gameInfo}</p>}
-        {end.matchInfo && end.matchInfo !== end.gameInfo && <p className="end-match">{end.matchInfo}</p>}
+        {end.gameInfo && <p className="end-info">{gameInfoText}</p>}
+        {end.matchInfo && end.matchInfo !== end.gameInfo && <p className="end-match">{matchInfoText}</p>}
 
         {!isSpectator && (end.wins != null || end.winsNeeded != null) && (
           <p className="end-score">

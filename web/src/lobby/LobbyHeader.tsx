@@ -43,7 +43,7 @@ export default function LobbyHeader({
           <h1 className="lobby-main-heading">XMage Nexus</h1>
           <span className="conn-info">
             <span className="conn-status-dot" />
-            {conn?.serverHost}:{conn?.port} · {onlineCount} {t('lobby', 'online_count')}
+            {conn?.serverHost}:{conn?.port} · {onlineCount} {t('lobby', onlineCount === 1 ? 'online_count_one' : 'online_count')}
           </span>
         </div>
       </div>

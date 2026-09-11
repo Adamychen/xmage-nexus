@@ -43,6 +43,8 @@ export function ArenaCardStrip({
   onDec,
   onRemove,
   onSetCover,
+  onSetCommander,
+  commanderEligible,
   onHover,
   onLeave,
   onChangePrinting,
@@ -59,6 +61,8 @@ export function ArenaCardStrip({
   onDec?: (key: string) => void
   onRemove?: (key: string) => void
   onSetCover?: (c: DeckCard) => void
+  onSetCommander?: (c: DeckCard) => void
+  commanderEligible?: boolean
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
   onChangePrinting?: (c: DeckCard) => void
@@ -213,6 +217,23 @@ export function ArenaCardStrip({
             title={isCover ? t('decks', 'strip_cover_current') : t('decks', 'strip_cover_use')}
           >
             ★
+          </button>
+        )}
+        {onSetCommander && (
+          <button
+            type="button"
+            className={`strip-btn crown ${isCommander ? 'active' : ''}`}
+            disabled={!isCommander && commanderEligible === false}
+            onClick={() => onSetCommander(card)}
+            title={
+              isCommander
+                ? t('decks', 'commander_unset')
+                : commanderEligible === false
+                  ? t('decks', 'commander_not_eligible')
+                  : t('decks', 'commander_set')
+            }
+          >
+            <Icon name="crown" size={13} />
           </button>
         )}
         <button

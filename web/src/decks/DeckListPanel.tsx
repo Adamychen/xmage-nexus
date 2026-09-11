@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
-import { commanderCardsFor } from './deckUtils'
+import { commanderCardsFor, isCommanderEligible } from './deckUtils'
+import { aggregateCards } from './deckCardOps'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -29,6 +30,7 @@ export default function DeckListPanel({
   cards,
   sideboard,
   coverKey,
+  commanderCard,
   isCommanderFormat,
   metaMap,
   cardIssues,
@@ -37,6 +39,7 @@ export default function DeckListPanel({
   onDec,
   onRemove,
   onSetCover,
+  onSetCommander,
   onHover,
   onLeave,
   onChangePrinting,
@@ -47,6 +50,7 @@ export default function DeckListPanel({
   cards: DeckCard[]
   sideboard: DeckCard[]
   coverKey: string | null
+  commanderCard?: DeckCard | null
   isCommanderFormat?: boolean
   metaMap: Map<string, CardStripMeta>
   cardIssues?: Map<string, ValidationIssue>
@@ -55,6 +59,7 @@ export default function DeckListPanel({
   onDec: (key: string) => void
   onRemove: (key: string) => void
   onSetCover: (c: DeckCard) => void
+  onSetCommander?: (c: DeckCard) => void
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
   onChangePrinting?: (c: DeckCard) => void
@@ -65,6 +70,9 @@ export default function DeckListPanel({
   const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
+
+  const displayCards = useMemo(() => aggregateCards(cards), [cards])
+  const displaySideboard = useMemo(() => aggregateCards(sideboard), [sideboard])
 
   // Chrome cancels the drop when dropEffect is not permitted by the drag source's
   // effectAllowed (search cards drag with 'copy', deck strips with 'move').
@@ -130,15 +138,17 @@ export default function DeckListPanel({
     }
   }
 
-  // Commander cards (cover + second Partner, U7-7) or empty outside commander formats
-  const commanderCards = isCommanderFormat && cards.length > 0
-    ? commanderCardsFor(cards, cards.find((c) => getCardKey(c) === coverKey) ?? null, metaMap)
+  // Commander cards (explicit designation + second Partner, U7-7). Sin
+  // comandante designado no se muestra nada: nada de portada/primera carta.
+  const commanderCards = isCommanderFormat && displayCards.length > 0
+    ? commanderCardsFor(displayCards, commanderCard ?? null, metaMap)
     : []
   const commanderKeys = new Set(commanderCards.map(getCardKey))
+  const showCommanderEmpty = !!isCommanderFormat && commanderCards.length === 0
 
   const mainCardsWithoutCommander = commanderCards.length > 0
-    ? cards.filter((c) => !commanderKeys.has(getCardKey(c)))
-    : cards
+    ? displayCards.filter((c) => !commanderKeys.has(getCardKey(c)))
+    : displayCards
 
   // Group main cards by category
   const categoriesOrder = ['creatures', 'planeswalkers', 'instants', 'sorceries', 'artifacts', 'enchantments', 'lands', 'other']
@@ -176,8 +186,8 @@ export default function DeckListPanel({
   }
 
   // Total counts
-  const mainTotal = cards.reduce((s, c) => s + c.amount, 0)
-  const sideTotal = sideboard.reduce((s, c) => s + c.amount, 0)
+  const mainTotal = displayCards.reduce((s, c) => s + c.amount, 0)
+  const sideTotal = displaySideboard.reduce((s, c) => s + c.amount, 0)
 
   const sideboardSection = (
     <div
@@ -191,7 +201,7 @@ export default function DeckListPanel({
         <span className="deck-category-count">{sideTotal}/15</span>
       </div>
       {sideboard.length === 0 && <div className="deck-sideboard-empty">{t('decks', 'builder_side_empty')}</div>}
-      {sideboard.map((card) => {
+      {displaySideboard.map((card) => {
         const k = `sb:${getCardKey(card)}`
         const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
         const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
@@ -233,6 +243,14 @@ export default function DeckListPanel({
           )}
 
           {/* Commander Banner (1 card, or 2 with Partner — U7-7) */}
+          {showCommanderEmpty && (
+            <div className="deck-category-section">
+              <div className="deck-category-header">
+                <span>{t('decks', 'commander')}</span>
+              </div>
+              <div className="deck-sideboard-empty">{t('decks', 'commander_hint')}</div>
+            </div>
+          )}
           {commanderCards.length > 0 && (
             <div className="deck-category-section">
               <div className="deck-category-header">
@@ -250,6 +268,7 @@ export default function DeckListPanel({
                 onDec={onDec}
                 onRemove={onRemove}
                 onSetCover={onSetCover}
+                onSetCommander={onSetCommander}
                 onHover={onHover}
                 onLeave={onLeave}
                 onChangePrinting={onChangePrinting}
@@ -285,6 +304,8 @@ export default function DeckListPanel({
                       onDec={onDec}
                       onRemove={onRemove}
                       onSetCover={onSetCover}
+                      onSetCommander={onSetCommander}
+                      commanderEligible={meta ? isCommanderEligible(meta) : undefined}
                       onHover={onHover}
                       onLeave={onLeave}
                       onChangePrinting={onChangePrinting}
@@ -314,7 +335,7 @@ export default function DeckListPanel({
           {/* Horizontal Mode (Columns by CMC) */}
           <div className="arena-deck-cols-layout deck-cols">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((cmc) => {
-              const colCards = cards.filter((c) => {
+              const colCards = displayCards.filter((c) => {
                 const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
                 const cardCmc = meta?.cmc ?? 0
                 return cmc === 7 ? cardCmc >= 7 : cardCmc === cmc
@@ -344,6 +365,8 @@ export default function DeckListPanel({
                           onDec={onDec}
                           onRemove={onRemove}
                           onSetCover={onSetCover}
+                          onSetCommander={onSetCommander}
+                          commanderEligible={meta ? isCommanderEligible(meta) : undefined}
                           onHover={onHover}
                           onLeave={onLeave}
                           onChangePrinting={onChangePrinting}

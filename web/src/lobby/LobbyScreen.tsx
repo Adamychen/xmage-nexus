@@ -317,14 +317,14 @@ export default function LobbyScreen() {
             onClick={() => setShowDebug(!showDebug)}
           >
             <span><Icon name="settings" size={13} /> {t('lobby','debug_title')} ({events.length})</span>
-            <span>{showDebug ? `▼ ${t('common','close')}` : `▲ ${t('common','loading')}`}</span>
+            <span>{showDebug ? `▼ ${t('common','close')}` : '▲'}</span>
           </button>
 
           {showDebug && (
             <div className="debug-drawer-panel panel">
               <div className="debug-drawer-header">
                 <h3>{t('lobby','debug_ws_log')}</h3>
-                <span className="debug-count">{events.length} {t('common','loading')}</span>
+                <span className="debug-count">{events.length === 1 ? t('game','feed_events_one') : t('game','feed_events', { count: events.length })}</span>
               </div>
               <ul className="events-list">
                 {events.slice(-50).map((e, i) => (

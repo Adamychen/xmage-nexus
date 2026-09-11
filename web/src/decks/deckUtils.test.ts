@@ -7,7 +7,9 @@ import {
   basicLandKind,
   isManaSourceCard,
   isPartnerCard,
+  isCommanderEligible,
   commanderCardsFor,
+  withCommanderFirst,
   landPrinting,
   loadBasicLandSet,
   DEFAULT_BASIC_LAND_SET,
@@ -120,14 +122,16 @@ describe('deckUtils basic calculations', () => {
     expect(isPartnerCard(null)).toBe(false)
   })
 
-  it('returns one commander normally, two with Partner (U7-7)', () => {
+  it('returns the designated commander, two with Partner (U7-7)', () => {
     const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }
     const solRing = { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '264', amount: 1 }
     const sidar = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
     const tana = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 }
     const noMeta = new Map()
     expect(commanderCardsFor([atraxa, solRing], atraxa, noMeta)).toEqual([atraxa])
-    expect(commanderCardsFor([solRing, atraxa], null, noMeta)).toEqual([solRing])
+    // Sin comandante designado no hay comandante: nada de portada/primera carta
+    expect(commanderCardsFor([solRing, atraxa], null, noMeta)).toEqual([])
+    expect(commanderCardsFor([solRing, atraxa], { cardName: 'Not In Deck', setCode: 'X', cardNumber: '1', amount: 1 }, noMeta)).toEqual([])
     expect(commanderCardsFor([], null, noMeta)).toEqual([])
     const partnerMeta = new Map([
       ['PC2/1', { keywords: ['Partner'] }],
@@ -136,6 +140,27 @@ describe('deckUtils basic calculations', () => {
       ['tana, the bloodsower', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
     ])
     expect(commanderCardsFor([sidar, tana, solRing], sidar, partnerMeta)).toEqual([sidar, tana])
+  })
+
+  it('detects commander eligibility from the oracle (parity with proxy)', () => {
+    expect(isCommanderEligible({ typeLine: 'Legendary Creature — Phyrexian Angel' })).toBe(true)
+    expect(isCommanderEligible({ typeLine: 'Legendary Artifact — Vehicle' })).toBe(true)
+    expect(isCommanderEligible({ oracleText: 'The Royal Scions can be your commander.' })).toBe(true)
+    expect(isCommanderEligible({ typeLine: 'Legendary Enchantment — Background' })).toBe(true)
+    expect(isCommanderEligible({ oracleText: 'This card can be your commander.' })).toBe(true)
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Jace', oracleText: 'Flying' })).toBe(false)
+    expect(isCommanderEligible({ typeLine: 'Creature — Human' })).toBe(false)
+    expect(isCommanderEligible({ typeLine: 'Basic Land — Mountain' })).toBe(false)
+    expect(isCommanderEligible(undefined)).toBe(false)
+  })
+
+  it('moves the designated commander to the front for the server heuristic', () => {
+    const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }
+    const solRing = { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '264', amount: 1 }
+    const forest = { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 98 }
+    expect(withCommanderFirst([forest, solRing, atraxa], atraxa)).toEqual([atraxa, forest, solRing])
+    expect(withCommanderFirst([forest, solRing], null)).toEqual([forest, solRing])
+    expect(withCommanderFirst([forest, solRing], atraxa)).toEqual([forest, solRing])
   })
 })
 

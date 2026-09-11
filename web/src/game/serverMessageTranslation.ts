@@ -11,9 +11,11 @@ export function localizeServerMessage(
   if (!raw) return ''
   const trimmed = raw.trim()
 
-  const payManaMatch = trimmed.match(/^Pay\s+(\{[^{}]+\}(?:\s*\{[^{}]+\})*)$/i)
+  const payManaMatch = trimmed.match(/^Pay\s+(\{[^{}]+\}(?:\s*\{[^{}]+\})*)(?:\s+(.+?))?[.!]?$/i)
   if (payManaMatch) {
-    return `${t('game', 'pay_mana')} ${payManaMatch[1]}`
+    const rest = payManaMatch[2]?.trim()
+    const base = `${t('game', 'pay_mana')} ${payManaMatch[1]}`
+    return rest ? `${base} · ${rest}` : base
   }
 
   const payLifeMatch = trimmed.match(/^Pay\s+(\d+)\s+life\??$/i)
@@ -21,7 +23,7 @@ export function localizeServerMessage(
     return t('game', 'pay_life_prompt', { count: payLifeMatch[1] })
   }
 
-  if (/^(?:Select|Choose)\s+(?:a\s+)?target$/i.test(trimmed)) {
+  if (/^(?:Select|Choose)\s+(?:a\s+|any\s+)?target$/i.test(trimmed)) {
     return t('game', 'choose_target')
   }
 
@@ -51,6 +53,11 @@ export function localizeServerMessage(
 
   if (/^Take\s+a\s+mulligan\??$/i.test(trimmed)) {
     return `${t('dialogs', 'mulligan_take')}?`
+  }
+
+  const mulliganDownMatch = trimmed.match(/^Mulligan\s+down\s+to\s+(\d+)\s+cards?\??$/i)
+  if (mulliganDownMatch) {
+    return `${t('dialogs', 'mulligan_take')} (${mulliganDownMatch[1]})`
   }
 
   if (/^Choose\s+a\s+card\s+(?:for\s+them\s+)?to\s+discard$/i.test(trimmed)) {
@@ -127,6 +134,40 @@ export function localizeServerMessage(
   }
 
   return raw
+}
+
+/**
+ * Localiza los mensajes de fin de partida que envía el servidor en inglés
+ * (`You won the game on turn 3.`, `<name> won the match!`). El pronombre "You"
+ * se sustituye por la forma local (`Tú`).
+ */
+export function localizeGameEndMessage(
+  raw: string | null | undefined,
+  t: TranslationFn
+): string {
+  if (!raw) return ''
+  const trimmed = raw.trim()
+  const you = t('game', 'you')
+
+  const gameResult = trimmed.match(/^(.+?)\s+(?:has\s+)?(won|lost)\s+the\s+game(?:,?\s+on\s+turn\s+(\d+))?[.!]?$/i)
+  if (gameResult) {
+    const rawPlayer = gameResult[1].trim()
+    const player = /^you$/i.test(rawPlayer) ? you : rawPlayer
+    const won = gameResult[2].toLowerCase() === 'won'
+    const turn = gameResult[3]
+    if (turn) {
+      return t('game', won ? 'end_won_game_turn' : 'end_lost_game_turn', { player, turn })
+    }
+    return trimmed
+  }
+
+  const matchResult = trimmed.match(/^(.+?)\s+won\s+the\s+match[.!]?$/i)
+  if (matchResult) {
+    const rawPlayer = matchResult[1].trim()
+    return t('game', 'feed_won_match', { player: /^you$/i.test(rawPlayer) ? you : rawPlayer })
+  }
+
+  return trimmed
 }
 
 export function localizeOptionLabel(

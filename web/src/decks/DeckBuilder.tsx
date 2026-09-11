@@ -17,6 +17,8 @@ import { DeckImportModal } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { applySuggestion, fetchDeckIssues } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
+import { withCommanderFirst } from './deckUtils'
+import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
 import type { DeckCard } from '../lobby/decks'
@@ -33,6 +35,7 @@ import './DeckBuilder.css'
 export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClose: () => void }) {
   const { t } = useTranslation()
   const [deck, setDeck] = useState<DeckV2 | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [name, setName] = useState('')
   const [format, setFormat] = useState<DeckV2['format']>('Freeform')
   const [layout, setLayout] = useState<'vertical' | 'horizontal'>('vertical')
@@ -49,7 +52,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showCurve, setShowCurve] = useState(() => {
     try {
       const saved = localStorage.getItem('nexus_deck_show_curve')
-      return saved !== null ? saved === 'true' : (typeof window !== 'undefined' ? window.innerHeight > 850 : false)
+      const roomy = typeof window !== 'undefined' && window.innerHeight > 850
+      return saved !== null ? saved === 'true' && roomy : roomy
     } catch {
       return false
     }
@@ -96,15 +100,37 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }
   }, [])
 
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerHeight < 780) setShowCurve(false)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   // Load deck data on mount
   useEffect(() => {
     void (async () => {
       const d = await storage.get(deckId)
       if (d) {
-        setDeck(d)
-        setName(d.name)
-        setFormat(d.format)
-        updateMetaForDeck([...d.cards, ...d.sideboard])
+        // Migración: mazos de Commander guardados antes de la designación
+        // explícita usaban la portada como comandante. Si la portada sigue en
+        // la lista principal, la conservamos como comandante designado.
+        let loaded = d
+        const config = FORMAT_CONFIGS[d.format] ?? FORMAT_CONFIGS.Freeform
+        if (config.hasCommander && !d.commanderCard && d.coverCard) {
+          const cover = d.coverCard
+          if (d.cards.some((c) => deckCardKey(c) === deckCardKey(cover))) {
+            loaded = { ...d, commanderCard: cover }
+          }
+        }
+        setDeck(loaded)
+        setName(loaded.name)
+        setFormat(loaded.format)
+        updateMetaForDeck([...loaded.cards, ...loaded.sideboard])
+        if (loaded !== d) void storage.put(loaded)
+      } else {
+        setLoadFailed(true)
       }
     })()
   }, [deckId])
@@ -233,10 +259,23 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const mainCount = deck ? deckMainCount(deck) : 0
   const sideCount = deck ? deckSideCount(deck) : 0
-  const isCommanderFormat = format === 'Commander' || format === 'Brawl'
+  const isCommanderFormat = !!(FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform).hasCommander
   const coverKey = deck?.coverCard ? deckCardKey(deck.coverCard) : null
 
-  if (!deck) return <div className="deck-builder loading">{t('common', 'loading')}</div>
+  if (!deck) {
+    return (
+      <div className="deck-builder loading">
+        {loadFailed ? (
+          <>
+            <span>{t('errors', 'deck_parse_failed')}</span>
+            <button type="button" onClick={onClose}>{t('common', 'close')}</button>
+          </>
+        ) : (
+          t('common', 'loading')
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="deck-builder">
@@ -375,6 +414,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             cards={deck.cards}
             sideboard={deck.sideboard}
             coverKey={coverKey}
+            commanderCard={deck.commanderCard}
             isCommanderFormat={isCommanderFormat}
             metaMap={metaMap}
             cardIssues={mergedCardIssues}
@@ -383,6 +423,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             onDec={mutations.handleDec}
             onRemove={mutations.handleRemove}
             onSetCover={mutations.handleSetCover}
+            onSetCommander={mutations.handleSetCommander}
             onHover={handleHoverCard}
             onLeave={handleLeaveCard}
             onChangePrinting={mutations.handleChangePrinting}
@@ -396,7 +437,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             equippedName={equipped?.name}
             onImport={() => setShowImportModal(true)}
             onSample={() => setShowSampleHand(true)}
-            onEquip={() => setMyDeck(deck)}
+            onEquip={() => setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard) })}
             onClose={onClose}
           />
         </section>

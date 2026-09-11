@@ -39,6 +39,28 @@ export function removeFromList(list: DeckCard[], key: string): DeckCard[] {
   return list.filter((c) => deckCardKey(c) !== key)
 }
 
+/**
+ * Fusiona entradas repetidas (misma impresión y nombre) sumando cantidades.
+ * Los mazos pueden traer la misma carta en varias entradas (imports, mazos
+ * deterministas del e2e con orden fijo): para pintar la lista debe verse una
+ * sola fila, y las claves de React deben ser únicas.
+ */
+export function aggregateCards(cards: DeckCard[]): DeckCard[] {
+  const out: DeckCard[] = []
+  const index = new Map<string, number>()
+  for (const c of cards) {
+    const k = deckCardKey(c)
+    const i = index.get(k)
+    if (i === undefined) {
+      index.set(k, out.length)
+      out.push({ ...c })
+    } else {
+      out[i] = { ...out[i], amount: Math.min(99, out[i].amount + c.amount) }
+    }
+  }
+  return out
+}
+
 /** Fusiona cartas importadas en la lista (suma cantidades, tope 99). */
 export function mergeIntoList(base: DeckCard[], incoming: DeckCard[]): DeckCard[] {
   const merged: DeckCard[] = [...base]

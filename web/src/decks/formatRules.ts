@@ -1,6 +1,6 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { commanderCardsFor } from './deckUtils'
+import { commanderCardsFor, isCommanderEligible } from './deckUtils'
 import { t } from '../i18n'
 
 export interface FormatRuleConfig {
@@ -457,17 +457,24 @@ export function validateDeckForFormat(
   // 3. Commander identification and color identity (union over Partners, U7-7)
   let commanderColors: Set<string> | null = null
   if (config.hasCommander) {
-    const commanders = commanderCardsFor(deck.cards, deck.coverCard ?? null, metaMap)
+    const commanders = commanderCardsFor(deck.cards, deck.commanderCard ?? null, metaMap)
     if (commanders.length > 0) {
       commanderColors = new Set()
       for (const commander of commanders) {
         const meta = metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase())
         for (const c of meta?.colors ?? []) commanderColors.add(c.toUpperCase())
+        if (meta?.typeLine && !isCommanderEligible(meta)) {
+          issues.push({
+            type: 'commander',
+            message: `${t('decks', 'commander')}: ${t('decks', 'commander_not_eligible')}`,
+            severity: 'error',
+          })
+        }
       }
     } else {
       issues.push({
         type: 'commander',
-        message: `${t('decks', 'commander')}: ${t('decks', 'deck_no_cards')}`,
+        message: `${t('decks', 'commander')}: ${t('decks', 'commander_hint')}`,
         severity: 'error',
       })
     }

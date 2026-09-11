@@ -193,7 +193,8 @@ export function parseGameEvent(
   ): ParsedGameEvent => ({ ...base, type, text: { kind: 'i18n', key, params }, ...extra })
 
   // 1. Turn announcements: "Turn 1 Player (0 - 20)" or "Turn 2 (Alice)" or "Turn 3 Bob"
-  const turnMatch = text.match(/^Turn\s+(\d+)\s*([^:(]+?)(?:\s*\([^)]*\))?$/i)
+  //    or "Turn 2 for Alice" (server includes the target player with "for")
+  const turnMatch = text.match(/^Turn\s+(\d+)\s*(?:for\s+)?([^:(]+?)(?:\s*\([^)]*\))?$/i)
   if (turnMatch) {
     const turnNum = Number(turnMatch[1])
     const pName = turnMatch[2].trim()
@@ -372,10 +373,13 @@ export function parseGameEvent(
   }
 
   // 11d. First turn choice: "Sim chooses that Alice take the first turn"
+  //      XMage writes "chooses that they take the first turn" when the chooser
+  //      picked themselves: resolve the pronoun to the chooser's name.
   const firstTurnMatch = text.match(/^([^:]+?)\s+chooses?\s+that\s+(.+?)\s+takes?\s+the\s+first\s+turn$/i)
   if (firstTurnMatch) {
     const pName = firstTurnMatch[1].trim()
-    const chosen = firstTurnMatch[2].trim()
+    const chosenRaw = firstTurnMatch[2].trim()
+    const chosen = /^(?:they|them)$/i.test(chosenRaw) ? pName : chosenRaw
     return i18n('system', 'feed_first_turn', { player: pName, chosen }, { playerName: pName, isMe: isMe(pName) })
   }
 

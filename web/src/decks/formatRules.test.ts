@@ -133,6 +133,7 @@ describe('formatRules', () => {
       sideboard: [],
       colors: ['G'],
       coverCard: { cardName: 'Omnath, Locus of Mana', setCode: 'WWK', cardNumber: '109', amount: 1 },
+      commanderCard: { cardName: 'Omnath, Locus of Mana', setCode: 'WWK', cardNumber: '109', amount: 1 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'custom',
@@ -169,6 +170,7 @@ describe('formatRules', () => {
       sideboard: [],
       colors: ['G', 'R'],
       coverCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+      commanderCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'custom',
@@ -182,6 +184,41 @@ describe('formatRules', () => {
     const report = validateDeckForFormat(partnerDeck, metaMap)
     expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Counterspell')).toBe(true)
     expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Forest')).toBe(false)
+  })
+
+  it('requires an explicit eligible commander (no portada/primera carta)', () => {
+    const atraxasFall = { cardName: "Atraxa's Fall", setCode: 'ONE', cardNumber: '190', amount: 1 }
+    const base: DeckV2 = {
+      id: 'test-cmd',
+      name: 'CMD',
+      format: 'Commander',
+      cards: [
+        { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 98 },
+        { cardName: 'Atraxa, Praetors\' Voice', setCode: 'C16', cardNumber: '28', amount: 1 },
+        { cardName: "Atraxa's Fall", setCode: 'ONE', cardNumber: '190', amount: 1 },
+      ],
+      sideboard: [],
+      colors: ['G'],
+      coverCard: { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 1 },
+      commanderCard: { cardName: 'Atraxa, Praetors\' Voice', setCode: 'C16', cardNumber: '28', amount: 1 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('C16/28', { colors: ['W', 'U', 'B', 'G'], typeLine: 'Legendary Creature — Phyrexian Angel', legalities: { commander: 'legal' } })
+    metaMap.set('ONE/190', { colors: ['G'], typeLine: 'Sorcery', legalities: { commander: 'legal' } })
+
+    const ok = validateDeckForFormat(base, metaMap)
+    expect(ok.issues.filter((i) => i.type === 'commander' && i.severity === 'error')).toHaveLength(0)
+
+    // Sin comandante designado: error explícito (antes caía al coverCard o a la primera carta)
+    const missing = validateDeckForFormat({ ...base, commanderCard: undefined }, metaMap)
+    expect(missing.issues.some((i) => i.type === 'commander' && i.message.includes('comandante'))).toBe(true)
+
+    // Un hechizo designado como comandante: error de elegibilidad
+    const notEligible = validateDeckForFormat({ ...base, commanderCard: { ...atraxasFall } }, metaMap)
+    expect(notEligible.issues.some((i) => i.type === 'commander' && i.severity === 'error')).toBe(true)
   })
 
   it('allows any card in Freeform format', () => {
@@ -218,6 +255,7 @@ describe('formatRules', () => {
       sideboard: [],
       colors: ['U'],
       coverCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+      commanderCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'custom',
@@ -250,6 +288,7 @@ describe('formatRules', () => {
         sideboard: [],
         colors: ['U'],
         coverCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
+        commanderCard: { cardName: 'Jace, the Mind Sculptor', setCode: 'WWK', cardNumber: '31', amount: 1 },
         createdAt: Date.now(),
         updatedAt: Date.now(),
         source: 'custom',
@@ -275,6 +314,7 @@ describe('formatRules', () => {
       sideboard: [],
       colors: ['R'],
       coverCard: { cardName: 'Zada, Hedron Grinder', setCode: 'ORI', cardNumber: '301', amount: 1 },
+      commanderCard: { cardName: 'Zada, Hedron Grinder', setCode: 'ORI', cardNumber: '301', amount: 1 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'custom',

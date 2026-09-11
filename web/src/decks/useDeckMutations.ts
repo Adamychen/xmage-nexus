@@ -152,6 +152,13 @@ export function useDeckMutations(deps: Deps) {
     schedulePersist({ ...deck, coverCard: c })
   }
 
+  /** Designa/quita el comandante explícito del mazo (toggle con la corona). */
+  const handleSetCommander = (c: DeckCard) => {
+    if (!deck) return
+    const isSame = deck.commanderCard && deckCardKey(deck.commanderCard) === deckCardKey(c)
+    schedulePersist({ ...deck, commanderCard: isSame ? undefined : c })
+  }
+
   const handleAddBasicLand = (preset: BasicLandPreset) => {
     if (!deck) return
     const existingIdx = deck.cards.findIndex(
@@ -242,7 +249,7 @@ export function useDeckMutations(deps: Deps) {
 
   return {
     handleAddFromSearch, handleSwap, handleDropCardOnDeck,
-    handleInc, handleDec, handleRemove, handleSetCover,
+    handleInc, handleDec, handleRemove, handleSetCover, handleSetCommander,
     handleAddBasicLand, handleRemoveBasicLand, handleApplySuggestedLands,
     handleChangePrinting, handleApplyPrinting, handleApplyImport, handleDropFile,
   }

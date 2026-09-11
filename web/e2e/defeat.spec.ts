@@ -84,7 +84,7 @@ test('derrota: el Sim gana 2-0 y el match termina con "won the match"', { tag: '
     const start2 = await waitFrameAt(page, (f) => f.method === 'START_GAME', 'START_GAME game 2', 30_000, sideboard1.index + 1)
     await waitGameToEnd(page, helper, start2.frame.objectId ?? '')
 
-    await expect(page.locator('.end-dialog')).toContainText(`${SIM_NAME} won the match!`, { timeout: 20_000 })
+    await expect(page.locator('.end-dialog')).toContainText(new RegExp(`${SIM_NAME} (?:won the match!|gana el match)`, 'i'), { timeout: 20_000 })
     const end2 = [...parseFrames(framesOf(page))].reverse().find((f) => f.method === 'END_GAME_INFO')
     expect((end2?.data as { loses?: number } | null)?.loses, 'loses=2 al perder el match').toBe(2)
     expect((end2?.data as { matchInfo?: string } | null)?.matchInfo ?? '', 'matchInfo marca derrota').toMatch(/won the match/i)

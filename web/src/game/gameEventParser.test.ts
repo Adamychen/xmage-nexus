@@ -36,6 +36,12 @@ describe('gameEventParser', () => {
     expect(res?.playerName).toBe('Player1')
     expect(res?.isMe).toBe(true)
     expect(esText('Turn 1 Player1 (0 - 20)', 'Player1')).toBe('Turno 1 · Player1')
+
+    const forVariant = parsed('Turn 2 for sim-00001-307', 'player1')
+    expect(forVariant.type).toBe('turn')
+    expect(forVariant.amount).toBe(2)
+    expect(forVariant.playerName).toBe('sim-00001-307')
+    expect(esText('Turn 2 for sim-00001-307', 'player1')).toBe('Turno 2 · sim-00001-307')
   })
 
   it('parses real XMage spell casts with [abc] IDs, targets and zone suffix', () => {
@@ -198,6 +204,15 @@ describe('gameEventParser', () => {
     expect(res.playerName).toBe('sim-00001-307')
     expect(esText('sim-00001-307 chooses that player1 take the first turn', 'player1')).toBe(
       'sim-00001-307 elige que player1 juegue primero'
+    )
+  })
+
+  it('resolves the "they" pronoun in the first-turn choice to the chooser', () => {
+    const res = parsed('qa-ui-1345 chooses that they take the first turn', 'qa-ui-1345')
+    expect(res.type).toBe('system')
+    expect(res.playerName).toBe('qa-ui-1345')
+    expect(esText('qa-ui-1345 chooses that they take the first turn', 'qa-ui-1345')).toBe(
+      'qa-ui-1345 elige que qa-ui-1345 juegue primero'
     )
   })
   it('parses wins and concessions', () => {

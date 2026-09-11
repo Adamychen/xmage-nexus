@@ -183,6 +183,8 @@
   gap: 8px;
   animation: curveSlideDown 150ms ease-out;
   flex-shrink: 0;
+  max-height: 30vh;
+  overflow-y: auto;
 }
 
 @keyframes curveSlideDown {

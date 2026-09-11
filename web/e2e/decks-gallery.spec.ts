@@ -88,6 +88,70 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
+  test('precon: Editar clona el mazo y abre el builder (regresión "Cargando...") @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`precon_${Date.now()}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+
+      // Un precon solo existe en memoria: Editar debe clonarlo en storage y abrir
+      // el builder; si no, DeckBuilder no encuentra el id y queda en "Cargando...".
+      await page.locator('.deck-box', { hasText: /Precon/ }).first().click()
+      await page.getByRole('button', { name: /Editar|Edit/i }).click()
+      await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.builder-done')).toBeVisible()
+      await expect(page.locator('.deck-builder.loading')).toHaveCount(0)
+      await expect(page.locator('.arena-deck-list-container .arena-card-strip').first()).toBeVisible({ timeout: 8000 })
+    })
+  })
+
+  test('commander: designación explícita con la corona, sin caer a la primera carta @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd_${Date.now()}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
+
+      // Formato Commander sin comandante: slot vacío, no la primera carta
+      await page.locator('.arena-deck-header select').selectOption('Commander')
+      await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
+
+      // Importar un mazo con una carta en main: NO debe aparecer como comandante
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill("1 [2XM:190] Atraxa, Praetors' Voice\n1 [C16:264] Sol Ring")
+      await page.locator('.import-submit-btn').click()
+      const atraxa = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Atraxa/ }).first()
+      await expect(atraxa).toBeVisible({ timeout: 3000 })
+      await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
+
+      // La corona designa/quita el comandante explícito. Las acciones solo se
+      // montan con :hover y la meta puede recategorizar la carta (detach), así
+      // que reintentamos hover+click hasta que el botón esté visible.
+      await expect(async () => {
+        await atraxa.hover()
+        await atraxa.locator('.strip-btn.crown').click({ timeout: 2000 })
+      }).toPass({ timeout: 15000 })
+      const commanderSection = page.locator('.deck-category-section', { hasText: /^Comandante/ }).first()
+      await expect(commanderSection.locator('.arena-card-strip', { hasText: /Atraxa/ })).toBeVisible()
+      await expect(page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Atraxa/ })).toHaveCount(1)
+      await expect(async () => {
+        await commanderSection.locator('.arena-card-strip', { hasText: /Atraxa/ }).hover()
+        await commanderSection.locator('.strip-btn.crown').click({ timeout: 2000 })
+      }).toPass({ timeout: 15000 })
+      await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
+    })
+  })
+
   test('import .dck text creates deck in gallery @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)

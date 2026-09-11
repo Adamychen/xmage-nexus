@@ -351,16 +351,16 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
     }
     if (line.startsWith('SB:')) {
       const before = sideboard.length
-      pushBracketOrArena(sideboard, line.slice(3).trim(), 'M10', '1')
+      pushBracketOrArena(sideboard, line.slice(3).trim(), '', '')
       if (sideboard.length === before) {
         const m2 = line.slice(3).trim().match(/^(.+)$/)
-        if (m2) pushCard(sideboard, 1, m2[1], 'M10', '1')
+        if (m2) pushCard(sideboard, 1, m2[1], '', '')
       }
       continue
     }
 
     const target = inCommander ? commanders : isSideboard ? sideboard : cards
-    pushBracketOrArena(target, line, 'M10', '1')
+    pushBracketOrArena(target, line, '', '')
   }
 
   const allCards = [...commanders, ...cards]

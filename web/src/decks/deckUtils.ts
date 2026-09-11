@@ -41,6 +41,7 @@ export function normalizeBasicLandName(name: string): string | null {
 export interface PartnerMeta {
   keywords?: string[]
   oracleText?: string
+  typeLine?: string
 }
 
 export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
@@ -49,23 +50,40 @@ export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
   return /\bpartner(\s+with\s+.+)?\b/i.test(meta.oracleText ?? '')
 }
 
+/**
+ * Elegibilidad para ser comandante según el oráculo (mismo criterio que el
+ * proxy en DeckValidation.normalizeForXMage): "can be your commander", o
+ * legendaria criatura/vehículo/nave, o un trasfondo (Background).
+ * Con meta ausente devuelve false: el llamante decide si puede validar.
+ */
+export function isCommanderEligible(meta: PartnerMeta | undefined | null): boolean {
+  if (!meta) return false
+  const typeLine = (meta.typeLine ?? '').toLowerCase()
+  if (/can be your commander/i.test(meta.oracleText ?? '')) return true
+  if (typeLine.includes('background')) return true
+  if (!typeLine.includes('legendary')) return false
+  return typeLine.includes('creature') || typeLine.includes('vehicle') || typeLine.includes('spacecraft')
+}
+
 function metaKey(c: DeckCard): string {
   return `${c.setCode}/${c.cardNumber}`
 }
 
 /**
- * Comandantes a mostrar (U7-7): la portada (o primera carta) + un segundo
- * Partner si existe. Sin Partner: una sola carta (comportamiento anterior).
+ * Comandantes a mostrar (U7-7): el comandante designado explícitamente (o
+ * ninguno) + un segundo Partner si existe. Ya no se cae a la portada/primera
+ * carta: eso metía "una carta cualquiera" en el slot de comandante.
  */
 export function commanderCardsFor(
   cards: DeckCard[],
-  coverCard: DeckCard | undefined | null,
+  commander: DeckCard | undefined | null,
   metaMap: Map<string, PartnerMeta>,
 ): DeckCard[] {
-  if (cards.length === 0) return []
-  const first = (coverCard && cards.some((c) => metaKey(c) === metaKey(coverCard) && c.cardName === coverCard.cardName)
-    ? coverCard
-    : cards[0])!
+  if (cards.length === 0 || !commander) return []
+  const first = cards.find(
+    (c) => metaKey(c) === metaKey(commander) && c.cardName === commander.cardName,
+  )
+  if (!first) return []
   const out = [first]
   const firstMeta = metaMap.get(metaKey(first)) ?? metaMap.get(first.cardName.toLowerCase())
   if (isPartnerCard(firstMeta)) {
@@ -74,6 +92,22 @@ export function commanderCardsFor(
     if (second) out.push(second)
   }
   return out
+}
+
+/**
+ * Reordena la lista principal para que el comandante designado vaya primero:
+ * el proxy (DeckValidation.normalizeForXMage) elige como comandante a la
+ * primera carta legal en el orden del mazo.
+ */
+export function withCommanderFirst(cards: DeckCard[], commander: DeckCard | undefined | null): DeckCard[] {
+  if (!commander) return cards
+  const k = `${commander.setCode}:${commander.cardNumber}:${commander.cardName}`
+  const idx = cards.findIndex((c) => `${c.setCode}:${c.cardNumber}:${c.cardName}` === k)
+  if (idx <= 0) return cards
+  const next = [...cards]
+  const [cmd] = next.splice(idx, 1)
+  next.unshift(cmd)
+  return next
 }
 
 export function getBasicLandLabel(landName: string, lang = 'en'): string {

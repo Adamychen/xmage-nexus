@@ -11,12 +11,14 @@ export function useDeckMetadata() {
   const updateMetaForDeck = (cards: DeckCard[]) => {
     const m = new Map(metaMap)
     const toFetch: DeckCard[] = []
+    const seen = new Set<string>()
     for (const c of cards) {
       const k = `${c.setCode}/${c.cardNumber}`
       const hasSetAndNum = !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
-      if (hasSetAndNum ? !m.has(k) : !m.has(c.cardName.toLowerCase())) {
-        toFetch.push(c)
-      }
+      const lookup = hasSetAndNum ? k : c.cardName.toLowerCase()
+      if (m.has(lookup) || seen.has(lookup)) continue
+      seen.add(lookup)
+      toFetch.push(c)
     }
     if (toFetch.length === 0) return
 

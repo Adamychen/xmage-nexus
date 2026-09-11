@@ -14,7 +14,7 @@ export function DeckBrowser({
   onCloneDeck,
   onOpenBuilder,
 }: {
-  onCloneDeck: (deck: MetaDeckItem | DeckV2) => Promise<void>
+  onCloneDeck: (deck: MetaDeckItem | DeckV2) => Promise<DeckV2 | void>
   onOpenBuilder: (deckId: string) => void
 }) {
   const { t } = useTranslation()
@@ -64,8 +64,8 @@ export function DeckBrowser({
   }
 
   const handleEdit = async (deck: MetaDeckItem | DeckV2) => {
-    await onCloneDeck(deck)
-    onOpenBuilder(deck.id)
+    const cloned = await onCloneDeck(deck)
+    onOpenBuilder(cloned?.id ?? deck.id)
   }
 
   const handleOnlineImport = async () => {
@@ -76,11 +76,11 @@ export function DeckBrowser({
     try {
       const parsed = await loadDeckFromOnlineSource(importInput, importName)
       if (parsed) {
-        await onCloneDeck(parsed)
+        const cloned = await onCloneDeck(parsed)
         setImportStatus(`✓ ${parsed.name} ${t('common', 'done')}`)
         setImportInput('')
         setImportName('')
-        setTimeout(() => onOpenBuilder(parsed.id), 800)
+        setTimeout(() => onOpenBuilder(cloned?.id ?? parsed.id), 800)
       } else {
         setImportStatus(t('errors', 'deck_parse_failed'))
       }

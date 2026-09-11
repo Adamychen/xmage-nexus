@@ -65,6 +65,7 @@ export interface TranslationSchema {
   lobby: {
     brand_title: string
     online_count: string
+    online_count_one: string
     nav_new: string
     nav_tables: string
     nav_decks: string
@@ -655,6 +656,8 @@ export interface TranslationSchema {
     feed_won_game: string
     feed_won_match: string
     feed_conceded: string
+    end_won_game_turn: string
+    end_lost_game_turn: string
     chat_empty: string
     chat_placeholder: string
     insert_emoji: string
@@ -862,6 +865,7 @@ export interface TranslationSchema {
     score: string
     match_continues: string
     feed_events: string
+    feed_events_one: string
     feed_waiting: string
     action_main_hint: string
     action_sending: string
@@ -1145,6 +1149,10 @@ export interface TranslationSchema {
     lands: string
     sideboard: string
     commander: string
+    commander_set: string
+    commander_unset: string
+    commander_hint: string
+    commander_not_eligible: string
     format_legal: string
     format_illegal: string
     filter_all_formats: string

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
   mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
-  stripMetaFromSearch, stripMetaFromJson,
+  stripMetaFromSearch, stripMetaFromJson, aggregateCards,
 } from './deckCardOps'
 import type { DeckCard } from '../lobby/decks'
 
@@ -118,6 +118,22 @@ describe('replaceBasicLands', () => {
     expect(next.find((c) => c.cardName === 'Lightning Bolt')).toBeTruthy()
     expect(next.find((c) => c.cardName === 'Mountain')).toBeUndefined()
     expect(next.find((c) => c.cardName === 'Island')!.amount).toBe(18)
+  })
+})
+
+describe('aggregateCards', () => {
+  it('fusiona entradas repetidas sumando cantidades y conserva el orden', () => {
+    const mountain = (amount: number): DeckCard => ({ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount })
+    const out = aggregateCards([mountain(4), bolt(), mountain(52)])
+    expect(out).toEqual([{ ...mountain(56) }, bolt()])
+  })
+  it('no toca listas sin duplicados', () => {
+    const list = [bolt(), bolt({ cardName: 'Shock', cardNumber: '149' })]
+    expect(aggregateCards(list)).toEqual(list)
+  })
+  it('respeta el tope de 99 copias', () => {
+    const mountain = (amount: number): DeckCard => ({ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount })
+    expect(aggregateCards([mountain(60), mountain(60)])[0].amount).toBe(99)
   })
 })
 

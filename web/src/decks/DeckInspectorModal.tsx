@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
 import { ArenaCardStrip, type CardStripMeta } from './ArenaCardStrip'
+import { aggregateCards } from './deckCardOps'
 import CurveChart from './CurveChart'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
@@ -29,9 +30,11 @@ export function DeckInspectorModal({
   const { t } = useTranslation()
   const mainTotal = deck.cards.reduce((s, c) => s + c.amount, 0)
   const sideTotal = deck.sideboard.reduce((s, c) => s + c.amount, 0)
+  const displayCards = aggregateCards(deck.cards)
+  const displaySideboard = aggregateCards(deck.sideboard)
 
   useEffect(() => {
-    const all = [...deck.cards, ...deck.sideboard]
+    const all = [...displayCards, ...displaySideboard]
     const cardLang = getEffectiveCardLang()
     for (const c of all) {
       const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
@@ -118,7 +121,7 @@ export function DeckInspectorModal({
             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginBottom: 4 }}>
               {t('game', 'sideboard_main')} ({mainTotal} {t('decks', 'total_cards')})
             </div>
-            {deck.cards.map((c) => {
+            {displayCards.map((c) => {
               const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
               return (
                 <ArenaCardStrip
@@ -134,7 +137,7 @@ export function DeckInspectorModal({
                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginTop: 12, marginBottom: 4 }}>
                   {t('decks', 'sideboard')} (Sideboard: {sideTotal} {t('decks', 'total_cards')})
                 </div>
-                {deck.sideboard.map((c) => {
+                {displaySideboard.map((c) => {
                   const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
                   return (
                     <ArenaCardStrip
