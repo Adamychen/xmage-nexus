@@ -63,9 +63,22 @@ ya existente (varias pestañas/ventanas = una sola sesión) en vez de abrir una
 nueva. Cuentas distintas son sesiones aisladas: los eventos server→cliente de una
 sesión solo llegan a sus propias conexiones.
 
+El `result` de `connect` incluye `data.attached`: `true` si la conexión se ha
+adjuntado a una sesión ya viva (re-login/reconexión dentro del grace de 60 s) y
+`false` si ha creado una sesión nueva (la anterior caducó → las partidas en
+curso ya no existen y hay que re-`joinGame`). El cliente web y el MCP lo usan
+para decidir si resincronizar la partida activa.
+
+**Replay al re-attach:** como el `GameClient` del proxy nunca se desconecta del
+servidor, XMage no reenvía el estado al re-loguear. Para que la resincronización
+funcione, el proxy cachea por partida el último `GAME_INIT`/`GAME_UPDATE` y el
+último prompt pendiente (`GAME_ASK`, `GAME_TARGET`, `GAME_SELECT`,
+`GAME_PLAY_MANA`, …) y, al recibir `joinGame` de una conexión, los reenvía **solo
+a esa conexión**. El caché se limpia al crear una sesión nueva.
+
 | Action | Args | Description |
 |---|---|---|
-| `connect` | `{host, port, username, password}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds |
+| `connect` | `{host, port, username, password}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. Result data: `{attached: boolean}` |
 | `disconnect` | `{}` | Disconnect from server |
 | `ping` | `{}` | Keepalive |
 | `getServerInfo` | `{}` | Server version, protocol version |

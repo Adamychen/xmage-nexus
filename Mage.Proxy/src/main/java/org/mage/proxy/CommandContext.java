@@ -17,5 +17,7 @@ interface CommandContext {
 
     void sendFailure(WebSocket conn, String action, String requestId, long start);
 
+    void replayGameState(WebSocket conn, UUID gameId);
+
     void startSims(JsonObject args, UUID roomId, UUID tableId);
 }

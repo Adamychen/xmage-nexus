@@ -60,6 +60,10 @@ class ExpansionsCommandTest {
         }
 
         @Override
+        public void replayGameState(WebSocket conn, java.util.UUID gameId) {
+        }
+
+        @Override
         public void startSims(JsonObject args, java.util.UUID roomId, java.util.UUID tableId) {
         }
     }

@@ -24,6 +24,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -76,6 +78,10 @@ public class ProxyClient implements MageClient, CommandContext {
      * (they flooded the single-threaded callback queue and starved real dialogs like WATCHGAME).
      */
     private final Set<UUID> sessionGameIds = new java.util.HashSet<>();
+    /** Último GAME_INIT/GAME_UPDATE serializado por partida (replay al re-attach). */
+    private final ConcurrentMap<UUID, String> latestGameEvents = new ConcurrentHashMap<>();
+    /** Último prompt de partida pendiente de respuesta (replay al re-attach). */
+    private final ConcurrentMap<UUID, String> pendingPromptEvents = new ConcurrentHashMap<>();
 
     private final SimManager simManager;
     private String accountKey = null;
@@ -440,7 +446,16 @@ public class ProxyClient implements MageClient, CommandContext {
                         + (callback.getObjectId() != null ? ", obj=" + callback.getObjectId() : "")
                         + ", data=" + (data == null ? "null" : data.getClass().getSimpleName()) + ")");
             }
-            broadcastAuthorized(ev.toString());
+            String eventJson = ev.toString();
+            if (callbackObjectId != null && isGameRelated(callback.getMethod())) {
+                if (callback.getMethod() == ClientCallbackMethod.GAME_INIT || isGameUpdate(callback)) {
+                    latestGameEvents.put(callbackObjectId, eventJson);
+                    pendingPromptEvents.remove(callbackObjectId);
+                } else if (isGamePrompt(callback.getMethod())) {
+                    pendingPromptEvents.put(callbackObjectId, eventJson);
+                }
+            }
+            broadcastAuthorized(eventJson);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error processing callback " + callback.getInfo(), ex);
             JsonObject ev = new JsonObject();
@@ -463,6 +478,37 @@ public class ProxyClient implements MageClient, CommandContext {
             return true;
         }
         return method.name().startsWith("GAME_");
+    }
+
+    private static boolean isGamePrompt(ClientCallbackMethod method) {
+        switch (method) {
+            case GAME_ASK:
+            case GAME_TARGET:
+            case GAME_CHOOSE_ABILITY:
+            case GAME_CHOOSE_PILE:
+            case GAME_CHOOSE_CHOICE:
+            case GAME_SELECT:
+            case GAME_PLAY_MANA:
+            case GAME_PLAY_XMANA:
+            case GAME_GET_AMOUNT:
+            case GAME_GET_MULTI_AMOUNT:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /** Reenvía a una conexión recién adjuntada el último estado y prompt pendiente de esa partida. */
+    @Override
+    public void replayGameState(WebSocket conn, UUID gameId) {
+        String state = latestGameEvents.get(gameId);
+        if (state != null) {
+            gateway.send(conn, state);
+        }
+        String prompt = pendingPromptEvents.get(gameId);
+        if (prompt != null) {
+            gateway.send(conn, prompt);
+        }
     }
 
     // ============================ lobby polling ============================
@@ -640,7 +686,9 @@ public class ProxyClient implements MageClient, CommandContext {
             if (conn != null) {
                 authorized.add(conn);
             }
-            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
+            JsonObject data = new JsonObject();
+            data.addProperty("attached", true);
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, data));
             return;
         }
         if (conn != null) {
@@ -694,6 +742,8 @@ public class ProxyClient implements MageClient, CommandContext {
             // new session owns a fresh set of games; events of the previous user's still-running
             // games (re-sent by the server over the same channel) must be dropped, not forwarded
             sessionGameIds.clear();
+            latestGameEvents.clear();
+            pendingPromptEvents.clear();
             // drop callbacks still queued from the previous session instead of replaying them
             // to the new client (e.g. a WATCHGAME that lagged behind the update flood)
             callbackExecutor.shutdownNow();
@@ -708,7 +758,9 @@ public class ProxyClient implements MageClient, CommandContext {
             if (conn != null) {
                 authorized.add(conn);
             }
-            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
+            JsonObject connectData = new JsonObject();
+            connectData.addProperty("attached", false);
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connectData));
         } else {
             // el servidor manda el detalle del fallo por un callback SHOW_USERMESSAGE
             // (llega ~3s después, tras su sleep anti-bruteforce): sondearlo para no
@@ -728,7 +780,9 @@ public class ProxyClient implements MageClient, CommandContext {
     /** Adjunta una conexión ya autenticada a esta sesión existente (misma cuenta, otra ventana). */
     public synchronized void attach(WebSocket conn, String requestId) {
         authorized.add(conn);
-        gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, null));
+        JsonObject data = new JsonObject();
+        data.addProperty("attached", true);
+        gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, data));
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "connected");
         ev.addProperty("info", "Connected (attached to existing session)");

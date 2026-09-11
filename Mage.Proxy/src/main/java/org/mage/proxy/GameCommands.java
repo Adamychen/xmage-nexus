@@ -91,7 +91,11 @@ final class GameCommands {
             }
             case "joinGame": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().joinGame(gameId), null, null));
+                boolean ok = gameId != null && ctx.session().joinGame(gameId);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, ok ? null : ProxyProtocol.ERR_FAILED, null));
+                if (ok && gameId != null) {
+                    ctx.replayGameState(conn, gameId);
+                }
                 return true;
             }
             case "quitMatch": {

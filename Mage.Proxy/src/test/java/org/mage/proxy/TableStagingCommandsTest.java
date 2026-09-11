@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Cableado de las acciones de staging U4: swapSeats, startTournament y panel-join (joinTournament/joinDraft). */
+/** Cableado de las acciones de staging U4 (swapSeats/startTournament/panel-join) y del replay al re-join. */
 class TableStagingCommandsTest {
 
     private static final UUID ROOM = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -65,6 +65,7 @@ class TableStagingCommandsTest {
 
         UUID joinedTournament;
         UUID joinedDraft;
+        UUID joinedGame;
 
         @Override
         public boolean joinTournament(UUID tournamentId) {
@@ -75,6 +76,12 @@ class TableStagingCommandsTest {
         @Override
         public boolean joinDraft(UUID draftId) {
             joinedDraft = draftId;
+            return true;
+        }
+
+        @Override
+        public boolean joinGame(UUID gameId) {
+            joinedGame = gameId;
             return true;
         }
 
@@ -119,6 +126,11 @@ class TableStagingCommandsTest {
         @Override
         public void sendFailure(WebSocket conn, String action, String requestId, long start) {
             gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_FAILED, null));
+        }
+
+        @Override
+        public void replayGameState(WebSocket conn, UUID gameId) {
+            gateway.send(conn, ProxyProtocol.resultJson("joinGame", "", true, null, "replayed:" + gameId));
         }
 
         @Override
@@ -214,6 +226,27 @@ class TableStagingCommandsTest {
         assertTrue(routed);
         assertEquals(DRAFT, ctx.session.joinedDraft);
         assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void joinGameForwardsIdAndRequestsStateReplay() throws Exception {
+        UUID game = UUID.fromString("00000000-0000-0000-0000-000000000006");
+        StubCtx ctx = new StubCtx();
+        boolean routed = GameCommands.handle("joinGame", null, "r11",
+                args("{\"gameId\":\"" + game + "\"}"), ctx);
+        assertTrue(routed);
+        assertEquals(game, ctx.session.joinedGame);
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+        assertTrue(ctx.gateway.sent.stream().anyMatch(json -> json.contains("replayed:" + game)));
+    }
+
+    @Test
+    void joinGameWithoutIdFailsAndDoesNotReplay() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = GameCommands.handle("joinGame", null, "r12", args("{}"), ctx);
+        assertTrue(routed);
+        assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+        assertTrue(ctx.gateway.sent.stream().noneMatch(json -> json.contains("replayed:")));
     }
 
     @Test
