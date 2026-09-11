@@ -138,8 +138,8 @@ export default function LobbyScreen() {
           setActiveTab('tables')
           if (myActiveTables.length === 1) {
             const only = myActiveTables[0]
-            if (only.tableState === 'DUELING') {
-              tableActions.watchTable(only)
+            if (only.tableState === 'DUELING' || only.tableState === 'SIDEBOARDING') {
+              void tableActions.resumeGame(only)
             } else {
               openStagingTable(only.tableId)
             }
@@ -170,8 +170,8 @@ export default function LobbyScreen() {
                     <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                   </div>
                   <div className="tables-header-actions">
-                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')}: ${myDeck?.name ?? '—'}`}>
-                      <span className="hero-deck-label">{t('lobby.active_deck')}:</span>
+                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
+                      <span className="hero-deck-label">{t('lobby.active_deck')}</span>
                       <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
                     </div>
                     <button
@@ -213,6 +213,7 @@ export default function LobbyScreen() {
                     onOpenStaging={(tableId) => openStagingTable(tableId)}
                     onStart={tableActions.startTable}
                     onWatch={tableActions.watchTable}
+                    onResume={tableActions.resumeGame}
                   />
                 )}
 
@@ -230,6 +231,7 @@ export default function LobbyScreen() {
                       onJoinAi={tableActions.joinAi}
                       onStart={tableActions.startTable}
                       onWatch={tableActions.watchTable}
+                      onResume={tableActions.resumeGame}
                       onOpenBracket={bracket.openBracket}
                       onSelectUser={setSelectedUser}
                     />

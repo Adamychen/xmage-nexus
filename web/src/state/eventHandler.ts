@@ -28,7 +28,7 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ phase: 'lobby', connecting: false, error: null })
       break
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, rollbackPendingFor: null })
+      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, rollbackPendingFor: null, resumingGameId: null })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -83,8 +83,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
     return
   }
 
-  // Guard: If we are in the lobby, ignore in-flight trailing game events from closed/stopped games
-  if (s.phase === 'lobby' && isGameEvent && method !== 'START_GAME' && method !== 'WATCHGAME') {
+  // Guard: If we are in the lobby, ignore in-flight trailing game events from closed/stopped games.
+  // Excepción: el replay de una partida que acabamos de re-unir (joinGame tras
+  // recarga/desconexión) llega con phase='lobby' y es justo lo que hay que aplicar.
+  const restoringGame = !!s.resumingGameId && objectId === s.resumingGameId
+  if (s.phase === 'lobby' && isGameEvent && !restoringGame && method !== 'START_GAME' && method !== 'WATCHGAME') {
     return
   }
 
@@ -112,6 +115,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
         ...(rollbackRestored ? { feedback: null, playableIds: [], playableWindow: null, combat: null } : null),
       })
       if (rollbackRestored) addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
+      // La partida re-unida ya está adoptada: el guard de lobby vuelve a aplicar.
+      if (objectId && getState().resumingGameId === objectId) setState({ resumingGameId: null })
     }
   }
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {

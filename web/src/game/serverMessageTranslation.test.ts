@@ -19,6 +19,13 @@ describe('serverMessageTranslation', () => {
     expect(localizeServerMessage('Pay {R} Lightning Bolt.', t as any)).toBe('Pagar maná {R} · Lightning Bolt')
   })
 
+  it('localizes pay mana with a card name attached without a space (server HTML payload)', () => {
+    expect(localizeServerMessage('Pay {R} Raging Goblin', t as any)).toBe('Pagar maná {R} · Raging Goblin')
+    expect(
+      localizeServerMessage("Pay {R}<div style='font-size:11pt'><font color='#FF6347' object_id='a'>Raging Goblin</font> [ab1]</div>", t as any),
+    ).toBe("Pagar maná {R} · <div style='font-size:11pt'><font color='#FF6347' object_id='a'>Raging Goblin</font> [ab1]</div>")
+  })
+
   it('localizes pay life prompt', () => {
     expect(localizeServerMessage('Pay 2 life?', t as any)).toBe('¿Pagar 2 vidas?')
     expect(localizeServerMessage('Pay 3 life', t as any)).toBe('¿Pagar 3 vidas?')
@@ -40,6 +47,7 @@ describe('serverMessageTranslation', () => {
   it('localizes mulligan prompts', () => {
     expect(localizeServerMessage('Take a mulligan?', t as any)).toBe('Hacer Mulligan?')
     expect(localizeServerMessage('Mulligan down to 6 cards?', t as any)).toBe('Hacer Mulligan (6)')
+    expect(localizeServerMessage('Mulligan <font color=#ffff00>down to 6 cards</font>?', t as any)).toBe('Hacer Mulligan (6)')
     expect(localizeServerMessage('Select a card to put on the bottom of your library', t as any)).toBe('Elige cartas para poner en el fondo de tu biblioteca')
     expect(localizeServerMessage('Select 2 cards to put on the bottom of your library', t as any)).toBe('Elige cartas para poner en el fondo de tu biblioteca (2)')
   })

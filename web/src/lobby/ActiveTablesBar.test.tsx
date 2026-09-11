@@ -64,6 +64,7 @@ describe('ActiveTablesBar', () => {
         onOpenStaging={vi.fn()}
         onStart={vi.fn()}
         onWatch={vi.fn()}
+        onResume={vi.fn()}
       />,
     )
     expect(container.firstChild).toBeNull()
@@ -77,6 +78,7 @@ describe('ActiveTablesBar', () => {
         onOpenStaging={onOpenStaging}
         onStart={vi.fn()}
         onWatch={vi.fn()}
+        onResume={vi.fn()}
       />,
     )
 
@@ -95,6 +97,7 @@ describe('ActiveTablesBar', () => {
         onOpenStaging={vi.fn()}
         onStart={onStart}
         onWatch={vi.fn()}
+        onResume={vi.fn()}
       />,
     )
 
@@ -105,14 +108,15 @@ describe('ActiveTablesBar', () => {
     expect(onStart).toHaveBeenCalledWith(MOCK_READY_TABLE)
   })
 
-  it('renders dueling table with resume/watch button', () => {
-    const onWatch = vi.fn()
+  it('renders dueling table with resume button', () => {
+    const onResume = vi.fn()
     const { container } = render(
       <ActiveTablesBar
         tables={[MOCK_DUELING_TABLE]}
         onOpenStaging={vi.fn()}
         onStart={vi.fn()}
-        onWatch={onWatch}
+        onWatch={vi.fn()}
+        onResume={onResume}
       />,
     )
 
@@ -120,7 +124,7 @@ describe('ActiveTablesBar', () => {
     const resumeBtn = container.querySelector('.btn-resume') as HTMLButtonElement
     expect(resumeBtn).not.toBeNull()
     fireEvent.click(resumeBtn)
-    expect(onWatch).toHaveBeenCalledWith(MOCK_DUELING_TABLE)
+    expect(onResume).toHaveBeenCalledWith(MOCK_DUELING_TABLE)
   })
 
   it('renders multiple active tables', () => {
@@ -130,6 +134,7 @@ describe('ActiveTablesBar', () => {
         onOpenStaging={vi.fn()}
         onStart={vi.fn()}
         onWatch={vi.fn()}
+        onResume={vi.fn()}
       />,
     )
 

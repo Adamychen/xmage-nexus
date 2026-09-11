@@ -6,6 +6,8 @@ export interface DeckCard {
 }
 
 export interface Deck {
+  /** Identidad estable del mazo (puede faltar en mazos legacy/bundled). */
+  id?: string
   name: string
   cards: DeckCard[]
   sideboard: DeckCard[]
@@ -183,6 +185,19 @@ export function saveCustomDecks(decks: Deck[]) {
   } catch {}
 }
 
+/** Referencia estable para selects/persistencia: id si existe, si no el nombre. */
+export function deckRef(d: Deck): string {
+  return d.id ?? d.name
+}
+
+/** Compara identidad de mazos: por id cuando ambos lo tienen; por nombre si a
+ *  alguno le falta (mazos legacy/recién importados aún sin registrar). */
+export function sameDeck(a: Deck | null | undefined, b: Deck | null | undefined): boolean {
+  if (!a || !b) return false
+  if (a.id && b.id) return a.id === b.id
+  return a.name === b.name
+}
+
 export function getAllAvailableDecks(): Deck[] {
   const legacy = loadSavedCustomDecks()
   let v2: Deck[] = []
@@ -190,12 +205,25 @@ export function getAllAvailableDecks(): Deck[] {
     const raw = localStorage.getItem('mage_decks_v2')
     if (raw) {
       const arr = JSON.parse(raw) as (Deck & { id?: string })[]
-      if (Array.isArray(arr)) v2 = arr.map((d) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard }))
+      if (Array.isArray(arr)) {
+        v2 = arr.map((d) => ({ ...d, id: d.id || `v2:${d.name}` }))
+      }
     }
   } catch {}
-  const merged = new Map<string, Deck>()
-  for (const d of [...bundledDecks(), ...legacy, ...v2]) merged.set(d.name, d)
-  return [...merged.values()]
+  // Los mazos v2 pisan a los legacy con el mismo nombre (migración), pero un
+  // mazo del usuario NO debe ocultar a un precon con el mismo nombre: cada uno
+  // conserva su id y ambos se pueden elegir.
+  const v2Names = new Set(v2.map((d) => d.name))
+  const decks: Deck[] = []
+  for (const d of bundledDecks()) decks.push({ ...d, id: d.id ?? `precon:${d.name}` })
+  const seenLegacy = new Set<string>()
+  for (const d of legacy) {
+    if (v2Names.has(d.name) || seenLegacy.has(d.name)) continue
+    seenLegacy.add(d.name)
+    decks.push({ ...d, id: d.id ?? `legacy:${d.name}` })
+  }
+  for (const d of v2) decks.push(d)
+  return decks
 }
 
 export function getAllAvailableDecksV2Raw(): Deck[] {

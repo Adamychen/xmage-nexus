@@ -4,6 +4,8 @@ import type { FeedbackPrompt } from '../../game/feedback'
 import { findAutoAnswer } from '../../game/autoAnswers'
 import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
+import { localizeServerMessage } from '../../game/serverMessageTranslation'
+import { t as tStatic } from '../../i18n'
 import { setState, addLog } from '../state'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
@@ -58,15 +60,20 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', `¿${question || 'pregunta'}?`)
+    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
   } else {
     const feedback = parseFeedback(method, currentGameId, data)
     if (feedback) {
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', `¿${question || 'pregunta'}?`)
+    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
   }
+}
+
+function questionLogLine(question: string): string {
+  const q = (question || 'pregunta').trim()
+  return /[?？]$/.test(q) ? q : `¿${q}?`
 }
 
 export function applyChoiceMemory(feedback: FeedbackPrompt, gameId: string | null, s: Snapshot): boolean {

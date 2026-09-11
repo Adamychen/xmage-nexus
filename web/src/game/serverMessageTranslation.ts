@@ -11,37 +11,47 @@ export function localizeServerMessage(
   if (!raw) return ''
   const trimmed = raw.trim()
 
-  const payManaMatch = trimmed.match(/^Pay\s+(\{[^{}]+\}(?:\s*\{[^{}]+\})*)(?:\s+(.+?))?[.!]?$/i)
+  // El servidor puede mandar `Pay {R} Carta` o `Pay {R}<div …>Carta</div>` (sin
+  // espacio tras el coste), por eso el separador con el resto es opcional.
+  const payManaMatch = trimmed.match(/^Pay\s+(\{[^{}]+\}(?:\s*\{[^{}]+\})*)\s*(.*)$/i)
   if (payManaMatch) {
-    const rest = payManaMatch[2]?.trim()
+    const rest = payManaMatch[2]?.trim().replace(/\s*[.!]+$/, '')
     const base = `${t('game', 'pay_mana')} ${payManaMatch[1]}`
     return rest ? `${base} · ${rest}` : base
   }
 
-  const payLifeMatch = trimmed.match(/^Pay\s+(\d+)\s+life\??$/i)
+  // Los prompts suelen venir con HTML del servidor (`mulligan <font…>down to 6
+  // cards</font>?`): se compara contra el texto plano para poder localizarlos.
+  const plain = trimmed
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+([?!.,;:])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const payLifeMatch = plain.match(/^Pay\s+(\d+)\s+life\??$/i)
   if (payLifeMatch) {
     return t('game', 'pay_life_prompt', { count: payLifeMatch[1] })
   }
 
-  if (/^(?:Select|Choose)\s+(?:a\s+|any\s+)?target$/i.test(trimmed)) {
+  if (/^(?:Select|Choose)\s+(?:a\s+|any\s+)?target$/i.test(plain)) {
     return t('game', 'choose_target')
   }
 
-  const targetForMatch = trimmed.match(/^(?:Select|Choose)\s+target\s+for\s+(.+)$/i)
+  const targetForMatch = plain.match(/^(?:Select|Choose)\s+target\s+for\s+(.+)$/i)
   if (targetForMatch) {
     return `${t('game', 'choose_target')}: ${targetForMatch[1]}`
   }
 
-  const selectTargetMatch = trimmed.match(/^Select\s+target\s+(.+)$/i)
+  const selectTargetMatch = plain.match(/^Select\s+target\s+(.+)$/i)
   if (selectTargetMatch) {
     return `${t('game', 'choose_target')} (${selectTargetMatch[1]})`
   }
 
-  if (/who (?:goes|will go) first\??|choose.*start|starting player/i.test(trimmed)) {
+  if (/who (?:goes|will go) first\??|choose.*start|starting player/i.test(plain)) {
     return t('game', 'starting_player_board_hint')
   }
 
-  const bottomMatch = trimmed.match(
+  const bottomMatch = plain.match(
     /^(?:Select|Choose)\s+(?:a|(\d+))\s+cards?\s+to\s+put\s+on\s+the\s+bottom\s+of\s+(?:your|the)\s+library$/i
   )
   if (bottomMatch) {
@@ -51,85 +61,85 @@ export function localizeServerMessage(
       : `${t('dialogs', 'mulligan_london_hint')} (${count})`
   }
 
-  if (/^Take\s+a\s+mulligan\??$/i.test(trimmed)) {
+  if (/^Take\s+a\s+mulligan\??$/i.test(plain)) {
     return `${t('dialogs', 'mulligan_take')}?`
   }
 
-  const mulliganDownMatch = trimmed.match(/^Mulligan\s+down\s+to\s+(\d+)\s+cards?\??$/i)
+  const mulliganDownMatch = plain.match(/^Mulligan\s+down\s+to\s+(\d+)\s+cards?\??$/i)
   if (mulliganDownMatch) {
     return `${t('dialogs', 'mulligan_take')} (${mulliganDownMatch[1]})`
   }
 
-  if (/^Choose\s+a\s+card\s+(?:for\s+them\s+)?to\s+discard$/i.test(trimmed)) {
+  if (/^Choose\s+a\s+card\s+(?:for\s+them\s+)?to\s+discard$/i.test(plain)) {
     return t('game', 'choose_discard')
   }
 
-  const discardDownMatch = trimmed.match(/^Discard\s+down\s+to\s+(\d+)\s+cards?$/i)
+  const discardDownMatch = plain.match(/^Discard\s+down\s+to\s+(\d+)\s+cards?$/i)
   if (discardDownMatch) {
     return `${t('game', 'choose_discard')} (${discardDownMatch[1]})`
   }
 
-  if (/^Announce\s+the\s+value\s+for\s+\{?X\}?$/i.test(trimmed)) {
+  if (/^Announce\s+the\s+value\s+for\s+\{?X\}?$/i.test(plain)) {
     return `${t('game', 'amount_title')} {X}`
   }
 
-  if (/^Order\s+cards\s+on\s+top\s+of\s+library$/i.test(trimmed)) {
+  if (/^Order\s+cards\s+on\s+top\s+of\s+library$/i.test(plain)) {
     return t('game', 'choose_order')
   }
 
-  if (/^Order\s+(?:damage|blockers)$/i.test(trimmed)) {
+  if (/^Order\s+(?:damage|blockers)$/i.test(plain)) {
     return t('dialogs', 'library_title_blocker')
   }
 
-  if (/^(?:Choose|Select)\s+(?:a\s+)?mode$/i.test(trimmed)) {
+  if (/^(?:Choose|Select)\s+(?:a\s+)?mode$/i.test(plain)) {
     return t('game', 'choose_mode')
   }
-  if (/^Choose\s+one$/i.test(trimmed)) {
+  if (/^Choose\s+one$/i.test(plain)) {
     return `${t('game', 'choose_mode')} (1)`
   }
-  if (/^Choose\s+two$/i.test(trimmed)) {
+  if (/^Choose\s+two$/i.test(plain)) {
     return `${t('game', 'choose_mode')} (2)`
   }
 
-  if (/^(?:Choose|Select)\s+a\s+color$/i.test(trimmed)) {
+  if (/^(?:Choose|Select)\s+a\s+color$/i.test(plain)) {
     return t('game', 'choose_color')
   }
 
-  if (/^(?:Choose|Select)\s+a\s+player$/i.test(trimmed)) {
+  if (/^(?:Choose|Select)\s+a\s+player$/i.test(plain)) {
     return t('game', 'choose_player_title')
   }
 
-  if (/^(?:Choose|Select)\s+an\s+option$/i.test(trimmed)) {
+  if (/^(?:Choose|Select)\s+an\s+option$/i.test(plain)) {
     return t('game', 'choose_option')
   }
 
-  if (/^(?:Choose|Select)\s+a\s+pile$/i.test(trimmed)) {
+  if (/^(?:Choose|Select)\s+a\s+pile$/i.test(plain)) {
     return t('game', 'choose_pile')
   }
 
-  if (/^Search\s+your\s+library\s+for\s+a\s+card$/i.test(trimmed)) {
+  if (/^Search\s+your\s+library\s+for\s+a\s+card$/i.test(plain)) {
     return t('game', 'choose_cards')
   }
 
-  const searchMatch = trimmed.match(/^Search\s+your\s+library\s+for\s+up\s+to\s+(\d+)\s+cards?$/i)
+  const searchMatch = plain.match(/^Search\s+your\s+library\s+for\s+up\s+to\s+(\d+)\s+cards?$/i)
   if (searchMatch) {
     return `${t('game', 'choose_cards')} (max ${searchMatch[1]})`
   }
 
-  if (/^Declare\s+attackers$/i.test(trimmed)) {
+  if (/^Declare\s+attackers$/i.test(plain)) {
     return t('game', 'combat_attackers_title')
   }
-  if (/^Declare\s+blockers$/i.test(trimmed)) {
+  if (/^Declare\s+blockers$/i.test(plain)) {
     return t('game', 'combat_blockers_title')
   }
 
-  if (/^Click\s+a\s+target\s+on\s+the\s+board$/i.test(trimmed)) {
+  if (/^Click\s+a\s+target\s+on\s+the\s+board$/i.test(plain)) {
     return t('game', 'targeting_hint')
   }
-  if (/^Click\s+your\s+creatures\s+on\s+the\s+board\s+to\s+declare\s+them$/i.test(trimmed)) {
+  if (/^Click\s+your\s+creatures\s+on\s+the\s+board\s+to\s+declare\s+them$/i.test(plain)) {
     return t('game', 'combat_hint')
   }
-  if (/^Click\s+your\s+mana\s+sources/i.test(trimmed)) {
+  if (/^Click\s+your\s+mana\s+sources/i.test(plain)) {
     return t('game', 'mana_hint')
   }
 

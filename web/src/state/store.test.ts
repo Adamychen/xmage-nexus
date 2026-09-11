@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { joinGame, sendPlayerBoolean, sendPlayerUUID, updatePreferences } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
-import { getState, setState } from './state'
+import { getState, setState, addLog } from './state'
 import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
 import { loadActiveGame } from './persistence'
@@ -156,6 +156,35 @@ describe('handleMessage', () => {
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-1', data: { gameId: 'g-1' } })
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 2, objectId: 'g-1', data: { gameId: 'g-1' } })
     expect(joinGame).toHaveBeenCalledTimes(1)
+  })
+
+  it('START_GAME limpia del log los eventos de la partida anterior (feed por partida)', () => {
+    addLog('partida', 'evento de la partida vieja')
+    expect(getState().log.some((e) => e.text === 'evento de la partida vieja' && e.channel === 'game')).toBe(true)
+
+    handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-new', data: { gameId: 'g-new' } })
+
+    const gameEntries = getState().log.filter((e) => e.channel === 'game')
+    expect(gameEntries.some((e) => e.text === 'evento de la partida vieja')).toBe(false)
+    expect(gameEntries.some((e) => /Iniciar Partida/.test(e.text))).toBe(true)
+  })
+
+  it('aplica el replay de una partida re-unida aunque phase sea lobby (restore tras recarga)', () => {
+    const game = makeGameView({})
+    setState({ phase: 'lobby', resumingGameId: 'g-restore' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-restore', data: game })
+    expect(getState().phase).toBe('game')
+    expect(getState().gameId).toBe('g-restore')
+    expect(getState().game).toBe(game)
+    expect(getState().resumingGameId).toBeNull()
+  })
+
+  it('ignora eventos de partida en lobby si no son de una partida en restauración', () => {
+    const game = makeGameView({})
+    setState({ phase: 'lobby' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-vieja', data: game })
+    expect(getState().game).toBeNull()
+    expect(getState().phase).toBe('lobby')
   })
 
   it('result with ok:false sets the error', () => {

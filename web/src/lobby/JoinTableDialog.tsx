@@ -4,6 +4,8 @@ import {
   getAllAvailableDecks,
   saveCustomDecks,
   loadSavedCustomDecks,
+  deckRef,
+  sameDeck,
   type Deck,
 } from './decks'
 import { parseAnyDeck } from '../decks/parseDck'
@@ -49,15 +51,15 @@ export default function JoinTableDialog({
         if (cancelled) return
         const maps = new Map<string, Deck>()
         for (const d of v2) {
-          const deck: Deck = { name: d.name, cards: d.cards, sideboard: d.sideboard }
-          maps.set(deck.name, deck)
+          const deck: Deck = { ...d, id: d.id || `v2:${d.name}` }
+          maps.set(deckRef(deck), deck)
         }
         for (const d of getAllAvailableDecks()) {
-          if (!maps.has(d.name)) maps.set(d.name, d)
+          if (!maps.has(deckRef(d))) maps.set(deckRef(d), d)
         }
         const merged = [...maps.values()]
         setAllDecks(merged)
-        if (merged.length && (!selectedDeck || !merged.some((d) => d.name === selectedDeck.name))) setSelectedDeck(merged[0])
+        if (merged.length && (!selectedDeck || !merged.some((d) => sameDeck(d, selectedDeck)))) setSelectedDeck(merged[0])
       } catch {}
     })()
     return () => { cancelled = true }
@@ -236,7 +238,7 @@ export default function JoinTableDialog({
                 <p className="import-error-msg">{t('lobby', 'create_err_no_deck')}</p>
               )}
               {allDecks.map((d) => {
-                const isSelected = selectedDeck?.name === d.name
+                const isSelected = sameDeck(selectedDeck, d)
                 const count = d.cards.reduce((acc, c) => acc + c.amount, 0)
                 const sbCount = d.sideboard.reduce((acc, c) => acc + c.amount, 0)
                 const sampleCards = d.cards
@@ -248,7 +250,7 @@ export default function JoinTableDialog({
 
                 return (
                   <div
-                    key={d.name}
+                    key={deckRef(d)}
                     className={`join-deck-card ${isSelected ? 'selected' : ''} ${
                       isRecommended ? 'recommended' : ''
                     }`}

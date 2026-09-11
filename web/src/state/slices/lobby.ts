@@ -30,6 +30,8 @@ export interface LobbySlice {
   stagingIsTournament: boolean
   /** invitación pendiente vía deep link (#join= / #watch=); la consume el lobby */
   pendingDeepLink: DeepLink | null
+  /** partida que estamos re-uniendo (joinGame) y cuyo replay aún no ha llegado */
+  resumingGameId: string | null
   log: LogEntry[]
   events: { method: string; time: number }[]
 }
@@ -46,6 +48,7 @@ export const initialLobby: LobbySlice = {
   stagingTableId: null,
   stagingIsTournament: false,
   pendingDeepLink: null,
+  resumingGameId: null,
   log: [],
   events: [],
 }

@@ -5,7 +5,7 @@
  * helper WS. Cada test crea SU PROPIA partida (independencia total).
  */
 
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import { cleanupUser, registerHelper } from '../cleanup'
 import { HumanHelper } from '../wshelper'
 import { parsedLen } from './frames'
@@ -114,6 +114,19 @@ export interface CreateTableOptions {
   winsNeeded?: number
 }
 
+/** Selecciona un mazo por nombre en los selects del wizard: las option ahora
+ *  llevan como value la referencia estable (id) y el nombre en la etiqueta. */
+async function selectDeckOption(select: Locator, deckName: string): Promise<void> {
+  const value = await select.evaluate((el, name) => {
+    const options = [...(el as HTMLSelectElement).options]
+    const withCount = options.find((o) => (o.textContent ?? '').startsWith(`${name} (`))
+    const exact = options.find((o) => (o.textContent ?? '').trim() === name)
+    return withCount?.value ?? exact?.value ?? ''
+  }, deckName)
+  if (!value) throw new Error(`No encuentro la opción de mazo "${deckName}" en el wizard`)
+  await select.selectOption(value)
+}
+
 export async function createTable(page: Page, tableName: string, opts: CreateTableOptions = {}): Promise<void> {
   await page.getByRole('button', { name: /Nueva/i }).first().click()
   await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
@@ -135,10 +148,10 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
       // wizard-step: la tarjeta de modo "Commander / Multijugador" también matchea)
       await page.locator('button.wizard-step', { hasText: /Multijugador/i }).click()
       if (opts.deck) {
-        await page.getByLabel(/Mazo activo/i).selectOption({ value: opts.deck })
+        await selectDeckOption(page.getByLabel(/Mazo activo/i), opts.deck)
       }
       if (opts.simDeck) {
-        await page.getByLabel(/Mazo global para SIM/i).selectOption({ value: opts.simDeck })
+        await selectDeckOption(page.getByLabel(/Mazo global para SIM/i), opts.simDeck)
       }
     }
 

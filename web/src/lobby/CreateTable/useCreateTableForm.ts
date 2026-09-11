@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import * as cmds from '../../net/commands'
 import type { GameTypeInfo } from '../../net/commands'
 import { setMyDeck, useStore } from '../../state/store'
-import { getAllAvailableDecks, DEFAULT_DECK, type Deck } from '../decks'
+import { getAllAvailableDecks, deckRef, sameDeck, DEFAULT_DECK, type Deck } from '../decks'
 import { requestDeckValidation } from '../DeckIssuesDialog'
 import { useTranslation } from '../../i18n'
 import { prepareDeckForXMage } from '../../decks/deckNormalize'
@@ -519,11 +519,11 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         if (cancelled) return
         const maps = new Map<string, Deck>()
         for (const d of v2) {
-          const deck: Deck = { name: d.name, cards: d.cards, sideboard: d.sideboard }
-          maps.set(deck.name, deck)
+          const deck: Deck = { ...d, id: d.id || `v2:${d.name}` }
+          maps.set(deckRef(deck), deck)
         }
         for (const d of getAllAvailableDecks()) {
-          if (!maps.has(d.name)) maps.set(d.name, d)
+          if (!maps.has(deckRef(d))) maps.set(deckRef(d), d)
         }
         setAvailableDecks([...maps.values()])
       } catch {}
@@ -531,8 +531,12 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     return () => { cancelled = true }
   }, [])
   const [myDeck, setMyDeckState] = useState<Deck | null>(() => {
-    if (storeDeck) return storeDeck
     const avail = getAllAvailableDecks()
+    if (storeDeck) {
+      const match = avail.find((d) => sameDeck(d, storeDeck))
+      if (match) return match
+      return storeDeck
+    }
     return avail[0] ?? null
   })
   const [simDeck, setSimDeck] = useState<Deck | null>(() => getAllAvailableDecks()[0] ?? null)
@@ -682,7 +686,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setSeatConfigs((prev) => {
       if (prev.length === target) return prev
       if (prev.length < target) {
-        const add = Array.from({ length: target - prev.length }, () => ({ type: defaultSeatType, deckName: simDeck?.name ?? '', skill: 2 }))
+        const add = Array.from({ length: target - prev.length }, () => ({ type: defaultSeatType, deckName: simDeck ? deckRef(simDeck) : '', skill: 2 }))
         return [...prev, ...add]
       }
       return prev.slice(0, target)
@@ -720,19 +724,24 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     const n = normalizeSeatType(type)
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type: n } : s)))
   }
-  const setSeatDeck = (idx: number, deckName: string) => {
-    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName } : s)))
+  /** Resuelve un mazo por referencia estable (id) con fallback por nombre (form persistido antiguo). */
+  const findDeck = (ref?: string): Deck | undefined => {
+    if (!ref) return undefined
+    return availableDecks.find((d) => deckRef(d) === ref) ?? availableDecks.find((d) => d.name === ref)
+  }
+  const setSeatDeck = (idx: number, deckRefValue: string) => {
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName: deckRefValue } : s)))
   }
   const setSeatSkill = (idx: number, skill: number) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, skill: Math.min(10, Math.max(1, skill)) } : s)))
   }
-  const selectMyDeck = (deckName: string) => {
-    setMyDeckState(availableDecks.find((d) => d.name === deckName) ?? null)
+  const selectMyDeck = (ref: string) => {
+    setMyDeckState(findDeck(ref) ?? null)
   }
-  const selectGlobalSimDeck = (deckName: string) => {
-    const d = availableDecks.find((x) => x.name === deckName) ?? null
+  const selectGlobalSimDeck = (ref: string) => {
+    const d = findDeck(ref) ?? null
     setSimDeck(d)
-    if (d) setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) ? { ...s, deckName: d.name } : s))
+    if (d) setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) ? { ...s, deckName: deckRef(d) } : s))
   }
 
   const runDemoTable = async () => {
@@ -780,9 +789,9 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     }
     setBusy(true)
     setError(null)
-    const resolveSimDeck = (deckName?: string): Deck | null => {
-      if (deckName) {
-        const found = availableDecks.find((d) => d.name === deckName)
+    const resolveSimDeck = (deckRefValue?: string): Deck | null => {
+      if (deckRefValue) {
+        const found = findDeck(deckRefValue)
         if (found) return found
       }
       return simDeck ?? myDeck ?? DEFAULT_DECK

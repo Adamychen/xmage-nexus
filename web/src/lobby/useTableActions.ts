@@ -211,9 +211,39 @@ export function useTableActions(conn: ConnectionInfo | null) {
     }
   }
 
+  /** Reincorporarse como jugador a una partida en curso (recarga/staging perdido). */
+  const resumeGame = async (t: TableView) => {
+    const gameId = t.games?.[0]
+    if (!gameId) {
+      setState({ error: translateError(tStatic('errors','generic_error')) })
+      return
+    }
+    setBusyTable(t.tableId)
+    setState({ error: null })
+    setNotice(null)
+    setState({ resumingGameId: gameId })
+    try {
+      const res = await withTimeout(cmds.joinGame(gameId), 15000, 'joinGame')
+      if (res.ok) {
+        setNotice(tStatic('lobby','active_table_resume'))
+      } else {
+        setState({ resumingGameId: null })
+        const code = (res as { errorCode?: string }).errorCode
+        const raw = res.error || code || tStatic('errors','generic_error')
+        setState({ error: translateError(raw, 'joinGame', code) })
+      }
+    } catch (e) {
+      setState({ resumingGameId: null })
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'joinGame', (err as { errorCode?: string }).errorCode) })
+    } finally {
+      setBusyTable(null)
+    }
+  }
+
   return {
     joiningTable, setJoiningTable, joinPassword, setJoinPassword,
     busyTable, notice, setNotice,
-    joinHuman, handleJoinWithDeck, joinAi, startTable, watchTable,
+    joinHuman, handleJoinWithDeck, joinAi, startTable, watchTable, resumeGame,
   }
 }

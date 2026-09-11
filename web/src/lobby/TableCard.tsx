@@ -18,13 +18,14 @@ interface Props {
   onJoinAi: (t: TableView) => void
   onStart: (t: TableView) => void
   onWatch: (t: TableView) => void
+  onResume: (t: TableView) => void
   onOpenBracket: (t: TableView) => void
   onSelectUser: (u: UsersView) => void
 }
 
 export default function TableCard({
   tTable, users, username, avatarId, stagingTableId, busyTable,
-  onJoinHuman, onJoinAi, onStart, onWatch, onOpenBracket, onSelectUser,
+  onJoinHuman, onJoinAi, onStart, onWatch, onResume, onOpenBracket, onSelectUser,
 }: Props) {
   const { t } = useTranslation()
   const isReady = tTable.tableState === 'READY_TO_START'
@@ -56,7 +57,11 @@ export default function TableCard({
       className={`table-card table-row ${statusClass}${isMine ? ' is-my-table' : ''}`}
       onDoubleClick={() => {
         if (isPlaying) {
-          onWatch(tTable)
+          if (isMine || mySeat) {
+            onResume(tTable)
+          } else {
+            onWatch(tTable)
+          }
           return
         }
         if (canReenter) {
@@ -223,6 +228,16 @@ export default function TableCard({
       </div>
 
       <div className="table-actions">
+        {isPlaying && (isMine || mySeat) && (
+          <button
+            className="primary table-action-btn resume-table-btn"
+            data-testid="resume-table"
+            disabled={busyTable === tTable.tableId}
+            onClick={() => onResume(tTable)}
+          >
+            <Icon name="swords" size={13} /> {t('lobby','active_table_resume')}
+          </button>
+        )}
         {canReenter && (
           <button
             className="primary table-action-btn return-table-btn"

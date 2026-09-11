@@ -1,5 +1,6 @@
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
+import { deckRef } from '../decks'
 import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
@@ -36,12 +37,12 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   <label>
                     {t('lobby','active_deck')}
                     <select
-                      value={form.myDeck?.name ?? ''}
+                      value={form.myDeck ? deckRef(form.myDeck) : ''}
                       onChange={(e) => form.selectMyDeck(e.target.value)}
                       disabled={form.availableDecks.length === 0}
                     >
                       {form.availableDecks.map((d) => (
-                        <option key={d.name} value={d.name}>
+                        <option key={deckRef(d)} value={deckRef(d)}>
                           {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
                         </option>
                       ))}
@@ -105,7 +106,8 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   )}
                   {isHumanSeatType(cfg.type) && <span className="wizard-hint-box"><Icon name="user" size={11} /> {t('lobby','create_seat_human_waiting')}</span>}
                   {!isHumanSeatType(cfg.type) && !form.isDraftLimited && (() => {
-                    const deck = form.availableDecks.find((d) => d.name === cfg.deckName)
+                    const deck = form.availableDecks.find((d) => deckRef(d) === cfg.deckName)
+                      ?? form.availableDecks.find((d) => d.name === cfg.deckName)
                     const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
                     return (
                       <>
@@ -113,7 +115,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                           {t('lobby','create_seat_deck_label',{num:idx+2})}
                           <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)} disabled={form.availableDecks.length === 0}>
                             {form.availableDecks.map((d) => (
-                              <option key={d.name} value={d.name}>
+                              <option key={deckRef(d)} value={deckRef(d)}>
                                 {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
                               </option>
                             ))}
@@ -151,9 +153,9 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
             </div>
             <label style={{ marginTop: 8 }}>
               {t('lobby','create_sim_deck_global_shortcut')}
-              <select value={form.simDeck?.name ?? ''} onChange={(e) => form.selectGlobalSimDeck(e.target.value)} disabled={form.availableDecks.length === 0}>
+              <select value={form.simDeck ? deckRef(form.simDeck) : ''} onChange={(e) => form.selectGlobalSimDeck(e.target.value)} disabled={form.availableDecks.length === 0}>
                 {form.availableDecks.map((d) => (
-                  <option key={d.name} value={d.name}>
+                  <option key={deckRef(d)} value={deckRef(d)}>
                     {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
                   </option>
                 ))}

@@ -45,8 +45,12 @@ export function attachGateway(g: Gateway) {
             })
           } else {
             addLog('conexión', 'Restaurando partida en curso…')
+            setState({ resumingGameId: active.gameId })
             void cmds.joinGame(active.gameId).then((r) => {
-              if (!r?.ok) clearActiveGame()
+              if (!r?.ok) {
+                clearActiveGame()
+                setState({ resumingGameId: null })
+              }
             })
           }
           void cmds.getGameChatId(active.gameId).then((cid) => setState({ gameChatId: cid ?? null }))
@@ -145,8 +149,12 @@ async function runConnect(
         })
       } else {
         addLog('conexión', 'Restaurando partida en curso…')
+        setState({ resumingGameId: active.gameId })
         void cmds.joinGame(active.gameId).then((r) => {
-          if (!r?.ok) clearActiveGame()
+          if (!r?.ok) {
+            clearActiveGame()
+            setState({ resumingGameId: null })
+          }
         })
       }
       void cmds.getGameChatId(active.gameId).then((cid) => setState({ gameChatId: cid ?? null }))

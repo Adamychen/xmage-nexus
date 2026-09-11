@@ -9,9 +9,10 @@ interface Props {
   onOpenStaging: (tableId: string) => void
   onStart: (t: TableView) => void
   onWatch: (t: TableView) => void
+  onResume: (t: TableView) => void
 }
 
-export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onWatch }: Props) {
+export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onResume }: Props) {
   const { t } = useTranslation()
 
   if (!tables || tables.length === 0) return null
@@ -87,7 +88,7 @@ export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onWatc
                 <button
                   type="button"
                   className="active-table-action-btn btn-resume"
-                  onClick={() => onWatch(tTable)}
+                  onClick={() => onResume(tTable)}
                   title={t('lobby', 'active_table_resume')}
                 >
                   <Icon name="swords" size={13} /> {t('lobby', 'active_table_resume')}

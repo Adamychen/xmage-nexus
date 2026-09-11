@@ -33,6 +33,9 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   const isNewGame = !!d?.gameId && d.gameId !== s.gameId
   if (d?.gameId) saveActiveGame(d.gameId)
   exitTableChat()
+  // Nueva partida: el feed no debe arrastrar los eventos de la anterior (el log
+  // global es compartido; solo se limpia el canal de partida).
+  setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
   setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, rollbackPendingFor: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
@@ -178,6 +181,7 @@ export function handleEndGameInfo(data: unknown): void {
       phase: 'lobby',
       gameEnd: end,
       rollbackPendingFor: null,
+      resumingGameId: null,
     })
   } else {
     setState({ gameEnd: end })
