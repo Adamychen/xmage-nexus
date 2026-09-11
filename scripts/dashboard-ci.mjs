@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Orquesta las capas ligeras de CI, escribe marcadores y genera el dashboard.
 // Uso: node scripts/dashboard-ci.mjs
-// Capas: unit+coverage (vitest), typecheck, build, fake-e2e, proxy java.
+// Capas: unit+coverage (vitest), typecheck, build, fake-e2e, mcp, proxy java.
 // Los resultados crudos se dejan en web/ para que gen-dashboard.mjs los consuma.
 
 import fs from "node:fs";
@@ -11,6 +11,7 @@ import { run, binName, repoRoot, ensureMageArtifacts } from "./lib.mjs";
 import { build } from "./gen-dashboard.mjs";
 
 const webDir = path.join(repoRoot, "web");
+const mcpDir = path.join(repoRoot, "mcp");
 
 function writeMarker(name, status) {
   fs.writeFileSync(path.join(webDir, name), JSON.stringify({ status }));
@@ -43,7 +44,17 @@ async function main() {
     console.log("e2e stderr (tail):", e2e.stderr.slice(-2000));
   }
 
-  // 5. Proxy (java) — necesita los artefactos org.mage en ~/.m2 (release del
+  // 5. MCP (typecheck + tests herméticos contra el FixtureServer, sin Java)
+  const mcpTc = run("npm", ["run", "typecheck"], { cwd: mcpDir, timeoutMs: 300_000 });
+  const mcpTest = run("npm", ["run", "test"], { cwd: mcpDir, timeoutMs: 600_000 });
+  if (mcpTc.code !== 0) console.log("mcp typecheck stderr (tail):", mcpTc.stderr.slice(-2000));
+  if (mcpTest.code !== 0) {
+    console.log("mcp test stdout (tail):", mcpTest.stdout.slice(-2000));
+    console.log("mcp test stderr (tail):", mcpTest.stderr.slice(-2000));
+  }
+  writeMarker(".mcp-tests.json", mcpTc.code === 0 && mcpTest.code === 0 ? "pass" : "fail");
+
+  // 6. Proxy (java) — necesita los artefactos org.mage en ~/.m2 (release del
   //    fork descargada en CI, build local en máquina de desarrollo)
   ensureMageArtifacts();
   const java = run(binName("mvn"), ["-f", "Mage.Proxy/pom.xml", "test"], { timeoutMs: 900_000 });
@@ -52,7 +63,7 @@ async function main() {
     console.log("java stderr (tail):", java.stderr.slice(-2000));
   }
 
-  // 6. Generar status.json
+  // 7. Generar status.json
   build();
 }
 

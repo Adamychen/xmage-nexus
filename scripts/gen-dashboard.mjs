@@ -226,6 +226,7 @@ function build() {
     ),
     layer("typecheck", "Typecheck (tsc)", markerStatus(webDir, ".typecheck.json")),
     layer("build", "Build (vite)", markerStatus(webDir, ".build.json")),
+    layer("mcp", "MCP (typecheck+test)", markerStatus(webDir, ".mcp-tests.json")),
     layer("fake-e2e", "E2E (fake, no stack)", pw ? (pw.failed ? "fail" : "pass") : "pending", pw),
     layer("proxy", "Proxy (java)", proxy ? (proxy.failed ? "fail" : "pass") : "pending", proxy),
     layer(

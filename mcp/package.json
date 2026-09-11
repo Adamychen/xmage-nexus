@@ -1,0 +1,28 @@
+{
+  "name": "mage-nexus-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server for XMage Nexus: dev-stack control and headless XMage player tools",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:real": "MCP_E2E=1 vitest run test/realGame.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "ws": "^8.21.3",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

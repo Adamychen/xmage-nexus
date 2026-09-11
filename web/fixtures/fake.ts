@@ -139,6 +139,7 @@ export interface BaseScenarioOptions {
   onSendPlayerBoolean?: (conn: FakeConn, ctx: BaseScenarioActionContext) => void
   onSendPlayerInteger?: (conn: FakeConn, value: number, ctx: BaseScenarioActionContext) => void
   onSendPlayerString?: (conn: FakeConn, value: string, ctx: BaseScenarioActionContext) => void
+  onJoinGame?: (conn: FakeConn, gameId: string, ctx: BaseScenarioActionContext) => void
   onExtra?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
   /** Informe que devuelve la acción `validateDeck` (pre-validación de mazos).
    *  Si no se define, la respuesta es un mazo válido sin problemas. */
@@ -176,11 +177,17 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
         case 'connect':
         case 'createTable':
         case 'createTournamentTable':
+          conn.ok(requestId, action, { tableId: table.tableId })
+          conn.lobby([table])
+          return
         case 'joinGame':
         case 'watchTable':
         case 'watchGame':
           conn.ok(requestId, action, { tableId: table.tableId })
           conn.lobby([table])
+          if (action === 'joinGame' && opts.onJoinGame) {
+            opts.onJoinGame(conn, argString(args, 'gameId'), ctx())
+          }
           return
         case 'joinTable': {
           conn.ok(requestId, action, {})

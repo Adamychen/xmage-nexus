@@ -134,6 +134,41 @@ Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
 
 Success criteria and details in the `mage-test-suite` skill.
 
+## MCP server (`mcp/`)
+
+`mcp/` is a standalone MCP (stdio) server, registered in `opencode.json` as
+`mage`. Fase A (done) exposes DevOps tools wrapping the existing scripts:
+`mage_stack`, `mage_logs`, `mage_run_tests`, `mage_build`,
+`mage_record_fixture`, `mage_validate_generated`, `mage_e2e` (Playwright con
+`spec`/`grep` y backend fake/real), plus resources
+(`mage://status/project`, `mage://coverage/interactions`, …). Fase C1 (done)
+exposes the WS session/lobby: `mage_connect`, `mage_lobby`,
+`mage_create_table`, `mage_join_table`, `mage_start_match`, `mage_leave_table`,
+`mage_session`. Fase C2 (done) makes it play: `mage_game_state` (compact view),
+`mage_wait_for_prompt`, `mage_action`/`mage_choose`/`mage_play_card`/
+`mage_pay_mana`/`mage_combat`/`mage_pass_priority`, `mage_auto_pass`,
+`mage_concede`, `mage_chat`. Verified with a full real game vs Sim
+(`MCP_E2E=1 npm test` in `mcp/`). Fase C3 (done): arnés con el FixtureServer de
+`web/` en los tests (sin Java) + capa `mcp` en CI, maná/interacciones complejas
+(auto-pago/botón especial, X, orden, multi-amount, trigger order) con auto-pass
+anti-flood, reconexión/resync (`mage_reconnect`; el proxy cachea y reenvía el
+último estado+prompt en el re-attach, y `connect` devuelve `data.attached`) y
+multi-sesión (`mage_connect {session}`, `mage_use_session`, `mage_sessions`).
+
+- No build: Node ≥24 runs the TypeScript directly (`node mcp/src/index.ts`).
+  Strip-only mode: no `enum`/`namespace`/parameter properties.
+- After touching `mcp/`: `npm --prefix mcp test` + `npm --prefix mcp run typecheck`.
+- Never write to stdout outside the MCP transport (diagnostics → stderr).
+- Scoped doc: `mcp/README.md`; roadmap/status: `PROJECT.md`.
+
+**Interactive browser MCP**: `opencode.json` also registers `playwright`
+(`scripts/playwright-mcp.mjs` → `@playwright/mcp`, reusing web/playwright's
+Chromium; overrides `PLAYWRIGHT_MCP_VERSION`/`PLAYWRIGHT_EXECUTABLE_PATH`).
+It gives the agent real UI interaction (accessibility snapshots, click/hover/
+drag, screenshots, console/network) against a running app (stack vite on 5173
+or any URL); artifacts land in `.run/playwright-mcp/`. Complementary to `mage`:
+`mage` operates the protocol/backend, `playwright` sees and touches the UI.
+
 ## E2E with dual backends: deterministic fake and real
 
 Browser E2E (Playwright) runs in **two modes with the SAME specs**:
@@ -211,15 +246,27 @@ test window).
   return socket: `SESSION CALLBACK EXCEPTION - Unable to create socket`
   in `server.out.log`). Retry once with a warm server; if it fails
   repeatedly, it's a real bug, not a flake.
-- **Known failure (pre-existing e2e, since the 2026-09-05 → 09-10 window)**:
-  several fake-e2e specs (`skips`, `spells`, `targeting`, …) fail because the
-  user lands in the spectator staging (`Sala de Espera de Espectador`, seats
-  2/2) with no `staging-start` and no lobby start button. NOT caused by the
-  fork split (verified via revert bisect 2026-09-10) nor by the modal work.
-  Repro: `npx playwright test e2e/skips.spec.ts`. Also beware: the desktop
-  launcher (`today.xmage.nexus` JRE) can squat ports 17171/8787 while dev
-  processes fail to bind with a stale `.run/*.pid` — kill those processes
-  before self-tests.
+- **Known failure (e2e fake, cuantificado y de causa raíz conocida 2026-09-11)**:
+  Solo quedan 2 tests excluidos por defecto vía `grepInvert`
+  (`web/e2e/known-broken.ts`; para incluirlos: `E2E_INCLUDE_KNOWN_BROKEN=1 npm
+  run test:e2e`): los deep links de invitación (`invite-link.spec`) — la página
+  alcanza el staging de espectador (`staging-back` ✓) pero vuelve al lobby
+  antes del segundo aserto y los botones `invite-copy-*`/diálogo de mazo no
+  llegan; el escenario fake no emite `WATCHGAME` y `ActiveTablesBar` marca la
+  mesa como propia (`isMyTable` por `controllerName='e2e'`). Pendiente de
+  triage. **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
+  desde la ventana 09-05→09-10 (firma "Sala de Espera de Espectador" + asientos
+  `0/N` en lobby) tenían causa raíz en el SetupWizard (commit `03abd96354`):
+  su `skip()` persistía una conexión por defecto (proxy 8787) y el evento
+  `setup-conn` pisaba el `?proxyPort=8789` del FixtureServer, así que los e2e
+  jugaban contra el proxy real (beta.xmage.today en CI; evidencia: snapshot
+  con "Mesas (21)" reales y seats `0/2` = formato real `TableView.seatsInfo`).
+  Fix: `skip()` no persiste nada (la bandera ya la re-adivina
+  `guessDefaultFlag`) + `LoginScreen` da prioridad al `?proxyPort=` explícito
+  en `applySetupConn` + helper e2e apunta a `localhost` en fake. Also beware:
+  the desktop launcher (`today.xmage.nexus` JRE) can squat ports 17171/8787
+  while dev processes fail to bind with a stale `.run/*.pid` — kill those
+  processes before self-tests.
 - **Do not touch** generated files: `dist/`, `.run/`, `local-server/`,
   `node_modules/`, `target/`.
 - No comments in code unless requested.
