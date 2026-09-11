@@ -1,6 +1,10 @@
 import { defineConfig } from '@playwright/test'
+import { KNOWN_BROKEN_TITLES } from './e2e/known-broken'
 
 const FAKE_MODE = process.env.E2E_BACKEND !== 'real'
+const INCLUDE_KNOWN_BROKEN = process.env.E2E_INCLUDE_KNOWN_BROKEN === '1'
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // Puerto DEDICADO del e2e fake (misma lección que el 8789 del FixtureServer):
 // si el dev server del usuario o el vite del stack ocupan 5173, con
@@ -16,6 +20,13 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
+  // fake: excluye el known-broken (triage pendiente, e2e/known-broken.ts) salvo
+  // inclusión explícita para triage/reparación. Lista vacía = sin exclusión
+  // (un RegExp '(?:)' matchearía TODO y excluiría la suite entera).
+  grepInvert:
+    FAKE_MODE && !INCLUDE_KNOWN_BROKEN && KNOWN_BROKEN_TITLES.length > 0
+      ? new RegExp(`(?:${KNOWN_BROKEN_TITLES.map(escapeRegExp).join('|')})`)
+      : undefined,
   // en modo fake (por defecto) el e2e no depende del stack: vite se levanta solo
   webServer: FAKE_MODE
     ? {

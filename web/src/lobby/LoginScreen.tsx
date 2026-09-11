@@ -76,7 +76,9 @@ export default function LoginScreen() {
       const conn = (e as CustomEvent<ConnectionInfo>).detail
       if (!conn) return
       setProxyHost(conn.wsHost)
-      setProxyPort(conn.proxyPort)
+      // un ?proxyPort= explícito en la URL SIEMPRE gana (lo fijan los e2e para
+      // el FixtureServer; el wizard/defaults no debe pisarlo)
+      setProxyPort(urlProxyPort() ?? conn.proxyPort)
       setServerHost(conn.serverHost)
       setPort(String(conn.port))
       setUsername(conn.username)

@@ -74,7 +74,9 @@ export async function login(page: Page, username: string, opts: LoginOptions = {
     await page.locator('summary.login-network-header').click()
   }
   await page.getByLabel(/Proxy/i).fill('localhost')
-  await page.getByLabel(/Servidor XMage|XMage Server/i).fill(process.env.E2E_SERVER_HOST || 'beta.xmage.today')
+  // en fake el FixtureServer ignora el target, pero fijar localhost evita que
+  // una regresión de enrutado lance los tests contra el XMage real (beta)
+  await page.getByLabel(/Servidor XMage|XMage Server/i).fill(process.env.E2E_SERVER_HOST || (FAKE_MODE ? 'localhost' : 'beta.xmage.today'))
   await page.getByLabel(/Puerto|Port/i).fill(process.env.E2E_SERVER_PORT || '17171')
   await page.getByLabel(/Nombre de usuario|Usuario|Username/i).fill(username)
   await page.getByLabel(/Contraseña|Password/i).fill('x')

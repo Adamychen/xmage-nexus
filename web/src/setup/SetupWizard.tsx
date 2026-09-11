@@ -85,9 +85,10 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   }
 
   const skip = () => {
-    const conn = buildConn()
-    saveConn(conn)
-    window.dispatchEvent(new CustomEvent(SETUP_CONN_EVENT, { detail: conn }))
+    // Omitir deja el login INTACTO: solo marca el setup como hecho. Persistir
+    // una conexión por defecto (proxy 8787) pisaba el ?proxyPort= del e2e y
+    // lanzaba los tests fake contra el proxy real (causa raíz de los 77 fallos
+    // de staging/lobby del 2026-09-05→09-11).
     markSetupDone()
     onClose()
   }

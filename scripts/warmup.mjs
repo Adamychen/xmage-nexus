@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-// Calentamiento del stack: crea una partida IA vs IA descartable para "tripar" el
-// canal de callbacks del servidor tras un arranque en frío (la PRIMERA partida
-// puede perder el socket de retorno: "SESSION CALLBACK EXCEPTION - Unable to
-// create socket" en server.out.log). Si el fallo ocurre, se reintenta una vez.
+// Calentamiento del stack: espera a que el proxy termine de cargar su BD de
+// cartas (ERR_WARMING_UP en cada connect mientras CardScanner corre en
+// background; el escaneo frío en CI tarda minutos) y luego crea una partida
+// IA vs IA descartable para "tripar" el canal de callbacks del servidor tras
+// un arranque en frío (la PRIMERA partida puede perder el socket de retorno:
+// "SESSION CALLBACK EXCEPTION - Unable to create socket" en server.out.log).
+// Si el fallo del juego ocurre, se reintenta una vez.
 // Uso: node scripts/warmup.mjs
 
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
+// CI escanea la BD de cartas del proxy en frío (ruta relativa ./db, fuera del
+// caché del servidor): hasta READY todo connect responde ERR_WARMING_UP.
+const READY_TIMEOUT_MS = Number(process.env.NEXUS_PROXY_WARMUP_MS ?? 600_000)
+const READY_POLL_MS = 5000
 // el servidor limita el nombre de usuario a 14 caracteres (config.xml maxUserNameLength)
 const USER = `warmup-${String(Date.now()).slice(-6)}`
 
@@ -112,6 +119,38 @@ async function cleanup(tableId, gameId) {
   }
 }
 
+/** Espera (sondeando connect) a que el proxy termine de cargar la BD de cartas.
+ *  Solo espera ante ERR_WARMING_UP: cualquier otro error de connect falla al
+ *  momento (mismo comportamiento que antes para problemas reales del stack). */
+async function waitProxyReady() {
+  const deadline = Date.now() + READY_TIMEOUT_MS
+  for (;;) {
+    const c = client()
+    try {
+      await Promise.race([c.opened, timeout(10000, 'apertura del WebSocket')])
+      const res = await Promise.race([
+        c.send('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' }),
+        timeout(15000, 'resultado de connect (readiness)'),
+      ])
+      if (res.ok) return
+      if (!/still loading card data/i.test(res.error ?? '')) {
+        throw new Error(`connect falló: ${res.error ?? ''}`)
+      }
+    } finally {
+      try {
+        c.ws.close()
+      } catch {
+        /* noop */
+      }
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`el proxy no terminó de cargar la BD de cartas en ${READY_TIMEOUT_MS / 1000}s`)
+    }
+    console.log(`  [warmup] proxy cargando BD de cartas (ERR_WARMING_UP) — reintento en ${READY_POLL_MS / 1000}s`)
+    await new Promise((r) => setTimeout(r, READY_POLL_MS))
+  }
+}
+
 async function runOnce() {
   const c = client()
   let tableId = null
@@ -183,6 +222,7 @@ async function runOnce() {
 }
 
 async function main() {
+  await waitProxyReady()
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const { gameId } = await runOnce()

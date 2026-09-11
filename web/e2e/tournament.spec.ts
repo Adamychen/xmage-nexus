@@ -86,7 +86,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
   test('tournament panel joins the tournament chat over WS (T4)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
       await login(page, 'e2e')
-      await page.evaluate(() => {
+      const inject = () => page.evaluate(() => {
         const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
         const now = Date.now()
         store?.setState({
@@ -113,7 +113,12 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
         })
       })
       const panel = page.locator('[data-testid="tournament-panel"]').first()
-      await expect(panel).toBeVisible({ timeout: 10_000 })
+      // frames tardíos del connect pueden resetear el phase tras la inyección:
+      // re-inyectar hasta que el panel aparezca
+      await expect(async () => {
+        await inject()
+        await expect(panel).toBeVisible({ timeout: 2_000 })
+      }).toPass({ timeout: 10_000 })
       const chat = panel.locator('[data-testid="tournament-panel-chat"]').first()
       await expect(chat).toBeVisible({ timeout: 10_000 })
       await chat.locator('.chat-input input').fill('gl en el torneo')

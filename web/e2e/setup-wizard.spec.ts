@@ -16,7 +16,7 @@ test('setup wizard: aparece en contexto fresco, se completa y precarga el login'
   await expect(page.getByTestId('settings-sound-card')).toBeVisible()
   await next.click()
   await expect(page.getByTestId('setup-counter')).toContainText('6')
-  await next.click()
+  // el paso final ('done') muestra "Entrar" (setup-enter), no hay setup-next
   await expect(page.getByTestId('setup-enter')).toBeVisible()
   await page.getByTestId('setup-enter').click()
   await expect(wizard).toBeHidden({ timeout: 5_000 })
