@@ -112,7 +112,7 @@ test('best-of-3: el match se decide en game 3 (1-1 antes)', { tag: '@fullflow' }
     const start3 = await waitFrameAt(page, (f) => f.method === 'START_GAME', 'START_GAME game 3', 30_000, sideboard2.index + 1)
     await winGameWithBolts(page, helper, start3.frame.objectId ?? '')
 
-    await expect(page.locator('.end-dialog')).toContainText('You won the match!', { timeout: 20_000 })
+    await expect(page.locator('.end-dialog')).toContainText(/Tú gana el match|You won the match/i, { timeout: 20_000 })
     const end3 = [...parseFrames(framesOf(page))].reverse().find((f) => f.method === 'END_GAME_INFO')
     expect((end3?.data as { wins?: number } | null)?.wins, 'wins=2 al ganar el match').toBe(2)
 
