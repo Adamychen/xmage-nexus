@@ -105,6 +105,33 @@ describe('gameEventParser', () => {
     )
   })
 
+  it('strips server P/T suffixes and count forms so art lookup uses clean names (selfplay-1 spectator)', () => {
+    const block = parseGameEvent('qa-self-A blocks Raging Goblin (1/1) with Raging Goblin (1/1)', 'qa-self-A')
+    expect(block?.type).toBe('block')
+    expect(block?.cardName).toBe('Raging Goblin')
+    expect(block?.targetName).toBe('Raging Goblin')
+    expect(esText('qa-self-A blocks Raging Goblin (1/1) with Raging Goblin (1/1)', 'qa-self-A')).toBe(
+      'qa-self-A bloquea a Raging Goblin con Raging Goblin'
+    )
+
+    const dmg = parseGameEvent('Raging Goblin (1/1) deals 1 damage to Raging Goblin (1/1)', 'qa-self-A')
+    expect(dmg?.type).toBe('damage')
+    expect(dmg?.cardName).toBe('Raging Goblin')
+    expect(dmg?.targetName).toBe('Raging Goblin')
+
+    const one = parseGameEvent('qa-self-B attacks qa-self-A with 1 creature', 'qa-self-A')
+    expect(one?.type).toBe('attack')
+    expect(one?.cardName).toBeUndefined()
+    expect(esText('qa-self-B attacks qa-self-A with 1 creature', 'qa-self-A')).toBe(
+      'qa-self-B ataca a qa-self-A con 1 criatura'
+    )
+
+    const cast = parseGameEvent('qa-self-A casts Lightning Bolt targeting Raging Goblin (1/1) from hand', 'qa-self-A')
+    expect(cast?.type).toBe('cast')
+    expect(cast?.cardName).toBe('Lightning Bolt')
+    expect(cast?.targetName).toBe('Raging Goblin')
+  })
+
   it('parses real XMage damage and life changes', () => {
     const dmg = parseGameEvent('Lightning Bolt [3f9] deals 3 damage to Bob', 'Bob')
     expect(dmg?.type).toBe('damage')
@@ -250,6 +277,17 @@ describe('gameEventParser', () => {
   it('ignores spectator and join noise', () => {
     expect(parseGameEvent('Espectador: mirando la partida a8a976c9…', 'Alice')).toBeNull()
     expect(parseGameEvent('Alice has joined the game', 'Alice')).toBeNull()
+  })
+
+  it('parses "X has won the match/game" without swallowing "has" into the player name', () => {
+    const match = parseGameEvent('qa-self-B has won the match', 'qa-self-A')
+    expect(match?.type).toBe('system')
+    expect(match?.playerName).toBe('qa-self-B')
+    expect(esText('qa-self-B has won the match', 'qa-self-A')).toBe('qa-self-B gana el match')
+
+    const game = parseGameEvent('qa-self-B has won the game', 'qa-self-A')
+    expect(game?.playerName).toBe('qa-self-B')
+    expect(esText('qa-self-B has won the game', 'qa-self-A')).toBe('qa-self-B gana la partida')
   })
 
   it('localizes the same event in another language', () => {

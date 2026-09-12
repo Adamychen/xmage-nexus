@@ -168,6 +168,10 @@ It gives the agent real UI interaction (accessibility snapshots, click/hover/
 drag, screenshots, console/network) against a running app (stack vite on 5173
 or any URL); artifacts land in `.run/playwright-mcp/`. Complementary to `mage`:
 `mage` operates the protocol/backend, `playwright` sees and touches the UI.
+**Default browser workflow (2026-09-12, user-mandated)**: snapshot to act +
+**screenshot to verify** — after every meaningful browser step take a
+screenshot and actually look at it (read the image file), so visual regressions
+(overlap, clipping, empty states, canvas) are caught without being asked.
 
 ## E2E with dual backends: deterministic fake and real
 

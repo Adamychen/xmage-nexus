@@ -43,6 +43,15 @@ export interface FeedVerbatimText {
 }
 
 /**
+ * Limpia el sufijo de fuerza/resistencia que el servidor añade a los nombres
+ * de criatura en los mensajes de combate/daño ("Raging Goblin (1/1)" → "Raging
+ * Goblin"). Sin esto el nombre sucio llega a la búsqueda de imagen (404 en
+ * Scryfall) y al texto visible del feed.
+ */
+export function cleanCardName(raw: string): string {
+  return raw.replace(/\s*\(\d+\/\d+[^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim()
+}
+/**
  * Evento parseado pero SIN localizar: el texto visible se resuelve con
  * `formatFeedText` / `toFeedItem` en el idioma activo de la UI. Los nombres
  * de jugadores y cartas viajan en `params` y jamás se traducen.
@@ -211,8 +220,8 @@ export function parseGameEvent(
   )
   if (castMatch) {
     const pName = castMatch[1].trim()
-    const card = castMatch[2].trim()
-    const target = castMatch[3]?.trim() || castMatch[4]?.trim() || undefined
+    const card = cleanCardName(castMatch[2].trim())
+    const target = cleanCardName(castMatch[3]?.trim() || castMatch[4]?.trim() || '') || undefined
     return target
       ? i18n('cast', 'feed_cast_target', { player: pName, card, target }, { playerName: pName, isMe: isMe(pName), cardName: card, targetName: target })
       : i18n('cast', 'feed_cast', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })
@@ -233,12 +242,12 @@ export function parseGameEvent(
   )
   if (attackMatch) {
     const pName = attackMatch[1].trim()
-    const creatures = (attackMatch[2] ?? attackMatch[4])?.trim()
+    const creatures = cleanCardName((attackMatch[2] ?? attackMatch[4])?.trim() ?? '')
     const defender = attackMatch[3]?.trim()
-    const target = attackMatch[5]?.trim()
+    const target = cleanCardName(attackMatch[5]?.trim() ?? '') || undefined
     const countMatch = creatures?.match(/^(\d+)\s+creatures?$/i)
     const count = countMatch ? Number(countMatch[1]) : null
-    const extra = { playerName: pName, isMe: isMe(pName), cardName: creatures, targetName: target ?? defender }
+    const extra = { playerName: pName, isMe: isMe(pName), cardName: count !== null ? undefined : creatures, targetName: target ?? defender }
     if (count !== null) {
       if (defender) {
         return count === 1
@@ -259,17 +268,17 @@ export function parseGameEvent(
   const blockMatch = text.match(/^([^:]+?)\s+blocks\s+(.+?)\s+with\s+(.+)$/i)
   if (blockMatch) {
     const pName = blockMatch[1].trim()
-    const attacker = blockMatch[2].trim()
-    const blocker = blockMatch[3].trim()
+    const attacker = cleanCardName(blockMatch[2].trim())
+    const blocker = cleanCardName(blockMatch[3].trim())
     return i18n('block', 'feed_block', { player: pName, attacker, blocker }, { playerName: pName, isMe: isMe(pName), cardName: blocker, targetName: attacker })
   }
 
   // 6. Damage: "Source deals N damage to Target" or "Target takes N damage from Source"
   const dmgMatch = text.match(/^(.+?)\s+deals?\s+(\d+)\s+damage\s+to\s+(.+)$/i)
   if (dmgMatch) {
-    const src = dmgMatch[1].trim()
+    const src = cleanCardName(dmgMatch[1].trim())
     const dmg = Number(dmgMatch[2])
-    const tgt = dmgMatch[3].trim()
+    const tgt = cleanCardName(dmgMatch[3].trim())
     return i18n('damage', 'feed_damage', { source: src, amount: dmg, target: tgt }, { cardName: src, targetName: tgt, amount: dmg, isMe: isMe(tgt) })
   }
 
@@ -449,7 +458,7 @@ export function parseGameEvent(
     text.toLowerCase().includes('has conceded') ||
     text.toLowerCase().includes('fin de partida')
   ) {
-    const wonMatch = text.match(/^(.*?)\s+won the (game|match)\b/i)
+    const wonMatch = text.match(/^(.*?)\s+(?:has\s+)?won the (game|match)\b/i)
     if (wonMatch) {
       const pName = wonMatch[1].trim()
       const isMatch = wonMatch[2].toLowerCase() === 'match'
