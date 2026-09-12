@@ -335,3 +335,38 @@ rama `master`, 6 commits por delante de `origin/master`). Mandato del usuario: *
   reales (~45+ clics como participante) es desproporcionado para esta sesión.
 - Mesas `bo3-1`/`probe-1`/`tmr-1` cerradas; lobby a 0.
 - **Queda**: draft jugado en vivo (opcional, caro), commit del lote (pedir).
+
+## 11. Sesión 2026-09-12 noche-bis: e2e fake completo + Fase 2C resto + vías de error ✅
+
+- **E2E fake completo sin exclusiones** (`KNOWN_BROKEN_TITLES = []`): **119
+  passed, 2 skipped, 0 failed (14.9m)**. Cierra el §10.
+- **Mesa `audit-2c3`** (2×HUMAN Freeform determinista; C cuenta fresca
+  `mcp-mtyu3t58` con 10 Bolt + 20 Mountain, A con 30 Mountain): keeps, C
+  primero (sin robo), A T2 tierra, C descarta Bolt en cleanup T3 →
+  cementerio con 1 Bolt. Espectado en navegador con screenshots.
+- **Lección harness importante**: los `wait_for_prompt timeout:true` devuelven
+  el último estado CACHEADO — tras crear una mesa nueva con sesiones
+  reutilizadas los conteos 7+23 coincidían y parecía que el servidor había
+  reutilizado los mazos/manos (UUIDs idénticos incluidos). En realidad era
+  vista vieja: con cuenta fresca la mano trae Bolts (orden top-first con
+  `skipInitShuffling` confirmado: mano = primeras 7). Tras `start_match`,
+  exigir prompts frescos (mulligan/GAME_INIT) antes de fiarse del estado.
+- **Fix i18n cazado en vivo** (`PileOverlay.tsx` + test): el visor decía
+  "Cementerio (1 cartas)" — siempre plural. Ahora singular con 1 (patrón de
+  `LimitedDeckDialog`; claves ya en todos los locales). Verificado en vivo
+  ("Cementerio (1 carta)" + arte M10 del Bolt) y en unit. Suite 1369/1369 +
+  typecheck ✅.
+- **Fase 2C resto**: visor de cementerio ✅ (abre, pinta, cierra con ×/Esc);
+  chat de partida como espectador ✅ (mensaje con hora + autor); F1 no
+  existe en web (skips F4–F11 por diseño); F11 como espectador sin errores;
+  clic en avatar en partida sin handler (solo selecciona objetivo al
+  elegir — por diseño, no bug); feed limpio al espectar re-verificado
+  (1 evento).
+- **Vías de error**: mesa llena → `joinTable falló [SEAT]: No available
+  seats`; password mala → `[PASSWORD]: Wrong password`; password buena entra;
+  Bolt sin maná ni prioridad ignorado sin corromper (sigue en mano, turno
+  intacto). `leaveTable` falla con partida activa (`Command failed`) pero
+  `remove:true` (owner) limpia — mismo comportamiento ya visto.
+- Mesas `audit-2c3`/`audit-pw2` eliminadas; lobby a 0. Cuentas: `mcp-mtyu3t58`
+  (nueva, reutilizable).
+- **Queda**: draft jugado en vivo (opcional, caro), commit del lote (pedir).

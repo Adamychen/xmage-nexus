@@ -21,6 +21,18 @@ describe('PileOverlay', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('uses singular for a single card', () => {
+    const { getByText } = render(
+      <PileOverlay
+        title="Cementerio"
+        cards={{ 'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 } }}
+        onClose={vi.fn()}
+      />
+    )
+
+    expect(getByText('Cementerio (1 carta)')).not.toBeNull()
+  })
+
   it('renders library with revealed top card, position badges, and face-down cards', () => {
     const onClose = vi.fn()
     const cards: Record<string, CardView> = {

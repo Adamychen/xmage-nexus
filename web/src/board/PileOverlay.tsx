@@ -56,7 +56,7 @@ export default function PileOverlay({
       <div className={`pile-overlay ${isLibrary ? 'library-overlay' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <div className="pile-header-titles">
-            <h3>{title} ({entries.length} {t('dialogs', 'viewer_card_plural')})</h3>
+            <h3>{title} ({entries.length} {entries.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')})</h3>
             {isLibrary && (
               <span className="pile-header-subtitle">
                 {knownCount > 0
