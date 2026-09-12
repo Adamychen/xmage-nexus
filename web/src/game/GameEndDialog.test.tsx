@@ -85,6 +85,25 @@ describe('GameEndDialog', () => {
     fireEvent.click(btn)
   })
 
+  it('renders winner badge for the "Player X is the winner" server form', () => {
+    setState({
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-a', name: 'qa-vfy-A2', controlled: false }),
+          makePlayer({ playerId: 'p-b', name: 'qa-vfy-B2', controlled: false }),
+        ],
+      }),
+      gameEnd: {
+        gameInfo: 'Player qa-vfy-B2 is the winner',
+        won: false,
+      },
+    })
+
+    render(<GameEndDialog />)
+    expect(screen.getByText('Partida finalizada')).toBeDefined()
+    expect(screen.getByText('qa-vfy-B2')).toBeDefined()
+  })
+
   it('renders nothing when sideboardScreen is active (does not block sideboard)', () => {
     setState({
       game: makeGameView({

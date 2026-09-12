@@ -169,6 +169,17 @@ describe('handleMessage', () => {
     expect(gameEntries.some((e) => /Iniciar Partida/.test(e.text))).toBe(true)
   })
 
+  it('WATCHGAME limpia del log los eventos de la partida anterior (feed por partida)', () => {
+    addLog('partida', 'evento de la partida vieja')
+    expect(getState().log.some((e) => e.text === 'evento de la partida vieja' && e.channel === 'game')).toBe(true)
+
+    handleMessage({ type: 'event', method: 'WATCHGAME', messageId: 1, objectId: 'g-new', data: null })
+
+    const gameEntries = getState().log.filter((e) => e.channel === 'game')
+    expect(gameEntries.some((e) => e.text === 'evento de la partida vieja')).toBe(false)
+    expect(gameEntries.some((e) => /mirando la partida/.test(e.text))).toBe(true)
+  })
+
   it('aplica el replay de una partida re-unida aunque phase sea lobby (restore tras recarga)', () => {
     const game = makeGameView({})
     setState({ phase: 'lobby', resumingGameId: 'g-restore' })

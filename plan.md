@@ -202,4 +202,136 @@ rama `master`, 6 commits por delante de `origin/master`). Mandato del usuario: *
   caminos (handleSetCommander limpio; derivePartnerCard devuelve null en los estados modelados).
   El invariante ya está cerrado por construcción (canPair rechaza mismo nombre + dedupe en
   commanderCardsFor + guards en adopt/drop/crown) con tests, y el estado se curó en vivo.
-  Si reaparece un duplicado, instrumentar `schedulePersist` con traza en vez de re-analizar en vacío.
+   Si reaparece un duplicado, instrumentar `schedulePersist` con traza en vez de re-analizar en vacío.
+
+## 7. Sesión 2026-09-12 tarde: tokens + auras + 4 fixes (sin commit, a petición)
+
+- **Harness nuevo verificado en vivo**: el MCP reiniciado acepta `session?`; `tokens-1` y `aura-1`
+  (2×HUMAN, `skipInitShuffling`, sesiones `vfy-A`/`vfy-B` pineadas) jugadas en paralelo sin
+  interferencias — cierra la advertencia del §1 ("reconectar el MCP").
+- **Tokens**: `Dragon Fodder ORI:140` → 2× Goblin 1/1 (`isToken`, `mageObjectType TOKEN`,
+  `cardNumber` vacío), ataque + daño 20→19→17, render + feed con píldoras ➔. Ojo: la mano
+  inicial viene **ordenada por el servidor** (contenido determinista, orden no).
+- **Auras**: `Elvish Mystic m14:169` + `Rancor M13:185` (el servidor auto-elige objetivo con una
+  sola criatura legal, sin `GAME_TARGET`); 3/1+trample, doble Rancor 5/1; `attachments[]`,
+  `attachedTo`, icono `ABILITY_TRAMPLE`; la web apila el aura + badge TR + tooltip Arrollar.
+- **Fixes** (unit 1365/1365 + typecheck, sin commitear): `Attacker: X (P/T)` sin `cleanCardName`
+  (8×404 por ficha); `feed_lose/gain_life_one` ×9 locales (`pierde 1 vidas`→`pierde 1 vida`);
+  `Player X is the winner` + `X wants to concede` en crudo (parser + badge `GameEndDialog`);
+  `handleWatchGame` no limpiaba el feed (arrastraba la partida anterior al espectar).
+- **Lección harness**: `mage_combat` multi-atacante pierde el 2º UUID igual que el gang-block →
+  secuencial (UUID→wait→UUID→confirm); auto-pay `special` no paga solo (usar `sourceId`).
+- **Queda**: contadores (Ballista `2XM:306`, diálogo X/multi-cantidad en web), PW (Jace `WWK:31`),
+  equipos (Greaves `2XM:267`/Boots `C20:254`), evasión (Serra `LEA:39` — el research
+  decía `LEA:227` pero es War Mammoth), draft/Bo3 en UI.
+  Lobby a 0 mesas. Cuentas reutilizables: qa-vfy-A2/B2 (1 victoria cada una).
+
+## 8. Sesión 2026-09-12 tarde-noche: contadores (Ballista) — mecánicas ✅, ataque ❌ (quirk engine)
+
+- **Mesa `counters-1`** (2×HUMAN determinista, sesiones pineadas, 17 turnos, espectada
+  con screenshots + recarga dura): `Walking Ballista 2XM:306` (verificada en Scryfall)
+  con X=2 (`GAME_CHOOSE_ABILITY` → `GAME_GET_AMOUNT` "Announce the value for {X}{X}" →
+  `mage_choose value=2` (ojo: `mage_action integer` rechaza string del transporte;
+  `mage_choose` sí coerciona con `Number()`) → pago {4} girando 4 Bosques).
+- **Contadores verificados**: entra 2/2 con 2×+1/+1; ping T7 quitando 1 contador como
+  coste (`GAME_TARGET` a B, 20→19, queda 1/1+1); `{4}: poner contador` en T9 (2/2+2).
+  GameView trae `counters:[{+1/+1×2}]` + icono `OTHER_COST_X "x=2" ("Announced X = 2")`
+  + las 3 reglas; la web renderiza arte + `2/2` + badge `+2` + chip `x=2` (screenshots
+  `page-2026-09-12T17-25-58` y `18-04-42`, turno 7 y 17, B a 19).
+- **Quirk engine (fork, fuera de alcance)**: el UUID de la Ballista en la ventana
+  declare-attackers abre `GAME_CHOOSE_ABILITY` en vez de declarar (4 reproducciones:
+  T9 con `mage_combat`, T11 botón `special` "All attack", T15 UUID solo con auto-pass
+  OFF, T17 doble-clic). El proxy reenvía directo (`SessionImpl` de `Mage.Client`);
+  `HumanPlayer.selectAttackers` debería declarar vía `selectDefender` (1 defensor =
+  directo), pero empíricamente sale el menú; la web manda el mismo UUID que el
+  desktop (`GameScreen.onCombatClick`), así que hay paridad por construcción y el
+  ataque con criaturas normales está cubierto (tokens + `combat.spec` real).
+- **Lección harness**: el auto-pass come el declare si llega como `mode=select`
+  (confirmado en `mage_session`: `AUTO_PASS` tras `GAME_SELECT`, T13 saltado sin
+  atacantes) → **apagarlo (`mage_auto_pass enabled=false`) antes de declarar**.
+  Por eso el T13 se saltó el combate; con auto-pass off el declare sobrevive.
+- Mesa concedida (gana B) y abandonada; lobby a 0; auto-pass de vfy-A restaurado a on.
+  Sin cambios de código → suite 1365 + typecheck siguen vigentes.
+- **Queda**: PW (Jace `WWK:31`), equipos (`2XM:267`/`C20:254`), evasión (Serra `LEA:39`),
+  draft/Bo3 en UI, diálogo multi-cantidad en web, 2 e2e invite en known-broken.
+
+## 9. Sesión 2026-09-12 noche: PW (Jace) + equipos/evasión (Serra) — todo ✅
+
+- **Mesa `pw-1`** (2×HUMAN determinista, sesiones pineadas, 10 turnos, espectada con
+  screenshots): `Jace, the Mind Sculptor WWK:31` (verificado en Scryfall) casteado T8
+  con `{2}{U}{U}` (4 Islas `iko/263` por `sourceId`); entra con lealtad 3.
+- **+2** (`GAME_CHOOSE_ABILITY` solo ofrece +2 y 0: −1 sin criatura, −12 sin lealtad —
+  legalidad correcta del engine): `GAME_TARGET` a jugador (B) → `GAME_ASK` Yes/No
+  "bottom of library" → lealtad 3→5 ✅, biblioteca de B intacta en conteo.
+- **0 Brainstorm**: roba 3 (mano 7→10, biblio 48→45) + 2× `GAME_TARGET` secuencial
+  "Select a card" para devolver (mano 8, biblio 47, pila vacía, lealtad sigue 5).
+  Cubre de paso el diálogo de "orden/devolución" del plan.
+- Web: Jace con "Lealtad: 5" + badge `+5`, bibliotecas 47/49, feed limpio al espectar
+  (fix `handleWatchGame` re-verificado); screenshots `page-2026-09-12T18-13-54` (T9)
+  y `18-15-15` (T10). Mesa concedida (gana B) y abandonada.
+- **Mesa `equip-1`** (12 turnos, espectada con screenshot): mano inicial perfecta
+  (Serra+Greaves+Boots+4 Plains `iko/260`, todo verificado en Scryfall).
+  Greaves T4 (`{2}`, `Pay {2}` con 2 Plains), Boots T6 (`{2}`), Serra T10
+  (`{3}{W}{W}` con 5 Plains) → 4/4 en mesa.
+- **Equipar**: UUID de Greaves → `GAME_CHOOSE_ABILITY` "Equip {0}" → el servidor
+  **auto-elige objetivo con una sola criatura legal** (igual que Rancor, sin
+  `GAME_TARGET`); `attachments:[greaves]`, reglas `Flying/Vigilance/Haste/Shroud`,
+  `summoningSickness:false`, iconos `ABILITY_FLYING/VIGILANCE/HEXPROOF("Shroud")`
+  (ojo: shroud mapea a tipo `ABILITY_HEXPROOF` en el engine).
+- **Ataque T10 con `mage_combat` directo**: criatura sin habilidades activadas declara
+  sin menú (contraste con el quirk Ballista: el UUID abre `CHOOSE_ABILITY` solo si la
+  carta TIENE habilidades) → B 20→16 (evasión flying ✅), Serra **no girada**
+  (vigilance ✅), haste vía Greaves ✅.
+- **Shroud negativo**: en T12 ni Greaves ni Boots aparecen en `playableIds` (única
+  criatura con shroud → equip sin objetivo legal no se ofrece). Engine correcto.
+- Web: Serra 4/4 con badges FL/VI/SH + tooltips ES (Volar 🦅, Prisa 🔥, Velo 🌫️,
+  Vigilancia 🛡️), Greaves anexadas, Boots sueltas, B a 16; screenshot
+  `page-2026-09-12T18-24-20`. Mesa concedida (gana B) y abandonada; lobby a 0.
+  Sin cambios de código → suite 1365 + typecheck siguen vigentes.
+- **Queda**: draft/Bo3 en UI, 2 e2e invite en known-broken.
+
+## 10. Sesión 2026-09-12 noche: Bo3 completo + fix timer + invite unblocked ✅
+
+- **Mesa `bo3-1`** (winsNeeded 2, 2×HUMAN con `playerTypes:[HUMAN,HUMAN]` — lección:
+  con el default HUMAN+SIM el bot ocupa el asiento libre antes de que B se una;
+  hubo que borrar y recrear): 3 partidas con concesiones (B gana P1, A gana P2,
+  B gana P3 → match 2-1). Mazos 55 tierras + 5 de sideboard.
+- **Sideboard entre partidas**: el servidor emite `SIDEBOARD` (objectId = mesa) y
+  espera ambos submits; el harness MCP no expone `submitDeck`, así que se envió
+  por WS crudo con script temporal (`.run/scratch/submit-sideboard.mjs`: connect
+  con misma cuenta → `attached:true` → `submitDeck {tableId,deck}` → `ok:true`).
+  Tras ambos submits arranca la siguiente partida con bibliotecas restauradas
+  (55). Sin cambios, mazos intactos. Gap de harness anotado (no hay tool de
+  sideboard; el proxy sí lo soporta — `GameCommands.java:106`).
+- **Web Bo3**: lobby "Wins: 2 Score: 0-0/0-1", pips de match ○○→●○→1/2 en
+  PlayerInfoBar con tooltip "Victorias en el match", feed 1ª persona en
+  concesiones, feed limpio al re-espectar ("Espectador: mirando la partida
+  e5e1ac0a…", 1 evento), `SideboardScreen`/`GameEndDialog` cableados y
+  testeados (el diálogo se oculta durante sideboard). Screenshots
+  `page-2026-09-12T19-38-22` (P1 fin), `19-43-52` (P2).
+- **Límite del espectador**: `watchGame(gameId)` es por partida — al empezar P2
+  el espectador se queda en P1 (diálogo de fin). Hay que Volver al lobby +
+  re-Espectar (verificado: entra en P2 con marcador 0-1). Sin auto-follow;
+  paridad con desktop, no se toca.
+- **Hallazgo: END_GAME_INFO no llega a espectadores** (probado en `probe-1`:
+  el `gameEnd` del watcher es 100% sintético de `handleGameOver`, con
+  `matchView.endTime` = hora actual). Consecuencia: no hay señal fiable para
+  distinguir fin-de-partida de fin-de-match en el watcher — se deja el diálogo
+  como está (Volver al lobby siempre) en vez de arriesgar espectadores
+  atascados. Anotado, no fix.
+- **Fix timer sin-reloj** (`utils/timer.ts`, `PlayerInfoBar.tsx` + 3 tests):
+  el servidor envía `priorityTimeLeftSecs: 2147483647` (Integer.MAX_VALUE) que
+  se renderizaba como "596523:14:07" (2^31-1 s exactos, confirmado por cálculo
+  + screenshot P2). Ahora `isUnlimitedTime()` lo trata como sin límite: badge
+  oculto, hook devuelve 0 sin tickear. Suite 1368/1368 + typecheck ✅.
+  Nota: en vivo también se ve badge "00:00" (`timerActive` con left=0,
+  comportamiento previo, sin cambios).
+- **Invite known-broken VACÍO**: los 2 tests (`invite-link.spec`) pasan al
+  re-ejecutarlos (1.5s c/u, con y sin flag) — eran coletazo del bug del
+  SetupWizard, no bug propio. `KNOWN_BROKEN_TITLES = []`.
+- **Draft en vivo**: diferido con criterio — creación via wizard ya verificada
+  (§2), `DraftScreen`/`ConstructScreen` cubiertas por e2e fake (`draft.spec`,
+  `tournament.spec`) + unit, `submitDeck` verificado en vivo aquí; jugar picks
+  reales (~45+ clics como participante) es desproporcionado para esta sesión.
+- Mesas `bo3-1`/`probe-1`/`tmr-1` cerradas; lobby a 0.
+- **Queda**: draft jugado en vivo (opcional, caro), commit del lote (pedir).

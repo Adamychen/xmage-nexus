@@ -150,6 +150,9 @@ describe('gameEventParser', () => {
     expect(lifeGain?.type).toBe('life')
     expect(lifeGain?.amount).toBe(4)
     expect(esText('Alice gains 4 life', 'Alice')).toBe('Alice gana 4 vidas (+4)')
+
+    expect(esText('Bob loses 1 life', 'Bob')).toBe('Bob pierde 1 vida (-1)')
+    expect(esText('Alice gains 1 life', 'Alice')).toBe('Alice gana 1 vida (+1)')
   })
 
   it('parses attacks with defender and creature counts', () => {
@@ -187,10 +190,10 @@ describe('gameEventParser', () => {
 
   it('parses combat status lines', () => {
     expect(esText('Attacker: Old-Growth Dryads (3/3) unblocked', 'Alice')).toBe(
-      'Atacante: Old-Growth Dryads (3/3), sin bloquear'
+      'Atacante: Old-Growth Dryads, sin bloquear'
     )
     expect(esText('Attacker: Grizzly Bears (2/2) blocked by Llanowar Elves (1/1)', 'Alice')).toBe(
-      'Atacante: Grizzly Bears (2/2), bloqueado por Llanowar Elves (1/1)'
+      'Atacante: Grizzly Bears, bloqueado por Llanowar Elves'
     )
     expect(esText('Attacked player: Necrosis', 'Necrosis')).toBe('Jugador atacado: Necrosis')
   })
@@ -265,6 +268,8 @@ describe('gameEventParser', () => {
     expect(esText('Alice won the game', 'Alice')).toBe('Alice gana la partida')
     expect(esText('Bob won the match', 'Alice')).toBe('Bob gana el match')
     expect(esText('Bob has conceded', 'Alice')).toBe('Bob concede la partida')
+    expect(esText('Player qa-vfy-B2 is the winner', 'Alice')).toBe('qa-vfy-B2 gana la partida')
+    expect(esText('qa-vfy-A2 wants to concede', 'Alice')).toBe('qa-vfy-A2 concede la partida')
   })
 
   it('keeps already-Spanish announcements verbatim', () => {

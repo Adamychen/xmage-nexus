@@ -287,13 +287,15 @@ export function parseGameEvent(
   if (lifeLossMatch) {
     const pName = lifeLossMatch[1].trim()
     const amt = Number(lifeLossMatch[2])
-    return i18n('life', 'feed_lose_life', { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: -amt })
+    const key = amt === 1 ? 'feed_lose_life_one' : 'feed_lose_life'
+    return i18n('life', key, { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: -amt })
   }
   const lifeGainMatch = text.match(/^([^:]+?)\s+gains\s+(\d+)\s+life/i)
   if (lifeGainMatch) {
     const pName = lifeGainMatch[1].trim()
     const amt = Number(lifeGainMatch[2])
-    return i18n('life', 'feed_gain_life', { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: amt })
+    const key = amt === 1 ? 'feed_gain_life_one' : 'feed_gain_life'
+    return i18n('life', key, { player: pName, amount: amt }, { playerName: pName, isMe: isMe(pName), amount: amt })
   }
 
   // 8. Abilities: "[Player - ]Ability triggers: CardName [- desc] [- targeting Target]"
@@ -397,9 +399,9 @@ export function parseGameEvent(
   // 12. Combat status: "Attacker: Grizzly Bears (2/2) unblocked", "Attacked player: Bob"
   const attackerMatch = text.match(/^Attacker:\s*(.+?)\s+(unblocked|blocked(?:\s+by\s+(.+?))?)\.?$/i)
   if (attackerMatch) {
-    const attacker = attackerMatch[1].trim()
+    const attacker = cleanCardName(attackerMatch[1].trim())
     const how = attackerMatch[2].trim().toLowerCase()
-    const blocker = attackerMatch[3]?.trim()
+    const blocker = attackerMatch[3] ? cleanCardName(attackerMatch[3].trim()) : undefined
     if (how === 'unblocked') {
       return i18n('attack', 'feed_attacker_unblocked', { attacker }, { cardName: attacker })
     }
@@ -455,16 +457,23 @@ export function parseGameEvent(
     text.toLowerCase().includes('ha ganado') ||
     text.toLowerCase().includes('won the match') ||
     text.toLowerCase().includes('won the game') ||
+    text.toLowerCase().includes('is the winner') ||
     text.toLowerCase().includes('has conceded') ||
+    text.toLowerCase().includes('wants to concede') ||
     text.toLowerCase().includes('fin de partida')
   ) {
+    const winnerMatch = text.match(/^Player\s+(.+?)\s+is the winner\.?$/i)
+    if (winnerMatch) {
+      const pName = winnerMatch[1].trim()
+      return i18n('system', 'feed_won_game', { player: pName }, { playerName: pName, isMe: isMe(pName) })
+    }
     const wonMatch = text.match(/^(.*?)\s+(?:has\s+)?won the (game|match)\b/i)
     if (wonMatch) {
       const pName = wonMatch[1].trim()
       const isMatch = wonMatch[2].toLowerCase() === 'match'
       return i18n('system', isMatch ? 'feed_won_match' : 'feed_won_game', { player: pName }, { playerName: pName, isMe: isMe(pName) })
     }
-    const concededMatch = text.match(/^(.*?)\s+has conceded\b/i)
+    const concededMatch = text.match(/^(.*?)\s+(?:has conceded|wants to concede)\b/i)
     if (concededMatch) {
       const pName = concededMatch[1].trim()
       return i18n('system', 'feed_conceded', { player: pName }, { playerName: pName, isMe: isMe(pName) })

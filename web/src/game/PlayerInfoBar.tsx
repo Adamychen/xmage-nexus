@@ -1,6 +1,6 @@
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
-import { formatTimer, useTickingTimer } from '../utils/timer'
+import { formatTimer, isUnlimitedTime, useTickingTimer } from '../utils/timer'
 import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
 import { useTweenNumber } from './useTweenNumber'
@@ -244,7 +244,8 @@ export default function PlayerInfoBar({
     ? game.activePlayerId === player.playerId
     : !!player.isActive
   const timeLeft = useTickingTimer(player.priorityTimeLeftSecs, hasPriority)
-  const hasTimer = (player.priorityTimeLeftSecs != null && player.priorityTimeLeftSecs > 0) || !!player.timerActive
+  const unlimitedTime = isUnlimitedTime(player.priorityTimeLeftSecs)
+  const hasTimer = !unlimitedTime && ((player.priorityTimeLeftSecs != null && player.priorityTimeLeftSecs > 0) || !!player.timerActive)
   const isTimeLow = hasTimer && timeLeft > 0 && timeLeft <= 30
   const bufferTimeLeft = player.bufferTimeLeft ?? 0
   const hasBuffer = bufferTimeLeft > 0

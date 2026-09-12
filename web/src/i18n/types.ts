@@ -647,7 +647,9 @@ export interface TranslationSchema {
     feed_block: string
     feed_damage: string
     feed_lose_life: string
+    feed_lose_life_one: string
     feed_gain_life: string
+    feed_gain_life_one: string
     feed_ability_trigger: string
     feed_ability_trigger_desc: string
     feed_ability_trigger_target: string

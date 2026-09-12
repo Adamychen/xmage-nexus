@@ -210,6 +210,17 @@ describe('PlayerInfoBar', () => {
     expect(timerBadge?.classList.contains('timer-low')).toBe(true)
   })
 
+  it('hides the timer badge when the server sends no time limit (Integer.MAX_VALUE)', () => {
+    const timelessPlayer: PlayerView = {
+      ...basePlayer,
+      hasPriority: true,
+      timerActive: true,
+      priorityTimeLeftSecs: 2147483647,
+    }
+    const { container } = render(<PlayerInfoBar player={timelessPlayer} side="my" />)
+    expect(container.querySelector('.player-timer-badge')).toBeNull()
+  })
+
   it('renders buffer time when bufferTimeLeft > 0', () => {
     const bufferPlayer: PlayerView = {
       ...basePlayer,

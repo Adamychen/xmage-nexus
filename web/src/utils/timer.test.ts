@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { formatTimer, useTickingTimer } from './timer'
+import { formatTimer, isUnlimitedTime, UNLIMITED_TIME, useTickingTimer } from './timer'
 
 describe('timer utility', () => {
   beforeEach(() => {
@@ -27,6 +27,14 @@ describe('timer utility', () => {
       expect(formatTimer(3600)).toBe('1:00:00')
       expect(formatTimer(6908)).toBe('1:55:08')
       expect(formatTimer(7325)).toBe('2:02:05')
+    })
+
+    it('detects the server no-time-limit sentinel (Integer.MAX_VALUE)', () => {
+      expect(isUnlimitedTime(UNLIMITED_TIME)).toBe(true)
+      expect(isUnlimitedTime(3600)).toBe(false)
+      expect(isUnlimitedTime(0)).toBe(false)
+      expect(isUnlimitedTime(null)).toBe(false)
+      expect(isUnlimitedTime(undefined)).toBe(false)
     })
   })
 
@@ -70,6 +78,16 @@ describe('timer utility', () => {
       // Server update arrives with 55s
       rerender({ t: 55, ticking: true })
       expect(result.current).toBe(55)
+    })
+
+    it('treats the no-time-limit sentinel as 0 and never ticks', () => {
+      const { result } = renderHook(() => useTickingTimer(UNLIMITED_TIME, true))
+      expect(result.current).toBe(0)
+
+      act(() => {
+        vi.advanceTimersByTime(5000)
+      })
+      expect(result.current).toBe(0)
     })
   })
 })

@@ -104,6 +104,9 @@ export function handleWatchGame(objectId: string | null): void {
     void cmds.watchGame(objectId)
     setState({ phase: 'spectating_pending', gameId: objectId, watchingTable: null })
   }
+  // Nuevo espectado: el feed no debe arrastrar los eventos de la partida anterior
+  // (mismo motivo que en handleStartGame: el log global es compartido).
+  setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
   addLog('partida', `Espectador: mirando la partida ${objectId?.slice(0, 8) ?? ''}…`)
 }
 
