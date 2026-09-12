@@ -38,14 +38,14 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 | Tool | Args | Qué hace |
 |---|---|---|
 | `mage_connect` | `session?`, `proxyUrl?`, `host?`, `port?`, `username?`, `password?`, `timeoutSec?` | Abre el WS contra el proxy y hace login (default local; cuenta autogenerada de ≤14 chars; reintenta `WARMING_UP`). `session` nombra la sesión MCP (multi-sesión). |
-| `mage_disconnect` | — | Cierra la sesión activa. |
-| `mage_reconnect` | — | Reabre el WS con las credenciales guardadas, re-loguea (attach si la sesión sigue viva; `lastConnectAttached`) y resincroniza la partida con `joinGame`. El auto-reconnect (backoff 1s→10s) ya lo hace solo. |
-| `mage_lobby` | `limit?` | Mesas de la sala (id, tipo, asientos, estado) + resumen de usuarios. |
-| `mage_create_table` | `name?`, `gameType?`, `deckType?`, `winsNeeded?`, `playerTypes?`, `simDecks?`, `seatSkills?`, `skipInitShuffling?`, `skipStartingPlayerChoice?` | Crea mesa (default HUMAN+SIM) y devuelve `tableId`. |
-| `mage_join_table` | `tableId`, `deck` (DeckJson), `playerName?`, `playerType?`, `skill?`, `password?` | Se une como jugador con mazo. |
-| `mage_start_match` | `tableId?`, `waitMs?` | Arranca y espera `START_GAME`; devuelve `gameId`. |
-| `mage_leave_table` | `tableId?`, `remove?` | Sale de la mesa o la elimina (dueño). |
-| `mage_session` | — | Estado de la sesión ACTIVA (id, conexión, mesa, gameId, turno/fase/prioridad) + cola de eventos. |
+| `mage_disconnect` | `session?` | Cierra la sesión (pin o activa). |
+| `mage_reconnect` | `session?` | Reabre el WS con las credenciales guardadas, re-loguea (attach si la sesión sigue viva; `lastConnectAttached`) y resincroniza la partida con `joinGame`. El auto-reconnect (backoff 1s→10s) ya lo hace solo. |
+| `mage_lobby` | `limit?`, `session?` | Mesas de la sala (id, tipo, asientos, estado) + resumen de usuarios. |
+| `mage_create_table` | `name?`, `gameType?`, `deckType?`, `winsNeeded?`, `playerTypes?`, `simDecks?`, `seatSkills?`, `skipInitShuffling?`, `skipStartingPlayerChoice?`, `session?` | Crea mesa (default HUMAN+SIM) y devuelve `tableId`. |
+| `mage_join_table` | `tableId`, `deck` (DeckJson), `playerName?`, `playerType?`, `skill?`, `password?`, `session?` | Se une como jugador con mazo. |
+| `mage_start_match` | `tableId?`, `waitMs?`, `session?` | Arranca y espera `START_GAME`; devuelve `gameId`. |
+| `mage_leave_table` | `tableId?`, `remove?`, `session?` | Sale de la mesa o la elimina (dueño). |
+| `mage_session` | `session?` | Estado de la sesión (pin o activa: id, conexión, mesa, gameId, turno/fase/prioridad) + cola de eventos. |
 | `mage_sessions` | — | Lista todas las sesiones nombradas (id, activa, conexión, username, mesa, gameId). |
 | `mage_use_session` | `session` | Cambia la sesión activa; las demás siguen recibiendo eventos (y auto-pass) en segundo plano. |
 
@@ -53,17 +53,23 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 
 | Tool | Args | Qué hace |
 |---|---|---|
-| `mage_game_state` | `level`(compact/full) | Estado compacto (turno/fase/prioridad, vidas, mano, battlefield, stack, jugables, combate) + prompt pendiente. |
-| `mage_wait_for_prompt` | `timeoutMs?`, `afterSeq?` | Bloquea hasta que el servidor pida decisión o la partida acabe; devuelve el prompt normalizado con opciones. |
-| `mage_action` | `kind`(uuid/boolean/integer/string/manaType/playerAction), `value?`, `action?`, `data?`, `playerId?`, `force?` | Respuesta cruda validada contra el prompt pendiente. |
-| `mage_choose` | `optionId?`, `value?`, `values?` | Responde por opción/valor; sin args pasa (select/combat). |
-| `mage_play_card` | `cardId` | `sendPlayerUUID` de una carta/fuente/habilidad jugable. |
-| `mage_pay_mana` | `sourceId?`, `manaType?` | Paga con una fuente (`sendPlayerUUID`) o del pool (`sendPlayerManaType`). |
-| `mage_pass_priority` | — | `sendPlayerBoolean(false)`: pasar/confirmar/rechazar. |
-| `mage_combat` | `attackers?`, `blockers?`, `confirm?` | Declara UUIDs y confirma el paso de combate. |
-| `mage_auto_pass` | `enabled` | Auto-pass en ventanas de prioridad del rival o sin jugables (default ON; nunca en asks/maná). Anti-flood: si el servidor repite el mismo prompt >5 veces, lo desactiva y registra `AUTO_PASS_STOPPED`. |
-| `mage_concede` | — | `sendPlayerAction CONCEDE`. |
-| `mage_chat` | `text`, `chatId?` | Chat de la partida. |
+| `mage_game_state` | `level`(compact/full), `session?` | Estado compacto (turno/fase/prioridad, vidas, mano, battlefield, stack, jugables, combate) + prompt pendiente. |
+| `mage_wait_for_prompt` | `timeoutMs?`, `afterSeq?`, `session?` | Bloquea hasta que el servidor pida decisión o la partida acabe; devuelve el prompt normalizado con opciones. |
+| `mage_action` | `kind`(uuid/boolean/integer/string/manaType/playerAction), `value?`, `action?`, `data?`, `playerId?`, `force?`, `session?` | Respuesta cruda validada contra el prompt pendiente. |
+| `mage_choose` | `optionId?`, `value?`, `values?`, `session?` | Responde por opción/valor; sin args pasa (select/combat). |
+| `mage_play_card` | `cardId`, `session?` | `sendPlayerUUID` de una carta/fuente/habilidad jugable. |
+| `mage_pay_mana` | `sourceId?`, `manaType?`, `session?` | Paga con una fuente (`sendPlayerUUID`) o del pool (`sendPlayerManaType`). |
+| `mage_pass_priority` | `session?` | `sendPlayerBoolean(false)`: pasar/confirmar/rechazar. |
+| `mage_combat` | `attackers?`, `blockers?`, `blockTargets?`, `confirm?`, `targetTimeoutMs?`, `session?` | Declara atacantes; bloqueadoras de una en una respondiendo el `GAME_TARGET` intercalado con `blockTargets[i]` (gang-block). |
+| `mage_auto_pass` | `enabled`, `session?` | Auto-pass en ventanas de prioridad del rival o sin jugables (default ON; nunca en asks/maná). Anti-flood: si el servidor repite el mismo prompt >5 veces, lo desactiva y registra `AUTO_PASS_STOPPED`. |
+| `mage_concede` | `session?` | `sendPlayerAction CONCEDE`. |
+| `mage_chat` | `text`, `chatId?`, `session?` | Chat de la partida. |
+
+> **Pin `session` (anti-carreras)**: casi todas las tools aceptan `session?` para
+> operar sobre una sesión MCP sin cambiar la activa global. Imprescindible en
+> juego paralelo (varios agentes/partidas en un proceso MCP): sin pin, dos
+> agentes conmutando `mage_use_session` se pisan (acciones caídas en la partida
+> ajena). Verificado con self-play PvP + oleada paralela (`PROJECT.md`).
 
 ### Bucle de juego
 
@@ -80,8 +86,10 @@ realmente puede decidir (su turno con jugables, asks, targets, maná). Desactív
 `mage_auto_pass({enabled:false})` si quieres ver también las prioridades del rival.
 
 **Multi-sesión**: `mage_connect({session:"a"})` crea una sesión nombrada (varias
-cuentas/partidas en un proceso MCP). Todas las tools operan sobre la sesión
-**activa**; cámbiala con `mage_use_session` y lístalas con `mage_sessions`.
+cuentas/partidas en un proceso MCP). Sin pin, las tools operan sobre la sesión
+**activa** (cámbiala con `mage_use_session`, lístalas con `mage_sessions`);
+con pin `session?` operan sobre esa sin tocar la activa — obligatorio en juego
+paralelo (la activa global es una carrera entre agentes).
 Las sesiones inactivas siguen procesando eventos en segundo plano (incluido el
 auto-pass), así que una partida puede avanzar mientras juegas otra.
 

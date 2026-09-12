@@ -368,6 +368,24 @@ export function registerSessionTools(server: McpServer): void {
     return entry ? { seq: entry.seq, method: entry.method, mode: entry.view.mode, title: entry.view.title } : null
   }
 
+  const PIN_DESC =
+    'Pin anti-carreras: opera sobre esta sesión MCP sin cambiar la activa global ' +
+    '(equivale a mage_use_session solo para esta llamada). Imprescindible en juego paralelo.'
+
+  const pickState = (session?: string): SessionState => (session ? resolveSession(session) : activeState)
+
+  async function waitTargetUuid(state: SessionState, afterSeq: number, timeoutMs: number): Promise<PromptEntry | null> {
+    const started = Date.now()
+    while (Date.now() - started < timeoutMs) {
+      const entry = state.pendingPrompt
+      if (entry && entry.seq > afterSeq && (entry.method === 'GAME_TARGET' || entry.view.mode === 'uuid')) {
+        return entry
+      }
+      await sleep(150)
+    }
+    return null
+  }
+
   server.registerTool(
     'mage_connect',
     {
@@ -402,12 +420,14 @@ export function registerSessionTools(server: McpServer): void {
     'mage_disconnect',
     {
       title: 'Disconnect from XMage',
-      description: 'Cierra la sesión WS con el proxy (los asientos SIM se detienen en el proxy).',
-      inputSchema: {},
+      description: 'Cierra la sesión WS con el proxy (los asientos SIM se detienen en el proxy). Con session cierra solo esa.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+      },
       annotations: { readOnlyHint: false },
     },
-    async () => {
-      const state = activeState
+    async ({ session }) => {
+      const state = pickState(session)
       const client = state.client
       state.client = null
       state.loggedIn = false
@@ -423,12 +443,14 @@ export function registerSessionTools(server: McpServer): void {
       description:
         'Reabre el WS contra el proxy con las credenciales guardadas, re-loguea (attach si la sesión ' +
         'XMage sigue viva; el proxy la mantiene 60s de gracia) y resincroniza la partida en curso con ' +
-        'joinGame. El auto-reconnect ya lo hace solo; usa esta tool para forzarlo o si el auto falló.',
-      inputSchema: {},
+        'joinGame. El auto-reconnect ya lo hace solo; usa esta tool para forzarlo o si el auto falló. Con session reconecta solo esa.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+      },
       annotations: { readOnlyHint: false },
     },
-    async () => {
-      const state = activeState
+    async ({ session }) => {
+      const state = pickState(session)
       if (!state.host || !state.username) throw new Error('sin conexión previa — usa mage_connect')
       let client = state.client
       if (!client?.isOpen) {
@@ -449,12 +471,13 @@ export function registerSessionTools(server: McpServer): void {
       title: 'Lobby tables and users',
       description: 'Lista las mesas de la sala principal (id, nombre, tipo, asientos, estado) y el resumen de usuarios.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         limit: z.number().int().min(1).max(100).default(20),
       },
       annotations: { readOnlyHint: true },
     },
-    async ({ limit }) => {
-      const state = activeState
+    async ({ session, limit }) => {
+      const state = pickState(session)
       const client = requireClient(state)
       const tables = (await client.requestOk('getTables', {}, 15_000)) as TableLike[]
       const users = (await client.requestOk('getRoomUsers', {}, 15_000)) as {
@@ -504,6 +527,7 @@ export function registerSessionTools(server: McpServer): void {
         '(si falta usa tierras por defecto); skipInitShuffling/skipStartingPlayerChoice ' +
         'deterministas para tests. Devuelve tableId.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         name: z.string().optional(),
         gameType: z.string().default('Two Player Duel'),
         deckType: z.string().default('Constructed - Pioneer'),
@@ -518,7 +542,7 @@ export function registerSessionTools(server: McpServer): void {
       annotations: { readOnlyHint: false },
     },
     async (input) => {
-      const state = activeState
+      const state = pickState(input.session)
       const client = requireClient(state)
       const args: Record<string, unknown> = {
         name: input.name ?? `mcp-${Date.now().toString(36)}`,
@@ -552,6 +576,7 @@ export function registerSessionTools(server: McpServer): void {
         '{name, cards:[{cardName,setCode,cardNumber,amount}], sideboard?, commanders?}). ' +
         'commanders (1-2) son los comandantes designados para Commander: el proxy los baja al banquillo.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         tableId: z.string(),
         deck: deckSchema,
         playerName: z.string().optional(),
@@ -562,7 +587,7 @@ export function registerSessionTools(server: McpServer): void {
       annotations: { readOnlyHint: false },
     },
     async (input) => {
-      const state = activeState
+      const state = pickState(input.session)
       const client = requireClient(state)
       const args: Record<string, unknown> = {
         tableId: input.tableId,
@@ -586,13 +611,14 @@ export function registerSessionTools(server: McpServer): void {
         'Arranca la partida de la mesa y espera el START_GAME/GAME_INIT para devolver el gameId. ' +
         'Requiere la mesa completa (humano + SIM ya unidos; el proxy une los SIM al crear la mesa).',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         tableId: z.string().optional(),
         waitMs: z.number().int().min(0).max(120_000).default(30_000),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ tableId, waitMs }) => {
-      const state = activeState
+    async ({ session, tableId, waitMs }) => {
+      const state = pickState(session)
       const client = requireClient(state)
       const id = tableId ?? state.tableId
       if (!id) throw new Error('sin tableId — pasa uno o crea/únete a una mesa primero')
@@ -610,13 +636,14 @@ export function registerSessionTools(server: McpServer): void {
       title: 'Leave / remove a table',
       description: 'Sale de la mesa (leaveTable) o la elimina (removeTable, solo dueño).',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         tableId: z.string().optional(),
         remove: z.boolean().default(false),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ tableId, remove }) => {
-      const state = activeState
+    async ({ session, tableId, remove }) => {
+      const state = pickState(session)
       const client = requireClient(state)
       const id = tableId ?? state.tableId
       if (!id) throw new Error('sin tableId')
@@ -635,12 +662,13 @@ export function registerSessionTools(server: McpServer): void {
         'battlefield (mías/rivales con girada, P/T, daño y contadores), stack, ids jugables y combate, ' +
         'más el prompt pendiente si lo hay. level=full incluye el GameView crudo (grande) truncado.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         level: z.enum(['compact', 'full']).default('compact'),
       },
       annotations: { readOnlyHint: true },
     },
-    async ({ level }) => {
-      const state = activeState
+    async ({ session, level }) => {
+      const state = pickState(session)
       const view = state.lastGameView as GameView | null
       if (!view) {
         return textResult(json({ session: sessionSnapshot(state), state: null, prompt: currentPromptView(state) }))
@@ -670,13 +698,14 @@ export function registerSessionTools(server: McpServer): void {
         'que la partida termine. afterSeq permite esperar SOLO un prompt posterior a la última acción ' +
         '(usa el promptSeq devuelto por las acciones). Si expira devuelve timeout=true con el estado.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         timeoutMs: z.number().int().min(1_000).max(120_000).default(30_000),
         afterSeq: z.number().int().min(0).default(0),
       },
       annotations: { readOnlyHint: true },
     },
-    async ({ timeoutMs, afterSeq }) => {
-      const state = activeState
+    async ({ session, timeoutMs, afterSeq }) => {
+      const state = pickState(session)
       const started = Date.now()
       while (Date.now() - started < timeoutMs) {
         if (state.gameOver) {
@@ -719,6 +748,7 @@ export function registerSessionTools(server: McpServer): void {
         'usa {action, data}. Valida el kind contra el prompt pendiente (usa force=true para saltarte ' +
         'la validación). Devuelve promptSeq para encadenar mage_wait_for_prompt(afterSeq).',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         kind: z.enum(['uuid', 'boolean', 'integer', 'string', 'manaType', 'playerAction']),
         value: z.union([z.string(), z.number(), z.boolean()]).optional(),
         action: z.string().optional(),
@@ -728,8 +758,8 @@ export function registerSessionTools(server: McpServer): void {
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ kind, value, action, data, playerId, force }) => {
-      const state = activeState
+    async ({ session, kind, value, action, data, playerId, force }) => {
+      const state = pickState(session)
       const pending = state.pendingPrompt
       if (kind !== 'playerAction' && !force) {
         const mismatch = modeMismatch(kind, pending?.view ?? null)
@@ -784,14 +814,15 @@ export function registerSessionTools(server: McpServer): void {
         'multiString: cantidades) o sin argumentos para pasar (modo select/combat). ' +
         'optionId="special" pulsa el botón especial del prompt (auto-pago de maná, "all attack").',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         optionId: z.string().optional(),
         value: z.union([z.string(), z.number(), z.boolean()]).optional(),
         values: z.array(z.number()).optional(),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ optionId, value, values }) => {
-      const state = activeState
+    async ({ session, optionId, value, values }) => {
+      const state = pickState(session)
       const entry = state.pendingPrompt
       if (!entry) {
         throw new Error(`no hay prompt pendiente (promptSeq ${state.promptSeq}) — usa mage_wait_for_prompt`)
@@ -842,12 +873,13 @@ export function registerSessionTools(server: McpServer): void {
       title: 'Play a card or ability',
       description: 'Envía sendPlayerUUID con el id de una carta/fuente jugable (mano, battlefield o habilidad).',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         cardId: z.string(),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ cardId }) => {
-      const state = activeState
+    async ({ session, cardId }) => {
+      const state = pickState(session)
       await answer(state, 'sendPlayerUUID', { value: cardId }, state.pendingPrompt)
       return textResult(json({ ok: true, cardId, promptSeq: state.promptSeq, pending: promptSummary(state) }))
     },
@@ -863,14 +895,15 @@ export function registerSessionTools(server: McpServer): void {
         'maná (auto-pago). Para cancelar un pago usa mage_choose sin argumentos o mage_action ' +
         'kind=boolean value=false.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         sourceId: z.string().optional(),
         manaType: z.string().optional(),
         special: z.boolean().default(false),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ sourceId, manaType, special }) => {
-      const state = activeState
+    async ({ session, sourceId, manaType, special }) => {
+      const state = pickState(session)
       if (special) {
         await answer(state, 'sendPlayerString', { value: 'special' }, state.pendingPrompt)
       } else if (sourceId) {
@@ -890,12 +923,14 @@ export function registerSessionTools(server: McpServer): void {
     'mage_pass_priority',
     {
       title: 'Pass priority / confirm',
-      description: 'Envía sendPlayerBoolean(false): pasar prioridad, confirmar atacantes/bloqueadores o rechazar (no).',
-      inputSchema: {},
+      description: 'Envía sendPlayerBoolean(false): pasar prioridad, confirmar atacantes/bloqueadores o rechazar (no). Con session pin anti-carreras.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+      },
       annotations: { readOnlyHint: false },
     },
-    async () => {
-      const state = activeState
+    async ({ session }) => {
+      const state = pickState(session)
       await answer(state, 'sendPlayerBoolean', { value: false }, state.pendingPrompt)
       return textResult(json({ ok: true, promptSeq: state.promptSeq, pending: promptSummary(state) }))
     },
@@ -904,23 +939,55 @@ export function registerSessionTools(server: McpServer): void {
   server.registerTool(
     'mage_combat',
     {
-      title: 'Declare attackers/blockers',
+      title: 'Declare attackers/blockers (gang-block aware)',
       description:
-        'Declara combate: envía sendPlayerUUID por cada id de attackers/blockers y confirma con ' +
-        'sendPlayerBoolean(false) si confirm=true. Ids válidos en el prompt de combate (mode=combat).',
+        'Declara combate. Atacantes: un sendPlayerUUID por id. Bloqueadoras: de una en una; tras cada ' +
+        'bloqueador el servidor puede pedir GAME_TARGET (elegir atacante cuando hay varios): se responde ' +
+        'con blockTargets[i] (o con el único atacante si solo hay uno). blockTargets alinea cada bloqueador ' +
+        'con su atacante; sin atacante conocido el bloqueador queda en "unresolved" sin bloquear la llamada. ' +
+        'confirm=true envía sendPlayerBoolean(false) al final. session fija la sesión MCP sin cambiar la activa.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         attackers: z.array(z.string()).optional(),
         blockers: z.array(z.string()).optional(),
+        blockTargets: z
+          .array(z.string())
+          .optional()
+          .describe('Atacante para cada bloqueador de blockers (mismo índice). Opcional si hay un único atacante.'),
         confirm: z.boolean().default(true),
+        targetTimeoutMs: z.number().int().min(500).max(15_000).default(2500).describe('Espera máxima del GAME_TARGET tras cada bloqueador.'),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ attackers, blockers, confirm }) => {
-      const state = activeState
-      const sent = [...(attackers ?? []), ...(blockers ?? [])]
-      for (const id of sent) await answer(state, 'sendPlayerUUID', { value: id }, null)
+    async ({ session, attackers, blockers, blockTargets, confirm, targetTimeoutMs }) => {
+      const state = pickState(session)
+      const sent: string[] = []
+      for (const id of attackers ?? []) {
+        await answer(state, 'sendPlayerUUID', { value: id }, null)
+        sent.push(id)
+      }
+      const targetsAnswered: { blocker: string; attacker: string }[] = []
+      const unresolved: string[] = []
+      const blocks = blockers ?? []
+      for (let i = 0; i < blocks.length; i++) {
+        const before = state.promptSeq
+        await answer(state, 'sendPlayerUUID', { value: blocks[i] }, null)
+        sent.push(blocks[i])
+        const target = await waitTargetUuid(state, before, targetTimeoutMs)
+        if (!target) continue
+        const attacker = blockTargets?.[i] ?? (attackers?.length === 1 ? attackers[0] : undefined)
+        if (!attacker) {
+          unresolved.push(blocks[i])
+          continue
+        }
+        await answer(state, 'sendPlayerUUID', { value: attacker }, target)
+        sent.push(attacker)
+        targetsAnswered.push({ blocker: blocks[i], attacker })
+      }
       if (confirm) await answer(state, 'sendPlayerBoolean', { value: false }, state.pendingPrompt)
-      return textResult(json({ ok: true, sent, confirmed: confirm, promptSeq: state.promptSeq, pending: promptSummary(state) }))
+      return textResult(
+        json({ ok: true, sent, targetsAnswered, unresolved, confirmed: confirm, promptSeq: state.promptSeq, pending: promptSummary(state) }),
+      )
     },
   )
 
@@ -935,12 +1002,13 @@ export function registerSessionTools(server: McpServer): void {
         `${AUTO_PASS_MAX_REPEATS} veces seguidas, desactiva el auto-pass y lo registra ` +
         '(AUTO_PASS_STOPPED). Por defecto está activado.',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         enabled: z.boolean(),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ enabled }) => {
-      const state = activeState
+    async ({ session, enabled }) => {
+      const state = pickState(session)
       state.autoPass = enabled
       if (enabled) {
         state.autoPassSignature = null
@@ -955,12 +1023,14 @@ export function registerSessionTools(server: McpServer): void {
     'mage_concede',
     {
       title: 'Concede the game',
-      description: 'Envía sendPlayerAction CONCEDE (solo la partida actual; no abandona el match).',
-      inputSchema: {},
+      description: 'Envía sendPlayerAction CONCEDE (solo la partida actual; no abandona el match). Con session pin anti-carreras.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+      },
       annotations: { readOnlyHint: false },
     },
-    async () => {
-      const state = activeState
+    async ({ session }) => {
+      const state = pickState(session)
       await answer(state, 'sendPlayerAction', { action: 'CONCEDE', data: null }, state.pendingPrompt)
       return textResult(json({ ok: true, promptSeq: state.promptSeq }))
     },
@@ -972,13 +1042,14 @@ export function registerSessionTools(server: McpServer): void {
       title: 'Send game chat',
       description: 'Envía un mensaje al chat de la partida actual (o al chatId indicado).',
       inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
         text: z.string(),
         chatId: z.string().optional(),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ text, chatId }) => {
-      const state = activeState
+    async ({ session, text, chatId }) => {
+      const state = pickState(session)
       const client = requireClient(state)
       let target = chatId
       if (!target) {
@@ -997,12 +1068,16 @@ export function registerSessionTools(server: McpServer): void {
     {
       title: 'Current MCP XMage session',
       description:
-        'Estado de la sesión MCP ACTIVA (id, conexión, mesa, gameId, turno/fase/prioridad) y cola de eventos ' +
-        'recientes. Usa mage_sessions para listar todas y mage_use_session para cambiar la activa.',
-      inputSchema: {},
+        'Estado de la sesión MCP (id, conexión, mesa, gameId, turno/fase/prioridad) y cola de eventos ' +
+        'recientes. Sin session informa la activa; con session informa esa sin cambiar la activa. ' +
+        'Usa mage_sessions para listar todas y mage_use_session para cambiar la activa.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+      },
       annotations: { readOnlyHint: true },
     },
-    async () => textResult(json({ sessionId: sessionIdOf(activeState), ...sessionSnapshot(activeState) })),
+    async ({ session }) =>
+      textResult(json({ sessionId: session ?? sessionIdOf(activeState), ...sessionSnapshot(pickState(session)) })),
   )
 
   server.registerTool(
@@ -1030,7 +1105,8 @@ export function registerSessionTools(server: McpServer): void {
     {
       title: 'Switch the active MCP session',
       description:
-        'Cambia la sesión activa: todas las tools de juego (excepto mage_connect/sessions) operan sobre ella. ' +
+        'Cambia la sesión activa: las tools sin pin session operan sobre ella. ' +
+        'Para juego paralelo prefiere el pin session por llamada (anti-carreras). ' +
         'Las sesiones no usadas siguen recibiendo eventos (auto-pass incluido) en segundo plano.',
       inputSchema: {
         session: z.string(),
