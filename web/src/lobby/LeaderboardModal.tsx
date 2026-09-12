@@ -9,6 +9,7 @@ import AvatarImage from './AvatarImage'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import PingBadge from './PingBadge'
+import { isUserInGame } from './lobbyUtils'
 import { useTranslation } from '../i18n'
 import './LeaderboardModal.css'
 
@@ -63,7 +64,7 @@ export default function LeaderboardModal({
   )
 
   // Compute wins / losses and winrate for user
-  const parseStats = (historyStr?: string | null, elo?: number) => {
+  const parseStats = (historyStr?: string | null) => {
     if (!historyStr || historyStr === '0' || historyStr === '0-0') {
       return { wins: 0, losses: 0, total: 0, winrate: null, formattedHistory: '0-0' }
     }
@@ -76,36 +77,34 @@ export default function LeaderboardModal({
       const winrate = total > 0 ? Math.round((wins / total) * 100) : null
       return { wins, losses, total, winrate, formattedHistory: `${wins}-${losses}` }
     }
-    // Number format like "12" or "12 (Q:1)"
+    // Number format like "6" or "6 (Q:1)": the server only sends the MATCH
+    // COUNT (see User.userStatsToMatchHistory) — never W-L. Showing an
+    // ELO-derived W-L here would fabricate results, so wins/losses/winrate
+    // stay unknown and only the count is displayed.
     const numMatch = historyStr.match(/^(\d+)/)
     if (numMatch) {
       const totalMatches = parseInt(numMatch[1], 10)
       if (totalMatches === 0) {
         return { wins: 0, losses: 0, total: 0, winrate: null, formattedHistory: '0-0' }
       }
-      const effectiveElo = elo && elo > 0 ? elo : 1500
-      const winProb = 1 / (1 + Math.pow(10, (1500 - effectiveElo) / 400))
-      const wins = Math.round(totalMatches * winProb)
-      const losses = Math.max(0, totalMatches - wins)
-      const winrate = Math.round(winProb * 100)
       return {
-        wins,
-        losses,
+        wins: null,
+        losses: null,
         total: totalMatches,
-        winrate,
-        formattedHistory: `${wins}-${losses}`,
+        winrate: null,
+        formattedHistory: historyStr.trim(),
       }
     }
     return { wins: 0, losses: 0, total: 0, winrate: null, formattedHistory: historyStr }
   }
 
-  const displayedStats = parseStats(targetUser?.matchHistory, displayedElo)
+  const displayedStats = parseStats(targetUser?.matchHistory)
 
   // Sorted room leaderboard
   const sortedUsers = useMemo(() => {
     const list = [...users].map((u) => {
       const effectiveRating = u.constructedRating > 0 ? u.constructedRating : 1500
-      const stats = parseStats(u.matchHistory, effectiveRating)
+      const stats = parseStats(u.matchHistory)
       return {
         ...u,
         effectiveRating,
@@ -258,7 +257,7 @@ export default function LeaderboardModal({
                             )}
                           </td>
                           <td>
-                            {u.infoGames ? (
+                            {isUserInGame(u.infoGames) ? (
                               <span className="status-playing"><Icon name="swords" size={12} /> {t('lobby', 'in_game')}</span>
                             ) : (
                               <span className="status-idle">{t('lobby', 'in_lobby')}</span>
@@ -431,11 +430,11 @@ export default function LeaderboardModal({
                   <span className="stat-label">{t('lobby', 'leaderboard_stat_total')}</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-value text-green">{displayedStats.wins}</span>
+                  <span className="stat-value text-green">{displayedStats.wins ?? '—'}</span>
                   <span className="stat-label">{t('lobby', 'leaderboard_stat_wins')}</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-value text-red">{displayedStats.losses}</span>
+                  <span className="stat-value text-red">{displayedStats.losses ?? '—'}</span>
                   <span className="stat-label">{t('lobby', 'leaderboard_stat_losses')}</span>
                 </div>
                 <div className="stat-card">

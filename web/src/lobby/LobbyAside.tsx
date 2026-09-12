@@ -6,7 +6,7 @@ import RankBadge from './RankBadge'
 import PingBadge from './PingBadge'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
-import { fallbackActionUser } from './lobbyUtils'
+import { fallbackActionUser, isUserInGame } from './lobbyUtils'
 
 interface Props {
   users: UsersView[]
@@ -75,7 +75,7 @@ export default function LobbyAside({
                 style={{ cursor: 'pointer' }}
                 title={`${t('lobby','view_profile_hint')} ${u.userName}`}
               >
-                <span className={`dot ${u.infoGames ? 'playing' : 'online'}`} />
+                <span className={`dot ${isUserInGame(u.infoGames) ? 'playing' : 'online'}`} />
                 <AvatarImage avatarId={u.avatarId} username={u.userName} size="medium" />
                 <div className="user-info-col">
                   <div className="user-name-row">
@@ -87,7 +87,7 @@ export default function LobbyAside({
                     {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
                   </div>
                 </div>
-                {u.infoGames ? (
+                {isUserInGame(u.infoGames) ? (
                   <span className="game-info-badge"><Icon name="swords" size={13} /></span>
                 ) : (
                   <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>

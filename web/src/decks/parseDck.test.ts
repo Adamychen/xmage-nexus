@@ -279,5 +279,44 @@ Sideboard (2)
     expect(d.sideboard).toHaveLength(1)
     expect(d.sideboard[0].cardName).toBe('Pyroblast')
   })
+
+  it('roundtrip de comandante: export Arena -> import designa (AUDIT)', () => {
+    const deck = {
+      name: 'CMD',
+      cards: [
+        { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 },
+        { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '272', amount: 1 },
+      ],
+      sideboard: [],
+      commanderCard: { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 },
+    }
+    const out = exportArena(deck)
+    expect(out).toContain('Commander')
+    const back = parseAnyDeck(out)!
+    expect(back.commanders).toMatchObject([{ cardName: "Atraxa, Praetors' Voice" }])
+    expect(back.cards.filter((c) => c.cardName === "Atraxa, Praetors' Voice")).toHaveLength(1)
+  })
+
+  it('parseDck enruta la sección [COMMANDER] sin duplicar (AUDIT)', () => {
+    const d = parseDck(`NAME:CMD
+[COMMANDER]
+1 [C16:28] Atraxa, Praetors' Voice
+[MAIN]
+1 [C16:272] Sol Ring
+`)!
+    expect(d.commanders).toMatchObject([{ cardName: "Atraxa, Praetors' Voice" }])
+    expect(d.cards.filter((c) => c.cardName === "Atraxa, Praetors' Voice")).toHaveLength(1)
+  })
+
+  it('parseCodXml lee la zona commander (AUDIT)', () => {
+    const d = parseCodXml(`<?xml version="1.0"?>
+<cockatrice_deck version="1">
+<deckname>CMD</deckname>
+<zone name="main"><card number="1" name="Sol Ring"/></zone>
+<zone name="commander"><card number="1" name="Atraxa, Praetors' Voice"/></zone>
+</cockatrice_deck>`)!
+    expect(d.commanders).toMatchObject([{ cardName: "Atraxa, Praetors' Voice" }])
+    expect(d.cards.map((c) => c.cardName)).toEqual(["Atraxa, Praetors' Voice", 'Sol Ring'])
+  })
 })
 

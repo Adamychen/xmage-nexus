@@ -49,16 +49,20 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
     const mainCards: DeckCard[] = []
     const sideCards: DeckCard[] = []
 
-    // Commanders / Companions
+    // Commanders / Companions: van al main (convención de la app: el
+    // comandante también figura en el main) y además se designan.
+    const commanderList: DeckCard[] = []
     if (data.commanders) {
       for (const [, entry] of Object.entries(data.commanders as Record<string, any>)) {
         const card = entry.card || entry
-        mainCards.push({
+        const commander = {
           cardName: card.name,
           setCode: card.set?.toUpperCase() || 'M10',
           cardNumber: card.cn || card.collector_number || '1',
           amount: entry.quantity || 1,
-        })
+        }
+        commanderList.push(commander)
+        mainCards.push(commander)
       }
     }
 
@@ -97,6 +101,8 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
       sideboard: sideCards,
       colors: [],
       coverCard,
+      commanderCard: commanderList[0],
+      partnerCard: commanderList[1],
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'imported',
@@ -124,6 +130,7 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
     const name = data.name || 'Archidekt Deck'
     const mainCards: DeckCard[] = []
     const sideCards: DeckCard[] = []
+    const commanderList: DeckCard[] = []
 
     if (Array.isArray(data.cards)) {
       for (const entry of data.cards) {
@@ -137,7 +144,9 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
         if (categories.includes('Sideboard')) {
           sideCards.push({ cardName, setCode, cardNumber, amount })
         } else {
-          mainCards.push({ cardName, setCode, cardNumber, amount })
+          const row = { cardName, setCode, cardNumber, amount }
+          mainCards.push(row)
+          if (categories.includes('Commander')) commanderList.push(row)
         }
       }
     }
@@ -150,6 +159,8 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
       sideboard: sideCards,
       colors: [],
       coverCard: mainCards[0],
+      commanderCard: commanderList[0],
+      partnerCard: commanderList[1],
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'imported',

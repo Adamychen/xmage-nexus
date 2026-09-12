@@ -67,8 +67,15 @@ export default function SearchPanel({
 
   const toggleColor = (c: string) => {
     const next = new Set(colorFilter)
-    if (next.has(c)) next.delete(c)
-    else next.add(c)
+    if (next.has(c)) {
+      next.delete(c)
+    } else if (c === 'C') {
+      next.clear()
+      next.add('C')
+    } else {
+      next.delete('C')
+      next.add(c)
+    }
     setColorFilter(next)
   }
 

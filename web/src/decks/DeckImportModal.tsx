@@ -9,6 +9,7 @@ import './DeckImportModal.css'
 export interface ImportResult {
   cards: DeckCard[]
   sideboard: DeckCard[]
+  commanders?: DeckCard[]
   mode: 'add' | 'replace'
 }
 
@@ -78,6 +79,7 @@ export function DeckImportModal({
     onImport({
       cards: parsed.cards,
       sideboard: parsed.sideboard,
+      commanders: parsed.commanders,
       mode,
     })
     onClose()
@@ -95,7 +97,7 @@ export function DeckImportModal({
       title={t('decks', 'import_deck')}
       message={t('decks', 'import_formats')}
       topRight={(
-        <button type="button" className="deck-import-close-btn" onClick={onClose}>
+        <button type="button" className="deck-import-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
           ×
         </button>
       )}

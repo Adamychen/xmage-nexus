@@ -73,6 +73,12 @@
   color: #8a90b8;
 }
 
+.setup-field-error {
+  color: #fc8181;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .setup-field input,
 .setup-field select {
   background: rgba(255, 255, 255, 0.06);

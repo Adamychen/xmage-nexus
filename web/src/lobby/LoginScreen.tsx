@@ -9,6 +9,7 @@ import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
 import { useNewsBadge } from '../system/useNewsBadge'
 import Icon from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
 import type { ConnectionInfo } from '../state/persistence'
@@ -216,6 +217,7 @@ export default function LoginScreen() {
             onClick={() => setShowAvatarPicker(true)}
             title={t('lobby', 'avatar_pick_title')}
             style={{ cursor: 'pointer' }}
+            {...clickableProps(() => setShowAvatarPicker(true))}
           >
             <AvatarImage avatarId={avatarId} username={username} size="large" />
             <div className="user-avatar-flag-pill">
@@ -267,16 +269,29 @@ export default function LoginScreen() {
             <span className="network-box-hint">{serverHost}:{port}</span>
           </summary>
           <div className="login-network-fields">
-            <label className="network-field-proxy">
-              {t('login.proxy')}
-              <input
-                value={proxyHost}
-                onChange={(e) => {
-                  setProxyHost(e.target.value)
-                  setPreset('custom')
-                }}
-              />
-            </label>
+            <div className="network-field-row">
+              <label className="network-field-proxy">
+                {t('login.proxy')}
+                <input
+                  value={proxyHost}
+                  onChange={(e) => {
+                    setProxyHost(e.target.value)
+                    setPreset('custom')
+                  }}
+                />
+              </label>
+              <label className="network-field-port">
+                {t('login.proxy_port')}
+                <input
+                  value={proxyPort}
+                  onChange={(e) => {
+                    setProxyPort(Number(e.target.value) || 8787)
+                    setPreset('custom')
+                  }}
+                  type="number"
+                />
+              </label>
+            </div>
             <div className="network-field-row">
               <label className="network-field-host">
                 {t('login.xmage_server')}
@@ -307,7 +322,7 @@ export default function LoginScreen() {
           <div className="error-box">
             <span className="error-icon"><Icon name="alert" size={14} /></span>
             <span className="error-msg">{tError(error)}</span>
-            <button type="button" onClick={clearError} title={t('common.close')}>
+            <button type="button" onClick={clearError} title={t('common.close')} aria-label={t('common', 'close')}>
               ✕
             </button>
           </div>

@@ -7,6 +7,7 @@ import type { DeckV2 } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import './DeckBrowser.css'
 
@@ -178,6 +179,7 @@ export function DeckBrowser({
                   key={deck.id}
                   className="browser-deck-card"
                   onClick={() => setInspectingDeck(deck)}
+                  {...clickableProps(() => setInspectingDeck(deck))}
                 >
                   {/* Card Art Header */}
                   <div

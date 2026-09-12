@@ -11,6 +11,8 @@ export interface Deck {
   name: string
   cards: DeckCard[]
   sideboard: DeckCard[]
+  /** Comandantes designados por el importador (sección Commander). */
+  commanders?: DeckCard[]
 }
 
 export const STABLE_DECK: Deck = {

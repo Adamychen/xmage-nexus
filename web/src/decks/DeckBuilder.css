@@ -85,6 +85,17 @@
   font-weight: 600;
 }
 
+.builder-save-error {
+  color: #fc8181;
+  background: none;
+  border: 1px solid #fc8181;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 /* Main Split View */
 .deck-builder-body {
   display: grid;

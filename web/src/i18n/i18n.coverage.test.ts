@@ -12,6 +12,11 @@ import type { TranslationSchema } from './types'
 
 const WHITELIST = new Set<string>([
   'lobby.brand_title',
+  'lobby.create_seat_sim',
+  'lobby.create_draft_timing_regular',
+  'lobby.dev_title',
+  'lobby.join_sb_suffix',
+  'lobby.create_time_min_short',
   'lobby.leaderboard_col_elo',
   'dialogs.voting_vs',
   'board.token',

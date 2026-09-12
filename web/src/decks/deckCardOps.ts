@@ -208,6 +208,7 @@ export function stripMetaFromSearch(card: ScryfallSearchCard): CardStripMeta {
 }
 
 export interface ScryfallJson {
+  name?: string
   printed_name?: string
   mana_cost?: string
   cmc?: number

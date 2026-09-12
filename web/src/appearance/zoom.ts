@@ -15,7 +15,16 @@ export function clampZoom(value: number): number {
 }
 
 export function stepZoom(current: number, dir: 1 | -1): number {
-  return clampZoom(roundZoom(current) + dir * ZOOM_STEP)
+  const c = roundZoom(current)
+  const sorted = [...ZOOM_PRESETS].sort((a, b) => a - b)
+  if (dir === 1) {
+    const nextPreset = sorted.find((p) => p > c + ZOOM_PRESET_EPSILON)
+    if (nextPreset !== undefined) return clampZoom(nextPreset)
+    return clampZoom(c + ZOOM_STEP)
+  }
+  const prevPreset = [...sorted].reverse().find((p) => p < c - ZOOM_PRESET_EPSILON)
+  if (prevPreset !== undefined) return clampZoom(prevPreset)
+  return clampZoom(c - ZOOM_STEP)
 }
 
 export function normalizeZoom(value: unknown): number {

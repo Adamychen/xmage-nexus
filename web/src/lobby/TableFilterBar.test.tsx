@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import TableFilterBar, {
   INITIAL_TABLE_FILTERS,
   filterTables,
+  sanitizeTableFilters,
 } from './TableFilterBar'
 import { formatDeckTypeName } from './lobbyUtils'
 import type { TableView } from '../net/types'
@@ -201,6 +202,21 @@ describe('filterTables logic', () => {
       passwordedOnly: true,
     })
     expect(passworded.map((t) => t.tableId)).toEqual(['t-2'])
+  })
+
+  it('sanea pares contradictorios guardados: gana el Only (AUDIT)', () => {
+    const fixed = sanitizeTableFilters({
+      ...INITIAL_TABLE_FILTERS,
+      hidePassworded: true,
+      passwordedOnly: true,
+      ratedOnly: true,
+      unratedOnly: true,
+    })
+    expect(fixed.hidePassworded).toBe(false)
+    expect(fixed.passwordedOnly).toBe(true)
+    expect(fixed.ratedOnly).toBe(true)
+    expect(fixed.unratedOnly).toBe(false)
+    expect(filterTables(MOCK_TABLES, fixed).length).toBeGreaterThan(0)
   })
 
   it('hides tables owned by ignored users only when the toggle is on', () => {

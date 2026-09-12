@@ -517,7 +517,7 @@ export default function ConstructScreen() {
           {hoverPreview.backUrl && (
             <div className="preview-face-card">
               <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
+              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? t('wiki', 'face_front')} (${t('wiki', 'face_back')})`} />
             </div>
           )}
         </div>

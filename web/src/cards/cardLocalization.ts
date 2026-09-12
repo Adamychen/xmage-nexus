@@ -106,7 +106,7 @@ export async function fetchLocalizedCardName(
             const faceMatch = data.card_faces?.find((f: any) => (f.name ?? '').toLowerCase() === cleanName.toLowerCase())
             const hit = faceMatch?.printed_name || data.printed_name || data.name
             if (hit && typeof hit === 'string') {
-              setCachedCardName(cleanName, hit, lang)
+              setCachedCardName(faceMatch?.name ?? data.name ?? cleanName, hit, lang)
               return hit
             }
           }
@@ -134,7 +134,7 @@ export async function fetchLocalizedCardName(
       }
 
       if (translated && typeof translated === 'string') {
-        setCachedCardName(cleanName, translated, lang)
+        setCachedCardName(first.name ?? cleanName, translated, lang)
         return translated
       }
       return null

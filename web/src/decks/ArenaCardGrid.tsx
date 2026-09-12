@@ -67,7 +67,7 @@ export function ArenaCardGrid({
       cardNumber: card.collector_number,
       manaCost: card.mana_cost,
       cmc: card.cmc,
-      typeLine: card.printed_type_line || card.type_line,
+      typeLine: card.type_line || card.printed_type_line,
       colors: card.colors || card.color_identity || [],
       oracleText: card.oracle_text ?? '',
       source: 'search',
@@ -191,7 +191,7 @@ export function ArenaCardGrid({
       <div className="arena-grid-footer">
         <div className="arena-footer-left">
           <span className="arena-grid-count">
-            {cards.length.toLocaleString()} {totalCards ? `de ${totalCards.toLocaleString()}` : ''} {t('decks', 'total_cards')}
+            {cards.length.toLocaleString()} {totalCards ? t('decks', 'grid_of_total', { total: totalCards.toLocaleString() }) : ''} {t('decks', 'total_cards')}
           </span>
         </div>
 

@@ -76,7 +76,7 @@ export function CardPrintingsModal({
     return () => {
       cancelled = true
     }
-  }, [cardName])
+  }, [cardName, t])
 
   return (
     <DialogShell

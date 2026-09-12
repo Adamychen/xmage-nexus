@@ -48,13 +48,27 @@ export function applySuggestion<D extends { cards: DeckPrinting[]; sideboard: De
   from: DeckPrinting,
   to: DeckPrinting,
 ): D {
+  const samePrinting = (c: DeckPrinting) =>
+    c.cardName === from.cardName && c.setCode === from.setCode && c.cardNumber === from.cardNumber
   const swap = (cards: DeckPrinting[]) =>
     cards.map((c) =>
-      c.cardName === from.cardName && c.setCode === from.setCode && c.cardNumber === from.cardNumber
+      samePrinting(c)
         ? { ...c, cardName: to.cardName, setCode: to.setCode, cardNumber: to.cardNumber }
         : c,
     )
-  return { ...deck, cards: swap(deck.cards), sideboard: swap(deck.sideboard) }
+  const next: D = { ...deck, cards: swap(deck.cards), sideboard: swap(deck.sideboard) }
+  for (const field of ['commanderCard', 'partnerCard', 'coverCard'] as const) {
+    const cur = (next as Record<string, unknown>)[field] as DeckPrinting | undefined | null
+    if (cur && samePrinting(cur)) {
+      ;(next as Record<string, unknown>)[field] = {
+        ...cur,
+        cardName: to.cardName,
+        setCode: to.setCode,
+        cardNumber: to.cardNumber,
+      }
+    }
+  }
+  return next
 }
 
 /** Índice de la entrada con ese nombre marcada como problemática por el servidor (-1 si no hay). */

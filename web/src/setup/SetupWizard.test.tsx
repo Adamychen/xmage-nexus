@@ -128,4 +128,17 @@ describe('SetupWizard', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(isSetupDone()).toBe(false)
   })
+
+  it('bloquea avanzar con el nombre vacío y lo exige al entrar (AUDIT)', () => {
+    render(<SetupWizard onClose={() => {}} />)
+    next()
+    fireEvent.change(screen.getByTestId('setup-username'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByTestId('setup-next'))
+    expect(screen.getByTestId('setup-username-error')).toBeTruthy()
+    expect(screen.getByTestId('setup-counter').textContent).toContain('2')
+    fireEvent.change(screen.getByTestId('setup-username'), { target: { value: 'audit' } })
+    expect(screen.queryByTestId('setup-username-error')).toBeNull()
+    fireEvent.click(screen.getByTestId('setup-next'))
+    expect(screen.getByTestId('setup-counter').textContent).toContain('3')
+  })
 })

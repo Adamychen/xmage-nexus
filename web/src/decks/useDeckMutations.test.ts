@@ -96,9 +96,60 @@ describe('useDeckMutations commander drops', () => {
     expect(schedulePersist.mock.calls[1][0]).toMatchObject({ commanderCard: tana, partnerCard: undefined })
   })
 
+  it('rechaza designar la misma carta como pareja (AUDIT)', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar], commanderCard: sidar }))
+    act(() => { result.current.handleSetPartner({ ...sidar }) })
+    expect(schedulePersist).not.toHaveBeenCalled()
+  })
+
   it('does not assign an illegal second commander via crown', () => {
     const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar, bolt], commanderCard: sidar }))
     act(() => { result.current.handleSetPartner(bolt) })
     expect(schedulePersist).not.toHaveBeenCalled()
+  })
+})
+
+describe('useDeckMutations import (AUDIT bloqueante)', () => {
+  it('replace conserva el comandante si sigue en la lista nueva', () => {
+    const { result, schedulePersist } = renderMutations(
+      makeDeck({ cards: [sidar, tana], commanderCard: sidar, partnerCard: tana }),
+    )
+    act(() => {
+      result.current.handleApplyImport({ cards: [sidar, bolt], sideboard: [], mode: 'replace' })
+    })
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ commanderCard: sidar, partnerCard: undefined })
+  })
+
+  it('replace limpia el comandante ausente en vez de dejarlo rancio', () => {
+    const { result, schedulePersist } = renderMutations(
+      makeDeck({ cards: [sidar, tana], commanderCard: sidar, partnerCard: tana }),
+    )
+    act(() => {
+      result.current.handleApplyImport({ cards: [bolt], sideboard: [], mode: 'replace' })
+    })
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ commanderCard: undefined, partnerCard: undefined })
+  })
+
+  it('drop de fichero fusiona el banquillo sin duplicar filas', async () => {    const { result, schedulePersist } = renderMutations(makeDeck({ sideboard: [bolt] }))
+    const file = { text: async () => 'SB: 1 [M10:146] Lightning Bolt\n' } as File
+    await act(async () => { await result.current.handleDropFile(file) })
+    const side = schedulePersist.mock.calls[0][0].sideboard as DeckCard[]
+    expect(side).toHaveLength(1)
+    expect(side[0]).toMatchObject({ cardName: 'Lightning Bolt', amount: 2 })
+  })
+
+  it('replace adopta los comandantes del import y add solo rellena huecos', () => {
+    const atraxa: DeckCard = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [bolt] }))
+    act(() => {
+      result.current.handleApplyImport({ cards: [atraxa, bolt], sideboard: [], commanders: [atraxa], mode: 'replace' })
+    })
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ commanderCard: atraxa })
+
+    const { result: r2, schedulePersist: sp2 } = renderMutations(makeDeck({ cards: [sidar], commanderCard: sidar }))
+    act(() => {
+      r2.current.handleApplyImport({ cards: [atraxa], sideboard: [], commanders: [atraxa], mode: 'add' })
+    })
+    expect(sp2.mock.calls[0][0]).toMatchObject({ commanderCard: sidar })
   })
 })

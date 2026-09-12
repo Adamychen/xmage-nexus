@@ -27,7 +27,7 @@ test.describe('Global settings modal', () => {
       await page.getByTestId('settings-nav-interface').click()
       await expect(page.getByTestId('settings-section-interface')).toBeVisible()
       await page.getByTestId('settings-zoom-plus').click()
-      await expect(page.getByTestId('settings-zoom-current')).toHaveText('110%')
+      await expect(page.getByTestId('settings-zoom-current')).toHaveText('115%')
       await page.getByTestId('settings-nav-sound').click()
       await expect(page.locator('[data-testid="settings-sound-card"] .audio-slider').first()).toBeVisible()
       await page.getByTestId('settings-nav-gameplay').click()

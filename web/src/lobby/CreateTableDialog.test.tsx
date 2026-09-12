@@ -567,4 +567,16 @@ describe('CreateTableDialog', () => {
     expect(cmds.createTournamentTable).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  it('el stepper no salta al último paso con el nombre vacío (AUDIT)', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '   ' } })
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    const lastStep = stepper.querySelectorAll('button')[4]
+    fireEvent.click(lastStep)
+    await waitFor(() => {
+      expect(screen.getByText(/necesita un nombre|needs a name/i)).toBeDefined()
+    })
+    expect(screen.queryByRole('button', { name: /Crear mesa|Create table/i })).toBeNull()
+  })
 })

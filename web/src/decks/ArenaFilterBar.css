@@ -24,6 +24,14 @@
   max-width: 360px;
 }
 
+.arena-filter-clash {
+  width: 100%;
+  color: #f6c453;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 4px;
+}
+
 .arena-search-icon {
   position: absolute;
   left: 10px;

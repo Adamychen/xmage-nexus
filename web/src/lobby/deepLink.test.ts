@@ -39,10 +39,10 @@ describe('parseDeepLink', () => {
     expect(parseDeepLink('#watch/table-9')).toEqual({ kind: 'watch', tableId: 'table-9' })
   })
 
-  it('ignora un servidor malformado sin tumbar la invitación', () => {
-    expect(parseDeepLink('#join=abc&server=nonsense')).toEqual({ kind: 'join', tableId: 'abc' })
-    expect(parseDeepLink('#join=abc&server=:17171')).toEqual({ kind: 'join', tableId: 'abc' })
-    expect(parseDeepLink('#join=abc&server=host:notaport')).toEqual({ kind: 'join', tableId: 'abc' })
+  it('conserva el servidor malformado en serverRaw sin tumbar la invitación', () => {
+    expect(parseDeepLink('#join=abc&server=nonsense')).toEqual({ kind: 'join', tableId: 'abc', serverRaw: 'nonsense' })
+    expect(parseDeepLink('#join=abc&server=:17171')).toEqual({ kind: 'join', tableId: 'abc', serverRaw: ':17171' })
+    expect(parseDeepLink('#join=abc&server=host:notaport')).toEqual({ kind: 'join', tableId: 'abc', serverRaw: 'host:notaport' })
   })
 
   it('decodifica ids y passwords con caracteres especiales', () => {
@@ -70,6 +70,18 @@ describe('buildDeepLink', () => {
       kind: 'watch',
       tableId: 't1',
     })
+  })
+
+  it('conserva serverRaw cuando server= no parsea (AUDIT)', () => {
+    expect(parseDeepLink('#join=t1&server=sin-puerto')).toEqual({
+      kind: 'join',
+      tableId: 't1',
+      serverRaw: 'sin-puerto',
+    })
+    expect(parseDeepLink('#join=t1&server=:17171')).toMatchObject({ serverRaw: ':17171' })
+    const ok = parseDeepLink('#join=t1&server=beta.xmage.today:17171')
+    expect(ok).toMatchObject({ serverHost: 'beta.xmage.today', serverPort: 17171 })
+    expect(ok).not.toHaveProperty('serverRaw')
   })
 })
 

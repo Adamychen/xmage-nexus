@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { handleMessage } from './eventHandler'
+import { questionLogLine } from './events/prompts'
 import { getState, setState } from './state'
 
 vi.mock('../net/commands', () => ({
@@ -66,6 +67,15 @@ describe('eventHandler — callbacks críticos', () => {
   it('registra GAME_ERROR en el estado de error', () => {
     handleMessage({ type: 'event', method: 'GAME_ERROR', objectId: 'g1', data: { message: 'Mana pool vacío' } } as never)
     expect(getState().error).toBe('Mana pool vacío')
+  })
+
+  it('questionLogLine no duplica el "?" si el signo queda tras etiquetas HTML del servidor', () => {
+    expect(questionLogLine('You still have mana in your mana pool and it will be lost. Pass anyway?')).toBe(
+      'You still have mana in your mana pool and it will be lost. Pass anyway?'
+    )
+    expect(questionLogLine('Pass anyway?<font color="#ffaa00"></font>')).toBe('Pass anyway?<font color="#ffaa00"></font>')
+    expect(questionLogLine('Elige objetivo')).toBe('¿Elige objetivo?')
+    expect(questionLogLine('Elige objetivo.')).toBe('Elige objetivo.')
   })
 
   it('JOINED_TABLE abre la sala de espera (staging) con la mesa del payload real', () => {

@@ -71,9 +71,13 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
   }
 }
 
-function questionLogLine(question: string): string {
+export function questionLogLine(question: string): string {
   const q = (question || 'pregunta').trim()
-  return /[?？]$/.test(q) ? q : `¿${q}?`
+  // El servidor a veces envuelve el texto en <font> u otras etiquetas: el
+  // signo final queda oculto tras ">" y el log pintaba "¿...??". Se mira el
+  // texto visible para decidir si ya termina en signo de puntuación.
+  const visible = q.replace(/<[^>]*>/g, '').trim()
+  return /[?？!¡.]$/.test(visible) ? q : `¿${q}?`
 }
 
 export function applyChoiceMemory(feedback: FeedbackPrompt, gameId: string | null, s: Snapshot): boolean {

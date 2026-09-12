@@ -308,14 +308,27 @@ export function useDeckMutations(deps: Deps) {
 
   const handleApplyImport = (result: ImportResult) => {
     if (!deck) return
+    const adoptedCommander = result.commanders?.[0]
+    const adoptedPartner = result.commanders?.[1]
+    const distinctPartner = adoptedCommander && adoptedPartner
+      && deckCardKey(adoptedCommander) !== deckCardKey(adoptedPartner)
+      ? adoptedPartner
+      : undefined
     if (result.mode === 'replace') {
       const nextCards = result.cards
       const nextSide = result.sideboard
+      const stillPresent = (c?: DeckCard) =>
+        c !== undefined && nextCards.some((n) =>
+          n.cardName === c.cardName && n.setCode === c.setCode && n.cardNumber === c.cardNumber)
+        ? c
+        : undefined
       schedulePersist({
         ...deck,
         cards: nextCards,
         sideboard: nextSide,
         coverCard: nextCards[0] ?? null,
+        commanderCard: adoptedCommander ?? stillPresent(deck.commanderCard),
+        partnerCard: distinctPartner ?? stillPresent(deck.partnerCard),
       })
       updateMetaForDeck([...nextCards, ...nextSide])
     } else {
@@ -326,6 +339,8 @@ export function useDeckMutations(deps: Deps) {
         cards: mergedCards,
         sideboard: mergedSide,
         coverCard: deck.coverCard ?? mergedCards[0] ?? null,
+        commanderCard: deck.commanderCard ?? adoptedCommander,
+        partnerCard: deck.partnerCard ?? distinctPartner,
       })
       updateMetaForDeck([...result.cards, ...result.sideboard])
     }
@@ -337,7 +352,8 @@ export function useDeckMutations(deps: Deps) {
     const parsed = parseAnyDeck(text, deck.name)
     if (!parsed) return
     const merged = mergeIntoList(deck.cards, parsed.cards)
-    schedulePersist({ ...deck, cards: merged, sideboard: [...deck.sideboard, ...parsed.sideboard] })
+    const mergedSide = mergeIntoList(deck.sideboard, parsed.sideboard)
+    schedulePersist({ ...deck, cards: merged, sideboard: mergedSide })
   }
 
   return {

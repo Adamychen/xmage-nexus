@@ -157,14 +157,21 @@ export function localizeGameEndMessage(
 ): string {
   if (!raw) return ''
   const trimmed = raw.trim()
-  const you = t('game', 'you')
 
   const gameResult = trimmed.match(/^(.+?)\s+(?:has\s+)?(won|lost)\s+the\s+game(?:,?\s+on\s+turn\s+(\d+))?[.!]?$/i)
   if (gameResult) {
     const rawPlayer = gameResult[1].trim()
-    const player = /^you$/i.test(rawPlayer) ? you : rawPlayer
     const won = gameResult[2].toLowerCase() === 'won'
     const turn = gameResult[3]
+    // "You" + verbo en 3ª persona ("Tú pierde", "Du hat", "Tu a") es
+    // agramatical en varios idiomas: hay claves dedicadas de 2ª persona.
+    if (/^you$/i.test(rawPlayer)) {
+      if (turn) {
+        return t('game', won ? 'end_won_game_turn_you' : 'end_lost_game_turn_you', { turn })
+      }
+      return trimmed
+    }
+    const player = rawPlayer
     if (turn) {
       return t('game', won ? 'end_won_game_turn' : 'end_lost_game_turn', { player, turn })
     }
@@ -174,7 +181,10 @@ export function localizeGameEndMessage(
   const matchResult = trimmed.match(/^(.+?)\s+won\s+the\s+match[.!]?$/i)
   if (matchResult) {
     const rawPlayer = matchResult[1].trim()
-    return t('game', 'feed_won_match', { player: /^you$/i.test(rawPlayer) ? you : rawPlayer })
+    if (/^you$/i.test(rawPlayer)) {
+      return t('game', 'feed_won_match_you', {})
+    }
+    return t('game', 'feed_won_match', { player: rawPlayer })
   }
 
   return trimmed

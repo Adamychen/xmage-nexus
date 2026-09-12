@@ -9,7 +9,7 @@ import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
 import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
-import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, type TableFilters } from './TableFilterBar'
+import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import { t as tStatic, translateError } from '../i18n'
@@ -57,7 +57,7 @@ export default function LobbyScreen() {
   const [filters, setFilters] = useState<TableFilters>(() => {
     try {
       const saved = localStorage.getItem('lobby_filters')
-      return saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
+      return saved ? sanitizeTableFilters({ ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) }) : INITIAL_TABLE_FILTERS
     } catch { return INITIAL_TABLE_FILTERS }
   })
   const [mobileChatOpen, setMobileChatOpen] = useState(() => {
@@ -371,9 +371,13 @@ export default function LobbyScreen() {
           onWatchTable={async (tableId) => {
             setState({ error: null })
             setNotice(null)
-            const watched = await withTimeout(cmds.watchTable(tableId), 15000, 'watchTable')
-            if (watched.ok) setNotice(tStatic('lobby','watch_btn'))
-            else setState({ error: translateError((watched as { error?: string }).error || tStatic('errors','generic_error'), 'watchTable') })
+            try {
+              const watched = await withTimeout(cmds.watchTable(tableId), 15000, 'watchTable')
+              if (watched.ok) setNotice(tStatic('lobby','watch_btn'))
+              else setState({ error: translateError((watched as { error?: string }).error || tStatic('errors','generic_error'), 'watchTable') })
+            } catch (e) {
+              setState({ error: translateError(e instanceof Error ? e.message : String(e), 'watchTable') })
+            }
           }}
           onClose={() => setSelectedUser(null)}
         />

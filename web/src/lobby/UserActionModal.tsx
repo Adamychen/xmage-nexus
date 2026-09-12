@@ -7,6 +7,7 @@ import RankBadge from './RankBadge'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
+import { isUserInGame } from './lobbyUtils'
 import { useTranslation } from '../i18n'
 import './UserActionModal.css'
 
@@ -35,7 +36,7 @@ export default function UserActionModal({
 
   // Find table where player is currently playing, if any
   const currentTable = tables.find((t) =>
-    t.seats.some((s) => s.playerName?.toLowerCase() === user.userName.toLowerCase())
+    (t.seats ?? []).some((s) => s.playerName?.toLowerCase() === user.userName.toLowerCase())
   )
 
   const handleWhisper = () => {
@@ -92,7 +93,7 @@ export default function UserActionModal({
             </div>
 
             <div className="user-action-status-row">
-              {user.infoGames ? (
+              {isUserInGame(user.infoGames) ? (
                 <span className="user-status-playing"><Icon name="swords" size={12} /> {user.infoGames}</span>
               ) : (
                 <span className="user-status-idle"><Icon name="userCheck" size={12} /> {t('lobby', 'user_status_available')}</span>

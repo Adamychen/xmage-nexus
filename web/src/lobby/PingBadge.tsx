@@ -1,4 +1,5 @@
 import './PingBadge.css'
+import { useTranslation } from '../i18n'
 
 export interface PingBadgeProps {
   infoPing?: string | null
@@ -7,7 +8,7 @@ export interface PingBadgeProps {
   className?: string
 }
 
-export function parsePing(infoPing?: string | null): {
+export function parsePing(infoPing?: string | null, disconnectedLabel = 'Desconectado'): {
   ms: number | null
   status: 'good' | 'medium' | 'slow' | 'disconnected' | 'unknown'
   label: string
@@ -17,7 +18,7 @@ export function parsePing(infoPing?: string | null): {
     return { ms: null, status: 'unknown', label: '—' }
   }
   if (infoPing.toLowerCase().includes('discon') || infoPing.toLowerCase().includes('offline')) {
-    return { ms: null, status: 'disconnected', label: 'Desconectado' }
+    return { ms: null, status: 'disconnected', label: disconnectedLabel }
   }
 
   const msMatch = infoPing.match(/<?(\d+)\s*ms/i)
@@ -44,13 +45,16 @@ export default function PingBadge({
   showText = true,
   className = '',
 }: PingBadgeProps) {
-  const { status, label, duration } = parsePing(infoPing)
+  const { t } = useTranslation()
+  const { status, label, duration } = parsePing(infoPing, t('lobby', 'ping_disconnected'))
 
   if (status === 'unknown' && !infoPing) {
     return null
   }
 
-  const tooltip = duration ? `Latencia: ${label} (conectado ${duration})` : `Latencia: ${label}`
+  const tooltip = duration
+    ? t('lobby', 'ping_tooltip_conn', { label, duration })
+    : t('lobby', 'ping_tooltip', { label })
 
   return (
     <div

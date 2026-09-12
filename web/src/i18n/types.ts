@@ -60,6 +60,7 @@ export interface TranslationSchema {
     proxy: string
     xmage_server: string
     port: string
+    proxy_port: string
     attribution: string
   }
   lobby: {
@@ -143,6 +144,9 @@ export interface TranslationSchema {
     leaderboard_col_history: string
     leaderboard_col_winrate: string
     leaderboard_col_status: string
+    ping_tooltip: string
+    ping_tooltip_conn: string
+    ping_disconnected: string
     view_profile_hint: string
     time_now: string
     time_ago_m: string
@@ -316,6 +320,24 @@ export interface TranslationSchema {
     create_seat_human_short: string
     create_sim_deck_global_shortcut: string
     create_seat_human_waiting_label: string
+    create_seat_sim: string
+    create_seat_ai_mad: string
+    create_seat_ai_montecarlo: string
+    create_seat_ai_draftbot: string
+    create_draft_timing_beginner: string
+    create_draft_timing_regular: string
+    create_draft_timing_professional: string
+    dev_title: string
+    dev_subtitle: string
+    dev_notice: string
+    dev_demo_title: string
+    dev_demo_desc: string
+    dev_skip_shuffle_desc: string
+    dev_skip_starting_desc: string
+    table_min_rating: string
+    table_max_quit: string
+    join_sb_suffix: string
+    create_time_min_short: string
     create_summary_waiting: string
     create_time_none: string
     create_time_standard: string
@@ -376,9 +398,11 @@ export interface TranslationSchema {
     invite_copy_join: string
     invite_copy_watch: string
     invite_copied: string
+    invite_copy_failed: string
     invite_login_hint: string
     invite_table_not_found: string
     invite_server_switch: string
+    invite_bad_server: string
     staging_host_crown: string
     staging_waiting_fallback: string
     staging_seats_count: string
@@ -655,11 +679,15 @@ export interface TranslationSchema {
     feed_dest_bottom: string
     feed_won_game: string
     feed_won_match: string
+    feed_won_match_you: string
     feed_conceded: string
     end_won_game_turn: string
     end_lost_game_turn: string
+    end_won_game_turn_you: string
+    end_lost_game_turn_you: string
     chat_empty: string
     chat_placeholder: string
+    chat_send: string
     insert_emoji: string
     send_reaction: string
     feedback_kicker_mode: string
@@ -679,6 +707,7 @@ export interface TranslationSchema {
     targeting_finish: string
     targeting_cancel: string
     mana_title: string
+    mana_symbol_title: string
     mana_hint: string
     mana_pool_pay: string
     mana_special: string
@@ -858,6 +887,8 @@ export interface TranslationSchema {
     tracker_hide_empty: string
     tracker_show_all: string
     tracker_search_placeholder: string
+    tracker_clear_search: string
+    tracker_sort_label: string
     tracker_no_results: string
     tracker_top_revealed: string
     tracker_face_down_exile: string
@@ -961,6 +992,13 @@ export interface TranslationSchema {
     target_fallback: string
     amount_fallback: string
     pile_1: string
+    pile_choose: string
+    amount_decrease: string
+    amount_value: string
+    amount_increase: string
+    amount_range: string
+    amount_min: string
+    amount_max: string
     pile_2: string
     pile_summary: string
     card_number: string
@@ -1165,6 +1203,7 @@ export interface TranslationSchema {
     import_placeholder: string
     alert_delete: string
     builder_editor: string
+    save_failed_retry: string
     builder_search_hint: string
     builder_mana_curve: string
     builder_basic_lands: string
@@ -1185,6 +1224,16 @@ export interface TranslationSchema {
     filter_cmc: string
     filter_type: string
     box_create: string
+    export_dck: string
+    export_arena: string
+    export_plain: string
+    export_dek: string
+    grid_of_total: string
+    drag_remove: string
+    box_new_deck: string
+    search_help_title: string
+    search_help_eg: string
+    search_help_hint_rest: string
     sample_london: string
     sample_no_cards: string
     sample_land: string
@@ -1238,6 +1287,7 @@ export interface TranslationSchema {
     filter_set: string
     filter_set_placeholder: string
     filter_search_placeholder: string
+    filter_raw_color_clash: string
     filter_more: string
     filter_less: string
     sort_by: string
@@ -1266,6 +1316,7 @@ export interface TranslationSchema {
     invalid_password: string
     timeout: string
     create_table_failed: string
+    create_table_name_required: string
     join_table_failed: string
     start_game_failed: string
     draft_no_sets: string
@@ -1390,6 +1441,7 @@ export interface TranslationSchema {
     skip: string
     review: string
     first_time: string
+    username_required: string
   }
   splash: {
     checking: string

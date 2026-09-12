@@ -39,7 +39,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [name, setName] = useState('')
   const [format, setFormat] = useState<DeckV2['format']>('Freeform')
   const [layout, setLayout] = useState<'vertical' | 'horizontal'>('vertical')
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const isDraggingRef = useRef(false)
@@ -73,7 +73,13 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const equipped = useStore((s) => s.myDeck)
   const wsAlive = useStore((s) => s.wsAlive)
   const debounceRef = useRef<number | null>(null)
+  const savedTimerRef = useRef<number | null>(null)
   const partnerMigratedRef = useRef(false)
+
+  useEffect(() => () => {
+    if (debounceRef.current) window.clearTimeout(debounceRef.current)
+    if (savedTimerRef.current) window.clearTimeout(savedTimerRef.current)
+  }, [])
 
   const { metaMap, setMetaMap, updateMetaForDeck, cmcNumberMap } = useDeckMetadata()
   const { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList } = useDeckValidation(
@@ -174,9 +180,15 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const persist = async (next: DeckV2) => {
     setSaveState('saving')
-    await storage.put({ ...next, updatedAt: Date.now() })
+    try {
+      await storage.put({ ...next, updatedAt: Date.now() })
+    } catch {
+      setSaveState('error')
+      return
+    }
     setSaveState('saved')
-    setTimeout(() => setSaveState('idle'), 1200)
+    if (savedTimerRef.current) window.clearTimeout(savedTimerRef.current)
+    savedTimerRef.current = window.setTimeout(() => setSaveState('idle'), 1200)
   }
 
   const schedulePersist = (next: DeckV2) => {
@@ -303,9 +315,19 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
         <div className="arena-nav-right">
           {saveState !== 'idle' && (
-            <span className="builder-save-badge builder-save">
-              {saveState === 'saving' ? t('common', 'loading') : `${t('common', 'done')} ✓`}
-            </span>
+            saveState === 'error' ? (
+              <button
+                type="button"
+                className="builder-save-badge builder-save-error"
+                onClick={() => { if (deck) void persist(deck) }}
+              >
+                {t('decks', 'save_failed_retry')}
+              </button>
+            ) : (
+              <span className="builder-save-badge builder-save">
+                {saveState === 'saving' ? t('common', 'loading') : `${t('common', 'done')} ✓`}
+              </span>
+            )
           )}
           <LanguageSelector compact showCardLangToggle />
         </div>

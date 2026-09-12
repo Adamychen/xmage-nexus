@@ -53,11 +53,11 @@ describe('serverMessageTranslation', () => {
   })
 
   it('localizes game end messages', () => {
-    expect(localizeGameEndMessage('You won the game on turn 1.', t as any)).toBe('Tú gana la partida en el turno 1')
+    expect(localizeGameEndMessage('You won the game on turn 1.', t as any)).toBe('Has ganado la partida en el turno 1')
     expect(localizeGameEndMessage('sim-000001-670 won the game on turn 2.', t as any)).toBe('sim-000001-670 gana la partida en el turno 2')
     expect(localizeGameEndMessage('sim-000001-670 has won the game on turn 3.', t as any)).toBe('sim-000001-670 gana la partida en el turno 3')
-    expect(localizeGameEndMessage('You lost the game on turn 2.', t as any)).toBe('Tú pierde la partida en el turno 2')
-    expect(localizeGameEndMessage('You won the match!', t as any)).toBe('Tú gana el match')
+    expect(localizeGameEndMessage('You lost the game on turn 2.', t as any)).toBe('Has perdido la partida en el turno 2')
+    expect(localizeGameEndMessage('You won the match!', t as any)).toBe('Has ganado el match')
     expect(localizeGameEndMessage('sim-000001-670 won the match!', t as any)).toBe('sim-000001-670 gana el match')
   })
 

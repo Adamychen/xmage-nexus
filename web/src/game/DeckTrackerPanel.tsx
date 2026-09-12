@@ -194,7 +194,7 @@ export default function DeckTrackerPanel() {
                   type="button"
                   className="tracker-search-clear"
                   onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
+                  aria-label={t('game', 'tracker_clear_search')}
                 >
                   <Icon name="x" size={11} />
                 </button>
@@ -207,7 +207,7 @@ export default function DeckTrackerPanel() {
                   className="tracker-sort-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  aria-label="Sort cards"
+                  aria-label={t('game', 'tracker_sort_label')}
                 >
                   <option value="cmc">{t('game', 'tracker_sort_cmc')}</option>
                   <option value="name">{t('game', 'tracker_sort_name')}</option>

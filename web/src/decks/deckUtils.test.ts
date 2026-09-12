@@ -135,6 +135,7 @@ describe('deckUtils basic calculations', () => {
     expect(commanderCardsFor([solRing, atraxa], null, null, noMeta)).toEqual([])
     expect(commanderCardsFor([solRing, atraxa], { cardName: 'Not In Deck', setCode: 'X', cardNumber: '1', amount: 1 }, null, noMeta)).toEqual([])
     expect(commanderCardsFor([], null, null, noMeta)).toEqual([])
+
     const partnerMeta = new Map([
       ['PC2/1', { keywords: ['Partner'] }],
       ['sidar kondo of jamuraa', { keywords: ['Partner'] }],
@@ -149,6 +150,15 @@ describe('deckUtils basic calculations', () => {
     expect(derivePartnerCard([sidar, tana, solRing], sidar, partnerMeta)).toEqual(tana)
     expect(derivePartnerCard([solRing], sidar, partnerMeta)).toBeNull()
     expect(derivePartnerCard([solRing], null, partnerMeta)).toBeNull()
+  })
+
+  it('una carta no es pareja de sí misma (AUDIT)', () => {
+    const sidar = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'CMR', cardNumber: '535', amount: 1 }
+    const sidarPC2 = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
+    const partnerMeta = { keywords: ['Partner'], typeLine: 'Legendary Creature — Human' }
+    expect(canPairCommanders(partnerMeta, partnerMeta, sidar.cardName, sidar.cardName)).toBe(false)
+    expect(canPairCommanders(partnerMeta, partnerMeta, sidar.cardName, sidarPC2.cardName)).toBe(false)
+    expect(commanderCardsFor([sidar], sidar, { ...sidar }, new Map())).toEqual([sidar])
   })
 
   it('pairs commanders mirroring the XMage validators', () => {

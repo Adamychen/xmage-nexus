@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
@@ -7,23 +7,30 @@ import { stripMetaFromJson, type ScryfallJson } from './deckCardOps'
 /** Metadatos Scryfall de las cartas del mazo + mapa de CMCs para la curva. */
 export function useDeckMetadata() {
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
+  // Claves conocidas + en vuelo en refs: updateMetaForDeck se llama en ráfaga
+  // (load, imports, drops) y el estado metaMap llega rancio entre llamadas.
+  const knownRef = useRef<Set<string>>(new Set())
+  const inFlightRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    for (const k of metaMap.keys()) knownRef.current.add(k)
+  }, [metaMap])
 
   const updateMetaForDeck = (cards: DeckCard[]) => {
-    const m = new Map(metaMap)
-    const toFetch: DeckCard[] = []
+    const toFetch: Array<{ card: DeckCard; lookup: string }> = []
     const seen = new Set<string>()
     for (const c of cards) {
       const k = `${c.setCode}/${c.cardNumber}`
       const hasSetAndNum = !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
       const lookup = hasSetAndNum ? k : c.cardName.toLowerCase()
-      if (m.has(lookup) || seen.has(lookup)) continue
+      if (knownRef.current.has(lookup) || inFlightRef.current.has(lookup) || seen.has(lookup)) continue
       seen.add(lookup)
-      toFetch.push(c)
+      inFlightRef.current.add(lookup)
+      toFetch.push({ card: c, lookup })
     }
     if (toFetch.length === 0) return
 
     const cardLang = getEffectiveCardLang()
-    for (const c of toFetch) {
+    for (const { card: c, lookup } of toFetch) {
       const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
       const localizedUrl = hasSetAndNum && cardLang && cardLang !== 'en'
         ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${cardLang}?format=json`
@@ -48,10 +55,12 @@ export function useDeckMetadata() {
 
       fetchMetadata()
         .then((data) => {
+          inFlightRef.current.delete(lookup)
           if (!data) return
+          knownRef.current.add(lookup)
           const printedName = data.printed_name || data.card_faces?.[0]?.printed_name
           if (printedName && cardLang && cardLang !== 'en') {
-            setCachedCardName(c.cardName, printedName, cardLang)
+            setCachedCardName(data.name ?? c.cardName, printedName, cardLang)
           }
           const meta = stripMetaFromJson(data)
           setMetaMap((prev) => {
@@ -61,7 +70,9 @@ export function useDeckMetadata() {
             return nxt
           })
         })
-        .catch(() => {})
+        .catch(() => {
+          inFlightRef.current.delete(lookup)
+        })
     }
   }
 

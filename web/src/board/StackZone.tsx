@@ -9,6 +9,7 @@ import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
 import { useTranslation } from '../i18n'
 import Icon, { type IconName } from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -287,7 +288,7 @@ function RecordedStackEntry({
   }, [id])
 
   return (
-    <div ref={ref} data-card-id={id} className={className} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div ref={ref} data-card-id={id} className={className} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} {...clickableProps(onClick)}>
       {children}
     </div>
   )

@@ -30,17 +30,32 @@ export function useInviteLink({ conn, tables, hasLobby, joinHuman, watchTable, s
   const pending = useStore((s) => s.pendingDeepLink)
   const [retry, setRetry] = useState(0)
   const handledRef = useRef<object | null>(null)
+  const handledConnRef = useRef<object | null>(null)
 
   useEffect(() => {
     setRetry(0)
     handledRef.current = null
+    handledConnRef.current = null
   }, [pending])
 
   useEffect(() => {
-    if (!pending || handledRef.current === pending) return
+    if (!pending) return
+    if (handledRef.current === pending && handledConnRef.current !== conn) {
+      handledRef.current = null
+      handledConnRef.current = null
+    }
+    if (handledRef.current === pending) return
+    if (pending.serverRaw && !(pending.serverHost && pending.serverPort)) {
+      handledRef.current = pending
+      handledConnRef.current = conn
+      setNotice(tStatic('lobby', 'invite_bad_server', { server: pending.serverRaw }))
+      setState({ pendingDeepLink: null })
+      return
+    }
     if (pending.serverHost && pending.serverPort && conn
       && (conn.serverHost !== pending.serverHost || conn.port !== pending.serverPort)) {
       handledRef.current = pending
+      handledConnRef.current = conn
       const label = serverLabel(pending) ?? ''
       const targetHost = pending.serverHost
       const targetPort = pending.serverPort

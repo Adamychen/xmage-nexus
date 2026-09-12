@@ -222,8 +222,8 @@ export default function SpectatorStagingScreen({
         if (!ok) return
       }
       await cmds.removeTable(tTable.tableId)
-      const simSeats = tTable.seats.filter((s) => s.playerType === 'SIM').length
-      const playerTypes = tTable.seats.map((s) => s.playerType || 'HUMAN')
+      const simSeats = seats.filter((s) => s.playerType === 'SIM').length
+      const playerTypes = seats.map((s) => s.playerType || 'HUMAN')
       const createRes = await cmds.createTable({
         name: tTable.tableName,
         gameType: tTable.gameType,

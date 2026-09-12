@@ -61,9 +61,19 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   const [avatarId, setAvatarId] = useState(() => loadConn()?.avatarId ?? 10)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [server, setServer] = useState<ServerDraft>(initialServerDraft)
+  const [identityError, setIdentityError] = useState(false)
 
   const stepId = STEPS[step]
   const isLast = stepId === 'done'
+
+  const goNext = () => {
+    if (stepId === 'identity' && !username.trim()) {
+      setIdentityError(true)
+      return
+    }
+    setIdentityError(false)
+    setStep(step + 1)
+  }
 
   const buildConn = (): ConnectionInfo => ({
     wsHost: server.proxyHost.trim() || 'localhost',
@@ -77,6 +87,11 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   })
 
   const finish = () => {
+    if (!username.trim()) {
+      setStep(STEPS.indexOf('identity'))
+      setIdentityError(true)
+      return
+    }
     const conn = buildConn()
     saveConn(conn)
     window.dispatchEvent(new CustomEvent(SETUP_CONN_EVENT, { detail: conn }))
@@ -134,7 +149,8 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
               <div className="setup-identity-fields">
                 <label className="setup-field">
                   {t('login', 'username')}
-                  <input value={username} onChange={(e) => setUsername(e.target.value)} maxLength={14} data-testid="setup-username" autoComplete="username" />
+                  <input value={username} onChange={(e) => { setUsername(e.target.value); setIdentityError(false) }} maxLength={14} required data-testid="setup-username" autoComplete="username" />
+                  {identityError && <span className="setup-field-error" data-testid="setup-username-error">{t('setup', 'username_required')}</span>}
                 </label>
                 <label className="setup-field">
                   {t('login', 'password')}
@@ -225,7 +241,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
             </button>
           )}
           {!isLast && (
-            <button type="button" className="setup-btn-primary" onClick={() => setStep(step + 1)} data-testid="setup-next">
+            <button type="button" className="setup-btn-primary" onClick={goNext} data-testid="setup-next">
               {t('lobby', 'wizard_next')}
             </button>
           )}

@@ -31,9 +31,6 @@ export default function QuickReactions() {
           {emoji}
         </button>
       ))}
-      <button type="button" className="quick-reaction-btn quick-reaction-more" title={t('game', 'send_reaction')} disabled>
-        +
-      </button>
     </div>
   )
 }

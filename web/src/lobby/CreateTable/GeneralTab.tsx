@@ -269,7 +269,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   {t('lobby','create_field_draft_timing')}
                   <select value={form.draftTiming} onChange={(e) => form.setDraftTiming(e.target.value as 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL')}>
                     {DRAFT_TIMING_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option key={o.value} value={o.value}>{o.value === 'BEGINNER' ? t('lobby','create_draft_timing_beginner') : o.value === 'REGULAR' ? t('lobby','create_draft_timing_regular') : t('lobby','create_draft_timing_professional')}</option>
                     ))}
                   </select>
                 </label>

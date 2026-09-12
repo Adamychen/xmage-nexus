@@ -42,4 +42,10 @@ describe('PingBadge component & parsePing', () => {
     const { container } = render(<PingBadge infoPing="90ms" compact />)
     expect(container.querySelector('.ping-compact')).toBeDefined()
   })
+
+  it('localizes the tooltip instead of hardcoding Spanish (AUDIT)', () => {
+    const { container } = render(<PingBadge infoPing="1ms (avg: <1ms)" />)
+    const badge = container.querySelector('.ping-badge')
+    expect(badge?.getAttribute('title')).toBe('Latencia: 1ms (conectado avg: <1ms)')
+  })
 })

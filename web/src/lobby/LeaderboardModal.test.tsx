@@ -111,6 +111,29 @@ describe('LeaderboardModal Component', () => {
     expect(screen.getAllByText('Mítico').length).toBeGreaterThan(0)
   })
 
+  it('no fabrica W-L ni winrate con historial de solo-conteo (AUDIT)', () => {
+    const onClose = vi.fn()
+    const users: UsersView[] = [
+      { ...mockUsers[0], userName: 'counter', matchHistory: '6', infoGames: 'not active' },
+    ]
+    render(<LeaderboardModal users={users} currentUsername="counter" onClose={onClose} />)
+    expect(screen.getByText('6')).toBeDefined()
+    expect(screen.queryByText(/0-6/)).toBeNull()
+    expect(screen.getByText('—')).toBeDefined()
+    expect(screen.getByText(/En el lobby/i)).toBeDefined()
+  })
+
+  it('muestra En partida solo con tokens de juego reales (AUDIT)', () => {
+    const onClose = vi.fn()
+    const users: UsersView[] = [
+      { ...mockUsers[0], userName: 'duelist', infoGames: 'Match: 1 ' },
+      { ...mockUsers[2], userName: 'waiter', infoGames: 'Wait: 1 ' },
+    ]
+    render(<LeaderboardModal users={users} currentUsername="duelist" onClose={onClose} />)
+    expect(screen.getByText(/En partida/i)).toBeDefined()
+    expect(screen.getByText(/En el lobby/i)).toBeDefined()
+  })
+
   it('renders ignored users in my profile and allows unignoring', () => {
     addIgnoredUser('annoying_guy')
     const onClose = vi.fn()

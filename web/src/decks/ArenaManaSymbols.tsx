@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t as tStatic } from '../i18n'
 
 export function symbolToSvgPath(rawSymbol: string): string {
   let clean = rawSymbol.replace(/^\{|\}$/g, '').toUpperCase().trim()
@@ -52,7 +53,7 @@ export function ManaPip({
       <span
         className={`mana-symbol sym-generic ${className}`}
         style={{ width: size, height: size, fontSize: Math.max(9, size * 0.65) }}
-        title={`Maná ${s}`}
+        title={tStatic('game', 'mana_symbol_title', { sym: s })}
       >
         {s}
       </span>

@@ -33,13 +33,10 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
   }
 
   const renderPile = (cards: FeedbackCard[], pile1: boolean, label: string, testId: string) => (
-    <button
+    <div
       key={testId}
-      type="button"
       className="pile-column"
       data-testid={testId}
-      disabled={busy}
-      onClick={() => choose(pile1)}
     >
       <span className="pile-column-name">{label} ({cards.length})</span>
       <span className="pile-cards">
@@ -54,7 +51,15 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
           </span>
         ))}
       </span>
-    </button>
+      <button
+        type="button"
+        className="pile-choose-btn"
+        disabled={busy}
+        onClick={() => choose(pile1)}
+      >
+        {t('game', 'pile_choose')}
+      </button>
+    </div>
   )
 
   return (

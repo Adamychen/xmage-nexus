@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import type { TableView } from '../net/types'
 import {
   getAllAvailableDecks,
@@ -41,6 +41,8 @@ export default function JoinTableDialog({
   const currentEquippedDeck = useStore((s) => s.myDeck)
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(() => currentEquippedDeck ?? allDecks[0] ?? null)
+  const selectedDeckRef = useRef(selectedDeck)
+  selectedDeckRef.current = selectedDeck
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -59,7 +61,8 @@ export default function JoinTableDialog({
         }
         const merged = [...maps.values()]
         setAllDecks(merged)
-        if (merged.length && (!selectedDeck || !merged.some((d) => sameDeck(d, selectedDeck)))) setSelectedDeck(merged[0])
+        const current = selectedDeckRef.current
+        if (merged.length && (!current || !merged.some((d) => sameDeck(d, current)))) setSelectedDeck(merged[0])
       } catch {}
     })()
     return () => { cancelled = true }
@@ -132,7 +135,7 @@ export default function JoinTableDialog({
       kickerLabel={title ? title.toUpperCase() : t('lobby', 'join_human_btn').toUpperCase()}
       title={table.tableName}
       topRight={(
-        <button type="button" className="close-btn" onClick={onClose}>
+        <button type="button" className="close-btn" onClick={onClose} aria-label={t('common', 'close')}>
           ✕
         </button>
       )}
@@ -268,7 +271,7 @@ export default function JoinTableDialog({
                       <div className="deck-card-title-row">
                         <span className="deck-card-name"><Icon name="layers" size={12} /> {d.name}</span>
                         <span className="deck-card-count-badge">
-                          {count} {t('decks','total_cards')} {sbCount > 0 ? `(+${sbCount} sb)` : ''}
+                          {count} {t('decks','total_cards')} {sbCount > 0 ? t('lobby', 'join_sb_suffix', { count: sbCount }) : ''}
                         </span>
                       </div>
                       <span className="deck-card-sample">{sampleCards}…</span>

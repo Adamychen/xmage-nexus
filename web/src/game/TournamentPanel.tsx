@@ -39,7 +39,7 @@ export default function TournamentPanel() {
     const h = el.offsetHeight || 36
     const next = clampDragPos(miniPos.left, miniPos.top, w, h, window.innerWidth, window.innerHeight)
     if (next.left !== miniPos.left || next.top !== miniPos.top) setMiniPos(next)
-  }, [expanded])
+  }, [expanded, miniPos, setMiniPos])
   const watchStall = draftOverAt != null && !hasConstruct
   useEffect(() => {
     if (!watchStall) return

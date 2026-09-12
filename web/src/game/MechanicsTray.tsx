@@ -123,9 +123,11 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           if (tracked && tracked.length > 0) {
             visited = tracked
           } else if (dungeonItem.currentRoom) {
-            visited = pathToRoom(graph, dungeonItem.currentRoom) ?? [dungeonRoot(graph)]
+            const root = dungeonRoot(graph)
+            visited = pathToRoom(graph, dungeonItem.currentRoom) ?? (root ? [root] : [])
           } else {
-            visited = [dungeonRoot(graph)]
+            const root = dungeonRoot(graph)
+            visited = root ? [root] : []
           }
         }
         list.push({ name: dungeonItem.name, player: p, graph, visited })
@@ -159,6 +161,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   ) ?? []
 
   useEffect(() => {
+    let cancelled = false
     const tokens = [
       { key: 'ring', name: 'The Ring' },
       { key: 'monarch', name: 'The Monarch' },
@@ -169,11 +172,14 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     ]
     tokens.forEach((tkn) => {
       awaitImageUrl({ name: tkn.name, displayName: tkn.name, manaValue: 0 } as CardView).then((url) => {
-        if (url) {
+        if (!cancelled && url) {
           setTokenImages((prev) => ({ ...prev, [tkn.key]: url }))
         }
       })
     })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const availableTabs = useMemo(() => {

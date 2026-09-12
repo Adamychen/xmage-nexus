@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
@@ -33,6 +33,18 @@ function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
   return [...set].sort()
 }
 
+export function cloneDeckForEdit(d: MetaDeckItem | DeckV2): DeckV2 {
+  const now = Date.now()
+  return {
+    ...d,
+    id: makeDeckId(),
+    coverCard: d.coverCard ?? d.cards[0],
+    createdAt: now,
+    updatedAt: now,
+    source: 'custom',
+  }
+}
+
 function preconToV2(): DeckV2[] {
   const now = Date.now()
   return bundledDecks().map((d, i) => ({
@@ -45,6 +57,28 @@ function preconToV2(): DeckV2[] {
     updatedAt: now - 1000000 - i * 1000,
     source: 'precon' as const,
   }))
+}
+
+function cardsFingerprint(cards: DeckCard[]): string {
+  return cards.map((c) => `${c.setCode}/${c.cardNumber}:${c.cardName}x${c.amount}`).join('|')
+}
+
+/**
+ * Fusiona los colores enriquecidos por id contra el estado ACTUAL: solo se
+ * aplican si el mazo no cambió por debajo (mismas cartas) y sigue sin colores.
+ * Así una edición del usuario durante los fetches nunca se pierde.
+ */
+export function mergeEnrichedColors(current: DeckV2[], enriched: DeckV2[]): DeckV2[] {
+  const byId = new Map(enriched.map((d) => [d.id, d]))
+  let changed = false
+  const merged = current.map((cur) => {
+    const fresh = byId.get(cur.id)
+    if (!fresh || fresh.colors.length === 0 || cur.colors.length > 0) return cur
+    if (cardsFingerprint(cur.cards) !== cardsFingerprint(fresh.cards)) return cur
+    changed = true
+    return { ...cur, colors: fresh.colors }
+  })
+  return changed ? merged : current
 }
 
 export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void }) {
@@ -103,25 +137,30 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const customCount = decks.filter((d) => d.source !== 'precon').length
 
+  const decksRef = useRef(decks)
+  decksRef.current = decks
+
   useEffect(() => {
     if (decks.length === 0) return
+    const snapshot = decks
     let cancelled = false
+    const ctrl = new AbortController()
     void (async () => {
-      const updated = await Promise.all(decks.map(async (d, idx) => {
+      const updated = await Promise.all(snapshot.map(async (d, idx) => {
         if (d.colors.length > 0) return d
         if (idx >= 12) return d
         const uniq = [...new Map(d.cards.slice(0, 6).map((c) => [`${c.setCode}/${c.cardNumber}:${c.cardName}`, c])).values()]
         const set = new Set<string>()
         for (const c of uniq) {
-          if (cancelled) break
+          if (cancelled || ctrl.signal.aborted) break
           try {
             let data: { color_identity?: string[] } | null = null
             if (c.setCode && c.cardNumber && c.cardNumber !== '0') {
-              const r = await fetch(`https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`, { headers: { Accept: 'application/json' } })
+              const r = await fetch(`https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`, { headers: { Accept: 'application/json' }, signal: ctrl.signal })
               if (r.ok) data = await r.json() as { color_identity?: string[] }
             }
             if (!data || !data.color_identity?.length) {
-              const r2 = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`, { headers: { Accept: 'application/json' } })
+              const r2 = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`, { headers: { Accept: 'application/json' }, signal: ctrl.signal })
               if (r2.ok) data = await r2.json() as { color_identity?: string[] }
             }
             if (data?.color_identity) for (const col of data.color_identity) set.add(col)
@@ -130,15 +169,20 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         }
         if (set.size === 0) return d
         const sorted = [...set].sort() as DeckV2['colors']
-        if (d.source !== 'precon' && sorted.length) {
-          const upd: DeckV2 = { ...d, colors: sorted }
-          try { await storage.put(upd) } catch {}
-        }
         return { ...d, colors: sorted }
       }))
-      if (!cancelled) setDecks(updated)
+      if (cancelled) return
+      const merged = mergeEnrichedColors(decksRef.current, updated)
+      if (merged === decksRef.current) return
+      const before = new Map(decksRef.current.map((d) => [d.id, d]))
+      for (const m of merged) {
+        if (m !== before.get(m.id) && m.source !== 'precon') {
+          try { await storage.put(m) } catch {}
+        }
+      }
+      if (!cancelled) setDecks(merged)
     })()
-    return () => { cancelled = true }
+    return () => { cancelled = true; ctrl.abort() }
   }, [decks.length])
 
   const handleCreate = async () => {
@@ -146,7 +190,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     const now = Date.now()
     const empty: DeckV2 = {
       id: makeDeckId(),
-      name: `${t('decks', 'box_create').replace('Crear ', '').replace('Create ', '')} ${customCount + 1}`,
+      name: `${t('decks', 'box_new_deck', { n: customCount + 1 })}`,
       cards: [],
       sideboard: [],
       format: 'Freeform',
@@ -161,18 +205,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   }
 
   const handleCloneFromBrowser = async (d: MetaDeckItem | DeckV2): Promise<DeckV2> => {
-    const v2: DeckV2 = {
-      id: makeDeckId(),
-      name: d.name,
-      format: d.format,
-      cards: d.cards,
-      sideboard: d.sideboard,
-      colors: d.colors,
-      coverCard: d.coverCard ?? d.cards[0],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      source: 'custom',
-    }
+    const v2 = cloneDeckForEdit(d)
     await storage.put(v2)
     await load()
     setSelectedId(v2.id)

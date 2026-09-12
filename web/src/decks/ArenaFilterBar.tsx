@@ -4,6 +4,7 @@ import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { keywordDisplayName } from '../data/keywordI18n'
 import type { Rarity, StatFilter, StatOp } from './filterQuery'
+import { rawQueryHasColor } from './filterQuery'
 import type { ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
 import './ArenaFilterBar.css'
 
@@ -159,19 +160,19 @@ export function ArenaFilterBar({
               type="button"
               className="arena-search-help-btn"
               onClick={() => setHelpOpen((v) => !v)}
-              title="Scryfall syntax help"
-              aria-label="Search help"
+              title={t('decks', 'search_help_title')}
+              aria-label={t('decks', 'search_help_title')}
             >
               ?
             </button>
             {helpOpen && (
               <div className="arena-search-help-popover" role="dialog">
-                <div className="help-popover-title">Scryfall syntax</div>
+                <div className="help-popover-title">{t('decks', 'search_help_title')}</div>
                 <div className="help-popover-examples">
                   <code>t:creature</code> <code>c:red</code> <code>cmc&lt;=3</code> <code>o:"haste"</code> <code>pow&gt;3</code> <code>rarity:mythic</code> <code>set:mh3</code> <code>f:standard</code>
                 </div>
                 <div className="help-popover-hint">
-                  e.g. <code>haste</code> + chips · O escribe sintaxis completa.
+                  {t('decks', 'search_help_eg')} <code>haste</code> {t('decks', 'search_help_hint_rest')}
                 </div>
                 <a href="https://scryfall.com/docs/syntax" target="_blank" rel="noopener noreferrer" className="help-popover-link">
                   scryfall.com/docs/syntax ↗
@@ -180,6 +181,9 @@ export function ArenaFilterBar({
             )}
           </div>
         </div>
+        {query.trim() !== '' && colorFilter.size > 0 && rawQueryHasColor(query) && (
+          <div className="arena-filter-clash" role="note">{t('decks', 'filter_raw_color_clash')}</div>
+        )}
 
         {onSearchLangChange && (
           <div className="arena-lang-select-wrap" ref={langMenuRef}>
@@ -359,7 +363,10 @@ export function ArenaFilterBar({
                 onChange={(e) => {
                   const v = e.target.value
                   if (v === '') onPowerChange(null)
-                  else onPowerChange({ op: powerFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Number(v))) })
+                  else {
+                    const n = Number(v)
+                    if (Number.isFinite(n)) onPowerChange({ op: powerFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Math.trunc(n))) })
+                  }
                 }}
               />
               {powerFilter && (
@@ -396,7 +403,10 @@ export function ArenaFilterBar({
                 onChange={(e) => {
                   const v = e.target.value
                   if (v === '') onToughnessChange(null)
-                  else onToughnessChange({ op: toughnessFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Number(v))) })
+                  else {
+                    const n = Number(v)
+                    if (Number.isFinite(n)) onToughnessChange({ op: toughnessFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Math.trunc(n))) })
+                  }
                 }}
               />
               {toughnessFilter && (

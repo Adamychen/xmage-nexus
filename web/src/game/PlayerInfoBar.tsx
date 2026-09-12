@@ -7,6 +7,7 @@ import { useTweenNumber } from './useTweenNumber'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import './PlayerInfoBar.css'
 
 interface PlayerInfoBarProps {
@@ -293,7 +294,7 @@ export default function PlayerInfoBar({
       className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
-      role={onClick ? 'button' : undefined}
+      {...clickableProps(onClick)}
     >
       <div
         className={`player-avatar ${hasPriority ? 'avatar-active' : ''}`}
@@ -438,7 +439,7 @@ export default function PlayerInfoBar({
           {curseInfo && (
             <span
               className="badge badge-curse interactive-badge"
-              title={`${curseInfo.count} ${t('board', 'zone_graveyard')}`}
+              title={`${curseInfo.count} ${t('game', 'curse')}`}
               onMouseEnter={(e) => handleMouseEnter(curseInfo.firstCard, e)}
               onMouseLeave={handleMouseLeave}
             >

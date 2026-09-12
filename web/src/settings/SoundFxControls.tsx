@@ -71,6 +71,7 @@ export default function SoundFxControls() {
           className="audio-slider"
           value={settings.masterVolume}
           disabled={!settings.soundEnabled}
+          aria-label={t('game', 'sound_volume_master')}
           onChange={(e) => setSetting('masterVolume', parseFloat(e.target.value))}
         />
       </div>
@@ -84,6 +85,7 @@ export default function SoundFxControls() {
           className="audio-slider"
           value={settings.sfxVolume}
           disabled={!settings.soundEnabled}
+          aria-label={t('game', 'sound_volume_sfx')}
           onChange={(e) => setSetting('sfxVolume', parseFloat(e.target.value))}
         />
       </div>
@@ -97,6 +99,7 @@ export default function SoundFxControls() {
           className="audio-slider"
           value={settings.uiVolume}
           disabled={!settings.soundEnabled}
+          aria-label={t('game', 'sound_volume_ui')}
           onChange={(e) => setSetting('uiVolume', parseFloat(e.target.value))}
         />
       </div>

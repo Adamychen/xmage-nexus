@@ -23,7 +23,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           title={`${t('decks', 'export_deck')} .dck — ${t('common', 'copied')}`}
           onClick={() => void downloadDeckFile(deck, 'dck', `✓ ${t('common', 'copied')}`)}
         >
-          Export .DCK
+          {t('decks', 'export_dck')}
         </button>
         <button
           type="button"
@@ -31,7 +31,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           title={`${t('decks', 'export_deck')} Arena — ${t('common', 'copied')}`}
           onClick={() => void downloadDeckFile(deck, 'arena', `✓ ${t('common', 'copied')}`)}
         >
-          Export Arena
+          {t('decks', 'export_arena')}
         </button>
         <button
           type="button"
@@ -39,7 +39,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           title={`${t('decks', 'export_deck')} Plain — ${t('common', 'copied')}`}
           onClick={() => void downloadDeckFile(deck, 'txt', `✓ ${t('common', 'copied')}`)}
         >
-          Export Plain
+          {t('decks', 'export_plain')}
         </button>
         <button
           type="button"
@@ -47,7 +47,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
           title={`${t('decks', 'export_deck')} MTGO .dek — ${t('common', 'copied')}`}
           onClick={() => void downloadDeckFile(deck, 'dek', `✓ ${t('common', 'copied')}`)}
         >
-          Export .DEK
+          {t('decks', 'export_dek')}
         </button>
         <button
           type="button"

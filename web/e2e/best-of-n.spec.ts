@@ -146,7 +146,7 @@ test('match best-of-N: END_GAME_INFO + SIDEBOARD + submitDeck + siguiente partid
       throw e
     }
     try {
-      await expect(page.locator('.end-dialog')).toContainText(/Tú gana el match|You won the match/i, { timeout: 20_000 })
+      await expect(page.locator('.end-dialog')).toContainText(/Tú gana el match|Has ganado el match|You won the match|You win the match/i, { timeout: 20_000 })
     } catch (e) {
       dumpE2E(page, 'bestofn-matchover')
       throw e

@@ -128,6 +128,20 @@ export function ArenaCardStrip({
     onInc?.(actionKey)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (onSwap) onSwap(actionKey)
+      else onDec?.(actionKey)
+    } else if (e.key === '+' || e.key === '=') {
+      e.preventDefault()
+      onInc?.(actionKey)
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault()
+      onDec?.(actionKey)
+    }
+  }
+
   return (
     <div
       ref={ref}
@@ -139,6 +153,9 @@ export function ArenaCardStrip({
       onMouseLeave={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       title={issue ? `${hoverTitle} — ! ${issue}` : (onSwap ? `${hoverTitle} — ${swapLabel ?? '⇄'}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`)}
     >
       {/* Background card art crop */}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BASIC_LAND_PRESETS, BASIC_LAND_SETS, countManaPips, suggestBasicLands, getBasicLandLabel, landPrinting, loadBasicLandSet, saveBasicLandSet, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
@@ -25,6 +25,10 @@ export function BasicLandAdder({
   const isCommander = format === 'Commander'
   const defaultTarget = isCommander ? 36 : (format === 'Limited' ? 17 : 24)
   const [targetCount, setTargetCount] = useState<number>(defaultTarget)
+  // El objetivo depende del formato: al cambiarlo se resetea la sugerencia.
+  useEffect(() => {
+    setTargetCount(defaultTarget)
+  }, [defaultTarget])
   const [isOpen, setIsOpen] = useState(false)
   const [landSet, setLandSet] = useState<string>(() => loadBasicLandSet())
 

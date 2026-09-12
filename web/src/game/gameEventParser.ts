@@ -203,14 +203,16 @@ export function parseGameEvent(
       : i18n('turn', 'feed_turn', { turn: turnNum }, { amount: turnNum })
   }
 
-  // 2. Cast spells: "Player casts CardName [target: TargetName] from Zone" or "Player casts CardName from Zone"
+  // 2. Cast spells: "Player casts CardName [target: TargetName] from Zone",
+  //    "Player casts CardName targeting Target from Zone" (AbilityImpl#getGameLogMessage
+  //    inline form, targeting BEFORE the zone) or "Player casts CardName from Zone"
   const castMatch = text.match(
-    /^([^:]+?)\s+(?:casts|plays\s+spell)\s+(?:a\s+copied\s+)?(.+?)(?:\s*\[target:\s*([^\]]+)\])?(?:\s+from\s+[A-Za-z ]+)?$/i
+    /^([^:]+?)\s+(?:casts|plays\s+spell)\s+(?:a\s+copied\s+)?(.+?)(?:\s*\[target:\s*([^\]]+)\])?(?:\s+targeting\s+(.+?))?(?:\s+from\s+[A-Za-z ]+)?$/i
   )
   if (castMatch) {
     const pName = castMatch[1].trim()
     const card = castMatch[2].trim()
-    const target = castMatch[3]?.trim()
+    const target = castMatch[3]?.trim() || castMatch[4]?.trim() || undefined
     return target
       ? i18n('cast', 'feed_cast_target', { player: pName, card, target }, { playerName: pName, isMe: isMe(pName), cardName: card, targetName: target })
       : i18n('cast', 'feed_cast', { player: pName, card }, { playerName: pName, isMe: isMe(pName), cardName: card })

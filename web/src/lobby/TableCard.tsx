@@ -5,6 +5,7 @@ import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import { useTranslation } from '../i18n'
+import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable } from './lobbyUtils'
 
 interface Props {
@@ -28,16 +29,17 @@ export default function TableCard({
   onJoinHuman, onJoinAi, onStart, onWatch, onResume, onOpenBracket, onSelectUser,
 }: Props) {
   const { t } = useTranslation()
+  const seats = tTable.seats ?? []
   const isReady = tTable.tableState === 'READY_TO_START'
   const isPlaying = tTable.tableState === 'DUELING' || tTable.tableState === 'SIDEBOARDING'
   const isWaiting = tTable.tableState === 'WAITING'
 
   const hasHumanSeat =
     (isWaiting || isReady) &&
-    tTable.seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
+    seats.some((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
   const hasAiSeat =
     (isWaiting || isReady) &&
-    tTable.seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
+    seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
 
   const statusClass = isReady
     ? 'status-ready'
@@ -49,7 +51,7 @@ export default function TableCard({
   const skill = getSkillBadge(tTable.skillLevel)
   const isMine = isMyTable(tTable, username, stagingTableId)
   const mySeat = !!username
-    && tTable.seats.some((s) => s.playerName?.toLowerCase() === username.toLowerCase())
+    && seats.some((s) => s.playerName?.toLowerCase() === username.toLowerCase())
   const canReenter = isMine || mySeat || stagingTableId === tTable.tableId
 
   return (
@@ -130,12 +132,12 @@ export default function TableCard({
           )}
           {Number(tTable.minimumRating) > 0 && (
             <span className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>
-              <Icon name="star" size={12} /> Min {tTable.minimumRating}
+              <Icon name="star" size={12} /> {t('lobby', 'table_min_rating', { rating: tTable.minimumRating })}
             </span>
           )}
           {Number(String(tTable.quitRatio ?? '100').replace('%', '')) < 100 && (
             <span className="table-tag-restriction" title={`${t('lobby','create_field_quit_ratio')}: ${tTable.quitRatio}`}>
-              <Icon name="ban" size={12} /> Max Quit {tTable.quitRatio}
+              <Icon name="ban" size={12} /> {t('lobby', 'table_max_quit', { ratio: tTable.quitRatio })}
             </span>
           )}
         </div>
@@ -148,7 +150,7 @@ export default function TableCard({
         )}
 
         <div className="table-seats-roster">
-          {tTable.seats.map((s, idx) => {
+          {seats.map((s, idx) => {
             const hostName = tTable.controllerName ? tTable.controllerName.split(',')[0].trim() : ''
             const isOwner = !!hostName && !!s.playerName && s.playerName.toLowerCase() === hostName.toLowerCase()
             const isHuman = !s.playerType || s.playerType === 'HUMAN'
@@ -157,6 +159,17 @@ export default function TableCard({
               : undefined
             const rating = foundUser?.constructedRating ?? s.constructedRating
             const historyInfo = formatSeatHistory(s.history, foundUser?.matchHistory)
+            const seatName = s.playerName
+            const openProfile = seatName
+              ? () => onSelectUser(
+                foundUser ?? {
+                  ...fallbackActionUser(seatName),
+                  flagName: s.flagName ?? '',
+                  constructedRating: s.constructedRating || 1500,
+                  matchHistory: s.history || '',
+                },
+              )
+              : undefined
             const seatAvatarId = isHuman
               ? s.playerName === username
                 ? avatarId
@@ -168,18 +181,11 @@ export default function TableCard({
                 key={idx}
                 className={`seat-badge ${s.playerName ? 'occupied interactive' : 'empty'} ${isOwner ? 'is-owner' : ''}`}
                 onClick={() => {
-                  if (!s.playerName) return
-                  onSelectUser(
-                    foundUser ?? {
-                      ...fallbackActionUser(s.playerName),
-                      flagName: s.flagName ?? '',
-                      constructedRating: s.constructedRating || 1500,
-                      matchHistory: s.history || '',
-                    },
-                  )
+                  openProfile?.()
                 }}
                 style={s.playerName ? { cursor: 'pointer' } : undefined}
                 title={s.playerName ? `${t('lobby','view_profile_hint')} ${s.playerName}` : t('lobby','open_seat')}
+                {...clickableProps(openProfile)}
               >
                 <div className="seat-part-avatar">
                   {s.playerName ? (

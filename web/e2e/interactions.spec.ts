@@ -65,7 +65,7 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     fs.writeFileSync(path.join(SHOTS_DIR, 'interaction-03-choose-pile.png'), await page.screenshot({ fullPage: true }))
 
     cursor = parsedLen(page)
-    await page.getByTestId('pile-column-1').click()
+    await page.getByTestId('pile-column-1').locator('.pile-choose-btn').click()
 
     // ─────────────────────────────────────────────────────────────
     // 4. GAME_TARGET con CardGrid (Tutor / Búsqueda en biblioteca)

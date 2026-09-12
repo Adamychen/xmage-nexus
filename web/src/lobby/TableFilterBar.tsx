@@ -43,6 +43,18 @@ export function tableOwnerName(t: TableView): string {
   return (t.controllerName ?? '').split(',')[0].trim()
 }
 
+/**
+ * Normaliza pares mutuamente excluyentes (filtros guardados de versiones
+ * anteriores podían traer ambos a true y garantizaban lista vacía).
+ * En conflicto gana el "Only", que es el más específico.
+ */
+export function sanitizeTableFilters(f: TableFilters): TableFilters {
+  const next = { ...f }
+  if (next.hidePassworded && next.passwordedOnly) next.hidePassworded = false
+  if (next.ratedOnly && next.unratedOnly) next.unratedOnly = false
+  return next
+}
+
 function hasFreeSeat(t: TableView): boolean {
   return t.seats?.some((s) => !s.playerName) ?? false
 }
@@ -278,6 +290,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
               className="tfb-clear-search-btn"
               onClick={() => onChange({ ...filters, searchQuery: '' })}
               title={t('common.clear')}
+              aria-label={t('common.clear')}
             >
               &times;
             </button>
@@ -516,7 +529,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 <input
                   type="checkbox"
                   checked={filters.hidePassworded}
-                  onChange={(e) => onChange({ ...filters, hidePassworded: e.target.checked })}
+                  onChange={(e) => onChange({ ...filters, hidePassworded: e.target.checked, passwordedOnly: e.target.checked ? false : filters.passwordedOnly })}
                 />
                 <span><Icon name="unlock" size={12} /> {t('lobby','tag_private')}</span>
               </label>
@@ -525,7 +538,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 <input
                   type="checkbox"
                   checked={filters.passwordedOnly}
-                  onChange={(e) => onChange({ ...filters, passwordedOnly: e.target.checked })}
+                  onChange={(e) => onChange({ ...filters, passwordedOnly: e.target.checked, hidePassworded: e.target.checked ? false : filters.hidePassworded })}
                 />
                 <span><Icon name="lock" size={12} /> {t('lobby', 'filter_passworded_only')}</span>
               </label>
@@ -534,7 +547,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 <input
                   type="checkbox"
                   checked={filters.ratedOnly}
-                  onChange={(e) => onChange({ ...filters, ratedOnly: e.target.checked })}
+                  onChange={(e) => onChange({ ...filters, ratedOnly: e.target.checked, unratedOnly: e.target.checked ? false : filters.unratedOnly })}
                 />
                 <span><Icon name="medal" size={12} /> {t('lobby', 'tag_rated')}</span>
               </label>
@@ -543,7 +556,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 <input
                   type="checkbox"
                   checked={filters.unratedOnly}
-                  onChange={(e) => onChange({ ...filters, unratedOnly: e.target.checked })}
+                  onChange={(e) => onChange({ ...filters, unratedOnly: e.target.checked, ratedOnly: e.target.checked ? false : filters.ratedOnly })}
                 />
                 <span><Icon name="medal" size={12} /> {t('lobby', 'filter_unrated_only')}</span>
               </label>

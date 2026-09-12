@@ -14,21 +14,29 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
   color: inherit;
   font: inherit;
   text-align: center;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.pile-column:hover:not(:disabled) {
-  border-color: rgba(124, 92, 255, 0.6);
-  background: rgba(124, 92, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+.pile-choose-btn {
+  margin-top: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(124, 92, 255, 0.6);
+  background: rgba(124, 92, 255, 0.15);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.pile-column:disabled {
+.pile-choose-btn:hover:not(:disabled) {
+  background: rgba(124, 92, 255, 0.3);
+}
+
+.pile-choose-btn:disabled {
   opacity: 0.6;
   cursor: default;
 }

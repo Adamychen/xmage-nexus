@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useDeckMetadata } from './useDeckMetadata'
+import { getCachedCardName } from '../cards/cardLocalization'
 import type { DeckCard } from '../lobby/decks'
 
 function scryfallCard(imageUrl: string) {
@@ -74,4 +75,44 @@ describe('useDeckMetadata printing changes', () => {
     })
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('dedup llamadas solapadas antes de resolver (AUDIT)', async () => {
+    let resolveFetch!: (v: unknown) => void
+    const fetchMock = vi.fn().mockImplementation(
+      () => new Promise((res) => { resolveFetch = res as (v: unknown) => void }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    const bolt: DeckCard = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }
+    act(() => {
+      result.current.updateMetaForDeck([bolt])
+      result.current.updateMetaForDeck([bolt])
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      resolveFetch({ ok: true, json: () => Promise.resolve(scryfallCard('https://img.test/m10-bolt.jpg')) })
+    })
+    await waitFor(() => expect(result.current.metaMap.has('M10/146')).toBe(true))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('no envenena la caché con el nombre de otra impresión (AUDIT)', async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ name: 'Armored Griffin', printed_name: 'Grifo acorazado', type_line: 'Creature — Griffin' }),
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([{ cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }])
+    })
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    await waitFor(() => expect(getCachedCardName('Armored Griffin', 'es')).toBe('Grifo acorazado'))
+    expect(getCachedCardName('Sidar Kondo of Jamuraa', 'es')).toBeNull()
+  })
 })
+

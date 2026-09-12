@@ -181,7 +181,13 @@ const SEAT_TYPE_LABELS: Record<string, string> = {
 
 export function seatTypeLabel(tName: string, t?: (cat: any, key: any) => string): string {
   const n = normalizeSeatType(tName)
-  if (t && n === HUMAN_SEAT) return t('lobby', 'create_seat_human_waiting_label')
+  if (t) {
+    if (n === HUMAN_SEAT) return t('lobby', 'create_seat_human_waiting_label')
+    if (n === SIM_SEAT) return t('lobby', 'create_seat_sim')
+    if (n === 'COMPUTER_MAD') return t('lobby', 'create_seat_ai_mad')
+    if (n === 'COMPUTER_MONTE_CARLO') return t('lobby', 'create_seat_ai_montecarlo')
+    if (n === 'COMPUTER_DRAFT_BOT') return t('lobby', 'create_seat_ai_draftbot')
+  }
   return SEAT_TYPE_LABELS[n] ?? tName
 }
 

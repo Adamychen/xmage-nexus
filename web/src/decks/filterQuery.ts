@@ -15,6 +15,12 @@ export interface ScryfallQueryOpts {
   setFilter: string | null
 }
 
+const RAW_COLOR_RE = /(?:^|\s)(?:c|id|color|colour|identity|commander)\s*(?::|<=|>=|<|>|=)/i
+/** true si el texto libre ya filtra por color (chocaría con los chips de color). */
+export function rawQueryHasColor(rawQuery: string): boolean {
+  return RAW_COLOR_RE.test(rawQuery.trim())
+}
+
 export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   const parts: string[] = []
   const raw = opts.rawQuery.trim()
@@ -38,8 +44,8 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   if (opts.keywordFilter.size > 0) {
     for (const kw of opts.keywordFilter) parts.push(`keyword:${kw.toLowerCase()}`)
   }
-  if (opts.powerFilter) parts.push(`pow${opts.powerFilter.op}${opts.powerFilter.value}`)
-  if (opts.toughnessFilter) parts.push(`tou${opts.toughnessFilter.op}${opts.toughnessFilter.value}`)
+  if (opts.powerFilter && Number.isFinite(opts.powerFilter.value)) parts.push(`pow${opts.powerFilter.op}${opts.powerFilter.value}`)
+  if (opts.toughnessFilter && Number.isFinite(opts.toughnessFilter.value)) parts.push(`tou${opts.toughnessFilter.op}${opts.toughnessFilter.value}`)
   if (opts.setFilter) {
     const s = opts.setFilter.trim().toLowerCase()
     if (s) parts.push(`set:${s}`)

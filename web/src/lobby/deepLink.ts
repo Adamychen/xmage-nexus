@@ -4,6 +4,8 @@ export interface DeepLink {
   password?: string
   serverHost?: string
   serverPort?: number
+  /** Valor crudo de `server=` cuando venía en el enlace pero no parseó. */
+  serverRaw?: string
 }
 
 function parseServer(raw: string | null): { serverHost?: string; serverPort?: number } {
@@ -65,10 +67,13 @@ function assemble(
   const link: DeepLink = { kind, tableId }
   const pwd = params.get('pwd') ?? params.get('password') ?? ''
   if (pwd) link.password = pwd
+  const rawServer = (params.get('server') ?? '').trim()
   const { serverHost, serverPort } = parseServer(params.get('server'))
   if (serverHost && serverPort) {
     link.serverHost = serverHost
     link.serverPort = serverPort
+  } else if (rawServer) {
+    link.serverRaw = rawServer
   }
   return link
 }

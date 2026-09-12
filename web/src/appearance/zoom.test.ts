@@ -16,9 +16,19 @@ import { applyAppearanceToDocument, loadAppearanceSettings, saveAppearanceSettin
 describe('zoom helpers', () => {
   it('rounds to kill float dust while keeping presets exact', () => {
     expect(roundZoom(1.15)).toBe(1.15)
-    expect(stepZoom(1, 1)).toBe(1.1)
-    expect(stepZoom(1.1, -1)).toBe(1)
-    expect(stepZoom(1.15, 1)).toBe(1.25)
+    expect(stepZoom(1, 1)).toBe(1.15)
+    expect(stepZoom(1.15, 1)).toBe(1.3)
+    expect(stepZoom(1.3, -1)).toBe(1.15)
+    expect(stepZoom(1, -1)).toBe(0.9)
+  })
+
+  it('el stepper camina la lista de presets y sigue ±0.1 fuera de ella (AUDIT)', () => {
+    expect(stepZoom(1.05, 1)).toBe(1.15)
+    expect(stepZoom(1.25, -1)).toBe(1.15)
+    expect(stepZoom(1.5, 1)).toBe(1.6)
+    expect(stepZoom(0.9, -1)).toBe(0.8)
+    expect(stepZoom(0.85, 1)).toBe(0.9)
+    expect(stepZoom(1.6, 1)).toBe(1.7)
   })
 
   it('clamps to the browser-like range', () => {

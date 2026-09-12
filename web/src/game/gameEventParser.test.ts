@@ -62,6 +62,25 @@ describe('gameEventParser', () => {
     expect(esText(raw2, 'Alice')).toBe('Bob lanza Wrath of God')
   })
 
+  it('parses live-server casts with inline "targeting X" (art lookup must use the clean name)', () => {
+    const raw = "<font color='#ffaa00'>sim-000001-1</font> casts <font color='cyan'>Lightning Bolt</font> [3f9] targeting qa-ui-1345 from hand"
+    const res = parseGameEvent(raw, 'qa-ui-1345')
+    expect(res?.type).toBe('cast')
+    expect(res?.cardName).toBe('Lightning Bolt')
+    expect(res?.targetName).toBe('qa-ui-1345')
+    expect(esText(raw, 'qa-ui-1345')).toBe('sim-000001-1 lanza Lightning Bolt ➔ qa-ui-1345')
+
+    const noZone = 'sim-000001-1 casts Lightning Bolt targeting qa-ui-1345'
+    const res2 = parseGameEvent(noZone, 'qa-ui-1345')
+    expect(res2?.cardName).toBe('Lightning Bolt')
+    expect(res2?.targetName).toBe('qa-ui-1345')
+
+    const copied = 'Alice casts a copied Lightning Bolt targeting Bob from hand'
+    const res3 = parseGameEvent(copied, 'Alice')
+    expect(res3?.cardName).toBe('Lightning Bolt')
+    expect(res3?.targetName).toBe('Bob')
+  })
+
   it('parses real XMage land drops with [abc] IDs and from Hand', () => {
     const raw = "<font color='#ffaa00'>Alice</font> plays <font color='cyan'>Mountain</font> [e01] from Hand"
     const res = parseGameEvent(raw, 'Alice')

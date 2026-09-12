@@ -13,20 +13,26 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
   let name: string | null = null
   const cards: DeckCard[] = []
   const sideboard: DeckCard[] = []
+  const commanders: DeckCard[] = []
+  let inCommander = false
 
   for (const raw of lines) {
     const line = raw.trim()
     if (!line) continue
     if (line.startsWith('#')) continue
-    if (LAYOUT_RE.test(line)) continue
+    if (LAYOUT_RE.test(line)) { inCommander = false; continue }
     const nameMatch = line.match(NAME_RE)
     if (nameMatch) {
       name = nameMatch[1].trim() || null
       continue
     }
     if (AUTHOR_RE.test(line)) continue
-    if (/^\[(COMMANDER|COMPANION|MAIN|SIDEBOARD)\]/i.test(line)) continue
-    if (/^\[.*\]$/.test(line)) continue
+    const sectionMatch = line.match(/^\[(COMMANDER|COMPANION|MAIN|SIDEBOARD)\]/i)
+    if (sectionMatch) {
+      inCommander = sectionMatch[1].toUpperCase() === 'COMMANDER'
+      continue
+    }
+    if (/^\[.*\]$/.test(line)) { inCommander = false; continue }
 
     const m = line.match(DCK_LINE)
     if (m) {
@@ -38,18 +44,21 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
       if (!rawName) continue
       const cardName = normalizeBasicLandName(rawName) || rawName
       const entry = normalizeDeckCard({ cardName, setCode, cardNumber, amount })
-      if (isSideboard) sideboard.push(entry)
-      else cards.push(entry)
+      if (isSideboard) { sideboard.push(entry); continue }
+      cards.push(entry)
+      if (inCommander) commanders.push(entry)
       continue
     }
   }
 
   if (cards.length === 0 && sideboard.length === 0) return null
-  return {
+  const deck: Deck = {
     name: name || fallbackName,
     cards,
     sideboard,
   }
+  if (commanders.length > 0) deck.commanders = commanders
+  return deck
 }
 
 export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
@@ -145,9 +154,12 @@ export function parseCodXml(text: string, fallbackName = t('decks', 'import_plac
   }
   const cards = readZone('main')
   const sideboard = readZone('side')
-  if (cards.length === 0 && sideboard.length === 0) return null
+  const commanders = readZone('commander')
+  if (cards.length === 0 && sideboard.length === 0 && commanders.length === 0) return null
   const deckName = doc.querySelector('cockatrice_deck > deckname')?.textContent?.trim()
-  return { name: deckName || fallbackName, cards, sideboard }
+  const deck: Deck = { name: deckName || fallbackName, cards: [...commanders, ...cards], sideboard }
+  if (commanders.length > 0) deck.commanders = commanders
+  return deck
 }
 
 /**
@@ -259,7 +271,9 @@ export function parseMtgjson(text: string, fallbackName = t('decks', 'import_pla
   const sideboard = readBoard(data.sideBoard)
   if (cards.length === 0 && sideboard.length === 0) return null
   const name = typeof data.name === 'string' && data.name.trim() ? data.name.trim() : fallbackName
-  return { name, cards, sideboard }
+  const deck: Deck = { name, cards, sideboard }
+  if (commander.length > 0) deck.commanders = commander
+  return deck
 }
 
 function parseArenaLike(text: string, fallbackName: string): Deck | null {
@@ -365,7 +379,9 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
 
   const allCards = [...commanders, ...cards]
   if (allCards.length === 0 && sideboard.length === 0) return null
-  return { name: fallbackName, cards: allCards, sideboard }
+  const deck: Deck = { name: fallbackName, cards: allCards, sideboard }
+  if (commanders.length > 0) deck.commanders = [...commanders]
+  return deck
 }
 
 export function exportDck(deck: Deck): string {
@@ -398,10 +414,37 @@ export function exportDck(deck: Deck): string {
   return out.join('\n') + '\n'
 }
 
-export function exportArena(deck: Deck): string {
+export interface ExportDeck extends Deck {
+  commanderCard?: DeckCard
+  partnerCard?: DeckCard
+}
+
+function isDesignated(deck: ExportDeck, c: DeckCard): boolean {
+  return [deck.commanderCard, deck.partnerCard].some(
+    (d) => !!d && d.cardName === c.cardName && d.setCode === c.setCode && d.cardNumber === c.cardNumber,
+  )
+}
+
+/** Separa los comandantes designados del main para no exportarlos duplicados. */
+function withoutDesignatedCommanders(deck: ExportDeck): { main: DeckCard[]; commanders: DeckCard[] } {
+  const commanders = [deck.commanderCard, deck.partnerCard].filter((c): c is DeckCard => !!c)
+  if (commanders.length === 0) return { main: deck.cards, commanders: [] }
+  return { main: deck.cards.filter((c) => !isDesignated(deck, c)), commanders }
+}
+
+/** Sección `Commander` al final (el parser la reconoce en cualquier orden). */
+function appendCommanderSection(out: string[], commanders: DeckCard[], print: (c: DeckCard) => string): void {
+  if (commanders.length === 0) return
+  out.push('')
+  out.push('Commander')
+  for (const c of commanders) out.push(print(c))
+}
+
+export function exportArena(deck: ExportDeck): string {
+  const { main, commanders } = withoutDesignatedCommanders(deck)
   const out: string[] = []
   out.push('Deck')
-  for (const c of deck.cards) {
+  for (const c of main) {
     out.push(`${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
   }
   if (deck.sideboard.length > 0) {
@@ -411,16 +454,19 @@ export function exportArena(deck: Deck): string {
       out.push(`${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
     }
   }
+  appendCommanderSection(out, commanders, (c) => `${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
   return out.join('\n') + '\n'
 }
 
-export function exportTxt(deck: Deck): string {
+export function exportTxt(deck: ExportDeck): string {
+  const { main, commanders } = withoutDesignatedCommanders(deck)
   const out: string[] = []
-  for (const c of deck.cards) out.push(`${c.amount} ${c.cardName}`)
+  for (const c of main) out.push(`${c.amount} ${c.cardName}`)
   if (deck.sideboard.length > 0) {
     out.push('')
     for (const c of deck.sideboard) out.push(`SB: ${c.amount} ${c.cardName}`)
   }
+  appendCommanderSection(out, commanders, (c) => `${c.amount} ${c.cardName}`)
   return out.join('\n') + '\n'
 }
 

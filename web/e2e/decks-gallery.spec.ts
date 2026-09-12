@@ -321,7 +321,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Pyroblast/ })).toBeVisible({ timeout: 3000 })
 
       // U6-5: .dek export button present in the footer
-      await expect(page.getByRole('button', { name: /Export \.DEK/i })).toBeVisible()
+      await expect(page.getByRole('button', { name: /Export(ar)? \.DEK/i })).toBeVisible()
     })
   })
 

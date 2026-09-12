@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isDirectTournamentJoin } from './lobbyUtils'
+import { isDirectTournamentJoin, isUserInGame } from './lobbyUtils'
 import type { TableView } from '../net/types'
 
 function table(over: Partial<TableView>): TableView {
@@ -45,5 +45,21 @@ describe('isDirectTournamentJoin', () => {
 
   it('mesa normal nunca entra directo', () => {
     expect(isDirectTournamentJoin(table({ isTournament: false, gameType: 'Booster Draft' }))).toBe(false)
+  })
+})
+
+describe('isUserInGame (AUDIT)', () => {
+  it('solo los tokens de juego cuentan como en partida', () => {
+    expect(isUserInGame('')).toBe(false)
+    expect(isUserInGame(null)).toBe(false)
+    expect(isUserInGame('not active')).toBe(false)
+    expect(isUserInGame('Wait: 1 ')).toBe(false)
+    expect(isUserInGame('Watch: 2 ')).toBe(false)
+    expect(isUserInGame('Match: 1 ')).toBe(true)
+    expect(isUserInGame('Sideb: 1 ')).toBe(true)
+    expect(isUserInGame('Draft: 1 ')).toBe(true)
+    expect(isUserInGame('Const: 1 ')).toBe(true)
+    expect(isUserInGame('Tourn: 1 ')).toBe(true)
+    expect(isUserInGame('Wait: 1 Match: 1 ')).toBe(true)
   })
 })

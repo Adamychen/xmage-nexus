@@ -63,6 +63,7 @@ export interface CreateTableForm {
   activeIndex: number
   goNext: () => void
   goPrev: () => void
+  goToStep: (t: CreateTab) => void
   isLastStep: boolean
   isFirstStep: boolean
   tableCategory: TableCategory
@@ -215,6 +216,25 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     goToIndex(activeIndex + 1)
   }
   const goPrev = () => goToIndex(activeIndex - 1)
+  const goToStep = (tab: CreateTab) => {
+    const target = wizardSteps.findIndex((s) => s.id === tab)
+    if (target < 0) return
+    if (target <= activeIndex) {
+      setError(null)
+      setActiveTab(tab)
+      return
+    }
+    for (let i = activeIndex; i < target; i++) {
+      const err = validateStep(wizardSteps[i].id)
+      if (err) {
+        setError(err)
+        setActiveTab(wizardSteps[i].id)
+        return
+      }
+    }
+    setError(null)
+    setActiveTab(tab)
+  }
   const isLastStep = activeIndex === wizardSteps.length - 1
   const isFirstStep = activeIndex === 0
 
@@ -775,7 +795,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   const submit = async () => {
     if (!name.trim()) {
-      setError(t('errors','create_table_failed') + ': nombre requerido')
+      setError(t('errors','create_table_name_required'))
       return
     }
     if (compatibilityError && !isDraftLimited) {
@@ -1113,6 +1133,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     activeIndex,
     goNext,
     goPrev,
+    goToStep,
     isLastStep,
     isFirstStep,
     gameTypes,

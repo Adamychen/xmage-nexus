@@ -16,7 +16,7 @@ export type { CreateTableForm } from './CreateTable/useCreateTableForm'
 export default function CreateTableDialog({ onClose }: { onClose: () => void }) {
   const { t, tError } = useTranslation()
   const form = useCreateTableForm(onClose)
-  const { wizardSteps, activeTab, setActiveTab, activeIndex, goNext, goPrev, isLastStep, isFirstStep } = form
+  const { wizardSteps, activeTab, activeIndex, goNext, goPrev, goToStep, isLastStep, isFirstStep } = form
 
   return (
     <DialogShell
@@ -30,7 +30,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       title={t('lobby.create_table_btn')}
       message={t('lobby', 'create_header_subtitle')}
       topRight={(
-        <button type="button" className="create-dialog-close-btn" onClick={onClose}>
+        <button type="button" className="create-dialog-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
           ✕
         </button>
       )}
@@ -50,7 +50,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                 key={step.id}
                 type="button"
                 className={`wizard-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                onClick={() => setActiveTab(step.id)}
+                onClick={() => goToStep(step.id)}
                 aria-current={isActive ? 'step' : undefined}
                 title={label}
               >

@@ -64,7 +64,7 @@ export function DeckInspectorModal({
           if (!data) return
           const printedName = data.printed_name || data.card_faces?.[0]?.printed_name
           if (printedName && cardLang && cardLang !== 'en') {
-            setCachedCardName(c.cardName, printedName, cardLang)
+            setCachedCardName(data.name ?? c.cardName, printedName, cardLang)
           }
           const meta: CardStripMeta = {
             artCropUrl: data.image_uris?.art_crop ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null,
@@ -72,7 +72,7 @@ export function DeckInspectorModal({
             backImageUrl: data.card_faces?.[1]?.image_uris?.normal ?? null,
             manaCost: data.mana_cost ?? data.card_faces?.[0]?.mana_cost ?? '',
             cmc: data.cmc ?? 0,
-            typeLine: data.printed_type_line ?? data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
+            typeLine: data.type_line ?? data.printed_type_line ?? data.card_faces?.[0]?.type_line ?? '',
             colors: data.colors ?? data.color_identity ?? [],
             legalities: data.legalities,
           }

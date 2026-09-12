@@ -98,7 +98,6 @@ export function ArenaDeckHeader({
             value={format}
             onChange={(e) => onFormatChange(e.target.value as DeckV2['format'])}
             className="deck-header-format-select builder-format"
-            title={config.description}
           >
             {ALL_FORMATS.map((f) => (
               <option key={f} value={f}>

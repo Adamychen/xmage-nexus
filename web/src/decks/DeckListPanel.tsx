@@ -135,6 +135,11 @@ export default function DeckListPanel({
     e.preventDefault()
     e.stopPropagation()
     setIsSideDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && onDropFile) {
+      onDropFile(file)
+      return
+    }
     const rawData = e.dataTransfer.getData('application/json')
     if (rawData && onDropCard) {
       try {
@@ -190,7 +195,7 @@ export default function DeckListPanel({
   const categoriesOrder = ['creatures', 'planeswalkers', 'instants', 'sorceries', 'artifacts', 'enchantments', 'lands', 'other']
   const catDisplay: Record<string, string> = {
     creatures: t('decks', 'creatures'),
-    planeswalkers: 'Planeswalkers',
+    planeswalkers: t('game', 'category_planeswalkers'),
     instants: t('game', 'category_instants'),
     sorceries: t('game', 'category_sorceries'),
     artifacts: t('game', 'category_artifacts'),
@@ -233,7 +238,7 @@ export default function DeckListPanel({
       onDrop={handleSideDrop}
     >
       <div className="deck-category-header">
-        <span>{t('decks', 'sideboard')} (Sideboard)</span>
+        <span>{t('decks', 'sideboard')}</span>
         <span className="deck-category-count">{sideTotal}/15</span>
       </div>
       {sideboard.length === 0 && <div className="deck-sideboard-empty">{t('decks', 'builder_side_empty')}</div>}

@@ -94,17 +94,19 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
     setGridQuery('')
     setActiveIdx(0)
   }, [form.prompt?.method, form.prompt?.gameId, form.prompt?.message])
-  if (!prompt) return null
-  const isGridBranch = prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string'
-  const isMultiGrid = prompt.mode === 'uuid' && prompt.max > 1
   const gridOptions = useMemo(() => {
+    if (!prompt) return []
     const q = gridQuery.trim().toLowerCase()
     if (!q) return prompt.options
     return prompt.options.filter((opt) => opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q))
   }, [prompt, gridQuery])
+  const gridOptionsLength = gridOptions.length
   useEffect(() => {
-    setActiveIdx((i) => Math.min(i, Math.max(gridOptions.length - 1, 0)))
-  }, [gridOptions.length])
+    setActiveIdx((i) => Math.min(i, Math.max(gridOptionsLength - 1, 0)))
+  }, [gridOptionsLength])
+  if (!prompt) return null
+  const isGridBranch = prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string'
+  const isMultiGrid = prompt.mode === 'uuid' && prompt.max > 1
   const chooseActive = () => {
     const opt = gridOptions[activeIdx]
     if (!opt || busy) return
@@ -250,13 +252,13 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               className="stepper-btn"
               disabled={busy || amount <= prompt.min}
               onClick={() => setAmount((v) => Math.max(prompt.min, v - 1))}
-              aria-label="Disminuir"
+              aria-label={t('game', 'amount_decrease')}
             >
               −
             </button>
             <div className="stepper-display">
               <input
-                aria-label="Cantidad"
+                aria-label={t('game', 'amount_value')}
                 type="number"
                 min={prompt.min}
                 max={prompt.max}
@@ -264,14 +266,14 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 onChange={(event) => setAmount(Number(event.target.value))}
                 className="stepper-input"
               />
-              <span className="stepper-range">({prompt.min} a {prompt.max})</span>
+              <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
             </div>
             <button
               type="button"
               className="stepper-btn"
               disabled={busy || amount >= prompt.max}
               onClick={() => setAmount((v) => Math.min(prompt.max, v + 1))}
-              aria-label="Aumentar"
+              aria-label={t('game', 'amount_increase')}
             >
               +
             </button>
@@ -284,7 +286,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 disabled={busy || amount === prompt.min}
                 onClick={() => setAmount(prompt.min)}
               >
-                Mín ({prompt.min})
+                {t('game', 'amount_min', { min: prompt.min })}
               </button>
               <button
                 type="button"
@@ -292,7 +294,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 disabled={busy || amount === prompt.max}
                 onClick={() => setAmount(prompt.max)}
               >
-                Máx ({prompt.max})
+                {t('game', 'amount_max', { max: prompt.max })}
               </button>
             </div>
           )}
@@ -316,6 +318,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                       type="button"
                       className="stepper-btn mini"
                       disabled={busy || cur <= item.min}
+                      aria-label={t('game', 'amount_decrease')}
                       onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}
                     >
                       −
@@ -325,6 +328,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                       type="button"
                       className="stepper-btn mini"
                       disabled={busy || cur >= item.max}
+                      aria-label={t('game', 'amount_increase')}
                       onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}
                     >
                       +

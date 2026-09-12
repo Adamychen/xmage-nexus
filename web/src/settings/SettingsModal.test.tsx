@@ -27,7 +27,7 @@ describe('SettingsModal', () => {
     const current = screen.getByTestId('settings-zoom-current')
     expect(current.textContent).toBe('100%')
     fireEvent.click(screen.getByTestId('settings-zoom-plus'))
-    expect(screen.getByTestId('settings-zoom-current').textContent).toBe('110%')
+    expect(screen.getByTestId('settings-zoom-current').textContent).toBe('115%')
     fireEvent.click(screen.getByTestId('settings-zoom-1-15'))
     expect(screen.getByTestId('settings-zoom-current').textContent).toBe('115%')
     setSetting('uiScale', 1)

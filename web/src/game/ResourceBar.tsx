@@ -91,7 +91,7 @@ export default function ResourceBar({
       const id = `lib-${player.playerId}-${i}`
       res[id] = {
         id,
-        name: `Card #${i}`,
+        name: t('game', 'card_number', { count: i }),
         manaValue: 0,
         expansionSetCode: '',
         cardNumber: '0',

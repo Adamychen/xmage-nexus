@@ -49,6 +49,20 @@ describe('deckIssues helpers', () => {
     expect(next.cards[0].setCode).toBe('PRO')
   })
 
+  it('applySuggestion arrastra comandante/pareja/portada a la nueva impresión (AUDIT)', () => {
+    const deck = {
+      name: 'CMD',
+      cards: [{ cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }],
+      sideboard: [],
+      commanderCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+      coverCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+    }
+    const next = applySuggestion(deck, { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1' }, { cardName: 'Sidar Kondo of Jamuraa', setCode: 'CMR', cardNumber: '535' })
+    expect(next.commanderCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
+    expect(next.coverCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
+    expect(next.cards[0]).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
+  })
+
   it('findFlaggedSameName localiza solo entradas marcadas', () => {
     const cards = [
       { cardName: 'Island', setCode: 'M21', cardNumber: '265' },

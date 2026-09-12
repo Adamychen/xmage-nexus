@@ -10,9 +10,22 @@ import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import './GameChat.css'
 
+// Remitentes de sistema a nivel de código (los escribe addLog y los handlers de
+// eventos, no el locale de la UI): nunca son mensajes de chat de jugadores.
+// Incluye 'torneo'/'replay', que antes faltaban y se colaban en la pestaña Chat.
+const SYSTEM_SENDERS = new Set(['partida', 'servidor', 'error', 'conexión', 'mesa', 'tú', 'torneo', 'replay'])
+
 // Set corto para el selector de emoji del chat (icono 😊 a la izquierda del input,
 // spec sección 61.3). No es un picker completo: basta con los más usados en partida.
 const EMOJI_PICKS = ['😊', '😂', '😮', '👀', '🙏', '😅', '🤔', '🔥']
+
+export function isGameChatEntry(e: { channel?: string | null; from?: string | null }): boolean {
+  if (e.channel === 'chat') return true
+  if (e.channel) return false
+  // Entradas legacy sin canal: se queda todo lo que no venga de un remitente
+  // de sistema conocido (comparación insensible a mayúsculas: los nicks sí importan).
+  return !!e.from && !SYSTEM_SENDERS.has(e.from.toLowerCase())
+}
 
 export default function GameChat() {
   const { t } = useTranslation()
@@ -37,13 +50,7 @@ export default function GameChat() {
   // Only show real player/user chat messages in the Chat tab (not engine inform
   // lines, lobby join/leave, or game-log lines — those are routed to other channels).
   const chatEntries = useMemo(() => {
-    return log.filter((e) => {
-      if (e.channel === 'chat') return true
-      if (e.channel) return false
-      // Legacy entries without a channel: keep anything that isn't a known
-      // game/system source (best-effort fallback for older sessions).
-      return !!e.from && !['partida', 'servidor', 'error', 'conexión', 'mesa', 'tú'].includes(e.from)
-    })
+    return log.filter((e) => isGameChatEntry(e))
   }, [log])
 
   useEffect(() => {
@@ -122,7 +129,7 @@ export default function GameChat() {
           placeholder={t('game', 'chat_placeholder')}
           maxLength={500}
         />
-        <button type="submit" className="game-chat-send" disabled={!input.trim() || !chatId}>▸</button>
+        <button type="submit" className="game-chat-send" disabled={!input.trim() || !chatId} aria-label={t('game', 'chat_send')}>▸</button>
       </form>
 
       <QuickReactions />

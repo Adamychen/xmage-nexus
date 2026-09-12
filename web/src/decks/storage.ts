@@ -70,8 +70,30 @@ function lsList(): DeckV2[] {
     return []
   }
 }
+export class DeckStorageError extends Error {
+  code: 'quota' | 'io'
+  constructor(code: 'quota' | 'io', message?: string) {
+    super(message ?? (code === 'quota' ? 'deck storage quota exceeded' : 'deck storage write failed'))
+    this.name = 'DeckStorageError'
+    this.code = code
+  }
+}
+
+export function isQuotaError(e: unknown): boolean {
+  if (e instanceof DeckStorageError) return e.code === 'quota'
+  if (!e || typeof e !== 'object') return false
+  const err = e as { name?: unknown; code?: unknown }
+  return err.name === 'QuotaExceededError'
+    || err.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    || err.code === 22
+}
+
 function lsSaveAll(decks: DeckV2[]): void {
-  localStorage.setItem(LS_KEY_V2, JSON.stringify(decks))
+  try {
+    localStorage.setItem(LS_KEY_V2, JSON.stringify(decks))
+  } catch (e) {
+    throw new DeckStorageError(isQuotaError(e) ? 'quota' : 'io')
+  }
 }
 
 function legacyToV2(decks: Deck[]): DeckV2[] {
@@ -144,8 +166,8 @@ async function migrateIfNeeded(): Promise<void> {
         for (const d of all) {
           const nd = normalizeDeckV2(d)
           if (nd !== d) {
-            if (isIdbAvailable()) try { await idbPut(nd) } catch { lsSaveAll(lsList().map(x => x.id === d.id ? nd : x)) }
-            else lsSaveAll(lsList().map(x => x.id === d.id ? nd : x))
+            if (isIdbAvailable()) try { await idbPut(nd) } catch { try { lsSaveAll(lsList().map(x => x.id === d.id ? nd : x)) } catch {} }
+            else try { lsSaveAll(lsList().map(x => x.id === d.id ? nd : x)) } catch {}
             fixed++
           }
         }
@@ -168,7 +190,11 @@ async function migrateIfNeeded(): Promise<void> {
       } catch {}
     } else {
       const existing = lsList()
-      lsSaveAll([...existing, ...v2])
+      try {
+        lsSaveAll([...existing, ...v2])
+      } catch {
+        return
+      }
       localStorage.setItem(LS_KEY_MIGRATED, '1')
       try { localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY) } catch {}
     }

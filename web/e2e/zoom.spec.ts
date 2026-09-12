@@ -31,7 +31,7 @@ test.describe('UI zoom (browser-like)', () => {
       await page.keyboard.down('Control')
       await page.keyboard.press('=')
       await page.keyboard.up('Control')
-      await expect.poll(() => zoomOf(page)).toBe('1.1')
+      await expect.poll(() => zoomOf(page)).toBe('1.15')
       await page.keyboard.down('Control')
       await page.keyboard.press('0')
       await page.keyboard.up('Control')
@@ -39,7 +39,7 @@ test.describe('UI zoom (browser-like)', () => {
     })
   })
 
-  test('el stepper de Configuración suma de 10 en 10 y los presets fijan paradas', async ({ page }) => {
+  test('el stepper de Configuración camina presets y los presets fijan paradas', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
@@ -47,7 +47,7 @@ test.describe('UI zoom (browser-like)', () => {
       const current = page.getByTestId('settings-zoom-current')
       await expect(current).toBeVisible()
       await page.getByTestId('settings-zoom-plus').click()
-      await expect(current).toHaveText('110%')
+      await expect(current).toHaveText('115%')
       await page.getByTestId('settings-zoom-1-15').click()
       await expect(current).toHaveText('115%')
       expect(await zoomOf(page)).toBe('1.15')

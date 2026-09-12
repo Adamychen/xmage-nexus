@@ -65,7 +65,7 @@ describe('DeckListPanel sideboard', () => {
 
   it('renders the sideboard section with count and swap actions', () => {
     const { onSwap } = renderPanel()
-    expect(screen.getByText(/Sideboard/i)).toBeDefined()
+    expect(screen.getByText(/Banquillo|Sideboard/i)).toBeDefined()
     expect(screen.getByText('2/15')).toBeDefined()
     const sideSection = document.querySelector('.deck-sideboard-section')
     expect(sideSection).not.toBeNull()

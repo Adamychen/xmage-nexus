@@ -172,6 +172,17 @@ export function fallbackActionUser(userName: string): UsersView {
   }
 }
 
+/**
+ * Presencia real a partir de `User.getGameInfo()` del servidor: devuelve
+ * "not active" (cadena NO vacía) sin partida, y tokens `Match:/Sideb:/Draft:/
+ * Const:/Tourn:` en juego. Tratar cualquier string no vacío como "en partida"
+ * marcaba a TODOS los conectados como jugando.
+ */
+export function isUserInGame(infoGames?: string | null): boolean {
+  if (!infoGames || infoGames === 'not active') return false
+  return /Match:|Sideb:|Draft:|Const:|Tourn:/.test(infoGames)
+}
+
 /** Comprueba si el usuario conectado es el creador o un jugador de la mesa. */
 export function isMyTable(table: TableView, username?: string, stagingTableId?: string | null): boolean {
   if (!table) return false

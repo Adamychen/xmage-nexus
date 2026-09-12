@@ -6,6 +6,9 @@ describe('FormattedText', () => {
   it('decodes HTML entities properly', () => {
     expect(decodeHtmlEntities('&iexcl;Hola desde el cliente web!')).toBe('¡Hola desde el cliente web!')
     expect(decodeHtmlEntities('&quot;Hello&quot; &amp; &lt;World&gt;')).toBe('"Hello" & <World>')
+    expect(decodeHtmlEntities('hola auditor&iacute;a')).toBe('hola auditoría')
+    expect(decodeHtmlEntities('&Aacute;rbol &ntilde;and&uacute; &iquest;qu&eacute; tal?')).toBe('Árbol ñandú ¿qué tal?')
+    expect(decodeHtmlEntities('l&hellip;attaquant &agrave; Paris')).toBe('l…attaquant à Paris')
   })
 
   it('cleans XMage internal object hashes and raw div tags', () => {

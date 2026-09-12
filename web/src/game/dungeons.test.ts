@@ -118,3 +118,11 @@ describe('parseDungeonEntry (server broadcast, all players)', () => {
     expect(parseDungeonEntry('Bob has entered the battlefield.')).toBeNull()
   })
 })
+
+describe('dungeonRoot defensivo (AUDIT)', () => {
+  it('devuelve null con depths vacíos en vez de lanzar TypeError', () => {
+    const empty = { id: 'x', match: [], depths: [], edges: [] } as unknown as Parameters<typeof dungeonRoot>[0]
+    expect(dungeonRoot(empty)).toBeNull()
+    expect(pathToRoom(empty, 'Nada')).toBeNull()
+  })
+})

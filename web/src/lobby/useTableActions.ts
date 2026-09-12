@@ -30,7 +30,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
     setState({ error: null })
     setNotice(ignoredOwnerNotice(t))
     setJoinPassword(presetPassword)
-    const seat = t.seats.find((s) => !s.playerName)
+    const seat = (t.seats ?? []).find((s) => !s.playerName)
     if (!seat) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
       return

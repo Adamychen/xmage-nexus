@@ -40,7 +40,7 @@ export default function CardPreview({ card, onClose }: Props) {
           ...card.secondCardFace,
           isSecondCardFace: true,
           expansionSetCode: card.secondCardFace.expansionSetCode || card.expansionSetCode,
-          cardNumber: card.secondCardFace.cardNumber || card.expansionSetCode,
+          cardNumber: card.secondCardFace.cardNumber || card.cardNumber,
         } as CardView)
       : card
 
@@ -145,7 +145,7 @@ export default function CardPreview({ card, onClose }: Props) {
       </div>
 
       {onClose && (
-        <button className="card-preview-close" onClick={onClose} title={t('common', 'close')}>
+        <button className="card-preview-close" onClick={onClose} title={t('common', 'close')} aria-label={t('common', 'close')}>
           ×
         </button>
       )}

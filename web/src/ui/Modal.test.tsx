@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import Modal from './Modal'
+import Modal, { __modalAllocator } from './Modal'
 
 describe('Modal', () => {
   afterEach(() => {
@@ -104,6 +104,22 @@ describe('Modal', () => {
     expect(onEscapeBottom).not.toHaveBeenCalled()
   })
 
+  it('envuelve el contador sin atascarse en 1999 (AUDIT)', () => {
+    __modalAllocator.active.add(1500)
+    try {
+      let max = 0
+      let last = 0
+      for (let i = 0; i < 2500; i++) {
+        last = __modalAllocator.next()
+        max = Math.max(max, last)
+      }
+      expect(max).toBeLessThanOrEqual(__modalAllocator.max)
+      expect(last).not.toBe(1500)
+    } finally {
+      __modalAllocator.active.delete(1500)
+    }
+  })
+
   it('does not run onEscape after the modal unmounts', () => {
     const onEscape = vi.fn()
     const { unmount } = render(
@@ -112,5 +128,39 @@ describe('Modal', () => {
     unmount()
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onEscape).not.toHaveBeenCalled()
+  })
+
+  it('mueve el foco al primer control al abrir y lo restaura al cerrar (AUDIT)', () => {
+    const outside = document.createElement('button')
+    outside.textContent = 'fuera'
+    document.body.appendChild(outside)
+    outside.focus()
+    const { unmount } = render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
+        <button>primero</button>
+        <button>segundo</button>
+      </Modal>,
+    )
+    expect(document.activeElement?.textContent).toBe('primero')
+    unmount()
+    expect(document.activeElement).toBe(outside)
+    outside.remove()
+  })
+
+  it('atrapa Tab dentro del diálogo y envuelve al principio/fin (AUDIT)', () => {
+    render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
+        <button>uno</button>
+        <button>dos</button>
+      </Modal>,
+    )
+    const one = screen.getByRole('button', { name: 'uno' })
+    const two = screen.getByRole('button', { name: 'dos' })
+    expect(document.activeElement).toBe(one)
+    two.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(one)
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(two)
   })
 })

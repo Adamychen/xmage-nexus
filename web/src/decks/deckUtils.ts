@@ -125,6 +125,9 @@ export function canPairCommanders(
   aName: string,
   bName: string,
 ): boolean {
+  // La misma carta no es pareja de sí misma (ni dos impresiones distintas:
+  // singleton + misma carta dos veces es ilegal en Commander).
+  if (normalizePartnerName(aName) === normalizePartnerName(bName)) return false
   const a = pairProfile(aMeta)
   const b = pairProfile(bMeta)
   if (a.genericPartner && b.genericPartner) return true
@@ -180,7 +183,8 @@ export function commanderCardsFor(
   if (!first) return []
   if (!partner) return [first]
   const second = cards.find((c) => metaKey(c) === metaKey(partner) && c.cardName === partner.cardName)
-  return second ? [first, second] : [first]
+  if (!second || (metaKey(second) === metaKey(first) && second.cardName === first.cardName)) return [first]
+  return [first, second]
 }
 
 /**

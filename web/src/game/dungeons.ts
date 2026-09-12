@@ -128,8 +128,8 @@ export function findDungeonGraph(dungeonName: string): DungeonGraph | null {
   return DUNGEON_GRAPHS.find((g) => g.match.some((m) => key.includes(m))) ?? null
 }
 
-export function dungeonRoot(graph: DungeonGraph): string {
-  return graph.depths[0][0].name
+export function dungeonRoot(graph: DungeonGraph): string | null {
+  return graph.depths[0]?.[0]?.name ?? null
 }
 
 /** Split a shared level label (`A / B`) and pick the room's part. */
@@ -154,6 +154,7 @@ export function pathToRoom(graph: DungeonGraph, roomName: string): string[] | nu
   const target = roomByName(graph, roomName)
   if (!target) return null
   const root = dungeonRoot(graph)
+  if (!root) return null
   if (target.name === root) return [root]
   const prev = new Map<string, string>()
   const seen = new Set<string>([root])

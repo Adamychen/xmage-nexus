@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import './HandZone.css'
 
@@ -124,7 +125,7 @@ export default function HandZone({
               : t('game', 'opp_hand_stack', { count: entries.length })
           }
           onClick={onViewHand}
-          role={onViewHand ? 'button' : undefined}
+          {...clickableProps(onViewHand)}
         >
           <CardSlot
             card={faceDownEntries[0][1]}
