@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeDeckCard } from './deckNormalize'
+import { normalizeDeckCard, prepareDeckForXMage } from './deckNormalize'
 import type { DeckCard } from '../lobby/decks'
 
 const c = (cardName: string, setCode: string, cardNumber: string): DeckCard => ({
@@ -31,5 +31,24 @@ describe('deckNormalize', () => {
   it('sufijos promo del número se limpian', () => {
     expect(normalizeDeckCard(c('Bear', 'M21', '123p')).cardNumber).toBe('123')
     expect(normalizeDeckCard(c('Bear', 'M21', '123★')).cardNumber).toBe('123')
+  })
+
+  it('prepareDeckForXMage adjunta los comandantes designados (1 o 2) y los pone primero', () => {
+    const atraxa = { ...c("Atraxa, Praetors' Voice", '2XM', '190') }
+    const sidar = { ...c('Sidar Kondo of Jamuraa', 'PC2', '1') }
+    const tana = { ...c('Tana, the Bloodsower', 'C16', '56') }
+    const forest = { ...c('Forest', 'LEA', '294'), amount: 98 }
+
+    const one = prepareDeckForXMage({ name: 'D', cards: [forest, atraxa], sideboard: [], commanderCard: atraxa }, 'Variant Magic - Commander', 'Commander Two Player Duel')
+    expect(one.commanders).toEqual([atraxa])
+    expect(one.cards[0]).toEqual(atraxa)
+
+    const pair = prepareDeckForXMage({ name: 'D', cards: [forest, tana, sidar], sideboard: [], commanderCard: sidar, partnerCard: tana }, 'Variant Magic - Commander', 'Commander Two Player Duel')
+    expect(pair.commanders).toEqual([sidar, tana])
+    expect(pair.cards.slice(0, 2)).toEqual([sidar, tana])
+
+    // No es formato comandante: no se toca nada
+    const freeform = prepareDeckForXMage({ name: 'D', cards: [forest, atraxa], sideboard: [], commanderCard: atraxa }, 'Variant Magic - Freeform', 'Two Player Duel')
+    expect(freeform.commanders).toBeUndefined()
   })
 })

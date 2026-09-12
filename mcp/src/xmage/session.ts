@@ -23,6 +23,7 @@ const deckSchema = z.object({
   name: z.string(),
   cards: z.array(deckCardSchema),
   sideboard: z.array(deckCardSchema).optional(),
+  commanders: z.array(deckCardSchema).optional(),
 })
 
 interface SessionEvent {
@@ -548,7 +549,8 @@ export function registerSessionTools(server: McpServer): void {
       title: 'Join a table',
       description:
         'Se une a una mesa como jugador con un mazo (formato DeckJson del protocolo: ' +
-        '{name, cards:[{cardName,setCode,cardNumber,amount}], sideboard?}).',
+        '{name, cards:[{cardName,setCode,cardNumber,amount}], sideboard?, commanders?}). ' +
+        'commanders (1-2) son los comandantes designados para Commander: el proxy los baja al banquillo.',
       inputSchema: {
         tableId: z.string(),
         deck: deckSchema,

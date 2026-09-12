@@ -17,7 +17,7 @@ import { DeckImportModal } from './DeckImportModal'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { applySuggestion, fetchDeckIssues } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
-import { withCommanderFirst } from './deckUtils'
+import { withCommanderFirst, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
@@ -73,6 +73,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const equipped = useStore((s) => s.myDeck)
   const wsAlive = useStore((s) => s.wsAlive)
   const debounceRef = useRef<number | null>(null)
+  const partnerMigratedRef = useRef(false)
 
   const { metaMap, setMetaMap, updateMetaForDeck, cmcNumberMap } = useDeckMetadata()
   const { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList } = useDeckValidation(
@@ -110,6 +111,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   // Load deck data on mount
   useEffect(() => {
+    partnerMigratedRef.current = false
     void (async () => {
       const d = await storage.get(deckId)
       if (d) {
@@ -158,6 +160,17 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     }, 1200)
     return () => window.clearTimeout(timer)
   }, [deck])
+
+  useEffect(() => {
+    if (partnerMigratedRef.current) return
+    if (!deck || deck.partnerCard || !deck.commanderCard) return
+    const config = FORMAT_CONFIGS[deck.format] ?? FORMAT_CONFIGS.Freeform
+    if (!config.hasCommander) return
+    const derived = derivePartnerCard(deck.cards, deck.commanderCard, metaMap)
+    if (!derived) return
+    partnerMigratedRef.current = true
+    schedulePersist({ ...deck, partnerCard: derived })
+  }, [deck, metaMap])
 
   const persist = async (next: DeckV2) => {
     setSaveState('saving')
@@ -415,6 +428,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             sideboard={deck.sideboard}
             coverKey={coverKey}
             commanderCard={deck.commanderCard}
+            partnerCard={deck.partnerCard}
             isCommanderFormat={isCommanderFormat}
             metaMap={metaMap}
             cardIssues={mergedCardIssues}
@@ -424,6 +438,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             onRemove={mutations.handleRemove}
             onSetCover={mutations.handleSetCover}
             onSetCommander={mutations.handleSetCommander}
+            onSetPartner={mutations.handleSetPartner}
             onHover={handleHoverCard}
             onLeave={handleLeaveCard}
             onChangePrinting={mutations.handleChangePrinting}
@@ -437,7 +452,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             equippedName={equipped?.name}
             onImport={() => setShowImportModal(true)}
             onSample={() => setShowSampleHand(true)}
-            onEquip={() => setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard) })}
+            onEquip={() => setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard) })}
             onClose={onClose}
           />
         </section>

@@ -122,6 +122,41 @@ export function addSearchResult(
   return { cards: [...cards, card], card }
 }
 
+export interface CommanderDrop {
+  cards: DeckCard[]
+  sideboard: DeckCard[]
+  card: DeckCard
+  replacedOldKey: string | null
+}
+
+/**
+ * Resuelve el drop sobre el slot de comandante: asegura que la carta esté en el
+ * main (la mueve del banquillo o la añade desde la búsqueda; si ya está, no
+ * duplica copias) y devuelve la entrada resultante. La designación de slot
+ * (primer/segundo comandante) la decide el llamante con las reglas de pareja.
+ */
+export function dropOnCommander(
+  cards: DeckCard[],
+  sideboard: DeckCard[],
+  card: DroppedCard & { source?: string },
+  flaggedKeys: Set<string>,
+): CommanderDrop {
+  const key = `${card.setCode}:${card.cardNumber}:${card.cardName}`
+  const dropped = { cardName: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber }
+  const findIn = (list: DeckCard[]) => list.find((c) => deckCardKey(c) === key)
+  if (card.source === 'sideboard') {
+    const [nextSide, moved] = moveOneBetween(sideboard, cards, key)
+    const found = findIn(moved)
+    if (found) return { cards: moved, sideboard: nextSide, card: found, replacedOldKey: null }
+    const { list, replacedOldKey } = insertOrIncrement(moved, dropped, flaggedKeys)
+    return { cards: list, sideboard: nextSide, card: findIn(list) ?? { ...dropped, amount: 1 }, replacedOldKey }
+  }
+  const existing = findIn(cards)
+  if (existing) return { cards, sideboard, card: existing, replacedOldKey: null }
+  const { list, replacedOldKey } = insertOrIncrement(cards, dropped, flaggedKeys)
+  return { cards: list, sideboard, card: findIn(list) ?? { ...dropped, amount: 1 }, replacedOldKey }
+}
+
 /** Cambia la impresión de una carta en main y sideboard (conserva cantidades). */
 export function applyPrinting(
   cards: DeckCard[],
@@ -164,7 +199,7 @@ export function stripMetaFromSearch(card: ScryfallSearchCard): CardStripMeta {
     backImageUrl: scryfallCardBackImage(card),
     manaCost: card.mana_cost ?? '',
     cmc: card.cmc ?? 0,
-    typeLine: card.printed_type_line ?? card.type_line ?? '',
+    typeLine: card.type_line ?? card.printed_type_line ?? '',
     colors: card.colors || card.color_identity || [],
     oracleText: card.oracle_text ?? '',
     keywords: card.keywords ?? [],
@@ -195,13 +230,16 @@ export interface ScryfallJson {
 
 /** Meta de tira construida desde el JSON de la API de Scryfall. */
 export function stripMetaFromJson(data: ScryfallJson): CardStripMeta {
+  // type_line/oracle_text canónicos (inglés) aunque la carta sea localizada:
+  // la lógica de categorías/elegibilidad/parejas depende de ellos. Los campos
+  // printed_* (localizados) se usan solo para mostrar el nombre.
   return {
     artCropUrl: data.image_uris?.art_crop ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null,
     imageUrl: data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null,
     backImageUrl: data.card_faces?.[1]?.image_uris?.normal ?? null,
     manaCost: data.mana_cost ?? data.card_faces?.[0]?.mana_cost ?? '',
     cmc: data.cmc ?? 0,
-    typeLine: data.printed_type_line ?? data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
+    typeLine: data.type_line ?? data.printed_type_line ?? data.card_faces?.[0]?.type_line ?? '',
     colors: data.colors ?? data.color_identity ?? [],
     oracleText: data.oracle_text ?? data.card_faces?.[0]?.oracle_text ?? '',
     keywords: data.keywords ?? [],

@@ -13,8 +13,13 @@ import java.util.List;
  * Parses a deck from the web client JSON format into the XMage DeckCardLists:
  * <pre>
  * {"name":"My Deck","cards":[{"cardName":"Grizzly Bears","setCode":"M21","cardNumber":"178","amount":4}],
- *  "sideboard":[{"cardName":"...","setCode":"...","cardNumber":"...","amount":1}]}
+ *  "sideboard":[{"cardName":"...","setCode":"...","cardNumber":"...","amount":1}],
+ *  "commanders":[{"cardName":"...","setCode":"...","cardNumber":"...","amount":1}]}
  * </pre>
+ * Los comandantes designados (1-2, parejas legales tipo Partner/Trasfondo) se
+ * mueven del main al sideboard: es donde XMage los espera
+ * (GameCommanderImpl/AbstractCommander). Sin este campo el proxy mantiene su
+ * heurística de primera carta legal en normalizeForXMage.
  */
 public final class DeckJson {
 
@@ -30,7 +35,37 @@ public final class DeckJson {
         deck.setAuthor(deckJson.has("author") ? deckJson.get("author").getAsString() : "");
         deck.setCards(parseCards(deckJson.getAsJsonArray("cards")));
         deck.setSideboard(parseCards(deckJson.getAsJsonArray("sideboard")));
+        for (DeckCardInfo commander : parseCards(deckJson.getAsJsonArray("commanders"))) {
+            removeOne(deck.getCards(), commander);
+            deck.getSideboard().add(new DeckCardInfo(
+                    commander.getCardName(), commander.getCardNumber(), commander.getSetCode(), 1));
+        }
         return deck;
+    }
+
+    private static void removeOne(List<DeckCardInfo> cards, DeckCardInfo target) {
+        for (int i = 0; i < cards.size(); i++) {
+            DeckCardInfo c = cards.get(i);
+            if (!sameCard(c, target)) {
+                continue;
+            }
+            if (c.getAmount() > 1) {
+                cards.set(i, new DeckCardInfo(c.getCardName(), c.getCardNumber(), c.getSetCode(), c.getAmount() - 1));
+            } else {
+                cards.remove(i);
+            }
+            return;
+        }
+    }
+
+    private static boolean sameCard(DeckCardInfo a, DeckCardInfo b) {
+        String an = a.getCardName() == null ? "" : a.getCardName();
+        String bn = b.getCardName() == null ? "" : b.getCardName();
+        String as = a.getSetCode() == null ? "" : a.getSetCode();
+        String bs = b.getSetCode() == null ? "" : b.getSetCode();
+        String ac = a.getCardNumber() == null ? "" : a.getCardNumber();
+        String bc = b.getCardNumber() == null ? "" : b.getCardNumber();
+        return an.equalsIgnoreCase(bn) && as.equalsIgnoreCase(bs) && ac.equalsIgnoreCase(bc);
     }
 
     private static List<DeckCardInfo> parseCards(JsonArray array) {

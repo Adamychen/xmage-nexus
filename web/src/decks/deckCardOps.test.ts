@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
   mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
-  stripMetaFromSearch, stripMetaFromJson, aggregateCards,
+  dropOnCommander, stripMetaFromSearch, stripMetaFromJson, aggregateCards,
 } from './deckCardOps'
 import type { DeckCard } from '../lobby/decks'
 
@@ -121,6 +121,42 @@ describe('replaceBasicLands', () => {
   })
 })
 
+describe('dropOnCommander', () => {
+  const atraxa: DeckCard = { cardName: "Atraxa, Praetors' Voice", setCode: '2XM', cardNumber: '190', amount: 1 }
+  const solRing: DeckCard = { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '264', amount: 1 }
+
+  it('designa una carta que ya está en el main sin duplicarla', () => {
+    const res = dropOnCommander([atraxa, solRing], [], { ...atraxa, source: 'main' }, new Set())
+    expect(res.cards).toEqual([atraxa, solRing])
+    expect(res.card).toEqual(atraxa)
+  })
+
+  it('añade la carta de búsqueda al main y la designa', () => {
+    const res = dropOnCommander([solRing], [], { ...atraxa, source: 'search' }, new Set())
+    expect(res.cards).toHaveLength(2)
+    expect(res.card).toEqual(atraxa)
+  })
+
+  it('si la búsqueda ya existe no incrementa: solo designa', () => {
+    const res = dropOnCommander([atraxa], [], { ...atraxa, source: 'search' }, new Set())
+    expect(res.cards).toEqual([atraxa])
+    expect(res.card).toEqual(atraxa)
+  })
+
+  it('mueve una copia del sideboard al main y la designa', () => {
+    const res = dropOnCommander([], [atraxa], { ...atraxa, source: 'sideboard' }, new Set())
+    expect(res.sideboard).toEqual([])
+    expect(res.cards).toEqual([atraxa])
+    expect(res.card).toEqual(atraxa)
+  })
+
+  it('tolera source sideboard con la carta ya en el main', () => {
+    const res = dropOnCommander([atraxa], [], { ...atraxa, source: 'sideboard' }, new Set())
+    expect(res.cards).toEqual([atraxa])
+    expect(res.card).toEqual(atraxa)
+  })
+})
+
 describe('aggregateCards', () => {
   it('fusiona entradas repetidas sumando cantidades y conserva el orden', () => {
     const mountain = (amount: number): DeckCard => ({ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount })
@@ -148,5 +184,15 @@ describe('strip meta builders', () => {
   it('stripMetaFromJson prefiere cara impresa y tolera ausencias', () => {
     const meta = stripMetaFromJson({ cmc: 3, card_faces: [{ mana_cost: '{1}{R}' }] })
     expect(meta).toMatchObject({ manaCost: '{1}{R}', cmc: 3, imageUrl: null })
+  })
+  it('stripMetaFromJson prefiere type_line/oracle canónicos sobre printed_* localizados', () => {
+    const meta = stripMetaFromJson({
+      type_line: 'Legendary Creature — Human Knight',
+      printed_type_line: 'Criatura legendaria — Caballero humano',
+      oracle_text: 'Partner (You can have two commanders if both have partner.)',
+      keywords: ['Partner'],
+    } as never)
+    expect(meta.typeLine).toBe('Legendary Creature — Human Knight')
+    expect(meta.oracleText).toContain('Partner')
   })
 })

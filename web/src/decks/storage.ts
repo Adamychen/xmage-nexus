@@ -129,7 +129,9 @@ function normalizeDeckV2(deck: DeckV2): DeckV2 {
   const cards = deck.cards.map(norm)
   const sideboard = deck.sideboard.map(norm)
   const coverCard = deck.coverCard ? norm(deck.coverCard as any) as any : deck.coverCard
-  return changed ? { ...deck, cards, sideboard, coverCard } : deck
+  const commanderCard = deck.commanderCard ? norm(deck.commanderCard as any) as any : deck.commanderCard
+  const partnerCard = deck.partnerCard ? norm(deck.partnerCard as any) as any : deck.partnerCard
+  return changed ? { ...deck, cards, sideboard, coverCard, commanderCard, partnerCard } : deck
 }
 
 async function migrateIfNeeded(): Promise<void> {

@@ -8,7 +8,9 @@ import {
   isManaSourceCard,
   isPartnerCard,
   isCommanderEligible,
+  canPairCommanders,
   commanderCardsFor,
+  derivePartnerCard,
   withCommanderFirst,
   landPrinting,
   loadBasicLandSet,
@@ -128,18 +130,49 @@ describe('deckUtils basic calculations', () => {
     const sidar = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
     const tana = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 }
     const noMeta = new Map()
-    expect(commanderCardsFor([atraxa, solRing], atraxa, noMeta)).toEqual([atraxa])
+    expect(commanderCardsFor([atraxa, solRing], atraxa, null, noMeta)).toEqual([atraxa])
     // Sin comandante designado no hay comandante: nada de portada/primera carta
-    expect(commanderCardsFor([solRing, atraxa], null, noMeta)).toEqual([])
-    expect(commanderCardsFor([solRing, atraxa], { cardName: 'Not In Deck', setCode: 'X', cardNumber: '1', amount: 1 }, noMeta)).toEqual([])
-    expect(commanderCardsFor([], null, noMeta)).toEqual([])
+    expect(commanderCardsFor([solRing, atraxa], null, null, noMeta)).toEqual([])
+    expect(commanderCardsFor([solRing, atraxa], { cardName: 'Not In Deck', setCode: 'X', cardNumber: '1', amount: 1 }, null, noMeta)).toEqual([])
+    expect(commanderCardsFor([], null, null, noMeta)).toEqual([])
     const partnerMeta = new Map([
       ['PC2/1', { keywords: ['Partner'] }],
       ['sidar kondo of jamuraa', { keywords: ['Partner'] }],
       ['C16/56', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
       ['tana, the bloodsower', { oracleText: 'Partner (You can have two commanders if both have partner.)' }],
     ])
-    expect(commanderCardsFor([sidar, tana, solRing], sidar, partnerMeta)).toEqual([sidar, tana])
+    // Sin segundo explícito solo se muestra el primero (la derivación es para migrar)
+    expect(commanderCardsFor([sidar, tana, solRing], sidar, null, partnerMeta)).toEqual([sidar])
+    // Segundo designado explícito: se muestra aunque el partner no sea derivable
+    expect(commanderCardsFor([sidar, tana, solRing], sidar, tana, new Map())).toEqual([sidar, tana])
+    // La migración deriva la pareja legal del oráculo
+    expect(derivePartnerCard([sidar, tana, solRing], sidar, partnerMeta)).toEqual(tana)
+    expect(derivePartnerCard([solRing], sidar, partnerMeta)).toBeNull()
+    expect(derivePartnerCard([solRing], null, partnerMeta)).toBeNull()
+  })
+
+  it('pairs commanders mirroring the XMage validators', () => {
+    const partner = { keywords: ['Partner'] }
+    const kraum = { keywords: ['Partner with Ludevic, Necro-Alchemist'] }
+    const ludevic = { keywords: ['Partner with Kraum, Ludevic\u2019s Opus'] }
+    const generic = { oracleText: 'Partner (You can have two commanders if both have partner.)' }
+    const friends = { keywords: ['Friends forever'] }
+    const doctor = { typeLine: 'Legendary Creature — Time Lord Doctor' }
+    const companion = { keywords: ["Doctor's companion"] }
+    const background = { typeLine: 'Legendary Enchantment — Background' }
+    const chooser = { oracleText: 'Choose a Background (You can have a Background as a second commander.)' }
+
+    expect(canPairCommanders(partner, generic, 'A', 'B')).toBe(true)
+    expect(canPairCommanders(kraum, ludevic, 'Kraum, Ludevic\u2019s Opus', 'Ludevic, Necro-Alchemist')).toBe(true)
+    expect(canPairCommanders({ keywords: ['Partner with X'] }, { keywords: ['Partner with Y'] }, 'A', 'B')).toBe(false)
+    expect(canPairCommanders(friends, friends, 'A', 'B')).toBe(true)
+    expect(canPairCommanders(companion, doctor, 'A', 'B')).toBe(true)
+    expect(canPairCommanders(doctor, companion, 'A', 'B')).toBe(true)
+    expect(canPairCommanders(chooser, background, 'A', 'B')).toBe(true)
+    expect(canPairCommanders(background, chooser, 'A', 'B')).toBe(true)
+    expect(canPairCommanders({ typeLine: 'Legendary Creature — Angel' }, { typeLine: 'Legendary Creature — Demon' }, 'A', 'B')).toBe(false)
+    expect(canPairCommanders(partner, friends, 'A', 'B')).toBe(false)
+    expect(canPairCommanders(undefined, partner, 'A', 'B')).toBe(false)
   })
 
   it('detects commander eligibility from the oracle (parity with proxy)', () => {

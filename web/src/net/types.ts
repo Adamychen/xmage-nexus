@@ -87,6 +87,8 @@ export interface DeckJson {
   name: string
   cards: DeckCardEntry[]
   sideboard: DeckCardEntry[]
+  /** Comandantes designados (1-2): el proxy los mueve al banquillo que XMage espera. */
+  commanders?: DeckCardEntry[]
 }
 
 export interface DeckCardEntry {

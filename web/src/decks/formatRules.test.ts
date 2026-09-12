@@ -165,12 +165,14 @@ describe('formatRules', () => {
         { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
         { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 },
         { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 1 },
-        { cardName: 'Counterspell', setCode: 'EMA', cardNumber: '43', amount: 1 }, // Blue outside G/R identity!
+        { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }, // Red: solo legal por Tana
+        { cardName: 'Counterspell', setCode: 'EMA', cardNumber: '43', amount: 1 }, // Blue outside G/W/R identity!
       ],
       sideboard: [],
       colors: ['G', 'R'],
       coverCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
       commanderCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+      partnerCard: { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'custom',
@@ -179,11 +181,50 @@ describe('formatRules', () => {
     const metaMap = new Map<string, CardStripMeta>()
     metaMap.set('PC2/1', { colors: ['G', 'W'], keywords: ['Partner'], legalities: { commander: 'legal' } })
     metaMap.set('C16/56', { colors: ['R', 'G'], keywords: ['Partner'], legalities: { commander: 'legal' } })
+    metaMap.set('LEA/294', { colors: ['G'], legalities: { commander: 'legal' } })
+    metaMap.set('M10/146', { colors: ['R'], legalities: { commander: 'legal' } })
     metaMap.set('EMA/43', { colors: ['U'], legalities: { commander: 'legal' } })
 
     const report = validateDeckForFormat(partnerDeck, metaMap)
     expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Counterspell')).toBe(true)
-    expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Forest')).toBe(false)
+    expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Lightning Bolt')).toBe(false)
+    expect(report.issues.some((i) => i.type === 'commander' && i.severity === 'error')).toBe(false)
+  })
+
+  it('flags an illegal commander pair and a lone Background', () => {
+    const deck: DeckV2 = {
+      id: 'test-badpair',
+      name: 'Bad pair',
+      format: 'Commander',
+      cards: [
+        { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+        { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 },
+        { cardName: 'Raised by Giants', setCode: 'CLB', cardNumber: '3', amount: 1 },
+        { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 97 },
+      ],
+      sideboard: [],
+      colors: [],
+      coverCard: { cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: 1 },
+      commanderCard: { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 },
+      partnerCard: { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      source: 'custom',
+    }
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('PC2/1', { colors: ['G', 'W'], keywords: ['Partner'], typeLine: 'Legendary Creature — Human', legalities: { commander: 'legal' } })
+    metaMap.set('C16/28', { colors: ['W', 'U', 'B', 'G'], typeLine: 'Legendary Creature — Phyrexian Angel', legalities: { commander: 'legal' } })
+    metaMap.set('CLB/3', { colors: ['G'], typeLine: 'Legendary Enchantment — Background', legalities: { commander: 'legal' } })
+
+    const invalidPair = validateDeckForFormat(deck, metaMap)
+    expect(invalidPair.issues.some((i) => i.type === 'commander' && i.message.includes('pareja'))).toBe(true)
+
+    const loneBackground = validateDeckForFormat({
+      ...deck,
+      commanderCard: { cardName: 'Raised by Giants', setCode: 'CLB', cardNumber: '3', amount: 1 },
+      partnerCard: undefined,
+    }, metaMap)
+    expect(loneBackground.issues.some((i) => i.type === 'commander' && i.message.includes('Trasfondo'))).toBe(true)
   })
 
   it('requires an explicit eligible commander (no portada/primera carta)', () => {

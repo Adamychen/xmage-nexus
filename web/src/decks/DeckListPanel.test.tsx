@@ -143,3 +143,94 @@ describe('DeckListPanel sideboard', () => {
     expect(onDropCard).toHaveBeenCalledWith(expect.objectContaining({ cardName: 'Lightning Bolt' }), 'sideboard')
   })
 })
+
+describe('DeckListPanel commander drop', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('routes a drop on the commander slot to the commander target (not main)', () => {
+    const { onDropCard } = renderPanel({ isCommanderFormat: true })
+    const section = document.querySelector('.deck-commander-section')!
+    fireEvent.drop(section, { dataTransfer: makeDataTransfer({ cardName: "Atraxa, Praetors' Voice", setCode: '2XM', cardNumber: '190', source: 'main' }) })
+    expect(onDropCard).toHaveBeenCalledTimes(1)
+    expect(onDropCard).toHaveBeenCalledWith(expect.objectContaining({ cardName: "Atraxa, Praetors' Voice" }), 'commander')
+  })
+
+  it('shows the drop-here hint while dragging over the commander slot', () => {
+    renderPanel({ isCommanderFormat: true })
+    const section = document.querySelector('.deck-commander-section')!
+    expect(section.textContent).toContain('Designa una carta legendaria')
+    fireEvent.dragOver(section, { dataTransfer: makeDataTransfer({ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', source: 'main' }) })
+    expect(section.className).toContain('is-commander-drag-over')
+    expect(section.textContent).toContain('Suelta aquí una carta legendaria')
+  })
+
+  it('flags a rejected drop with the invalid class', () => {
+    const onDropCard = vi.fn(() => false)
+    renderPanel({ isCommanderFormat: true, onDropCard })
+    const section = document.querySelector('.deck-commander-section')!
+    fireEvent.drop(section, { dataTransfer: makeDataTransfer({ cardName: 'Sol Ring', setCode: 'C16', cardNumber: '264', source: 'main' }) })
+    expect(onDropCard).toHaveBeenCalledWith(expect.objectContaining({ cardName: 'Sol Ring' }), 'commander')
+    expect(section.className).toContain('is-commander-drop-invalid')
+  })
+
+  it('does not render the commander slot outside commander formats', () => {
+    renderPanel({ isCommanderFormat: false })
+    expect(document.querySelector('.deck-commander-section')).toBeNull()
+  })
+
+  it('shows both commanders and routes the second crown to onSetPartner', () => {
+    const sidar: DeckCard = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
+    const tana: DeckCard = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 }
+    const onSetPartner = vi.fn()
+    const partnerMeta: CardStripMeta = { keywords: ['Partner'], typeLine: 'Legendary Creature — Human' }
+    renderPanel({
+      isCommanderFormat: true,
+      cards: [sidar, tana, mountain],
+      commanderCard: sidar,
+      partnerCard: tana,
+      onSetCommander: vi.fn(),
+      onSetPartner,
+      metaMap: new Map([
+        ['PC2/1', partnerMeta],
+        ['C16/56', partnerMeta],
+        ['sidar kondo of jamuraa', partnerMeta],
+        ['tana, the bloodsower', partnerMeta],
+        ['LEA/292', meta],
+        ['mountain', meta],
+      ]),
+    })
+    const section = document.querySelector('.deck-commander-section')!
+    expect(section.querySelectorAll('.arena-card-strip')).toHaveLength(2)
+    expect(section.querySelector('.deck-category-count')?.textContent).toBe('2')
+    const crowns = section.querySelectorAll('.strip-btn.crown')
+    expect(crowns).toHaveLength(2)
+    fireEvent.click(crowns[1])
+    expect(onSetPartner).toHaveBeenCalledWith(tana)
+  })
+
+  it('shows only the primary until a second commander is designated explicitly', () => {
+    const sidar: DeckCard = { cardName: 'Sidar Kondo of Jamuraa', setCode: 'PC2', cardNumber: '1', amount: 1 }
+    const tana: DeckCard = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '56', amount: 1 }
+    const partnerMeta: CardStripMeta = { keywords: ['Partner'], typeLine: 'Legendary Creature — Human' }
+    renderPanel({
+      isCommanderFormat: true,
+      cards: [sidar, tana, mountain],
+      commanderCard: sidar,
+      metaMap: new Map([
+        ['PC2/1', partnerMeta],
+        ['C16/56', partnerMeta],
+        ['sidar kondo of jamuraa', partnerMeta],
+        ['tana, the bloodsower', partnerMeta],
+        ['LEA/292', meta],
+        ['mountain', meta],
+      ]),
+    })
+    const section = document.querySelector('.deck-commander-section')!
+    expect(section.querySelectorAll('.arena-card-strip')).toHaveLength(1)
+    // La pareja legal sigue en el mazo general hasta que se designa el segundo
+    const mainTana = document.querySelector('.deck-category-section:not(.deck-sideboard-section):not(.deck-commander-section) .arena-card-strip')
+    expect(mainTana?.textContent).toContain('Tana')
+  })
+})

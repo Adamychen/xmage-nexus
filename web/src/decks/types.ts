@@ -10,6 +10,7 @@ export interface DeckV2 extends Deck {
   favorite?: boolean
   coverCard?: DeckCard
   commanderCard?: DeckCard
+  partnerCard?: DeckCard
   createdAt: number
   updatedAt: number
   source: 'custom' | 'imported' | 'precon'

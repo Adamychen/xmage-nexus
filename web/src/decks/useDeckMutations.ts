@@ -9,8 +9,9 @@ import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalizati
 import {
   deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
   mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
-  stripMetaFromSearch, type SuggestedLand,
+  dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
+import { canPairCommanders, isCommanderEligible } from './deckUtils'
 
 interface Deps {
   deck: DeckV2 | null
@@ -59,13 +60,105 @@ export function useDeckMutations(deps: Deps) {
     }
   }
 
-  const handleDropCardOnDeck = (cardData: any, target: 'main' | 'sideboard') => {
+  const cacheMetaFromPayload = (cardData: any, setCode: string, cardNumber: string, cardName: string) => {
+    if (cardData.manaCost === undefined && !cardData.typeLine) return
+    setMetaMap((prev) => {
+      const nxt = new Map(prev)
+      const meta: CardStripMeta = {
+        artCropUrl: cardData.artCropUrl ?? null,
+        imageUrl: cardData.imageUrl ?? null,
+        backImageUrl: cardData.backImageUrl ?? null,
+        manaCost: cardData.manaCost ?? '',
+        cmc: cardData.cmc ?? 0,
+        typeLine: cardData.typeLine ?? '',
+        colors: cardData.colors ?? [],
+        oracleText: cardData.oracleText ?? '',
+        legalities: cardData.legalities,
+      }
+      nxt.set(`${setCode}/${cardNumber}`, meta)
+      nxt.set(cardName.toLowerCase(), meta)
+      return nxt
+    })
+  }
+
+  const metaOf = (cardName: string, setCode: string, cardNumber: string, payload?: any) => {
+    if (payload?.typeLine) {
+      return { typeLine: payload.typeLine, oracleText: payload.oracleText ?? '', keywords: payload.keywords }
+    }
+    return metaMap.get(`${setCode.toUpperCase()}/${cardNumber}`)
+      ?? metaMap.get(`${setCode}/${cardNumber}`)
+      ?? metaMap.get(cardName.toLowerCase())
+      ?? null
+  }
+
+  const pairBetween = (
+    a: { cardName: string; setCode: string; cardNumber: string } | null | undefined,
+    b: { cardName: string; setCode: string; cardNumber: string } | null | undefined,
+  ): boolean => {
+    if (!a || !b) return false
+    const aMeta = metaOf(a.cardName, a.setCode, a.cardNumber)
+    const bMeta = metaOf(b.cardName, b.setCode, b.cardNumber)
+    if (!aMeta || !bMeta) return false
+    return canPairCommanders(aMeta, bMeta, a.cardName, b.cardName)
+  }
+
+  const sameCard = (a: { cardName: string; setCode: string; cardNumber: string }, cardName: string, setCode: string, cardNumber: string) =>
+    a.cardName === cardName
+    && a.setCode.toUpperCase() === setCode.toUpperCase()
+    && a.cardNumber === cardNumber
+
+  const handleDropCardOnDeck = (cardData: any, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
     if (!deck || !cardData?.cardName) return
     const setCode = (cardData.setCode || '').toUpperCase()
     const cardNumber = cardData.cardNumber || '0'
     const cardName = cardData.cardName
     const key = `${setCode}:${cardNumber}:${cardName}`
     const source: string = cardData.source ?? 'search'
+
+    if (target === 'commander') {
+      const droppedMeta = metaOf(cardName, setCode, cardNumber, cardData)
+      const droppedEligible = !droppedMeta || isCommanderEligible(droppedMeta)
+      const commander = deck.commanderCard ?? null
+      const partner = deck.partnerCard ?? null
+
+      let nextCommander = commander
+      let nextPartner = partner
+      const droppedCard = { cardName, setCode, cardNumber, amount: 1 }
+      if (commander && sameCard(commander, cardName, setCode, cardNumber)) {
+        nextCommander = commander
+        nextPartner = partner
+      } else if (partner && sameCard(partner, cardName, setCode, cardNumber)) {
+        nextCommander = commander
+        nextPartner = partner
+      } else if (partner && pairBetween(partner, droppedCard)) {
+        nextCommander = droppedCard
+        nextPartner = partner
+      } else if (commander && pairBetween(commander, droppedCard)) {
+        nextCommander = commander
+        nextPartner = droppedCard
+      } else if (droppedEligible) {
+        nextCommander = droppedCard
+        nextPartner = null
+      } else {
+        return false
+      }
+
+      const res = dropOnCommander(deck.cards, deck.sideboard, { cardName, setCode, cardNumber, source }, serverFlaggedKeys)
+      let nextCover = deck.coverCard
+      if (res.replacedOldKey && nextCover && deckCardKey(nextCover) === res.replacedOldKey) {
+        nextCover = { ...nextCover, cardName, setCode, cardNumber }
+      }
+      schedulePersist({
+        ...deck,
+        cards: res.cards,
+        sideboard: res.sideboard,
+        commanderCard: nextCommander ?? undefined,
+        partnerCard: nextPartner ?? undefined,
+        coverCard: nextCover ?? res.cards[0],
+      })
+      cacheMetaFromPayload(cardData, setCode, cardNumber, cardName)
+      return true
+    }
 
     if (source === 'sideboard' && target === 'main') {
       const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, key)
@@ -91,25 +184,7 @@ export function useDeckMutations(deps: Deps) {
       schedulePersist({ ...deck, sideboard: nextSide })
     }
 
-    if (cardData.manaCost !== undefined || cardData.typeLine) {
-      setMetaMap((prev) => {
-        const nxt = new Map(prev)
-        const meta: CardStripMeta = {
-          artCropUrl: cardData.artCropUrl ?? null,
-          imageUrl: cardData.imageUrl ?? null,
-          backImageUrl: cardData.backImageUrl ?? null,
-          manaCost: cardData.manaCost ?? '',
-          cmc: cardData.cmc ?? 0,
-          typeLine: cardData.typeLine ?? '',
-          colors: cardData.colors ?? [],
-          oracleText: cardData.oracleText ?? '',
-          legalities: cardData.legalities,
-        }
-        nxt.set(`${setCode}/${cardNumber}`, meta)
-        nxt.set(cardName.toLowerCase(), meta)
-        return nxt
-      })
-    }
+    cacheMetaFromPayload(cardData, setCode, cardNumber, cardName)
   }
 
   const splitKey = (k: string) => {
@@ -152,11 +227,29 @@ export function useDeckMutations(deps: Deps) {
     schedulePersist({ ...deck, coverCard: c })
   }
 
-  /** Designa/quita el comandante explícito del mazo (toggle con la corona). */
+  /** Designa/quita el primer comandante (corona). Al quitarlo, el segundo asciende. */
   const handleSetCommander = (c: DeckCard) => {
     if (!deck) return
-    const isSame = deck.commanderCard && deckCardKey(deck.commanderCard) === deckCardKey(c)
-    schedulePersist({ ...deck, commanderCard: isSame ? undefined : c })
+    const isSame = !!deck.commanderCard && deckCardKey(deck.commanderCard) === deckCardKey(c)
+    if (isSame) {
+      schedulePersist({ ...deck, commanderCard: deck.partnerCard, partnerCard: undefined })
+      return
+    }
+    const keepPartner = deck.partnerCard && pairBetween(c, deck.partnerCard)
+    schedulePersist({ ...deck, commanderCard: c, partnerCard: keepPartner ? deck.partnerCard : undefined })
+  }
+
+  /** Designa/quita el segundo comandante (Partner/Trasfondo) si es pareja legal. */
+  const handleSetPartner = (c: DeckCard) => {
+    if (!deck) return
+    const isSame = !!deck.partnerCard && deckCardKey(deck.partnerCard) === deckCardKey(c)
+    if (isSame) {
+      schedulePersist({ ...deck, partnerCard: undefined })
+      return
+    }
+    if (deck.commanderCard && pairBetween(deck.commanderCard, c)) {
+      schedulePersist({ ...deck, partnerCard: c })
+    }
   }
 
   const handleAddBasicLand = (preset: BasicLandPreset) => {
@@ -249,7 +342,7 @@ export function useDeckMutations(deps: Deps) {
 
   return {
     handleAddFromSearch, handleSwap, handleDropCardOnDeck,
-    handleInc, handleDec, handleRemove, handleSetCover, handleSetCommander,
+    handleInc, handleDec, handleRemove, handleSetCover, handleSetCommander, handleSetPartner,
     handleAddBasicLand, handleRemoveBasicLand, handleApplySuggestedLands,
     handleChangePrinting, handleApplyPrinting, handleApplyImport, handleDropFile,
   }

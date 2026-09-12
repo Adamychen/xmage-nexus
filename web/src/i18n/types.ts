@@ -1152,6 +1152,10 @@ export interface TranslationSchema {
     commander_set: string
     commander_unset: string
     commander_hint: string
+    commander_drop_here: string
+    commander_set_partner: string
+    commander_pair_invalid: string
+    commander_background_alone: string
     commander_not_eligible: string
     format_legal: string
     format_illegal: string

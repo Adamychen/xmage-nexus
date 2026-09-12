@@ -279,11 +279,11 @@ Base web: `DeckImportModal.tsx` (modos añadir/reemplazar, drag&drop, badge live
 | `.mwdeck` `N [SET] Nombre`, `SB:`, `//` | Variante bracket + `SB:` + `//` + comentarios `#` (U7-3) | ✅ |
 | `.txt` switch banquillo por línea vacía | `hasExplicitSideboardMark` + primera línea vacía (U7-3; reimporta bien el propio `.dek`; tolera `Sideboard (15)` y categorías `Creatures (10)`) | ✅ |
 | `Commander/Maybeboard`→banquillo | Commander→principal **en cabeza** (=`coverCard`→zona 👑, la web SÍ muestra zona y el desktop no) + Maybeboard→banquillo (U7-6) | ✅ (divergencia justificada) |
-| Sin zona comandante / sin Partner | Banner 1 corona, o 2 con Partner (detección por `keywords`/oráculo, unión de identidad; U7-7) | ✅ (supera; sin mantenimiento manual ante cartas/reglas nuevas) |
+| Sin zona comandante / sin Partner | Dos plazas de comandante con pareja legal data-driven (Partner, Partner with, variantes, Doctor's companion, Choose a Background + Background), corona por plaza, drop designa 1º/2º y `commanders[]` baja ambos al banquillo que XMage espera (U7-7 + 2026-09-11) | ✅ (supera; sin mantenimiento manual ante cartas/reglas nuevas; verificado en partida real con 2 comandantes) |
 | Export fichero dck/dck_info/dek/mtga; export clipboard con preview | Footer dck/arena/txt/dek (descarga+copia) + `.dek` (U6-5); `dck_info` no-aplica; Arena con cabeceras (compatible) | ✅ |
 | Import URL / sample hand — no existen | Moxfield/Archidekt por URL, London mulligan + goldfish T1–T3 | ✅ (supera) |
 
-Evidencia: `parseDck.test` +7 (draft, mtgjson, bracket, blank-switch, roundtrip `.dek`, commander/maybeboard, categorías), `deckUtils.test` +2 (partner), `formatRules.test` +1 (unión identidad), `DeckImportModal.test` +1 (pegado), `decks-gallery.spec` test U7 (commander/maybeboard/`.draft`/botón pegar).
+Evidencia: `parseDck.test` +7 (draft, mtgjson, bracket, blank-switch, roundtrip `.dek`, commander/maybeboard, categorías), `deckUtils.test` (parejas Partner/partner-with/trasfondo/doctor + derivación), `formatRules.test` (unión identidad + pareja ilegal), `DeckImportModal.test` +1 (pegado), `decks-gallery.spec` test U7 (commander/maybeboard/`.draft`/botón pegar) + test de pareja Partner (dos plazas), `DeckJsonTest` (proxy mueve 1-2 comandantes al banquillo), verificado real con 2 comandantes en la zona de mando.
 
 ### U6 — Editor mazos (AUDITADA 2026-09-07, CERRADA)
 

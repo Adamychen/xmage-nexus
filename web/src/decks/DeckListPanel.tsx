@@ -31,6 +31,7 @@ export default function DeckListPanel({
   sideboard,
   coverKey,
   commanderCard,
+  partnerCard,
   isCommanderFormat,
   metaMap,
   cardIssues,
@@ -40,6 +41,7 @@ export default function DeckListPanel({
   onRemove,
   onSetCover,
   onSetCommander,
+  onSetPartner,
   onHover,
   onLeave,
   onChangePrinting,
@@ -51,6 +53,7 @@ export default function DeckListPanel({
   sideboard: DeckCard[]
   coverKey: string | null
   commanderCard?: DeckCard | null
+  partnerCard?: DeckCard | null
   isCommanderFormat?: boolean
   metaMap: Map<string, CardStripMeta>
   cardIssues?: Map<string, ValidationIssue>
@@ -60,16 +63,19 @@ export default function DeckListPanel({
   onRemove: (key: string) => void
   onSetCover: (c: DeckCard) => void
   onSetCommander?: (c: DeckCard) => void
+  onSetPartner?: (c: DeckCard) => void
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
   onChangePrinting?: (c: DeckCard) => void
-  onDropCard?: (cardData: any, target: 'main' | 'sideboard') => void
+  onDropCard?: (cardData: any, target: 'main' | 'sideboard' | 'commander') => boolean | void
   onSwap?: (key: string) => void
   onDropFile?: (f: File) => void
 }) {
   const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
+  const [isCommanderDragOver, setIsCommanderDragOver] = useState(false)
+  const [commanderDropInvalid, setCommanderDropInvalid] = useState(false)
 
   const displayCards = useMemo(() => aggregateCards(cards), [cards])
   const displaySideboard = useMemo(() => aggregateCards(sideboard), [sideboard])
@@ -138,10 +144,40 @@ export default function DeckListPanel({
     }
   }
 
-  // Commander cards (explicit designation + second Partner, U7-7). Sin
-  // comandante designado no se muestra nada: nada de portada/primera carta.
+  const handleCommanderDragOver = (e: React.DragEvent) => {
+    if (!onDropCard) return
+    e.preventDefault()
+    e.stopPropagation()
+    compatibleDropEffect(e)
+    if (!isCommanderDragOver) setIsCommanderDragOver(true)
+  }
+
+  const handleCommanderDragLeave = (e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return
+    setIsCommanderDragOver(false)
+  }
+
+  const handleCommanderDrop = (e: React.DragEvent) => {
+    if (!onDropCard) return
+    e.preventDefault()
+    e.stopPropagation()
+    setIsCommanderDragOver(false)
+    const rawData = e.dataTransfer.getData('application/json')
+    if (!rawData) return
+    try {
+      const cardData = JSON.parse(rawData)
+      const accepted = onDropCard(cardData, 'commander')
+      if (accepted === false) {
+        setCommanderDropInvalid(true)
+        window.setTimeout(() => setCommanderDropInvalid(false), 700)
+      }
+    } catch {}
+  }
+
+  // Commander cards (explicit designation + second Partner/Background, U7-7).
+  // Sin comandante designado no se muestra nada: nada de portada/primera carta.
   const commanderCards = isCommanderFormat && displayCards.length > 0
-    ? commanderCardsFor(displayCards, commanderCard ?? null, metaMap)
+    ? commanderCardsFor(displayCards, commanderCard ?? null, partnerCard ?? null, metaMap)
     : []
   const commanderKeys = new Set(commanderCards.map(getCardKey))
   const showCommanderEmpty = !!isCommanderFormat && commanderCards.length === 0
@@ -226,6 +262,47 @@ export default function DeckListPanel({
     </div>
   )
 
+  const commanderSection = isCommanderFormat ? (
+    <div
+      className={`deck-category-section deck-commander-section ${isCommanderDragOver ? 'is-commander-drag-over' : ''} ${commanderDropInvalid ? 'is-commander-drop-invalid' : ''}`}
+      onDragOver={handleCommanderDragOver}
+      onDragLeave={handleCommanderDragLeave}
+      onDrop={handleCommanderDrop}
+    >
+      <div className="deck-category-header">
+        <span>{t('decks', 'commander')}</span>
+        {commanderCards.length > 0 && <span className="deck-category-count">{commanderCards.length}</span>}
+      </div>
+      {showCommanderEmpty && (
+        <div className="deck-sideboard-empty deck-commander-empty">
+          {isCommanderDragOver ? t('decks', 'commander_drop_here') : t('decks', 'commander_hint')}
+        </div>
+      )}
+      {isCommanderDragOver && commanderCards.length > 0 && (
+        <div className="deck-commander-drop-hint">
+          {commanderCards.length === 1 ? t('decks', 'commander_set_partner') : t('decks', 'commander_drop_here')}
+        </div>
+      )}
+      {commanderCards.map((cmdCard, index) => (
+        <ArenaCardStrip
+          key={getCardKey(cmdCard)}
+          card={cmdCard}
+          meta={metaMap.get(`${cmdCard.setCode}/${cmdCard.cardNumber}`) ?? metaMap.get(cmdCard.cardName.toLowerCase())}
+          isCommander
+          isCover={index === 0}
+          onInc={onInc}
+          onDec={onDec}
+          onRemove={onRemove}
+          onSetCover={onSetCover}
+          onSetCommander={index === 0 ? onSetCommander : onSetPartner}
+          onHover={onHover}
+          onLeave={onLeave}
+          onChangePrinting={onChangePrinting}
+        />
+      ))}
+    </div>
+  ) : null
+
   return (
     <div
       className={`arena-deck-list-container deck-list-panel ${isDragOver ? 'is-drag-over' : ''}`}
@@ -243,39 +320,7 @@ export default function DeckListPanel({
           )}
 
           {/* Commander Banner (1 card, or 2 with Partner — U7-7) */}
-          {showCommanderEmpty && (
-            <div className="deck-category-section">
-              <div className="deck-category-header">
-                <span>{t('decks', 'commander')}</span>
-              </div>
-              <div className="deck-sideboard-empty">{t('decks', 'commander_hint')}</div>
-            </div>
-          )}
-          {commanderCards.length > 0 && (
-            <div className="deck-category-section">
-              <div className="deck-category-header">
-                <span>{t('decks', 'commander')}</span>
-                <span className="deck-category-count">{commanderCards.length}</span>
-              </div>
-              {commanderCards.map((commanderCard) => (
-              <ArenaCardStrip
-                key={getCardKey(commanderCard)}
-                card={commanderCard}
-                meta={metaMap.get(`${commanderCard.setCode}/${commanderCard.cardNumber}`) ?? metaMap.get(commanderCard.cardName.toLowerCase())}
-                isCommander
-                isCover
-                onInc={onInc}
-                onDec={onDec}
-                onRemove={onRemove}
-                onSetCover={onSetCover}
-                onSetCommander={onSetCommander}
-                onHover={onHover}
-                onLeave={onLeave}
-                onChangePrinting={onChangePrinting}
-              />
-              ))}
-            </div>
-          )}
+          {commanderSection}
 
           {/* Grouped Categories */}
           {categoriesOrder.map((cat) => {

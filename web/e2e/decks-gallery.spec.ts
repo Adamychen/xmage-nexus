@@ -149,6 +149,80 @@ test.describe('Decks Gallery', () => {
         await commanderSection.locator('.strip-btn.crown').click({ timeout: 2000 })
       }).toPass({ timeout: 15000 })
       await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
+
+      // Drag&drop sobre el slot de comandante: designa la carta (antes el drop
+      // burbujeaba al contenedor y la añadía/duplicaba en el mazo general).
+      const mainAtraxa = page.locator('.deck-category-section:not(.deck-sideboard-section):not(.deck-commander-section) .arena-card-strip', { hasText: /Atraxa/ }).first()
+      await expect(mainAtraxa).toBeVisible()
+      const cmdDt = await page.evaluateHandle(() => new DataTransfer())
+      const commanderSlot = page.locator('.deck-commander-section')
+      await mainAtraxa.dispatchEvent('dragstart', { dataTransfer: cmdDt })
+      await commanderSlot.dispatchEvent('dragover', { dataTransfer: cmdDt })
+      await expect(commanderSlot).toHaveClass(/is-commander-drag-over/)
+      await commanderSlot.dispatchEvent('drop', { dataTransfer: cmdDt })
+      await expect(commanderSlot.locator('.arena-card-strip', { hasText: /Atraxa/ })).toBeVisible()
+      await expect(page.locator('.deck-category-section:not(.deck-sideboard-section):not(.deck-commander-section) .arena-card-strip', { hasText: /Atraxa/ })).toHaveCount(0)
+      await expect(page.getByText(/Designa una carta legendaria como comandante/)).toHaveCount(0)
+    })
+  })
+
+  test('commander: pareja Partner ocupa las dos plazas sin duplicar en el mazo @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      const scryfall = (name: string, typeLine: string, colors: string[]) => ({
+        name,
+        type_line: typeLine,
+        colors,
+        keywords: ['Partner'],
+        oracle_text: 'Partner (You can have two commanders if both have partner.)',
+        mana_cost: '{1}{W}{R}',
+        cmc: 3,
+        image_uris: { normal: 'https://img.test/card.jpg', art_crop: 'https://img.test/card.jpg' },
+      })
+      await page.route('**/api.scryfall.com/cards/pc2/1**', (route) =>
+        route.fulfill({ json: scryfall('Sidar Kondo of Jamuraa', 'Legendary Creature — Human', ['W']) }),
+      )
+      await page.route('**/api.scryfall.com/cards/c16/56**', (route) =>
+        route.fulfill({ json: scryfall('Tana, the Bloodsower', 'Legendary Creature — Elf', ['R', 'G']) }),
+      )
+
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd2_${Date.now()}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
+      await page.locator('.arena-deck-header select').selectOption('Commander')
+
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill("1 [PC2:1] Sidar Kondo of Jamuraa\n1 [C16:56] Tana, the Bloodsower\n20 [M10:234] Mountain")
+      await page.locator('.import-submit-btn').click()
+
+      const mainTana = page.locator('.deck-category-section:not(.deck-sideboard-section):not(.deck-commander-section) .arena-card-strip', { hasText: /Tana/ }).first()
+      await expect(mainTana).toBeVisible({ timeout: 5000 })
+      const dt = await page.evaluateHandle(() => new DataTransfer())
+      const slot = page.locator('.deck-commander-section')
+      await mainTana.dispatchEvent('dragstart', { dataTransfer: dt })
+      await slot.dispatchEvent('dragover', { dataTransfer: dt })
+      await slot.dispatchEvent('drop', { dataTransfer: dt })
+
+      // La pareja legal (ambos Partner) ocupa las dos plazas; el drop no añade
+      // ni duplica la carta en el mazo general.
+      await expect(slot.locator('.arena-card-strip', { hasText: /Tana/ })).toBeVisible()
+      await expect(slot.locator('.arena-card-strip', { hasText: /Sidar/ })).toBeVisible()
+      await expect(slot.locator('.arena-card-strip')).toHaveCount(2)
+      await expect(page.locator('.arena-card-strip', { hasText: /Tana/ })).toHaveCount(1)
+      await expect(page.locator('.arena-card-strip', { hasText: /Sidar/ })).toHaveCount(1)
+
+      // Quitar el primer comandante asciende al segundo (no se pierde la pareja)
+      await expect(async () => {
+        await slot.locator('.arena-card-strip', { hasText: /Tana/ }).hover()
+        await slot.locator('.arena-card-strip', { hasText: /Tana/ }).locator('.strip-btn.crown').click({ timeout: 2000 })
+      }).toPass({ timeout: 15000 })
+      await expect(slot.locator('.arena-card-strip')).toHaveCount(1)
+      await expect(slot.locator('.arena-card-strip', { hasText: /Sidar/ })).toBeVisible()
     })
   })
 

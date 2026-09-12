@@ -1,4 +1,5 @@
 import type { DeckCard } from '../lobby/decks'
+import { withCommanderFirst } from './deckUtils'
 
 function stripPromoSuffix(num: string): string {
   const t = num.trim()
@@ -67,17 +68,38 @@ export function isCommanderFormat(deckType?: string, gameType?: string): boolean
 }
 
 export function prepareDeckForXMage(
-  deck: { name: string; cards: DeckCard[]; sideboard: DeckCard[] },
+  deck: {
+    name: string
+    cards: DeckCard[]
+    sideboard: DeckCard[]
+    commanderCard?: DeckCard
+    partnerCard?: DeckCard
+  },
   deckType?: string,
   gameType?: string,
-): { name: string; cards: DeckCard[]; sideboard: DeckCard[] } {
-  // Transformación invisible: el usuario ve 100 en main + comandante como portada,
-  // XMage exige 99+1 (comandante en banquillo). El proxy hace la normalización
-  // autoritativa con CardRepository (DeckValidation.normalizeForXMage) usando
-  // deckType/gameType, así que aquí solo preservamos el deck tal cual y
-  // dejamos que el proxy elija el comandante correcto (legendaria criatura,
-  // CanBeYourCommanderAbility, partners, etc.). No tocamos storage.
-  void deckType
-  void gameType
-  return deck
+): { name: string; cards: DeckCard[]; sideboard: DeckCard[]; commanders?: DeckCard[] } {
+  // Transformación invisible: el usuario ve los comandantes en el main,
+  // XMage los exige en el banquillo (99 + comandantes). El proxy hace la
+  // normalización autoritativa con CardRepository (DeckValidation.normalizeForXMage)
+  // y además honra los comandantes designados explícitamente (1 o 2 parejas
+  // legales: Partner, Trasfondo…). Si no hay designación, el proxy mantiene su
+  // heurística de primera carta legal. No tocamos storage.
+  const commanders: DeckCard[] = []
+  if (deck.commanderCard) commanders.push(deck.commanderCard)
+  if (deck.partnerCard && !sameCommanderKey(deck.partnerCard, deck.commanderCard)) {
+    commanders.push(deck.partnerCard)
+  }
+  if (commanders.length === 0 || !isCommanderFormat(deckType, gameType)) {
+    return deck
+  }
+  return {
+    ...deck,
+    cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard),
+    commanders,
+  }
+}
+
+function sameCommanderKey(a: DeckCard, b?: DeckCard): boolean {
+  if (!b) return false
+  return a.cardName === b.cardName && a.setCode === b.setCode && a.cardNumber === b.cardNumber
 }

@@ -44,10 +44,103 @@ export interface PartnerMeta {
   typeLine?: string
 }
 
-export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
+function normalizePartnerName(name: string): string {
+  return name
+    .replace(/[’']/g, "'")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+}
+
+function normalizeVariant(name: string): string {
+  return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
+}
+
+const PARTNER_VARIANTS = ['friends forever', 'father & son', 'survivors', 'character select']
+
+function hasGenericPartner(meta: PartnerMeta | undefined | null): boolean {
   if (!meta) return false
-  if (meta.keywords?.some((k) => k.toLowerCase() === 'partner' || k.toLowerCase().startsWith('partner with'))) return true
-  return /\bpartner(\s+with\s+.+)?\b/i.test(meta.oracleText ?? '')
+  if (meta.keywords?.some((k) => k.toLowerCase().trim() === 'partner')) return true
+  return /(^|\n)\s*partner\b(?!\s+with)/i.test(meta.oracleText ?? '')
+}
+
+function partnerWithName(meta: PartnerMeta | undefined | null): string | null {
+  if (!meta) return null
+  const fromKeyword = meta.keywords?.find((k) => /^partner\s+with\s+/i.test(k.trim()))
+  const source = fromKeyword ?? meta.oracleText ?? ''
+  const m = /partner\s+with\s+([^(\n.]+)/i.exec(source)
+  if (!m) return null
+  const name = normalizePartnerName(m[1])
+  return name || null
+}
+
+function partnerVariant(meta: PartnerMeta | undefined | null): string | null {
+  if (!meta) return null
+  const hay = [...(meta.keywords ?? []), meta.oracleText ?? ''].join('\n').toLowerCase()
+  for (const v of PARTNER_VARIANTS) {
+    if (hay.includes(v)) return normalizeVariant(v)
+  }
+  return null
+}
+
+/** Perfil de emparejamiento por datos del oráculo (paridad con mage.util.validation). */
+export interface CommanderPairProfile {
+  genericPartner: boolean
+  partnerWith: string | null
+  variant: string | null
+  doctorsCompanion: boolean
+  chooseABackground: boolean
+  timeLordDoctor: boolean
+  background: boolean
+}
+
+export function isBackgroundCard(meta: PartnerMeta | undefined | null): boolean {
+  return /background/i.test(meta?.typeLine ?? '')
+}
+
+export function pairProfile(meta: PartnerMeta | undefined | null): CommanderPairProfile {
+  const typeLine = (meta?.typeLine ?? '').toLowerCase()
+  const hay = [...(meta?.keywords ?? []), meta?.oracleText ?? ''].join('\n').toLowerCase()
+  return {
+    genericPartner: hasGenericPartner(meta),
+    partnerWith: partnerWithName(meta),
+    variant: partnerVariant(meta),
+    doctorsCompanion: hay.includes("doctor's companion") || hay.includes('doctors companion'),
+    chooseABackground: hay.includes('choose a background'),
+    timeLordDoctor: typeLine.includes('time lord') && typeLine.includes('doctor') && !typeLine.includes('brushwagg'),
+    background: isBackgroundCard(meta),
+  }
+}
+
+/**
+ * ¿Pueden ser pareja de comandantes? Espeja los validadores de XMage
+ * (PartnerValidator, PartnerVariantValidator, PartnerWithValidator,
+ * ChooseABackgroundValidator, DoctorsCompanionValidator): partner genérico,
+ * "partner with" mutuo, misma variante, Doctor + Time Lord Doctor y
+ * "Elegir un Trasfondo" + Trasfondo.
+ */
+export function canPairCommanders(
+  aMeta: PartnerMeta | undefined | null,
+  bMeta: PartnerMeta | undefined | null,
+  aName: string,
+  bName: string,
+): boolean {
+  const a = pairProfile(aMeta)
+  const b = pairProfile(bMeta)
+  if (a.genericPartner && b.genericPartner) return true
+  if (a.partnerWith && b.partnerWith
+    && a.partnerWith === normalizePartnerName(bName)
+    && b.partnerWith === normalizePartnerName(aName)) return true
+  if (a.variant && b.variant && a.variant === b.variant) return true
+  if (a.doctorsCompanion && b.timeLordDoctor) return true
+  if (b.doctorsCompanion && a.timeLordDoctor) return true
+  if (a.chooseABackground && b.background) return true
+  if (b.chooseABackground && a.background) return true
+  return false
+}
+
+export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
+  return hasGenericPartner(meta) || partnerWithName(meta) !== null
 }
 
 /**
@@ -70,44 +163,75 @@ function metaKey(c: DeckCard): string {
 }
 
 /**
- * Comandantes a mostrar (U7-7): el comandante designado explícitamente (o
- * ninguno) + un segundo Partner si existe. Ya no se cae a la portada/primera
- * carta: eso metía "una carta cualquiera" en el slot de comandante.
+ * Comandantes a mostrar (U7-7): el comandante designado y, si hay, el segundo
+ * designado explícitamente (Partner/Trasfondo). Sin comandante designado no se
+ * muestra nada: nada de portada/primera carta.
  */
 export function commanderCardsFor(
   cards: DeckCard[],
   commander: DeckCard | undefined | null,
-  metaMap: Map<string, PartnerMeta>,
+  partner: DeckCard | undefined | null,
+  _metaMap: Map<string, PartnerMeta>,
 ): DeckCard[] {
   if (cards.length === 0 || !commander) return []
   const first = cards.find(
     (c) => metaKey(c) === metaKey(commander) && c.cardName === commander.cardName,
   )
   if (!first) return []
-  const out = [first]
-  const firstMeta = metaMap.get(metaKey(first)) ?? metaMap.get(first.cardName.toLowerCase())
-  if (isPartnerCard(firstMeta)) {
-    const second = cards.find((c) => (c.cardName !== first.cardName || metaKey(c) !== metaKey(first)) &&
-      isPartnerCard(metaMap.get(metaKey(c)) ?? metaMap.get(c.cardName.toLowerCase())))
-    if (second) out.push(second)
-  }
-  return out
+  if (!partner) return [first]
+  const second = cards.find((c) => metaKey(c) === metaKey(partner) && c.cardName === partner.cardName)
+  return second ? [first, second] : [first]
 }
 
 /**
- * Reordena la lista principal para que el comandante designado vaya primero:
- * el proxy (DeckValidation.normalizeForXMage) elige como comandante a la
- * primera carta legal en el orden del mazo.
+ * Deriva la pareja legal del comandante designado a partir del oráculo (para
+ * migrar mazos guardados antes del segundo slot explícito). Devuelve null si
+ * no hay pareja. El resultado se persiste una vez y a partir de ahí manda la
+ * designación explícita (quitar el segundo no lo vuelve a derivar).
  */
-export function withCommanderFirst(cards: DeckCard[], commander: DeckCard | undefined | null): DeckCard[] {
-  if (!commander) return cards
-  const k = `${commander.setCode}:${commander.cardNumber}:${commander.cardName}`
-  const idx = cards.findIndex((c) => `${c.setCode}:${c.cardNumber}:${c.cardName}` === k)
-  if (idx <= 0) return cards
-  const next = [...cards]
-  const [cmd] = next.splice(idx, 1)
-  next.unshift(cmd)
-  return next
+export function derivePartnerCard(
+  cards: DeckCard[],
+  commander: DeckCard | undefined | null,
+  metaMap: Map<string, PartnerMeta>,
+): DeckCard | null {
+  if (!commander) return null
+  const first = cards.find(
+    (c) => metaKey(c) === metaKey(commander) && c.cardName === commander.cardName,
+  )
+  if (!first) return null
+  const firstMeta = metaMap.get(metaKey(first)) ?? metaMap.get(first.cardName.toLowerCase())
+  return cards.find((c) =>
+    (c.cardName !== first.cardName || metaKey(c) !== metaKey(first))
+    && canPairCommanders(
+      firstMeta,
+      metaMap.get(metaKey(c)) ?? metaMap.get(c.cardName.toLowerCase()),
+      first.cardName,
+      c.cardName,
+    )) ?? null
+}
+
+/**
+ * Reordena la lista principal para que el/los comandante(s) designado(s) vayan
+ * primero: el proxy (DeckValidation.normalizeForXMage) elige como comandante a
+ * la primera carta legal en el orden del mazo.
+ */
+export function withCommanderFirst(
+  cards: DeckCard[],
+  commander: DeckCard | undefined | null,
+  partner?: DeckCard | null,
+): DeckCard[] {
+  const out = [...cards]
+  const moveToFront = (card: DeckCard | undefined | null, index: number) => {
+    if (!card) return
+    const k = `${card.setCode}:${card.cardNumber}:${card.cardName}`
+    const idx = out.findIndex((c) => `${c.setCode}:${c.cardNumber}:${c.cardName}` === k)
+    if (idx < 0 || idx === index) return
+    const [moved] = out.splice(idx, 1)
+    out.splice(index, 0, moved)
+  }
+  moveToFront(commander, 0)
+  moveToFront(partner, 1)
+  return out
 }
 
 export function getBasicLandLabel(landName: string, lang = 'en'): string {

@@ -1,6 +1,6 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { commanderCardsFor, isCommanderEligible } from './deckUtils'
+import { commanderCardsFor, isCommanderEligible, isBackgroundCard, canPairCommanders } from './deckUtils'
 import { t } from '../i18n'
 
 export interface FormatRuleConfig {
@@ -457,16 +457,36 @@ export function validateDeckForFormat(
   // 3. Commander identification and color identity (union over Partners, U7-7)
   let commanderColors: Set<string> | null = null
   if (config.hasCommander) {
-    const commanders = commanderCardsFor(deck.cards, deck.commanderCard ?? null, metaMap)
+    const commanders = commanderCardsFor(deck.cards, deck.commanderCard ?? null, deck.partnerCard ?? null, metaMap)
     if (commanders.length > 0) {
       commanderColors = new Set()
-      for (const commander of commanders) {
-        const meta = metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase())
+      const metas = commanders.map((commander) =>
+        metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase()),
+      )
+      for (const meta of metas) {
         for (const c of meta?.colors ?? []) commanderColors.add(c.toUpperCase())
         if (meta?.typeLine && !isCommanderEligible(meta)) {
           issues.push({
             type: 'commander',
             message: `${t('decks', 'commander')}: ${t('decks', 'commander_not_eligible')}`,
+            severity: 'error',
+          })
+        }
+      }
+      if (metas[0] && isBackgroundCard(metas[0]) && commanders.length === 1) {
+        issues.push({
+          type: 'commander',
+          message: `${t('decks', 'commander')}: ${t('decks', 'commander_background_alone')}`,
+          severity: 'error',
+        })
+      } else if (commanders.length === 2) {
+        const [a, b] = commanders
+        const aMeta = metas[0]
+        const bMeta = metas[1]
+        if (aMeta && bMeta && !canPairCommanders(aMeta, bMeta, a.cardName, b.cardName)) {
+          issues.push({
+            type: 'commander',
+            message: `${t('decks', 'commander')}: ${t('decks', 'commander_pair_invalid')}`,
             severity: 'error',
           })
         }

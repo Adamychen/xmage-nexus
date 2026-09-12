@@ -135,6 +135,60 @@
   margin: 0 10px 10px;
 }
 
+/* Commander slot */
+.deck-commander-section .deck-category-header {
+  border-left-color: #ecc94b;
+}
+
+.deck-commander-section.is-commander-drag-over {
+  border: 1px dashed #ecc94b;
+  border-radius: 6px;
+  padding: 6px;
+  background: rgba(236, 201, 75, 0.08);
+  box-shadow: inset 0 0 16px rgba(236, 201, 75, 0.25);
+}
+
+.deck-commander-section.is-commander-drag-over .deck-commander-empty {
+  border-color: #ecc94b;
+  color: #f6e05e;
+  background: rgba(236, 201, 75, 0.06);
+}
+
+.deck-commander-drop-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border: 1px dashed #ecc94b;
+  border-radius: 6px;
+  color: #f6e05e;
+  background: rgba(236, 201, 75, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.deck-commander-section.is-commander-drop-invalid {
+  border: 1px solid #e53e3e;
+  border-radius: 6px;
+  padding: 6px;
+  background: rgba(229, 62, 62, 0.08);
+  animation: commander-drop-reject 380ms ease;
+}
+
+@keyframes commander-drop-reject {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-commander-section.is-commander-drop-invalid {
+    animation: none;
+  }
+}
+
 /* Empty deck list placeholder */
 .deck-list-empty-hint {
   display: flex;

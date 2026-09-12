@@ -124,9 +124,19 @@ Deck format:
 {
   "name": "My Deck",
   "cards": [{"cardName": "Lightning Bolt", "setCode": "2XM", "cardNumber": "162", "amount": 4}],
-  "sideboard": [{"cardName": "Path to Exile", "setCode": "2XM", "cardNumber": "30", "amount": 2}]
+  "sideboard": [{"cardName": "Path to Exile", "setCode": "2XM", "cardNumber": "30", "amount": 2}],
+  "commanders": [{"cardName": "Sidar Kondo of Jamuraa", "setCode": "CMR", "cardNumber": "535", "amount": 1}]
 }
 ```
+
+`commanders` (optional, 1–2 cards) carries the **explicitly designated**
+commander(s) for Commander games (a legal pair: Partner, Partner with, Friends
+forever, Doctor's companion or Choose a Background + Background). `DeckJson.parse`
+moves each entry from `cards` to `sideboard` — where XMage expects commanders
+(`GameCommanderImpl` treats all sideboard cards as commanders and
+`AbstractCommander` validates the pair). Without this field the proxy keeps its
+heuristic in `DeckValidation.normalizeForXMage` (first legal card in deck order),
+which only ever sends one commander.
 
 #### Deck pre-validation (`validateDeck`)
 
