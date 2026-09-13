@@ -220,3 +220,28 @@
     `(Meccanica/Mecânica/Mechanik…)` donde no hay regla confirmada.
   - Consolidación: `unit`+`typecheck` PASS (paridad incluida). Sin commits.
   - Plan2 COMPLETO salvo verificación del cron en GitHub Actions.
+
+- **2026-09-13 — frente CI (Actions en rojo → verde) ✅**
+  - Último `Web client CI` (09-11) fallaba en `mcp` (timeouts reconnect/
+    fakeGame) + `proxy` (GatewayProtocolIntegrationTest). En local: proxy
+    70/70 (stale); mcp flakeaba un fichero distinto por run (sessionFlow,
+    multiSession) y en aislado todo verde → causa: 14 ficheros × servidor
+    stdio en paralelo. Fix: `vitest run --maxWorkers=1` (3×39/39 ~35s).
+  - Push (19 commits pendientes) → integration e2e (fake, mal llamado
+    "real") 115+7 fallos. Uno real: switcher-order (auto-pod mapea el
+    `standard` inyectado por setState a pod con 3j; fix: `boardLayoutManual`
+    en el spec). Los otros 6, dos causas: (1) contención (2 JVMs + Playwright
+    en 4 cores → 10× slowdown) → fix: job `e2e-fake` propio sin stack;
+    (2) carrera de nombres localizados: con red rápida el enrich Scryfall
+    ES gana y las tiras muestran "Relámpago"/"Tutor infernal" (screenshot CI
+    lo prueba) → fix: helper `blockLocalizedEnrich(page)` (vías search +
+    directa set/num/lang) en 6 specs + span `.visually-hidden` con nombre
+    inglés estable en la rama con arte de CardSlot (a11y + selectores;
+    face-down no filtra nada) + timeouts 15s en reveal (el frame del gameView
+    va detrás del prompt).
+  - Verificación: runs 34764361904 (solo stack-priority) → 34766059240 →
+    34767493558 (mechanics+reveal, causa arte) → 34770466961: **todo verde
+    salvo human-test flake** ("timeout decisión maná Blaze", primera vez;
+    re-run del job sin cambios → success). Conclusión: CI verde completo.
+  - Lección harness: `gh` resolvía a `magefree/mage` (usar `--repo` siempre);
+    `/dev/tcp` no existe en zsh (verificar puertos con WS real).
