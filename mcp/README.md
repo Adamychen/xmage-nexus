@@ -16,7 +16,7 @@ cambiar la config. Para probarlo a mano (desde `mcp/`):
 
 ```bash
 npm install          # una vez
-npm test             # vitest: arranca el server por stdio y ejerce tools/resources
+npm test             # vitest en serie (--maxWorkers=1): cada fichero levanta el server por stdio y los timeouts de 30s flakean en paralelo (CI 2026-09-11)
 npm run typecheck
 node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 ```

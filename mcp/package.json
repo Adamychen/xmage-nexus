@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node src/index.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "test:real": "MCP_E2E=1 vitest run test/realGame.test.ts"
   },
