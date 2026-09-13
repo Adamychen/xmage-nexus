@@ -112,4 +112,17 @@ describe('ChatBox component', () => {
     expect(formatChatTime(new Date(2026, 8, 7, 9, 4).getTime())).toMatch(/0?9:04/)
     expect(formatChatTime()).toMatch(/\d{1,2}:\d{2}/)
   })
+
+  it('formatChatTime usa el idioma del juego (zhs mapea a zh)', () => {
+    const spy = vi.spyOn(Date.prototype, 'toLocaleTimeString')
+    try {
+      formatChatTime(1700000000000, 'zhs')
+      expect(spy).toHaveBeenCalledWith('zh', expect.anything())
+      spy.mockClear()
+      formatChatTime(1700000000000, 'ja')
+      expect(spy).toHaveBeenCalledWith('ja', expect.anything())
+    } finally {
+      spy.mockRestore()
+    }
+  })
 })

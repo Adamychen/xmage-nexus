@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
-import { t, translateError, setLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage } from './index'
+import { t, translateError, setLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage, toBcp47Locale } from './index'
+import { ja } from './locales/ja'
 
 describe('i18n system', () => {
   beforeEach(() => {
@@ -66,6 +67,26 @@ describe('i18n system', () => {
 
     setLanguage('ja')
     expect(translateError('login failed')).toBe('ログイン失敗: 認証情報が無効か、サーバーが利用できません')
+  })
+
+  it('falls back to English (not Spanish) for keys missing in the active language', () => {
+    const backup = ja.game.concede
+    try {
+      setLanguage('ja')
+      delete (ja.game as unknown as Record<string, unknown>).concede
+      expect(t('game.concede')).toBe('Concede')
+      expect(t('game', 'concede')).toBe('Concede')
+    } finally {
+      ;(ja.game as unknown as Record<string, unknown>).concede = backup
+      setLanguage('es')
+    }
+  })
+
+  it('maps game language to BCP-47 for Intl formatters', () => {
+    expect(toBcp47Locale('zhs')).toBe('zh')
+    expect(toBcp47Locale('ja')).toBe('ja')
+    expect(toBcp47Locale('es')).toBe('es')
+    expect(toBcp47Locale('en')).toBe('en')
   })
 
   it('supports interpolation parameters', () => {

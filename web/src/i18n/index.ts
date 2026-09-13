@@ -84,6 +84,14 @@ export function getLanguage(): SupportedLanguage {
   return currentLanguage
 }
 
+/**
+ * BCP-47 tag del idioma del juego para `toLocaleString`/`Intl`:
+ * el juego usa `zhs` pero `Intl` espera `zh`.
+ */
+export function toBcp47Locale(lang: SupportedLanguage): string {
+  return lang === 'zhs' ? 'zh' : lang
+}
+
 export function setLanguage(lang: SupportedLanguage): void {
   if (LOCALES[lang] && lang !== currentLanguage) {
     currentLanguage = lang
@@ -144,14 +152,14 @@ export function t(
   }
 
   const parts = path.split('.')
-  let current: any = LOCALES[currentLanguage] || LOCALES.es
+  let current: any = LOCALES[currentLanguage] || LOCALES.en
 
   for (const part of parts) {
     if (current && typeof current === 'object' && part in current) {
       current = current[part]
     } else {
-      // Fallback to Spanish or key if missing
-      let fallback: any = LOCALES.es
+      // Fallback to English or key if missing
+      let fallback: any = LOCALES.en
       for (const p of parts) {
         if (fallback && typeof fallback === 'object' && p in fallback) {
           fallback = fallback[p]

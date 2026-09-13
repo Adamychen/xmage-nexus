@@ -332,6 +332,39 @@ describe('StackZone', () => {
     expect(line?.textContent).toContain('SimBot')
   })
 
+  it('exposes the full target list on a focusable labelled element (ellipsis is structural)', () => {
+    const players: PlayerView[] = [
+      { playerId: 'p-me', name: 'Yo', life: 20, controlled: true, isHuman: true } as PlayerView,
+      {
+        playerId: 'p-opp',
+        name: 'SimBot',
+        life: 20,
+        controlled: false,
+        isHuman: false,
+        battlefield: {
+          'perm-acer': { id: 'perm-acer', name: 'Acererak, el Archiliche', manaValue: 3 },
+        },
+      } as unknown as PlayerView,
+    ]
+
+    const stack: Record<string, CardView> = {
+      'spell-1': {
+        name: 'Lightning Bolt',
+        cardTypes: ['INSTANT'],
+        manaValue: 1,
+        targets: ['perm-acer', 'p-opp'],
+      } as any,
+    }
+
+    const { container } = render(<StackZone stack={stack} players={players} myPlayerId="p-me" />)
+
+    const line = container.querySelector('[data-testid="stack-targets"]') as HTMLElement
+    expect(line).not.toBeNull()
+    expect(line.tabIndex).toBe(0)
+    expect(line.getAttribute('aria-label')).toContain('Acererak, el Archiliche')
+    expect(line.getAttribute('aria-label')).toContain('SimBot')
+  })
+
   it('hides the target line when the spell has no targets', () => {
     const stack: Record<string, CardView> = {
       'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },

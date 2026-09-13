@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { buildDraftLog } from './draftLog'
 import { parseDraftLog } from '../decks/parseDck'
 
@@ -30,5 +30,18 @@ describe('draftLog (U9-6)', () => {
     const text = buildDraftLog({ draftId: 'd', startedAt: new Date(), players: [], entries: [] })
     expect(text).toContain('Event #: d')
     expect(parseDraftLog(text)).toBeNull()
+  })
+
+  it('formats the timestamp with the game language (zhs maps to zh)', () => {
+    const spy = vi.spyOn(Date.prototype, 'toLocaleString')
+    try {
+      buildDraftLog({ draftId: 'd', startedAt: new Date(), players: [], entries: [] }, 'zhs')
+      expect(spy).toHaveBeenCalledWith('zh')
+      spy.mockClear()
+      buildDraftLog({ draftId: 'd', startedAt: new Date(), players: [], entries: [] }, 'ja')
+      expect(spy).toHaveBeenCalledWith('ja')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

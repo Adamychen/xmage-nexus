@@ -38,6 +38,16 @@ import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './ski
 import './GameScreen.css'
 import './TournamentPanel.css'
 
+/** El atajo global Space no debe disparar cuando el foco está en un control
+ *  nativo (doble acción: el control + el pass). Cubre el caso en que el
+ *  target es un descendiente del control (p. ej. un span dentro de un button). */
+export function isSpaceShortcutTargetIgnored(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null
+  if (!el || typeof (el as HTMLElement).closest !== 'function') return false
+  if ((el as HTMLInputElement).isContentEditable) return true
+  return Boolean(el.closest('input, textarea, select, button, a, [role="button"], [role="menuitem"], [role="option"], [contenteditable]'))
+}
+
 export default function GameScreen() {
   const { t } = useTranslation()
   const game = useGame()
@@ -137,7 +147,7 @@ export default function GameScreen() {
   // Space activates main action / pass priority
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+      if (e.code === 'Space' && !isSpaceShortcutTargetIgnored(e.target)) {
         e.preventDefault()
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return

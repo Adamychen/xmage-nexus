@@ -1110,6 +1110,7 @@ export const zhs: TranslationSchema = {
     library_cancel: '取消',
     voting_vs: 'VS',
     voting_hint: '在所有人选择前，你的投票保密',
+    voting_step: '步骤 {count} / {total}',
     planeswalker_loyalty: '当前忠诚度：{count}',
     planeswalker_hint: '每回合只能使用一个异能',
     userrequest_title: '游戏请求',

@@ -42,6 +42,12 @@ describe('CardGrid', () => {
     expect(container.querySelector('.card-grid-count-badge')?.textContent).toContain('3 Mano')
   })
 
+  it('labels the search filter for assistive tech', () => {
+    const { container } = render(<CardGrid prompt={makePrompt()} selected={[]} setSelected={vi.fn()} send={vi.fn()} cancel={vi.fn()} busy={false} />)
+    const input = container.querySelector('.card-grid-filter') as HTMLInputElement
+    expect(input.getAttribute('aria-label')).toBeTruthy()
+  })
+
   it('filters cards by name', () => {
     const cards = Array.from({ length: 10 }, (_, i) => ({
       id: `c-${i}`, name: i === 3 ? 'Volcanic Hammer' : `Card ${i}`, expansionSetCode: 'TEST', cardNumber: String(i),

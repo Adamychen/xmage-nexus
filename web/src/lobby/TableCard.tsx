@@ -4,7 +4,7 @@ import Icon from '../ui/Icon'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
-import { useTranslation } from '../i18n'
+import { useTranslation, toBcp47Locale } from '../i18n'
 import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable } from './lobbyUtils'
 
@@ -28,7 +28,7 @@ export default function TableCard({
   tTable, users, username, avatarId, stagingTableId, busyTable,
   onJoinHuman, onJoinAi, onStart, onWatch, onResume, onOpenBracket, onSelectUser,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const seats = tTable.seats ?? []
   const isReady = tTable.tableState === 'READY_TO_START'
   const isPlaying = tTable.tableState === 'DUELING' || tTable.tableState === 'SIDEBOARDING'
@@ -96,7 +96,7 @@ export default function TableCard({
           </div>
           <div className="table-header-right">
             {timeAgo && (
-              <span className="table-time-ago" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString() : undefined}>
+              <span className="table-time-ago" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString(toBcp47Locale(lang)) : undefined}>
                 <Icon name="clock" size={12} /> {timeAgo}
               </span>
             )}

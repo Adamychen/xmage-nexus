@@ -35,7 +35,7 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
         <span className="action-prompt-msg">
           <FormattedText text={localizedManaMsg} />
         </span>
-        <span className="action-prompt-hint">{t('game', 'mana_hint')}</span>
+        <span className="action-prompt-hint" role="status" aria-live="polite">{t('game', 'mana_hint')}</span>
       </div>
       <div className="action-prompt-actions">
         {prompt.playerId && (

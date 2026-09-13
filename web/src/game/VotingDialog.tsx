@@ -26,6 +26,9 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
   const right = prompt.options[1]
   const hasTwo = prompt.options.length === 2 && left && right
   const stepMatch = /step\s+(\d+)\s+of\s+(\d+)/i.exec(prompt.message)
+  const stepLabel = stepMatch
+    ? t('dialogs', 'voting_step', { count: stepMatch[1], total: stepMatch[2] })
+    : ''
 
   return (
     <DialogShell
@@ -34,9 +37,10 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
       legacyBackdropClass="voting-backdrop"
       legacyPanelClass="voting-dialog"
       kickerIcon="check"
-      kickerLabel={<>{t('dialogs', 'voting_title').toUpperCase()} {stepMatch ? `${stepMatch[1]}/${stepMatch[2]}` : ''}</>}
+      kickerLabel={<>{t('dialogs', 'voting_title').toUpperCase()} {stepLabel}</>}
       title={<FormattedText text={prompt.title} />}
       message={<FormattedText text={prompt.message} />}
+      sectionProps={{ 'aria-describedby': 'voting-hint' }}
     >        {hasTwo ? (
           <div className="voting-options">
             <button
@@ -66,7 +70,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
             ))}
           </div>
         )}
-        <div className="voting-hint">{t('dialogs', 'voting_hint')}</div>
+        <div className="voting-hint" id="voting-hint">{t('dialogs', 'voting_hint')}</div>
     </DialogShell>
   )
 }

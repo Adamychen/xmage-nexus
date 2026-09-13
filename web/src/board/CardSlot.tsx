@@ -8,6 +8,7 @@ import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, type Designation } from './designations'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
+import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { useSettings } from '../state/selectors'
@@ -169,6 +170,11 @@ export default function CardSlot({
   const pairPartner = useMemo(() => pairedPartnerName(card.rules), [card.rules])
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
 
+  const handleClick = onClick ? () => {
+    soundManager.play('tap', 'game')
+    onClick()
+  } : undefined
+
   const designationTexts = (d: Designation): { label: string; title: string } => {
     if (d === 'paired' && pairPartner) {
       return {
@@ -206,10 +212,9 @@ export default function CardSlot({
         flightState === 'landing' ? 'flight-land' : '',
         className,
       ].filter(Boolean).join(' ')}
-      onClick={onClick ? () => {
-        soundManager.play('tap', 'game')
-        onClick()
-      } : undefined}
+      onClick={handleClick}
+      {...clickableProps(handleClick)}
+      aria-label={onClick ? cardName(card) : undefined}
       onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       style={style}

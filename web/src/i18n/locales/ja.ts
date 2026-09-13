@@ -1110,6 +1110,7 @@ export const ja: TranslationSchema = {
     library_cancel: 'キャンセル',
     voting_vs: 'VS',
     voting_hint: '全員が選ぶまで投票は非公開です',
+    voting_step: 'ステップ {count} / {total}',
     planeswalker_loyalty: '現在の忠誠度：{count}',
     planeswalker_hint: '1ターンに1つの能力のみ',
     userrequest_title: 'ゲーム要求',

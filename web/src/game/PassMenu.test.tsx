@@ -64,6 +64,16 @@ describe('PassMenu', () => {
     expect(onSkip).toHaveBeenCalledWith(CANCEL_SKIP_ACTION)
   })
 
+  it('exposes skips as menuitems inside the menu', () => {
+    const { container } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
+    expect(container.querySelector('.pass-menu')?.getAttribute('role')).toBe('menu')
+    const items = container.querySelectorAll('[data-testid^="skip-"]')
+    expect(items.length).toBeGreaterThan(0)
+    for (const item of Array.from(items)) {
+      expect(item.getAttribute('role')).toBe('menuitem')
+    }
+  })
+
   it('sends the skip action on click', () => {
     const onSkip = vi.fn()
     const { container } = render(<PassMenu game={gameWith()} onSkip={onSkip} />)

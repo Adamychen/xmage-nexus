@@ -3,7 +3,7 @@ import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { useTranslation, toBcp47Locale } from '../i18n'
 import './ArenaCardGrid.css'
 
 export function ArenaCardGrid({
@@ -33,7 +33,7 @@ export function ArenaCardGrid({
   onLeave?: () => void
   cardMinPx?: number
 }) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -191,7 +191,7 @@ export function ArenaCardGrid({
       <div className="arena-grid-footer">
         <div className="arena-footer-left">
           <span className="arena-grid-count">
-            {cards.length.toLocaleString()} {totalCards ? t('decks', 'grid_of_total', { total: totalCards.toLocaleString() }) : ''} {t('decks', 'total_cards')}
+            {cards.length.toLocaleString(toBcp47Locale(lang))} {totalCards ? t('decks', 'grid_of_total', { total: totalCards.toLocaleString(toBcp47Locale(lang)) }) : ''} {t('decks', 'total_cards')}
           </span>
         </div>
 

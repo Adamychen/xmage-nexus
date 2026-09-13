@@ -4,7 +4,7 @@ import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
-import { useTranslation } from '../i18n'
+import { useTranslation, toBcp47Locale } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 
 export interface TournamentBracketProps {
@@ -28,7 +28,7 @@ function formatTimer(serverTime?: number, stepStartTime?: number | null): string
 }
 
 export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }: TournamentBracketProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [tick, setTick] = useState(0)
   useEffect(() => {
     if (view.serverTime == null || view.stepStartTime == null) return
@@ -105,7 +105,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
         </span>
         {view.startTime != null && view.startTime > 0 && (
           <span className="tournament-dates" data-testid="tournament-dates">
-            {new Date(view.startTime).toLocaleString()}{view.endTime ? ` – ${new Date(view.endTime).toLocaleString()}` : ''}
+            {new Date(view.startTime).toLocaleString(toBcp47Locale(lang))}{view.endTime ? ` – ${new Date(view.endTime).toLocaleString(toBcp47Locale(lang))}` : ''}
           </span>
         )}
         {tournamentId && (

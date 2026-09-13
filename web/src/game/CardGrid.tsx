@@ -81,6 +81,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
           <input
             className="card-grid-filter"
             type="text"
+            aria-label={t('dialogs','cardgrid_search_placeholder')}
             placeholder={t('dialogs','cardgrid_search_placeholder')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}

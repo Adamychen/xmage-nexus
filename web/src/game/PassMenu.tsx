@@ -25,6 +25,7 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
         <button
           key={skip.key}
           type="button"
+          role="menuitem"
           className={`pass-menu-item ${activeSkip?.key === skip.key ? 'is-active' : ''}`}
           data-testid={`skip-${skip.key}`}
           title={`${t('game', skip.labelKey)} (${skip.shortcut})`}
@@ -37,6 +38,7 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
       {activeSkip && (
         <button
           type="button"
+          role="menuitem"
           className="pass-menu-item pass-menu-cancel"
           data-testid="skip-cancel"
           title={`${t('game', 'skip_cancel')} (${CANCEL_SKIP_SHORTCUT})`}

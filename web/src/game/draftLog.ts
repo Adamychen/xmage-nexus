@@ -1,3 +1,5 @@
+import { getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
+
 export interface DraftLogEntry {
   setCode: string
   packNo: number
@@ -18,10 +20,10 @@ export interface DraftLogData {
  * (`------ SET ------`, `Pack X pick Y:`, pick marcado con `--> `), el mismo
  * que `parseDraftLog` (U7-1) sabe reimportar.
  */
-export function buildDraftLog(data: DraftLogData): string {
+export function buildDraftLog(data: DraftLogData, lang?: SupportedLanguage): string {
   const lines: string[] = []
   lines.push(`Event #: ${data.draftId}`)
-  lines.push(`Time: ${data.startedAt.toLocaleString()}`)
+  lines.push(`Time: ${data.startedAt.toLocaleString(toBcp47Locale(lang ?? getLanguage()))}`)
   lines.push(`Players: ${data.players.join(', ')}`)
   lines.push('')
   let currentSet = ''

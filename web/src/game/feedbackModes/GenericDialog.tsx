@@ -124,6 +124,31 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       chooseActive()
     }
   }
+  const focusOption = (container: HTMLElement, idx: number) => {
+    container.querySelectorAll<HTMLButtonElement>('.feedback-choice-card')[idx]?.focus()
+  }
+  const onOptionsKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key >= '1' && e.key <= '9') {
+      const idx = Number(e.key) - 1
+      const opt = gridOptions[idx]
+      if (opt && !busy) {
+        e.preventDefault()
+        setActiveIdx(idx)
+        selectOption(opt)
+      }
+      return
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      const dir = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1
+      const next = Math.min(Math.max(activeIdx + dir, 0), gridOptions.length - 1)
+      setActiveIdx(next)
+      focusOption(e.currentTarget, next)
+    } else if (e.key === 'Enter' && (e.target as HTMLElement)?.classList?.contains('feedback-options-grid')) {
+      e.preventDefault()
+      chooseActive()
+    }
+  }
   const kicker = getFeedbackKicker(prompt, t as any)
   const title = getLocalizedTitle(prompt, t as any)
   const autoAnswerable =
@@ -204,13 +229,25 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           )}
           {filteredStringOptions.length > 0 && (
             <div className="feedback-options feedback-options-wrap">
-              <div className={`feedback-options-grid ${filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}>
+              <div
+                className={`feedback-options-grid ${filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}
+                onKeyDown={(e) => {
+                  if (e.key >= '1' && e.key <= '9' && !busy) {
+                    const opt = filteredStringOptions[Number(e.key) - 1]
+                    if (opt) {
+                      e.preventDefault()
+                      sendChoice(opt.value)
+                    }
+                  }
+                }}
+              >
                 {filteredStringOptions.map((option, idx) => (
                   <button
                     key={option.id}
                     className="feedback-choice-card"
                     disabled={busy}
                     title={prompt.choiceHints?.[option.id] ?? prompt.choiceHints?.[option.value]}
+                    aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
                     onClick={() => sendChoice(option.value)}
                   >
                     <span className="choice-number">{idx + 1}</span>
@@ -318,17 +355,17 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                       type="button"
                       className="stepper-btn mini"
                       disabled={busy || cur <= item.min}
-                      aria-label={t('game', 'amount_decrease')}
+                      aria-label={`${item.label} — ${t('game', 'amount_decrease')}`}
                       onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}
                     >
                       −
                     </button>
-                    <span className="multi-stepper-val">{cur}</span>
+                    <span className="multi-stepper-val" role="status" aria-live="polite" aria-label={`${item.label}: ${cur}`}>{cur}</span>
                     <button
                       type="button"
                       className="stepper-btn mini"
                       disabled={busy || cur >= item.max}
-                      aria-label={t('game', 'amount_increase')}
+                      aria-label={`${item.label} — ${t('game', 'amount_increase')}`}
                       onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}
                     >
                       +
@@ -347,15 +384,21 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
 
       {prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string' && (
         <div className="feedback-options feedback-options-wrap">
-          <div className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}>
+          <div
+            className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}
+            onKeyDown={onOptionsKeyDown}
+          >
             {gridOptions.map((option, idx) => {
               const isSel = selected.includes(option.value)
               return (
                 <button
                   key={option.id}
+                  tabIndex={idx === activeIdx ? 0 : -1}
+                  aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
                   className={`feedback-choice-card ${isSel ? 'selected' : ''} ${idx === activeIdx && gridQuery.trim() !== '' ? 'kb-active' : ''}`}
                   disabled={busy}
                   onMouseEnter={() => setActiveIdx(idx)}
+                  onFocus={() => setActiveIdx(idx)}
                   onDoubleClick={() => {
                     if (!isMultiGrid) selectOption(option)
                   }}

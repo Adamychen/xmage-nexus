@@ -92,6 +92,23 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(onViewHand).toHaveBeenCalledTimes(1)
   })
 
+  it('exposes hand cards as keyboard-operable buttons (Tab + Enter = click)', () => {
+    const onCardClick = vi.fn()
+    const { container } = render(
+      <HandZone
+        cards={Object.fromEntries([faceUp('k1', 'Lightning Bolt'), faceUp('k2', 'Shock')])}
+        onCardClick={onCardClick}
+      />
+    )
+    const slots = container.querySelectorAll('.hand-card-slot .card-slot[role="button"]')
+    expect(slots.length).toBe(2)
+    expect(slots[0].getAttribute('tabindex')).toBe('0')
+    fireEvent.keyDown(slots[0], { key: 'Enter' })
+    expect(onCardClick).toHaveBeenCalledWith('k1')
+    fireEvent.keyDown(slots[1], { key: ' ' })
+    expect(onCardClick).toHaveBeenCalledWith('k2')
+  })
+
   it('never stacks an all face-up hand (my own cards)', () => {
     const { container } = render(
       <HandZone cards={Object.fromEntries([faceUp('k1', 'Bolt'), faceUp('k2', 'Shock')])} stackBacks />

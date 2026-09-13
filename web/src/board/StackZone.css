@@ -236,10 +236,10 @@
 }
 
 .stack-tl-pos {
-  font-size: 0.594rem;
+  font-size: 0.687rem;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .stack-tl-entry.is-top .stack-tl-pos {
@@ -251,7 +251,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.594rem;
+  font-size: 0.687rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -390,7 +390,7 @@
 }
 
 .stack-tl-type-badge {
-  font-size: 0.594rem;
+  font-size: 0.687rem;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
@@ -410,8 +410,8 @@
 }
 
 .stack-tl-subtype {
-  font-size: 0.594rem;
-  color: #94a3b8;
+  font-size: 0.687rem;
+  color: #cbd5e1;
   font-style: italic;
 }
 
@@ -425,7 +425,7 @@
 }
 
 .stack-tl-copy-badge {
-  font-size: 0.562rem;
+  font-size: 0.687rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;

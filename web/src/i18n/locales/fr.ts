@@ -1110,6 +1110,7 @@ export const fr: TranslationSchema = {
     library_cancel: 'Annuler',
     voting_vs: 'VS',
     voting_hint: 'Votre vote reste secret jusqu’à ce que tout le monde ait choisi',
+    voting_step: 'Étape {count} sur {total}',
     planeswalker_loyalty: 'Loyauté actuelle : {count}',
     planeswalker_hint: 'Une seule capacité par tour',
     userrequest_title: 'REQUÊTE DE PARTIE',

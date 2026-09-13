@@ -1,4 +1,6 @@
 import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
+import { handleWatchGame } from '../state/events/game'
+import { findFollowGameId } from './spectatorFollow'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
@@ -11,6 +13,8 @@ export default function GameEndDialog() {
   const sideboardScreen = useStore((s) => s.sideboardScreen)
   const game = useGame()
   const log = useStore((s) => s.log)
+  const watchedGameId = useStore((s) => s.gameId)
+  const lobbyTables = useStore((s) => s.lobby?.tables)
   const { t } = useTranslation()
 
   if (!end || sideboardScreen) return null
@@ -18,6 +22,9 @@ export default function GameEndDialog() {
   const me = game?.players?.find((p) => p.controlled)
   const isSpectator = !me
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '') || isSpectator
+  // B.10: la mesa puede tener ya otra partida (Bo3/torneo); sin auto-follow,
+  // solo aviso + botón Seguir (literales ES: el carril de locales extraerá claves).
+  const followGameId = isSpectator ? findFollowGameId(lobbyTables, watchedGameId) : null
   const duration = formatMatchDuration(end.startTime, end.endTime ?? end.matchView?.endTime ?? undefined)
 
   const handleDownloadLog = () => {
@@ -79,9 +86,21 @@ export default function GameEndDialog() {
         </div>
 
         {matchOver ? (
-          <button className="primary" onClick={returnToLobby}>
-            {t('game', 'return_to_lobby')}
-          </button>
+          followGameId ? (
+            <div className="end-actions">
+              <p className="end-hint">La partida cambió: la mesa ha empezado una nueva partida.</p>
+              <button className="primary" onClick={() => handleWatchGame(followGameId)}>
+                Seguir partida
+              </button>
+              <button onClick={returnToLobby}>
+                {t('game', 'return_to_lobby')}
+              </button>
+            </div>
+          ) : (
+            <button className="primary" onClick={returnToLobby}>
+              {t('game', 'return_to_lobby')}
+            </button>
+          )
         ) : (
           <div className="end-actions">
             <p className="end-hint">{t('game', 'match_continues')}</p>

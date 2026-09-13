@@ -1,12 +1,17 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import VotingDialog from './VotingDialog'
+import { setLanguage } from '../i18n'
 import type { FeedbackPrompt } from './feedback'
 
 vi.mock('../net/commands', () => ({
   sendPlayerBoolean: vi.fn().mockResolvedValue({ ok: true }),
   sendPlayerString: vi.fn().mockResolvedValue({ ok: true }),
 }))
+
+afterEach(() => {
+  setLanguage('es')
+})
 
 describe('VotingDialog', () => {
   it('renders two voting options and sends boolean', () => {
@@ -35,7 +40,7 @@ describe('VotingDialog', () => {
     expect(send).toHaveBeenCalled()
   })
 
-  it('shows step badge when message contains step', () => {
+  it('shows a localized step kicker and links the hint via aria-describedby', () => {
     const prompt: FeedbackPrompt = {
       method: 'GAME_ASK',
       gameId: 'g1',
@@ -50,7 +55,17 @@ describe('VotingDialog', () => {
       max: 1,
       isVoting: true,
     }
-    const { container } = render(<VotingDialog prompt={prompt} send={vi.fn() as never} busy={false} />)
-    expect(container.textContent).toContain('2/3')
+    setLanguage('es')
+    const esRender = render(<VotingDialog prompt={prompt} send={vi.fn() as never} busy={false} />)
+    expect(esRender.container.textContent).toContain('Paso 2 de 3')
+    const esSection = esRender.container.querySelector('section[role="dialog"]')
+    expect(esSection?.getAttribute('aria-describedby')).toBe('voting-hint')
+    expect(esRender.container.querySelector('#voting-hint')?.textContent).toContain('Tu voto es secreto')
+    esRender.unmount()
+
+    setLanguage('en')
+    const enRender = render(<VotingDialog prompt={prompt} send={vi.fn() as never} busy={false} />)
+    expect(enRender.container.textContent).toContain('Step 2 of 3')
+    enRender.unmount()
   })
 })

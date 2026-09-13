@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   GameLogStore,
   createMemoryGameLogBackend,
@@ -46,6 +46,16 @@ describe('buildGameLogHtml', () => {
     expect(html).toContain('Partida &lt;x&gt;')
     expect(html).toContain('línea &lt;b&gt;1&lt;/b&gt;')
     expect(html).not.toContain('<b>1</b>')
+  })
+
+  it('formats entry times with the game language (zhs maps to zh)', () => {
+    const spy = vi.spyOn(Date.prototype, 'toLocaleString')
+    try {
+      buildGameLogHtml({ key: 'k', savedAt: 1, gameId: 'g', title: 't', entries: [entry(1)] }, 'zhs')
+      expect(spy).toHaveBeenCalledWith('zh')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
 

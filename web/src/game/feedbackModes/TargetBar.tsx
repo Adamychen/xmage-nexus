@@ -30,7 +30,7 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
           <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
           <FormattedText text={titleText} />
         </span>
-        <span className="action-prompt-hint">
+        <span className="action-prompt-hint" role="status" aria-live="polite">
           {hintText}
         </span>
       </div>

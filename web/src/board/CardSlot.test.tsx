@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { act, StrictMode } from 'react'
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
 
@@ -94,6 +94,37 @@ describe('CardSlot', () => {
     const badge = container.querySelector('.designation-badge.is-paired')
     expect(badge).not.toBeNull()
     expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
+  })
+
+  it('is keyboard operable when clickable: Tab + Enter triggers the same action as click', () => {
+    const onClick = vi.fn()
+    const card = {
+      id: 'kb1',
+      name: 'Lightning Bolt',
+      cardTypes: ['Instant'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} onClick={onClick} />)
+    const slot = container.querySelector('.card-slot')!
+    expect(slot.getAttribute('role')).toBe('button')
+    expect(slot.getAttribute('tabindex')).toBe('0')
+    fireEvent.click(slot)
+    expect(onClick).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(slot, { key: 'Enter' })
+    expect(onClick).toHaveBeenCalledTimes(2)
+    fireEvent.keyDown(slot, { key: ' ' })
+    expect(onClick).toHaveBeenCalledTimes(3)
+  })
+
+  it('is not focusable without onClick', () => {
+    const card = {
+      id: 'kb2',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const slot = container.querySelector('.card-slot')!
+    expect(slot.getAttribute('role')).toBeNull()
+    expect(slot.getAttribute('tabindex')).toBeNull()
   })
 
   it('renders class level badge with the live level', () => {

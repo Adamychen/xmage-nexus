@@ -1,9 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import GameEndDialog from './GameEndDialog'
+import { watchGame } from '../net/commands'
 import { setState } from '../state/state'
 import { reset } from '../state/store'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
+
+vi.mock('../net/commands', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../net/commands')>()
+  return { ...mod, watchGame: vi.fn().mockResolvedValue({ ok: true }) }
+})
 
 describe('GameEndDialog', () => {
   beforeEach(() => {
@@ -145,5 +151,64 @@ describe('GameEndDialog', () => {
     const closeBtn = getByRole('button', { name: /Cerrar|Close/i })
     expect(closeBtn).toBeDefined()
     fireEvent.click(closeBtn)
+  })
+
+  it('shows follow button when the table already has a newer game (B.10)', () => {
+    setState({
+      gameId: 'g-1',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: false }),
+          makePlayer({ playerId: 'p-bob', name: 'Bob', controlled: false }),
+        ],
+      }),
+      gameEnd: {
+        gameInfo: 'Alice has won the game',
+        matchInfo: 'Alice won the match!',
+        won: false,
+        matchView: { endTime: '2026-08-29T23:50:00Z' },
+      },
+      lobby: {
+        type: 'lobby',
+        tables: [{ tableId: 't-1', games: ['g-1', 'g-2'] }],
+        users: [],
+        serverMessages: [],
+      } as unknown as never,
+    })
+
+    render(<GameEndDialog />)
+    expect(screen.getByText(/La partida cambió/i)).toBeDefined()
+    const follow = screen.getByRole('button', { name: /Seguir partida/i })
+    expect(follow).toBeDefined()
+    fireEvent.click(follow)
+    expect(watchGame).toHaveBeenCalledWith('g-2')
+  })
+
+  it('hides follow button when the watched game is the only one (B.10)', () => {
+    setState({
+      gameId: 'g-1',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: false }),
+          makePlayer({ playerId: 'p-bob', name: 'Bob', controlled: false }),
+        ],
+      }),
+      gameEnd: {
+        gameInfo: 'Alice has won the game',
+        matchInfo: 'Alice won the match!',
+        won: false,
+        matchView: { endTime: '2026-08-29T23:50:00Z' },
+      },
+      lobby: {
+        type: 'lobby',
+        tables: [{ tableId: 't-1', games: ['g-1'] }],
+        users: [],
+        serverMessages: [],
+      } as unknown as never,
+    })
+
+    render(<GameEndDialog />)
+    expect(screen.queryByRole('button', { name: /Seguir partida/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Volver al lobby/i })).toBeDefined()
   })
 })

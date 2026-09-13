@@ -1116,6 +1116,7 @@ export interface TranslationSchema {
     library_cancel: string
     voting_vs: string
     voting_hint: string
+    voting_step: string
     planeswalker_loyalty: string
     planeswalker_hint: string
     userrequest_title: string

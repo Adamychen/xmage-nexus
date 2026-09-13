@@ -6,7 +6,7 @@ import FloatingCardPreview from '../board/FloatingCardPreview'
 import { handleIgnoreCommand, isUserIgnored } from './ignoreList'
 import Icon, { type IconName } from '../ui/Icon'
 import type { CardView, ChatMessageEvent } from '../net/types'
-import { useTranslation } from '../i18n'
+import { useTranslation, getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import './ChatBox.css'
 
 function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: IconName; text: string } {
@@ -59,9 +59,9 @@ function isConnectionEvent(text: string): boolean {
 
 export const MAX_CHAT_MESSAGE_SIZE = 500
 
-export function formatChatTime(time?: number): string {
+export function formatChatTime(time?: number, lang?: SupportedLanguage): string {
   try {
-    return new Date(time ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return new Date(time ?? Date.now()).toLocaleTimeString(toBcp47Locale(lang ?? getLanguage()), { hour: '2-digit', minute: '2-digit' })
   } catch {
     return ''
   }
@@ -77,7 +77,7 @@ interface ChatBoxProps {
 }
 
 export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage, chatIdOverride }: ChatBoxProps = {}) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const roomChatId = useStore((s) => s.roomChatId)
   const myName = useStore((s) => s.conn?.username)
   const chatId = chatIdOverride ?? roomChatId
@@ -172,7 +172,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
             const parsed = parseSystemEvent(m.message, t)
             return (
               <div key={i} className="chat-msg system-msg">
-                <span className="chat-time">{formatChatTime(m.time)}</span>
+                <span className="chat-time">{formatChatTime(m.time, lang)}</span>
                 <span className="sys-icon"><Icon name={parsed.icon} size={12} /></span>
                 <span className="sys-text">
                   <FormattedText text={parsed.text} onHover={handleHover} />
@@ -182,7 +182,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           }
           return (
             <div key={i} className={`chat-msg user-msg${isWhisper ? ' whisper-msg' : ''}${isOwn ? ' own-msg' : ''}`}>
-              <span className="chat-time">{formatChatTime(m.time)}</span>
+              <span className="chat-time">{formatChatTime(m.time, lang)}</span>
               <span
                 className="chat-from"
                 onClick={() => onUserClick?.(m.username)}

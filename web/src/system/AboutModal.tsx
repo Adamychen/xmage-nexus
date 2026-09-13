@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useTranslation } from '../i18n'
+import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { APP_VERSION } from './version'
@@ -13,17 +13,17 @@ interface AboutModalProps {
 
 type TabType = 'about' | 'news'
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, lang: SupportedLanguage): string {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleDateString()
+    return new Date(iso).toLocaleDateString(toBcp47Locale(lang))
   } catch {
     return ''
   }
 }
 
 export default function AboutModal({ onClose, initialTab = 'about' }: AboutModalProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [releases, setReleases] = useState<NewsRelease[]>([])
   const [offline, setOffline] = useState(false)
@@ -61,7 +61,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
           <header>
             <strong>{r.name}</strong>
             <span className="about-release-tag">{r.tag}</span>
-            {r.publishedAt && <span className="about-release-date">{formatDate(r.publishedAt)}</span>}
+            {r.publishedAt && <span className="about-release-date">{formatDate(r.publishedAt, lang)}</span>}
           </header>
           {r.body && (
             <div

@@ -1,6 +1,6 @@
 import type { TableView } from '../net/types'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { useTranslation, toBcp47Locale } from '../i18n'
 import { formatDeckTypeName, formatTimeAgo } from './lobbyUtils'
 import './ActiveTablesBar.css'
 
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onResume }: Props) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
 
   if (!tables || tables.length === 0) return null
 
@@ -54,7 +54,7 @@ export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onResu
                   )}
                 </span>
                 {timeAgo && (
-                  <span className="active-table-time" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString() : undefined}>
+                  <span className="active-table-time" title={tTable.createTime ? new Date(tTable.createTime).toLocaleTimeString(toBcp47Locale(lang)) : undefined}>
                     <Icon name="clock" size={11} /> {timeAgo}
                   </span>
                 )}

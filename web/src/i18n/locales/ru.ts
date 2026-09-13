@@ -1110,6 +1110,7 @@ export const ru: TranslationSchema = {
     library_cancel: 'Отмена',
     voting_vs: 'VS',
     voting_hint: 'Ваш голос скрыт, пока все не проголосуют',
+    voting_step: 'Шаг {count} из {total}',
     planeswalker_loyalty: 'Текущая верность: {count}',
     planeswalker_hint: 'Только одна способность за ход',
     userrequest_title: 'ИГРОВОЙ ЗАПРОС',

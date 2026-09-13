@@ -1110,6 +1110,7 @@ export const de: TranslationSchema = {
     library_cancel: 'Abbrechen',
     voting_vs: 'VS',
     voting_hint: 'Deine Stimme ist geheim, bis alle gewählt haben',
+    voting_step: 'Schritt {count} von {total}',
     planeswalker_loyalty: 'Aktuelle Loyalität: {count}',
     planeswalker_hint: 'Nur eine Fähigkeit pro Zug',
     userrequest_title: 'SPIELANFRAGE',

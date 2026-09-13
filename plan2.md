@@ -151,3 +151,25 @@
   - Consolidación: `restart all` (fantasmas fuera, lobby a 0), `test.mjs
     unit+typecheck` PASS, `mcp test` 37+1 skip. Sin commits (pendiente).
   - Resto: A.5–A.8, B.10, fixes C.13–C.15/C.18, verificación cron en GitHub.
+
+- **2026-09-13 — 3 carriles en paralelo (A.5–A.8+B.10 + fixes C.14/15 + C.18) ✅**
+  - *Vivo*: A.5 exilio verificado (Path→Osos, visor ×/Esc; nit: `exileCount`
+    watcher en 0 aunque `exiles[]` trae la carta). A.6 UserActionModal
+    verificado (susurro/perfil; ignorar no clicado). A.7 reconexión verificada
+    (reenganche solo tras recarga; nit: log reiniciado a 0). A.8 FFA 3 HUMAN
+    verificado + HALLAZGO MAYOR: layout Estándar oculta al 3er jugador (hay
+    que cambiar a Pod 2×2; sin fix, informe). B.10 FIX: aviso "La partida
+    cambió" + Seguir partida en `GameEndDialog` (`spectatorFollow.ts` nuevo;
+    ES a propósito) + 7 tests, verificado en Bo3 vivo. Lobby a 0.
+  - *Código (C.14/15)*: cartas operables por teclado (`clickableProps`),
+    Space sin doble disparo, grid con flechas/dígitos, live-regions
+    (multi-cantidad, barras), nits aria/roles, contraste mínimo (tamaños y
+    grises + fondo en feed + targets enfocables). Omitidos: VotingDialog
+    (locales lo hizo), preview-lector, abreviaturas iconos.
+  - *Locales (C.18)*: fallback a inglés, `toBcp47Locale()` + fechas/números
+    por idioma, VotingDialog i18n (`dialogs.voting_step` ×9 locales), pt/es/en
+    cortas corregidas (`Opp hand`, `Paso automático`). Bulk keywords pendiente
+    medido (152–176/locales sin traducir; es 0 summaries).
+  - Consolidación: `unit`+`typecheck` PASS en árbol combinado (1411 tests).
+    Sin commits (pendiente). Resto plan 2: fix layout FFA (A.8), bulk
+    keywords, verificación cron en GitHub.

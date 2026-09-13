@@ -153,6 +153,13 @@ html.fx-off .card-slot.attacking {
   box-shadow: 0 0 20px 4px rgba(99, 230, 190, 0.9), 0 10px 24px rgba(0, 0, 0, 0.7);
 }
 
+.card-slot.clickable:focus-visible,
+.card-slot.playable:focus-visible {
+  outline: 2px solid #63e6be;
+  outline-offset: 2px;
+  box-shadow: 0 0 20px 4px rgba(99, 230, 190, 0.9), 0 10px 24px rgba(0, 0, 0, 0.7);
+}
+
 /* Targetable glow (orange pulse) */
 @keyframes targetPulse {
   0%, 100% {
@@ -376,7 +383,7 @@ html.fx-off .counter-badge {
   height: 14px;
   padding: 0 3px;
   border-radius: 3px;
-  font-size: 0.562rem;
+  font-size: 0.687rem;
   font-weight: 800;
   font-family: var(--font-display);
   line-height: 1;
@@ -442,7 +449,7 @@ html.fx-off .counter-badge {
 .facedown-type-badge {
   padding: 1px 5px;
   border-radius: 4px;
-  font-size: 0.562rem;
+  font-size: 0.687rem;
   font-weight: 800;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -473,7 +480,7 @@ html.fx-off .counter-badge {
 .designation-badge {
   padding: 1px 5px;
   border-radius: 4px;
-  font-size: 0.562rem;
+  font-size: 0.687rem;
   font-weight: 800;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -661,7 +668,7 @@ html.fx-off .counter-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.562rem;
+  font-size: 0.687rem;
   line-height: 1;
   background: rgba(20, 24, 50, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.2);

@@ -1,4 +1,5 @@
 import type { LogEntry } from '../state/slices/lobby'
+import { getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
 
 export interface SavedGameLogEntry {
   time: number
@@ -99,12 +100,13 @@ export class GameLogStore {
 
 export const gameLogStore = new GameLogStore()
 
-export function buildGameLogHtml(log: SavedGameLog): string {
+export function buildGameLogHtml(log: SavedGameLog, lang?: SupportedLanguage): string {
   const esc = (s: string): string =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const locale = toBcp47Locale(lang ?? getLanguage())
   const rows = log.entries
     .map((e) => {
-      const time = new Date(e.time).toLocaleString()
+      const time = new Date(e.time).toLocaleString(locale)
       return `<div>[${esc(time)}] <b>${esc(e.from)}</b>: ${esc(e.text)}</div>`
     })
     .join('\n')

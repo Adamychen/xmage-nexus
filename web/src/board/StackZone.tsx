@@ -484,9 +484,15 @@ export default function StackZone({
                       {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
                     </div>
                     {tgtLabels.length > 0 && (
-                      <div className="stack-tl-targets" data-testid="stack-targets" title={tgtLabels.join(', ')}>
+                      <div
+                        className="stack-tl-targets"
+                        data-testid="stack-targets"
+                        title={tgtLabels.join(', ')}
+                        tabIndex={0}
+                        aria-label={`${t('game', 'choose_target')}: ${tgtLabels.join(', ')}`}
+                      >
                         <span className="stack-target-arrow" aria-hidden="true"><Icon name="target" size={11} /> →</span>
-                        <span className="stack-target-names">{tgtLabels.join(', ')}</span>
+                        <span className="stack-target-names" aria-hidden="true">{tgtLabels.join(', ')}</span>
                       </div>
                     )}
                     {rulesText && viewMode === 'expanded' && (

@@ -1110,6 +1110,7 @@ export const it: TranslationSchema = {
     library_cancel: 'Annulla',
     voting_vs: 'VS',
     voting_hint: 'Il tuo voto è segreto finché tutti non hanno scelto',
+    voting_step: 'Passo {count} di {total}',
     planeswalker_loyalty: 'Fedeltà attuale: {count}',
     planeswalker_hint: 'Solo un\'abilità per turno',
     userrequest_title: 'RICHIESTA DI GIOCO',
