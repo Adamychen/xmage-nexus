@@ -26,9 +26,11 @@ test('descarte interactivo desde mano revelada (Thoughtseize) @reveal', async ({
       await expect(dialog).toContainText('Counterspell')
       await expect(dialog).toContainText('Serra Angel')
 
-      // La mano del oponente se muestra boca arriba en la zona revelada
+      // La mano del oponente se muestra boca arriba en la zona revelada.
+      // Timeout generoso: el frame del gameView con la mano revelada llega
+      // después del prompt; en CI lento supera los 5s por defecto.
       const oppZone = page.locator('.opponent-zone').first()
-      await expect(oppZone).toContainText('Lightning Bolt')
+      await expect(oppZone).toContainText('Lightning Bolt', { timeout: 15_000 })
 
       // El humano elige una carta -> la grilla envía sendPlayerUUID (descarte) y
       // el diálogo se cierra (clearFeedback tras envío OK).
@@ -44,9 +46,9 @@ test('descarte interactivo desde mano revelada (Thoughtseize) @reveal', async ({
       // Tras el descarte la mano revelada del oponente queda en 2 cartas (sin
       // Counterspell). Esperamos el estado final estable antes de afirmar.
       await expect(oppZone.locator('.hand-card-slot')).toHaveCount(2, { timeout: 15_000 })
-      await expect(oppZone).not.toContainText('Counterspell', { timeout: 10_000 })
-      await expect(oppZone).toContainText('Lightning Bolt')
-      await expect(oppZone).toContainText('Serra Angel')
+      await expect(oppZone).not.toContainText('Counterspell', { timeout: 15_000 })
+      await expect(oppZone).toContainText('Lightning Bolt', { timeout: 15_000 })
+      await expect(oppZone).toContainText('Serra Angel', { timeout: 15_000 })
 
       expect(pageErrors).toEqual([])
     },

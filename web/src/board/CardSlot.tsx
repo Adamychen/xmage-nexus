@@ -228,12 +228,18 @@ export default function CardSlot({
           <img src={sleeve.imageUrl} alt="" className="card-image" draggable={false} data-sleeve-id={sleeve.id} />
         )
       ) : imgUrl ? (
-        <img
-          src={imgUrl}
-          alt={cardName(card)}
-          className="card-image"
-          draggable={false}
-        />
+        <>
+          <img
+            src={imgUrl}
+            alt={cardName(card)}
+            className="card-image"
+            draggable={false}
+          />
+          {/* Nombre siempre presente como texto (a11y + selectores estables):
+              con arte no hay .card-placeholder-name y el nombre visible puede
+              estar localizado; este span oculto conserva el inglés estable. */}
+          <span className="visually-hidden">{card.name || card.alternateName || '?'}</span>
+        </>
       ) : (
         <div className="card-placeholder">
           <span className="card-placeholder-name">{cardName(card)}</span>

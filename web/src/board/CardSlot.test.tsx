@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { act, StrictMode } from 'react'
-import { fireEvent, render } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
 
@@ -9,6 +9,11 @@ vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardZone: vi.fn(() => undefined),
   recordCardPosition: vi.fn(),
 }))
+
+vi.mock('../cards/cardImages', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../cards/cardImages')>()
+  return { ...mod, awaitImageUrl: vi.fn(async () => 'https://img.test/art.jpg') }
+})
 
 describe('CardSlot', () => {
   it('renders loyalty badge for planeswalker with loyalty', () => {
@@ -184,5 +189,26 @@ describe('CardSlot entering lifecycle', () => {
 
     expect(slot(view).className).not.toContain('entering')
     expect(slot(view).className).toContain('tapped')
+  })
+})
+
+describe('CardSlot hidden name (art branch)', () => {
+  it('keeps the stable English name as hidden text when art loads', async () => {
+    const card = {
+      id: 'art1',
+      name: 'Invasion of Zendikar',
+      displayName: 'Invasión de Zendikar',
+      cardTypes: ['Battle'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const hidden = await screen.findByText('Invasion of Zendikar', { selector: '.visually-hidden' })
+    expect(hidden).not.toBeNull()
+    expect(container.querySelector('img.card-image')).not.toBeNull()
+  })
+
+  it('does not leak the name when face-down', () => {
+    const card = { id: 'fd1', name: 'Secret Plans' } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} faceDown />)
+    expect(container.querySelector('.visually-hidden')).toBeNull()
   })
 })
