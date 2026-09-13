@@ -212,3 +212,11 @@
   - Omitidos con causa: abreviaturas iconos (bulk), CJK (rediseño), Ballista
     (fork). Consolidación: `unit`+`typecheck` PASS combinado. Sin commits.
   - Resto plan 2: bulk keywords + cron GitHub (requieren decisión/acceso).
+
+- **2026-09-13 — 4 carriles en paralelo (bulk keywords ×7 locales) ✅**
+  - de 302 + fr 297 (resto = término oficial coincidente: Ninjutsu, Bushido…;
+    verificado Scryfall printed_text), it 304 + pt 304, ru 352 (176+176),
+    ja 304 + zhs 304 (verificado MTG Wiki JA). Terminología oficial; stubs
+    `(Meccanica/Mecânica/Mechanik…)` donde no hay regla confirmada.
+  - Consolidación: `unit`+`typecheck` PASS (paridad incluida). Sin commits.
+  - Plan2 COMPLETO salvo verificación del cron en GitHub Actions.
