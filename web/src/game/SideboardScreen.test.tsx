@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react'
+import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SideboardScreen from './SideboardScreen'
 import { reset } from '../state/store'
 import { setState } from '../state/state'
 import type { SideboardScreenState } from '../state/state'
+import { submitDeck } from '../net/commands'
 
 vi.mock('../net/commands', () => ({
   submitDeck: vi.fn().mockResolvedValue({ ok: true }),
@@ -84,5 +85,30 @@ describe('SideboardScreen', () => {
     setState({ sideboardScreen: makeScreen({ maindeck }) })
     const { container } = render(<SideboardScreen />)
     expect(container.querySelector('.sideboard-filter')).toBeTruthy()
+  })
+
+  it('no auto-envía al llegar el SIDEBOARD en vivo (el timer aún vale 0 un render)', async () => {
+    render(<SideboardScreen />)
+    await act(async () => {
+      setState({ sideboardScreen: makeScreen({ tableId: 't-live', timeLeft: 180 }) })
+    })
+    expect(vi.mocked(submitDeck)).not.toHaveBeenCalled()
+  })
+
+  it('auto-envía una sola vez al expirar el timer', async () => {
+    vi.useFakeTimers()
+    try {
+      render(<SideboardScreen />)
+      await act(async () => {
+        setState({ sideboardScreen: makeScreen({ tableId: 't-live', timeLeft: 3 }) })
+      })
+      expect(vi.mocked(submitDeck)).not.toHaveBeenCalled()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+      expect(submitDeck).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

@@ -13,7 +13,7 @@
 // 1.4.61-V1): arrancar con `node scripts/ctl.mjs restart all` y grabar.
 
 import { spawn } from 'node:child_process'
-import { runRecorder, getMe } from './rec-lib.mjs'
+import { runRecorder, runTournamentRecorder, getMe } from './rec-lib.mjs'
 
 const MUTATE_DECK = {
   name: 'Mage Web mutate',
@@ -296,7 +296,14 @@ function makeMonstrosityDriver() {
   }
 }
 
-const REGISTRY = { mutate: makeMutateDriver, creature: makeCreatureDriver, combat: makeCombatDriver, monstrosity: makeMonstrosityDriver }
+const REGISTRY = {
+  mutate: makeMutateDriver,
+  creature: makeCreatureDriver,
+  combat: makeCombatDriver,
+  monstrosity: makeMonstrosityDriver,
+  'sealed-pool': makeSealedPoolDriver,
+  'tournament-end': makeTournamentEndDriver,
+}
 const NAMES = Object.keys(REGISTRY)
 
 async function runOne(name) {
@@ -305,7 +312,47 @@ async function runOne(name) {
     console.error(`driver desconocido: ${name}. Disponibles: ${NAMES.join(', ')}`)
     process.exit(2)
   }
-  await runRecorder(make())
+  const driver = make()
+  if (driver.kind === 'tournament') await runTournamentRecorder(driver)
+  else await runRecorder(driver)
+}
+
+// D.20 — torneo Sellado: captura el CONSTRUCT (pool 6xM15 ≈ 28KB) y sale.
+// No juega la partida: basta con joinTournament x2 para que llegue el pool.
+function makeSealedPoolDriver() {
+  return {
+    name: 'sealed-pool',
+    kind: 'tournament',
+    maxMs: 240_000,
+    tournament: {
+      tournamentType: 'Sealed Elimination',
+      matchType: 'Two Player Duel',
+      setCodes: ['M20', 'M20', 'M20', 'M20', 'M20', 'M20'],
+      numberBoosters: 6,
+      constructionTime: 60,
+    },
+    capturePool: true,
+    poolOutFile: 'sealed-pool.json',
+  }
+}
+
+// D.20 — torneo Sellado hasta el final: auto-submit → partida → concesión en
+// el primer SELECT (turn>=1) → getTournament con tournamentState 'Finished'.
+function makeTournamentEndDriver() {
+  return {
+    name: 'tournament-end',
+    kind: 'tournament',
+    maxMs: 480_000,
+    tournament: {
+      tournamentType: 'Sealed Elimination',
+      matchType: 'Two Player Duel',
+      setCodes: ['M20', 'M20', 'M20', 'M20', 'M20', 'M20'],
+      numberBoosters: 6,
+      constructionTime: 60,
+    },
+    playToEnd: true,
+    endOutFile: 'tournament-end.json',
+  }
 }
 
 async function main() {

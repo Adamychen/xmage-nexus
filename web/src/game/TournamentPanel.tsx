@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../state/store'
+import { getState, setState } from '../state/state'
+import type { TournamentView } from '../net/types'
 import { isConstructStalled } from '../state/events/draft'
 import { enterTournamentChat, exitTournamentChat } from '../state/actions'
 import TournamentBracket from '../lobby/TournamentBracket'
@@ -56,6 +58,29 @@ export default function TournamentPanel() {
     if (!tid) return
     void enterTournamentChat(tid)
     return () => exitTournamentChat()
+  }, [tournament?.tournamentId])
+
+  useEffect(() => {
+    const tid = tournament?.tournamentId
+    if (!tid) return
+    let cancelled = false
+    const refresh = async () => {
+      try {
+        const data = await cmds.getTournament(tid)
+        if (!cancelled && data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
+          if (getState().tournament?.tournamentId === tid) {
+            setState({ tournament: { tournamentId: tid, view: data as TournamentView } })
+          }
+        }
+      } catch {}
+    }
+    const id = window.setInterval(() => {
+      void refresh()
+    }, 8000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
   }, [tournament?.tournamentId])
 
   if (!tournament) return null

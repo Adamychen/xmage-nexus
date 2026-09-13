@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ConstructScreen from './ConstructScreen'
 import { setState } from '../state/store'
@@ -50,5 +50,36 @@ describe('ConstructScreen — tierras básicas', () => {
     expect(container.querySelector('.basic-land-dec-btn')).not.toBeNull()
     fireEvent.click(container.querySelector('.basic-land-dec-btn') as HTMLElement)
     expect(container.querySelector('.basic-land-dec-btn')).toBeNull()
+  })
+
+  it('no auto-envía al llegar el CONSTRUCT en vivo (el timer aún vale 0 un render)', async () => {
+    setState({ construct: null } as never)
+    render(<ConstructScreen />)
+    await act(async () => {
+      setState({
+        construct: { deckName: 'Pool', pool: {}, tableId: 't-live', parentTableId: null, timeLeft: 600 },
+      } as never)
+    })
+    expect(vi.mocked(submitDeck)).not.toHaveBeenCalled()
+  })
+
+  it('auto-envía una sola vez al expirar el timer', async () => {
+    vi.useFakeTimers()
+    try {
+      setState({ construct: null } as never)
+      render(<ConstructScreen />)
+      await act(async () => {
+        setState({
+          construct: { deckName: 'Pool', pool: {}, tableId: 't-live', parentTableId: null, timeLeft: 3 },
+        } as never)
+      })
+      expect(vi.mocked(submitDeck)).not.toHaveBeenCalled()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+      expect(submitDeck).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

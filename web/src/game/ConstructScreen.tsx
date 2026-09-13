@@ -74,6 +74,7 @@ export default function ConstructScreen() {
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isPoolDragOver, setIsPoolDragOver] = useState(false)
   const submitRef = useRef<() => Promise<void>>(async () => {})
+  const autoSubmitArmRef = useRef<string | null>(null)
   const poolSize = useMemo(() => {
     if (!construct?.pool) return 0
     return Object.keys(construct.pool).length
@@ -286,7 +287,12 @@ export default function ConstructScreen() {
 
   useEffect(() => {
     if (!construct) return
-    if (construct.timeLeft > 0 && timeLeft === 0) {
+    if (timeLeft > 0) {
+      autoSubmitArmRef.current = construct.tableId
+      return
+    }
+    if (timeLeft === 0 && construct.timeLeft > 0 && autoSubmitArmRef.current === construct.tableId) {
+      autoSubmitArmRef.current = null
       void submitRef.current()
     }
   }, [timeLeft, construct?.tableId])

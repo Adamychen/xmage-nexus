@@ -123,3 +123,31 @@
     antes/después en `.run/playwright-mcp/`.
   - Sin commits (pendiente pedir). Resto del plan 2 intacto: A.1–A.8,
     B.10, C.14–C.18, D.19–D.20.
+
+- **2026-09-13 — 3 carriles en paralelo (A.1–A.4 + C.14/15/18 + D.19/20) ✅**
+  - *Vivo (A.1–A.4)*: draft en web VERIFICADO (2 HUMAN + 2 draft-bots; el
+    engine exige minPlayers=4; límite: `timing:'REGULAR'` obligatorio o el
+    proxy cuña el torneo con ClassCastException — H1/mayor sin fix por veto
+    a reiniciar). A.2 sealed-UI verificado + FIX bloqueante (auto-submit de
+    mazo vacío al llegar CONSTRUCT; guard por `tableId` en Construct y
+    SideboardScreen +4 tests). A.3 sideboard-UI verificado (61/14 →
+    libraryCount 54/53 en J2). A.4 staging verificado + FIX (bracket pedía
+    `getTournament` con id de mesa → rondas en 0; resuelve id del torneo +
+    poll 8s +5 tests). Bracket final no visible (mesa desaparece al terminar;
+    mayor pendiente). Unit 1380/1380 + typecheck ✅. 13 mesas `p2-live-*`
+    creadas y eliminadas.
+  - *Estático (C.14/15/18)*: informe sin fixes — 1 bloqueante (cartas no
+    operables por teclado), 5 mayores (Space doble, grid sin flechas,
+    multi-cantidad sin nombre, barras sin anuncio, ~150 keywords sin
+    traducir ja/zhs), nits de contraste (9.5px, feed sobre arte) y locales
+    (ru largo 2.75×, fallback a español, números/fechas con locale del
+    navegador). Cantera para lotear fixes.
+  - *Infra (D.19/20)*: `runTournamentRecorder()` + drivers `sealed-pool`
+    (pool 90 M20, sin `name` — pool sin nombres también visto en web) y
+    `tournament-end` (Finished) + fixtures + asserts `hasConstructPool`/
+    `tournamentFinished` (vitest 6/6); cron `pages.yml` extendido
+    (re-record + validate + artefacto nightly; ejecución GitHub sin
+    verificar). Dejó 2 fantasmas `rec-*` WAITING (limpiados con restart).
+  - Consolidación: `restart all` (fantasmas fuera, lobby a 0), `test.mjs
+    unit+typecheck` PASS, `mcp test` 37+1 skip. Sin commits (pendiente).
+  - Resto: A.5–A.8, B.10, fixes C.13–C.15/C.18, verificación cron en GitHub.

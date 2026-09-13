@@ -21,17 +21,27 @@ export function useTournamentBracket() {
   const [bracketLoading, setBracketLoading] = useState(false)
   const [bracketError, setBracketError] = useState<string | null>(null)
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
+  const [bracketTournamentId, setBracketTournamentId] = useState<string | null>(null)
+
+  const resolveId = (t: TableView): string => {
+    if (tournamentState && tournamentState.view?.tournamentName === t.tableName) {
+      return tournamentState.tournamentId
+    }
+    return t.tableId
+  }
 
   const openBracket = async (t: TableView) => {
     setBracketTable(t)
     setBracketError(null)
+    const tid = resolveId(t)
+    setBracketTournamentId(tid)
     if (tournamentState) {
       setBracketView(tournamentState.view)
     }
     setBracketLoading(true)
     try {
       void cmds.watchTournamentTable(t.tableId)
-      const data = await withTimeout(cmds.getTournament(t.tableId) as Promise<unknown>, 8000, 'getTournament')
+      const data = await withTimeout(cmds.getTournament(tid) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
       } else if (tournamentState?.view) {
@@ -52,6 +62,7 @@ export function useTournamentBracket() {
     setBracketTable(null)
     setBracketView(null)
     setBracketError(null)
+    setBracketTournamentId(null)
   }
 
   const watchMatch = async (tableId: string) => {
@@ -72,7 +83,7 @@ export function useTournamentBracket() {
     setBracketError(null)
     try {
       void cmds.watchTournamentTable(bracketTable.tableId)
-      const data = await withTimeout(cmds.getTournament(bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
+      const data = await withTimeout(cmds.getTournament(bracketTournamentId ?? bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
       } else if (tournamentState?.view) {
@@ -102,7 +113,7 @@ export function useTournamentBracket() {
       void refreshBracket()
     }, 8000)
     return () => clearInterval(id)
-  }, [bracketTable?.tableId])
+  }, [bracketTable?.tableId, bracketTournamentId])
 
   return {
     bracketTable, bracketView, bracketLoading, bracketError,

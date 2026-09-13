@@ -1,10 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TournamentPanel from './TournamentPanel'
 import { setState } from '../state/store'
+import { getState } from '../state/state'
+import { getTournament } from '../net/commands'
 
 vi.mock('../net/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../net/commands')>()),
+  getTournament: vi.fn(async () => null),
   getTournamentChatId: vi.fn(async () => null),
   quitTournament: vi.fn(async () => ({ ok: true })),
 }))
@@ -109,5 +112,48 @@ describe('TournamentPanel — pill arrastrable', () => {
     const mini = screen.getByTestId('tournament-panel-mini') as HTMLElement
     expect(mini.style.left).toBe('696px')
     expect(mini.style.top).toBe('724px')
+  })
+})
+
+describe('TournamentPanel — refresco del bracket en vivo', () => {
+  it('sondea getTournament con el id unido y aplica la vista con rondas', async () => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    try {
+      vi.mocked(getTournament).mockResolvedValue({ tournamentName: "player1's table", rounds: [{ games: [] }] } as never)
+      setState({ tournament: { tournamentId: 't1', view } } as never)
+      render(<TournamentPanel />)
+      expect(vi.mocked(getTournament)).not.toHaveBeenCalled()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(8000)
+      })
+      expect(vi.mocked(getTournament)).toHaveBeenCalledWith('t1')
+      expect((getState().tournament?.view as { rounds: unknown[] }).rounds).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('no pisa la vista si el torneo cambió antes del sondeo', async () => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    try {
+      vi.mocked(getTournament).mockImplementation(async (tid: string) => {
+        await new Promise((r) => setTimeout(r, 10))
+        return { tournamentName: tid, rounds: [] } as never
+      })
+      setState({ tournament: { tournamentId: 't1', view } } as never)
+      render(<TournamentPanel />)
+      setState({ tournament: { tournamentId: 't2', view } } as never)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20000)
+      })
+      for (const call of vi.mocked(getTournament).mock.calls) {
+        expect(call[0]).not.toBe('t1')
+      }
+      expect(getState().tournament?.tournamentId).toBe('t2')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

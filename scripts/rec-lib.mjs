@@ -137,6 +137,272 @@ function defaultOnChooseChoice(opts) {
   return (opts.find((o) => /top/i.test(o.label)) ?? opts[0])?.value
 }
 
+// ---------------------------------------------------------------------------
+// Torneos (sellado): un "tournament driver" crea un Sealed 2xHUMAN, captura el
+// CONSTRUCT (pool) y/o juega hasta el torneo Finished (concesión) volcando:
+//   - { poolOutFile }: { recordedAt, tournamentId, tableId, construct }
+//     (payload TableClientMessage del evento CONSTRUCT: deck + time + mesa)
+//   - { endOutFile }: { recordedAt, tournamentId, tableId, tournament }
+//     (TournamentView de getTournament con tournamentState 'Finished')
+//
+// Flujo probado contra el servidor local (plan2 D.20): createTournamentTable →
+// joinTournamentTable x2 → startTournament → joinTournament x2 (sin esto el
+// torneo no arranca) → CONSTRUCT → auto-submit al expirar constructionTime →
+// START_GAME → joinGame x2 → keeps → starter (self-pick: el que elige se elige
+// a sí mismo) → concesión en el primer SELECT con turn>=1 → GAME_OVER →
+// getTournament hasta 'Finished'. Nombres ≤14 caracteres (límite del servidor).
+// ---------------------------------------------------------------------------
+
+function tconn(username, onEvent) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(WS_URL)
+    let rid = 0
+    const pending = new Map()
+    const events = []
+    const api = { ws, name: username, events, view: null }
+    api.call = (action, args) =>
+      new Promise((res) => {
+        const id = `${username}-${++rid}`
+        pending.set(id, res)
+        try {
+          ws.send(JSON.stringify({ requestId: id, action, args }))
+        } catch {
+          res({ ok: false, error: 'send-fail' })
+        }
+      })
+    ws.onopen = async () => {
+      const r = await api.call('connect', { host: SERVER_HOST, port: SERVER_PORT, username, password: 'x' })
+      log('tconn', username, 'connect:', JSON.stringify(r).slice(0, 100))
+      resolve(api)
+    }
+    ws.onmessage = (raw) => {
+      let msg
+      try {
+        msg = JSON.parse(String(raw.data ?? raw))
+      } catch {
+        return
+      }
+      if (msg.requestId && pending.has(msg.requestId)) {
+        pending.get(msg.requestId)(msg)
+        pending.delete(msg.requestId)
+        return
+      }
+      if (msg.requestId || msg.type === 'lobby') return
+      if (msg.data?.gameView) api.view = msg.data.gameView
+      // Eventos adelgazados: los gameViews completos (~180KB en sellado)
+      // revienta la memoria si se acumulan.
+      const slim = { method: msg.method, objectId: msg.objectId }
+      if (['CONSTRUCT', 'START_GAME', 'GAME_OVER', 'END_GAME_INFO', 'TOURNAMENT_OVER', 'TOURNAMENT_INIT', 'GAME_TARGET'].includes(msg.method)) {
+        slim.data = msg.data?.gameView ? { gameView: true } : msg.data
+        if (msg.method === 'GAME_TARGET') slim.q = String(msg.data?.message ?? '').slice(0, 80)
+      }
+      events.push(slim)
+      if (events.length > 400) events.splice(0, events.length - 400)
+      if (msg.method === 'CONSTRUCT' || msg.method === 'START_GAME') api._full = msg
+      try {
+        onEvent(api, msg)
+      } catch (e) {
+        log('tconn handle THREW:', String(e))
+      }
+    }
+    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
+  })
+}
+
+export async function runTournamentRecorder(driver) {
+  const stamp = String(Date.now() % 100000)
+  const UA = `nexus-A-${stamp}`.slice(0, 14)
+  const UB = `nexus-B-${stamp}`.slice(0, 14)
+  const t = driver.tournament || {}
+  const constructionTime = t.constructionTime || 60
+  const tableName = `rec-${driver.name}-${stamp}`.slice(0, 30)
+  const joinDeck = driver.joinDeck || {
+    name: 'rec-join',
+    cards: [{ cardName: 'Mountain', setCode: 'LEA', cardNumber: '265', amount: 30 }],
+  }
+  let tableId = null
+  let tournamentId = null
+  let gameId = null
+  let finished = false
+  let conceded = false
+  let starterDone = false
+  let A = null
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+  function finish(code) {
+    if (finished) return
+    finished = true
+    for (const api of [A, B]) {
+      try {
+        if (tableId) api?.ws.send(JSON.stringify({ action: 'removeTable', args: { tableId } }))
+      } catch {}
+      try {
+        api?.ws.close()
+      } catch {}
+    }
+    process.exit(code)
+  }
+  async function waitFor(conns, pred, secs, label) {
+    for (let i = 0; i < secs * 2; i++) {
+      if (finished) throw new Error('finished')
+      for (const c of conns) for (const e of c.events) {
+        if (pred(e)) return e
+      }
+      await sleep(500)
+    }
+    throw new Error('timeout esperando ' + label)
+  }
+
+  async function handle(api, msg) {
+    const m = msg.method
+    if (!m || !gameId) return
+    if (['GAME_UPDATE', 'GAME_UPDATE_AND_INFORM', 'GAME_INFORM', 'GAME_INFO', 'GAME_INIT'].includes(m)) return
+    if (m === 'GAME_OVER' || m === 'END_GAME_INFO' || m === 'TOURNAMENT_OVER') return
+    if (!m.startsWith('GAME_')) return
+    const d = msg.data ?? {}
+    const q = String(d.message ?? d.question ?? '')
+    const gv = api.view ?? {}
+    const U = (v) => api.ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: v } }))
+    const Bl = (v) => api.ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId, value: v } }))
+    if (m === 'GAME_ASK') {
+      Bl(false)
+      return
+    }
+    if (m === 'GAME_TARGET' && /starting player/i.test(q) && !starterDone) {
+      let aid = gv.myPlayerId ?? (gv.players ?? []).find((p) => p.controlled)?.playerId
+      for (let i = 0; i < 20 && !aid; i++) {
+        await sleep(500)
+        const v = api.view ?? {}
+        aid = v.myPlayerId ?? (v.players ?? []).find((p) => p.controlled)?.playerId
+      }
+      if (!aid) return
+      starterDone = true
+      U(aid)
+      return
+    }
+    if (m === 'GAME_SELECT') {
+      if ((gv.turn ?? 0) >= 1 && !conceded && driver.playToEnd) {
+        conceded = true
+        api.call('sendPlayerAction', { gameId, action: 'CONCEDE' })
+        return
+      }
+      const land = firstBasicLand(gv.myHand ?? gv.hand)
+      if (land) U(land)
+      else Bl(false)
+      return
+    }
+    if (m === 'GAME_PLAY_MANA' || m === 'GAME_PLAY_XMANA') {
+      const src = untappedManaSource(gv)
+      if (src) U(src)
+      else Bl(false)
+      return
+    }
+    if (m === 'GAME_GET_AMOUNT' || m === 'GAME_TARGET_AMOUNT') {
+      api.ws.send(JSON.stringify({ action: 'sendPlayerInteger', args: { gameId, value: 1 } }))
+      return
+    }
+    if (m === 'GAME_CHOOSE_ABILITY') {
+      const opts = optionList(msg.data?.choices)
+      const val = driver.onChooseAbility ? driver.onChooseAbility(opts, null) : (opts[0]?.value)
+      if (val) U(val)
+      return
+    }
+    if (m === 'GAME_CHOOSE_CHOICE') {
+      const opts = optionList(msg.data?.choice?.keyChoices ?? msg.data?.choice?.choices ?? msg.data?.choices)
+      if (opts[0]?.value) api.ws.send(JSON.stringify({ action: 'sendPlayerString', args: { gameId, value: opts[0].value } }))
+      return
+    }
+    if (m === 'GAME_TARGET') Bl(false)
+  }
+
+  let B = null
+  try {
+    A = await tconn(UA, handle)
+    B = await tconn(UB, handle)
+
+    const created = await A.call('createTournamentTable', {
+      name: tableName,
+      tournamentType: t.tournamentType || 'Sealed Elimination',
+      matchType: t.matchType || 'Two Player Duel',
+      playerTypes: ['HUMAN', 'HUMAN'],
+      limitedOptions: {
+        setCodes: t.setCodes || ['M20', 'M20', 'M20', 'M20', 'M20', 'M20'],
+        numberBoosters: t.numberBoosters || 6,
+        constructionTime,
+      },
+    })
+    tableId = created?.data?.tableId
+    if (!tableId) {
+      log('createTournamentTable falló:', JSON.stringify(created).slice(0, 200))
+      finish(1)
+      return
+    }
+    log('mesa torneo creada', String(tableId).slice(0, 8))
+
+    for (const api of [A, B]) {
+      const r = await api.call('joinTournamentTable', { tableId, playerName: api.name, playerType: 'HUMAN', deck: joinDeck })
+      if (!r.ok) {
+        log('joinTournamentTable falló:', JSON.stringify(r).slice(0, 160))
+        finish(1)
+        return
+      }
+    }
+    await A.call('startTournament', { tableId })
+    const st = await waitFor([A, B], (e) => e.method === 'START_TOURNAMENT' && e.objectId, 30, 'START_TOURNAMENT')
+    tournamentId = st.objectId
+    log('tournamentId', String(tournamentId).slice(0, 8))
+    await A.call('joinTournament', { tournamentId })
+    await B.call('joinTournament', { tournamentId })
+    await waitFor([A, B], (e) => e.method === 'CONSTRUCT', 90, 'CONSTRUCT')
+    log('CONSTRUCT visto')
+
+    if (driver.capturePool) {
+      const full = A._full?.method === 'CONSTRUCT' ? A._full : B._full
+      const OUT = `${OUT_DIR}/${driver.poolOutFile || 'sealed-pool.json'}`
+      fs.mkdirSync(path.dirname(OUT), { recursive: true })
+      fs.writeFileSync(OUT, JSON.stringify({ recordedAt: new Date().toISOString(), tournamentId, tableId, construct: full?.data ?? null }, null, 2))
+      log('escrito', OUT)
+      finish(0)
+      return
+    }
+
+    log(`esperando START_GAME (auto-submit en ${constructionTime}s)…`)
+    const sg = await waitFor([A, B], (e) => e.method === 'START_GAME' && e.objectId, constructionTime + 120, 'START_GAME')
+    gameId = sg.objectId
+    log('gameId', String(gameId).slice(0, 8))
+    await A.call('joinGame', { gameId })
+    await B.call('joinGame', { gameId })
+    await waitFor([A, B], (e) => e.method === 'GAME_OVER', 150, 'GAME_OVER')
+    log('GAME_OVER visto')
+    let finalT = null
+    for (let i = 0; i < 40; i++) {
+      const r = await A.call('getTournament', { tournamentId })
+      finalT = r?.data
+      if (finalT?.tournamentState === 'Finished') break
+      await sleep(3000)
+    }
+    if (finalT?.tournamentState !== 'Finished') {
+      log('torneo no llegó a Finished:', finalT?.tournamentState)
+      finish(1)
+      return
+    }
+    const OUT = `${OUT_DIR}/${driver.endOutFile || 'tournament-end.json'}`
+    fs.mkdirSync(path.dirname(OUT), { recursive: true })
+    fs.writeFileSync(OUT, JSON.stringify({ recordedAt: new Date().toISOString(), tournamentId, tableId, tournament: finalT }, null, 2))
+    log('escrito', OUT)
+    finish(0)
+  } catch (e) {
+    log('error:', String(e))
+    finish(1)
+  }
+  setTimeout(() => {
+    if (!finished) {
+      log('TIMEOUT', driver.name)
+      finish(1)
+    }
+  }, driver.maxMs || 480_000)
+}
+
 export async function runRecorder(driver) {
   const outFile = driver.outFile || `${driver.name}.json`
   const OUT = `${OUT_DIR}/${outFile}`

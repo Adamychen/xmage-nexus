@@ -11,13 +11,20 @@ import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const manifest = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', 'manifest.json'), 'utf8'),
-) as Array<{ file: string; mechanic: string; assert: string }>
+) as Array<{ file: string; mechanic: string; assert: string; kind?: 'game' | 'construct' | 'tournament' }>
+
+// Solo los frames de partida (kind 'game' o sin kind) se reemiten como
+// GAME_INIT en el FakeServer. Los frames de torneo (CONSTRUCT pool,
+// tournament Finished) se validan en fixtures/recorded.test.ts (forma real
+// del protocolo); su replay en el FakeServer (ConstructScreen con pool real,
+// panel de torneo Finished) queda como trabajo futuro — ver plan2 D.20.
+const replayable = manifest.filter((e) => (e.kind ?? 'game') === 'game')
 
 // Smoke test anti-deriva: cada frame real grabado se reemite en el FakeServer y
 // el web debe pintarlo sin errores. No depende del servidor real ni de beta.
 fakeOnly()
 test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, () => {
-  for (const entry of manifest) {
+  for (const entry of replayable) {
     test(`${entry.mechanic} (${entry.file}) renderiza sin errores`, async ({ page }) => {
       await withFakeServer(() => replayRecordedScenario(entry.file), async () => {
         const { pageErrors } = await startGame(page, {

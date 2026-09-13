@@ -91,10 +91,33 @@ jobs:
         continue-on-error: true
         run: node scripts/integration-report.mjs
 
+      - name: Re-record golden frames (nightly only)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        run: node scripts/record.mjs all
+
+      - name: Validate re-recorded frames (nightly only)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        working-directory: web
+        run: npx vitest run fixtures/recorded.test.ts
+
       - name: Stop local stack (nightly only)
         if: github.event_name == 'schedule'
         continue-on-error: true
         run: node scripts/dev.mjs stop
+
+      - name: Upload nightly integration report (nightly only)
+        if: github.event_name == 'schedule'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-integration-report
+          path: |
+            reports/integration-result.json
+            web/playwright-report/**
+            web/test-results/**
+            web/fixtures/recorded/*.json
+          if-no-files-found: warn
 
       - name: Regenerate with integration results (nightly only)
         if: github.event_name == 'schedule'

@@ -8,7 +8,15 @@ import type { GameView } from '../src/net/types'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const RECORDED_DIR = path.join(__dirname, 'recorded')
 
-type AssertKind = 'hasMutatedPermanent' | 'hasNonMutatedCreature' | 'hasAttackingTappedCreature' | 'hasCombatGroup'
+type AssertKind =
+  | 'hasMutatedPermanent'
+  | 'hasNonMutatedCreature'
+  | 'hasAttackingTappedCreature'
+  | 'hasCombatGroup'
+  | 'hasConstructPool'
+  | 'tournamentFinished'
+
+type ManifestKind = 'game' | 'construct' | 'tournament'
 
 function getMe(gv: GameView): GameView['players'][number] | undefined {
   return gv.players?.find((p) => p?.controlled)
@@ -55,9 +63,60 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
 const manifest = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, 'manifest.json'), 'utf8')) as Array<{
   file: string
   mechanic: string
+  kind?: ManifestKind
   assert: AssertKind
   note?: string
 }>
+
+function poolSize(construct: unknown): number {
+  const deck = (construct as { deck?: { cards?: Record<string, unknown>; sideboard?: Record<string, unknown> } })?.deck
+  if (!deck || typeof deck !== 'object') return -1
+  return Object.keys(deck.cards ?? {}).length + Object.keys(deck.sideboard ?? {}).length
+}
+
+function runConstructAssert(kind: AssertKind, raw: { construct?: unknown }): boolean {
+  const construct = raw.construct as {
+    deck?: { cards?: Record<string, { id?: unknown; expansionSetCode?: unknown; cardNumber?: unknown }>; sideboard?: Record<string, { id?: unknown; expansionSetCode?: unknown; cardNumber?: unknown }> }
+    time?: unknown
+    currentTableId?: unknown
+  }
+  switch (kind) {
+    case 'hasConstructPool': {
+      if (!construct || typeof construct !== 'object') return false
+      if (typeof construct.time !== 'number' || construct.time <= 0) return false
+      if (typeof construct.currentTableId !== 'string' || !construct.currentTableId) return false
+      const cards = { ...(construct.deck?.cards ?? {}), ...(construct.deck?.sideboard ?? {}) }
+      const ids = Object.values(cards)
+      if (ids.length < 40) return false
+      return ids.every((c) => typeof c?.id === 'string' && !!c.id && typeof c?.expansionSetCode === 'string' && typeof c?.cardNumber === 'string')
+    }
+    default:
+      return false
+  }
+}
+
+function runTournamentAssert(kind: AssertKind, raw: { tournament?: unknown }): boolean {
+  const t = raw.tournament as {
+    tournamentState?: unknown
+    tournamentType?: unknown
+    players?: Array<{ name?: unknown; state?: unknown; points?: unknown }>
+    rounds?: Array<{ games?: Array<{ state?: unknown; result?: unknown }> }>
+  }
+  switch (kind) {
+    case 'tournamentFinished': {
+      if (!t || typeof t !== 'object') return false
+      if (t.tournamentState !== 'Finished') return false
+      if (!Array.isArray(t.players) || t.players.length < 2) return false
+      const winner = t.players.find((p) => typeof p?.state === 'string' && /winner/i.test(p.state))
+      if (!winner || typeof winner.points !== 'number' || winner.points < 3) return false
+      const game = t.rounds?.[0]?.games?.[0]
+      if (!game || typeof game.state !== 'string' || !game.state.startsWith('Finished')) return false
+      return typeof game.result === 'string' && /winner/i.test(game.result)
+    }
+    default:
+      return false
+  }
+}
 
 describe('golden frames grabados del protocolo real (anti-deriva)', () => {
   it('el manifest referencia frames que existen', () => {
@@ -67,11 +126,25 @@ describe('golden frames grabados del protocolo real (anti-deriva)', () => {
   })
 
   for (const entry of manifest) {
-    it(`el frame ${entry.file} (${entry.mechanic}) pasa la validación de contrato y cumple su invariante`, () => {
-      const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { gameView: GameView }
-      const res = gameViewFromAndValidate(raw.gameView)
-      expect(res.ok, `gameView de ${entry.file} inválido: ${JSON.stringify(res.errors)}`).toBe(true)
-      expect(runAssert(entry.assert, raw.gameView), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
-    })
+    const kind: ManifestKind = entry.kind ?? 'game'
+    if (kind === 'game') {
+      it(`el frame ${entry.file} (${entry.mechanic}) pasa la validación de contrato y cumple su invariante`, () => {
+        const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { gameView: GameView }
+        const res = gameViewFromAndValidate(raw.gameView)
+        expect(res.ok, `gameView de ${entry.file} inválido: ${JSON.stringify(res.errors)}`).toBe(true)
+        expect(runAssert(entry.assert, raw.gameView), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
+      })
+    } else if (kind === 'construct') {
+      it(`el frame ${entry.file} (${entry.mechanic}) trae pool CONSTRUCT válido y cumple su invariante`, () => {
+        const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { construct: unknown }
+        expect(poolSize(raw.construct) >= 40, `pool <40 en ${entry.file}`).toBe(true)
+        expect(runConstructAssert(entry.assert, raw), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
+      })
+    } else {
+      it(`el frame ${entry.file} (${entry.mechanic}) trae torneo Finished válido y cumple su invariante`, () => {
+        const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { tournament: unknown }
+        expect(runTournamentAssert(entry.assert, raw), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
+      })
+    }
   }
 })

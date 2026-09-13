@@ -57,6 +57,7 @@ export default function SideboardScreen() {
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
   const submitRef = useRef<() => Promise<void>>(async () => {})
+  const autoSubmitArmRef = useRef<string | null>(null)
   const initialMainRef = useRef<DeckCard[]>([])
   const initialSideRef = useRef<DeckCard[]>([])
 
@@ -278,7 +279,12 @@ export default function SideboardScreen() {
 
   useEffect(() => {
     if (!screen) return
-    if (screen.timeLeft > 0 && timeLeft === 0) {
+    if (timeLeft > 0) {
+      autoSubmitArmRef.current = screen.tableId
+      return
+    }
+    if (timeLeft === 0 && screen.timeLeft > 0 && autoSubmitArmRef.current === screen.tableId) {
+      autoSubmitArmRef.current = null
       void submitRef.current()
     }
   }, [timeLeft, screen?.tableId])

@@ -2,19 +2,36 @@
   {
     "file": "mutate.json",
     "mechanic": "mutate",
+    "kind": "game",
     "assert": "hasMutatedPermanent",
     "note": "Elvish Mystic + Gemrazer apilados vía mutate (mutateView con 2 partes)."
   },
   {
     "file": "creature.json",
     "mechanic": "creature",
+    "kind": "game",
     "assert": "hasNonMutatedCreature",
     "note": "Criatura normal en el battlefield del humano (sin mutate)."
   },
   {
     "file": "combat.json",
     "mechanic": "combat",
+    "kind": "game",
     "assert": "hasAttackingTappedCreature",
     "note": "Ataque declarado (Raging Goblin haste): grupo de combate con atacante girado (tapped) tanto en el battlefield como embebido en combat.attackers."
+  },
+  {
+    "file": "sealed-pool.json",
+    "mechanic": "sealed-pool",
+    "kind": "construct",
+    "assert": "hasConstructPool",
+    "note": "CONSTRUCT real de sellado 6xM20 (driver sealed-pool): pool de 90 en deck.sideboard, cards vacío, time>0. Las cartas del pool no traen name (solo id/expansionSetCode/cardNumber)."
+  },
+  {
+    "file": "tournament-end.json",
+    "mechanic": "tournament-end",
+    "kind": "tournament",
+    "assert": "tournamentFinished",
+    "note": "getTournament tras concesión en la final (driver tournament-end): tournamentState Finished, un jugador 'Finished (Winner)' con 3pts y ronda 1 con result 'is the winner'."
   }
 ]
