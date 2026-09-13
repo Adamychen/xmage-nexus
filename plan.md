@@ -370,3 +370,35 @@ rama `master`, 6 commits por delante de `origin/master`). Mandato del usuario: *
 - Mesas `audit-2c3`/`audit-pw2` eliminadas; lobby a 0. Cuentas: `mcp-mtyu3t58`
   (nueva, reutilizable).
 - **Queda**: draft jugado en vivo (opcional, caro), commit del lote (pedir).
+
+## 12. Sesión 2026-09-13 mañana: sealed en vivo de punta a punta ✅ (cierra el draft)
+
+- **Mesa `audit-sealed-2`** (Sealed Elimination, 2×HUMAN, 6×M20,
+  constructionTime 180s; cuentas frescas `qa-seal-A/B`): ciclo completo contra
+  protocolo real — `createTournamentTable` → `joinTournamentTable` ×2 →
+  `startTournament` → **`joinTournament` ×2 (DESCUBRIMIENTO: sin unirse al
+  torneo con su id, `TournamentController.checkStart` nunca avanza; la mesa se
+  queda en Starting aunque los asientos estén llenos)** → `TOURNAMENT_INIT` →
+  `CONSTRUCT` (pool 28KB, cartas M20 reales) → auto-submit al expirar →
+  `START_GAME` (mazo 40, `libraryCount` 33 tras robar 7) → `GAME_TARGET`
+  "Select a starting player" → `GAME_ASK` mulligan (keep ambos) → turnos T1–T2
+  con pases → concesión de B (`sendPlayerAction CONCEDE`) → `GAME_OVER` +
+  `END_GAME_INFO` → torneo **Finished** (A Winner 3pts, B Eliminated,
+  `getTournament` con ronda "Player qa-seal-A is the winner"). Mesa eliminada,
+  lobby a 0.
+- **Lecciones harness (raw WS)**: (1) `sendPlayerUUID/Boolean/Integer`
+  usan campo **`value`**, no `uuid`/`cardId` (`playCard` no existe como acción;
+  con `uuid` el proxy devuelve ok pero envía null y el prompt se reemite).
+  (2) Cerrar el WS mata la sesión XMage a los ~60s ("has left XMage"): los
+  scripts largos deben mantener conexiones abiertas (el `head -N` del shell
+  mata por SIGPIPE — redirigir a fichero con nohup). (3) El re-join a torneo y
+  partida funciona (`joinTournament` + `joinGame` reenvían `GAME_INIT`; el MCP
+  hace attach a la misma sesión por usuario). (4) El harness MCP no expone
+  `joinTournament`/`joinGame`/`getTournament` — gap para operar torneos (el
+  proxy y la web sí los soportan).
+- **Web**: wizard Torneo verificado con datos reales (19 tipos Draft/Sealed/
+  Jumpstart, sets con boosters, plazas 2–32, sobres 3/6, tiempos; screenshot
+  `page-2026-09-13T08-35-10`). Sin fixes (todo render existente funcionó).
+- Scripts en `web/.run/scratch/` (`sealed-*.mjs`, no commiteables): probe,
+  state, join, full, rejoin, driver con keeps/tierras/pases, concede, clean.
+- **Queda**: commit de docs (pedir). La auditoría fases 0–4 queda COMPLETA.
