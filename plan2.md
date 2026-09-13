@@ -245,3 +245,29 @@
     re-run del job sin cambios → success). Conclusión: CI verde completo.
   - Lección harness: `gh` resolvía a `magefree/mage` (usar `--repo` siempre);
     `/dev/tcp` no existe en zsh (verificar puertos con WS real).
+
+- **2026-09-13 — lane visual (stack real + navegador, qa-vis/p2-live2-SPEC) ✅/parcial**
+  - A.5 exilio VERIFICADO VISUAL (real, espectador): Swords→Lions, chip
+    `Exilio: 1 (Savannah Lions)`, overlay `EXILIO (1 CARTA)` con arte 3ED,
+    `PILA VACÍA`, vidas 22. Capturas en `web/e2e/shots/vis-exile-*.png`
+    (gitignored). Hallazgo tooling (no app): el compact del MCP decía
+    `exileCount: 0` con 1 carta en exilio — la UI pinta bien.
+  - Auto-pod 2×2 y CONSTRUCT verificados en capturas fake frescas
+    (`auto-pod__...Pod_2_2`, `draft__...CONSTRUCT`): cuadrantes Bob/Carol +
+    Alice full-width, orden Carol→Bob→Alice ACTIVO, pool + Tierras Básicas +
+    `Enviar mazo`. Sin solapes rotos (el preview gigante de hand-bar es hover).
+  - Fin de partida como espectador: diálogo `Partida finalizada` +
+    feed `qa-vis ha abandonado la partida` + `Fuera` ✅. Nit i18n (by-design,
+    mensaje de servidor): `Player sim-... is the winner` en inglés dentro de
+    UI española (`vis-gameend.png`).
+  - B.10 follow: reproducido hasta sideboarding Bo3 (`vis-follow`, Score 0-1,
+    `Esperando oponente… qa-vis`) pero game2 no arranca: el match espera el
+    sideboard-submit del humano y MCP no expone esa acción → la transición
+    viva (notice + `Seguir partida` → `watchGame('g-2')`) sigue cubierta SOLO
+    por unit tests. Riesgo bajo (misma ruta que bracket-eye T1, verificado).
+  - C.14 foco: parcial (2 Tabs en lobby, `Mesas (1)` parece resaltado;
+    `vis-focus-tab.png`). Ruido: 404 Scryfall `cards/3ed/41/es` (sets viejos
+    sin impresión ES; el fallback EN funciona, solo ruido en consola).
+  - Sealed T3/T6 visual: pendiente (requiere torneo sealed completo).
+  - Limpieza: mesas `vis-exile`/`vis-follow` eliminadas, sesión `vis`
+    cerrada, lobby a 0.
