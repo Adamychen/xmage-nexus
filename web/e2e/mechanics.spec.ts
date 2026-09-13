@@ -4,7 +4,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
-import { fakeOnly } from './support/fake-mode'
+import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
@@ -15,12 +15,7 @@ const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots
 test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
   test('sagas, planeswalkers and battles dock in the marquee dock @mechanics', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
-      // Hermeticidad (ver decks-gallery U6): bloquear el enrich localizado.
-      await page.route('**/api.scryfall.com/cards/search*', (route) =>
-        route.request().url().includes('name%3A%2F%5E')
-          ? route.fulfill({ json: { object: 'list', data: [] } })
-          : route.continue(),
-      )
+      await blockLocalizedEnrich(page)
       const { pageErrors } = await startGame(page, {
         prefix: 'mechq',
         tableName: TABLE.mechanics,

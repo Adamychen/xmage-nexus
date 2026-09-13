@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures'
-import { fakeOnly } from './support/fake-mode'
+import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { pileVisualScenario } from '../fixtures/scenarios/pileVisual'
@@ -11,12 +11,7 @@ fakeOnly()
 test.describe('PileDialog visual (U14 PickPile)', { tag: '@feedback' }, () => {
   test('renders two card piles side by side and choosing sends boolean', async ({ page }) => {
     await withFakeServer(pileVisualScenario, async () => {
-      // Hermeticidad (ver decks-gallery U6): bloquear el enrich localizado.
-      await page.route('**/api.scryfall.com/cards/search*', (route) =>
-        route.request().url().includes('name%3A%2F%5E')
-          ? route.fulfill({ json: { object: 'list', data: [] } })
-          : route.continue(),
-      )
+      await blockLocalizedEnrich(page)
       const { pageErrors } = await startGame(page, {
         prefix: 'pilevis',
         tableName: TABLE.pileVisual,
