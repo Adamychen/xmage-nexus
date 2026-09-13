@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import JoinTableDialog from './JoinTableDialog'
+import JoinTableDialog, { recommendedMinMain } from './JoinTableDialog'
 import type { TableView } from '../net/types'
 
 afterEach(() => {
@@ -142,5 +142,50 @@ describe('JoinTableDialog', () => {
         undefined
       )
     })
+  })
+})
+
+describe('recommendedMinMain (C.13-mayores §4)', () => {
+  it('Commander → 100, Limitado → 40, Construido → 60', () => {
+    expect(recommendedMinMain('Variant Magic - Commander', 'Commander Free For All')).toBe(100)
+    expect(recommendedMinMain('Constructed - Modern', 'Two Player Duel')).toBe(60)
+    expect(recommendedMinMain('Limited', 'Booster Draft')).toBe(40)
+  })
+
+  it('sin dato de formato no recomienda (null)', () => {
+    expect(recommendedMinMain('', '')).toBeNull()
+    expect(recommendedMinMain('Variant Magic - Momir Basic', 'Momir Basic')).toBeNull()
+    expect(recommendedMinMain(undefined, undefined)).toBeNull()
+  })
+})
+
+describe('JoinTableDialog UX (C.13-mayores §4)', () => {
+  it('el checkbox dice "Recordar como predeterminado", no "Guardar"', () => {
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+    const { getByText, queryByLabelText } = render(
+      <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
+    )
+    expect(getByText('Recordar como predeterminado')).not.toBeNull()
+    expect(queryByLabelText('Guardar')).toBeNull()
+  })
+
+  it('marca recomendado el mazo de 60 en mesa Modern', () => {
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(
+      <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
+    )
+    expect(container.querySelectorAll('.join-deck-card.recommended').length).toBeGreaterThan(0)
+  })
+
+  it('sin formato conocido no marca ninguna recomendación', () => {
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(
+      <JoinTableDialog
+        table={{ ...MOCK_TABLE, deckType: '', gameType: '' }}
+        onClose={() => {}}
+        onJoin={onJoin}
+      />
+    )
+    expect(container.querySelectorAll('.join-deck-card.recommended').length).toBe(0)
   })
 })

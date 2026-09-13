@@ -9,6 +9,7 @@ import {
   type Deck,
 } from './decks'
 import { parseAnyDeck } from '../decks/parseDck'
+import { isLimitedDeckType } from '../decks/formatRules'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import Icon from '../ui/Icon'
@@ -16,6 +17,20 @@ import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './JoinTableDialog.css'
+
+/**
+ * Mínimo de principal para marcar un mazo como recomendado, según el formato
+ * de la mesa cuando se conoce (Commander 100, Limitado 40, Construido 60).
+ * `null` = sin dato fiable: no se muestra recomendación.
+ */
+export function recommendedMinMain(deckType?: string, gameType?: string): number | null {
+  const dt = (deckType ?? '').toLowerCase()
+  const gt = (gameType ?? '').toLowerCase()
+  if (dt.includes('commander') || gt.includes('commander')) return 100
+  if (isLimitedDeckType(deckType)) return 40
+  if (dt.startsWith('constructed')) return 60
+  return null
+}
 
 interface JoinTableDialogProps {
   table: TableView
@@ -77,12 +92,10 @@ export default function JoinTableDialog({
   const [importError, setImportError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
 
-  const isCommanderTable = useMemo(() => {
-    return (
-      table.deckType?.toLowerCase().includes('commander') ||
-      table.gameType?.toLowerCase().includes('commander')
-    )
-  }, [table])
+  const minMain = useMemo(
+    () => recommendedMinMain(table.deckType, table.gameType),
+    [table.deckType, table.gameType],
+  )
 
   const handleImportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -249,7 +262,7 @@ export default function JoinTableDialog({
                   .map((c) => c.cardName)
                   .join(', ')
 
-                const isRecommended = isCommanderTable ? count >= 100 : count === 60
+                const isRecommended = minMain != null && count >= minMain
 
                 return (
                   <div
@@ -290,7 +303,7 @@ export default function JoinTableDialog({
                 checked={setAsDefault}
                 onChange={(e) => setSetAsDefault(e.target.checked)}
               />
-              <span>{t('common','save')}</span>
+              <span>Recordar como predeterminado</span>
             </label>
 
             <div className="join-footer-buttons">

@@ -173,3 +173,27 @@
   - Consolidación: `unit`+`typecheck` PASS en árbol combinado (1411 tests).
     Sin commits (pendiente). Resto plan 2: fix layout FFA (A.8), bulk
     keywords, verificación cron en GitHub.
+
+- **2026-09-13 — 3 carriles en paralelo (FFA + C.13/H2 + H1 Java) ✅**
+  - *Vivo (A.8)*: FIX auto-Pod 2×2 con 3+ salvo override manual
+    (`boardLayout.ts` nuevo + flag `boardLayoutManual` persistido) + 7 unit +
+    `auto-pod.spec.ts` fake 2/2; verificado en FFA 3 con screenshots
+    (antes: B oculto; después: Pod; override a Estándar persiste tras
+    recarga). Lobby a 0.
+  - *Web (C.13+H2)*: footer con etiquetas honestas + backup disabled sin
+    customs; `pruneSelectedId()` + confirm con nombre; invite con aviso de
+    cancelada/búsqueda/error final; `recommendedMinMain()` por formato +
+    "Recordar como predeterminado"; `handleStartTournament` con backoff
+    [500,1500]. Todo con tests; unit 1428/1428 + typecheck ✅. ES nuevo sin
+    clave i18n (pasada de locales pendiente).
+  - *Proxy (H1)*: `MatchOptionsParser.java` construye `DraftOptions` (timing
+    REGULAR por defecto) si el tipo contiene "draft"; sealed intacto. 6 tests
+    nuevos + SimPlayerTest: 16/16 (sin fix: 3 fallos + ClassCast exacto).
+  - Consolidación: jar reconstruido (`build.mjs proxy`) + `restart proxy`
+    (import 92k cartas; lección: el puerto 8787 responde `msgsrvr` en lsof y
+    `/dev/tcp` NO existe en zsh — verificar con WS real). H1 verificado en
+    vivo: 2× draft sin timing → start ok, **cero ClassCast nuevo** en log
+    (los 2 registrados son de las 10:51/10:55 pre-fix); huérfanos eliminados,
+    lobby a 0. `unit`+`typecheck` PASS combinado. Sin commits (pendiente).
+  - Resto plan 2: bulk keywords, verificación cron en GitHub, pasada i18n a
+    literales ES nuevos (B.10, C.13).

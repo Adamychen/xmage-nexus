@@ -72,6 +72,52 @@ describe('useInviteLink server switch', () => {
     expect(d.watchTable).not.toHaveBeenCalled()
   })
 
+  it('deja rastro visible al cancelar la invitación (C.13-mayores §3)', async () => {
+    vi.mocked(confirmDialog).mockResolvedValue(false)
+    await act(async () => {
+      setState({ pendingDeepLink: { kind: 'watch', tableId: 't1', serverHost: 'server-b', serverPort: 17172 } } as any)
+    })
+    const d = deps()
+    renderHook((p: any) => useInviteLink(p), { initialProps: d as any })
+    await act(async () => {})
+    expect(d.setNotice).toHaveBeenCalledTimes(1)
+    expect(String(d.setNotice.mock.calls[0][0])).toMatch(/cancelada/i)
+  })
+
+  it('muestra estado pendiente mientras reintenta la mesa ausente (C.13-mayores §3)', async () => {
+    await act(async () => {
+      setState({ pendingDeepLink: { kind: 'join', tableId: 't-ausente' } } as any)
+    })
+    const d = deps({ hasLobby: true, tables: [] })
+    renderHook((p: any) => useInviteLink(p), { initialProps: d as any })
+    await act(async () => {})
+    expect(d.joinHuman).not.toHaveBeenCalled()
+    expect(d.setNotice).toHaveBeenCalledTimes(1)
+    expect(String(d.setNotice.mock.calls[0][0])).toMatch(/buscando/i)
+  })
+
+  it('avisa al agotar los reintentos de mesa ausente (C.13-mayores §3)', async () => {
+    vi.useFakeTimers()
+    try {
+      await act(async () => {
+        setState({ pendingDeepLink: { kind: 'join', tableId: 't-ausente' } } as any)
+      })
+      const d = deps({ hasLobby: true, tables: [] })
+      renderHook((p: any) => useInviteLink(p), { initialProps: d as any })
+      await act(async () => {})
+      for (let i = 0; i < 11; i++) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1000)
+        })
+      }
+      expect(d.joinHuman).not.toHaveBeenCalled()
+      const msgs = d.setNotice.mock.calls.map((c) => String(c[0]))
+      expect(msgs.some((m) => /ya no existe/i.test(m))).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('avisa con servidor inválido sin dialogar ni unir (AUDIT)', async () => {
     await act(async () => {
       setState({ pendingDeepLink: { kind: 'join', tableId: 't1', serverRaw: 'sin-puerto' } } as any)

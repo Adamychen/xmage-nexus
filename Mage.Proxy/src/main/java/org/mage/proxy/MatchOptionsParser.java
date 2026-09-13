@@ -178,10 +178,22 @@ final class MatchOptionsParser {
             mOpts.setBannedUsers(banned);
         }
         // limitedOptions
+        // El engine exige DraftOptions (no el base LimitedOptions) para los tipos
+        // draft: BoosterDraftEliminationTournament.draft() hace
+        // (DraftOptions) options.getLimitedOptions() y revienta con
+        // ClassCastException si el proxy manda un LimitedOptions pelao (el torneo
+        // se queda cuñado en Starting). El cliente desktop manda DraftOptions
+        // siempre que tournamentType.isDraft() (NewTournamentDialog), con timing
+        // elegido en combo; aquí se replica: tipos draft -> DraftOptions con
+        // timing REGULAR por defecto cuando falte o sea inválido.
+        boolean isDraft = tournamentType != null
+                && tournamentType.toLowerCase(Locale.ROOT).contains("draft");
         if (args.has("limitedOptions") && args.get("limitedOptions").isJsonObject()) {
             JsonObject lo = args.getAsJsonObject("limitedOptions");
             mage.game.tournament.LimitedOptions lim;
-            if (lo.has("timing")) {
+            if (isDraft) {
+                lim = newDraftOptionsWithDefaultTiming(lo);
+            } else if (lo.has("timing")) {
                 try {
                     mage.game.draft.DraftOptions draftOpts = new mage.game.draft.DraftOptions();
                     draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.valueOf(
@@ -210,8 +222,28 @@ final class MatchOptionsParser {
             tOpts.setLimitedOptions(lim);
         }
         if (tOpts.getLimitedOptions() == null) {
-            tOpts.setLimitedOptions(new mage.game.tournament.LimitedOptions());
+            if (isDraft) {
+                mage.game.draft.DraftOptions draftOpts = new mage.game.draft.DraftOptions();
+                draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.REGULAR);
+                tOpts.setLimitedOptions(draftOpts);
+            } else {
+                tOpts.setLimitedOptions(new mage.game.tournament.LimitedOptions());
+            }
         }
         return tOpts;
+    }
+
+    private static mage.game.draft.DraftOptions newDraftOptionsWithDefaultTiming(JsonObject lo) {
+        mage.game.draft.DraftOptions draftOpts = new mage.game.draft.DraftOptions();
+        try {
+            draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.valueOf(
+                    JsonArgs.str(lo, "timing", "REGULAR").toUpperCase(Locale.ROOT)));
+        } catch (Exception ignored) {
+            draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.REGULAR);
+        }
+        if (draftOpts.getTiming() == null) {
+            draftOpts.setTiming(mage.game.draft.DraftOptions.TimingOption.REGULAR);
+        }
+        return draftOpts;
     }
 }

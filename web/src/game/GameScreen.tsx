@@ -31,6 +31,7 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { combatActorsFrom } from '../state/gameUtils'
+import { resolveBoardLayout } from '../board/boardLayout'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
@@ -223,9 +224,9 @@ export default function GameScreen() {
 
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
-  const isMultiplayer = opps.length >= 2
-  const isArenaLayout = settings.boardLayout === 'arena' && isMultiplayer
-  const isPodLayout = !isArenaLayout && (settings.boardLayout === 'pod' || (isMultiplayer && settings.boardLayout !== 'standard' && settings.boardLayout !== 'arena'))
+  const effectiveLayout = resolveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length)
+  const isArenaLayout = effectiveLayout === 'arena'
+  const isPodLayout = effectiveLayout === 'pod'
 
   return (
     <div className="game" style={{ zoom: inverseZoom(settings.uiScale) }}>

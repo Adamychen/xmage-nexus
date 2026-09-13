@@ -61,6 +61,8 @@ export function useInviteLink({ conn, tables, hasLobby, joinHuman, watchTable, s
       const targetPort = pending.serverPort
       void confirmDialog(tStatic('lobby', 'invite_server_switch', { server: label })).then((ok) => {
         if (!ok) {
+          // Rastro visible: antes se descartaba en silencio.
+          setNotice('Invitación cancelada — sigues en el servidor actual.')
           setState({ pendingDeepLink: null })
           return
         }
@@ -82,6 +84,8 @@ export function useInviteLink({ conn, tables, hasLobby, joinHuman, watchTable, s
         setState({ pendingDeepLink: null })
         return
       }
+      // Estado pendiente visible durante los reintentos (antes silencioso).
+      if (retry === 0) setNotice(`Buscando la mesa de la invitación… (${retry + 1}/${MAX_RETRIES})`)
       const id = window.setTimeout(() => setRetry((r) => r + 1), 1000)
       return () => window.clearTimeout(id)
     }

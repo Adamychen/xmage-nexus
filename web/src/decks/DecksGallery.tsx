@@ -64,6 +64,15 @@ function cardsFingerprint(cards: DeckCard[]): string {
 }
 
 /**
+ * Conserva el seleccionado solo si sigue existiendo tras recargar (evita
+ * `selected` stale cuando el mazo se borró en otra pestaña/ventana).
+ */
+export function pruneSelectedId(decks: DeckV2[], selectedId: string | null): string | null {
+  if (!selectedId) return null
+  return decks.some((d) => d.id === selectedId) ? selectedId : null
+}
+
+/**
  * Fusiona los colores enriquecidos por id contra el estado ACTUAL: solo se
  * aplican si el mazo no cambió por debajo (mismas cartas) y sigue sin colores.
  * Así una edición del usuario durante los fetches nunca se pierde.
@@ -102,8 +111,12 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const load = async () => {
     const custom = await storage.list()
-    setDecks([...custom, ...precon])
-    if (!selectedId && custom.length > 0) setSelectedId(custom[0].id)
+    const loaded = [...custom, ...precon]
+    setDecks(loaded)
+    setSelectedId((prev) => {
+      if (pruneSelectedId(loaded, prev)) return prev
+      return custom.length > 0 ? custom[0].id : null
+    })
   }
   useEffect(() => { void load() }, [])
 
@@ -292,10 +305,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleBackupAll = async () => {
     const customDecks = await storage.list()
-    if (customDecks.length === 0) {
-      await alertDialog(t('decks', 'deck_no_cards'))
-      return
-    }
+    if (customDecks.length === 0) return
     const payload = {
       app: 'xmage-nexus',
       version: 2,
@@ -463,9 +473,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 }} />
               </label>
               <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}><Icon name="clipboard" size={12} /> {t('decks', 'import_hint')}</button>
-              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('common', 'save')}</button>
+              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_deck')} ({customCount})</button>
               <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
-                <Icon name="download" size={12} /> {t('common', 'refresh')}
+                <Icon name="download" size={12} /> {t('decks', 'import_deck')} (JSON)
                 <input type="file" accept=".json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleRestoreBackup(f)
@@ -477,8 +487,8 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} Plain</button>
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dek')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} .dek</button>
               <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}><Icon name="copy" size={12} /> {t('common', 'copy')}</button>
-              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
-              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} onClick={handleFavorite}><Icon name="star" size={12} /> {t('common', 'all')}</button>
+              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
+              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} aria-pressed={!!selected?.favorite} onClick={handleFavorite}><span aria-hidden="true">★</span> {t('common', 'all')}</button>
             </div>
             <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && void openForEdit(selected)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</button>
           </footer>

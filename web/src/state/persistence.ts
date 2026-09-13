@@ -397,10 +397,11 @@ export interface AppearanceSettings {
   boardLayout: BoardLayoutPref
   uiScale: ZoomLevel
   cjkBoost: boolean
+  boardLayoutManual?: boolean
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
@@ -415,7 +416,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
         : DEFAULT_APPEARANCE.boardLayout
       const scale = normalizeZoom(parsed.uiScale)
       const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
-      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost }
+      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true }
     }
   } catch {}
   return { ...DEFAULT_APPEARANCE }

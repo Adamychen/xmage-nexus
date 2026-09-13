@@ -276,11 +276,13 @@ export function returnToLobby() {
 }
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
-  setState({ settings: { ...getState().settings, [key]: value } })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
+  const next = { ...getState().settings, [key]: value }
+  if (key === 'boardLayout') next.boardLayoutManual = true
+  setState({ settings: next })
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, uiScale, cjkBoost })
+  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost })
   saveAutoAnswers(autoAnswers.map(({ pattern, answer }) => ({ pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })

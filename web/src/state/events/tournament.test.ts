@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { handleStartTournament } from './tournament'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { handleStartTournament, TOURNAMENT_JOIN_RETRY_DELAYS_MS } from './tournament'
 import { handleStartDraft } from './draft'
 import { getState, setState } from '../state'
 import * as cmds from '../../net/commands'
@@ -78,6 +78,37 @@ describe('handleStartTournament — auto panel-join', () => {
   })
 })
 
+describe('handleStartTournament — reintento con backoff (H2)', () => {
+  beforeEach(() => {
+    vi.mocked(cmds.joinTournament).mockReset().mockResolvedValue({ ok: true } as never)
+    setState({ error: null, lobby: null, conn: null } as never)
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('une si la mesa aparece tras el primer reintento (carrera lobby)', async () => {
+    setState({ conn: { username: 'player1' }, lobby: null } as never)
+    handleStartTournament('tournament-1', { currentTableId: 'table-draft-1' })
+    expect(cmds.joinTournament).not.toHaveBeenCalled()
+
+    setState({ lobby: tableSeated([{ playerName: 'player1', playerType: 'HUMAN' }]) } as never)
+    await vi.advanceTimersByTimeAsync(TOURNAMENT_JOIN_RETRY_DELAYS_MS[0])
+    await Promise.resolve()
+    expect(cmds.joinTournament).toHaveBeenCalledOnce()
+    expect(cmds.joinTournament).toHaveBeenCalledWith('tournament-1')
+  })
+
+  it('desiste tras agotar los reintentos sin llamar al servidor', async () => {
+    setState({ conn: { username: 'player1' }, lobby: null } as never)
+    handleStartTournament('tournament-1', { currentTableId: 'table-draft-1' })
+    const total = TOURNAMENT_JOIN_RETRY_DELAYS_MS.reduce((a, b) => a + b, 0)
+    await vi.advanceTimersByTimeAsync(total + 1000)
+    expect(cmds.joinTournament).not.toHaveBeenCalled()
+  })
+})
 describe('handleStartDraft — auto joinDraft', () => {
   beforeEach(() => {
     vi.mocked(cmds.joinDraft).mockReset().mockResolvedValue({ ok: true } as never)

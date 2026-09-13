@@ -16,6 +16,7 @@ export interface SettingsState {
   phaseStops: PhaseStops
   gameLogAutoSave: boolean
   boardLayout: 'standard' | 'pod' | 'arena'
+  boardLayoutManual: boolean
   effects: boolean
   animationSpeed: number
   soundEnabled: boolean
@@ -45,5 +46,6 @@ export const initialSettings: SettingsSlice = {
     ...loadFxSettings(),
     ...loadAudioSettings(),
     ...loadAppearanceSettings(),
+    boardLayoutManual: loadAppearanceSettings().boardLayoutManual ?? false,
   },
 }
