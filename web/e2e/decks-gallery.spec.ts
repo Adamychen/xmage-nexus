@@ -283,6 +283,15 @@ test.describe('Decks Gallery', () => {
 
   test('U6: sort control, card-size slider, .cod import and .dek export @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
+      // Hermeticidad: el enrich de nombres localizados (Scryfall, name:/^...$/)
+      // corre en carrera con los asertos en inglés de abajo; si la red gana,
+      // las tiras muestran "Relámpago"/"Ráfaga de fuego" y el test falla.
+      // Solo se bloquea el patrón del enrich; el panel de búsqueda sigue real.
+      await page.route('**/api.scryfall.com/cards/search*', (route) =>
+        route.request().url().includes('name%3A%2F%5E')
+          ? route.fulfill({ json: { object: 'list', data: [] } })
+          : route.continue(),
+      )
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
       const username = `deck_u6_${Date.now()}`
@@ -327,6 +336,12 @@ test.describe('Decks Gallery', () => {
 
   test('U7: commander/maybeboard sections, draft log and paste button @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
+      // Igual que U6: bloquear el enrich localizado para asertos en inglés.
+      await page.route('**/api.scryfall.com/cards/search*', (route) =>
+        route.request().url().includes('name%3A%2F%5E')
+          ? route.fulfill({ json: { object: 'list', data: [] } })
+          : route.continue(),
+      )
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
       const username = `deck_u7_${Date.now()}`
