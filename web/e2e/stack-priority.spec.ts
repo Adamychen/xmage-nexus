@@ -12,6 +12,12 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
     test.setTimeout(45_000)
 
     await withFakeServer(() => stackPriorityScenario(), async () => {
+      // Hermeticidad (ver decks-gallery U6): bloquear el enrich localizado.
+      await page.route('**/api.scryfall.com/cards/search*', (route) =>
+        route.request().url().includes('name%3A%2F%5E')
+          ? route.fulfill({ json: { object: 'list', data: [] } })
+          : route.continue(),
+      )
       const { pageErrors, helper } = await startGame(page, {
         prefix: 'stk',
         tableName: TABLE.stackPriority,
