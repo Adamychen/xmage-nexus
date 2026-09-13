@@ -34,8 +34,11 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   if (d?.gameId) saveActiveGame(d.gameId)
   exitTableChat()
   // Nueva partida: el feed no debe arrastrar los eventos de la anterior (el log
-  // global es compartido; solo se limpia el canal de partida).
-  setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
+  // global es compartido; solo se limpia el canal de partida). En el reenganche
+  // a la MISMA partida (rejoin tras caída/recarga) se conserva el feed.
+  if (!d?.gameId || d.gameId !== s.gameId) {
+    setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
+  }
   setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, rollbackPendingFor: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
@@ -99,14 +102,18 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
 }
 
 export function handleWatchGame(objectId: string | null): void {
+  const prevGameId = getState().gameId
   if (objectId) {
     saveActiveGame(objectId, undefined, 'watcher')
     void cmds.watchGame(objectId)
     setState({ phase: 'spectating_pending', gameId: objectId, watchingTable: null })
   }
   // Nuevo espectado: el feed no debe arrastrar los eventos de la partida anterior
-  // (mismo motivo que en handleStartGame: el log global es compartido).
-  setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
+  // (mismo motivo que en handleStartGame: el log global es compartido). Al
+  // re-enganchar la MISMA partida (p. ej. auto-rejoin del gateway) se conserva.
+  if (!objectId || objectId !== prevGameId) {
+    setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
+  }
   addLog('partida', `Espectador: mirando la partida ${objectId?.slice(0, 8) ?? ''}…`)
 }
 

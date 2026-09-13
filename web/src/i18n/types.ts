@@ -403,6 +403,8 @@ export interface TranslationSchema {
     invite_table_not_found: string
     invite_server_switch: string
     invite_bad_server: string
+    invite_cancelled_stay: string
+    invite_searching: string
     staging_host_crown: string
     staging_waiting_fallback: string
     staging_seats_count: string
@@ -433,6 +435,7 @@ export interface TranslationSchema {
     join_import_toggle_close: string
     join_save_select: string
     join_with_deck: string
+    join_remember_default: string
     join_import_cards_placeholder: string
     useraction_profile_title: string
     useraction_profile_desc: string
@@ -1026,6 +1029,8 @@ export interface TranslationSchema {
     switch_hand: string
     looked_at_window: string
     companion_window: string
+    spectator_game_changed: string
+    follow_game: string
   }
   wiki: {
     title: string
@@ -1181,6 +1186,8 @@ export interface TranslationSchema {
     popular_meta: string
     import_deck: string
     export_deck: string
+    export_backup_count: string
+    import_backup_json: string
     mana_curve: string
     basic_lands: string
     sample_hand: string

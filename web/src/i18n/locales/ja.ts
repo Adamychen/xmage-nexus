@@ -397,6 +397,10 @@ export const ja: TranslationSchema = {
     invite_table_not_found: '招待されたテーブルは存在しないか終了しました',
     invite_server_switch: '招待は {server} を指しています — サーバーを切り替えますか？',
     invite_bad_server: '招待に無効なサーバーが含まれています（{server}）',
+    // TODO bulk: interim English until proper ja translation lands
+    invite_cancelled_stay: 'Invite cancelled — you stay on the current server.',
+    // TODO bulk: interim English until proper ja translation lands
+    invite_searching: 'Looking for the invited table… ({current}/{total})',
     staging_host_crown: 'テーブルホスト',
     staging_waiting_fallback: '待機中のゲーム',
     staging_seats_count: '{count}席',
@@ -427,6 +431,8 @@ export const ja: TranslationSchema = {
     join_import_toggle_close: 'インポートをキャンセル',
     join_save_select: '保存して選択',
     join_with_deck: '"{name}" で参加',
+    // TODO bulk: interim English until proper ja translation lands
+    join_remember_default: 'Remember as default',
     join_import_cards_placeholder: 'カードリストをここに貼り付け（例 1 Sol Ring ...）',
     useraction_profile_title: 'プロフィールとリーグ順位を表示',
     useraction_profile_desc: 'ランキングでメダル、ELO、成績を表示',
@@ -1020,6 +1026,10 @@ export const ja: TranslationSchema = {
     switch_hand: '手札を切替',
     looked_at_window: '見たカード ({name})',
     companion_window: '相棒 ({name})',
+    // TODO bulk: interim English until proper ja translation lands
+    spectator_game_changed: 'The game changed: the table has started a new game.',
+    // TODO bulk: interim English until proper ja translation lands
+    follow_game: 'Follow game',
   },
   wiki: {
     title: 'MTG ルールWiki & 用語集',
@@ -1175,6 +1185,10 @@ export const ja: TranslationSchema = {
     popular_meta: 'メタ & 人気デッキ',
     import_deck: 'デッキインポート',
     export_deck: 'デッキエクスポート',
+    // TODO bulk: interim English until proper ja translation lands
+    export_backup_count: 'Export Deck ({count})',
+    // TODO bulk: interim English until proper ja translation lands
+    import_backup_json: 'Import Deck (JSON)',
     mana_curve: 'マナカーブ',
     basic_lands: '基本土地',
     sample_hand: '初手テスト',

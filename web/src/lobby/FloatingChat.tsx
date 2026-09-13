@@ -46,6 +46,14 @@ export default function FloatingChat({
   const { t } = useTranslation()
   const [tab, setTab] = useState<'chat' | 'users'>('chat')
   const [pos, setPos] = useState<Pos | null>(null)
+  // Espejo síncrono de `pos`: endDrag corre en el mismo gesto que el último
+  // pointermove y el estado aún no se ha volcado (stale) → se persistía la
+  // posición anterior al drag. El ref siempre lleva la gota exacta.
+  const posRef = useRef<Pos | null>(null)
+  const setPosSync = (p: Pos | null) => {
+    posRef.current = p
+    setPos(p)
+  }
   const panelRef = useRef<HTMLElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; origLeft: number; origTop: number } | null>(null)
 
@@ -56,7 +64,7 @@ export default function FloatingChat({
       const el = panelRef.current
       const w = el?.offsetWidth || 360
       const h = el?.offsetHeight || 480
-      setPos({
+      setPosSync({
         left: Math.min(Math.max(8, raw.left), Math.max(8, window.innerWidth - w - 8)),
         top: Math.min(Math.max(8, raw.top), Math.max(8, window.innerHeight - Math.min(h, 120) - 8)),
       })
@@ -73,10 +81,12 @@ export default function FloatingChat({
         const el = panelRef.current
         const w = el?.offsetWidth || 360
         const h = el?.offsetHeight || 480
-        return {
+        const next = {
           left: Math.min(Math.max(8, prev.left), Math.max(8, window.innerWidth - w - 8)),
           top: Math.min(Math.max(8, prev.top), Math.max(8, window.innerHeight - Math.min(h, 120) - 8)),
         }
+        posRef.current = next
+        return next
       })
     }
     window.addEventListener('resize', onResize)
@@ -112,12 +122,12 @@ export default function FloatingChat({
       Math.max(8, drag.origTop + (e.clientY - drag.startY)),
       Math.max(8, window.innerHeight - Math.min(h, 120) - 8),
     )
-    setPos({ left, top })
+    setPosSync({ left, top })
   }
 
   const endDrag = () => {
-    if (dragRef.current && pos) {
-      try { localStorage.setItem(POS_KEY, JSON.stringify(pos)) } catch {}
+    if (dragRef.current && posRef.current) {
+      try { localStorage.setItem(POS_KEY, JSON.stringify(posRef.current)) } catch {}
     } else if (dragRef.current) {
       try {
         const el = panelRef.current

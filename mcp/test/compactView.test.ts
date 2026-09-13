@@ -34,4 +34,27 @@ describe('compactGameView', () => {
     const compact = compactGameView(loadGameView('combat'))
     expect(compact.combat.attackers.length).toBeGreaterThan(0)
   })
+
+  it('counts exile from the player map (A.5: era 0 al ser un mapa, no un array)', () => {
+    const base = loadGameView('creature')
+    const players = (base.players ?? []).map((p, i) =>
+      i === 0
+        ? { ...p, controlled: true, exile: { 'e-1': { name: 'Path', manaValue: 1 }, 'e-2': { name: 'Bears', manaValue: 2 } } }
+        : { ...p, controlled: false, exile: {} },
+    )
+    const compact = compactGameView({ ...base, players } as GameView)
+    expect(compact.me?.exileCount).toBe(2)
+  })
+
+  it('derives exileCount from exiles[] when the player map is empty (watcher)', () => {
+    const base = loadGameView('creature')
+    const players = (base.players ?? []).map((p) => ({ ...p, controlled: false, exile: {} }))
+    const game = {
+      ...base,
+      players,
+      exiles: [{ name: 'Exile', cards: { 'x-1': { name: 'Grizzly Bears', manaValue: 2 } } }],
+    } as unknown as GameView
+    const compact = compactGameView(game)
+    expect(compact.opponents[0]?.exileCount).toBe(1)
+  })
 })

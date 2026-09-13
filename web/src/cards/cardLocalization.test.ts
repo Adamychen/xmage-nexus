@@ -4,6 +4,7 @@ import {
   getCachedCardName,
   setCachedCardName,
   fetchLocalizedCardName,
+  isUuidLikeCardName,
   useLocalizedCardName,
   resetCardLocalizationCacheForTest,
 } from './cardLocalization'
@@ -120,5 +121,15 @@ describe('cardLocalization', () => {
     const { result } = renderHook(() => useLocalizedCardName(deckCard))
     expect(result.current.originalName).toBe('Lightning Bolt')
     expect(result.current.displayName).toBe('Relámpago')
+  })
+
+  it('no pide red para nombres-UUID del pool CONSTRUCT sin nombres', async () => {
+    const uuid = '37094b2c-7d96-4491-9041-80d14cc8d5d1'
+    expect(isUuidLikeCardName(uuid)).toBe(true)
+    expect(isUuidLikeCardName('Lightning Bolt')).toBe(false)
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    const card = makeMockCard({ name: uuid })
+    expect(await fetchLocalizedCardName(card, 'es')).toBeNull()
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

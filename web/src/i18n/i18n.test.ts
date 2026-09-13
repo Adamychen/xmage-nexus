@@ -108,4 +108,41 @@ describe('i18n system', () => {
     const cardCodes = CARD_LANGUAGES.map((c) => c.code).sort()
     expect(uiCodes).toEqual(cardCodes)
   })
+
+  it('exposes the B.10/C.13 keys in all 9 languages with working interpolation', () => {
+    const keys = [
+      'game.spectator_game_changed',
+      'game.follow_game',
+      'lobby.join_remember_default',
+      'lobby.invite_cancelled_stay',
+      'lobby.invite_searching',
+      'decks.export_backup_count',
+      'decks.import_backup_json',
+    ]
+    for (const lang of LANGUAGES) {
+      setLanguage(lang.code)
+      for (const key of keys) {
+        const value = t(key)
+        expect(value, `${lang.code}:${key}`).not.toBe('')
+        expect(value, `${lang.code}:${key}`).not.toBe(key)
+      }
+    }
+    setLanguage('es')
+    expect(t('decks.export_backup_count', { count: 3 })).toContain('3')
+    expect(t('lobby.invite_searching', { current: 1, total: 10 })).toContain('1')
+    expect(t('lobby.invite_searching', { current: 1, total: 10 })).toContain('10')
+  })
+
+  it('falls back to English for the new keys when missing in the active language', () => {
+    const backup = ja.game.follow_game
+    try {
+      setLanguage('ja')
+      delete (ja.game as unknown as Record<string, unknown>).follow_game
+      expect(t('game.follow_game')).toBe('Follow game')
+      expect(t('game', 'follow_game')).toBe('Follow game')
+    } finally {
+      ;(ja.game as unknown as Record<string, unknown>).follow_game = backup
+      setLanguage('es')
+    }
+  })
 })

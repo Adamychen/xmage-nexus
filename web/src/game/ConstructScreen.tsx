@@ -15,20 +15,30 @@ import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
+import { isUuidLikeCardName } from '../cards/cardLocalization'
 import './ConstructScreen.css'
 
 function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
 }
 
-function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
+export function poolCardDisplayName(rawName: unknown, set: string, num: string): string | null {
+  const name = rawName == null ? '' : String(rawName)
+  if (name && !isUuidLikeCardName(name)) return name
+  if (!set || !num) return null
+  return `${set} ${num}`
+}
+
+export function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
   const map = new Map<string, DeckCard>()
-  for (const [instanceId, raw] of Object.entries(pool)) {
+  for (const raw of Object.values(pool)) {
     const sc = raw as SimpleCardView & { cardName?: string; name?: string }
-    const name = (sc as any).name ?? (sc as any).cardName ?? sc.id ?? instanceId
     const set = sc.expansionSetCode ?? ''
     const num = sc.cardNumber ?? ''
-    const cardName = String(name)
+    // El engine no manda `name` en el pool (SimpleCardsView): antes caía el
+    // UUID de instancia como nombre (90 filas + 404s Scryfall). Sin nombre se
+    // agrupa por impresión ("SET número"), honesto y sin red inútil.
+    const cardName = poolCardDisplayName((sc as any).name ?? (sc as any).cardName, set, num)
     if (!cardName) continue
     const key = `${cardName}|${set}|${num}`
     const existing = map.get(key)
@@ -99,7 +109,11 @@ export default function ConstructScreen() {
     }
     if (toFetch.length === 0) return
     for (const c of toFetch) {
-      const url = c.setCode && c.cardNumber && c.cardNumber !== '0'
+      const hasPrinting = !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
+      // Sin impresión ni nombre real (pool CONSTRUCT sin nombres) no hay URL
+      // que pueda resolver: pedirla solo genera 404s en Scryfall.
+      if (!hasPrinting && (isUuidLikeCardName(c.cardName) || c.cardName === `${c.setCode} ${c.cardNumber}`)) continue
+      const url = hasPrinting
         ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
         : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
       fetch(url, { headers: { Accept: 'application/json' } })

@@ -397,6 +397,10 @@ export const zhs: TranslationSchema = {
     invite_table_not_found: '邀请的牌桌已不存在或已结束',
     invite_server_switch: '邀请指向 {server} — 是否切换服务器？',
     invite_bad_server: '邀请中的服务器无效（{server}）',
+    // TODO bulk: interim English until proper zhs translation lands
+    invite_cancelled_stay: 'Invite cancelled — you stay on the current server.',
+    // TODO bulk: interim English until proper zhs translation lands
+    invite_searching: 'Looking for the invited table… ({current}/{total})',
     staging_host_crown: '桌主',
     staging_waiting_fallback: '等待中的对局',
     staging_seats_count: '{count} 座位',
@@ -427,6 +431,8 @@ export const zhs: TranslationSchema = {
     join_import_toggle_close: '取消导入',
     join_save_select: '保存并选择',
     join_with_deck: '使用“{name}”加入',
+    // TODO bulk: interim English until proper zhs translation lands
+    join_remember_default: 'Remember as default',
     join_import_cards_placeholder: '在此粘贴卡牌列表（例如 1 Sol Ring ...）',
     useraction_profile_title: '查看资料与天梯段位',
     useraction_profile_desc: '在排行榜查看奖牌、ELO 与数据',
@@ -1020,6 +1026,10 @@ export const zhs: TranslationSchema = {
     switch_hand: '切换手牌',
     looked_at_window: '已查看 ({name})',
     companion_window: '伙伴 ({name})',
+    // TODO bulk: interim English until proper zhs translation lands
+    spectator_game_changed: 'The game changed: the table has started a new game.',
+    // TODO bulk: interim English until proper zhs translation lands
+    follow_game: 'Follow game',
   },
   wiki: {
     title: 'MTG 规则百科与术语表',
@@ -1175,6 +1185,10 @@ export const zhs: TranslationSchema = {
     popular_meta: '主流热门套牌',
     import_deck: '导入套牌',
     export_deck: '导出套牌',
+    // TODO bulk: interim English until proper zhs translation lands
+    export_backup_count: 'Export Deck ({count})',
+    // TODO bulk: interim English until proper zhs translation lands
+    import_backup_json: 'Import Deck (JSON)',
     mana_curve: '法术力曲线',
     basic_lands: '基本地',
     sample_hand: '起手模拟',

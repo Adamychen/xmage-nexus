@@ -123,12 +123,12 @@ export default function TableCard({
             </span>
           )}
           {tTable.rated ? (
-            <span className="table-tag-rated" title={t('lobby','tag_rated')}><Icon name="medal" size={12} /> {t('lobby','tag_rated')}</span>
+            <span className="table-tag-rated" title={t('lobby','tag_rated')} role="img" aria-label={t('lobby','tag_rated')}><Icon name="medal" size={12} /></span>
           ) : (
             <span className="table-tag-unrated" title={t('lobby','tag_unrated')}>{t('lobby','tag_unrated')}</span>
           )}
           {tTable.spectatorsAllowed && (
-            <span className="table-tag-spectate" title={t('lobby','tag_spectators')}><Icon name="eye" size={12} /> {t('lobby','spectators')}</span>
+            <span className="table-tag-spectate" title={t('lobby','tag_spectators')} aria-label={`${t('lobby','tag_spectators')}: ${t('lobby','spectators')}`}><Icon name="eye" size={12} /> {t('lobby','spectators')}</span>
           )}
           {Number(tTable.minimumRating) > 0 && (
             <span className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>

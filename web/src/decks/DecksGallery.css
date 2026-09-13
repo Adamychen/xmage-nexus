@@ -146,6 +146,7 @@
   box-shadow: 0 0 10px rgba(236, 201, 75, 0.5);
 }
 .decks-counter { margin-left: auto; font-weight: 700; opacity: 0.85; letter-spacing: 0.04em; font-size: 0.88rem; }
+.decks-enriching { font-size: 0.8rem; opacity: 0.75; font-style: italic; white-space: nowrap; }
 
 .decks-grid {
   display: grid;

@@ -182,3 +182,19 @@ describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
     expect(delBtn.closest('button')?.getAttribute('title')).toContain('Precon')
   })
 })
+
+describe('DecksGallery enriching (C.13 nit: progreso Scryfall)', () => {
+  it('muestra indicador mientras enriquece colores y lo retira al terminar', async () => {
+    storeState.decks = [customDeck({ id: 'c-nocolor', colors: [] })]
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})) as never)
+    render(<DecksGallery onEdit={() => {}} />)
+    expect(await screen.findByRole('status')).not.toBeNull()
+  })
+
+  it('sin trabajo de enriquecimiento no hay indicador', async () => {
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    await screen.findByText('Mi Burn')
+    await waitFor(() => expect(screen.queryByRole('status')).toBeNull())
+  })
+})

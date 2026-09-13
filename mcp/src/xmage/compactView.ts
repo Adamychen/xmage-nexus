@@ -104,7 +104,13 @@ function manaPoolOf(player: PlayerView): Record<string, number> | undefined {
   return Object.keys(out).length ? out : undefined
 }
 
-function compactPlayer(player: PlayerView): CompactPlayer {
+function zoneCardCount(zone: Record<string, CardView> | CardView[] | undefined): number {
+  if (!zone) return 0
+  return Array.isArray(zone) ? zone.length : Object.keys(zone).length
+}
+
+function compactPlayer(player: PlayerView, exileFallback: number): CompactPlayer {
+  const exileCount = zoneCardCount(player.exile as Record<string, CardView> | CardView[] | undefined)
   return {
     playerId: player.playerId,
     name: player.name,
@@ -112,7 +118,9 @@ function compactPlayer(player: PlayerView): CompactPlayer {
     handCount: player.handCount,
     libraryCount: player.libraryCount,
     graveyardCount: Object.keys(player.graveyard ?? {}).length,
-    exileCount: Array.isArray(player.exile) ? player.exile.length : 0,
+    // El mapa `exile` del jugador puede venir vacío para no-controladores
+    // (la carta sí viaja en el `exiles[]` global): derivar del array entonces.
+    exileCount: exileCount > 0 ? exileCount : exileFallback,
     isActive: player.isActive === true,
     hasPriority: player.hasPriority === true,
     manaPool: manaPoolOf(player),
@@ -146,6 +154,10 @@ export function compactGameView(game: GameView): CompactGame {
       target.push(compactCard(id, card, playable))
     }
   }
+  const exiledTotal = (game.exiles ?? []).reduce(
+    (acc, zone) => acc + zoneCardCount(zone?.cards as Record<string, CardView> | CardView[] | undefined),
+    0,
+  )
   return {
     turn: game.turn,
     phase: game.phase,
@@ -154,8 +166,8 @@ export function compactGameView(game: GameView): CompactGame {
     priorityPlayer: game.priorityPlayerName,
     myTurn: me?.isActive === true,
     myPriority: me?.hasPriority === true,
-    me: me ? compactPlayer(me) : null,
-    opponents: players.filter((player) => player.controlled !== true).map(compactPlayer),
+    me: me ? compactPlayer(me, exiledTotal) : null,
+    opponents: players.filter((player) => player.controlled !== true).map((p) => compactPlayer(p, exiledTotal)),
     hand: compactZone(game.myHand, playable),
     battlefield: { mine, theirs },
     stack: compactZone(game.stack, playable),

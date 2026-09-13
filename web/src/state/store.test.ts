@@ -180,6 +180,22 @@ describe('handleMessage', () => {
     expect(gameEntries.some((e) => /mirando la partida/.test(e.text))).toBe(true)
   })
 
+  it('WATCHGAME conserva el feed al re-enganchar la MISMA partida (A.7)', () => {
+    setState({ gameId: 'g-same' } as never)
+    addLog('partida', 'evento previo de la misma partida')
+    handleMessage({ type: 'event', method: 'WATCHGAME', messageId: 1, objectId: 'g-same', data: null })
+    const gameEntries = getState().log.filter((e) => e.channel === 'game')
+    expect(gameEntries.some((e) => e.text === 'evento previo de la misma partida')).toBe(true)
+  })
+
+  it('START_GAME conserva el feed al re-enganchar la MISMA partida (A.7)', () => {
+    setState({ gameId: 'g-same' } as never)
+    addLog('partida', 'evento previo de la misma partida')
+    handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-same', data: { gameId: 'g-same' } })
+    const gameEntries = getState().log.filter((e) => e.channel === 'game')
+    expect(gameEntries.some((e) => e.text === 'evento previo de la misma partida')).toBe(true)
+  })
+
   it('aplica el replay de una partida re-unida aunque phase sea lobby (restore tras recarga)', () => {
     const game = makeGameView({})
     setState({ phase: 'lobby', resumingGameId: 'g-restore' })

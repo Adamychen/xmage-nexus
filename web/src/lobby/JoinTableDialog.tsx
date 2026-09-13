@@ -303,7 +303,7 @@ export default function JoinTableDialog({
                 checked={setAsDefault}
                 onChange={(e) => setSetAsDefault(e.target.checked)}
               />
-              <span>Recordar como predeterminado</span>
+              <span>{t('lobby','join_remember_default')}</span>
             </label>
 
             <div className="join-footer-buttons">

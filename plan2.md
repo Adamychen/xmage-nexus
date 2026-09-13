@@ -197,3 +197,18 @@
     lobby a 0. `unit`+`typecheck` PASS combinado. Sin commits (pendiente).
   - Resto plan 2: bulk keywords, verificación cron en GitHub, pasada i18n a
     literales ES nuevos (B.10, C.13).
+
+- **2026-09-13 — 2 carriles en paralelo (i18n + nits) ✅**
+  - *i18n*: 7 claves (`spectator_game_changed`/`follow_game`,
+    `join_remember_default`, `invite_cancelled_stay`/`invite_searching`,
+    `export_backup_count`/`import_backup_json`) en 9 locales (ja/zhs en EN
+    interim honesto, resto traducido) + test paridad/interpolación/fallback.
+  - *Nits*: exileCount era `Array.isArray` sobre un mapa (fix + fallback
+    watcher); feed conservado en rejoin mismo gameId (recarga completa sigue
+    a 0 por diseño); pool sin nombres → fallback web (placeholder
+    "SET número", sin red sin nombre; engine no expone nombre, fix Java
+    inviable en barato — sin rebuild); FloatingChat `posRef`; TableCard
+    aria-labels; indicador `role=status` en enrich Scryfall.
+  - Omitidos con causa: abreviaturas iconos (bulk), CJK (rediseño), Ballista
+    (fork). Consolidación: `unit`+`typecheck` PASS combinado. Sin commits.
+  - Resto plan 2: bulk keywords + cron GitHub (requieren decisión/acceso).

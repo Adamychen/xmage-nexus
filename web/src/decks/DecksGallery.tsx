@@ -105,6 +105,8 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [importName, setImportName] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Enriquecimiento de colores vía Scryfall en curso (C.13 nit: sin indicador).
+  const [enriching, setEnriching] = useState(false)
 
   const storage = useMemo(() => getDeckStorage(), [])
   const precon = useMemo(() => preconToV2(), [])
@@ -156,10 +158,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   useEffect(() => {
     if (decks.length === 0) return
     const snapshot = decks
+    if (!snapshot.slice(0, 12).some((d) => d.colors.length === 0)) return
     let cancelled = false
     const ctrl = new AbortController()
+    setEnriching(true)
     void (async () => {
-      const updated = await Promise.all(snapshot.map(async (d, idx) => {
+      try {
+        const updated = await Promise.all(snapshot.map(async (d, idx) => {
         if (d.colors.length > 0) return d
         if (idx >= 12) return d
         const uniq = [...new Map(d.cards.slice(0, 6).map((c) => [`${c.setCode}/${c.cardNumber}:${c.cardName}`, c])).values()]
@@ -194,8 +199,11 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         }
       }
       if (!cancelled) setDecks(merged)
+      } finally {
+        if (!cancelled) setEnriching(false)
+      }
     })()
-    return () => { cancelled = true; ctrl.abort() }
+    return () => { cancelled = true; ctrl.abort(); setEnriching(false) }
   }, [decks.length])
 
   const handleCreate = async () => {
@@ -406,6 +414,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           {mainView === 'my-decks' && (
             <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
           )}
+          {enriching && mainView === 'my-decks' && (
+            <span className="decks-enriching" role="status" aria-live="polite">{t('common', 'loading')}…</span>
+          )}
         </div>
 
         {mainView === 'my-decks' && (
@@ -473,9 +484,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 }} />
               </label>
               <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}><Icon name="clipboard" size={12} /> {t('decks', 'import_hint')}</button>
-              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_deck')} ({customCount})</button>
+              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_backup_count', { count: customCount })}</button>
               <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
-                <Icon name="download" size={12} /> {t('decks', 'import_deck')} (JSON)
+                <Icon name="download" size={12} /> {t('decks', 'import_backup_json')}
                 <input type="file" accept=".json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
                   if (f) await handleRestoreBackup(f)

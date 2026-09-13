@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ConstructScreen from './ConstructScreen'
+import ConstructScreen, { poolToDeckCards } from './ConstructScreen'
 import { setState } from '../state/store'
 import { submitDeck } from '../net/commands'
 
@@ -81,5 +81,30 @@ describe('ConstructScreen — tierras básicas', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('ConstructScreen — pool CONSTRUCT sin nombres (engine SimpleCardsView)', () => {
+  it('agrupa por impresión con "SET número" en vez de un UUID por carta', () => {
+    const pool = {
+      'i-1': { id: 'i-1', expansionSetCode: 'M20', cardNumber: '34' },
+      'i-2': { id: 'i-2', expansionSetCode: 'M20', cardNumber: '34' },
+      'i-3': { id: 'i-3', expansionSetCode: 'M20', cardNumber: '35' },
+    }
+    const cards = poolToDeckCards(pool)
+    expect(cards).toEqual([
+      { cardName: 'M20 34', setCode: 'M20', cardNumber: '34', amount: 2 },
+      { cardName: 'M20 35', setCode: 'M20', cardNumber: '35', amount: 1 },
+    ])
+    expect(cards.some((c) => /-/i.test(c.cardName) && c.cardName.length > 30)).toBe(false)
+  })
+
+  it('conserva el nombre cuando el engine sí lo trae', () => {
+    const pool = {
+      'i-1': { id: 'i-1', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' },
+    }
+    expect(poolToDeckCards(pool)).toEqual([
+      { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 },
+    ])
   })
 })

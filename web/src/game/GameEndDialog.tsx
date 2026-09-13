@@ -23,7 +23,7 @@ export default function GameEndDialog() {
   const isSpectator = !me
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '') || isSpectator
   // B.10: la mesa puede tener ya otra partida (Bo3/torneo); sin auto-follow,
-  // solo aviso + botón Seguir (literales ES: el carril de locales extraerá claves).
+  // solo aviso + botón Seguir (claves game.spectator_game_changed / game.follow_game).
   const followGameId = isSpectator ? findFollowGameId(lobbyTables, watchedGameId) : null
   const duration = formatMatchDuration(end.startTime, end.endTime ?? end.matchView?.endTime ?? undefined)
 
@@ -88,9 +88,9 @@ export default function GameEndDialog() {
         {matchOver ? (
           followGameId ? (
             <div className="end-actions">
-              <p className="end-hint">La partida cambió: la mesa ha empezado una nueva partida.</p>
+              <p className="end-hint">{t('game', 'spectator_game_changed')}</p>
               <button className="primary" onClick={() => handleWatchGame(followGameId)}>
-                Seguir partida
+                {t('game', 'follow_game')}
               </button>
               <button onClick={returnToLobby}>
                 {t('game', 'return_to_lobby')}

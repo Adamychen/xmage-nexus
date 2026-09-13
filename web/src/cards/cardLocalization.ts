@@ -70,6 +70,13 @@ export function extractCardName(card: LocalizableCard): string {
   return ''
 }
 
+/** El pool CONSTRUCT del engine no trae `name` (SimpleCardsView solo lleva
+ *  id/set/número): la web usaba el UUID como nombre y disparaba búsquedas
+ *  Scryfall condenadas al 404. Estos no-nombres no deben pedir red. */
+export function isUuidLikeCardName(name: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name.trim())
+}
+
 export async function fetchLocalizedCardName(
   card: LocalizableCard,
   lang: string = getEffectiveCardLang(),
@@ -77,6 +84,7 @@ export async function fetchLocalizedCardName(
   const baseName = extractCardName(card)
   if (!baseName || lang === 'en') return baseName || null
   if (/^(?:ability|habilidad)$/i.test(baseName.trim())) return null
+  if (isUuidLikeCardName(baseName)) return null
 
   const cleanName = baseName.trim()
   const cacheKey = `${lang}:${cleanName.toLowerCase()}`
@@ -94,6 +102,9 @@ export async function fetchLocalizedCardName(
       const src = isAb ? ((card as any).sourceCard || (card as any).ability) : card
       const set = (src as any)?.setCode || (src as any)?.expansionSetCode
       const num = (src as any)?.cardNumber
+
+      // Placeholder "SET número" del pool sin nombres: no es un nombre real.
+      if (set && num && cleanName === `${set} ${num}`) return null
 
       if (set && num && num !== '0' && set !== 'XMAGE') {
         try {
