@@ -49,6 +49,25 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 | `mage_sessions` | — | Lista todas las sesiones nombradas (id, activa, conexión, username, mesa, gameId). |
 | `mage_use_session` | `session` | Cambia la sesión activa; las demás siguen recibiendo eventos (y auto-pass) en segundo plano. |
 
+| Tool | Args | Qué hace |
+|---|---|---|
+| `mage_create_tournament_table` | `name?`, `tournamentType?`(Elimination), `gameType?`, `deckType?`, `limited?`, `limitedOptions?`{setCodes, numberBoosters, constructionTime, draftCubeName, timing}, `playerTypes?`, `password?`, `winsNeeded?`, `numberRounds?`, `skillLevel?`, `rated?`, `spectatorsAllowed?`, `quitRatio?`, `session?` | Crea mesa de torneo (Sealed/Draft/Elimination…); limitado → `deckType:Limited` + sin mazo al unirse. Devuelve `tableId`. |
+| `mage_join_tournament_table` | `tableId`, `deck?` (opcional en limitado), `playerName?`, `playerType?`, `skill?`, `password?`, `deckType?`, `gameType?`, `session?` | Ocupa un asiento del torneo. |
+| `mage_start_tournament` | `tableId?`, `waitMs?`, `session?` | Arranca el torneo y espera `START_TOURNAMENT` para devolver el `tournamentId` (sin unirse al panel el torneo no avanza). |
+| `mage_join_tournament` | `tournamentId?` (= último visto), `session?` | Unión obligatoria al panel (idempotente: vale como re-join). |
+| `mage_join_game` | `gameId?` (= partida activa), `waitMs?`, `session?` | Attach a partida por id (torneo/Bo3); el proxy reenvía el `GAME_INIT` cacheado; espera vista fresca. |
+| `mage_get_tournament` | `tournamentId?` (= último visto), `session?` | TournamentView (nombre, estado, jugadores, rondas). Solo lectura. |
+| `mage_submit_deck` | `tableId?`, `deck` (DeckJson), `session?` | Mazo construido (CONSTRUCT limitado 40 cartas / sideboard Bo3). |
+
+Flujo torneo (verificado en vivo, Sealed Elimination 2×HUMAN):
+```
+mage_create_tournament_table(limited) → mage_join_tournament_table ×2 (sin mazo)
+→ mage_start_tournament → mage_join_tournament ×2 (OBLIGATORIO, si no no arranca)
+→ CONSTRUCT: mage_submit_deck → START_GAME → mage_join_game {gameId}
+```
+La sesión captura `tournamentId` de `START_TOURNAMENT`/`TOURNAMENT_INIT`/`TOURNAMENT_UPDATE`
+igual que `gameId` de `START_GAME`/`GAME_*`, así que `join/get` lo resuelven por defecto.
+
 ## Tools — fase C2 (jugar)
 
 | Tool | Args | Qué hace |
@@ -89,9 +108,16 @@ realmente puede decidir (su turno con jugables, asks, targets, maná). Desactív
 cuentas/partidas en un proceso MCP). Sin pin, las tools operan sobre la sesión
 **activa** (cámbiala con `mage_use_session`, lístalas con `mage_sessions`);
 con pin `session?` operan sobre esa sin tocar la activa — obligatorio en juego
-paralelo (la activa global es una carrera entre agentes).
-Las sesiones inactivas siguen procesando eventos en segundo plano (incluido el
-auto-pass), así que una partida puede avanzar mientras juegas otra.
+  paralelo (la activa global es una carrera entre agentes).
+  Las sesiones inactivas siguen procesando eventos en segundo plano (incluido el
+  auto-pass), así que una partida puede avanzar mientras juegas otra.
+
+- **Harness torneo B.12 (hecha, 2026-09-13)**: `mage_create_tournament_table`,
+  `mage_join_tournament_table`, `mage_start_tournament`, `mage_join_tournament`
+  (panel obligatorio + re-join), `mage_join_game` (attach por id), `mage_get_tournament`
+  (estado/pool/rondas) y `mage_submit_deck` (CONSTRUCT/sideboard). Tests herméticos en
+  `test/tournament.test.ts` + verificación en vivo (Sealed Elimination 2×HUMAN,
+  `CONSTRUCT` → submit ok, lobby a 0).
 
 ## Resources (fase A)
 
@@ -115,8 +141,7 @@ determinista, `mage_e2e` ejecuta los specs reales de Playwright.
   normalizado (`promptView`), bucle `wait_for_prompt` + acciones, combate,
   pagos de maná y auto-pass. Verificado con una partida real completa vs Sim
   (`MCP_E2E=1 npm test` en `mcp/`).
-- **Fase C3 (hecha, 2026-09-11)**: endurecimiento en 4 sub-fases, en
-  orden **C3.3 → C3.1 → C3.2 → C3.4**:
+- **Fase C3 (hecha, 2026-09-11)**: endurecimiento en 4 sub-fases, en  orden **C3.3 → C3.1 → C3.2 → C3.4**:
   - **C3.3 · Arnés FixtureServer en CI** (hecha): tests del MCP contra
     `FakeServer.start(0, escenario)` de `web/fixtures/fake.ts` vía
     `test/support/fakeServer.ts` (import dinámico no-literal, porque `fake.ts`

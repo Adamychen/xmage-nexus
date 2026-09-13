@@ -26,6 +26,15 @@ const deckSchema = z.object({
   commanders: z.array(deckCardSchema).optional(),
 })
 
+const limitedOptionsSchema = z.object({
+  setCodes: z.array(z.string()).optional(),
+  sets: z.array(z.string()).optional(),
+  numberBoosters: z.number().int().min(1).max(24).optional(),
+  constructionTime: z.number().int().min(0).max(3600).optional(),
+  draftCubeName: z.string().optional(),
+  timing: z.string().optional(),
+})
+
 interface SessionEvent {
   at: number
   method: string
@@ -49,6 +58,7 @@ interface SessionState {
   password: string | null
   tableId: string | null
   gameId: string | null
+  tournamentId: string | null
   lastGameView: unknown
   lastConnectAttached: boolean | null
   events: SessionEvent[]
@@ -76,6 +86,7 @@ function createSessionState(): SessionState {
     password: null,
     tableId: null,
     gameId: null,
+    tournamentId: null,
     lastGameView: null,
     lastConnectAttached: null,
     events: [],
@@ -118,6 +129,12 @@ function attach(state: SessionState, client: ProxyClient): void {
     const method = String(event.method ?? '')
     if (event.objectId && (method === 'START_GAME' || method.startsWith('GAME_'))) {
       state.gameId = String(event.objectId)
+    }
+    if (
+      event.objectId &&
+      (method === 'START_TOURNAMENT' || method === 'TOURNAMENT_INIT' || method === 'TOURNAMENT_UPDATE')
+    ) {
+      state.tournamentId = String(event.objectId)
     }
     const data = event.data
     if (data && typeof data === 'object' && 'gameView' in data && data.gameView) {
@@ -250,6 +267,7 @@ async function connectToProxy(state: SessionState, input: {
   state.password = input.password
   state.gameId = null
   state.tableId = null
+  state.tournamentId = null
   state.lastGameView = null
   state.prompts = []
   state.promptSeq = 0
@@ -303,6 +321,7 @@ async function resyncAfterReconnect(state: SessionState, client: ProxyClient): P
     if (gameId && data?.attached === false) {
       state.gameId = null
       state.lastGameView = null
+      state.tournamentId = null
       state.events.push({ at: Date.now(), method: 'RECONNECT_NEW_SESSION', objectId: gameId })
     } else if (gameId) {
       state.lastGameView = null
@@ -511,7 +530,7 @@ export function registerSessionTools(server: McpServer): void {
             gameThreads: users.numberGameThreads ?? 0,
             maxGames: users.numberMaxGames ?? 0,
           },
-          session: { username: state.username, tableId: state.tableId, gameId: state.gameId },
+          session: { username: state.username, tableId: state.tableId, gameId: state.gameId, tournamentId: state.tournamentId },
         }),
       )
     },
@@ -650,6 +669,263 @@ export function registerSessionTools(server: McpServer): void {
       await client.requestOk(remove ? 'removeTable' : 'leaveTable', { tableId: id }, 20_000)
       if (state.tableId === id) state.tableId = null
       return textResult(`${remove ? 'mesa eliminada' : 'salida de mesa'}: ${id}`)
+    },
+  )
+
+  server.registerTool(
+    'mage_create_tournament_table',
+    {
+      title: 'Create a tournament table',
+      description:
+        'Crea una mesa de torneo (Elimination/Swiss, Booster Draft/Sealed…). Devuelve tableId. ' +
+        'Para limitado (Sealed/Draft) pasa limited:true + limitedOptions{setCodes, numberBoosters, ' +
+        'constructionTime} y une sin mazo; para construido el mazo va en mage_join_tournament_table. ' +
+        'playerTypes: plazas (SIM se mapea a HUMAN en el proxy). Espejo de buildCreateTournamentArgs de la web.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        name: z.string().optional(),
+        tournamentType: z.string().default('Elimination'),
+        gameType: z.string().default('Two Player Duel'),
+        deckType: z.string().default('Constructed - Pioneer'),
+        limited: z.boolean().default(false),
+        limitedOptions: limitedOptionsSchema.optional(),
+        playerTypes: z.array(z.string()).default(['HUMAN', 'HUMAN']),
+        password: z.string().optional(),
+        winsNeeded: z.number().int().min(1).max(5).default(1),
+        numberRounds: z.number().int().min(0).max(16).optional(),
+        skillLevel: z.enum(['BEGINNER', 'CASUAL', 'SERIOUS']).default('CASUAL'),
+        rated: z.boolean().default(false),
+        spectatorsAllowed: z.boolean().default(true),
+        quitRatio: z.number().int().min(0).max(100).default(100),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async (input) => {
+      const state = pickState(input.session)
+      const client = requireClient(state)
+      const limitedOptions = input.limitedOptions
+        ? {
+            ...(input.limitedOptions.setCodes ? { setCodes: input.limitedOptions.setCodes, sets: input.limitedOptions.setCodes } : {}),
+            ...(input.limitedOptions.sets ? { sets: input.limitedOptions.sets } : {}),
+            ...(input.limitedOptions.numberBoosters !== undefined ? { numberBoosters: input.limitedOptions.numberBoosters } : {}),
+            ...(input.limitedOptions.constructionTime !== undefined ? { constructionTime: input.limitedOptions.constructionTime } : {}),
+            ...(input.limitedOptions.draftCubeName ? { draftCubeName: input.limitedOptions.draftCubeName } : {}),
+            ...(input.limitedOptions.timing ? { timing: input.limitedOptions.timing } : {}),
+          }
+        : undefined
+      const args: Record<string, unknown> = {
+        name: input.name ?? `mcp-tourney-${Date.now().toString(36)}`,
+        tournamentType: input.tournamentType,
+        gameType: input.gameType,
+        matchType: input.gameType,
+        deckType: input.limited ? 'Limited' : input.deckType,
+        limited: input.limited,
+        ...(limitedOptions ? { limitedOptions } : {}),
+        playerTypes: input.playerTypes,
+        winsNeeded: input.winsNeeded,
+        ...(input.numberRounds ? { numberRounds: input.numberRounds } : {}),
+        skillLevel: input.skillLevel,
+        rated: input.rated,
+        watchingAllowed: input.spectatorsAllowed,
+        spectatorsAllowed: input.spectatorsAllowed,
+        quitRatio: input.quitRatio,
+      }
+      if (input.password) args.password = input.password
+      const data = (await client.requestOk('createTournamentTable', args, 30_000)) as {
+        tableId?: string
+        table?: { tableId?: string }
+      }
+      const tableId = data?.tableId ?? data?.table?.tableId ?? null
+      state.tableId = tableId
+      state.tournamentId = null
+      if (!tableId) throw new Error(`createTournamentTable no devolvió tableId: ${json(data)}`)
+      return textResult(`mesa de torneo creada: ${tableId}\n\n${json({ tableId, args })}`)
+    },
+  )
+
+  server.registerTool(
+    'mage_join_tournament_table',
+    {
+      title: 'Join a tournament table',
+      description:
+        'Ocupa un asiento de la mesa de torneo. En limitado (Sealed/Draft) el mazo es opcional ' +
+        '(se construye en CONSTRUCT y se envía con mage_submit_deck); en construido es obligatorio ' +
+        '(formato DeckJson: {name, cards, sideboard?, commanders?}). deckType/gameType solo afinan la normalización.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tableId: z.string(),
+        deck: deckSchema.optional(),
+        playerName: z.string().optional(),
+        playerType: z.string().default('HUMAN'),
+        skill: z.number().int().min(0).max(10).default(1),
+        password: z.string().optional(),
+        deckType: z.string().optional(),
+        gameType: z.string().optional(),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async (input) => {
+      const state = pickState(input.session)
+      const client = requireClient(state)
+      const args: Record<string, unknown> = {
+        tableId: input.tableId,
+        playerName: input.playerName ?? state.username,
+        playerType: input.playerType,
+        skill: input.skill,
+      }
+      if (input.deck) args.deck = input.deck
+      if (input.password) args.password = input.password
+      if (input.deckType) args.deckType = input.deckType
+      if (input.gameType) args.gameType = input.gameType
+      await client.requestOk('joinTournamentTable', args, 30_000)
+      state.tableId = input.tableId
+      return textResult(`unido a la mesa de torneo ${input.tableId} como ${String(args.playerName)} (${input.playerType})`)
+    },
+  )
+
+  server.registerTool(
+    'mage_start_tournament',
+    {
+      title: 'Start a tournament',
+      description:
+        'Arranca el torneo de la mesa (requiere asientos llenos) y espera el evento START_TOURNAMENT ' +
+        'para devolver el tournamentId — sin ese id el torneo no avanza (hay que unirse al panel con ' +
+        'mage_join_tournament). Si expira, devuelve ok:true con tournamentId:null (consúltalo con mage_session).',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tableId: z.string().optional(),
+        waitMs: z.number().int().min(0).max(120_000).default(30_000),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, tableId, waitMs }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const id = tableId ?? state.tableId
+      if (!id) throw new Error('sin tableId — pasa uno o crea/únete a una mesa primero')
+      await client.requestOk('startTournament', { tableId: id }, 30_000)
+      state.tableId = id
+      state.tournamentId = null
+      let tournamentId: string | null = null
+      if (waitMs > 0) {
+        try {
+          tournamentId = await waitFor(() => state.tournamentId, waitMs, 'START_TOURNAMENT')
+        } catch {
+          tournamentId = state.tournamentId
+        }
+      }
+      return textResult(`torneo arrancado\n\n${json({ tableId: id, tournamentId, session: sessionSnapshot(state) })}`)
+    },
+  )
+
+  server.registerTool(
+    'mage_join_tournament',
+    {
+      title: 'Join the tournament panel (or re-join)',
+      description:
+        'Unión obligatoria al panel del torneo tras el arranque: sin ella el TournamentController ' +
+        'nunca avanza (la mesa se queda en Starting). Idempotente — vale también como re-join ' +
+        '(reenvía el estado). tournamentId por defecto: el último visto en START_TOURNAMENT/TOURNAMENT_UPDATE.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tournamentId: z.string().optional(),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, tournamentId }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const id = tournamentId ?? state.tournamentId
+      if (!id) throw new Error('sin tournamentId — arranca el torneo con mage_start_tournament o pasa uno')
+      await client.requestOk('joinTournament', { tournamentId: id }, 20_000)
+      state.tournamentId = id
+      return textResult(json({ ok: true, tournamentId: id, session: sessionSnapshot(state) }))
+    },
+  )
+
+  server.registerTool(
+    'mage_join_game',
+    {
+      title: 'Attach to a game by id (or re-join)',
+      description:
+        'Se une a una partida como jugador por su gameId (flujo torneo/Bo3: el gameId llega en ' +
+        'START_GAME; en espectador usa watchGame de la web). El proxy reenvía el GAME_INIT cacheado. ' +
+        'gameId por defecto: la partida activa de la sesión. Espera una vista fresca salvo waitMs:0.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        gameId: z.string().optional(),
+        waitMs: z.number().int().min(0).max(60_000).default(15_000),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, gameId, waitMs }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const id = gameId ?? state.gameId
+      if (!id) throw new Error('sin gameId — arranca una partida o pasa uno')
+      await client.requestOk('joinGame', { gameId: id }, 20_000)
+      state.gameId = id
+      state.lastGameView = null
+      state.pendingPrompt = null
+      state.gameOver = null
+      let fresh = false
+      if (waitMs > 0) {
+        try {
+          await waitFor(() => state.lastGameView, waitMs, 'gameView tras joinGame')
+          fresh = true
+        } catch {
+          state.events.push({ at: Date.now(), method: 'JOINGAME_NO_GAMEVIEW', objectId: id })
+        }
+      }
+      return textResult(json({ ok: true, gameId: id, freshGameView: fresh, session: sessionSnapshot(state) }))
+    },
+  )
+
+  server.registerTool(
+    'mage_get_tournament',
+    {
+      title: 'Tournament state, pools and rounds',
+      description:
+        'Estado del torneo (TournamentView serializado: nombre, estado, jugadores/puntos, rondas/parejas). ' +
+        'tournamentId por defecto: el último visto en la sesión. Solo lectura.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tournamentId: z.string().optional(),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ session, tournamentId }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const id = tournamentId ?? state.tournamentId
+      if (!id) throw new Error('sin tournamentId — arranca/únete a un torneo o pasa uno')
+      const data = await client.requestOk('getTournament', { tournamentId: id }, 20_000)
+      return textResult(truncate(json({ tournamentId: id, tournament: data }), 40_000))
+    },
+  )
+
+  server.registerTool(
+    'mage_submit_deck',
+    {
+      title: 'Submit a built deck (CONSTRUCT / sideboard)',
+      description:
+        'Envía el mazo construido: en torneos limitados durante CONSTRUCT (40 cartas del pool) y ' +
+        'entre partidas de un match Bo3 (sideboard). tableId por defecto: la mesa de la sesión. ' +
+        'Formato DeckJson: {name, cards:[{cardName,setCode,cardNumber,amount}], sideboard?}.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tableId: z.string().optional(),
+        deck: deckSchema,
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, tableId, deck }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const id = tableId ?? state.tableId
+      if (!id) throw new Error('sin tableId — pasa uno o crea/únete a una mesa primero')
+      await client.requestOk('submitDeck', { tableId: id, deck }, 30_000)
+      return textResult(json({ ok: true, tableId: id, deck: deck.name, main: deck.cards.length, side: deck.sideboard?.length ?? 0 }))
     },
   )
 
@@ -1154,6 +1430,7 @@ function sessionSnapshot(state: SessionState) {
     username: state.username,
     tableId: state.tableId,
     gameId: state.gameId,
+    tournamentId: state.tournamentId,
     autoPass: state.autoPass,
     autoPassRepeats: state.autoPassRepeats,
     promptSeq: state.promptSeq,

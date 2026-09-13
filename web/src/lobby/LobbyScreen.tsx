@@ -157,7 +157,7 @@ export default function LobbyScreen() {
       <div className="lobby-columns lobby-columns-single">
 
         {/* CENTER: Main tab content */}
-        <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : ''}`}>
+        <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : activeTab === 'decks' ? 'has-decks-gallery' : ''}`}>
           {activeTab === 'tables' && (
             <div className="lobby-tables-view">
               <section className="panel tables-panel">
