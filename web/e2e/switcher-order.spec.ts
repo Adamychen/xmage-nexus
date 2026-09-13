@@ -49,7 +49,7 @@ async function setGame(page: Page, gameView: unknown, layout = 'standard') {
   await page.evaluate(({ gv, l }) => {
     const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, unknown>; setState: (s: unknown) => void } }).__mageStore
     const st = store?.getState() as { settings: Record<string, unknown> }
-    store?.setState({ phase: 'game', settings: { ...st.settings, boardLayout: l }, game: gv })
+    store?.setState({ phase: 'game', settings: { ...st.settings, boardLayout: l, boardLayoutManual: true }, game: gv })
   }, { gv: gameView, l: layout })
 }
 
