@@ -121,6 +121,16 @@ describe('SetupWizard', () => {
     expect(loadConn()).toBeNull()
   })
 
+  it('close button sits in the top-right corner, after the step counter', () => {
+    render(<SetupWizard onClose={() => {}} />)
+    const close = screen.getByTestId('setup-wizard-close')
+    const counter = screen.getByTestId('setup-counter')
+    const row = close.parentElement
+    expect(row).toBe(counter.parentElement?.parentElement)
+    expect(row?.lastElementChild).toBe(close)
+    expect(counter.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('Escape closes without saving (topmost-modal aware)', () => {
     const onClose = vi.fn()
     render(<SetupWizard onClose={onClose} />)

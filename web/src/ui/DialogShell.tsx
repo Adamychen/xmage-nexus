@@ -23,6 +23,7 @@ export interface DialogShellProps {
   aside?: ReactNode
   trailing?: ReactNode
   topRight?: ReactNode
+  closeInCorner?: boolean
   sectionProps?: Omit<HTMLAttributes<HTMLElement>, 'className'>
   onBackdropClick?: (e: MouseEvent<HTMLDivElement>) => void
   onClose?: () => void
@@ -47,11 +48,25 @@ export default function DialogShell({
   aside,
   trailing,
   topRight,
+  closeInCorner = false,
   sectionProps,
   onBackdropClick,
   onClose,
 }: DialogShellProps) {
   const { t } = useTranslation()
+
+  const closeButton = onClose ? (
+    <button
+      type="button"
+      className="dlg-close"
+      onClick={onClose}
+      data-testid={testId ? `${testId}-close` : undefined}
+      title={t('common', 'close')}
+      aria-label={t('common', 'close')}
+    >
+      ✕
+    </button>
+  ) : null
 
   return (
     <Modal
@@ -70,19 +85,9 @@ export default function DialogShell({
           <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span> {kickerLabel}
         </div>
         <div className="dlg-head-right">
-          {onClose && (
-            <button
-              type="button"
-              className="dlg-close"
-              onClick={onClose}
-              data-testid={testId ? `${testId}-close` : undefined}
-              title={t('common', 'close')}
-              aria-label={t('common', 'close')}
-            >
-              ✕
-            </button>
-          )}
+          {!closeInCorner && closeButton}
           {topRight && <div className="dlg-head-right-extra">{topRight}</div>}
+          {closeInCorner && closeButton}
         </div>
       </div>
       <h2 id={titleId} className="dlg-title">{title}</h2>
