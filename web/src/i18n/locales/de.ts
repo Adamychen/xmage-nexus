@@ -454,6 +454,7 @@ export const de: TranslationSchema = {
     leaderboard_format_limited: 'Limitiert (Draft/Versiegelt)',
     leaderboard_tournaments_played: 'Gespielte Turniere',
     leaderboard_fair_play: 'Fairplay',
+    leaderboard_fair_play_hint: 'Partien ohne Aufgabe ({ratio}% Aufgaben)',
     leaderboard_quit_ratio: '{ratio}% Abbr.',
     leaderboard_reliable: '100% zuverlässig',
     leaderboard_stat_total: 'Spiele Gesamt',

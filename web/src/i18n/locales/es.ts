@@ -454,6 +454,7 @@ export const es: TranslationSchema = {
     leaderboard_format_limited: 'Limitado (Draft/Sellado)',
     leaderboard_tournaments_played: 'Torneos Jugados',
     leaderboard_fair_play: 'Juego Limpio',
+    leaderboard_fair_play_hint: 'Partidas sin abandonos ({ratio}% de abandonos)',
     leaderboard_quit_ratio: '{ratio}% aband.',
     leaderboard_reliable: '100% fiable',
     leaderboard_stat_total: 'Partidas Totales',

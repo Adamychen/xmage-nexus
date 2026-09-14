@@ -109,15 +109,18 @@ export default function LeaderboardModal({
         ...u,
         effectiveRating,
         stats,
+        // Juego limpio: dato REAL del server (ratio de abandonos); el win rate
+        // no existe (el historial solo trae el conteo de partidas).
+        fairPlay: Math.max(0, 100 - (u.matchQuitRatio ?? 0)),
       }
     })
 
-    // Sort by ELO descending, then by winrate descending
+    // Sort by ELO descending, then by fair play descending
     list.sort((a, b) => {
       if (b.effectiveRating !== a.effectiveRating) {
         return b.effectiveRating - a.effectiveRating
       }
-      return (b.stats.winrate ?? 0) - (a.stats.winrate ?? 0)
+      return b.fairPlay - a.fairPlay
     })
 
     if (searchQuery.trim()) {
@@ -201,7 +204,7 @@ export default function LeaderboardModal({
                       <th>{t('lobby', 'leaderboard_col_tier')}</th>
                       <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_elo')}</th>
                       <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_history')}</th>
-                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_winrate')}</th>
+                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_fair_play')}</th>
                       <th>{t('lobby', 'leaderboard_col_status')}</th>
                     </tr>
                   </thead>
@@ -242,13 +245,16 @@ export default function LeaderboardModal({
                           <td className="elo-cell"><Icon name="star" size={12} /> {u.effectiveRating}</td>
                           <td className="history-cell">{u.stats.formattedHistory}</td>
                           <td className="winrate-cell">
-                            {u.stats.winrate !== null ? (
-                              <div className="winrate-bar-container">
-                                <span className="winrate-text">{u.stats.winrate}%</span>
+                            {u.stats.total > 0 ? (
+                              <div
+                                className="winrate-bar-container"
+                                title={t('lobby', 'leaderboard_fair_play_hint', { ratio: String(u.matchQuitRatio ?? 0) })}
+                              >
+                                <span className="winrate-text">{u.fairPlay}%</span>
                                 <div className="winrate-mini-track">
                                   <div
                                     className="winrate-mini-fill"
-                                    style={{ width: `${u.stats.winrate}%` }}
+                                    style={{ width: `${u.fairPlay}%` }}
                                   />
                                 </div>
                               </div>

@@ -460,6 +460,7 @@ export interface TranslationSchema {
     leaderboard_format_limited: string
     leaderboard_tournaments_played: string
     leaderboard_fair_play: string
+    leaderboard_fair_play_hint: string
     leaderboard_quit_ratio: string
     leaderboard_reliable: string
     leaderboard_stat_total: string

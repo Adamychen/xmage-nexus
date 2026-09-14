@@ -457,6 +457,7 @@ export const ja: TranslationSchema = {
     leaderboard_format_limited: 'リミテッド (ドラフト/シールド)',
     leaderboard_tournaments_played: '参加トーナメント',
     leaderboard_fair_play: 'フェアプレー',
+    leaderboard_fair_play_hint: '途中退出なしの対戦（{ratio}% が途中退出）',
     leaderboard_quit_ratio: '{ratio}% 途中退出',
     leaderboard_reliable: '100% 信頼性',
     leaderboard_stat_total: '総対戦数',

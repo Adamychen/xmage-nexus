@@ -457,6 +457,7 @@ export const zhs: TranslationSchema = {
     leaderboard_format_limited: '限制 (轮抽/现开)',
     leaderboard_tournaments_played: '锦标赛场次',
     leaderboard_fair_play: '公平竞赛',
+    leaderboard_fair_play_hint: '未中途退出的对局（弃权 {ratio}%）',
     leaderboard_quit_ratio: '{ratio}% 中途退出',
     leaderboard_reliable: '100% 可靠',
     leaderboard_stat_total: '总对局数',

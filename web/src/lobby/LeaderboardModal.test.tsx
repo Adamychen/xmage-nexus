@@ -111,16 +111,26 @@ describe('LeaderboardModal Component', () => {
     expect(screen.getAllByText('Mítico').length).toBeGreaterThan(0)
   })
 
-  it('no fabrica W-L ni winrate con historial de solo-conteo (AUDIT)', () => {
+  it('con historial de solo-conteo muestra Juego Limpio real (nunca W-L/winrate fabricados)', () => {
     const onClose = vi.fn()
     const users: UsersView[] = [
-      { ...mockUsers[0], userName: 'counter', matchHistory: '6', infoGames: 'not active' },
+      { ...mockUsers[0], userName: 'counter', matchHistory: '6 (Q:1)', matchQuitRatio: 17, infoGames: '' },
     ]
     render(<LeaderboardModal users={users} currentUsername="counter" onClose={onClose} />)
-    expect(screen.getByText('6')).toBeDefined()
+    expect(screen.getByText('6 (Q:1)')).toBeDefined()
     expect(screen.queryByText(/0-6/)).toBeNull()
+    // Dato real disponible: juego limpio = 100 - ratio de abandonos (17) = 83%
+    expect(screen.queryByText('—')).toBeNull()
+    expect(screen.getByText('83%')).toBeDefined()
+    expect(screen.getByTitle(/abandonos/i)).toBeDefined()
+  })
+
+  it('sin partidas registradas deja la columna en — con pista', () => {
+    const onClose = vi.fn()
+    const users: UsersView[] = [{ ...mockUsers[0], userName: 'rookie', matchHistory: '0', matchQuitRatio: 0 }]
+    render(<LeaderboardModal users={users} currentUsername="rookie" onClose={onClose} />)
     expect(screen.getByText('—')).toBeDefined()
-    expect(screen.getByText(/En el lobby/i)).toBeDefined()
+    expect(screen.queryByText(/%$/)).toBeNull()
   })
 
   it('muestra En partida solo con tokens de juego reales (AUDIT)', () => {

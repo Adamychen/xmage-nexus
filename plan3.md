@@ -313,3 +313,19 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
   - *Pendientes relacionados*: cuadro de torneos YA TERMINADOS desde el
     Historial (la mesa desaparece del lobby y `MatchView` no trae tournamentId:
     haría falta un command de historial→torneo); §2.2 replay (decisión usuario).
+
+- **2026-09-14 (6ª parte) — Win Rate del leaderboard → Juego Limpio (dato real)**
+  - *Reporte del usuario*: la columna WIN RATE de Clasificación mostraba `—`.
+    Causa: desde `f08ed4e46b8` (2026-09-12, auditoría interactiva) se dejó de
+    fabricar un win rate a partir del ELO; el server **nunca** envía W-L
+    (`User.userStatsToMatchHistory` solo manda el conteo + abandonos:
+    `1 (Q:1)`), así que el dato no existe.
+  - *Decisión del usuario*: mostrar el **fair play real** disponible. La columna
+    pasa a `JUEGO LIMPIO` = `100 − matchQuitRatio` (con tooltip
+    `leaderboard_fair_play_hint`: "{ratio}% de abandonos"; `—` con pista cuando
+    no hay partidas). Tie-break del sort por juego limpio en vez de winrate.
+  - *Tests*: 2 en `LeaderboardModal.test.tsx` (rojo sin el cambio: el de
+    solo-conteo exigía `—` y ahora exige `83%` con tooltip; + el de 0 partidas
+    sigue en `—`); clave nueva ×9 locales + `types.ts`. Unit **1465/1465** ✅ +
+    typecheck ✅. Verificado en vivo (`p2-live2-SPEC`: HISTORIAL `1 (Q:1)` →
+    JUEGO LIMPIO `0%`; captura `web/e2e/shots/leaderboard-fairplay.png`).

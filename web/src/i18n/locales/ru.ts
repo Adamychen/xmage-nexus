@@ -454,6 +454,7 @@ export const ru: TranslationSchema = {
     leaderboard_format_limited: 'Лимитед (Драфт/Силед)',
     leaderboard_tournaments_played: 'Сыграно турниров',
     leaderboard_fair_play: 'Честная игра',
+    leaderboard_fair_play_hint: 'Игры без выхода ({ratio}% выходов)',
     leaderboard_quit_ratio: '{ratio}% выходов',
     leaderboard_reliable: '100% надёжно',
     leaderboard_stat_total: 'Всего игр',
