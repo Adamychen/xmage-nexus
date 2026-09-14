@@ -58,7 +58,7 @@ describe('CurveChart', () => {
     // Avg CMC = (4*1 + 4*1 + 4*2) / 12 = 16 / 12 = 1.3
     expect(screen.getByText('1.3')).toBeDefined()
     // 16 {R} mana symbols
-    expect(screen.getByText('16')).toBeDefined()
+    expect(screen.getAllByText('16').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders the Mana Analyser sections: sources, basics and distribution (U6-2)', () => {

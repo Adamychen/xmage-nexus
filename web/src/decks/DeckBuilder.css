@@ -194,7 +194,7 @@
   gap: 8px;
   animation: curveSlideDown 150ms ease-out;
   flex-shrink: 0;
-  max-height: 30vh;
+  max-height: 38vh;
   overflow-y: auto;
 }
 
@@ -290,11 +290,6 @@
 .deck-curve-panel .curve-stat-pill {
   padding: 3px 6px;
   font-size: 0.72rem;
-}
-
-.deck-curve-panel .curve-pips-row {
-  margin-top: 2px;
-  gap: 8px;
 }
 
 /* Deck Actions Footer */

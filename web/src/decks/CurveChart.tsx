@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { isLandCard, fallbackCmc, basicLandKind, isManaSourceCard, type BasicLandKind } from './deckUtils'
-import { parseManaSymbols, ManaPip } from './ArenaManaSymbols'
+import { parseManaSymbols } from './ArenaManaSymbols'
+import ManaPie, { ManaPieLegend, type ManaPieSlice } from './ManaPie'
+import { COLOR_LABEL_KEYS } from './ArenaFilterBar'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CurveChart.css'
@@ -119,18 +121,15 @@ export default function CurveChart({
     G: { label: 'G', color: '#4caf6e' },
     C: { label: 'C', color: '#9aa0a6' },
   }
-  const donutGradient = (entries: [string, number][], total: number) => {
-    if (total <= 0) return 'conic-gradient(#3a3a3a 0deg 360deg)'
-    let acc = 0
-    return `conic-gradient(${entries.map(([sym, cnt]) => {
-      const m = COLOR_META[sym] ?? COLOR_META.C
-      const start = (acc / total) * 360
-      acc += cnt
-      const end = (acc / total) * 360
-      return `${m.color} ${start}deg ${end}deg`
-    }).join(', ')})`
-  }
-  const gradient = donutGradient(activePips, totalPips)
+  const colorName = (symbol: string) =>
+    t('game', COLOR_LABEL_KEYS[symbol as keyof typeof COLOR_LABEL_KEYS] ?? 'color_colorless')
+  const colorSlices: ManaPieSlice[] = activePips.map(([symbol, count]) => ({
+    key: symbol,
+    label: colorName(symbol),
+    value: count,
+    color: (COLOR_META[symbol] ?? COLOR_META.C).color,
+    pip: symbol,
+  }))
 
   const BASIC_SYMBOLS: { kind: BasicLandKind; symbol: string }[] = [
     { kind: 'Plains', symbol: 'W' },
@@ -142,10 +141,19 @@ export default function CurveChart({
   ]
   const activeBasics = BASIC_SYMBOLS.map(({ kind, symbol }) => ({ kind, symbol, count: basics[kind] })).filter((e) => e.count > 0)
   const totalBasics = activeBasics.reduce((s, e) => s + e.count, 0)
-  const basicsGradient = donutGradient(activeBasics.map((e) => [e.symbol, e.count]), totalBasics)
+  const basicSlices: ManaPieSlice[] = activeBasics.map((e) => ({
+    key: e.kind,
+    label: colorName(e.symbol),
+    value: e.count,
+    color: (COLOR_META[e.symbol] ?? COLOR_META.C).color,
+    pip: e.symbol,
+  }))
 
   const totalSources = sourceLands + sourceNonlands
-  const sourcesGradient = donutGradient([['G', sourceLands], ['C', sourceNonlands]], totalSources)
+  const sourceSlices: ManaPieSlice[] = [
+    { key: 'lands', label: t('decks', 'mana_from_lands'), value: sourceLands, color: '#4caf6e', icon: <Icon name="tree" size={13} /> },
+    { key: 'nonlands', label: t('decks', 'mana_from_nonlands'), value: sourceNonlands, color: '#9aa0a6', icon: <Icon name="sparkles" size={13} /> },
+  ].filter((slice) => slice.value > 0)
 
   const distMax = Math.max(1, ...distByCmc.map((d) => Object.values(d).reduce((s, v) => s + v, 0)))
   const DIST_ORDER = ['W', 'U', 'B', 'R', 'G']
@@ -195,50 +203,32 @@ export default function CurveChart({
         </div>
       </div>
 
-      {activePips.length > 0 && (
-        <div className="curve-pips-row">
-          <div
-            className="curve-color-donut"
-            style={{ background: gradient }}
-            title={activePips.map(([s, c]) => `${s}:${c}`).join(' ')}
-            role="img"
-            aria-label={t('decks', 'builder_aria_color_breakdown')}
-          >
-            <span className="curve-donut-hole" />
-          </div>
-          <div className="curve-pips-list">
-            {activePips.map(([symbol, count]) => (
-              <span key={symbol} className="curve-pip-item" title={`${count} ${symbol}`}>
-                <ManaPip symbol={symbol} size={15} />
-                <span>{count}</span>
-              </span>
-            ))}
+      {totalPips > 0 && (
+        <div className="curve-mana-section">
+          <div className="curve-section-title">{t('decks', 'builder_mana_pips')} · {totalPips}</div>
+          <div className="curve-mana-row">
+            <ManaPie
+              slices={colorSlices}
+              centerValue={totalPips}
+              ariaLabel={t('decks', 'builder_aria_color_breakdown')}
+              title={activePips.map(([s, c]) => `${s}: ${c}`).join(' · ')}
+            />
+            <ManaPieLegend slices={colorSlices} total={totalPips} />
           </div>
         </div>
       )}
-      {totalSources > 0 && (
+      {sourceSlices.length > 0 && (
         <div className="curve-mana-section">
           <div className="curve-section-title">{t('decks', 'mana_sources')} · {totalSources}</div>
-          <div className="curve-pips-row">
-            <div
-              className="curve-color-donut"
-              style={{ background: sourcesGradient }}
+          <div className="curve-mana-row">
+            <ManaPie
+              slices={sourceSlices}
+              size={76}
+              centerValue={totalSources}
+              ariaLabel={t('decks', 'builder_aria_mana_sources')}
               title={`${t('decks', 'mana_from_lands')}: ${sourceLands} · ${t('decks', 'mana_from_nonlands')}: ${sourceNonlands}`}
-              role="img"
-              aria-label={t('decks', 'builder_aria_mana_sources')}
-            >
-              <span className="curve-donut-hole" />
-            </div>
-            <div className="curve-pips-list">
-              <span className="curve-pip-item" title={t('decks', 'mana_from_lands')}>
-                <Icon name="tree" size={15} />
-                <span>{sourceLands}</span>
-              </span>
-              <span className="curve-pip-item" title={t('decks', 'mana_from_nonlands')}>
-                <Icon name="sparkles" size={15} />
-                <span>{sourceNonlands}</span>
-              </span>
-            </div>
+            />
+            <ManaPieLegend slices={sourceSlices} total={totalSources} />
           </div>
         </div>
       )}
@@ -249,24 +239,15 @@ export default function CurveChart({
             {t('decks', 'mana_basic_lands')} · {totalBasics}
             {nonbasicLands > 0 && <span className="curve-section-sub"> · {t('decks', 'mana_nonbasic_lands')}: {nonbasicLands}</span>}
           </div>
-          <div className="curve-pips-row">
-            <div
-              className="curve-color-donut"
-              style={{ background: basicsGradient }}
-              title={activeBasics.map((e) => `${e.kind}:${e.count}`).join(' ')}
-              role="img"
-              aria-label={t('decks', 'builder_aria_basic_lands')}
-            >
-              <span className="curve-donut-hole" />
-            </div>
-            <div className="curve-pips-list">
-              {activeBasics.map((e) => (
-                <span key={e.kind} className="curve-pip-item" title={`${e.count} ${e.kind}`}>
-                  <ManaPip symbol={e.symbol} size={15} />
-                  <span>{e.count}</span>
-                </span>
-              ))}
-            </div>
+          <div className="curve-mana-row">
+            <ManaPie
+              slices={basicSlices}
+              size={76}
+              centerValue={totalBasics}
+              ariaLabel={t('decks', 'builder_aria_basic_lands')}
+              title={activeBasics.map((e) => `${e.kind}: ${e.count}`).join(' · ')}
+            />
+            <ManaPieLegend slices={basicSlices} total={totalBasics} />
           </div>
         </div>
       )}

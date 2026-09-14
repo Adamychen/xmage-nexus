@@ -12,7 +12,7 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
 const TYPES = ['Creature', 'Instant', 'Sorcery', 'Planeswalker', 'Artifact', 'Enchantment', 'Land', 'Battle'] as const
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'mythic']
 const RARITY_LABEL: Record<Rarity, string> = { common: 'C', uncommon: 'U', rare: 'R', mythic: 'M' }
-const COLOR_LABEL_KEYS: Record<(typeof COLORS)[number], keyof import('../i18n').TranslationSchema['game']> = {
+export const COLOR_LABEL_KEYS: Record<(typeof COLORS)[number], keyof import('../i18n').TranslationSchema['game']> = {
   W: 'color_white',
   U: 'color_blue',
   B: 'color_black',

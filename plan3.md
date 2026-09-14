@@ -411,3 +411,31 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     suite de decks/deckvalidation/grid-search en verde. Unit **1500/1500** +
     typecheck + build ✅. Vivo: capturas `web/e2e/shots/db-after-*.png`
     (header/issues, sin resultados, horizontal, guardado).
+
+- **2026-09-14 (10ª parte) — Maná del Deck Builder: donuts SVG reales (reporte del usuario)**
+  - *Petición*: «lo de ver el maná se ve cutre, ¿no se puede hacer un pie chart
+    de verdad?». Los antiguos repartos eran tres `conic-gradient` de 38 px con
+    agujero y leyenda de pips suelta (sin nombres ni porcentajes).
+  - *Implementación*: componente reutilizable `ManaPie.tsx/.css` — donut SVG por
+    sectores (`stroke-dasharray`/`dashoffset` sobre círculos rotados −90°),
+    separación de 2 px entre sectores (sin hueco si hay uno solo), total en el
+    centro, hover con brillo y `<title>` por sector; `ManaPieLegend` con
+    símbolo/icono, nombre del color (`game.color_*` vía `COLOR_LABEL_KEYS`,
+    exportado desde `ArenaFilterBar`), cantidad y porcentaje (`manaShare`, con
+    «<1%» para porciones diminutas). `CurveChart` pasa a tres secciones con
+    título + gráfico + leyenda: **Pips de maná** (104 px), **Fuentes de maná**
+    (76 px, tierras/no-tierras con iconos) y **Tierras básicas** (76 px, por
+    color); «Maná por coste» se mantiene (segmentos con hover). Panel de curva:
+    `max-height` 30vh → 38vh para que el gráfico respire. CSS muerto eliminado
+    (`curve-color-donut`, `curve-donut-hole`, `curve-pips-*`).
+  - *Tests*: `ManaPie.test.tsx` (6: sectores, anillo mono-color sin hueco, hueco
+    entre sectores, vacío → `null`, leyenda con % y redondeo/límite de
+    `manaShare`); `CurveChart.test.tsx` ajustado (el total ahora aparece también
+    en el centro). Unit **1506/1506** + typecheck + build ✅; e2e fake
+    `decks-gallery`/`deckvalidation`/`grid-search` 14/14 ✅.
+  - *Vivo (1280×800, real)*: donut de 5 colores (Rojo 50%, resto 13%) con total
+    y leyenda, fuentes/tierras en anillo completo mono-color, y el mismo gráfico
+    en el Inspector (doble clic) — capturas `web/e2e/shots/mana-pie-after.png`,
+    `mana-pie-donut.png`, `mana-pie-sections.png`, `mana-pie-inspector.png`
+    (antes: `mana-pie-before.png`).
+
