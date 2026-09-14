@@ -4,6 +4,7 @@ import { ManaCost } from './ArenaManaSymbols'
 import { setFloatingStripDragImage } from './arenaDragHelpers'
 import { useLocalizedCardName } from '../cards/cardLocalization'
 import Icon from '../ui/Icon'
+import { confirmDialog } from '../ui/confirmDialog'
 import { useTranslation } from '../i18n'
 import './ArenaCardStrip.css'
 
@@ -114,8 +115,24 @@ export function ArenaCardStrip({
     if (e.shiftKey) {
       onInc?.(actionKey)
     } else {
+      focusNeighborAfterRemoval()
       onDec?.(actionKey)
     }
+  }
+
+  /** Si la tira desaparece al quitar la última copia, el foco cae a <body>:
+   *  lo movemos al vecino más próximo (antes de que React desmonte). */
+  const focusNeighborAfterRemoval = () => {
+    const el = ref.current
+    if (!el) return
+    const next = el.nextElementSibling as HTMLElement | null
+    const prev = el.previousElementSibling as HTMLElement | null
+    requestAnimationFrame(() => {
+      if (document.activeElement && document.activeElement !== document.body) return
+      const pick = (n: HTMLElement | null): HTMLElement | null =>
+        n?.classList.contains('arena-card-strip') ? n : n?.querySelector<HTMLElement>('.arena-card-strip') ?? null
+      ;(pick(next) ?? pick(prev))?.focus()
+    })
   }
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -132,14 +149,30 @@ export function ArenaCardStrip({
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       if (onSwap) onSwap(actionKey)
-      else onDec?.(actionKey)
+      else {
+        focusNeighborAfterRemoval()
+        onDec?.(actionKey)
+      }
     } else if (e.key === '+' || e.key === '=') {
       e.preventDefault()
       onInc?.(actionKey)
     } else if (e.key === '-' || e.key === '_') {
       e.preventDefault()
+      focusNeighborAfterRemoval()
       onDec?.(actionKey)
     }
+  }
+
+  const handleRemoveAll = async () => {
+    if (!onRemove) return
+    if (card.amount > 1) {
+      const ok = await confirmDialog(
+        t('decks', 'strip_remove_all_confirm', { count: card.amount, name: displayName || originalName }),
+      )
+      if (!ok) return
+    }
+    focusNeighborAfterRemoval()
+    onRemove(actionKey)
   }
 
   return (
@@ -189,7 +222,11 @@ export function ArenaCardStrip({
       </div>
 
       {/* Quick Hover Controls */}
-      <div className="strip-actions" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="strip-actions"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         {onSwap && (
           <button
             type="button"
@@ -203,7 +240,10 @@ export function ArenaCardStrip({
         <button
           type="button"
           className="strip-btn"
-          onClick={() => onDec?.(actionKey)}
+          onClick={() => {
+            focusNeighborAfterRemoval()
+            onDec?.(actionKey)
+          }}
           title={t('decks', 'strip_remove_one')}
         >
           −
@@ -256,7 +296,7 @@ export function ArenaCardStrip({
         <button
           type="button"
           className="strip-btn danger"
-          onClick={() => onRemove?.(actionKey)}
+          onClick={() => void handleRemoveAll()}
           title={t('decks', 'strip_remove_all')}
         >
           ×

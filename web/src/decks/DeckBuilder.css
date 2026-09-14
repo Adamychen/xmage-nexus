@@ -442,6 +442,7 @@
 }
 
 .builder-server-issues {
+  position: relative;
   margin: 6px 12px 0;
   padding: 8px 12px;
   background: rgba(220, 80, 60, 0.12);
@@ -449,6 +450,26 @@
   border-radius: 8px;
   font-size: 0.812rem;
   color: #f2b8ad;
+}
+.builder-server-issues .bsi-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+}
+.builder-server-issues .bsi-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 .builder-server-issues .bsi-title {
   font-weight: 700;

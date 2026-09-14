@@ -174,8 +174,14 @@
   z-index: 3;
 }
 
-.arena-card-strip:hover .strip-actions {
+.arena-card-strip:hover .strip-actions,
+.arena-card-strip:focus-within .strip-actions {
   display: flex;
+}
+
+.strip-btn:focus-visible {
+  outline: 2px solid #63b3ed;
+  outline-offset: 1px;
 }
 
 .strip-btn {

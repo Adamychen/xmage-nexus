@@ -16,6 +16,9 @@ export function ArenaCardGrid({
   countMap,
   onAdd,
   onLoadMore,
+  onRetry,
+  onClearFilters,
+  query,
   onHover,
   onLeave,
   cardMinPx,
@@ -29,11 +32,14 @@ export function ArenaCardGrid({
   countMap: Map<string, number>
   onAdd: (card: ScryfallSearchCard) => void
   onLoadMore?: () => void
+  onRetry?: () => void
+  onClearFilters?: () => void
+  query?: string
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
   cardMinPx?: number
 }) {
-  const { t, lang } = useTranslation()
+  const { t, tError, lang } = useTranslation()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -92,8 +98,14 @@ export function ArenaCardGrid({
   if (error) {
     return (
       <div className="arena-card-grid-container">
-        <div className="arena-grid-status-box" style={{ color: '#fc8181' }}>
-          <span><Icon name="alert" size={13} /> {error}</span>
+        <div className="arena-grid-status-box is-error" role="alert">
+          <span><Icon name="alert" size={13} /> {t('decks', 'builder_search_failed')}</span>
+          <small>{tError(error)}</small>
+          {onRetry && (
+            <button type="button" className="arena-grid-retry-btn" onClick={onRetry}>
+              {t('decks', 'builder_search_retry')}
+            </button>
+          )}
         </div>
       </div>
     )
@@ -128,20 +140,33 @@ export function ArenaCardGrid({
               key={card.id}
               className="arena-grid-card search-card"
               draggable
+              role="button"
+              tabIndex={0}
+              aria-label={`${displayName} — ${t('decks', 'builder_grid_add')}`}
               onDragStart={(e) => handleDragStart(e, card)}
               onClick={() => onAdd(card)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onAdd(card)
+                }
+              }}
               onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={onLeave}
-              title={`${hoverTitle} — ${t('decks', 'builder_drag_hint')}`}
+              title={`${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
             >
               {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
               <div className="arena-card-pips">
-                {Array.from({ length: maxPips }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`card-pip-diamond ${i < count ? 'filled' : ''}`}
-                  />
-                ))}
+                {count > maxPips ? (
+                  <span className="card-pip-count" title={`${count}× ${displayName}`}>{count}×</span>
+                ) : (
+                  Array.from({ length: maxPips }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`card-pip-diamond ${i < count ? 'filled' : ''}`}
+                    />
+                  ))
+                )}
               </div>
 
               {/* Card Image */}
@@ -160,7 +185,7 @@ export function ArenaCardGrid({
                   </div>
                 )}
                 <div className="arena-grid-card-overlay">
-                  <span className="arena-add-badge search-card-add">+ {t('common', 'search')}</span>
+                  <span className="arena-add-badge search-card-add">+ {t('decks', 'builder_grid_add')}</span>
                 </div>
               </div>
             </div>
@@ -178,12 +203,20 @@ export function ArenaCardGrid({
         )}
 
         {cards.length === 0 && !loading && (
-          <div className="arena-grid-status-box">
-            <span>{t('decks', 'sample_no_cards')}</span>
-            <small style={{ color: '#718096' }}>
-              {t('decks', 'builder_search_hint')}
-            </small>
-          </div>
+          totalCards !== undefined ? (
+            <div className="arena-grid-status-box">
+              <span>{query ? t('decks', 'builder_search_no_results', { query }) : t('decks', 'sample_no_cards')}</span>
+              {onClearFilters && (
+                <button type="button" className="arena-grid-retry-btn" onClick={onClearFilters}>
+                  {t('decks', 'builder_search_clear_filters')}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="arena-grid-status-box">
+              <span><Icon name="search" size={13} /> {t('decks', 'builder_search_hint')}</span>
+            </div>
+          )
         )}
       </div>
 
@@ -206,9 +239,9 @@ export function ArenaCardGrid({
               type="button"
               className="arena-footer-load-btn"
               onClick={() => onLoadMore?.()}
-              title={t('common', 'loading')}
+              title={t('decks', 'builder_load_more')}
             >
-              <Icon name="zap" size={13} /> {t('common', 'loading')}
+              <Icon name="zap" size={13} /> {t('decks', 'builder_load_more')}
             </button>
           ) : cards.length > 0 ? (
             <span className="arena-footer-done">✓ {t('common', 'done')}</span>

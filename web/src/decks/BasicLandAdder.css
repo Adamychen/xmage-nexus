@@ -92,6 +92,13 @@
   color: #ff8787;
 }
 
+.basic-land-dec-placeholder {
+  display: inline-block;
+  width: 22px;
+  padding: 3px 5px;
+  border-left: 1px solid transparent;
+}
+
 .basic-land-suggest-toggle-btn {
   margin-left: auto;
   background: linear-gradient(135deg, rgba(124, 92, 255, 0.2), rgba(99, 102, 241, 0.2));

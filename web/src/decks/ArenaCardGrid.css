@@ -83,6 +83,23 @@
   box-shadow: 0 0 4px rgba(246, 224, 94, 0.8);
 }
 
+.card-pip-count {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #f6e05e;
+  background: rgba(246, 224, 94, 0.16);
+  border: 1px solid rgba(236, 201, 75, 0.7);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.arena-grid-card:focus-visible {
+  outline: 2px solid #63b3ed;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 /* Card Image Wrapper */
 .arena-grid-card-img-wrapper {
   position: relative;
@@ -240,6 +257,33 @@
   color: #a0aec0;
   padding: 40px 20px;
   text-align: center;
+}
+
+.arena-grid-status-box.is-error {
+  color: #fc8181;
+}
+
+.arena-grid-status-box small {
+  color: #a0aec0;
+  font-size: 0.7rem;
+  max-width: 90%;
+  overflow-wrap: anywhere;
+}
+
+.arena-grid-retry-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.arena-grid-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
 }
 
 .arena-grid-spinner {

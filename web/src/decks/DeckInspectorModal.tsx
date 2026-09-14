@@ -18,7 +18,7 @@ export function DeckInspectorModal({
 }: {
   deck: MetaDeckItem | DeckV2
   onClose: () => void
-  onCopy: (d: MetaDeckItem | DeckV2) => void
+  onCopy: (d: MetaDeckItem | DeckV2) => unknown | Promise<unknown>
   onEdit: (d: MetaDeckItem | DeckV2) => void
 }) {
   const [copied, setCopied] = useState(false)
@@ -87,9 +87,9 @@ export function DeckInspectorModal({
     }
   }, [deck.id])
 
-  const handleCopy = () => {
-    onCopy(deck)
-    setCopied(true)
+  const handleCopy = async () => {
+    const result = await onCopy(deck)
+    setCopied(result !== false)
     setTimeout(() => setCopied(false), 2000)
   }
 

@@ -5,7 +5,15 @@
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+
+.curve-chart-empty {
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  color: #a0aec0;
+  font-size: 0.78rem;
+  text-align: center;
 }
 
 .curve-bars {

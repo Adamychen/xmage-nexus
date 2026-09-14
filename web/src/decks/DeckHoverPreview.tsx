@@ -23,7 +23,7 @@ export default function DeckHoverPreview({ preview }: { preview: HoverPreview | 
       {preview.backUrl && (
         <div className="preview-face-card">
           <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-          <img src={preview.backUrl} alt={`${preview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
+          <img src={preview.backUrl} alt={`${preview.name ?? t('decks', 'card')} (${t('wiki', 'face_back')})`} />
         </div>
       )}
     </div>

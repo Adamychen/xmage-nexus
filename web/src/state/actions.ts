@@ -3,7 +3,7 @@ import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
-import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument } from './persistence'
+import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
 import { soundManager } from '../audio/soundManager'
@@ -41,6 +41,7 @@ export function sniffDungeonEntry(message: string, gameId: string | null) {
 
 export function setMyDeck(deck: DeckJson | null) {
   saveActiveDeck(deck)
+  rememberEquippedDeckId((deck as { id?: string } | null)?.id ?? null)
   setState({ myDeck: deck, sideboard: deck?.sideboard ?? [] })
 }
 

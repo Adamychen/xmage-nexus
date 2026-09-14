@@ -12,6 +12,14 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
 const TYPES = ['Creature', 'Instant', 'Sorcery', 'Planeswalker', 'Artifact', 'Enchantment', 'Land', 'Battle'] as const
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'mythic']
 const RARITY_LABEL: Record<Rarity, string> = { common: 'C', uncommon: 'U', rare: 'R', mythic: 'M' }
+const COLOR_LABEL_KEYS: Record<(typeof COLORS)[number], keyof import('../i18n').TranslationSchema['game']> = {
+  W: 'color_white',
+  U: 'color_blue',
+  B: 'color_black',
+  R: 'color_red',
+  G: 'color_green',
+  C: 'color_colorless',
+}
 const KEYWORDS_PRIMARY = ['Flying', 'Haste', 'Trample', 'Deathtouch', 'Lifelink', 'Vigilance', 'Hexproof', 'Menace', 'Reach', 'First Strike', 'Double Strike', 'Ward'] as const
 const KEYWORDS_EXTRA = ['Flash', 'Defender', 'Indestructible', 'Prowess', 'Toxic', 'Backup', 'Convoke', 'Delve', 'Evolve', 'Cascade', 'Kicker', 'Cycling'] as const
 const keywordIdOfLabel = (label: string): string => label.toLowerCase().replace(/ /g, '_')
@@ -102,8 +110,11 @@ export function ArenaFilterBar({
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [moreKeywords, setMoreKeywords] = useState(false)
   const [setInput, setSetInput] = useState(setFilter ?? '')
+  const [powerOp, setPowerOp] = useState<StatOp>('>=')
+  const [toughnessOp, setToughnessOp] = useState<StatOp>('>=')
   const langMenuRef = useRef<HTMLDivElement>(null)
   const helpRef = useRef<HTMLDivElement>(null)
+  const helpBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => { setSetInput(setFilter ?? '') }, [setFilter])
 
@@ -158,15 +169,26 @@ export function ArenaFilterBar({
           <div className="arena-search-help-wrap" ref={helpRef}>
             <button
               type="button"
+              ref={helpBtnRef}
               className="arena-search-help-btn"
               onClick={() => setHelpOpen((v) => !v)}
               title={t('decks', 'search_help_title')}
               aria-label={t('decks', 'search_help_title')}
+              aria-expanded={helpOpen}
             >
               ?
             </button>
             {helpOpen && (
-              <div className="arena-search-help-popover" role="dialog">
+              <div
+                className="arena-search-help-popover"
+                role="dialog"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setHelpOpen(false)
+                    helpBtnRef.current?.focus()
+                  }
+                }}
+              >
                 <div className="help-popover-title">{t('decks', 'search_help_title')}</div>
                 <div className="help-popover-examples">
                   <code>t:creature</code> <code>c:red</code> <code>cmc&lt;=3</code> <code>o:"haste"</code> <code>pow&gt;3</code> <code>rarity:mythic</code> <code>set:mh3</code> <code>f:standard</code>
@@ -217,13 +239,16 @@ export function ArenaFilterBar({
         <div className="arena-mana-orbs">
           {COLORS.map((c) => {
             const active = colorFilter.has(c)
+            const label = t('game', COLOR_LABEL_KEYS[c])
             return (
               <button
                 key={c}
                 type="button"
                 className={`mana-orb-btn orb-${c.toLowerCase()} ${active ? 'active' : ''}`}
                 onClick={() => onToggleColor(c)}
-                title={`${t('decks', 'filter_cmc')} ${c}`}
+                title={label}
+                aria-label={label}
+                aria-pressed={active}
               >
                 <ManaPip symbol={c} size={20} />
               </button>
@@ -236,7 +261,7 @@ export function ArenaFilterBar({
         <div className="arena-filter-chips">
           <span className="arena-chip-label">{t('decks', 'filter_cmc')}</span>
           {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
-            <button key={n} type="button" className={`arena-cmc-btn cmc-chip ${cmcFilter === n ? 'active' : ''}`} onClick={() => onCmcChange(cmcFilter === n ? null : n)}>
+            <button key={n} type="button" className={`arena-cmc-btn cmc-chip ${cmcFilter === n ? 'active' : ''}`} onClick={() => onCmcChange(cmcFilter === n ? null : n)} aria-pressed={cmcFilter === n} aria-label={`${t('decks', 'filter_cmc')} ${n === 7 ? '7+' : n}`}>
               {n === 7 ? '7+' : n}
             </button>
           ))}
@@ -245,7 +270,7 @@ export function ArenaFilterBar({
         <div className="arena-filter-chips">
           <span className="arena-chip-label">{t('decks', 'filter_type')}</span>
           {TYPES.map((tKey) => (
-            <button key={tKey} type="button" className={`arena-type-btn ${typeFilter === tKey ? 'active' : ''}`} onClick={() => onTypeChange(typeFilter === tKey ? null : tKey)}>
+            <button key={tKey} type="button" className={`arena-type-btn ${typeFilter === tKey ? 'active' : ''}`} onClick={() => onTypeChange(typeFilter === tKey ? null : tKey)} aria-pressed={typeFilter === tKey}>
               {t('game', TYPE_LABEL_KEYS[tKey])}
             </button>
           ))}
@@ -294,7 +319,10 @@ export function ArenaFilterBar({
               value={gridSize}
               onChange={(e) => onGridSizeChange(Number(e.target.value))}
               aria-label={t('decks', 'grid_size')}
+              aria-valuetext={`${gridSize}%`}
+              title={`${t('decks', 'grid_size')}: ${gridSize}%`}
             />
+            <span className="arena-grid-size-value">{gridSize}%</span>
           </div>
         )}
 
@@ -311,7 +339,7 @@ export function ArenaFilterBar({
             <span className="arena-chip-label">{t('decks', 'filter_rarity')}</span>
             <div className="arena-filter-chips">
               {RARITIES.map((r) => (
-                <button key={r} type="button" className={`rarity-chip rarity-${r} ${rarityFilter.has(r) ? 'active' : ''}`} onClick={() => onToggleRarity(r)} title={r}>
+                <button key={r} type="button" className={`rarity-chip rarity-${r} ${rarityFilter.has(r) ? 'active' : ''}`} onClick={() => onToggleRarity(r)} title={`${t('decks', 'filter_rarity')} ${RARITY_LABEL[r]}`} aria-label={`${t('decks', 'filter_rarity')} ${RARITY_LABEL[r]}`} aria-pressed={rarityFilter.has(r)}>
                   {RARITY_LABEL[r]}
                 </button>
               ))}
@@ -324,7 +352,7 @@ export function ArenaFilterBar({
               {(moreKeywords ? [...KEYWORDS_PRIMARY, ...KEYWORDS_EXTRA] : [...KEYWORDS_PRIMARY]).map((kw) => {
                 const active = keywordFilter.has(kw)
                 return (
-                  <button key={kw} type="button" className={`keyword-chip ${active ? 'active' : ''}`} onClick={() => onToggleKeyword(kw)} title={kw}>
+                  <button key={kw} type="button" className={`keyword-chip ${active ? 'active' : ''}`} onClick={() => onToggleKeyword(kw)} title={kw} aria-pressed={active}>
                     {keywordDisplayName(keywordIdOfLabel(kw), kw, (k) => t('keywords', k))}
                   </button>
                 )
@@ -340,11 +368,12 @@ export function ArenaFilterBar({
               <span className="arena-chip-label">{t('decks', 'filter_power')}</span>
               <select
                 className="stat-op-select"
-                value={powerFilter?.op ?? '>='}
+                value={powerFilter?.op ?? powerOp}
+                aria-label={t('decks', 'filter_power')}
                 onChange={(e) => {
                   const op = e.target.value as StatOp
-                  const val = powerFilter?.value ?? 3
-                  onPowerChange({ op, value: val })
+                  setPowerOp(op)
+                  if (powerFilter) onPowerChange({ op, value: powerFilter.value })
                 }}
               >
                 <option value=">=">≥</option>
@@ -365,7 +394,7 @@ export function ArenaFilterBar({
                   if (v === '') onPowerChange(null)
                   else {
                     const n = Number(v)
-                    if (Number.isFinite(n)) onPowerChange({ op: powerFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Math.trunc(n))) })
+                    if (Number.isFinite(n)) onPowerChange({ op: powerFilter?.op ?? powerOp, value: Math.max(0, Math.min(20, Math.trunc(n))) })
                   }
                 }}
               />
@@ -380,11 +409,12 @@ export function ArenaFilterBar({
               <span className="arena-chip-label">{t('decks', 'filter_toughness')}</span>
               <select
                 className="stat-op-select"
-                value={toughnessFilter?.op ?? '>='}
+                value={toughnessFilter?.op ?? toughnessOp}
+                aria-label={t('decks', 'filter_toughness')}
                 onChange={(e) => {
                   const op = e.target.value as StatOp
-                  const val = toughnessFilter?.value ?? 3
-                  onToughnessChange({ op, value: val })
+                  setToughnessOp(op)
+                  if (toughnessFilter) onToughnessChange({ op, value: toughnessFilter.value })
                 }}
               >
                 <option value=">=">≥</option>
@@ -405,7 +435,7 @@ export function ArenaFilterBar({
                   if (v === '') onToughnessChange(null)
                   else {
                     const n = Number(v)
-                    if (Number.isFinite(n)) onToughnessChange({ op: toughnessFilter?.op ?? '>=', value: Math.max(0, Math.min(20, Math.trunc(n))) })
+                    if (Number.isFinite(n)) onToughnessChange({ op: toughnessFilter?.op ?? toughnessOp, value: Math.max(0, Math.min(20, Math.trunc(n))) })
                   }
                 }}
               />
@@ -440,7 +470,7 @@ export function ArenaFilterBar({
           <div className="adv-row adv-sets-row">
             <div className="arena-filter-chips">
               {QUICK_SETS.map((s) => (
-                <button key={s} type="button" className={`set-chip ${setFilter === s ? 'active' : ''}`} onClick={() => onSetChange(setFilter === s ? null : s)}>
+                <button key={s} type="button" className={`set-chip ${setFilter === s ? 'active' : ''}`} onClick={() => onSetChange(setFilter === s ? null : s)} aria-pressed={setFilter === s}>
                   {s.toUpperCase()}
                 </button>
               ))}

@@ -140,6 +140,25 @@ export function clearActiveGame() {
 }
 
 const ACTIVE_DECK_KEY = 'mage-web-active-deck'
+const EQUIPPED_DECK_ID_KEY = 'mage-web-equipped-deck-id'
+
+/** Recuerda el id (catálogo de mazos) del mazo equipado, para poder marcarlo
+ *  aunque se renombre (comparar por nombre fallaba). */
+export function rememberEquippedDeckId(id: string | null | undefined) {
+  try {
+    const storage = getStorage()
+    if (id) storage.setItem(EQUIPPED_DECK_ID_KEY, id)
+    else storage.removeItem(EQUIPPED_DECK_ID_KEY)
+  } catch {}
+}
+
+export function equippedDeckId(): string | null {
+  try {
+    return getStorage().getItem(EQUIPPED_DECK_ID_KEY)
+  } catch {
+    return null
+  }
+}
 
 export function saveActiveDeck(deck: DeckJson | null) {
   try {

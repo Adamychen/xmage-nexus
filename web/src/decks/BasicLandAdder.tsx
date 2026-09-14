@@ -3,6 +3,7 @@ import { BASIC_LAND_PRESETS, BASIC_LAND_SETS, countManaPips, suggestBasicLands, 
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
+import { confirmDialog } from '../ui/confirmDialog'
 import { useTranslation } from '../i18n'
 import './BasicLandAdder.css'
 
@@ -50,12 +51,20 @@ export function BasicLandAdder({
     return found ? found.amount : 0
   }
 
-  const handleSuggest = () => {
+  const handleSuggest = async () => {
     const suggested = suggestBasicLands(pips, targetCount, landSet)
-    if (suggested.length > 0) {
-      onApplySuggestedLands(suggested)
-      setIsOpen(false)
-    }
+    if (suggested.length === 0) return
+    const basicNames = new Set(BASIC_LAND_PRESETS.map((p) => p.name.toLowerCase()))
+    const currentBasics = cards
+      .filter((c) => basicNames.has(c.cardName.toLowerCase()))
+      .reduce((sum, c) => sum + c.amount, 0)
+    const summary = suggested.map((s) => `${getBasicLandLabel(s.name, lang)} ×${s.amount}`).join(', ')
+    const ok = await confirmDialog(
+      t('decks', 'builder_basics_replace_confirm', { count: currentBasics, summary }),
+    )
+    if (!ok) return
+    onApplySuggestedLands(suggested)
+    setIsOpen(false)
   }
 
   return (
@@ -79,7 +88,7 @@ export function BasicLandAdder({
                   <span className="basic-land-btn-name">{label}</span>
                   {count > 0 && <span className="basic-land-btn-count">{count}</span>}
                 </button>
-                {count > 0 && (
+                {count > 0 ? (
                   <button
                     type="button"
                     className="basic-land-dec-btn"
@@ -88,6 +97,8 @@ export function BasicLandAdder({
                   >
                     -
                   </button>
+                ) : (
+                  <span className="basic-land-dec-placeholder" aria-hidden="true" />
                 )}
               </div>
             )
@@ -110,7 +121,7 @@ export function BasicLandAdder({
           <div className="suggester-header">
             <span className="suggester-title">{t('decks', 'basic_lands')}</span>
             <div className="suggester-pips-summary">
-              <span>{t('decks', 'mana_curve')}:</span>
+              <span>{t('decks', 'builder_mana_pips')}:</span>
               {totalPips > 0 ? (
                 <div className="pips-chips">
                   {pips.W > 0 && <span className="pip-chip pip-w"><ManaPip symbol="W" size={14} /> {pips.W}</span>}
@@ -140,7 +151,7 @@ export function BasicLandAdder({
               </select>
             </label>
             <label className="suggester-target-label">
-              {t('decks', 'total_cards')}:
+              {t('decks', 'builder_lands_target')}:
               <input
                 type="number"
                 min={1}

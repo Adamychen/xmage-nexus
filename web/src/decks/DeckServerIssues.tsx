@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import type { ServerIssueItem } from './useDeckValidation'
@@ -9,10 +10,21 @@ interface Props {
 
 export default function DeckServerIssues({ issues, onRepair }: Props) {
   const { t } = useTranslation()
-  if (issues.length === 0) return null
+  const [dismissed, setDismissed] = useState(false)
+  useEffect(() => setDismissed(false), [issues])
+  if (issues.length === 0 || dismissed) return null
   return (
-    <div className="builder-server-issues" data-testid="builder-server-issues">
+    <div className="builder-server-issues" data-testid="builder-server-issues" role="status" aria-live="polite">
       <div className="bsi-title"><Icon name="alert" size={14} /> {t('decks', 'issues_banner_title')}</div>
+      <button
+        type="button"
+        className="bsi-close"
+        onClick={() => setDismissed(true)}
+        aria-label={t('common', 'close')}
+        title={t('common', 'close')}
+      >
+        <Icon name="x" size={13} />
+      </button>
       <ul>
         {issues.map((it, i) => (
           <li key={`${it.name}-${it.set}-${it.num}-${i}`}>

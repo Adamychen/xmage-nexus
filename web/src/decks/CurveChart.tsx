@@ -149,6 +149,11 @@ export default function CurveChart({
 
   const distMax = Math.max(1, ...distByCmc.map((d) => Object.values(d).reduce((s, v) => s + v, 0)))
   const DIST_ORDER = ['W', 'U', 'B', 'R', 'G']
+  const deckTotal = totalLands + totalCreatures + totalSpells
+
+  if (deckTotal === 0) {
+    return <div className="curve-chart curve-chart-empty">{t('decks', 'builder_curve_empty')}</div>
+  }
 
   return (
     <div className="curve-chart">
@@ -196,7 +201,8 @@ export default function CurveChart({
             className="curve-color-donut"
             style={{ background: gradient }}
             title={activePips.map(([s, c]) => `${s}:${c}`).join(' ')}
-            aria-label="color breakdown"
+            role="img"
+            aria-label={t('decks', 'builder_aria_color_breakdown')}
           >
             <span className="curve-donut-hole" />
           </div>
@@ -218,7 +224,8 @@ export default function CurveChart({
               className="curve-color-donut"
               style={{ background: sourcesGradient }}
               title={`${t('decks', 'mana_from_lands')}: ${sourceLands} · ${t('decks', 'mana_from_nonlands')}: ${sourceNonlands}`}
-              aria-label="mana sources breakdown"
+              role="img"
+              aria-label={t('decks', 'builder_aria_mana_sources')}
             >
               <span className="curve-donut-hole" />
             </div>
@@ -247,7 +254,8 @@ export default function CurveChart({
               className="curve-color-donut"
               style={{ background: basicsGradient }}
               title={activeBasics.map((e) => `${e.kind}:${e.count}`).join(' ')}
-              aria-label="basic land breakdown"
+              role="img"
+              aria-label={t('decks', 'builder_aria_basic_lands')}
             >
               <span className="curve-donut-hole" />
             </div>

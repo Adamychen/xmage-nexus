@@ -1224,6 +1224,33 @@ export interface TranslationSchema {
     builder_spells: string
     builder_lands: string
     builder_drag_hint: string
+    builder_drag_remove_hint: string
+    builder_load_more: string
+    builder_grid_add: string
+    builder_saving: string
+    builder_saved: string
+    builder_legality_issues: string
+    builder_search_no_results: string
+    builder_search_retry: string
+    builder_search_clear_filters: string
+    builder_search_failed: string
+    builder_layout_vertical: string
+    builder_layout_horizontal: string
+    builder_hide_curve: string
+    builder_show_curve: string
+    builder_deck_not_found: string
+    builder_deck_name_placeholder: string
+    builder_mana_pips: string
+    builder_lands_target: string
+    builder_equip: string
+    builder_equipped: string
+    strip_remove_all_confirm: string
+    builder_basics_replace_confirm: string
+    builder_curve_empty: string
+    builder_aria_color_breakdown: string
+    builder_aria_mana_sources: string
+    builder_aria_basic_lands: string
+    card: string
     browser_filter_aggro: string
     browser_filter_midrange: string
     browser_filter_control: string

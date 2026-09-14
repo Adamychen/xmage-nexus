@@ -64,7 +64,7 @@ describe('DeckListPanel sideboard', () => {
   })
 
   it('renders the sideboard section with count and swap actions', () => {
-    const { onSwap } = renderPanel()
+    const { onSwap } = renderPanel({ format: 'Modern' })
     expect(screen.getByText(/Banquillo|Sideboard/i)).toBeDefined()
     expect(screen.getByText('2/15')).toBeDefined()
     const sideSection = document.querySelector('.deck-sideboard-section')
@@ -113,10 +113,16 @@ describe('DeckListPanel sideboard', () => {
   })
 
   it('shows the sideboard section in horizontal layout too', () => {
-    renderPanel({ layout: 'horizontal' })
+    renderPanel({ layout: 'horizontal', format: 'Modern' })
     expect(document.querySelector('.arena-deck-cols-layout')).not.toBeNull()
     expect(document.querySelector('.deck-sideboard-section')).not.toBeNull()
     expect(screen.getByText('2/15')).toBeDefined()
+  })
+
+  it('Commander (sin banquillo) muestra el conteo sin límite ficticio', () => {
+    renderPanel({ format: 'Commander' })
+    expect(screen.getByText('2')).toBeDefined()
+    expect(screen.queryByText('2/15')).toBeNull()
   })
 
   it('sets a dropEffect compatible with the drag source effectAllowed (Chrome drop-cancel guard)', () => {

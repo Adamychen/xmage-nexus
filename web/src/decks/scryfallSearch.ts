@@ -94,6 +94,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
   const [hasMore, setHasMore] = useState(false)
   const [totalCards, setTotalCards] = useState<number | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
+  const [retryNonce, setRetryNonce] = useState(0)
   const queryRef = useRef(query)
   const langRef = useRef(lang)
   const orderRef = useRef(order)
@@ -122,7 +123,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
         if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) {
           setCards(r.data)
           setHasMore(r.has_more)
-          setTotalCards(r.total_cards)
+          setTotalCards(r.total_cards ?? (r.data.length === 0 ? 0 : undefined))
           pageRef.current = 1
         }
       } catch (e) {
@@ -132,7 +133,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
       }
     }, debounceMs)
     return () => clearTimeout(t)
-  }, [query, lang, debounceMs, order, dir])
+  }, [query, lang, debounceMs, order, dir, retryNonce])
 
   const loadMore = async () => {
     if (loading || loadingMore || !hasMore) return
@@ -152,7 +153,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
     }
   }
 
-  return { cards, loading, loadingMore, hasMore, totalCards, error, loadMore }
+  return { cards, loading, loadingMore, hasMore, totalCards, error, loadMore, retry: () => setRetryNonce((n) => n + 1) }
 }
 
 export function scryfallCardImage(card: ScryfallSearchCard): string | null {

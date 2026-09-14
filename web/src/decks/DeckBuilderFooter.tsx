@@ -5,14 +5,14 @@ import Icon from '../ui/Icon'
 
 interface Props {
   deck: DeckV2
-  equippedName?: string
+  isEquipped?: boolean
   onImport: () => void
   onSample: () => void
   onEquip: () => void
   onClose: () => void
 }
 
-export default function DeckBuilderFooter({ deck, equippedName, onImport, onSample, onEquip, onClose }: Props) {
+export default function DeckBuilderFooter({ deck, isEquipped, onImport, onSample, onEquip, onClose }: Props) {
   const { t } = useTranslation()
   return (
     <div className="builder-deck-footer">
@@ -20,7 +20,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         <button
           type="button"
           className="builder-act"
-          title={`${t('decks', 'export_deck')} .dck — ${t('common', 'copied')}`}
+          title={`${t('decks', 'export_deck')} .dck`}
           onClick={() => void downloadDeckFile(deck, 'dck', `✓ ${t('common', 'copied')}`)}
         >
           {t('decks', 'export_dck')}
@@ -28,7 +28,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         <button
           type="button"
           className="builder-act"
-          title={`${t('decks', 'export_deck')} Arena — ${t('common', 'copied')}`}
+          title={`${t('decks', 'export_deck')} Arena`}
           onClick={() => void downloadDeckFile(deck, 'arena', `✓ ${t('common', 'copied')}`)}
         >
           {t('decks', 'export_arena')}
@@ -36,7 +36,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         <button
           type="button"
           className="builder-act"
-          title={`${t('decks', 'export_deck')} Plain — ${t('common', 'copied')}`}
+          title={`${t('decks', 'export_deck')} Plain`}
           onClick={() => void downloadDeckFile(deck, 'txt', `✓ ${t('common', 'copied')}`)}
         >
           {t('decks', 'export_plain')}
@@ -44,7 +44,7 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         <button
           type="button"
           className="builder-act"
-          title={`${t('decks', 'export_deck')} MTGO .dek — ${t('common', 'copied')}`}
+          title={`${t('decks', 'export_deck')} MTGO .dek`}
           onClick={() => void downloadDeckFile(deck, 'dek', `✓ ${t('common', 'copied')}`)}
         >
           {t('decks', 'export_dek')}
@@ -67,10 +67,12 @@ export default function DeckBuilderFooter({ deck, equippedName, onImport, onSamp
         </button>
         <button
           type="button"
-          className={`builder-act primary ${equippedName === deck.name ? 'is-equipped' : ''}`}
+          className={`builder-act primary ${isEquipped ? 'is-equipped' : ''}`}
           onClick={onEquip}
+          disabled={isEquipped}
+          title={isEquipped ? t('decks', 'builder_equipped') : t('decks', 'builder_equip')}
         >
-          {equippedName === deck.name ? `✓ ${t('common', 'done')}` : t('common', 'confirm')}
+          {isEquipped ? `✓ ${t('decks', 'builder_equipped')}` : t('decks', 'builder_equip')}
         </button>
       </div>
 

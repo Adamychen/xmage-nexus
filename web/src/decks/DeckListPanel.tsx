@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
+import { FORMAT_CONFIGS } from './formatRules'
+import type { DeckFormat } from './types'
 import { commanderCardsFor, isCommanderEligible } from './deckUtils'
 import { aggregateCards } from './deckCardOps'
 import { ArenaCardStrip } from './ArenaCardStrip'
@@ -33,6 +35,7 @@ export default function DeckListPanel({
   commanderCard,
   partnerCard,
   isCommanderFormat,
+  format = 'Freeform',
   metaMap,
   cardIssues,
   layout = 'vertical',
@@ -55,6 +58,7 @@ export default function DeckListPanel({
   commanderCard?: DeckCard | null
   partnerCard?: DeckCard | null
   isCommanderFormat?: boolean
+  format?: DeckFormat
   metaMap: Map<string, CardStripMeta>
   cardIssues?: Map<string, ValidationIssue>
   layout?: 'vertical' | 'horizontal'
@@ -229,6 +233,8 @@ export default function DeckListPanel({
   // Total counts
   const mainTotal = displayCards.reduce((s, c) => s + c.amount, 0)
   const sideTotal = displaySideboard.reduce((s, c) => s + c.amount, 0)
+  const maxSideboard = (FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform).maxSideboard
+  const sideCountLabel = maxSideboard > 0 && maxSideboard < 99 ? `${sideTotal}/${maxSideboard}` : `${sideTotal}`
 
   const sideboardSection = (
     <div
@@ -239,7 +245,7 @@ export default function DeckListPanel({
     >
       <div className="deck-category-header">
         <span>{t('decks', 'sideboard')}</span>
-        <span className="deck-category-count">{sideTotal}/15</span>
+        <span className={`deck-category-count ${maxSideboard > 0 && sideTotal > maxSideboard ? 'is-over' : ''}`}>{sideCountLabel}</span>
       </div>
       {sideboard.length === 0 && <div className="deck-sideboard-empty">{t('decks', 'builder_side_empty')}</div>}
       {displaySideboard.map((card) => {
@@ -396,7 +402,7 @@ export default function DeckListPanel({
               return (
                 <div key={cmc} className="arena-deck-column deck-col">
                   <div className="arena-deck-col-head deck-col-head">
-                    <span className="deck-col-title">{cmc === 7 ? '7+' : `CMC ${cmc}`}</span>
+                    <span className="deck-col-title">{cmc === 7 ? '7+' : `${t('decks', 'filter_cmc')} ${cmc}`}</span>
                     <span className="deck-col-count">{totalInCol}</span>
                   </div>
                   <div className="deck-col-list">

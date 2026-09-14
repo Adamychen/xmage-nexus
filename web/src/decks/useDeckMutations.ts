@@ -12,6 +12,8 @@ import {
   dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
+import { setStoreError } from '../state/store'
+import { t as tStatic } from '../i18n'
 
 interface Deps {
   deck: DeckV2 | null
@@ -350,7 +352,10 @@ export function useDeckMutations(deps: Deps) {
     if (!deck) return
     const text = await f.text()
     const parsed = parseAnyDeck(text, deck.name)
-    if (!parsed) return
+    if (!parsed) {
+      setStoreError(tStatic('errors', 'deck_parse_failed'))
+      return
+    }
     const merged = mergeIntoList(deck.cards, parsed.cards)
     const mergedSide = mergeIntoList(deck.sideboard, parsed.sideboard)
     schedulePersist({ ...deck, cards: merged, sideboard: mergedSide })

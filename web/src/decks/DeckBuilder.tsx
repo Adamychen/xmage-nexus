@@ -14,6 +14,7 @@ import { CardPrintingsModal } from './CardPrintingsModal'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
+import { exportTxt } from './parseDck'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { applySuggestion, fetchDeckIssues } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
@@ -21,6 +22,7 @@ import { withCommanderFirst, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
+import { equippedDeckId } from '../state/persistence'
 import type { DeckCard } from '../lobby/decks'
 import { useTranslation } from '../i18n'
 import LanguageSelector from '../i18n/LanguageSelector'
@@ -70,14 +72,20 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   }
 
   const storage = useMemo(() => getDeckStorage(), [])
-  const equipped = useStore((s) => s.myDeck)
+  const [equippedId, setEquippedId] = useState<string | null>(() => equippedDeckId())
   const wsAlive = useStore((s) => s.wsAlive)
   const debounceRef = useRef<number | null>(null)
   const savedTimerRef = useRef<number | null>(null)
   const partnerMigratedRef = useRef(false)
+  const deckRef = useRef<DeckV2 | null>(null)
+  deckRef.current = deck
 
   useEffect(() => () => {
-    if (debounceRef.current) window.clearTimeout(debounceRef.current)
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current)
+      const pending = deckRef.current
+      if (pending) void persist(pending)
+    }
     if (savedTimerRef.current) window.clearTimeout(savedTimerRef.current)
   }, [])
 
@@ -195,8 +203,19 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     setDeck(next)
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     debounceRef.current = window.setTimeout(() => {
+      debounceRef.current = null
       void persist(next)
     }, 800)
+  }
+
+  /** Cierra el editor sin perder la última edición pendiente del debounce. */
+  const handleClose = () => {
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current)
+      debounceRef.current = null
+      if (deck) void persist(deck)
+    }
+    onClose()
   }
 
   const mutations = useDeckMutations({
@@ -242,7 +261,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
     if (!img) return
 
-    const previewWidth = backImg ? 520 : 255
+    const previewWidth = Math.min(backImg ? 856 : 420, window.innerWidth - 20)
+    const previewHeight = Math.min(588, window.innerHeight - 40)
     let x = 0
     let y = 0
     if (rect) {
@@ -252,7 +272,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       } else {
         x = Math.min(window.innerWidth - previewWidth - 15, rect.right + 15)
       }
-      y = Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40))
+      y = Math.max(10, Math.min(window.innerHeight - previewHeight - 10, rect.top - 40))
     } else {
       x = window.innerWidth / 2 - previewWidth / 2
       y = window.innerHeight / 2 - 180
@@ -292,7 +312,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       <div className="deck-builder loading">
         {loadFailed ? (
           <>
-            <span>{t('errors', 'deck_parse_failed')}</span>
+            <span>{t('decks', 'builder_deck_not_found')}</span>
             <button type="button" onClick={onClose}>{t('common', 'close')}</button>
           </>
         ) : (
@@ -307,7 +327,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       {/* Top Navbar */}
       <header className="arena-top-nav deck-builder-top">
         <div className="arena-nav-left">
-          <button type="button" className="arena-nav-back builder-back" onClick={onClose}>
+          <button type="button" className="arena-nav-back builder-back" onClick={handleClose}>
             <span>←</span> {t('decks', 'my_decks')}
           </button>
           <span className="deck-builder-title">{t('decks', 'builder_editor')}</span>
@@ -319,13 +339,15 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               <button
                 type="button"
                 className="builder-save-badge builder-save-error"
+                role="status"
+                aria-live="polite"
                 onClick={() => { if (deck) void persist(deck) }}
               >
                 {t('decks', 'save_failed_retry')}
               </button>
             ) : (
-              <span className="builder-save-badge builder-save">
-                {saveState === 'saving' ? t('common', 'loading') : `${t('common', 'done')} ✓`}
+              <span className="builder-save-badge builder-save" role="status" aria-live="polite">
+                {saveState === 'saving' ? t('decks', 'builder_saving') : t('decks', 'builder_saved')}
               </span>
             )
           )}
@@ -365,7 +387,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         >
           {isCollectionDragOver && (
             <div className="arena-remove-drop-hint">
-              <span><Icon name="trash" size={14} /></span> {t('decks', 'builder_drag_hint')}
+              <span><Icon name="trash" size={14} /></span> {t('decks', 'builder_drag_remove_hint')}
             </div>
           )}
           <SearchPanel
@@ -424,7 +446,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                     type="button"
                     className="deck-curve-close-btn"
                     onClick={toggleCurve}
-                    title={t('common', 'close')}
+                    title={t('decks', 'builder_hide_curve')}
+                    aria-label={t('decks', 'builder_hide_curve')}
                   >
                     ▲
                   </button>
@@ -452,6 +475,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             commanderCard={deck.commanderCard}
             partnerCard={deck.partnerCard}
             isCommanderFormat={isCommanderFormat}
+            format={format}
             metaMap={metaMap}
             cardIssues={mergedCardIssues}
             layout={layout}
@@ -471,11 +495,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
           <DeckBuilderFooter
             deck={deck}
-            equippedName={equipped?.name}
+            isEquipped={equippedId === deck.id}
             onImport={() => setShowImportModal(true)}
             onSample={() => setShowSampleHand(true)}
-            onEquip={() => setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard) })}
-            onClose={onClose}
+            onEquip={() => {
+              setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard) })
+              setEquippedId(deck.id)
+            }}
+            onClose={handleClose}
           />
         </section>
       </div>
@@ -521,7 +548,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           deck={deck}
           onClose={() => setShowInspector(false)}
           onEdit={() => setShowInspector(false)}
-          onCopy={() => {}}
+          onCopy={async () => {
+            try {
+              await navigator.clipboard.writeText(exportTxt(deck))
+              return true
+            } catch {
+              return false
+            }
+          }}
         />
       )}
     </div>

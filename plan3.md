@@ -377,3 +377,37 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     banner dentro del diálogo con «La contraseña de la mesa es incorrecta» y X
     (capturas `web/e2e/shots/join-error-banner.png`, `lobby-error-banner.png`).
     Unit 1489/1489 + typecheck + build ✅.
+
+- **2026-09-14 (9ª parte) — UX del Deck Builder (auditoría, sin mecánicas nuevas)**
+  - *Petición*: mejorar la experiencia del editor de mazos sin añadir funcionalidad.
+    Auditoría del subagente sobre `decks/*` + verificación viva en 1280×800.
+  - *Lote 1 (bugs visibles)*: el debounce de guardado ya no pierde la última
+    edición al cerrar (`handleClose` + flush en el cleanup del desmontaje; tests
+    `DeckBuilder.test`), rejilla de búsqueda operable por teclado (Enter/Espacio)
+    y tira con `focus-within` + `stopPropagation` del keydown de sus botones
+    (antes Enter en “+” restaba copia), hint de la papelera honesto («quitar una
+    copia»), “Cargando…” del botón de paginar → “Cargar más” y overlay
+    “+ Buscar” → “+ Añadir”.
+  - *Lote 2 (feedback)*: “Copiar” del Inspector copia de verdad
+    (`exportTxt` + fallback a no-confirmar), badge de guardado “Guardando…/
+    Guardado ✓” con `role=status aria-live`, tooltips de export sin “¡Copiado!”,
+    problemas de legalidad visibles al clic (popover; antes solo tooltip),
+    drop de `.dck` inválido avisa, búsqueda con estados diferenciados
+    (sin resultados con la query + limpiar filtros; error con reintento) y
+    banner de issues del servidor descartable y anunciado.
+  - *Lote 3 (pulido)*: banquillo con tope real por formato (`FORMAT_CONFIGS`,
+    antes “/15” fijo), vista horizontal sin scroll lateral (columnas adaptables),
+    tooltips honestos del header (layout/curva), filtros con `aria-pressed` y
+    etiquetas de color reales, operador F/R sin valor 3 implícito, slider con
+    valor visible, popover de ayuda con Escape, curva con vacío y `role=img`,
+    etiquetas “Pips de maná/Tierras objetivo”, contador de copias >4 numérico,
+    confirmaciones al borrar todas las copias y al sugerir tierras, foco al
+    vecino al vaciar una tira, hint de drop fuera del flujo (sin empujar),
+    preview clampada al viewport, “Equipar/Equipado” por id persistido,
+    placeholders/aria del nombre y doble clic contenido.
+  - *Tests*: `DeckBuilder.test.tsx` (2), `ArenaCardStrip.test.tsx` (4),
+    `ArenaCardGrid.test.tsx` (+4), `DeckListPanel.test.tsx` (+1 y banquillo por
+    formato); e2e fake `decks-gallery.spec` actualizado (conteo sin “/15”) y
+    suite de decks/deckvalidation/grid-search en verde. Unit **1500/1500** +
+    typecheck + build ✅. Vivo: capturas `web/e2e/shots/db-after-*.png`
+    (header/issues, sin resultados, horizontal, guardado).
