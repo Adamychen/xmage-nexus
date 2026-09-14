@@ -439,3 +439,43 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     `mana-pie-donut.png`, `mana-pie-sections.png`, `mana-pie-inspector.png`
     (antes: `mana-pie-before.png`).
 
+- **2026-09-14 (11ª parte) — Draft: acuse del pick, espera honesta y nombres (reporte del usuario)**
+  - *Reporte*: «intenté jugar un draft y fue imposible; a veces me quedaba
+    esperando porque decía que el tiempo se acababa pero cuando clickeo una
+    carta el contador sigue; no sé si la selección es correcta y es que estoy
+    esperando al otro; falta info visual».
+  - *Diagnóstico (protocolo real)*: al pickear, el server **no manda ningún
+    evento** hasta que TODOS han elegido (el `DRAFT_UPDATE` de rotación solo
+    sale cuando el sobre pasa). El proxy **sí** devuelve en la respuesta de
+    `sendCardPick` el `DraftPickView` posterior (`picking:false`), como el
+    cliente de escritorio, pero la web lo ignoraba: el `picking:true` viejo
+    seguía mandando → contador local bajando a 0 («tiempo agotado»), cartas aún
+    clicables y ningún acuse de la carta elegida (un segundo clic se perdía en
+    silencio). Además, en el protocolo real `SimpleCardView` **no trae `name`**
+    → sobres y banners con UUIDs.
+  - *Fix cliente*: `mergePickAck` en `state/events/draft.ts` aplica la respuesta
+    solo si el pick sigue vigente (mismo sobre/carta; si llegó el siguiente
+    `DRAFT_PICK` en el round-trip, se descarta) y `DRAFT_UPDATE` sin pickView
+    fuerza `picking:false` (cubre autopicks, que no generan respuesta).
+    `DraftScreen`: acuse local inmediato (banner «Has elegido {carta}» + chip
+    «Esperando…», timer parado), anti-doble-pick por acuse, `freshPick` acepta
+    también `DRAFT_INIT` (recarga/reconexión en mitad del pick), timeout 0 =
+    ∞, progreso «Sobre X/N · Carta Y», texto de dirección de paso, `is-picked`/
+    `is-new` (ring verde) y nombre resuelto por Scryfall (`CardStripMeta.name`)
+    cuando el contrato no lo trae.
+  - *Tests*: `draft.test.ts` (+5: ack, merge de picks, guarda de vigencia,
+    DRAFT_UPDATE→false), `DraftScreen.test.tsx` (+5: acuse/no doble pick,
+    fallback sin data, siguiente pick re-habilita, respuesta obsoleta, nombre
+    por Scryfall), escenario fake `draft.ts` fiel al protocolo (responde el
+    `DraftPickView` + silencio configurable `nextPickDelayMs`, updates con
+    `draftPickView:null`) y e2e nuevo `draft.spec.ts` «el pick acusa al instante
+    y espera a los demás». Unit **1516/1516** + typecheck + build ✅; `@draft`
+    4/4 ✅.
+  - *Vivo (protocolo real, 2×HUMAN)*: `Booster Draft Elimination` M21 con la web
+    como un humano y un segundo humano por WS crudo que retiene el pick a
+    voluntad (`draft-hold.mjs`): espera larga verificada sin contador fantasma
+    (`web/e2e/shots/draft-live-waiting.png`), al pickear el rival el siguiente
+    `DRAFT_PICK` limpia el banner y re-habilita las cartas solo
+    (`draft-live-resumed.png`). Resuelto el límite A.1 de plan2 (picks de draft
+    jugados en vivo con la web). Queda pendiente el submit del pool desde
+    `ConstructScreen` (A.2).

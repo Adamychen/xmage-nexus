@@ -1,6 +1,8 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { dismissSetupWizard } from './support/start-game'
+import { dismissSetupWizard, login } from './support/start-game'
+import { withFakeServer } from './support/fake-backend'
+import { makeDraftScenario } from '../fixtures/scenarios/draft'
 fakeOnly()
 
 test.describe('Draft', { tag: '@draft' }, () => {
@@ -68,6 +70,34 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(construct).toBeVisible({ timeout: 10_000 })
     await expect(page.getByTestId('construct-submit').first()).toBeVisible()
     await expect(page.locator('.construct-screen').first()).toContainText(/Pool/)
+  })
+
+  test('el pick acusa al instante y espera a los demás (sin contador fantasma)', { tag: '@draft' }, async ({ page }) => {
+    await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 2500 }), async () => {
+      await login(page, `draft-${String(Date.now()).slice(-6)}`)
+      await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
+      const first = page.getByTestId('draft-card').first()
+      const firstId = await first.getAttribute('data-card-id')
+      await first.click()
+      // Acuse inmediato: banner con la carta elegida + espera (sin contador).
+      const banner = page.getByTestId('draft-picked-banner')
+      await expect(banner).toBeVisible({ timeout: 5_000 })
+      await expect(banner).toContainText('Has elegido')
+      await expect(banner).toContainText('Esperando a los demás jugadores')
+      await expect(page.getByTestId('draft-waiting')).toContainText('Esperando')
+      await expect(page.getByTestId('draft-timeout')).toHaveCount(0)
+      await expect(page.getByTestId('draft-pick-card').first()).toHaveAttribute('data-card-id', firstId ?? '')
+      await expect(page.getByTestId('draft-pick-new')).toBeVisible()
+      for (const card of await page.getByTestId('draft-card').all()) {
+        await expect(card).toBeDisabled()
+      }
+      await page.screenshot({ path: 'e2e/shots/draft-waiting.png' })
+      // El resto de la mesa termina: llega el siguiente DRAFT_PICK y vuelve a tocarte.
+      await expect(page.getByTestId('draft-timeout').first()).toBeVisible({ timeout: 8_000 })
+      await expect(page.getByTestId('draft-picked-banner')).toHaveCount(0)
+      await expect(page.getByTestId('draft-card').first()).toBeEnabled()
+    })
   })
 
   test('U9: mesa, ocultar pick con F9 y botón de log', async ({ page }) => {

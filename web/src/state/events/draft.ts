@@ -2,6 +2,7 @@ import { getState, setState, addLog } from '../state'
 import * as cmds from '../../net/commands'
 import { translateError } from '../../i18n'
 import type { DraftClientMessage } from '../../net/types.generated'
+import type { DraftState } from '../slices'
 
 export function handleStartDraft(objectId: string | null, data: unknown): void {
   setState({ draftOverAt: null, lastDraftEventAt: Date.now() })
@@ -64,6 +65,7 @@ export function mergeDraftMessage(
   prev: { draftId: string; message: DraftClientMessage } | null,
   objectId: string | null,
   msg: DraftClientMessage,
+  method?: string,
 ): { draftId: string; message: DraftClientMessage } {
   const draftId = objectId ?? prev?.draftId ?? 'draft'
   const sameDraft = !prev || prev.draftId === draftId
@@ -77,15 +79,59 @@ export function mergeDraftMessage(
   const booster =
     hasFreshBooster || packChanged || !prevPick ? (incomingBooster ?? {}) : (prevPick.booster ?? {})
   const picks = { ...(prevPick?.picks ?? {}), ...(incomingPicks ?? {}) }
+  const merged = incoming
+    ? { ...incoming, booster, picks }
+    : prevPick
+      ? { ...prevPick, booster, picks }
+      : undefined
+  // DRAFT_UPDATE sin pickView = el sobre ya rotó/pasó: ese jugador no está
+  // eligiendo. Sin esto, un `picking` viejo (p.ej. de un autopick, que no
+  // genera respuesta) deja la UI en "tu turno" con el contador corriendo.
+  const draftPickView =
+    merged && method === 'DRAFT_UPDATE' && !incoming ? { ...merged, picking: false } : merged
   return {
     draftId,
     message: {
       ...msg,
-      draftPickView: incoming
-        ? { ...incoming, booster, picks }
-        : prevPick
-          ? { ...prevPick, booster, picks }
-          : undefined,
+      draftPickView,
+    } as DraftClientMessage,
+  }
+}
+
+/**
+ * Aplica la respuesta de `sendCardPick` (el proxy devuelve el `DraftPickView`
+ * de después del pick: `{booster, picks, picking:false, timeout:0}`), igual que
+ * hace el cliente de escritorio. Solo si el pick sigue vigente —mismo draft y
+ * mismo sobre/carta que al enviarlo—: si durante el round-trip llegó el
+ * siguiente DRAFT_PICK, la respuesta es obsoleta y se descarta para no pisarlo.
+ */
+export function mergePickAck(
+  prev: DraftState | null,
+  draftId: string,
+  pickView: unknown,
+  sent: { boosterNum: number; cardNum: number },
+): DraftState | null {
+  if (!prev || prev.draftId !== draftId) return null
+  if (prev.message.draftView.boosterNum !== sent.boosterNum) return null
+  if (prev.message.draftView.cardNum !== sent.cardNum) return null
+  const incoming = pickView as (LoosePickView & { picking?: unknown; timeout?: unknown }) | null | undefined
+  if (!incoming || typeof incoming.picking !== 'boolean') return null
+  const prevPick = prev.message.draftPickView as
+    | (LoosePickView & { picking?: boolean; timeout?: number })
+    | undefined
+  const booster = incoming.booster != null ? incoming.booster : (prevPick?.booster ?? {})
+  const picks =
+    incoming.picks != null ? { ...(prevPick?.picks ?? {}), ...incoming.picks } : (prevPick?.picks ?? {})
+  return {
+    ...prev,
+    message: {
+      ...prev.message,
+      draftPickView: {
+        booster,
+        picks,
+        picking: incoming.picking,
+        timeout: typeof incoming.timeout === 'number' ? incoming.timeout : 0,
+      },
     } as DraftClientMessage,
   }
 }
@@ -93,7 +139,7 @@ export function mergeDraftMessage(
 export function handleDraftUpdate(method: string, objectId: string | null, data: unknown): void {
   const msg = data as DraftClientMessage | null
   if (!msg?.draftView) return
-  setState({ draft: mergeDraftMessage(getState().draft, objectId, msg), lastDraftEventAt: Date.now(), lastDraftMethod: method })
+  setState({ draft: mergeDraftMessage(getState().draft, objectId, msg, method), lastDraftEventAt: Date.now(), lastDraftMethod: method })
   if (method === 'DRAFT_INIT') addLog('torneo', `Draft: booster ${msg.draftView.boosterNum} carta ${msg.draftView.cardNum} — ${msg.draftView.setCodes.join(', ')}`)
   else if (method === 'DRAFT_PICK' && msg.draftPickView?.picking) addLog('torneo', `Tu turno de draftear — timeout ${msg.draftPickView.timeout}s`)
 }

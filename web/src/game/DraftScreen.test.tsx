@@ -85,7 +85,8 @@ describe('DraftScreen', () => {
     expect(container.querySelector('.draft-backdrop')).toBeTruthy()
     expect(getByTestId('draft-booster')).toBeTruthy()
     expect(getByTestId('draft-timeout').textContent).toMatch(/1:00|0:60/)
-    expect(container.textContent).toContain('Booster 1')
+    expect(container.textContent).toContain('Sobre 1 de 1')
+    expect(container.textContent).toContain('Carta 1')
     expect(container.textContent).toContain('M21')
     expect(container.textContent).toContain('Tu turno')
   })
@@ -111,6 +112,111 @@ describe('DraftScreen', () => {
     expect(mockSetBoosterLoaded).toHaveBeenCalled()
   })
 
+  it('acusa el pick al instante: banner, espera a los demás y sin doble pick (bug del contador)', async () => {
+    mockSendCardPick.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        booster: { 'c-2': { id: 'c-2', expansionSetCode: 'M21', cardNumber: '2', name: 'Grizzly Bears' } },
+        picks: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Lightning Bolt' } },
+        picking: false,
+        timeout: 0,
+      },
+    })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container, getByTestId, queryByTestId } = render(<DraftScreen />)
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    await waitFor(() => expect(getByTestId('draft-picked-banner')).toBeTruthy())
+    expect(container.textContent).toContain('Has elegido Lightning Bolt')
+    expect(container.textContent).toContain('Esperando a los demás jugadores')
+    expect(queryByTestId('draft-timeout')).toBeNull()
+    expect(getByTestId('draft-waiting')).toBeTruthy()
+    // La carta elegida sale del sobre y aparece en picks marcada como nueva
+    const boosterIds = [...container.querySelectorAll('[data-testid="draft-card"]')].map((c) => c.getAttribute('data-card-id'))
+    expect(boosterIds).toEqual(['c-2'])
+    const pickIds = [...container.querySelectorAll('[data-testid="draft-pick-card"]')].map((c) => c.getAttribute('data-card-id'))
+    expect(pickIds).toEqual(['c-1'])
+    expect(getByTestId('draft-pick-new')).toBeTruthy()
+    for (const c of Array.from(container.querySelectorAll('[data-testid="draft-card"]'))) {
+      expect((c as HTMLButtonElement).disabled).toBe(true)
+    }
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    expect(mockSendCardPick).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin data del proxy el acuse local también pone la espera y bloquea el sobre', async () => {
+    mockSendCardPick.mockResolvedValueOnce({ ok: true })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container, getByTestId, queryByTestId } = render(<DraftScreen />)
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    await waitFor(() => expect(getByTestId('draft-picked-banner')).toBeTruthy())
+    expect(container.textContent).toContain('Has elegido Lightning Bolt')
+    const cards = container.querySelectorAll('[data-testid="draft-card"]')
+    expect(cards.length).toBe(2)
+    for (const c of Array.from(cards)) expect((c as HTMLButtonElement).disabled).toBe(true)
+    expect(queryByTestId('draft-timeout')).toBeNull()
+  })
+
+  it('el siguiente DRAFT_PICK limpia la espera y rehabilita el sobre', async () => {
+    mockSendCardPick.mockResolvedValueOnce({ ok: true })
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container, getByTestId, queryByTestId } = render(<DraftScreen />)
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    await waitFor(() => expect(getByTestId('draft-picked-banner')).toBeTruthy())
+    act(() => {
+      setState({
+        draft: {
+          draftId: 'draft-1',
+          message: makeDraftMessage({
+            draftView: { setNames: ['Core Set 2021'], setCodes: ['M21'], boosterNum: 1, cardNum: 2, players: ['a', 'b'] },
+            draftPickView: {
+              booster: { 'c-9': { id: 'c-9', expansionSetCode: 'M21', cardNumber: '9', name: 'Forest' } },
+              picks: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Lightning Bolt' } },
+              picking: true,
+              timeout: 60,
+            },
+          }),
+        },
+        lastDraftMethod: 'DRAFT_PICK',
+      })
+    })
+    await waitFor(() => expect(queryByTestId('draft-picked-banner')).toBeNull())
+    expect(container.textContent).toContain('Tu turno')
+    const cards = container.querySelectorAll('[data-testid="draft-card"]')
+    for (const c of Array.from(cards)) expect((c as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('descarta la respuesta de un pick ya rotado (round-trip lento)', async () => {
+    let resolvePick: (v: unknown) => void = () => {}
+    mockSendCardPick.mockImplementationOnce(() => new Promise((r) => { resolvePick = r }))
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container, queryByTestId } = render(<DraftScreen />)
+    void fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    act(() => {
+      setState({
+        draft: {
+          draftId: 'draft-1',
+          message: makeDraftMessage({
+            draftView: { setNames: ['Core Set 2021'], setCodes: ['M21'], boosterNum: 1, cardNum: 2, players: ['a', 'b'] },
+            draftPickView: {
+              booster: { 'c-9': { id: 'c-9', expansionSetCode: 'M21', cardNumber: '9', name: 'Forest' } },
+              picks: {},
+              picking: true,
+              timeout: 60,
+            },
+          }),
+        },
+        lastDraftMethod: 'DRAFT_PICK',
+      })
+    })
+    await act(async () => {
+      resolvePick({ ok: true, data: { booster: {}, picks: {}, picking: false, timeout: 0 } })
+      await Promise.resolve()
+    })
+    expect(queryByTestId('draft-picked-banner')).toBeNull()
+    const card = container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement
+    expect(card.disabled).toBe(false)
+  })
+
   it('right click triggers sendCardMark', async () => {
     setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
     const { container } = render(<DraftScreen />)
@@ -118,6 +224,28 @@ describe('DraftScreen', () => {
     expect(card).toBeTruthy()
     await fireEvent.contextMenu(card)
     await waitFor(() => expect(mockSendCardMark).toHaveBeenCalledWith('draft-1', expect.any(String)))
+  })
+
+  it('resolve el nombre por Scryfall cuando SimpleCardView no trae name (live)', async () => {
+    mockSendCardPick.mockResolvedValueOnce({ ok: true })
+    setState({
+      lastDraftMethod: 'DRAFT_PICK',
+      draft: {
+        draftId: 'draft-1',
+        message: makeDraftMessage({
+          draftPickView: {
+            booster: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '132' } },
+            picks: {},
+            picking: true,
+            timeout: 60,
+          },
+        }),
+      },
+    })
+    const { container } = render(<DraftScreen />)
+    await waitFor(() => expect(container.textContent).toContain('Mock Card'))
+    await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
+    await waitFor(() => expect(container.textContent).toContain('Has elegido Mock Card'))
   })
 
   it('shows picks tray', () => {

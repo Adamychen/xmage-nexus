@@ -30,9 +30,9 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `SIDEBOARD` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
 | `CONSTRUCT` | ✅ | — | ✅ | ConstructScreen / draft.spec.ts | 2026-08-26 |
 | `DRAFT_OVER` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
-| `DRAFT_INIT` | ✅ | ✅ | ✅ | DraftScreen.test.tsx / draft.spec.ts | 2026-08-26 |
-| `DRAFT_PICK` | ✅ | ✅ | ✅ | DraftScreen.test.tsx / draft.spec.ts | 2026-08-26 |
-| `DRAFT_UPDATE` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
+| `DRAFT_INIT` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (recarga en mitad del pick) / draft.spec.ts (fake) / vivo 2026-09-14 (2×HUMAN real) | 2026-09-14 |
+| `DRAFT_PICK` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (acuse + espera + anti doble pick) / draft.spec.ts `el pick acusa al instante` / vivo 2026-09-14 (2×HUMAN real: espera larga y re-habilitación) | 2026-09-14 |
+| `DRAFT_UPDATE` | ✅ | — | ✅ | merge `picking:false` (draft.test.ts) / draft.spec.ts / vivo 2026-09-14 | 2026-09-14 |
 | `SHOW_TOURNAMENT` | ✅ | — | ✅ | resolve tableId→tournamentId del watch (lobby) / TournamentBracket; unit store.test + vivo 2026-09-14 | 2026-09-14 |
 | `WATCHGAME` | ✅ | — | ✅ | self-test (real) | 2026-08-24 |
 | `VIEW_LIMITED_DECK` | ✅ | ✅ | ✅ | eventHandler.test.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
@@ -231,7 +231,7 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Commander (zona / tax / eminence / pod 4-max en tablero) | ✅ | ✅ | `PodBoard.tsx` (2x2 clamp 4 SOLO de pintado — el servidor soporta FFA 3-10, `CommanderFreeForAllType.java`) + `TurnOrderRing` + `CommanderDamageMatrix` (`PodBoard.test.tsx` 12) + `CommandZone` ×4 | 2026-08-26 |
-| Draft / Sealed (8-player) | ✅ | ✅ | `DraftScreen.tsx` + `ConstructScreen.tsx` + `DraftScreen.test.tsx` + `draft.spec.ts` (`@draft` 8→4) | 2026-08-26 |
+| Draft / Sealed (8-player) | ✅ | ✅ | `DraftScreen.tsx` + `ConstructScreen.tsx` + `DraftScreen.test.tsx` + `draft.spec.ts` (`@draft` 8→4; +acuse de pick/espera) + vivo 2026-09-14 (draft real 2×HUMAN, M21) | 2026-09-14 |
 | Torneo Swiss / Bracket | ✅ | ✅ | `TournamentBracket.tsx` + `TournamentPanel.tsx` + `TournamentBracket.test.tsx` + `tournament.spec.ts` | 2026-08-26 |
 | Two-Headed Giant / multijugador | ✅ | ✅ | `TwoHeadedBoard` (`PodBoard`) 2×2 pod — clamp 4 solo de pintado web (el servidor XMage soporta FFA 3-10) | 2026-08-26 |
 

@@ -844,6 +844,12 @@ export interface TranslationSchema {
     draft_table_title: string
     draft_pick_long: string
     draft_status_count: string
+    draft_pack_of: string
+    draft_pick_no: string
+    draft_waiting_others: string
+    draft_picked_card: string
+    draft_pass_left: string
+    draft_pass_right: string
     draft_picks_title: string
     sideboard_main_count: string
     sideboard_side_count: string

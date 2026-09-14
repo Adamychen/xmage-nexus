@@ -9,6 +9,7 @@ import { useTranslation } from '../i18n'
 import './ArenaCardStrip.css'
 
 export interface CardStripMeta {
+  name?: string
   artCropUrl?: string | null
   imageUrl?: string | null
   backImageUrl?: string | null

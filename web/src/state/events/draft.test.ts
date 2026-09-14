@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { mergeDraftMessage, handleConstruct } from './draft'
+import { mergeDraftMessage, mergePickAck, handleConstruct } from './draft'
 import { getState, setState } from '../state'
 import type { DraftClientMessage } from '../../net/types.generated'
 
@@ -80,6 +80,65 @@ describe('mergeDraftMessage', () => {
     const pv = next.message.draftPickView as unknown as { booster: Record<string, unknown>; picks: Record<string, unknown> }
     expect(Object.keys(pv.booster)).toEqual(['c9'])
     expect(Object.keys(pv.picks)).toEqual([])
+  })
+
+  it('DRAFT_UPDATE fuerza picking=false (sin evento el sobre ya pasó)', () => {
+    const prev = {
+      draftId: 'd1',
+      message: msg({ booster: { c1: card('c1') }, picks: {}, picking: true, timeout: 100 }),
+    }
+    const next = mergeDraftMessage(prev, 'd1', msg(undefined, { cardNum: 2 }), 'DRAFT_UPDATE')
+    const pv = next.message.draftPickView as unknown as { picking: boolean; booster: Record<string, unknown> }
+    expect(pv.picking).toBe(false)
+    expect(Object.keys(pv.booster)).toEqual(['c1'])
+  })
+})
+
+describe('mergePickAck — respuesta de sendCardPick', () => {
+  const prev = () => ({
+    draftId: 'd1',
+    message: msg({ booster: { c1: card('c1'), c2: card('c2') }, picks: {}, picking: true, timeout: 60 }),
+  })
+
+  it('aplica el DraftPickView posterior al pick (picking:false)', () => {
+    const next = mergePickAck(prev(), 'd1', {
+      booster: { c2: card('c2') },
+      picks: { c1: card('c1') },
+      picking: false,
+      timeout: 0,
+    }, { boosterNum: 1, cardNum: 1 })
+    expect(next).not.toBeNull()
+    const pv = next?.message.draftPickView as unknown as {
+      booster: Record<string, unknown>
+      picks: Record<string, unknown>
+      picking: boolean
+      timeout: number
+    }
+    expect(Object.keys(pv.booster)).toEqual(['c2'])
+    expect(Object.keys(pv.picks)).toEqual(['c1'])
+    expect(pv.picking).toBe(false)
+    expect(pv.timeout).toBe(0)
+  })
+
+  it('acumula picks que no vengan en la respuesta', () => {
+    const base = prev()
+    base.message.draftPickView = { booster: {}, picks: { p0: card('p0') }, picking: true, timeout: 30 } as never
+    const next = mergePickAck(base, 'd1', { picks: { c1: card('c1') }, picking: false, timeout: 0 }, { boosterNum: 1, cardNum: 1 })
+    const pv = next?.message.draftPickView as unknown as { picks: Record<string, unknown> }
+    expect(Object.keys(pv.picks).sort()).toEqual(['c1', 'p0'])
+  })
+
+  it('descarta la respuesta si el pick ya no está vigente (llegó el siguiente)', () => {
+    const stale = mergePickAck(prev(), 'd1', { picking: false, timeout: 0 }, { boosterNum: 1, cardNum: 2 })
+    expect(stale).toBeNull()
+    const otherDraft = mergePickAck(prev(), 'd2', { picking: false, timeout: 0 }, { boosterNum: 1, cardNum: 1 })
+    expect(otherDraft).toBeNull()
+  })
+
+  it('ignora respuestas sin forma de DraftPickView', () => {
+    expect(mergePickAck(prev(), 'd1', undefined, { boosterNum: 1, cardNum: 1 })).toBeNull()
+    expect(mergePickAck(prev(), 'd1', {}, { boosterNum: 1, cardNum: 1 })).toBeNull()
+    expect(mergePickAck(null, 'd1', { picking: false }, { boosterNum: 1, cardNum: 1 })).toBeNull()
   })
 })
 

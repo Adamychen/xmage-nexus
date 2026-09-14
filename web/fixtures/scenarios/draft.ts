@@ -42,12 +42,21 @@ export interface DraftScenarioOptions {
   boosterSize?: number
   timeout?: number
   totalPicksBeforeOver?: number
+  /**
+   * Silencio entre `sendCardPick` y el siguiente `DRAFT_PICK`, imitando el
+   * protocolo real: el servidor responde al pick con el `DraftPickView` nuevo
+   * (picking:false) y NO manda más eventos hasta que el resto de jugadores
+   * eligen. Default 80ms (transición casi inmediata); los tests de la espera
+   * usan valores mayores.
+   */
+  nextPickDelayMs?: number
 }
 
 export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
   const boosterSize = opts.boosterSize ?? 14
   const timeout = opts.timeout ?? 60
   const totalPicksBeforeOver = opts.totalPicksBeforeOver ?? 3
+  const nextPickDelayMs = opts.nextPickDelayMs ?? 80
 
   let boosterNum = 1
   let cardNum = 1
@@ -83,6 +92,11 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
     }
   }
 
+  /** DRAFT_UPDATE real: `draftPickView` null (el sobre ya rotó/pasó). */
+  function broadcastUpdate() {
+    activeConn?.broadcast('DRAFT_UPDATE', { draftView: draftView(boosterNum, cardNum), draftPickView: null }, DRAFT_ID)
+  }
+
   function broadcastDraft(method: string, msg: DraftClientMessage) {
     if (activeConn) activeConn.broadcast(method, msg, DRAFT_ID)
   }
@@ -107,6 +121,37 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
       parentTableId: null,
       time: 600,
     }, TABLE_ID)
+  }
+
+  /** El "resto de la mesa" termina de elegir: update de rotación + siguiente pick (o fin). */
+  function advanceAfterPick() {
+    if (!activeConn) return
+    if (pickCount >= totalPicksBeforeOver) {
+      draftOver = true
+      picking = false
+      broadcastUpdate()
+      setTimeout(() => {
+        activeConn?.broadcast('DRAFT_OVER', {}, DRAFT_ID)
+        setTimeout(() => {
+          if (!constructSent) {
+            constructSent = true
+            broadcastConstruct()
+          }
+        }, 150)
+      }, 150)
+      return
+    }
+    if (boosterCards.length === 0) {
+      boosterNum++
+      cardNum = 1
+      boosterCards = makeBooster(pickCount * 100, boosterSize - (pickCount % 3))
+    } else {
+      cardNum++
+    }
+    picking = false
+    broadcastUpdate()
+    picking = true
+    broadcastDraft('DRAFT_PICK', currentDraftMessage())
   }
 
   return {
@@ -159,38 +204,23 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
           return
         case 'sendCardPick': {
           const cardId = argStr('cardId')
-          conn.ok(requestId, action, {})
-          const picked = boosterCards.find((c) => c.id === cardId) ?? boosterCards[0]
+          const picked = boosterCards.find((c) => c.id === cardId)
           if (!picked) {
-            conn.broadcast('DRAFT_UPDATE', currentDraftMessage(), DRAFT_ID)
+            conn.fail(requestId, action, 'Card not in booster', 'FAILED')
             return
           }
           pickCards.push(picked)
           boosterCards = boosterCards.filter((c) => c.id !== picked.id)
           pickCount++
-          cardNum++
-          if (pickCount >= totalPicksBeforeOver) {
-            draftOver = true
-            conn.broadcast('DRAFT_UPDATE', currentDraftMessage(), DRAFT_ID)
-            setTimeout(() => {
-              conn.broadcast('DRAFT_OVER', {}, DRAFT_ID)
-              setTimeout(() => {
-                if (!constructSent) {
-                  constructSent = true
-                  broadcastConstruct()
-                }
-              }, 150)
-            }, 150)
-          } else {
-            if (boosterCards.length === 0) {
-              boosterNum++
-              cardNum = 1
-              boosterCards = makeBooster(pickCount * 100, boosterSize - (pickCount % 3))
-            }
-            picking = true
-            conn.broadcast('DRAFT_UPDATE', currentDraftMessage(), DRAFT_ID)
-            setTimeout(() => conn.broadcast('DRAFT_PICK', currentDraftMessage(), DRAFT_ID), 80)
-          }
+          picking = false
+          // Respuesta del proxy real: el DraftPickView ya con picking:false.
+          conn.ok(requestId, action, {
+            booster: mapFromCards(boosterCards),
+            picks: mapFromCards(pickCards),
+            picking: false,
+            timeout: 0,
+          })
+          setTimeout(advanceAfterPick, nextPickDelayMs)
           return
         }
         case 'sendCardMark': {
