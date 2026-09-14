@@ -271,3 +271,50 @@
   - Sealed T3/T6 visual: pendiente (requiere torneo sealed completo).
   - Limpieza: mesas `vis-exile`/`vis-follow` eliminadas, sesión `vis`
     cerrada, lobby a 0.
+
+- **2026-09-14 — live QA de la estela: mutate ✅ / replay ⚠️ / rendimiento ✅**
+  - *Mutate en vivo* (mesa 2×HUMAN `mutate-live-1`, espectada con
+    screenshots): Gemrazer mutado sobre Elvish con `GAME_ASK` Under/Over;
+    coste de mutate `{1}{G}{G}`; ambas direcciones pintan la pila en el
+    observador: Over → `[Gemrazer, Elvish]` 4/4, Under → `[Elvish, Gemrazer]`
+    1/1 (P/T del top; RE+TR del conjunto). Cierra el "play en vivo nunca
+    verificado" de `INTERACTION_COVERAGE` (el fixture `recorded/mutate.json`
+    ya existía).
+  - *Replay viewer — NO verificable de punta a punta*: probe real
+    `getFinishedMatches` → `games:[]`/`replayAvailable:false` siempre; causa:
+    el config del server trae `saveGameActivated="false"` (el template upstream
+    lo comenta como «not working correctly yet»). Consecuencia: el botón del
+    Historial nunca aparece (paridad con desktop en esa config). Además, en
+    cliente: `replayNext/Previous/SkipForward` sin UI y `REPLAY_DONE` no sale
+    del tablero. Para cerrarlo harían falta: habilitar saveGame + rebuild/
+    restart del server (el comentario upstream avisa que no funciona bien) y
+    controles/exit en web.
+  - *Rendimiento real* (`perf-sealed-1`, Sealed Elimination 2×HUMAN 6×M20,
+    `constructionTime:10` → auto-submit): instrumentación WS en el navegador
+    (wrap de `WebSocket`) + medición init→paint: GAME_INIT de espectador
+    **4.247 B → ~27 ms** (79 ms desde `watchTournamentTable`); el frame más
+    grande observado fue **47 KB** (`GAME_UPDATE_AND_INFORM` de jugador vía
+    `joinGame`). Los ~180 KB de C.17 no se reproducen en sealed (probablemente
+    medían el pool de CONSTRUCT); no hace falta virtualizar el log.
+  - *Hallazgo torneo*: no se puede espectar un match **en vivo** desde el
+    lobby (Ver Cuadro solo lista finalizadas; Espectar deja la pantalla de
+    staging «Preparando inicio…» sin seguir el match). El watch real exige
+    `watchTournamentTable(matchTableId)` (sin UI fuera del `TournamentPanel`
+    del participante; el harness MCP no lo expone) → anotado en
+    `COMPONENT_PARITY` U10 como límite declarado.
+  - *Lecciones harness*: el server NO reenvía GAME_INIT al re-watch (para
+    repro: `stopWatching` + `watchTournamentTable`); `mage_create_tournament_table`
+    exige `tournamentType:'Sealed Elimination'` (con `'Elimination'` →
+    NPE `Class.getConstructor`/`Map.get`); `GAME_INIT` de espectador no
+    incluye pools/sideboards (por eso es pequeño).
+  - Limpieza: mesas `mutate-live-1`/`perf-sealed-1` eliminadas, sesiones
+    cerradas, lobby a 0. Scripts en `web/.run/scratch/p3-*.mjs` (no
+    commiteables).
+  - *Bug UX reportado por el usuario*: el Historial (25 partidas) no se
+    podía desplazar — `.finished-matches-panel`/`.finished-matches-list`
+    desbordaban `.lobby-main` (`overflow:hidden`) sin contenedor con scroll.
+    Fix: panel `flex:1; min-height:0` + lista `flex:1; overflow-y:auto` y la
+    lista solo se monta con partidas (el empty-state queda fuera y centrado).
+    Regresión cubierta por `web/e2e/finished-matches.spec.ts` (fake, escenario
+    `finishedMatches.ts`; falla sin el fix: `overflowY: visible` → esperado
+    `auto`) + 2 asserts unit en `FinishedMatchesPanel.test.tsx`.

@@ -57,10 +57,10 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `GAME_GET_MULTI_AMOUNT` | ✅ | ✅ | — | feedback.test.ts + en vivo 2026-09-12: reparto de daño de gang-block capturado verbatim (multiString con defaults en orden de declaración, sin prompt de orden previo) | 2026-09-12 |
 | `GAME_OVER` | ✅ | — | ✅ | full-flow.spec.ts / defeat.spec.ts | 2026-08-24 |
 | `END_GAME_INFO` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
-| `REPLAY_GAME` | ✅ | — | — | eventHandler `REPLAY_GAME` (log) | 2026-08-26 |
-| `REPLAY_INIT` | ✅ | — | — | eventHandler `REPLAY_INIT` + replayViewer | 2026-08-26 |
+| `REPLAY_GAME` | ✅ | — | — | eventHandler `REPLAY_GAME` (log). **En vivo 2026-09-14**: `getFinishedMatches` real devuelve `games:[]` y `replayAvailable:false` (server con `saveGameActivated="false"`; upstream lo marca «not working correctly yet») → el `replayGame` del Historial nunca se dispara con la config por defecto | 2026-09-14 |
+| `REPLAY_INIT` | ✅ | — | — | eventHandler `REPLAY_INIT` + replayViewer (pinta el frame en GameScreen vía `{game, phase:'game'}`) | 2026-08-26 |
 | `REPLAY_UPDATE` | ✅ | — | — | eventHandler `REPLAY_UPDATE` | 2026-08-26 |
-| `REPLAY_DONE` | ✅ | — | — | eventHandler `REPLAY_DONE` | 2026-08-26 |
+| `REPLAY_DONE` | ✅ | — | — | eventHandler `REPLAY_DONE` (log + `replayViewer.result`; no sale del tablero) | 2026-08-26 |
 
 ## Catálogo de mecánicas de juego
 
@@ -159,7 +159,7 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Auras / Equipment (render de adjuntos) | ✅ | ✅ | `OpponentZone` (`.attachment-subcard`) + `mechanics.spec.ts` | 2026-08-24 |
-| Mutate (apilar bajo/sobre host) | ✅ | ✅ | `PermanentView.mutateView` (MutateView) + `.card-mutate-pile`/`.mutated-badge`/`.mutate-part` en `PlayerZone`/`OpponentZone`; activación vía `canPlayObjects`→`GAME_CHOOSE_ABILITY`; `mutate.spec.ts` (fake) + `OpponentZone.test.tsx`. **Beta real**: el proxy reenvía `mutateView` por reflexión (sin cambio Java, verificado en código); el render está verificado en fake. El play en vivo contra beta desde el harness está BLOQUEADO por el modelo de sesión del proxy (`Mage.Proxy` rechaza el 2º login con el mismo usuario que la página → el `HumanHelper` no conecta). Falta: permitir la 2ª sesión en el proxy o grabar frames reales para un fixture anti-drift. | 2026-08-25 |
+| Mutate (apilar bajo/sobre host) | ✅ | ✅ | `PermanentView.mutateView` (MutateView) + `.card-mutate-pile`/`.mutated-badge`/`.mutate-part` en `PlayerZone`/`OpponentZone`; activación vía `canPlayObjects`→`GAME_CHOOSE_ABILITY`; `mutate.spec.ts` (fake) + `OpponentZone.test.tsx` + fixture real `recorded/mutate.json`. **En vivo 2026-09-14 (local, mesa 2×HUMAN `mutate-live-1`, espectada)**: Gemrazer mutado sobre Elvish Mystic con `GAME_ASK` Under/Over; costo de mutate `{1}{G}{G}`; ambas direcciones renderizadas: Over → partes `[Gemrazer, Elvish Mystic]` 4/4, Under → `[Elvish Mystic, Gemrazer]` 1/1 (P/T del top, habilidades del conjunto: RE+TR en ambos). Pila + badge visibles en el observador (spectator) y en el GameView. | 2026-09-14 |
 
 ### C. Estados globales y contadores de jugador
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -241,12 +241,12 @@ Lista actual (de `engine-view-gap.json`):
 | Concede / rendirse | ✅ | ✅ | `concedeGame` en `actions.ts` + `concede.spec.ts` (fake) + `concede.test.ts` | 2026-08-24 |
 | Mulligan / Keep (auto) | ✅ | ✅ | UI dedicada `MulliganDialog` (`isMulligan`/`isMulliganLondon` en `feedback.ts`); E2E `mulligan.spec.ts` (fake) ejercita la ventana con mano en abanico + London-bottom (`shots/mulligan-01-window.png`) | 2026-08-24 |
 | Sideboard (Bo3 / Bo5) | ✅ | ✅ | `SIDEBOARD` + `best-of-3.spec.ts` / `best-of-5.spec.ts` | 2026-08-24 |
-| Replay viewer | ✅ | — | `eventHandler` `REPLAY_*` + `replayViewer` state | 2026-08-26 |
+| Replay viewer | ✅ | — | `eventHandler` `REPLAY_*` + `replayViewer` state + `GameScreen` pinta los frames. **Límites (probado en vivo 2026-09-14)**: (1) el server por defecto no guarda replays (`saveGameActivated="false"`), así que `MatchView.games` llega vacío y el botón del Historial no aparece; (2) `replayNext`/`replayPrevious`/`replaySkipForward` existen en `commands.ts` pero **sin UI** (no hay controles de transporte); (3) `REPLAY_DONE` no vuelve al lobby | 2026-09-14 |
 | Sideboard Arena strips (A+B) | ✅ | ✅ | `ArenaCardStrip` swap + agrupación + drag + preview + `validateDeckForFormat` en `SideboardScreen.tsx:376` | 2026-08-26 |
 
 ## Planes enlazados (callbacks ✅)
 - **Slice A — Draft / Limited** ✅: `START_DRAFT`, `DRAFT_INIT`, `DRAFT_PICK`, `DRAFT_UPDATE`, `DRAFT_OVER`, `CONSTRUCT` → `DraftScreen`/`ConstructScreen`.
 - **Slice B — Torneo** ✅: `START_TOURNAMENT`, `TOURNAMENT_INIT`, `TOURNAMENT_UPDATE`, `TOURNAMENT_OVER`, `SHOW_TOURNAMENT` → `TournamentBracket`/`TournamentPanel`.
-- **Slice C — Replay viewer** ✅: `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE` → `replayViewer` + `GameView`.
+- **Slice C — Replay viewer** ⚠️ (solo cliente): `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE` → `replayViewer` + `GameView`. En vivo 2026-09-14 no es verificable de punta a punta: el servidor por defecto lleva `saveGameActivated="false"` → nunca hay `games[]`/`replayAvailable`; y el cliente no tiene controles (siguiente/anterior/skip) ni salida del tablero.
 - **Slice D — Sala de espera de jugador** ✅: `JOINED_TABLE` → fase `staging` (`SpectatorStagingScreen mode="player"`), paridad con el `TableWaitingDialog` de desktop: salto automático al crear/unirse, Empezar (dueño+ready), Salir (`leaveTable`), Eliminar mesa (dueño, `removeTable`), toggle Listo/No listo (`staging-toggle-ready` con badges 🟢/🟡 y sincronización reactiva por chat de sala), cambiar baraja en vivo (`staging-change-deck`) y re-entrada "Ir a la mesa" desde la tarjeta (asiento propio o `stagingTableId`). Cierre U4 2026-09-06: reordenar asientos (`swapSeats`, ↑/↓ dueño en READY), bypass de torneo limitado sin password (`joinTournamentTable` directo), `startTournament` en torneo (flag `JOINED_TABLE`→`stagingIsTournament`), start con confirm si falta ready, roster con rating/history/flag. E2E: staging.spec.ts (fake, 8/8) / multi-user.spec.ts (real). Nota desktop: si el join falla tras crear, el dueño limpia con `removeTable` (mismo flujo en `NewTableDialog`).
 - **Trivial**: `GAME_REDRAW_GUI` (log-only; el tablero ya reacciona a `GAME_UPDATE`).
