@@ -248,161 +248,163 @@ export default function FinishedMatchesPanel({
       </div>
 
       {/* Matches Grid */}
-      <div className="finished-matches-list">
-        {filteredMatches.map((m, index) => {
-          const scores = parseMatchResult(m.result, m.players)
-          const duration = formatMatchDuration(m.startTime, m.endTime)
-          const relativeTime = formatRelativeTime(m.endTime || m.startTime)
-          const matchKey = m.matchId || m.tableId || `match-${index}`
+      {filteredMatches.length > 0 && (
+        <div className="finished-matches-list">
+          {filteredMatches.map((m, index) => {
+            const scores = parseMatchResult(m.result, m.players)
+            const duration = formatMatchDuration(m.startTime, m.endTime)
+            const relativeTime = formatRelativeTime(m.endTime || m.startTime)
+            const matchKey = m.matchId || m.tableId || `match-${index}`
 
-          return (
-            <div key={matchKey} className="match-card">
-              {/* Match Card Header */}
-              <div className="match-card-header">
-                <div className="match-meta-left">
-                  <span className="match-game-type">{m.gameType || 'Duelo MTG'}</span>
-                  {m.deckType && <span className="match-deck-type">{m.deckType}</span>}
+            return (
+              <div key={matchKey} className="match-card">
+                {/* Match Card Header */}
+                <div className="match-card-header">
+                  <div className="match-meta-left">
+                    <span className="match-game-type">{m.gameType || 'Duelo MTG'}</span>
+                    {m.deckType && <span className="match-deck-type">{m.deckType}</span>}
+                  </div>
+
+                  <div className="match-meta-right">
+                    {m.rated && <span className="match-badge rated"><Icon name="star" size={11} /> {t('lobby', 'tag_rated')}</span>}
+                    {m.isTournament && <span className="match-badge tournament"><Icon name="trophy" size={11} /> {t('lobby', 'tournament_badge')}</span>}
+                    {duration && <span className="match-duration"><Icon name="clock" size={11} /> {duration}</span>}
+                    {relativeTime && <span className="match-time-ago">{relativeTime}</span>}
+                  </div>
                 </div>
 
-                <div className="match-meta-right">
-                  {m.rated && <span className="match-badge rated"><Icon name="star" size={11} /> {t('lobby', 'tag_rated')}</span>}
-                  {m.isTournament && <span className="match-badge tournament"><Icon name="trophy" size={11} /> {t('lobby', 'tournament_badge')}</span>}
-                  {duration && <span className="match-duration"><Icon name="clock" size={11} /> {duration}</span>}
-                  {relativeTime && <span className="match-time-ago">{relativeTime}</span>}
-                </div>
-              </div>
-
-              {/* Match Players & Score Board */}
-              <div className="match-scoreboard">
-                {scores.length >= 2 ? (
-                  <>
-                    {/* Player 1 (Left) */}
-                    <div className={`player-slot ${scores[0].isWinner ? 'winner' : ''}`}>
-                      <div
-                        className="player-info-wrap"
-                        onClick={() => onInspectUser?.(scores[0].name)}
-                        style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
-                      >
-                        <AvatarImage
-                          avatarId={userMap.get(scores[0].name.toLowerCase())?.avatarId ?? 10}
-                          username={scores[0].name}
-                          size="medium"
-                        />
-                        <div className="player-name-col">
-                          <div className="player-name-line">
-                            {userMap.get(scores[0].name.toLowerCase())?.flagName && (
-                              <CountryFlag
-                                flagName={userMap.get(scores[0].name.toLowerCase())!.flagName}
-                              />
-                            )}
-                            <span className="player-name">{scores[0].name}</span>
-                            {scores[0].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
-                          </div>
-                          {scores[0].quit && (
-                            <span className="player-quit-tag">
-                              {scores[0].timeoutType === 'timer'
-                                ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
-                                : scores[0].timeoutType === 'idle'
-                                ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
-                                : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="player-score-box">{scores[0].wins}</div>
-                    </div>
-
-                    {/* Center VS Indicator */}
-                    <div className="match-vs-divider">
-                      <span className="vs-text">{t('lobby', 'staging_vs')}</span>
-                    </div>
-
-                    {/* Player 2 (Right) */}
-                    <div className={`player-slot right ${scores[1].isWinner ? 'winner' : ''}`}>
-                      <div className="player-score-box">{scores[1].wins}</div>
-                      <div
-                        className="player-info-wrap"
-                        onClick={() => onInspectUser?.(scores[1].name)}
-                        style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
-                      >
-                        <div className="player-name-col right-align">
-                          <div className="player-name-line">
-                            {scores[1].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
-                            <span className="player-name">{scores[1].name}</span>
-                            {userMap.get(scores[1].name.toLowerCase())?.flagName && (
-                              <CountryFlag
-                                flagName={userMap.get(scores[1].name.toLowerCase())!.flagName}
-                              />
+                {/* Match Players & Score Board */}
+                <div className="match-scoreboard">
+                  {scores.length >= 2 ? (
+                    <>
+                      {/* Player 1 (Left) */}
+                      <div className={`player-slot ${scores[0].isWinner ? 'winner' : ''}`}>
+                        <div
+                          className="player-info-wrap"
+                          onClick={() => onInspectUser?.(scores[0].name)}
+                          style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
+                        >
+                          <AvatarImage
+                            avatarId={userMap.get(scores[0].name.toLowerCase())?.avatarId ?? 10}
+                            username={scores[0].name}
+                            size="medium"
+                          />
+                          <div className="player-name-col">
+                            <div className="player-name-line">
+                              {userMap.get(scores[0].name.toLowerCase())?.flagName && (
+                                <CountryFlag
+                                  flagName={userMap.get(scores[0].name.toLowerCase())!.flagName}
+                                />
+                              )}
+                              <span className="player-name">{scores[0].name}</span>
+                              {scores[0].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                            </div>
+                            {scores[0].quit && (
+                              <span className="player-quit-tag">
+                                {scores[0].timeoutType === 'timer'
+                                  ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
+                                  : scores[0].timeoutType === 'idle'
+                                  ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
+                                  : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
+                              </span>
                             )}
                           </div>
-                          {scores[1].quit && (
-                            <span className="player-quit-tag">
-                              {scores[1].timeoutType === 'timer'
-                                ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
-                                : scores[1].timeoutType === 'idle'
-                                ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
-                                : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
-                            </span>
-                          )}
                         </div>
-                        <AvatarImage
-                          avatarId={userMap.get(scores[1].name.toLowerCase())?.avatarId ?? 10}
-                          username={scores[1].name}
-                          size="medium"
-                        />
+                        <div className="player-score-box">{scores[0].wins}</div>
                       </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="match-single-player-row">
-                    <span className="player-raw-text">
-                      {m.result || m.players || t('lobby', 'match_no_result')}
-                    </span>
-                  </div>
-                )}
-              </div>
 
-              {/* Match Replays & Footer */}
-              <div className="match-card-footer">
-                <div className="match-result-summary">
-                  <span className="result-label">{t('lobby', 'match_result_label')}</span>
-                  <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>
+                      {/* Center VS Indicator */}
+                      <div className="match-vs-divider">
+                        <span className="vs-text">{t('lobby', 'staging_vs')}</span>
+                      </div>
+
+                      {/* Player 2 (Right) */}
+                      <div className={`player-slot right ${scores[1].isWinner ? 'winner' : ''}`}>
+                        <div className="player-score-box">{scores[1].wins}</div>
+                        <div
+                          className="player-info-wrap"
+                          onClick={() => onInspectUser?.(scores[1].name)}
+                          style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
+                        >
+                          <div className="player-name-col right-align">
+                            <div className="player-name-line">
+                              {scores[1].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                              <span className="player-name">{scores[1].name}</span>
+                              {userMap.get(scores[1].name.toLowerCase())?.flagName && (
+                                <CountryFlag
+                                  flagName={userMap.get(scores[1].name.toLowerCase())!.flagName}
+                                />
+                              )}
+                            </div>
+                            {scores[1].quit && (
+                              <span className="player-quit-tag">
+                                {scores[1].timeoutType === 'timer'
+                                  ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
+                                  : scores[1].timeoutType === 'idle'
+                                  ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
+                                  : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
+                              </span>
+                            )}
+                          </div>
+                          <AvatarImage
+                            avatarId={userMap.get(scores[1].name.toLowerCase())?.avatarId ?? 10}
+                            username={scores[1].name}
+                            size="medium"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="match-single-player-row">
+                      <span className="player-raw-text">
+                        {m.result || m.players || t('lobby', 'match_no_result')}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {m.games && m.games.length > 0 && (
-                  <div className="match-replay-actions">
-                    {m.games.map((gId, gIdx) => (
-                      <button
-                        key={gId}
-                        type="button"
-                        className="replay-btn"
-                        onClick={() => handleReplay(gId)}
-                        disabled={replayingGameId === gId}
-                        title={`${t('common', 'loading')} #${gIdx + 1}`}
-                      >
-                        <span className="replay-icon"><Icon name="play" size={12} /></span>
-                        <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
-                      </button>
-                    ))}
+                {/* Match Replays & Footer */}
+                <div className="match-card-footer">
+                  <div className="match-result-summary">
+                    <span className="result-label">{t('lobby', 'match_result_label')}</span>
+                    <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>
                   </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
 
-        {filteredMatches.length === 0 && !loading && (
-          <div className="matches-empty-state">
-            <span className="empty-icon"><Icon name="inbox" size={26} /></span>
-            <h3 className="empty-title">{t('lobby', 'matches_empty')}</h3>
-            <p className="empty-desc">
-              {searchQuery
-                ? t('lobby', 'no_tables_found')
-                : t('lobby', 'matches_empty')}
-            </p>
-          </div>
-        )}
-      </div>
+                  {m.games && m.games.length > 0 && (
+                    <div className="match-replay-actions">
+                      {m.games.map((gId, gIdx) => (
+                        <button
+                          key={gId}
+                          type="button"
+                          className="replay-btn"
+                          onClick={() => handleReplay(gId)}
+                          disabled={replayingGameId === gId}
+                          title={`${t('common', 'loading')} #${gIdx + 1}`}
+                        >
+                          <span className="replay-icon"><Icon name="play" size={12} /></span>
+                          <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {filteredMatches.length === 0 && !loading && (
+        <div className="matches-empty-state">
+          <span className="empty-icon"><Icon name="inbox" size={26} /></span>
+          <h3 className="empty-title">{t('lobby', 'matches_empty')}</h3>
+          <p className="empty-desc">
+            {searchQuery
+              ? t('lobby', 'no_tables_found')
+              : t('lobby', 'matches_empty')}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
