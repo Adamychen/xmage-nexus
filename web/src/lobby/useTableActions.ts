@@ -196,7 +196,9 @@ export function useTableActions(conn: ConnectionInfo | null) {
     try {
       const res = await withTimeout(cmds.watchTable(t.tableId), 15000, 'watchTable')
       if (res.ok) {
-        setWatchingTable(t)
+        // Mesa de torneo: el server responde SHOW_TOURNAMENT (id real del torneo)
+        // y el lobby abre el cuadro; no hay staging de mesa que mostrar.
+        if (!t.isTournament) setWatchingTable(t)
         setNotice(tStatic('lobby','watch_btn'))
       } else {
         const code = (res as { errorCode?: string }).errorCode

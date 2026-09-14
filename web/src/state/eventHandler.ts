@@ -216,7 +216,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       break
     }
     case 'SHOW_TOURNAMENT': {
-      handleShowTournament(data)
+      handleShowTournament(objectId, data)
       break
     }
     case 'REPLAY_GAME': {

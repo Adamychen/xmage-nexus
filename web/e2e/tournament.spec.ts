@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { tournamentScenario } from '../fixtures/scenarios/tournament'
+import { makeTournamentScenario, tournamentScenario } from '../fixtures/scenarios/tournament'
 import { dismissSetupWizard, login } from './support/start-game'
 fakeOnly()
 
@@ -81,6 +81,24 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       await eyes.first().click()
       await expect(modal.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
     })
+  })
+
+  test('Espectar de una mesa de torneo abre el cuadro con el id de SHOW_TOURNAMENT (T6)', async ({ page }) => {
+    await withFakeServer(
+      () => makeTournamentScenario({ includeStartTournament: false, includeInit: false, emitUpdates: 0, emitShowTournamentOnWatch: true }),
+      async () => {
+        await login(page, 'e2e')
+        const watchBtn = page.locator('.table-card .watch-btn').first()
+        await expect(watchBtn).toBeVisible({ timeout: 10_000 })
+        await watchBtn.click()
+        const modal = page.locator('[data-testid="tournament-bracket"]').first()
+        await expect(modal).toBeVisible({ timeout: 10_000 })
+        await expect(modal.locator('[data-testid="bracket-watch"]')).toHaveCount(4)
+        // torneo ajeno: sin "Abandonar torneo" y sin staging clavado
+        await expect(page.getByTestId('tournament-quit')).toHaveCount(0)
+        await expect(page.getByTestId('staging-back')).toHaveCount(0)
+      },
+    )
   })
 
   test('tournament panel joins the tournament chat over WS (T4)', async ({ page }) => {

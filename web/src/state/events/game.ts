@@ -115,6 +115,9 @@ export function handleWatchGame(objectId: string | null): void {
       phase: 'spectating_pending',
       gameId: objectId,
       watchingTable: null,
+      // El id de torneo resuelto (SHOW_TOURNAMENT) ya no hace falta: evita que al
+      // volver del juego espectado el lobby reabra el cuadro solo.
+      spectateTournament: null,
       ...(switchingGame ? { game: null, gameEnd: null } : null),
     })
   }

@@ -829,6 +829,12 @@ describe('active game persistence in store', () => {
     expect(getState().gameId).toBe('g-b10-2')
   })
 
+  it('al entrar al juego espectado limpia la resolución de torneo (no reabre el cuadro al volver al lobby)', () => {
+    setState({ spectateTournament: { tournamentId: 't-9', tableId: 'table-9' } })
+    handleWatchGame('g-tt-1')
+    expect(getState().spectateTournament).toBeNull()
+  })
+
   it('Bo3: la vista de la 2ª partida no se descarta por comparar con la de la 1ª', () => {
     setState({
       phase: 'game',
@@ -1152,5 +1158,44 @@ describe('tournament chat (T4)', () => {
     returnToLobby()
     expect(leaveChat).toHaveBeenCalledWith('chat-tourney-1')
     expect(getState().tournamentChatId).toBeNull()
+  })
+})
+
+describe('SHOW_TOURNAMENT — resolución tableId→tournamentId (watch de torneo)', () => {
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+  })
+
+  it('guarda el tournamentId del callback (objectId) con el tableId de la mesa', () => {
+    handleMessage({
+      type: 'event',
+      method: 'SHOW_TOURNAMENT',
+      messageId: 1,
+      objectId: 't-real',
+      data: { currentTableId: 'table-9', parentTableId: null },
+    })
+    expect(getState().spectateTournament).toEqual({ tournamentId: 't-real', tableId: 'table-9' })
+  })
+
+  it('es idempotente: repetir el mismo callback no cambia la referencia (evita reabrir el cuadro)', () => {
+    const event = {
+      type: 'event' as const,
+      method: 'SHOW_TOURNAMENT',
+      messageId: 1,
+      objectId: 't-real',
+      data: { currentTableId: 'table-9' },
+    }
+    handleMessage(event)
+    const first = getState().spectateTournament
+    handleMessage({ ...event, messageId: 2 })
+    expect(getState().spectateTournament).toBe(first)
+  })
+
+  it('ignora callbacks sin id de torneo o sin mesa', () => {
+    handleMessage({ type: 'event', method: 'SHOW_TOURNAMENT', messageId: 1, objectId: null, data: { currentTableId: 'table-9' } })
+    expect(getState().spectateTournament).toBeNull()
+    handleMessage({ type: 'event', method: 'SHOW_TOURNAMENT', messageId: 2, objectId: 't-real', data: null })
+    expect(getState().spectateTournament).toBeNull()
   })
 })

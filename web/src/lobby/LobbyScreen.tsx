@@ -38,6 +38,7 @@ export default function LobbyScreen() {
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
   const stagingTableId = useStore((s) => s.stagingTableId)
+  const spectateTournament = useStore((s) => s.spectateTournament)
   const myDeck = useStore((s) => s.myDeck)
   const error = useStore((s) => s.error)
   const events = useStore((s) => s.events)
@@ -106,6 +107,20 @@ export default function LobbyScreen() {
     watchTable: tableActions.watchTable,
     setNotice,
   })
+
+  // Al espectar una mesa de torneo el server responde SHOW_TOURNAMENT con el id
+  // real del torneo (no resuelve ids de mesa en getTournament): mantén abierto el
+  // cuadro con ese id. Idempotente: no reabre si el id ya es el del cuadro.
+  useEffect(() => {
+    if (!spectateTournament) return
+    // Consumido: evita reabrir el cuadro al remontar el lobby (p. ej. al volver
+    // de un juego espectado). El refresh periódico puede reponerlo; se re-consume.
+    setState({ spectateTournament: null })
+    if (bracket.bracketTournamentId === spectateTournament.tournamentId) return
+    const table = tables.find((tb) => tb.tableId === spectateTournament.tableId)
+    if (!table) return
+    void bracket.openBracket(table, spectateTournament.tournamentId)
+  }, [spectateTournament, tables, bracket.bracketTournamentId, bracket.openBracket])
 
   const filteredTables = useMemo(() => {
     let ignored: string[] = []
@@ -401,6 +416,8 @@ export default function LobbyScreen() {
           onRefresh={() => void bracket.refreshBracket()}
           onWatchMatch={(id) => void bracket.watchMatch(id)}
           watchingMatchId={bracket.watchingMatchId}
+          tournamentId={bracket.bracketTournamentId}
+          canQuit={bracket.canQuit}
         />
       )}
       {showSettings && (

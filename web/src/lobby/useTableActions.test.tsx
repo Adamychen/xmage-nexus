@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { useTableActions } from './useTableActions'
 import * as cmds from '../net/commands'
+import { getState } from '../state/state'
+import { reset } from '../state/store'
 
 vi.mock('../net/commands', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../net/commands')>()
@@ -11,6 +13,7 @@ vi.mock('../net/commands', async (importOriginal) => {
     joinTournamentTable: vi.fn(),
     startMatch: vi.fn(),
     startTournament: vi.fn(),
+    watchTable: vi.fn(),
   }
 })
 
@@ -140,5 +143,31 @@ describe('useTableActions.startTable', () => {
     expect(cmds.startMatch).toHaveBeenCalledOnce()
     expect(cmds.startMatch).toHaveBeenCalledWith('t-match')
     expect(cmds.startTournament).not.toHaveBeenCalled()
+  })
+})
+
+describe('useTableActions.watchTable', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.watchTable).mockReset().mockResolvedValue({ ok: true } as any)
+  })
+
+  it('mesa de torneo: no entra al staging (el cuadro lo abre SHOW_TOURNAMENT)', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    await act(async () => {
+      await result.current.watchTable(tourTable())
+    })
+    expect(cmds.watchTable).toHaveBeenCalledWith('t-tourney')
+    expect(getState().watchingTable).toBeNull()
+    expect(getState().phase).not.toBe('spectating_pending')
+  })
+
+  it('partida normal: sigue entrando al staging de espectador', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    await act(async () => {
+      await result.current.watchTable(matchTable())
+    })
+    expect(getState().watchingTable?.tableId).toBe('t-match')
+    expect(getState().phase).toBe('spectating_pending')
   })
 })

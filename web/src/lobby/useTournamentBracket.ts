@@ -23,22 +23,30 @@ export function useTournamentBracket() {
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
   const [bracketTournamentId, setBracketTournamentId] = useState<string | null>(null)
 
-  const resolveId = (t: TableView): string =>
-    isOwnTournament(t) ? (tournamentState?.tournamentId ?? t.tableId) : t.tableId
-
   /** El torneo cacheado en el store es de la mesa pedida (el usuario jugó/creó
    *  ese torneo). Para mesas ajenas NO vale como fallback: pintar el torneo
    *  propio en el cuadro de otro torneo es un bug (visto en vivo 2026-09-14). */
   const isOwnTournament = (t: TableView): boolean =>
     !!tournamentState && tournamentState.view?.tournamentName === t.tableName
 
-  const openBracket = async (t: TableView) => {
+  /**
+   * Abre el cuadro de la mesa. `tournamentId` explícito es la resolución
+   * tableId→tournamentId ya conocida (callback SHOW_TOURNAMENT). Si es un torneo
+   * ajeno sin resolver todavía, se dispara el watch y el lobby reabre con el id
+   * cuando llegue el callback (el server no resuelve ids de mesa).
+   */
+  const openBracket = async (t: TableView, tournamentId?: string) => {
     setBracketTable(t)
     setBracketError(null)
     const own = isOwnTournament(t)
-    const tid = resolveId(t)
+    const tid = tournamentId ?? (own ? (tournamentState?.tournamentId ?? t.tableId) : null)
     setBracketTournamentId(tid)
     setBracketView(own ? (tournamentState?.view ?? null) : null)
+    if (!tid) {
+      setBracketLoading(false)
+      void cmds.watchTournamentTable(t.tableId)
+      return
+    }
     setBracketLoading(true)
     try {
       void cmds.watchTournamentTable(t.tableId)
@@ -81,12 +89,12 @@ export function useTournamentBracket() {
   }
 
   const refreshBracket = async () => {
-    if (!bracketTable) return
+    if (!bracketTable || !bracketTournamentId) return
     setBracketLoading(true)
     setBracketError(null)
     try {
       void cmds.watchTournamentTable(bracketTable.tableId)
-      const data = await withTimeout(cmds.getTournament(bracketTournamentId ?? bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
+      const data = await withTimeout(cmds.getTournament(bracketTournamentId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
       } else if (bracketTournamentId === tournamentState?.tournamentId && tournamentState?.view) {
@@ -120,7 +128,8 @@ export function useTournamentBracket() {
   }, [bracketTable?.tableId, bracketTournamentId])
 
   return {
-    bracketTable, bracketView, bracketLoading, bracketError,
+    bracketTable, bracketView, bracketLoading, bracketError, bracketTournamentId,
+    canQuit: !!bracketTable && isOwnTournament(bracketTable),
     openBracket, closeBracket, refreshBracket, watchMatch, watchingMatchId,
   }
 }

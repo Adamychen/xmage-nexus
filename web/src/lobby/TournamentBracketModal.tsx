@@ -13,9 +13,13 @@ interface Props {
   onRefresh: () => void
   onWatchMatch?: (tableId: string) => void
   watchingMatchId?: string | null
+  /** id REAL del torneo (no el de la mesa): necesario para quitTournament */
+  tournamentId?: string | null
+  /** false = torneo ajeno/espectador: oculta "Abandonar torneo" */
+  canQuit?: boolean
 }
 
-export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh, onWatchMatch, watchingMatchId }: Props) {
+export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh, onWatchMatch, watchingMatchId, tournamentId, canQuit }: Props) {
   const { t } = useTranslation()
   return (
     <DialogShell
@@ -44,10 +48,11 @@ export default function TournamentBracketModal({ table, view, loading, error, on
           {view && (
             <TournamentBracket
               view={view}
-              tournamentId={table.tableId}
+              tournamentId={tournamentId ?? undefined}
               onClose={onClose}
               onWatchMatch={onWatchMatch}
               watchingMatchId={watchingMatchId}
+              canQuit={canQuit}
             />
           )}
           {!view && !loading && !error && (

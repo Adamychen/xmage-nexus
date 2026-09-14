@@ -80,6 +80,9 @@ export interface TournamentScenarioOptions {
   includeStartTournament?: boolean
   includeInit?: boolean
   emitUpdates?: number
+  /** Al hacer watchTable (Espectar), responde SHOW_TOURNAMENT con el id real del
+   *  torneo (como el server para mesas de torneo). */
+  emitShowTournamentOnWatch?: boolean
 }
 
 export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Scenario {
@@ -166,8 +169,14 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
           setTimeout(() => broadcastTournament('TOURNAMENT_UPDATE', quitView), 50)
           return
         }
+        case 'watchTable':
         case 'watchTournamentTable':
-          conn.ok(requestId, action, {})
+          conn.ok(requestId, action, { tableId: TABLE_ID })
+          if (action === 'watchTable' && opts.emitShowTournamentOnWatch) {
+            setTimeout(() => {
+              conn.broadcast('SHOW_TOURNAMENT', { currentTableId: TABLE_ID, parentTableId: null }, TOURNAMENT_ID)
+            }, 20)
+          }
           return
         case 'getTournamentChatId':
           conn.ok(requestId, action, `tournament-chat-${argStr('tournamentId') || TOURNAMENT_ID}`)

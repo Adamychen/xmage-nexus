@@ -201,3 +201,17 @@ describe('TournamentBracket', () => {
     expect(screen.getByTestId('tournament-construction').textContent).toContain('10m')
   })
 })
+
+describe('TournamentBracket — Abandonar torneo (id real vs mesa ajena)', () => {
+  afterEach(() => cleanup())
+
+  it('muestra Abandonar torneo cuando hay id real (participante)', () => {
+    render(<TournamentBracket view={sampleTournamentView()} tournamentId="t-real" />)
+    expect(screen.getByTestId('tournament-quit')).toBeDefined()
+  })
+
+  it('oculta Abandonar torneo en el torneo de otro (canQuit=false)', () => {
+    render(<TournamentBracket view={sampleTournamentView()} tournamentId="t-real" canQuit={false} />)
+    expect(screen.queryByTestId('tournament-quit')).toBeNull()
+  })
+})

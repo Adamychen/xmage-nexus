@@ -25,6 +25,10 @@ export interface LobbySlice {
   tournamentChatTournamentId: string | null
   chatMessages: ChatMessageEvent[]
   watchingTable: TableView | null
+  /** Resolución tableId→tournamentId del watch de torneo (callback SHOW_TOURNAMENT):
+   *  el lobby la usa para abrir el cuadro de un torneo ajeno o en vivo (el server
+   *  no acepta el id de mesa en getTournament). */
+  spectateTournament: { tournamentId: string; tableId: string } | null
   stagingTableId: string | null
   /** flag isTournament del JOINED_TABLE (el lobby puede ir desfasado al entrar) */
   stagingIsTournament: boolean
@@ -45,6 +49,7 @@ export const initialLobby: LobbySlice = {
   tournamentChatTournamentId: null,
   chatMessages: [],
   watchingTable: null,
+  spectateTournament: null,
   stagingTableId: null,
   stagingIsTournament: false,
   pendingDeepLink: null,

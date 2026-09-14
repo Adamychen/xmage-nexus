@@ -73,7 +73,18 @@ export function handleTournamentOver(data: unknown): void {
   addLog('torneo', text)
 }
 
-export function handleShowTournament(data: unknown): void {
+/** SHOW_TOURNAMENT(objectId = tournamentId, data = TableClientMessage con
+ *  currentTableId): el server solo reconoce el id de TORNEO en getTournament, así
+ *  que al espectar una mesa de torneo (ajena o propia) guardamos la resolución
+ *  para que el lobby abra el cuadro con el id correcto (antes solo se logueaba y
+ *  el staging se quedaba en «Preparando inicio…»). */
+export function handleShowTournament(objectId: string | null, data: unknown): void {
   const d = data as { currentTableId?: string } | null
-  addLog('torneo', `Viendo torneo ${d?.currentTableId?.slice(0, 8) ?? ''}`)
+  if (objectId && d?.currentTableId) {
+    const prev = getState().spectateTournament
+    if (prev?.tournamentId !== objectId || prev?.tableId !== d.currentTableId) {
+      setState({ spectateTournament: { tournamentId: objectId, tableId: d.currentTableId } })
+    }
+  }
+  addLog('torneo', `Viendo torneo ${objectId?.slice(0, 8) ?? d?.currentTableId?.slice(0, 8) ?? ''}`)
 }

@@ -15,6 +15,8 @@ export interface TournamentBracketProps {
   onWatchMatch?: (tableId: string) => void
   watchingMatchId?: string | null
   compact?: boolean
+  /** false = torneo ajeno/espectador: no se puede abandonar (el desktop tampoco lo ofrece) */
+  canQuit?: boolean
 }
 
 function formatTimer(serverTime?: number, stepStartTime?: number | null): string {
@@ -27,7 +29,7 @@ function formatTimer(serverTime?: number, stepStartTime?: number | null): string
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }: TournamentBracketProps) {
+export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, canQuit }: TournamentBracketProps) {
   const { t, lang } = useTranslation()
   const [tick, setTick] = useState(0)
   useEffect(() => {
@@ -108,7 +110,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit }:
             {new Date(view.startTime).toLocaleString(toBcp47Locale(lang))}{view.endTime ? ` – ${new Date(view.endTime).toLocaleString(toBcp47Locale(lang))}` : ''}
           </span>
         )}
-        {tournamentId && (
+        {tournamentId && (canQuit ?? true) && (
           <button type="button" className="tournament-quit-btn" onClick={() => void handleQuit()} data-testid="tournament-quit">
             {t('lobby', 'tournament_quit')}
           </button>
@@ -165,7 +167,7 @@ function BracketRound({ round, index, watchingAllowed, onWatchMatch, watchingMat
   )
 }
 
-export default function TournamentBracket({ view, tournamentId, onClose, onQuit, onWatchMatch, watchingMatchId, compact }: TournamentBracketProps) {
+export default function TournamentBracket({ view, tournamentId, onClose, onQuit, onWatchMatch, watchingMatchId, compact, canQuit }: TournamentBracketProps) {
   const { t } = useTranslation()
   const sortedPlayers = useMemo(() => {
     return [...view.players].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
@@ -173,7 +175,7 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
 
   return (
     <div className={`tournament-bracket ${compact ? 'compact' : ''}`} data-testid="tournament-bracket">
-      <TournamentBracketHeader view={view} tournamentId={tournamentId} onClose={onClose} onQuit={onQuit} />
+      <TournamentBracketHeader view={view} tournamentId={tournamentId} onClose={onClose} onQuit={onQuit} canQuit={canQuit} />
       <div className="tournament-bracket-body">
         <section className="tournament-rounds-section" aria-label={t('lobby', 'bracket_title')}>
           <h3 className="tournament-section-title">{t('lobby', 'bracket_title')}</h3>
