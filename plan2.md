@@ -34,8 +34,12 @@
    `DraftScreen` nunca tocados en vivo (el sealed se auto-submiteó). Intentar
    2 HUMAN (+SIMs de relleno si el servidor los admite en draft) con picks
    alternos; si el mínimo de jugadores lo impide, documentar el mínimo real.
+   **✅ Resuelto 2026-09-14** (plan3 §E 11ª): picks con la web en draft real
+   2×HUMAN, local y beta.xmage.today.
 2. **Construcción sealed desde la web** — submit de 40 cartas vía UI
    (`ConstructScreen`) en torneo vivo, no auto-submit.
+   **✅ Resuelto 2026-09-14** (plan3 §1.2): pool 90 M20, sugerida de tierras +
+   submit 40 desde la UI en torneo sealed vivo.
 3. **Sideboard Bo3 desde la web** — `SideboardScreen` solo tiene tests; en vivo
    se usó WS crudo (`.run/scratch/submit-sideboard.mjs`).
 4. **Staging de torneo + bracket** — `TournamentBracketModal` y staging con

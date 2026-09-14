@@ -86,6 +86,15 @@
    `INTERACTION_COVERAGE` §Replay viewer. Mientras tanto el botón del Historial
    ya queda oculto solo (no hay `games[]`).
 3. **`GAME_REDRAW_GUI`**: log-only (INTERACTION_COVERAGE:41) → aceptar/issue.
+4. **Recarga de página a mitad de draft (resync)**: el draft vive solo en
+   memoria (`draft`/`draftId`); un F5 pierde la pantalla, el servidor sigue y
+   el asiento **autopickea por timeout** (el reenganche del WS sin recargar sí
+   se recupera: auto-rejoin 2026-09-09 + `DRAFT_INIT` habilita el pick desde el
+   fix 2026-09-14, pero el estado no se persiste). Fix propuesto: guardar
+   `{draftId}` en `persistence` (como `activeGame`) y al reconectar el gateway
+   llamar `joinDraft(draftId)`; el server responde `DRAFT_INIT` con el estado
+   actual. Tests: persistence + gateway-rejoin + e2e fake con reload. Sin
+   verificar en vivo todavía.
 
 ## 3. Fork / motor (coste alto: rebuild del server)
 
@@ -477,8 +486,9 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     (`web/e2e/shots/draft-live-waiting.png`), al pickear el rival el siguiente
     `DRAFT_PICK` limpia el banner y re-habilita las cartas solo
     (`draft-live-resumed.png`). Resuelto el límite A.1 de plan2 (picks de draft
-    jugados en vivo con la web). Queda pendiente el submit del pool desde
-    `ConstructScreen` (A.2).
+    jugados en vivo con la web). El submit del pool desde `ConstructScreen`
+    (A.2) ya estaba verificado en vivo con sealed (§1.2, submit 40 desde la UI);
+    el camino draft→construct usa la misma pantalla.
   - *Vivo en el servidor oficial (`beta.xmage.today`)*: mismo guion con la web
     logueada en beta (98 jugadores online; la mesa pública `nexus-qa-*` se creó,
     jugó 2 rondas y se eliminó): nombres reales resueltos por Scryfall (el
