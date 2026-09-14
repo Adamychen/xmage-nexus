@@ -479,3 +479,11 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     (`draft-live-resumed.png`). Resuelto el límite A.1 de plan2 (picks de draft
     jugados en vivo con la web). Queda pendiente el submit del pool desde
     `ConstructScreen` (A.2).
+  - *Vivo en el servidor oficial (`beta.xmage.today`)*: mismo guion con la web
+    logueada en beta (98 jugadores online; la mesa pública `nexus-qa-*` se creó,
+    jugó 2 rondas y se eliminó): nombres reales resueltos por Scryfall (el
+    contrato real no trae `name`), banner «Has elegido Alpine Watchdog», espera
+    sin contador (`web/e2e/shots/beta-draft-waiting.png`) y re-habilitación al
+    pickear el rival (`beta-draft-resumed.png`). Login anónimo OK en esta
+    ventana; la verificación canónica sigue siendo el fork local (beta es
+    intermitente por diseño).
