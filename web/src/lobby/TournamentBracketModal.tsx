@@ -37,7 +37,7 @@ export default function TournamentBracketModal({ table, view, loading, error, on
           <button type="button" className="tournament-refresh-btn" onClick={onRefresh} disabled={loading}>
             {loading ? t('lobby', 'matches_loading') : (<><Icon name="refresh" size={12} /> {t('lobby', 'matches_refresh')}</>)}
           </button>
-          <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}>✕</button>
+          <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={13} /></button>
         </div>
       )}
       onBackdropClick={onClose}

@@ -64,7 +64,7 @@ export default function DialogShell({
       title={t('common', 'close')}
       aria-label={t('common', 'close')}
     >
-      ✕
+      <Icon name="x" size={13} />
     </button>
   ) : null
 

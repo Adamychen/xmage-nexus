@@ -16,6 +16,10 @@
 }
 
 .deck-import-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   background: transparent;
   border: none;
   color: #a0aec0;

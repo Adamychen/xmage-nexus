@@ -329,3 +329,28 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     sigue en `—`); clave nueva ×9 locales + `types.ts`. Unit **1465/1465** ✅ +
     typecheck ✅. Verificado en vivo (`p2-live2-SPEC`: HISTORIAL `1 (Q:1)` →
     JUEGO LIMPIO `0%`; captura `web/e2e/shots/leaderboard-fairplay.png`).
+
+- **2026-09-14 (7ª parte) — X de cerrar modales centrados (reporte del usuario)**
+  - *Reporte*: «alguno está descentrado». Auditoría: los ✕ de texto dependían de
+    la métrica de la fuente y varios modales no centraban su caja
+    (`settings-close`, `appearance-close`, `sleeve-picker-close`,
+    `create-dialog-close-btn`, `close-btn` de Join, `wiki-close-btn`,
+    `about-close-btn`, `deck-import-close-btn`); además había 3 glifos distintos
+    (`✕`, `×`, `&times;`).
+  - *Fix*: todos los cierres de modal/overlay usan el icono SVG `<Icon name="x" />`
+    (geometría garantizada) y su CSS declara centrado
+    (`inline-flex` + `align-items`/`justify-content: center` + `line-height: 1`;
+    los que ya usaban `grid`/`place-items` se mantienen). Campos tocados:
+    DialogShell (todos los modales que lo usan), Settings, Apariencia, Sleeve
+    picker, Crear mesa, Unirse, Cuadro de torneo (modal + cabecera), Wiki,
+    Torneo (panel), CardPreview, Importar mazo, Acerca de, PileOverlay,
+    CrossZoneOverlay, HandViewer, Leaderboard, Perfil de usuario, Avatar picker.
+    Fuera de alcance (no son cierres): buscadores con ✕, borrados de reglas de
+    auto-respuesta, borrar baraja del manager, banner de error del login.
+  - *Guard*: `web/src/ui/modalCloseCentering.test.ts` (16 cases) exige el
+    centrado en CSS; **rojo exacto en los 8 ofensores** sin el fix.
+  - *Vivo*: medido con probe (SVG-center vs botón-center, dx/dy = 0) en Settings,
+    About, Crear Mesa, Unirse y Clasificación; capturas
+    `web/e2e/shots/x-settings-fixed.png`, `x-join-fixed.png`. Unit **1481/1481** +
+    typecheck + build ✅; e2e fake de modales (about/settings/wizard/staging/
+    tournament/decks) 35/35 ✅.

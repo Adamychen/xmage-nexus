@@ -203,7 +203,7 @@ export default function TournamentPanel() {
               onClick={() => setExpanded(false)}
               aria-label={t('game', 'tournament_close')}
             >
-              ✕
+              <Icon name="x" size={13} />
             </button>
           </div>
         </header>

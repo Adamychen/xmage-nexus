@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
+import Icon from '../ui/Icon'
 import FloatingCardPreview from './FloatingCardPreview'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
@@ -55,7 +56,7 @@ export default function HandViewer({
             <h3>{t('game', 'opp_hand_view', { known: known.length, count: total }) + ` — ${playerName}`}</h3>
           </div>
           <button type="button" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-            &times;
+            <Icon name="x" size={17} />
           </button>
         </div>
         <div className="pile-overlay-scroll">

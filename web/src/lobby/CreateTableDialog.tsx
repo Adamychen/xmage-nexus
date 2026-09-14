@@ -31,7 +31,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       message={t('lobby', 'create_header_subtitle')}
       topRight={(
         <button type="button" className="create-dialog-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          ✕
+          <Icon name="x" size={14} />
         </button>
       )}
       onBackdropClick={onClose}

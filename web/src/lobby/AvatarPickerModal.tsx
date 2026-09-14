@@ -39,7 +39,7 @@ export default function AvatarPickerModal({
       message={t('lobby', 'avatar_desc')}
       topRight={(
         <button type="button" className="avatar-picker-close-btn" onClick={onClose}>
-          ✕
+          <Icon name="x" size={13} />
         </button>
       )}
       onBackdropClick={onClose}

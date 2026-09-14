@@ -146,7 +146,7 @@ export default function CardPreview({ card, onClose }: Props) {
 
       {onClose && (
         <button className="card-preview-close" onClick={onClose} title={t('common', 'close')} aria-label={t('common', 'close')}>
-          ×
+          <Icon name="x" size={14} />
         </button>
       )}
     </div>

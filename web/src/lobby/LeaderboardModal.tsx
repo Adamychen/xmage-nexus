@@ -148,7 +148,7 @@ export default function LeaderboardModal({
       message={t('lobby', 'leaderboard_subtitle')}
       topRight={(
         <button type="button" className="leaderboard-close-btn" onClick={onClose}>
-          ✕
+          <Icon name="x" size={14} />
         </button>
       )}
       onBackdropClick={onClose}

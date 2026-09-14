@@ -66,7 +66,7 @@ export default function PileOverlay({
             )}
           </div>
           <button type="button" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-            &times;
+            <Icon name="x" size={17} />
           </button>
         </div>
         <div className="pile-overlay-scroll">

@@ -91,7 +91,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
             <span className="tournament-construction" data-testid="tournament-construction"><Icon name="hourglass" size={12} /> {constructionLabel}</span>
           )}
           {onClose && (
-            <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}>✕</button>
+            <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={13} /></button>
           )}
         </div>
       </div>

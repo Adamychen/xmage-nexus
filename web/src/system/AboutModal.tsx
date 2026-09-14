@@ -96,7 +96,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
           data-testid="about-close"
           onClick={onClose}
         >
-          ✕
+          <Icon name="x" size={14} />
         </button>
       )}
       onBackdropClick={onClose}

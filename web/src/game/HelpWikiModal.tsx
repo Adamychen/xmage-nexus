@@ -90,7 +90,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
       message={t('wiki', 'subtitle')}
       topRight={(
         <button type="button" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-          ✕
+          <Icon name="x" size={13} />
         </button>
       )}
       onBackdropClick={onClose}

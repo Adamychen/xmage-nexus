@@ -149,7 +149,7 @@ export default function JoinTableDialog({
       title={table.tableName}
       topRight={(
         <button type="button" className="close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          ✕
+          <Icon name="x" size={15} />
         </button>
       )}
       onBackdropClick={onClose}

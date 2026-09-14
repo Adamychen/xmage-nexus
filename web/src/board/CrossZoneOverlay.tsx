@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import CardSlot from './CardSlot'
+import Icon from '../ui/Icon'
 import type { CrossZonePlayable } from './crossZone'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
@@ -27,7 +28,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
         <div className="pile-overlay-header">
           <h3>{t('game', 'pile_stack')} ({playables.length})</h3>
           <button type="button" className="pile-overlay-close" onClick={onClose}>
-          &times;
+          <Icon name="x" size={17} />
           </button>
         </div>
         <div className="pile-overlay-scroll">

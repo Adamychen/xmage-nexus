@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
 import DialogShell from '../ui/DialogShell'
+import Icon from '../ui/Icon'
 import './AppearanceSettingsModal.css'
 import './SleevePickerModal.css'
 
@@ -44,7 +45,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
       title={t('lobby', 'appearance_title')}
       message={t('lobby', 'appearance_subtitle')}
       topRight={(
-        <button type="button" className="appearance-close" onClick={onClose}>✕</button>
+        <button type="button" className="appearance-close" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={14} /></button>
       )}
       onBackdropClick={onClose}
     >

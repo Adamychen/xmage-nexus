@@ -98,7 +98,7 @@ export function DeckImportModal({
       message={t('decks', 'import_formats')}
       topRight={(
         <button type="button" className="deck-import-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          ×
+          <Icon name="x" size={18} />
         </button>
       )}
       onBackdropClick={onClose}

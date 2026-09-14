@@ -102,7 +102,7 @@ export default function UserActionModal({
           </div>
 
           <button type="button" className="user-action-close-btn" onClick={onClose}>
-            ✕
+            <Icon name="x" size={13} />
           </button>
         </div>
 

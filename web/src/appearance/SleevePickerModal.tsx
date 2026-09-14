@@ -3,6 +3,7 @@ import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
 import DialogShell from '../ui/DialogShell'
+import Icon from '../ui/Icon'
 import './SleevePickerModal.css'
 
 interface Props {
@@ -24,7 +25,7 @@ export default function SleevePickerModal({ onClose }: Props) {
       title={t('lobby', 'sleeve_pick_title')}
       message={t('lobby', 'sleeve_pick_subtitle')}
       topRight={(
-        <button type="button" className="sleeve-picker-close" onClick={onClose} aria-label={t('common', 'close')}>✕</button>
+        <button type="button" className="sleeve-picker-close" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={14} /></button>
       )}
       onBackdropClick={onClose}
     >
