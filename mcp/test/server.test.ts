@@ -67,6 +67,7 @@ describe('mage-nexus MCP server', () => {
       'mage_use_session',
       'mage_validate_generated',
       'mage_wait_for_prompt',
+      'mage_watch_tournament_match',
     ])
   }, 30_000)
 

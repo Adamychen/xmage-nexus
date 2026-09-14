@@ -882,6 +882,53 @@ export function registerSessionTools(server: McpServer): void {
   )
 
   server.registerTool(
+    'mage_watch_tournament_match',
+    {
+      title: 'Watch a live tournament match (spectator)',
+      description:
+        'Especta un match de torneo EN VIVO por el tableId del match (el que trae ' +
+        'TournamentView.rounds[].tableId). El server responde WATCHGAME con el gameId; esta tool ' +
+        'pide watchGame y espera el GAME_INIT cacheado. Mismo camino que el botón ojo del cuadro web.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        tableId: z.string(),
+        waitMs: z.number().int().min(0).max(60_000).default(15_000),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, tableId, waitMs }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const mark = state.events.length
+      await client.requestOk('watchTournamentTable', { tableId }, 20_000)
+      let gameId: string | null = null
+      let fresh = false
+      if (waitMs > 0) {
+        try {
+          const watcher = await waitFor(
+            () => state.events.slice(mark).find((e) => e.method === 'WATCHGAME') ?? null,
+            waitMs,
+            'WATCHGAME tras watchTournamentTable',
+          )
+          gameId = String(watcher.objectId)
+          state.gameId = gameId
+          state.lastGameView = null
+          await client.requestOk('watchGame', { gameId }, 20_000)
+          try {
+            await waitFor(() => state.lastGameView, waitMs, 'gameView del match')
+            fresh = true
+          } catch {
+            state.events.push({ at: Date.now(), method: 'WATCHGAME_NO_GAMEVIEW', objectId: gameId })
+          }
+        } catch {
+          state.events.push({ at: Date.now(), method: 'WATCHGAME_TIMEOUT', objectId: tableId })
+        }
+      }
+      return textResult(json({ ok: true, tableId, gameId, freshGameView: fresh, session: sessionSnapshot(state) }))
+    },
+  )
+
+  server.registerTool(
     'mage_get_tournament',
     {
       title: 'Tournament state, pools and rounds',

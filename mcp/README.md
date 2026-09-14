@@ -58,6 +58,7 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 | `mage_join_game` | `gameId?` (= partida activa), `waitMs?`, `session?` | Attach a partida por id (torneo/Bo3); el proxy reenvía el `GAME_INIT` cacheado; espera vista fresca. |
 | `mage_get_tournament` | `tournamentId?` (= último visto), `session?` | TournamentView (nombre, estado, jugadores, rondas). Solo lectura. |
 | `mage_submit_deck` | `tableId?`, `deck` (DeckJson), `session?` | Mazo construido (CONSTRUCT limitado 40 cartas / sideboard Bo3). |
+| `mage_watch_tournament_match` | `tableId` (del match, `rounds[].tableId`), `waitMs?`, `session?` | Especta un match de torneo en vivo: `watchTournamentTable` → `WATCHGAME` → `watchGame` → espera el `GAME_INIT` cacheado. |
 
 Flujo torneo (verificado en vivo, Sealed Elimination 2×HUMAN):
 ```
@@ -115,7 +116,8 @@ con pin `session?` operan sobre esa sin tocar la activa — obligatorio en juego
 - **Harness torneo B.12 (hecha, 2026-09-13)**: `mage_create_tournament_table`,
   `mage_join_tournament_table`, `mage_start_tournament`, `mage_join_tournament`
   (panel obligatorio + re-join), `mage_join_game` (attach por id), `mage_get_tournament`
-  (estado/pool/rondas) y `mage_submit_deck` (CONSTRUCT/sideboard). Tests herméticos en
+  (estado/pool/rondas), `mage_submit_deck` (CONSTRUCT/sideboard) y
+  `mage_watch_tournament_match` (espectar match en vivo). Tests herméticos en
   `test/tournament.test.ts` + verificación en vivo (Sealed Elimination 2×HUMAN,
   `CONSTRUCT` → submit ok, lobby a 0).
 

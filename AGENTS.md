@@ -147,7 +147,8 @@ exposes the WS session/lobby: `mage_connect`, `mage_lobby`,
 `mage_session`. Fase C2 (done) makes it play: `mage_game_state` (compact view),
 `mage_wait_for_prompt`, `mage_action`/`mage_choose`/`mage_play_card`/
 `mage_pay_mana`/`mage_combat`/`mage_pass_priority`, `mage_auto_pass`,
-`mage_concede`, `mage_chat`. Verified with a full real game vs Sim
+`mage_concede`, `mage_chat`, `mage_watch_tournament_match` (espectar un match de
+torneo en vivo). Verified with a full real game vs Sim
 (`MCP_E2E=1 npm test` in `mcp/`). Fase C3 (done): arnés con el FixtureServer de
 `web/` en los tests (sin Java) + capa `mcp` en CI, maná/interacciones complejas
 (auto-pago/botón especial, X, orden, multi-amount, trigger order) con auto-pass
