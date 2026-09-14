@@ -53,4 +53,31 @@ describe('useTournamentBracket — resolución del id de torneo', () => {
     })
     expect(getTournament).toHaveBeenCalledWith('t-9')
   })
+
+  it('openBracket de una mesa ajena no pinta el torneo propio cacheado', async () => {
+    vi.mocked(getTournament).mockResolvedValue(null as never)
+    setState({ tournament: { tournamentId: 't-9', view: { tournamentName: 'My Tourney', rounds: [] } } } as never)
+    const foreign = { tableId: 'table-2', tableName: 'Otra Copa' } as never
+    const { result } = renderHook(() => useTournamentBracket())
+    await act(async () => {
+      await result.current.openBracket(foreign)
+    })
+    expect(getTournament).toHaveBeenCalledWith('table-2')
+    expect(result.current.bracketView).toBeNull()
+    expect(result.current.bracketError).toContain('table-2')
+  })
+
+  it('refreshBracket de una mesa ajena no repone el torneo propio cacheado', async () => {
+    vi.mocked(getTournament).mockResolvedValue(null as never)
+    setState({ tournament: { tournamentId: 't-9', view: { tournamentName: 'My Tourney', rounds: [] } } } as never)
+    const foreign = { tableId: 'table-2', tableName: 'Otra Copa' } as never
+    const { result } = renderHook(() => useTournamentBracket())
+    await act(async () => {
+      await result.current.openBracket(foreign)
+    })
+    await act(async () => {
+      await result.current.refreshBracket()
+    })
+    expect(result.current.bracketView).toBeNull()
+  })
 })

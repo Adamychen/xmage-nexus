@@ -23,32 +23,35 @@ export function useTournamentBracket() {
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
   const [bracketTournamentId, setBracketTournamentId] = useState<string | null>(null)
 
-  const resolveId = (t: TableView): string => {
-    if (tournamentState && tournamentState.view?.tournamentName === t.tableName) {
-      return tournamentState.tournamentId
-    }
-    return t.tableId
-  }
+  const resolveId = (t: TableView): string =>
+    isOwnTournament(t) ? (tournamentState?.tournamentId ?? t.tableId) : t.tableId
+
+  /** El torneo cacheado en el store es de la mesa pedida (el usuario jugó/creó
+   *  ese torneo). Para mesas ajenas NO vale como fallback: pintar el torneo
+   *  propio en el cuadro de otro torneo es un bug (visto en vivo 2026-09-14). */
+  const isOwnTournament = (t: TableView): boolean =>
+    !!tournamentState && tournamentState.view?.tournamentName === t.tableName
 
   const openBracket = async (t: TableView) => {
     setBracketTable(t)
     setBracketError(null)
+    const own = isOwnTournament(t)
     const tid = resolveId(t)
     setBracketTournamentId(tid)
-    if (tournamentState) {
-      setBracketView(tournamentState.view)
-    }
+    setBracketView(own ? (tournamentState?.view ?? null) : null)
     setBracketLoading(true)
     try {
       void cmds.watchTournamentTable(t.tableId)
       const data = await withTimeout(cmds.getTournament(tid) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
-      } else if (tournamentState?.view) {
+      } else if (own && tournamentState?.view) {
         setBracketView(tournamentState.view)
+      } else {
+        setBracketError(`getTournament: ${tid}`)
       }
     } catch (e) {
-      if (tournamentState?.view) {
+      if (own && tournamentState?.view) {
         setBracketView(tournamentState.view)
       } else {
         setBracketError((e as Error).message)
@@ -86,11 +89,11 @@ export function useTournamentBracket() {
       const data = await withTimeout(cmds.getTournament(bracketTournamentId ?? bracketTable.tableId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
-      } else if (tournamentState?.view) {
+      } else if (bracketTournamentId === tournamentState?.tournamentId && tournamentState?.view) {
         setBracketView(tournamentState.view)
       }
     } catch (e) {
-      if (tournamentState?.view) {
+      if (bracketTournamentId === tournamentState?.tournamentId && tournamentState?.view) {
         setBracketView(tournamentState.view)
       } else {
         setBracketError((e as Error).message)
@@ -102,10 +105,11 @@ export function useTournamentBracket() {
 
   useEffect(() => {
     if (!bracketTable) return
-    if (tournamentState?.view) {
+    // Solo el torneo propio cacheado corresponde a esta mesa; el ajeno no.
+    if (tournamentState?.view && bracketTournamentId === tournamentState.tournamentId) {
       setBracketView(tournamentState.view)
     }
-  }, [tournamentState, bracketTable])
+  }, [tournamentState, bracketTable, bracketTournamentId])
 
   useEffect(() => {
     if (!bracketTable) return
