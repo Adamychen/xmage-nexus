@@ -1,6 +1,7 @@
 import { getState, setState, addLog } from '../state'
 import * as cmds from '../../net/commands'
 import { translateError } from '../../i18n'
+import { saveActiveDraft, clearActiveDraft } from '../persistence'
 import type { DraftClientMessage } from '../../net/types.generated'
 import type { DraftState } from '../slices'
 
@@ -136,10 +137,18 @@ export function mergePickAck(
   }
 }
 
+/** Guarda la instantánea del draft en curso para poder re-pintarlo tras
+ *  recargar la página (el server no reenvía DRAFT_INIT a un joinDraft tardío). */
+export function persistDraft(draft: DraftState | null): void {
+  saveActiveDraft(draft, getState().tournament?.tournamentId ?? null)
+}
+
 export function handleDraftUpdate(method: string, objectId: string | null, data: unknown): void {
   const msg = data as DraftClientMessage | null
   if (!msg?.draftView) return
-  setState({ draft: mergeDraftMessage(getState().draft, objectId, msg, method), lastDraftEventAt: Date.now(), lastDraftMethod: method })
+  const draft = mergeDraftMessage(getState().draft, objectId, msg, method)
+  setState({ draft, lastDraftEventAt: Date.now(), lastDraftMethod: method })
+  persistDraft(draft)
   if (method === 'DRAFT_INIT') addLog('torneo', `Draft: booster ${msg.draftView.boosterNum} carta ${msg.draftView.cardNum} — ${msg.draftView.setCodes.join(', ')}`)
   else if (method === 'DRAFT_PICK' && msg.draftPickView?.picking) addLog('torneo', `Tu turno de draftear — timeout ${msg.draftPickView.timeout}s`)
 }
@@ -149,6 +158,7 @@ export function handleDraftOver(objectId: string | null): void {
   const n = picks ? Object.keys(picks).length : 0
   addLog('torneo', n > 0 ? `Draft terminado con ${n} cartas — construye tu mazo de 40+` : 'Draft terminado — pasa a construcción')
   setState({ draft: null, draftOverAt: Date.now(), lastDraftEventAt: null, lastDraftMethod: null })
+  clearActiveDraft()
   void objectId
 }
 
@@ -162,5 +172,6 @@ export function handleConstruct(data: unknown, objectId: string | null): void {
   const time = d?.time ?? 600
   setState({ construct: { deckName, pool, tableId, parentTableId: d?.parentTableId ?? null, timeLeft: time } })
   setState({ draft: null, draftOverAt: null, lastDraftEventAt: null, lastDraftMethod: null })
+  clearActiveDraft()
   addLog('torneo', `Construcción: pool ${Object.keys(pool).length} cartas — ${time}s`)
 }

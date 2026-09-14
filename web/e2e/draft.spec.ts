@@ -100,6 +100,26 @@ test.describe('Draft', { tag: '@draft' }, () => {
     })
   })
 
+  test('recargar a mitad de draft re-sincroniza solo (instantánea + joinDraft)', { tag: '@draft' }, async ({ page }) => {
+    // joinDraftSilent: el server real no reenvía DRAFT_INIT al re-unirse a un
+    // draft ya empezado; la pantalla solo puede volver con la instantánea local.
+    await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 60_000, joinDraftSilent: true }), async () => {
+      await login(page, `draft-reload-${String(Date.now()).slice(-6)}`)
+      await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
+      const firstId = await page.getByTestId('draft-card').first().getAttribute('data-card-id')
+      await page.reload()
+      await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 15_000 })
+      await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
+      const card = page.getByTestId('draft-card').first()
+      await expect(card).toBeEnabled()
+      await card.click()
+      await expect(page.getByTestId('draft-picked-banner')).toContainText('Has elegido', { timeout: 5_000 })
+      await expect(page.getByTestId('draft-pick-card').first()).toHaveAttribute('data-card-id', firstId ?? '')
+      await page.screenshot({ path: 'e2e/shots/draft-reload-resync.png' })
+    })
+  })
+
   test('U9: mesa, ocultar pick con F9 y botón de log', async ({ page }) => {
     await page.goto('/')
     await dismissSetupWizard(page)

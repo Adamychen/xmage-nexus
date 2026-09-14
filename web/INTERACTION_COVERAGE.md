@@ -30,7 +30,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `SIDEBOARD` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
 | `CONSTRUCT` | ✅ | — | ✅ | ConstructScreen / draft.spec.ts | 2026-08-26 |
 | `DRAFT_OVER` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
-| `DRAFT_INIT` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (recarga en mitad del pick) / draft.spec.ts (fake) / vivo 2026-09-14 (2×HUMAN real, local y beta.xmage.today) | 2026-09-14 |
+| `DRAFT_INIT` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (recarga en mitad del pick) / draft.spec.ts (fake) / vivo 2026-09-14 (2×HUMAN real, local y beta.xmage.today) / resync por instantánea + `joinDraft` (sin `DRAFT_INIT` del server en join tardío; vivo 2ª recarga `draft-live3-resync.png`) | 2026-09-14 |
 | `DRAFT_PICK` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (acuse + espera + anti doble pick) / draft.spec.ts `el pick acusa al instante` / vivo 2026-09-14 (2×HUMAN real en local y beta: espera larga y re-habilitación) | 2026-09-14 |
 | `DRAFT_UPDATE` | ✅ | — | ✅ | merge `picking:false` (draft.test.ts) / draft.spec.ts / vivo 2026-09-14 | 2026-09-14 |
 | `SHOW_TOURNAMENT` | ✅ | — | ✅ | resolve tableId→tournamentId del watch (lobby) / TournamentBracket; unit store.test + vivo 2026-09-14 | 2026-09-14 |

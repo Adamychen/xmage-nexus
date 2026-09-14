@@ -86,15 +86,8 @@
    `INTERACTION_COVERAGE` §Replay viewer. Mientras tanto el botón del Historial
    ya queda oculto solo (no hay `games[]`).
 3. **`GAME_REDRAW_GUI`**: log-only (INTERACTION_COVERAGE:41) → aceptar/issue.
-4. **Recarga de página a mitad de draft (resync)**: el draft vive solo en
-   memoria (`draft`/`draftId`); un F5 pierde la pantalla, el servidor sigue y
-   el asiento **autopickea por timeout** (el reenganche del WS sin recargar sí
-   se recupera: auto-rejoin 2026-09-09 + `DRAFT_INIT` habilita el pick desde el
-   fix 2026-09-14, pero el estado no se persiste). Fix propuesto: guardar
-   `{draftId}` en `persistence` (como `activeGame`) y al reconectar el gateway
-   llamar `joinDraft(draftId)`; el server responde `DRAFT_INIT` con el estado
-   actual. Tests: persistence + gateway-rejoin + e2e fake con reload. Sin
-   verificar en vivo todavía.
+4. ✅ **Recarga de página a mitad de draft (resync) — HECHO 2026-09-14**
+   (ver §E 12ª parte: el server NO reenvía `DRAFT_INIT` a un `joinDraft` tardío).
 
 ## 3. Fork / motor (coste alto: rebuild del server)
 
@@ -497,3 +490,38 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     pickear el rival (`beta-draft-resumed.png`). Login anónimo OK en esta
     ventana; la verificación canónica sigue siendo el fork local (beta es
     intermitente por diseño).
+- **2026-09-14 (12ª parte) — Recarga a mitad de draft: resync ✅ (código + vivo)**
+  - *Hallazgo de motor (fork)*: `DraftController.join()` crea una `DraftSession`
+    nueva SIN llamar `init()` (solo se llama al arrancar el draft), así que el
+    server **NO responde `DRAFT_INIT` a un `joinDraft` tardío** — solo mandará
+    los próximos `DRAFT_PICK`. Persistir solo el `draftId` no repinta nada:
+    la primera versión del fix lo confirmó en vivo (lobby hasta el siguiente
+    pick). Fix final (solo web, sin Java): `persistence` guarda la **instantánea
+    completa** (`ActiveDraftPersistence {draft, tournamentId, savedAt}`, máx 3h,
+    rechaza el id sintético `'draft'`); `handleDraftUpdate` la sella en cada
+    evento y `handlePick` tras el acuse (`persistDraft`); `gateway.restoreLimited`
+    (en `onOpen` y en `runConnect` tras el login) re-pinta la instantánea con
+    `lastDraftEventAt=now` y `lastDraftMethod='DRAFT_INIT'` si `picking` (si no,
+    `null`: la espera sigue sin manos calientes) y re-une la sesión con
+    `joinDraft` — si falla, descarta instantánea y estado. Limpieza en
+    `DRAFT_OVER`/`CONSTRUCT`/`quitDraft`/login manual/`reset`.
+  - *Tests*: `persistence.test` (+7: snapshot, corrupto, caducidad…),
+    `gateway-rejoin.test` (+4: re-pinta+re-une, espera sin pick fresco, fallo
+    descarta+limpia estado, `reset`), `draft.test` (+4: sella/limpia); el fake
+    ya no manda `DRAFT_INIT` espontáneo tras la 1ª conexión y `joinDraft` tiene
+    modo `joinDraftSilent` (fiel al server real); e2e `draft.spec` +1 (recarga
+    con `joinDraftSilent`: la pantalla solo puede volver por la instantánea,
+    y el pick posterior funciona). Unit **1531/1531** + typecheck + build ✅;
+    `@draft` **5/5** ✅.
+  - *Vivo (protocolo real, 2×HUMAN, M21)*: recarga en mitad de la espera →
+    lobby (sin instantánea útil); con el fix, tras la 2ª recarga la pantalla
+    **vuelve al instante** desde la instantánea («Tu turno», booster y picks
+    intactos) y el pick desde la pantalla restaurada lo acepta el server
+    («Has elegido Battle-Rattle Shaman», 3 picks).
+    Capturas: `draft-live3-resync.png` (+ `draft-live2-*`).
+  - *Límites honestos*: el temporizador restaurado cuenta desde el `timeout` del
+    evento (puede sobreestimar tras una caída larga; el server manda y su
+    autopick manda — la UI se autocorrige al siguiente evento); una recarga en
+    *tu* turno funciona porque el pick seguía pendiente en el server; sin
+    sesión viva en el server (proxy >60s de gracia), `joinDraft` falla y se
+    limpia.

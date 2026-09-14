@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { mergeDraftMessage, mergePickAck, handleConstruct } from './draft'
+import { mergeDraftMessage, mergePickAck, handleConstruct, handleDraftOver, handleDraftUpdate } from './draft'
 import { getState, setState } from '../state'
+import { clearActiveDraft, loadActiveDraft, saveActiveDraft } from '../persistence'
 import type { DraftClientMessage } from '../../net/types.generated'
 
 const card = (id: string) => ({ id, name: `Card ${id}` })
@@ -238,5 +239,41 @@ describe('watchdog mitad del draft', () => {
     setState({ lastDraftEventAt: 111 } as never)
     handleConstruct({ deck: { cards: {} }, currentTableId: 't1' }, null)
     expect(getState().lastDraftEventAt).toBeNull()
+  })
+})
+
+describe('draft persistido (resync tras recargar)', () => {
+  const pickMsg = (over: Record<string, unknown> = {}) =>
+    ({ draftView: view(over), draftPickView: { booster: {}, picks: {}, picking: true, timeout: 60 } }) as unknown as DraftClientMessage
+
+  beforeEach(() => {
+    clearActiveDraft()
+    setState({ draft: null, tournament: null } as never)
+  })
+
+  it('handleDraftUpdate persiste la instantánea y el torneo en curso', () => {
+    setState({ tournament: { tournamentId: 't1', view: {} } } as never)
+    handleDraftUpdate('DRAFT_INIT', 'draft-1', pickMsg())
+    const persisted = loadActiveDraft()
+    expect(persisted?.draft.draftId).toBe('draft-1')
+    expect(persisted?.draft.message.draftView?.boosterNum).toBe(1)
+    expect(persisted?.tournamentId).toBe('t1')
+  })
+
+  it('sin objectId no persiste el id sintético "draft"', () => {
+    handleDraftUpdate('DRAFT_PICK', null, pickMsg())
+    expect(loadActiveDraft()).toBeNull()
+  })
+
+  it('handleDraftOver limpia el registro', () => {
+    saveActiveDraft({ draftId: 'draft-1', message: {} } as never, 't1')
+    handleDraftOver('draft-1')
+    expect(loadActiveDraft()).toBeNull()
+  })
+
+  it('handleConstruct limpia el registro', () => {
+    saveActiveDraft({ draftId: 'draft-1', message: {} } as never, 't1')
+    handleConstruct({ deck: { cards: {} }, currentTableId: 't1' }, null)
+    expect(loadActiveDraft()).toBeNull()
   })
 })

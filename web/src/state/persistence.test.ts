@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  clearActiveDraft,
   clearActiveGame,
+  loadActiveDraft,
   loadActiveGame,
   loadConn,
   loadFxSettings,
+  saveActiveDraft,
   saveActiveGame,
   saveConn,
   saveFxSettings,
@@ -141,6 +144,59 @@ describe('persistence', () => {
 
       expect(loadActiveGame()).toBeNull()
       expect(mockStorage['mage-web-active-game']).toBeUndefined()
+    })
+  })
+
+  describe('active draft persistence', () => {
+    const draft = (id: string) => ({ draftId: id, message: { draftView: { boosterNum: 1 } } }) as never
+
+    it('returns null when no draft is saved', () => {
+      expect(loadActiveDraft()).toBeNull()
+    })
+
+    it('saves and loads the draft snapshot with its tournament id', () => {
+      saveActiveDraft(draft('draft-uuid-123'), 'tournament-uuid-456')
+      const active = loadActiveDraft()
+      expect(active?.draft.draftId).toBe('draft-uuid-123')
+      expect(active?.draft.message).toEqual({ draftView: { boosterNum: 1 } })
+      expect(active?.tournamentId).toBe('tournament-uuid-456')
+      expect(typeof active?.savedAt).toBe('number')
+    })
+
+    it('never stores the synthetic "draft" fallback id', () => {
+      saveActiveDraft(draft('draft'))
+      expect(loadActiveDraft()).toBeNull()
+      expect(mockStorage['mage-web-active-draft']).toBeUndefined()
+    })
+
+    it('ignores corrupt snapshots', () => {
+      mockStorage['mage-web-active-draft'] = JSON.stringify({ draft: { draftId: 'd1' }, savedAt: Date.now() })
+      expect(loadActiveDraft()).toBeNull()
+    })
+
+    it('clears the draft when clearActiveDraft() is called', () => {
+      saveActiveDraft(draft('draft-uuid-123'))
+      expect(loadActiveDraft()).not.toBeNull()
+      clearActiveDraft()
+      expect(loadActiveDraft()).toBeNull()
+    })
+
+    it('clears the draft when passing null to saveActiveDraft()', () => {
+      saveActiveDraft(draft('draft-uuid-123'))
+      saveActiveDraft(null)
+      expect(loadActiveDraft()).toBeNull()
+    })
+
+    it('expires and clears drafts older than 3 hours', () => {
+      const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000
+      mockStorage['mage-web-active-draft'] = JSON.stringify({
+        draft: draft('old-draft-123'),
+        tournamentId: null,
+        savedAt: fourHoursAgo,
+      })
+
+      expect(loadActiveDraft()).toBeNull()
+      expect(mockStorage['mage-web-active-draft']).toBeUndefined()
     })
   })
 

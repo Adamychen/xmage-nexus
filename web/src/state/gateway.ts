@@ -3,11 +3,43 @@ import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
 import { clonePhaseStops } from '../game/phaseStops'
-import { saveConn, loadActiveGame, clearActiveGame, type ConnectionInfo } from './persistence'
+import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, type ConnectionInfo } from './persistence'
 
 let gateway: Gateway | null = null
 let activeAttempt = 0
 let inFlight: { key: string; promise: Promise<void> } | null = null
+
+/** Re-une draft/torneo activos: primero el estado en memoria; tras recargar la
+ *  página se re-pinta la última instantánea persistida (el server NO reenvía
+ *  DRAFT_INIT a un `joinDraft` tardío: solo llegarán los próximos picks) y se
+ *  re-une la sesión del draft para que el flujo siga. Si `joinDraft` falla
+ *  (draft ya terminado), se descarta la instantánea para no reintentarla. */
+function restoreLimited(): void {
+  const persisted = loadActiveDraft()
+  if (!getState().draft && persisted?.draft) {
+    addLog('conexión', 'Restaurando draft desde la última instantánea…')
+    setState({
+      draft: persisted.draft,
+      lastDraftEventAt: Date.now(),
+      lastDraftMethod: persisted.draft.message.draftPickView?.picking ? 'DRAFT_INIT' : null,
+    })
+  }
+  const draftId = getState().draft?.draftId ?? persisted?.draft?.draftId
+  const tournamentId = getState().tournament?.tournamentId ?? persisted?.tournamentId ?? null
+  if (draftId && draftId !== 'draft') {
+    addLog('conexión', 'Restaurando draft en curso…')
+    void (cmds.joinDraft(draftId) as Promise<{ ok?: boolean }>).then((r) => {
+      if (!r?.ok) {
+        clearActiveDraft()
+        if (getState().draft?.draftId === draftId) setState({ draft: null })
+      }
+    })
+  }
+  if (tournamentId) {
+    addLog('conexión', 'Restaurando torneo en curso…')
+    void cmds.joinTournament(tournamentId)
+  }
+}
 
 export function attachGateway(g: Gateway) {
   gateway = g
@@ -26,16 +58,7 @@ export function attachGateway(g: Gateway) {
         s.conn.avatarId,
       )
       if (res.ok) {
-        const draftId = getState().draft?.draftId
-        if (draftId) {
-          addLog('conexión', 'Restaurando draft en curso…')
-          void cmds.joinDraft(draftId)
-        }
-        const tournamentId = getState().tournament?.tournamentId
-        if (tournamentId) {
-          addLog('conexión', 'Restaurando torneo en curso…')
-          void cmds.joinTournament(tournamentId)
-        }
+        restoreLimited()
         const active = loadActiveGame()
         if (active?.gameId) {
           if (active.role === 'watcher') {
@@ -140,6 +163,7 @@ async function runConnect(
   if (res.ok) {
     setState({ phase: 'lobby', connecting: false, error: null, conn })
     saveConn(conn)
+    restoreLimited()
     const active = loadActiveGame()
     if (active?.gameId) {
       if (active.role === 'watcher') {
@@ -174,5 +198,6 @@ export function reset() {
   gateway?.close()
   saveConn(null)
   clearActiveGame()
+  clearActiveDraft()
   setState(initialState)
 }

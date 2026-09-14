@@ -50,6 +50,12 @@ export interface DraftScenarioOptions {
    * usan valores mayores.
    */
   nextPickDelayMs?: number
+  /**
+   * El server real NO responde con `DRAFT_INIT` a un `joinDraft` en un draft ya
+   * empezado (solo manda los próximos picks): con esto el fake lo imita, para
+   * que el e2e de recarga pruebe la instantánea persistida y no un evento fresco.
+   */
+  joinDraftSilent?: boolean
 }
 
 export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
@@ -57,6 +63,7 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
   const timeout = opts.timeout ?? 60
   const totalPicksBeforeOver = opts.totalPicksBeforeOver ?? 3
   const nextPickDelayMs = opts.nextPickDelayMs ?? 80
+  const joinDraftSilent = opts.joinDraftSilent ?? false
 
   let boosterNum = 1
   let cardNum = 1
@@ -67,6 +74,7 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
   let draftOver = false
   let constructSent = false
   let activeConn: FakeConn | null = null
+  let connectedOnce = false
 
   const draftTable = makeTable({
     tableId: TABLE_ID,
@@ -154,20 +162,28 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
     broadcastDraft('DRAFT_PICK', currentDraftMessage())
   }
 
+  function sendDraftInit(conn: FakeConn) {
+    conn.broadcast('DRAFT_INIT', currentDraftMessage(), DRAFT_ID)
+    setTimeout(() => {
+      if (!picking) return
+      conn.broadcast('DRAFT_PICK', currentDraftMessage(), DRAFT_ID)
+    }, 100)
+  }
+
   return {
     onConnect(conn) {
       activeConn = conn
       conn.raw({ type: 'connected', message: 'Proxy ready.' })
       conn.raw({ type: 'info', message: 'Proxy ready.' })
       conn.lobby([draftTable])
+      // Solo en la primera conexión: tras recargar, el server real no manda
+      // DRAFT_INIT solo; hay que re-unirse con `joinDraft` (resync).
+      if (connectedOnce) return
+      connectedOnce = true
       setTimeout(() => {
         if (!draftOver) {
           conn.broadcast('START_DRAFT', { currentTableId: TABLE_ID }, TABLE_ID)
-          conn.broadcast('DRAFT_INIT', currentDraftMessage(), DRAFT_ID)
-          setTimeout(() => {
-            if (!picking) return
-            conn.broadcast('DRAFT_PICK', currentDraftMessage(), DRAFT_ID)
-          }, 100)
+          sendDraftInit(conn)
         }
       }, 150)
     },
@@ -229,6 +245,13 @@ export function makeDraftScenario(opts: DraftScenarioOptions = {}): Scenario {
         }
         case 'setBoosterLoaded': {
           conn.ok(requestId, action, true)
+          return
+        }
+        case 'joinDraft': {
+          conn.ok(requestId, action, {})
+          // Re-unión (p.ej. tras recargar): el server real responde con los
+          // próximos picks, no con un DRAFT_INIT del estado actual.
+          if (!draftOver && !joinDraftSilent) sendDraftInit(conn)
           return
         }
         case 'submitDeck': {

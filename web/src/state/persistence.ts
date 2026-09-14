@@ -1,5 +1,6 @@
 import type { PhaseStops } from '../net/commands'
 import type { DeckJson } from '../net/types'
+import type { DraftState } from './slices/limited'
 import { mergePhaseStops } from '../game/phaseStops'
 
 export interface ConnectionInfo {
@@ -136,6 +137,66 @@ export function clearActiveGame() {
   try {
     const storage = getStorage()
     storage.removeItem(ACTIVE_GAME_KEY)
+  } catch {}
+}
+
+export interface ActiveDraftPersistence {
+  /** Última instantánea del draft (el server no reenvía el estado al re-unirse). */
+  draft: DraftState
+  tournamentId?: string | null
+  savedAt: number
+}
+
+const ACTIVE_DRAFT_KEY = 'mage-web-active-draft'
+const ACTIVE_DRAFT_MAX_AGE_MS = 3 * 60 * 60 * 1000 // 3 horas
+
+/** Draft en curso (instantánea + id) para recuperarlo tras recargar la página:
+ *  el estado vive solo en memoria y el asiento autopickea por timeout. El server
+ *  no responde `DRAFT_INIT` a un `joinDraft` en draft ya empezado, así que la
+ *  instantánea es lo único que permite pintar el draft hasta el siguiente pick. */
+export function loadActiveDraft(): ActiveDraftPersistence | null {
+  try {
+    const storage = getStorage()
+    const raw = storage.getItem(ACTIVE_DRAFT_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as ActiveDraftPersistence
+      const draft = parsed?.draft
+      if (
+        draft &&
+        typeof draft.draftId === 'string' &&
+        draft.draftId !== 'draft' &&
+        draft.message &&
+        typeof parsed.savedAt === 'number'
+      ) {
+        if (Date.now() - parsed.savedAt < ACTIVE_DRAFT_MAX_AGE_MS) {
+          return parsed
+        }
+        clearActiveDraft()
+      }
+    }
+  } catch {}
+  return null
+}
+
+export function saveActiveDraft(draft: DraftState | null, tournamentId?: string | null) {
+  try {
+    const storage = getStorage()
+    if (draft && draft.draftId && draft.draftId !== 'draft' && draft.message) {
+      const data: ActiveDraftPersistence = {
+        draft,
+        tournamentId: tournamentId ?? null,
+        savedAt: Date.now(),
+      }
+      storage.setItem(ACTIVE_DRAFT_KEY, JSON.stringify(data))
+    } else {
+      clearActiveDraft()
+    }
+  } catch {}
+}
+
+export function clearActiveDraft() {
+  try {
+    getStorage().removeItem(ACTIVE_DRAFT_KEY)
   } catch {}
 }
 

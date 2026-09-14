@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { clearError, doConnect, useStore, loadConn, clearActiveGame } from '../state/store'
+import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
@@ -119,6 +119,7 @@ export default function LoginScreen() {
     e.preventDefault()
     if (busy) return
     clearActiveGame()
+    clearActiveDraft()
     void doConnect(
       proxyHost.trim(),
       proxyPort,

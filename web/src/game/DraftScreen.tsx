@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import * as cmds from '../net/commands'
-import { useStore } from '../state/store'
+import { useStore, clearActiveDraft } from '../state/store'
 import { getState, setState } from '../state/state'
 import type { SimpleCardView } from '../net/types'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
@@ -8,7 +8,7 @@ import { soundManager } from '../audio/soundManager'
 import { buildDraftLog, type DraftLogData } from './draftLog'
 import { useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
-import { isDraftStalled, mergePickAck } from '../state/events/draft'
+import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
@@ -284,7 +284,10 @@ export default function DraftScreen() {
           curView?.boosterNum === sentKey.boosterNum && curView?.cardNum === sentKey.cardNum
         if (stillCurrent) {
           const merged = mergePickAck(cur, draftId, res.data, sentKey)
-          if (merged) setState({ draft: merged })
+          if (merged) {
+            setState({ draft: merged })
+            persistDraft(merged)
+          }
           setPickAck({ id: cardId, name: pickName })
         }
       }
@@ -313,6 +316,7 @@ export default function DraftScreen() {
     if (!draftId) return
     if (!(await confirmDialog(t('game', 'draft_quit_confirm'), { danger: true }))) return
     await cmds.quitDraft(draftId)
+    clearActiveDraft()
   }, [draftId, t])
 
   const handleHidePick = useCallback((cardId: string) => {
