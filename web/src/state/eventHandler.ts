@@ -93,17 +93,22 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame) {
-    const staleByPosition = isOlderThanCurrentGame(embeddedGame, objectId, s.game, s.gameId)
+    // START_GAME de OTRA partida (Bo3/torneo): la vista en pantalla es de la
+    // partida anterior; comparar turno/paso contra ella clasificaría el estado
+    // nuevo como "viejo" y lo descartaría (mesa congelada al arrancar la 2ª).
+    const switchingGame = method === 'START_GAME' && objectId != null && objectId !== s.gameId
+    const currentGame = switchingGame ? null : s.game
+    const staleByPosition = isOlderThanCurrentGame(embeddedGame, objectId, currentGame, s.gameId)
     const sameGame = !!objectId && objectId === s.gameId
     // Rollback del servidor: la vista restaurada va hacia atrás en turno/paso pero es
     // la vigente. Sin esto ambos clientes se congelan en la vista pre-rollback (partida muerta).
     // El flag se arma con la acción propia (pedir/aceptar) o el anuncio del servidor.
-    const rollbackRestored = staleByPosition && sameGame && !!s.game
+    const rollbackRestored = staleByPosition && sameGame && !!currentGame
       && s.rollbackPendingFor != null && s.rollbackPendingFor === s.gameId
     if (!staleByPosition || rollbackRestored) {
-      dispatchGameSounds(s.game, embeddedGame, method)
+      dispatchGameSounds(currentGame, embeddedGame, method)
       setState({
-        game: attributeStackControllers(sameGame ? s.game : null, embeddedGame),
+        game: attributeStackControllers(sameGame ? currentGame : null, embeddedGame),
         phase: 'game',
         watchingTable: null,
         gameId: objectId ?? s.gameId,

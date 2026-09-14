@@ -4,6 +4,7 @@ import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } fr
 import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
 import { getState, setState, addLog } from './state'
 import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
+import { handleWatchGame } from './events/game'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
 import { loadActiveGame } from './persistence'
 
@@ -807,6 +808,53 @@ describe('active game persistence in store', () => {
     // Active game remains on g-active-2 (turn 3), NOT overwritten by g-active-1
     expect(getState().gameId).toBe('g-active-2')
     expect(getState().game?.turn).toBe(3)
+  })
+
+  it('B.10: el GAME_INIT de la partida nueva tras seguir un Bo3 sustituye la vista anterior', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-b10-1',
+      game: makeGameView({ turn: 1, step: 'PRECOMBAT_MAIN' }),
+    })
+
+    handleWatchGame('g-b10-2')
+    expect(getState().phase).toBe('spectating_pending')
+    expect(getState().game).toBeNull()
+
+    const fresh = makeGameView({ turn: 1, step: undefined })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 2, objectId: 'g-b10-2', data: fresh })
+
+    expect(getState().phase).toBe('game')
+    expect(getState().game).toBe(fresh)
+    expect(getState().gameId).toBe('g-b10-2')
+  })
+
+  it('Bo3: la vista de la 2ª partida no se descarta por comparar con la de la 1ª', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-bo3-1',
+      game: makeGameView({
+        turn: 1,
+        step: 'PRECOMBAT_MAIN',
+        players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+      }),
+    })
+
+    const fresh = makeGameView({
+      turn: 1,
+      step: undefined,
+      players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+    })
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-bo3-2',
+      data: { gameId: 'g-bo3-2', gameView: fresh },
+    })
+
+    expect(getState().gameId).toBe('g-bo3-2')
+    expect(getState().game?.step).toBeUndefined()
   })
 
   it('returnToLobby leaves gameChat and clears game chat messages', () => {

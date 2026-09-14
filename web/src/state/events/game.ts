@@ -106,7 +106,17 @@ export function handleWatchGame(objectId: string | null): void {
   if (objectId) {
     saveActiveGame(objectId, undefined, 'watcher')
     void cmds.watchGame(objectId)
-    setState({ phase: 'spectating_pending', gameId: objectId, watchingTable: null })
+    // Follow de Bo3/torneo: la vista en pantalla es de la partida ANTERIOR. Si se
+    // conserva, el guard anti-stale (`isOlderThanCurrentGame` compara turno/paso
+    // con el `gameId` ya actualizado) descarta el GAME_INIT de la nueva partida y
+    // el espectador se queda en el staging «Preparando inicio…» para siempre.
+    const switchingGame = objectId !== prevGameId
+    setState({
+      phase: 'spectating_pending',
+      gameId: objectId,
+      watchingTable: null,
+      ...(switchingGame ? { game: null, gameEnd: null } : null),
+    })
   }
   // Nuevo espectado: el feed no debe arrastrar los eventos de la partida anterior
   // (mismo motivo que en handleStartGame: el log global es compartido). Al
