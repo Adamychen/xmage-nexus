@@ -146,6 +146,33 @@ describe('useTableActions.startTable', () => {
   })
 })
 
+describe('useTableActions.handleJoinWithDeck', () => {
+  beforeEach(() => {
+    reset()
+  })
+
+  it('rechaza con el error traducido (lo enseña el diálogo, no el lobby)', async () => {
+    vi.mocked(cmds.joinTable).mockReset().mockResolvedValue({ ok: false, error: 'table full' } as any)
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    const deck = { name: 'd', cards: [], sideboard: [] } as any
+    await act(async () => {
+      await expect(result.current.handleJoinWithDeck(matchTable(), deck)).rejects.toThrow(
+        'La mesa ya está completa',
+      )
+    })
+    expect(getState().error).toBeNull()
+  })
+
+  it('no rechaza cuando la unión va bien', async () => {
+    vi.mocked(cmds.joinTable).mockReset().mockResolvedValue({ ok: true } as any)
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    const deck = { name: 'd', cards: [], sideboard: [] } as any
+    await act(async () => {
+      await expect(result.current.handleJoinWithDeck(matchTable(), deck)).resolves.toBeUndefined()
+    })
+  })
+})
+
 describe('useTableActions.watchTable', () => {
   beforeEach(() => {
     reset()

@@ -197,7 +197,7 @@ export function translateError(error: string | null | undefined, action?: string
   if (!error && errorCode) {
     return translateError(errorCode, action)
   }
-  const str = String(error).trim()
+  const str = String(error).trim().replace(/^(join table|join tournament|create table|create tournament)[\s:]+/i, '')
   const lower = str.toLowerCase()
   const joinFailedLower = t('errors.join_table_failed').toLowerCase()
   const createFailedLower = t('errors.create_table_failed').toLowerCase()
@@ -262,6 +262,7 @@ export function translateError(error: string | null | undefined, action?: string
     return verbose ? prefixFor(str) : t('errors.invalid_deck')
   }
   if (lower.includes('wrong password') || lower.includes('invalid password') || str === 'PASSWORD') {
+    if (/^(wrong|invalid) password[.!]?$/i.test(str)) return t('errors.invalid_password')
     return lower.includes('wrong password') ? prefixFor(str) : t('errors.invalid_password')
   }
   if (lower.includes('no available seats') || lower.includes('table is full') || lower.includes('can join a table only') || lower.includes("player can't join") || lower.includes('could not create player') || str === 'SEAT') {

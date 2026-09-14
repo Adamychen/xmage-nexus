@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useLobby, useStore, openStagingTable } from '../state/store'
+import { useLobby, useStore, openStagingTable, clearError } from '../state/store'
 import * as cmds from '../net/commands'
 import type { UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
@@ -11,6 +11,7 @@ import LeaderboardModal from './LeaderboardModal'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
+import ErrorBanner from '../ui/ErrorBanner'
 import FinishedMatchesPanel from './FinishedMatchesPanel'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
@@ -34,7 +35,7 @@ import './LobbyScreen.css'
 import './TournamentBracket.css'
 
 export default function LobbyScreen() {
-  const { t, tError } = useTranslation()
+  const { t } = useTranslation()
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
   const stagingTableId = useStore((s) => s.stagingTableId)
@@ -165,7 +166,12 @@ export default function LobbyScreen() {
         hasNews={unseenNews}
       />
 
-      {error && <div className="error-box panel lobby-error-banner">{tError(error)}</div>}
+      <ErrorBanner
+        message={error}
+        onClose={clearError}
+        className="lobby-error-banner"
+        testId="lobby-error"
+      />
       {notice && <div className="notice panel lobby-notice-banner">{notice}</div>}
 
       {/* Single-column main area: nav lives in the topstrip, chat is floating */}

@@ -354,3 +354,26 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     `web/e2e/shots/x-settings-fixed.png`, `x-join-fixed.png`. Unit **1481/1481** +
     typecheck + build ✅; e2e fake de modales (about/settings/wizard/staging/
     tournament/decks) 35/35 ✅.
+
+- **2026-09-14 (8ª parte) — Errores de unión a mesa: banner formateado y descartable (reporte del usuario)**
+  - *Reporte*: al unirse a una mesa el error no se podía cerrar y se veía crudo.
+    Causa raíz doble: (1) el fallo de `joinTable` (eventHandler, «delegated»)
+    pintaba el banner del lobby **detrás** del diálogo — ilegible/inaccesible; y
+    (2) el texto llegaba con el título del servidor pegado
+    (`Join Table Wrong password.`) y sin botón de cierre.
+  - *Fix*: componente compartido `ui/ErrorBanner` (icono en badge, mensaje con
+    `pre-wrap`/`overflow-wrap`, `role=alert` y X de cierre accesible) usado en
+    el diálogo de unión, el lobby y el staging. `handleJoinWithDeck` lanza el
+    error ya traducido y limpia el global (sin duplicado detrás del modal);
+    `translateError` descarta el título del servidor
+    (`Join Table|Join Tournament|Create Table|Create Tournament`) y mapea
+    `Wrong password.` a la traducción limpia.
+  - *Tests*: unit (`ui/ErrorBanner.test.tsx` 5, `JoinTableDialog` cierra el
+    banner, `useTableActions` rechaza sin tocar el store, i18n con el título
+    quitado) + e2e fake `web/e2e/join-errors.spec.ts` (2: banner en el diálogo
+    sin banner en el lobby y descarte del banner del lobby tras fallar
+    `watchTable`; hook `onRequest` nuevo en `makeBaseScenario`).
+  - *Vivo*: real, mesa con password `err-banner-1` + password incorrecta →
+    banner dentro del diálogo con «La contraseña de la mesa es incorrecta» y X
+    (capturas `web/e2e/shots/join-error-banner.png`, `lobby-error-banner.png`).
+    Unit 1489/1489 + typecheck + build ✅.

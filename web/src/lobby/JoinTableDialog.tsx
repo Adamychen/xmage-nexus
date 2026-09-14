@@ -13,6 +13,7 @@ import { isLimitedDeckType } from '../decks/formatRules'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import Icon from '../ui/Icon'
+import ErrorBanner from '../ui/ErrorBanner'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
@@ -173,12 +174,12 @@ export default function JoinTableDialog({
         </div>
 
         {/* Error Banner if any */}
-        {joinError && (
-          <div className="join-error-banner">
-            <span className="join-error-icon"><Icon name="alert" size={14} /></span>
-            <span className="join-error-text">{tError(joinError)}</span>
-          </div>
-        )}
+        <ErrorBanner
+          message={joinError}
+          onClose={() => setJoinError(null)}
+          className="join-error-banner"
+          testId="join-error"
+        />
 
         <form onSubmit={handleConfirm} className="join-modal-form">
           {/* Password field if protected */}

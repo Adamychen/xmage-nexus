@@ -57,6 +57,10 @@ describe('i18n system', () => {
     setLanguage('es')
     expect(translateError('login failed')).toBe('Error de inicio de sesión: credenciales incorrectas o servidor no disponible')
     expect(translateError('table full')).toBe('La mesa ya está completa')
+    expect(translateError('Join Table Wrong password.')).toBe('La contraseña de la mesa es incorrecta')
+    expect(translateError('Join Table You can join a table only one time.', 'joinTable')).toBe(
+      'No se pudo unir a la mesa seleccionada: You can join a table only one time.',
+    )
 
     setLanguage('en')
     expect(translateError('login failed')).toBe('Login failed: invalid credentials or server unavailable')

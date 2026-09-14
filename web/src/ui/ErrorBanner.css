@@ -1,0 +1,61 @@
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(60, 20, 30, 0.9);
+  border: 1px solid rgba(255, 82, 82, 0.55);
+  box-shadow: 0 4px 14px rgba(255, 82, 82, 0.18);
+  color: #ffc4cb;
+  font-size: 0.781rem;
+  line-height: 1.45;
+}
+
+.error-banner-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 82, 82, 0.18);
+  color: #ff8a8a;
+  margin-top: 1px;
+}
+
+.error-banner-msg {
+  flex: 1;
+  min-width: 0;
+  align-self: center;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.error-banner-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffb8c0;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.error-banner-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.error-banner-close:focus-visible {
+  outline: 2px solid #ff8a8a;
+  outline-offset: 1px;
+}

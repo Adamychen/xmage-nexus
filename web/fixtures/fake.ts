@@ -140,6 +140,9 @@ export interface BaseScenarioOptions {
   onSendPlayerInteger?: (conn: FakeConn, value: number, ctx: BaseScenarioActionContext) => void
   onSendPlayerString?: (conn: FakeConn, value: string, ctx: BaseScenarioActionContext) => void
   onJoinGame?: (conn: FakeConn, gameId: string, ctx: BaseScenarioActionContext) => void
+  /** Intercepta cualquier acción antes del switch del escenario. Devolver true
+   *  significa "ya respondida" (p. ej. `conn.fail(...)` para probar errores). */
+  onRequest?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
   onExtra?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
   /** Informe que devuelve la acción `validateDeck` (pre-validación de mazos).
    *  Si no se define, la respuesta es un mazo válido sin problemas. */
@@ -171,6 +174,7 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
     },
     onAction: (conn, action, args, requestId) => {
       activeConn = conn
+      if (opts.onRequest?.(conn, action, args, requestId)) return
       const gv = () => getGv()
       const ctx = (): BaseScenarioActionContext => ({ args, activeConn })
       switch (action) {

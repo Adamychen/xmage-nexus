@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import JoinTableDialog, { recommendedMinMain } from './JoinTableDialog'
 import type { TableView } from '../net/types'
@@ -187,5 +187,21 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
       />
     )
     expect(container.querySelectorAll('.join-deck-card.recommended').length).toBe(0)
+  })
+
+  it('el fallo de unión se muestra dentro del diálogo, traducido y con cierre', async () => {
+    const onJoin = vi.fn().mockRejectedValue(new Error('table full'))
+    const { getByRole, getByTestId, queryByTestId } = render(
+      <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
+    )
+    fireEvent.click(getByRole('button', { name: /Unirse con/i }))
+
+    const banner = await waitFor(() => getByTestId('join-error'))
+    expect(banner.textContent).toContain('La mesa ya está completa')
+    expect(banner.className).toContain('error-banner')
+
+    fireEvent.click(within(banner).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(queryByTestId('join-error')).toBeNull())
+    expect(getByTestId('join-table-dialog')).not.toBeNull()
   })
 })

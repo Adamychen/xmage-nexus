@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setMyDeck, startStagedMatch, useStore } from '../state/store'
+import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setMyDeck, startStagedMatch, useStore, clearError } from '../state/store'
 import { setState } from '../state/state'
 import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
@@ -8,6 +8,7 @@ import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import ErrorBanner from '../ui/ErrorBanner'
 import InviteLinkButton from './InviteLinkButton'
 import { formatSeatHistory } from './lobbyUtils'
 import { requestDeckValidation } from './DeckIssuesDialog'
@@ -27,7 +28,7 @@ export default function SpectatorStagingScreen({
   onLeave?: () => void
   mode?: 'spectator' | 'player'
 }) {
-  const { t, tError } = useTranslation()
+  const { t } = useTranslation()
   const storeTable = useStore((s) => s.watchingTable)
   const stagingError = useStore((s) => s.error)
   const lobby = useStore((s) => s.lobby)
@@ -565,9 +566,12 @@ export default function SpectatorStagingScreen({
 
           {/* Progress stepper: Table → Players → Ready → Play */}
           {stagingError && (
-            <div className="error-box panel staging-error-banner" data-testid="staging-error">
-              {tError(stagingError)}
-            </div>
+            <ErrorBanner
+              message={stagingError}
+              onClose={clearError}
+              className="staging-error-banner"
+              testId="staging-error"
+            />
           )}
           <div className="staging-stepper" data-testid="staging-stepper">
             {[

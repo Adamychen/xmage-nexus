@@ -76,6 +76,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
     setState({ error: null })
     setNotice(null)
     const xmageDeck = prepareDeckForXMage(deck, t.deckType, t.gameType)
+    let failure: string | null = null
     try {
       const res = await withTimeout(
         cmds.joinTable({
@@ -95,17 +96,20 @@ export function useTableActions(conn: ConnectionInfo | null) {
         setNotice(tStatic('lobby','waiting_players'))
         setJoiningTable(null)
         setJoinPassword(undefined)
-      } else {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || tStatic('errors','join_table_failed')
-        setState({ error: translateError(raw, 'joinTable', code) })
         return
       }
+      const code = (res as { errorCode?: string }).errorCode
+      const raw = res.error || code || tStatic('errors','join_table_failed')
+      failure = translateError(raw, 'joinTable', code)
     } catch (e) {
       const err = e as Error & { errorCode?: string }
-      setState({ error: translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode) })
+      failure = translateError(err.message, 'joinTable', (err as { errorCode?: string }).errorCode)
     } finally {
       setBusyTable(null)
+    }
+    if (failure) {
+      setState({ error: null })
+      throw new Error(failure)
     }
   }
 

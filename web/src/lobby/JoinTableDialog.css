@@ -285,15 +285,6 @@
 
 /* Error Banner */
 .join-error-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(255, 77, 77, 0.15);
-  border: 1px solid rgba(255, 77, 77, 0.4);
-  color: #ff9999;
-  font-size: 0.781rem;
   margin: 0 24px;
 }
 
