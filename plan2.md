@@ -266,9 +266,11 @@
     viva (notice + `Seguir partida` → `watchGame('g-2')`) sigue cubierta SOLO
     por unit tests. Riesgo bajo (misma ruta que bracket-eye T1, verificado).
   - C.14 foco: parcial (2 Tabs en lobby, `Mesas (1)` parece resaltado;
-    `vis-focus-tab.png`). Ruido: 404 Scryfall `cards/3ed/41/es` (sets viejos
+    `vis-focus-tab.png`) — **cerrado en plan3 §1.4 (2026-09-14)**: era el anillo
+    de foco del tab activo, correcto; lobby y partida OK en vivo.
+    Ruido: 404 Scryfall `cards/3ed/41/es` (sets viejos
     sin impresión ES; el fallback EN funciona, solo ruido en consola).
-  - Sealed T3/T6 visual: pendiente (requiere torneo sealed completo).
+  - Sealed T3/T6 visual: ✅ plan3 §1.2 (2026-09-14; CONSTRUCT real + T3/T6).
   - Limpieza: mesas `vis-exile`/`vis-follow` eliminadas, sesión `vis`
     cerrada, lobby a 0.
 

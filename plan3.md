@@ -54,33 +54,37 @@
    `useTournamentBracket.ts` (3 guards + `isOwnTournament`) con 2 tests
    rojos→verdes. Nota: la mesa desaparece del lobby al terminar el torneo
    (sigue sin poder verse el cuadro final desde el lobby).
-4. **C.14 foco teclado**: cerrar el parcial (2 Tabs en lobby `Mesas (1)` y
-   partida) — informe o fix mínimo con test. **PENDIENTE**.
+4. ✅ **C.14 foco teclado** — verificado en vivo 2026-09-14 (ver §E 4ª
+   parte): lobby OK (el "resaltado" de `Mesas (1)` era el anillo de foco del
+   tab activo, correcto) y partida OK (mano operable con Tab + glow en
+   `:focus-visible`, Space juega UNA tierra sin doble disparo). Findings
+   menores: el foco cae a `<body>` al jugar la carta enfocada (se desmonta el
+   nodo) y el link del footer entra en el orden de tabulación; cantera, sin
+   fix.
 
 ## 2. Verificación que exige código antes (~1–2 sesiones)
 
-1. **Espectar match de torneo EN VIVO desde el lobby** (hoy imposible:
-   `Ver Cuadro` solo lista finalizadas; `Espectar` deja la pantalla de staging
-   «Preparando inicio…» sin seguir el match; el watch real exige
-   `watchTournamentTable(matchTableId)` sin UI fuera del `TournamentPanel` del
-   participante). `TournamentView.rounds` YA trae el match vivo con `tableId`
-   + `state` (verificado hoy por `getTournament`) → proponer botón/ojo en
-   bracket o en la tarjeta para matches en curso; + tool MCP de watch
-   (hoy el harness no lo expone); e2e fake (escenario torneo) + verificación real.
-2. **Replay** — 3 partes:
-   - (a) Server: habilitar `saveGameActivated="true"`
-     (`local-server/config/config.xml`, seed en
-     `../xmage-fork/Mage.Server/release/config/config.xml`) + restart; el
-     template upstream avisa «not working correctly yet» → validar si el motor
-     reproduce o declarar fuera de alcance.
-   - (b) Cliente: UI de transporte (`replayNext/Previous/SkipForward` existen
-     en `commands.ts` sin uso) y salida del tablero en `REPLAY_DONE`
-     (`web/src/state/events/replay.ts`); hoy `REPLAY_INIT/UPDATE` pintan en
-     `GameScreen` pero no hay controles.
-   - (c) Tests: unit de handlers (`replay.ts` sin tests propios) + escenario
-     fake `REPLAY_*` + e2e.
-   Alternativa barata si (a) es inviable: declarar fuera de alcance y ocultar
-   el botón del Historial.
+1. ✅ **Espectar match de torneo EN VIVO desde el lobby** — HECHO 2026-09-14
+   (ver §E 5ª parte): `SHOW_TOURNAMENT` resolvía tableId→tournamentId (antes
+   solo se logueaba y el staging se quedaba en «Preparando inicio…»); el lobby
+   guarda la resolución y abre el cuadro con el id real; las dos entradas
+   (ojo del cuadro y `Espectar` de la tarjeta) verificadas en vivo contra un
+   torneo Constructed con match Dueling. Extra: "Abandonar torneo" ya no
+   aparece en torneos ajenos y usa el id real. Tool MCP
+   `mage_watch_tournament_match` añadida.
+2. ⏸️ **Replay — APLAZADO por decisión (2026-09-14)**: no se toca
+   `saveGameActivated` ni se implementan controles/exit en la web mientras el
+   motor no lo soporte. Motivo: es el único switch (`GameController.setSaveGame`
+   / `cleanUpOnMatchEnd`) y el propio template upstream lo marca «not working
+   correctly yet» con `false` por defecto; la sonda a beta (qa-beta-probe) dio
+   25 partidas terminadas y **0 con `games[]`/`replayAvailable`**, así que
+   contra el server oficial el botón del Historial nunca aparece. Reactivar si
+   upstream lo arregla: (a) local `saveGameActivated="true"` + restart y validar
+   que el motor guarda/reproduce; (b) UI de transporte
+   (`replayNext/Previous/SkipForward`) + salida en `REPLAY_DONE`; (c) tests
+   (unit de `replay.ts` + escenario fake `REPLAY_*` + e2e). Contexto en
+   `INTERACTION_COVERAGE` §Replay viewer. Mientras tanto el botón del Historial
+   ya queda oculto solo (no hay `games[]`).
 3. **`GAME_REDRAW_GUI`**: log-only (INTERACTION_COVERAGE:41) → aceptar/issue.
 
 ## 3. Fork / motor (coste alto: rebuild del server)
@@ -244,3 +248,68 @@ con server caliente) · 404s Scryfall `/es` (ruido de consola, fallback EN) ·
     (qa-b10-A/B). Capturas en `web/e2e/shots/` (gitignored): `seal-construct-built.png`, `seal-turn3.png`, `seal-turn6.png`, `b10-*.png`.
   - *Residual §1.4*: foco teclado (2 Tabs en lobby `Mesas (1)` y partida) —
     sin hacer.
+
+- **2026-09-14 (4ª parte) — §1.4 C.14 foco teclado: cierre del parcial ✅ (informe)**
+  - *Lobby* (navegador `p2-live2-SPEC`): orden de tabulación sano — Nueva Mesa
+    → Mesas → Mazos → Historial → Clasificación → ajustes ×2 → Desconectar →
+    toggle filtros → buscador → pills. Todos `:focus-visible` con anillo visible
+    (`outline auto 3px`; el buscador usa el `outline solid` de `styles.css`).
+    El "`Mesas (1)` parece resaltado" del parcial era el anillo de foco sobre el
+    tab ACTIVO: comportamiento correcto, no bug (captura
+    `web/e2e/shots/focus-lobby-tab2.png`).
+  - *Partida real* (`focus-live-1`, 2×HUMAN: MCP `qa-focus-A` 40 Forests +
+    navegador "Mage Web bolt"; `skipInitShuffling`): la mano es operable con
+    Tab (`.hand-card.clickable` role=button tabindex=0) y la carta jugable
+    enfocada muestra el glow de `.card-slot.playable:focus-visible`
+    (`focus-game-playable-card.png`); **Space juega exactamente UNA tierra**
+    (mano 7→6, battlefield 0→1, sin segundo intento ni error) — el fix de
+    "Space doble" de C.14 confirmado en vivo. Diálogos con trampa de foco OK
+    (mulligan y confirmaciones enfocan su primer control; en confirmar-salir
+    el foco inicial es "Cancelar", buena elección).
+  - *Findings menores (cantera, sin fix)*: (a) al jugar la carta enfocada por
+    teclado, el nodo se desmonta y el foco cae a `<body>` → el jugador de
+    teclado debe re-Tabear todo; (b) el enlace Scryfall del footer entra en el
+    orden de tabulación entre el botón grande de prioridad y el header (orden
+    DOM, no roto); (c) AT/BL son focusables fuera de combate (son toggles de
+    parada, legítimos).
+  - *Extras verificados de paso*: keep de mulligan con Enter (el web NO
+    auto-responde en real; el helper e2e sí lo hace en fake), Conceder→
+    Confirmar→"ha abandonado la partida"→Salir→confirm→lobby. El CONCEDE del
+    MCP se registra en el log del server aunque el game de la sesión siga
+    mostrando el turno (la concesión del navegador cerró la partida).
+  - *Estado*: mesa eliminada, sesión MCP cerrada, lobby a 0, navegador en el
+    lobby. Capturas en `web/e2e/shots/` (gitignored). Sin cambios de código.
+
+- **2026-09-14 (5ª parte) — §2.1 watch de torneo en vivo desde el lobby ✅ (código + vivo)**
+  - *Causa raíz*: al espectar una mesa de torneo, el server
+    (`TableController.watchTable`) responde **SHOW_TOURNAMENT con el id REAL del
+    torneo** (objectId) + `currentTableId`; el web solo lo logueaba → el staging
+    se quedaba en «Preparando inicio…» y no había forma de llegar al cuadro.
+    Además `getTournament` del proxy/server exige el id de TORNEO
+    (`tournamentFindById`), no el de la mesa.
+  - *Fix (web)*: `handleShowTournament(objectId, data)` guarda
+    `spectateTournament {tournamentId, tableId}` (idempotente);
+    `useTournamentBracket.openBracket(table, tournamentId?)` usa el id resuelto
+    (sin él espera el callback en vez de consultar con el tableId);
+    `LobbyScreen` consume la resolución y abre el cuadro (sin staging);
+    `useTableActions.watchTable` ya no mete las mesas de torneo al staging;
+    `handleWatchGame` limpia la resolución (no reabre el cuadro al volver del
+    juego). Extra: el bracket del modal recibe el id real y `canQuit` → en
+    torneos ajenos ya no aparece "Abandonar torneo" (antes además quitaba con el
+    tableId equivocado).
+  - *MCP*: tool `mage_watch_tournament_match` (WATCHGAME → `watchGame` →
+    espera `gameView`), inventario del server test actualizado.
+  - *Tests*: `useTournamentBracket` (5→6), `useTableActions` (+2 watchTable),
+    `store.test` (+3 SHOW_TOURNAMENT +1 limpieza en watchGame),
+    `TournamentBracket` (+2 canQuit). Unit **1464/1464** + typecheck ✅;
+    `mcp test` 39 pass + typecheck ✅.
+  - *Verificación viva* (torneo `tt-live-1`, Constructed Elimination 2×HUMAN
+    `qa-tt-A/B`, match `2fc133b2…` Dueling): navegador `p2-live2-SPEC` (ajeno)
+    → "Ver Cuadro" carga el cuadro EN VIVO (Dueling, 1 ronda, 1 partida, ojo) →
+    el ojo pinta el tablero del match como espectador
+    (`web/e2e/shots/bracket-live-watch.png`); "Espectar" de la tarjeta abre el
+    cuadro directo (sin staging) y sin "Abandonar torneo"
+    (`bracket-live-modal.png`). Mesa eliminada, sesiones cerradas, lobby a 0.
+  - *Pendientes relacionados*: cuadro de torneos YA TERMINADOS desde el
+    Historial (la mesa desaparece del lobby y `MatchView` no trae tournamentId:
+    haría falta un command de historial→torneo); §2.2 replay (decisión usuario).
