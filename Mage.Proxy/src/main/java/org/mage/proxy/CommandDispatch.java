@@ -13,6 +13,7 @@ final class CommandDispatch {
         return InfoCommands.handle(action, conn, requestId, args, ctx)
                 || TableCommands.handle(action, conn, requestId, args, ctx)
                 || TournamentCommands.handle(action, conn, requestId, args, ctx)
-                || GameCommands.handle(action, conn, requestId, args, ctx);
+                || GameCommands.handle(action, conn, requestId, args, ctx)
+                || OnlineDeckCommands.handle(action, conn, requestId, args, ctx);
     }
 }

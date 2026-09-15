@@ -226,6 +226,18 @@ export async function validateDeck(deck: DeckJson): Promise<import('./types').De
   return res.ok ? (res.data ?? null) : null
 }
 
+/**
+ * Fetch de un mazo en Moxfield/Archidekt vía el proxy (Java, sin CORS) en vez
+ * de `fetch()` en el navegador: esas APIs no envían cabeceras CORS que
+ * permitan llamarlas desde el origen del cliente web, así que un fetch
+ * directo siempre falla con "Failed to fetch". Devuelve el JSON crudo tal
+ * cual lo sirve la API de origen (el parseo a DeckV2 sigue en el cliente).
+ */
+export async function fetchOnlineDeckJson(source: 'moxfield' | 'archidekt', urlOrId: string): Promise<unknown | null> {
+  const res = await getGateway().send<unknown>('fetchOnlineDeck', { source, urlOrId })
+  return res.ok ? (res.data ?? null) : null
+}
+
 export interface PhaseStops {
   yourTurn: Record<string, boolean>
   opponentTurn: Record<string, boolean>

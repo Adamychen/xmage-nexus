@@ -3,6 +3,24 @@ import type { DeckFormat, DeckV2 } from './types'
 import { makeDeckId } from './types'
 import { parseAnyDeck } from './parseDck'
 import { t } from '../i18n'
+import { fetchOnlineDeckJson } from '../net/commands'
+
+/**
+ * El fetch a Moxfield/Archidekt corre en el proxy (Java), no en el navegador:
+ * esas APIs no envían cabeceras CORS que permitan llamarlas desde el origen
+ * del cliente web, así que `fetch()` directo siempre falla con "Failed to
+ * fetch". Si el proxy no está conectado (`getGateway` lanza), se trata igual
+ * que un fallo de red: se devuelve `null` y el caller cae al parser de texto.
+ */
+async function fetchOnlineDeckData(source: 'moxfield' | 'archidekt', urlOrId: string): Promise<any | null> {
+  try {
+    const data = await fetchOnlineDeckJson(source, urlOrId)
+    return data ?? null
+  } catch (e) {
+    console.warn(`[onlineDeckService] fetch ${source} vía proxy no disponible:`, e instanceof Error ? e.message : e)
+    return null
+  }
+}
 
 export interface OnlineDeckSummary {
   id: string
@@ -20,16 +38,16 @@ export interface OnlineDeckSummary {
  * Parses and extracts deck from Moxfield API response.
  */
 export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null> {
-  const match = urlOrId.match(/(?:moxfield\.com\/decks\/|id=|^)([A-Za-z0-9_-]+)/)
-  const deckId = match ? match[1] : urlOrId.trim()
+  // Sin marcador explícito ("moxfield.com/decks/" o "id=") se asume que
+  // urlOrId YA es el id (no se usa un fallback "^" en la alternancia: eso
+  // capturaría el prefijo "https" de una URL completa en vez de fallar).
+  const match = urlOrId.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)|id=([A-Za-z0-9_-]+)/)
+  const deckId = match ? match[1] || match[2] : urlOrId.trim()
   if (!deckId) return null
 
   try {
-    const res = await fetch(`https://api.moxfield.com/v2/decks/all/${deckId}`, {
-      headers: { Accept: 'application/json' },
-    })
-    if (!res.ok) return null
-    const data = await res.json()
+    const data = await fetchOnlineDeckData('moxfield', deckId)
+    if (!data) return null
 
     const name = data.name || 'Moxfield Deck'
     const formatRaw = (data.format || 'Standard') as string
@@ -116,16 +134,13 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
  * Parses and extracts deck from Archidekt API.
  */
 export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null> {
-  const match = urlOrId.match(/(?:archidekt\.com\/decks\/|id=|^)(\d+)/)
-  const deckId = match ? match[1] : urlOrId.trim()
+  const match = urlOrId.match(/archidekt\.com\/decks\/(\d+)|id=(\d+)/)
+  const deckId = match ? match[1] || match[2] : urlOrId.trim()
   if (!deckId) return null
 
   try {
-    const res = await fetch(`https://archidekt.com/api/decks/${deckId}/small/`, {
-      headers: { Accept: 'application/json' },
-    })
-    if (!res.ok) return null
-    const data = await res.json()
+    const data = await fetchOnlineDeckData('archidekt', deckId)
+    if (!data) return null
 
     const name = data.name || 'Archidekt Deck'
     const mainCards: DeckCard[] = []
