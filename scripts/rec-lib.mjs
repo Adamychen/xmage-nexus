@@ -126,6 +126,7 @@ const DEFAULT_SIM_DECK = {
 function defaultOnAsk(q) {
   if (/mulligan|keep your hand|keep hand/i.test(q)) return false // keep
   if (/mutate|put on top|on top/i.test(q)) return true // mutation on top
+  if (/pass anyway/i.test(q)) return true // maná flotante: seguir (visto con Thoughtseize 2026-09-16)
   return undefined
 }
 
@@ -406,7 +407,11 @@ export async function runTournamentRecorder(driver) {
 export async function runRecorder(driver) {
   const outFile = driver.outFile || `${driver.name}.json`
   const OUT = `${OUT_DIR}/${outFile}`
-  const USER = `selftest-${Date.now() % 100000}`
+  // P4 (2026-09-15): el servidor limita el nombre a 14 caracteres (ver
+  // TournamentRecorder: "Nombres ≤14"). Sufijo pid+tiempo en base36 para poder
+  // lanzar varios recorders en paralelo sin colisión (mismo nombre = attach a
+  // la misma sesión multi-tenant y caos cruzado).
+  const USER = (`u${driver.name.replace(/[^a-z]/gi, '').slice(0, 5)}${process.pid.toString(36)}${(Date.now() % 46656).toString(36)}`).slice(0, 14)
   const host = driver.serverHost || SERVER_HOST
   const port = driver.serverPort || SERVER_PORT
   const simDeck = driver.simDeck || DEFAULT_SIM_DECK
@@ -419,6 +424,24 @@ export async function runRecorder(driver) {
   let recorded = null
   let tableId = null
   let finished = false
+  // P4 (2026-09-16): watchdog anti-congelamiento del cheat. El cheatSetup
+  // tiene una carrera intermitente: con ok:true pero sin más eventos el hilo
+  // de juego queda muerto (pasa en ~1 de cada 3-4 cheats, tanto en T1 como en
+  // T2). Si tras un cheat ok no llega ningún evento de juego en 60 s, se
+  // aborta la run (finish 1) para que el bucle shell reintente barato en vez
+  // de quemar los 300 s de maxMs.
+  let lastGameEventAt = 0
+  let cheatArmedAt = 0
+  // P4 (2026-09-16): generación de SELECTs para el auto-pass post-cheat.
+  let selectGen = 0
+  let lastSelectOurs = false
+  const stallTimer = setInterval(() => {
+    if (finished || !cheatArmedAt || recorded) return
+    if (Date.now() - Math.max(lastGameEventAt, cheatArmedAt) > 60_000) {
+      log('STALL post-cheat (60s sin eventos): aborto para reintento')
+      finish(1)
+    }
+  }, 5_000)
 
   const waitEvent = (pred, ms = 20000) =>
     new Promise((resolve, reject) => {
@@ -484,10 +507,46 @@ export async function runRecorder(driver) {
         if (d.question !== undefined) slim.question = d.question
         const ch = d.choices ?? d.choice?.keyChoices ?? d.choice?.choices
         if (ch !== undefined) slim.choices = optionList(ch).map((o) => o.label)
+        const pt = d.options?.possibleTargets ?? d.targets
+        if (pt !== undefined) slim.possibleTargets = Array.isArray(pt) ? pt.length : Object.keys(pt ?? {}).length
         fs.appendFileSync(`${OUT_DIR}/${driver.name}.events.jsonl`, JSON.stringify(slim) + '\n')
       } catch {}
     },
     send,
+    // P1: coloca cartas nombradas en zonas (solo testMode; el proxy responde
+    // ok:false fuera de testMode o con carta/zona/jugador desconocidos).
+    // REGLA (bisecada en vivo 2026-09-15): llamar cuando la partida ya haya
+    // procesado ≥1 acción normal (p.ej. tras jugar la primera tierra); en la
+    // primera prioridad de la partida el cheat corre fuera del hilo de juego
+    // aún arrancando y congela el loop (ok:true pero sin más GAME_UPDATEs).
+    // Llamar una sola vez (el driver guarda el flag); el envío es async.
+    async cheatSetup(zones, playerIdOverride) {
+      const playerId = playerIdOverride ?? lastGV?.myPlayerId ?? getMe(lastGV)?.playerId
+      // Generación del SELECT pendiente: si al completarse el cheat el
+      // servidor no ha re-preguntado, el hilo de juego sigue aparcado
+      // esperando NUESTRA respuesta al select que disparó el cheat (el cheat
+      // corre en el hilo CALL, no responde al prompt). Sin este pass la
+      // partida se queda muda hasta el idle-timeout (visto en vivo 2026-09-16:
+      // "ok:true y silencio"). Si llegó un SELECT nuevo, el driver lo lleva.
+      const gen = selectGen
+      const ours = lastSelectOurs
+      // Aviso P1 (2026-09-16): cheatear con prioridad en turno AJENO congela
+      // el loop de forma determinista (solo turno propio tras ≥1 acción).
+      if (DEBUG) {
+        const me = getMe(lastGV)
+        if (me && me.isActive !== true) log('cheatSetup AVISO: turno ajeno (isActive=false), probable congelamiento')
+      }
+      const r = await send('cheatSetup', { gameId, playerId, zones })
+      if (DEBUG) log('cheatSetup →', JSON.stringify(r).slice(0, 160))
+      if (r?.ok) {
+        cheatArmedAt = Date.now()
+        if (ours && gen === selectGen) {
+          if (DEBUG) log('cheatSetup: sin re-prompt, paso el pendiente')
+          pass()
+        }
+      }
+      return r
+    },
     playLand() {
       const land = firstBasicLand(lastGV?.myHand ?? lastGV?.hand)
       if (land) ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: land } }))
@@ -497,6 +556,62 @@ export async function runRecorder(driver) {
       const id = cardInHand(lastGV, name)
       if (id) ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: id } }))
       return id
+    },
+    // P4 (2026-09-15): carta en el propio cementerio (flashback/escape). El
+    // UUID se juega directo igual que desde la mano (el servidor valida).
+    cardInGraveyard(name) {
+      const gy = getMe(lastGV)?.graveyard
+      if (!gy) return null
+      const lower = name.toLowerCase()
+      for (const [id, c] of Object.entries(gy)) {
+        const n = String(c?.name ?? c?.displayName ?? '').toLowerCase()
+        if (n === lower || n.includes(lower)) return id
+      }
+      return null
+    },
+    // P4 (2026-09-16): activar habilidad (Birds, equipar, planeswalker) =
+    // hacer CLIC en el objeto (enviar SU uuid); el servidor responde
+    // GAME_CHOOSE_ABILITY cuando hay varias habilidades jugables y el driver
+    // elige por texto en onChooseAbility. Enviar el UUID de la habilidad
+    // directo NO activa nada: HumanPlayer resuelve el UUID con
+    // game.getObject() y una habilidad no es un objeto de juego (la activación
+    // se ignora en silencio; visto en vivo con el +1 de Teferi 2026-09-16).
+    // kinds/match localizan el objeto con la habilidad buscada.
+    playAbility(name, kinds, match) {
+      const gv = lastGV
+      const ids = []
+      const lower = String(name ?? '').toLowerCase()
+      for (const [id, c] of Object.entries(gv?.myHand ?? {})) {
+        const n = String(c?.name ?? c?.displayName ?? '').toLowerCase()
+        if (n === lower || n.includes(lower)) ids.push(id)
+      }
+      for (const [id, c] of Object.entries(getMe(gv)?.battlefield ?? {})) {
+        const n = String(c?.name ?? c?.displayName ?? '').toLowerCase()
+        if (n === lower || n.includes(lower)) ids.push(id)
+      }
+      // P4 (2026-09-16): también en la pila (la acción especial de delve
+      // cuelga del hechizo en el stack).
+      for (const [id, c] of Object.entries(gv?.stack ?? {})) {
+        const n = String(c?.name ?? c?.displayName ?? '').toLowerCase()
+        if (n === lower || n.includes(lower)) ids.push(id)
+      }
+      const objs = gv?.canPlayObjects?.objects ?? {}
+      const order = kinds ?? ['basicPlayAbilities', 'other', 'basicCastAbilities', 'basicManaAbilities']
+      for (const id of ids) {
+        const stats = objs[id]
+        if (DEBUG && stats) log('playAbility cands', name, JSON.stringify(Object.fromEntries(Object.entries(stats).map(([k, arr]) => [k, (arr ?? []).map((r) => String(r?.value ?? '').slice(0, 60))]))).slice(0, 400))
+        if (!stats) continue
+        for (const k of order) {
+          const recs = stats[k] ?? []
+          const rec = match ? recs.find((r) => match.test(String(r?.value ?? ''))) : recs[0]
+          if (rec?.id) {
+            ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: id } }))
+            if (DEBUG) log('playAbility → click', name, k, 'habilidad=', String(rec.value ?? '').slice(0, 60))
+            return id
+          }
+        }
+      }
+      return null
     },
     pass,
     findOnBattlefield: (name) => findOnBattlefield(lastGV, name),
@@ -512,7 +627,12 @@ export async function runRecorder(driver) {
     if (method === 'GAME_ASK') {
       const q = String(m.data?.question ?? m.data?.message ?? '')
       if (DEBUG) log('GAME_ASK:', JSON.stringify(q).slice(0, 120))
-      const ans = driver.onAsk ? driver.onAsk(q, ctx) : defaultOnAsk(q)
+      // P4 (2026-09-15): si el driver define onAsk pero devuelve undefined
+      // para una pregunta que no le compete (p.ej. mulligan), se aplica el
+      // default en vez de callar (callar en el mulligan deja la partida sin
+      // arrancar).
+      let ans = driver.onAsk ? driver.onAsk(q, ctx) : undefined
+      if (ans === undefined) ans = defaultOnAsk(q)
       if (ans !== undefined) {
         ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId, value: ans } }))
         if (DEBUG) log('ASK →', ans)
@@ -533,8 +653,28 @@ export async function runRecorder(driver) {
       return
     }
     if (method === 'GAME_TARGET') {
-      const val = driver.onTarget ? driver.onTarget(ctx) : undefined
-      if (val) ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: val } }))
+      if (process.env.REC_DUMP_EVENTS === '1') {
+        try {
+          const slim = { keys: Object.keys(m.data ?? {}) }
+          for (const [k, v] of Object.entries(m.data ?? {})) {
+            if (k === 'gameView') continue
+            slim[k] = JSON.stringify(v).slice(0, 1500)
+          }
+          log('TARGET slim:', JSON.stringify(slim).slice(0, 3000))
+        } catch {}
+      }
+      // P4 (2026-09-15): el descarte de limpieza también llega como
+      // GAME_TARGET ("Select a card to discard") — se pasa el texto para que
+      // el driver discrimine (un onTarget ciego que devuelve un permanente del
+      // campo ante un descarte = rechazo en bucle).
+      const q = String(m.data?.message ?? m.data?.question ?? '')
+      const val = driver.onTarget ? driver.onTarget(ctx, q, m.data ?? {}) : undefined
+      // P4 (2026-09-16): devolver false declina el objetivo opcional
+      // ("hasta una", fallar la búsqueda del tutor) con sendPlayerBoolean.
+      if (val === false) {
+        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId, value: false } }))
+        if (DEBUG) log('TARGET → declino (false)')
+      } else if (val) ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId, value: val } }))
       return
     }
     if (method === 'GAME_TARGET_AMOUNT' || method === 'GAME_GET_AMOUNT') {
@@ -543,7 +683,28 @@ export async function runRecorder(driver) {
       return
     }
     if (method === 'GAME_PLAY_MANA') {
-      if (DEBUG) log('PLAY_MANA msg=', JSON.stringify(m.data?.message), 'min=', m.data?.min, 'max=', m.data?.max, 'opt=', JSON.stringify(m.data?.options)?.slice(0, 120))
+      if (DEBUG) log('PLAY_MANA msg=', JSON.stringify(m.data?.message), 'min=', m.data?.min, 'max=', m.data?.max, 'opt=', (process.env.REC_DUMP_EVENTS === '1' ? JSON.stringify(m.data?.options) : JSON.stringify(m.data?.options)?.slice(0, 120)))
+      if (process.env.REC_DUMP_EVENTS === '1') {
+        const objs = gv?.canPlayObjects?.objects ?? {}
+        try {
+          const slim = {}
+          for (const [k, v] of Object.entries(objs)) {
+            slim[k.slice(0, 8)] = Object.fromEntries(Object.entries(v ?? {}).map(([bk, arr]) => [bk, (arr ?? []).map((r) => String(r?.value ?? r?.id ?? '').slice(0, 80))]))
+          }
+          log('PLAY_MANA canPlay:', JSON.stringify(slim).slice(0, 1500), 'special=', gv?.special)
+        } catch {}
+      }
+      // Hook P4: el driver puede pagar en turnos ajenos (p.ej. Counterspell en
+      // respuesta), donde isActive=false y el comportamiento por defecto (que
+      // exige turno propio, igual que SimPlayer.onPlayMana) se quedaría quieto.
+      if (driver.onPlayMana) {
+        try {
+          driver.onPlayMana(ctx, m)
+        } catch (e) {
+          log('onPlayMana THREW:', String(e))
+        }
+        return
+      }
       const me = getMe(gv)
       if (DEBUG) log('PLAY_MANA check: isActive=', me?.isActive, 'hasPriority=', me?.hasPriority, 'src=', untappedManaSource(gv))
       // Pagar enviando el UUID de una fuente sin voltear (igual que
@@ -559,6 +720,8 @@ export async function runRecorder(driver) {
     }
     if (method === 'GAME_SELECT') {
       const me = getMe(gv)
+      selectGen += 1
+      lastSelectOurs = me?.hasPriority === true
       if (DEBUG) {
         log('GAME_SELECT t=', gv.turn, 'ph=', gv.phase, 'act=', me?.isActive, 'prio=', me?.hasPriority,
           'hand=', Object.values(gv.myHand ?? gv.hand ?? {}).map((c) => c?.name ?? c?.displayName).join(','),
@@ -581,6 +744,7 @@ export async function runRecorder(driver) {
   function finish(code) {
     if (finished) return
     finished = true
+    clearInterval(stallTimer)
     try {
       if (recorded) {
         fs.mkdirSync(path.dirname(OUT), { recursive: true })
@@ -629,6 +793,7 @@ export async function runRecorder(driver) {
     if (m.type === 'event') {
       if (DEBUG) log('EVENT', m.method, 'prio/active=', getMe(m.data?.gameView)?.hasPriority, getMe(m.data?.gameView)?.isActive)
       ctx.dumpEvent(m)
+      if (m.method?.startsWith('GAME_')) lastGameEventAt = Date.now()
       if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_'))) {
         if (!gameId) gameId = String(m.objectId)
       }

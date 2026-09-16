@@ -33,5 +33,250 @@
     "kind": "tournament",
     "assert": "tournamentFinished",
     "note": "getTournament tras concesión en la final (driver tournament-end): tournamentState Finished, un jugador 'Finished (Winner)' con 3pts y ronda 1 con result 'is the winner'."
+  },
+  {
+    "file": "counterspell.json",
+    "mechanic": "counterspell",
+    "kind": "game",
+    "assert": "hasCounterOnStack",
+    "note": "Counterspell propio contrarrestando Lightning Bolt del SIM (driver counterspell con cheatSetup: counter en mano + 2 Islas al campo en T1; pila con ambos hechizos y objetivos cruzados)."
+  },
+  {
+    "file": "aura.json",
+    "mechanic": "aura",
+    "kind": "game",
+    "assert": "hasAttachedAura",
+    "note": "Rancor sobre Elvish Mystic propio (driver aura con cheatSetup: Mystic 3/1 con attachments=[Rancor], Rancor con attachedTo; pago solo con Bosques — el Mystic mareado rompía el pago por defecto)."
+  },
+  {
+    "file": "tokens.json",
+    "mechanic": "tokens",
+    "kind": "game",
+    "assert": "hasTokens",
+    "note": "Dragon Fodder → 2 Goblin Token 1/1 (driver tokens con cheatSetup; isToken=true, set WAR, cardNumber vacío)."
+  },
+  {
+    "file": "modal.json",
+    "mechanic": "modal",
+    "kind": "game",
+    "assert": "hasModalOnStack",
+    "note": "Boros Charm en modo daño contra el rival (driver modal con cheatSetup; modo elegido por texto vía GAME_CHOOSE_ABILITY — los modos son habilidades, no CHOICE; pago {R}{W} con la tierra del color pedido)."
+  },
+  {
+    "file": "xcosts.json",
+    "mechanic": "xcosts",
+    "kind": "game",
+    "assert": "hasXCostCounters",
+    "note": "Walking Ballista con X=2 (driver xcosts con cheatSetup: 2/2 con 2 contadores +1/+1, coste {X}{X}; el max del prompt es INT_MAX — el servidor no acota)."
+  },
+  {
+    "file": "response.json",
+    "mechanic": "response",
+    "kind": "game",
+    "assert": "hasStackResponse",
+    "note": "Giant Growth en respuesta a Hornet Sting propio sobre el Mystic (driver response con cheatSetup; pila LIFO con ambos al mismo objetivo). El SIM retiene su Bolt con criaturas fuera (108 turnos sin lanzarlo) — la respuesta se monta sobre hechizo propio."
+  },
+  {
+    "file": "trigger-order.json",
+    "mechanic": "trigger-order",
+    "kind": "game",
+    "assert": "hasDoubleTrigger",
+    "note": "2 Soul Warden + Mystic → vidas 22 (driver trigger-order con cheatSetup; SIN diálogo de orden: el motor auto-ordena 2 triggers del mismo controlador)."
+  },
+  {
+    "file": "may-trigger.json",
+    "mechanic": "may-trigger",
+    "kind": "game",
+    "assert": "hasSolemn",
+    "note": "Solemn en campo tras may→SÍ + búsqueda de Bosque (GAME_ASK + GAME_TARGET con options.possibleTargets; driver may-trigger con cheatSetup)."
+  },
+  {
+    "file": "convoke.json",
+    "mechanic": "convoke",
+    "kind": "game",
+    "assert": "hasConvoke",
+    "note": "Chord of Calling X=1 pagado por convoke (driver convoke con cheatSetup: 3 Mystics girados + Bosque para el {1}; los taps van como PLAY_MANA con UUID — el mareo no estorba; con X=0 no hay objetivo legal). Chord en cementerio + 4º Mystic tutoreado."
+  },
+  {
+    "file": "flashback.json",
+    "mechanic": "flashback",
+    "kind": "game",
+    "assert": "hasFlashback",
+    "note": "Faithless Looting lanzado por flashback desde el cementerio (driver flashback con cheatSetup: roba 2, descarta 2 Montañas — un UUID por prompt con memoria — y acaba exiliado)."
+  },
+  {
+    "file": "delve.json",
+    "mechanic": "delve",
+    "kind": "game",
+    "assert": "hasDelve",
+    "note": "Treasure Cruise ({7}{U}) pagado con delve: {U} con Isla + 7 exilios del cementerio vía botón 'special' (responder sendPlayerString 'special' al PLAY_MANA abre la acción especial; los UUIDs del cementerio directos se ignoran). Hallazgo harnés: tras cheatSetup hay que responder el SELECT pendiente (auto-pass en rec-lib) o el hilo queda mudo."
+  },
+  {
+    "file": "scry.json",
+    "mechanic": "scry",
+    "kind": "game",
+    "assert": "hasScry",
+    "note": "Opt ({U}): scry 1 como GAME_TARGET 'Select up to one card to PUT on the BOTTOM (Scry)' (UUID=abajo, declinar=arriba) + robar. Driver scry con cheatSetup."
+  },
+  {
+    "file": "overload.json",
+    "mechanic": "overload",
+    "kind": "game",
+    "assert": "hasOverload",
+    "note": "Cyclonic Rift pagado por overload {6}{U} (7 Islas giradas, Rift en pila). Overload es una spell ability separada (OverloadAbility): el driver la elige por texto en basicCastAbilities (el UUID de la carta ya iba a overload por defecto en 1.4.61)."
+  },
+  {
+    "file": "gang-block.json",
+    "mechanic": "block",
+    "kind": "game",
+    "assert": "hasBlock",
+    "note": "Combate SIN cheat (el cheat de campo es el que congela): mazos ordenados, el SIM lanza Mystics (tryCast) y bloquea solo (primer bloqueador). 1 atacante nuestro girado + 1 bloqueador SIM. El gang 2v1 no sale porque el SIM ataca con todo (no reserva 2 bloqueadores); sigue R por sesión 09-12."
+  },
+  {
+    "file": "kicker.json",
+    "mechanic": "kicker",
+    "kind": "game",
+    "assert": "hasKicker",
+    "note": "Goblin Bushwhacker con kicker {R} pagado (ASK 'Pay Kicker {R}?' → SÍ; 2 Montañas giradas = base+kicker). Driver kicker con cheatSetup."
+  },
+  {
+    "file": "evoke.json",
+    "mechanic": "evoke",
+    "kind": "game",
+    "assert": "hasEvoke",
+    "note": "Solitude por evoke (CHOOSE_CHOICE explícito): Swords exiliada (coste), Mystic del SIM exiliado (ETB), Solitude sacrificada. El orden de triggers ('Pick triggered ability') se responde con los ability-UUID de cardsView1 (el sourceId no vale: el flag de macro lo desactiva). SIM con Mystics (sin cheat al rival: congela)."
+  },
+  {
+    "file": "clones.json",
+    "mechanic": "clone",
+    "kind": "game",
+    "assert": "hasClone",
+    "note": "Phantasmal Image entra como copia del Mystic del SIM (copy:true). La copia es ASK 'Use effect of Phantasmal Image?' → SÍ + TARGET. Lanzamiento diferido hasta que el SIM tenga criatura (sin objetivo es 0/0)."
+  },
+  {
+    "file": "treason.json",
+    "mechanic": "threaten",
+    "kind": "game",
+    "assert": "hasThreaten",
+    "note": "Act of Treason roba el Mystic del SIM a nuestro campo (mazo todo-Montañas: cualquier Mystic propio es robado). Lanzamiento diferido hasta que el SIM tenga criatura."
+  },
+  {
+    "file": "dfc.json",
+    "mechanic": "transform",
+    "kind": "game",
+    "assert": "hasTransform",
+    "note": "Moonmist transforma al Delver of Secrets en Insectile Aberration (cara trasera en el campo). Driver dfc con cheatSetup."
+  },
+  {
+    "file": "adventure.json",
+    "mechanic": "adventure",
+    "kind": "game",
+    "assert": "hasAdventure",
+    "note": "Stomp (aventura) a la cara del rival → Giant exiliado → criatura lanzada desde el exilio. La aventura sale por canPlayObjects (valor con el nombre de la carta). Driver adventure con cheatSetup."
+  },
+  {
+    "file": "split.json",
+    "mechanic": "split-damage",
+    "kind": "game",
+    "assert": "hasSplit",
+    "note": "Arc Trail ({1}{R}): 2 daños a un objetivo + 1 a otro (Mystic SIM + cara del rival con fallback; el segundo TARGET no puede repetir el primero). Driver split con cheatSetup."
+  },
+  {
+    "file": "seize.json",
+    "mechanic": "discard-reveal",
+    "kind": "game",
+    "assert": "hasSeize",
+    "note": "Thoughtseize: TARGET 'Select a player' (playerId) + carta de la mano rival (primera opción) → Mystic descartado. Hallazgo harnés: el ASK de maná flotante ('Pass anyway?') va al default (true)."
+  },
+  {
+    "file": "tutor.json",
+    "mechanic": "tutor",
+    "kind": "game",
+    "assert": "hasTutor",
+    "note": "Demonic Tutor trae carta a la mano (TARGET 'Select a card', primera opción). El decline (false) NO falla la búsqueda (re-pregunta en bucle): 'fail to find' sigue S. Driver tutor con cheatSetup."
+  },
+  {
+    "file": "dismember.json",
+    "mechanic": "phyrexian",
+    "kind": "game",
+    "assert": "hasPhyrexian",
+    "note": "Dismember pagado con 4 vidas (ASK 'Pay 2 life instead of {B}?' ×2 → SÍ; vida 16) matando al Mystic del SIM. Driver dismember con cheatSetup."
+  },
+  {
+    "file": "snow.json",
+    "mechanic": "snow-fight",
+    "kind": "game",
+    "assert": "hasSnowFight",
+    "note": "Blizzard Brawl con Snow-Covered Forest (pelea Oso vs Mystic SIM). Nombres de cheat válidos: 'Snow-Covered Forest', 'Runeclaw Bear'. Driver snow con cheatSetup."
+  },
+  {
+    "file": "madness.json",
+    "mechanic": "madness",
+    "kind": "game",
+    "assert": "hasMadness",
+    "note": "Looting descarta Fiery Temper → ASK 'you may cast it by paying {R}' → SÍ → 3 daños al rival (vida 17). Driver madness con cheatSetup."
+  },
+  {
+    "file": "shock.json",
+    "mechanic": "split-second",
+    "kind": "game",
+    "assert": "hasSplitSecond",
+    "note": "Sudden Shock (split second) a la cara del rival, en la pila. Driver shock con cheatSetup."
+  },
+  {
+    "file": "cascade.json",
+    "mechanic": "cascade",
+    "kind": "game",
+    "assert": "hasCascade",
+    "note": "Bloodbraid Elf → cascade encuentra el Bolt de la cima (putOnTop de 1) → ASK lanzarlo SÍ → 3 daños al rival. Driver cascade con cheatSetup."
+  },
+  {
+    "file": "vote.json",
+    "mechanic": "vote",
+    "kind": "game",
+    "assert": "hasVote",
+    "note": "Council's Judgment: el voto llega como GAME_TARGET (no GAME_CHOOSE_CHOICE) sobre el único permanente sin tierras que no controlamos → Mystic del rival exiliado. Driver vote con cheatSetup en dos pasos encadenados (mano propia + Mystic votable al rival, sin el cual el voto no tiene candidato y el hechizo fizzlea). Hallazgo de motor: el rival cheateado terminó con 2 Mystics exiliados (uno propio del mazo simDeck) en vez de 1 — posible bug de voto que deja votar por permanentes propios cuando el rival no tiene ninguno ajeno."
+  },
+  {
+    "file": "warp.json",
+    "mechanic": "extra-turn",
+    "kind": "game",
+    "assert": "hasExtraTurn",
+    "note": "Time Warp ('Target player takes an extra turn after this one.', sin exilio ni robo — el comentario original del driver decía lo contrario) → TARGET 'Select a player' → uno mismo → carta en el cementerio. Driver warp con cheatSetup; el TARGET también recibe el descarte de limpieza si se tarda, hay que discriminar por el texto de la pregunta."
+  },
+  {
+    "file": "hybrid.json",
+    "mechanic": "hybrid",
+    "kind": "game",
+    "assert": "hasHybrid",
+    "note": "Kitchen Finks ({1}{G/W}{G/W}) lanzado con 3 Bosques (el híbrido se paga con verde): 3/2 con persist en el campo. Driver hybrid con cheatSetup."
+  },
+  {
+    "file": "anycolor.json",
+    "mechanic": "any-color-mana",
+    "kind": "game",
+    "assert": "hasAnyColor",
+    "note": "Birds of Paradise paga el {U} de Opt (AddManaOfAnyColorEffect): el servidor pregunta la fuente (PLAY_MANA) y auto-resuelve el color cuando solo uno es pagable — no hubo GAME_CHOOSE_CHOICE de color (hallazgo de motor). Captura: Birds 0/1 en el campo + Opt en el cementerio. Driver anycolor con cheatSetup."
+  },
+  {
+    "file": "planeswalker.json",
+    "mechanic": "planeswalker",
+    "kind": "game",
+    "assert": "hasPlaneswalker",
+    "note": "Teferi, Hero of Dominaria lanzado ({3}{W}{U}) y su lealtad +1 (robar) activada: 4→5 contadores (campo loyalty '5' y counters loyalty:5). Hallazgo del harnés: enviar el UUID de la habilidad no activa nada (game.getObject no lo resuelve); hay que hacer clic en el permanente y responder GAME_CHOOSE_ABILITY. Driver planeswalker con cheatSetup."
+  },
+  {
+    "file": "saga.json",
+    "mechanic": "saga",
+    "kind": "game",
+    "assert": "hasSaga",
+    "note": "History of Benalia ({1}{W}{W}): capítulo I al entrar — contador lore:1 y ficha Knight Token 2/2 con vigilancia. Driver saga con cheatSetup."
+  },
+  {
+    "file": "morph.json",
+    "mechanic": "face-down",
+    "kind": "game",
+    "assert": "hasFaceDown",
+    "note": "Den Protector lanzado boca abajo por morph ({3}): permanente 'Morph: Den Protector' 2/2 faceDown en el campo. El clic en la carta abre GAME_CHOOSE_ABILITY (lanzamiento normal vs Megamorph) y se elige morph por texto; la habilidad va a la bolsa `other` (SpellAbilityType.BASE_ALTERNATE), no a basicCastAbilities. Driver morph con cheatSetup."
   }
 ]

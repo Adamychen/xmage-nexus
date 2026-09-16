@@ -40,7 +40,12 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         await expect(myCard).toBeVisible()
 
         // Sin grupos de attachment heredados (el render de mutate/pila es distinto).
-        await expect(page.locator('.card-attachment-group')).toHaveCount(0)
+        // El frame de aura sí trae adjunto propio: se aserta aparte.
+        if (entry.assert === 'hasAttachedAura') {
+          await expect(page.locator('.card-attachment-group')).not.toHaveCount(0)
+        } else {
+          await expect(page.locator('.card-attachment-group')).toHaveCount(0)
+        }
 
         if (entry.assert === 'hasMutatedPermanent') {
           await expect(page.locator('.player-zone .card-mutate-pile')).toBeVisible()
@@ -48,6 +53,64 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         }
         if (entry.assert === 'hasNonMutatedCreature') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasCounterOnStack') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(2)')
+        }
+        if (entry.assert === 'hasTokens') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Token"]')).toHaveCount(2)
+        }
+        if (entry.assert === 'hasModalOnStack') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+        }
+        if (entry.assert === 'hasXCostCounters') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Walking Ballista"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasStackResponse') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(2)')
+        }
+        if (entry.assert === 'hasDoubleTrigger') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Soul Warden"]')).toHaveCount(2)
+        }
+        if (entry.assert === 'hasSolemn') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Solemn Simulacrum"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasConvoke') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toHaveCount(4)
+        }
+        if (entry.assert === 'hasOverload') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+        }
+        if (entry.assert === 'hasKicker') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Bushwhacker"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasClone') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasTransform') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Insectile Aberration"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasAdventure') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Bonecrusher Giant"]')).toBeVisible()
+        }
+        if (entry.assert === 'hasSplit') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+        }
+        if (entry.assert === 'hasSnowFight') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+        }
+        if (entry.assert === 'hasSplitSecond') {
+          await expect(page.locator('.stack-zone')).toBeVisible()
+          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+        }
+        if (entry.assert === 'hasCascade') {
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Bloodbraid Elf"]')).toBeVisible()
         }
       })
     })

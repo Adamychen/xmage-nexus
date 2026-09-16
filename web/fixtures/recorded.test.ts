@@ -13,6 +13,41 @@ type AssertKind =
   | 'hasNonMutatedCreature'
   | 'hasAttackingTappedCreature'
   | 'hasCombatGroup'
+  | 'hasCounterOnStack'
+  | 'hasAttachedAura'
+  | 'hasTokens'
+  | 'hasModalOnStack'
+  | 'hasXCostCounters'
+  | 'hasStackResponse'
+  | 'hasDoubleTrigger'
+  | 'hasSolemn'
+  | 'hasConvoke'
+  | 'hasFlashback'
+  | 'hasDelve'
+  | 'hasScry'
+  | 'hasOverload'
+  | 'hasBlock'
+  | 'hasKicker'
+  | 'hasEvoke'
+  | 'hasClone'
+  | 'hasThreaten'
+  | 'hasTransform'
+  | 'hasAdventure'
+  | 'hasSplit'
+  | 'hasSeize'
+  | 'hasTutor'
+  | 'hasPhyrexian'
+  | 'hasSnowFight'
+  | 'hasMadness'
+  | 'hasSplitSecond'
+  | 'hasCascade'
+  | 'hasVote'
+  | 'hasExtraTurn'
+  | 'hasHybrid'
+  | 'hasAnyColor'
+  | 'hasPlaneswalker'
+  | 'hasSaga'
+  | 'hasFaceDown'
   | 'hasConstructPool'
   | 'tournamentFinished'
 
@@ -41,6 +76,213 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       return bf.some((c) => (c as { mutated?: boolean; mutateView?: unknown }).mutated && Object.keys((c as { mutateView?: Record<string, unknown> }).mutateView ?? {}).length > 0)
     case 'hasNonMutatedCreature':
       return bf.some((c) => (c.cardTypes ?? []).includes('CREATURE') && !(c as { mutated?: boolean }).mutated)
+    case 'hasCounterOnStack': {
+      const names = Object.values(gv.stack ?? {}).map((s) => String((s as { name?: unknown }).name ?? ''))
+      return names.some((n) => /counterspell/i.test(n)) && names.some((n) => /lightning bolt/i.test(n))
+    }
+    case 'hasAttachedAura':
+      return bf.some((c) => ((c as { attachments?: unknown }).attachments as unknown[] | undefined)?.length > 0)
+        && bf.some((c) => /rancor/i.test(String((c as { name?: unknown }).name ?? '')))
+    case 'hasTokens':
+      return bf.filter((c) => (c as { isToken?: unknown }).isToken === true).length >= 2
+    case 'hasModalOnStack':
+      return Object.values(gv.stack ?? {}).some((s) => /boros charm/i.test(String((s as { name?: unknown }).name ?? '')))
+    case 'hasXCostCounters': {
+      const ballista = bf.find((c) => /walking ballista/i.test(String((c as { name?: unknown }).name ?? '')))
+      const counters = (ballista as unknown as { counters?: Array<{ name?: unknown; count?: unknown }> } | undefined)?.counters ?? []
+      return counters.some((k) => /\+1\/\+1/.test(String(k?.name ?? '')) && Number(k?.count ?? 0) >= 2)
+    }
+    case 'hasStackResponse': {
+      const names = Object.values(gv.stack ?? {}).map((s) => String((s as { name?: unknown }).name ?? ''))
+      return names.some((n) => /giant growth/i.test(n)) && names.some((n) => /hornet sting/i.test(n))
+    }
+    case 'hasDoubleTrigger': {
+      const wardens = bf.filter((c) => /soul warden/i.test(String((c as { name?: unknown }).name ?? '')))
+      const mystic = bf.some((c) => /elvish mystic/i.test(String((c as { name?: unknown }).name ?? '')))
+      return wardens.length >= 2 && mystic && Number(me?.life ?? 0) >= 22
+    }
+    case 'hasSolemn':
+      return bf.some((c) => /solemn simulacrum/i.test(String((c as { name?: unknown }).name ?? '')))
+    case 'hasConvoke': {
+      const me2 = getMe(gv)
+      const mystics = bf.filter((c) => /elvish mystic/i.test(String((c as { name?: unknown }).name ?? '')))
+      const gy = Object.values(me2?.graveyard ?? {})
+      return mystics.length >= 4 && gy.some((c) => /chord of calling/i.test(String((c as { name?: unknown }).name ?? '')))
+    }
+    case 'hasDelve': {
+      const me2 = getMe(gv)
+      const gy = Object.values(me2?.graveyard ?? {})
+      const ex = me2?.exile ?? {}
+      const exVals = Array.isArray(ex) ? ex : Object.values(ex)
+      return (
+        gy.some((c) => /treasure cruise/i.test(String((c as { name?: unknown })?.name ?? ''))) && exVals.length >= 7
+      )
+    }
+    case 'hasScry': {
+      const me2 = getMe(gv)
+      const gy = Object.values(me2?.graveyard ?? {})
+      return gy.some((c) => String((c as { name?: unknown })?.name ?? '').toLowerCase() === 'opt')
+    }
+    case 'hasOverload': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      const tappedIsles = bf.filter(
+        (c) => /island/i.test(String((c as { name?: unknown })?.name ?? '')) && (c as { tapped?: boolean })?.tapped === true,
+      )
+      const stack = Object.values(gv.stack ?? {})
+      return tappedIsles.length >= 6 && stack.some((s) => /cyclonic rift/i.test(String((s as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasBlock': {
+      const groups = gv.combat ?? []
+      return groups.some((group) => {
+        const at = (group as unknown as Record<string, Record<string, unknown>>).attackers
+        const bl = (group as unknown as Record<string, Record<string, unknown>>).blockers
+        const nAt = Array.isArray(at) ? at.length : Object.keys(at ?? {}).length
+        const nBl = Array.isArray(bl) ? bl.length : Object.keys(bl ?? {}).length
+        return nAt >= 1 && nBl >= 1
+      })
+    }
+    case 'hasKicker': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      const hasBw = bf.some((c) => /goblin bushwhacker/i.test(String((c as { name?: unknown })?.name ?? '')))
+      const tappedMtn = bf.filter(
+        (c) => /mountain/i.test(String((c as { name?: unknown })?.name ?? '')) && (c as { tapped?: boolean })?.tapped === true,
+      )
+      return hasBw && tappedMtn.length >= 2
+    }
+    case 'hasEvoke': {
+      const me2 = getMe(gv)
+      const gy = Object.values(me2?.graveyard ?? {})
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const simEx = sim?.exile ?? {}
+      const simExVals = Array.isArray(simEx) ? simEx : Object.values(simEx)
+      const nameOf = (c: unknown) =>
+        String((c as { name?: unknown })?.name ?? (typeof c === 'string' ? c : ''))
+      return (
+        gy.some((c) => /solitude/i.test(nameOf(c))) && simExVals.some((c) => /elvish mystic/i.test(nameOf(c)))
+      )
+    }
+    case 'hasClone': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      return bf.some(
+        (c) =>
+          /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')) &&
+          (c as { copy?: boolean })?.copy === true,
+      )
+    }
+    case 'hasThreaten': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      return bf.some((c) => /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasTransform': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      return bf.some((c) => /insectile aberration/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasAdventure': {
+      const me2 = getMe(gv)
+      const bf = Object.values(me2?.battlefield ?? {})
+      return bf.some((c) => /bonecrusher giant/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasSplit': {
+      const stack = Object.values(gv.stack ?? {})
+      return stack.some((s) => /arc trail/i.test(String((s as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasSeize': {
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const gy = Object.values(sim?.graveyard ?? {})
+      return gy.length >= 1
+    }
+    case 'hasTutor': {
+      const me2 = getMe(gv)
+      const gy = Object.values(me2?.graveyard ?? {})
+      return gy.some((c) => /demonic tutor/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasPhyrexian': {
+      const me2 = getMe(gv)
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const simGy = Object.values(sim?.graveyard ?? {})
+      return (
+        Number(me2?.life ?? 20) < 20 && simGy.some((c) => /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')))
+      )
+    }
+    case 'hasSnowFight': {
+      const stack = Object.values(gv.stack ?? {})
+      return stack.some((s) => /blizzard brawl/i.test(String((s as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasMadness': {
+      const me2 = getMe(gv)
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const gy = Object.values(me2?.graveyard ?? {})
+      return (
+        gy.some((c) => /fiery temper/i.test(String((c as { name?: unknown })?.name ?? ''))) &&
+        Number(sim?.life ?? 20) < 20
+      )
+    }
+    case 'hasSplitSecond': {
+      const stack = Object.values(gv.stack ?? {})
+      return stack.some((s) => /sudden shock/i.test(String((s as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasCascade': {
+      const me2 = getMe(gv)
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const bf = Object.values(me2?.battlefield ?? {})
+      return (
+        bf.some((c) => /bloodbraid elf/i.test(String((c as { name?: unknown })?.name ?? ''))) &&
+        Number(sim?.life ?? 20) < 20
+      )
+    }
+    case 'hasVote': {
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const ex = sim?.exile ?? {}
+      const vals = Array.isArray(ex) ? ex : Object.values(ex)
+      return vals.some((c) => /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? (typeof c === 'string' ? c : ''))))
+    }
+    case 'hasExtraTurn': {
+      const me2 = getMe(gv)
+      const gy = Object.values(me2?.graveyard ?? {})
+      return gy.some((c) => /time warp/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasHybrid': {
+      const finks = bf.find((c) => /kitchen finks/i.test(String((c as { name?: unknown })?.name ?? '')))
+      return (
+        String((finks as { power?: unknown })?.power ?? '') === '3' &&
+        String((finks as { toughness?: unknown })?.toughness ?? '') === '2'
+      )
+    }
+    case 'hasAnyColor': {
+      const birds = bf.some((c) => /birds of paradise/i.test(String((c as { name?: unknown })?.name ?? '')))
+      const gy = Object.values(getMe(gv)?.graveyard ?? {})
+      return birds && gy.some((c) => /^opt$/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasPlaneswalker': {
+      const pw = bf.find((c) => /teferi, hero of dominaria/i.test(String((c as { name?: unknown })?.name ?? '')))
+      if (!pw) return false
+      if (Number((pw as { loyalty?: unknown }).loyalty ?? 0) >= 5) return true
+      const counters = (pw as { counters?: Array<{ name?: unknown; count?: unknown }> }).counters ?? []
+      return counters.some((k) => /loyalty/i.test(String(k?.name ?? '')) && Number(k?.count ?? 0) >= 5)
+    }
+    case 'hasSaga': {
+      const saga = bf.find((c) => /history of benalia/i.test(String((c as { name?: unknown })?.name ?? '')))
+      const lore = ((saga as { counters?: Array<{ name?: unknown; count?: unknown }> } | undefined)?.counters ?? []).some(
+        (k) => /lore/i.test(String(k?.name ?? '')) && Number(k?.count ?? 0) >= 1,
+      )
+      const knight = bf.some(
+        (c) => (c as { isToken?: boolean }).isToken === true && /knight/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      return lore && knight
+    }
+    case 'hasFaceDown':
+      return bf.some((c) => (c as { faceDown?: boolean }).faceDown === true)
+    case 'hasFlashback': {
+      const me2 = getMe(gv)
+      const ex = me2?.exile ?? {}
+      const vals = Array.isArray(ex) ? ex : Object.values(ex)
+      return vals.some((c) => /faithless looting/i.test(String((c as { name?: unknown })?.name ?? (typeof c === 'string' ? c : ''))))
+    }
     case 'hasCombatGroup':
       return combatAttackerIds(gv).length > 0
     case 'hasAttackingTappedCreature': {
