@@ -463,6 +463,8 @@ export default function BoardZone({
         crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
         onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
         onCardHover={onCardHover}
+        targetIds={targetIds}
+        onTargetClick={onCardClick}
       />
     </div>
   )

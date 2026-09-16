@@ -13,6 +13,8 @@ interface PileOverlayProps {
   onClose: () => void
   playableIds?: Set<string>
   onPlayCard?: (id: string) => void
+  targetIds?: Set<string>
+  onTargetClick?: (id: string) => void
   isLibrary?: boolean
 }
 
@@ -22,11 +24,14 @@ export default function PileOverlay({
   onClose,
   playableIds,
   onPlayCard,
+  targetIds,
+  onTargetClick,
   isLibrary = false,
 }: PileOverlayProps) {
   const { t } = useTranslation()
   const entries = Object.entries(cards)
   const playableSet = useMemo(() => playableIds ?? new Set<string>(), [playableIds])
+  const targetSet = useMemo(() => targetIds ?? new Set<string>(), [targetIds])
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
@@ -73,6 +78,13 @@ export default function PileOverlay({
           {entries.map(([id, card], index) => {
             const isTop = isLibrary && index === 0
             const isRevealed = !card.faceDown
+            const isPlayableCard = playableSet.has(id)
+            const isTargetCard = targetSet.has(id)
+            const cardOnClick = isPlayableCard && onPlayCard
+              ? () => onPlayCard(id)
+              : isTargetCard && onTargetClick
+                ? () => onTargetClick(id)
+                : undefined
 
             return (
               <div key={id} className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}`}>
@@ -87,8 +99,9 @@ export default function PileOverlay({
                   card={card}
                   faceDown={card.faceDown === true}
                   className="pile-card"
-                  isPlayable={playableSet.has(id)}
-                  onClick={playableSet.has(id) && onPlayCard ? () => onPlayCard(id) : undefined}
+                  isPlayable={isPlayableCard}
+                  isTarget={isTargetCard}
+                  onClick={cardOnClick}
                   onHover={handleCardHover}
                 />
               </div>

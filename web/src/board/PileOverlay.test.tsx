@@ -1,7 +1,9 @@
-import { fireEvent, render } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import PileOverlay from './PileOverlay'
 import type { CardView } from '../net/types'
+
+afterEach(cleanup)
 
 describe('PileOverlay', () => {
   it('renders graveyard / exile cards list with close button', () => {
@@ -85,5 +87,48 @@ describe('PileOverlay', () => {
 
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('lets a graveyard/exile card be clicked when it is a valid target', () => {
+    const onTargetClick = vi.fn()
+    const cards: Record<string, CardView> = {
+      'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 },
+    }
+
+    render(
+      <PileOverlay
+        title="Cementerio"
+        cards={cards}
+        onClose={vi.fn()}
+        targetIds={new Set(['c-1'])}
+        onTargetClick={onTargetClick}
+      />
+    )
+
+    fireEvent.click(document.body.querySelector('.pile-card')!)
+    expect(onTargetClick).toHaveBeenCalledWith('c-1')
+  })
+
+  it('does not attach a click handler for a non-target, non-playable card', () => {
+    const onTargetClick = vi.fn()
+    const onPlayCard = vi.fn()
+    const cards: Record<string, CardView> = {
+      'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 },
+    }
+
+    render(
+      <PileOverlay
+        title="Cementerio"
+        cards={cards}
+        onClose={vi.fn()}
+        targetIds={new Set(['other-id'])}
+        onTargetClick={onTargetClick}
+        onPlayCard={onPlayCard}
+      />
+    )
+
+    fireEvent.click(document.body.querySelector('.pile-card')!)
+    expect(onTargetClick).not.toHaveBeenCalled()
+    expect(onPlayCard).not.toHaveBeenCalled()
   })
 })

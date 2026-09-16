@@ -23,6 +23,8 @@ interface ResourceBarProps {
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   onCardHover?: (card: any, rect?: DOMRect) => void
+  targetIds?: Set<string>
+  onTargetClick?: (id: string) => void
 }
 
 function extractCards(cardsView: unknown): CardView[] {
@@ -39,6 +41,8 @@ export default function ResourceBar({
   crossZonePlayables,
   onPlayCrossZone,
   onCardHover,
+  targetIds,
+  onTargetClick,
 }: ResourceBarProps) {
   const { t } = useTranslation()
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
@@ -321,6 +325,8 @@ export default function ResourceBar({
             onClose={() => setOpenPile(null)}
             playableIds={playableByZone.library}
             onPlayCard={onPlayCrossZone}
+            targetIds={targetIds}
+            onTargetClick={onTargetClick}
             isLibrary={true}
            />
          )}
@@ -331,6 +337,8 @@ export default function ResourceBar({
             onClose={() => setOpenPile(null)}
             playableIds={playableByZone.graveyard}
             onPlayCard={onPlayCrossZone}
+            targetIds={targetIds}
+            onTargetClick={onTargetClick}
            />
          )}
          {openPile === 'exile' && (
@@ -340,6 +348,8 @@ export default function ResourceBar({
             onClose={() => setOpenPile(null)}
             playableIds={playableByZone.exile}
             onPlayCard={onPlayCrossZone}
+            targetIds={targetIds}
+            onTargetClick={onTargetClick}
            />
          )}
          {openPile === 'crosszone' && (
