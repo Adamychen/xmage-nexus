@@ -84,6 +84,7 @@ igual que `gameId` de `START_GAME`/`GAME_*`, así que `join/get` lo resuelven po
 | `mage_auto_pass` | `enabled`, `session?` | Auto-pass en ventanas de prioridad del rival o sin jugables (default ON; nunca en asks/maná). Anti-flood: si el servidor repite el mismo prompt >5 veces, lo desactiva y registra `AUTO_PASS_STOPPED`. |
 | `mage_concede` | `session?` | `sendPlayerAction CONCEDE`. |
 | `mage_chat` | `text`, `chatId?`, `session?` | Chat de la partida. |
+| `mage_cheat_setup` | `playerId?`, `hand?`, `battlefield?`, `library?`, `graveyard?`, `exile?`, `session?` | **Solo testMode local** (beta → `ok:false`): siembra cartas por nombre en las zonas del jugador (P1; `library` apila encima, el último nombre queda arriba). `playerId` default: el controlado. Llamar con prioridad en turno propio y tras ≥1 acción normal (en la 1ª prioridad del T1 o en turno ajeno congela el hilo). Verificado en vivo 2026-09-15 (2×Counterspell + 2×Island, la partida sigue). |
 
 > **Pin `session` (anti-carreras)**: casi todas las tools aceptan `session?` para
 > operar sobre una sesión MCP sin cambiar la activa global. Imprescindible en
@@ -176,6 +177,11 @@ determinista, `mage_e2e` ejecuta los specs reales de Playwright.
     eventos). Verificado con dos FakeServers en paralelo
     (`test/multiSession.test.ts`): partidas independientes, `mage_sessions`
     correcto y desconectar una no afecta a la otra.
+- **P1/P4 (hecha, 2026-09-15)**: `mage_cheat_setup` expone la siembra del modo
+  test de XMage (parche aditivo del fork `nexus`, gate `testMode`) para montar
+  escenarios reales deterministas desde MCP — cartas por nombre en
+  hand/battlefield/library/graveyard/exile. Test hermético
+  (`test/cheatSetup.test.ts`) + verificado en vivo.
 
 ## Notas de plataforma
 

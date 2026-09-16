@@ -35,6 +35,7 @@ describe('mage-nexus MCP server', () => {
       'mage_auto_pass',
       'mage_build',
       'mage_chat',
+      'mage_cheat_setup',
       'mage_choose',
       'mage_combat',
       'mage_concede',

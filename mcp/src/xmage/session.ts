@@ -977,6 +977,50 @@ export function registerSessionTools(server: McpServer): void {
   )
 
   server.registerTool(
+    'mage_cheat_setup',
+    {
+      title: 'Cheat setup: place named cards (test mode only)',
+      description:
+        'Solo servidor local con testMode (contra beta devuelve ok:false): coloca cartas por nombre en ' +
+        'las zonas del jugador — hand, battlefield, library, graveyard, exile (library las apila encima, ' +
+        'el último nombre queda arriba). playerId por defecto: el jugador controlado (usa mage_game_state ' +
+        'para el rival). Llámalo con prioridad en TU turno y tras ≥1 acción normal: en la primera ' +
+        'prioridad del T1 o en turno ajeno congela el hilo de juego (el cheat corre fuera del hilo). ' +
+        'Tras ok puede quedar pendiente el prompt que disparó el cheat: contéstalo normalmente.',
+      inputSchema: {
+        session: z.string().optional().describe(PIN_DESC),
+        playerId: z.string().optional().describe('Jugador destino (default: el controlado).'),
+        hand: z.array(z.string()).optional(),
+        battlefield: z.array(z.string()).optional(),
+        library: z.array(z.string()).optional(),
+        graveyard: z.array(z.string()).optional(),
+        exile: z.array(z.string()).optional(),
+      },
+      annotations: { readOnlyHint: false },
+    },
+    async ({ session, playerId, hand, battlefield, library, graveyard, exile }) => {
+      const state = pickState(session)
+      const client = requireClient(state)
+      const gameId = requireGameId(state)
+      const target = playerId ?? controlledPlayerId(state)
+      if (!target) throw new Error('sin playerId — pasa uno o usa mage_game_state para localizarlo')
+      const zones: Record<string, string[]> = {}
+      if (hand?.length) zones.hand = hand
+      if (battlefield?.length) zones.battlefield = battlefield
+      if (library?.length) zones.library = library
+      if (graveyard?.length) zones.graveyard = graveyard
+      if (exile?.length) zones.exile = exile
+      if (Object.keys(zones).length === 0) {
+        throw new Error('pasa al menos una zona con cartas (hand/battlefield/library/graveyard/exile)')
+      }
+      await client.requestOk('cheatSetup', { gameId, playerId: target, zones }, 30_000)
+      return textResult(
+        json({ ok: true, gameId, playerId: target, zones, promptSeq: state.promptSeq, pending: promptSummary(state) }),
+      )
+    },
+  )
+
+  server.registerTool(
     'mage_game_state',
     {
       title: 'Compact game state',
