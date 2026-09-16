@@ -1,0 +1,35 @@
+.import-name-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.import-name-label,
+.import-textarea-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #cbd5e0;
+}
+
+.import-name-input {
+  box-sizing: border-box;
+  width: 100%;
+  background: #070a10;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #f7fafc;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+
+.import-name-input:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+}
+
+.import-name-input::placeholder {
+  color: #4a5568;
+  font-style: italic;
+}

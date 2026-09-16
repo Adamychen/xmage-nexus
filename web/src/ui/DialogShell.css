@@ -4,6 +4,13 @@
   z-index: var(--dlg-z);
   display: grid;
   place-items: center;
+  /* si el panel no cabe (zoom fraccional + viewport estrecho, o cualquier
+     combinación real que lo haga más alto que la pantalla), permitir que el
+     fondo se desplace en vez de recortarlo sin forma de llegar a él;
+     `safe` cae a `start` solo cuando no cabe, y se ignora entera en
+     navegadores sin soporte (queda el `place-items: center` de arriba). */
+  place-items: safe center;
+  overflow-y: auto;
   padding: 20px;
   background: var(--dlg-backdrop);
   backdrop-filter: blur(var(--dlg-backdrop-blur));
@@ -13,6 +20,7 @@
 .dlg-panel {
   position: relative;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: var(--dlg-padding);
   border: var(--dlg-border);
   border-radius: var(--dlg-radius);

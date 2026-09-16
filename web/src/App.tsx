@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
 import { setSetting } from './state/actions'
@@ -19,6 +20,10 @@ import ConfirmHost from './ui/ConfirmHost'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 
+// P3: galería de estados (solo dev). El import dinámico queda tras
+// `import.meta.env.DEV`, así el build de producción no incluye los frames.
+const GalleryScreen = import.meta.env.DEV ? lazy(() => import('./dev/GalleryScreen')) : null
+
 export default function App() {
   const { t, lang } = useTranslation()
   const phase = usePhase()
@@ -26,6 +31,15 @@ export default function App() {
   const wsAlive = useStore((s) => s.wsAlive)
   const settings = useStore((s) => s.settings)
   const [showSetup, setShowSetup] = useState(() => !isSetupDone())
+  const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
+
+  useEffect(() => {
+    if (!GalleryScreen) return
+    const sync = () => setGallery(isGalleryHash(window.location.hash))
+    sync()
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
 
   useEffect(() => {
     const open = () => setShowSetup(true)
@@ -50,6 +64,7 @@ export default function App() {
   useEffect(() => {
     soundManager.init(loadAudioSettings())
     if (!isSetupDone()) return
+    if (GalleryScreen && isGalleryHash(window.location.hash)) return
     const saved = loadConn()
     if (saved && saved.username && phase === 'idle') {
       void doConnect(
@@ -96,6 +111,14 @@ export default function App() {
   }, [settings.uiScale])
 
   const reconnecting = connecting && !wsAlive
+
+  if (gallery && GalleryScreen) {
+    return (
+      <Suspense fallback={null}>
+        <GalleryScreen />
+      </Suspense>
+    )
+  }
 
   return (
     <>

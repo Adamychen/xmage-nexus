@@ -24,6 +24,10 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
   Dedicated port **8789** (8788 is the Java proxy's HTTP test page — never use it here).
 - `E2E_BACKEND=real npm run test:e2e:real` — against a live stack (needs the
   proxy running; see `Mage.Proxy/AGENTS.md`). Use only as the anti-drift net.
+- `#/gallery` — P3 gallery of states (dev only): 33 recorded frames + prompt
+  fixtures + login, no stack needed. `npx playwright test e2e/gallery.spec.ts`
+  walks every entry (0 page errors); visual regression is opt-in
+  (`E2E_VISUAL=1 … --update-snapshots` on the first run, baselines per platform).
 
 ## Rules
 

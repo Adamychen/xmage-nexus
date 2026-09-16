@@ -145,6 +145,41 @@ describe('CardSlot', () => {
     expect(badge?.textContent).toContain('2')
     expect(badge?.getAttribute('title')).toContain('2/3')
   })
+
+  it('expone data-attrs de fidelidad (P2): P/T, girado, contadores y daño', () => {
+    const card = {
+      id: 'fid1',
+      name: 'Walking Ballista',
+      cardTypes: ['Creature', 'Artifact'],
+      power: '2',
+      toughness: '2',
+      damage: 1,
+      tapped: true,
+      counters: [{ name: '+1/+1', count: 2 }],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showCounters showDamage tapped />)
+    const slot = container.querySelector('.card-slot')!
+    expect(slot.getAttribute('data-pt')).toBe('2/2')
+    expect(slot.getAttribute('data-tapped')).toBe('1')
+    expect(slot.getAttribute('data-damage')).toBe('1')
+    expect(slot.getAttribute('data-counters')).toBe('+1/+1:2')
+  })
+
+  it('no expone data-pt/data-counters cuando el badge no se pinta', () => {
+    const card = {
+      id: 'fid2',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+      counters: [{ name: '+1/+1', count: 1 }],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const slot = container.querySelector('.card-slot')!
+    expect(slot.getAttribute('data-pt')).toBeNull()
+    expect(slot.getAttribute('data-counters')).toBeNull()
+    expect(slot.getAttribute('data-tapped')).toBe('0')
+  })
 })
 
 describe('CardSlot entering lifecycle', () => {

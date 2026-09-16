@@ -431,6 +431,7 @@ export interface TranslationSchema {
     staging_step_play: string
     join_requires_password: string
     join_password_enter_placeholder: string
+    join_password_disabled_beta: string
     join_import_toggle_open: string
     join_import_toggle_close: string
     join_save_select: string
@@ -1264,7 +1265,6 @@ export interface TranslationSchema {
     browser_filter_ramp: string
     browser_filter_tribal: string
     browser_filter_precon: string
-    browser_import_hint: string
     filter_cmc: string
     filter_type: string
     box_create: string
@@ -1296,6 +1296,12 @@ export interface TranslationSchema {
     builder_side_empty: string
     inspect_double_click: string
     import_formats: string
+    import_formats_with_url: string
+    import_deck_name_label: string
+    import_textarea_label: string
+    import_textarea_placeholder: string
+    import_choose_file: string
+    import_url_detected: string
     import_recognized: string
     import_waiting: string
     issues_title: string
@@ -1457,6 +1463,8 @@ export interface TranslationSchema {
     log_autosave: string
     log_autosave_hint: string
     log_download: string
+    diag_export: string
+    diag_export_hint: string
     match_duration: string
     land_set: string
   }

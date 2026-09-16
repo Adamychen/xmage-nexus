@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { resolveBoardLayout } from './boardLayout'
+import { effectiveBoardLayout, resolveBoardLayout } from './boardLayout'
 import { getState, reset, setSetting } from '../state/store'
 import { loadAppearanceSettings } from '../state/persistence'
 
@@ -27,6 +27,21 @@ describe('resolveBoardLayout', () => {
   it('arena solo en multiplayer, cae a standard en 1v1', () => {
     expect(resolveBoardLayout('arena', true, 2)).toBe('arena')
     expect(resolveBoardLayout('arena', true, 1)).toBe('standard')
+  })
+})
+
+describe('effectiveBoardLayout (FFA solo en standard)', () => {
+  it('fuerza standard con 5+ jugadores aunque el layout sea pod o arena', () => {
+    expect(effectiveBoardLayout('pod', true, 4, 5)).toBe('standard')
+    expect(effectiveBoardLayout('arena', true, 4, 5)).toBe('standard')
+    expect(effectiveBoardLayout('standard', false, 4, 5)).toBe('standard')
+  })
+
+  it('respeta el layout con 4 o menos jugadores', () => {
+    expect(effectiveBoardLayout('standard', false, 3, 4)).toBe('pod')
+    expect(effectiveBoardLayout('pod', true, 3, 4)).toBe('pod')
+    expect(effectiveBoardLayout('arena', true, 3, 4)).toBe('arena')
+    expect(effectiveBoardLayout('standard', false, 1, 2)).toBe('standard')
   })
 })
 

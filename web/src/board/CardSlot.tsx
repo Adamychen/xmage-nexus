@@ -196,6 +196,10 @@ export default function CardSlot({
       ref={slotRef}
       data-card-id={cardId ?? effectiveId}
       data-card-name={cardName(card)}
+      data-tapped={tapped ? '1' : '0'}
+      data-pt={showPt && isRealCreature && perm.power != null && perm.toughness != null ? `${perm.power}/${perm.toughness}` : undefined}
+      data-damage={showDamage && isRealCreature && (perm.damage ?? 0) > 0 ? String(perm.damage) : undefined}
+      data-counters={showCounters && counters.length > 0 ? counters.map((c) => `${c.name}:${c.count}`).join('|') : undefined}
       className={[
         'card-slot',
         tapped ? 'tapped' : '',

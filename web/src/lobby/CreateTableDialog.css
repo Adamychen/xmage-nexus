@@ -206,6 +206,7 @@
 .create-table-body {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   min-height: 260px;
   max-height: 52vh;
   padding-right: 4px;

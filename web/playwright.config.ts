@@ -14,6 +14,18 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // server limpio con el código actual. Real sigue en 5173 (el vite del stack).
 const E2E_PORT = FAKE_MODE ? 5175 : 5173
 
+// Matriz navegador × resolución (plan4 §8.1): por defecto Chromium 1600×900
+// (el loop diario no cambia). WebKit = motor real de Tauri en macOS.
+//   E2E_BROWSER=webkit npm run test:e2e
+//   E2E_VIEWPORT=1366x768|1920x1080|2560x1440 npm run test:e2e
+const E2E_BROWSER = process.env.E2E_BROWSER === 'webkit' ? 'webkit' : 'chromium'
+
+function parseViewport(): { width: number; height: number } {
+  const m = /^\s*(\d+)\s*x\s*(\d+)\s*$/i.exec(process.env.E2E_VIEWPORT ?? '')
+  if (m) return { width: Number(m[1]), height: Number(m[2]) }
+  return { width: 1600, height: 900 }
+}
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 120_000,
@@ -38,7 +50,7 @@ export default defineConfig({
     : undefined,
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
-    viewport: { width: 1600, height: 900 },
+    viewport: parseViewport(),
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     // Los specs seleccionan la UI por texto en español ('Usuario', 'Conectar',
@@ -47,4 +59,5 @@ export default defineConfig({
     locale: 'es-ES',
   },
   reporter: [['list'], ['html', { open: 'never' }]],
+  projects: [{ name: E2E_BROWSER, use: { browserName: E2E_BROWSER } }],
 })

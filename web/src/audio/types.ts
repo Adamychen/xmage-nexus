@@ -15,6 +15,8 @@ export type SoundKey =
   | 'ui_click'
   | 'prompt_open'
   | 'whisper'
+  | 'player_join'
+  | 'player_leave'
 
 export type SoundCategory = 'game' | 'ui'
 

@@ -1,10 +1,12 @@
 import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import JoinTableDialog, { recommendedMinMain } from './JoinTableDialog'
+import { setState } from '../state/state'
 import type { TableView } from '../net/types'
 
 afterEach(() => {
   cleanup()
+  setState({ conn: null } as never)
 })
 
 const MOCK_TABLE: TableView = {
@@ -203,5 +205,30 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
     fireEvent.click(within(banner).getByRole('button', { name: 'Cerrar' }))
     await waitFor(() => expect(queryByTestId('join-error')).toBeNull())
     expect(getByTestId('join-table-dialog')).not.toBeNull()
+  })
+
+  it('deshabilita la contraseña en beta.xmage.today (U4-2)', () => {
+    setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+
+    const { getByPlaceholderText, getByRole, getByText } = render(
+      <JoinTableDialog table={MOCK_PASSWORD_TABLE} onClose={() => {}} onJoin={onJoin} />
+    )
+    const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…') as HTMLInputElement
+    expect(passwordInput.disabled).toBe(true)
+    expect(getByText('En el servidor público (beta) no se puede entrar a mesas con contraseña.')).not.toBeNull()
+    expect(getByRole('button', { name: /Unirse con/i }).hasAttribute('disabled')).toBe(true)
+  })
+
+  it('permite la contraseña fuera de beta (U4-2)', () => {
+    setState({ conn: { serverHost: 'localhost' } } as never)
+    const onJoin = vi.fn().mockResolvedValue(undefined)
+
+    const { getByPlaceholderText, queryByText } = render(
+      <JoinTableDialog table={MOCK_PASSWORD_TABLE} onClose={() => {}} onJoin={onJoin} />
+    )
+    const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…') as HTMLInputElement
+    expect(passwordInput.disabled).toBe(false)
+    expect(queryByText('En el servidor público (beta) no se puede entrar a mesas con contraseña.')).toBeNull()
   })
 })

@@ -1,4 +1,5 @@
 import type { EventEnvelope, LobbyEnvelope, ProxyMessage, ResultEnvelope } from './types'
+import { recordFrame } from './frameBuffer'
 
 export interface GatewayEvents {
   onMessage?: (msg: ProxyMessage) => void
@@ -104,6 +105,7 @@ export class Gateway {
     if (msg.type === 'result') {
       this.resolvePending(msg)
     }
+    recordFrame(msg)
     this.events.onMessage?.(msg)
   }
 

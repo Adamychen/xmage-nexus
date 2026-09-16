@@ -22,6 +22,8 @@ const ALL_SOUND_KEYS: SoundKey[] = [
   'ui_click',
   'prompt_open',
   'whisper',
+  'player_join',
+  'player_leave',
 ]
 
 function createMockAudioContext(sampleRate = 44100): AudioContext {

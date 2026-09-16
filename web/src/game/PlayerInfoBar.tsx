@@ -292,6 +292,7 @@ export default function PlayerInfoBar({
   return (
     <div
       data-player-id={player.playerId}
+      data-life={player.life != null ? String(player.life) : undefined}
       className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''}`}
       onClick={onClick}
       onContextMenu={onContextMenu}

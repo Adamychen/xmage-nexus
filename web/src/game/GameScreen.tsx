@@ -31,7 +31,7 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { crossZonePlayables } from '../board/crossZone'
 import { combatActorsFrom } from '../state/gameUtils'
-import { resolveBoardLayout } from '../board/boardLayout'
+import { effectiveBoardLayout } from '../board/boardLayout'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
@@ -224,7 +224,8 @@ export default function GameScreen() {
 
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
-  const effectiveLayout = resolveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length)
+  const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
+  const effectiveLayout = effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'
   const isPodLayout = effectiveLayout === 'pod'
 

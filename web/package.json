@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "test:e2e:fake": "playwright test",
     "test:e2e:real": "E2E_BACKEND=real playwright test",
+    "test:e2e:webkit": "E2E_BROWSER=webkit playwright test",
     "test:e2e:spells": "playwright test --grep \"@spells\"",
     "test:e2e:targeting": "playwright test --grep \"@targeting\"",
     "test:e2e:combat": "playwright test --grep \"@combat\"",

@@ -38,7 +38,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `VIEW_LIMITED_DECK` | ✅ | ✅ | ✅ | eventHandler.test.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
 | `VIEW_SIDEBOARD` | ✅ | ✅ | ✅ | eventHandler.test.ts / player-menu.spec.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
 | `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts / UserRequestDialog.test.tsx / verify-hand-permission.mjs (real: permiso de mano) | 2026-09-08 |
-| `GAME_REDRAW_GUI` | ⚠️ log-only | — | — | — | 2026-08-24 |
+| `GAME_REDRAW_GUI` | ➖ fuera de alcance | — | — | Decisión 2026-09-14: log-only permanente; el tablero ya reacciona a `GAME_UPDATE` | 2026-09-14 |
 | `START_GAME` | ✅ | — | ✅ | full-flow.spec.ts | 2026-08-24 |
 | `GAME_INIT` | ✅ | — | ✅ | full-flow.spec.ts / spells.spec.ts | 2026-08-24 |
 | `GAME_UPDATE_AND_INFORM` | ✅ | — | ✅ | (partidas E2E) | 2026-08-24 |
@@ -102,17 +102,13 @@ Lista actual (de `engine-view-gap.json`):
   (gate por método, no campo) — invisible.
 - **Harnessed** (Unfinity): `PermanentImpl.harnessed` — invisible. `HarnessedHint`
   existe pero nada lo adjunta y no hay contadores/iconos: sin señal cliente.
-  **Fix fork/upstream** (2 líneas + import por carta): en
-  `Mage.Sets/.../t/TheMindStone.java:54` y `t/TheSoulStone.java:47`, tras construir
-  la `SimpleActivatedAbility` con `HarnessSourceEffect`, añadir
-  `ability.addHint(HarnessedHint.instance)` (+ `import mage.abilities.hint.common.HarnessedHint`).
+  **Fuera de alcance por decisión (2026-09-14)**: requeriría cambio en el fork
+  (adjuntar la hint por carta + rebuild del motor); el proxy no puede inferirlo
+  de `rules`/iconos.
 - **Soulbond** (pareja) — **visible vía línea `info` + badge (2026-09-08)**: `PermanentImpl.setPairedWith` añade `addInfo("soulbond", "Paired with <nombre>")` en ambas criaturas (y `setUnpaired` la retira); `getRules` la vuelca en `rules`. El web parsea el partner (`pairedPartnerName`) a `.designation-badge.is-paired` con tooltip "Emparejada con X" (i18n ×9). Las stats llegan computadas.
 - **Solved** (Casos MKM): `CaseSolvedHint` existe pero está huérfano — nada lo
-  adjunta en `CaseAbility`. **Fix fork/upstream** (1 línea + import): en
-  `Mage/.../abilities/common/CaseAbility.java`, ctor (tras `super(Zone.ALL, null)`),
-  añadir `this.addHint(new CaseSolvedHint(SolvedSourceCondition.SOLVED))`
-  (+ `import mage.abilities.hint.common.CaseSolvedHint`; `SolvedSourceCondition`
-  ya importado). La hint es bipolar ("Case is solved./unsolved."), igual que monstrous.
+  adjunta en `CaseAbility`. **Fuera de alcance por decisión (2026-09-14)**:
+  requeriría cambio en el fork + rebuild; el proxy no puede inferirlo.
 - **Can't be targeted** (criatura y jugador): `canBeTargetedBy` es gate por método,
   no campo — invisible. Aceptado: el servidor rechaza objetivos ilegales.
 - **Habilidades de jugador** (hexproof/shroud/daño/vida): `PlayerImpl` sin campo
@@ -151,7 +147,8 @@ Lista actual (de `engine-view-gap.json`):
 | MDFC / Transform (cara 2) | ✅ | ✅ | `CardPreview.secondCardFace`; `complex-costs.spec.ts` | 2026-08-24 |
 | Adventures (modo criatura vs hechizo) | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
 | Split / Fuse | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
-| Sagas (badge de capítulo / lore) | ✅ | ✅ | `CardSlot` renderiza contador `lore` (📖 + nº de capítulo); `CardSlot.test.tsx` cubre contadores | 2026-08-25 |
+| Sagas (badge de capítulo / lore) | ✅ | ✅ | `CardSlot` renderiza contador `lore` (📖 + nº de capítulo); `CardSlot.test.tsx` cubre contadores; frame real `recorded/saga.json` (History of Benalia lore:1 + ficha Caballero, driver P4) | 2026-09-16 |
+| Boca abajo (morph / megamorph) | ✅ | ✅ | `CardSlot` usa la cara trasera/placeholder si `faceDown`; frame real `recorded/morph.json` (Den Protector boca abajo 2/2; el picker de lanzamiento llega como `GAME_CHOOSE_ABILITY`, la habilidad en `canPlayObjects.other`) | 2026-09-16 |
 | Battles (cartas batalla) | ✅ | ✅ | `mechanics.spec.ts` (`.defense-badge`) | 2026-08-24 |
 | Tokens (Treasure/Food/Clue/Map/Blood) | ✅ | ✅ | `cardImages.tokenScryfallKey` + `gameEventParser` + `mechanics.spec.ts` (render) | 2026-08-24 |
 
@@ -205,7 +202,9 @@ Lista actual (de `engine-view-gap.json`):
 | Pago estándar / X-cost | ✅ | ✅ | `complex-costs`, `stack-priority`, `mechanics` | 2026-08-24 |
 | Maná Pirexiano ({U/P}) | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
 | Kicker / Strive | ✅ | ✅ | `complex-costs.spec.ts` | 2026-08-24 |
-| Convoke / Improvise | ✅ | ✅ | `complex-costs.spec.ts` (Chord of Calling) | 2026-08-24 |
+| Convoke / Improvise | ✅ | ✅ | `complex-costs.spec.ts` (Chord of Calling); frame real `recorded/convoke.json` (driver P4) | 2026-09-15 |
+| Maná híbrido ({G/W}) | ✅ | ✅ | `complex-costs.spec.ts`; frame real `recorded/hybrid.json` (Kitchen Finks 3/2 pagado con Bosques — sin pregunta de color, driver P4) | 2026-09-16 |
+| Maná de cualquier color (Birds / Treasure) | ✅ | ✅ | `complex-costs.spec.ts`; frame real `recorded/anycolor.json` (Birds paga el {U} de Opt; el servidor auto-resuelve el color con un solo color pagable, driver P4) | 2026-09-16 |
 
 ### I. Elecciones modales / Voting
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -225,7 +224,7 @@ Lista actual (de `engine-view-gap.json`):
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
 | Lealtad (render de badge) | ✅ | ✅ | `CardSlot` `.loyalty-badge` + `FloatingCardPreview` `.floating-card-loyalty`; `CardSlot.test.tsx` + `FloatingCardPreview.test.tsx` + `mechanics.spec.ts` (`.loyalty-badge`) | 2026-08-26 |
-| Activar habilidad de planeswalker | ✅ | ✅ | `PlaneswalkerAbilityDialog.tsx` dedicado (`✨ PLANESWALKER`, `+2/-3` con `loyaltyDeltas`, `isPlaneswalkerAbility`→`uuid`); `feedback.test.ts` (`loyaltyDeltas`) + `PlaneswalkerAbilityDialog.test.tsx` + `planeswalker.spec.ts` (`@planeswalker`) `fixtures/scenarios/planeswalker.ts` | 2026-08-26 |
+| Activar habilidad de planeswalker | ✅ | ✅ | `PlaneswalkerAbilityDialog.tsx` dedicado (`✨ PLANESWALKER`, `+2/-3` con `loyaltyDeltas`, `isPlaneswalkerAbility`→`uuid`); `feedback.test.ts` (`loyaltyDeltas`) + `PlaneswalkerAbilityDialog.test.tsx` + `planeswalker.spec.ts` (`@planeswalker`) `fixtures/scenarios/planeswalker.ts`; frame real `recorded/planeswalker.json` (Teferi +1 robar, lealtad 4→5, driver P4) | 2026-09-16 |
 
 ### L. Modos de juego
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
@@ -249,4 +248,4 @@ Lista actual (de `engine-view-gap.json`):
 - **Slice B — Torneo** ✅: `START_TOURNAMENT`, `TOURNAMENT_INIT`, `TOURNAMENT_UPDATE`, `TOURNAMENT_OVER`, `SHOW_TOURNAMENT` → `TournamentBracket`/`TournamentPanel`.
 - **Slice C — Replay viewer** ⚠️ (solo cliente): `REPLAY_GAME`, `REPLAY_INIT`, `REPLAY_UPDATE`, `REPLAY_DONE` → `replayViewer` + `GameView`. En vivo 2026-09-14 no es verificable de punta a punta: el servidor por defecto lleva `saveGameActivated="false"` → nunca hay `games[]`/`replayAvailable`; y el cliente no tiene controles (siguiente/anterior/skip) ni salida del tablero. **APLAZADO por decisión (2026-09-14)** hasta que el motor lo soporte.
 - **Slice D — Sala de espera de jugador** ✅: `JOINED_TABLE` → fase `staging` (`SpectatorStagingScreen mode="player"`), paridad con el `TableWaitingDialog` de desktop: salto automático al crear/unirse, Empezar (dueño+ready), Salir (`leaveTable`), Eliminar mesa (dueño, `removeTable`), toggle Listo/No listo (`staging-toggle-ready` con badges 🟢/🟡 y sincronización reactiva por chat de sala), cambiar baraja en vivo (`staging-change-deck`) y re-entrada "Ir a la mesa" desde la tarjeta (asiento propio o `stagingTableId`). Cierre U4 2026-09-06: reordenar asientos (`swapSeats`, ↑/↓ dueño en READY), bypass de torneo limitado sin password (`joinTournamentTable` directo), `startTournament` en torneo (flag `JOINED_TABLE`→`stagingIsTournament`), start con confirm si falta ready, roster con rating/history/flag. E2E: staging.spec.ts (fake, 8/8) / multi-user.spec.ts (real). Nota desktop: si el join falla tras crear, el dueño limpia con `removeTable` (mismo flujo en `NewTableDialog`).
-- **Trivial**: `GAME_REDRAW_GUI` (log-only; el tablero ya reacciona a `GAME_UPDATE`).
+- **Trivial**: `GAME_REDRAW_GUI` (fuera de alcance por decisión 2026-09-14; log-only permanente, el tablero ya reacciona a `GAME_UPDATE`).

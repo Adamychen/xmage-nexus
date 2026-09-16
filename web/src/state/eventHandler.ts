@@ -21,6 +21,8 @@ import {
 } from './events/tournament'
 import { handleReplayGame, handleReplayUpdate, handleReplayDone } from './events/replay'
 import { handleViewLimitedDeck, handleViewSideboard } from './events/views'
+import { notifyStagingRoster } from './stagingSounds'
+import { maybeRunFidelityCheck } from '../system/fidelity'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -45,6 +47,11 @@ export function handleMessage(msg: ProxyMessage) {
         if (found) {
           updatedWatching = found
         }
+      }
+      if (s.phase === 'staging' && s.stagingTableId) {
+        const prevStaged = s.lobby?.tables.find((t) => t.tableId === s.stagingTableId)
+        const nextStaged = msg.tables.find((t) => t.tableId === s.stagingTableId)
+        notifyStagingRoster(prevStaged, nextStaged, s.conn?.username)
       }
       setState({ lobby: msg, watchingTable: updatedWatching })
       break
@@ -122,6 +129,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       if (rollbackRestored) addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
       // La partida re-unida ya está adoptada: el guard de lobby vuelve a aplicar.
       if (objectId && getState().resumingGameId === objectId) setState({ resumingGameId: null })
+      // P2: comprobador de fidelidad de render (solo con mage-web-fidelity=1).
+      maybeRunFidelityCheck(objectId ?? s.gameId)
     }
   }
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {

@@ -64,4 +64,12 @@ describe('AboutModal', () => {
     fireEvent.click(screen.getByTestId('about-close'))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('exporta el diagnóstico al pulsar el botón (P7)', () => {
+    vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:diag'), revokeObjectURL: vi.fn() })
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    render(<AboutModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('about-export-diag'))
+    expect(click).toHaveBeenCalled()
+  })
 })

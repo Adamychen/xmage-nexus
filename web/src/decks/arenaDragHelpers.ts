@@ -25,6 +25,7 @@ export function setFloatingCardDragImage(
     ghost.style.transform = 'rotate(4deg) scale(1.02)'
     ghost.style.zIndex = '999999'
     ghost.style.background = '#111'
+    ghost.style.opacity = '0.88'
     ghost.style.pointerEvents = 'none'
     document.body.appendChild(ghost)
   }
@@ -33,8 +34,12 @@ export function setFloatingCardDragImage(
     ? `<img src="${imageUrl}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:6px;" />`
     : `<div style="padding:12px;color:#ffffff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;height:100%;background:linear-gradient(135deg,#1b2430,#0d1218);text-align:center;border-radius:6px;">${cardName}</div>`
 
+  // Ancla el fantasma cerca de su esquina superior izquierda (no centrado en
+  // el cursor): así la carta arrastrada queda por debajo/derecha del puntero
+  // en vez de taparlo, dejando visibles los mensajes de "suelta aquí" de la
+  // zona de destino mientras el usuario apunta.
   try {
-    e.dataTransfer.setDragImage(ghost, 65, 91)
+    e.dataTransfer.setDragImage(ghost, 24, 28)
   } catch {}
 }
 
@@ -62,6 +67,7 @@ export function setFloatingStripDragImage(
     ghost.style.transform = 'rotate(-3deg)'
     ghost.style.zIndex = '999999'
     ghost.style.background = '#1a202c'
+    ghost.style.opacity = '0.9'
     ghost.style.pointerEvents = 'none'
     document.body.appendChild(ghost)
   }
@@ -75,7 +81,9 @@ export function setFloatingStripDragImage(
     </div>
   `
 
+  // Ancla cerca de la esquina superior izquierda por el mismo motivo que el
+  // fantasma de carta: deja el punto de suelta despejado bajo el cursor.
   try {
-    e.dataTransfer.setDragImage(ghost, 120, 20)
+    e.dataTransfer.setDragImage(ghost, 24, 16)
   } catch {}
 }

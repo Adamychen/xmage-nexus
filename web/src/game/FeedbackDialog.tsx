@@ -5,7 +5,7 @@ import PileDialog from './PileDialog'
 import TriggerOrderDialog from './TriggerOrderDialog'
 import VotingDialog from './VotingDialog'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
-import { useFeedbackForm } from './useFeedbackForm'
+import { useFeedbackForm, type UseFeedbackForm } from './useFeedbackForm'
 import StartingPlayerDialog from './feedbackModes/StartingPlayerDialog'
 import TargetBar from './feedbackModes/TargetBar'
 import ManaBar from './feedbackModes/ManaBar'
@@ -14,6 +14,20 @@ import GenericDialog from './feedbackModes/GenericDialog'
 
 export default function FeedbackDialog() {
   const form = useFeedbackForm()
+  const { prompt } = form
+
+  if (!prompt) return null
+
+  return (
+    <>
+      {/* P2: marcador para el comprobador de fidelidad (prompt pendiente pintado). */}
+      <span data-prompt-method={prompt.method} data-prompt-mode={prompt.mode} hidden aria-hidden="true" />
+      {renderPrompt(form)}
+    </>
+  )
+}
+
+function renderPrompt(form: UseFeedbackForm) {
   const { prompt, selected, setSelected, send, cancel, busy } = form
 
   if (!prompt) return null

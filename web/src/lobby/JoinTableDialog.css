@@ -118,6 +118,16 @@
   box-shadow: 0 0 12px rgba(255, 208, 112, 0.3);
 }
 
+.join-password-input:disabled {
+  opacity: 0.45;
+}
+
+.join-password-beta-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #f0a35e;
+}
+
 /* Deck Selection */
 .join-deck-section {
   display: flex;

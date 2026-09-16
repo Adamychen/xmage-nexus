@@ -161,7 +161,7 @@ export function DeckImportModal({
           <div className="deck-import-status-bar">
             <div className="import-status-left">
               <label className="import-file-btn">
-                <Icon name="folder" size={12} /> {t('common', 'search')}
+                <Icon name="folder" size={12} /> {t('decks', 'import_choose_file')}
                 <input
                   type="file"
                   accept=".dck,.txt,.dec,.cod,.o8d,.dek,.mtga,.mwdeck,.draft,.json"

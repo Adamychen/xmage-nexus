@@ -3,6 +3,7 @@ import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { APP_VERSION } from './version'
+import { downloadDiagnostics } from './diagnostics'
 import { getNews, markNewsSeen, renderNewsMarkdown, type NewsRelease } from './news'
 import './AboutModal.css'
 
@@ -133,6 +134,16 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
               <a href="https://github.com/magefree/mage" target="_blank" rel="noreferrer">
                 <Icon name="bookOpen" size={13} /> {t('system', 'xmage_link')}
               </a>
+            </div>
+            <div className="about-links">
+              <button
+                type="button"
+                data-testid="about-export-diag"
+                title={t('system', 'diag_export_hint')}
+                onClick={() => downloadDiagnostics()}
+              >
+                <Icon name="download" size={13} /> {t('system', 'diag_export')}
+              </button>
             </div>
           </div>
         ) : (

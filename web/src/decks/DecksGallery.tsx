@@ -9,6 +9,7 @@ import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
 import { DeckInspectorModal } from './DeckInspectorModal'
+import { ImportDeckDialog } from './ImportDeckDialog'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
@@ -100,11 +101,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [sortBy, setSortBy] = useState<'updated' | 'name' | 'size'>('updated')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [inspectingDeck, setInspectingDeck] = useState<DeckV2 | null>(null)
-  const [showImport, setShowImport] = useState(false)
-  const [importText, setImportText] = useState('')
-  const [importName, setImportName] = useState('')
-  const [importError, setImportError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   // Enriquecimiento de colores vía Scryfall en curso (C.13 nit: sin indicador).
   const [enriching, setEnriching] = useState(false)
 
@@ -245,32 +242,11 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     onEdit(cloned.id)
   }
 
-  const handleImport = async () => {
-    setImportError(null)
-    if (!importText.trim()) { setImportError(t('errors', 'deck_parse_failed')); return }
-    const parsed = parseAnyDeck(importText, importName.trim() || t('decks', 'import_placeholder'))
-    if (!parsed) { setImportError(t('errors', 'deck_parse_failed')); return }
-    setBusy(true)
-    try {
-      const v2: DeckV2 = {
-        ...parsed,
-        id: makeDeckId(),
-        format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform',
-        colors: [],
-        coverCard: parsed.cards[0],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        source: 'imported',
-      }
-      await storage.put(v2)
-      await load()
-      setSelectedId(v2.id)
-      setShowImport(false)
-      setImportText('')
-      setImportName('')
-    } finally {
-      setBusy(false)
-    }
+  const handleImportedDeck = async (deck: DeckV2) => {
+    await storage.put(deck)
+    await load()
+    setSelectedId(deck.id)
+    setMainView('my-decks')
   }
 
   const handleDelete = async () => {
@@ -381,7 +357,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       }
     }
     const parsed = parseAnyDeck(text, name || t('decks', 'import_placeholder'))
-    if (!parsed) { setImportError(`${t('errors', 'deck_read_failed')}: ${f.name}`); setShowImport(true); return }
+    if (!parsed) { await alertDialog(`${t('errors', 'deck_read_failed')}: ${f.name}`); return }
     const v2: DeckV2 = { ...parsed, id: makeDeckId(), format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform', colors: [], coverCard: parsed.cards[0], createdAt: Date.now(), updatedAt: Date.now(), source: 'imported' }
     await storage.put(v2); await load(); setSelectedId(v2.id)
   }
@@ -411,12 +387,17 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             </div>
           </div>
 
-          {mainView === 'my-decks' && (
-            <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
-          )}
-          {enriching && mainView === 'my-decks' && (
-            <span className="decks-enriching" role="status" aria-live="polite">{t('common', 'loading')}…</span>
-          )}
+          <div className="decks-gallery-header-right">
+            <button type="button" className="decks-import-cta" onClick={() => setShowImportDialog(true)}>
+              <Icon name="download" size={14} /> {t('decks', 'import_deck')}
+            </button>
+            {mainView === 'my-decks' && (
+              <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
+            )}
+            {enriching && mainView === 'my-decks' && (
+              <span className="decks-enriching" role="status" aria-live="polite">{t('common', 'loading')}…</span>
+            )}
+          </div>
         </div>
 
         {mainView === 'my-decks' && (
@@ -475,15 +456,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
           <footer className="decks-footer">
             <div className="decks-footer-left">
-              <label className="decks-footer-btn">
-                <Icon name="download" size={12} /> {t('decks', 'import_deck')}
-                <input type="file" accept=".dck,.txt,.cod,.dec,.o8d,.dek,.mtga,.mwdeck,.draft,.json" hidden onChange={async (e) => {
-                  const f = e.target.files?.[0]
-                  if (f) await handleFile(f)
-                  e.currentTarget.value = ''
-                }} />
-              </label>
-              <button type="button" className="decks-footer-btn" onClick={() => setShowImport(true)}><Icon name="clipboard" size={12} /> {t('decks', 'import_hint')}</button>
               <button type="button" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_backup_count', { count: customCount })}</button>
               <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
                 <Icon name="download" size={12} /> {t('decks', 'import_backup_json')}
@@ -513,20 +485,11 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         </div>
       )}
 
-      {showImport && (
-        <div className="overlay" onClick={() => setShowImport(false)}>
-          <div className="dialog panel decks-import-dialog" onClick={(e) => e.stopPropagation()}>
-            <h2><Icon name="download" size={17} /> {t('decks', 'import_deck')}</h2>
-            <p className="decks-import-hint">{t('decks', 'import_hint')}</p>
-            <label>{t('common', 'player')} <input value={importName} onChange={(e) => setImportName(e.target.value)} placeholder={t('decks', 'import_placeholder')} /></label>
-            <label>{t('decks', 'total_cards')} <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={12} placeholder={`NAME:${t('decks', 'import_placeholder')}\n4 [M10:146] Lightning Bolt\nSB: 2 [4ED:218] Red Elemental Blast\n\n—o—\nDeck\n4 Lightning Bolt (M10) 146\nSideboard\n2 Red Elemental Blast (4ED) 218`} /></label>
-            {importError && <div className="error-box">{importError}</div>}
-            <div className="decks-import-actions">
-              <button type="button" onClick={() => setShowImport(false)}>{t('common', 'cancel')}</button>
-              <button type="button" className="primary" disabled={busy} onClick={handleImport}>{busy ? t('common', 'loading') : t('decks', 'import_deck')}</button>
-            </div>
-          </div>
-        </div>
+      {showImportDialog && (
+        <ImportDeckDialog
+          onImport={handleImportedDeck}
+          onClose={() => setShowImportDialog(false)}
+        />
       )}
 
       {inspectingDeck && (
