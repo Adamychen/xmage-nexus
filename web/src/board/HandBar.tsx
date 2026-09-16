@@ -62,6 +62,7 @@ export default function HandBar({
       ref={zoneRef}
       className="hand-bar"
       data-testid="hand-bar"
+      data-hand-count={entries.length}
       style={
         {
           '--card-w': `${cardW}px`,

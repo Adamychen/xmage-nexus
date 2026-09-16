@@ -52,7 +52,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "4011b9bc-add4-4b36-80e5-53f7aeed1b0f",
@@ -497,7 +499,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "98e8bc66-79b6-4e44-baaf-9444513a005d",
@@ -736,7 +740,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "98e8bc66-79b6-4e44-baaf-9444513a005d",
@@ -2093,7 +2099,9 @@
     "watchedHands": {},
     "stack": {},
     "exiles": [
-      {}
+      {
+        "cards": {}
+      }
     ],
     "revealed": [],
     "lookedAt": [],

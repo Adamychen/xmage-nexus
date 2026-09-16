@@ -23,6 +23,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     )
     expect(container.querySelector('[data-testid="opp-hand-stack"]')).toBeNull()
     expect(container.querySelectorAll('.hand-card-slot').length).toBe(3)
+    expect(container.querySelector('.hand-zone')?.getAttribute('data-hand-count')).toBe('3')
   })
 
   it('collapses 3+ backs into one ×N stack with stackBacks', () => {
@@ -34,6 +35,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(stack?.getAttribute('data-count')).toBe('4')
     expect(stack?.textContent).toContain('×4')
     expect(container.querySelectorAll('.hand-card-slot').length).toBe(0)
+    expect(container.querySelector('.hand-zone')?.getAttribute('data-hand-count')).toBe('4')
   })
 
   it('keeps a single back as a plain slot', () => {

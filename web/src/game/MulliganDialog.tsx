@@ -10,6 +10,7 @@ import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
+import { confirmDialog } from '../ui/confirmDialog'
 import './MulliganDialog.css'
 
 interface MulliganDialogProps {
@@ -33,6 +34,12 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
   const keep = () => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed'))
   const mulligan = () => void send(() => cmds.sendPlayerBoolean(true, prompt.gameId), t('errors', 'send_failed_mulligan'))
+
+  const concede = async () => {
+    if (await confirmDialog(t('game', 'concede_confirm'), { danger: true })) {
+      void send(() => cmds.sendPlayerAction('CONCEDE', prompt.gameId), t('errors', 'send_failed'))
+    }
+  }
 
   const toggle = (id: string) => {
     setSelected((current) =>
@@ -121,6 +128,14 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             {prompt.required === false && (
               <button disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</button>
             )}
+            <button
+              className="mulligan-concede"
+              data-testid="mulligan-concede"
+              disabled={busy}
+              onClick={() => void concede()}
+            >
+              <Icon name="flag" size={13} /> {t('dialogs', 'mulligan_concede')}
+            </button>
           </div>
       </DialogShell>
     )
@@ -170,6 +185,14 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
           </button>
           <button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
             <Icon name="refresh" size={13} /> {t('dialogs', 'mulligan_btn')}
+          </button>
+          <button
+            className="mulligan-concede"
+            data-testid="mulligan-concede"
+            disabled={busy}
+            onClick={() => void concede()}
+          >
+            <Icon name="flag" size={13} /> {t('dialogs', 'mulligan_concede')}
           </button>
         </div>
     </DialogShell>

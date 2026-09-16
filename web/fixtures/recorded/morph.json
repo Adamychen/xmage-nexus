@@ -52,7 +52,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "c0793df6-0940-4232-a53d-17c1c4cd33a0",
@@ -388,7 +390,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "ccb59f0f-f6b2-494a-875b-0235a6c0be1b",
@@ -627,7 +631,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "ccb59f0f-f6b2-494a-875b-0235a6c0be1b",
@@ -866,7 +872,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "ccb59f0f-f6b2-494a-875b-0235a6c0be1b",
@@ -1105,7 +1113,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "ccb59f0f-f6b2-494a-875b-0235a6c0be1b",
@@ -1348,7 +1358,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "ccb59f0f-f6b2-494a-875b-0235a6c0be1b",
@@ -2695,7 +2707,9 @@
     "watchedHands": {},
     "stack": {},
     "exiles": [
-      {}
+      {
+        "cards": {}
+      }
     ],
     "revealed": [],
     "lookedAt": [],

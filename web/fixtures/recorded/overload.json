@@ -52,7 +52,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "0d8ee0b3-fbbe-4005-b2d8-72a96cef5a3d",
@@ -388,7 +390,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -627,7 +631,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -866,7 +872,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -1105,7 +1113,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -1344,7 +1354,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -1583,7 +1595,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -1822,7 +1836,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "055425fa-0868-469d-89ae-777c26564281",
@@ -3180,7 +3196,9 @@
       }
     },
     "exiles": [
-      {}
+      {
+        "cards": {}
+      }
     ],
     "revealed": [],
     "lookedAt": [],

@@ -46,8 +46,8 @@ export function mechanicsScenario(): Scenario {
             name: 'Samwise Gamgee',
             parentId: 'sam1',
             controlled: true,
-            isRingBearer: true,
-          } as any),
+            cardIcons: [{ cardIconType: 'RINGBEARER', hint: 'Ring-bearer' }],
+          }),
           land1: makePermanent({
             id: 'land1',
             name: 'Mountain',

@@ -1102,6 +1102,7 @@ export const zhs: TranslationSchema = {
     mulligan_decision_title: '调度决定',
     mulligan_keep_btn: '保留（{count}）',
     mulligan_btn: 'Mulligan',
+    mulligan_concede: '认输',
     cardgrid_select_targets: '选择目标',
     cardgrid_select_cards: '选择卡牌',
     cardgrid_search_placeholder: '按名称、类别或规则文本搜索…',

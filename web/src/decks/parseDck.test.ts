@@ -56,6 +56,28 @@ SB: 3 Pyroblast
     expect(d.sideboard[0].cardName).toBe('Pyroblast')
   })
 
+  it('does not drop lines with a Moxfield foil/etched marker suffix (*F*/*E*) (AUDIT)', () => {
+    const text = `1 Fatal Push (2XM) 93 *F*
+1 Defile (H1R) 13 *E*
+1 Mind Twist (4ED) 147`
+    const d = parseAnyDeck(text)!
+    expect(d.cards).toHaveLength(3)
+    expect(d.cards[0]).toMatchObject({ cardName: 'Fatal Push', setCode: '2XM', cardNumber: '93' })
+    expect(d.cards[1]).toMatchObject({ cardName: 'Defile', setCode: 'H1R', cardNumber: '13' })
+  })
+
+  it('preserves split/MDFC card names ("//") in Arena/MTGO plain text (AUDIT)', () => {
+    const arena = `Deck
+1 Fire // Ice (2X2) 233
+
+Sideboard
+`
+    expect(parseAnyDeck(arena)!.cards[0].cardName).toBe('Fire // Ice')
+
+    const mtgo = `1 Agadeem's Awakening // Agadeem, the Undercrypt`
+    expect(parseAnyDeck(mtgo)!.cards[0].cardName).toBe("Agadeem's Awakening // Agadeem, the Undercrypt")
+  })
+
   it('exportArena format', () => {
     const deck = {
       name: 'A',

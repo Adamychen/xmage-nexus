@@ -112,6 +112,7 @@ export default function ResourceBar({
           <>
             <button
               type="button"
+              data-library-count={player.libraryCount}
               className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}`}
               title={
                 player.topCard
@@ -135,6 +136,7 @@ export default function ResourceBar({
 
             <button
               type="button"
+              data-graveyard-count={graveyardCount}
               className={`resource-chip graveyard-chip clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}`}
               title={
                 topGraveyardCard
@@ -156,6 +158,7 @@ export default function ResourceBar({
 
             <button
               type="button"
+              data-exile-count={exileCount}
               className={`resource-chip exile-chip clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}`}
               title={
                 topExileCard
@@ -198,6 +201,7 @@ export default function ResourceBar({
           <>
             <button
               type="button"
+              data-library-count={player.libraryCount}
               className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}`}
               title={
                 player.topCard
@@ -225,6 +229,7 @@ export default function ResourceBar({
 
             <button
               type="button"
+              data-graveyard-count={graveyardCount}
               className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : ''}`}
               title={
                 topGraveyardCard
@@ -252,6 +257,7 @@ export default function ResourceBar({
 
             <button
               type="button"
+              data-exile-count={exileCount}
               className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : ''}`}
               title={
                 topExileCard

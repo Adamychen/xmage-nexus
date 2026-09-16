@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import MechanicsTray from './MechanicsTray'
+import MechanicsTray, { findRingBearer } from './MechanicsTray'
 import { setState, sniffDungeonEntry } from '../state/store'
 import { getState } from '../state/state'
+import theRingFrame from '../../fixtures/recorded/the-ring.json'
 import type { GameView, PlayerView } from '../net/types'
 
 vi.mock('../cards/cardImages', () => ({
@@ -54,7 +55,8 @@ describe('MechanicsTray', () => {
               perm1: {
                 id: 'perm1',
                 name: 'Samwise Gamgee',
-                isRingBearer: true,
+                displayName: 'Samwise Gamgee',
+                cardIcons: [{ cardIconType: 'RINGBEARER', text: '', hint: 'Ring-bearer' }],
               },
             },
           } as unknown as PlayerView,
@@ -71,6 +73,118 @@ describe('MechanicsTray', () => {
     const lockedCards = container.querySelectorAll('.ring-level-card.locked')
     expect(unlockedCards.length).toBe(2)
     expect(lockedCards.length).toBe(2)
+  })
+
+  it('reads the Ring level from the "The Ring" commandList rules length', () => {
+    setState({
+      game: {
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Frodo',
+            controlled: true,
+            life: 20,
+            commandList: [
+              {
+                id: 'ring-1',
+                name: 'The Ring',
+                rules: ['R1', 'R2', 'R3', 'R4', 'R5'],
+              },
+            ],
+            battlefield: {
+              perm1: {
+                id: 'perm1',
+                name: 'Samwise Gamgee',
+                displayName: 'Samwise Gamgee',
+                cardIcons: [{ cardIconType: 'RINGBEARER', hint: 'Ring-bearer' }],
+              },
+            },
+          } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+
+    const { getByText, container } = render(<MechanicsTray />)
+    expect(getByText('Nivel 4 / 4')).toBeDefined()
+    expect(container.querySelectorAll('.ring-level-card.unlocked').length).toBe(4)
+  })
+
+  it('shows "Sin objetivo" when The Ring is present with no Ring-bearer', () => {
+    setState({
+      game: {
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Frodo',
+            controlled: true,
+            life: 20,
+            commandList: [{ id: 'ring-1', name: 'The Ring', rules: ['R1'] }],
+            battlefield: {
+              perm1: {
+                id: 'perm1',
+                name: 'Swamp',
+                displayName: 'Swamp',
+                cardIcons: [],
+              },
+            },
+          } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+
+    const { getByText } = render(<MechanicsTray />)
+    expect(getByText('Sin objetivo')).toBeDefined()
+    expect(getByText('Nivel 1 / 4')).toBeDefined()
+  })
+
+  describe('findRingBearer', () => {
+    it('resolves the bearer from a cardIcons RINGBEARER entry', () => {
+      const player = {
+        playerId: 'p1',
+        name: 'Frodo',
+        battlefield: {
+          a: { id: 'a', name: 'Swamp', cardIcons: [] },
+          b: {
+            id: 'b',
+            name: 'Uruk-hai Berserker',
+            displayName: 'Uruk-hai Berserker',
+            cardIcons: [{ cardIconType: 'RINGBEARER', text: '', hint: 'Ring-bearer' }],
+          },
+        },
+      } as unknown as PlayerView
+
+      expect(findRingBearer(player)).toBe('Uruk-hai Berserker')
+    })
+
+    it('returns undefined without a RINGBEARER icon', () => {
+      const player = {
+        playerId: 'p1',
+        name: 'Frodo',
+        battlefield: {
+          a: {
+            id: 'a',
+            name: 'Grizzly Bears',
+            displayName: 'Grizzly Bears',
+            cardIcons: [{ cardIconType: 'OTHER_HAS_RESTRICTIONS', hint: 'Goaded' }],
+          },
+        },
+      } as unknown as PlayerView
+
+      expect(findRingBearer(player)).toBeUndefined()
+      expect(findRingBearer({ playerId: 'p1', name: 'Frodo' } as unknown as PlayerView)).toBeUndefined()
+    })
+
+    it('resolves the bearer from the recorded the-ring frame', () => {
+      const raw = theRingFrame as unknown as { gameView: GameView }
+      const me = raw.gameView.players?.find((p) => p.controlled)
+
+      expect(findRingBearer(me as PlayerView)).toBe('Uruk-hai Berserker')
+
+      const ring = ((me?.commandList ?? []) as Array<{ name?: string; rules?: string[] }>).find(
+        (c) => c.name === 'The Ring',
+      )
+      expect(ring?.rules?.length).toBe(3)
+    })
   })
 
   it('renders Active Dungeon tab with room progression', () => {

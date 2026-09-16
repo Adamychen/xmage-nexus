@@ -18,9 +18,9 @@ export interface GameView {
   lookedAt: RevealedView[]
   companion: RevealedView[]
   combat: CombatGroupView[]
-  phase: string
-  step: string
-  activePlayerId: string
+  phase: string | null
+  step: string | null
+  activePlayerId: string | null
   activePlayerName: string
   priorityPlayerName: string
   turn: number
@@ -181,7 +181,11 @@ export interface PermanentView extends CardView {
   mutateView?: MutateView
 }
 
-export type MutateView = Record<string, CardView>
+export interface MutateView {
+  name?: string
+  id?: string
+  cards: CardsView
+}
 
 export type CardsView = Record<string, CardView>
 
@@ -300,9 +304,9 @@ export interface CombatGroupView {
 }
 
 export interface ExileView {
-  name: string
+  name?: string
   cards: CardsView
-  zoneId?: string
+  id?: string
 }
 
 export interface RevealedView {

@@ -114,5 +114,30 @@ describe('useDeckMetadata printing changes', () => {
     await waitFor(() => expect(getCachedCardName('Armored Griffin', 'es')).toBe('Grifo acorazado'))
     expect(getCachedCardName('Sidar Kondo of Jamuraa', 'es')).toBeNull()
   })
+
+  it('no comparte imagen entre cartas sin set/número (import de texto plano) (AUDIT)', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      const name = decodeURIComponent(url.split('exact=')[1] ?? '')
+      const card = name === 'Sol Ring'
+        ? { name: 'Sol Ring', mana_cost: '{1}', cmc: 1, type_line: 'Artifact', colors: [], image_uris: { normal: 'https://img.test/sol-ring.jpg' } }
+        : { name: 'Arcane Signet', mana_cost: '{1}', cmc: 1, type_line: 'Artifact', colors: [], image_uris: { normal: 'https://img.test/arcane-signet.jpg' } }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(card) })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([
+        { cardName: 'Sol Ring', setCode: '', cardNumber: '', amount: 1 },
+        { cardName: 'Arcane Signet', setCode: '', cardNumber: '', amount: 1 },
+      ])
+    })
+    await waitFor(() => expect(result.current.metaMap.get('sol ring')?.imageUrl).toBe('https://img.test/sol-ring.jpg'))
+    await waitFor(() => expect(result.current.metaMap.get('arcane signet')?.imageUrl).toBe('https://img.test/arcane-signet.jpg'))
+    // La clave "/" (setCode y cardNumber vacíos) no debe existir: si existiera,
+    // pisaría la búsqueda por nombre y todas las cartas sin impresión mostrarían
+    // la imagen de la última resuelta.
+    expect(result.current.metaMap.has('/')).toBe(false)
+  })
 })
 

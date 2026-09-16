@@ -652,6 +652,16 @@ export async function runRecorder(driver) {
       if (val) ws.send(JSON.stringify({ action: 'sendPlayerString', args: { gameId, value: val } }))
       return
     }
+    // P4 (2026-09-16): elección de pila (Fact or Fiction, "separate into two
+    // piles"): el cliente web responde con un booleano (pile1=true,
+    // pile2=false). El driver puede elegir con onChoosePile(data, ctx);
+    // por defecto pile 1.
+    if (method === 'GAME_CHOOSE_PILE') {
+      const val = driver.onChoosePile ? driver.onChoosePile(m.data ?? {}, ctx) : true
+      ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId, value: val } }))
+      if (DEBUG) log('CHOOSE_PILE →', val)
+      return
+    }
     if (method === 'GAME_TARGET') {
       if (process.env.REC_DUMP_EVENTS === '1') {
         try {
@@ -680,6 +690,24 @@ export async function runRecorder(driver) {
     if (method === 'GAME_TARGET_AMOUNT' || method === 'GAME_GET_AMOUNT') {
       const val = driver.onTargetAmount ? driver.onTargetAmount(m.data, ctx) : (m.data?.min ?? 1)
       ws.send(JSON.stringify({ action: 'sendPlayerInteger', args: { gameId, value: val } }))
+      return
+    }
+    // P4 (2026-09-16): asignación de daño de combate (trample con uno o más
+    // bloqueadores) llega como GAME_GET_MULTI_AMOUNT — un ítem por mensaje del
+    // servidor (bloqueador o exceso al jugador), cada uno con su propio
+    // min/max/defaultValue. Se responde con sendPlayerString de los valores en
+    // el mismo orden, separados por espacio (igual que confirmMultiAmount en
+    // el cliente web). El defaultValue del servidor ya respeta deathtouch (el
+    // mínimo letal baja a 1), así que el default de la librería basta salvo
+    // que el driver quiera un reparto distinto.
+    if (method === 'GAME_GET_MULTI_AMOUNT') {
+      const items = Array.isArray(m.data?.messages) ? m.data.messages : []
+      const vals = driver.onMultiAmount
+        ? driver.onMultiAmount(items, ctx, m.data)
+        : items.map((it) => Number(it?.defaultValue ?? it?.min ?? 0))
+      const str = vals.map((v) => String(v)).join(' ')
+      if (DEBUG) log('MULTI_AMOUNT items=', JSON.stringify(items).slice(0, 300), '→', str)
+      ws.send(JSON.stringify({ action: 'sendPlayerString', args: { gameId, value: str } }))
       return
     }
     if (method === 'GAME_PLAY_MANA') {
@@ -792,6 +820,11 @@ export async function runRecorder(driver) {
     }
     if (m.type === 'event') {
       if (DEBUG) log('EVENT', m.method, 'prio/active=', getMe(m.data?.gameView)?.hasPriority, getMe(m.data?.gameView)?.isActive)
+      if (DEBUG && m.method === 'GAME_ERROR') {
+        const d = { ...(m.data ?? {}) }
+        delete d.gameView
+        log('GAME_ERROR data=', JSON.stringify(d).slice(0, 2000))
+      }
       ctx.dumpEvent(m)
       if (m.method?.startsWith('GAME_')) lastGameEventAt = Date.now()
       if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_'))) {
@@ -799,11 +832,15 @@ export async function runRecorder(driver) {
       }
       if (m.data?.gameView) lastGV = m.data.gameView
       if (m.method === 'GAME_UPDATE' || m.method === 'GAME_UPDATE_AND_INFORM') {
-        const gv = m.data?.gameView
+        const gv = m.data?.gameView ?? (Array.isArray(m.data?.players) ? m.data : undefined)
         if (gv) {
           lastGV = gv
           captureCheck(gv)
         }
+      }
+      if (m.method === 'GAME_OVER' && m.data?.gameView) {
+        lastGV = m.data.gameView
+        captureCheck(m.data.gameView)
       }
       handleEvent(m)
       for (let i = waiters.length - 1; i >= 0; i--) {
@@ -833,13 +870,13 @@ export async function runRecorder(driver) {
 
     let res = await send('createTable', {
       name: `rec-${driver.name}-${Date.now()}`,
-      gameType: 'Two Player Duel',
+      gameType: driver.tableGameType || 'Two Player Duel',
       deckType: driver.gameType || 'Constructed - Pioneer',
       winsNeeded: 1,
       playerTypes: ['HUMAN', 'SIM'],
       simDecks: [simDeck],
       skipInitShuffling: true,
-      skipStartingPlayerChoice: true,
+      skipStartingPlayerChoice: driver.skipStartingPlayerChoice !== false,
     })
     tableId = res.ok ? res.data?.tableId ?? res.data?.table?.tableId : null
     if (!tableId) {

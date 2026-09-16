@@ -22,6 +22,9 @@ import mage.view.PlayerView;
 import mage.view.TableClientMessage;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +58,9 @@ public class SimPlayer implements MageClient {
 
     private static final Logger logger = Logger.getLogger(SimPlayer.class.getName());
     private static final Pattern COLOR_PATTERN = Pattern.compile("\\{(R|W|U|B|G)\\}");
+    private static final String OPTION_POSSIBLE_TARGETS = "possibleTargets";
+    private static final String OPTION_CHOSEN_TARGETS = "chosenTargets";
+    private static final String OPTION_DONE_BUTTON = "UI.right.btn.text";
 
     private final String username;
     private final String password;
@@ -92,6 +98,19 @@ public class SimPlayer implements MageClient {
         this.skill = Math.min(10, Math.max(0, skill));
         this.version = new MageVersion(SimPlayer.class);
         this.session = new SessionImpl(this);
+    }
+
+    /** Constructor de test: inyecta la sesión (un doble puede registrar las
+     *  respuestas) sin conectar ni unirse a ninguna mesa. */
+    SimPlayer(String username, SessionImpl session) {
+        this.username = username;
+        this.password = "";
+        this.host = "";
+        this.port = 0;
+        this.deck = new DeckCardLists();
+        this.skill = 0;
+        this.version = new MageVersion(SimPlayer.class);
+        this.session = session;
     }
 
     public String getUsername() {
@@ -489,9 +508,26 @@ public class SimPlayer implements MageClient {
         }
     }
 
-    private void onTarget(GameClientMessage gcm) {
+    void onTarget(GameClientMessage gcm) {
         Set<UUID> targets = gcm.getTargets();
         if (targets == null || targets.isEmpty()) {
+            // La sobrecarga Cards de fireSelectTargetEvent (p.ej. la separación
+            // de pilas de Fact or Fiction) no rellena data.targets: los ids van
+            // en options.possibleTargets. Se responde como el cliente humano:
+            // sendPlayerUUID por carta y sendPlayerBoolean cuando el servidor ya
+            // marcó el mínimo satisfecho (options["UI.right.btn.text"] = "Done").
+            Map<String, Serializable> options = gcm.getOptions();
+            if (cardTargetDone(options)) {
+                logger.info("sim " + username + " target cards: selección completada -> done");
+                session.sendPlayerBoolean(gameId, false);
+                return;
+            }
+            UUID pick = cardTargetPick(options);
+            if (pick != null) {
+                logger.info("sim " + username + " target cards: elijo " + pick);
+                session.sendPlayerUUID(gameId, pick);
+                return;
+            }
             cancel();
             return;
         }
@@ -511,6 +547,43 @@ public class SimPlayer implements MageClient {
             return;
         }
         session.sendPlayerUUID(gameId, targets.iterator().next());
+    }
+
+    /** true si el GAME_TARGET de cartas (sobrecarga Cards) ya satisfizo su
+     *  mínimo: entonces HumanPlayer.getOptions añade options["UI.right.btn.text"]
+     *  = "Done" y toca cerrar la selección con sendPlayerBoolean. */
+    static boolean cardTargetDone(Map<String, Serializable> options) {
+        return options != null
+                && options.containsKey(OPTION_DONE_BUTTON)
+                && !optionUuids(options, OPTION_CHOSEN_TARGETS).isEmpty();
+    }
+
+    /** Carta a seleccionar de options.possibleTargets (la menor por id, orden
+     *  determinista); null si no hay ninguna. */
+    static UUID cardTargetPick(Map<String, Serializable> options) {
+        return optionUuids(options, OPTION_POSSIBLE_TARGETS).stream()
+                .min(Comparator.comparing(UUID::toString))
+                .orElse(null);
+    }
+
+    private static Set<UUID> optionUuids(Map<String, Serializable> options, String key) {
+        Set<UUID> ids = new LinkedHashSet<>();
+        Object value = options == null ? null : options.get(key);
+        if (!(value instanceof Collection)) {
+            return ids;
+        }
+        for (Object item : (Collection<?>) value) {
+            if (item instanceof UUID) {
+                ids.add((UUID) item);
+            } else if (item instanceof String) {
+                try {
+                    ids.add(UUID.fromString((String) item));
+                } catch (IllegalArgumentException ignored) {
+                    // no es un id: se ignora
+                }
+            }
+        }
+        return ids;
     }
 
     // ============================ helpers ============================

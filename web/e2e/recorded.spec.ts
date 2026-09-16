@@ -35,13 +35,22 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
 
         expect(pageErrors).toEqual([])
 
-        // El tablero pinta al menos una carta del humano.
-        const myCard = page.locator('.player-zone .card-slot').first()
-        await expect(myCard).toBeVisible()
+        // El tablero pinta al menos una carta del humano (salvo fin de partida
+        // en mulligan: sin mano/campo, solo el estado de la partida).
+        if (entry.assert === 'hasConcedeMulligan') {
+          await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
+          await expect(page.locator('.player-zone .card-slot')).toHaveCount(0)
+        } else if (entry.assert === 'hasKarnRestart') {
+          // Reinicio de Karn: mesa vacía pero mano nueva (7 cartas).
+          await expect(page.locator('.hand-zone .card-slot').first()).toBeVisible()
+        } else {
+          const myCard = page.locator('.player-zone .card-slot').first()
+          await expect(myCard).toBeVisible()
+        }
 
         // Sin grupos de attachment heredados (el render de mutate/pila es distinto).
-        // El frame de aura sí trae adjunto propio: se aserta aparte.
-        if (entry.assert === 'hasAttachedAura') {
+        // Los frames con adjunto propio (aura, Lure forzando bloqueo) se asertan aparte.
+        if (entry.assert === 'hasAttachedAura' || entry.assert === 'hasMustBlock' || entry.assert === 'hasTrampleDeathtouch') {
           await expect(page.locator('.card-attachment-group')).not.toHaveCount(0)
         } else {
           await expect(page.locator('.card-attachment-group')).toHaveCount(0)

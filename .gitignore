@@ -93,4 +93,7 @@ node_modules/.vite
 /web/test-results
 /web/e2e/shots
 /web/coverage
+# recorder debug dumps (REC_DUMP_EVENTS=1)
+/web/fixtures/recorded/*.events.jsonl
 .aider*
+/web/.run

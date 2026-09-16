@@ -13,6 +13,7 @@
 // 1.4.61-V1): arrancar con `node scripts/ctl.mjs restart all` y grabar.
 
 import { spawn } from 'node:child_process'
+import * as fs from 'node:fs'
 import { runRecorder, runTournamentRecorder, getMe } from './rec-lib.mjs'
 
 const MUTATE_DECK = {
@@ -1263,6 +1264,11 @@ const REGISTRY = {
   planeswalker: makePlaneswalkerDriver,
   saga: makeSagaDriver,
   morph: makeMorphDriver,
+  ward: makeWardDriver,
+  'illegal-target': makeIllegalTargetDriver,
+  'upto-zero': makeUpToZeroDriver,
+  redirect: makeRedirectDriver,
+  'big-stack': makeBigStackDriver,
   'sealed-pool': makeSealedPoolDriver,
   'tournament-end': makeTournamentEndDriver,
 }
@@ -3519,6 +3525,397 @@ function makeMorphDriver() {
       const me = (gv.players ?? []).find((p) => p?.controlled)
       return Object.values(me?.battlefield ?? {}).some((c) => c?.faceDown === true)
     },
+  }
+}
+
+// P4 — Ward vía cheatSetup (§3.4): Lightning Bolt en mano + 2 Montañas;
+// Sythis, Harvest's Hand (Ward {1}, sin ETB) al campo del rival. Al targetear
+// dispara la pregunta de pago (GAME_ASK "pay ... Ward"); se paga y el Bolt
+// sigue su curso, matando a Sythis (1/3, 3 de daño).
+function makeWardDriver() {
+  return {
+    name: 'ward',
+    outFile: 'ward.json',
+    deck: {
+      name: 'Mage Web ward rec',
+      cards: [{ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: tierra inicial')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Bolt en mano, 2 Montañas) + Sythis (Ward) al rival')
+        const rival = (gv.players ?? []).find((p) => !p?.controlled)
+        const rid = rival?.playerId ?? rival?.id
+        void ctx
+          .cheatSetup({ hand: ['Lightning Bolt'], battlefield: ['Mountain', 'Mountain'] })
+          .then(() => (rid ? ctx.cheatSetup({ battlefield: ["Sythis, Harvest's Hand"] }, rid) : null))
+        return
+      }
+      const rival = (gv.players ?? []).find((p) => !p?.controlled)
+      const sythisOnRival = Object.values(rival?.battlefield ?? {}).some((c) => /sythis/i.test(c?.name ?? ''))
+      if (ctx.cardInHand('Lightning Bolt') && sythisOnRival) {
+        ctx.log('onSelect: lanzo Lightning Bolt a Sythis (Ward)')
+        ctx.playCardByName('Lightning Bolt')
+        return
+      }
+      ctx.pass()
+    },
+    onAsk(q, ctx) {
+      if (/ward/i.test(q)) {
+        ctx.log('onAsk: pago Ward')
+        return true
+      }
+      return undefined
+    },
+    onTarget(ctx) {
+      const rival = (ctx.gv?.players ?? []).find((p) => !p?.controlled)
+      const sythis = Object.values(rival?.battlefield ?? {}).find((c) => /sythis/i.test(c?.name ?? ''))
+      if (sythis) {
+        ctx.log('onTarget: Bolt → Sythis (Ward)')
+        return sythis.id
+      }
+      return undefined
+    },
+    captureWhen(gv) {
+      const rival = (gv.players ?? []).find((p) => !p?.controlled)
+      const gy = Object.values(rival?.graveyard ?? {})
+      return gy.some((c) => /sythis/i.test(c?.name ?? ''))
+    },
+  }
+}
+
+// P4 — objetivo ilegal al resolver vía cheatSetup (§3.4): Lightning Bolt
+// propio a nuestro Elvish Mystic; en la misma ventana de prioridad (antes de
+// pasar) activamos Viscera Seer para sacrificar ese mismo Mystic — el Bolt
+// se queda sin objetivo legal y se elimina de la pila sin efecto ("countered
+// by rules") al intentar resolver.
+function makeIllegalTargetDriver() {
+  return {
+    name: 'illegal-target',
+    outFile: 'illegal-target.json',
+    deck: {
+      name: 'Mage Web illegal rec',
+      cards: [{ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    _cast: false,
+    _sacked: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: tierra inicial')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Bolt en mano, Mystic + Viscera Seer al campo)')
+        void ctx.cheatSetup({ hand: ['Lightning Bolt'], battlefield: ['Mountain', 'Elvish Mystic', 'Viscera Seer'] })
+        return
+      }
+      if (!this._cast) {
+        if (ctx.cardInHand('Lightning Bolt') && ctx.findOnBattlefield('Elvish Mystic')) {
+          ctx.log('onSelect: lanzo Lightning Bolt a mi propio Mystic')
+          ctx.playCardByName('Lightning Bolt')
+          this._cast = true
+        } else ctx.pass()
+        return
+      }
+      if (!this._sacked) {
+        const stack = Object.values(gv.stack ?? {})
+        const boltOnStack = stack.some((s) => /lightning bolt/i.test(s?.name ?? ''))
+        const mysticAlive = !!ctx.findOnBattlefield('Elvish Mystic')
+        if (boltOnStack && mysticAlive) {
+          const id = ctx.playAbility('Viscera Seer')
+          if (id) {
+            this._sacked = true
+            ctx.log('onSelect: activo Viscera Seer para sacrificar al Mystic (objetivo del Bolt)')
+            return
+          }
+        }
+      }
+      ctx.pass()
+    },
+    onTarget(ctx, question) {
+      const q = String(question ?? '')
+      if (/scry/i.test(q)) return false
+      const mystic = ctx.findOnBattlefield('Elvish Mystic')
+      if (mystic) {
+        ctx.log('onTarget:', q.slice(0, 40), '→ Mystic')
+        return mystic
+      }
+      return undefined
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const gy = Object.values(me?.graveyard ?? {})
+      const names = gy.map((c) => String(c?.name ?? '').toLowerCase())
+      return names.includes('lightning bolt') && names.includes('elvish mystic')
+    },
+  }
+}
+
+// P4 — "hasta N / cero objetivos" vía cheatSetup (§3.4): Frost Breath ("Tap
+// up to two target creatures... Scry 1") en mano; se declina el objetivo
+// (0 de un máximo de 2, con un Mystic rival legal disponible) y también el
+// scry (declinar = arriba, igual que en el driver scry). Prueba: el Mystic
+// rival sigue sin tocar (no se le aplicó el tap del hechizo).
+function makeUpToZeroDriver() {
+  return {
+    name: 'upto-zero',
+    outFile: 'upto-zero.json',
+    deck: {
+      name: 'Mage Web upto rec',
+      cards: [{ cardName: 'Island', setCode: 'iko', cardNumber: '265', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: tierra inicial')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Frost Breath en mano, 2 Islas) + Mystic al rival')
+        const rival = (gv.players ?? []).find((p) => !p?.controlled)
+        const rid = rival?.playerId ?? rival?.id
+        void ctx
+          .cheatSetup({ hand: ['Frost Breath'], battlefield: ['Island', 'Island'] })
+          .then(() => (rid ? ctx.cheatSetup({ battlefield: ['Elvish Mystic'] }, rid) : null))
+        return
+      }
+      if (ctx.cardInHand('Frost Breath')) {
+        ctx.log('onSelect: lanzo Frost Breath declinando objetivos')
+        ctx.playCardByName('Frost Breath')
+        return
+      }
+      ctx.pass()
+    },
+    // Declinamos siempre: 0 de un máximo de 2 objetivos, y el scry queda
+    // arriba (mismo patrón que el driver scry).
+    onTarget(ctx, question) {
+      ctx.log('onTarget: declino', String(question ?? '').slice(0, 60))
+      return false
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const gy = Object.values(me?.graveyard ?? {})
+      return gy.some((c) => /frost breath/i.test(c?.name ?? ''))
+    },
+  }
+}
+
+// P4 — cambiar objetivo / copiar hechizo vía cheatSetup (§3.4): Lightning
+// Bolt (a la cara del rival) + Redirect en mano ({R} + {U}{U}, Mountain +
+// 2 Islas). Se lanza el Bolt, luego Redirect apuntando al propio Bolt en la
+// pila; al resolver Redirect pide el nuevo objetivo del Bolt → nos lo
+// redirigimos a nosotros mismos. Prueba: nuestra vida baja 3 (20→17) y la
+// del rival queda intacta.
+function makeRedirectDriver() {
+  return {
+    name: 'redirect',
+    outFile: 'redirect.json',
+    deck: {
+      name: 'Mage Web redirect rec',
+      cards: [
+        { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 1 },
+        { cardName: 'Island', setCode: 'iko', cardNumber: '265', amount: 59 },
+      ],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    _boltCast: false,
+    _redirectCast: false,
+    _boltTargeted: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: tierra inicial')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Bolt + Redirect en mano, Mountain + 2 Islas)')
+        void ctx.cheatSetup({ hand: ['Lightning Bolt', 'Redirect'], battlefield: ['Mountain', 'Island', 'Island'] })
+        return
+      }
+      if (!this._boltCast) {
+        if (ctx.cardInHand('Lightning Bolt') && ctx.untappedMana() >= 1) {
+          ctx.log('onSelect: lanzo Lightning Bolt a la cara del rival')
+          ctx.playCardByName('Lightning Bolt')
+          this._boltCast = true
+        } else ctx.pass()
+        return
+      }
+      if (!this._redirectCast) {
+        const boltOnStack = Object.values(gv.stack ?? {}).some((s) => /lightning bolt/i.test(s?.name ?? ''))
+        if (boltOnStack && ctx.cardInHand('Redirect') && ctx.untappedMana() >= 2) {
+          ctx.log('onSelect: lanzo Redirect sobre el Bolt')
+          ctx.playCardByName('Redirect')
+          this._redirectCast = true
+          return
+        }
+      }
+      ctx.pass()
+    },
+    // Redirect auto-resuelve su propio objetivo (el Bolt es el único hechizo
+    // legal en la pila — mismo patrón "un solo legal" que any-color-mana) y
+    // en vez de un segundo GAME_TARGET llega un GAME_ASK "Change this 1 of 1
+    // target: ...?" (ver onAsk). Solo quedan dos decisiones de GAME_TARGET:
+    // (1) el Bolt al lanzarse → cara del rival, (2) tras aceptar el cambio,
+    // el nuevo objetivo del Bolt → nosotros mismos.
+    onTarget(ctx, question) {
+      const q = String(question ?? '').slice(0, 60)
+      if (!this._boltTargeted) {
+        this._boltTargeted = true
+        const rival = (ctx.gv?.players ?? []).find((p) => !p?.controlled)
+        const rid = rival?.playerId ?? rival?.id
+        ctx.log('onTarget:', q, '→ Bolt a la cara del rival')
+        return rid
+      }
+      const me = ctx.me
+      const myId = me?.playerId ?? me?.id
+      ctx.log('onTarget:', q, '→ nuevo objetivo del Bolt: yo mismo')
+      return myId
+    },
+    onAsk(q, ctx) {
+      if (/change this/i.test(q)) {
+        ctx.log('onAsk: SÍ, cambio el objetivo del Bolt')
+        return true
+      }
+      return undefined
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const gy = Object.values(me?.graveyard ?? {}).map((c) => String(c?.name ?? '').toLowerCase())
+      return gy.includes('lightning bolt') && gy.includes('redirect') && Number(me?.life ?? 20) < 20
+    },
+  }
+}
+
+// P4 — pila de 10+ objetos vía cheatSetup (§3.5): 10x Opt en mano + 10 Islas.
+// Se lanzan los 10 sin pasar prioridad entre medias (Opt no pide objetivo al
+// lanzarse, solo al resolver) hasta que la pila tiene 10 hechizos, para
+// comprobar scroll/legibilidad de una pila grande.
+function makeBigStackDriver() {
+  return {
+    name: 'big-stack',
+    outFile: 'big-stack.json',
+    deck: {
+      name: 'Mage Web stack rec',
+      cards: [{ cardName: 'Island', setCode: 'iko', cardNumber: '265', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: tierra inicial')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (10x Opt en mano, 10 Islas al campo)')
+        void ctx.cheatSetup({
+          hand: Array(10).fill('Opt'),
+          battlefield: Array(10).fill('Island'),
+        })
+        return
+      }
+      const stackLen = Object.keys(gv.stack ?? {}).length
+      if (stackLen < 10 && ctx.cardInHand('Opt')) {
+        ctx.log('onSelect: lanzo Opt', stackLen + 1, '/10')
+        ctx.playCardByName('Opt')
+        return
+      }
+      ctx.pass()
+    },
+    captureWhen(gv) {
+      return Object.keys(gv?.stack ?? {}).length >= 10
+    },
+  }
+}
+
+const DRIVERS_DIR = new URL('./drivers/', import.meta.url)
+if (fs.existsSync(DRIVERS_DIR)) {
+  for (const file of fs.readdirSync(DRIVERS_DIR).sort()) {
+    if (!file.endsWith('.mjs')) continue
+    const mod = await import(new URL(file, DRIVERS_DIR).href)
+    Object.assign(REGISTRY, mod.drivers ?? {})
   }
 }
 

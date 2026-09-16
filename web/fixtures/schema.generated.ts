@@ -7,9 +7,9 @@ import { z } from 'zod'
 export const gameViewSchema = z.object({
   priorityTime: z.number(),
   turn: z.number(),
-  phase: z.string(),
-  step: z.string(),
-  activePlayerId: z.string(),
+  phase: z.union([z.string(), z.null()]).optional(),
+  step: z.union([z.string(), z.null()]).optional(),
+  activePlayerId: z.union([z.string(), z.null()]).optional(),
   activePlayerName: z.string(),
   priorityPlayerName: z.string(),
   players: z.array(z.record(z.string(), z.unknown())).nullish(),

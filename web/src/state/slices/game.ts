@@ -64,7 +64,7 @@ export interface GameSlice {
   gameId: string | null
   gameChatId: string | null
   playableIds: string[]
-  playableWindow: { turn: number; phase: string } | null
+  playableWindow: { turn: number; phase: string | null } | null
   combat: CombatState | null
   gameEnd: GameEndInfo | null
   myDeck: DeckJson | null

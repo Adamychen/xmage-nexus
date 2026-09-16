@@ -118,8 +118,8 @@ export function consolidatePlayables(
   method: string,
   currentFeedback: FeedbackPrompt | null | undefined,
   currentPlayableIds: string[],
-  currentPlayableWindow: { turn: number; phase: string } | null,
-): { ids: string[]; window: { turn: number; phase: string } | null } {
+  currentPlayableWindow: { turn: number; phase: string | null } | null,
+): { ids: string[]; window: { turn: number; phase: string | null } | null } {
   const turn = game.turn
   const phase = game.phase
   const objects = game.canPlayObjects?.objects
@@ -157,5 +157,5 @@ export function isOlderThanCurrentGame(
   if (currentGame.myPlayerId !== next.myPlayerId) return false
   if (next.turn < currentGame.turn) return true
   if (next.turn > currentGame.turn) return false
-  return (STEP_RANK[next.step] ?? 0) < (STEP_RANK[currentGame.step] ?? 0)
+  return (next.step ? STEP_RANK[next.step] ?? 0 : 0) < (currentGame.step ? STEP_RANK[currentGame.step] ?? 0 : 0)
 }

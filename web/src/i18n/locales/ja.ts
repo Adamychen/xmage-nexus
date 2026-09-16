@@ -1102,6 +1102,7 @@ export const ja: TranslationSchema = {
     mulligan_decision_title: 'マリガン判定',
     mulligan_keep_btn: 'キープ（{count}）',
     mulligan_btn: 'Mulligan',
+    mulligan_concede: '投了',
     cardgrid_select_targets: '対象を選択',
     cardgrid_select_cards: 'カード選択',
     cardgrid_search_placeholder: '名前、カードタイプ、ルールで検索…',

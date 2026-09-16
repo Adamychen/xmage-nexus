@@ -45,9 +45,9 @@
           "type": "array",
           "items": { "$ref": "#/definitions/CombatGroupView" }
         },
-        "phase": { "type": "string" },
-        "step": { "type": "string" },
-        "activePlayerId": { "type": "string" },
+        "phase": { "type": ["string", "null"] },
+        "step": { "type": ["string", "null"] },
+        "activePlayerId": { "type": ["string", "null"] },
         "activePlayerName": { "type": "string" },
         "priorityPlayerName": { "type": "string" },
         "turn": { "type": "number" },
@@ -258,8 +258,13 @@
     },
     "MutateView": {
       "type": "object",
-      "description": "Constituent cards of a mutated permanent, ordered top->bottom. Real XMage: PermanentView.mutateView (extends CardsView). Keys are card UUIDs.",
-      "additionalProperties": { "$ref": "#/definitions/CardView" }
+      "description": "Real XMage: PermanentView.mutateView (extends CardsView, itself extends LinkedHashMap<UUID,CardView>) plus its own name/id (the base permanent). JsonUtil (Mage.Proxy) serializes Map-subclasses that declare their own fields as {..fields.., cards:{...map entries...}} — name/id may be absent on frames recorded before this was fixed (2026-09-16).",
+      "properties": {
+        "name": { "type": "string" },
+        "id": { "type": "string" },
+        "cards": { "$ref": "#/definitions/CardsView" }
+      },
+      "required": ["cards"]
     },
     "CardsView": {
       "type": "object",
@@ -420,12 +425,13 @@
     },
     "ExileView": {
       "type": "object",
+      "description": "Real XMage: ExileView (extends CardsView, itself extends LinkedHashMap<UUID,CardView>) plus its own name/id (the exile zone). JsonUtil (Mage.Proxy) serializes Map-subclasses that declare their own fields as {..fields.., cards:{...map entries...}} — name/id may be absent on frames recorded before this was fixed (2026-09-16).",
       "properties": {
         "name": { "type": "string" },
         "cards": { "$ref": "#/definitions/CardsView" },
-        "zoneId": { "type": "string" }
+        "id": { "type": "string" }
       },
-      "required": ["name", "cards"]
+      "required": ["cards"]
     },
     "RevealedView": {
       "type": "object",

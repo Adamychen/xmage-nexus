@@ -492,7 +492,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "4ef9100c-e979-4961-aaa3-9a9017fb0cdd",
@@ -731,7 +733,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "4ef9100c-e979-4961-aaa3-9a9017fb0cdd",
@@ -970,7 +974,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "4ef9100c-e979-4961-aaa3-9a9017fb0cdd",
@@ -2204,113 +2210,115 @@
     "stack": {},
     "exiles": [
       {
-        "aa61347c-fc60-428e-9a05-0eeadcfdbd22": {
-          "parentId": null,
-          "controllerId": null,
-          "controllerName": null,
-          "name": "Faithless Looting",
-          "displayName": "Faithless Looting",
-          "displayFullName": "Faithless Looting",
-          "rules": [
-            "Draw two cards, then discard two cards.",
-            "Flashback {2}{R} <i>(You may cast this card from your graveyard for its flashback cost. Then exile it.)</i>"
-          ],
-          "power": "0",
-          "toughness": "0",
-          "loyalty": "",
-          "defense": "",
-          "startingLoyalty": "",
-          "startingDefense": "",
-          "cardTypes": [
-            "SORCERY"
-          ],
-          "subTypes": [],
-          "superTypes": [],
-          "color": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": true,
-            "green": false
-          },
-          "frameColor": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": false,
-            "green": false
-          },
-          "frameStyle": "M15_NORMAL",
-          "manaCostLeftStr": [
-            "{R}"
-          ],
-          "manaCostRightStr": [],
-          "manaValue": 1,
-          "rarity": "RARE",
-          "mageObjectType": "CARD",
-          "isAbility": false,
-          "abilityType": null,
-          "isToken": false,
-          "ability": null,
-          "imageFileName": "",
-          "imageNumber": 0,
-          "extraDeckCard": false,
-          "transformable": false,
-          "secondCardFace": null,
-          "transformed": false,
-          "flipCard": false,
-          "faceDown": false,
-          "alternateName": null,
-          "isSplitCard": false,
-          "leftSplitName": null,
-          "leftSplitCostsStr": null,
-          "leftSplitRules": null,
-          "leftSplitTypeLine": null,
-          "rightSplitName": null,
-          "rightSplitCostsStr": null,
-          "rightSplitRules": null,
-          "rightSplitTypeLine": null,
-          "isDoubleFacedCard": false,
-          "artRect": "NORMAL",
-          "targets": null,
-          "pairedCard": null,
-          "bandedCards": null,
-          "paid": false,
-          "counters": null,
-          "controlledByOwner": true,
-          "zone": null,
-          "rotate": false,
-          "hideInfo": false,
-          "canAttack": false,
-          "canBlock": false,
-          "inViewerOnly": false,
-          "cardIcons": [],
-          "originalPower": {
-            "baseValue": 0,
-            "modifiedBaseValue": 0,
-            "boostedValue": 0,
-            "cardValue": "0"
-          },
-          "originalToughness": {
-            "baseValue": 0,
-            "modifiedBaseValue": 0,
-            "boostedValue": 0,
-            "cardValue": "0"
-          },
-          "originalColorIdentity": "{R}",
-          "originalIsCopy": false,
-          "id": "aa61347c-fc60-428e-9a05-0eeadcfdbd22",
-          "expansionSetCode": "PIDW",
-          "cardNumber": "2",
-          "usesVariousArt": false,
-          "gameObject": true,
-          "isChoosable": false,
-          "isSelected": false,
-          "playableStats": {
-            "basicManaAbilities": [],
-            "basicPlayAbilities": [],
-            "basicCastAbilities": [],
-            "other": []
+        "cards": {
+          "aa61347c-fc60-428e-9a05-0eeadcfdbd22": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Faithless Looting",
+            "displayName": "Faithless Looting",
+            "displayFullName": "Faithless Looting",
+            "rules": [
+              "Draw two cards, then discard two cards.",
+              "Flashback {2}{R} <i>(You may cast this card from your graveyard for its flashback cost. Then exile it.)</i>"
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "SORCERY"
+            ],
+            "subTypes": [],
+            "superTypes": [],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": true,
+              "green": false
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [
+              "{R}"
+            ],
+            "manaCostRightStr": [],
+            "manaValue": 1,
+            "rarity": "RARE",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": null,
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{R}",
+            "originalIsCopy": false,
+            "id": "aa61347c-fc60-428e-9a05-0eeadcfdbd22",
+            "expansionSetCode": "PIDW",
+            "cardNumber": "2",
+            "usesVariousArt": false,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
           }
         }
       }

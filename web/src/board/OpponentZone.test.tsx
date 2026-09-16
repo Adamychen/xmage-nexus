@@ -101,7 +101,10 @@ describe('OpponentZone', () => {
     )
 
     // Creature with attachment group
-    expect(container.querySelector('.card-attachment-group')).not.toBeNull()
+    const group = container.querySelector('.card-attachment-group')
+    expect(group).not.toBeNull()
+    expect(group?.getAttribute('data-attachment-host')).toBe('creature-1')
+    expect(group?.querySelector('.attachment-subcard')?.getAttribute('data-card-id')).toBe('aura-1')
     expect(getByText('Grizzly Bears')).not.toBeNull()
     expect(getByText('Pacifism')).not.toBeNull()
 
@@ -126,8 +129,10 @@ describe('OpponentZone', () => {
           toughness: '3',
           mutated: true,
           mutateView: {
-            'under-1': { id: 'under-1', name: 'Gemrazer', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
-            'under-2': { id: 'under-2', name: 'Pouncing Shoreshark', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+            cards: {
+              'under-1': { id: 'under-1', name: 'Gemrazer', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+              'under-2': { id: 'under-2', name: 'Pouncing Shoreshark', manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+            },
           },
         } as any,
       },

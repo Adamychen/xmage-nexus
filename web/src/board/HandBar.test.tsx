@@ -31,6 +31,7 @@ describe('HandBar', () => {
     const slots = container.querySelectorAll('.hand-bar .hand-card-slot')
     expect(slots.length).toBe(3)
     expect(container.querySelectorAll('.hand-bar .hand-card').length).toBe(3)
+    expect(getByTestId('hand-bar').getAttribute('data-hand-count')).toBe('3')
   })
 
   it('exposes sizing CSS variables, sink and the visible band height', () => {

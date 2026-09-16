@@ -91,6 +91,7 @@ export default function HandZone({
     <div
       ref={zoneRef}
       className={`hand-zone ${faceDown ? 'face-down' : ''} ${compact ? 'compact' : ''}`}
+      data-hand-count={entries.length}
       style={{ '--card-w': `${cardW}px`, '--overlap': `${overlap}px` } as React.CSSProperties}
     >
       {shownFaceUp.map(([id, card]) => {

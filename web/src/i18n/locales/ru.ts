@@ -1097,6 +1097,7 @@ export const ru: TranslationSchema = {
     mulligan_decision_title: 'РЕШЕНИЕ ПО МУЛИГАНУ',
     mulligan_keep_btn: 'Оставить ({count})',
     mulligan_btn: 'Mulligan',
+    mulligan_concede: 'Сдаться',
     cardgrid_select_targets: 'ВЫБОР ЦЕЛЕЙ',
     cardgrid_select_cards: 'ВЫБОР КАРТ',
     cardgrid_search_placeholder: 'Поиск по имени, типу карты или тексту правил…',

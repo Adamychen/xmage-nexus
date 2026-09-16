@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CardView, PermanentView, PlayerView } from '../net/types'
+import type { CardView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
@@ -54,12 +54,12 @@ function getFallbackRooms(t: (c: any, k: any) => string): DungeonRoomDef[] {
   ]
 }
 
-function findRingBearer(player: PlayerView): string | undefined {
+export function findRingBearer(player: PlayerView): string | undefined {
   const battlefield = player.battlefield ?? {}
   for (const perm of Object.values(battlefield)) {
-    const p = perm as PermanentView & { isRingBearer?: boolean; ringBearer?: boolean }
-    if (p.isRingBearer || p.ringBearer) {
-      return p.displayName || p.name || 'Creature'
+    const icons = perm.cardIcons ?? []
+    if (icons.some((icon) => icon.cardIconType === 'RINGBEARER')) {
+      return perm.displayName || perm.name || 'Creature'
     }
   }
   return undefined

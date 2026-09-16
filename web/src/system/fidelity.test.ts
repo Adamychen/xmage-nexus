@@ -40,7 +40,7 @@ function makeGame(overrides: Record<string, unknown> = {}): GameView {
 }
 
 function cardState(overrides: Partial<PaintedCardState> = {}): PaintedCardState {
-  return { ownerId: null, tapped: null, pt: null, damage: null, counters: null, attacking: false, ...overrides }
+  return { ownerId: null, tapped: null, pt: null, damage: null, counters: null, attacking: false, isAttachment: false, ...overrides }
 }
 
 function painted(ids: string[], statusText: string | null = 'Turno 5', pills = 1, extra: Partial<PaintedSnapshot> = {}): PaintedSnapshot {
@@ -53,6 +53,9 @@ function painted(ids: string[], statusText: string | null = 'Turno 5', pills = 1
     hasPromptMarker: false,
     gameStatusText: statusText,
     activePhasePills: pills,
+    attachmentGroups: [],
+    zoneCounts: {},
+    myHandCount: null,
     ...extra,
   }
 }
@@ -213,9 +216,158 @@ describe('fidelity (P2)', () => {
         damage: '1',
         counters: '+1/+1:2|shield:1',
         attacking: true,
+        isAttachment: false,
       })
       expect(snap.players).toEqual([{ playerId: 'p1', life: '17' }])
       expect(snap.hasPromptMarker).toBe(true)
+    })
+  })
+
+  describe('v3: adjuntos y tamaños de mano/biblioteca/cementerio/exilio', () => {
+    const hostPerm = (overrides: Record<string, unknown> = {}) => ({
+      id: 'host',
+      name: 'Elvish Mystic',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      attachments: ['aura-1'],
+      ...overrides,
+    })
+    const auraPerm = { id: 'aura-1', name: 'Rancor', cardTypes: ['Enchantment', 'Aura'] }
+
+    function gameWithAura() {
+      return makeGame({
+        players: [{ playerId: 'p1', name: 'Alice', battlefield: { host: hostPerm(), 'aura-1': auraPerm } }],
+      })
+    }
+
+    it('adjuntos: grupo pintado anidando la carta adjunta en su host', () => {
+      const game = gameWithAura()
+      const ok = painted(['host', 'aura-1'], 'Turno 5', 1, {
+        attachmentGroups: [{ hostId: 'host', ids: ['aura-1'], ownerId: 'p1' }],
+        cardStates: { host: cardState({ pt: '1/1' }), 'aura-1': cardState({ isAttachment: true, ownerId: 'p1' }) },
+      })
+      expect(checkFidelity(game, ok)).toEqual([])
+
+      const missing = painted(['host'], 'Turno 5', 1)
+      expect(checkFidelity(game, missing).map((d) => d.code)).toContain('attachments-mismatch')
+
+      const wrong = painted(['host', 'aura-1'], 'Turno 5', 1, {
+        attachmentGroups: [{ hostId: 'host', ids: [], ownerId: 'p1' }],
+      })
+      const out = checkFidelity(game, wrong)
+      expect(out.map((d) => d.code)).toContain('attachments-mismatch')
+      expect(out.some((d) => d.code === 'attachments-mismatch' && d.detail.includes('aura-1'))).toBe(true)
+    })
+
+    it('adjuntos: grupo pintado que el servidor no declara', () => {
+      const game = makeGame({
+        players: [{ playerId: 'p1', name: 'Alice', battlefield: { host: hostPerm({ attachments: [] }) } }],
+      })
+      const extra = painted(['host'], 'Turno 5', 1, {
+        attachmentGroups: [{ hostId: 'host', ids: ['aura-9'], ownerId: 'p1' }],
+      })
+      const out = checkFidelity(game, extra)
+      expect(out.map((d) => d.code)).toContain('attachments-mismatch')
+      expect(out.some((d) => d.detail.includes('sin adjuntos en el servidor'))).toBe(true)
+    })
+
+    it('adjunto: una carta adjunta no exige badges P/T ni girado', () => {
+      const game = makeGame({
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Alice',
+            battlefield: {
+              host: hostPerm(),
+              'aura-1': { ...auraPerm, cardTypes: ['Creature', 'Aura'], power: '2', toughness: '2', tapped: true },
+            },
+          },
+        ],
+      })
+      const snap = painted(['host', 'aura-1'], 'Turno 5', 1, {
+        attachmentGroups: [{ hostId: 'host', ids: ['aura-1'], ownerId: 'p1' }],
+        cardStates: {
+          host: cardState({ pt: '1/1' }),
+          'aura-1': cardState({ isAttachment: true, ownerId: 'p1', tapped: '0' }),
+        },
+      })
+      const codes = checkFidelity(game, snap).map((d) => d.code)
+      expect(codes).not.toContain('pt-mismatch')
+      expect(codes).not.toContain('tapped-mismatch')
+    })
+
+    it('tamaños: mano, biblioteca, cementerio y exilio coinciden o discrepan', () => {
+      const game = makeGame({
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Alice',
+            handCount: 3,
+            libraryCount: 40,
+            graveyard: { g1: { id: 'g1' }, g2: { id: 'g2' } },
+            exile: { e1: { id: 'e1' } },
+          },
+        ],
+      })
+      const ok = painted([], 'Turno 5', 1, {
+        zoneCounts: { p1: { hand: 3, library: 40, graveyard: 2, exile: 1 } },
+      })
+      expect(checkFidelity(game, ok)).toEqual([])
+
+      const bad = painted([], 'Turno 5', 1, {
+        zoneCounts: { p1: { hand: 2, library: 39, graveyard: 1, exile: 0 } },
+      })
+      expect(checkFidelity(game, bad).map((d) => d.code)).toEqual([
+        'hand-mismatch',
+        'library-mismatch',
+        'graveyard-mismatch',
+        'exile-mismatch',
+      ])
+    })
+
+    it('mano: el hand-bar manda para mi jugador', () => {
+      const game = makeGame({ myPlayerId: 'p1', players: [{ playerId: 'p1', name: 'Alice', handCount: 5 }] })
+      const ok = painted([], 'Turno 5', 1, { myHandCount: 5 })
+      expect(checkFidelity(game, ok)).toEqual([])
+      const bad = painted([], 'Turno 5', 1, { myHandCount: 4 })
+      expect(checkFidelity(game, bad).map((d) => d.code)).toContain('hand-mismatch')
+    })
+
+    it('cuenta solo las zonas pintadas (jugadores sin render no cuentan)', () => {
+      const game = makeGame({
+        players: [
+          { playerId: 'p1', name: 'Alice', handCount: 1, libraryCount: 10, graveyard: {}, exile: {} },
+          { playerId: 'p2', name: 'Bob', handCount: 7, libraryCount: 99, graveyard: {}, exile: {} },
+        ],
+      })
+      const ok = painted([], 'Turno 5', 1, {
+        zoneCounts: { p1: { hand: 1, library: 10, graveyard: 0, exile: 0 } },
+      })
+      expect(checkFidelity(game, ok)).toEqual([])
+    })
+
+    it('collectPainted lee adjuntos, hand-bar y contadores de zona', () => {
+      document.body.innerHTML = `
+        <div data-player-id="p1" class="board-zone">
+          <div class="hand-zone" data-hand-count="4"></div>
+          <button data-testid="hand-switch-btn" data-switched="p2"></button>
+          <button data-library-count="40"></button>
+          <button data-graveyard-count="2"></button>
+          <button data-exile-count="1"></button>
+          <div class="card-attachment-group" data-attachment-host="host">
+            <div class="attachments-list">
+              <div class="card-slot attachment-subcard" data-card-id="aura-1"></div>
+            </div>
+            <div class="card-slot" data-card-id="host"></div>
+          </div>
+        </div>
+        <div data-testid="hand-bar" data-hand-count="6"></div>`
+      const snap = collectPainted(document)
+      expect(snap.attachmentGroups).toEqual([{ hostId: 'host', ids: ['aura-1'], ownerId: 'p1' }])
+      expect(snap.myHandCount).toBe(6)
+      expect(snap.zoneCounts.p1).toEqual({ hand: null, library: 40, graveyard: 2, exile: 1 })
+      expect(snap.cardStates['aura-1'].isAttachment).toBe(true)
     })
   })
 })

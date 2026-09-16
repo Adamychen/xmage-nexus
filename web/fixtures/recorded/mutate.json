@@ -52,7 +52,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "6f7f5422-141e-4b09-8419-26e88211868c",
@@ -182,7 +184,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "6f7f5422-141e-4b09-8419-26e88211868c",
@@ -518,7 +522,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "f94df3af-b0ba-4910-97e9-4342c8889132",
@@ -759,229 +765,231 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
-              "fe9bb9f5-0314-4106-9f22-b9a1cee9d50c": {
-                "parentId": null,
-                "controllerId": null,
-                "controllerName": null,
-                "name": "Elvish Mystic",
-                "displayName": "Elvish Mystic",
-                "displayFullName": "Elvish Mystic",
-                "rules": [
-                  "{T}: Add {G}."
-                ],
-                "power": "1",
-                "toughness": "1",
-                "loyalty": "",
-                "defense": "",
-                "startingLoyalty": "",
-                "startingDefense": "",
-                "cardTypes": [
-                  "CREATURE"
-                ],
-                "subTypes": [
-                  "ELF",
-                  "DRUID"
-                ],
-                "superTypes": [],
-                "color": {
-                  "white": false,
-                  "blue": false,
-                  "black": false,
-                  "red": false,
-                  "green": true
+              "cards": {
+                "fe9bb9f5-0314-4106-9f22-b9a1cee9d50c": {
+                  "parentId": null,
+                  "controllerId": null,
+                  "controllerName": null,
+                  "name": "Elvish Mystic",
+                  "displayName": "Elvish Mystic",
+                  "displayFullName": "Elvish Mystic",
+                  "rules": [
+                    "{T}: Add {G}."
+                  ],
+                  "power": "1",
+                  "toughness": "1",
+                  "loyalty": "",
+                  "defense": "",
+                  "startingLoyalty": "",
+                  "startingDefense": "",
+                  "cardTypes": [
+                    "CREATURE"
+                  ],
+                  "subTypes": [
+                    "ELF",
+                    "DRUID"
+                  ],
+                  "superTypes": [],
+                  "color": {
+                    "white": false,
+                    "blue": false,
+                    "black": false,
+                    "red": false,
+                    "green": true
+                  },
+                  "frameColor": {
+                    "white": false,
+                    "blue": false,
+                    "black": false,
+                    "red": false,
+                    "green": false
+                  },
+                  "frameStyle": "M15_NORMAL",
+                  "manaCostLeftStr": [
+                    "{G}"
+                  ],
+                  "manaCostRightStr": [],
+                  "manaValue": 1,
+                  "rarity": "COMMON",
+                  "mageObjectType": "CARD",
+                  "isAbility": false,
+                  "abilityType": null,
+                  "isToken": false,
+                  "ability": null,
+                  "imageFileName": "",
+                  "imageNumber": 0,
+                  "extraDeckCard": false,
+                  "transformable": false,
+                  "secondCardFace": null,
+                  "transformed": false,
+                  "flipCard": false,
+                  "faceDown": false,
+                  "alternateName": null,
+                  "isSplitCard": false,
+                  "leftSplitName": null,
+                  "leftSplitCostsStr": null,
+                  "leftSplitRules": null,
+                  "leftSplitTypeLine": null,
+                  "rightSplitName": null,
+                  "rightSplitCostsStr": null,
+                  "rightSplitRules": null,
+                  "rightSplitTypeLine": null,
+                  "isDoubleFacedCard": false,
+                  "artRect": "NORMAL",
+                  "targets": null,
+                  "pairedCard": null,
+                  "bandedCards": null,
+                  "paid": false,
+                  "counters": null,
+                  "controlledByOwner": true,
+                  "zone": null,
+                  "rotate": false,
+                  "hideInfo": false,
+                  "canAttack": false,
+                  "canBlock": false,
+                  "inViewerOnly": false,
+                  "cardIcons": [],
+                  "originalPower": {
+                    "baseValue": 1,
+                    "modifiedBaseValue": 1,
+                    "boostedValue": 1,
+                    "cardValue": "1"
+                  },
+                  "originalToughness": {
+                    "baseValue": 1,
+                    "modifiedBaseValue": 1,
+                    "boostedValue": 1,
+                    "cardValue": "1"
+                  },
+                  "originalColorIdentity": "{G}",
+                  "originalIsCopy": false,
+                  "id": "fe9bb9f5-0314-4106-9f22-b9a1cee9d50c",
+                  "expansionSetCode": "M14",
+                  "cardNumber": "169",
+                  "usesVariousArt": false,
+                  "gameObject": true,
+                  "isChoosable": false,
+                  "isSelected": false,
+                  "playableStats": {
+                    "basicManaAbilities": [],
+                    "basicPlayAbilities": [],
+                    "basicCastAbilities": [],
+                    "other": []
+                  }
                 },
-                "frameColor": {
-                  "white": false,
-                  "blue": false,
-                  "black": false,
-                  "red": false,
-                  "green": false
-                },
-                "frameStyle": "M15_NORMAL",
-                "manaCostLeftStr": [
-                  "{G}"
-                ],
-                "manaCostRightStr": [],
-                "manaValue": 1,
-                "rarity": "COMMON",
-                "mageObjectType": "CARD",
-                "isAbility": false,
-                "abilityType": null,
-                "isToken": false,
-                "ability": null,
-                "imageFileName": "",
-                "imageNumber": 0,
-                "extraDeckCard": false,
-                "transformable": false,
-                "secondCardFace": null,
-                "transformed": false,
-                "flipCard": false,
-                "faceDown": false,
-                "alternateName": null,
-                "isSplitCard": false,
-                "leftSplitName": null,
-                "leftSplitCostsStr": null,
-                "leftSplitRules": null,
-                "leftSplitTypeLine": null,
-                "rightSplitName": null,
-                "rightSplitCostsStr": null,
-                "rightSplitRules": null,
-                "rightSplitTypeLine": null,
-                "isDoubleFacedCard": false,
-                "artRect": "NORMAL",
-                "targets": null,
-                "pairedCard": null,
-                "bandedCards": null,
-                "paid": false,
-                "counters": null,
-                "controlledByOwner": true,
-                "zone": null,
-                "rotate": false,
-                "hideInfo": false,
-                "canAttack": false,
-                "canBlock": false,
-                "inViewerOnly": false,
-                "cardIcons": [],
-                "originalPower": {
-                  "baseValue": 1,
-                  "modifiedBaseValue": 1,
-                  "boostedValue": 1,
-                  "cardValue": "1"
-                },
-                "originalToughness": {
-                  "baseValue": 1,
-                  "modifiedBaseValue": 1,
-                  "boostedValue": 1,
-                  "cardValue": "1"
-                },
-                "originalColorIdentity": "{G}",
-                "originalIsCopy": false,
-                "id": "fe9bb9f5-0314-4106-9f22-b9a1cee9d50c",
-                "expansionSetCode": "M14",
-                "cardNumber": "169",
-                "usesVariousArt": false,
-                "gameObject": true,
-                "isChoosable": false,
-                "isSelected": false,
-                "playableStats": {
-                  "basicManaAbilities": [],
-                  "basicPlayAbilities": [],
-                  "basicCastAbilities": [],
-                  "other": []
-                }
-              },
-              "eab7166b-f85b-401e-aa8d-22a07638c3ce": {
-                "parentId": null,
-                "controllerId": null,
-                "controllerName": null,
-                "name": "Gemrazer",
-                "displayName": "Gemrazer",
-                "displayFullName": "Gemrazer",
-                "rules": [
-                  "Mutate {1}{G}{G} <i>(If you cast this spell for its mutate cost, put it over or under target non-Human creature you own. They mutate into the creature on top plus all abilities from under it.)</i>",
-                  "Reach",
-                  "Trample",
-                  "Whenever this creature mutates, destroy target artifact or enchantment an opponent controls."
-                ],
-                "power": "4",
-                "toughness": "4",
-                "loyalty": "",
-                "defense": "",
-                "startingLoyalty": "",
-                "startingDefense": "",
-                "cardTypes": [
-                  "CREATURE"
-                ],
-                "subTypes": [
-                  "BEAST"
-                ],
-                "superTypes": [],
-                "color": {
-                  "white": false,
-                  "blue": false,
-                  "black": false,
-                  "red": false,
-                  "green": true
-                },
-                "frameColor": {
-                  "white": false,
-                  "blue": false,
-                  "black": false,
-                  "red": false,
-                  "green": false
-                },
-                "frameStyle": "M15_NORMAL",
-                "manaCostLeftStr": [
-                  "{3}",
-                  "{G}"
-                ],
-                "manaCostRightStr": [],
-                "manaValue": 4,
-                "rarity": "RARE",
-                "mageObjectType": "CARD",
-                "isAbility": false,
-                "abilityType": null,
-                "isToken": false,
-                "ability": null,
-                "imageFileName": "",
-                "imageNumber": 0,
-                "extraDeckCard": false,
-                "transformable": false,
-                "secondCardFace": null,
-                "transformed": false,
-                "flipCard": false,
-                "faceDown": false,
-                "alternateName": null,
-                "isSplitCard": false,
-                "leftSplitName": null,
-                "leftSplitCostsStr": null,
-                "leftSplitRules": null,
-                "leftSplitTypeLine": null,
-                "rightSplitName": null,
-                "rightSplitCostsStr": null,
-                "rightSplitRules": null,
-                "rightSplitTypeLine": null,
-                "isDoubleFacedCard": false,
-                "artRect": "NORMAL",
-                "targets": null,
-                "pairedCard": null,
-                "bandedCards": null,
-                "paid": false,
-                "counters": null,
-                "controlledByOwner": true,
-                "zone": null,
-                "rotate": false,
-                "hideInfo": false,
-                "canAttack": false,
-                "canBlock": false,
-                "inViewerOnly": false,
-                "cardIcons": [],
-                "originalPower": {
-                  "baseValue": 4,
-                  "modifiedBaseValue": 4,
-                  "boostedValue": 4,
-                  "cardValue": "4"
-                },
-                "originalToughness": {
-                  "baseValue": 4,
-                  "modifiedBaseValue": 4,
-                  "boostedValue": 4,
-                  "cardValue": "4"
-                },
-                "originalColorIdentity": "{G}",
-                "originalIsCopy": false,
-                "id": "eab7166b-f85b-401e-aa8d-22a07638c3ce",
-                "expansionSetCode": "IKO",
-                "cardNumber": "155",
-                "usesVariousArt": true,
-                "gameObject": true,
-                "isChoosable": false,
-                "isSelected": false,
-                "playableStats": {
-                  "basicManaAbilities": [],
-                  "basicPlayAbilities": [],
-                  "basicCastAbilities": [],
-                  "other": []
+                "eab7166b-f85b-401e-aa8d-22a07638c3ce": {
+                  "parentId": null,
+                  "controllerId": null,
+                  "controllerName": null,
+                  "name": "Gemrazer",
+                  "displayName": "Gemrazer",
+                  "displayFullName": "Gemrazer",
+                  "rules": [
+                    "Mutate {1}{G}{G} <i>(If you cast this spell for its mutate cost, put it over or under target non-Human creature you own. They mutate into the creature on top plus all abilities from under it.)</i>",
+                    "Reach",
+                    "Trample",
+                    "Whenever this creature mutates, destroy target artifact or enchantment an opponent controls."
+                  ],
+                  "power": "4",
+                  "toughness": "4",
+                  "loyalty": "",
+                  "defense": "",
+                  "startingLoyalty": "",
+                  "startingDefense": "",
+                  "cardTypes": [
+                    "CREATURE"
+                  ],
+                  "subTypes": [
+                    "BEAST"
+                  ],
+                  "superTypes": [],
+                  "color": {
+                    "white": false,
+                    "blue": false,
+                    "black": false,
+                    "red": false,
+                    "green": true
+                  },
+                  "frameColor": {
+                    "white": false,
+                    "blue": false,
+                    "black": false,
+                    "red": false,
+                    "green": false
+                  },
+                  "frameStyle": "M15_NORMAL",
+                  "manaCostLeftStr": [
+                    "{3}",
+                    "{G}"
+                  ],
+                  "manaCostRightStr": [],
+                  "manaValue": 4,
+                  "rarity": "RARE",
+                  "mageObjectType": "CARD",
+                  "isAbility": false,
+                  "abilityType": null,
+                  "isToken": false,
+                  "ability": null,
+                  "imageFileName": "",
+                  "imageNumber": 0,
+                  "extraDeckCard": false,
+                  "transformable": false,
+                  "secondCardFace": null,
+                  "transformed": false,
+                  "flipCard": false,
+                  "faceDown": false,
+                  "alternateName": null,
+                  "isSplitCard": false,
+                  "leftSplitName": null,
+                  "leftSplitCostsStr": null,
+                  "leftSplitRules": null,
+                  "leftSplitTypeLine": null,
+                  "rightSplitName": null,
+                  "rightSplitCostsStr": null,
+                  "rightSplitRules": null,
+                  "rightSplitTypeLine": null,
+                  "isDoubleFacedCard": false,
+                  "artRect": "NORMAL",
+                  "targets": null,
+                  "pairedCard": null,
+                  "bandedCards": null,
+                  "paid": false,
+                  "counters": null,
+                  "controlledByOwner": true,
+                  "zone": null,
+                  "rotate": false,
+                  "hideInfo": false,
+                  "canAttack": false,
+                  "canBlock": false,
+                  "inViewerOnly": false,
+                  "cardIcons": [],
+                  "originalPower": {
+                    "baseValue": 4,
+                    "modifiedBaseValue": 4,
+                    "boostedValue": 4,
+                    "cardValue": "4"
+                  },
+                  "originalToughness": {
+                    "baseValue": 4,
+                    "modifiedBaseValue": 4,
+                    "boostedValue": 4,
+                    "cardValue": "4"
+                  },
+                  "originalColorIdentity": "{G}",
+                  "originalIsCopy": false,
+                  "id": "eab7166b-f85b-401e-aa8d-22a07638c3ce",
+                  "expansionSetCode": "IKO",
+                  "cardNumber": "155",
+                  "usesVariousArt": true,
+                  "gameObject": true,
+                  "isChoosable": false,
+                  "isSelected": false,
+                  "playableStats": {
+                    "basicManaAbilities": [],
+                    "basicPlayAbilities": [],
+                    "basicCastAbilities": [],
+                    "other": []
+                  }
                 }
               }
             },
@@ -1240,7 +1248,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "f94df3af-b0ba-4910-97e9-4342c8889132",
@@ -2267,7 +2277,9 @@
     "watchedHands": {},
     "stack": {},
     "exiles": [
-      {}
+      {
+        "cards": {}
+      }
     ],
     "revealed": [],
     "lookedAt": [],

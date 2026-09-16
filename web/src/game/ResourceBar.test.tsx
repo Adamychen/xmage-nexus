@@ -31,6 +31,10 @@ describe('ResourceBar', () => {
 
     const exileBack = container.querySelector('.exile-back')
     expect(exileBack).toBeTruthy()
+
+    expect(container.querySelector('[data-library-count]')?.getAttribute('data-library-count')).toBe('40')
+    expect(container.querySelector('[data-graveyard-count]')?.getAttribute('data-graveyard-count')).toBe('0')
+    expect(container.querySelector('[data-exile-count]')?.getAttribute('data-exile-count')).toBe('0')
   })
 
   it('renders the top card image for graveyard and exile when cards are present', () => {
@@ -151,6 +155,11 @@ describe('ResourceBar', () => {
     expect(container.querySelector('.resource-chip.library-chip')).toBeTruthy()
     expect(container.querySelector('.resource-chip.graveyard-chip')).toBeTruthy()
     expect(container.querySelector('.resource-chip.exile-chip')).toBeTruthy()
+
+    // Fidelity data-attrs (server value mirrored for the render checker)
+    expect(container.querySelector('.library-chip')?.getAttribute('data-library-count')).toBe('84')
+    expect(container.querySelector('.graveyard-chip')?.getAttribute('data-graveyard-count')).toBe('1')
+    expect(container.querySelector('.exile-chip')?.getAttribute('data-exile-count')).toBe('1')
 
     // Displays counts in the chips
     expect(getByText('84')).toBeTruthy()

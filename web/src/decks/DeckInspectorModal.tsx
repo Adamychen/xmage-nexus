@@ -78,7 +78,7 @@ export function DeckInspectorModal({
           }
           setMetaMap((prev) => {
             const nxt = new Map(prev)
-            nxt.set(`${c.setCode}/${c.cardNumber}`, meta)
+            if (hasSetAndNum) nxt.set(`${c.setCode}/${c.cardNumber}`, meta)
             nxt.set(c.cardName.toLowerCase(), meta)
             return nxt
           })

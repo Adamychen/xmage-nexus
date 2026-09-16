@@ -85,8 +85,8 @@ export function getVisibleCards(game: GameView | null, myPlayerId?: string | nul
     for (const p of perms) {
       if (!p || p.isToken) continue
       list.push(p)
-      if (p.mutateView) {
-        for (const mc of Object.values(p.mutateView) as CardView[]) {
+      if (p.mutateView?.cards) {
+        for (const mc of Object.values(p.mutateView.cards) as CardView[]) {
           if (mc && !mc.isToken) list.push(mc)
         }
       }

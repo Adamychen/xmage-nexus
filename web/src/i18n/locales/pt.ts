@@ -1097,6 +1097,7 @@ export const pt: TranslationSchema = {
     mulligan_decision_title: 'DECISÃO DE MULLIGAN',
     mulligan_keep_btn: 'Manter ({count})',
     mulligan_btn: 'Mulligan',
+    mulligan_concede: 'Conceder',
     cardgrid_select_targets: 'SELECIONAR ALVOS',
     cardgrid_select_cards: 'SELEÇÃO DE CARDS',
     cardgrid_search_placeholder: 'Buscar por nome, tipo de card ou texto de regra…',

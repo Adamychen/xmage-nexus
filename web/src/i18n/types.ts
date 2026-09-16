@@ -1103,6 +1103,7 @@ export interface TranslationSchema {
     mulligan_decision_title: string
     mulligan_keep_btn: string
     mulligan_btn: string
+    mulligan_concede: string
     cardgrid_select_targets: string
     cardgrid_select_cards: string
     cardgrid_search_placeholder: string

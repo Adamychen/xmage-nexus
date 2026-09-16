@@ -91,3 +91,39 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
 })
+
+test('mulligan: la ventana ofrece "Conceder" y confirma el envío de CONCEDE', { tag: '@fullflow' }, async ({ page }) => {
+  await withFakeServer(() => mulliganScenario(), async () => {
+    const { pageErrors } = await startGame(page, {
+      prefix: 'mull3',
+      tableName: TABLE.mulligan,
+      deck: DECK.lands,
+      simDeck: DECK.aiLands,
+      autoKeepMulligan: false,
+    })
+
+    const dialog = page.locator('.mulligan-dialog')
+    await expect(dialog).toBeVisible({ timeout: 15_000 })
+
+    const concedeBtn = dialog.getByTestId('mulligan-concede')
+    await expect(concedeBtn).toBeVisible()
+    await expect(concedeBtn).toBeEnabled()
+    await concedeBtn.click()
+
+    // confirmación in-app (mismo camino que el menú ⋯) y envío de CONCEDE
+    await expect(page.getByTestId('confirm-modal')).toBeVisible({ timeout: 10_000 })
+    await page.getByTestId('confirm-modal-ok').click()
+
+    await expect
+      .poll(
+        () => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerAction' && String(s.args?.action) === 'CONCEDE'),
+        { timeout: 10_000 },
+      )
+      .toBeTruthy()
+
+    // al aceptarse la acción el feedback se limpia: el diálogo deja de bloquear
+    await expect(dialog).toHaveCount(0, { timeout: 10_000 })
+
+    expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+  })
+})

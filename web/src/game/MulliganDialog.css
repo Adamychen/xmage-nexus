@@ -136,6 +136,21 @@ html.fx-off .mulligan-card-wrap {
   box-shadow: 0 4px 14px rgba(255, 180, 84, 0.3);
 }
 
+.mulligan-actions .mulligan-concede {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border-color: #8c4a4a;
+  color: #e5a0a0;
+  box-shadow: none;
+}
+
+.mulligan-actions .mulligan-concede:hover:not(:disabled) {
+  border-color: #c25b5b;
+  color: #ffb3b3;
+}
+
 .mulligan-actions .primary {
   background: linear-gradient(180deg, #5b8cff 0%, #3f6ae0 100%);
   color: #fff;

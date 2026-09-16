@@ -3,9 +3,11 @@ package org.mage.proxy;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,9 +50,18 @@ public final class JsonUtil {
             return;
         }
         if (obj instanceof Boolean || obj instanceof Byte || obj instanceof Short
-                || obj instanceof Integer || obj instanceof Long
-                || obj instanceof Float || obj instanceof Double) {
+                || obj instanceof Integer || obj instanceof Long) {
             sb.append(obj.toString());
+            return;
+        }
+        if (obj instanceof Float || obj instanceof Double) {
+            // Double.toString()/Float.toString() de NaN/Infinity producen esos
+            // literales sin comillas, que no son JSON válido (JSON.parse los
+            // rechaza en el navegador). Ningún campo real es hoy NaN-able en
+            // la práctica, pero el serializador genérico no debe poder emitir
+            // JSON corrupto si algún campo futuro lo fuera.
+            double d = ((Number) obj).doubleValue();
+            sb.append(Double.isFinite(d) ? obj.toString() : "null");
             return;
         }
         if (obj instanceof UUID) {
@@ -87,7 +98,21 @@ public final class JsonUtil {
         stack.put(obj, Boolean.TRUE);
 
         if (obj instanceof Map) {
-            writeMap(sb, (Map) obj, stack);
+            List<Field> ownFields = collectOwnFieldsAboveMapImpl(clazz);
+            if (ownFields.isEmpty()) {
+                writeMap(sb, (Map) obj, stack);
+            } else {
+                // Real XMage view classes like ExileView/MutateView (Mage.Common)
+                // extend CardsView (-> LinkedHashMap<UUID, CardView>) AND declare
+                // their own fields (name, id). Without this branch those fields
+                // are silently dropped: `obj instanceof Map` alone would route
+                // here via writeMap(), which only walks map entries and never
+                // reaches the reflection loop below that reads declared fields.
+                // Wrap: own fields stay at the top level, map entries move under
+                // "cards" (mirrors the sibling POJOs RevealedView/LookedAtView,
+                // which already expose a `cards` field the same way).
+                writeMapWithOwnFields(sb, obj, (Map) obj, ownFields, stack);
+            }
         } else if (obj instanceof Iterable) {
             writeIterable(sb, (Iterable) obj, stack);
         } else if (clazz.isArray()) {
@@ -119,6 +144,56 @@ public final class JsonUtil {
             sb.append(':');
             writeValue(sb, entry.getValue(), stack);
         }
+        sb.append('}');
+    }
+
+    /**
+     * Fields declared by obj's own class hierarchy above the terminal java.*
+     * Map implementation (e.g. ExileView/MutateView declare `name`/`id` on
+     * top of extending CardsView -> LinkedHashMap; a plain CardsView with no
+     * such subclass returns an empty list, keeping the old flat behavior).
+     */
+    private static List<Field> collectOwnFieldsAboveMapImpl(Class<?> clazz) {
+        List<Field> result = new ArrayList<>();
+        for (Class<?> c = clazz; c != null && Map.class.isAssignableFrom(c); c = c.getSuperclass()) {
+            Package pkg = c.getPackage();
+            if (pkg != null && (pkg.getName().startsWith("java.") || pkg.getName().startsWith("javax."))) {
+                break;
+            }
+            for (Field field : c.getDeclaredFields()) {
+                if (isWritableField(field)) {
+                    result.add(field);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static void writeMapWithOwnFields(StringBuilder sb, Object obj, Map<?, ?> map, List<Field> ownFields, IdentityHashMap<Object, Boolean> stack) {
+        sb.append('{');
+        boolean first = true;
+        for (Field field : ownFields) {
+            if (!first) {
+                sb.append(',');
+            }
+            first = false;
+            writeString(sb, field.getName());
+            sb.append(':');
+            try {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+                writeValue(sb, field.get(obj), stack);
+            } catch (Exception e) {
+                sb.append("null");
+            }
+        }
+        if (!first) {
+            sb.append(',');
+        }
+        writeString(sb, "cards");
+        sb.append(':');
+        writeMap(sb, map, stack);
         sb.append('}');
     }
 

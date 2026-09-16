@@ -254,7 +254,7 @@ export default function BoardZone({
     const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
     const attachments = perm.attachments ?? []
     const mutateParts = perm.mutated
-      ? (Object.values(perm.mutateView ?? {}).filter(Boolean) as CardView[])
+      ? (Object.values(perm.mutateView?.cards ?? {}).filter(Boolean) as CardView[])
       : []
 
     const isTarget = targetIds.has(id)
@@ -265,6 +265,7 @@ export default function BoardZone({
         <div
           key={id}
           className={`card-mutate-pile ${attachments.length > 0 ? 'has-attachments' : ''}`}
+          data-attachment-host={attachments.length > 0 ? id : undefined}
           style={{ width: `calc(var(--card-w, 100px) + ${(mutateParts.length + attachments.length) * 14}px)` }}
         >
           <div className="mutate-parts">
@@ -322,6 +323,7 @@ export default function BoardZone({
         <div
           key={id}
           className="card-attachment-group"
+          data-attachment-host={id}
           style={{ width: `calc(var(--card-w, 100px) + ${attachments.length * 16}px)` }}
         >
           <div className="attachments-list">

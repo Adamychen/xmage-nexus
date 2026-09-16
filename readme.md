@@ -1,8 +1,16 @@
-# XMage Nexus — Modern Web Client for XMage
+# XMage Nexus — Modern XMage Client for MTG (Web + Desktop)
 
-**XMage Nexus** is a modern, high-performance web client for [XMage](https://github.com/magefree/mage), featuring a visual aesthetic inspired by modern digital card games. Play directly in the browser **without installing Java or desktop apps**.
+**XMage Nexus** is a modern, high-performance **MTG** client for [XMage](https://github.com/magefree/mage), featuring a visual aesthetic inspired by modern digital card games. Play in your **browser** or as a **one-click desktop app** — no Java setup either way.
 
 > **Note:** XMage Nexus is an independent modern client interface. The rules engine and card database remain the battle-tested XMage Java server (`Mage.Server`).
+
+## Play
+
+| Way | How |
+|---|---|
+| **Desktop app** (Windows / macOS / Linux) | Download the launcher from [Releases](https://github.com/Adamychen/xmage-nexus/releases): Windows `.msi`/`.exe`, macOS `.dmg` (Apple Silicon), Linux `.AppImage`/`.deb`/`.rpm`. It bundles the JRE + XMage server + proxy and boots everything with one click (~15 MB, auto-updates). |
+| **Browser** (zero install) | Join a hosted instance — see the [project page](https://adamychen.github.io/xmage-nexus/) — or self-host with [docs/deploy-playit.md](docs/deploy-playit.md). |
+| **Local dev** | Pick a variant below: [web-only](#variant-a--web-only-no-java-no-maven-fastest-loop) (no Java/Maven) or [full stack](#variant-b--full-stack-real-xmage-server--proxy--web-client). |
 
 ## Architecture
 

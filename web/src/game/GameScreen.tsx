@@ -236,7 +236,7 @@ export default function GameScreen() {
           {game && (
             <div className="game-state" data-testid="game-status">
               <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
-              <PhaseBar step={game.step} />
+              <PhaseBar step={game.step ?? ''} />
             </div>
           )}
         </div>
@@ -250,7 +250,7 @@ export default function GameScreen() {
                 controlledId={me?.playerId}
                 selectedOppId={currentOpp?.playerId || ''}
                 onSelectOpponent={(id) => setSelectedOppId(id)}
-                activePlayerId={game?.activePlayerId}
+                activePlayerId={game?.activePlayerId ?? undefined}
                 targetIds={new Set(targetIds)}
                 onTargetClick={onTargetClick}
                 combat={game?.combat ?? []}

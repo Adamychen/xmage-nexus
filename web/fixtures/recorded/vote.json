@@ -275,7 +275,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "e43cad26-3b46-412f-a074-fb9098a2b305",
@@ -722,7 +724,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "a8deb647-413f-4853-b199-8c3112323665",
@@ -961,7 +965,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "a8deb647-413f-4853-b199-8c3112323665",
@@ -1200,7 +1206,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "a8deb647-413f-4853-b199-8c3112323665",
@@ -1439,7 +1447,9 @@
             "cloaked": false,
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
-            "mutateView": {},
+            "mutateView": {
+              "cards": {}
+            },
             "mutated": false,
             "parentId": null,
             "controllerId": "a8deb647-413f-4853-b199-8c3112323665",
@@ -2687,226 +2697,228 @@
     "stack": {},
     "exiles": [
       {
-        "71e27e31-52e1-4b0e-b54e-2e1aef13db9b": {
-          "parentId": null,
-          "controllerId": null,
-          "controllerName": null,
-          "name": "Elvish Mystic",
-          "displayName": "Elvish Mystic",
-          "displayFullName": "Elvish Mystic",
-          "rules": [
-            "{T}: Add {G}."
-          ],
-          "power": "1",
-          "toughness": "1",
-          "loyalty": "",
-          "defense": "",
-          "startingLoyalty": "",
-          "startingDefense": "",
-          "cardTypes": [
-            "CREATURE"
-          ],
-          "subTypes": [
-            "ELF",
-            "DRUID"
-          ],
-          "superTypes": [],
-          "color": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": false,
-            "green": true
+        "cards": {
+          "71e27e31-52e1-4b0e-b54e-2e1aef13db9b": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Elvish Mystic",
+            "displayName": "Elvish Mystic",
+            "displayFullName": "Elvish Mystic",
+            "rules": [
+              "{T}: Add {G}."
+            ],
+            "power": "1",
+            "toughness": "1",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "CREATURE"
+            ],
+            "subTypes": [
+              "ELF",
+              "DRUID"
+            ],
+            "superTypes": [],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": true
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [
+              "{G}"
+            ],
+            "manaCostRightStr": [],
+            "manaValue": 1,
+            "rarity": "COMMON",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": null,
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 1,
+              "modifiedBaseValue": 1,
+              "boostedValue": 1,
+              "cardValue": "1"
+            },
+            "originalToughness": {
+              "baseValue": 1,
+              "modifiedBaseValue": 1,
+              "boostedValue": 1,
+              "cardValue": "1"
+            },
+            "originalColorIdentity": "{G}",
+            "originalIsCopy": false,
+            "id": "71e27e31-52e1-4b0e-b54e-2e1aef13db9b",
+            "expansionSetCode": "HOC",
+            "cardNumber": "205",
+            "usesVariousArt": false,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
           },
-          "frameColor": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": false,
-            "green": false
-          },
-          "frameStyle": "M15_NORMAL",
-          "manaCostLeftStr": [
-            "{G}"
-          ],
-          "manaCostRightStr": [],
-          "manaValue": 1,
-          "rarity": "COMMON",
-          "mageObjectType": "CARD",
-          "isAbility": false,
-          "abilityType": null,
-          "isToken": false,
-          "ability": null,
-          "imageFileName": "",
-          "imageNumber": 0,
-          "extraDeckCard": false,
-          "transformable": false,
-          "secondCardFace": null,
-          "transformed": false,
-          "flipCard": false,
-          "faceDown": false,
-          "alternateName": null,
-          "isSplitCard": false,
-          "leftSplitName": null,
-          "leftSplitCostsStr": null,
-          "leftSplitRules": null,
-          "leftSplitTypeLine": null,
-          "rightSplitName": null,
-          "rightSplitCostsStr": null,
-          "rightSplitRules": null,
-          "rightSplitTypeLine": null,
-          "isDoubleFacedCard": false,
-          "artRect": "NORMAL",
-          "targets": null,
-          "pairedCard": null,
-          "bandedCards": null,
-          "paid": false,
-          "counters": null,
-          "controlledByOwner": true,
-          "zone": null,
-          "rotate": false,
-          "hideInfo": false,
-          "canAttack": false,
-          "canBlock": false,
-          "inViewerOnly": false,
-          "cardIcons": [],
-          "originalPower": {
-            "baseValue": 1,
-            "modifiedBaseValue": 1,
-            "boostedValue": 1,
-            "cardValue": "1"
-          },
-          "originalToughness": {
-            "baseValue": 1,
-            "modifiedBaseValue": 1,
-            "boostedValue": 1,
-            "cardValue": "1"
-          },
-          "originalColorIdentity": "{G}",
-          "originalIsCopy": false,
-          "id": "71e27e31-52e1-4b0e-b54e-2e1aef13db9b",
-          "expansionSetCode": "HOC",
-          "cardNumber": "205",
-          "usesVariousArt": false,
-          "gameObject": true,
-          "isChoosable": false,
-          "isSelected": false,
-          "playableStats": {
-            "basicManaAbilities": [],
-            "basicPlayAbilities": [],
-            "basicCastAbilities": [],
-            "other": []
-          }
-        },
-        "490cc919-f628-48bb-ad15-4355c289d426": {
-          "parentId": null,
-          "controllerId": null,
-          "controllerName": null,
-          "name": "Elvish Mystic",
-          "displayName": "Elvish Mystic",
-          "displayFullName": "Elvish Mystic",
-          "rules": [
-            "{T}: Add {G}."
-          ],
-          "power": "1",
-          "toughness": "1",
-          "loyalty": "",
-          "defense": "",
-          "startingLoyalty": "",
-          "startingDefense": "",
-          "cardTypes": [
-            "CREATURE"
-          ],
-          "subTypes": [
-            "ELF",
-            "DRUID"
-          ],
-          "superTypes": [],
-          "color": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": false,
-            "green": true
-          },
-          "frameColor": {
-            "white": false,
-            "blue": false,
-            "black": false,
-            "red": false,
-            "green": false
-          },
-          "frameStyle": "M15_NORMAL",
-          "manaCostLeftStr": [
-            "{G}"
-          ],
-          "manaCostRightStr": [],
-          "manaValue": 1,
-          "rarity": "COMMON",
-          "mageObjectType": "CARD",
-          "isAbility": false,
-          "abilityType": null,
-          "isToken": false,
-          "ability": null,
-          "imageFileName": "",
-          "imageNumber": 0,
-          "extraDeckCard": false,
-          "transformable": false,
-          "secondCardFace": null,
-          "transformed": false,
-          "flipCard": false,
-          "faceDown": false,
-          "alternateName": null,
-          "isSplitCard": false,
-          "leftSplitName": null,
-          "leftSplitCostsStr": null,
-          "leftSplitRules": null,
-          "leftSplitTypeLine": null,
-          "rightSplitName": null,
-          "rightSplitCostsStr": null,
-          "rightSplitRules": null,
-          "rightSplitTypeLine": null,
-          "isDoubleFacedCard": false,
-          "artRect": "NORMAL",
-          "targets": null,
-          "pairedCard": null,
-          "bandedCards": null,
-          "paid": false,
-          "counters": null,
-          "controlledByOwner": true,
-          "zone": null,
-          "rotate": false,
-          "hideInfo": false,
-          "canAttack": false,
-          "canBlock": false,
-          "inViewerOnly": false,
-          "cardIcons": [],
-          "originalPower": {
-            "baseValue": 1,
-            "modifiedBaseValue": 1,
-            "boostedValue": 1,
-            "cardValue": "1"
-          },
-          "originalToughness": {
-            "baseValue": 1,
-            "modifiedBaseValue": 1,
-            "boostedValue": 1,
-            "cardValue": "1"
-          },
-          "originalColorIdentity": "{G}",
-          "originalIsCopy": false,
-          "id": "490cc919-f628-48bb-ad15-4355c289d426",
-          "expansionSetCode": "M14",
-          "cardNumber": "169",
-          "usesVariousArt": false,
-          "gameObject": true,
-          "isChoosable": false,
-          "isSelected": false,
-          "playableStats": {
-            "basicManaAbilities": [],
-            "basicPlayAbilities": [],
-            "basicCastAbilities": [],
-            "other": []
+          "490cc919-f628-48bb-ad15-4355c289d426": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Elvish Mystic",
+            "displayName": "Elvish Mystic",
+            "displayFullName": "Elvish Mystic",
+            "rules": [
+              "{T}: Add {G}."
+            ],
+            "power": "1",
+            "toughness": "1",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "CREATURE"
+            ],
+            "subTypes": [
+              "ELF",
+              "DRUID"
+            ],
+            "superTypes": [],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": true
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [
+              "{G}"
+            ],
+            "manaCostRightStr": [],
+            "manaValue": 1,
+            "rarity": "COMMON",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": null,
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 1,
+              "modifiedBaseValue": 1,
+              "boostedValue": 1,
+              "cardValue": "1"
+            },
+            "originalToughness": {
+              "baseValue": 1,
+              "modifiedBaseValue": 1,
+              "boostedValue": 1,
+              "cardValue": "1"
+            },
+            "originalColorIdentity": "{G}",
+            "originalIsCopy": false,
+            "id": "490cc919-f628-48bb-ad15-4355c289d426",
+            "expansionSetCode": "M14",
+            "cardNumber": "169",
+            "usesVariousArt": false,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
           }
         }
       }

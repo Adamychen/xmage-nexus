@@ -53,6 +53,26 @@ Sideboard
     expect(deck).toBeNull()
   })
 
+  it('raw text: designa el comandante desde la sección [Commander]/Commander del texto (AUDIT)', async () => {
+    const rawText = `Commander
+1 Acererak the Archlich
+
+Deck
+1 Agonizing Remorse
+19 Snow-Covered Swamp
+18 Snow-Covered Swamp
+1 Wishclaw Talisman
+`
+    const deck = await loadDeckFromOnlineSource(rawText, 'Acererak Storm')
+    expect(deck).not.toBeNull()
+    expect(deck?.commanderCard).toMatchObject({ cardName: 'Acererak the Archlich' })
+    expect(deck?.cards.some((c) => c.cardName === 'Acererak the Archlich')).toBe(true)
+    expect(deck?.sideboard.some((c) => c.cardName === 'Acererak the Archlich')).toBe(false)
+    // Lista parcial (< 99 cartas): sin este fix el conteo por umbral la
+    // catalogaba como 'Standard' pese a tener comandante designado (AUDIT).
+    expect(deck?.format).toBe('Commander')
+  })
+
   it('moxfield: designa el comandante sin sacarlo del main (AUDIT)', async () => {
     mockedFetchOnlineDeckJson.mockResolvedValueOnce({
       name: 'Sidar+Tana',

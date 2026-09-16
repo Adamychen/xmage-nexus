@@ -4,13 +4,21 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import mage.players.PlayerType;
 import mage.game.match.MatchOptions;
+import mage.remote.SessionImpl;
+import mage.view.CardsView;
+import mage.view.GameClientMessage;
 import org.junit.jupiter.api.Test;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimPlayerTest {
@@ -130,8 +138,94 @@ class SimPlayerTest {
         assertEquals(setOf(), SimPlayer.requiredColors(null));
     }
 
+    // GAME_TARGET de la sobrecarga Cards (Fact or Fiction y similares): data.targets
+    // llega null y los ids están en options.possibleTargets; el SIM debe elegir una
+    // carta válida con sendPlayerUUID (NO cancelar) y cerrar con sendPlayerBoolean.
+
+    @Test
+    void cardTargetWithPossibleTargetsPicksAValidCard() {
+        UUID a = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+        UUID b = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+        UUID c = UUID.fromString("00000000-0000-0000-0000-00000000000c");
+        Map<String, Serializable> options = new HashMap<>();
+        options.put("possibleTargets", new LinkedHashSet<>(Arrays.asList(c, b, a)));
+        options.put("chosenTargets", new LinkedHashSet<UUID>());
+        options.put("UI.right.btn.text", "Done");
+
+        // min=0: el primer prompt ya trae "Done", pero sin ninguna carta elegida
+        // toca seleccionar (nunca cerrar en vacío)
+        assertTrue(!SimPlayer.cardTargetDone(options));
+        assertTrue(Arrays.asList(a, b, c).contains(SimPlayer.cardTargetPick(options)));
+        assertEquals(a, SimPlayer.cardTargetPick(options));
+    }
+
+    @Test
+    void cardTargetDoneAfterAPickAndNotBefore() {
+        UUID a = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+        Map<String, Serializable> options = new HashMap<>();
+        options.put("possibleTargets", new LinkedHashSet<>(Arrays.asList(a)));
+        options.put("chosenTargets", new LinkedHashSet<UUID>());
+        options.put("UI.right.btn.text", "Done");
+        assertTrue(!SimPlayer.cardTargetDone(options));
+
+        options.put("chosenTargets", new LinkedHashSet<>(Arrays.asList(a)));
+        assertTrue(SimPlayer.cardTargetDone(options));
+    }
+
+    @Test
+    void cardTargetWithoutPossibleTargetsHasNoPick() {
+        assertNull(SimPlayer.cardTargetPick(null));
+        assertNull(SimPlayer.cardTargetPick(new HashMap<>()));
+        assertTrue(!SimPlayer.cardTargetDone(null));
+    }
+
+    @Test
+    void onTargetCardsOverloadSendsAValidUuidInsteadOfCancelling() {
+        RecordingSession session = new RecordingSession();
+        SimPlayer sim = new SimPlayer("sim-test", session);
+        UUID a = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+        UUID b = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+        Map<String, Serializable> options = new HashMap<>();
+        options.put("possibleTargets", new LinkedHashSet<>(Arrays.asList(b, a)));
+        options.put("chosenTargets", new LinkedHashSet<UUID>());
+        options.put("UI.right.btn.text", "Done");
+        GameClientMessage prompt = new GameClientMessage(null, options, "cards to put in the first pile", new CardsView(), null, false);
+
+        sim.onTarget(prompt);
+
+        assertEquals(a, session.lastUuid);
+        assertNull(session.lastBoolean);
+
+        // segundo prompt con la carta ya elegida: cierra la selección con un booleano
+        options.put("chosenTargets", new LinkedHashSet<>(Arrays.asList(a)));
+        sim.onTarget(prompt);
+
+        assertEquals(Boolean.FALSE, session.lastBoolean);
+    }
+
     private static Set<Character> setOf(Character... values) {
         return new LinkedHashSet<>(Arrays.asList(values));
+    }
+
+    private static final class RecordingSession extends SessionImpl {
+        private UUID lastUuid;
+        private Boolean lastBoolean;
+
+        private RecordingSession() {
+            super(null);
+        }
+
+        @Override
+        public boolean sendPlayerUUID(UUID gameId, UUID data) {
+            lastUuid = data;
+            return true;
+        }
+
+        @Override
+        public boolean sendPlayerBoolean(UUID gameId, boolean data) {
+            lastBoolean = data;
+            return true;
+        }
     }
 
     @Test

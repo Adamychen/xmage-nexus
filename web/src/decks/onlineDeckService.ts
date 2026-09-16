@@ -210,9 +210,20 @@ export async function loadDeckFromOnlineSource(input: string, customName?: strin
     return {
       ...parsed,
       id: makeDeckId(),
-      format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Standard',
+      // Una sección [Commander]/Commander explícita en el texto manda sobre el
+      // conteo: una lista parcial (<99 cartas, p.ej. pegada a medio terminar)
+      // con comandante designado seguía cayendo en 'Standard' y perdía las
+      // reglas de Commander (singleton, sección de comandante, etc).
+      format: (parsed.commanders?.length ?? 0) > 0 || parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99
+        ? 'Commander'
+        : 'Standard',
       colors: [],
-      coverCard: parsed.cards[0],
+      coverCard: parsed.commanders?.[0] ?? parsed.cards[0],
+      // Designación explícita del comandante (sección [Commander]/LAYOUT/etc. del
+      // texto importado): sin esto, el mazo quedaba sin comandante marcado hasta
+      // que una heurística de "portada = primera carta" lo adivinaba al abrirlo.
+      commanderCard: parsed.commanders?.[0],
+      partnerCard: parsed.commanders?.[1],
       createdAt: Date.now(),
       updatedAt: Date.now(),
       source: 'imported',

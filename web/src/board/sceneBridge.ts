@@ -106,7 +106,7 @@ export function useSceneBridge({
             chosen: s.combatChosen ?? [],
           },
          game: s.game
-            ? { turn: s.game.turn, phase: s.game.phase, step: s.game.step, priority: me?.hasPriority === true }
+            ? { turn: s.game.turn, phase: s.game.phase ?? '', step: s.game.step ?? '', priority: me?.hasPriority === true }
             : null,
          gameView: s.game ?? null,
       } satisfies MageSceneState

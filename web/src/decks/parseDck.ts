@@ -290,7 +290,6 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
     const cleaned = rawName
       .trim()
       .replace(/\s+#.*$/, '')
-      .replace(/\s*\/\/.*$/, '')
       .trim()
     if (!cleaned || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(cleaned)) return
     const cardName = normalizeBasicLandName(cleaned) || cleaned
@@ -304,7 +303,7 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
       pushCard(target, parseInt(b[1], 10) || 1, b[3], b[2].trim() || defaultSet, defaultNumber)
       return
     }
-    const m = rest.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?\s*$/)
+    const m = rest.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?(?:\s+\*[A-Za-z]+\*)?\s*$/)
     if (m) {
       pushCard(target, parseInt(m[1], 10) || 1, m[2], m[3] || defaultSet, m[4] || defaultNumber)
       return
