@@ -1005,6 +1005,24 @@ public class MageServerImpl implements MageServer {
         });
     }
 
+    @Override
+    public boolean cheatSetup(final UUID gameId, final String sessionId, final UUID playerId, final Map<String, List<String>> cardsByZone) throws MageException {
+        return executeWithResult("cheatSetup", sessionId, new ActionWithBooleanResult() {
+            @Override
+            public Boolean execute() throws MageException {
+                if (!testMode) {
+                    return false;
+                }
+                Optional<Session> session = managerFactory.sessionManager().getSession(sessionId);
+                if (session.isPresent()) {
+                    managerFactory.gameManager().cheatSetup(gameId, session.get().getUserId(), playerId, cardsByZone);
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
     public void handleException(Exception ex) throws MageException {
         if (ex.getMessage() != null && !ex.getMessage().equals("No message")) {
             throw new MageException(ex.getMessage());

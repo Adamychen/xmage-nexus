@@ -13,6 +13,7 @@ import mage.utils.MageVersion;
 import mage.view.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -157,6 +158,8 @@ public interface MageServer {
     void replaySkipForward(UUID gameId, String sessionId, int moves) throws MageException;
 
     void cheatShow(UUID gameId, String sessionId, UUID playerId) throws MageException;
+
+    boolean cheatSetup(UUID gameId, String sessionId, UUID playerId, Map<String, List<String>> cardsByZone) throws MageException;
 
     List<UserView> adminGetUsers(String sessionId) throws MageException;
 

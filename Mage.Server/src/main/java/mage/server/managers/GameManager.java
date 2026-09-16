@@ -7,7 +7,9 @@ import mage.game.Game;
 import mage.game.GameOptions;
 import mage.server.game.GameController;
 import mage.view.GameView;
+import mage.MageException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +41,8 @@ public interface GameManager {
     void stopWatching(UUID gameId, UUID userId);
 
     void cheatShow(UUID gameId, UUID userId, UUID playerId);
+
+    void cheatSetup(UUID gameId, UUID userId, UUID playerId, Map<String, List<String>> cardsByZone) throws MageException;
 
     void removeGame(UUID gameId);
 

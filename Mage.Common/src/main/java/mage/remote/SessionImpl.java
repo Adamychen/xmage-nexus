@@ -1551,6 +1551,20 @@ public class SessionImpl implements Session {
     }
 
     @Override
+    public boolean cheatSetup(UUID gameId, UUID playerId, Map<String, List<String>> cardsByZone) {
+        try {
+            if (isConnected()) {
+                return server.cheatSetup(gameId, sessionId, playerId, cardsByZone);
+            }
+        } catch (MageException ex) {
+            handleMageException(ex);
+        } catch (Throwable t) {
+            handleThrowable(t);
+        }
+        return false;
+    }
+
+    @Override
     public List<UserView> getUsers() {
         try {
             if (isConnected()) {

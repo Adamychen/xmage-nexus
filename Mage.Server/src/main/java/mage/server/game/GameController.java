@@ -4,6 +4,8 @@ import mage.MageException;
 import mage.abilities.Ability;
 import mage.cards.Card;
 import mage.cards.Cards;
+import mage.cards.repository.CardInfo;
+import mage.cards.repository.CardRepository;
 import mage.choices.Choice;
 import mage.collectors.DataCollectorServices;
 import mage.constants.ManaType;
@@ -11,6 +13,7 @@ import mage.constants.PlayerAction;
 import mage.game.Game;
 import mage.game.GameOptions;
 import mage.game.GameState;
+import mage.game.PutToBattlefieldInfo;
 import mage.game.Table;
 import mage.game.command.Plane;
 import mage.game.events.Listener;
@@ -751,6 +754,64 @@ public class GameController implements GameCallback {
         if (player != null) {
             player.signalPlayerCheat();
         }
+    }
+
+    /**
+     * Nexus P1: coloca cartas por nombre en las zonas del jugador usando el
+     * mismo motor que los tests (Game.cheat). Solo testMode (el gate vive en
+     * MageServerImpl); zonas: hand, battlefield, library, graveyard, exile.
+     */
+    public void cheatSetup(UUID playerId, Map<String, List<String>> cardsByZone) throws MageException {
+        Player player = game.getPlayer(playerId);
+        if (player == null) {
+            throw new MageException("cheatSetup: unknown player " + playerId);
+        }
+        List<Card> library = new ArrayList<>();
+        List<Card> hand = new ArrayList<>();
+        List<PutToBattlefieldInfo> battlefield = new ArrayList<>();
+        List<Card> graveyard = new ArrayList<>();
+        List<Card> exiled = new ArrayList<>();
+        if (cardsByZone != null) {
+            for (Map.Entry<String, List<String>> entry : cardsByZone.entrySet()) {
+                String zone = entry.getKey() == null ? "" : entry.getKey().toLowerCase(Locale.ENGLISH);
+                List<String> names = entry.getValue() == null ? Collections.emptyList() : entry.getValue();
+                for (String name : names) {
+                    Card card = createCheatCard(name);
+                    switch (zone) {
+                        case "library":
+                            library.add(card);
+                            break;
+                        case "hand":
+                            hand.add(card);
+                            break;
+                        case "battlefield":
+                            battlefield.add(new PutToBattlefieldInfo(card, false));
+                            break;
+                        case "graveyard":
+                            graveyard.add(card);
+                            break;
+                        case "exile":
+                        case "exiled":
+                            exiled.add(card);
+                            break;
+                        default:
+                            throw new MageException("cheatSetup: unknown zone " + entry.getKey());
+                    }
+                }
+            }
+        }
+        game.cheat(playerId, library, hand, battlefield, graveyard, Collections.emptyList(), exiled);
+    }
+
+    private static Card createCheatCard(String name) throws MageException {
+        if (name == null || name.trim().isEmpty()) {
+            throw new MageException("cheatSetup: empty card name");
+        }
+        CardInfo info = CardRepository.instance.findCard(name.trim(), true);
+        if (info == null) {
+            throw new MageException("cheatSetup: unknown card " + name);
+        }
+        return info.createCard();
     }
 
     public void onResponseIdleTimeout(UUID playerId) {
