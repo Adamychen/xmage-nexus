@@ -16,7 +16,18 @@ final class SimManager {
     private final Config config;
     private final Consumer<String> errorSink;
     private final java.util.Map<String, SimPlayer> sims = new java.util.HashMap<>();
-    private int simCounter = 0;
+    // Compartido por TODAS las instancias de SimManager del proceso (una por
+    // sesión/ProxyClient). Antes era un contador por instancia (siempre
+    // arrancaba en 0) y la única fuente de unicidad entre sesiones era
+    // currentTimeMillis() % 1000 — un espacio de solo 1000 valores. Con
+    // varias mesas SIM creándose casi a la vez (visto en vivo con el fuzzer
+    // de P6: 2 de 8 tablas concurrentes) dos sesiones distintas podían
+    // generar el MISMO username "sim-000001-<mismos ms%1000>"; el servidor
+    // trata las conexiones duplicadas del mismo usuario como reconexión y
+    // mata la sesión más antigua, dejando el asiento SIM de esa mesa sin
+    // ocupar y `startMatch` falla con "Command failed". Un contador atómico
+    // global garantiza unicidad sin depender del reloj.
+    private static final java.util.concurrent.atomic.AtomicLong GLOBAL_SIM_COUNTER = new java.util.concurrent.atomic.AtomicLong();
     // servidor al que conecta la sesión web (los Sim se conectan al mismo)
     private volatile String serverHost = "";
     private volatile int serverPort = 0;
@@ -76,7 +87,7 @@ final class SimManager {
     }
 
     private String nextSimUsername() {
-        return "sim-" + String.format("%06d", ++simCounter) + "-" + (System.currentTimeMillis() % 1000);
+        return "sim-" + String.format("%06d", GLOBAL_SIM_COUNTER.incrementAndGet());
     }
 
     /** Skill 1-10 del asiento bot (orden de plazas no-humanas); 0 si ausente/inválido. */

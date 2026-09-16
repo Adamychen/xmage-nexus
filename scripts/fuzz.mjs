@@ -15,6 +15,7 @@
 //
 // Uso:
 //   node scripts/fuzz.mjs [--games=20] [--concurrency=6] [--maxTurns=60] [--stallMs=45000] [--maxGameMs=480000]
+//   node scripts/fuzz.mjs --games=5 --humanDeck="Life for Death" [--simDeck="..."]  (repro dirigida)
 //
 // Requiere el proxy (ws://127.0.0.1:8787) y un servidor XMage de test
 // arrancados (scripts/start-local.mjs o equivalente) y el checkout del fork
@@ -32,6 +33,15 @@ function argNum(name, def) {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`))
   return hit ? Number(hit.split('=')[1]) : def
 }
+function argStr(name, def) {
+  const hit = process.argv.find((a) => a.startsWith(`--${name}=`))
+  return hit ? hit.slice(name.length + 3) : def
+}
+// Repro dirigida: fija un mazo concreto (subcadena case-insensitive del
+// nombre/ruta del .dck) en vez de sortear del pool, para aislar un hallazgo
+// del fuzzing masivo (p.ej. --humanDeck="Life for Death").
+const HUMAN_DECK_FILTER = argStr('humanDeck', null)
+const SIM_DECK_FILTER = argStr('simDeck', null)
 const GAMES = argNum('games', 20)
 const MAX_TURNS = argNum('maxTurns', 60)
 const STALL_MS = argNum('stallMs', 45_000)
@@ -113,7 +123,7 @@ function parseDck(filePath) {
 }
 
 let deckPool = null
-function pickRandomDeck() {
+function ensureDeckPool() {
   if (!deckPool) {
     deckPool = collectDckFiles(forkPath('Mage.Client/release/sample-decks'))
     if (deckPool.length === 0) {
@@ -121,8 +131,22 @@ function pickRandomDeck() {
     }
     log(`pool de mazos reales: ${deckPool.length} archivos .dck`)
   }
+  return deckPool
+}
+/** Repro dirigida: primer .dck del pool cuya ruta contiene `filter` (sin
+ *  distinguir mayúsculas). Lanza si no hay ninguno, para no fallar en
+ *  silencio con un typo. */
+function pickFixedDeck(filter) {
+  const pool = ensureDeckPool()
+  const needle = filter.toLowerCase()
+  const file = pool.find((f) => f.toLowerCase().includes(needle))
+  if (!file) throw new Error(`ningún .dck del pool coincide con "${filter}"`)
+  return { ...parseDck(file), file: path.relative(forkPath('.'), file) }
+}
+function pickRandomDeck() {
+  const pool = ensureDeckPool()
   for (let tries = 0; tries < 10; tries++) {
-    const file = deckPool[Math.floor(Math.random() * deckPool.length)]
+    const file = pool[Math.floor(Math.random() * pool.length)]
     const deck = parseDck(file)
     const total = deck.cards.reduce((s, c) => s + c.amount, 0)
     if (total >= 40 && total <= 300 && deck.cards.length > 0) {
@@ -137,7 +161,20 @@ function pickRandomDeck() {
 // ---------------------------------------------------------------------------
 function optionList(choices) {
   if (!choices) return []
-  if (Array.isArray(choices)) return choices.map((c) => ({ value: String(c?.id ?? c?.value ?? ''), label: String(c?.label ?? c?.name ?? '') }))
+  if (Array.isArray(choices)) {
+    // "Modo texto" de GAME_CHOOSE_CHOICE (Cavern of Souls/Pithing Needle,
+    // ver plan4.md §3.7): choice.choices puede ser un array de STRINGS
+    // planos, no de {id,value}. Confirmado en vivo (2026-09-16): con
+    // c?.id ?? c?.value sobre un string da '' (falsy) → sendPlayerString
+    // nunca se envía y el bot se queda mudo hasta el idle-timeout del
+    // servidor (visto como "stall" con [NPH] Life for Death.dck, que era
+    // en realidad este bug del fuzzer, no del producto).
+    return choices.map((c) =>
+      typeof c === 'string'
+        ? { value: c, label: c }
+        : { value: String(c?.id ?? c?.value ?? ''), label: String(c?.label ?? c?.name ?? '') },
+    )
+  }
   if (typeof choices === 'object') return Object.entries(choices).map(([k, v]) => ({ value: String(k), label: typeof v === 'string' ? v : String(v?.name ?? v?.label ?? '') }))
   return []
 }
@@ -213,8 +250,10 @@ function connectPlayer(username) {
       }
       tick()
     }
+    api.sendCount = 0
     api.send = (action, args) => {
       if (!api.gameId) return
+      api.sendCount++
       sendQueue.push({ action, args: { gameId: api.gameId, ...args } })
       drainQueue()
     }
@@ -243,7 +282,27 @@ function connectPlayer(username) {
         api.gameId = String(msg.objectId)
       }
       if (method === 'GAME_OVER' || method === 'END_GAME_INFO') api.over = true
+      const RESPONSE_REQUIRED = new Set([
+        'GAME_ASK', 'GAME_CHOOSE_ABILITY', 'GAME_CHOOSE_CHOICE', 'GAME_CHOOSE_PILE', 'GAME_TARGET',
+        'GAME_GET_AMOUNT', 'GAME_TARGET_AMOUNT', 'GAME_GET_MULTI_AMOUNT', 'GAME_PLAY_MANA', 'GAME_PLAY_XMANA',
+      ])
+      const before = api.sendCount
       respond(api, msg)
+      // Diagnóstico (2026-09-16): dump de cualquier prompt que exige
+      // respuesta y se quedó sin ella — así se ve la forma real del dato
+      // (p.ej. GAME_CHOOSE_CHOICE con una forma no contemplada) en vez de
+      // reconstruirla a ciegas. GAME_SELECT no cuenta: la política puede
+      // pasar a propósito.
+      if (RESPONSE_REQUIRED.has(method) && api.sendCount === before) {
+        try {
+          const slim = { ...msg.data }
+          delete slim.gameView
+          fs.appendFileSync(
+            path.join(REPORT_DIR, 'fuzz-unanswered.jsonl'),
+            JSON.stringify({ at: Date.now(), player: username, gameId: api.gameId, method, data: slim }) + '\n',
+          )
+        } catch {}
+      }
     }
     ws.onerror = (e) => {
       api.anomalies.push({ kind: 'wsError', at: Date.now(), message: String(e?.message ?? e) })
@@ -273,12 +332,22 @@ function respond(api, m) {
     }
     case 'GAME_CHOOSE_ABILITY': {
       const opts = optionList(m.data?.choices)
-      if (opts[0]?.value) api.send('sendPlayerUUID', { value: opts[0].value })
+      // opts[0]?.value truthy-check: un value '' (string vacío, legítimo en
+      // "modo texto") sería falsy y dejaría el prompt sin respuesta — usar
+      // longitud, no veracidad del valor.
+      if (opts.length > 0) api.send('sendPlayerUUID', { value: opts[0].value })
       return
     }
     case 'GAME_CHOOSE_CHOICE': {
-      const opts = optionList(m.data?.choice?.keyChoices ?? m.data?.choice?.choices ?? m.data?.choices)
-      if (opts[0]?.value) api.send('sendPlayerString', { value: opts[0].value })
+      // Confirmado en vivo (2026-09-16, gameId f80a728d…): keyChoices llega
+      // como {} (objeto vacío) en "modo texto" — NO null/undefined — así que
+      // un `keyChoices ?? choices` con `??` nunca cae al fallback (jamás
+      // pasa de {} a choices) y optionList({}) da []. Hay que comprobar
+      // longitud explícitamente antes de preferir keyChoices sobre choices.
+      const keyChoices = m.data?.choice?.keyChoices
+      const source = keyChoices && Object.keys(keyChoices).length > 0 ? keyChoices : (m.data?.choice?.choices ?? m.data?.choices)
+      const opts = optionList(source)
+      if (opts.length > 0) api.send('sendPlayerString', { value: opts[0].value })
       return
     }
     case 'GAME_CHOOSE_PILE':
@@ -343,8 +412,8 @@ function respond(api, m) {
 async function playOneGame(gameNum) {
   const stamp = `${Date.now().toString(36)}${gameNum}`
   const humanUser = `fz-h-${stamp}`.slice(0, 14)
-  const humanDeck = pickRandomDeck()
-  const simDeck = pickRandomDeck()
+  const humanDeck = HUMAN_DECK_FILTER ? pickFixedDeck(HUMAN_DECK_FILTER) : pickRandomDeck()
+  const simDeck = SIM_DECK_FILTER ? pickFixedDeck(SIM_DECK_FILTER) : pickRandomDeck()
 
   const result = { gameNum, humanUser, humanDeck: humanDeck.file, simDeck: simDeck.file, anomalies: [], turnsPlayed: 0, outcome: 'unknown', durationMs: 0 }
   const startedAt = Date.now()
