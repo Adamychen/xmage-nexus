@@ -85,11 +85,17 @@
    (unit de `replay.ts` + escenario fake `REPLAY_*` + e2e). Contexto en
    `INTERACTION_COVERAGE` §Replay viewer. Mientras tanto el botón del Historial
    ya queda oculto solo (no hay `games[]`).
-3. **`GAME_REDRAW_GUI`**: log-only (INTERACTION_COVERAGE:41) → aceptar/issue.
+3. ✅ **`GAME_REDRAW_GUI` — FUERA DE ALCANCE por decisión (2026-09-14)**: log-only permanente; el tablero ya reacciona a `GAME_UPDATE`.
 4. ✅ **Recarga de página a mitad de draft (resync) — HECHO 2026-09-14**
    (ver §E 12ª parte: el server NO reenvía `DRAFT_INIT` a un `joinDraft` tardío).
 
-## 3. Fork / motor (coste alto: rebuild del server)
+## 3. Fork / motor — FUERA DE ALCANCE por decisión (2026-09-14)
+
+Los gaps `harnessed`/`Case solved` (y el resto del baseline: habilidades de
+jugador, día/noche, `can't-be-targeted`) quedan declarados fuera de alcance:
+exigirían cambio en el fork + rebuild del motor, y el proxy no puede inferirlos
+de `rules`/iconos. Documentado en `INTERACTION_COVERAGE.md` §Gaps; el guard
+`engineViewCoverage` sigue vigilando que el gap no cambie.
 
 1. `harnessed` (Unfinity): `ability.addHint(HarnessedHint.instance)` en
    `TheMindStone.java:54` y `TheSoulStone.java:47` (+ import).
@@ -102,9 +108,8 @@
 
 ## 4. Decisiones de producto (no test)
 
-- **U8 generador de mazos**: único ❌ del mapa (`web/COMPONENT_PARITY.md:33`)
-  → implementar o declarar fuera de alcance.
-- **U4-2** caché de password y **U4-12** sonidos de staging (stretch menores).
+- **U8 generador de mazos**: ✅ FUERA DE ALCANCE por decisión (2026-09-14).
+- ✅ **U4-2** (contraseña deshabilitada en beta) y **U4-12** (sonidos join/leave en staging) — hechos 2026-09-14.
 - **PWA/offline** (ROADMAP Phase 3).
 - **Tauri release**: guardar clave privada minisign + secrets
   `TAURI_SIGNING_PRIVATE_KEY[_PASSWORD]` en GitHub y probar updater real
