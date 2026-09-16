@@ -47,6 +47,7 @@ export const it: TranslationSchema = {
     connecting: 'Connessione in corso...',
     username: 'Nome utente',
     password: 'Password (opzionale)',
+    password_disabled_beta: 'Il server pubblico (beta) non usa password; viene ignorata.',
     avatar: 'Avatar',
     flag: 'Paese / Bandiera',
     custom_server_hint: 'Inserisci host e porta del server XMage',

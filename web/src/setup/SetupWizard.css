@@ -207,3 +207,14 @@
   .setup-footer { flex-direction: column-reverse; align-items: stretch; }
   .setup-nav { justify-content: flex-end; }
 }
+
+/* U4-2: contraseña deshabilitada en el servidor público (beta) */
+.setup-field-hint {
+  font-size: 0.75rem;
+  color: #f0a35e;
+}
+.setup-field input:disabled,
+.setup-field select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

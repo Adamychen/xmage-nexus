@@ -47,6 +47,7 @@ export const ru: TranslationSchema = {
     connecting: 'Подключение...',
     username: 'Имя пользователя',
     password: 'Пароль (необязательно)',
+    password_disabled_beta: 'Публичный сервер (бета) не использует пароль; он игнорируется.',
     avatar: 'Аватар',
     flag: 'Страна / Флаг',
     custom_server_hint: 'Введите хост и порт сервера XMage',

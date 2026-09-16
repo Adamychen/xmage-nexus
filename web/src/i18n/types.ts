@@ -53,6 +53,7 @@ export interface TranslationSchema {
     connecting: string
     username: string
     password: string
+    password_disabled_beta: string
     avatar: string
     flag: string
     custom_server_hint: string

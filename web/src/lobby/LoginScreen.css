@@ -590,3 +590,15 @@ details.login-network-box .login-network-fields {
   flex-direction: column;
   gap: 8px;
 }
+
+/* U4-2: contraseña deshabilitada en el servidor público (beta) */
+.login-password-beta-note {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #f0a35e;
+}
+.login-card input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

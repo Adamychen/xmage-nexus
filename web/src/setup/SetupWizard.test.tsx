@@ -139,6 +139,17 @@ describe('SetupWizard', () => {
     expect(isSetupDone()).toBe(false)
   })
 
+  it('deshabilita la contraseña con el preset oficial (beta) (U4-2)', () => {
+    render(<SetupWizard onClose={() => {}} />)
+    next(2)
+    fireEvent.click(screen.getByTestId('setup-preset-official'))
+    fireEvent.click(screen.getByTestId('setup-back'))
+    const pw = screen.getByTestId('setup-password') as HTMLInputElement
+    expect(pw.disabled).toBe(true)
+    expect(pw.value).toBe('')
+    expect(screen.getByText(/no usa contraseña|no password/i)).toBeTruthy()
+  })
+
   it('bloquea avanzar con el nombre vacío y lo exige al entrar (AUDIT)', () => {
     render(<SetupWizard onClose={() => {}} />)
     next()

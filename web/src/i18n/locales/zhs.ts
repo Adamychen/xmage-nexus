@@ -47,6 +47,7 @@ export const zhs: TranslationSchema = {
     connecting: '连接中...',
     username: '用户名',
     password: '密码（可选）',
+    password_disabled_beta: '公共服务器（beta）不使用密码，会被忽略。',
     avatar: '头像',
     flag: '国家 / 地区',
     custom_server_hint: '输入目标 XMage 服务器的主机与端口',

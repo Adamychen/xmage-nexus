@@ -47,6 +47,7 @@ export const ja: TranslationSchema = {
     connecting: '接続中...',
     username: 'ユーザー名',
     password: 'パスワード (任意)',
+    password_disabled_beta: '公開サーバー（ベータ）ではパスワードは使用されません（無視されます）。',
     avatar: 'アバター',
     flag: '国 / 国旗',
     custom_server_hint: 'XMageサーバーのホストとポートを入力',

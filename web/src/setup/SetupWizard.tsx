@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
@@ -65,6 +65,13 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
 
   const stepId = STEPS[step]
   const isLast = stepId === 'done'
+  // U4-2: el servidor público (beta) no usa contraseñas; el campo se
+  // deshabilita, se limpia y no viaja en la conexión guardada.
+  const passwordDisabledOnBeta = server.serverHost.trim() === 'beta.xmage.today'
+
+  useEffect(() => {
+    if (passwordDisabledOnBeta && password) setPassword('')
+  }, [passwordDisabledOnBeta, password])
 
   const goNext = () => {
     if (stepId === 'identity' && !username.trim()) {
@@ -81,7 +88,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
     serverHost: server.serverHost.trim() || server.proxyHost.trim() || 'localhost',
     port: parseInt(server.port, 10) || 17171,
     username: username.trim(),
-    password,
+    password: passwordDisabledOnBeta ? '' : password,
     flagName,
     avatarId,
   })
@@ -155,7 +162,10 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                 </label>
                 <label className="setup-field">
                   {t('login', 'password')}
-                  <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" disabled={passwordDisabledOnBeta} data-testid="setup-password" />
+                  {passwordDisabledOnBeta && (
+                    <span className="setup-field-hint">{t('login', 'password_disabled_beta')}</span>
+                  )}
                 </label>
                 <label className="setup-field">
                   {t('login', 'flag')}

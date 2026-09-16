@@ -114,6 +114,14 @@ export default function LoginScreen() {
   }
 
   const busy = phase === 'connecting'
+  // U4-2: el servidor público (beta) no comprueba contraseñas (authenticationActivated=false):
+  // el campo se deshabilita y no se envía nada.
+  const passwordDisabledOnBeta = serverHost.trim() === 'beta.xmage.today'
+  const passwordValue = passwordDisabledOnBeta ? '' : password
+
+  useEffect(() => {
+    if (passwordDisabledOnBeta && password) setPassword('')
+  }, [passwordDisabledOnBeta, password])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +134,7 @@ export default function LoginScreen() {
       serverHost.trim() || proxyHost.trim(),
       parseInt(port, 10) || 17171,
       username.trim(),
-      password,
+      passwordValue,
       flagName,
       avatarId,
     )
@@ -258,7 +266,12 @@ export default function LoginScreen() {
                 type="password"
                 placeholder={t('login.password')}
                 autoComplete="current-password"
+                disabled={passwordDisabledOnBeta}
+                data-testid="login-password"
               />
+              {passwordDisabledOnBeta && (
+                <span className="login-password-beta-note">{t('login', 'password_disabled_beta')}</span>
+              )}
             </label>
           </div>
         </div>
