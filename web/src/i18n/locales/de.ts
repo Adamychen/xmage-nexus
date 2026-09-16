@@ -218,6 +218,7 @@ export const de: TranslationSchema = {
     create_field_attack_option: 'Angriffsoption',
     create_field_range: 'Reichweite',
     create_field_password: 'Tischpasswort',
+    create_password_disabled_beta: 'Auf dem öffentlichen Server (Beta) können keine Tische mit Passwort erstellt werden.',
     create_field_min_rating: 'Mindest-ELO-Wertung',
     create_field_max_rating: 'Maximale ELO-Wertung',
     create_field_quit_ratio: 'Max. Abbruchquote',

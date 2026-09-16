@@ -224,6 +224,7 @@ export interface TranslationSchema {
     create_field_attack_option: string
     create_field_range: string
     create_field_password: string
+    create_password_disabled_beta: string
     create_field_min_rating: string
     create_field_max_rating: string
     create_field_quit_ratio: string

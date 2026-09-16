@@ -218,6 +218,7 @@ export const ru: TranslationSchema = {
     create_field_attack_option: 'Вариант атаки',
     create_field_range: 'Радиус влияния',
     create_field_password: 'Пароль стола',
+    create_password_disabled_beta: 'На публичном сервере (бета) нельзя создавать столы с паролем.',
     create_field_min_rating: 'Минимальный рейтинг ELO',
     create_field_max_rating: 'Максимальный рейтинг ELO',
     create_field_quit_ratio: 'Макс. процент выходов',

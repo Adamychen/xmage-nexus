@@ -218,6 +218,7 @@ export const ja: TranslationSchema = {
     create_field_attack_option: '攻撃オプション',
     create_field_range: '影響範囲',
     create_field_password: 'テーブルパスワード',
+    create_password_disabled_beta: '公開サーバー（ベータ）ではパスワード付きテーブルを作成できません。',
     create_field_min_rating: '最低ELOレーティング',
     create_field_max_rating: '最高ELOレーティング',
     create_field_quit_ratio: '許容される放棄率',

@@ -218,6 +218,7 @@ export const it: TranslationSchema = {
     create_field_attack_option: 'Opzione d\'attacco',
     create_field_range: 'Raggio d\'influenza',
     create_field_password: 'Password tavolo',
+    create_password_disabled_beta: 'Non si possono creare tavoli con password sul server pubblico (beta).',
     create_field_min_rating: 'ELO minimo',
     create_field_max_rating: 'ELO massimo',
     create_field_quit_ratio: 'Abbandoni massimi consentiti',

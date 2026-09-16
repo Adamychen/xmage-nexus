@@ -218,6 +218,7 @@ export const es: TranslationSchema = {
     create_field_attack_option: 'Opción de Ataque',
     create_field_range: 'Rango de Influencia',
     create_field_password: 'Contraseña de la Mesa',
+    create_password_disabled_beta: 'En el servidor público (beta) no se pueden crear mesas con contraseña.',
     create_field_min_rating: 'Rating ELO Mínimo',
     create_field_max_rating: 'Rating ELO Máximo',
     create_field_quit_ratio: 'Abandonos máximos permitidos',

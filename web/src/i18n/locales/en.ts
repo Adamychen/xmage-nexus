@@ -218,6 +218,7 @@ export const en: TranslationSchema = {
     create_field_attack_option: 'Attack Option',
     create_field_range: 'Range of Influence',
     create_field_password: 'Table Password',
+    create_password_disabled_beta: "Password tables can't be created on the public server (beta).",
     create_field_min_rating: 'Minimum ELO Rating',
     create_field_max_rating: 'Maximum ELO Rating',
     create_field_quit_ratio: 'Allowed quit %',

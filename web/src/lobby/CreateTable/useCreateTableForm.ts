@@ -131,6 +131,8 @@ export interface CreateTableForm {
   setRange: (v: string) => void
   password: string
   setPassword: (v: string) => void
+  /** U4-2: en beta.xmage.today el campo se deshabilita (no se pueden crear mesas privadas) */
+  passwordDisabledOnBeta: boolean
   showPassword: boolean
   setShowPassword: (v: boolean) => void
   bannedUsersRaw: string
@@ -189,6 +191,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
+  const serverHost = useStore((s) => s.conn?.serverHost)
+  const passwordDisabledOnBeta = serverHost === 'beta.xmage.today'
 
   const wizardSteps: WizardStep[] = useMemo(() => {
     const steps = [...WIZARD_STEPS_BASE]
@@ -488,6 +492,13 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   // Security & Permissions tab
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  // U4-2: el servidor público (beta) no acepta mesas con contraseña, así que el
+  // campo se deshabilita y se limpia para no enviarla nunca (misma decisión que
+  // en JoinTableDialog).
+  const passwordValue = passwordDisabledOnBeta ? '' : password
+  useEffect(() => {
+    if (passwordDisabledOnBeta && password) setPassword('')
+  }, [passwordDisabledOnBeta, password])
   const [bannedUsersRaw, setBannedUsersRaw] = useState('')
   const [spectatorsAllowed, setSpectatorsAllowed] = useState(true)
   const [rollbackTurnsAllowed, setRollbackTurnsAllowed] = useState(true)
@@ -878,7 +889,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
         draft: isDraftLimited,
         limitedOptions,
         playerTypesFinal,
-        password,
+        password: passwordValue,
         spectatorsAllowed,
         wins,
         numberRounds,
@@ -927,7 +938,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
             playerType: normalizeSeatType(bot.type),
             skill: bot.cfg?.skill ?? 2,
             ...(botDeck ? { deck: botDeck as any, deckType, gameType } : {}),
-            password: password.trim() || undefined,
+            password: passwordValue.trim() || undefined,
           })
           if (!joinBot.ok) {
             const code = (joinBot as { errorCode?: string }).errorCode
@@ -943,7 +954,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
             playerType: 'HUMAN',
             skill: mySkill,
             ...(finalMyDeck ? { deck: finalMyDeck, deckType, gameType } : {}),
-            password: password.trim() || undefined,
+            password: passwordValue.trim() || undefined,
           })
           if (finalMyDeck && myDeck) {
             setMyDeck(myDeck)
@@ -1043,7 +1054,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       wins,
       playerTypesFinal,
       seatSkills,
-      password,
+      password: passwordValue,
       skillLevel,
       rated,
       spectatorsAllowed,
@@ -1093,7 +1104,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           deck: botDeck as any,
           deckType,
           gameType,
-          password: password.trim() || undefined,
+          password: passwordValue.trim() || undefined,
         })
         if (!joinBot.ok) {
           const code = (joinBot as { errorCode?: string }).errorCode
@@ -1112,7 +1123,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           deck: finalMyDeck,
           deckType,
           gameType,
-          password: password.trim() || undefined,
+          password: passwordValue.trim() || undefined,
         })
         setMyDeck(myDeck)
         if (!join.ok) {
@@ -1194,6 +1205,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     range,
     setRange,
     password,
+    passwordDisabledOnBeta,
     setPassword,
     showPassword,
     setShowPassword,

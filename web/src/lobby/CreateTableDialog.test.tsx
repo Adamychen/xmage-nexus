@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import CreateTableDialog from './CreateTableDialog'
 import * as cmds from '../net/commands'
+import { setState } from '../state/state'
 
 vi.mock('../net/commands', () => ({
   getGameTypes: vi.fn().mockResolvedValue([
@@ -40,6 +41,7 @@ describe('CreateTableDialog', () => {
 
   afterEach(() => {
     cleanup()
+    setState({ conn: null } as never)
   })
 
   // Renders the dialog and waits until the async form data (game/deck/player/
@@ -93,6 +95,18 @@ describe('CreateTableDialog', () => {
     const passwordInput = screen.getByPlaceholderText(/Dejar en blanco para mesa pública|Leave blank for public table/i)
     fireEvent.change(passwordInput, { target: { value: 'secret123' } })
     expect((passwordInput as HTMLInputElement).value).toBe('secret123')
+  })
+
+  it('deshabilita la contraseña en beta.xmage.today (U4-2)', async () => {
+    setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
+    render(<CreateTableDialog onClose={onClose} />)
+
+    const securityTab = screen.getByText(/Restricciones|Restrictions/)
+    fireEvent.click(securityTab)
+
+    const passwordInput = screen.getByPlaceholderText(/Dejar en blanco para mesa pública|Leave blank for public table/i) as HTMLInputElement
+    expect(passwordInput.disabled).toBe(true)
+    expect(screen.getByText(/no se pueden crear mesas con contraseña|can't be created on the public server/i)).toBeDefined()
   })
 
   it('submits createTable with selected options and joins own seat', async () => {

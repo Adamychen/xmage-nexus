@@ -218,6 +218,7 @@ export const zhs: TranslationSchema = {
     create_field_attack_option: '攻击选项',
     create_field_range: '影响距离',
     create_field_password: '桌子密码',
+    create_password_disabled_beta: '在公共服务器（beta）上无法创建带密码的桌子。',
     create_field_min_rating: '最低 ELO 分数',
     create_field_max_rating: '最高 ELO 分数',
     create_field_quit_ratio: '允许的最大中途退出率',

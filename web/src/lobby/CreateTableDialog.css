@@ -187,6 +187,16 @@
 .password-field-wrap input {
   flex: 1;
 }
+.password-field-wrap input:disabled,
+.password-field-wrap .password-toggle-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.create-password-beta-note {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #f0a35e;
+}
 .password-toggle-btn {
   background: rgba(22,28,56,0.8);
   border: 1px solid rgba(255,255,255,0.12);
