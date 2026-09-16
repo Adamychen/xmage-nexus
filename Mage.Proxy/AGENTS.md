@@ -25,8 +25,10 @@ on the XMage fork (`mage` + `mage-common`) via the parent pom.
   change + recompile, not a code edit.
 - The only fork-side code we carry is the test-mode propagation in
   `Mage.Server/src/main/java/mage/server/TableController.java`
-  (`skipInitShuffling` / `skipStartingPlayerChoice`). Adjust only when changing
-  test mode.
+  (`skipInitShuffling` / `skipStartingPlayerChoice`) plus the P1 cheat channel
+  (`cheatSetup` across `MageServer`/`Testable`/`SessionImpl` in `Mage.Common`
+  and `MageServerImpl`/`GameManager`/`GameController` in `Mage.Server`,
+  testMode-gated, sync boolean result). Adjust only when changing test mode.
 
 ## Build & run
 

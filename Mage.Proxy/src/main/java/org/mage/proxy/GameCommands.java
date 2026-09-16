@@ -177,6 +177,16 @@ final class GameCommands {
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerManaType(gameId, playerId, manaType), null, null));
                 return true;
             }
+            case "cheatSetup": {
+                UUID gameId = JsonArgs.uuid(args, "gameId", null);
+                UUID playerId = JsonArgs.uuid(args, "playerId", null);
+                java.util.Map<String, java.util.List<String>> zones = JsonArgs.stringListMap(
+                        args.has("zones") && args.get("zones").isJsonObject() ? args.getAsJsonObject("zones") : null);
+                boolean ok = gameId != null && playerId != null && zones != null
+                        && ctx.session().cheatSetup(gameId, playerId, zones);
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, ok ? null : ProxyProtocol.ERR_FAILED, null));
+                return true;
+            }
             default:
                 return false;
         }

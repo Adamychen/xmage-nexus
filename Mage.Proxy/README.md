@@ -196,6 +196,7 @@ empty.
 | `sendPlayerManaType` | `{gameId, value}` | Choose mana type |
 | `sendPlayerAction` | `{gameId, action, data}` | Advanced actions (e.g., `PASS_PRIORITY_UNTIL_STACK_RESOLVED`) |
 | `updatePreferences` | `{phases?, confirmEmptyManaPool?}` | Sync user prefs to server (`UserData`, applied live via in-place `update()`): phase-stop matrix and/or empty-mana-pool pass confirm (`HumanPlayer.passWithManaPoolCheck`) |
+| `cheatSetup` | `{gameId, playerId, zones:{hand?, battlefield?, library?, graveyard?, exile?}}` | **Test only**: place named cards into zones (P1; requires fork server with `testMode=true`, else `ok:false`; unknown card/zone/player → `ok:false`). Call once the game has processed ≥1 normal action (e.g. after the first land drop) — on the very first priority of turn 1 it freezes the game loop (runs off the game thread while still starting up) |
 
 ### Chat
 

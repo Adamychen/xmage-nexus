@@ -3,6 +3,10 @@ package org.mage.proxy;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Lectura defensiva de argumentos JSON de comandos. */
@@ -74,5 +78,27 @@ final class JsonArgs {
             return prim.getAsString();
         }
         return data.toString();
+    }
+
+    /** Mapa zona → nombres de carta ({hand:[...], battlefield:[...]}), o null si malformado. */
+    static Map<String, List<String>> stringListMap(JsonObject obj) {
+        if (obj == null || !obj.isJsonObject()) {
+            return null;
+        }
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+            if (entry.getValue() == null || !entry.getValue().isJsonArray()) {
+                return null;
+            }
+            List<String> names = new ArrayList<>();
+            for (JsonElement el : entry.getValue().getAsJsonArray()) {
+                if (!el.isJsonPrimitive() || !el.getAsJsonPrimitive().isString()) {
+                    return null;
+                }
+                names.add(el.getAsString());
+            }
+            out.put(entry.getKey(), names);
+        }
+        return out;
     }
 }
