@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
-import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
+import type { CardView, CardsView, GameView, PermanentView, PlayerView } from '../net/types'
 import { simpleToCardsView } from './revealedCards'
+import { switchedHandCards } from './handSwitch'
+import { useStore } from '../state/store'
 import type { CrossZonePlayable } from './crossZone'
 
 export const MAX_BOARD_PLAYERS = 4
@@ -21,6 +23,13 @@ export interface BoardProps {
   blockingIds?: string[]
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
+}
+
+/** Mano controlada para la barra propia (Switch Hands / Mindslaver): sustituye
+ *  a `game.myHand` mientras haya una clave activa con mano visible. */
+export function useSwitchedHand(game: GameView | null): CardsView | null {
+  const key = useStore((s) => s.switchedHandKey)
+  return useMemo(() => switchedHandCards(game?.opponentHands, key), [game?.opponentHands, key])
 }
 
 export function useSpectatorBottomHand(

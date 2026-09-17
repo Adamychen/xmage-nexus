@@ -171,6 +171,7 @@
     { "category": "In-Game Board", "feature": "Tap Rotations, Life Totals, Counters", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Board", "feature": "Graveyard / Exile Inspector Overlays", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Board", "feature": "Double-Faced Cards (DFC/MDFC/Sagas)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "In-Game Board", "feature": "Control Opponent's Turn (Mindslaver) + Switch Hands", "official": "yes", "nexus": "partial", "phase": "Completed" },
     { "category": "In-Game Rules & Prompts", "feature": "Priority & Turn Passing (GAME_SELECT)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Rules & Prompts", "feature": "Mana Payment (tap + color pool)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Rules & Prompts", "feature": "Visual Targeting (animated arrows/glow)", "official": "partial", "nexus": "yes", "phase": "Completed" },

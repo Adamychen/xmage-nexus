@@ -792,6 +792,7 @@ export const ja: TranslationSchema = {
     step_end_step: '終了ステップ',
     step_cleanup: 'クリンナップ',
     waiting_opponent: '対戦相手の行動を待機中…',
+    controlling_turn: '{name}のターンを操作中',
     color_white: '白',
     color_blue: '青',
     color_black: '黒',

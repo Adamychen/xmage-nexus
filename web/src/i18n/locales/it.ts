@@ -789,6 +789,7 @@ export const it: TranslationSchema = {
     step_end_step: 'Sottofase Finale',
     step_cleanup: 'Cancellazione',
     waiting_opponent: 'In attesa dell\'avversario…',
+    controlling_turn: 'Controlli il turno di {name}',
     color_white: 'Bianco',
     color_blue: 'Blu',
     color_black: 'Nero',

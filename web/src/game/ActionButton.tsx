@@ -5,6 +5,7 @@ import { useTranslation } from '../i18n'
 import PassMenu from './PassMenu'
 import Icon, { type IconName } from '../ui/Icon'
 import { activeSkipOf } from './skips'
+import { controlInfo } from '../state/control'
 import './ActionButton.css'
 
 interface ActionButtonProps {
@@ -33,6 +34,7 @@ export default function ActionButton({
   const opp = game?.players?.find((p) => !p.controlled)
   const stackItems = Object.keys(game?.stack ?? {}).length
   const activeSkip = activeSkipOf(me)
+  const control = controlInfo(game)
 
   useEffect(() => {
     if (!menuOpen) return
@@ -70,6 +72,11 @@ export default function ActionButton({
   } else if (me?.hasPriority) {
     label = t('game', 'pass_priority')
     sublabel = me.isActive ? t('game', 'turn') : t('game', 'priority')
+    modeClass = 'action-priority'
+    modeIcon = 'play'
+  } else if (control.priorityIsControlled) {
+    label = t('game', 'pass_priority')
+    sublabel = t('game', 'controlling_turn', { name: control.actingName ?? '' })
     modeClass = 'action-priority'
     modeIcon = 'play'
   } else if (!me?.hasPriority && opp?.hasPriority) {

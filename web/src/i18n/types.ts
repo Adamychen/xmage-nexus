@@ -796,6 +796,7 @@ export interface TranslationSchema {
     step_end_step: string
     step_cleanup: string
     waiting_opponent: string
+    controlling_turn: string
     color_white: string
     color_blue: string
     color_black: string

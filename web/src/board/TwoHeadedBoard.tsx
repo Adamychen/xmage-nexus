@@ -4,7 +4,7 @@ import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
-import { type BoardProps } from './boardShared'
+import { useSwitchedHand, type BoardProps } from './boardShared'
 import { opponentRevealedCards } from './revealedCards'
 import './TwoHeadedBoard.css'
 
@@ -28,6 +28,7 @@ export default function TwoHeadedBoard({
   onPlayCrossZone,
 }: BoardProps) {
   const { me, opps, isSpectator } = useBoardPlayers(game, true)
+  const switchedHand = useSwitchedHand(game)
   const presenter = useBoardPresenter({
     game,
     targetIds,
@@ -68,10 +69,14 @@ export default function TwoHeadedBoard({
       {player && (
         <OpponentZone
           player={player}
-          onCardClick={onTargetClick}
+          onCardClick={handleCardClick}
           onCardHover={handleCardHover}
           targetIds={targetIdSet}
           revealedCards={opponentRevealedCards(game, player)}
+          playableIds={playableIdSet}
+          combatSelectable={combatSelectable}
+          combatMode={combatMode}
+          combatChosen={combatChosen}
           attackingIds={attackingIds}
           blockingIds={blockingIds}
           mirrored={mirrored}
@@ -90,7 +95,7 @@ export default function TwoHeadedBoard({
       className={shellClass}
       presenter={presenter}
       handBar={!isSpectator ? {
-        cards: game?.myHand ?? {},
+        cards: switchedHand ?? game?.myHand ?? {},
         onCardClick: onPlayableClick,
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
@@ -134,10 +139,14 @@ export default function TwoHeadedBoard({
           ) : botLeft ? (
             <OpponentZone
               player={botLeft as PlayerView | undefined}
-              onCardClick={onTargetClick}
+              onCardClick={handleCardClick}
               onCardHover={handleCardHover}
               targetIds={targetIdSet}
               revealedCards={opponentRevealedCards(game, botLeft as PlayerView | undefined)}
+              playableIds={playableIdSet}
+              combatSelectable={combatSelectable}
+              combatMode={combatMode}
+              combatChosen={combatChosen}
               attackingIds={attackingIds}
               blockingIds={blockingIds}
               mirrored

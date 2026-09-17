@@ -789,6 +789,7 @@ export const fr: TranslationSchema = {
     step_end_step: 'Fin de tour',
     step_cleanup: 'Nettoyage',
     waiting_opponent: 'En attente de l\'adversaire…',
+    controlling_turn: 'Tu contrôles le tour de {name}',
     color_white: 'Blanc',
     color_blue: 'Bleu',
     color_black: 'Noir',

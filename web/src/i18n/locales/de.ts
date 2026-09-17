@@ -789,6 +789,7 @@ export const de: TranslationSchema = {
     step_end_step: 'Endsegment',
     step_cleanup: 'Aufräumsegment',
     waiting_opponent: 'Warten auf Gegner…',
+    controlling_turn: 'Du kontrollierst {name}s Zug',
     color_white: 'Weiß',
     color_blue: 'Blau',
     color_black: 'Schwarz',

@@ -789,6 +789,7 @@ export const ru: TranslationSchema = {
     step_end_step: 'Конечный шаг',
     step_cleanup: 'Очистка',
     waiting_opponent: 'Ожидание оппонента…',
+    controlling_turn: 'Вы контролируете ход {name}',
     color_white: 'Белый',
     color_blue: 'Синий',
     color_black: 'Черный',

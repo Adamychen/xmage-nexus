@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import HandZone from './HandZone'
@@ -10,10 +11,10 @@ import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
-import { switchableHandKeys } from './handSwitch'
+import { switchedHandCards, switchableHandKeys } from './handSwitch'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
-import { setState, useStore } from '../state/store'
+import { setState, setSwitchedHandKey, useStore } from '../state/store'
 import { groupStackables } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import { isMarqueePermanent } from './marquee'
@@ -90,11 +91,20 @@ export default function BoardZone({
   const opponentHands = useStore((s) => s.game?.opponentHands)
   const gamePlayers = useStore((s) => s.game?.players)
   const switchKeys = useMemo(() => switchableHandKeys(opponentHands), [opponentHands])
-  const [switchedHandKey, setSwitchedHandKey] = useState<string | null>(null)
-  useEffect(() => {
-    if (switchedHandKey && !switchKeys.includes(switchedHandKey)) setSwitchedHandKey(null)
-  }, [switchedHandKey, switchKeys])
+  const switchedHandKey = useStore((s) => s.switchedHandKey)
   const canSwitchHands = effectiveControlled && switchKeys.length > 0
+  // El abanico de la mano flota sobre la status row (z-index 20) y ningún
+  // z-index dentro de la zona puede superarlo (la zona crea su propio contexto):
+  // el botón se monta como hijo directo del tablero para quedar por encima.
+  const [shellEl, setShellEl] = useState<HTMLElement | null>(null)
+  const zoneRefWithShell = useCallback(
+    (node: HTMLDivElement | null) => {
+      zoneRef(node)
+      const next = (node?.closest('.board-shell') as HTMLElement | null) ?? null
+      setShellEl((prev) => (prev === next ? prev : next))
+    },
+    [zoneRef],
+  )
   const switchedPlayerName = switchedHandKey
     ? (gamePlayers?.find((p) => p.playerId === switchedHandKey || p.name === switchedHandKey)?.name ?? switchedHandKey)
     : null
@@ -114,16 +124,8 @@ export default function BoardZone({
   const finalHand = useMemo((): CardsView => {
     if (!player) return {}
     // Mano controlada ajena (Switch Hands, Mindslaver): sustituye a la propia.
-    if (switchedHandKey) {
-      const switched = opponentHands?.[switchedHandKey]
-      if (switched) {
-        const res: Record<string, CardView> = {}
-        for (const [id, card] of Object.entries(switched)) {
-          res[id] = { ...(card as CardView), id, faceDown: false }
-        }
-        return res
-      }
-    }
+    const switched = switchedHandCards(opponentHands, switchedHandKey)
+    if (switched) return switched
     const handCount = player.handCount ?? 0
 
     // 1. Explicit full hand passed (e.g. human player or spectator bottom)
@@ -216,7 +218,7 @@ export default function BoardZone({
   if (!player) {
     return (
       <div
-        ref={zoneRef}
+        ref={zoneRefWithShell}
         className={`board-zone empty ${isTop ? 'zone-top opponent-zone' : 'zone-bottom player-zone'} ${compactPod ? 'compact-pod' : ''} ${className}`}
         style={{ '--card-w': `${cardW}px` } as React.CSSProperties}
       />
@@ -405,6 +407,20 @@ export default function BoardZone({
     )
   }
 
+  const handSwitchButton = (
+    <button
+      type="button"
+      data-testid="hand-switch-btn"
+      data-switched={switchedHandKey ?? undefined}
+      className={`hand-switch-btn ${switchedHandKey ? 'is-switched' : ''}`}
+      title={t('game', 'switch_hand')}
+      onClick={() => setSwitchedHandKey(switchedHandKey ? null : (switchKeys[0] ?? null))}
+    >
+      <Icon name="swap" size={13} />
+      <span>{switchedHandKey && switchedPlayerName ? switchedPlayerName : t('game', 'switch_hand')}</span>
+    </button>
+  )
+
   const statusRow = (
     <div
       key="status-row"
@@ -436,25 +452,10 @@ export default function BoardZone({
           onViewHand={() => setHandViewerOpen(true)}
         />
       )}
-      {canSwitchHands && (
-        <button
-          type="button"
-          data-testid="hand-switch-btn"
-          data-switched={switchedHandKey ?? undefined}
-          className={`hand-switch-btn ${switchedHandKey ? 'is-switched' : ''}`}
-          title={t('game', 'switch_hand')}
-          onClick={() => {
-            if (switchedHandKey) {
-              setSwitchedHandKey(null)
-            } else {
-              setSwitchedHandKey(switchKeys[0])
-            }
-          }}
-        >
-          <Icon name="swap" size={13} />
-          <span>{switchedHandKey && switchedPlayerName ? switchedPlayerName : t('game', 'switch_hand')}</span>
-        </button>
-      )}
+      {canSwitchHands &&
+        (shellEl
+          ? createPortal(handSwitchButton, shellEl)
+          : handSwitchButton)}
       <ResourceBar
         player={player}
         side={statusSide}
@@ -534,7 +535,7 @@ export default function BoardZone({
   return (
     <div
       className={zoneClasses}
-      ref={zoneRef}
+      ref={zoneRefWithShell}
       data-player-id={player.playerId}
       data-player-name={player.name}
       data-role={isTop ? 'opponent' : 'player'}

@@ -6,6 +6,7 @@ import { attributeStackControllers } from '../game/stackAttribution'
 import {
   gameViewFrom, isOlderThanCurrentGame,
 } from './gameUtils'
+import { switchableHandKeys } from '../board/handSwitch'
 import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
 import { notifyFeedbackOpened } from '../audio/promptSound'
 import { handleChatMessage, handleShowUserMessage, handleServerMessage } from './events/chat'
@@ -114,11 +115,16 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       && s.rollbackPendingFor != null && s.rollbackPendingFor === s.gameId
     if (!staleByPosition || rollbackRestored) {
       dispatchGameSounds(currentGame, embeddedGame, method)
+      // La mano controlada cambió/desapareció: la barra propia vuelve a la mía.
+      const switched = s.switchedHandKey
+      const switchedValid =
+        switched != null && switchableHandKeys(embeddedGame.opponentHands).includes(switched)
       setState({
         game: attributeStackControllers(sameGame ? currentGame : null, embeddedGame),
         phase: 'game',
         watchingTable: null,
         gameId: objectId ?? s.gameId,
+        ...(switched && !switchedValid ? { switchedHandKey: null } : null),
         // Solo se limpia al consumir el rollback: un accept normal no debe tumbar
         // un flag recién armado (el aviso por chat puede llegar tarde).
         ...(rollbackRestored ? { rollbackPendingFor: null } : null),

@@ -4,7 +4,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { MAX_BOARD_PLAYERS, useSpectatorBottomHand, type BoardProps } from './boardShared'
+import { MAX_BOARD_PLAYERS, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import './ArenaBoard.css'
 
 export type { BoardProps as ArenaBoardProps }
@@ -52,6 +52,7 @@ export default function ArenaBoard({
   // con su mano si es visible, y el resto arriba en columnas.
   const spectatorBottom = isSpectator ? (opps.length >= 2 ? opps[opps.length - 1] : opps[0]) : undefined
   const spectatorBottomHand = useSpectatorBottomHand(game, isSpectator, spectatorBottom)
+  const switchedHand = useSwitchedHand(game)
 
   const oppRow = useMemo(
     () => (isSpectator ? opps.slice(0, Math.max(0, opps.length - 1)).slice(0, MAX_BOARD_PLAYERS - 1) : opps.slice(0, MAX_BOARD_PLAYERS - 1)),
@@ -64,7 +65,7 @@ export default function ArenaBoard({
       testId="arena-board"
       presenter={presenter}
       handBar={!isSpectator ? {
-        cards: game?.myHand ?? {},
+        cards: switchedHand ?? game?.myHand ?? {},
         onCardClick: onPlayableClick,
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
@@ -79,10 +80,14 @@ export default function ArenaBoard({
               {opp && (
                 <OpponentZone
                   player={opp}
-                  onCardClick={onTargetClick}
+                  onCardClick={handleCardClick}
                   onCardHover={handleCardHover}
                   targetIds={targetIdSet}
                   revealedCards={opponentRevealedCards(game, opp)}
+                  playableIds={playableIdSet}
+                  combatSelectable={combatSelectable}
+                  combatMode={combatMode}
+                  combatChosen={combatChosen}
                   attackingIds={attackingIds}
                   blockingIds={blockingIds}
                   compactPod

@@ -7,6 +7,7 @@ import { stopKeyForStep } from '../game/phaseStops'
 import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
+import { isControllingPriority } from './control'
 import { soundManager } from '../audio/soundManager'
 import { resetPromptSound } from '../audio/promptSound'
 import type { AppState } from './state'
@@ -17,6 +18,11 @@ export function clearError() {
 
 export function setStoreError(error: string) {
   setState({ error })
+}
+
+/** Cambia la mano visible de la barra propia (Switch Hands / Mindslaver). */
+export function setSwitchedHandKey(key: string | null) {
+  setState({ switchedHandKey: key })
 }
 
 export function clearFeedback() {
@@ -302,7 +308,9 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
 export function maybeAutoPass(game: GameView) {
   const s = getState()
   const me = game.players?.find((p) => p.controlled)
-  if (!s.settings.autoPass || s.feedback || !me?.hasPriority || !s.gameId) return
+  if (!s.settings.autoPass || s.feedback || !s.gameId) return
+  if (isControllingPriority(game)) return
+  if (!me?.hasPriority) return
   if (s.combat) return
   const stopKey = stopKeyForStep(game.step)
   if (stopKey) {

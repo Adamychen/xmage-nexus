@@ -4,7 +4,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { useSpectatorBottomHand, type BoardProps } from './boardShared'
+import { useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import './GameBoard.css'
 
 export interface GameBoardProps extends BoardProps {
@@ -54,6 +54,8 @@ export default function GameBoard({
 
   /** Bottom player hand in spectator mode (revealed or viewed). */
   const spectatorBottomHand = useSpectatorBottomHand(game, isSpectator, oppBottom)
+  /** Mano ajena bajo control (Switch Hands): sustituye a la propia. */
+  const switchedHand = useSwitchedHand(game)
 
   const currentOpp = useMemo(() => {
     if (topOpps.length <= 1) return topOpps[0]
@@ -72,7 +74,7 @@ export default function GameBoard({
       testId="game-board"
       presenter={presenter}
       handBar={!isSpectator ? {
-        cards: game?.myHand ?? {},
+        cards: switchedHand ?? game?.myHand ?? {},
         onCardClick: onPlayableClick,
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
@@ -82,10 +84,14 @@ export default function GameBoard({
       <OpponentZone
         key={currentOpp?.playerId}
         player={currentOpp}
-        onCardClick={onTargetClick}
+        onCardClick={handleCardClick}
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
         revealedCards={opponentRevealedCards(game, currentOpp)}
+        playableIds={playableIdSet}
+        combatSelectable={combatSelectable}
+        combatMode={combatMode}
+        combatChosen={combatChosen}
         attackingIds={attackingIds}
         blockingIds={blockingIds}
       />

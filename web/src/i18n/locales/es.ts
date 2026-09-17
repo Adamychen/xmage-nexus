@@ -789,6 +789,7 @@ export const es: TranslationSchema = {
     step_end_step: 'Paso final',
     step_cleanup: 'Limpieza',
     waiting_opponent: 'Esperando oponente…',
+    controlling_turn: 'Controlas el turno de {name}',
     color_white: 'Blanco',
     color_blue: 'Azul',
     color_black: 'Negro',

@@ -59,6 +59,20 @@ describe('handleMessage', () => {
     expect(getState().gameId).toBe('g-1')
   })
 
+  it('limpia switchedHandKey cuando la mano controlada desaparece del GameView', () => {
+    const withHand = makeGameView({
+      opponentHands: { Bob: { 'oh-1': { id: 'oh-1', name: 'Lightning Bolt' } } },
+    })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-1', data: withHand })
+    setState({ switchedHandKey: 'Bob' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 2, objectId: 'g-1', data: withHand })
+    expect(getState().switchedHandKey).toBe('Bob')
+
+    const withoutHand = makeGameView({ opponentHands: {} })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 3, objectId: 'g-1', data: withoutHand })
+    expect(getState().switchedHandKey).toBeNull()
+  })
+
   it('unwraps GAME_UPDATE_AND_INFORM gameView data', () => {
     const game = makeGameView({ phase: 'COMBAT' })
     handleMessage({
@@ -511,6 +525,31 @@ describe('maybeAutoPass', () => {
     })
     maybeAutoPass(game)
     expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+  })
+
+  it('nunca pasa la prioridad del jugador controlado (Mindslaver)', () => {
+    setSetting('autoPass', true)
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-1',
+      data: { gameId: 'g-1' },
+    })
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
+    const game = makeGameView({
+      phase: 'PRECOMBAT_MAIN',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true }),
+        makePlayer({ playerId: 'p2', name: 'Bob', isActive: true, hasPriority: true }),
+      ],
+      opponentHands: { Bob: { 'oh-1': { id: 'oh-1', name: 'Lightning Bolt' } } },
+      activePlayerName: 'Bob',
+      priorityPlayerName: 'Bob',
+      myHand: { 'h-1': makeCard({ name: 'Counterspell', parentId: 'h-1' }) },
+    })
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 })
 

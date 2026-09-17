@@ -36,6 +36,7 @@ import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
 import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
+import { isControllingPriority } from '../state/control'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
@@ -88,7 +89,11 @@ export default function GameScreen() {
       soundManager.play('timer_tick', 'game')
     }
   }, [timerSecs, isTimerTicking])
-  const canPass = !!gameId && (!!me?.hasPriority || (!!me?.isActive && (!feedback || feedback.mode === 'combat')))
+  const controllingPriority = isControllingPriority(game)
+  const canPass =
+    !!gameId &&
+    (!!me?.hasPriority ||
+      ((controllingPriority || !!me?.isActive) && (!feedback || feedback.mode === 'combat')))
   const targetIds = feedback?.method === 'GAME_TARGET' ? feedback.options.map((option) => option.id) : []
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined

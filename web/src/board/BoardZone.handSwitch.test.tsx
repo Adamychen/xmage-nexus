@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import BoardZone from './BoardZone'
-import { setState } from '../state/store'
+import { getState, setState } from '../state/store'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 
 const alice = () =>
@@ -13,6 +13,7 @@ function setGame(opponentHands: Record<string, Record<string, unknown>>) {
   setState({
     game: makeGameView({ players: [alice(), bob()], opponentHands: opponentHands as never }) as never,
     gameId: 'g1',
+    switchedHandKey: null,
   })
 }
 
@@ -21,10 +22,10 @@ const bobsHand = { Bob: { 'oh-1': makeCard({ name: 'Mindslaver Prize', parentId:
 
 describe('BoardZone Switch Hands', () => {
   beforeEach(() => {
-    setState({ game: null, gameId: null, playerMenu: null })
+    setState({ game: null, gameId: null, playerMenu: null, switchedHandKey: null })
   })
   afterEach(() => {
-    setState({ game: null, gameId: null, playerMenu: null })
+    setState({ game: null, gameId: null, playerMenu: null, switchedHandKey: null })
     cleanup()
   })
 
@@ -41,11 +42,13 @@ describe('BoardZone Switch Hands', () => {
     expect(queryByText('Counterspell')).not.toBeNull()
 
     fireEvent.click(btn)
+    expect(getState().switchedHandKey).toBe('Bob')
     expect(btn.getAttribute('data-switched')).toBe('Bob')
     expect(queryByText('Mindslaver Prize')).not.toBeNull()
     expect(queryByText('Counterspell')).toBeNull()
 
     fireEvent.click(getByTestId('hand-switch-btn'))
+    expect(getState().switchedHandKey).toBeNull()
     expect(queryByText('Counterspell')).not.toBeNull()
     expect(queryByText('Mindslaver Prize')).toBeNull()
   })

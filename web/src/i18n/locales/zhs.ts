@@ -792,6 +792,7 @@ export const zhs: TranslationSchema = {
     step_end_step: '结束步骤',
     step_cleanup: '清除步骤',
     waiting_opponent: '等待对手行动…',
+    controlling_turn: '你控制着{name}的回合',
     color_white: '白色',
     color_blue: '蓝色',
     color_black: '黑色',
