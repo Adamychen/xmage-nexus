@@ -2,6 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { DeckBox } from './DeckBox'
 import type { DeckV2 } from './types'
+import { deckInitials } from './types'
 
 describe('DeckBox', () => {
   afterEach(() => {
@@ -67,5 +68,42 @@ describe('DeckBox', () => {
     const box = screen.getByRole('button')
     box.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
     expect(dblClicked).toBe(true)
+  })
+
+  it('shows distinct fallback initials for decks sharing a common name prefix', () => {
+    const base = {
+      colors: [] as DeckV2['colors'],
+      cards: [{ cardName: 'Mountain', setCode: 'DMU', cardNumber: '280', amount: 60 }],
+      sideboard: [],
+      createdAt: 1000,
+      updatedAt: 1000,
+      source: 'precon' as const,
+    }
+    const starter: DeckV2 = { ...base, id: 'precon-0', name: 'Mage Web starter', format: 'Freeform' }
+    const bolt: DeckV2 = { ...base, id: 'precon-1', name: 'Mage Web bolt', format: 'Freeform' }
+
+    render(<DeckBox deck={starter} />)
+    render(<DeckBox deck={bolt} />)
+
+    // Antes del fix ambos caían en "MA" (slice(0, 2) del prefijo compartido "Mage Web").
+    expect(screen.getByText('WS')).toBeDefined()
+    expect(screen.getByText('WB')).toBeDefined()
+    expect(screen.queryByText('MA')).toBeNull()
+  })
+})
+
+describe('deckInitials', () => {
+  it('takes the last two significant words instead of the shared prefix', () => {
+    expect(deckInitials('Mage Web starter')).toBe('WS')
+    expect(deckInitials('Mage Web bolt')).toBe('WB')
+    expect(deckInitials('Mage Web AI lands')).toBe('AL')
+  })
+
+  it('falls back to the first two letters for a single-word name', () => {
+    expect(deckInitials('Solo')).toBe('SO')
+  })
+
+  it('returns a placeholder for an empty name', () => {
+    expect(deckInitials('')).toBe('??')
   })
 })

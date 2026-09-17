@@ -37,9 +37,19 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
 
         // El tablero pinta al menos una carta del humano (salvo fin de partida
         // en mulligan: sin mano/campo, solo el estado de la partida).
-        if (entry.assert === 'hasConcedeMulligan') {
+        if (entry.assert === 'hasConcedeMulligan' || entry.assert === 'hasTimeoutLoss') {
+          // Fin de partida sin concesión explícita de cartas: el jugador
+          // controlado ya salió (conceder en mulligan / reloj agotado) y su
+          // zona queda vacía.
           await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
           await expect(page.locator('.player-zone .card-slot')).toHaveCount(0)
+        } else if (entry.assert === 'firstMulliganFreeSecondCostsCard') {
+          // Justo tras el mulligan (turno 1): mano final de 6 (dos mulligans
+          // con el primero gratis: 7 − 1 carta al fondo) y el comandante en
+          // la zona de mando (el único card-slot del player-zone).
+          await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
+          await expect(page.getByTestId('hand-bar')).toHaveAttribute('data-hand-count', '6')
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Krenko, Mob Boss"]')).toHaveCount(1)
         } else if (entry.assert === 'hasKarnRestart') {
           // Reinicio de Karn: mesa vacía pero mano nueva (7 cartas).
           await expect(page.locator('.hand-zone .card-slot').first()).toBeVisible()

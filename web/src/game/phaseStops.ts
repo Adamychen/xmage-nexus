@@ -41,6 +41,27 @@ export function togglePhaseStop(stops: PhaseStops, turn: PhaseTurn, key: string)
   return next
 }
 
+/** Mapa de `GameView.step` (wire real del servidor) al `stopKey` configurable de PhaseBar/PhaseStopSelector. */
+const STEP_STOP_KEY: Record<string, string> = {
+  UPKEEP: 'upkeep',
+  DRAW: 'draw',
+  PRECOMBAT_MAIN: 'main1',
+  BEGIN_COMBAT: 'beginCombat',
+  END_COMBAT: 'endCombat',
+  POSTCOMBAT_MAIN: 'main2',
+  END_TURN: 'endStep',
+}
+
+/**
+ * DECLARE_ATTACKERS/DECLARE_BLOCKERS/COMBAT_DAMAGE/CLEANUP no tienen stopKey:
+ * no son configurables (el motor siempre pregunta cuando hay algo que decidir
+ * en esos pasos, igual que el cliente oficial), así que no hay nada que mirar
+ * aquí para ellos.
+ */
+export function stopKeyForStep(step: string | null | undefined): string | undefined {
+  return step ? STEP_STOP_KEY[step] : undefined
+}
+
 export function mergePhaseStops(stored: unknown): PhaseStops {
   const base = clonePhaseStops(DEFAULT_PHASE_STOPS)
   if (!stored || typeof stored !== 'object') return base

@@ -99,3 +99,58 @@ describe('MulliganDialog — conceder', () => {
     expect((screen.getByTestId('mulligan-concede') as HTMLButtonElement).disabled).toBe(true)
   })
 })
+
+describe('MulliganDialog — grid de London-bottom por teclado', () => {
+  beforeEach(() => {
+    reset()
+    setLanguage('es')
+    vi.clearAllMocks()
+    setState({
+      game: makeGameView({
+        myPlayerId: 'p1',
+        players: [],
+        myHand: {
+          'h-1': { id: 'h-1', name: 'Forest' } as any,
+          'h-2': { id: 'h-2', name: 'Mountain' } as any,
+        },
+      }),
+      gameId: 'game-1',
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('cada carta del grid es un elemento con role=button y tabIndex operable', () => {
+    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
+    const slots = document.querySelectorAll('.mulligan-hand-grid .card-slot')
+    expect(slots.length).toBe(2)
+    for (const slot of slots) {
+      expect(slot.getAttribute('role')).toBe('button')
+      expect(slot.getAttribute('tabindex')).toBe('0')
+    }
+  })
+
+  it('Enter selecciona una carta para el fondo igual que el click, y refleja aria-pressed', () => {
+    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
+    const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[0] as HTMLElement
+    expect(slot.getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.keyDown(slot, { key: 'Enter' })
+
+    expect(slot.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText('#1')).toBeTruthy()
+  })
+
+  it('Space también selecciona, y la selección habilita el botón de confirmar al llegar al mínimo', () => {
+    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
+    const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[0] as HTMLElement
+    const confirmBtn = document.querySelector('.mulligan-actions .primary') as HTMLButtonElement
+    expect(confirmBtn.disabled).toBe(true)
+
+    fireEvent.keyDown(slot, { key: ' ' })
+
+    expect(confirmBtn.disabled).toBe(false)
+  })
+})

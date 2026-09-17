@@ -9,6 +9,7 @@ import { buildDraftLog, type DraftLogData } from './draftLog'
 import { useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
+import Modal from '../ui/Modal'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
@@ -405,8 +406,7 @@ export default function DraftScreen() {
   const hiddenCount = pickCards.length - visiblePicks.length
 
   return (
-    <div className="draft-backdrop" role="presentation">
-      <section className="draft-screen" role="dialog" aria-modal="true" aria-label={t('game', 'draft_title')}>
+    <Modal backdropClassName="draft-backdrop" dialogClassName="draft-screen" label={t('game', 'draft_title')}>
         <header className="draft-header">
           <div className="draft-title">
             <h2>{t('game', 'draft_title')}</h2>
@@ -596,7 +596,6 @@ export default function DraftScreen() {
             </div>
           )}
         </div>
-      </section>
       {hoverPreview && (
         <div
           className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
@@ -614,6 +613,6 @@ export default function DraftScreen() {
           )}
         </div>
       )}
-    </div>
+    </Modal>
   )
 }

@@ -39,6 +39,12 @@ export interface HumanGameOptions {
   hand: string[]
   playable?: string[]
   crossZone?: CrossZoneConfig[]
+  // Carta ya reposando en el cementerio/exilio propio SIN ser jugable desde
+  // ahí (a diferencia de crossZone, que además la marca en canPlayObjects
+  // como lanzable por flashback/escape/jump-start). Sirve para probar un
+  // efecto de OTRA fuente que la apunta como target dentro de la pila
+  // (p. ej. Reanimate) sin contaminar el escenario con el "ray" de cast.
+  otherZoneCards?: CrossZoneConfig[]
   cast?: CastStep[]
   damageToSim?: number
   resolveEffect?: ResolveEffect

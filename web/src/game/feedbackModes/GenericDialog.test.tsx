@@ -106,6 +106,105 @@ describe('GenericDialog hooks', () => {
     }
   })
 
+  it('string mode: no Cancelar button when the prompt is required (default)', () => {
+    const stringPrompt: FeedbackPrompt = {
+      method: 'GAME_CHOOSE_CHOICE',
+      gameId: 'g1',
+      title: 'Name a card',
+      message: 'Name a card',
+      mode: 'string',
+      options: [],
+      min: 0,
+      max: 1,
+    }
+    const { container } = render(<GenericDialog form={stubForm(stringPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).toBeNull()
+  })
+
+  it('string mode: shows a functional Cancelar button when the prompt declares itself optional', () => {
+    const cancel = vi.fn()
+    const stringPrompt: FeedbackPrompt = {
+      method: 'GAME_CHOOSE_CHOICE',
+      gameId: 'g1',
+      title: 'Name a card',
+      message: 'Name a card',
+      mode: 'string',
+      options: [],
+      min: 0,
+      max: 1,
+      required: false,
+    }
+    const { container } = render(<GenericDialog form={{ ...stubForm(stringPrompt), cancel }} />)
+    const btn = container.querySelector<HTMLButtonElement>('.cancel-btn')
+    expect(btn).not.toBeNull()
+    fireEvent.click(btn!)
+    expect(cancel).toHaveBeenCalled()
+  })
+
+  it('integer mode: no Cancelar button when the prompt is required (default)', () => {
+    const amountPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_AMOUNT',
+      gameId: 'g1',
+      title: 'Amount',
+      message: 'Choose an amount',
+      mode: 'integer',
+      options: [],
+      min: 0,
+      max: 5,
+    }
+    const { container } = render(<GenericDialog form={stubForm(amountPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).toBeNull()
+  })
+
+  it('integer mode: shows Cancelar when the prompt declares itself optional', () => {
+    const amountPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_AMOUNT',
+      gameId: 'g1',
+      title: 'Amount',
+      message: 'Choose an amount',
+      mode: 'integer',
+      options: [],
+      min: 0,
+      max: 5,
+      required: false,
+    }
+    const { container } = render(<GenericDialog form={stubForm(amountPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).not.toBeNull()
+  })
+
+  it('multiString mode: no Cancelar button when the prompt is required (default)', () => {
+    const multiPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_MULTI_AMOUNT',
+      gameId: 'g1',
+      title: 'Split',
+      message: 'Split the damage',
+      mode: 'multiString',
+      options: [],
+      min: 0,
+      max: 5,
+      items: [{ id: 'm1', label: 'Ritos', min: 0, max: 5, defaultValue: 2 }],
+    }
+    const { container } = render(<GenericDialog form={stubForm(multiPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).toBeNull()
+  })
+
+  it('multiString mode: shows Cancelar when the prompt declares itself optional', () => {
+    const multiPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_MULTI_AMOUNT',
+      gameId: 'g1',
+      title: 'Split',
+      message: 'Split the damage',
+      mode: 'multiString',
+      options: [],
+      min: 0,
+      max: 5,
+      items: [{ id: 'm1', label: 'Ritos', min: 0, max: 5, defaultValue: 2 }],
+      required: false,
+    }
+    const { container } = render(<GenericDialog form={stubForm(multiPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).not.toBeNull()
+  })
+
   it('survives prompt null -> defined -> null without a hooks-order crash (AUDIT-01)', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const view = render(<GenericDialog form={stubForm(null)} />)

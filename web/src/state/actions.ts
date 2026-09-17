@@ -3,6 +3,7 @@ import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
+import { stopKeyForStep } from '../game/phaseStops'
 import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
@@ -46,7 +47,12 @@ export function setMyDeck(deck: DeckJson | null) {
 }
 
 export function clearGameEnd() {
-  setState({ gameEnd: null })
+  const pending = getState().pendingSideboardScreen
+  if (pending) {
+    setState({ gameEnd: null, sideboardScreen: pending, pendingSideboardScreen: null })
+  } else {
+    setState({ gameEnd: null })
+  }
 }
 
 export function setWatchingTable(table: import('../net/types').TableView | null) {
@@ -272,6 +278,7 @@ export function returnToLobby() {
     feedback: null,
     gameEnd: null,
     sideboardScreen: null,
+    pendingSideboardScreen: null,
     error: null,
   })
 }
@@ -297,6 +304,11 @@ export function maybeAutoPass(game: GameView) {
   const me = game.players?.find((p) => p.controlled)
   if (!s.settings.autoPass || s.feedback || !me?.hasPriority || !s.gameId) return
   if (s.combat) return
+  const stopKey = stopKeyForStep(game.step)
+  if (stopKey) {
+    const turn = me.isActive ? 'yourTurn' : 'opponentTurn'
+    if (s.phaseStops?.[turn]?.[stopKey]) return
+  }
   const myHand = game.myHand ?? {}
   if (Object.keys(myHand).length === 0) return
   if (game.phase === 'PRECOMBAT_MAIN') {

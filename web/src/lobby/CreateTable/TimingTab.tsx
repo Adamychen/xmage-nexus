@@ -32,7 +32,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
       </div>
 
       <div className="field">
-        <span>{t('lobby','create_field_free_mulligans')} <em style={{ textTransform: 'none', fontWeight: 400, color: '#9aa3c2' }}>{t('lobby','create_mulligan_recommended_commander')}</em></span>
+        <span>{t('lobby','create_field_free_mulligans')} {form.recommendedMulligans > 0 && <em style={{ textTransform: 'none', fontWeight: 400, color: '#9aa3c2' }}>{t('lobby','create_mulligan_recommended_commander')}</em>}</span>
         <div className="chip-row">
           {[0, 1, 2, 3, 4, 5].map((m) => (
             <button

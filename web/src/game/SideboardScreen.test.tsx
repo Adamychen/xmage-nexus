@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SideboardScreen from './SideboardScreen'
 import { reset } from '../state/store'
@@ -110,5 +110,65 @@ describe('SideboardScreen', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  function legalMaindeck() {
+    return Array.from({ length: 60 }, (_, i) => ({
+      instanceId: `m-${i}`, setCode: 'TEST', cardNumber: String(i), name: `Card ${i}`,
+    }))
+  }
+
+  it('shows a waiting-for-opponent state after submitting, instead of going blank', async () => {
+    setState({ sideboardScreen: makeScreen({ maindeck: legalMaindeck() }) })
+    const { container } = render(<SideboardScreen />)
+    const submitBtn = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Enviar mazo')!
+    await act(async () => {
+      fireEvent.click(submitBtn)
+    })
+    expect(submitDeck).toHaveBeenCalledTimes(1)
+    // The screen must NOT be nulled out (that would leave nothing rendered
+    // until the next GAME_INIT); it stays mounted showing a waiting message.
+    expect(container.querySelector('.sideboard-backdrop')).toBeTruthy()
+    expect(container.querySelector('.sideboard-waiting')).toBeTruthy()
+    expect(container.textContent).toContain('esperando al rival')
+    // The deck-editing UI (submit button, timer) is gone while waiting.
+    expect(container.textContent).not.toContain('Enviar mazo')
+  })
+
+  it('does not double-submit if the timer keeps ticking after submission', async () => {
+    vi.useFakeTimers()
+    try {
+      setState({ sideboardScreen: makeScreen({ tableId: 't-live', timeLeft: 3, maindeck: legalMaindeck() }) })
+      const { container } = render(<SideboardScreen />)
+      const submitBtn = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Enviar mazo')!
+      await act(async () => {
+        fireEvent.click(submitBtn)
+      })
+      expect(submitDeck).toHaveBeenCalledTimes(1)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+      // The auto-submit-on-timeout effect must not fire again once submitted.
+      expect(submitDeck).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resets the waiting state when a new SIDEBOARD event arrives for the next game of the match', async () => {
+    setState({ sideboardScreen: makeScreen({ tableId: 'match-1', maindeck: legalMaindeck() }) })
+    const { container } = render(<SideboardScreen />)
+    const submitBtn = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Enviar mazo')!
+    await act(async () => {
+      fireEvent.click(submitBtn)
+    })
+    expect(container.querySelector('.sideboard-waiting')).toBeTruthy()
+
+    // Same tableId (same Bo3 match), but a fresh SIDEBOARD event/object for game 2.
+    await act(async () => {
+      setState({ sideboardScreen: makeScreen({ tableId: 'match-1', maindeck: legalMaindeck() }) })
+    })
+    expect(container.querySelector('.sideboard-waiting')).toBeNull()
+    expect(container.textContent).toContain('Enviar mazo')
   })
 })

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import CreateTableDialog from './CreateTableDialog'
+import { STORAGE_KEY } from './CreateTable/constants'
 import * as cmds from '../net/commands'
 import { setState } from '../state/state'
 
@@ -41,6 +42,7 @@ describe('CreateTableDialog', () => {
 
   afterEach(() => {
     cleanup()
+    localStorage?.removeItem(STORAGE_KEY)
     setState({ conn: null } as never)
   })
 
@@ -79,6 +81,55 @@ describe('CreateTableDialog', () => {
     const mulliganChip = screen.getByText('1')
     fireEvent.click(mulliganChip)
     expect(mulliganChip.classList.contains('on')).toBe(true)
+  })
+
+  it('CR 103.5c: preselecciona 1 mulligan gratis en multijugador/Brawl y lo envía', async () => {
+    const { container } = await renderDialog()
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    const goToStep = (i: number) => fireEvent.click(stepper.querySelectorAll('button')[i])
+    const chips = () => Array.from(container.querySelectorAll('.chip-row .chip')) as HTMLButtonElement[]
+    const selectedChip = () => chips().find((c) => c.classList.contains('on'))?.textContent
+    const hint = () => screen.queryByText(/recomendado 1|recommended 1/)
+    const gameType = () => screen.getAllByRole('combobox')[0] as HTMLSelectElement
+
+    // Two Player Duel: sin mulligan gratis y sin recomendación
+    goToStep(1)
+    expect(selectedChip()).toBe('0')
+    expect(hint()).toBeNull()
+
+    // Commander Free For All: preset 1 + hint visible
+    goToStep(0)
+    fireEvent.change(gameType(), { target: { value: 'Commander Free For All' } })
+    goToStep(1)
+    expect(selectedChip()).toBe('1')
+    expect(hint()).toBeDefined()
+
+    // el override manual se respeta mientras no cambie el formato
+    fireEvent.click(chips().find((c) => c.textContent === '3')!)
+    expect(selectedChip()).toBe('3')
+
+    // volver a 1v1 devuelve el default a 0
+    goToStep(0)
+    fireEvent.change(gameType(), { target: { value: 'Two Player Duel' } })
+    goToStep(1)
+    expect(selectedChip()).toBe('0')
+
+    // y al crear una mesa multijugador se envía freeMulligans: 1
+    goToStep(0)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Commander Night' } })
+    fireEvent.change(gameType(), { target: { value: 'Commander Free For All' } })
+    for (let i = 0; i < 5; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear Mesa/ }))
+
+    await waitFor(() => {
+      expect(cmds.createTable).toHaveBeenCalledWith(
+        expect.objectContaining({ gameType: 'Commander Free For All', freeMulligans: 1 }),
+      )
+    })
   })
 
   it('allows setting password and permissions in Security tab', async () => {
@@ -132,6 +183,7 @@ describe('CreateTableDialog', () => {
           name: 'Epic Modern Duel',
           gameType: 'Two Player Duel',
           deckType: 'Constructed - Modern',
+          freeMulligans: 0,
           winsNeeded: 1,
           skillLevel: 'CASUAL',
           spectatorsAllowed: true,

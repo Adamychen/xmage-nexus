@@ -798,6 +798,10 @@ export async function runRecorder(driver) {
   function captureCheck(gv) {
     if (!gv) return
     if (recorded) return
+    if (DEBUG) {
+      const meDbg = (gv.players ?? []).find((p) => p?.controlled)
+      log('captureCheck turn=', gv.turn, 'active=', meDbg?.isActive, 'hand=', meDbg?.handCount)
+    }
     if (driver.captureWhen(gv)) {
       recorded = { recordedAt: new Date().toISOString(), gameId: String(gameId), gameView: gv }
       log('CAPTURADO', driver.name, '— volcando y saliendo')
@@ -831,18 +835,21 @@ export async function runRecorder(driver) {
         if (!gameId) gameId = String(m.objectId)
       }
       if (m.data?.gameView) lastGV = m.data.gameView
-      if (m.method === 'GAME_UPDATE' || m.method === 'GAME_UPDATE_AND_INFORM') {
-        const gv = m.data?.gameView ?? (Array.isArray(m.data?.players) ? m.data : undefined)
-        if (gv) {
-          lastGV = gv
-          captureCheck(gv)
-        }
-      }
-      if (m.method === 'GAME_OVER' && m.data?.gameView) {
-        lastGV = m.data.gameView
-        captureCheck(m.data.gameView)
-      }
       handleEvent(m)
+      // P4 (2026-09-17): la captura se evalúa DESPUÉS de handleEvent y sobre
+      // cualquier evento con gameView (no solo GAME_UPDATE): hay estados que
+      // solo viajan en GAME_SELECT/GAME_TARGET (p. ej. el turno 1 del jugador
+      // activo justo tras el mulligan) y, si el ASK viene en el mismo mensaje,
+      // el driver necesita haberlo visto antes de decidir su captureWhen.
+      const captureGv =
+        m.data?.gameView ??
+        ((m.method === 'GAME_UPDATE' || m.method === 'GAME_UPDATE_AND_INFORM') && Array.isArray(m.data?.players)
+          ? m.data
+          : undefined)
+      if (captureGv) {
+        lastGV = captureGv
+        captureCheck(captureGv)
+      }
       for (let i = waiters.length - 1; i >= 0; i--) {
         if (waiters[i](m)) waiters.splice(i, 1)
       }
@@ -873,10 +880,11 @@ export async function runRecorder(driver) {
       gameType: driver.tableGameType || 'Two Player Duel',
       deckType: driver.gameType || 'Constructed - Pioneer',
       winsNeeded: 1,
-      playerTypes: ['HUMAN', 'SIM'],
-      simDecks: [simDeck],
+      playerTypes: driver.playerTypes || ['HUMAN', 'SIM'],
+      simDecks: driver.simDecks || [simDeck],
       skipInitShuffling: true,
       skipStartingPlayerChoice: driver.skipStartingPlayerChoice !== false,
+      ...(driver.freeMulligans ? { freeMulligans: driver.freeMulligans } : {}),
     })
     tableId = res.ok ? res.data?.tableId ?? res.data?.table?.tableId : null
     if (!tableId) {

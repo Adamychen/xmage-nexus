@@ -71,6 +71,11 @@ export interface GameSlice {
   feedback: FeedbackPrompt | null
   sideboard: DeckCardEntry[]
   sideboardScreen: SideboardScreenState | null
+  /** Sideboard de la próxima partida (Bo3) recibido mientras aún se muestra el
+   * diálogo de fin de partida sin cerrar (ver `handleSideboard` / `clearGameEnd`):
+   * se retiene aquí para no taparle al jugador el resultado "partida perdida,
+   * el match continúa" antes de que le dé tiempo a leerlo. */
+  pendingSideboardScreen: SideboardScreenState | null
   userRequest: UserRequestView | null
   rollbackDialogOpen: boolean
   /** gameId con rollback pendiente: lo pedí/acepté yo o el servidor lo anunció (ver armRollbackPending). */
@@ -94,6 +99,7 @@ export const initialGame: GameSlice = {
   feedback: null,
   sideboard: [],
   sideboardScreen: null,
+  pendingSideboardScreen: null,
   userRequest: null,
   rollbackDialogOpen: false,
   rollbackPendingFor: null,

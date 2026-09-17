@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
-import { setState, addLog } from '../state/state'
+import { addLog } from '../state/state'
 import { useTickingTimer } from '../utils/timer'
 import type { SideboardCard } from '../state/state'
 import type { DeckCard } from '../lobby/decks'
@@ -51,6 +51,7 @@ export default function SideboardScreen() {
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const timeLeft = useTickingTimer(screen?.timeLeft ?? 0, !!screen)
   const [busy, setBusy] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [sideFilter, setSideFilter] = useState('')
@@ -71,7 +72,12 @@ export default function SideboardScreen() {
     setSide(gSide)
     setMainFilter('')
     setSideFilter('')
-  }, [screen?.tableId])
+    setSubmitted(false)
+    // `screen` (object identity, not just tableId) is the dependency: the server
+    // sends a brand-new SIDEBOARD event/object for each game of a Bo3 match with
+    // the SAME tableId, and since we no longer null `sideboardScreen` right after
+    // submit (see submitDeck), keying on tableId alone would miss that reinit.
+  }, [screen])
 
   const handleReset = useCallback(() => {
     setMain(initialMainRef.current)
@@ -255,7 +261,7 @@ export default function SideboardScreen() {
   }, [moveOneToSide])
 
   const submitDeck = useCallback(async () => {
-    if (!screen || busy) return
+    if (!screen || busy || submitted) return
     setBusy(true)
     try {
       const deck = {
@@ -265,7 +271,11 @@ export default function SideboardScreen() {
       }
       const result = await cmds.submitDeck(screen.tableId, deck)
       if (result.ok) {
-        setState({ sideboardScreen: null })
+        // No limpiamos `sideboardScreen` aquí: el jugador se queda en esta
+        // pantalla mostrando "esperando al rival" hasta que llegue el próximo
+        // GAME_INIT (nueva partida del match) o un nuevo evento SIDEBOARD, que
+        // sí la limpian/reinicializan (ver events/game.ts y el efecto de arriba).
+        setSubmitted(true)
         addLog('partida', t('game', 'sideboard_submit'))
       } else {
         addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)
@@ -273,12 +283,12 @@ export default function SideboardScreen() {
     } finally {
       setBusy(false)
     }
-  }, [screen, main, side, busy])
+  }, [screen, main, side, busy, submitted])
 
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
   useEffect(() => {
-    if (!screen) return
+    if (!screen || submitted) return
     if (timeLeft > 0) {
       autoSubmitArmRef.current = screen.tableId
       return
@@ -287,7 +297,7 @@ export default function SideboardScreen() {
       autoSubmitArmRef.current = null
       void submitRef.current()
     }
-  }, [timeLeft, screen?.tableId])
+  }, [timeLeft, screen?.tableId, submitted])
 
   const formatForValidation: DeckFormat = useMemo(() => {
     if (screen?.limited) return 'Freeform' as DeckFormat
@@ -328,6 +338,22 @@ export default function SideboardScreen() {
   }, [main, side, metaMap, formatForValidation, screen?.deckName])
 
   if (!screen) return null
+
+  // El wire (evento SIDEBOARD, `events/sideboard.ts`) no trae ninguna señal de si
+  // el rival ya confirmó su propio banquillo -- el servidor solo avisa cuando la
+  // SIGUIENTE partida arranca (GAME_INIT). Así que esto es un estado puramente
+  // local: en cuanto ESTE jugador confirma, mostramos que seguimos esperando en
+  // vez de dejar la pantalla en blanco hasta el próximo GAME_INIT.
+  if (submitted) {
+    return (
+      <div className="sideboard-backdrop" role="presentation">
+        <section className="sideboard-screen sideboard-waiting" role="dialog" aria-modal="true" aria-label={t('game', 'sideboard_title')}>
+          <span className="sideboard-waiting-dot" aria-hidden="true" />
+          <p className="sideboard-waiting-text">{t('game', 'sideboard_waiting_opponent')}</p>
+        </section>
+      </div>
+    )
+  }
 
   const mainTotal = main.reduce((s, c) => s + c.amount, 0)
   const sideTotal = side.reduce((s, c) => s + c.amount, 0)

@@ -55,9 +55,11 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
   }
 
   const isDiscard = /descart|discard/i.test(prompt.message)
-  const cardGridTitle = isDiscard
-    ? t('game', 'choose_discard')
-    : (prompt.sourceName ?? (prompt.method === 'GAME_TARGET' ? t('game', 'choose_target') : t('game', 'choose_cards')))
+  const cardGridTitle = prompt.isLibraryOrderPick
+    ? t('game', 'library_order_title')
+    : isDiscard
+      ? t('game', 'choose_discard')
+      : (prompt.sourceName ?? (prompt.method === 'GAME_TARGET' ? t('game', 'choose_target') : t('game', 'choose_cards')))
   const kickerIcon: IconName = prompt.method === 'GAME_TARGET' ? (isDiscard ? 'trash' : 'target') : 'layers'
 
   return (

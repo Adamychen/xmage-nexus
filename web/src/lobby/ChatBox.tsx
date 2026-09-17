@@ -59,6 +59,22 @@ function isConnectionEvent(text: string): boolean {
 
 export const MAX_CHAT_MESSAGE_SIZE = 500
 
+/**
+ * El estado "listo" de la sala de espera se señaliza abusando del canal de
+ * chat (XMage no tiene un campo de protocolo para esto, ver
+ * `SpectatorStagingScreen.handleToggleReady`): manda `[NEXUS_READY] <user>` /
+ * `[NEXUS_NOT_READY] <user>` y el receptor interpreta CUALQUIER mensaje que
+ * contenga ese texto literal como un cambio de estado del remitente real
+ * (`m.username`, no falsificable). Si el input de chat libre no sanea esto,
+ * cualquier jugador que escriba ese texto a mano (aposta o sin querer)
+ * desincroniza su propio estado de listo y su mensaje desaparece de la vista
+ * de chat normal (se trata como aviso de sistema). Se sanea SOLO aquí, en el
+ * texto escrito a mano — `handleToggleReady` sigue mandando el tag real.
+ */
+export function sanitizeOutgoingChatText(text: string): string {
+  return text.replace(/\[\s*NEXUS_(NOT_)?READY\s*\]/gi, '').replace(/[ \t]{2,}/g, ' ').trim()
+}
+
 export function formatChatTime(time?: number, lang?: SupportedLanguage): string {
   try {
     return new Date(time ?? Date.now()).toLocaleTimeString(toBcp47Locale(lang ?? getLanguage()), { hour: '2-digit', minute: '2-digit' })
@@ -142,7 +158,9 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
     }
 
     if (!chatId) return
-    void cmds.sendChatMessage(chatId, text)
+    const sanitized = sanitizeOutgoingChatText(text)
+    if (!sanitized) return
+    void cmds.sendChatMessage(chatId, sanitized)
     setText('')
   }
 

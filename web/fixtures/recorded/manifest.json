@@ -719,5 +719,26 @@
     "kind": "game",
     "assert": "hasKarnRestart",
     "note": "Karn Liberated ({7}, lealtad 6) cheateado directo al campo con cheatSetup (entra con sus 6 contadores de lealtad; sin decisión \"as it enters\" el cheat es seguro) contra SIM pasivo: +4 legal en el T1 (6→10, GAME_CHOOSE_ABILITY con \"+4: Target player exiles a card from their hand\" respondido por texto; el GAME_TARGET \"Select a player\" se apunta al SIM, que exilia una carta de su mano) y +4 después (10→14); con 14 de lealtad exacta se activa el -14 (legible por PayLoyaltyCost.canPay: loyalty + cost >= 0). El reinicio NO llega como GAME_INIT ni como GAME_OVER: KarnLiberatedEffect.apply llama a GameState.clearOnGameRestart() + Player.init/useDeck + game.start(null) DENTRO de la resolución del -14, y el juego se re-inicializa con el MISMO gameId (el proxy no ve GAME_INIT nuevo; el rec-lib lo confirma: solo GAME_UPDATE). El primer GAME_UPDATE del juego reiniciado trae turno 1, activePlayerId = controlador de Karn, las manos re-repartidas por el init (7/7 tras el mulligan ASK, resuelto por el default del rec-lib), bibliotecas frescas (yo 53, SIM 93) y battlefield/cementerio/pila vacíos sin Karn (barajado de vuelta a la biblioteca); ese frame es la captura. Hallazgo del \"dirty hack\" del motor: las cartas exiliadas con Karn en el juego viejo NO se re-colocan en el battlefield en el primer frame y su rastro es inconsistente entre runs (run 2: exiles vacío; run 3: 1 Forest del SIM aún en exile) — la UI no debe fiarse de ellas. La UI debe re-inicializarse con ese GAME_UPDATE (no esperar GAME_INIT) y aceptar turn=1 tras una partida avanzada. Driver karn-restart con cheatSetup."
+  },
+  {
+    "file": "reanimate.json",
+    "mechanic": "reanimate",
+    "kind": "game",
+    "assert": "hasReanimateTarget",
+    "note": "Objetivo dentro de una pila (cementerio) — el gap real que dejó pasar el bug de PileOverlay (commit 8290f779a45: la pila nunca recibía targetIds/onTargetClick). Reanimate ({B}) cheateada a la mano + Grizzly Bears cheateado al propio cementerio: el GAME_TARGET llega con el id del Grizzly en el cementerio como objetivo legal (el mismo id que el jugador clicaría dentro del PileOverlay abierto), a diferencia de todos los demás drivers de cementerio (escape/foretell/suspend/jump-start) que solo prueban LANZAR desde ahí. Captura: Grizzly Bears bajo control propio en el campo, fuera del cementerio, vida 20→18 (mana value 2) — la prueba de que entró por Reanimate y no por hardcast. Driver reanimate con cheatSetup."
+  },
+  {
+    "file": "commander-free-mulligan.json",
+    "mechanic": "commander-free-mulligan",
+    "kind": "game",
+    "assert": "firstMulliganFreeSecondCostsCard",
+    "note": "CR 103.5c verificado en real (el \"Gap de motor\" del plan4 era un falso diagnóstico: citaba 103.4a/903.8 y ligaba la exención al starting player). La regla exime el PRIMER mulligan de cada jugador en multijugador y en cualquier Brawl; el motor la implementa con `MatchOptions.freeMulligans` + `usedFreeMulligans` por jugador en LondonMulligan. Frame: mesa \"Commander Free For All\" de 3 (1 humano + 2 SIM) con freeMulligans:1 (antes el default 0 lo dejaba fuera; el wizard web ya lo preselecciona desde 2026-09-17), tomamos DOS mulligans y keep: mano final 6 (una carta al fondo por el segundo), no 5. Los dos SIM conservan 7. El informe \"mulligans for free.\" va al chat/log, no al GameView. El caso 1v1 sin mulligan gratis (Commander Two Player Duel, freeMulligans 0) queda documentado en el historial del driver."
+  },
+  {
+    "file": "game-clock-timeout.json",
+    "mechanic": "game-clock-timeout",
+    "kind": "game",
+    "assert": "hasTimeoutLoss",
+    "note": "Timeout de reloj de partida (§3.5). Mesa con timeLimit=MIN___5 (300s, el mínimo real del motor — el wizard web solo baja hasta 15 min) vía driver standalone game-clock-timeout.mjs, porque rec-lib.mjs no expone timeLimit/bufferTime en su createTable hardcodeado (gap de tooling P4, no del motor; no se tocó rec-lib.mjs). El driver mantiene la mano y luego ignora a propósito toda ventana de prioridad: HumanPlayer.priority() mantiene el reloj corriendo (game.resumeTimer) hasta agotarlo → GameController→game.timerTimeout→PlayerImpl.timerTimeout (quit+timerTimeout+concede). Captura (turno 1, COMBAT/DECLARE_ATTACKERS): jugador controlado con priorityTimeLeftSecs=0 y hasLeft=true pero life=20 intacta; rival con priorityTimeLeftSecs=300 sin tocar — la asimetría de reloj es la prueba de timeout, no de concesión/daño. El texto 'run out of time' vive en el callback END_GAME_INFO (no en GAME_OVER, que este driver sí captura) y no quedó registrado en este frame; el aviso visible de \"timer bajo\" ya existe en cliente vía PlayerInfoBar.tsx isTimeLow a ≤30s (PlayerView.priorityTimeLeftSecs), verificado leyendo código pero no en e2e."
   }
 ]

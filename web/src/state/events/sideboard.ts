@@ -1,5 +1,5 @@
 import * as cmds from '../../net/commands'
-import { setState, addLog } from '../state'
+import { getState, setState, addLog } from '../state'
 import type { SideboardCard, SideboardScreenState } from '../state'
 import { t as tStatic, translateError } from '../../i18n'
 import { awaitCardMeta } from '../../cards/cardImages'
@@ -44,7 +44,14 @@ export function handleSideboard(data: unknown, s: Snapshot): void {
       timeLeft: time,
       limited,
     }
-    setState({ sideboardScreen: screen, gameEnd: null })
+    // Si el diálogo "partida perdida, el match continúa" sigue en pantalla sin
+    // cerrar (el jugador aún no le dio a "Cerrar"), no lo tapemos con el
+    // sideboard de golpe: se retiene y `clearGameEnd` lo promueve al cerrarlo.
+    if (getState().gameEnd) {
+      setState({ pendingSideboardScreen: screen })
+    } else {
+      setState({ sideboardScreen: screen, gameEnd: null })
+    }
     addLog('partida', `Sideboard: ${maindeck.length} main / ${sideboard.length} side — tienes ${time}s para ajustar`)
     if (s.settings.autoSubmitSideboard) {
       const group = (cards: SideboardCard[]) => {

@@ -1,4 +1,8 @@
 .player-info-bar {
+  position: relative;
+  /* Vidas + reloj de prioridad no deben quedar tapados por ningún backdrop
+     modal de prompt (p5-1-prompt-checklist.md hallazgo #1). */
+  z-index: var(--game-header-z);
   display: flex;
   align-items: center;
   gap: 12px;

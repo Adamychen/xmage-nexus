@@ -15,6 +15,29 @@ export function secondMessageOf(data: JsonRecord): string | undefined {
   return raw ? stripHtml(raw) : undefined
 }
 
+/**
+ * `Choice.subMessage` (ChoiceImpl.java): el motor lo usa para llevar el nombre
+ * de la fuente en GAME_CHOOSE_CHOICE (p.ej. ChoiceCreatureType/ChoicePlaneswalkerType
+ * hacen setSubMessage(sourceObject.getLogName())). No todos los Choice lo rellenan.
+ */
+export function subMessageOf(data: JsonRecord): string | undefined {
+  const raw = stringValue(data.subMessage)
+  return raw ? stripHtml(raw) : undefined
+}
+
+const SOURCE_SUFFIX_RE = /\s*\(source:\s*(.+?)\)\s*$/i
+
+/**
+ * `HumanPlayer.getAmount` concatena `message + CardUtil.getSourceLogName(game, source)`,
+ * que produce el sufijo literal " (source: <Nombre>)" — no es un campo separado del wire,
+ * hay que extraerlo del propio mensaje. Ver CardUtil.getSourceLogName(Game, Ability).
+ */
+export function splitSourceSuffix(message: string): { message: string; sourceName?: string } {
+  const match = SOURCE_SUFFIX_RE.exec(message)
+  if (!match) return { message }
+  return { message: message.slice(0, match.index).trimEnd(), sourceName: stripHtml(match[1]) }
+}
+
 /** Elimina tags HTML de un string (el servidor envía secondMessage con <FONT> etc.). */
 export function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '')

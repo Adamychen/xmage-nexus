@@ -3,10 +3,12 @@ import { render, fireEvent } from '@testing-library/react'
 import VotingDialog from './VotingDialog'
 import { setLanguage } from '../i18n'
 import type { FeedbackPrompt } from './feedback'
+import * as cmds from '../net/commands'
 
 vi.mock('../net/commands', () => ({
   sendPlayerBoolean: vi.fn().mockResolvedValue({ ok: true }),
   sendPlayerString: vi.fn().mockResolvedValue({ ok: true }),
+  sendPlayerUUID: vi.fn().mockResolvedValue({ ok: true }),
 }))
 
 afterEach(() => {
@@ -67,5 +69,50 @@ describe('VotingDialog', () => {
     const enRender = render(<VotingDialog prompt={prompt} send={vi.fn() as never} busy={false} />)
     expect(enRender.container.textContent).toContain('Step 2 of 3')
     enRender.unmount()
+  })
+
+  it('sends sendPlayerUUID when the vote arrives as GAME_TARGET (single-candidate vote)', () => {
+    const prompt: FeedbackPrompt = {
+      method: 'GAME_TARGET',
+      gameId: 'g1',
+      title: 'Votación',
+      message: 'Vote for a card to exile',
+      mode: 'uuid',
+      options: [
+        { id: 'p1', label: 'Elvish Mystic', value: 'perm-1' },
+      ],
+      min: 1,
+      max: 1,
+      isVoting: true,
+    }
+    const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
+    const { container } = render(<VotingDialog prompt={prompt} send={send as never} busy={false} />)
+    const btn = container.querySelector('.voting-btn') as Element
+    fireEvent.click(btn)
+    expect(cmds.sendPlayerUUID).toHaveBeenCalledWith('perm-1', 'g1')
+  })
+
+  it('localizes recognizable server message and option labels like sibling dialogs', () => {
+    const prompt: FeedbackPrompt = {
+      method: 'GAME_ASK',
+      gameId: 'g1',
+      title: 'Votación',
+      message: 'Choose a player',
+      mode: 'boolean',
+      options: [
+        { id: 'a', label: 'Yes', value: 'true' },
+        { id: 'b', label: 'No', value: 'false' },
+      ],
+      min: 0,
+      max: 1,
+      isVoting: true,
+    }
+    setLanguage('es')
+    const { container } = render(<VotingDialog prompt={prompt} send={vi.fn() as never} busy={false} />)
+    // 'Choose a player' matches a localizeServerMessage pattern -> translated, not raw English.
+    expect(container.textContent).not.toContain('Choose a player')
+    // 'Yes'/'No' match localizeOptionLabel -> translated to Spanish, same as GenericDialog's options.
+    expect(container.textContent).toContain('Sí')
+    expect(container.textContent).toContain('No')
   })
 })

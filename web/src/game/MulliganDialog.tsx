@@ -100,7 +100,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
                   key={id}
                   className={`mulligan-card-wrap ${selected.includes(id) ? 'is-selected' : ''}`}
                   style={{ animationDelay: `${i * 55}ms` }}
-                  onClick={() => handleCardClick(id)}
                 >
                   <CardSlot
                     cardId={id}
@@ -108,6 +107,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
                     isPlayable={false}
                     isTarget={selected.includes(id)}
                     onHover={handleHover}
+                    onClick={() => handleCardClick(id)}
+                    ariaPressed={prompt.max > 1 ? selected.includes(id) : undefined}
                   />
                   {selected.includes(id) && (
                     <div className="mulligan-card-badge">#{selected.indexOf(id) + 1}</div>

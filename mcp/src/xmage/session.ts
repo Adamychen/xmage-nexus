@@ -543,7 +543,8 @@ export function registerSessionTools(server: McpServer): void {
       description:
         'Crea una mesa. Defaults: Two Player Duel, Constructed - Pioneer, 1 victoria, asientos ' +
         '["HUMAN","SIM"] (oponente simulado del proxy). simDecks alimenta los asientos SIM ' +
-        '(si falta usa tierras por defecto); skipInitShuffling/skipStartingPlayerChoice ' +
+        '(si falta usa tierras por defecto); freeMulligans (0-5) es la opción global de mesa ' +
+        'del motor (CR 103.5c: 1 en multijugador y Brawl); skipInitShuffling/skipStartingPlayerChoice ' +
         'deterministas para tests. Devuelve tableId.',
       inputSchema: {
         session: z.string().optional().describe(PIN_DESC),
@@ -554,6 +555,7 @@ export function registerSessionTools(server: McpServer): void {
         playerTypes: z.array(z.string()).default(['HUMAN', 'SIM']),
         simDecks: z.array(deckSchema).optional(),
         seatSkills: z.array(z.number().int().min(0).max(10)).optional(),
+        freeMulligans: z.number().int().min(0).max(5).optional(),
         password: z.string().optional(),
         skipInitShuffling: z.boolean().default(false),
         skipStartingPlayerChoice: z.boolean().default(false),
@@ -572,6 +574,7 @@ export function registerSessionTools(server: McpServer): void {
       }
       if (input.simDecks?.length) args.simDecks = input.simDecks
       if (input.seatSkills?.length) args.seatSkills = input.seatSkills
+      if (typeof input.freeMulligans === 'number') args.freeMulligans = input.freeMulligans
       if (input.password) args.password = input.password
       if (input.skipInitShuffling) args.skipInitShuffling = true
       if (input.skipStartingPlayerChoice) args.skipStartingPlayerChoice = true

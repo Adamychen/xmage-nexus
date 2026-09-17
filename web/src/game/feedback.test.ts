@@ -209,6 +209,36 @@ describe('parseFeedback', () => {
     expect(prompt?.choiceSearch).toBeUndefined()
   })
 
+  it('extracts sourceName from Choice.subMessage (ChoiceCreatureType/ChoicePlaneswalkerType set it to the source name)', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5e', {
+      choice: { message: 'Choose a creature type', keyChoices: { 'Elf': 'Elf' }, subMessage: 'Cavern of Souls' },
+    })
+    expect(prompt?.sourceName).toBe('Cavern of Souls')
+  })
+
+  it('leaves sourceName undefined for GAME_CHOOSE_CHOICE when Choice.subMessage is absent', () => {
+    const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5f', {
+      choice: { message: 'Choose a pile to put into hand.', keyChoices: { 'a': 'Pile 1' } },
+    })
+    expect(prompt?.sourceName).toBeUndefined()
+  })
+
+  it('extracts sourceName from the " (source: X)" suffix HumanPlayer.getAmount appends to the message, and strips it from the displayed text', () => {
+    const prompt = parseFeedback('GAME_GET_AMOUNT', 'game-5g', {
+      message: 'X value for spell (source: Walking Ballista)',
+      min: 0,
+      max: 20,
+    })
+    expect(prompt?.message).toBe('X value for spell')
+    expect(prompt?.sourceName).toBe('Walking Ballista')
+  })
+
+  it('leaves GAME_GET_AMOUNT message untouched when there is no source suffix', () => {
+    const prompt = parseFeedback('GAME_GET_AMOUNT', 'game-5h', { message: 'How many?', min: 1, max: 4 })
+    expect(prompt?.message).toBe('How many?')
+    expect(prompt?.sourceName).toBeUndefined()
+  })
+
   it('parses pile card views into pileCards, else falls back to text options', () => {
     const card = (id: string, name: string) => ({ id, name, displayName: name })
     const withCards = parseFeedback('GAME_CHOOSE_PILE', 'game-5d', {
@@ -384,6 +414,27 @@ describe('parseFeedback', () => {
     expect(prompt?.title).toBe('Votación en Curso')
   })
 
+  it('also routes voting to VotingDialog when the server sends the vote as GAME_TARGET (single-candidate vote, real frame vote.json)', () => {
+    const prompt = parseFeedback('GAME_TARGET', 'game-20b', {
+      message: 'Vote for a permanent',
+      targets: ['perm-1'],
+      cardsView1: { 'perm-1': { id: 'perm-1', name: 'Elvish Mystic' } },
+    })
+    expect(prompt?.method).toBe('GAME_TARGET')
+    expect(prompt?.mode).toBe('uuid')
+    expect(prompt?.isVoting).toBe(true)
+    expect(prompt?.title).toBe('Votación en Curso')
+  })
+
+  it('does not mark a starting-player GAME_TARGET as a vote even though isStartingPlayer is also derived from message text', () => {
+    const prompt = parseFeedback('GAME_TARGET', 'game-20c', {
+      message: 'Select a starting player',
+      targets: ['p1', 'p2'],
+    })
+    expect(prompt?.isStartingPlayer).toBe(true)
+    expect(prompt?.isVoting).toBeFalsy()
+  })
+
   it('routes planeswalker GAME_CHOOSE_ABILITY to dedicated dialog with loyalty deltas', () => {
     const prompt = parseFeedback('GAME_CHOOSE_ABILITY', 'game-21', {
       message: 'Activate a loyalty ability',
@@ -478,5 +529,39 @@ describe('parseFeedback', () => {
       { id: 'grave-1', label: 'Snapcaster Mage', value: 'grave-1' },
       { id: 'exile-1', label: 'Lightning Bolt', value: 'exile-1' },
     ])
+  })
+
+  describe('library order pick (Ponder-like, real GAME_TARGET sequence — GAME_CHOOSE_CARDS_ORDER does not exist server-side)', () => {
+    it('flags isLibraryOrderPick and uses the ordering title for the exact Ponder message', () => {
+      const prompt = parseFeedback('GAME_TARGET', 'game-27', {
+        targets: ['c1', 'c2', 'c3'],
+        message: 'Select a card order to put on the TOP of your library (last one chosen will be topmost)',
+        cardsView1: {
+          c1: { id: 'c1', name: 'Grizzly Bears' },
+          c2: { id: 'c2', name: 'Forest' },
+          c3: { id: 'c3', name: 'Opt' },
+        },
+      })
+      expect(prompt?.isLibraryOrderPick).toBe(true)
+      expect(prompt?.title).toBe('Ordenando cartas')
+    })
+
+    it('does not flag a generic "Select a card" GAME_TARGET (Brainstorm-style, indistinguishable from ordinary targeting)', () => {
+      const prompt = parseFeedback('GAME_TARGET', 'game-28', {
+        targets: ['c1', 'c2'],
+        message: 'Select a card',
+      })
+      expect(prompt?.isLibraryOrderPick).toBeUndefined()
+      expect(prompt?.title).toBe('Elige objetivo')
+    })
+
+    it('does not flag the bottom-of-library mulligan message (isMulliganLondon owns that pattern)', () => {
+      const prompt = parseFeedback('GAME_TARGET', 'game-29', {
+        targets: ['c1'],
+        message: 'Select a card to put on the bottom of your library',
+      })
+      expect(prompt?.isLibraryOrderPick).toBeUndefined()
+      expect(prompt?.isMulliganLondon).toBe(true)
+    })
   })
 })

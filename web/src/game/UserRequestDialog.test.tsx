@@ -85,4 +85,43 @@ describe('UserRequestDialog (permiso de mano)', () => {
     })
     await vi.waitFor(() => expect(getState().rollbackPendingFor).toBe('g1'))
   })
+
+  it('deshabilita los botones mientras la petición está en vuelo y evita doble-envío', async () => {
+    let resolveSend: (value: { ok: boolean; action: string; requestId: number; args: unknown }) => void = () => {}
+    const deferred = new Promise<{ ok: boolean; action: string; requestId: number; args: unknown }>((resolve) => {
+      resolveSend = resolve
+    })
+    send.mockImplementationOnce(() => deferred)
+
+    const { getByText } = render(<UserRequestDialog />)
+    const acceptBtn = getByText('Accept').closest('button') as HTMLButtonElement
+    const rejectBtn = getByText('Reject').closest('button') as HTMLButtonElement
+
+    fireEvent.click(acceptBtn)
+    await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(1))
+    expect(acceptBtn.disabled).toBe(true)
+    expect(rejectBtn.disabled).toBe(true)
+
+    // Un segundo click mientras está en vuelo no debe disparar un segundo envío.
+    fireEvent.click(acceptBtn)
+    expect(send).toHaveBeenCalledTimes(1)
+
+    resolveSend({ ok: true, action: 'SOME_ACTION', requestId: 1, args: undefined })
+    await vi.waitFor(() => expect(getState().userRequest).toBeNull())
+  })
+
+  it('localiza title/message de servidor igual que los demás diálogos de prompt', () => {
+    setState({
+      userRequest: {
+        title: 'Select a target',
+        message: 'Select a target',
+        gameId: 'g1',
+        buttons: [{ text: 'Accept', action: 'SOME_ACTION' }],
+      },
+    })
+    const { getAllByText } = render(<UserRequestDialog />)
+    // 'Select a target' se traduce vía localizeServerMessage a 'Elige objetivo' (es);
+    // el texto crudo de servidor ya no debe quedar visible tal cual.
+    expect(getAllByText('Elige objetivo').length).toBeGreaterThan(0)
+  })
 })

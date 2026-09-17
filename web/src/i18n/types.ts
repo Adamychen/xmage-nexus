@@ -729,6 +729,7 @@ export interface TranslationSchema {
     starting_player_starts_first: string
     starting_player_board_hint: string
     choose_target: string
+    library_order_title: string
     choose_cards: string
     choose_discard: string
     choose_ability: string
@@ -834,6 +835,7 @@ export interface TranslationSchema {
     sideboard_valid: string
     sideboard_invalid: string
     sideboard_submit: string
+    sideboard_waiting_opponent: string
     draft_empty: string
     draft_quit: string
     draft_quit_title: string

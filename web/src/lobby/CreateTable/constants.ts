@@ -451,6 +451,15 @@ export const MAX_COMMANDER_PLAYERS = 4
 export const MAX_DRAFT_PLAYERS = 8
 export const MAX_TOURNAMENT_PLAYERS = 32
 
+export function recommendedFreeMulligans(gameType: string, numPlayers: number): number {
+  const n = (gameType || '').toLowerCase()
+  if (n.includes('brawl')) return 1
+  if (n.includes('duel') || n.includes('two player')) return 0
+  if (n.includes('free for all')) return 1
+  if ((n.includes('commander') || n.includes('oathbreaker')) && numPlayers > 2) return 1
+  return 0
+}
+
 export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo[], isDraft: boolean): number {
   if (isDraft) return MAX_DRAFT_PLAYERS
   const info = gameTypes.find((g) => g.name === gameType)

@@ -14,7 +14,9 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
     ? t('game', 'who_starts')
     : isDiscard
       ? t('game', 'choose_discard')
-      : (prompt.sourceName ?? t('game', 'choose_target'))
+      : prompt.isLibraryOrderPick
+        ? t('game', 'library_order_title')
+        : (prompt.sourceName ?? t('game', 'choose_target'))
   const localizedMessage = localizeServerMessage(prompt.message, t as any)
   const hintText = prompt.isStartingPlayer
     ? t('game', 'starting_player_board_hint')

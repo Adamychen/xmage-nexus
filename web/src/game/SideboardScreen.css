@@ -20,6 +20,40 @@
   overflow: hidden;
 }
 
+.sideboard-screen.sideboard-waiting {
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px 32px;
+}
+
+.sideboard-waiting-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f6ad55;
+  animation: sideboard-waiting-pulse 1.2s ease-in-out infinite;
+}
+
+.sideboard-waiting-text {
+  margin: 0;
+  color: var(--text-dim, #9aa3c2);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+@keyframes sideboard-waiting-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
 .sideboard-header {
   display: flex;
   align-items: center;

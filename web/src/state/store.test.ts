@@ -348,6 +348,10 @@ describe('maybeAutoPass', () => {
       objectId: 'g-1',
       data: { gameId: 'g-1' },
     })
+    // El paso actual (step por defecto PRECOMBAT_MAIN → stopKey 'main1') viene
+    // marcado como parada por defecto (DEFAULT_PHASE_STOPS); se desmarca para
+    // aislar lo que este test comprueba (autoPass pasa cuando nada es jugable).
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
     const game = makeGameView({
       players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
       myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
@@ -400,6 +404,7 @@ describe('maybeAutoPass', () => {
       objectId: 'g-1',
       data: { gameId: 'g-1' },
     })
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
     const game = makeGameView({
       phase: 'PRECOMBAT_MAIN',
       players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
@@ -436,6 +441,7 @@ describe('maybeAutoPass', () => {
       objectId: 'g-1',
       data: { gameId: 'g-1' },
     })
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
     const game = makeGameView({
       phase: 'PRECOMBAT_MAIN',
       players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: false })],
@@ -454,10 +460,53 @@ describe('maybeAutoPass', () => {
       objectId: 'g-1',
       data: { gameId: 'g-1' },
     })
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'upkeep') })
     const game = makeGameView({
       phase: 'UPKEEP',
+      step: 'UPKEEP',
       players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
       canPlayObjects: { objects: { 'h-1': {} } },
+      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
+    })
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+  })
+
+  it('does not pass a step the player marked as a phase stop, even with autoPass on and nothing playable (plan4.md §3.5: gap real de producto)', () => {
+    setSetting('autoPass', true)
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-1',
+      data: { gameId: 'g-1' },
+    })
+    // DEFAULT_PHASE_STOPS marca TODAS las fases como parada por defecto: sin
+    // tocar nada, el upkeep del rival ya viene marcado.
+    const game = makeGameView({
+      phase: 'UPKEEP',
+      step: 'UPKEEP',
+      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: false })],
+      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
+    })
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('the phase-stop check is per turn side: marking only the opponent upkeep does not block auto-pass on your own upkeep', () => {
+    setSetting('autoPass', true)
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-1',
+      data: { gameId: 'g-1' },
+    })
+    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'yourTurn', 'upkeep') })
+    const game = makeGameView({
+      phase: 'UPKEEP',
+      step: 'UPKEEP',
+      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: true })],
       myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
     })
     maybeAutoPass(game)

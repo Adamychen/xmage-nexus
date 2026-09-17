@@ -207,6 +207,10 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
         </div>
       ) : undefined}
     >
+      {/* string/integer/multiString: cancel manda sendPlayerBoolean(false), una respuesta de
+          tipo incorrecto para estos métodos (CHOICE/AMOUNT/MULTI_AMOUNT esperan string/integer/
+          multi-amount) — solo mostrar Cancelar cuando el propio prompt se declaró opcional
+          (prompt.required === false), igual que ya hace el bloque de targets de abajo. */}
       {prompt.mode === 'string' && (
         <div className="feedback-string-wrap">
           {prompt.choiceSearch !== false && (
@@ -276,7 +280,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             >
               {t('game', 'string_confirm')}
             </button>
-            <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            {prompt.required === false && (
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            )}
           </div>
         </div>
       )}
@@ -337,7 +343,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           )}
           <div className="feedback-dialog-actions">
             <button className="primary send-btn" disabled={busy} onClick={confirmAmount}>{t('game', 'integer_confirm')}</button>
-            <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            {prompt.required === false && (
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            )}
           </div>
         </div>
       )}
@@ -377,7 +385,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           </div>
           <div className="feedback-dialog-actions">
             <button className="primary send-btn" disabled={busy} onClick={confirmMultiAmount}>{t('game', 'multi_confirm')}</button>
-            <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            {prompt.required === false && (
+              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+            )}
           </div>
         </div>
       )}

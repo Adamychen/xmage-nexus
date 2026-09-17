@@ -39,7 +39,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   if (!d?.gameId || d.gameId !== s.gameId) {
     setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
   }
-  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, rollbackPendingFor: null })
+  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
     void cmds.joinGame(d!.gameId!)

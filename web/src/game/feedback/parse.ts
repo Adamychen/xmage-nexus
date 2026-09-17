@@ -11,6 +11,7 @@ import {
   booleanValueOf,
   detectPlaneswalkerChoice,
   isDiscardMessage,
+  isLibraryOrderPick,
   isLondonBottoming,
   isMulliganAsk,
   isStartingPlayerMessage,
@@ -30,8 +31,10 @@ import {
   multiAmountItems,
   optionEntries,
   secondMessageOf,
+  splitSourceSuffix,
   stringList,
   stringValue,
+  subMessageOf,
   targetOptions,
 } from './record'
 import { defaultText } from './text'
@@ -137,16 +140,22 @@ export function parseFeedback(
       const isMulliganLondon = isLondonBottoming(message)
       const isStartingPlayer = isStartingPlayerMessage(message)
       const isDiscard = isDiscardMessage(message)
+      const isVoting = !isStartingPlayer && isVotingAsk(message, stringValue(data.question))
       const queryType = stringValue(asRecord(data.options).queryType)
       const isTriggerOrder = !isStartingPlayer && isTriggerOrderPick(message, queryType)
+      const isOrderPick = isLibraryOrderPick(message)
       const title = isStartingPlayer
         ? t('game', 'who_starts')
-        : isDiscard
-          ? t('game', 'choose_discard')
-          : isTriggerOrder
-            ? t('game', 'trigger_title')
-            : t('game', 'choose_target')
-      return prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer, undefined, undefined, undefined, isTriggerOrder)
+        : isVoting
+          ? t('dialogs', 'voting_title')
+          : isDiscard
+            ? t('game', 'choose_discard')
+            : isTriggerOrder
+              ? t('game', 'trigger_title')
+              : isOrderPick
+                ? t('game', 'library_order_title')
+                : t('game', 'choose_target')
+      return prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
     }
     case 'GAME_SELECT_CARDS':
     case 'GAME_SELECT_TARGETS':
@@ -177,7 +186,7 @@ export function parseFeedback(
         choices = [...choices].sort((a, b) => (sortRank(a) ?? Number.MAX_SAFE_INTEGER) - (sortRank(b) ?? Number.MAX_SAFE_INTEGER))
       }
       return prompt(method, gameId, t('game', 'choose_option'), stringValue(choice.message) ?? message, 'string', choices, bounds,
-        undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, true, subMessageOf(choice), undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
         choiceHints(asRecord(choice.hintData)), choice.specialEnabled === true, choice.searchEnabled !== false)
     }
     case 'GAME_CHOOSE_PILE': {
@@ -202,8 +211,12 @@ export function parseFeedback(
         { id: 'no', label: t('common', 'cancel'), value: 'false' },
       ], bounds)
     case 'GAME_GET_AMOUNT':
-    case 'GAME_SELECT_AMOUNT':
-      return prompt(method, gameId, t('game', 'amount_title'), message, 'integer', [], bounds)
+    case 'GAME_SELECT_AMOUNT': {
+      // HumanPlayer.getAmount concatena `message + " (source: <Nombre>)"` (CardUtil.getSourceLogName)
+      // en vez de mandar un campo separado — lo extraemos del propio texto.
+      const { message: amountMessage, sourceName } = splitSourceSuffix(message)
+      return prompt(method, gameId, t('game', 'amount_title'), amountMessage, 'integer', [], bounds, undefined, undefined, true, sourceName)
+    }
     case 'GAME_GET_MULTI_AMOUNT': {
       const items = multiAmountItems(data.messages, (index) => t('game', 'amount_fallback', { index: String(index + 1) }))
       const minSum = typeof data.min === 'number' ? data.min : items.reduce((acc, it) => acc + it.min, 0)
@@ -303,6 +316,7 @@ function prompt(
   choiceSpecial?: boolean,
   choiceSearch?: boolean,
   pileCards?: { pile1: FeedbackCard[]; pile2: FeedbackCard[] },
+  isLibraryOrderPick?: boolean,
 ): FeedbackPrompt {
   const fp: FeedbackPrompt = { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
   if (isVoting) fp.isVoting = true
@@ -314,5 +328,6 @@ function prompt(
   if (choiceSpecial) fp.choiceSpecial = true
   if (choiceSearch === false) fp.choiceSearch = false
   if (pileCards) fp.pileCards = pileCards
+  if (isLibraryOrderPick) fp.isLibraryOrderPick = true
   return fp
 }

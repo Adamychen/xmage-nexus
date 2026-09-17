@@ -24,6 +24,23 @@ export function deckSideboardCount(d: Deck): number {
 }
 export const deckMainCount = deckTotalCards
 export const deckSideCount = deckSideboardCount
+
+/**
+ * Iniciales para el fallback visual cuando no hay portada. Toma las últimas
+ * (hasta) 2 palabras del nombre en vez de las primeras: los mazos precon
+ * empaquetados comparten un prefijo común ("Mage Web ...") y las primeras
+ * 2 letras colisionaban casi siempre en "MA".
+ */
+export function deckInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '??'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return words
+    .slice(-2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+}
 export function deckColorIdentity(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
   return colorIdentityFromCards(cards)
 }

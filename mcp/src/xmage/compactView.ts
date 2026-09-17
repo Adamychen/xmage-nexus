@@ -34,8 +34,8 @@ export interface CompactPlayer {
 
 export interface CompactGame {
   turn: number
-  phase: string
-  step: string
+  phase: string | null
+  step: string | null
   activePlayer: string
   priorityPlayer: string
   myTurn: boolean

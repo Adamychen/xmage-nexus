@@ -16,6 +16,7 @@ import type { DeckFormat } from '../decks/types'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import { isUuidLikeCardName } from '../cards/cardLocalization'
+import Modal from '../ui/Modal'
 import './ConstructScreen.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -367,8 +368,7 @@ export default function ConstructScreen() {
     : pool
 
   return (
-    <div className="construct-backdrop" role="presentation">
-      <section className="construct-screen" role="dialog" aria-modal="true" aria-label={t('game', 'construct_limited_label')}>
+    <Modal backdropClassName="construct-backdrop" dialogClassName="construct-screen" label={t('game', 'construct_limited_label')}>
         <div className="construct-header">
           <div className="construct-title">
             <h2>{t('game','construct_title')}</h2>
@@ -524,7 +524,6 @@ export default function ConstructScreen() {
             {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
           </button>
         </div>
-      </section>
       {hoverPreview && (
         <div
           className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
@@ -542,6 +541,6 @@ export default function ConstructScreen() {
           )}
         </div>
       )}
-    </div>
+    </Modal>
   )
 }

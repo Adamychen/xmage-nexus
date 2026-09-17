@@ -23,6 +23,8 @@ interface CardSlotProps {
   isTarget?: boolean
   isPlayable?: boolean
   isChosen?: boolean
+  /** Solo para `onClick` con semántica de selección (toggle) — aria-pressed en el elemento interactivo. */
+  ariaPressed?: boolean
   tapped?: boolean
   attacking?: boolean
   blocking?: boolean
@@ -42,6 +44,7 @@ export default function CardSlot({
   isTarget = false,
   isPlayable = false,
   isChosen = false,
+  ariaPressed,
   tapped = false,
   attacking = false,
   blocking = false,
@@ -219,6 +222,7 @@ export default function CardSlot({
       onClick={handleClick}
       {...clickableProps(handleClick)}
       aria-label={onClick ? cardName(card) : undefined}
+      aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}
       onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       style={style}

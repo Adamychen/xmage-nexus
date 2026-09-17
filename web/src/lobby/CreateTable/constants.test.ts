@@ -9,6 +9,7 @@ import {
   isSimSeatType,
   normalizeSeatType,
   normalizeTournamentType,
+  recommendedFreeMulligans,
   seatTypeLabel,
   tournamentTypeNameOf,
 } from './constants'
@@ -92,5 +93,33 @@ describe('tournament types (draft NPE)', () => {
     const gameTypes = [{ name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 }]
     expect(getEffectiveMaxPlayers('Two Player Duel', gameTypes, true)).toBe(8)
     expect(getEffectiveMaxPlayers('Two Player Duel', gameTypes, false)).toBe(2)
+  })
+})
+
+describe('recommendedFreeMulligans (CR 103.5c)', () => {
+  it('recommends 1 for any multiplayer table', () => {
+    expect(recommendedFreeMulligans('Free For All', 4)).toBe(1)
+    expect(recommendedFreeMulligans('Commander Free For All', 4)).toBe(1)
+    expect(recommendedFreeMulligans('Penny Dreadful Commander Free For All', 3)).toBe(1)
+    expect(recommendedFreeMulligans('Momir Basic Free For All', 3)).toBe(1)
+    expect(recommendedFreeMulligans('Oathbreaker Free For All', 3)).toBe(1)
+  })
+
+  it('recommends 1 for Brawl at any player count', () => {
+    expect(recommendedFreeMulligans('Brawl Two Player Duel', 2)).toBe(1)
+    expect(recommendedFreeMulligans('Brawl Free For All', 4)).toBe(1)
+  })
+
+  it('depends on the player count for commander variants without FFA in the name', () => {
+    expect(recommendedFreeMulligans('Freeform Unlimited Commander', 2)).toBe(0)
+    expect(recommendedFreeMulligans('Freeform Unlimited Commander', 3)).toBe(1)
+  })
+
+  it('recommends 0 for 1v1 duel formats', () => {
+    expect(recommendedFreeMulligans('Two Player Duel', 2)).toBe(0)
+    expect(recommendedFreeMulligans('Commander Two Player Duel', 2)).toBe(0)
+    expect(recommendedFreeMulligans('Tiny Leaders Two Player Duel', 2)).toBe(0)
+    expect(recommendedFreeMulligans('Freeform Commander Two Player Duel', 3)).toBe(0)
+    expect(recommendedFreeMulligans('', 2)).toBe(0)
   })
 })

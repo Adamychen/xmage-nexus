@@ -1,5 +1,20 @@
 import type { FeedbackCard, FeedbackPrompt } from '../game/feedback'
-import type { GameView, PlayerView } from '../net/types'
+import type {
+  GameView,
+  PlayerView,
+  LobbyEnvelope,
+  TableView,
+  SeatView,
+  UsersView,
+  TournamentView,
+  TournamentPlayerView,
+  TournamentGameView,
+  RoundView,
+  SimpleCardView,
+  SimpleCardsView,
+} from '../net/types'
+import type { DraftState, ConstructState } from '../state/slices/limited'
+import type { ConnectionInfo } from '../state/persistence'
 import manifest from '../../fixtures/recorded/manifest.json'
 
 interface FrameModule {
@@ -7,6 +22,13 @@ interface FrameModule {
 }
 
 const frameModules = import.meta.glob<FrameModule>('../../fixtures/recorded/*.json', { eager: true })
+
+// Fecha fija (no `Date.now()`): los datos de ejemplo del gallery se evalúan una
+// vez por carga de página, así que un timestamp "en vivo" difiere entre la
+// generación del baseline y cualquier ejecución posterior — hace flakear
+// `toHaveScreenshot()` en cualquier pantalla que pinte una hora/fecha absoluta
+// (p. ej. inicio/fin de torneo).
+const GALLERY_EPOCH = new Date('2026-01-01T12:00:00Z').getTime()
 
 export interface RecordedFrame {
   file: string
@@ -36,11 +58,18 @@ export interface GalleryEntry {
   group: string
   label: string
   description?: string
-  phase?: 'idle' | 'game'
+  phase?: 'idle' | 'lobby' | 'game'
+  /** Pantalla no cubierta por `game`/`login`: lobby, editor de mazos, draft, construct, torneo. */
+  screen?: 'lobby' | 'decks' | 'draft' | 'construct' | 'tournament'
   game?: GameView | null
   gameId?: string | null
   feedback?: FeedbackPrompt | null
   playableIds?: string[]
+  lobby?: LobbyEnvelope
+  conn?: ConnectionInfo
+  draft?: DraftState
+  construct?: ConstructState
+  tournamentModal?: { table: TableView; view: TournamentView | null }
 }
 
 function players(game: GameView): PlayerView[] {
@@ -109,6 +138,200 @@ const LIBRARY_CARDS: FeedbackCard[] = [
   { id: 'g5', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
   { id: 'g6', name: 'Forest', expansionSetCode: 'M21', cardNumber: '277', cardTypes: ['Land'] },
 ]
+
+// ─── Pantallas nuevas (P3 núcleo, 2026-09-17): lobby, editor, draft, construct, torneo ──
+
+const GALLERY_CONN: ConnectionInfo = {
+  wsHost: 'localhost',
+  proxyPort: 8787,
+  serverHost: 'localhost',
+  port: 17171,
+  username: 'gallery-dev',
+  password: '',
+}
+
+function makeSeat(playerName: string, seatIndex: number, playerType = 'Human'): SeatView {
+  return { playerName, seatIndex, playerType }
+}
+
+const LOBBY_GAME_TYPES = ['Standard', 'Modern', 'Commander', 'Pauper', 'Draft (BLB)', 'Sealed (DSK)', 'Two-Headed Giant']
+const LOBBY_NAMES = ['Alice', 'Bora', 'Chen', 'Dara', 'Enzo', 'Fran', 'Gus', 'Heidi']
+
+function makeLobbyTable(i: number, overrides: Partial<TableView> = {}): TableView {
+  const state = ['WAITING', 'DUELING', 'SIDEBOARDING', 'FINISHED'][i % 4]
+  return {
+    tableId: `gallery-table-${i}`,
+    gameType: LOBBY_GAME_TYPES[i % LOBBY_GAME_TYPES.length],
+    deckType: 'Constructed',
+    tableName: `Mesa de ${LOBBY_NAMES[i % LOBBY_NAMES.length]} #${i + 1}`,
+    controllerName: LOBBY_NAMES[i % LOBBY_NAMES.length],
+    additionalInfoShort: '',
+    additionalInfoFull: '',
+    createTime: GALLERY_EPOCH - i * 60_000,
+    tableState: state,
+    skillLevel: 'CASUAL',
+    tableStateText: state,
+    seatsInfo: '1/4',
+    isTournament: i % 7 === 0,
+    seats: [makeSeat(LOBBY_NAMES[i % LOBBY_NAMES.length], 0), makeSeat('', 1, 'Open')],
+    games: [],
+    quitRatio: '0',
+    minimumRating: '0',
+    limited: i % 5 === 0,
+    rated: i % 3 === 0,
+    passworded: i % 9 === 0,
+    spectatorsAllowed: true,
+    ...overrides,
+  }
+}
+
+function makeLobbyUser(i: number): UsersView {
+  return {
+    flagName: 'es',
+    userName: `${LOBBY_NAMES[i % LOBBY_NAMES.length]}${i}`,
+    matchHistory: '',
+    matchQuitRatio: 0,
+    tourneyHistory: '',
+    tourneyQuitRatio: 0,
+    infoGames: '0',
+    infoPing: '20',
+    generalRating: 1500 + i,
+    constructedRating: 1500 + i,
+    limitedRating: 1500 + i,
+  }
+}
+
+const LOBBY_EMPTY: LobbyEnvelope = { type: 'lobby', tables: [], users: [], serverMessages: [] }
+
+const LOBBY_OVERFLOW: LobbyEnvelope = {
+  type: 'lobby',
+  tables: Array.from({ length: 48 }, (_, i) => makeLobbyTable(i)),
+  users: Array.from({ length: 55 }, (_, i) => makeLobbyUser(i)),
+  serverMessages: [],
+}
+
+function makeSimpleCard(id: string, set: string, num: string, name: string): SimpleCardView {
+  return { id, expansionSetCode: set, cardNumber: num, name }
+}
+
+function cardsById(cards: SimpleCardView[]): SimpleCardsView {
+  const m: SimpleCardsView = {}
+  for (const c of cards) m[c.id] = c
+  return m
+}
+
+const DRAFT_SET_CODES = ['BLB', 'DSK', 'OTJ']
+function makeDraftPack(prefix: string, size: number): SimpleCardView[] {
+  return Array.from({ length: size }, (_, i) => {
+    const set = DRAFT_SET_CODES[i % DRAFT_SET_CODES.length]
+    return makeSimpleCard(`${prefix}-${i}`, set, String((i % 270) + 1), `${set} Card ${i}`)
+  })
+}
+
+const DRAFT_INPROGRESS: DraftState = {
+  draftId: 'gallery-draft-1',
+  message: {
+    draftView: {
+      setNames: ['Bloomburrow'],
+      setCodes: ['BLB'],
+      boosterNum: 1,
+      cardNum: 3,
+      players: ['gallery-dev', 'alice', 'bora', 'chen', 'dara', 'enzo', 'fran', 'grace'],
+    },
+    draftPickView: {
+      booster: cardsById(makeDraftPack('booster', 14)),
+      picks: cardsById(makeDraftPack('pick', 2)),
+      picking: true,
+      timeout: 60,
+    },
+  },
+  timeLeft: 42,
+}
+
+const DRAFT_WAITING: DraftState = {
+  draftId: 'gallery-draft-2',
+  message: {
+    draftView: {
+      setNames: ['Bloomburrow', 'Duskmourn', 'Outlaws of Thunder Junction'],
+      setCodes: DRAFT_SET_CODES,
+      boosterNum: 2,
+      cardNum: 15,
+      players: ['gallery-dev', 'alice-de-los-santos', 'bora-hernandez', 'chen-wei-long', 'dara-o-shaughnessy', 'enzo-fitzgerald', 'fran-de-la-cruz', 'grace-nakamura'],
+    },
+    draftPickView: { booster: {}, picks: cardsById(makeDraftPack('pick', 10)), picking: false, timeout: 60 },
+  },
+}
+
+function makeConstructPool(size: number): SimpleCardsView {
+  return cardsById(makeDraftPack('pool', size))
+}
+
+const CONSTRUCT_STATE_NORMAL: ConstructState = {
+  deckName: 'Mi mazo sellado',
+  pool: makeConstructPool(45),
+  tableId: 'gallery-construct-1',
+  parentTableId: null,
+  timeLeft: 900,
+}
+
+const CONSTRUCT_STATE_BIG: ConstructState = {
+  deckName: 'Pool grande (cubo)',
+  pool: makeConstructPool(90),
+  tableId: 'gallery-construct-2',
+  parentTableId: null,
+  timeLeft: 60,
+}
+
+function makeTournamentPlayer(name: string, points: number, state = 'ACTIVE'): TournamentPlayerView {
+  return { name, state, points, results: '', history: '' }
+}
+
+function makeTournamentGame(roundNum: number, players: string, state: string, result = ''): TournamentGameView {
+  return { roundNum, state, players, result }
+}
+
+const TOURNAMENT_TABLE = makeLobbyTable(0, { tableId: 'gallery-tournament-table', tableName: 'Standard Swiss #12', isTournament: true })
+
+const TOURNAMENT_INPROGRESS: TournamentView = {
+  tournamentName: 'Standard Swiss — Ronda 2 de 3',
+  tournamentType: 'Swiss',
+  tournamentState: 'DUELING',
+  startTime: GALLERY_EPOCH - 30 * 60_000,
+  constructionTime: 0,
+  watchingAllowed: true,
+  players: [
+    makeTournamentPlayer('alice', 3),
+    makeTournamentPlayer('bora', 3),
+    makeTournamentPlayer('chen', 1.5),
+    makeTournamentPlayer('dara', 1.5),
+    makeTournamentPlayer('enzo', 0),
+    makeTournamentPlayer('fran', 0),
+  ],
+  rounds: [
+    { games: [makeTournamentGame(1, 'alice vs chen', 'COMPLETED', '2-0'), makeTournamentGame(1, 'bora vs dara', 'COMPLETED', '2-1'), makeTournamentGame(1, 'enzo vs fran', 'COMPLETED', '1-2')] },
+    { games: [makeTournamentGame(2, 'alice vs bora', 'DUELING', ''), makeTournamentGame(2, 'dara vs fran', 'DUELING', ''), makeTournamentGame(2, 'chen vs enzo', 'DUELING', '')] },
+  ] satisfies RoundView[],
+}
+
+const TOURNAMENT_FINISHED: TournamentView = {
+  ...TOURNAMENT_INPROGRESS,
+  tournamentName: 'Standard Swiss — Terminado',
+  tournamentState: 'END',
+  endTime: GALLERY_EPOCH,
+  players: [
+    makeTournamentPlayer('alice', 6, 'FINISHED'),
+    makeTournamentPlayer('bora', 4.5, 'FINISHED'),
+    makeTournamentPlayer('dara', 3, 'FINISHED'),
+    makeTournamentPlayer('chen', 1.5, 'FINISHED'),
+    makeTournamentPlayer('fran', 1.5, 'FINISHED'),
+    makeTournamentPlayer('enzo', 0, 'FINISHED'),
+  ],
+  rounds: [
+    TOURNAMENT_INPROGRESS.rounds[0],
+    { games: [makeTournamentGame(2, 'alice vs bora', 'COMPLETED', '2-0'), makeTournamentGame(2, 'dara vs fran', 'COMPLETED', '2-1'), makeTournamentGame(2, 'chen vs enzo', 'COMPLETED', '2-0')] },
+    { games: [makeTournamentGame(3, 'alice vs dara', 'COMPLETED', '2-0'), makeTournamentGame(3, 'bora vs fran', 'COMPLETED', '2-1'), makeTournamentGame(3, 'chen vs enzo', 'COMPLETED', '2-0')] },
+  ],
+}
 
 export function buildGalleryEntries(): GalleryEntry[] {
   const entries: GalleryEntry[] = recordedFrames.map((frame) => ({
@@ -310,6 +533,81 @@ export function buildGalleryEntries(): GalleryEntry[] {
     label: 'Login',
     description: 'Pantalla de conexión sin formulario enviado.',
     phase: 'idle',
+  })
+
+  entries.push({
+    id: 'screen:lobby-empty',
+    group: 'Pantallas',
+    label: 'Lobby (vacío)',
+    description: 'Sin mesas ni jugadores conectados.',
+    screen: 'lobby',
+    lobby: LOBBY_EMPTY,
+    conn: GALLERY_CONN,
+  })
+  entries.push({
+    id: 'screen:lobby-overflow',
+    group: 'Pantallas',
+    label: 'Lobby (desbordado)',
+    description: '48 mesas y 55 jugadores conectados.',
+    screen: 'lobby',
+    lobby: LOBBY_OVERFLOW,
+    conn: GALLERY_CONN,
+  })
+  entries.push({
+    id: 'screen:decks',
+    group: 'Pantallas',
+    label: 'Editor de mazos',
+    description:
+      'Usa el almacenamiento real del navegador (IndexedDB): no se fuerzan mazos de ejemplo aquí para no contaminar tus mazos guardados con datos falsos.',
+    screen: 'decks',
+  })
+  entries.push({
+    id: 'screen:draft',
+    group: 'Pantallas',
+    label: 'Draft (pick en curso)',
+    description: 'Booster de 14 cartas, pick 3 de la ronda 1, con 2 ya elegidas.',
+    screen: 'draft',
+    draft: DRAFT_INPROGRESS,
+  })
+  entries.push({
+    id: 'screen:draft-waiting',
+    group: 'Pantallas',
+    label: 'Draft (esperando booster)',
+    description: 'Booster vacío tras terminar el pick (picking:false) con nombres de jugador largos.',
+    screen: 'draft',
+    draft: DRAFT_WAITING,
+  })
+  entries.push({
+    id: 'screen:construct',
+    group: 'Pantallas',
+    label: 'Construct (pool sellado)',
+    description: '45 cartas de un sobre sellado típico.',
+    screen: 'construct',
+    construct: CONSTRUCT_STATE_NORMAL,
+  })
+  entries.push({
+    id: 'screen:construct-overflow',
+    group: 'Pantallas',
+    label: 'Construct (pool grande)',
+    description: '90 cartas: pool de cubo/sellado grande, desbordado.',
+    screen: 'construct',
+    construct: CONSTRUCT_STATE_BIG,
+  })
+  entries.push({
+    id: 'screen:tournament-inprogress',
+    group: 'Pantallas',
+    label: 'Torneo (cuadro en curso)',
+    description: 'Suizo a 3 rondas, ronda 2 en curso.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: TOURNAMENT_INPROGRESS },
+  })
+  entries.push({
+    id: 'screen:tournament-finished',
+    group: 'Pantallas',
+    label: 'Torneo (cuadro terminado)',
+    description: 'Torneo terminado con posiciones finales.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: TOURNAMENT_FINISHED },
   })
 
   return entries

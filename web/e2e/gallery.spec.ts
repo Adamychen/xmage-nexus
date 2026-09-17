@@ -27,6 +27,15 @@ const VISUAL_ENTRIES = [
   'prompt:trigger-order',
   'prompt:voting',
   'screen:login',
+  'screen:lobby-empty',
+  'screen:lobby-overflow',
+  'screen:decks',
+  'screen:draft',
+  'screen:draft-waiting',
+  'screen:construct',
+  'screen:construct-overflow',
+  'screen:tournament-inprogress',
+  'screen:tournament-finished',
 ]
 
 async function openGallery(page: Page) {

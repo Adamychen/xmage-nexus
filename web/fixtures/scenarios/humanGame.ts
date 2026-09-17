@@ -29,6 +29,7 @@ export class HumanGame {
   private myBattle: PermanentView[] = []
   private simBattle: PermanentView[] = []
   private crossZone: Array<{ id: string; name: string; zone: 'graveyard' | 'exile' }> = []
+  private otherZoneCards: Array<{ id: string; name: string; zone: 'graveyard' | 'exile' }> = []
   private simGraveyard: Array<{ id: string; name: string }> = []
   private humanLife = 20
   private simLife = 20
@@ -66,6 +67,9 @@ export class HumanGame {
     }
     for (const cz of options.crossZone ?? []) {
       this.crossZone.push({ id: `cz-${cz.name.replace(/\s+/g, '-')}`, name: cz.name, zone: cz.zone ?? 'graveyard' })
+    }
+    for (const oz of options.otherZoneCards ?? []) {
+      this.otherZoneCards.push({ id: `oz-${oz.name.replace(/\s+/g, '-')}`, name: oz.name, zone: oz.zone ?? 'graveyard' })
     }
   }
 
@@ -210,6 +214,11 @@ export class HumanGame {
       const card = makeCard({ name: cz.name, parentId: cz.id })
       if (cz.zone === 'exile') exile[cz.id] = card
       else graveyard[cz.id] = card
+    }
+    for (const oz of this.otherZoneCards) {
+      const card = makeCard({ name: oz.name, parentId: oz.id })
+      if (oz.zone === 'exile') exile[oz.id] = card
+      else graveyard[oz.id] = card
     }
     human.graveyard = graveyard
     human.exile = exile

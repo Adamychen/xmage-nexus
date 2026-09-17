@@ -5,6 +5,8 @@
 }
 
 .game-top {
+  position: relative;
+  z-index: var(--game-header-z);
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as cmds from '../../net/commands'
 import type { GameTypeInfo } from '../../net/commands'
 import { setMyDeck, useStore } from '../../state/store'
@@ -32,6 +32,7 @@ import {
   isSimSeatType,
   normalizeSeatType,
   parseLimitedSetCodes,
+  recommendedFreeMulligans,
   type CreateTab,
   type DraftTiming,
   type SeatConfig,
@@ -113,6 +114,7 @@ export interface CreateTableForm {
   setBufferTime: (v: string) => void
   freeMulligans: number
   setFreeMulligans: (v: number) => void
+  recommendedMulligans: number
   mulliganType: string
   setMulliganType: (v: string) => void
   customStartLifeEnabled: boolean
@@ -526,6 +528,16 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     } catch {}
     return []
   })
+  const recommendedMulligans = useMemo(
+    () => recommendedFreeMulligans(gameType, numPlayers),
+    [gameType, numPlayers],
+  )
+  const lastRecommendedMulligans = useRef<number | null>(null)
+  useEffect(() => {
+    if (lastRecommendedMulligans.current === recommendedMulligans) return
+    lastRecommendedMulligans.current = recommendedMulligans
+    setFreeMulligans(recommendedMulligans)
+  }, [recommendedMulligans])
   const [mySkill, setMySkill] = useState(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
@@ -1188,6 +1200,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setBufferTime,
     freeMulligans,
     setFreeMulligans,
+    recommendedMulligans,
     mulliganType,
     setMulliganType,
     customStartLifeEnabled,

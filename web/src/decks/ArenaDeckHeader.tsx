@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
+import { deckInitials } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
 import Icon from '../ui/Icon'
@@ -87,7 +88,7 @@ export function ArenaDeckHeader({
           <img src={coverArtUrl} alt={name} className="deck-header-cover-img" />
         ) : (
           <div className="deck-header-cover-fallback">
-            {name.slice(0, 2).toUpperCase() || 'MTG'}
+            {name.trim() ? deckInitials(name) : 'MTG'}
           </div>
         )}
       </div>

@@ -1,9 +1,10 @@
-import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
+import { sendValue } from './useFeedbackForm'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { localizeOptionLabel, localizeServerMessage } from './serverMessageTranslation'
 import './VotingDialog.css'
 
 interface VotingDialogProps {
@@ -14,12 +15,11 @@ interface VotingDialogProps {
 
 export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) {
   const { t } = useTranslation()
+  // Un voto de un único candidato llega como GAME_TARGET (mode 'uuid'), no solo
+  // GAME_ASK (mode 'boolean') / GAME_CHOOSE_CHOICE (mode 'string') — sendValue()
+  // elige el wire call correcto según prompt.mode en vez de asumir boolean/string.
   const choose = (value: string) => {
-    const isBool = prompt.mode === 'boolean'
-    void send(
-      () => (isBool ? cmds.sendPlayerBoolean(value === 'true', prompt.gameId) : cmds.sendPlayerString(value, prompt.gameId)),
-      t('errors', 'send_failed_vote'),
-    )
+    void send(() => sendValue(prompt, value), t('errors', 'send_failed_vote'))
   }
 
   const left = prompt.options[0]
@@ -39,7 +39,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
       kickerIcon="check"
       kickerLabel={<>{t('dialogs', 'voting_title').toUpperCase()} {stepLabel}</>}
       title={<FormattedText text={prompt.title} />}
-      message={<FormattedText text={prompt.message} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
       sectionProps={{ 'aria-describedby': 'voting-hint' }}
     >        {hasTwo ? (
           <div className="voting-options">
@@ -49,7 +49,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
               onClick={() => choose(left.value)}
             >
               <span className="voting-btn-icon"><Icon name="check" size={16} /></span>
-              <span className="voting-btn-label"><FormattedText text={left.label} /></span>
+              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(left.label, t as any)} /></span>
             </button>
             <span className="voting-vs">VS</span>
             <button
@@ -58,14 +58,14 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
               onClick={() => choose(right.value)}
             >
               <span className="voting-btn-icon"><Icon name="circle" size={15} /></span>
-              <span className="voting-btn-label"><FormattedText text={right.label} /></span>
+              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(right.label, t as any)} /></span>
             </button>
           </div>
         ) : (
           <div className="voting-options voting-many">
             {prompt.options.map((opt) => (
               <button key={opt.id} className="voting-btn" disabled={busy} onClick={() => choose(opt.value)}>
-                <FormattedText text={opt.label} />
+                <FormattedText text={localizeOptionLabel(opt.label, t as any)} />
               </button>
             ))}
           </div>

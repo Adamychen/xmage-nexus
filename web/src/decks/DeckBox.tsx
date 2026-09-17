@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { DeckV2 } from './types'
-import { deckMainCount } from './types'
+import { deckMainCount, deckInitials } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
@@ -83,7 +83,7 @@ export function DeckBox({
       onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}
     >
       <div className="deck-box-art">
-        {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deck.name.slice(0, 2).toUpperCase()}</div>}
+        {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deckInitials(deck.name)}</div>}
         <div className="deck-box-art-scrim" />
         <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} ${t('decks', 'format_legal')}`}>
           {isValid ? (

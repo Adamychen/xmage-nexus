@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ChatBox, { formatChatTime, MAX_CHAT_MESSAGE_SIZE } from './ChatBox'
+import ChatBox, { formatChatTime, MAX_CHAT_MESSAGE_SIZE, sanitizeOutgoingChatText } from './ChatBox'
 import * as cmds from '../net/commands'
 import { setState } from '../state/state'
 
@@ -65,6 +65,38 @@ describe('ChatBox component', () => {
     fireEvent.click(sendBtn)
 
     expect(sendSpy).toHaveBeenCalledWith('chat-123', 'Testing message')
+  })
+
+  it('sanea el tag [NEXUS_READY]/[NEXUS_NOT_READY] escrito a mano antes de mandar el mensaje libre (no falsificable)', () => {
+    const sendSpy = vi.spyOn(cmds, 'sendChatMessage').mockResolvedValue({ type: 'result', ok: true, action: 'sendChatMessage' })
+    const { getByPlaceholderText, getByText } = render(<ChatBox />)
+
+    const input = getByPlaceholderText(/Mensaje/)
+    fireEvent.change(input, { target: { value: '[NEXUS_READY] hola a todos' } })
+    fireEvent.click(getByText('Enviar'))
+
+    expect(sendSpy).toHaveBeenCalledTimes(1)
+    const [, sentText] = sendSpy.mock.calls[0]
+    expect(sentText).not.toContain('[NEXUS_READY]')
+    expect(sentText).toBe('hola a todos')
+  })
+
+  it('no manda nada si el mensaje libre es SOLO el tag saneado (queda vacío)', () => {
+    const sendSpy = vi.spyOn(cmds, 'sendChatMessage').mockResolvedValue({ type: 'result', ok: true, action: 'sendChatMessage' })
+    const { getByPlaceholderText, getByText } = render(<ChatBox />)
+
+    const input = getByPlaceholderText(/Mensaje/)
+    fireEvent.change(input, { target: { value: '[nexus_ready]' } })
+    fireEvent.click(getByText('Enviar'))
+
+    expect(sendSpy).not.toHaveBeenCalled()
+  })
+
+  it('sanitizeOutgoingChatText elimina variantes de mayúsculas/espacios sin tocar texto normal', () => {
+    expect(sanitizeOutgoingChatText('[NEXUS_READY] Alice')).toBe('Alice')
+    expect(sanitizeOutgoingChatText('[ nexus_not_ready ] Bob')).toBe('Bob')
+    expect(sanitizeOutgoingChatText('hola [algo] normal')).toBe('hola [algo] normal')
+    expect(sanitizeOutgoingChatText('  espacios  ')).toBe('espacios')
   })
 
   it('formatea eventos de preparación [NEXUS_READY] y [NEXUS_NOT_READY] como avisos de sistema', () => {

@@ -111,6 +111,9 @@ type AssertKind =
   | 'hasCommanderZone'
   | 'hasKarnRestart'
   | 'hasEnergy'
+  | 'hasReanimateTarget'
+  | 'firstMulliganFreeSecondCostsCard'
+  | 'hasTimeoutLoss'
   | 'hasConstructPool'
   | 'tournamentFinished'
 
@@ -1168,6 +1171,36 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       const ex = me2?.exile ?? {}
       const vals = Array.isArray(ex) ? ex : Object.values(ex)
       return vals.some((c) => /faithless looting/i.test(String((c as { name?: unknown })?.name ?? (typeof c === 'string' ? c : ''))))
+    }
+    case 'hasReanimateTarget': {
+      const me2 = getMe(gv)
+      const onBattlefield = Object.values(me2?.battlefield ?? {}).some((c) =>
+        /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const stillInGraveyard = Object.values(me2?.graveyard ?? {}).some((c) =>
+        /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      return onBattlefield && !stillInGraveyard && Number(me2?.life) <= 18
+    }
+    case 'firstMulliganFreeSecondCostsCard': {
+      const me2 = getMe(gv)
+      const opponents = (gv.players ?? []).filter((p) => !p?.controlled)
+      return (
+        Number(gv.turn) === 1 &&
+        Number((me2 as { handCount?: unknown } | undefined)?.handCount) === 6 &&
+        opponents.length === 2 &&
+        opponents.every((p) => Number((p as { handCount?: unknown })?.handCount) === 7)
+      )
+    }
+    case 'hasTimeoutLoss': {
+      const me2 = getMe(gv)
+      const opponent = (gv.players ?? []).find((p) => !p?.controlled)
+      return (
+        Number((me2 as { priorityTimeLeftSecs?: unknown } | undefined)?.priorityTimeLeftSecs) === 0 &&
+        (me2 as { hasLeft?: boolean } | undefined)?.hasLeft === true &&
+        Number((me2 as { life?: unknown } | undefined)?.life) === 20 &&
+        Number((opponent as { priorityTimeLeftSecs?: unknown } | undefined)?.priorityTimeLeftSecs) > 0
+      )
     }
     case 'hasCombatGroup':
       return combatAttackerIds(gv).length > 0

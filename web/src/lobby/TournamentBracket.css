@@ -173,6 +173,12 @@
   grid-template-columns: 1.6fr 1fr;
   gap: 16px;
   min-height: 0;
+  /* Es hijo directo de .tournament-modal-scroll (flex column): sin esto el
+     grid no se encoge por debajo del min-content de sus columnas (bug clásico
+     de flex/grid anidado) y empuja el ancho del panel en vez de dejar que
+     .bracket-columns haga scroll horizontal internamente (ronda 3 se cortaba
+     sin scroll visible con 3+ rondas). */
+  min-width: 0;
 }
 @media (max-width: 900px) {
   .tournament-bracket-body {

@@ -27,6 +27,10 @@
   --dlg-backdrop: rgba(3, 6, 14, 0.78);
   --dlg-backdrop-blur: 8px;
   --dlg-z: 90;
+  /* Por encima del rango dinámico de Modal.tsx (nextModalZ, 501-1999): turno/fase
+     y vidas/reloj de prioridad no deben quedar tapados por ningún backdrop modal
+     (p5-1-prompt-checklist.md hallazgo #1). Por debajo de los toasts (9999). */
+  --game-header-z: 2000;
   --dlg-radius: 18px;
   --dlg-padding: 24px 28px 28px;
   --dlg-bg: linear-gradient(180deg, #161b2e 0%, #0d1222 100%);
