@@ -36,13 +36,51 @@ const VISUAL_ENTRIES = [
   'screen:construct-overflow',
   'screen:tournament-inprogress',
   'screen:tournament-finished',
+  'screen:tournament-loading',
+  'screen:tournament-error',
+  'screen:tournament-empty',
+  'screen:tournament-waiting',
+  'screen:tournament-panel',
+  'screen:draft-stalled',
+  'screen:setup',
+  'screen:login-connecting',
+  'screen:login-error',
+  'screen:lobby-error',
+  'screen:wizard',
+  'screen:staging-player',
+  'screen:gameend-game',
+  'screen:gameend-match',
+  'screen:settings',
+  'screen:appearance',
+  'screen:about',
+  'screen:help',
+  'board:pod-4',
+  'board:arena-4',
+  'board:pod-commander',
+  'game:hand-15',
+  'game:long-names',
+  'global:lang-lobby-ru',
+  'global:lang-game-ja',
+  'global:zoom-lobby-125',
+  'global:reconnecting',
 ]
 
 async function openGallery(page: Page) {
   await page.addInitScript(() => localStorage.clear())
   await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort())
+  // Movimiento reducido a nivel de página: `test.use({ reducedMotion })` no
+  // llega a aplicarse en este setup (verificado: matchMedia da false), y sin
+  // esto las flechas conservan trazo discontinuo animado cuya fase no es
+  // reproducible entre sesiones (WebKit no la congela ni con
+  // `animations:'disabled'`). Con `emulateMedia` el CSS de producto
+  // (`@media (prefers-reduced-motion: reduce)`) apaga pulsos/glows y deja los
+  // trazos sólidos → capturas deterministas.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/gallery')
   await expect(page.locator('[data-gallery]')).toBeVisible()
+  // Espera a las fuentes antes de montar entradas: las medidas de layout
+  // (`useZoneScale`, tarjetas) usan métricas finales y no las de reserva.
+  await page.evaluate(() => document.fonts.ready)
 }
 
 async function entryIds(page: Page): Promise<string[]> {
@@ -56,7 +94,19 @@ async function showEntry(page: Page, id: string) {
   await expect(button, `falta la entrada ${id}`).toHaveCount(1)
   await button.click()
   await expect(page.locator(`[data-gallery-stage="${id}"]`)).toBeAttached({ timeout: 10_000 })
+  // Fuentes tras montar la entrada: las pantallas del juego piden tipografías
+  // nuevas al aparecer y un swap tardío cambia métricas a mitad de captura.
+  await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(250)
+  // `CombatArrowsOverlay` mide rects una vez al montar y solo recalcula si el
+  // tablero (o la ventana) cambia de tamaño; el primer cálculo puede caer
+  // antes de que asiente el escalado de zonas (useZoneScale), y unas sesiones
+  // reciben después un tick del ResizeObserver y otras no → geometría de
+  // flechas distinta entre sesiones (hasta 9 px; WebKit lo destapó). Forzar el
+  // mismo camino de recálculo que usa la app en un resize deja el estado
+  // asentado y reproducible.
+  await page.evaluate(() => window.dispatchEvent(new Event('resize')))
+  await page.waitForTimeout(150)
 }
 
 test.describe('galería de estados (P3)', () => {
@@ -86,7 +136,16 @@ test.describe('galería de estados (P3)', () => {
       await expect(page.locator('.gallery-stage')).toHaveScreenshot(name, {
         animations: 'disabled',
         caret: 'hide',
+        // Pese a la geometría entera, el rasterizado de los trazos
+        // discontinuos y marcadores SVG cambia de una sesión a otra (también en
+        // Chromium a 2560): medido 452–1008 px con jitter estable dentro de
+        // cada sesión. 1200 px sobre un stage de 840 000–3 300 000 (~0,05 %) lo
+        // absorbe; sigue fallando ante regresiones reales (una flecha medida
+        // antes de asentar el layout daba >2 500 px y un cambio de layout,
+        // decenas de miles).
+        maxDiffPixels: 1200,
       })
     }
   })
 })
+

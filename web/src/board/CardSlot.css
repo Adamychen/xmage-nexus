@@ -178,6 +178,14 @@ html.fx-off .card-slot.attacking {
   border-color: #ffb03a;
 }
 
+/* Pulso infinito de objetivo: la fase no es reproducible en capturas (WebKit). */
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.targetable,
+  .sickness-badge {
+    animation: none;
+  }
+}
+
 /* Chosen / Attacking / Blocking glow (crimson / cyan) */
 .card-slot.chosen {
   border-color: #ff4757;

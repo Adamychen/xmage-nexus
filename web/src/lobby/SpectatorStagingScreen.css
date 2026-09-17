@@ -932,3 +932,14 @@ button.staging-tag.tag-invite:hover {
   min-height: 0;
   padding: 12px;
 }
+
+/* Movimiento reducido (plan4 §5.7): pulsos de preparación y spinner de staging.
+   Al final del fichero para ganar en orden a sus reglas. */
+@media (prefers-reduced-motion: reduce) {
+  .player-status-tag.preparing,
+  .ring-seat.preparing .ring-avatar,
+  .staging-step.active .staging-step-dot,
+  .pulse-spinner {
+    animation: none;
+  }
+}

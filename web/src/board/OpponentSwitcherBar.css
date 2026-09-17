@@ -83,6 +83,12 @@
   animation: targetPulse 1.2s infinite ease-in-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .opp-pill.is-targetable {
+    animation: none;
+  }
+}
+
 @keyframes targetPulse {
   0%, 100% { transform: scale(1); border-color: #63e6be; }
   50% { transform: scale(1.03); border-color: #ffd070; }

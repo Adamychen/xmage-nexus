@@ -78,6 +78,12 @@
   animation: torPriorityPulse 1s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .tor-seat.has-priority .tor-seat-dot {
+    animation: none;
+  }
+}
+
 @keyframes torPriorityPulse {
   0%, 100% {
     transform: scale(1);

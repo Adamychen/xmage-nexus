@@ -109,7 +109,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hand-bar .hand-card-slot .hand-card.playable {
+  .hand-bar .hand-card-slot .hand-card.playable,
+  .hand-bar .hand-card-slot .hand-card.targetable {
     animation: none;
   }
 }

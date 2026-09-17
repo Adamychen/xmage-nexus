@@ -83,6 +83,12 @@
   animation: pulseReadyDot 1.2s infinite alternate;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .state-ready .status-dot {
+    animation: none;
+  }
+}
+
 .state-ready .active-status-badge {
   color: #6ee7b7;
 }

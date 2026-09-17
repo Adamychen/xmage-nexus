@@ -168,6 +168,12 @@
   animation: activeTablePulse 1.8s infinite ease-in-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .top-nav-active-pulse {
+    animation: none;
+  }
+}
+
 @keyframes activeTablePulse {
   0%, 100% {
     transform: scale(0.9);

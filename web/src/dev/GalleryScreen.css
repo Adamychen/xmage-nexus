@@ -98,3 +98,12 @@
 .gallery-stage > * {
   height: 100%;
 }
+
+/* Layout reproducible (solo galería): el tablero estándar reparte la altura en
+   `1fr`/flex con fracciones de .5px que WebKit redondea distinto entre
+   sesiones (cartas y flechas se mueven 1px → baselines de regresión visual
+   inestables). Con zonas de alto entero el layout queda congelado. */
+.gallery-stage .game-board .board-zone {
+  flex: 0 0 352px;
+  height: 352px;
+}

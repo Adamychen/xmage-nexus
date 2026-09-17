@@ -298,6 +298,12 @@
   animation: pulseFlip 2s infinite ease-in-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .floating-card-flip-badge {
+    animation: none;
+  }
+}
+
 @keyframes pulseFlip {
   0%, 100% { border-color: rgba(255, 208, 112, 0.6); }
   50% { border-color: #63e6be; color: #63e6be; }

@@ -5,6 +5,20 @@ const MAX_CARD_W = 145
 const MAX_PLAYER_CARD_W = 175
 const CARD_ASPECT = 1.4
 
+/**
+ * Galería de estados (dev): congela el alto de la fila de estado que usa la
+ * medida. Esa fila contiene la mano rival (que a su vez se dimensiona con este
+ * ancho de carta): el ciclo tiene varios puntos fijos y el layout cambia de
+ * sesión en sesión, así que la regresión visual no era reproducible. El resto
+ * de la app no se ve afectado (solo se lee con `#/gallery`).
+ */
+export function galleryPinnedStatusH(): number | null {
+  if (!import.meta.env.DEV || typeof document === 'undefined') return null
+  const raw = document.documentElement.dataset.galleryStatusH
+  const value = raw ? Number(raw) : NaN
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
 interface ZoneScale {
   cardW: number
   ref: React.RefCallback<HTMLDivElement> & React.RefObject<HTMLDivElement | null>
@@ -45,7 +59,8 @@ export function useZoneScale(): ZoneScale {
       ) as HTMLElement | null
       const isCompactPod = el.classList.contains('compact-pod')
       const defaultStatusH = isCompactPod ? 64 : 44
-      const statusH = statusRow && statusRow.offsetHeight > 0 ? statusRow.offsetHeight : defaultStatusH
+      const pinnedStatusH = galleryPinnedStatusH()
+      const statusH = pinnedStatusH ?? (statusRow && statusRow.offsetHeight > 0 ? statusRow.offsetHeight : defaultStatusH)
 
       // Zone grid always has 2 card rows (1fr each) + 1 status row (auto).
       // Bands never collapse (compact-pod included: static division), so cards

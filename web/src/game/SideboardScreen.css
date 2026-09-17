@@ -35,6 +35,12 @@
   animation: sideboard-waiting-pulse 1.2s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .sideboard-waiting-dot {
+    animation: none;
+  }
+}
+
 .sideboard-waiting-text {
   margin: 0;
   color: var(--text-dim, #9aa3c2);

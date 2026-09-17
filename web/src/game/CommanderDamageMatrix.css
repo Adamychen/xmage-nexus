@@ -123,6 +123,13 @@
   animation: cdmLethalPulse 1.4s infinite alternate;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cdm-alert-pill.lethal,
+  .cdm-damage-cell.is-lethal {
+    animation: none;
+  }
+}
+
 /* Cards View */
 .cdm-cards-list {
   display: flex;

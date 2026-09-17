@@ -67,9 +67,13 @@ export default function CombatArrowsOverlay({
       const centerOf = (el: Element) => {
         const rect = el.getBoundingClientRect()
         if (rect.width > 0 && rect.height > 0) {
+          // Centros a píxel entero: los rects traen fracciones que varían unas
+          // milésimas entre sesiones (layout de WebKit) y, si el punto cae en
+          // un .5 exacto, el redondeo de la punta de flecha oscila y rompe los
+          // baselines de regresión visual.
           return {
-            x: rect.left + rect.width / 2 - boardRect.left,
-            y: rect.top + rect.height / 2 - boardRect.top,
+            x: Math.round(rect.left + rect.width / 2 - boardRect.left),
+            y: Math.round(rect.top + rect.height / 2 - boardRect.top),
             rect,
           }
         }
@@ -114,14 +118,17 @@ export default function CombatArrowsOverlay({
       const dist = Math.hypot(dx, dy) || 1
       const ux = dx / dist
       const uy = dy / dist
-      const startInset = Math.min(from.rect.width, from.rect.height) * 0.42
+      const startInset = Math.min(Math.round(from.rect.width), Math.round(from.rect.height)) * 0.42
       const endInset = type === 'target' ? 12 : 18
+      // Extremos a píxel entero: con entradas enteras el trazo discontinuo y la
+      // punta del marcador quedan idénticos entre sesiones.
+      const end = (v: number) => Math.round(v)
       return {
         id,
-        x1: from.x + ux * startInset,
-        y1: from.y + uy * startInset,
-        x2: to.x - ux * endInset,
-        y2: to.y - uy * endInset,
+        x1: end(from.x + ux * startInset),
+        y1: end(from.y + uy * startInset),
+        x2: end(to.x - ux * endInset),
+        y2: end(to.y - uy * endInset),
         type,
       }
     }
@@ -337,8 +344,11 @@ export default function CombatArrowsOverlay({
         const my = (a.y1 + a.y2) / 2
         // Slight curvature perpendicular to direction
         const curveFactor = 0.15
-        const cx = mx - dy * curveFactor
-        const cy = my + dx * curveFactor
+        // Punto de control también a píxel entero: con extremos enteros el
+        // rasterizado de la punta del marcador deja de oscilar entre sesiones
+        // (WebKit). La desviación de la curva es < 0.5 px.
+        const cx = Math.round(mx - dy * curveFactor)
+        const cy = Math.round(my + dx * curveFactor)
 
         const pathData = `M ${a.x1} ${a.y1} Q ${cx} ${cy} ${a.x2} ${a.y2}`
 

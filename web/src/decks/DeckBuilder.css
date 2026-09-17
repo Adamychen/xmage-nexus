@@ -168,6 +168,12 @@
   animation: arena-remove-pulse 1s ease-in-out infinite alternate;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .arena-remove-drop-hint {
+    animation: none;
+  }
+}
+
 @keyframes arena-remove-pulse {
   from { transform: translateX(-50%) scale(0.96); opacity: 0.9; }
   to { transform: translateX(-50%) scale(1.02); opacity: 1; }

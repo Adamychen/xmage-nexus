@@ -55,6 +55,12 @@
   animation: spin 0.8s linear infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .printings-spinner {
+    animation: none;
+  }
+}
+
 .printings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));

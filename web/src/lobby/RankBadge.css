@@ -53,6 +53,12 @@
   animation: pulse-mythic 3s infinite alternate;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .rank-badge.mythic {
+    animation: none;
+  }
+}
+
 .rank-badge.diamond {
   box-shadow: 0 0 8px rgba(129, 140, 248, 0.35);
 }

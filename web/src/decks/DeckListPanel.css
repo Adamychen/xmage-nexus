@@ -196,7 +196,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .deck-commander-section.is-commander-drop-invalid {
+  .deck-commander-section.is-commander-drop-invalid,
+  .arena-drop-target-hint {
     animation: none;
   }
 }

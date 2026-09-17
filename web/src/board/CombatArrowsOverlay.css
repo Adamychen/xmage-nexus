@@ -68,6 +68,19 @@
   animation: arrowFlowTarget 0.8s linear infinite;
 }
 
+/* El flujo de guiones es una animación infinita: su fase depende del instante
+   de captura y no es reproducible en WebKit (`animations:'disabled'` no la
+   congela). Bajo movimiento reducido el trazo pasa a sólido (sin fase de guion
+   ligada a la longitud sub-píxel del path) y el overlay queda determinista. */
+@media (prefers-reduced-motion: reduce) {
+  .arrow-path.arrow-attack,
+  .arrow-path.arrow-block,
+  .arrow-path.arrow-target {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+
 @keyframes arrowFlowTarget {
   from {
     stroke-dashoffset: 26;

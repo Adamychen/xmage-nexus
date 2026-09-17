@@ -12,9 +12,13 @@ import type {
   RoundView,
   SimpleCardView,
   SimpleCardsView,
+  ChatMessageEvent,
+  GameEndInfo,
 } from '../net/types'
 import type { DraftState, ConstructState } from '../state/slices/limited'
 import type { ConnectionInfo } from '../state/persistence'
+import type { SupportedLanguage } from '../i18n'
+import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
 
 interface FrameModule {
@@ -53,14 +57,29 @@ export const recordedFrames: RecordedFrame[] = manifest
   })
   .filter((frame): frame is RecordedFrame => frame != null)
 
+export type GalleryScreenName =
+  | 'lobby'
+  | 'decks'
+  | 'draft'
+  | 'construct'
+  | 'tournament'
+  | 'setup'
+  | 'wizard'
+  | 'staging'
+  | 'settings'
+  | 'appearance'
+  | 'about'
+  | 'help'
+  | 'gameend'
+
 export interface GalleryEntry {
   id: string
   group: string
   label: string
   description?: string
-  phase?: 'idle' | 'lobby' | 'game'
-  /** Pantalla no cubierta por `game`/`login`: lobby, editor de mazos, draft, construct, torneo. */
-  screen?: 'lobby' | 'decks' | 'draft' | 'construct' | 'tournament'
+  phase?: 'idle' | 'connecting' | 'lobby' | 'game'
+  /** Pantalla no cubierta por `game`/`login`: lobby, editor de mazos, draft, construct, torneo… */
+  screen?: GalleryScreenName
   game?: GameView | null
   gameId?: string | null
   feedback?: FeedbackPrompt | null
@@ -69,7 +88,26 @@ export interface GalleryEntry {
   conn?: ConnectionInfo
   draft?: DraftState
   construct?: ConstructState
-  tournamentModal?: { table: TableView; view: TournamentView | null }
+  tournamentModal?: { table: TableView; view: TournamentView | null; loading?: boolean; error?: string | null }
+  /** `tournament` del store: monta el TournamentPanel dentro de GameScreen. */
+  tournament?: { tournamentId: string; view: TournamentView } | null
+  /** Error del slice de sesión (banner de lobby / caja de LoginScreen). */
+  error?: string | null
+  gameEnd?: GameEndInfo | null
+  /** Watchdog de cuña del draft (`lastDraftEventAt`); 0 = cuñado siempre. */
+  lastDraftEventAt?: number | null
+  /** `table` explícita de SpectatorStagingScreen (modo jugador). */
+  stagingTable?: TableView
+  chatMessages?: ChatMessageEvent[]
+  boardLayout?: 'standard' | 'pod' | 'arena'
+  uiScale?: number
+  cjkBoost?: boolean
+  /** Idioma de la i18n para este estado (se restaura al salir). */
+  lang?: SupportedLanguage
+  /** Sesión desconectada: App pinta el banner de reconexión. */
+  connecting?: boolean
+  /** Siembra de localStorage aplicada antes de montar (wizard de crear mesa). */
+  storageSeed?: Record<string, string>
 }
 
 function players(game: GameView): PlayerView[] {
@@ -332,6 +370,196 @@ const TOURNAMENT_FINISHED: TournamentView = {
     { games: [makeTournamentGame(3, 'alice vs dara', 'COMPLETED', '2-0'), makeTournamentGame(3, 'bora vs fran', 'COMPLETED', '2-1'), makeTournamentGame(3, 'chen vs enzo', 'COMPLETED', '2-0')] },
   ],
 }
+
+// ─── §4 matriz de estados (2026-09-17): variantes de tablero, pantallas y globales ──
+// Todo lo de aquí se deriva de los frames grabados o de los props/slices reales de
+// cada pantalla. Nada de backend: los estados que solo existen por respuesta del
+// servidor (p. ej. `pickError` del draft) quedan documentados como pendientes.
+
+const GALLERY_ISO = new Date(GALLERY_EPOCH).toISOString()
+const GALLERY_ISO_END = new Date(GALLERY_EPOCH + 14 * 60_000).toISOString()
+
+const GANG_BLOCK_FRAME = recordedFrames.find((f) => f.file === 'gang-block.json')
+const COMMANDER_FRAME = recordedFrames.find((f) => f.file === 'commander-free-mulligan.json')
+
+type MutableRecord = Record<string, unknown>
+
+function isPlainObject(value: unknown): value is MutableRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** Clona reemplazando ids (claves y valores) por el mapa dado; el resto tal cual. */
+function remapIds<T>(value: T, map: (id: string) => string | undefined): T {
+  if (typeof value === 'string') return (map(value) ?? value) as unknown as T
+  if (Array.isArray(value)) return value.map((v) => remapIds(v, map)) as unknown as T
+  if (isPlainObject(value)) {
+    const out: MutableRecord = {}
+    for (const [k, v] of Object.entries(value)) out[map(k) ?? k] = remapIds(v, map)
+    return out as unknown as T
+  }
+  return value
+}
+
+function playerCardIds(player: PlayerView): Set<string> {
+  const ids = new Set<string>([player.playerId])
+  const addKeys = (zone: unknown) => {
+    if (isPlainObject(zone)) for (const id of Object.keys(zone)) ids.add(id)
+  }
+  addKeys(player.battlefield)
+  addKeys(player.graveyard)
+  addKeys(player.exile)
+  addKeys(player.sideboard)
+  addKeys(player.helperCards)
+  for (const card of (player.commandList ?? []) as Array<{ id?: string }>) {
+    if (card?.id) ids.add(card.id)
+  }
+  const topCard = player.topCard as { id?: string } | null | undefined
+  if (topCard?.id) ids.add(topCard.id)
+  return ids
+}
+
+/** FFA sintético: clona un rival del frame con ids únicos (uuid + sufijo) y su mano. */
+function withClonedOpponent(game: GameView, src: PlayerView | undefined, suffix: string, name?: string): GameView {
+  if (!src) return game
+  const ids = playerCardIds(src)
+  const map = (id: string) => (ids.has(id) ? `${id}-${suffix}` : undefined)
+  const clone = { ...remapIds(src, map), name: name ?? src.name }
+  const srcHand = game.opponentHands?.[src.playerId]
+  const opponentHands = srcHand ? { ...(game.opponentHands ?? {}), [clone.playerId]: remapIds(srcHand, map) } : game.opponentHands
+  return { ...game, players: [...players(game), clone], opponentHands }
+}
+
+/** Mano sintética de N cartas reutilizando las del frame con ids nuevos. */
+function withHandSize(game: GameView, size: number): GameView {
+  const hand = (game.myHand ?? {}) as Record<string, unknown>
+  const entries = Object.entries(hand)
+  if (entries.length === 0 || entries.length >= size) return game
+  const next: Record<string, unknown> = { ...hand }
+  let i = 0
+  while (Object.keys(next).length < size) {
+    const [id, card] = entries[i % entries.length]
+    const nextId = `${id}-x${i + 1}`
+    next[nextId] = { ...(remapIds(card, (v) => (v === id ? nextId : undefined)) as MutableRecord), id: nextId }
+    i++
+  }
+  const me = controlledPlayer(game)
+  return {
+    ...game,
+    myHand: next as GameView['myHand'],
+    players: players(game).map((p) => (p === me ? { ...p, handCount: size } : p)),
+  }
+}
+
+const LONG_ME = 'Alejandro-de-la-Vega-Fernández-Castillo'
+const LONG_OPP = 'Bartholomew-Montgomery-Fitzwilliam-III'
+const LONG_CARD = 'Asmoranomardicadaistinaculdacar'
+
+/** Nombres largos de jugador y de carta (desbordado de etiquetas). */
+function withLongNames(game: GameView): GameView {
+  const renamed = players(game).map((p) => ({ ...p, name: p.controlled ? LONG_ME : LONG_OPP }))
+  const me = renamed.find((p) => p.controlled)
+  const renameFirst = (zone: unknown): unknown => {
+    if (!isPlainObject(zone)) return zone
+    const out: MutableRecord = {}
+    let first = true
+    for (const [id, card] of Object.entries(zone)) {
+      out[id] = first && isPlainObject(card) ? { ...card, name: LONG_CARD, displayName: LONG_CARD, displayFullName: LONG_CARD } : card
+      first = false
+    }
+    return out
+  }
+  const activeName = game.activePlayerId === me?.playerId ? LONG_ME : game.activePlayerId ? LONG_OPP : game.activePlayerName
+  return {
+    ...game,
+    players: renamed.map((p) => (p === me ? { ...p, battlefield: renameFirst(p.battlefield) as PlayerView['battlefield'] } : p)),
+    myHand: renameFirst(game.myHand) as GameView['myHand'],
+    activePlayerName: activeName,
+    priorityPlayerName: game.priorityPlayerName ? activeName : game.priorityPlayerName,
+  }
+}
+
+// gang-block es 1v1: se clona DOS veces el rival del frame (c1/c2) para llegar a 4.
+const FOUR_PLAYER_GAME = GANG_BLOCK_FRAME
+  ? (() => {
+      const game = GANG_BLOCK_FRAME.gameView
+      const opp = opponentPlayer(game)
+      return withClonedOpponent(withClonedOpponent(game, opp, 'c1', 'sim-000042'), opp, 'c2', 'sim-000043')
+    })()
+  : null
+const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
+const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
+const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
+
+const STAGING_TABLE = makeLobbyTable(0, {
+  tableId: 'gallery-staging-table',
+  tableName: 'Duelo de bienvenida',
+  gameType: 'Two Player Duel',
+  deckType: 'Constructed - Pioneer',
+  controllerName: 'gallery-dev',
+  tableState: 'WAITING',
+  tableStateText: 'Waiting for players',
+  seatsInfo: '2/2',
+  seats: [
+    { playerName: 'gallery-dev', seatIndex: 0, playerType: 'HUMAN', flagName: 'es', constructedRating: 1520, history: '3-1' },
+    { playerName: 'bora-the-bold', seatIndex: 1, playerType: 'HUMAN', flagName: 'ru', constructedRating: 1602, history: '12-5' },
+  ],
+})
+
+const STAGING_CHAT: ChatMessageEvent[] = [
+  { chatId: 'gallery-staging-chat', username: 'gallery-dev', message: '[NEXUS_NOT_READY] gallery-dev', time: GALLERY_EPOCH },
+  { chatId: 'gallery-staging-chat', username: 'bora-the-bold', message: '[NEXUS_READY] bora-the-bold', time: GALLERY_EPOCH + 1000 },
+]
+
+const GAME_END_GAME: GameEndInfo = {
+  won: false,
+  gameInfo: `${LONG_OPP} has won the game`,
+  wins: 0,
+  loses: 1,
+  winsNeeded: 2,
+  startTime: GALLERY_ISO,
+  endTime: GALLERY_ISO_END,
+  matchView: { matchId: 'gallery-match-1', result: '', players: `${LONG_ME} vs ${LONG_OPP}`, games: ['1'], startTime: GALLERY_ISO, endTime: null },
+}
+
+const GAME_END_MATCH: GameEndInfo = {
+  won: true,
+  gameInfo: `${LONG_ME} has won the game`,
+  matchInfo: `${LONG_ME} has won the match 2-1`,
+  wins: 2,
+  loses: 1,
+  winsNeeded: 2,
+  startTime: GALLERY_ISO,
+  endTime: GALLERY_ISO_END,
+  matchView: { matchId: 'gallery-match-1', result: '2-1', players: `${LONG_ME} vs ${LONG_OPP}`, games: ['1', '2', '3'], startTime: GALLERY_ISO, endTime: GALLERY_ISO_END },
+}
+
+// Estado real del wire: `TournamentView.tournamentState` es el texto del
+// `TableState` del fork ("Constructing"/"Dueling"/"Finished"), no el enum.
+const TOURNAMENT_WAITING: TournamentView = {
+  ...TOURNAMENT_INPROGRESS,
+  tournamentName: 'Standard Swiss — En construcción',
+  tournamentState: 'Constructing',
+  startTime: GALLERY_EPOCH - 2 * 60_000,
+  constructionTime: 600,
+  rounds: [],
+}
+
+// Formulario persistido «Draft MH3 (8P)»: el wizard lo relee al montar (la
+// combinación inválida NO es representable: los setters y un efecto de montaje
+// la auto-corrigen, ver `useCreateTableForm`). `seatConfigs` = 7 asientos SIM.
+const WIZARD_DRAFT_FORM = JSON.stringify({
+  tableCategory: 'tourney',
+  tournamentCategory: 'limited',
+  useDraftTournament: true,
+  name: 'Draft MH3 de la galería',
+  gameType: 'Two Player Duel',
+  deckType: 'Limited',
+  wins: 2,
+  skillLevel: 'CASUAL',
+  rated: false,
+  numPlayers: 8,
+  seatConfigs: Array.from({ length: 7 }, () => ({ type: 'SIM', deckName: '', skill: 2 })),
+})
 
 export function buildGalleryEntries(): GalleryEntry[] {
   const entries: GalleryEntry[] = recordedFrames.map((frame) => ({
@@ -608,6 +836,259 @@ export function buildGalleryEntries(): GalleryEntry[] {
     description: 'Torneo terminado con posiciones finales.',
     screen: 'tournament',
     tournamentModal: { table: TOURNAMENT_TABLE, view: TOURNAMENT_FINISHED },
+  })
+  entries.push({
+    id: 'screen:tournament-loading',
+    group: 'Pantallas',
+    label: 'Torneo (cargando)',
+    description: 'Cuadro sin datos mientras llega TOURNAMENT_INIT (loading).',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: null, loading: true },
+  })
+  entries.push({
+    id: 'screen:tournament-error',
+    group: 'Pantallas',
+    label: 'Torneo (error)',
+    description: 'Fallo al pedir el cuadro (prop error del modal).',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: null, error: 'No se pudo cargar el cuadro del torneo' },
+  })
+  entries.push({
+    id: 'screen:tournament-empty',
+    group: 'Pantallas',
+    label: 'Torneo (sin datos)',
+    description: 'Carga terminada sin vista todavía: estado vacío del modal.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: null },
+  })
+  entries.push({
+    id: 'screen:tournament-waiting',
+    group: 'Pantallas',
+    label: 'Torneo (en construcción)',
+    description: 'Constructing con 6 jugadores y 0 rondas: espera antes del primer emparejamiento.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_TABLE, view: TOURNAMENT_WAITING },
+  })
+  entries.push({
+    id: 'screen:draft-stalled',
+    group: 'Pantallas',
+    label: 'Draft (cuñado)',
+    description: 'Watchdog sin eventos desde hace >150 s: aviso + botón Reintentar.',
+    screen: 'draft',
+    draft: DRAFT_INPROGRESS,
+    lastDraftEventAt: 0,
+  })
+  entries.push({
+    id: 'screen:setup',
+    group: 'Pantallas',
+    label: 'Setup wizard',
+    description: 'Primera ejecución: configuración de proxy y servidor.',
+    phase: 'idle',
+    screen: 'setup',
+  })
+  entries.push({
+    id: 'screen:login-connecting',
+    group: 'Pantallas',
+    label: 'Login (conectando)',
+    description: 'Formulario enviado: botón Conectando… con spinner y envío bloqueado.',
+    phase: 'connecting',
+    conn: GALLERY_CONN,
+  })
+  entries.push({
+    id: 'screen:login-error',
+    group: 'Pantallas',
+    label: 'Login (error de conexión)',
+    description: 'Error del slice de sesión traducido en la caja de login.',
+    phase: 'idle',
+    error: 'No se pudo conectar al proxy',
+  })
+  entries.push({
+    id: 'screen:lobby-error',
+    group: 'Pantallas',
+    label: 'Lobby (error)',
+    description: 'ErrorBanner del lobby con el lobby cargado detrás.',
+    screen: 'lobby',
+    lobby: LOBBY_OVERFLOW,
+    conn: GALLERY_CONN,
+    error: 'No se pudo conectar al proxy',
+  })
+  entries.push({
+    id: 'screen:wizard',
+    group: 'Pantallas',
+    label: 'Crear mesa (wizard)',
+    description:
+      'Formulario persistido «Draft MH3 (8P)»: rama de torneo limitado con resumen y 8 asientos. (La combinación inválida no es representable: los setters la auto-corrigen.)',
+    phase: 'game',
+    screen: 'wizard',
+    storageSeed: { [CREATE_TABLE_STORAGE_KEY]: WIZARD_DRAFT_FORM },
+  })
+  entries.push({
+    id: 'screen:staging-player',
+    group: 'Pantallas',
+    label: 'Sala de espera (jugador)',
+    description: 'Mesa 2/2 con roster, listo/no listo y cambio de mazo.',
+    phase: 'game',
+    screen: 'staging',
+    conn: GALLERY_CONN,
+    lobby: LOBBY_OVERFLOW,
+    stagingTable: STAGING_TABLE,
+    chatMessages: STAGING_CHAT,
+  })
+  entries.push({
+    id: 'screen:tournament-panel',
+    group: 'Pantallas',
+    label: 'Torneo (panel en partida)',
+    description: 'TournamentPanel durante una partida de torneo (cuadro + chat).',
+    phase: 'game',
+    game: GANG_BLOCK_FRAME?.gameView ?? null,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    tournament: { tournamentId: 'gallery-tournament-1', view: TOURNAMENT_INPROGRESS },
+  })
+  entries.push({
+    id: 'screen:gameend-game',
+    group: 'Pantallas',
+    label: 'Fin de partida (el match sigue)',
+    description: 'Derrota en el juego 1 de un Bo3 con marcador y "el match continúa".',
+    screen: 'gameend',
+    game: GANG_BLOCK_FRAME?.gameView ?? null,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    gameEnd: GAME_END_GAME,
+  })
+  entries.push({
+    id: 'screen:gameend-match',
+    group: 'Pantallas',
+    label: 'Fin de match (victoria)',
+    description: 'Match Bo3 ganado 2-1: ganador, marcador y volver al lobby.',
+    screen: 'gameend',
+    game: GANG_BLOCK_FRAME?.gameView ?? null,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    gameEnd: GAME_END_MATCH,
+  })
+  entries.push({
+    id: 'screen:settings',
+    group: 'Pantallas',
+    label: 'Ajustes',
+    description: 'SettingsModal (idioma, interfaz, tablero, sonido, juego).',
+    phase: 'game',
+    screen: 'settings',
+  })
+  entries.push({
+    id: 'screen:appearance',
+    group: 'Pantallas',
+    label: 'Apariencia',
+    description: 'Zoom, disposición de tablero y fundas.',
+    phase: 'game',
+    screen: 'appearance',
+  })
+  entries.push({
+    id: 'screen:about',
+    group: 'Pantallas',
+    label: 'Acerca de',
+    description: 'Versión, créditos y enlaces (sin pestaña de noticias: usa red).',
+    phase: 'idle',
+    screen: 'about',
+  })
+  entries.push({
+    id: 'screen:help',
+    group: 'Pantallas',
+    label: 'Ayuda / wiki',
+    description: 'Glosario de keywords, fases y atajos.',
+    phase: 'game',
+    screen: 'help',
+  })
+
+  // Variantes de tablero: settings.boardLayout real decide el layout efectivo
+  // (`effectiveBoardLayout`: pod/arena solo con rivales; >4 jugadores ⇒ standard).
+  entries.push({
+    id: 'board:pod-4',
+    group: 'Tablero',
+    label: 'Pod 2×2 (4 jugadores)',
+    description: 'FFA de 4 con layout pod: rejilla 2×2 y anillo de turno.',
+    phase: 'game',
+    game: FOUR_PLAYER_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'pod',
+  })
+  entries.push({
+    id: 'board:arena-4',
+    group: 'Tablero',
+    label: 'Arena (4 jugadores)',
+    description: 'Mismo FFA de 4 con layout arena: rivales en columnas compactas.',
+    phase: 'game',
+    game: FOUR_PLAYER_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'arena',
+  })
+  entries.push({
+    id: 'board:pod-commander',
+    group: 'Tablero',
+    label: 'Pod Commander (3 jugadores)',
+    description: 'Commander Free For All de 3: zona de mando por rival y anillo.',
+    phase: 'game',
+    game: THREE_PLAYER_COMMANDER,
+    gameId: COMMANDER_FRAME?.gameId ?? null,
+    boardLayout: 'pod',
+  })
+  entries.push({
+    id: 'game:hand-15',
+    group: 'Tablero',
+    label: 'Mano de 15 cartas',
+    description: 'Mano desbordada (15 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_15_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:long-names',
+    group: 'Tablero',
+    label: 'Nombres largos',
+    description: 'Jugadores y cartas con nombres muy largos (desbordado de etiquetas).',
+    phase: 'game',
+    game: LONG_NAMES_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+
+  // Estados globales: idioma, zoom y conexión (slices reales de la app).
+  entries.push({
+    id: 'global:lang-lobby-ru',
+    group: 'Global',
+    label: 'Lobby en ruso (idioma largo)',
+    description: 'Traducción ru sobre el lobby desbordado: etiquetas más largas.',
+    screen: 'lobby',
+    lobby: LOBBY_OVERFLOW,
+    conn: GALLERY_CONN,
+    lang: 'ru',
+  })
+  entries.push({
+    id: 'global:lang-game-ja',
+    group: 'Global',
+    label: 'Partida en japonés (CJK)',
+    description: 'Traducción ja + cjkBoost sobre un frame real.',
+    phase: 'game',
+    game: GANG_BLOCK_FRAME?.gameView ?? null,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    lang: 'ja',
+    cjkBoost: true,
+  })
+  entries.push({
+    id: 'global:zoom-lobby-125',
+    group: 'Global',
+    label: 'Lobby a zoom 125%',
+    description: 'settings.uiScale = 1.25 (el tablero lo compensa con inverseZoom).',
+    screen: 'lobby',
+    lobby: LOBBY_OVERFLOW,
+    conn: GALLERY_CONN,
+    uiScale: 1.25,
+  })
+  entries.push({
+    id: 'global:reconnecting',
+    group: 'Global',
+    label: 'Desconectado (reconectando)',
+    description: 'connecting + wsAlive:false: banner de reconexión de la app.',
+    screen: 'lobby',
+    lobby: LOBBY_OVERFLOW,
+    conn: GALLERY_CONN,
+    connecting: true,
   })
 
   return entries

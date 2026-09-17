@@ -602,3 +602,15 @@ details.login-network-box .login-network-fields {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Movimiento reducido (plan4 §5.7): glows del fondo, logo y spinners infinitos
+   quedan estáticos. Al final del fichero para ganar en orden a sus reglas. */
+@media (prefers-reduced-motion: reduce) {
+  .login-bg-glow-1,
+  .login-bg-glow-2,
+  .login-logo-img,
+  .btn-spinner,
+  .connecting-spinner {
+    animation: none;
+  }
+}
