@@ -91,6 +91,23 @@ test('control del turno ajeno: pasar, mano cambiada y jugables del controlado @c
       )
       .toBe(true)
 
+    // Regresión Space: con el foco en la criatura clicada, Space confirma
+    // atacantes (atajo global de la región de juego) y no re-activa la carta.
+    const booleansBefore = parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean').length
+    const creatureUuidsBefore = parseSent(sentOf(page)).filter(
+      (f) => f.action === 'sendPlayerUUID' && f.args?.value === CONTROL_CREATURE_ID,
+    ).length
+    await page.keyboard.press('Space')
+    await expect
+      .poll(() => parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean').length)
+      .toBe(booleansBefore + 1)
+    expect(
+      parseSent(sentOf(page)).filter(
+        (f) => f.action === 'sendPlayerUUID' && f.args?.value === CONTROL_CREATURE_ID,
+      ).length,
+      'Space no debe re-activar la carta enfocada',
+    ).toBe(creatureUuidsBefore)
+
     expect(session.pageErrors, session.pageErrors.map(String).join(' | ')).toEqual([])
   })
 })

@@ -7,7 +7,7 @@ import { crossZoneScenario } from '../fixtures/scenarios/crossZone'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { waitCrossZonePlayable, expectFeedbackDialog, payMana } from './support/game-screen'
-import { lastGameView, opponentPlayer, parseFrames, waitOppLife } from './support/frames'
+import { lastGameView, opponentPlayer, parseFrames, parseSent, sentOf, waitOppLife } from './support/frames'
 import { crossZoneInScene } from './support/scene'
 
 /**
@@ -41,6 +41,18 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
     await expect(overlay, 'el overlay cross-zone debería abrirse').toBeVisible({ timeout: 10_000 })
     const arcCard = overlay.locator('.cross-zone-entry, [data-card-id]').first()
     await expect(arcCard, 'Arc Trail en el overlay').toBeVisible({ timeout: 10_000 })
+
+    // Regresión: con el visor abierto Space no pasa prioridad, aunque el foco
+    // caiga al fondo al clicar dentro del overlay (data-space-shortcut-off).
+    await overlay.locator('.pile-overlay-header h3').click()
+    const booleansBefore = parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean').length
+    await page.keyboard.press('Space')
+    await page.waitForTimeout(400)
+    expect(
+      parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean').length,
+      'Space no debe pasar prioridad con el visor abierto',
+    ).toBe(booleansBefore)
+    await expect(overlay, 'el overlay sigue abierto tras Space').toBeVisible()
     await arcCard.click()
 
      // (c) el cast en curso: el diálogo de objetivo aparece (la carta se lanzó

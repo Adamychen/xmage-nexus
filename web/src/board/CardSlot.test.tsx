@@ -132,6 +132,25 @@ describe('CardSlot', () => {
     expect(slot.getAttribute('tabindex')).toBeNull()
   })
 
+  it('inside the game region Space does not activate the card (Space passes priority), Enter does', () => {
+    const onClick = vi.fn()
+    const card = {
+      id: 'kb3',
+      name: 'Forest',
+      cardTypes: ['Land'],
+    } as unknown as PermanentView
+    const { container } = render(
+      <div data-space-passes-priority="true">
+        <CardSlot card={card} onClick={onClick} />
+      </div>,
+    )
+    const slot = container.querySelector('.card-slot')!
+    fireEvent.keyDown(slot, { key: ' ' })
+    expect(onClick).not.toHaveBeenCalled()
+    fireEvent.keyDown(slot, { key: 'Enter' })
+    expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
   it('renders class level badge with the live level', () => {
     const card = {
       id: 'c7',

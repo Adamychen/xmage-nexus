@@ -49,7 +49,7 @@ export default function HandViewer({
   const total = known.length + unknownCount
 
   return createPortal(
-    <div className="pile-overlay-backdrop" onClick={onClose}>
+    <div className="pile-overlay-backdrop" onClick={onClose} data-space-shortcut-off="true">
       <div className="pile-overlay hand-viewer" data-testid="hand-viewer" onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <div className="pile-header-titles">

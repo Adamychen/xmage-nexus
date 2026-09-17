@@ -29,6 +29,7 @@ import MechanicsTray from './MechanicsTray'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
+import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/clickable'
 import { crossZonePlayables } from '../board/crossZone'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
@@ -42,12 +43,24 @@ import './TournamentPanel.css'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
- *  target es un descendiente del control (p. ej. un span dentro de un button). */
+ *  target es un descendiente del control (p. ej. un span dentro de un button).
+ *  Dentro de la región de juego Space es SIEMPRE el atajo (pasar/confirmar),
+ *  aunque el foco esté en una carta role=button: esas se activan con Enter. */
 export function isSpaceShortcutTargetIgnored(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null
   if (!el || typeof (el as HTMLElement).closest !== 'function') return false
   if ((el as HTMLInputElement).isContentEditable) return true
-  return Boolean(el.closest('input, textarea, select, button, a, [role="button"], [role="menuitem"], [role="option"], [contenteditable]'))
+  if (el.closest('input, textarea, select, button, a, [contenteditable]')) return true
+  const roleControl = el.closest('[role="button"], [role="menuitem"], [role="option"]')
+  if (!roleControl) return false
+  return !roleControl.closest(SPACE_PASS_REGION_SELECTOR)
+}
+
+/** El atajo Space también queda bloqueado mientras haya un overlay de visor
+ *  abierto (`data-space-shortcut-off`), aunque el foco esté en `body` tras
+ *  clicar su fondo: dentro del overlay Space vuelve a ser activación normal. */
+export function isSpaceShortcutBlocked(target: EventTarget | null): boolean {
+  return isSpaceShortcutTargetIgnored(target) || Boolean(document.querySelector(SPACE_SHORTCUT_OFF_SELECTOR))
 }
 
 export default function GameScreen() {
@@ -153,7 +166,7 @@ export default function GameScreen() {
   // Space activates main action / pass priority
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !isSpaceShortcutTargetIgnored(e.target)) {
+      if (e.code === 'Space' && !isSpaceShortcutBlocked(e.target)) {
         e.preventDefault()
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
@@ -267,7 +280,7 @@ export default function GameScreen() {
           <GameMenu />
         </div>
       </header>
-      <div className="game-body" ref={gameBodyRef}>
+      <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
         <div className="board-wrap">
           {isArenaLayout ? (
             <ArenaBoard {...boardProps} />

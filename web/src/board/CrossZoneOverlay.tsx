@@ -23,7 +23,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
    }, [handleKeyDown])
 
   return (
-    <div className="pile-overlay-backdrop" onClick={onClose}>
+    <div className="pile-overlay-backdrop" onClick={onClose} data-space-shortcut-off="true">
       <div className="pile-overlay cross-zone-overlay" onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <h3>{t('game', 'pile_stack')} ({playables.length})</h3>

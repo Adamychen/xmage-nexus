@@ -57,7 +57,7 @@ export default function PileOverlay({
   const knownCount = entries.filter(([, c]) => !c.faceDown).length
 
   return createPortal(
-    <div className="pile-overlay-backdrop" onClick={onClose}>
+    <div className="pile-overlay-backdrop" onClick={onClose} data-space-shortcut-off="true">
       <div className={`pile-overlay ${isLibrary ? 'library-overlay' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="pile-overlay-header">
           <div className="pile-header-titles">
