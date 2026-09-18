@@ -1,0 +1,687 @@
+{
+  "meta": {
+    "scope": {
+      "modules": [
+        "Mage",
+        "Mage.Common"
+      ],
+      "excluded": [
+        "Mage.Sets"
+      ],
+      "note": "v1 cubre solo la API de hints del motor; Mage.Sets (corpus por carta: 2383 addHint, 50 hints, 60 addInfo) queda fuera."
+    },
+    "sources": {
+      "restrictRequirementTexts": [
+        "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+      ],
+      "hintClasses": [
+        "Mage/src/main/java",
+        "Mage.Common/src/main/java"
+      ],
+      "registeredHints": [
+        "Mage/src/main/java",
+        "Mage.Common/src/main/java"
+      ],
+      "hintIcons": [
+        "Mage/src/main/java/mage/abilities/hint/HintUtils.java"
+      ],
+      "infoKeys": [
+        "Mage/src/main/java",
+        "Mage.Common/src/main/java"
+      ]
+    },
+    "forkVersion": "1.4.61"
+  },
+  "restrictRequirementTexts": [
+    {
+      "template": "Can't attack{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_RESTRICT",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Can't block{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_RESTRICT",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Can't transform{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_RESTRICT",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Can't untapped{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_RESTRICT",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Can't use activated abilities{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_RESTRICT",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Goaded by {player.getLogName()} (must attack)",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must attack defender {object.getLogName()}{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must attack defender {player.getLogName()}{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must attack{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must block all attackers{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must block any{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must block attacker if able {object.getLogName()}{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must block attacker {object.getLogName()}{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    },
+    {
+      "template": "Must block{addSourceObjectName(game, ability)}",
+      "icon": "HINT_ICON_REQUIRE",
+      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+    }
+  ],
+  "hintClasses": {
+    "core": [
+      {
+        "name": "ConditionHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/ConditionHint.java"
+      },
+      {
+        "name": "ConditionTrueHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/ConditionTrueHint.java"
+      },
+      {
+        "name": "StaticHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/StaticHint.java"
+      },
+      {
+        "name": "ValueConditionHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/ValueConditionHint.java"
+      },
+      {
+        "name": "ValueHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/ValueHint.java"
+      },
+      {
+        "name": "ValuePositiveHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/ValuePositiveHint.java"
+      }
+    ],
+    "common": [
+      {
+        "name": "AbilityResolutionCountHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/AbilityResolutionCountHint.java"
+      },
+      {
+        "name": "ArtifactYouControlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ArtifactYouControlHint.java"
+      },
+      {
+        "name": "BargainCostWasPaidHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/BargainCostWasPaidHint.java"
+      },
+      {
+        "name": "BoastHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/BoastHint.java"
+      },
+      {
+        "name": "CanPlayAdditionalLandsHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CanPlayAdditionalLandsHint.java"
+      },
+      {
+        "name": "CaseSolvedHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CaseSolvedHint.java"
+      },
+      {
+        "name": "CitysBlessingHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CitysBlessingHint.java"
+      },
+      {
+        "name": "ClassLevelHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ClassLevelHint.java"
+      },
+      {
+        "name": "ConditionPermanentHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ConditionPermanentHint.java"
+      },
+      {
+        "name": "ControlACommanderHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ControlACommanderHint.java"
+      },
+      {
+        "name": "ControlArtifactAndEnchantmentHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ControlArtifactAndEnchantmentHint.java"
+      },
+      {
+        "name": "ControllerDiscardedHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ControllerDiscardedHint.java"
+      },
+      {
+        "name": "CountersOnPermanentsHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CountersOnPermanentsHint.java"
+      },
+      {
+        "name": "CovenHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CovenHint.java"
+      },
+      {
+        "name": "CreaturesDiedThisTurnHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CreaturesDiedThisTurnHint.java"
+      },
+      {
+        "name": "CreaturesYouControlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CreaturesYouControlHint.java"
+      },
+      {
+        "name": "CurrentDungeonHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/CurrentDungeonHint.java"
+      },
+      {
+        "name": "DayNightHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/DayNightHint.java"
+      },
+      {
+        "name": "DifferentManaValuesInGraveHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/DifferentManaValuesInGraveHint.java"
+      },
+      {
+        "name": "DomainHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/DomainHint.java"
+      },
+      {
+        "name": "EnduringStoryHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/EnduringStoryHint.java"
+      },
+      {
+        "name": "EvidenceHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/EvidenceHint.java"
+      },
+      {
+        "name": "FerociousHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/FerociousHint.java"
+      },
+      {
+        "name": "GatesYouControlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/GatesYouControlHint.java"
+      },
+      {
+        "name": "HarnessedHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/HarnessedHint.java"
+      },
+      {
+        "name": "InitiativeHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/InitiativeHint.java"
+      },
+      {
+        "name": "LandsYouControlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/LandsYouControlHint.java"
+      },
+      {
+        "name": "MetalcraftHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/MetalcraftHint.java"
+      },
+      {
+        "name": "ModesAlreadyUsedHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ModesAlreadyUsedHint.java"
+      },
+      {
+        "name": "MonarchHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/MonarchHint.java"
+      },
+      {
+        "name": "MonstrousHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/MonstrousHint.java"
+      },
+      {
+        "name": "MorbidHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/MorbidHint.java"
+      },
+      {
+        "name": "MyTurnHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/MyTurnHint.java"
+      },
+      {
+        "name": "NotMyTurnHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/NotMyTurnHint.java"
+      },
+      {
+        "name": "OpenSideboardHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/OpenSideboardHint.java"
+      },
+      {
+        "name": "OpponentsLostLifeHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/OpponentsLostLifeHint.java"
+      },
+      {
+        "name": "OpponentsTurnHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/OpponentsTurnHint.java"
+      },
+      {
+        "name": "PartyCountHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/PartyCountHint.java"
+      },
+      {
+        "name": "PermanentsYouControlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/PermanentsYouControlHint.java"
+      },
+      {
+        "name": "PlayersLeftRightHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/PlayersLeftRightHint.java"
+      },
+      {
+        "name": "ProwlCostWasPaidHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ProwlCostWasPaidHint.java"
+      },
+      {
+        "name": "ProwlHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/ProwlHint.java"
+      },
+      {
+        "name": "RaidHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/RaidHint.java"
+      },
+      {
+        "name": "RenownedHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/RenownedHint.java"
+      },
+      {
+        "name": "TeamworkCostWasPaidHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/TeamworkCostWasPaidHint.java"
+      }
+    ],
+    "embedded": [
+      {
+        "name": "CardTypesInGraveyardHint",
+        "path": "Mage/src/main/java/mage/abilities/dynamicvalue/common/CardTypesInGraveyardCount.java"
+      },
+      {
+        "name": "CardsInOpponentGraveyardConditionHint",
+        "path": "Mage/src/main/java/mage/abilities/condition/common/CardsInOpponentGraveyardCondition.java"
+      },
+      {
+        "name": "ColorsAmongControlledPermanentsHint",
+        "path": "Mage/src/main/java/mage/abilities/dynamicvalue/common/ColorsAmongControlledPermanentsCount.java"
+      },
+      {
+        "name": "DesertControlledOrGraveyardHint",
+        "path": "Mage/src/main/java/mage/abilities/condition/common/DesertControlledOrGraveyardCondition.java"
+      },
+      {
+        "name": "EllywickTumblestrumEmblemHint",
+        "path": "Mage/src/main/java/mage/game/command/emblems/EllywickTumblestrumEmblem.java"
+      },
+      {
+        "name": "MutateCountHint",
+        "path": "Mage/src/main/java/mage/abilities/keyword/MutateAbility.java"
+      },
+      {
+        "name": "OnceEachTurnCastHint",
+        "path": "Mage/src/main/java/mage/watchers/common/OnceEachTurnCastWatcher.java"
+      },
+      {
+        "name": "RegenerationShieldsHint",
+        "path": "Mage/src/main/java/mage/abilities/effects/common/RegenerateSourceEffect.java"
+      },
+      {
+        "name": "VolosJournalTokenHint",
+        "path": "Mage/src/main/java/mage/game/permanent/token/VolosJournalToken.java"
+      }
+    ],
+    "registered": [
+      {
+        "path": "Mage/src/main/java/mage/abilities/PlayLandAbility.java",
+        "expression": "CanPlayAdditionalLandsHint.instance",
+        "class": "CanPlayAdditionalLandsHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/BecomeDayAsEntersAbility.java",
+        "expression": "DayNightHint.instance",
+        "class": "DayNightHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/CastSecondSpellTriggeredAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/DrawNthCardTriggeredAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/DrawNthOrNthCardTriggeredAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/ExpendTriggeredAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/GainLifeFirstTimeTriggeredAbility.java",
+        "expression": "hint",
+        "class": "ConditionHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/effects/common/InfoEffect.java",
+        "expression": "cardHint",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/effects/common/InfoEffect.java",
+        "expression": "cardHint",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/AffinityAbility.java",
+        "expression": "affinityType.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/BargainAbility.java",
+        "expression": "BargainCostWasPaidHint.instance",
+        "class": "BargainCostWasPaidHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/BoastAbility.java",
+        "expression": "BoastHint.instance",
+        "class": "BoastHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/ClassReminderAbility.java",
+        "expression": "ClassLevelHint.instance",
+        "class": "ClassLevelHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/CollectEvidenceAbility.java",
+        "expression": "new EvidenceHint(amount)",
+        "class": "EvidenceHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/ConvokeAbility.java",
+        "expression": "new ValueHint(\"Untapped creatures you control\", new PermanentsOnBattlefieldCount(filterUntapped))",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/DayboundAbility.java",
+        "expression": "DayNightHint.instance",
+        "class": "DayNightHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/DelveAbility.java",
+        "expression": "new ValueHint(\"Cards in your graveyard\", cardsInGraveyard)",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/FreerunningAbility.java",
+        "expression": "FreerunningCondition.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/GravestormAbility.java",
+        "expression": "new ValueHint( \"Permanents put into graveyards from the battlefield this turn\", PermanentsDestroyedThisTurnValue.instance )",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/ImproviseAbility.java",
+        "expression": "new ValueHint(\"Untapped artifacts you control\", untappedCount)",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/LivingMetalAbility.java",
+        "expression": "MyTurnHint.instance",
+        "class": "MyTurnHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/MonstrosityAbility.java",
+        "expression": "MonstrousHint.instance",
+        "class": "MonstrousHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/MutateAbility.java",
+        "expression": "new MutateCountHint()",
+        "class": "MutateCountHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/NightboundAbility.java",
+        "expression": "DayNightHint.instance",
+        "class": "DayNightHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/ProwlAbility.java",
+        "expression": "ProwlHint.instance",
+        "class": "ProwlHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/RenownAbility.java",
+        "expression": "RenownedHint.instance",
+        "class": "RenownedHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/SaddleAbility.java",
+        "expression": "hint",
+        "class": "ConditionHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/SpectacleAbility.java",
+        "expression": "OpponentsLostLifeHint.instance",
+        "class": "OpponentsLostLifeHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/StartYourEnginesAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/StormAbility.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/keyword/TeamworkAbility.java",
+        "expression": "TeamworkCostWasPaidHint.instance",
+        "class": "TeamworkCostWasPaidHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/mana/AddEachControlledColorManaAbility.java",
+        "expression": "ColorsAmongControlledPermanentsCount.ALL_PERMANENTS.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/designations/Initiative.java",
+        "expression": "CurrentDungeonHint.instance",
+        "class": "CurrentDungeonHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/command/emblems/EllywickTumblestrumEmblem.java",
+        "expression": "EllywickTumblestrumEmblemHint.instance",
+        "class": "EllywickTumblestrumEmblemHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/command/emblems/XmageHelperEmblem.java",
+        "expression": "hint",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/AshiokWickedManipulatorNightmareToken.java",
+        "expression": "WasCardExiledThisTurnCondition.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/ConsumingBlobOozeToken.java",
+        "expression": "CardTypesInGraveyardCount.YOU.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/SeizeTheStormElementalToken.java",
+        "expression": "hint",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/TarmogoyfToken.java",
+        "expression": "CardTypesInGraveyardCount.ALL.getHint()",
+        "class": null
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/ThePrydwenSteelFlagshipHumanKnightToken.java",
+        "expression": "new ConditionHint(ArtifactEnteredUnderYourControlCondition.instance)",
+        "class": "ConditionHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/VolosJournalToken.java",
+        "expression": "VolosJournalTokenHint.instance",
+        "class": "VolosJournalTokenHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/game/permanent/token/WastelandSurvivalGuideToken.java",
+        "expression": "hint",
+        "class": "ValueHint"
+      }
+    ]
+  },
+  "hintIcons": {
+    "HINT_ICON_BAD": "ICON_BAD",
+    "HINT_ICON_DUNGEON_ROOM_CURRENT": "ICON_DUNGEON_ROOM_CURRENT",
+    "HINT_ICON_DUNGEON_ROOM_NEXT": "ICON_DUNGEON_ROOM_NEXT",
+    "HINT_ICON_GOOD": "ICON_GOOD",
+    "HINT_ICON_REQUIRE": "ICON_REQUIRE",
+    "HINT_ICON_RESTRICT": "ICON_RESTRICT"
+  },
+  "hintStartMark": "<br/><hintstart/>",
+  "infoKeys": {
+    "literal": [
+      {
+        "key": "Commander",
+        "paths": [
+          "Mage/src/main/java/mage/watchers/common/CommanderInfoWatcher.java"
+        ]
+      },
+      {
+        "key": "_modeChoice",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseModeEffect.java"
+        ]
+      },
+      {
+        "key": "attachedTo",
+        "paths": [
+          "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+        ]
+      },
+      {
+        "key": "chosen color",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseBasicLandTypeEffect.java",
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseColorEffect.java"
+        ]
+      },
+      {
+        "key": "chosen creature",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseCreatureEffect.java"
+        ]
+      },
+      {
+        "key": "chosen opponent",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseOpponentEffect.java"
+        ]
+      },
+      {
+        "key": "chosen player",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChoosePlayerEffect.java"
+        ]
+      },
+      {
+        "key": "chosen set",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseExpansionSetEffect.java"
+        ]
+      },
+      {
+        "key": "chosen type",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseCardTypeEffect.java",
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseCreatureTypeEffect.java",
+          "Mage/src/main/java/mage/abilities/effects/common/ChooseLandTypeEffect.java",
+          "Mage/src/main/java/mage/abilities/effects/common/ChoosePlaneswalkerTypeEffect.java"
+        ]
+      },
+      {
+        "key": "hauntinfo",
+        "paths": [
+          "Mage/src/main/java/mage/abilities/keyword/HauntAbility.java"
+        ]
+      },
+      {
+        "key": "protector",
+        "paths": [
+          "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+        ]
+      },
+      {
+        "key": "soulbond",
+        "paths": [
+          "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+        ]
+      }
+    ],
+    "constants": [
+      {
+        "key": "IS_PREPARED",
+        "constant": "preparedInfoKey",
+        "declaredAt": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+      },
+      {
+        "key": "IS_RINGBEARER",
+        "constant": "ringbearerInfoKey",
+        "declaredAt": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+      },
+      {
+        "key": "IS_SUSPECTED",
+        "constant": "suspectedInfoKey",
+        "declaredAt": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
+      },
+      {
+        "key": "NAMED_CARD",
+        "constant": "INFO_KEY",
+        "declaredAt": "Mage/src/main/java/mage/abilities/effects/common/ChooseACardNameEffect.java"
+      },
+      {
+        "key": "_secOpp",
+        "constant": "SECRET_OPPONENT",
+        "declaredAt": "Mage/src/main/java/mage/abilities/effects/common/ChooseSecretOpponentEffect.java"
+      }
+    ],
+    "dynamic": [
+      "\"Commander\" + entry.getKey()",
+      "\"detain\" + getId()"
+    ]
+  }
+}

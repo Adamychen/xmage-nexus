@@ -1459,6 +1459,16 @@ export interface TranslationSchema {
     designation_paired_title: string
     designation_classlevel: string
     designation_classlevel_title: string
+    designation_casesolved: string
+    designation_casesolved_title: string
+    designation_harnessed: string
+    designation_harnessed_title: string
+    designation_evidence: string
+    designation_evidence_title: string
+    designation_prepared: string
+    designation_prepared_title: string
+    designation_protector: string
+    designation_protector_title: string
     turn_order_label: string
     turn_active_badge: string
     turn_active_suffix: string

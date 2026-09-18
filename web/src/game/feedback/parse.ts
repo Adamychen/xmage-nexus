@@ -39,6 +39,7 @@ import {
   targetOptions,
 } from './record'
 import { defaultText } from './text'
+import { sanitizePromptText } from './promptText'
 
 export function parseFeedback(
   method: string,
@@ -340,7 +341,7 @@ function prompt(
   pileCards?: { pile1: FeedbackCard[]; pile2: FeedbackCard[] },
   isLibraryOrderPick?: boolean,
 ): FeedbackPrompt {
-  const fp: FeedbackPrompt = { method, gameId, title, message, mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
+  const fp: FeedbackPrompt = { method, gameId, title, message: sanitizePromptText(message, sourceName), mode, options, min: bounds.min, max: bounds.max, items, playerId, required, sourceName, chosenTargets, special, cards, isMulligan, isMulliganLondon, isStartingPlayer }
   if (isVoting) fp.isVoting = true
   if (isPlaneswalkerAbility) fp.isPlaneswalkerAbility = true
   if (loyaltyDeltas) fp.loyaltyDeltas = loyaltyDeltas

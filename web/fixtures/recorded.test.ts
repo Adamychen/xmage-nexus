@@ -122,6 +122,7 @@ type AssertKind =
   | 'hasFfaSix'
   | 'firstMulliganFreeSecondCostsCard'
   | 'hasTimeoutLoss'
+  | 'hasSlicerCeded'
   | 'hasConstructPool'
   | 'tournamentFinished'
 
@@ -1359,6 +1360,31 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         (me2 as { hasLeft?: boolean } | undefined)?.hasLeft === true &&
         Number((me2 as { life?: unknown } | undefined)?.life) === 20 &&
         Number((opponent as { priorityTimeLeftSecs?: unknown } | undefined)?.priorityTimeLeftSecs) > 0
+      )
+    }
+    case 'hasSlicerCeded': {
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const slicer = Object.values(sim?.battlefield ?? {}).find((c) =>
+        /slicer/i.test(String((c as { name?: unknown })?.name ?? '')),
+      ) as
+        | {
+            tapped?: boolean
+            cardIcons?: Array<{ cardIconType?: string; hint?: string }>
+            rules?: unknown[]
+          }
+        | undefined
+      const icons = slicer?.cardIcons ?? []
+      const rules = slicer?.rules ?? []
+      return (
+        !!slicer &&
+        slicer.tapped === false &&
+        icons.some(
+          (ic) =>
+            String(ic?.cardIconType ?? '') === 'OTHER_HAS_RESTRICTIONS' &&
+            /goaded by/i.test(String(ic?.hint ?? '')),
+        ) &&
+        rules.some((r) => /goaded by/i.test(String(r))) &&
+        rules.some((r) => /can't be sacrificed/i.test(String(r)))
       )
     }
     case 'hasCombatGroup':

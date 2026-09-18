@@ -125,6 +125,16 @@ test.describe('galería de estados (P3)', () => {
     expect(pageErrors).toEqual([])
   })
 
+  test('el ASK de Slicer sanea {this} con el nombre de la fuente', async ({ page }) => {
+    await openGallery(page)
+    await showEntry(page, 'prompt:ask-slicer')
+
+    const dialog = page.locator('.feedback-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog).not.toContainText('{this}')
+    await expect(dialog.locator('.dlg-message')).toContainText('Slicer, Hired Muscle')
+  })
+
   test('regresión visual de la selección representativa', async ({ page }) => {
     test.skip(!VISUAL, 'E2E_VISUAL=1 requerido (baselines por plataforma)')
     await openGallery(page)

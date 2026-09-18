@@ -1,4 +1,4 @@
-import type { FeedbackCard, FeedbackPrompt } from '../game/feedback'
+import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import type {
   GameView,
   PlayerView,
@@ -381,6 +381,8 @@ const GALLERY_ISO_END = new Date(GALLERY_EPOCH + 14 * 60_000).toISOString()
 
 const GANG_BLOCK_FRAME = recordedFrames.find((f) => f.file === 'gang-block.json')
 const COMMANDER_FRAME = recordedFrames.find((f) => f.file === 'commander-free-mulligan.json')
+const SLICER_ASK_RULE =
+  "At the beginning of each opponent's upkeep, you may have that player gain control of {this} until end of turn. If you do, untap {this}, goad it, and it can't be sacrificed this turn. If you don't, convert it."
 
 type MutableRecord = Record<string, unknown>
 
@@ -753,6 +755,26 @@ export function buildGalleryEntries(): GalleryEntry[] {
         playableIds: p.playableIds,
       })
     }
+  }
+
+  const slicerFrame = recordedFrames.find((frame) => frame.file === 'slicer.json')
+  const slicerAsk = slicerFrame
+    ? parseFeedback('GAME_ASK', slicerFrame.gameId, {
+        message: SLICER_ASK_RULE,
+        options: { secondMessage: 'Slicer, Hired Muscle' },
+      })
+    : null
+  if (slicerFrame && slicerAsk) {
+    entries.push({
+      id: 'prompt:ask-slicer',
+      group: 'Prompts',
+      label: 'GAME_ASK (Slicer, Hired Muscle)',
+      description: 'Pregunta real del motor con {this}: el saneado la resuelve con sourceName.',
+      phase: 'game',
+      game: slicerFrame.gameView,
+      gameId: slicerFrame.gameId,
+      feedback: slicerAsk,
+    })
   }
 
   entries.push({

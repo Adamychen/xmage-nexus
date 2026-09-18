@@ -796,5 +796,12 @@
     "kind": "game",
     "assert": "hasFfaSix",
     "note": "FFA real de 6 (1 humano + 5 SIM) en mesa \"Free For All\": frame estable en la primera main propia con la tierra jugada (sin cheat ni combate). Evidencia de la decisión §9.1 (solo standard con switcher para 5+): el view trae 6 jugadores y el replay exige `game-board` (NO `pod-board`), `.opponent-switcher-bar` visible y 6 píldoras `.opp-pill` — `effectiveBoardLayout` cae a standard cuando totalPlayers > MAX_BOARD_PLAYERS=4."
+  },
+  {
+    "file": "slicer.json",
+    "mechanic": "slicer",
+    "kind": "game",
+    "assert": "hasSlicerCeded",
+    "note": "Slicer, Hired Muscle (BOT 6/21, Transformers; DFC 3/4 doble estocada + prisa) con cheatSetup al campo propio en el T1: en el upkeep del SIM su trigger (BeginningOfUpkeepTriggeredAbility OPPONENT) pregunta al CONTROLADOR \"you may have that player gain control of Slicer until end of turn. If you do, untap Slicer, goad it, and it can't be sacrificed this turn. If you don't, convert it.\" y el driver responde SÍ (GAME_ASK chooseUse). Captura: Slicer en el battlefield del SIM (el view sigue al controlador real) desgirada (tapped:false por el untap) y con el hint de goad en `rules`/`cardIcons` (OTHER_HAS_RESTRICTIONS, \"Goaded by <jugador> (must attack)\" — mismo camino que goad.json; `goadingPlayers` no se serializa). Prueba el caso \"ceder control de tu permanente al rival en SU upkeep\" (dirección inversa a Threaten) sin campos nuevos del contrato."
   }
 ]

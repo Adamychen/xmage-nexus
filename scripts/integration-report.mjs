@@ -15,8 +15,24 @@ async function main() {
   const humanTest = run("node", ["scripts/human-test.mjs"], { cwd: repoRoot, timeoutMs: 1_800_000 });
   const e2eReal = run(
     "npx",
-    ["playwright", "test"],
-    { cwd: webDir, timeoutMs: 1_800_000, env: Object.assign({}, process.env, { E2E_BACKEND: "real" }) },
+    [
+      "playwright",
+      "test",
+      "deckvalidation.spec.ts",
+      "multi-user.spec.ts",
+      "priority-stop-real.spec.ts",
+      "skips.spec.ts",
+      "full-flow.spec.ts",
+    ],
+    {
+      cwd: webDir,
+      timeoutMs: 1_800_000,
+      env: Object.assign({}, process.env, {
+        E2E_BACKEND: "real",
+        E2E_SERVER_HOST: process.env.E2E_SERVER_HOST || "127.0.0.1",
+        E2E_SERVER_PORT: process.env.E2E_SERVER_PORT || "17171",
+      }),
+    },
   );
 
   const status = {

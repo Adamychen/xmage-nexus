@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardDesignations, classLevelOf, pairedPartnerName, substituteCardRefs } from './designations'
+import { cardDesignations, classLevelOf, evidenceCounts, pairedPartnerName, protectorName, substituteCardRefs } from './designations'
 
 describe('cardDesignations', () => {
   it('detecta monstrous desde la hint en vivo del motor', () => {
@@ -49,6 +49,38 @@ describe('cardDesignations', () => {
     expect(classLevelOf(['Class level: 2'])).toBe(2)
     expect(classLevelOf(['Level 2 — ability two.'])).toBeNull()
     expect(classLevelOf([])).toBeNull()
+  })
+
+  it('detecta Case solved solo en la rama positiva', () => {
+    expect(cardDesignations(['ICON_GOODCase is solved.'])).toEqual(['casesolved'])
+    expect(cardDesignations(['ICON_BADCase is unsolved.'])).toEqual([])
+    expect(cardDesignations(['ICON_BADCase is unsolved.  Case will be solved at the end step.'])).toEqual([])
+  })
+
+  it('detecta harnessed solo en la rama positiva', () => {
+    expect(cardDesignations(['ICON_GOOD{this} is harnessed'])).toEqual(['harnessed'])
+    expect(cardDesignations(["ICON_BAD{this} isn't harnessed"])).toEqual([])
+  })
+
+  it('detecta Evidence usada y extrae need/can collect', () => {
+    const used = 'ICON_GOODEvidence was used (need: 6, can collect: 9)'
+    expect(cardDesignations([used])).toEqual(['evidence'])
+    expect(evidenceCounts([used])).toEqual({ need: 6, canCollect: 9 })
+    expect(evidenceCounts(['Flying'])).toBeNull()
+    expect(cardDesignations(['ICON_BADEvidence was used (need: 6, can collect: 3)'])).toEqual([])
+    expect(evidenceCounts(['ICON_BADEvidence was used (need: 6, can collect: 3)'])).toBeNull()
+  })
+
+  it('detecta Prepared desde la línea info del motor (con tags)', () => {
+    expect(cardDesignations(["<font color = 'blue'>Prepared</font>"])).toEqual(['prepared'])
+    expect(cardDesignations(['Prepared'])).toEqual(['prepared'])
+    expect(cardDesignations(['Prepared creature with flying'])).toEqual([])
+  })
+
+  it('detecta protector y extrae el nombre', () => {
+    expect(cardDesignations(['Protected by Grizzly Bears'])).toEqual(['protector'])
+    expect(protectorName(['Protected by Grizzly Bears'])).toBe('Grizzly Bears')
+    expect(protectorName(['Flying'])).toBeNull()
   })
 
   it('sin rules no hay designaciones', () => {

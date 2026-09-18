@@ -5,7 +5,7 @@ import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, reco
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
-import { cardDesignations, pairedPartnerName, classLevelOf, type Designation } from './designations'
+import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import CardIcons from './CardIcons'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
@@ -202,6 +202,8 @@ export default function CardSlot({
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
   const pairPartner = useMemo(() => pairedPartnerName(card.rules), [card.rules])
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
+  const evidence = useMemo(() => evidenceCounts(card.rules), [card.rules])
+  const protector = useMemo(() => protectorName(card.rules), [card.rules])
 
   const handleClick = onClick ? () => {
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
@@ -230,6 +232,18 @@ export default function CardSlot({
       return {
         label: t('board', 'designation_classlevel', { level: String(classLevel) }),
         title: t('board', 'designation_classlevel_title', { level: String(classLevel) }),
+      }
+    }
+    if (d === 'evidence' && evidence) {
+      return {
+        label: t('board', 'designation_evidence'),
+        title: t('board', 'designation_evidence_title', { need: String(evidence.need), collect: String(evidence.canCollect) }),
+      }
+    }
+    if (d === 'protector' && protector) {
+      return {
+        label: t('board', 'designation_protector'),
+        title: t('board', 'designation_protector_title', { name: protector }),
       }
     }
     return { label: t('board', `designation_${d}`), title: t('board', `designation_${d}_title`) }

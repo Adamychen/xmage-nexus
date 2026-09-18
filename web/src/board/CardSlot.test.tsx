@@ -166,6 +166,47 @@ describe('CardSlot', () => {
     expect(badge?.getAttribute('title')).toContain('2/3')
   })
 
+  it('renders case solved and prepared badges from live engine lines', () => {
+    const card = {
+      id: 'c8',
+      name: 'Case of the Crimson Pulse',
+      cardTypes: ['Enchantment'],
+      rules: ['<br/><hintstart/>', 'ICON_GOODCase is solved.', "<font color = 'blue'>Prepared</font>"],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-casesolved')).not.toBeNull()
+    expect(container.querySelector('.designation-badge.is-prepared')).not.toBeNull()
+    expect(container.querySelector('.designation-badge.is-evidence')).toBeNull()
+  })
+
+  it('renders evidence badge with need/can collect detail in title', () => {
+    const card = {
+      id: 'c9',
+      name: 'Analyze the Pollen',
+      cardTypes: ['Sorcery'],
+      rules: ['ICON_GOODEvidence was used (need: 6, can collect: 9)'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const badge = container.querySelector('.designation-badge.is-evidence')
+    expect(badge).not.toBeNull()
+    expect(badge?.getAttribute('title')).toContain('6')
+    expect(badge?.getAttribute('title')).toContain('9')
+  })
+
+  it('renders harnessed and protector badges with the protector name in title', () => {
+    const card = {
+      id: 'c10',
+      name: 'Saddle Beast',
+      cardTypes: ['Creature'],
+      rules: ['ICON_GOOD{this} is harnessed', 'Protected by Grizzly Bears'],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-harnessed')).not.toBeNull()
+    const badge = container.querySelector('.designation-badge.is-protector')
+    expect(badge).not.toBeNull()
+    expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
+  })
+
   it('expone data-attrs de fidelidad (P2): P/T, girado, contadores y daño', () => {
     const card = {
       id: 'fid1',
