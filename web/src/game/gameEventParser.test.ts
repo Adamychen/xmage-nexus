@@ -272,6 +272,23 @@ describe('gameEventParser', () => {
     expect(esText('qa-vfy-A2 wants to concede', 'Alice')).toBe('qa-vfy-A2 concede la partida')
   })
 
+  it('parses fizzled spells/abilities (sin objetivos legales, texto real del motor)', () => {
+    // Spell.java: `getName() + " has been fizzled."`; StackAbility.java:
+    // `"Ability has been fizzled: " + getRule()`.
+    const bolt = parsed('Lightning Bolt has been fizzled.', 'Alice')
+    expect(bolt.type).toBe('system')
+    expect(bolt.cardName).toBe('Lightning Bolt')
+    expect(esText('Lightning Bolt has been fizzled.', 'Alice')).toBe(
+      'Lightning Bolt se retira de la pila sin efecto (sin objetivos legales)'
+    )
+
+    const ability = parsed('Ability has been fizzled: {T}: Add {G}.', 'Alice')
+    expect(ability.type).toBe('system')
+    expect(formatFeedText(ability, esT)).toBe(
+      'Una habilidad se retira de la pila sin efecto (sin objetivos legales)'
+    )
+  })
+
   it('keeps already-Spanish announcements verbatim', () => {
     const res = parsed('Fin de partida: Alice gana 2-0', 'Alice')
     expect(res.type).toBe('system')

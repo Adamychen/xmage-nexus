@@ -694,6 +694,48 @@ describe('playables consolidados', () => {
     expect(getState().playableIds).toEqual(['p-mountain', 'h-bolt'])
   })
 
+  it('offers basic lands in your precombat main with an empty stack (contraste)', () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_SELECT',
+      messageId: 1,
+      objectId: 'g-1',
+      data: {
+        gameView: makeGameView({
+          phase: 'PRECOMBAT_MAIN',
+          players: [
+            makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: true }),
+          ],
+          myHand: { 'h-land': makeCard({ name: 'Mountain', parentId: 'h-land' }) },
+        }),
+      },
+    })
+    expect(getState().playableIds).toEqual(['h-land'])
+  })
+
+  it('regression: NO ofrece tierras con un hechizo en la pila (split second: pila no vacía)', () => {
+    handleMessage({
+      type: 'event',
+      method: 'GAME_SELECT',
+      messageId: 1,
+      objectId: 'g-1',
+      data: {
+        gameView: makeGameView({
+          phase: 'PRECOMBAT_MAIN',
+          players: [
+            makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: true }),
+          ],
+          myHand: {
+            'h-land': makeCard({ name: 'Mountain', parentId: 'h-land' }),
+            'h-bolt': makeCard({ name: 'Lightning Bolt', parentId: 'h-bolt' }),
+          },
+          stack: { 's-1': makeCard({ name: 'Sudden Shock', parentId: 's-1' }) },
+        }),
+      },
+    })
+    expect(getState().playableIds).toEqual([])
+  })
+
   it('a GAME_SELECT clears a stale GAME_TARGET dialog', () => {
     handleMessage({
       type: 'event',

@@ -56,7 +56,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `GAME_GET_AMOUNT` | ✅ | ✅ | ✅ | feedback.test.ts / complex-costs.spec.ts | 2026-08-24 |
 | `GAME_GET_MULTI_AMOUNT` | ✅ | ✅ | — | feedback.test.ts + en vivo 2026-09-12: reparto de daño de gang-block capturado verbatim (multiString con defaults en orden de declaración, sin prompt de orden previo) | 2026-09-12 |
 | `GAME_OVER` | ✅ | — | ✅ | full-flow.spec.ts / defeat.spec.ts | 2026-08-24 |
-| `END_GAME_INFO` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts | 2026-08-24 |
+| `END_GAME_INFO` | ✅ | — | ✅ | best-of-3.spec.ts / best-of-5.spec.ts. **Espectadores 2026-09-17**: el server solo informaba a `getGameSessions()`; parche aditivo en el fork (`GameSessionWatcher.endGameInfo(Table)` + llamada desde `GameController.endGameInfo()`, GameSessionWatcher.java:125-129 / GameController.java:899-901) verificado con `scripts/verify-spectator-end.mjs` (espectador en partida en curso recibe `GameEndView` no nulo con `clientPlayer:null`; el web ya lo maneja en `handleEndGameInfo`) | 2026-09-17 |
 | `REPLAY_GAME` | ✅ | — | — | eventHandler `REPLAY_GAME` (log). **En vivo 2026-09-14**: `getFinishedMatches` real devuelve `games:[]` y `replayAvailable:false` (server con `saveGameActivated="false"`; upstream lo marca «not working correctly yet») → el `replayGame` del Historial nunca se dispara con la config por defecto | 2026-09-14 |
 | `REPLAY_INIT` | ✅ | — | — | eventHandler `REPLAY_INIT` + replayViewer (pinta el frame en GameScreen vía `{game, phase:'game'}`) | 2026-08-26 |
 | `REPLAY_UPDATE` | ✅ | — | — | eventHandler `REPLAY_UPDATE` | 2026-08-26 |

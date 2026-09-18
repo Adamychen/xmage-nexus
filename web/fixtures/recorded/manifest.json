@@ -158,7 +158,7 @@
     "mechanic": "threaten",
     "kind": "game",
     "assert": "hasThreaten",
-    "note": "Act of Treason roba el Mystic del SIM a nuestro campo (mazo todo-Montañas: cualquier Mystic propio es robado). Lanzamiento diferido hasta que el SIM tenga criatura."
+    "note": "Act of Treason ({2}{R}) roba el Elvish Mystic del SIM; la captura es el RETORNO de fin de turno: el Mystic vuelve al campo del SIM (ya no bajo nuestro control) con Act of Treason en nuestro cementerio (plan4 §3.10: antes se capturaba el robo sin probar el retorno). Driver treason con cheatSetup."
   },
   {
     "file": "dfc.json",
@@ -221,7 +221,7 @@
     "mechanic": "split-second",
     "kind": "game",
     "assert": "hasSplitSecond",
-    "note": "Sudden Shock (split second) a la cara del rival, en la pila. Driver shock con cheatSetup."
+    "note": "Sudden Shock (split second) en la pila CON prioridad nuestra (tras pasar el SIM) y Lightning Bolt + 6 Montañas en mano: el servidor solo ofrece las Montañas como habilidad de maná (split second permite maná) y nunca el Bolt; la UI marca las fuentes y no el Bolt. Driver shock con cheatSetup."
   },
   {
     "file": "cascade.json",
@@ -740,5 +740,61 @@
     "kind": "game",
     "assert": "hasTimeoutLoss",
     "note": "Timeout de reloj de partida (§3.5). Mesa con timeLimit=MIN___5 (300s, el mínimo real del motor — el wizard web solo baja hasta 15 min) vía driver standalone game-clock-timeout.mjs, porque rec-lib.mjs no expone timeLimit/bufferTime en su createTable hardcodeado (gap de tooling P4, no del motor; no se tocó rec-lib.mjs). El driver mantiene la mano y luego ignora a propósito toda ventana de prioridad: HumanPlayer.priority() mantiene el reloj corriendo (game.resumeTimer) hasta agotarlo → GameController→game.timerTimeout→PlayerImpl.timerTimeout (quit+timerTimeout+concede). Captura (turno 1, COMBAT/DECLARE_ATTACKERS): jugador controlado con priorityTimeLeftSecs=0 y hasLeft=true pero life=20 intacta; rival con priorityTimeLeftSecs=300 sin tocar — la asimetría de reloj es la prueba de timeout, no de concesión/daño. El texto 'run out of time' vive en el callback END_GAME_INFO (no en GAME_OVER, que este driver sí captura) y no quedó registrado en este frame; el aviso visible de \"timer bajo\" ya existe en cliente vía PlayerInfoBar.tsx isTimeLow a ≤30s (PlayerView.priorityTimeLeftSecs), verificado leyendo código pero no en e2e."
+  },
+  {
+    "file": "combat-trick.json",
+    "mechanic": "combat-trick",
+    "kind": "game",
+    "assert": "hasCombatTrick",
+    "note": "Truco de combate (Giant Growth {G}, +3/+3 hasta el final del turno) lanzado en DECLARE_BLOCKERS sobre el propio Grizzly atacante (GAME_SELECT de combate con prioridad real; el objetivo se AUTO-RESUELVE al ser el único legal). Captura: atacante en gv.combat[].attackers con P/T 5/5 (2/2 +3/+3), Giant Growth en el cementerio y pila vacía — la prueba de que la ventana post-bloqueadores es jugable."
+  },
+  {
+    "file": "companion.json",
+    "mechanic": "companion",
+    "kind": "game",
+    "assert": "hasCompanion",
+    "note": "Companion revelado (Lurrus of the Dream-Den en el BANQUILLO; mazo 24 Bosques + 36 Grizzly Bears, todos los permanentes MV ≤ 2 para que la condición Companion sea legal). Al inicializar, el motor pregunta \"Use Lurrus … as your companion?\" (chooseUse) y el driver responde SÍ; la carta queda en la zona de compañero (GameView.companion, RevealedView) con la SpecialAction de pagar {3} (CompanionAbility extends SpecialAction). El driver clica la carta desde la zona para pagar {3} (con 3 Bosques: la tierra del turno + 2 cheateados) y la copia propia pasa a la mano; el SIM lleva el mismo mazo con Lurrus para que la entrada del rival siga visible en la zona de compañero. Captura: Lurrus en mi mano + zona de compañero ajena aún poblada + vida sin cambios."
+  },
+  {
+    "file": "gitaxian-probe.json",
+    "mechanic": "gitaxian-probe",
+    "kind": "game",
+    "assert": "hasLookedAt",
+    "note": "Mirar la mano del rival (G12-2): Gitaxian Probe ({U/P}, \"Look at target player's hand. Draw a card.\") cheateada a la mano + 1 Isla propia; el GAME_TARGET de jugador se responde con el playerId del SIM. Captura: GameView.lookedAt poblado (RevealedView con la mano del rival) — la señal que alimenta el visor temporal (InfoWindows) tras la corrección G12-2."
+  },
+  {
+    "file": "multikicker.json",
+    "mechanic": "multikicker",
+    "kind": "game",
+    "assert": "hasMultikicker",
+    "note": "Multikicker (Everflowing Chalice {0}, Multikicker {2}): el prompt del motor es REPETIDO y en modo chooseUse — \"Pay 1 time {2} ?\", \"Pay 2 times {2} ?\", … (KickerAbility.addOptionalAdditionalCosts; no es GAME_CHOOSE_CHOICE ni un GAME_GET_AMOUNT). El driver paga 2 kicks con 4 Bosques (se pregunta 1 y 2 → SÍ, 3 → NO; canPay filtra las impagables) y la carta entra con 2 contadores de carga (AddCountersSourceEffect + MultikickerCount). Captura: Chalice en el campo con {charge:2} y pila vacía."
+  },
+  {
+    "file": "strive.json",
+    "mechanic": "strive",
+    "kind": "game",
+    "assert": "hasStrive",
+    "note": "Strive (Launch the Fleet {W}, StriveAbility \"{1}\"): dos Grizzly Bears propios cheateados + 3 Llanuras; los objetivos llegan como GAME_TARGET repetido (se declina con false al acabar) y el coste final es {1}{W} (se paga con 2 Llanuras). Captura: los DOS Grizzlies 2/2 → 3/3 hasta el final del turno, Launch the Fleet en el cementerio y pila vacía."
+  },
+  {
+    "file": "pod-combat.json",
+    "mechanic": "pod-combat",
+    "kind": "game",
+    "assert": "hasPodCombat",
+    "note": "Combate multijugador con varios defensores: FFA de 4 (1 humano + 3 SIM, `playerTypes`/`simDecks` de rec-lib) con un Grizzly propio cheateado. HALLAZGO 2026-09-17: el GAME_TARGET del defensor no llegaba porque el default de MatchOptions es attackOption=LEFT (en FFA `Combat.getAttackablePlayers` deja 1 solo defensor y HumanPlayer.selectDefender declara sin preguntar); la mesa ahora se crea con `attackOption: MULTIPLE` (passthrough nuevo en rec-lib.mjs). Al declarar el atacante el motor pregunta el defensor (TargetDefender \"Select a player, planeswalker, or battle to attack\") y el driver elige al ÚLTIMO SIM; la captura exige el grupo de combate con defenderId = ese SIM. Es el caso que el preview del overlay (CombatArrowsOverlay, `players.find(p => p.playerId !== activePlayerId)`) no cubre en pod: el replay aserta la flecha real por `[data-arrow-from]`/`[data-arrow-to]`."
+  },
+  {
+    "file": "commander-4.json",
+    "mechanic": "commander-4",
+    "kind": "game",
+    "assert": "hasPodCommander",
+    "note": "Commander FFA de 4 (1 humano + 3 SIM) con mazo legal (99 Montañas + Krenko, Mob Boss). SONDA DE CONTRATO 2026-09-17: el daño de comandante NO tiene campo en el view (`PlayerView`/`GameView`/`CommanderView` no lo exponen; vive en `CommanderInfoWatcher.damageToPlayer` del motor) — viaja SOLO como info del cardState en `rules` de la carta/permanente del comandante (\"Commander did N combat damage to player <nombre>.\"), que el web parsea en `CommanderDamageMatrix.extractDamage`. Krenko se lanza DESDE LA ZONA DE MANDO (cheatearlo crearía otra copia con id distinto que el watcher no ve) con 8 Montañas cheateadas y ataca al ÚLTIMO SIM con `attackOption: MULTIPLE` (el default LEFT no genera GAME_TARGET, ver pod-combat); después un Lightning Bolt propio lo manda de vuelta a la zona de mando, que es donde el CardView conserva la línea de daño (la matriz enumera comandantes desde commandList, no desde el battlefield). Captura: Krenko en commandList con la línea de daño y la vida del último SIM 40−N."
+  },
+  {
+    "file": "ffa-six.json",
+    "mechanic": "ffa-six",
+    "kind": "game",
+    "assert": "hasFfaSix",
+    "note": "FFA real de 6 (1 humano + 5 SIM) en mesa \"Free For All\": frame estable en la primera main propia con la tierra jugada (sin cheat ni combate). Evidencia de la decisión §9.1 (solo standard con switcher para 5+): el view trae 6 jugadores y el replay exige `game-board` (NO `pod-board`), `.opponent-switcher-bar` visible y 6 píldoras `.opp-pill` — `effectiveBoardLayout` cae a standard cuando totalPlayers > MAX_BOARD_PLAYERS=4."
   }
 ]

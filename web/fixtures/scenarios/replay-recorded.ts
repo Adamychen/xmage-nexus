@@ -2,7 +2,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { GameView } from '../../src/net/types'
-import { makeBaseScenario, type Scenario } from '../fake'
+import { makeBaseScenario, type FakeConn, type Scenario } from '../fake'
 import { TABLE_ID } from '../humanGameConstants'
 
 // Escenario genérico anti-deriva: reemite un frame real capturado por
@@ -18,6 +18,7 @@ export const REPLAY_TABLE_NAME = 'Replay Recorded (real frame)'
 export function replayRecordedScenario(
   filename: string,
   tableName: string = REPLAY_TABLE_NAME,
+  extras: { onStartMatch?: (conn: FakeConn, gameId: string) => void } = {},
 ): Scenario {
   const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, filename), 'utf8')) as {
     gameId: string
@@ -30,5 +31,6 @@ export function replayRecordedScenario(
     tableName,
     gameId,
     gameView: gameView as GameView,
+    onStartMatch: extras.onStartMatch ? (conn) => extras.onStartMatch!(conn, gameId) : undefined,
   })
 }

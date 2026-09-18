@@ -6,6 +6,7 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
+import { playableInSceneByName } from './support/scene'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -127,6 +128,95 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         if (entry.assert === 'hasSplitSecond') {
           await expect(page.locator('.stack-zone')).toBeVisible()
           await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          // Split second con prioridad nuestra: el servidor solo ofrece
+          // habilidades de maná (las tierras) y nunca el Bolt de la mano. La
+          // UI debe marcar la fuente de maná como jugable y NO el Bolt
+          // (plan4 §3.5).
+          await expect(page.locator('.player-zone .card-slot.playable').first()).toBeVisible()
+          const bolt = page.locator('.hand-bar .card-slot[data-card-name="Lightning Bolt"]')
+          await expect(bolt).toHaveCount(1)
+          await expect(bolt).not.toHaveClass(/playable/)
+          expect(await playableInSceneByName(page, 'Lightning Bolt')).toBeNull()
+        }
+        if (entry.assert === 'hasCompanion') {
+          // El compañero propio está en la mano (se pagó {3}); el del SIM
+          // sigue en su zona de compañero.
+          await expect(page.locator('.hand-bar .card-slot[data-card-name="Lurrus of the Dream-Den"]')).toHaveCount(1)
+        }
+        if (entry.assert === 'hasLookedAt') {
+          // Mirar la mano del rival abre el visor temporal (G12-2).
+          await expect(page.locator('.pile-overlay')).toBeVisible()
+        }
+        if (entry.assert === 'hasMultikicker') {
+          // Chalice con 2 contadores de carga (2 kicks pagados).
+          const chalice = page.locator('.player-zone .card-slot[data-card-name="Everflowing Chalice"]')
+          await expect(chalice).toHaveCount(1)
+          await expect(chalice).toHaveAttribute('data-counters', /charge:2/)
+        }
+        if (entry.assert === 'hasStrive') {
+          // Dos objetivos: ambos Grizzlies con la habilidad concedida.
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Grizzly Bears"]')).toHaveCount(2)
+        }
+        if (entry.assert === 'hasCombatTrick') {
+          // Giant Growth en la ventana de bloqueadores: 2/2 → 5/5.
+          await expect(page.locator('.player-zone .card-slot[data-card-name="Grizzly Bears"][data-pt="5/5"]')).toHaveCount(1)
+        }
+        if (entry.assert === 'hasPodCombat') {
+          // La flecha REAL del overlay apunta al defensor del frame (el último
+          // SIM), no al primer no-activo (atajo del preview en pod).
+          const raw = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', entry.file), 'utf8'),
+          ) as { gameView?: { combat?: Array<{ defenderId?: string }> } }
+          const defenderId = raw.gameView?.combat?.[0]?.defenderId ?? ''
+          expect(defenderId).not.toBe('')
+          await expect(
+            page.locator(`.arrow-group.arrow-attack[data-arrow-to="${defenderId}"]`),
+          ).toHaveCount(1)
+        }
+        if (entry.assert === 'hasPodCommander') {
+          // El daño de comandante no tiene campo en el view: solo viaja como
+          // texto en `rules` del comandante ("Commander did N combat damage to
+          // player X."). La matriz del sidebar debe parsearlo y pintar N.
+          const raw = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', entry.file), 'utf8'),
+          ) as {
+            gameView?: {
+              players?: Array<{
+                playerId?: string
+                name?: string
+                controlled?: boolean
+                commandList?: Array<{ id?: string; name?: string; rules?: string[] }>
+              }>
+            }
+          }
+          const players = raw.gameView?.players ?? []
+          const me = players.find((p) => p?.controlled)
+          const cmd = (me?.commandList ?? []).find((c) => /krenko, mob boss/i.test(String(c?.name ?? '')))
+          const rules = (cmd?.rules ?? []).map((r) => String(r).replace(/<[^>]*>/g, ' ')).join(' ')
+          const m = rules.match(/did\s+(\d+)\s+combat damage to player\s+([^.<]+)/i)
+          expect(m, 'rules del comandante con la línea de daño').not.toBeNull()
+          const dmg = Number(m?.[1] ?? 0)
+          const target = players.find(
+            (p) => String(p?.name ?? '').toLowerCase() === String(m?.[2] ?? '').trim().toLowerCase(),
+          )
+          expect(target, 'el rival dañado existe en el frame').toBeTruthy()
+          await page
+            .locator('.right-tab-btn')
+            .filter({ hasText: /Comand/i })
+            .click()
+          await expect(page.locator('[data-testid="commander-damage-matrix"]')).toBeVisible()
+          await expect(
+            page.locator(`[data-testid="cdm-cell-${target?.playerId}-${cmd?.id}"][data-damage="${dmg}"]`),
+          ).toHaveCount(1)
+        }
+        if (entry.assert === 'hasFfaSix') {
+          // 5+ jugadores (decisión §9.1): standard con switcher, NO pod (que
+          // recorta a MAX_BOARD_PLAYERS=4).
+          await expect(page.locator('[data-testid="game-board"]')).toBeVisible()
+          await expect(page.locator('[data-testid="pod-board"]')).toHaveCount(0)
+          const bar = page.locator('.opponent-switcher-bar')
+          await expect(bar).toBeVisible()
+          await expect(bar.locator('.opp-pill')).toHaveCount(6)
         }
         if (entry.assert === 'hasCascade') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Bloodbraid Elf"]')).toBeVisible()

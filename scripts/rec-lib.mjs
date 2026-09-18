@@ -432,6 +432,10 @@ export async function runRecorder(driver) {
   // de quemar los 300 s de maxMs.
   let lastGameEventAt = 0
   let cheatArmedAt = 0
+  // Chat de partida: sin joinChat el proxy NO reenvía los INFO del motor
+  // (p. ej. "<carta> has been fizzled."), que viajan como CHATMESSAGE GAME.
+  // Unirse permite capturarlos con REC_DUMP_EVENTS=1 como evidencia real.
+  let chatJoined = false
   // P4 (2026-09-16): generación de SELECTs para el auto-pass post-cheat.
   let selectGen = 0
   let lastSelectOurs = false
@@ -832,7 +836,28 @@ export async function runRecorder(driver) {
       ctx.dumpEvent(m)
       if (m.method?.startsWith('GAME_')) lastGameEventAt = Date.now()
       if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_'))) {
-        if (!gameId) gameId = String(m.objectId)
+        if (!gameId) {
+          gameId = String(m.objectId)
+          // P4 (2026-09-17): unirse a la partida como el cliente web/MCP
+          // (`joinGame`). Sin esto, en mesas de 5+ asientos el servidor solo
+          // arranca tras el force-join a los 10 s y las acciones del humano
+          // (tierra) caen al vacío sin error (visto en ffa-six: ok:true del
+          // proxy y battlefield vacío). En 1v1/4p funcionaba por el force-join,
+          // pero el flujo correcto es explícito.
+          void send('joinGame', { gameId }, 15000).then((r) => {
+            if (DEBUG) log('joinGame', String(gameId).slice(0, 8), r?.ok)
+          })
+        }
+      }
+      if (gameId && !chatJoined && driver.joinChat !== false) {
+        chatJoined = true
+        void send('getGameChatId', { gameId }).then((r) => {
+          const cid = r?.ok ? r.data : null
+          if (!cid) return
+          void send('joinChat', { chatId: String(cid) }).then((j) => {
+            if (DEBUG) log('joinChat', String(cid).slice(0, 8), j?.ok)
+          })
+        })
       }
       if (m.data?.gameView) lastGV = m.data.gameView
       handleEvent(m)
@@ -885,6 +910,14 @@ export async function runRecorder(driver) {
       skipInitShuffling: true,
       skipStartingPlayerChoice: driver.skipStartingPlayerChoice !== false,
       ...(driver.freeMulligans ? { freeMulligans: driver.freeMulligans } : {}),
+      // P4 (2026-09-17): opciones multijugador del motor. El default de
+      // MatchOptions es attackOption=LEFT (solo el vecino de la izquierda es
+      // defensor legal: en FFA `Combat.getAttackablePlayers` devuelve 1 y
+      // HumanPlayer.selectDefender NO pregunta defensor), por eso el combate
+      // en pod con varios defensores necesita attackOption=MULTIPLE. `range`
+      // (ONE/TWO/ALL) limita los oponentes atacables/objetivo.
+      ...(driver.attackOption ? { attackOption: driver.attackOption } : {}),
+      ...(driver.range ? { range: driver.range } : {}),
     })
     tableId = res.ok ? res.data?.tableId ?? res.data?.table?.tableId : null
     if (!tableId) {

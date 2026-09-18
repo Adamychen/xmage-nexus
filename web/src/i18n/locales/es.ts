@@ -683,6 +683,8 @@ export const es: TranslationSchema = {
     feed_won_match: '{player} gana el match',
     feed_won_match_you: 'Has ganado el match',
     feed_conceded: '{player} concede la partida',
+    feed_fizzled: '{card} se retira de la pila sin efecto (sin objetivos legales)',
+    feed_fizzled_ability: 'Una habilidad se retira de la pila sin efecto (sin objetivos legales)',
     end_won_game_turn: '{player} gana la partida en el turno {turn}',
     end_lost_game_turn: '{player} pierde la partida en el turno {turn}',
     end_won_game_turn_you: 'Has ganado la partida en el turno {turn}',

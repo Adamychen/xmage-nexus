@@ -127,7 +127,11 @@ export function consolidatePlayables(
   if (method === 'GAME_SELECT' || method === 'GAME_PLAY_MANA' || hasObjects) {
     const ids = playableObjectIds(game, currentFeedback ?? undefined)
     const me = game.players?.find((p) => p.controlled)
-    if (game.phase === 'PRECOMBAT_MAIN' && me?.isActive === true && me?.hasPriority) {
+    // Jugar una tierra exige pila vacía (CR 305.1/116.2): con un hechizo en la
+    // pila (split second incluido) no se ofrece aunque sea tu main y tengas
+    // prioridad.
+    const stackEmpty = Object.keys(game.stack ?? {}).length === 0
+    if (game.phase === 'PRECOMBAT_MAIN' && me?.isActive === true && me?.hasPriority && stackEmpty) {
       for (const [id, card] of Object.entries(game.myHand ?? {})) {
         if (BASIC_LANDS.includes(card.name ?? '') || BASIC_LANDS.includes(card.displayName ?? '')) {
           if (!ids.includes(id)) ids.push(id)

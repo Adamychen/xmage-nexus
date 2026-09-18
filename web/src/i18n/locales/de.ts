@@ -682,6 +682,8 @@ export const de: TranslationSchema = {
     feed_won_match: '{player} gewinnt das Match',
     feed_won_match_you: 'Du gewinnst das Match',
     feed_conceded: '{player} gibt auf',
+    feed_fizzled: '{card} verpufft: keine legalen Ziele, bleibt ohne Effekt',
+    feed_fizzled_ability: 'Eine Fähigkeit verpufft: keine legalen Ziele, bleibt ohne Effekt',
     end_won_game_turn: '{player} hat die Partie in Zug {turn} gewonnen',
     end_lost_game_turn: '{player} hat die Partie in Zug {turn} verloren',
     end_won_game_turn_you: 'Du hast die Partie in Zug {turn} gewonnen',

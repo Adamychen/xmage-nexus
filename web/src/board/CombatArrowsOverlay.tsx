@@ -9,6 +9,10 @@ interface ArrowItem {
   x2: number
   y2: number
   type: 'attack' | 'block' | 'target'
+  /** Origen/destino lógicos (UUID de carta o jugador) para poder asertar a
+   *  quién apunta cada flecha en los tests (pod multijugador). */
+  fromId: string
+  toId: string
 }
 
 interface CombatArrowsOverlayProps {
@@ -112,7 +116,7 @@ export default function CombatArrowsOverlay({
       return null
     }
 
-    const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type']): ArrowItem => {
+    const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
       const dx = to.x - from.x
       const dy = to.y - from.y
       const dist = Math.hypot(dx, dy) || 1
@@ -130,6 +134,8 @@ export default function CombatArrowsOverlay({
         x2: end(to.x - ux * endInset),
         y2: end(to.y - uy * endInset),
         type,
+        fromId,
+        toId,
       }
     }
 
@@ -164,7 +170,7 @@ export default function CombatArrowsOverlay({
             const defCenter = getCenter(defenderId)
             const attCenter = getCenter(String(attId))
             if (defCenter && attCenter) {
-              newArrows.push(makeArrow(`att-${gi}-${attId}`, attCenter, defCenter, 'attack'))
+              newArrows.push(makeArrow(`att-${gi}-${attId}`, attCenter, defCenter, 'attack', String(attId), String(defenderId)))
             }
           }
         })
@@ -183,7 +189,7 @@ export default function CombatArrowsOverlay({
             blockerIds.forEach((blkId) => {
               const blkCenter = getCenter(String(blkId))
               if (blkCenter) {
-                newArrows.push(makeArrow(`blk-${gi}-${blkId}`, blkCenter, firstAttCenter, 'block'))
+                newArrows.push(makeArrow(`blk-${gi}-${blkId}`, blkCenter, firstAttCenter, 'block', String(blkId), String(attackerIds[0])))
               }
             })
           }
@@ -205,7 +211,7 @@ export default function CombatArrowsOverlay({
             if (!newArrows.some((a) => a.id.includes(attId) && a.type === 'attack')) {
               const attCenter = getCenter(attId)
               if (attCenter) {
-                newArrows.push(makeArrow(`chosen-att-${attId}`, attCenter, defCenter, 'attack'))
+                newArrows.push(makeArrow(`chosen-att-${attId}`, attCenter, defCenter, 'attack', String(attId), String(defendingPlayer.playerId)))
               }
             }
           })
@@ -220,7 +226,7 @@ export default function CombatArrowsOverlay({
         chosenTargetIds.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
           if (tgtCenter) {
-            newArrows.push(makeArrow(`target-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target'))
+            newArrows.push(makeArrow(`target-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target', String(targetSourceId), String(tgtId)))
           }
         })
       }
@@ -243,7 +249,7 @@ export default function CombatArrowsOverlay({
         targetList.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
           if (tgtCenter) {
-            newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target'))
+            newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target', String(stackId), String(tgtId)))
           }
         })
       })
@@ -353,7 +359,12 @@ export default function CombatArrowsOverlay({
         const pathData = `M ${a.x1} ${a.y1} Q ${cx} ${cy} ${a.x2} ${a.y2}`
 
         return (
-          <g key={a.id} className={`arrow-group arrow-${a.type}`}>
+          <g
+            key={a.id}
+            className={`arrow-group arrow-${a.type}`}
+            data-arrow-from={a.fromId}
+            data-arrow-to={a.toId}
+          >
             {/* Background shadow stroke */}
             <path
               d={pathData}

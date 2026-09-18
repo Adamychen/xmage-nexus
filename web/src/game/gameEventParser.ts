@@ -451,6 +451,18 @@ export function parseGameEvent(
     }
   }
 
+  // 14b. Fizzle: "Lightning Bolt has been fizzled." (Spell.java 608.2b: sin
+  //      objetivos legales al resolver) y "Ability has been fizzled: <rule>".
+  const fizzledAbilityMatch = text.match(/^Ability\s+has\s+been\s+fizzled(?::\s*.*)?$/i)
+  if (fizzledAbilityMatch) {
+    return i18n('system', 'feed_fizzled_ability', {})
+  }
+  const fizzledMatch = text.match(/^(.*?)\s+has\s+been\s+fizzled\.?$/i)
+  if (fizzledMatch) {
+    const card = cleanCardName(fizzledMatch[1].trim())
+    return i18n('system', 'feed_fizzled', { card }, { cardName: card })
+  }
+
   // 15. Meaningful game announcements: game start, game over, concession, win
   if (
     text.startsWith('¡Partida') ||

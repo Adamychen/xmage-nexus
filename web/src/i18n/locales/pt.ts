@@ -682,6 +682,8 @@ export const pt: TranslationSchema = {
     feed_won_match: '{player} vence o match',
     feed_won_match_you: 'Venceste o match',
     feed_conceded: '{player} concede a partida',
+    feed_fizzled: '{card} falha: sem alvos legais, sai da pilha sem efeito',
+    feed_fizzled_ability: 'Uma habilidade falha: sem alvos legais, sai da pilha sem efeito',
     end_won_game_turn: '{player} venceu a partida no turno {turn}',
     end_lost_game_turn: '{player} perdeu a partida no turno {turn}',
     end_won_game_turn_you: 'Venceste a partida no turno {turn}',

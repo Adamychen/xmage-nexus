@@ -112,6 +112,14 @@ type AssertKind =
   | 'hasKarnRestart'
   | 'hasEnergy'
   | 'hasReanimateTarget'
+  | 'hasCompanion'
+  | 'hasLookedAt'
+  | 'hasMultikicker'
+  | 'hasStrive'
+  | 'hasCombatTrick'
+  | 'hasPodCombat'
+  | 'hasPodCommander'
+  | 'hasFfaSix'
   | 'firstMulliganFreeSecondCostsCard'
   | 'hasTimeoutLoss'
   | 'hasConstructPool'
@@ -239,9 +247,21 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       )
     }
     case 'hasThreaten': {
+      // plan4 §3.10: la evidencia es el RETORNO de fin de turno — el Mystic
+      // robado con Act of Treason vuelve al campo del SIM (y ya no está en el
+      // nuestro), con el hechizo en nuestro cementerio.
       const me2 = getMe(gv)
-      const bf = Object.values(me2?.battlefield ?? {})
-      return bf.some((c) => /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')))
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const mine = Object.values(me2?.battlefield ?? {}).some((c) =>
+        /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const theirs = Object.values(sim?.battlefield ?? {}).some((c) =>
+        /elvish mystic/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const gy = Object.values(me2?.graveyard ?? {}).some((c) =>
+        /act of treason/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      return !mine && theirs && gy
     }
     case 'hasTransform': {
       const me2 = getMe(gv)
@@ -289,8 +309,37 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       )
     }
     case 'hasSplitSecond': {
+      // Prioridad nuestra con el Shock en la pila: split second prohíbe lanzar
+      // hechizos/activar habilidades NO de maná, así que el servidor solo puede
+      // ofrecer habilidades de maná (las Montañas destapadas) y nunca el Bolt
+      // que sigue en mano. La UI debe distinguirlo (el Bolt no es jugable).
       const stack = Object.values(gv.stack ?? {})
-      return stack.some((s) => /sudden shock/i.test(String((s as { name?: unknown })?.name ?? '')))
+      const hand = gv.myHand ?? gv.hand ?? {}
+      const handNames = Object.values(hand).map((c) => String((c as { name?: unknown })?.name ?? ''))
+      const offered = gv.canPlayObjects?.objects ?? {}
+      const boltId = Object.entries(hand).find(([, c]) =>
+        /lightning bolt/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )?.[0]
+      const boltOffered = !!boltId && Object.prototype.hasOwnProperty.call(offered, boltId)
+      const nonManaOffered = Object.values(offered).some((o) => {
+        const rec = o as {
+          basicCastAbilities?: unknown[]
+          basicPlayAbilities?: unknown[]
+          other?: unknown[]
+        }
+        return (
+          (rec?.basicCastAbilities?.length ?? 0) > 0 ||
+          (rec?.basicPlayAbilities?.length ?? 0) > 0 ||
+          (rec?.other?.length ?? 0) > 0
+        )
+      })
+      return (
+        stack.some((s) => /sudden shock/i.test(String((s as { name?: unknown })?.name ?? ''))) &&
+        getMe(gv)?.hasPriority === true &&
+        handNames.some((n) => /lightning bolt/i.test(n)) &&
+        !boltOffered &&
+        !nonManaOffered
+      )
     }
     case 'hasCascade': {
       const me2 = getMe(gv)
@@ -1181,6 +1230,116 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')),
       )
       return onBattlefield && !stillInGraveyard && Number(me2?.life) <= 18
+    }
+    case 'hasCompanion': {
+      // El compañero propio se pagó ({3}) y está en mano; el del SIM sigue
+      // visible en la zona de compañero (RevealedView del rival).
+      const me2 = getMe(gv)
+      const myName = String((me2 as { name?: unknown })?.name ?? '')
+      const hand = Object.values(gv.myHand ?? gv.hand ?? {}).map((c) =>
+        String((c as { name?: unknown })?.name ?? ''),
+      )
+      const rivalCompanion = (gv.companion ?? []).some((v) => {
+        const owner = String((v as { name?: unknown })?.name ?? '')
+        return myName ? !owner.toLowerCase().includes(myName.toLowerCase()) : true
+      })
+      return hand.some((n) => /lurrus/i.test(n)) && rivalCompanion
+    }
+    case 'hasLookedAt': {
+      const views = gv.lookedAt ?? []
+      return views.some((v) => Object.keys((v as { cards?: Record<string, unknown> })?.cards ?? {}).length >= 1)
+    }
+    case 'hasMultikicker': {
+      const me2 = getMe(gv)
+      const chalice = Object.values(me2?.battlefield ?? {}).find((c) =>
+        /everflowing chalice/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const charge = ((chalice as { counters?: Array<{ name?: string; count?: number }> })?.counters ?? []).some(
+        (ct) => /charge/i.test(String(ct?.name ?? '')) && Number(ct?.count ?? 0) === 2,
+      )
+      return !!chalice && charge && Object.keys(gv.stack ?? {}).length === 0
+    }
+    case 'hasStrive': {
+      // Launch the Fleet no da +1/+1: concede a los DOS Grizzlies la habilidad
+      // disparada del soldado hasta el final del turno (y queda en el
+      // cementerio tras pagar {1}{W} por los 2 objetivos).
+      const me2 = getMe(gv)
+      const grizzlies = Object.values(me2?.battlefield ?? {}).filter((c) =>
+        /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const granted = (c: unknown) =>
+        ((c as { rules?: unknown[] })?.rules ?? []).some((r) => /Soldier creature token/i.test(String(r)))
+      const gy = Object.values(me2?.graveyard ?? {}).some((c) =>
+        /launch the fleet/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      return grizzlies.length === 2 && grizzlies.every(granted) && gy && Object.keys(gv.stack ?? {}).length === 0
+    }
+    case 'hasCombatTrick': {
+      const me2 = getMe(gv)
+      const bear = Object.values(me2?.battlefield ?? {}).find((c) =>
+        /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const buffed = Number((bear as { power?: unknown })?.power) === 5 && Number((bear as { toughness?: unknown })?.toughness) === 5
+      const gy = Object.values(me2?.graveyard ?? {}).some((c) =>
+        /giant growth/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const attacking = (gv.combat ?? []).some((group) =>
+        Object.keys((group as { attackers?: Record<string, unknown> })?.attackers ?? {}).length > 0,
+      )
+      return buffed && gy && attacking
+    }
+    case 'hasPodCombat': {
+      // Combate en pod: el Grizzly propio ataca al ÚLTIMO rival de la lista
+      // (no al primero/primer-no-activo, el atajo del preview del overlay) y
+      // el grupo de combate fija `defenderId` a ese jugador concreto.
+      const opponents = (gv.players ?? []).filter((p) => !p?.controlled)
+      const lastOpp = opponents[opponents.length - 1]
+      if (!lastOpp) return false
+      return (gv.combat ?? []).some((group) => {
+        const record = group as unknown as {
+          defenderId?: string
+          attackers?: Record<string, { name?: unknown }>
+        }
+        if (String(record?.defenderId ?? '') !== String(lastOpp.playerId)) return false
+        return Object.values(record?.attackers ?? {}).some((a) =>
+          /grizzly bears/i.test(String(a?.name ?? '')),
+        )
+      })
+    }
+    case 'hasPodCommander': {
+      // El daño de comandante NO tiene campo propio en el view (vive en
+      // CommanderInfoWatcher del motor): viaja SOLO como info del cardState
+      // dentro de `rules` del comandante ("Commander did N combat damage to
+      // player <nombre>."), que el web parsea en CommanderDamageMatrix. El
+      // invariante exige la traza completa en un pod de 4: el comandante del
+      // humano con la línea de daño, el ÚLTIMO rival como damnificado y su vida
+      // exactamente 40 − N.
+      const me2 = getMe(gv)
+      const opponents = (gv.players ?? []).filter((p) => !p?.controlled)
+      if ((gv.players ?? []).length !== 4 || opponents.length !== 3) return false
+      const lastOpp = opponents[opponents.length - 1]
+      const cards = [
+        ...Object.values(me2?.battlefield ?? {}),
+        ...((Array.isArray(me2?.commandList) ? me2?.commandList : Object.values(me2?.commandList ?? {})) as unknown[]),
+      ] as Array<{ name?: unknown; rules?: unknown[] }>
+      const krenko = cards.find((c) => /krenko, mob boss/i.test(String(c?.name ?? '')))
+      if (!krenko) return false
+      const rules = (krenko.rules ?? []).map((r) => String(r).replace(/<[^>]*>/g, ' ')).join(' ')
+      const m = rules.match(/did\s+(\d+)\s+combat damage to player\s+([^.<]+)/i)
+      if (!m) return false
+      if (m[2].trim().toLowerCase() !== String(lastOpp.name ?? '').toLowerCase()) return false
+      return Number(lastOpp.life) === 40 - Number(m[1])
+    }
+    case 'hasFfaSix': {
+      // FFA de 6 (> MAX_BOARD_PLAYERS=4): la decisión §9.1 sirve SOLO el layout
+      // standard con switcher. El view debe traer los 6 asientos y una tierra
+      // propia ya jugada (frame estable de la primera main).
+      const me2 = getMe(gv)
+      const opponents = (gv.players ?? []).filter((p) => !p?.controlled)
+      if ((gv.players ?? []).length !== 6 || opponents.length !== 5) return false
+      return Object.values(me2?.battlefield ?? {}).some((c) =>
+        (c.cardTypes ?? []).includes('LAND'),
+      )
     }
     case 'firstMulliganFreeSecondCostsCard': {
       const me2 = getMe(gv)

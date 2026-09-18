@@ -682,6 +682,8 @@ export const it: TranslationSchema = {
     feed_won_match: '{player} vince il match',
     feed_won_match_you: 'Hai vinto il match',
     feed_conceded: '{player} concede la partita',
+    feed_fizzled: '{card} svanisce: nessun bersaglio legale, nessun effetto',
+    feed_fizzled_ability: "Un'abilità svanisce: nessun bersaglio legale, nessun effetto",
     end_won_game_turn: '{player} ha vinto la partita al turno {turn}',
     end_lost_game_turn: '{player} ha perso la partita al turno {turn}',
     end_won_game_turn_you: 'Hai vinto la partita al turno {turn}',

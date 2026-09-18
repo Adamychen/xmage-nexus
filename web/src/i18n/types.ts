@@ -690,6 +690,8 @@ export interface TranslationSchema {
     feed_won_match: string
     feed_won_match_you: string
     feed_conceded: string
+    feed_fizzled: string
+    feed_fizzled_ability: string
     end_won_game_turn: string
     end_lost_game_turn: string
     end_won_game_turn_you: string

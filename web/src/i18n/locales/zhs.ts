@@ -685,6 +685,8 @@ export const zhs: TranslationSchema = {
     feed_won_match: '{player}赢得整场比赛',
     feed_won_match_you: '你赢得整场比赛',
     feed_conceded: '{player}认输',
+    feed_fizzled: '{card}因没有合法目标而失效，没有效果',
+    feed_fizzled_ability: '异能因没有合法目标而失效，没有效果',
     end_won_game_turn: '{player} 在第 {turn} 回合赢得游戏',
     end_lost_game_turn: '{player} 在第 {turn} 回合输掉游戏',
     end_won_game_turn_you: '你在第 {turn} 回合赢得游戏',

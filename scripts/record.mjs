@@ -1542,9 +1542,11 @@ function makeMadnessDriver() {
   }
 }
 
-// P4 — split second vía cheatSetup (§3.5): Sudden Shock en mano + 2 Montañas,
-// a la cara del rival. Captura: Shock en la pila (con split second nadie
-// puede responder; el SIM no podría de todos modos).
+// P4 — split second vía cheatSetup (§3.5): Sudden Shock + Lightning Bolt en
+// mano, 2 Montañas al campo, Shock a la cara del rival. Captura: Shock en la
+// pila Y prioridad nuestra (tras pasar el SIM), para probar que la UI NO
+// ofrece jugar el Bolt ni las tierras mientras split second está en la pila
+// (canPlayObjects vacío; el assert `hasSplitSecond` lo exige).
 function makeShockDriver() {
   return {
     name: 'shock',
@@ -1578,9 +1580,9 @@ function makeShockDriver() {
       }
       if (!this._cheated) {
         this._cheated = true
-        ctx.log('onSelect: cheatSetup (Shock en mano, 2 Montañas)')
+        ctx.log('onSelect: cheatSetup (Shock + Bolt en mano, 2 Montañas)')
         void ctx.cheatSetup({
-          hand: ['Sudden Shock'],
+          hand: ['Sudden Shock', 'Lightning Bolt'],
           battlefield: ['Mountain', 'Mountain'],
         })
         return
@@ -1602,7 +1604,9 @@ function makeShockDriver() {
       return undefined
     },
     captureWhen(gv) {
-      return Object.values(gv?.stack ?? {}).some((s) => /sudden shock/i.test(s?.name ?? ''))
+      const me = (gv?.players ?? []).find((p) => p?.controlled)
+      const onStack = Object.values(gv?.stack ?? {}).some((s) => /sudden shock/i.test(s?.name ?? ''))
+      return onStack && me?.hasPriority === true
     },
   }
 }
@@ -2472,9 +2476,17 @@ function makeTreasonDriver() {
       }
       return undefined
     },
+    // plan4 §3.10 (R parcial → R): antes se capturaba el robo (el Mystic en
+    // NUESTRO campo) sin probar el retorno de fin de turno. Ahora la captura
+    // es el RETORNO: hubo robo (estado interno del driver) y el Mystic vuelve
+    // al campo del SIM con Act of Treason en nuestro cementerio.
     captureWhen(gv) {
       const me = (gv.players ?? []).find((p) => p?.controlled)
-      return Object.values(me?.battlefield ?? {}).some((c) => /elvish mystic/i.test(c?.name ?? ''))
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const mine = Object.values(me?.battlefield ?? {}).some((c) => /elvish mystic/i.test(c?.name ?? ''))
+      const theirs = Object.values(sim?.battlefield ?? {}).some((c) => /elvish mystic/i.test(c?.name ?? ''))
+      if (mine) this._stole = true
+      return this._stole === true && !mine && theirs
     },
   }
 }

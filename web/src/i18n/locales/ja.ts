@@ -685,6 +685,8 @@ export const ja: TranslationSchema = {
     feed_won_match: '{player}がマッチに勝利',
     feed_won_match_you: 'あなたがマッチに勝利',
     feed_conceded: '{player}が投了',
+    feed_fizzled: '{card}は対象不適正のため効果なくスタックから取り除かれた',
+    feed_fizzled_ability: '能力は対象不適正のため効果なくスタックから取り除かれた',
     end_won_game_turn: '{player} はターン {turn} にゲームに勝利した',
     end_lost_game_turn: '{player} はターン {turn} にゲームに敗北した',
     end_won_game_turn_you: 'あなたはターン {turn} にゲームに勝利した',

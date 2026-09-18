@@ -682,6 +682,8 @@ export const ru: TranslationSchema = {
     feed_won_match: '{player} выигрывает матч',
     feed_won_match_you: 'Вы выиграли матч',
     feed_conceded: '{player} сдаётся',
+    feed_fizzled: '{card}: нет легальных целей, заклинание уходит из стека без эффекта',
+    feed_fizzled_ability: 'Способность: нет легальных целей, уходит из стека без эффекта',
     end_won_game_turn: '{player} выиграл партию на ходу {turn}',
     end_lost_game_turn: '{player} проиграл партию на ходу {turn}',
     end_won_game_turn_you: 'Вы выиграли партию на ходу {turn}',
