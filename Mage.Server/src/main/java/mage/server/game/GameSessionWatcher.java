@@ -122,6 +122,12 @@ public class GameSessionWatcher {
         return new GameEndView(game.getState(), game, playerId, table);
     }
 
+    public void endGameInfo(Table table) {
+        if (!killed) {
+            userManager.getUser(userId).ifPresent(user -> user.fireCallback(new ClientCallback(ClientCallbackMethod.END_GAME_INFO, game.getId(), getGameEndView(null, table))));
+        }
+    }
+
     public boolean isPlayer() {
         return isPlayer;
     }

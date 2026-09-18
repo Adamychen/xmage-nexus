@@ -896,7 +896,9 @@ public class GameController implements GameCallback {
                 for (final GameSessionPlayer gameSession : getGameSessions()) {
                     gameSession.endGameInfo(table);
                 }
-                // TODO: inform watchers about game end and who won
+                for (final GameSessionWatcher gameWatcher : getGameSessionWatchers()) {
+                    gameWatcher.endGameInfo(table);
+                }
             }
         }
     }
