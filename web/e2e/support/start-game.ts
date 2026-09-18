@@ -79,7 +79,10 @@ export async function login(page: Page, username: string, opts: LoginOptions = {
   await page.getByLabel(/^(Servidor XMage|XMage Server):/).fill(process.env.E2E_SERVER_HOST || (FAKE_MODE ? 'localhost' : 'beta.xmage.today'))
   await page.getByLabel(/^(Puerto|Port):/).fill(process.env.E2E_SERVER_PORT || '17171')
   await page.getByLabel(/Nombre de usuario|Usuario|Username/i).fill(username)
-  await page.getByLabel(/Contraseña|Password/i).fill('x')
+  // Contra beta el campo va deshabilitado (el servidor público no usa
+  // contraseña); rellenarlo a ciegas agota el timeout del test.
+  const password = page.getByLabel(/Contraseña|Password/i)
+  if (await password.isEnabled().catch(() => false)) await password.fill('x')
   const lobby = page.getByRole('heading', { name: /Lobby|XMage Nexus/i })
   const connect = page.getByRole('button', { name: /Conectar|Connect/i })
   await connect.click()

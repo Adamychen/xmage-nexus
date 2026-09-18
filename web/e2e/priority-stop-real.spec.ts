@@ -110,10 +110,31 @@ test(
       // se quedó esperando para siempre). Tampoco es una ventana de prioridad
       // -- el jugador puede no tener prioridad mientras está abierta -- así
       // que se resuelve ANTES de mirar `hasPriority`.
-      const discardTarget = page.locator('.hand-card.targetable, .card-grid-cell').first()
+      //
+      // `.last()` y no `.first()` (3ª corrida, causa raíz): la carta MÁS A LA
+      // IZQUIERDA del abanico queda tapada por la siguiente (solape real ~65%
+      // del ancho), así que el hit-test de Playwright nunca la alcanza; con
+      // actionTimeout=0 el click reintenta hasta agotar el timeout del test
+      // (443 reintentos medidos en el trace) y el descarte no se responde
+      // jamás. La última carta del DOM no tiene hermanos posteriores encima.
+      // Timeout acotado: un click que no llega no puede consumir la corrida
+      // entera; se salta esa iteración y el bucle reintenta.
+      const discardTarget = page.locator('.hand-card.targetable, .card-grid-cell').last()
       if (await discardTarget.isVisible().catch(() => false)) {
-        await discardTarget.click().catch(() => {})
-        await page.waitForTimeout(150)
+        await discardTarget.click({ timeout: 5_000 }).catch(() => {})
+        // El prompt desaparece en cuanto el server acepta el UUID; esperarlo
+        // (con tope) en vez de un sleep fijo acelera el bucle y evita contar
+        // como ventana una parada que ya se resolvió.
+        await expect
+          .poll(
+            () =>
+              page.evaluate(
+                () => ((globalThis as any).__mageStore?.getState?.()?.feedback?.method ?? null) as string | null,
+              ),
+            { timeout: 10_000 },
+          )
+          .not.toBe('GAME_TARGET')
+          .catch(() => {})
         continue
       }
 

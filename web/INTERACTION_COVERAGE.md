@@ -202,7 +202,7 @@ Lista actual (de `engine-view-gap.json`):
 ### G. Stack y prioridad
 | Mecánica | Implementado | Testeado | Ref | Última verif. |
 |---|---|---|---|---|
-| Pasar / Hold priority / Stop-until-* | ✅ | ✅ | `stack-priority.spec.ts` (+ `USER_REQUEST_DIALOG` para stop) | 2026-08-24 |
+| Pasar / Hold priority / Stop-until-* | ✅ | ✅ | `stack-priority.spec.ts` (+ `USER_REQUEST_DIALOG` para stop); **stops por fase en real**: `priority-stop-real.spec.ts` (`@priority-stop-real`, solo real) con `PhaseBar` → `updatePreferences` → `UserSkipPrioritySteps`/`HumanPlayer.checkPassStep` del engine: verifica que un paso marcado SIEMPRE retiene prioridad (3 paradas reales en "mi upkeep" con halt genuino y 0 auto-pases silenciosos; 3/3 corridas verdes 2026-09-18) | 2026-09-18 |
 | Pasar prioridad en nombre del jugador controlado (Mindslaver) | ✅ | ✅ | `state/control.ts` (`isControllingPriority`: `opponentHands` + `priorityPlayerName`/`activePlayerName`) habilita `canPass` y el botón (`game.controlling_turn` ×9); guarda en `maybeAutoPass` (`store.test.ts`); `ActionButton.control.test.tsx` + e2e `control.spec.ts` (`@control`, fake, click al botón envía `sendPlayerBoolean`) | 2026-09-17 |
 | Orden de triggers (`GAME_TARGET` PICK_ABILITY) | ✅ | ✅ | `TriggerOrderDialog` (Elegir + ⏫/⏬ por carta o texto + reset; `sendTriggerAutoOrder`; proxy String→UUID en ability) + `TriggerOrderDialog.test.tsx` + `trigger-order.spec.ts` (`@triggers`) | 2026-09-05 |
 | Auto-respuestas Sí/No (`GAME_ASK` texto exacto) | ✅ | ✅ | Solo-cliente: `autoAnswers.ts` + `prompts.ts handleGameAsk` (excluye mulligan/voting/starting) + checkbox `GenericDialog` + sección `GameMenu` ⋯; `autoAnswers.test.ts` + `prompts.autoAnswers.test.ts` + `auto-answers.spec.ts` (`@autoanswers`) | 2026-09-05 |
