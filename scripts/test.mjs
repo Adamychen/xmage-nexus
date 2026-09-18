@@ -188,8 +188,9 @@ async function main() {
             break
           }
         }
-        // el e2e por defecto corre en FAKE (FixtureServer) en puerto 8789.
-        // No se toca el proxy (puerto 8787) — ambos pueden correr simultáneamente.
+        // el e2e por defecto corre en FAKE (FixtureServer en puerto dinámico,
+        // un servidor por test, en paralelo). No se toca el proxy (8787) —
+        // ambos pueden correr simultáneamente.
         res = run(binName('npx'), ['playwright', 'test'], { cwd: WEB_DIR, timeoutMs: 3_600_000 })
         break
       }

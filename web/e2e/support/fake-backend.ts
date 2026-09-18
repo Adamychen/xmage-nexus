@@ -2,24 +2,30 @@
  * Arranque explícito del FixtureServer para los specs de partida humana
  * (spells/targeting/combat): cada test crea SU PROPIO servidor con el escenario
  * del guion y lo para al terminar (partida independiente). En modo real es no-op
- * (usa el stack). Usa puerto 8789 (dedicado). El escenario se construye UNA vez
- * por test, así que la página y el HumanHelper WS comparten el mismo estado
- * (el FakeServer crea el escenario por servidor, no por conexión).
+ * (usa el stack). Puerto DINÁMICO (el SO elige uno libre) publicado con
+ * setFakePort para que la página y el HumanHelper WS apunten al mismo. El
+ * escenario se construye UNA vez por test, así que la página y el HumanHelper WS
+ * comparten el mismo estado (el FakeServer crea el escenario por servidor, no
+ * por conexión).
  */
 
 import { FakeServer, type Scenario } from '../../fixtures/fake'
-import { BACKEND_PORT, FAKE_MODE } from '../dual'
+import { FAKE_MODE } from '../dual'
 import { getFakePort, setFakePort } from './fake-port'
 
 export async function withFakeServer<T>(makeScenario: () => Scenario, run: () => Promise<T>): Promise<T> {
   if (!FAKE_MODE) return run()
   const server = await FakeServer.start(0, makeScenario)
+  const previousPort = getFakePort()
   setFakePort(server.port)
   try {
     return await run()
   } finally {
-    await server.stop()
-    setFakePort(BACKEND_PORT)
+    try {
+      await server.stop()
+    } finally {
+      setFakePort(previousPort)
+    }
   }
 }
 

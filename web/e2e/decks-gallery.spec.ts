@@ -47,13 +47,21 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ })).toBeVisible()
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('2')
       const sideStrip = page.locator('.deck-sideboard-section .arena-card-strip').first()
+      // dispatchEvent y no click() geométrico: tras el swap la lista re-renderiza
+      // y con 4 workers el clic por coordenadas perdía el hover (element not
+      // stable / no visible) — flake visto 2026-09-18. El hover + visible sigue
+      // verificando que el reveal por hover funciona.
+      const sideSwap = sideStrip.locator('.strip-btn.swap')
       await sideStrip.hover()
-      await sideStrip.locator('.strip-btn.swap').click()
+      await expect(sideSwap).toBeVisible()
+      await sideSwap.dispatchEvent('click')
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('1')
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ })).toBeVisible()
       const mainRebStrip = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Red Elemental Blast|Ráfaga elemental roja/ }).first()
+      const mainSwap = mainRebStrip.locator('.strip-btn.swap')
       await mainRebStrip.hover()
-      await mainRebStrip.locator('.strip-btn.swap').click()
+      await expect(mainSwap).toBeVisible()
+      await mainSwap.dispatchEvent('click')
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('2')
 
       // Drag & drop: move one Mountain main → sideboard and back via HTML5 DnD

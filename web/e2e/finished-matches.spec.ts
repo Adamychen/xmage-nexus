@@ -3,7 +3,8 @@ import { cleanupUser } from './cleanup'
 import { login } from './support/start-game'
 import { FakeServer } from '../fixtures/fake'
 import { finishedMatchesScenario } from '../fixtures/scenarios/finishedMatches'
-import { BACKEND_PORT, FAKE_MODE } from './dual'
+import { FAKE_MODE } from './dual'
+import { getFakePort, setFakePort } from './support/fake-port'
 
 // Regresión 2026-09-14: el panel del Historial desbordaba el `.lobby-main`
 // (overflow:hidden) y la lista no se podía desplazar.
@@ -15,9 +16,18 @@ const historyTest = test.extend<{ historyServer: FakeServer | null }>({
         await use(null)
         return
       }
-      const server = await FakeServer.start(BACKEND_PORT, () => finishedMatchesScenario())
-      await use(server)
-      await server.stop()
+      const server = await FakeServer.start(0, () => finishedMatchesScenario())
+      const previousPort = getFakePort()
+      setFakePort(server.port)
+      try {
+        await use(server)
+      } finally {
+        try {
+          await server.stop()
+        } finally {
+          setFakePort(previousPort)
+        }
+      }
     },
     { scope: 'test' },
   ],

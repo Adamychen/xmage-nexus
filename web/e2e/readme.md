@@ -4,8 +4,8 @@ Browser test suite for the web client with **dual backend support**: the SAME te
 
 ## Modes
 
-- `npm run test:e2e` / `test:e2e:fake` — **fake**: FixtureServer on dedicated port (8789), declarative scenarios, no Java or real proxy needed. Ideal for the daily development loop.
-- `E2E_BACKEND=real npm run test:e2e:real` — **real**: runs against the full stack (`node scripts/ctl.mjs start`). Validates protocol contracts against the authoritative XMage server.
+- `npm run test:e2e` / `test:e2e:fake` — **fake**: FixtureServer on a dynamic port (one server per test, `FakeServer.start(0)` + `setFakePort`), declarative scenarios, no Java or real proxy needed. Parallel by default (`fullyParallel`, up to 4 workers, override with `E2E_WORKERS`). Ideal for the daily development loop.
+- `E2E_BACKEND=real npm run test:e2e:real` — **real**: runs against the full stack (`node scripts/ctl.mjs start`), 1 worker serial. Validates protocol contracts against the authoritative XMage server.
 
 ## Subsets by Domain
 

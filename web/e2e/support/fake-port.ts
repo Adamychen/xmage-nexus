@@ -1,11 +1,9 @@
 /**
- * Puerto del FixtureServer para los specs que arrancan su PROPIO servidor por
- * test (withFakeServer). Es dinámico: cada test elige un puerto libre para
- * evitar colisiones en TIME_WAIT entre specs fake secuenciales (la causa de las
- * cascadas tipo "reveal falla porque missing-prompts no liberó el 8789").
- * En modo real se ignora (el proxy va por 8787). El default 8789 preserva el
- * comportamiento de los specs que usan el servidor compartido por worker
- * (fixtures.ts, que sigue en 8789 fijo).
+ * Puerto del FixtureServer para los tests que arrancan su PROPIO servidor.
+ * Es dinámico: cada test elige un puerto libre (FakeServer.start(0)) para
+ * permitir el e2e fake en paralelo y evitar colisiones en TIME_WAIT entre specs.
+ * En modo real se ignora (el proxy va por 8787). El default 8789 es solo el
+ * fallback para los specs que no arrancan servidor (UI pura, sin WS).
  */
 
 let fakePort = 8789

@@ -1,12 +1,20 @@
+import { cpus } from 'node:os'
 import { defineConfig } from '@playwright/test'
 import { KNOWN_BROKEN_TITLES } from './e2e/known-broken'
 
 const FAKE_MODE = process.env.E2E_BACKEND !== 'real'
 const INCLUDE_KNOWN_BROKEN = process.env.E2E_INCLUDE_KNOWN_BROKEN === '1'
 
+// fake: cada FixtureServer arranca en puerto dinámico (ver e2e/fixtures.ts y
+// e2e/support/fake-backend.ts), así que los tests son independientes entre sí y
+// se pueden repartir entre workers. real: 1 worker serial (el stack es único).
+const E2E_WORKERS =
+  Number(process.env.E2E_WORKERS) || Math.max(1, Math.min(4, cpus().length - 1))
+
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-// Puerto DEDICADO del e2e fake (misma lección que el 8789 del FixtureServer):
+// Puerto DEDICADO del dev server del e2e fake (misma lección que el puerto
+// propio del FixtureServer):
 // si el dev server del usuario o el vite del stack ocupan 5173, con
 // reuseExistingServer Playwright reutiliza ESE servidor y los specs corren
 // contra su gráfico de módulos (HMR stale, UI vieja) fallando de forma
@@ -29,8 +37,8 @@ function parseViewport(): { width: number; height: number } {
 export default defineConfig({
   testDir: './e2e',
   timeout: 120_000,
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: FAKE_MODE,
+  workers: FAKE_MODE ? E2E_WORKERS : 1,
   retries: 0,
   // fake: excluye el known-broken (triage pendiente, e2e/known-broken.ts) salvo
   // inclusión explícita para triage/reparación. Lista vacía = sin exclusión

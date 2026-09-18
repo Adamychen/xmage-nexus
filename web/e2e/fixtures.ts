@@ -2,7 +2,9 @@
  * Fixtures de Playwright con el backend dual.
  * - fake: el FixtureServer se arranca con `{ fakeServer }` (full-flow usa el
  *   fixture; los specs de partida humana lo arrancan explícitamente con su
- *   escenario, `FakeServer.start(port, escenario())`). Usa puerto 8789 (dedicado).
+ *   escenario, `FakeServer.start(0, escenario())`). Puerto DINÁMICO (el SO
+ *   asigna uno libre) y se publica con setFakePort para que la página y el
+ *   helper WS naveguen al mismo; así el e2e fake corre en paralelo.
  * - real: fakeServer es null (usa el stack: server + proxy + vite, puerto 8787).
  */
 
@@ -12,7 +14,8 @@ import { fileURLToPath } from 'node:url'
 import { test as base, expect as baseExpect } from '@playwright/test'
 import { FakeServer } from '../fixtures/fake'
 import { fullFlowScenario } from '../fixtures/scenarios/fullFlow'
-import { BACKEND_PORT, FAKE_MODE } from './dual'
+import { FAKE_MODE } from './dual'
+import { getFakePort, setFakePort } from './support/fake-port'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
@@ -25,15 +28,21 @@ export const test = base.extend<{ fakeServer: FakeServer | null; autoShot: void 
       }
       let server: FakeServer
       try {
-        server = await FakeServer.start(BACKEND_PORT, () => fullFlowScenario())
+        server = await FakeServer.start(0, () => fullFlowScenario())
       } catch (err) {
-        throw new Error(
-          `FixtureServer no pudo arrancar en el puerto ${BACKEND_PORT}: ${(err as Error).message}. ` +
-            `Asegúrate de que el puerto ${BACKEND_PORT} no esté en uso.`,
-        )
+        throw new Error(`FixtureServer no pudo arrancar (puerto dinámico): ${(err as Error).message}`)
       }
-      await use(server)
-      await server.stop()
+      const previousPort = getFakePort()
+      setFakePort(server.port)
+      try {
+        await use(server)
+      } finally {
+        try {
+          await server.stop()
+        } finally {
+          setFakePort(previousPort)
+        }
+      }
     },
     { scope: 'test' },
   ],

@@ -4,7 +4,8 @@ import { cleanupUser } from './cleanup'
 import { login } from './support/start-game'
 import { FakeServer } from '../fixtures/fake'
 import { chatScenario } from '../fixtures/scenarios/chat'
-import { BACKEND_PORT, FAKE_MODE } from './dual'
+import { FAKE_MODE } from './dual'
+import { getFakePort, setFakePort } from './support/fake-port'
 
 // Override the default fixture to use the chat scenario
 const chatTest = test.extend<{ chatServer: FakeServer | null }>({
@@ -14,9 +15,18 @@ const chatTest = test.extend<{ chatServer: FakeServer | null }>({
         await use(null)
         return
       }
-      const server = await FakeServer.start(BACKEND_PORT, () => chatScenario())
-      await use(server)
-      await server.stop()
+      const server = await FakeServer.start(0, () => chatScenario())
+      const previousPort = getFakePort()
+      setFakePort(server.port)
+      try {
+        await use(server)
+      } finally {
+        try {
+          await server.stop()
+        } finally {
+          setFakePort(previousPort)
+        }
+      }
     },
     { scope: 'test' },
   ],
