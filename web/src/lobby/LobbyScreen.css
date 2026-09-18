@@ -1804,7 +1804,7 @@ html:lang(zh) .tables-list {
   position: absolute;
   bottom: 14px;
   right: 20px;
-  z-index: 50;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

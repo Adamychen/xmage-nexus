@@ -238,11 +238,11 @@ test.describe('Decks Gallery', () => {
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
-      await page.getByRole('button', { name: /Importar mazo desde texto/i }).click()
-      await expect(page.locator('.decks-import-dialog')).toBeVisible()
-      await page.locator('.decks-import-dialog input').first().fill('Mi Test DCK')
-      await page.locator('.decks-import-dialog textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
-      await page.locator('.decks-import-dialog').getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.decks-import-cta').click()
+      await expect(page.locator('.deck-import-modal')).toBeVisible()
+      await page.locator('.import-name-input').fill('Mi Test DCK')
+      await page.locator('.deck-import-textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
+      await page.locator('.import-submit-btn').click()
       await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })
@@ -276,9 +276,12 @@ test.describe('Decks Gallery', () => {
       await page.locator('.inspector-close-btn').click()
       await expect(page.locator('.deck-inspector-modal')).not.toBeVisible()
 
-      // Switch to URL import sub-tab
-      await page.getByRole('button', { name: /Importar Mazo/i }).click()
-      await expect(page.locator('.browser-url-import-view')).toBeVisible()
+      // Import por URL: entrada unificada del header (el sub-tab del browser
+      // se retiró con ImportDeckDialog)
+      await page.locator('.decks-import-cta').click()
+      await expect(page.locator('.deck-import-modal')).toBeVisible()
+      await page.locator('.deck-import-textarea').fill('https://moxfield.com/decks/abc123')
+      await expect(page.locator('.import-badge.success')).toBeVisible()
     })
   })
 
