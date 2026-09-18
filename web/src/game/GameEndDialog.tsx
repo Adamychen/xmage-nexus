@@ -36,7 +36,7 @@ export default function GameEndDialog() {
 
   let winnerName: string | null = null
   const rawEndInfo = end.gameInfo || end.matchInfo || ''
-  const wonMatch = rawEndInfo.match(/(?:Player\s+)?(.+?)\s+(?:has won the game|has won the match|won the match|won the game|is the winner|ha ganado)/i)
+  const wonMatch = rawEndInfo.match(/(?:Player\s+)?(.+?)\s+(?:has won the game|has won the match|have won the game|have won the match|won the match|won the game|is the winner|ha ganado)/i)
   if (wonMatch) {
     winnerName = wonMatch[1].trim()
     if (/^you$/i.test(winnerName)) {

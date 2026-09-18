@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { awaitImageUrl, cardName } from '../cards/cardImages'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
@@ -13,7 +13,11 @@ import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { useSettings } from '../state/selectors'
 import { getSleeveDef } from '../appearance/sleeves'
+import { perfMark } from '../system/perfProbe'
 import './CardSlot.css'
+
+/** Cota del acuse optimista si el eco del servidor no llega nunca. */
+const PENDING_ACK_MS = 3000
 
 interface CardSlotProps {
   cardId?: string
@@ -59,6 +63,8 @@ export default function CardSlot({
   const settings = useSettings()
   const sleeve = getSleeveDef(settings.sleeveId)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
+  const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
+  const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
   const [entering, setEntering] = useState(false)
@@ -68,6 +74,30 @@ export default function CardSlot({
   flightStateRef.current = flightState
 
   const effectiveId = cardId || (card as any).id
+
+  const clearPending = useCallback(() => {
+    if (pendingTimerRef.current) {
+      clearTimeout(pendingTimerRef.current)
+      pendingTimerRef.current = null
+    }
+    setPendingAck(null)
+  }, [])
+
+  // GAME_UPDATE/GAME_SELECT: el GameView se refresca con objetos nuevos, así que
+  // un `card` nuevo es el eco del servidor y el acuse optimista ya sobra.
+  useEffect(() => {
+    clearPending()
+  }, [card, clearPending])
+
+  // Reconciliación con el eco sin vista nueva (chosenTargets/playableIds).
+  useEffect(() => {
+    if (pendingAck === 'chosen-pending' && (isChosen || !isTarget)) clearPending()
+    else if (pendingAck === 'pending' && !isPlayable && !isChosen && !attacking && !blocking) clearPending()
+  }, [pendingAck, isChosen, isTarget, isPlayable, attacking, blocking, clearPending])
+
+  useEffect(() => () => {
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
+  }, [])
 
   useLayoutEffect(() => {
     const el = slotRef.current
@@ -174,6 +204,17 @@ export default function CardSlot({
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
 
   const handleClick = onClick ? () => {
+    const ackKind = isTarget ? 'chosen-pending' : 'pending'
+    // No reenviar el mismo objetivo mientras el eco no lo confirme; el resto
+    // de selecciones (jugable/combate) pueden re-clicarse (toggle del servidor).
+    if (pendingAck === 'chosen-pending' && !isChosen) return
+    setPendingAck(ackKind)
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
+    pendingTimerRef.current = setTimeout(() => {
+      pendingTimerRef.current = null
+      setPendingAck(null)
+    }, PENDING_ACK_MS)
+    perfMark('ack', ackKind, undefined, { cardId: String(effectiveId ?? '') })
     soundManager.play('tap', 'game')
     onClick()
   } : undefined
@@ -211,6 +252,8 @@ export default function CardSlot({
         isTarget ? 'targetable' : '',
         isPlayable ? 'playable' : '',
         isChosen ? 'chosen' : '',
+        pendingAck === 'pending' ? 'is-pending' : '',
+        pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
         faceDown ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         onClick ? 'clickable' : '',
@@ -334,7 +377,7 @@ export default function CardSlot({
       )}
 
       {hasSummoningSickness && (
-        <div className="sickness-badge" title={t('game', 'tap_mana')}>
+        <div className="sickness-badge" title={t('game', 'summoning_sickness')} aria-label={t('game', 'summoning_sickness')}>
           <Icon name="timer" size={11} />
         </div>
       )}

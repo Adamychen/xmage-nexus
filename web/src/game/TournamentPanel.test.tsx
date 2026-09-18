@@ -91,6 +91,13 @@ describe('TournamentPanel — pill arrastrable', () => {
     expect(screen.getByTestId('bracket-stub')).toBeDefined()
   })
 
+  it('traduce el estado del torneo en el pill', () => {
+    showMini()
+    const mini = screen.getByTestId('tournament-panel-mini') as HTMLElement
+    expect(mini.textContent).toContain('En draft')
+    expect(mini.textContent).not.toContain('Drafting')
+  })
+
   it('el drag mueve el pill, persiste y no abre el bracket', () => {
     showMini()
     const mini = screen.getByTestId('tournament-panel-mini') as HTMLElement

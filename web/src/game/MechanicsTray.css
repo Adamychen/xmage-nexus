@@ -549,3 +549,11 @@
   color: #ffd070;
   border: 1px solid rgba(255, 208, 112, 0.4);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .mechanic-tab-btn,
+  .ring-level-card,
+  .token-art-img {
+    transition: none;
+  }
+}

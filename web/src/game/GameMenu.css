@@ -182,3 +182,10 @@
 .game-menu-auto-delete:hover {
   color: #f09696;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-menu-btn,
+  .game-menu-item {
+    transition: none;
+  }
+}

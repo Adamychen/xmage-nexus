@@ -366,6 +366,22 @@ export interface TranslationSchema {
     tournament_round_label: string
     bracket_title: string
     bracket_no_rounds: string
+    bracket_scroll_right: string
+    table_state_waiting: string
+    table_state_ready_to_start: string
+    table_state_starting: string
+    table_state_drafting: string
+    table_state_constructing: string
+    table_state_dueling: string
+    table_state_sideboarding: string
+    table_state_active: string
+    table_state_completed: string
+    table_state_finished: string
+    table_state_eliminated: string
+    table_state_quit: string
+    leaderboard_col_points: string
+    leaderboard_col_results: string
+    standings_quit_badge: string
     standings_title: string
     tournament_construction_hint: string
     tournament_round_single: string
@@ -625,6 +641,7 @@ export interface TranslationSchema {
     draw_card: string
     untap: string
     tap_mana: string
+    summoning_sickness: string
     hold_priority: string
     stop_turn: string
     help_wiki: string
@@ -696,6 +713,10 @@ export interface TranslationSchema {
     end_lost_game_turn: string
     end_won_game_turn_you: string
     end_lost_game_turn_you: string
+    end_won_game: string
+    end_lost_game: string
+    end_won_game_you: string
+    end_lost_game_you: string
     chat_empty: string
     chat_placeholder: string
     chat_send: string
@@ -717,6 +738,10 @@ export interface TranslationSchema {
     targeting_chosen: string
     targeting_finish: string
     targeting_cancel: string
+    vote_for_permanent: string
+    vote_for_creature: string
+    vote_for_artifact: string
+    vote_for_player: string
     mana_title: string
     mana_symbol_title: string
     mana_hint: string

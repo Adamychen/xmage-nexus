@@ -100,3 +100,9 @@
   font-size: 0.688rem;
   color: #7a82a8;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-ability-btn {
+    transition: none;
+  }
+}

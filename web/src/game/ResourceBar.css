@@ -387,3 +387,11 @@
   margin-left: 1px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .resource-stack,
+  .clickable-pile,
+  .resource-chip {
+    transition: none;
+  }
+}
+

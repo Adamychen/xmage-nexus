@@ -363,3 +363,13 @@
   display: flex;
   justify-content: flex-end;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-close-btn,
+  .wiki-tab-btn,
+  .wiki-search-input,
+  .wiki-pill,
+  .wiki-kw-card {
+    transition: none;
+  }
+}

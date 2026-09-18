@@ -57,6 +57,27 @@ describe('SideboardScreen', () => {
     expect(container.textContent).toContain('Test Deck')
   })
 
+  it('el Modal compartido mueve el foco al primer control y atrapa Tab', () => {
+    setState({ sideboardScreen: makeScreen() })
+    const { container } = render(<SideboardScreen />)
+    const dialog = container.querySelector('.sideboard-screen') as HTMLElement
+    expect(dialog.getAttribute('role')).toBe('dialog')
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    const active = document.activeElement as HTMLElement
+    expect(dialog.contains(active)).toBe(true)
+    expect(active.tagName).toBe('BUTTON')
+    const focusables = [...dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )]
+    expect(focusables.length).toBeGreaterThan(1)
+    const last = focusables[focusables.length - 1]
+    last.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(focusables[0])
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(last)
+  })
+
   it('shows card names in maindeck and sideboard columns', () => {
     setState({ sideboardScreen: makeScreen() })
     const { container } = render(<SideboardScreen />)

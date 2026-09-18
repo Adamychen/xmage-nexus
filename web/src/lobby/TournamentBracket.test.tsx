@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import TournamentBracket from './TournamentBracket'
 import ConfirmHost from '../ui/ConfirmHost'
+import { setLanguage } from '../i18n'
 import type { TournamentView, TournamentPlayerView, RoundView, TournamentGameView } from '../net/types'
 
 function sampleTournamentView(overrides: Partial<TournamentView> = {}): TournamentView {
@@ -51,7 +52,57 @@ describe('TournamentBracket', () => {
     render(<TournamentBracket view={view} tournamentId="t-1" />)
     expect(screen.getByTestId('tournament-name').textContent).toBe('Commander Clash')
     expect(screen.getByTestId('tournament-type').textContent).toBe('Swiss')
-    expect(screen.getByTestId('tournament-state').textContent).toBe('Dueling')
+    expect(screen.getByTestId('tournament-state').textContent).toBe('En partida')
+  })
+
+  it('traduce los estados del torneo y de cada partida', () => {
+    render(<TournamentBracket view={sampleTournamentView()} />)
+    expect(screen.getByTestId('tournament-state').textContent).toBe('En partida')
+    const gameStates = screen.getAllByTestId('bracket-game-state').map((el) => el.textContent)
+    expect(gameStates).toContain('Finalizada')
+    expect(gameStates).toContain('En partida')
+    expect(gameStates).toContain('Lista para empezar')
+  })
+
+  it('traduce el estado de cada jugador en la clasificación', () => {
+    render(<TournamentBracket view={sampleTournamentView()} />)
+    const states = screen.getAllByTestId('standings-state').map((el) => el.textContent)
+    expect(states).toContain('En partida')
+    expect(states).toContain('Eliminado')
+  })
+
+  it('conserva el sufijo del servidor (duración / Winner) al traducir el estado', () => {
+    const view = sampleTournamentView({
+      tournamentState: 'Finished',
+      rounds: [{
+        games: [{ roundNum: 1, state: 'Finished (0:00:01)', players: 'a vs b', result: '2-0' }] as TournamentGameView[],
+      }],
+      players: [{ name: 'alice', state: 'Finished (Winner)', points: 3, results: '2-0', history: 'W', quit: false }],
+    })
+    render(<TournamentBracket view={view} />)
+    expect(screen.getByTestId('tournament-state').textContent).toBe('Finalizada')
+    expect(screen.getByTestId('bracket-game-state').textContent).toBe('Finalizada (0:00:01)')
+    expect(screen.getByTestId('standings-state').textContent).toBe('Finalizada (Winner)')
+  })
+
+  it('no duplica los encabezados de la clasificación en en y ru (sin .replace)', () => {
+    const headersFor = (lang: 'en' | 'ru') => {
+      setLanguage(lang)
+      const { container, unmount } = render(<TournamentBracket view={sampleTournamentView()} />)
+      const texts = Array.from(container.querySelectorAll('thead th')).map((el) => el.textContent ?? '')
+      unmount()
+      return texts
+    }
+    const en = headersFor('en')
+    expect(new Set(en).size).toBe(en.length)
+    expect(en).toContain('Results')
+    expect(en).toContain('History')
+    expect(en).toContain('Pts')
+    const ru = headersFor('ru')
+    expect(new Set(ru).size).toBe(ru.length)
+    expect(ru).toContain('Результаты')
+    expect(ru).toContain('История')
+    setLanguage('es')
   })
 
   it('renders rounds as bracket columns with games', () => {
@@ -199,6 +250,31 @@ describe('TournamentBracket', () => {
     const dueling = sampleTournamentView({ tournamentState: 'Dueling' })
     render(<TournamentBracket view={dueling} />)
     expect(screen.getByTestId('tournament-construction').textContent).toContain('10m')
+  })
+
+  it('muestra y oculta el chevron de scroll segun el desbordamiento a la derecha', async () => {
+    const view = sampleTournamentView()
+    render(<TournamentBracket view={view} />)
+    const columns = screen.getByTestId('bracket-columns') as HTMLElement
+    Object.defineProperty(columns, 'scrollWidth', { configurable: true, value: 1000 })
+    Object.defineProperty(columns, 'clientWidth', { configurable: true, value: 300 })
+    Object.defineProperty(columns, 'scrollLeft', { configurable: true, writable: true, value: 0 })
+    const scrollBy = vi.fn()
+    ;(columns as HTMLElement & { scrollBy: typeof scrollBy }).scrollBy = scrollBy
+
+    fireEvent.scroll(columns)
+    const chevron = screen.getByTestId('bracket-scroll-right')
+    expect(chevron.getAttribute('aria-label')).toBe('Desplazar rondas')
+    fireEvent.click(chevron)
+    expect(scrollBy).toHaveBeenCalledWith({ left: 240, behavior: 'smooth' })
+
+    ;(columns as HTMLElement & { scrollLeft: number }).scrollLeft = 700
+    fireEvent.scroll(columns)
+    await waitFor(() => expect(screen.queryByTestId('bracket-scroll-right')).toBeNull())
+
+    ;(columns as HTMLElement & { scrollLeft: number }).scrollLeft = 0
+    fireEvent.scroll(columns)
+    await waitFor(() => expect(screen.queryByTestId('bracket-scroll-right')).not.toBeNull())
   })
 })
 

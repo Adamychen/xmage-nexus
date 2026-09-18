@@ -83,3 +83,9 @@
     align-self: center;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .pile-choose-btn {
+    transition: none;
+  }
+}

@@ -113,6 +113,46 @@ describe('ChatBox component', () => {
     expect(getByText(/Bob aún no está listo/i)).not.toBeNull()
   })
 
+  it('un marcador a mitad de mensaje NO se formatea como aviso de sistema', () => {
+    setState({
+      chatMessages: [
+        { chatId: 'chat-123', username: 'Alice', message: 'hola [NEXUS_READY] Alice' },
+      ],
+      roomChatId: 'chat-123',
+    })
+    const { getByText, queryByText } = render(<ChatBox />)
+
+    expect(getByText('Alice:')).not.toBeNull()
+    expect(getByText('hola [NEXUS_READY] Alice')).not.toBeNull()
+    expect(queryByText(/está listo para jugar/i)).toBeNull()
+  })
+
+  it('acepta el marcador anclado con espacios dentro de los corchetes', () => {
+    setState({
+      chatMessages: [
+        { chatId: 'chat-123', username: 'Alice', message: '[ NEXUS_READY ] Alice' },
+      ],
+      roomChatId: 'chat-123',
+    })
+    const { getByText } = render(<ChatBox />)
+
+    expect(getByText(/Alice está listo para jugar\./i)).not.toBeNull()
+  })
+
+  it('un marcador con usuario embebido distinto del remitente no es aviso de sistema (anti-spoof)', () => {
+    setState({
+      chatMessages: [
+        { chatId: 'chat-123', username: 'Bob', message: '[NEXUS_NOT_READY] Alice' },
+      ],
+      roomChatId: 'chat-123',
+    })
+    const { getByText, queryByText } = render(<ChatBox />)
+
+    expect(getByText('Bob:')).not.toBeNull()
+    expect(getByText('[NEXUS_NOT_READY] Alice')).not.toBeNull()
+    expect(queryByText(/aún no está listo/i)).toBeNull()
+  })
+
   it('muestra la hora de cada mensaje y resalta los propios (U5-2/U5-4)', () => {
     setState({
       conn: { username: 'Alice' } as never,

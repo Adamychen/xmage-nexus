@@ -110,3 +110,13 @@ html.fx-off .phase-badge.active {
   background: #ffd070;
   box-shadow: 0 0 4px #ffd070;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-badge {
+    transition: none;
+  }
+
+  .phase-badge.active {
+    animation: none;
+  }
+}

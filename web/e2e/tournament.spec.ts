@@ -56,7 +56,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
     const panel = page.locator('[data-testid="tournament-panel"]').first()
     await expect(panel).toBeVisible({ timeout: 10_000 })
     await expect(panel.locator('[data-testid="tournament-name"]').first()).toContainText('Commander Clash')
-    await expect(panel.locator('[data-testid="tournament-state"]').first()).toContainText('Dueling')
+    await expect(panel.locator('[data-testid="tournament-state"]').first()).toContainText(/Dueling|En partida/)
     await expect(panel.locator('[data-testid="bracket-round"]').first()).toBeVisible()
     await expect(panel.locator('[data-testid="standings-row"]').first()).toBeVisible()
     await expect(panel.locator('[data-testid="standings-quit"]').first()).toBeVisible()

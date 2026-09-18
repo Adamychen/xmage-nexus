@@ -137,6 +137,29 @@ describe('i18n system', () => {
     expect(t('lobby.invite_searching', { current: 1, total: 10 })).toContain('10')
   })
 
+  it('traduce las pestañas Log/Chat en ru/ja/zhs (préstamo aceptado en los latinos)', () => {
+    setLanguage('ru')
+    expect(t('game.tab_log')).toBe('Лог')
+    expect(t('game.tab_chat')).toBe('Чат')
+    setLanguage('ja')
+    expect(t('game.tab_log')).toBe('ログ')
+    expect(t('game.tab_chat')).toBe('チャット')
+    setLanguage('zhs')
+    expect(t('game.tab_log')).toBe('日志')
+    expect(t('game.tab_chat')).toBe('聊天')
+  })
+
+  it('expone las claves de fin de partida sin turno y la de enfermedad de invocación', () => {
+    setLanguage('es')
+    expect(t('game.end_won_game', { player: 'Ana' })).toBe('Ana gana la partida')
+    expect(t('game.end_lost_game', { player: 'Ana' })).toBe('Ana pierde la partida')
+    expect(t('game.end_won_game_you')).toBe('Has ganado la partida')
+    expect(t('game.end_lost_game_you')).toBe('Has perdido la partida')
+    expect(t('game.summoning_sickness')).toContain('{T}')
+    setLanguage('en')
+    expect(t('game.summoning_sickness')).toContain('{T}')
+  })
+
   it('falls back to English for the new keys when missing in the active language', () => {
     const backup = ja.game.follow_game
     try {

@@ -38,6 +38,7 @@ import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
 import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
 import { isControllingPriority } from '../state/control'
+import { perfMark } from '../system/perfProbe'
 import './GameScreen.css'
 import './TournamentPanel.css'
 
@@ -112,14 +113,28 @@ export default function GameScreen() {
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
 
+  // Anti doble-envío del mismo objetivo mientras no llega el eco: el CardSlot
+  // cubre las cartas; este ref cubre el resto de superficies (headers, pila...).
+  const pendingTargetsRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    pendingTargetsRef.current.clear()
+  }, [game, feedback])
+
   const onTargetClick = async (id: string) => {
     if (!gameId) return
+    if (pendingTargetsRef.current.has(id)) return
+    pendingTargetsRef.current.add(id)
+    perfMark('click', 'target', undefined, { id })
     const result = await cmds.sendPlayerUUID(id, gameId)
-    if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_target'))
+    if (!result.ok) {
+      pendingTargetsRef.current.delete(id)
+      setStoreError(result.error ?? t('errors', 'send_failed_target'))
+    }
   }
 
   const onPlayableClick = async (id: string, e?: React.MouseEvent) => {
     if (!gameId) return
+    perfMark('click', feedback?.mode === 'mana' ? 'mana' : 'playable', undefined, { id })
     if (e?.ctrlKey || e?.metaKey || e?.shiftKey) {
       await cmds.sendPlayerAction('HOLD_PRIORITY', gameId)
     }
@@ -131,6 +146,7 @@ export default function GameScreen() {
 
   const onCombatClick = async (id: string) => {
     if (!gameId) return
+    perfMark('click', 'combat', undefined, { id })
     const result = await cmds.sendPlayerUUID(id, gameId)
     if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_combat'))
   }
@@ -154,7 +170,9 @@ export default function GameScreen() {
 
   const onResolveClick = useCallback(async () => {
     if (!gameId || busy) return
+    perfMark('click', 'pass')
     setBusy(true)
+    perfMark('ack', 'pass')
     try {
       const result = await cmds.sendPlayerBoolean(false, gameId)
       if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
@@ -181,7 +199,9 @@ export default function GameScreen() {
   // Sin F6: el propio desktop lo tiene desactivado ("Skip action don't used").
   const sendSkip = useCallback(async (action: string) => {
     if (!gameId || busy) return
+    perfMark('click', 'skip', undefined, { action })
     setBusy(true)
+    perfMark('ack', 'skip', undefined, { action })
     try {
       const result = await cmds.sendPlayerAction(action, gameId)
       if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))

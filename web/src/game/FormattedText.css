@@ -29,6 +29,12 @@
   filter: brightness(1.2);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .formatted-colored {
+    transition: none;
+  }
+}
+
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;

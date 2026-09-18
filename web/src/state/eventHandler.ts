@@ -24,6 +24,7 @@ import { handleReplayGame, handleReplayUpdate, handleReplayDone } from './events
 import { handleViewLimitedDeck, handleViewSideboard } from './events/views'
 import { notifyStagingRoster } from './stagingSounds'
 import { maybeRunFidelityCheck } from '../system/fidelity'
+import { perfMark } from '../system/perfProbe'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -77,6 +78,7 @@ export function handleMessage(msg: ProxyMessage) {
       break
     }
     case 'event':
+      perfMark('event', msg.method, undefined, { gameId: msg.objectId ?? null })
       handleEvent(msg.method, msg.objectId ?? null, msg.data)
       break
   }

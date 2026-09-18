@@ -9,14 +9,38 @@ import type { CardView, ChatMessageEvent } from '../net/types'
 import { useTranslation, getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import './ChatBox.css'
 
+export interface ReadyMarker {
+  ready: boolean
+  user?: string
+}
+
+/**
+ * El marcador de listo SOLO cuenta anclado al inicio del mensaje (variantes de
+ * mayúsculas y espacios dentro de los corchetes incluidas). Un texto cualquiera
+ * que contenga el tag a mitad NO es una señal — mismo criterio en
+ * `SpectatorStagingScreen` y en `ChatBox`.
+ */
+export function parseReadyMarker(text: string): ReadyMarker | null {
+  const match = /^\s*\[\s*NEXUS_(NOT_)?READY\s*\]\s*(.*)$/i.exec(text)
+  if (!match) return null
+  const user = match[2].trim()
+  return { ready: !match[1], user: user || undefined }
+}
+
+function readyMarkerOf(m: ChatMessageEvent): ReadyMarker | null {
+  const marker = parseReadyMarker(m.message ?? '')
+  if (!marker) return null
+  if (marker.user && m.username && marker.user.toLowerCase() !== m.username.toLowerCase()) return null
+  return marker
+}
+
 function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: IconName; text: string } {
-  if (text.includes('[NEXUS_READY]')) {
-    const user = text.replace(/\[NEXUS_READY\]/g, '').trim()
-    return { icon: 'userCheck', text: `${user} ${t('lobby', 'staging_chat_ready')}`.trim() }
-  }
-  if (text.includes('[NEXUS_NOT_READY]')) {
-    const user = text.replace(/\[NEXUS_NOT_READY\]/g, '').trim()
-    return { icon: 'clock', text: `${user} ${t('lobby', 'staging_chat_not_ready')}`.trim() }
+  const marker = parseReadyMarker(text)
+  if (marker) {
+    return {
+      icon: marker.ready ? 'userCheck' : 'clock',
+      text: `${marker.user ?? ''} ${t('lobby', marker.ready ? 'staging_chat_ready' : 'staging_chat_not_ready')}`.trim(),
+    }
   }
   if (text.includes('has joined')) {
     const user = text.replace(/\s+has joined.*$/i, '').trim()
@@ -39,7 +63,7 @@ function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { ic
 
 function isSystemMessage(m: ChatMessageEvent): boolean {
   if (!m.username || m.username === 'server' || m.messageType === 'SYSTEM') return true
-  if (m.message.includes('[NEXUS_READY]') || m.message.includes('[NEXUS_NOT_READY]')) return true
+  if (readyMarkerOf(m)) return true
   return (
     m.message.includes('has joined') ||
     m.message.includes('has lost connection') ||
@@ -63,13 +87,13 @@ export const MAX_CHAT_MESSAGE_SIZE = 500
  * El estado "listo" de la sala de espera se señaliza abusando del canal de
  * chat (XMage no tiene un campo de protocolo para esto, ver
  * `SpectatorStagingScreen.handleToggleReady`): manda `[NEXUS_READY] <user>` /
- * `[NEXUS_NOT_READY] <user>` y el receptor interpreta CUALQUIER mensaje que
- * contenga ese texto literal como un cambio de estado del remitente real
- * (`m.username`, no falsificable). Si el input de chat libre no sanea esto,
- * cualquier jugador que escriba ese texto a mano (aposta o sin querer)
- * desincroniza su propio estado de listo y su mensaje desaparece de la vista
- * de chat normal (se trata como aviso de sistema). Se sanea SOLO aquí, en el
- * texto escrito a mano — `handleToggleReady` sigue mandando el tag real.
+ * `[NEXUS_NOT_READY] <user>` y el receptor interpreta el mensaje SOLO si el
+ * marcador va anclado al inicio y, si trae usuario embebido, coincide con el
+ * remitente real (`m.username`, no falsificable). Si el input de chat libre no
+ * sanea esto, cualquier jugador que escriba ese texto a mano (aposta o sin
+ * querer) desincroniza su propio estado de listo y su mensaje desaparece de la
+ * vista de chat normal (se trata como aviso de sistema). Se sanea SOLO aquí, en
+ * el texto escrito a mano — `handleToggleReady` sigue mandando el tag real.
  */
 export function sanitizeOutgoingChatText(text: string): string {
   return text.replace(/\[\s*NEXUS_(NOT_)?READY\s*\]/gi, '').replace(/[ \t]{2,}/g, ' ').trim()

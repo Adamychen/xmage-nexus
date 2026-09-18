@@ -65,12 +65,12 @@ function renderPrompt(form: UseFeedbackForm) {
   // ── GAME_TARGET con cardsView1: grid de cartas (tutores, scry, descarte, etc.)
   const hasCardGrid = prompt.cards && prompt.cards.length > 0
   if (prompt.method === 'GAME_TARGET' && hasCardGrid) {
-    return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} cancel={cancel} busy={busy} />
+    return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} busy={busy} />
   }
 
   // ── Selección de cartas (tutores, buscar en biblioteca, revelar mano): grid HD
   if ((prompt.method === 'GAME_CHOOSE_CARDS' || prompt.method === 'GAME_SELECT_CARDS' || prompt.method === 'GAME_SELECT_TARGETS') && hasCardGrid) {
-    return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} cancel={cancel} busy={busy} />
+    return <CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} busy={busy} />
   }
 
   // ── GAME_TARGET sin cardsView1: barra flotante no-modal

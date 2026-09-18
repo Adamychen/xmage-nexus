@@ -40,7 +40,6 @@ export default function UserRequestDialog() {
       kickerLabel={t('dialogs', 'userrequest_title')}
       title={<FormattedText text={localizeServerMessage(request.title, t as any)} />}
       message={request.message ? <FormattedText text={localizeServerMessage(request.message, t as any)} /> : undefined}
-      onBackdropClick={close}
     >
         <div className="feedback-dialog-actions user-request-actions">
           {request.buttons.map((button, index) => (

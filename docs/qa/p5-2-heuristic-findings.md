@@ -102,3 +102,32 @@
 | Ajustes | 0 |
 
 **Total de esta pasada: 5 hallazgos, todos de severidad 2. 0 hallazgos de severidad 3–4** (el criterio de aprobado de `plan4.md` §7 — "0 hallazgos de severidad 3–4 abiertos" — no se ve bloqueado por esta pasada individual; pendiente consolidar con los evaluadores 2–3 antes de dar la heurística por cerrada).
+
+---
+
+## Cierre de la pasada 1 (2026-09-18)
+
+Estado real de los 5 hallazgos tras el ciclo de correcciones:
+
+1. **Staging ready (S2)**: mitigado — el receptor exige prefijo anclado
+   (`parseReadyMarker`, `/^\s*\[\s*NEXUS_(NOT_)?READY\s*\]\s*(.*)$/i`) y, si el
+   mensaje trae usuario embebido, que coincida con el emisor real; un marcador a
+   mitad de mensaje ya no cuenta (tests en `ChatBox.test.tsx` y
+   `SpectatorStagingScreen.test.tsx`). El default "listo salvo NOT_READY" se
+   mantiene **por diseño** (señal opt-out; no hay campo de protocolo real): el
+   caso "historial incompleto" queda como limitación declarada, no como texto
+   falsificable.
+2. **Monograma DeckBox (S2)**: cerrado (`deckInitials` de las 2 últimas
+   palabras; baseline `screen-decks` con WB/WA/WS/…).
+3. **Recorte del cuadro (S2)**: cerrado — `min-width: 0` + scrollbar visible +
+   degradado y chevrón condicionados a overflow (`TournamentBracket.tsx/css`,
+   test unitario).
+4. **VotingDialog i18n (S2)**: cerrado — `localizeServerMessage` con patrón de
+   voto + test con el string real de la galería.
+5. **Draft/Construct sin focus trap (S2)**: cerrado (usan `Modal`); de paso
+   `SideboardScreen` también pasó a `Modal` (foco inicial + Tab-trap).
+
+La heurística queda en **0 hallazgos de severidad 3–4**; la 2ª pasada
+(`docs/qa/p5-2-heuristic-findings-eval2.md`) añadió 7 hallazgos S1–S2, todos
+corregidos el 2026-09-18. Pendiente para cerrar §5.2: pasada 3 (idealmente
+humana/en vivo) y regenerar baselines al commitear.

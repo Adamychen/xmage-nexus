@@ -5,6 +5,7 @@ import type {
   FeedbackOption,
   FeedbackPrompt,
   FeedbackTextFn,
+  JsonRecord,
 } from './types'
 import { METADATA_OPTION_KEYS } from './types'
 import {
@@ -163,13 +164,15 @@ export function parseFeedback(
       const cards = feedbackCards(data)
       const isDiscard = isDiscardMessage(message)
       const title = isDiscard ? t('game', 'choose_discard') : t('game', 'choose_cards')
-      return prompt(method, gameId, title, message, 'uuid', cardOptions(data.cardsView1 ?? cleanChoices(data.options)), bounds, undefined, undefined, true, undefined, undefined, undefined, cards)
+      const { message: cardsMessage, sourceName } = messageWithSource(message, data)
+      return prompt(method, gameId, title, cardsMessage, 'uuid', cardOptions(data.cardsView1 ?? cleanChoices(data.options)), bounds, undefined, undefined, true, sourceName, undefined, undefined, cards)
     }
     case 'GAME_CHOOSE_ABILITY': {
       const abilities = asRecord(raw)
       const opts = optionEntries(abilities.choices)
       const { isPW, deltas } = detectPlaneswalkerChoice(opts, message)
-      return prompt(method, gameId, isPW ? t('dialogs', 'planeswalker_title') : t('game', 'choose_ability'), stringValue(abilities.message) ?? message, 'uuid', opts, bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
+      const { message: abilityMessage, sourceName } = messageWithSource(stringValue(abilities.message) ?? message, abilities)
+      return prompt(method, gameId, isPW ? t('dialogs', 'planeswalker_title') : t('game', 'choose_ability'), abilityMessage, 'uuid', opts, bounds, undefined, undefined, true, sourceName, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
     }
     case 'GAME_CHOOSE_CHOICE': {
       const choice = asRecord(data.choice)
@@ -195,21 +198,24 @@ export function parseFeedback(
       const pile1Cards = feedbackCardsFrom(data.cardsView1)
       const pile2Cards = feedbackCardsFrom(data.cardsView2)
       const pileCards = pile1Cards && pile2Cards ? { pile1: pile1Cards, pile2: pile2Cards } : undefined
-      return prompt(method, gameId, t('game', 'choose_pile'), message, 'boolean', [
+      const { message: pileMessage, sourceName } = messageWithSource(message, data)
+      return prompt(method, gameId, t('game', 'choose_pile'), pileMessage, 'boolean', [
         { id: 'pile1', label: pile1, value: 'true' },
         { id: 'pile2', label: pile2, value: 'false' },
-      ], bounds, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, pileCards)
+      ], bounds, undefined, undefined, true, sourceName, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, pileCards)
     }
     case 'GAME_PLAY_MANA':
       // El servidor NO manda los colores de maná: options solo trae {queryType: "PLAY_MANA"}.
       // El pago real se hace clicando las fuentes de maná en el tablero
       // (canPlayObjects del gameView incrustado), igual que el cliente oficial.
       return prompt(method, gameId, t('game', 'pay_mana'), message, 'mana', [], bounds, undefined, controlledPlayerId(data.gameView))
-    case 'GAME_PLAY_XMANA':
-      return prompt(method, gameId, t('game', 'pay_mana'), message, 'boolean', [
+    case 'GAME_PLAY_XMANA': {
+      const { message: xMessage, sourceName } = messageWithSource(message, data)
+      return prompt(method, gameId, t('game', 'pay_mana'), xMessage, 'boolean', [
         { id: 'yes', label: t('common', 'confirm'), value: 'true' },
         { id: 'no', label: t('common', 'cancel'), value: 'false' },
-      ], bounds)
+      ], bounds, undefined, undefined, true, sourceName)
+    }
     case 'GAME_GET_AMOUNT':
     case 'GAME_SELECT_AMOUNT': {
       // HumanPlayer.getAmount concatena `message + " (source: <Nombre>)"` (CardUtil.getSourceLogName)
@@ -221,7 +227,12 @@ export function parseFeedback(
       const items = multiAmountItems(data.messages, (index) => t('game', 'amount_fallback', { index: String(index + 1) }))
       const minSum = typeof data.min === 'number' ? data.min : items.reduce((acc, it) => acc + it.min, 0)
       const maxSum = typeof data.max === 'number' ? data.max : items.reduce((acc, it) => acc + it.max, 999999)
-      return prompt(method, gameId, t('game', 'multi_amount_title'), message, 'multiString', [], { min: minSum, max: maxSum }, items)
+      // HumanPlayer.getMultiAmountWithIndividualConstraints solo añade options.canCancel
+      // cuando MultiAmountType.isCanCancel(): sin esa bandera el motor espera valores
+      // numéricos y un false no es una respuesta válida -> no ofrecer cancelar.
+      const canCancel = asRecord(data.options).canCancel === true
+      const { message: multiMessage, sourceName } = messageWithSource(message, data)
+      return prompt(method, gameId, t('game', 'multi_amount_title'), multiMessage, 'multiString', [], { min: minSum, max: maxSum }, items, undefined, canCancel ? false : true, sourceName)
     }
     case 'GAME_CHOOSE_MODE': {
       const abilities = asRecord(raw)
@@ -267,6 +278,17 @@ export function parseFeedback(
     default:
       return null
   }
+}
+
+/**
+ * Origen del prompt: el sufijo literal " (source: X)" que HumanPlayer.getAmount
+ * concatena al mensaje, o `options.secondMessage` cuando el callback lo trae
+ * (GAME_ASK/GAME_TARGET; en el resto puede no venir en el wire — extracción
+ * tolerante, no se fabrica un valor).
+ */
+function messageWithSource(message: string, data: JsonRecord): { message: string; sourceName?: string } {
+  const { message: stripped, sourceName } = splitSourceSuffix(message)
+  return { message: stripped, sourceName: sourceName ?? secondMessageOf(data) }
 }
 
 function choiceSortRank(sortData: Record<string, unknown>): ((opt: FeedbackOption) => number | undefined) | null {

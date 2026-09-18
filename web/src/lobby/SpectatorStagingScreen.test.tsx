@@ -26,7 +26,8 @@ afterEach(() => {
   setState({ conn: null, stagingTableId: null, stagingIsTournament: false, lobby: null, phase: 'idle', chatMessages: [] })
 })
 
-vi.mock('./ChatBox', () => ({
+vi.mock('./ChatBox', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./ChatBox')>()),
   default: () => <div data-testid="chat-box-stub">Chat Stub</div>,
 }))
 
@@ -178,6 +179,48 @@ describe('SpectatorStagingScreen', () => {
 
     fireEvent.click(toggleBtn)
     expect(toggleBtn.textContent).toContain('Estoy listo')
+    expect(getByText(/Preparándose/i)).not.toBeNull()
+  })
+
+  it('ignora marcadores de listo que no van anclados al inicio del mensaje', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: 'hola [NEXUS_NOT_READY] Charlie' },
+      ],
+    })
+    const { queryByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(queryByText(/Preparándose/i)).toBeNull()
+  })
+
+  it('ignora marcadores cuyo usuario embebido no coincide con el remitente (anti-spoof)', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Diana' },
+      ],
+    })
+    const { queryByText } = render(<SpectatorStagingScreen mode="player" />)
+
+    expect(queryByText(/Preparándose/i)).toBeNull()
+  })
+
+  it('acepta variantes de espacios dentro de los corchetes (como el saneador)', () => {
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        { chatId: 'c1', username: 'Charlie', message: '[ NEXUS_NOT_READY ] Charlie' },
+      ],
+    })
+    const { getByText } = render(<SpectatorStagingScreen mode="player" />)
+
     expect(getByText(/Preparándose/i)).not.toBeNull()
   })
 

@@ -155,6 +155,91 @@ describe('parseFeedback', () => {
     expect(multi?.items).toEqual([{ id: 'x', label: 'First', min: 1, max: 2, defaultValue: 2 }])
   })
 
+  it('marks multi-amount cancellable only when options.canCancel is true (MultiAmountType.isCanCancel)', () => {
+    const payload = {
+      min: 0,
+      max: 5,
+      messages: [{ id: 'x', message: 'Assign damage', min: 1, max: 2, defaultValue: 2 }],
+    }
+    const cancellable = parseFeedback('GAME_GET_MULTI_AMOUNT', 'game-3b', {
+      ...payload,
+      options: { title: 'Assign damage', header: 'Assign damage among blockers', canCancel: true },
+    })
+    expect(cancellable?.required).toBe(false)
+
+    const mandatory = parseFeedback('GAME_GET_MULTI_AMOUNT', 'game-3b', {
+      ...payload,
+      options: { title: 'Assign damage', header: 'Assign damage among blockers' },
+    })
+    expect(mandatory?.required).toBe(true)
+  })
+
+  it('keeps sourceName undefined when the ability/pile/X/multi-amount payload carries no source (no fabrication)', () => {
+    const ability = parseFeedback('GAME_CHOOSE_ABILITY', 'game-32', {
+      message: 'Choose an ability',
+      choices: { a1: 'Triggered ability' },
+    })
+    expect(ability?.sourceName).toBeUndefined()
+
+    const pile = parseFeedback('GAME_CHOOSE_PILE', 'game-32', {
+      message: 'Separate the cards into two piles',
+      cardsView1: { c1: { id: 'c1', name: 'Grizzly Bears' } },
+      cardsView2: { c2: { id: 'c2', name: 'Shock' } },
+    })
+    expect(pile?.sourceName).toBeUndefined()
+
+    const x = parseFeedback('GAME_PLAY_XMANA', 'game-32', { message: 'Pay X mana?' })
+    expect(x?.sourceName).toBeUndefined()
+
+    const multi = parseFeedback('GAME_GET_MULTI_AMOUNT', 'game-32', {
+      min: 0,
+      max: 3,
+      messages: [{ id: 'x', message: 'First', min: 0, max: 3 }],
+    })
+    expect(multi?.sourceName).toBeUndefined()
+  })
+
+  it('extracts the " (source: X)" suffix (HumanPlayer.getAmount) on ability/pile/X and strips it from the message', () => {
+    const ability = parseFeedback('GAME_CHOOSE_ABILITY', 'game-33', {
+      message: 'Choose an ability (source: Teferi, Hero of Dominaria)',
+      choices: { a1: 'Triggered ability' },
+    })
+    expect(ability?.sourceName).toBe('Teferi, Hero of Dominaria')
+    expect(ability?.message).toBe('Choose an ability')
+
+    const pile = parseFeedback('GAME_CHOOSE_PILE', 'game-33', { message: 'Separate the cards into two piles (source: Fact or Fiction)' })
+    expect(pile?.sourceName).toBe('Fact or Fiction')
+    expect(pile?.message).toBe('Separate the cards into two piles')
+
+    const x = parseFeedback('GAME_PLAY_XMANA', 'game-33', { message: 'Pay X mana? (source: Walking Ballista)' })
+    expect(x?.sourceName).toBe('Walking Ballista')
+    expect(x?.message).toBe('Pay X mana?')
+  })
+
+  it('exposes sourceName on card selections from options.secondMessage and strips the source suffix on choose-cards', () => {
+    const select = parseFeedback('GAME_SELECT_CARDS', 'game-34', {
+      message: 'Select up to two cards',
+      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' } },
+      min: 1,
+      max: 2,
+      options: { secondMessage: 'Demonic Tutor' },
+    })
+    expect(select?.sourceName).toBe('Demonic Tutor')
+
+    const targets = parseFeedback('GAME_SELECT_TARGETS', 'game-34', {
+      message: 'Select targets',
+      options: { secondMessage: 'Arc Lightning' },
+    })
+    expect(targets?.sourceName).toBe('Arc Lightning')
+
+    const choose = parseFeedback('GAME_CHOOSE_CARDS', 'game-34', {
+      message: 'Search your library for a card (source: Demonic Tutor)',
+      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' } },
+    })
+    expect(choose?.sourceName).toBe('Demonic Tutor')
+    expect(choose?.message).toBe('Search your library for a card')
+  })
+
   it('maps pile choices to booleans and mana to a controlled player', () => {
     const pile = parseFeedback('GAME_CHOOSE_PILE', 'game-4', { cardsView1: { a: {} }, cardsView2: { b: {}, c: {} } })
     expect(pile?.options.map((option) => option.value)).toEqual(['true', 'false'])

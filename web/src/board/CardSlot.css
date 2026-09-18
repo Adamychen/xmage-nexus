@@ -198,6 +198,53 @@ html.fx-off .card-slot.attacking {
   cursor: pointer;
 }
 
+/* Acuse optimista (<100 ms) mientras el eco del servidor no llega:
+   atenuación + spinner para jugable/combate, anillo ámbar para objetivo. */
+.card-slot.is-pending {
+  opacity: 0.72;
+  filter: saturate(0.7);
+}
+
+.card-slot.is-pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-top-color: transparent;
+  animation: pendingSpin 0.7s linear infinite;
+  z-index: 8;
+  pointer-events: none;
+}
+
+@keyframes pendingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.card-slot.is-chosen-pending {
+  animation: chosenPendingPulse 0.6s ease-in-out infinite alternate;
+  border-color: #ffd166;
+}
+
+@keyframes chosenPendingPulse {
+  from {
+    box-shadow: 0 0 12px 2px rgba(255, 209, 102, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  to {
+    box-shadow: 0 0 24px 6px rgba(255, 209, 102, 0.95), 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.is-pending::after,
+  .card-slot.is-chosen-pending {
+    animation: none;
+  }
+}
+
 /* Card image */
 .card-image {
   width: 100%;

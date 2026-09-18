@@ -54,3 +54,9 @@
   width: 18px;
   text-align: center;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .context-menu-item {
+    transition: none;
+  }
+}

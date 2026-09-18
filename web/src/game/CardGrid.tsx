@@ -12,11 +12,10 @@ interface CardGridProps {
   selected: string[]
   setSelected: React.Dispatch<React.SetStateAction<string[]>>
   send: (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => void
-  cancel: () => void
   busy: boolean
 }
 
-export default function CardGrid({ prompt, selected, setSelected, send, cancel, busy }: CardGridProps) {
+export default function CardGrid({ prompt, selected, setSelected, send, busy }: CardGridProps) {
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const cards = prompt.cards ?? []
@@ -147,7 +146,6 @@ export default function CardGrid({ prompt, selected, setSelected, send, cancel, 
               {t('dialogs','cardgrid_finish')}
             </button>
           )}
-          <button disabled={busy} onClick={cancel}>{t('dialogs','cardgrid_cancel')}</button>
         </footer>
     </DialogShell>
   )

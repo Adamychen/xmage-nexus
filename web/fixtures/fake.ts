@@ -14,8 +14,20 @@ import type { GameView, RoomUsersView, SeatView, TableView, UserView } from '../
 
 let nextConnId = 1
 
+export interface FakeServerOptions {
+  /**
+   * Retardo artificial del "servidor" (ms) para los tests de latencia percibida
+   * (plan4 §5.4): se difieren los eventos de partida y las respuestas a las
+   * acciones de decisión (`sendPlayer*`, `sendCardPick`), de modo que el acuse
+   * local (busy/pending) quede visible durante el eco. 0 = inmediato (default).
+   */
+  echoDelayMs?: number
+}
+
 export interface FakeConn {
   readonly id: number
+  /** Usuario de la conexión (login); el proxy real ecoa el chat con este nombre. */
+  username?: string
   /** Callback del servidor (type:'event'); messageId autoincremental. */
   event(method: string, data: unknown, objectId?: string | null): void
   /** Emite el evento a TODAS las conexiones del servidor (la página y el
@@ -179,7 +191,13 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
       const gv = () => getGv()
       const ctx = (): BaseScenarioActionContext => ({ args, activeConn })
       switch (action) {
-        case 'connect':
+        case 'connect': {
+          const username = String((args as Record<string, unknown>).username ?? '').trim()
+          if (username) conn.username = username
+          conn.ok(requestId, action, { tableId: table.tableId })
+          conn.lobby([table])
+          return
+        }
         case 'createTable':
         case 'createTournamentTable':
           conn.ok(requestId, action, { tableId: table.tableId })
@@ -309,7 +327,7 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           const scopeChatId = String((args as Record<string, unknown>).chatId ?? '')
           conn.ok(requestId, action, true)
           if (text && scopeChatId) {
-            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: 'mesa-rival', message: text, time: Date.now() }, scopeChatId)
+            conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: conn.username ?? 'mesa-rival', message: text, time: Date.now() }, scopeChatId)
           }
           return
         }
@@ -321,13 +339,19 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
   }
 }
 
+/** Acciones de decisión cuyo `ok` se difiere con echoDelayMs (viaje de ida y
+ *  vuelta realista): así el busy/pending dura lo que el eco, no lo que el ACK. */
+const DELAYED_RESULT_ACTIONS = /^(sendPlayer|sendCardPick)/
+
 class FakeConnection implements FakeConn {
   private seq = 0
+  username?: string
   constructor(
     readonly id: number,
     private readonly ws: WebSocket,
     private readonly scenario: Scenario,
     private readonly server: FakeServer,
+    private readonly echoDelayMs = 0,
   ) {}
 
   isOpen(): boolean {
@@ -338,18 +362,31 @@ class FakeConnection implements FakeConn {
     if (this.isOpen()) this.ws.send(JSON.stringify(obj))
   }
 
+  private delayed(send: () => void): void {
+    if (this.echoDelayMs > 0) setTimeout(send, this.echoDelayMs)
+    else send()
+  }
+
   event(method: string, data: unknown, objectId: string | null = null): void {
-    this.raw({ type: 'event', method, messageId: ++this.seq, objectId, data })
+    const obj = { type: 'event', method, messageId: ++this.seq, objectId, data }
+    this.delayed(() => this.raw(obj))
   }
 
   broadcast(method: string, data: unknown, objectId: string | null = null): void {
     const obj = { type: 'event', method, messageId: ++this.seq, objectId, data }
-    this.raw(obj)
-    this.server.broadcast(obj, this.id)
+    this.delayed(() => {
+      this.raw(obj)
+      this.server.broadcast(obj, this.id)
+    })
   }
 
   ok(requestId: string | number, action: string, data?: unknown): void {
-    this.raw({ type: 'result', action, requestId, ok: true, data })
+    const obj = { type: 'result', action, requestId, ok: true, data }
+    if (this.echoDelayMs > 0 && DELAYED_RESULT_ACTIONS.test(action)) {
+      this.delayed(() => this.raw(obj))
+    } else {
+      this.raw(obj)
+    }
   }
 
   fail(requestId: string | number, action: string, error: string, errorCode?: string): void {
@@ -377,7 +414,11 @@ export class FakeServer {
   private cleanups: (() => void)[] = []
   private scenarioInstance: Scenario | null = null
 
-  constructor(private readonly requestedPort: number, private readonly makeScenario: () => Scenario) {
+  constructor(
+    private readonly requestedPort: number,
+    private readonly makeScenario: () => Scenario,
+    private readonly options: FakeServerOptions = {},
+  ) {
     this.assignedPort = requestedPort
   }
 
@@ -387,8 +428,12 @@ export class FakeServer {
     return this.assignedPort
   }
 
-  static async start(port: number, makeScenario: () => Scenario): Promise<FakeServer> {
-    const server = new FakeServer(port, makeScenario)
+  static async start(
+    port: number,
+    makeScenario: () => Scenario,
+    options: FakeServerOptions = {},
+  ): Promise<FakeServer> {
+    const server = new FakeServer(port, makeScenario, options)
     await server.listen()
     return server
   }
@@ -417,7 +462,7 @@ export class FakeServer {
     // humana vs Sim) a través del broadcast de FakeConnection.
     if (!this.scenarioInstance) this.scenarioInstance = this.makeScenario()
     const scenario = this.scenarioInstance
-    const conn = new FakeConnection(nextConnId++, ws, scenario, this)
+    const conn = new FakeConnection(nextConnId++, ws, scenario, this, this.options.echoDelayMs ?? 0)
     this.conns.add(conn)
     ws.on('close', () => {
       this.conns.delete(conn)

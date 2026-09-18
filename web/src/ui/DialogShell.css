@@ -195,3 +195,14 @@
 .dlg-check-row input {
   accent-color: #7c5cff;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-panel {
+    animation: none;
+  }
+
+  .dlg-close,
+  .dlg-btn {
+    transition: none;
+  }
+}

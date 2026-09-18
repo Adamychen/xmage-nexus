@@ -166,3 +166,10 @@
 .big-action-btn.disabled .action-btn-shortcut {
   display: none;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .big-action-toggle,
+  .big-action-btn {
+    transition: none;
+  }
+}

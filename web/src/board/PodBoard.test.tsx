@@ -374,6 +374,24 @@ describe('PodBoard', () => {
     expect(container.querySelectorAll('.pod-cell--empty').length).toBe(0)
   })
 
+  it('solo rotula el divisor Oponentes/Tu lado cuando la fila inferior es toda mía', () => {
+    const threePlayers = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', commandList: [] }),
+      ],
+    })
+    const three = render(<PodBoard game={threePlayers} />)
+    expect(three.container.querySelector('.board-shell-divider.with-labels')).not.toBeNull()
+    three.unmount()
+
+    const four = render(<PodBoard game={fourPlayerGame()} />)
+    expect(four.container.querySelector('.board-shell-divider.with-labels')).toBeNull()
+    four.unmount()
+  })
+
   it('hides orphan column dividers when a row collapses (2 players)', () => {
     const game = makeGameView({
       activePlayerId: 'p1',

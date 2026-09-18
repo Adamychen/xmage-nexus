@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { TournamentView, RoundView, TournamentGameView } from '../net/types'
 import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
+import { stateLabel } from './lobbyUtils'
 import { useTranslation, toBcp47Locale } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 
@@ -74,7 +75,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
         <div className="tournament-bracket-title">
           <h2 className="tournament-name" data-testid="tournament-name">{view.tournamentName}</h2>
           <span className="tournament-type" data-testid="tournament-type">{view.tournamentType}</span>
-          <span className="tournament-state-badge" data-testid="tournament-state">{view.tournamentState}</span>
+          <span className="tournament-state-badge" data-testid="tournament-state">{stateLabel(t, view.tournamentState)}</span>
           {view.watchingAllowed ? (
             <span className="tournament-watching-badge" data-testid="tournament-watching"><Icon name="eye" size={12} /> {t('lobby', 'tag_spectators')}</span>
           ) : (
@@ -137,7 +138,7 @@ function BracketRound({ round, index, watchingAllowed, onWatchMatch, watchingMat
           <div key={`${g.tableId ?? g.matchId ?? gi}-${gi}`} className="bracket-game" data-testid="bracket-game">
             <div className="bracket-game-top">
               <span className="bracket-game-players" data-testid="bracket-game-players" title={g.players}>{g.players || '—'}</span>
-              <span className={`bracket-game-state state-${String(g.state).toLowerCase()}`} data-testid="bracket-game-state">{g.state}</span>
+              <span className={`bracket-game-state state-${String(g.state).toLowerCase()}`} data-testid="bracket-game-state">{stateLabel(t, g.state)}</span>
             </div>
             {g.result && <div className="bracket-game-result" data-testid="bracket-game-result">{g.result}</div>}
             <div className="bracket-game-meta">
@@ -169,6 +170,40 @@ function BracketRound({ round, index, watchingAllowed, onWatchMatch, watchingMat
 
 export default function TournamentBracket({ view, tournamentId, onClose, onQuit, onWatchMatch, watchingMatchId, compact, canQuit }: TournamentBracketProps) {
   const { t } = useTranslation()
+  const columnsRef = useRef<HTMLDivElement>(null)
+  const [hasOverflowRight, setHasOverflowRight] = useState(false)
+
+  const updateOverflow = useCallback(() => {
+    const el = columnsRef.current
+    if (!el) return
+    setHasOverflowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+  }, [])
+
+  useEffect(() => {
+    updateOverflow()
+    const el = columnsRef.current
+    if (!el) return
+    el.addEventListener('scroll', updateOverflow, { passive: true })
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateOverflow)
+      ro.observe(el)
+    }
+    window.addEventListener('resize', updateOverflow)
+    return () => {
+      el.removeEventListener('scroll', updateOverflow)
+      ro?.disconnect()
+      window.removeEventListener('resize', updateOverflow)
+    }
+  }, [updateOverflow, view.rounds.length])
+
+  const scrollBracketRight = () => {
+    const el = columnsRef.current
+    if (!el) return
+    if (typeof el.scrollBy === 'function') el.scrollBy({ left: 240, behavior: 'smooth' })
+    else el.scrollLeft += 240
+  }
+
   const sortedPlayers = useMemo(() => {
     return [...view.players].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
   }, [view.players])
@@ -182,10 +217,26 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
           {view.rounds.length === 0 ? (
             <div className="tournament-empty" data-testid="tournament-no-rounds">{t('lobby', 'bracket_no_rounds')}</div>
           ) : (
-            <div className="bracket-columns" data-testid="bracket-columns">
-              {view.rounds.map((r, idx) => (
-                <BracketRound key={idx} round={r} index={idx} watchingAllowed={view.watchingAllowed} onWatchMatch={onWatchMatch} watchingMatchId={watchingMatchId} />
-              ))}
+            <div className="bracket-columns-wrap">
+              <div className="bracket-columns" data-testid="bracket-columns" ref={columnsRef}>
+                {view.rounds.map((r, idx) => (
+                  <BracketRound key={idx} round={r} index={idx} watchingAllowed={view.watchingAllowed} onWatchMatch={onWatchMatch} watchingMatchId={watchingMatchId} />
+                ))}
+              </div>
+              {hasOverflowRight && (
+                <>
+                  <div className="bracket-fade-right" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="bracket-scroll-right"
+                    data-testid="bracket-scroll-right"
+                    aria-label={t('lobby', 'bracket_scroll_right')}
+                    onClick={scrollBracketRight}
+                  >
+                    <span aria-hidden="true">›</span>
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>

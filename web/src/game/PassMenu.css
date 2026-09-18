@@ -94,3 +94,9 @@
 .pass-menu-check.hold-priority-toggle:hover {
   color: #ffd27a;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .pass-menu-item {
+    transition: none;
+  }
+}

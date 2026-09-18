@@ -172,6 +172,22 @@ describe('GenericDialog hooks', () => {
     expect(container.querySelector('.cancel-btn')).not.toBeNull()
   })
 
+  it('integer mode: renders the source name (origin) when the prompt carries one', () => {
+    const amountPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_AMOUNT',
+      gameId: 'g1',
+      title: 'Amount',
+      message: 'Choose an amount',
+      mode: 'integer',
+      options: [],
+      min: 0,
+      max: 5,
+      sourceName: 'Walking Ballista',
+    }
+    const { container } = render(<GenericDialog form={stubForm(amountPrompt)} />)
+    expect(container.querySelector('.dlg-source')?.textContent).toContain('Walking Ballista')
+  })
+
   it('multiString mode: no Cancelar button when the prompt is required (default)', () => {
     const multiPrompt: FeedbackPrompt = {
       method: 'GAME_GET_MULTI_AMOUNT',
@@ -202,6 +218,25 @@ describe('GenericDialog hooks', () => {
       required: false,
     }
     const { container } = render(<GenericDialog form={stubForm(multiPrompt)} />)
+    expect(container.querySelector('.cancel-btn')).not.toBeNull()
+  })
+
+  it('multiString mode: renders the source name (origin) when the prompt carries one, and canCancel maps to the cancel button', () => {
+    const multiPrompt: FeedbackPrompt = {
+      method: 'GAME_GET_MULTI_AMOUNT',
+      gameId: 'g1',
+      title: 'Split',
+      message: 'Split the damage',
+      mode: 'multiString',
+      options: [],
+      min: 0,
+      max: 5,
+      items: [{ id: 'm1', label: 'Ritos', min: 0, max: 5, defaultValue: 2 }],
+      required: false,
+      sourceName: 'Elvish Warrior',
+    }
+    const { container } = render(<GenericDialog form={stubForm(multiPrompt)} />)
+    expect(container.querySelector('.dlg-source')?.textContent).toContain('Elvish Warrior')
     expect(container.querySelector('.cancel-btn')).not.toBeNull()
   })
 

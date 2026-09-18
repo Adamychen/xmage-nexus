@@ -65,3 +65,9 @@
   color: #7a82a8;
   text-align: center;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .voting-btn {
+    transition: none;
+  }
+}

@@ -96,6 +96,10 @@ Contando solo las 20 filas principales (sin las sub-filas de hallazgo 12b/13b/15
 
 (recuento aproximado por lectura de la tabla de arriba; el criterio más castigado es **Contexto**, seguido de **Origen** y **Tiempo** — los tres caen casi en bloque sobre cualquier prompt que use `DialogShell`/`GenericDialog`; el más sólido es **Acuse**, que pasa ✅ en todas las filas que pasan por `useFeedbackForm.send()`).
 
+> **Nota (2026-09-18)**: la tabla anterior es la foto de la auditoría del
+> 2026-09-17. Los ❌ y ❓ de las filas que se citan en el cierre de abajo ya no
+> representan el estado del código: ver **Cierre §5.1 (2026-09-18)**.
+
 ---
 
 ## Hallazgos
@@ -125,3 +129,54 @@ Solo los ❌ y los ⚠️ con acción concreta pendiente, con su cita:
 11. **⚠️ No hay indicador visual de `startResponseIdleTimeout` al elegir quién empieza.** El frame `starting-player.json` documenta que el servidor sí impone un timeout de respuesta al jugador que gana el sorteo (`plan4.md` §3.1), pero `TargetBar.tsx` (el componente real que atiende este prompt, ver hallazgo 5) no muestra ninguna cuenta atrás para este caso específico — el criterio "Tiempo" no tiene forma de cumplirse aquí aunque el reloj de partida general sí sea visible.
 
 12. **⚠️ Posible bug de motor de terceros en votación con un solo votante** (no es un hallazgo de la interfaz web, se deja anotado porque salió del mismo frame): el rival cheateado en `vote.json` terminó con 2 Mystics exiliados en vez de 1 — candidato a bug de reglas del fork, sin resolver (`p4-frames-log.md`, tanda 09-16).
+
+---
+
+## Cierre §5.1 (2026-09-18)
+
+Correcciones aplicadas en el cliente (rama de trabajo, sin commitear al escribir
+esto) y verificadas con la suite unit (1824/1824), typecheck, build, e2e fake
+completo (259 passed / 4 skipped) y regresión visual P3 (baselines macOS
+regenerados de `prompt-target` y `screen-lobby-overflow`):
+
+| Hallazgo | Estado | Cambio y evidencia |
+|---|---|---|
+| 1. Backdrop tapa tablero y cabecera | **✅ Contexto/Tiempo** | `styles.css` define `--game-header-z: 2000` por encima del rango de `Modal` (501–1999); `.game-top` y `.player-info-bar` lo usan. Baseline `prompt-target` (regenerado) muestra turno/fase y vidas/reloj sobre el backdrop. El tablero se sigue atenuando a propósito. |
+| 2. Cancelar que no cancela | **✅** | `CardGrid` y `TargetBar` ya no pintan Cancelar cuando `required !== false` (antes lo mostraban siempre); `GenericDialog` mantiene el filtro. `GAME_GET_MULTI_AMOUNT` lee `options.canCancel` y solo entonces ofrece salida (`parse.ts`). Tests: `CardGrid.test.tsx`, `promptBars.test.tsx`, `feedback.test.ts`, `GenericDialog.test.tsx`. |
+| 3. `sourceName` ausente | **✅** | `messageWithSource()` (sufijo literal ` (source: X)` + `options.secondMessage`) se aplica a ability, pile, X y multi-amount; `PileDialog` lo pinta. **Límite documentado**: en 1.4.61 el wire de esos callbacks no trae fuente en la mayoría de casos (verificado sobre frames reales), así que el UI la muestra cuando existe y no inventa valor. |
+| 6. `UserRequestDialog` | **✅** | Ya localizaba y tenía busy (a15dd22e403); se elimina `onBackdropClick` (una petición del servidor no puede cerrarse sin responder). Test nuevo. |
+| 5/15b. Votación | **✅** | `localizeServerMessage` gana el patrón `Vote for a/an …` (con `— Step N of M` opcional); `parse.ts` ya detecta `isVoting` también en `GAME_TARGET`; `VotingDialog` enruta en real. Tests: `serverMessageTranslation.test.ts`, `VotingDialog.test.tsx`, `feedback.test.ts`. |
+| 7. Teclado en mulligan | ✅ | Ya cerrado en `a15dd22e403` (CardSlot con `role="button"` y Enter/Space; tests en `MulliganDialog.test.tsx`). |
+| 8. Sideboard sin espera | ✅ | Ya cerrado en `a15dd22e403`; además `SideboardScreen` pasa a `Modal` compartido (foco/trampa) en este cierre. |
+
+### Celdas ❓ (revisión en vivo, stack local, 2026-09-18)
+
+Sesión real 2×HUMAN (MCP + navegador adjunto a la sesión del rival) con Bolt +
+Raging Goblin sembrados por `cheatSetup`:
+
+- **Vista del rival (filas 2–17)**: el servidor **no** emite la línea de chat
+  `"Waiting for X"` (chat de partida vacío en la vista del rival durante los
+  prompts de target y maná del jugador activo; mecanismo `gameEventParser.ts`
+  queda como tolerancia, no como fuente). Lo que sí ve el rival, y evita la
+  "pantalla congelada": la pila con la carta del oponente y su controlador, el
+  indicador de turno/prioridad sobre el jugador activo (anillo + chip ACTIVO) y
+  su botón de acción (`RESOLVER PILA` / `PASAR PRIORIDAD`). Cuando no hay pila
+  ni prioridad, el botón muestra el estado de espera del rival.
+  Se actualiza el criterio: ✅ por visibilidad de estado, con la nota de que el
+  texto literal "esperando a X" solo existe vía `ActionButton`.
+- **Tiempo (filas 1/6/11/17)**: el reloj (`priorityTimeLeftSecs`) es visible en
+  la cabecera durante los modales (z-index de arriba) y en la sesión real
+  (`00:00` con `timeLimit` por defecto); ✅ para el criterio "el reloj se ve".
+- **Salida en prompts obligatorios**: con el gating por `required`, los prompts
+  obligatorios no ofrecen una salida que el motor ignore (Pile/Voting ya no la
+  ofrecían); los opcionales mantienen su botón de terminar. ✅.
+
+### Pendientes conscientes (no bloquean §7, que exige 0 ❌)
+
+- **X sin tope (`INT_MAX`)** y **`startResponseIdleTimeout` sin cuenta atrás**:
+  el wire no manda un máximo útil ni un valor de tiempo; quedan ⚠️ de motor.
+- **Sub-filas 12b/13b/17b** (TriggerOrderDialog sin fixture real, UX de orden
+  secuencial, StartingPlayerDialog no usado): documentadas como código de
+  cobertura sintética; el camino real funciona (TargetBar/CardGrid).
+- **Bug de motor en votación con un solo votante** (hallazgo 12): fuera de scope
+  web, sigue anotado.

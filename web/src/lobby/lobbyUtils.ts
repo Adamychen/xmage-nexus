@@ -204,3 +204,36 @@ export function getMyActiveTables(tables: TableView[], username?: string, stagin
   })
 }
 
+
+type TranslateFn = (
+  ns: 'lobby',
+  key: string,
+  params?: Record<string, string | number>,
+) => string
+
+const STATE_LABEL_KEYS: Record<string, string> = {
+  waiting: 'table_state_waiting',
+  ready: 'table_state_ready_to_start',
+  ready_to_start: 'table_state_ready_to_start',
+  starting: 'table_state_starting',
+  drafting: 'table_state_drafting',
+  constructing: 'table_state_constructing',
+  dueling: 'table_state_dueling',
+  sideboarding: 'table_state_sideboarding',
+  active: 'table_state_active',
+  completed: 'table_state_completed',
+  finished: 'table_state_finished',
+  end: 'table_state_finished',
+  eliminated: 'table_state_eliminated',
+  quit: 'table_state_quit',
+}
+
+/** Estado de mesa/partida/jugador del servidor (TableState, en inglés) → i18n; conserva el sufijo. */
+export function stateLabel(t: TranslateFn, value: string | null | undefined, fallback?: string): string {
+  const raw = String(value ?? '').trim()
+  if (!raw) return fallback ?? ''
+  const match = raw.match(/^([A-Za-z_]+)(.*)$/)
+  const key = match ? STATE_LABEL_KEYS[match[1].toLowerCase()] : undefined
+  if (!key) return fallback ?? raw
+  return `${t('lobby', key)}${match?.[2] ?? ''}`
+}

@@ -110,6 +110,16 @@ describe('UserRequestDialog (permiso de mano)', () => {
     await vi.waitFor(() => expect(getState().userRequest).toBeNull())
   })
 
+  it('el clic en el backdrop NO cierra: la petición del servidor exige respuesta', () => {
+    const { container } = render(<UserRequestDialog />)
+    const backdrop = container.querySelector('.feedback-backdrop') as HTMLElement
+    expect(backdrop).not.toBeNull()
+    fireEvent.click(backdrop)
+    expect(getState().userRequest).not.toBeNull()
+    expect(container.querySelector('.user-request-dialog')).not.toBeNull()
+    expect(send).not.toHaveBeenCalled()
+  })
+
   it('localiza title/message de servidor igual que los demás diálogos de prompt', () => {
     setState({
       userRequest: {

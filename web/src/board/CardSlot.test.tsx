@@ -3,6 +3,7 @@ import { act, StrictMode } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
+import { perfClear, perfEntries } from '../system/perfProbe'
 
 vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardPosition: vi.fn(() => undefined),
@@ -199,6 +200,35 @@ describe('CardSlot', () => {
     expect(slot.getAttribute('data-counters')).toBeNull()
     expect(slot.getAttribute('data-tapped')).toBe('0')
   })
+
+  it('el badge de enfermedad de invocación usa su propio texto accesible (no "Girar para maná")', () => {
+    const card = {
+      id: 'sick1',
+      name: 'Elvish Mystic',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      summoningSickness: true,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const badge = container.querySelector('.sickness-badge') as HTMLElement
+    expect(badge).not.toBeNull()
+    expect(badge.getAttribute('title')).toContain('Enfermedad de invocación')
+    expect(badge.getAttribute('aria-label')).toBe(badge.getAttribute('title'))
+  })
+
+  it('no pinta el badge de enfermedad de invocación si la criatura está girada', () => {
+    const card = {
+      id: 'sick2',
+      name: 'Elvish Mystic',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      summoningSickness: true,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} tapped />)
+    expect(container.querySelector('.sickness-badge')).toBeNull()
+  })
 })
 
 describe('CardSlot entering lifecycle', () => {
@@ -243,6 +273,67 @@ describe('CardSlot entering lifecycle', () => {
 
     expect(slot(view).className).not.toContain('entering')
     expect(slot(view).className).toContain('tapped')
+  })
+})
+
+describe('CardSlot acuse optimista (plan4 §5.4)', () => {
+  const makeSlotCard = (id: string) =>
+    ({ id, name: 'Lightning Bolt', cardTypes: ['Instant'] }) as unknown as PermanentView
+
+  beforeEach(() => perfClear())
+
+  it('pinta is-pending al clicar una carta jugable y lo limpia con el siguiente GAME_UPDATE', () => {
+    const onClick = vi.fn()
+    const view = render(<CardSlot card={makeSlotCard('ack-1')} isPlayable onClick={onClick} />)
+    const slot = () => view.container.querySelector('.card-slot')!
+
+    fireEvent.click(slot())
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(slot().className).toContain('is-pending')
+    expect(
+      perfEntries().some((e) => e.kind === 'ack' && e.name === 'pending' && (e.extra as { cardId?: string })?.cardId === 'ack-1'),
+    ).toBe(true)
+
+    // eco del servidor: el GAME_UPDATE trae un card nuevo (objeto fresco)
+    view.rerender(<CardSlot card={makeSlotCard('ack-1')} isPlayable onClick={onClick} />)
+    expect(slot().className).not.toContain('is-pending')
+  })
+
+  it('pinta is-chosen-pending al elegir objetivo, no reenvía el mismo target y reconcilia con isChosen', () => {
+    const onClick = vi.fn()
+    const card = makeSlotCard('ack-2')
+    const view = render(<CardSlot card={card} isTarget onClick={onClick} />)
+    const slot = () => view.container.querySelector('.card-slot')!
+
+    fireEvent.click(slot())
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(slot().className).toContain('is-chosen-pending')
+
+    fireEvent.click(slot())
+    expect(onClick, 'doble envío del mismo objetivo').toHaveBeenCalledTimes(1)
+
+    // eco: el servidor confirma el objetivo (mismo card, chosenTargets)
+    view.rerender(<CardSlot card={card} isTarget isChosen onClick={onClick} />)
+    expect(slot().className).not.toContain('is-chosen-pending')
+    expect(slot().className).toContain('chosen')
+
+    // ya confirmado, se permite des-seleccionar
+    fireEvent.click(slot())
+    expect(onClick).toHaveBeenCalledTimes(2)
+  })
+
+  it('si el eco nunca llega, el acuse se limpia solo a los ~3s', () => {
+    vi.useFakeTimers()
+    try {
+      const view = render(<CardSlot card={makeSlotCard('ack-3')} isPlayable onClick={vi.fn()} />)
+      const slot = () => view.container.querySelector('.card-slot')!
+      fireEvent.click(slot())
+      expect(slot().className).toContain('is-pending')
+      act(() => { vi.advanceTimersByTime(3100) })
+      expect(slot().className).not.toContain('is-pending')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 

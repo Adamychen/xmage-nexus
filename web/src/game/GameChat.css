@@ -153,3 +153,9 @@
 .game-chat-emoji-picker button:hover {
   background: #1e2448;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-chat-emoji-btn {
+    transition: none;
+  }
+}

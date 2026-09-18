@@ -110,6 +110,23 @@ describe('GameEndDialog', () => {
     expect(screen.getByText('qa-vfy-B2')).toBeDefined()
   })
 
+  it('renders the local "you" winner for the "You have won the game" server form', () => {
+    setState({
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true })],
+      }),
+      gameEnd: {
+        won: true,
+        gameInfo: 'You have won the game',
+        matchInfo: 'You need one more win to win the match.',
+      },
+    })
+
+    render(<GameEndDialog />)
+    expect(screen.getByText('Tú')).toBeDefined()
+    expect(screen.queryByText(/You have/)).toBeNull()
+  })
+
   it('renders nothing when sideboardScreen is active (does not block sideboard)', () => {
     setState({
       game: makeGameView({

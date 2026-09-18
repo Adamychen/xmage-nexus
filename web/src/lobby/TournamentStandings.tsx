@@ -1,5 +1,6 @@
 import type { TournamentPlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
+import { stateLabel } from './lobbyUtils'
 
 interface Props {
   players: TournamentPlayerView[]
@@ -19,9 +20,9 @@ export default function TournamentStandings({ players, sortedPlayers }: Props) {
           <tr>
             <th>#</th>
             <th>{t('lobby', 'leaderboard_col_player')}</th>
-            <th>{t('lobby', 'leaderboard_col_elo').replace('ELO', 'Pts')}</th>
+            <th>{t('lobby', 'leaderboard_col_points')}</th>
             <th>{t('lobby', 'leaderboard_col_status')}</th>
-            <th>{t('lobby', 'leaderboard_col_history').replace('Historial', 'Resultados')}</th>
+            <th>{t('lobby', 'leaderboard_col_results')}</th>
             <th>{t('lobby', 'leaderboard_col_history')}</th>
           </tr>
         </thead>
@@ -37,10 +38,10 @@ export default function TournamentStandings({ players, sortedPlayers }: Props) {
               <td className="standings-name" data-testid="standings-name">
                 <span className="standings-name-text">{p.name}</span>
                 {p.flagName && <span className="standings-flag" title={p.flagName}>{p.flagName}</span>}
-                {p.quit && <span className="standings-quit-badge" data-testid="standings-quit">{t('lobby', 'history_quits').replace('abandonos', 'Abandonó')}</span>}
+                {p.quit && <span className="standings-quit-badge" data-testid="standings-quit">{t('lobby', 'standings_quit_badge')}</span>}
               </td>
               <td className="standings-points" data-testid="standings-points">{p.points}</td>
-              <td className="standings-state" data-testid="standings-state">{p.state}</td>
+              <td className="standings-state" data-testid="standings-state">{stateLabel(t, p.state)}</td>
               <td className="standings-results" title={p.results ?? ''}>{p.results ?? '—'}</td>
               <td className="standings-history" title={p.history ?? ''}>{p.history ?? '—'}</td>
             </tr>

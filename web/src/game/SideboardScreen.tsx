@@ -12,6 +12,7 @@ import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
+import Modal from '../ui/Modal'
 import './SideboardScreen.css'
 
 function deckCardKey(c: DeckCard): string {
@@ -346,12 +347,10 @@ export default function SideboardScreen() {
   // vez de dejar la pantalla en blanco hasta el próximo GAME_INIT.
   if (submitted) {
     return (
-      <div className="sideboard-backdrop" role="presentation">
-        <section className="sideboard-screen sideboard-waiting" role="dialog" aria-modal="true" aria-label={t('game', 'sideboard_title')}>
-          <span className="sideboard-waiting-dot" aria-hidden="true" />
-          <p className="sideboard-waiting-text">{t('game', 'sideboard_waiting_opponent')}</p>
-        </section>
-      </div>
+      <Modal backdropClassName="sideboard-backdrop" dialogClassName="sideboard-screen sideboard-waiting" label={t('game', 'sideboard_title')}>
+        <span className="sideboard-waiting-dot" aria-hidden="true" />
+        <p className="sideboard-waiting-text">{t('game', 'sideboard_waiting_opponent')}</p>
+      </Modal>
     )
   }
 
@@ -389,9 +388,31 @@ export default function SideboardScreen() {
     ? side.filter((c) => c.cardName.toLowerCase().includes(sideFilter.toLowerCase()) || c.setCode.toLowerCase().includes(sideFilter.toLowerCase()))
     : side
 
+  const hoverPreviewNode = hoverPreview && (
+    <div
+      className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
+      style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
+    >
+      <div className="preview-face-card">
+        {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
+        <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
+      </div>
+      {hoverPreview.backUrl && (
+        <div className="preview-face-card">
+          <span className="preview-face-label">{t('wiki', 'face_back')}</span>
+          <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
+        </div>
+      )}
+    </div>
+  )
+
   return (
-    <div className="sideboard-backdrop" role="presentation">
-      <section className="sideboard-screen" role="dialog" aria-modal="true" aria-label={t('game', 'sideboard_title')}>
+    <Modal
+      backdropClassName="sideboard-backdrop"
+      dialogClassName="sideboard-screen"
+      label={t('game', 'sideboard_title')}
+      trailing={hoverPreviewNode}
+    >
         <div className="sideboard-header">
           <div className="sideboard-title">
             <h2>{t('game', 'sideboard_title')}</h2>
@@ -546,25 +567,7 @@ export default function SideboardScreen() {
             </button>
           </div>
         </div>
-      </section>
-      {hoverPreview && (
-        <div
-          className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
-          style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
-        >
-          <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
-          </div>
-          {hoverPreview.backUrl && (
-            <div className="preview-face-card">
-              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    </Modal>
   )
 }
 

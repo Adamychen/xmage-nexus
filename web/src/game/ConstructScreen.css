@@ -242,3 +242,9 @@
   font-size: 0.75rem;
   text-align: center;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .construct-timer-bar {
+    transition: none;
+  }
+}

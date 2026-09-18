@@ -133,6 +133,13 @@ export function localizeServerMessage(
     return t('game', 'combat_blockers_title')
   }
 
+  // Votación (Council's Judgment y similares): "Vote for a permanent — Step 1 of 2".
+  // El paso ya lo pinta el kicker del diálogo, aquí solo se traduce el objeto del voto.
+  const voteMatch = plain.match(/^Vote\s+for\s+(?:a|an)\s+(permanent|creature|artifact|player)(?:\s*[—–-]\s*Step\s+\d+\s+of\s+\d+)?[.!?]?$/i)
+  if (voteMatch) {
+    return t('game', `vote_for_${voteMatch[1].toLowerCase()}`)
+  }
+
   if (/^Click\s+a\s+target\s+on\s+the\s+board$/i.test(plain)) {
     return t('game', 'targeting_hint')
   }
@@ -158,7 +165,7 @@ export function localizeGameEndMessage(
   if (!raw) return ''
   const trimmed = raw.trim()
 
-  const gameResult = trimmed.match(/^(.+?)\s+(?:has\s+)?(won|lost)\s+the\s+game(?:,?\s+on\s+turn\s+(\d+))?[.!]?$/i)
+  const gameResult = trimmed.match(/^(.+?)\s+(?:(?:has|have)\s+)?(won|lost)\s+the\s+game(?:,?\s+on\s+turn\s+(\d+))?[.!]?$/i)
   if (gameResult) {
     const rawPlayer = gameResult[1].trim()
     const won = gameResult[2].toLowerCase() === 'won'
@@ -169,22 +176,24 @@ export function localizeGameEndMessage(
       if (turn) {
         return t('game', won ? 'end_won_game_turn_you' : 'end_lost_game_turn_you', { turn })
       }
-      return trimmed
+      return t('game', won ? 'end_won_game_you' : 'end_lost_game_you')
     }
     const player = rawPlayer
     if (turn) {
       return t('game', won ? 'end_won_game_turn' : 'end_lost_game_turn', { player, turn })
     }
-    return trimmed
+    return t('game', won ? 'end_won_game' : 'end_lost_game', { player })
   }
 
-  const matchResult = trimmed.match(/^(.+?)\s+won\s+the\s+match[.!]?$/i)
+  const matchResult = trimmed.match(/^(.+?)\s+(?:(?:has|have)\s+)?won\s+the\s+match(?:\s+(\d+\s*[-–—]\s*\d+))?[.!]?$/i)
   if (matchResult) {
     const rawPlayer = matchResult[1].trim()
+    const score = matchResult[2]?.replace(/\s+/g, '')
+    const suffix = score ? ` ${score}` : ''
     if (/^you$/i.test(rawPlayer)) {
-      return t('game', 'feed_won_match_you', {})
+      return `${t('game', 'feed_won_match_you', {})}${suffix}`
     }
-    return t('game', 'feed_won_match', { player: rawPlayer })
+    return `${t('game', 'feed_won_match', { player: rawPlayer })}${suffix}`
   }
 
   return trimmed

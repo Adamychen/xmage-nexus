@@ -14,6 +14,7 @@ import {
 import { soundManager } from '../../audio/soundManager'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { gameLogStore, toSavedEntries } from '../../system/gameLogs'
+import { clearFlights } from '../../board/flightManager'
 import type { Snapshot, EmbeddedGame } from './context'
 
 export function handleJoinedTable(data: unknown, s: Snapshot): void {
@@ -51,6 +52,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
 }
 
 export function handleGameUpdate(method: string, objectId: string | null, data: unknown, embeddedGame: EmbeddedGame | null, s: Snapshot): void {
+  if (method === 'GAME_INIT') clearFlights()
   if (objectId) saveActiveGame(objectId)
   if (method === 'GAME_UPDATE_AND_INFORM' && (data as any)?.message) {
     addLog('partida', (data as any).message, objectId ?? undefined)

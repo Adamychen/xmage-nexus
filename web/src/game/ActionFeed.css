@@ -95,3 +95,9 @@
   flex-direction: column;
   gap: 4px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-btn {
+    transition: none;
+  }
+}

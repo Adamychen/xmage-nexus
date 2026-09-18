@@ -239,3 +239,11 @@
   display: flex;
   gap: 8px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-arrow,
+  .btn-switch-zone,
+  .quick-actions button {
+    transition: none;
+  }
+}

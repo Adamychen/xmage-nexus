@@ -444,3 +444,15 @@
     gap: 10px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-sound-card .fx-toggle,
+  .settings-sound-card .fx-toggle-knob,
+  .settings-sound-card .fx-speed-btn {
+    transition: none;
+  }
+
+  .settings-sound-card .audio-slider::-webkit-slider-thumb {
+    transition: none;
+  }
+}

@@ -72,6 +72,9 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
       kickerIcon="package"
       kickerLabel={t('game', 'choose_pile')}
       title={t('game', 'choose_pile')}
+      sourceName={prompt.sourceName && prompt.sourceName !== t('game', 'choose_pile')
+        ? <FormattedText text={prompt.sourceName} />
+        : undefined}
       message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
       trailing={<FloatingCardPreview card={hoveredCard as never} anchorRect={anchorRect} boardRect={null} inModal />}
     >

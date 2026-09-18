@@ -110,7 +110,7 @@ export default function TwoHeadedBoard({
       </div>
 
       {/* ── Horizontal board divider ── */}
-      <BoardDivider labels />
+      <BoardDivider labels={isBottomFull} />
 
       {/* ── Bottom row ── */}
       <div className="pod-row pod-row--bottom">

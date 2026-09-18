@@ -3,7 +3,7 @@ import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setM
 import { setState } from '../state/state'
 import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
-import ChatBox from './ChatBox'
+import ChatBox, { parseReadyMarker } from './ChatBox'
 import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
@@ -56,13 +56,13 @@ export default function SpectatorStagingScreen({
     const scopeId = tableChatId ?? chatId
     for (const m of messages) {
       if (scopeId && m.chatId && m.chatId !== scopeId) continue
-      if (m.message?.includes('[NEXUS_READY]')) {
-        const u = (m.username || m.message.replace(/.*\[NEXUS_READY\]\s*/, '')).trim().toLowerCase()
-        if (u) map[u] = true
-      } else if (m.message?.includes('[NEXUS_NOT_READY]')) {
-        const u = (m.username || m.message.replace(/.*\[NEXUS_NOT_READY\]\s*/, '')).trim().toLowerCase()
-        if (u) map[u] = false
-      }
+      const marker = m.message ? parseReadyMarker(m.message) : null
+      if (!marker) continue
+      const embedded = marker.user?.toLowerCase()
+      const sender = m.username?.toLowerCase()
+      if (embedded && sender && embedded !== sender) continue
+      const user = sender || embedded
+      if (user) map[user] = marker.ready
     }
     return map
   }, [messages, tableChatId, chatId])

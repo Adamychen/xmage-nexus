@@ -60,3 +60,9 @@
 .phase-stop-btn.active:hover {
   background: rgba(99, 230, 190, 0.25);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-stop-btn {
+    transition: none;
+  }
+}

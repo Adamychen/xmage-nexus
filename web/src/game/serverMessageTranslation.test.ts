@@ -61,6 +61,15 @@ describe('serverMessageTranslation', () => {
     expect(localizeGameEndMessage('sim-000001-670 won the match!', t as any)).toBe('sim-000001-670 gana el match')
   })
 
+  it('localizes game end messages without a turn and with a match score (gallery captures)', () => {
+    expect(localizeGameEndMessage('Bartholomew-Montgomery-Fitzwilliam-III has won the game', t as any)).toBe('Bartholomew-Montgomery-Fitzwilliam-III gana la partida')
+    expect(localizeGameEndMessage('sim-000001-670 has lost the game', t as any)).toBe('sim-000001-670 pierde la partida')
+    expect(localizeGameEndMessage('You have won the game', t as any)).toBe('Has ganado la partida')
+    expect(localizeGameEndMessage('You have lost the game', t as any)).toBe('Has perdido la partida')
+    expect(localizeGameEndMessage('Alejandro-de-la-Vega-Fernández-Castillo has won the match 2-1', t as any)).toBe('Alejandro-de-la-Vega-Fernández-Castillo gana el match 2-1')
+    expect(localizeGameEndMessage('You have won the match 2-1', t as any)).toBe('Has ganado el match 2-1')
+  })
+
   it('localizes discard messages', () => {
     expect(localizeServerMessage('Choose a card for them to discard', t as any)).toBe('Elige una carta para que descarte')
     expect(localizeServerMessage('Choose a card to discard', t as any)).toBe('Elige una carta para que descarte')
@@ -78,6 +87,15 @@ describe('serverMessageTranslation', () => {
   it('localizes combat declarations', () => {
     expect(localizeServerMessage('Declare attackers', t as any)).toBe('Declara atacantes')
     expect(localizeServerMessage('Declare blockers', t as any)).toBe('Declara bloqueadores')
+  })
+
+  it('localizes voting prompts (Council\'s Judgment) and drops the step suffix (the kicker shows it)', () => {
+    expect(localizeServerMessage('Vote for a permanent — Step 1 of 2', t as any)).toBe('Vota por un permanente')
+    expect(localizeServerMessage('Vote for a permanent — Step 2 of 2', t as any)).toBe('Vota por un permanente')
+    expect(localizeServerMessage('Vote for a creature', t as any)).toBe('Vota por una criatura')
+    expect(localizeServerMessage('Vote for an artifact', t as any)).toBe('Vota por un artefacto')
+    expect(localizeServerMessage('Vote for a player', t as any)).toBe('Vota por un jugador')
+    expect(localizeServerMessage('Vote for a card to exile', t as any)).toBe('Vote for a card to exile')
   })
 
   it('localizes option labels', () => {

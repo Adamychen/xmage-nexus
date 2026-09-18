@@ -5,6 +5,7 @@ import type { TournamentView } from '../net/types'
 import { isConstructStalled } from '../state/events/draft'
 import { enterTournamentChat, exitTournamentChat } from '../state/actions'
 import TournamentBracket from '../lobby/TournamentBracket'
+import { stateLabel } from '../lobby/lobbyUtils'
 import ChatBox from '../lobby/ChatBox'
 import { watchTournamentMatch } from '../lobby/useTournamentBracket'
 import * as cmds from '../net/commands'
@@ -143,7 +144,7 @@ export default function TournamentPanel() {
         data-testid="tournament-panel-mini"
         title={t('game', 'tournament_view_bracket_tooltip')}
       >
-        <Icon name="trophy" size={13} /> {view.tournamentName} — {view.tournamentState} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
+        <Icon name="trophy" size={13} /> {view.tournamentName} — {stateLabel(t, view.tournamentState)} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
         <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
       </button>
     )

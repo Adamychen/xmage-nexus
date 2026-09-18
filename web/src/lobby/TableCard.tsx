@@ -6,7 +6,7 @@ import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import { useTranslation, toBcp47Locale } from '../i18n'
 import { clickableProps } from '../ui/clickable'
-import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable } from './lobbyUtils'
+import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable, stateLabel } from './lobbyUtils'
 
 interface Props {
   tTable: TableView
@@ -100,7 +100,7 @@ export default function TableCard({
                 <Icon name="clock" size={12} /> {timeAgo}
               </span>
             )}
-            <span className={`table-state-badge ${statusClass}`}>{tTable.tableStateText}</span>
+            <span className={`table-state-badge ${statusClass}`}>{stateLabel(t, tTable.tableState, tTable.tableStateText)}</span>
           </div>
         </div>
 

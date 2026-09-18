@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import TableCard from './TableCard'
+import { setLanguage } from '../i18n'
 
 afterEach(() => {
   cleanup()
@@ -57,5 +58,37 @@ describe('TableCard badges (C.13 nit: densos solo-icono)', () => {
     const badge = container.querySelector('.table-tag-spectate') as HTMLElement
     expect(badge).not.toBeNull()
     expect(badge.getAttribute('aria-label')).toBeTruthy()
+  })
+})
+
+describe('TableCard estado de mesa (i18n)', () => {
+  it('traduce WAITING/DUELING/FINISHED en es y en', () => {
+    const cases = [
+      ['WAITING', 'En espera', 'Waiting'],
+      ['DUELING', 'En partida', 'Dueling'],
+      ['FINISHED', 'Finalizada', 'Finished'],
+    ] as const
+    for (const [tableState, esText, enText] of cases) {
+      setLanguage('es')
+      const esView = render(
+        <TableCard tTable={tableOf({ tableState, tableStateText: 'Waiting for players' })} users={[]} stagingTableId={null} busyTable={null} {...handlers} />,
+      )
+      expect(esView.container.querySelector('.table-state-badge')?.textContent, `${tableState} es`).toBe(esText)
+      esView.unmount()
+      setLanguage('en')
+      const enView = render(
+        <TableCard tTable={tableOf({ tableState, tableStateText: 'Waiting for players' })} users={[]} stagingTableId={null} busyTable={null} {...handlers} />,
+      )
+      expect(enView.container.querySelector('.table-state-badge')?.textContent, `${tableState} en`).toBe(enText)
+      enView.unmount()
+    }
+    setLanguage('es')
+  })
+
+  it('usa tableStateText como fallback para estados desconocidos', () => {
+    const { container } = render(
+      <TableCard tTable={tableOf({ tableState: 'MYSTERY', tableStateText: 'Custom state' })} users={[]} stagingTableId={null} busyTable={null} {...handlers} />,
+    )
+    expect(container.querySelector('.table-state-badge')?.textContent).toBe('Custom state')
   })
 })

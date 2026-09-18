@@ -5,6 +5,7 @@ import { getState } from '../state/state'
 import type { FeedbackOption, FeedbackPrompt } from './feedback'
 import { ventureChoiceFromPrompt } from './dungeons'
 import { useTranslation, t as tStatic } from '../i18n'
+import { perfMark } from '../system/perfProbe'
 
 export function sendValue(prompt: FeedbackPrompt, value: string) {
   switch (prompt.mode) {
@@ -78,7 +79,10 @@ export function useFeedbackForm(): UseFeedbackForm {
 
   const send = async (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => {
     if (busy) return
+    const perfExtra = { method: prompt?.method ?? null, mode: prompt?.mode ?? null }
+    perfMark('click', 'prompt', undefined, perfExtra)
     setBusy(true)
+    perfMark('ack', 'prompt', undefined, perfExtra)
     try {
       isResultOk(await action(), fallback)
     } catch (error) {

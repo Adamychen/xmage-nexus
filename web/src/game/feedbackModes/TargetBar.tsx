@@ -6,7 +6,7 @@ import type { UseFeedbackForm } from '../useFeedbackForm'
 
 export default function TargetBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
-  const { prompt, busy, cancel, finishOptionalTarget } = form
+  const { prompt, busy, finishOptionalTarget } = form
   if (!prompt) return null
   const chosenCount = prompt.chosenTargets?.length ?? 0
   const isDiscard = /descart|discard/i.test(prompt.message)
@@ -39,9 +39,6 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
       <div className="action-prompt-actions">
         {prompt.required === false && (
           <button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</button>
-        )}
-        {!prompt.isStartingPlayer && (
-          <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'targeting_cancel')}</button>
         )}
       </div>
     </div>
