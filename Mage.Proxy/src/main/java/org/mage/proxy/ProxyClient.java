@@ -87,6 +87,7 @@ public class ProxyClient implements MageClient, CommandContext {
     private String accountKey = null;
 
     private volatile boolean connected = false;
+    private int lobbyPublishFailures = 0;
     private final List<ClientCallback> handshakeBuffer = new java.util.LinkedList<>();
     private volatile String lastDetailedMessage = null;
     private volatile long lastDetailedMessageAt = 0;
@@ -534,11 +535,17 @@ public class ProxyClient implements MageClient, CommandContext {
             lobby.add("users", JsonParser.parseString(JsonUtil.toJson(usersView)));
             lobby.add("serverMessages", JsonParser.parseString(JsonUtil.toJson(session.getServerMessages())));
             broadcastAuthorized(lobby.toString());
+            lobbyPublishFailures = 0;
         } catch (Throwable ex) {
-            // transient errors (e.g. server restart) must not spam the log; a Throwable here
-            // (e.g. a remoting Error while the server dies) would otherwise cancel the
-            // periodic task silently, killing all lobby broadcasts until the proxy restarts
-            logger.log(Level.WARNING, "Lobby publish failed: " + ex.getMessage(), ex);
+            // errores transitorios (p.ej. un reinicio del server) no deben inundar el log:
+            // el primer fallo se loguea con stack y después solo 1 línea por minuto, para
+            // no repetir ~70 KB de stack cada 2 s durante toda la caída
+            lobbyPublishFailures++;
+            if (lobbyPublishFailures == 1) {
+                logger.log(Level.WARNING, "Lobby publish failed: " + ex.getMessage(), ex);
+            } else if (lobbyPublishFailures % 30 == 0) {
+                logger.log(Level.WARNING, "Lobby publish still failing (" + lobbyPublishFailures + " ticks): " + ex.getMessage());
+            }
         }
     }
 

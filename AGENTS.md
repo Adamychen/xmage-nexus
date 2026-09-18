@@ -259,11 +259,32 @@ test window).
   (`build.mjs proxy`) + restart proxy.
 - **Before declaring a task "done"**: full suite
   (`node scripts/test.mjs`) with the stack up.
+  - **Reiniciar el stack justo antes** (`node scripts/ctl.mjs restart all`): un
+    server con muchas sesiones/partidas huérfanas acumuladas degrada el canal de
+    callbacks y hace flaky `warmup`/`self-test`/`human-test` (WATCHGAME que no
+    llega, `GAME_PLAY_MANA` que expira); con el stack recién reiniciado y
+    caliente, self-test 15/15 y human-test 80/80 (medido 2026-09-18). Los fallos
+    e2e de la suite en paralelo (hover/clic bajo carga: `printing-preview`,
+    `auto-pod`) también son flakes: reintentar el spec aislado antes de tocar nada.
 - **Known failure**: `self-test` may fail in `WATCHGAME` only on the first
   game after a cold server start (the server loses the callback
   return socket: `SESSION CALLBACK EXCEPTION - Unable to create socket`
   in `server.out.log`). Retry once with a warm server; if it fails
   repeatedly, it's a real bug, not a flake.
+  - **Resuelto 2026-09-18 (bug real del proxy + flake del test)**: los fallos
+    repetidos con `Lobby publish failed: NoClassDefFoundError
+    org/jboss/mx/util/ObjectNameFactory` (log de 648 MB) eran un bug del proxy:
+    `TransporterClient.findAlternativeTarget()` (solo tras
+    `CannotConnectException`) inicializa `InternalTransporterServices`, cuyo
+    `<clinit>` usa `ObjectNameFactory` de jboss-mx; el jar sombreado no lo
+    incluía y el artefacto ya no se publica en ningún repo. Fix: shim
+    `Mage.Proxy/src/main/java/org/jboss/mx/util/ObjectNameFactory.java` (el
+    proxy no usa clustering: `NetworkRegistry` nulo ⇒ el failover devuelve false
+    y se propaga el `CannotConnectException` real) + throttle de `publishLobby`
+    (1 stack + 1 línea/min por sesión). Verificado con caída controlada del
+    server (0 stacks tras el fix, recuperación automática,
+    `verify-spectator-end` 17/17) y `self-test` 15/15: el WATCHGAME era además
+    flaky por partidas IA-vs-IA que pueden terminar antes del watch.
 - **Known failure (e2e fake, cuantificado y de causa raíz conocida 2026-09-11)**:
   Solo quedan 2 tests excluidos por defecto vía `grepInvert`
   (`web/e2e/known-broken.ts`; para incluirlos: `E2E_INCLUDE_KNOWN_BROKEN=1 npm
