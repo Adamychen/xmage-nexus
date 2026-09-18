@@ -190,13 +190,14 @@ test('el hover en tierras del campo no hace morph (preview clásico) @fullflow @
     const landSlot = page.locator('.player-zone:not(.mirrored) .permanents-band .card-slot').first()
     await expect(landSlot).toBeVisible({ timeout: 30_000 })
     const preview = page.locator('.floating-card-preview')
+    await page.mouse.move(8, 8)
     await expect(preview).toHaveCount(0)
 
     await landSlot.hover()
     await expect(preview).toBeVisible({ timeout: 10_000 })
     await expect(preview, 'las tierras del campo no usan el morph de la mano').not.toHaveClass(/is-morph/)
 
-    await page.locator('.board-shell-divider-diamond').hover()
+    await page.mouse.move(8, 8)
     await expect(preview).toHaveCount(0)
     expect(pageErrors).toEqual([])
   })

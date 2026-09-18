@@ -2,7 +2,7 @@
  * P3 — galería de estados (`#/gallery`, solo dev).
  *
  * Siempre: recorre TODAS las entradas y exige que cada una monte sin errores de
- * página (cubre las 44 sin coste de baselines).
+ * página (el número lo fija el builder; hoy 160+).
  *
  * Regresión visual (`E2E_VISUAL=1`): compara una selección representativa con
  * `toHaveScreenshot` (animaciones desactivadas, red externa bloqueada para que

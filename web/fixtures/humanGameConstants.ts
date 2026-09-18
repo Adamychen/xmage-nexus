@@ -16,7 +16,7 @@ export const BASIC_LANDS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Fo
 export type CastStep =
   | { type: 'amount'; message: string; min?: number; max?: number }
   | { type: 'ability'; message: string; choices: Array<{ id: string; label: string }> }
-  | { type: 'target'; message: string; targets?: string[] }
+  | { type: 'target'; message: string; targets?: string[]; required?: boolean }
   | { type: 'mana'; message: string; sources: number }
 
 export interface LandConfig {

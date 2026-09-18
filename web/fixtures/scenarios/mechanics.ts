@@ -23,7 +23,7 @@ export function mechanicsScenario(): Scenario {
           { name: 'Poison', count: 3 },
           { name: 'Energy', count: 5 },
         ],
-        designationNames: ['Night', "City's Blessing"],
+        designationNames: ["City's Blessing"],
         commandList: [
           {
             id: 'ring-1',
@@ -108,6 +108,30 @@ export function mechanicsScenario(): Scenario {
             cardTypes: ['Battle'],
             defense: '4',
           }),
+          daynight1: makePermanent({
+            id: 'daynight1',
+            name: 'Storm-Charged Slasher',
+            parentId: 'daynight1',
+            controlled: true,
+            cardTypes: ['Creature'],
+            power: '3',
+            toughness: '4',
+            rules: [
+              'At the beginning of combat on your turn, target creature you control gets +2/+0 and gains trample and haste until end of turn.',
+              'Nightbound <i>(If a player casts at least two spells during their own turn, it becomes day next turn.)</i>',
+              '<br/><hintstart/>',
+              "It's currently night, active player has cast 0 spells this turn. It will not become day next turn.",
+            ],
+            secondCardFace: makeCard({
+              name: 'Reckless Stormseeker',
+              rules: [
+                'At the beginning of combat on your turn, target creature you control gets +1/+0 and gains haste until end of turn.',
+                'Daybound <i>(If a player casts no spells during their own turn, it becomes night next turn.)</i>',
+                '<br/><hintstart/>',
+                "It's currently night, active player has cast 0 spells this turn. It will not become day next turn.",
+              ],
+            }),
+          } as any),
         },
         topCard: makeCard({ name: 'Island', cardTypes: ['Land'] }),
       }),

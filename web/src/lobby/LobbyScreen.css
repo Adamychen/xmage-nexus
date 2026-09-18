@@ -212,6 +212,15 @@
   }
 }
 
+.lobby-columns-single:has(> aside.lobby-aside.floating-chat) > .lobby-main.has-decks-gallery .decks-footer {
+  position: relative;
+  z-index: 6;
+}
+
+.lobby-columns-single:has(> .lobby-main.has-decks-gallery) > aside.lobby-aside.floating-chat {
+  z-index: 4;
+}
+
 @media (max-width: 900px) {
   .lobby-top-nav {
     justify-content: flex-start;

@@ -49,13 +49,17 @@ async function loadGame(page: Page, settings: Record<string, unknown>) {
   await page.goto('/')
   await dismissSetupWizard(page)
   await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
-  await page.waitForTimeout(400)
+  await page.waitForFunction(() =>
+    Boolean((globalThis as unknown as { __mageStore?: unknown }).__mageStore),
+  )
   await page.evaluate(([gv, s]) => {
     const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (st: unknown) => void } }).__mageStore
     const st = store?.getState() as { settings: Record<string, unknown> }
     store?.setState({ phase: 'game', settings: { ...st.settings, ...(s as Record<string, unknown>) }, game: gv })
   }, [autoPodGame(), settings] as unknown as unknown)
-  await page.waitForTimeout(400)
+  await page.waitForFunction(
+    () => (globalThis as unknown as { __mageStore?: { getState: () => { phase?: string } } }).__mageStore?.getState?.().phase === 'game',
+  )
 }
 
 test('auto-pod: 3j con Estándar sin override arranca en Pod 2×2 @pod', async ({ page }) => {

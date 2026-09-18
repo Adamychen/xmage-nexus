@@ -680,14 +680,16 @@ export function registerSessionTools(server: McpServer): void {
     {
       title: 'Create a tournament table',
       description:
-        'Crea una mesa de torneo (Elimination/Swiss, Booster Draft/Sealed…). Devuelve tableId. ' +
+        'Crea una mesa de torneo. Devuelve tableId. tournamentType debe ser un nombre registrado del ' +
+        'config del server (p. ej. Constructed Elimination, Constructed Swiss; en limitado Booster Draft ' +
+        'Elimination / Sealed Elimination): un nombre inexistente provoca NPE en el server. ' +
         'Para limitado (Sealed/Draft) pasa limited:true + limitedOptions{setCodes, numberBoosters, ' +
         'constructionTime} y une sin mazo; para construido el mazo va en mage_join_tournament_table. ' +
         'playerTypes: plazas (SIM se mapea a HUMAN en el proxy). Espejo de buildCreateTournamentArgs de la web.',
       inputSchema: {
         session: z.string().optional().describe(PIN_DESC),
         name: z.string().optional(),
-        tournamentType: z.string().default('Elimination'),
+        tournamentType: z.string().default('Constructed Elimination'),
         gameType: z.string().default('Two Player Duel'),
         deckType: z.string().default('Constructed - Pioneer'),
         limited: z.boolean().default(false),

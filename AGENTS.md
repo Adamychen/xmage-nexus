@@ -285,15 +285,13 @@ test window).
     server (0 stacks tras el fix, recuperación automática,
     `verify-spectator-end` 17/17) y `self-test` 15/15: el WATCHGAME era además
     flaky por partidas IA-vs-IA que pueden terminar antes del watch.
-- **Known failure (e2e fake, cuantificado y de causa raíz conocida 2026-09-11)**:
-  Solo quedan 2 tests excluidos por defecto vía `grepInvert`
-  (`web/e2e/known-broken.ts`; para incluirlos: `E2E_INCLUDE_KNOWN_BROKEN=1 npm
-  run test:e2e`): los deep links de invitación (`invite-link.spec`) — la página
-  alcanza el staging de espectador (`staging-back` ✓) pero vuelve al lobby
-  antes del segundo aserto y los botones `invite-copy-*`/diálogo de mazo no
-  llegan; el escenario fake no emite `WATCHGAME` y `ActiveTablesBar` marca la
-  mesa como propia (`isMyTable` por `controllerName='e2e'`). Pendiente de
-  triage. **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
+- **RESUELTO (2026-09-12): `known-broken.ts` vacío; `invite-link.spec` pasa**
+  (era coletazo del SetupWizard; histórico abajo). `web/e2e/known-broken.ts` es
+  una lista vacía desde esa fecha, `playwright.config.ts` deja `grepInvert`
+  no-op con lista vacía y los deep links de invitación (`invite-link.spec`)
+  volvieron a pasar al re-ejecutarlos (`web/COMPONENT_PARITY.md:27`).
+  `E2E_INCLUDE_KNOWN_BROKEN=1` sigue disponible para re-incluir títulos si se
+  añaden. **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
   desde la ventana 09-05→09-10 (firma "Sala de Espera de Espectador" + asientos
   `0/N` en lobby) tenían causa raíz en el SetupWizard (commit `03abd96354`):
   su `skip()` persistía una conexión por defecto (proxy 8787) y el evento

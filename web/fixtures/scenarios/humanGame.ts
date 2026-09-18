@@ -278,11 +278,19 @@ export class HumanGame {
     if (this.stage === 'cast' && this.cast) this.onCastUUID(value)
   }
 
-  private onBoolean(conn: FakeConn, requestId: string | number, action: string, _value: boolean): void {
+  private onBoolean(conn: FakeConn, requestId: string | number, action: string, value: boolean): void {
     conn.ok(requestId, action, {})
     if (this.stage === 'discard') { const land = this.hand.find((c) => BASIC_LANDS.has(c.name)); const card = land ?? this.hand[0]; if (card) this.onDiscard(card.id); return }
     if (this.stage === 'attack') { this.finishHumanAttack(); return }
     if (this.stage === 'block') { this.finishHumanBlock(); return }
+    if (this.stage === 'cast' && this.cast) {
+      const step = this.castStep()
+      if (step?.type === 'target' && step.required === false && value === false) {
+        this.cast.index++
+        this.emitCastStep()
+      }
+      return
+    }
     if (this.stage !== 'main') return
     if (this.playableIds().length > 0 || this.crossZoneIds().length > 0) return
     if (this.options.humanAttack && this.myBattle.length > 0) { this.startHumanAttack(); return }
@@ -336,6 +344,7 @@ export class HumanGame {
       case 'target':
         this.emit('GAME_TARGET', {
           message: step.message,
+          flag: step.required === false ? false : undefined,
           targets: step.targets ?? [SIM_PLAYER_ID],
           options: { secondMessage: this.lastPlayedName() ?? '', possibleTargets: step.targets ?? [SIM_PLAYER_ID] },
           gameView: this.view(),

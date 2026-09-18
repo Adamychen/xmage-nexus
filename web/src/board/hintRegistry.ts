@@ -47,7 +47,7 @@ export const hintRegistry: HintRegistryRow[] = [
   { id: 'hint:CreaturesDiedThisTurnHint', kind: 'hint', status: 'known-unrendered', causa: 'informativo/cosmético (contador)' },
   { id: 'hint:CreaturesYouControlHint', kind: 'hint', status: 'known-unrendered', causa: 'informativo/cosmético (contador)' },
   { id: 'hint:CurrentDungeonHint', kind: 'hint', status: 'rendered', ref: 'web/src/game/MechanicsTray.tsx:103' },
-  { id: 'hint:DayNightHint', kind: 'hint', status: 'rendered', ref: 'web/src/game/MechanicsTray.tsx:139' },
+  { id: 'hint:DayNightHint', kind: 'hint', status: 'rendered', ref: 'web/src/board/dayNight.ts:12' },
   { id: 'hint:DifferentManaValuesInGraveHint', kind: 'hint', status: 'known-unrendered', causa: 'informativo/cosmético (contador)' },
   { id: 'hint:DomainHint', kind: 'hint', status: 'known-unrendered', causa: 'condición de arquetipo sin badge (D2)' },
   { id: 'hint:EnduringStoryHint', kind: 'hint', status: 'known-unrendered', causa: 'condición de arquetipo sin badge (D2)' },

@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/react'
 import PlayerInfoBar from './PlayerInfoBar'
 import type { PlayerView } from '../net/types'
 
-import { makePlayer } from '../__fixtures__/gameViews'
+import { makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
 const basePlayer: PlayerView = makePlayer({
   playerId: 'p1',
@@ -144,24 +144,47 @@ describe('PlayerInfoBar', () => {
     )
   })
 
-  it('renders Day/Night designation badge and triggers hover', () => {
+  it('renders Day/Night badge from the real rules hint and triggers hover', () => {
     const onHover = vi.fn()
     const dayPlayer: PlayerView = {
       ...basePlayer,
-      designationNames: ['Day'],
+      battlefield: {
+        perm1: makePermanent({
+          name: 'Reckless Stormseeker',
+          parentId: 'perm1',
+          rules: [
+            'Daybound <i>(If a player casts no spells during their own turn, it becomes night next turn.)</i>',
+            '<br/><hintstart/>',
+            "It's currently day, active player has cast 1 spells this turn. It will not become night next turn.",
+          ],
+        }),
+      },
     }
     const { container } = render(<PlayerInfoBar player={dayPlayer} side="my" onHover={onHover} />)
     const badge = container.querySelector('.badge-daynight')
     expect(badge).toBeDefined()
     expect(badge?.querySelector('svg')).not.toBeNull()
+    expect(badge?.classList.contains('is-day')).toBe(true)
 
     if (badge) {
       fireEvent.mouseEnter(badge)
       expect(onHover).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Day // Night' }),
+        expect.objectContaining({
+          name: 'Day // Night',
+          rules: ["It's currently day, active player has cast 1 spells this turn. It will not become night next turn."],
+        }),
         expect.any(Object),
       )
     }
+  })
+
+  it('ignores Day/Night designationNames without a real day/night hint', () => {
+    const stalePlayer: PlayerView = {
+      ...basePlayer,
+      designationNames: ['Night', 'Day'],
+    }
+    const { container } = render(<PlayerInfoBar player={stalePlayer} side="my" />)
+    expect(container.querySelector('.badge-daynight')).toBeNull()
   })
 
   it('renders player counters and triggers token preview on hover', () => {

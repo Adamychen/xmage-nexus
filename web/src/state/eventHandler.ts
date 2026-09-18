@@ -88,8 +88,10 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
   const s = getState()
 
   // Guard: If we are in an active game, ignore game-specific events belonging to another gameId
+  // (salvo GAME_INIT: es el arranque autoritativo de una partida, aunque el
+  // START_GAME previo ya haya actualizado el gameId).
   const isGameEvent = method.startsWith('GAME_')
-  if (s.gameId && objectId && objectId !== s.gameId && isGameEvent && method !== 'START_GAME') {
+  if (s.gameId && objectId && objectId !== s.gameId && isGameEvent && method !== 'START_GAME' && method !== 'GAME_INIT') {
     return
   }
 
@@ -103,10 +105,14 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame) {
-    // START_GAME de OTRA partida (Bo3/torneo): la vista en pantalla es de la
-    // partida anterior; comparar turno/paso contra ella clasificaría el estado
-    // nuevo como "viejo" y lo descartaría (mesa congelada al arrancar la 2ª).
-    const switchingGame = method === 'START_GAME' && objectId != null && objectId !== s.gameId
+    // START_GAME/GAME_INIT de OTRA partida (Bo3/torneo): la vista en pantalla es
+    // de la partida anterior; comparar turno/paso contra ella clasificaría el
+    // estado nuevo como "viejo" y lo descartaría (mesa congelada al arrancar la
+    // 2ª). GAME_INIT es siempre el arranque autoritativo de una partida, aunque
+    // el START_GAME previo ya haya actualizado el gameId: los eventos trailing
+    // de una partida vieja son UPDATE/AND_INFORM, no INIT.
+    const switchingGame = method === 'GAME_INIT'
+      || (method === 'START_GAME' && objectId != null && objectId !== s.gameId)
     const currentGame = switchingGame ? null : s.game
     const staleByPosition = isOlderThanCurrentGame(embeddedGame, objectId, currentGame, s.gameId)
     const sameGame = !!objectId && objectId === s.gameId

@@ -51,7 +51,7 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 
 | Tool | Args | Qué hace |
 |---|---|---|
-| `mage_create_tournament_table` | `name?`, `tournamentType?`(Elimination), `gameType?`, `deckType?`, `limited?`, `limitedOptions?`{setCodes, numberBoosters, constructionTime, draftCubeName, timing}, `playerTypes?`, `password?`, `winsNeeded?`, `numberRounds?`, `skillLevel?`, `rated?`, `spectatorsAllowed?`, `quitRatio?`, `session?` | Crea mesa de torneo (Sealed/Draft/Elimination…); limitado → `deckType:Limited` + sin mazo al unirse. Devuelve `tableId`. |
+| `mage_create_tournament_table` | `name?`, `tournamentType?`(Constructed Elimination), `gameType?`, `deckType?`, `limited?`, `limitedOptions?`{setCodes, numberBoosters, constructionTime, draftCubeName, timing}, `playerTypes?`, `password?`, `winsNeeded?`, `numberRounds?`, `skillLevel?`, `rated?`, `spectatorsAllowed?`, `quitRatio?`, `session?` | Crea mesa de torneo (Sealed/Draft/Elimination…); limitado → `deckType:Limited` + sin mazo al unirse. Devuelve `tableId`. `tournamentType` debe ser un nombre registrado del config del server (un nombre inexistente → NPE). |
 | `mage_join_tournament_table` | `tableId`, `deck?` (opcional en limitado), `playerName?`, `playerType?`, `skill?`, `password?`, `deckType?`, `gameType?`, `session?` | Ocupa un asiento del torneo. |
 | `mage_start_tournament` | `tableId?`, `waitMs?`, `session?` | Arranca el torneo y espera `START_TOURNAMENT` para devolver el `tournamentId` (sin unirse al panel el torneo no avanza). |
 | `mage_join_tournament` | `tournamentId?` (= último visto), `session?` | Unión obligatoria al panel (idempotente: vale como re-join). |

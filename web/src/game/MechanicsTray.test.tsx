@@ -270,7 +270,37 @@ describe('MechanicsTray', () => {
     expect(container.querySelectorAll('.dungeon-room-node.visited-room').length).toBeGreaterThan(0)
   })
 
-  it('renders Day and Night banner with transition rules', () => {
+  it('renders Day and Night banner with the real server hint', () => {
+    setState({
+      game: {
+        players: [
+          {
+            playerId: 'p1',
+            name: 'Werewolf Player',
+            controlled: true,
+            battlefield: {
+              perm1: {
+                id: 'perm1',
+                name: 'Storm-Charged Slasher',
+                rules: [
+                  'Nightbound <i>(If a player casts at least two spells during their own turn, it becomes day next turn.)</i>',
+                  '<br/><hintstart/>',
+                  "It's currently night, active player has cast 0 spells this turn. It will not become day next turn.",
+                ],
+              },
+            },
+          } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+
+    const { getAllByText } = render(<MechanicsTray />)
+    expect(getAllByText('Es de NOCHE').length).toBeGreaterThan(0)
+    expect(getAllByText(/Prioridad — Responde|Pila — Último/i).length).toBeGreaterThan(0)
+    expect(getAllByText(/It's currently night/).length).toBeGreaterThan(0)
+  })
+
+  it('ignores stale Day/Night designationNames without a real hint', () => {
     setState({
       game: {
         players: [
@@ -284,9 +314,10 @@ describe('MechanicsTray', () => {
       } as unknown as GameView,
     })
 
-    const { getAllByText } = render(<MechanicsTray />)
-    expect(getAllByText('Es de NOCHE').length).toBeGreaterThan(0)
-    expect(getAllByText(/Prioridad — Responde|Pila — Último/i).length).toBeGreaterThan(0)
+    const { container, getByText } = render(<MechanicsTray />)
+    expect(container.querySelector('.mechanic-tab-btn')).toBeNull()
+    expect(container.querySelector('.panel-daynight')).toBeNull()
+    expect(getByText('No hay mecánicas globales activas en esta partida.')).toBeDefined()
   })
 
   it('renders Monarch tab with rules explanation and current holder', () => {

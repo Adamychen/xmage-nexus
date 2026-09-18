@@ -158,6 +158,18 @@ describe('MCP tournament harness (B.12)', () => {
     expect(requestsFor('joinGame').at(-1)?.args).toMatchObject({ gameId: 'g-9' })
   }, 20_000)
 
+  it('mage_create_tournament_table default es un nombre registrado del config', async () => {
+    const { tools } = await client.listTools()
+    const tool = tools.find((candidate) => candidate.name === 'mage_create_tournament_table')
+    const schema = tool?.inputSchema as { properties?: Record<string, { default?: unknown }> } | undefined
+    expect(schema?.properties?.tournamentType?.default).toBe('Constructed Elimination')
+
+    await okText('mage_create_tournament_table', { session: 'p2-t', name: 'p2-default-tourney' })
+    expect(requestsFor('createTournamentTable').at(-1)?.args).toMatchObject({
+      tournamentType: 'Constructed Elimination',
+    })
+  })
+
   it('falla sin ids cuando la sesión no conoce torneo ni partida', async () => {
     await okText('mage_connect', { session: 'p2-empty', proxyUrl: url, host: 'localhost', port: 17171, username: 'p2empty' })
     for (const tool of ['mage_join_tournament', 'mage_get_tournament', 'mage_join_game']) {

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 // @ts-expect-error no type declarations for the oracle script (plain node .mjs)
 import { computeEngineViewGap } from '../../../scripts/engine-view-schema.mjs'
+import { ENGINE_VIEW_REGISTRY, engineViewKey, type EngineViewRegistryRow } from './engineViewRegistry'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -29,6 +30,22 @@ const KNOWN_DISPLAYABLE_GAPS: Record<string, string[]> = {
 
 const computed = computeEngineViewGap()
 
+interface GapKey {
+  id: string
+  view: string
+  field: string
+}
+
+function gapKeys(gap: typeof baseline): GapKey[] {
+  const keys: GapKey[] = []
+  for (const [view, entry] of Object.entries(gap) as [string, { missing?: string[] }][]) {
+    for (const field of entry.missing ?? []) keys.push({ id: engineViewKey(view, field), view, field })
+  }
+  return keys
+}
+
+const keys = gapKeys(baseline)
+
 describe('engine→view coverage (no unexposed engine state goes unnoticed)', () => {
   it('engine→view gap matches the committed baseline', () => {
     expect(computed).toEqual(baseline)
@@ -42,4 +59,50 @@ describe('engine→view coverage (no unexposed engine state goes unnoticed)', ()
       }
     })
   }
+
+  it('every engine→view field has a triage row in engineViewRegistry', () => {
+    const registered = new Set(ENGINE_VIEW_REGISTRY.map((r) => r.id))
+    const missing = keys.filter((k) => !registered.has(k.id))
+    expect(
+      missing.map((k) => k.id),
+      `campo engine→view sin triage: ${missing.map((k) => k.id).join(', ')} — añade fila en web/src/state/engineViewRegistry.ts o regenera el baseline (node scripts/engine-view-schema.mjs --update-baseline)`,
+    ).toEqual([])
+  })
+
+  it('every engineViewRegistry row maps to a live engine→view gap field', () => {
+    const live = new Set(keys.map((k) => k.id))
+    const stale = ENGINE_VIEW_REGISTRY.filter((r) => !live.has(r.id))
+    expect(
+      stale.map((r) => r.id),
+      `fila huérfana en engineViewRegistry.ts: ${stale.map((r) => r.id).join(', ')} — el campo ya no está en el gap; elimínala o regenera el baseline (node scripts/engine-view-schema.mjs --update-baseline)`,
+    ).toEqual([])
+  })
+
+  it('registry rows are unique and keyed as view.field', () => {
+    const seen = new Map<string, number>()
+    const problems: string[] = []
+    for (const row of ENGINE_VIEW_REGISTRY as EngineViewRegistryRow[]) {
+      if (row.id !== engineViewKey(row.view, row.field)) {
+        problems.push(`${row.id}: el id no coincide con ${row.view}.${row.field}`)
+      }
+      seen.set(row.id, (seen.get(row.id) ?? 0) + 1)
+    }
+    for (const [id, count] of seen) {
+      if (count > 1) problems.push(`${id}: ${count} filas duplicadas`)
+    }
+    expect(problems, problems.join('; ')).toEqual([])
+  })
+
+  it('rendered rows carry a path:line ref and the rest carry a causa', () => {
+    const problems: string[] = []
+    for (const row of ENGINE_VIEW_REGISTRY as EngineViewRegistryRow[]) {
+      if (row.decision === 'rendered' && !/^[\w./-]+:\d+$/.test(row.ref ?? '')) {
+        problems.push(`${row.id}: rendered sin ref 'ruta:línea' (ver web/ENGINE_VIEW_TRIAGE.md)`)
+      }
+      if (row.decision !== 'rendered' && !(row.causa && row.causa.trim().length > 0)) {
+        problems.push(`${row.id}: ${row.decision} sin causa (ver web/ENGINE_VIEW_TRIAGE.md)`)
+      }
+    }
+    expect(problems, problems.join('; ')).toEqual([])
+  })
 })

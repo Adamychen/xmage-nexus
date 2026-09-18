@@ -25,6 +25,7 @@ import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import { applyFxRoot } from '../board/fx'
 import { hasCommanders as hasCommandersInGame } from '../board/commanders'
+import { dayNightStateOf } from '../board/dayNight'
 import MechanicsTray from './MechanicsTray'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
@@ -242,7 +243,9 @@ export default function GameScreen() {
   }, [topOpps, selectedOppId, game?.activePlayerId])
 
   const hasActiveMechanics = useMemo(() => {
-    if (!game?.players) return false
+    if (!game) return false
+    if (dayNightStateOf(game)) return true
+    if (!game.players) return false
     return game.players.some((p) => {
       const items = Array.isArray(p.commandList)
         ? p.commandList
@@ -251,14 +254,13 @@ export default function GameScreen() {
       const hasDungeon = items.some(
         (c: any) => Array.isArray(c?.cardTypes) && c.cardTypes.map((t: string) => String(t).toLowerCase()).includes('dungeon')
       )
-      const hasDayNight = p.designationNames?.some((d) => d.toLowerCase().includes('day') || d.toLowerCase().includes('night'))
       const hasMonarch = !!p.monarch
       const hasInitiative = !!p.initiative
       const hasBlessing = p.designationNames?.some((d) => d.toLowerCase().includes('blessing'))
       const hasSpeed = p.designationNames?.some((d) => d.toLowerCase().includes('speed'))
-      return hasRing || hasDungeon || hasDayNight || hasMonarch || hasInitiative || hasBlessing || hasSpeed
+      return hasRing || hasDungeon || hasMonarch || hasInitiative || hasBlessing || hasSpeed
     })
-  }, [game?.players])
+  }, [game])
 
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 

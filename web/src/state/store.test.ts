@@ -993,6 +993,121 @@ describe('active game persistence in store', () => {
     expect(getState().game?.step).toBeUndefined()
   })
 
+  it('F1: el GAME_INIT de la partida 2 tras el sideboard sustituye la vista congelada de la 1ª', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-f1-1',
+      gameEnd: { matchInfo: 'You lost the game', matchView: { endTime: null } },
+      game: makeGameView({
+        turn: 2,
+        step: 'DECLARE_BLOCKERS',
+        players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+      }),
+    })
+
+    const fresh = makeGameView({
+      turn: 1,
+      step: undefined,
+      players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+    })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_INIT',
+      messageId: 1,
+      objectId: 'g-f1-2',
+      data: { gameView: fresh },
+    })
+
+    expect(getState().phase).toBe('game')
+    expect(getState().gameId).toBe('g-f1-2')
+    expect(getState().game).toBe(fresh)
+  })
+
+  it('F1 orden real: el GAME_INIT de la 2ª partida tras su START_GAME también sustituye la vista vieja', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-f1b-1',
+      gameEnd: { matchInfo: 'You lost the game', matchView: { endTime: null } },
+      game: makeGameView({
+        turn: 2,
+        step: 'DECLARE_BLOCKERS',
+        players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+      }),
+    })
+
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-f1b-2',
+      data: { gameId: 'g-f1b-2' },
+    })
+    expect(getState().gameId).toBe('g-f1b-2')
+    expect(getState().game?.turn).toBe(2)
+
+    const fresh = makeGameView({
+      turn: 1,
+      step: undefined,
+      players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+    })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_INIT',
+      messageId: 2,
+      objectId: 'g-f1b-2',
+      data: { gameView: fresh },
+    })
+
+    expect(getState().phase).toBe('game')
+    expect(getState().gameId).toBe('g-f1b-2')
+    expect(getState().game).toBe(fresh)
+  })
+
+  it('F1 guard intacto: un GAME_UPDATE trailing de otra partida y uno anterior de la misma siguen descartándose', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-x-1',
+      game: makeGameView({
+        turn: 3,
+        step: 'PRECOMBAT_MAIN',
+        players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+      }),
+    })
+
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 1,
+      objectId: 'g-x-0',
+      data: {
+        gameView: makeGameView({
+          turn: 1,
+          step: 'UPKEEP',
+          players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+        }),
+      },
+    })
+    expect(getState().gameId).toBe('g-x-1')
+    expect(getState().game?.turn).toBe(3)
+
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 2,
+      objectId: 'g-x-1',
+      data: {
+        gameView: makeGameView({
+          turn: 1,
+          step: 'UPKEEP',
+          players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })],
+        }),
+      },
+    })
+    expect(getState().gameId).toBe('g-x-1')
+    expect(getState().game?.turn).toBe(3)
+    expect(getState().game?.step).toBe('PRECOMBAT_MAIN')
+  })
+
   it('returnToLobby leaves gameChat and clears game chat messages', () => {
     setState({
       phase: 'game',
@@ -1117,10 +1232,10 @@ describe('active game persistence in store', () => {
     })
     await vi.waitFor(async () => {
       expect((await gameLogStore.list()).length).toBe(before + 1)
+      const latest = await gameLogStore.getLatest()
+      expect(latest?.gameId).toBe('g-log-1')
+      expect(latest?.entries.map((e) => e.text)).toEqual(['hola', 'Alice has won the game'])
     })
-    const latest = await gameLogStore.getLatest()
-    expect(latest?.gameId).toBe('g-log-1')
-    expect(latest?.entries.map((e) => e.text)).toEqual(['hola', 'Alice has won the game'])
 
     setSetting('gameLogAutoSave', false)
     handleMessage({

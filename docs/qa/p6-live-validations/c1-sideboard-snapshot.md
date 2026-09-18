@@ -1,0 +1,44 @@
+- dialog "Sideboard" [ref=e1321]:
+  - generic [ref=e1322]:
+    - generic [ref=e1323]:
+      - heading "Sideboard" [level=2] [ref=e1324]
+      - generic [ref=e1325]: p6-c1-deck
+    - generic [ref=e1326]: 2:52
+  - generic [ref=e1329]:
+    - generic [ref=e1330]:
+      - generic [ref=e1331]:
+        - heading "Mazo Principal" [level=3] [ref=e1332]
+        - generic [ref=e1333]: "60"
+      - generic [ref=e1334]:
+        - generic [ref=e1335]:
+          - generic [ref=e1336]:
+            - generic [ref=e1337]: Instantáneos
+            - generic [ref=e1338]: "4"
+          - 'button "4x Relámpago {R} {R}" [ref=e1339]':
+            - generic [ref=e1341]: 4x
+            - generic "Relámpago (Lightning Bolt)" [ref=e1342]: Relámpago
+            - 'generic "Lightning Bolt: Mazo No Válido (Pioneer)" [ref=e1343]'
+            - 'generic "{R}" [ref=e1348]':
+              - 'img "{R}"'
+        - generic [ref=e1350]:
+          - generic [ref=e1351]:
+            - generic [ref=e1352]: Tierras
+            - generic [ref=e1353]: "56"
+          - button "56x Bosque" [ref=e1354]:
+            - generic [ref=e1356]: 56x
+            - generic "Bosque (Forest)" [ref=e1357]: Bosque
+    - generic [ref=e1358]:
+      - generic [ref=e1359]:
+        - heading "Banquillo" [level=3] [ref=e1360]
+        - generic [ref=e1361]: 15/15
+      - button "15x Bosque" [ref=e1363]:
+        - generic [ref=e1365]: 15x
+        - generic "Bosque (Forest)" [ref=e1366]: Bosque
+  - generic [ref=e1367]: "Lightning Bolt: Mazo No Válido (Pioneer)"
+  - generic [ref=e1369]:
+    - generic [ref=e1370]:
+      - generic [ref=e1371]: "Main: 60 (mín 60)"
+      - generic [ref=e1372]: "Side: 15 (máx 15)"
+    - generic [ref=e1373]:
+      - button "Restablecer" [active] [ref=e1374] [cursor=pointer]
+      - button "Enviar mazo" [ref=e1378] [cursor=pointer]

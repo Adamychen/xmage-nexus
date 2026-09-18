@@ -1,0 +1,33 @@
+- dialog [ref=e1414]:
+  - generic [ref=e1415]: DECISIÓN DE MULLIGAN
+  - heading "Mano Inicial y Mulligan" [level=2] [ref=e1422]
+  - paragraph [ref=e1423]: Hacer Mulligan (6)
+  - generic [ref=e1424]:
+    - generic [ref=e1426] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1427]: Forest
+    - generic [ref=e1429] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1430]: Forest
+    - generic [ref=e1432] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1433]: Forest
+    - generic [ref=e1435] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1436]: Forest
+    - generic [ref=e1438] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1439]: Forest
+    - generic [ref=e1441] [cursor=pointer]:
+      - img "Lightning Bolt"
+      - generic [ref=e1442]: Lightning Bolt
+    - generic [ref=e1444] [cursor=pointer]:
+      - img "Forest"
+      - generic [ref=e1445]: Forest
+  - generic [ref=e1446]:
+    - button "Mantener (7)" [active] [ref=e1447] [cursor=pointer]
+    - button "Mulligan" [ref=e1453] [cursor=pointer]
+    - button "Conceder" [ref=e1459] [cursor=pointer]
+  - generic [ref=e1462] [cursor=pointer]:
+    - checkbox "Auto-mulligan" [ref=e1463]
+    - text: Auto-mulligan

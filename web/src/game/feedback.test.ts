@@ -34,6 +34,22 @@ describe('parseFeedback', () => {
     expect(prompt?.required).toBe(false)
   })
 
+  it('treats a string "false" flag as optional and an absent flag as required (fail-to-find frame)', () => {
+    const optional = parseFeedback('GAME_TARGET', 'game-ftf', {
+      message: 'Search your library for a basic land card',
+      flag: 'false',
+      targets: [],
+      options: { possibleTargets: [] },
+    })
+    expect(optional?.required).toBe(false)
+
+    const required = parseFeedback('GAME_TARGET', 'game-ftf', {
+      message: 'Search your library for a card',
+      targets: ['card-1'],
+    })
+    expect(required?.required).toBe(true)
+  })
+
   it('falls back to cardsView1 when XMage omits the target UUID set', () => {
     const prompt = parseFeedback('GAME_TARGET', 'game-2', {
       message: 'Choose a target',

@@ -57,16 +57,29 @@ test.describe('Printing change refreshes hover preview', () => {
       await expect(strip).toBeVisible({ timeout: 5000 })
       await expect(page.locator('.deck-category-section', { hasText: /instant/i })).toBeVisible({ timeout: 15000 })
 
-      await strip.hover({ timeout: 15000 })
-      await expect(page.locator('.arena-floating-preview img').first()).toHaveAttribute('src', IMG_A, { timeout: 10000 })
+      const preview = page.locator('.arena-floating-preview img').first()
+      await expect(async () => {
+        await page.mouse.move(8, 8)
+        await strip.hover({ timeout: 5000 })
+        await expect(preview).toHaveAttribute('src', IMG_A, { timeout: 3000 })
+      }).toPass({ timeout: 15000 })
 
-      await strip.locator('.strip-btn.print').click({ timeout: 15000 })
+      const printBtn = strip.locator('.strip-btn.print')
+      await expect(async () => {
+        await page.mouse.move(8, 8)
+        await strip.hover({ timeout: 5000 })
+        await expect(printBtn).toBeVisible()
+      }).toPass({ timeout: 15000 })
+      await printBtn.dispatchEvent('click')
       await expect(page.locator('.printings-modal')).toBeVisible({ timeout: 5000 })
-      await page.locator('.printing-card-item', { hasText: 'LEA #161' }).click({ timeout: 15000 })
+      await page.locator('.printing-card-item', { hasText: 'LEA #161' }).dispatchEvent('click', undefined, { timeout: 15000 })
       await expect(page.locator('.printings-modal')).toBeHidden({ timeout: 5000 })
 
-      await strip.hover({ timeout: 15000 })
-      await expect(page.locator('.arena-floating-preview img').first()).toHaveAttribute('src', IMG_B, { timeout: 10000 })
+      await expect(async () => {
+        await page.mouse.move(8, 8)
+        await strip.hover({ timeout: 5000 })
+        await expect(preview).toHaveAttribute('src', IMG_B, { timeout: 3000 })
+      }).toPass({ timeout: 15000 })
     })
   })
 })

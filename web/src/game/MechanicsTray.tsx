@@ -12,6 +12,7 @@ import {
   pathToRoom,
   type DungeonGraph,
 } from './dungeons'
+import { dayNightStateOf, type DayNightState } from '../board/dayNight'
 import './MechanicsTray.css'
 
 interface MechanicsTrayProps {
@@ -29,10 +30,6 @@ interface DungeonState {
   player: PlayerView
   graph: DungeonGraph | null
   visited: string[]
-}
-
-interface DayNightState {
-  isNight: boolean
 }
 
 function getRingLevels(t: (c: any, k: any) => string) {
@@ -136,18 +133,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     return list
   }, [game?.players, gameId, progress])
 
-  const dayNightState = useMemo((): DayNightState | null => {
-    if (!game?.players) return null
-    for (const p of game.players) {
-      for (const d of p.designationNames ?? []) {
-        const dl = d.toLowerCase()
-        if (dl.includes('day') || dl.includes('night')) {
-          return { isNight: dl.includes('night') && !dl.includes('neither') }
-        }
-      }
-    }
-    return null
-  }, [game?.players])
+  const dayNightState = useMemo((): DayNightState | null => dayNightStateOf(game), [game])
 
   const monarchPlayer = game?.players?.find((p) => p.monarch)
   const initiativePlayer = game?.players?.find((p) => p.initiative)
@@ -338,11 +324,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               <span className="daynight-giant-icon"><Icon name={dayNightState.isNight ? 'moon' : 'sun'} size={30} /></span>
               <div className="daynight-giant-text">
                 <h3>{dayNightState.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day')}</h3>
-                <span className="daynight-hint">
-                  {dayNightState.isNight
-                    ? t('wiki', 'phases_stack')
-                    : t('wiki', 'phases_priority')}
-                </span>
+                <span className="daynight-hint">{dayNightState.hint}</span>
               </div>
             </div>
 

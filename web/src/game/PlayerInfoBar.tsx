@@ -4,6 +4,7 @@ import { formatTimer, isUnlimitedTime, useTickingTimer } from '../utils/timer'
 import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
 import { useTweenNumber } from './useTweenNumber'
+import { dayNightStateOfPlayer } from '../board/dayNight'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
@@ -143,23 +144,18 @@ function getDungeonInfo(player: PlayerView): DungeonInfo | null {
   return null
 }
 
-function getDayNightInfo(player: PlayerView): { isNight: boolean; card: CardView } | null {
-  const designations = player.designationNames ?? []
-  for (const d of designations) {
-    const dl = d.toLowerCase()
-    if (dl.includes('day') || dl.includes('night')) {
-      const isNight = dl.includes('night') && !dl.includes('neither')
-      return {
-        isNight,
-        card: {
-          name: 'Day // Night',
-          displayName: isNight ? 'Night' : 'Day',
-          manaValue: 0,
-        } as CardView,
-      }
-    }
+function getDayNightInfo(player: PlayerView, game: GameView | null): { isNight: boolean; card: CardView } | null {
+  const state = dayNightStateOfPlayer(player, game)
+  if (!state) return null
+  return {
+    isNight: state.isNight,
+    card: {
+      name: 'Day // Night',
+      displayName: state.isNight ? 'Night' : 'Day',
+      rules: [state.hint],
+      manaValue: 0,
+    } as CardView,
   }
-  return null
 }
 
 function getCurseInfo(player: PlayerView, game: GameView | null): { count: number; firstCard: CardView } | null {
@@ -262,7 +258,7 @@ export default function PlayerInfoBar({
 
   const ringInfo = getRingInfo(player)
   const dungeonInfo = getDungeonInfo(player)
-  const dayNightInfo = getDayNightInfo(player)
+  const dayNightInfo = getDayNightInfo(player, game)
   const curseInfo = getCurseInfo(player, game)
   const nonDayNightDesignations = (player.designationNames ?? []).filter(
     (d) => !d.toLowerCase().includes('day') && !d.toLowerCase().includes('night')
