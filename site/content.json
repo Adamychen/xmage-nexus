@@ -2,24 +2,24 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.1.0",
-    "date": "2026-09-10",
-    "tag": "v0.1.0",
+    "version": "0.2.0",
+    "date": "2026-09-19",
+    "tag": "v0.2.0",
     "status": "draft",
-    "notes": "Primera build publica de XMage Nexus: cliente web moderno para XMage sobre un proxy WebSocket multi-usuario.",
+    "notes": "Segunda build publica: cierre de la fase de gameplay (todas las mecanicas verificadas contra el servidor real), guardas anti-drift en CI, MCP headless para jugar por protocolo y launcher con el pipeline de release restaurado.",
     "highlights": [
-      "Lobby completo: mesas en vivo, chat de sala/partida, filtros, perfiles y clanes",
-      "Juego 1v1 y Commander (hasta 4 en tablero): prioridad, targeting visual, pago de mana, combate multibloqueo y stack",
-      "Deck Builder in-app (Scryfall) con import/export texto, Arena y .dck",
-      "Draft y Sealed de 8 jugadores, torneos Suizo/Eliminacion y visor de repeticiones",
-      "9 idiomas, motor de sonido, VFX y deck tracker integrado",
-      "Launcher de escritorio (Tauri) con servidor + proxy + JRE integrados"
+      "1v1 y Commander afinados: prompts sin residuos, acuse visual <100 ms, paradas de fase y fin de match verificados en real",
+      "115 frames reales del servidor con invariantes + guardas anti-drift (callbacks, contrato, hints, engine a view)",
+      "MCP headless: crea mesa, juega turnos, paga mana y reconecta por protocolo",
+      "Bo3 con banquillo por UI, reconexion mid-game con resync y torneo Suizo/Eliminacion con cuadro en vivo",
+      "9 idiomas, 160+ estados en la galeria de QA y regresion visual opt-in",
+      "Launcher de escritorio (Tauri, Windows/macOS/Linux) con servidor + proxy + JRE en el primer arranque y updater firmado"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

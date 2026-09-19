@@ -73,10 +73,13 @@ Piezas:
   fragmento por plataforma (claves `linux-x86_64`/`windows-x86_64`/`darwin-aarch64`, distintas de
   los targets del manifest). `latest.json` = `{version, notes, pub_date, platforms}` y se publica
   en `releases/latest/download/latest.json`.
-- Estado (2026-09): el launcher compila y hay `.app`/`.dmg` en `launcher/target/release/bundle/`;
-  los workflows `modules.yml`/`release.yml` fueron BORRADOS (recuperables con
-  `git show 03abd963548:.github/workflows/<x>.yml`): hoy NO hay pipeline que publique
-  tarballs/manifest/latest. Faltan firma Apple/Windows, JRE por SO y tests de primera ejecución.
+- Estado (2026-09-19): el launcher compila y hay `.app`/`.dmg` en `launcher/target/release/bundle/`;
+  los workflows `modules.yml`/`release.yml` fueron BORRADOS en `aa6a8de39c7` (aislamiento del fork)
+  y **restaurados/adaptados el 2026-09-19** desde `git show v0.1.0:.github/workflows/<x>.yml`:
+  `modules.yml` es reutilizable (`workflow_dispatch` + `workflow_call`) y checkoutea la rama `nexus`
+  en `xmage-fork/` (`NEXUS_FORK_DIR`); `release.yml` lo llama desde el job `modules` y publica draft
+  por tag. Falta firma Apple/Windows, JRE por SO y tests de primera ejecución (Phase 4 sigue pendiente).
+  Release v0.2.0 en preparación: versiones ya bumpeadas, tag pendiente de decisión del usuario.
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 
@@ -102,5 +105,7 @@ Piezas:
 - Reiniciar solo el proxy deja sesiones huérfanas: `node scripts/ctl.mjs restart all`.
 - El launcher de escritorio puede ocupar 17171/8787 y dejar PIDs huérfanos en `.run/`: matarlos
   antes de los self-tests.
+- **Trampa `releases/latest`**: el repo comparte releases con el fork (los `engine-*.tar.gz` del motor se publican como `engine-1.4.61-v1` en este mismo repo). El updater apunta a `releases/latest/download/latest.json`: si un release del motor queda como «latest», la URL da 404 y el launcher degrada (check falla y sigue). Al publicar un release del producto, verifica `gh release edit <tag> --latest` y que
+  `curl -sL https://github.com/Adamychen/xmage-nexus/releases/latest/download/latest.json` responde JSON con las 3 plataformas (el CDN puede tardar unos minutos en soltar el 302 viejo).
 - No redistribuir sin revisar licencias (JRE + motor XMage) y sin decidir el modelo de
   distribución (plan4 §10).

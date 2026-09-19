@@ -1,28 +1,28 @@
 {
-  "generatedAt": "2026-09-10T15:24:01.519Z",
+  "generatedAt": "2026-09-18T23:39:39.182Z",
   "commit": null,
   "runUrl": null,
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.1.0",
-    "date": "2026-09-10",
-    "tag": "v0.1.0",
+    "version": "0.2.0",
+    "date": "2026-09-19",
+    "tag": "v0.2.0",
     "status": "draft",
-    "notes": "Primera build publica de XMage Nexus: cliente web moderno para XMage sobre un proxy WebSocket multi-usuario.",
+    "notes": "Segunda build publica: cierre de la fase de gameplay (todas las mecanicas verificadas contra el servidor real), guardas anti-drift en CI, MCP headless para jugar por protocolo y launcher con el pipeline de release restaurado.",
     "highlights": [
-      "Lobby completo: mesas en vivo, chat de sala/partida, filtros, perfiles y clanes",
-      "Juego 1v1 y Commander (hasta 4 en tablero): prioridad, targeting visual, pago de mana, combate multibloqueo y stack",
-      "Deck Builder in-app (Scryfall) con import/export texto, Arena y .dck",
-      "Draft y Sealed de 8 jugadores, torneos Suizo/Eliminacion y visor de repeticiones",
-      "9 idiomas, motor de sonido, VFX y deck tracker integrado",
-      "Launcher de escritorio (Tauri) con servidor + proxy + JRE integrados"
+      "1v1 y Commander afinados: prompts sin residuos, acuse visual <100 ms, paradas de fase y fin de match verificados en real",
+      "115 frames reales del servidor con invariantes + guardas anti-drift (callbacks, contrato, hints, engine a view)",
+      "MCP headless: crea mesa, juega turnos, paga mana y reconecta por protocolo",
+      "Bo3 con banquillo por UI, reconexion mid-game con resync y torneo Suizo/Eliminacion con cuadro en vivo",
+      "9 idiomas, 160+ estados en la galeria de QA y regresion visual opt-in",
+      "Launcher de escritorio (Tauri, Windows/macOS/Linux) con servidor + proxy + JRE en el primer arranque y updater firmado"
     ],
     "downloads": [
       {
@@ -275,6 +275,11 @@
       "status": "pending"
     },
     {
+      "name": "mcp",
+      "label": "MCP (typecheck+test)",
+      "status": "pending"
+    },
+    {
       "name": "fake-e2e",
       "label": "E2E (fake, no stack)",
       "status": "pending"
@@ -282,7 +287,11 @@
     {
       "name": "proxy",
       "label": "Proxy (java)",
-      "status": "pending"
+      "status": "pass",
+      "total": 89,
+      "passed": 89,
+      "failed": 0,
+      "durationMs": null
     },
     {
       "name": "integration",
@@ -292,10 +301,10 @@
     }
   ],
   "coverage": {
-    "lines": 82.8,
-    "functions": 71.12,
-    "branches": 69.8,
-    "statements": 81.2
+    "lines": 83.23,
+    "functions": 71.87,
+    "branches": 70.52,
+    "statements": 81.8
   },
   "coverageThresholds": {
     "lines": 70,
@@ -322,15 +331,15 @@
       "id": 2,
       "name": "Full Interaction",
       "status": "done",
-      "date": "2026-08-15",
-      "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters."
+      "date": "2026-09-12",
+      "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters. Live 2026-09-12: tokens (Dragon Fodder), auras (Rancor), counters (Ballista X=2), planeswalkers (Jace +2/Brainstorm), equipment + evasion (Serra flying/vigilance/haste/shroud), order dialogs, Bo3 sideboard via raw WS (UI submit pending)."
     },
     {
       "id": 2.5,
       "name": "1v1 Competitive Parity",
       "status": "done",
-      "date": "2026-08-25",
-      "desc": "Card selection modals (HD CardGrid), phase stops/shortcuts (F4/F9), match clocks, DFCs/Sagas, interactive discard from revealed hand (Thoughtseize)."
+      "date": "2026-09-12",
+      "desc": "Card selection modals (HD CardGrid), phase stops/shortcuts (F4-F11; F1 does not exist by design), match clocks, DFCs/Sagas, interactive discard from revealed hand (Thoughtseize). Live 2026-09-12: no-clock timer hidden via isUnlimitedTime, singular pile viewer, spectator game chat, honest seat/password error paths."
     },
     {
       "id": 3,
@@ -350,8 +359,8 @@
       "id": 5,
       "name": "Advanced Formats & Tournaments",
       "status": "done",
-      "date": "2026-08-26",
-      "desc": "Commander pod (PodBoard 2x2 render clamp 4 — server supports FFA 3-10 — + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay viewer."
+      "date": "2026-09-13",
+      "desc": "Commander pod (PodBoard 2x2 render clamp 4 — server supports FFA 3-10 — + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay viewer. Live 2026-09-13: Sealed Elimination end-to-end (audit-sealed-2, joinTournament discovery, auto-submit, 40-card game to Finished) + tournament wizard with real data (19 types). Pending: draft picks and sealed ConstructScreen submit via web UI."
     },
     {
       "id": 6,
@@ -458,6 +467,13 @@
       "feature": "Double-Faced Cards (DFC/MDFC/Sagas)",
       "official": "yes",
       "nexus": "yes",
+      "phase": "Completed"
+    },
+    {
+      "category": "In-Game Board",
+      "feature": "Control Opponent's Turn (Mindslaver) + Switch Hands",
+      "official": "yes",
+      "nexus": "partial",
       "phase": "Completed"
     },
     {

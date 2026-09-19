@@ -6,7 +6,7 @@ import { registerTestTools } from './tools/tests.ts'
 import { registerSessionTools } from './xmage/session.ts'
 import { registerResources } from './resources.ts'
 
-const server = new McpServer({ name: 'mage-nexus', version: '0.1.0' })
+const server = new McpServer({ name: 'mage-nexus', version: '0.2.0' })
 
 registerStackTools(server)
 registerTestTools(server)

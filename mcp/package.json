@@ -1,6 +1,6 @@
 {
   "name": "mage-nexus-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "MCP server for XMage Nexus: dev-stack control and headless XMage player tools",
