@@ -11,7 +11,7 @@
     "version": "0.2.0",
     "date": "2026-09-19",
     "tag": "v0.2.0",
-    "status": "draft",
+    "status": "published",
     "notes": "Segunda build publica: cierre de la fase de gameplay (todas las mecanicas verificadas contra el servidor real), guardas anti-drift en CI, MCP headless para jugar por protocolo y launcher con el pipeline de release restaurado.",
     "highlights": [
       "1v1 y Commander afinados: prompts sin residuos, acuse visual <100 ms, paradas de fase y fin de match verificados en real",
