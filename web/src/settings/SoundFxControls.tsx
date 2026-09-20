@@ -1,4 +1,5 @@
 import { FX_SPEEDS } from '../board/fx'
+import Tabs from '../ui/Tabs'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
@@ -23,18 +24,13 @@ export default function SoundFxControls() {
       </div>
       <div className="fx-popover-row">
         <span className="fx-popover-label">{t('game', 'fx_speed')}</span>
-        <div className="fx-speed-group">
-          {FX_SPEEDS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={`fx-speed-btn ${settings.animationSpeed === s ? 'active' : ''}`}
-              onClick={() => setSetting('animationSpeed', s)}
-            >
-              {s}×
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="segmented"
+          size="sm"
+          value={String(settings.animationSpeed)}
+          onChange={(next) => setSetting('animationSpeed', Number(next) as typeof settings.animationSpeed)}
+          items={FX_SPEEDS.map((s) => ({ id: String(s), label: `${s}×` }))}
+        />
       </div>
       <div className="fx-popover-divider" />
       <div className="fx-popover-row">

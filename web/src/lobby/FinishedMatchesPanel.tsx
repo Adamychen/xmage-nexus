@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
 import Chip from '../ui/Chip'
 import CloseButton from '../ui/CloseButton'
@@ -229,16 +230,14 @@ export default function FinishedMatchesPanel({
             </ChipButton>
           </div>
 
-          <button
-            type="button"
+          <Button variant="subtle"
             className={`matches-refresh-btn ${loading ? 'spinning' : ''}`}
             onClick={fetchMatches}
             disabled={loading}
-            title={t('common', 'refresh')}
-          >
+            title={t('common', 'refresh')}>
             <span className="refresh-icon"><Icon name="refresh" size={13} /></span>
             <span>{loading ? t('common', 'loading') : t('common', 'refresh')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -368,17 +367,14 @@ export default function FinishedMatchesPanel({
                   {m.games && m.games.length > 0 && (
                     <div className="match-replay-actions">
                       {m.games.map((gId, gIdx) => (
-                        <button
+                        <Button variant="soft" size="sm"
                           key={gId}
-                          type="button"
-                          className="replay-btn"
                           onClick={() => handleReplay(gId)}
                           disabled={replayingGameId === gId}
-                          title={`${t('common', 'loading')} #${gIdx + 1}`}
-                        >
+                          title={`${t('common', 'loading')} #${gIdx + 1}`}>
                           <span className="replay-icon"><Icon name="play" size={12} /></span>
                           <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}

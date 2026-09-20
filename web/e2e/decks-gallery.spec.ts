@@ -31,14 +31,14 @@ test.describe('Decks Gallery', () => {
       // deck list may need a tick for meta load
       await page.waitForTimeout(800)
       await expect(page.locator('.deck-builder-body')).toBeVisible()
-      await expect(page.locator('.builder-done')).toBeVisible()
+      await expect(page.locator('[data-testid="builder-done"]')).toBeVisible()
       // sideboard section always visible, with drop hint when empty
       await expect(page.locator('.deck-sideboard-section')).toBeVisible()
       await expect(page.locator('.deck-sideboard-empty')).toBeVisible()
       // import modal adds a card without Scryfall
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill('4 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(page.locator('.strip-name', { hasText: /Mountain|Montaña/ })).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.arena-card-strip').first()).toBeVisible({ timeout: 3000 })
 
@@ -93,7 +93,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.mana-orb-btn.orb-r')).toHaveClass(/active/)
       
       // Done button saves and returns to gallery
-      await page.locator('.builder-done').click()
+      await page.locator('[data-testid="builder-done"]').click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
@@ -113,7 +113,7 @@ test.describe('Decks Gallery', () => {
       await page.locator('.deck-box', { hasText: /Precon/ }).first().click()
       await page.getByRole('button', { name: /Editar|Edit/i }).click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.builder-done')).toBeVisible()
+      await expect(page.locator('[data-testid="builder-done"]')).toBeVisible()
       await expect(page.locator('.deck-builder.loading')).toHaveCount(0)
       await expect(page.locator('.arena-deck-list-container .arena-card-strip').first()).toBeVisible({ timeout: 8000 })
     })
@@ -138,7 +138,7 @@ test.describe('Decks Gallery', () => {
       // Importar un mazo con una carta en main: NO debe aparecer como comandante
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill("1 [2XM:190] Atraxa, Praetors' Voice\n1 [C16:264] Sol Ring")
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       const atraxa = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Atraxa/ }).first()
       await expect(atraxa).toBeVisible({ timeout: 3000 })
       await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
@@ -207,7 +207,7 @@ test.describe('Decks Gallery', () => {
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill("1 [PC2:1] Sidar Kondo of Jamuraa\n1 [C16:56] Tana, the Bloodsower\n20 [M10:234] Mountain")
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
 
       const mainTana = page.locator('.deck-category-section:not(.deck-sideboard-section):not(.deck-commander-section) .arena-card-strip', { hasText: /Tana/ }).first()
       await expect(mainTana).toBeVisible({ timeout: 5000 })
@@ -246,11 +246,11 @@ test.describe('Decks Gallery', () => {
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
-      await page.locator('.decks-import-cta').click()
+      await page.locator('[data-testid="decks-import-cta"]').click()
       await expect(page.locator('.deck-import-modal')).toBeVisible()
       await page.locator('.import-name-input').fill('Mi Test DCK')
       await page.locator('.deck-import-textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })
@@ -278,7 +278,7 @@ test.describe('Decks Gallery', () => {
       await page.locator('.browser-deck-card', { hasText: 'Izzet Murktide' }).click()
       await expect(page.locator('.deck-inspector-modal')).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.deck-inspector-modal .ui-chip', { hasText: 'Modern' })).toBeVisible()
-      await expect(page.locator('.inspector-copy-btn')).toBeVisible()
+      await expect(page.locator('[data-testid="inspector-copy-btn"]')).toBeVisible()
 
       // Close modal
       await page.locator('.inspector-close-btn').click()
@@ -286,7 +286,7 @@ test.describe('Decks Gallery', () => {
 
       // Import por URL: entrada unificada del header (el sub-tab del browser
       // se retiró con ImportDeckDialog)
-      await page.locator('.decks-import-cta').click()
+      await page.locator('[data-testid="decks-import-cta"]').click()
       await expect(page.locator('.deck-import-modal')).toBeVisible()
       await page.locator('.deck-import-textarea').fill('https://moxfield.com/decks/abc123')
       await expect(page.locator('.import-badge.success')).toBeVisible()
@@ -314,9 +314,9 @@ test.describe('Decks Gallery', () => {
       await expect(sortSelect).toBeVisible()
       await expect(sortSelect.locator('option')).toHaveCount(6)
       await sortSelect.selectOption('name')
-      await expect(page.locator('.arena-sort-dir-btn')).toBeVisible()
-      await page.locator('.arena-sort-dir-btn').click()
-      await expect(page.locator('.arena-sort-dir-btn')).toHaveText('↓')
+      await expect(page.getByTestId('arena-sort-dir-btn')).toBeVisible()
+      await page.getByTestId('arena-sort-dir-btn').click()
+      await expect(page.getByTestId('arena-sort-dir-btn')).toHaveText('↓')
 
       // U6 minor: card-size slider changes the grid min column width
       const slider = page.locator('.arena-grid-size-slider')
@@ -329,7 +329,7 @@ test.describe('Decks Gallery', () => {
       await page.locator('.deck-import-textarea').fill(
         '<?xml version="1.0"?>\n<cockatrice_deck version="1">\n<deckname>Burn</deckname>\n<zone name="main">\n<card number="4" name="Lightning Bolt"/>\n</zone>\n<zone name="side">\n<card number="2" name="Pyroblast"/>\n</zone>\n</cockatrice_deck>',
       )
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(page.locator('.strip-name', { hasText: /Lightning Bolt/ })).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Pyroblast/ })).toBeVisible({ timeout: 3000 })
 
@@ -355,14 +355,14 @@ test.describe('Decks Gallery', () => {
 
       // U7-5: paste button present in the import modal
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
-      await expect(page.locator('.import-paste-btn')).toBeVisible()
+      await expect(page.locator('[data-testid="import-paste-btn"]')).toBeVisible()
 
       // U7-6: Commander first in main, Maybeboard to sideboard
       await page.locator('.deck-import-textarea').fill(
         'Commander\n1 Atraxa, Praetors\' Voice\nDeck\n1 Sol Ring\nMaybeboard\n1 Doubling Season\n',
       )
       await expect(page.locator('.import-badge.success')).toBeVisible()
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(page.locator('.deck-category-section:not(.deck-sideboard-section) .strip-name').first()).toHaveText(/Atraxa/)
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Doubling Season/ })).toBeVisible({ timeout: 3000 })
 
@@ -418,7 +418,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.lobby-aside')).toBeVisible()
 
       // Verify done button works cleanly
-      await page.locator('.builder-done').click()
+      await page.locator('[data-testid="builder-done"]').click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })

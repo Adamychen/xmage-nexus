@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
 import Checkbox from '../ui/Checkbox'
 import {
@@ -96,9 +97,9 @@ export default function GameMenu() {
           <div className="game-menu-overlay" onClick={close} />
           <div className="game-menu-panel" role="menu" data-testid="game-menu">
             {me && (
-              <button
-                type="button"
-                className="leave-game-btn game-menu-item"
+              <MenuItem
+                danger
+                className="leave-game-btn"
                 onClick={async () => {
                   close()
                   if (await confirmDialog(t('game', 'concede_confirm'), { danger: true })) {
@@ -108,11 +109,11 @@ export default function GameMenu() {
                 title={t('game', 'concede_confirm')}
               >
                 <Icon name="flag" size={13} /> {t('game', 'concede')}
-              </button>
+              </MenuItem>
             )}
-            <button
-              type="button"
-              className="leave-match-btn game-menu-item"
+            <MenuItem
+              danger
+              className="leave-match-btn"
               onClick={async () => {
                 const msg = me ? t('game', 'concede_prompt') : t('game', 'leave_spectate_prompt')
                 close()
@@ -127,11 +128,10 @@ export default function GameMenu() {
               title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
             >
               <Icon name="door" size={13} /> {t('game', 'leave')}
-            </button>
+            </MenuItem>
             {game?.rollbackTurnsAllowed && !!me && (
-              <button
-                type="button"
-                className="rollback-game-btn game-menu-item"
+              <MenuItem
+                className="rollback-game-btn"
                 onClick={() => {
                   openRollbackDialog()
                   close()
@@ -139,12 +139,10 @@ export default function GameMenu() {
                 title={t('game', 'rollback_title')}
               >
                 <Icon name="undo" size={13} /> {t('game', 'rollback')}
-              </button>
+              </MenuItem>
             )}
             {!!me && !!gameId && (
-              <button
-                type="button"
-                className="game-menu-item"
+              <MenuItem
                 data-testid="game-menu-trigger-reset"
                 title={t('game', 'trigger_menu_reset')}
                 onClick={() => {
@@ -153,7 +151,7 @@ export default function GameMenu() {
                 }}
               >
                 <Icon name="refresh" size={13} /> {t('game', 'trigger_menu_reset')}
-              </button>
+              </MenuItem>
             )}
             {!!me && (
               <>
@@ -200,9 +198,7 @@ export default function GameMenu() {
                   </div>
                 ))}
                 {settings.autoAnswers.length > 0 && (
-                  <button
-                    type="button"
-                    className="game-menu-item"
+                  <MenuItem
                     data-testid="game-menu-auto-clear"
                     onClick={() => {
                       setSetting('autoAnswers', clearAutoAnswers())
@@ -210,7 +206,7 @@ export default function GameMenu() {
                     }}
                   >
                     <Icon name="trash" size={13} /> {t('game', 'auto_answers_clear')}
-                  </button>
+                  </MenuItem>
                 )}
                 <div className="game-menu-section-label" data-testid="game-menu-choice-memory-label">
                   {t('game', 'choice_memory_title', { count: settings.choiceMemory.length })}
@@ -232,9 +228,7 @@ export default function GameMenu() {
                   </div>
                 ))}
                 {settings.choiceMemory.length > 0 && (
-                  <button
-                    type="button"
-                    className="game-menu-item"
+                  <MenuItem
                     data-testid="game-menu-choice-clear"
                     onClick={() => {
                       setSetting('choiceMemory', clearChoiceMemory())
@@ -242,14 +236,12 @@ export default function GameMenu() {
                     }}
                   >
                     <Icon name="trash" size={13} /> {t('game', 'choice_memory_clear')}
-                  </button>
+                  </MenuItem>
                 )}
               </>
             )}
             <div className="game-menu-divider" />
-            <button
-              type="button"
-              className="game-menu-item"
+            <MenuItem
               data-testid="game-menu-settings"
               onClick={() => {
                 setShowSettings(true)
@@ -257,25 +249,21 @@ export default function GameMenu() {
               }}
             >
               <Icon name="settings" size={13} /> {t('common', 'settings')}
-            </button>
-            <button
-              type="button"
-              className="game-menu-item"
+            </MenuItem>
+            <MenuItem
               data-testid="game-menu-help"
               title={t('game', 'help_wiki')}
               onClick={() => setShowHelp(true)}
             >
               <Icon name="bookOpen" size={13} /> {t('game', 'help_wiki')}
-            </button>
-            <button
-              type="button"
-              className="game-menu-item"
+            </MenuItem>
+            <MenuItem
               data-testid="game-menu-fullscreen"
               title={isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
               onClick={() => void toggleFullscreen()}
             >
               <Icon name="maximize" size={13} /> {isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
-            </button>
+            </MenuItem>
           </div>
         </>
       )}

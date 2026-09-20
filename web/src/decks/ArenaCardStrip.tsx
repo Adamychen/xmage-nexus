@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import type { DeckCard } from '../lobby/decks'
 import { ManaCost } from './ArenaManaSymbols'
@@ -230,70 +231,46 @@ export function ArenaCardStrip({
         onKeyDown={(e) => e.stopPropagation()}
       >
         {onSwap && (
-          <button
-            type="button"
+          <IconButton label={swapLabel ?? (sideboard ? t('decks', 'strip_move_to_main') : t('decks', 'strip_move_to_side'))} icon="swap" size="sm"
             className="strip-btn swap"
-            onClick={() => onSwap(actionKey)}
-            title={swapLabel ?? (sideboard ? t('decks', 'strip_move_to_main') : t('decks', 'strip_move_to_side'))}
-          >
-            <Icon name="swap" size={13} />
-          </button>
+            onClick={() => onSwap(actionKey)} />
         )}
-        <button
-          type="button"
+        <IconButton label={t('decks', 'strip_remove_one')} size="sm"
           className="strip-btn"
           onClick={() => {
             focusNeighborAfterRemoval()
             onDec?.(actionKey)
-          }}
-          title={t('decks', 'strip_remove_one')}
-        >
+          }}>
           −
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton label={t('decks', 'strip_add_one')} size="sm"
           className="strip-btn"
-          onClick={() => onInc?.(actionKey)}
-          title={t('decks', 'strip_add_one')}
-        >
+          onClick={() => onInc?.(actionKey)}>
           +
-        </button>
+        </IconButton>
         {onChangePrinting && (
-          <button
-            type="button"
+          <IconButton label={t('decks', 'strip_change_art')} icon="palette" size="sm"
             className="strip-btn print"
-            onClick={() => onChangePrinting(card)}
-            title={t('decks', 'strip_change_art')}
-          >
-            <Icon name="palette" size={13} />
-          </button>
+            onClick={() => onChangePrinting(card)} />
         )}
         {onSetCover && (
-          <button
-            type="button"
+          <IconButton label={isCover ? t('decks', 'strip_cover_current') : t('decks', 'strip_cover_use')} size="sm"
             className={`strip-btn star ${isCover ? 'active' : ''}`}
-            onClick={() => onSetCover(card)}
-            title={isCover ? t('decks', 'strip_cover_current') : t('decks', 'strip_cover_use')}
-          >
+            onClick={() => onSetCover(card)}>
             ★
-          </button>
+          </IconButton>
         )}
         {onSetCommander && (
-          <button
-            type="button"
-            className={`strip-btn crown ${isCommander ? 'active' : ''}`}
-            disabled={!isCommander && commanderEligible === false}
-            onClick={() => onSetCommander(card)}
-            title={
+          <IconButton label={
               isCommander
                 ? t('decks', 'commander_unset')
                 : commanderEligible === false
                   ? t('decks', 'commander_not_eligible')
                   : t('decks', 'commander_set')
-            }
-          >
-            <Icon name="crown" size={13} />
-          </button>
+            } icon="crown" size="sm"
+            className={`strip-btn crown ${isCommander ? 'active' : ''}`}
+            disabled={!isCommander && commanderEligible === false}
+            onClick={() => onSetCommander(card)} />
         )}
         <CloseButton
           size="sm"

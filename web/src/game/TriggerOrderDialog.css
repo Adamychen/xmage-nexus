@@ -10,22 +10,6 @@
   color: var(--fg-2);
 }
 
-.trigger-scope-btn {
-  border: 1px solid var(--ink-4);
-  background: transparent;
-  color: var(--fg-1);
-  border-radius: var(--r-pill);
-  padding: 3px 12px;
-  font-size: var(--fs-xs);
-  cursor: pointer;
-}
-
-.trigger-scope-btn.is-active {
-  background: var(--ink-4);
-  color: var(--gold-300);
-  border-color: var(--gold-300);
-}
-
 .trigger-list {
   list-style: none;
   margin: 0;

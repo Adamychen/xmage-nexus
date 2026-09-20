@@ -1,4 +1,5 @@
 import { useSettings, setSetting } from '../state/store'
+import IconButton from '../ui/IconButton'
 import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
@@ -59,16 +60,11 @@ export function InterfaceSection() {
       <h3 className="settings-section-title">{t('lobby', 'ui_scale_title')}</h3>
       <p className="settings-hint">{t('lobby', 'ui_scale_hint')}</p>
       <div className="settings-stepper">
-        <button
-          type="button"
-          className="settings-step"
+        <IconButton label={t('lobby', 'zoom_out')} size="lg"
           onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, -1))}
-          title={t('lobby', 'zoom_out')}
-          aria-label={t('lobby', 'zoom_out')}
-          data-testid="settings-zoom-minus"
-        >
+          data-testid="settings-zoom-minus">
           −
-        </button>
+        </IconButton>
         <button
           type="button"
           className="settings-step-value"
@@ -78,16 +74,11 @@ export function InterfaceSection() {
         >
           {zoomPercent(settings.uiScale)}%
         </button>
-        <button
-          type="button"
-          className="settings-step"
+        <IconButton label={t('lobby', 'zoom_in')} size="lg"
           onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, 1))}
-          title={t('lobby', 'zoom_in')}
-          aria-label={t('lobby', 'zoom_in')}
-          data-testid="settings-zoom-plus"
-        >
+          data-testid="settings-zoom-plus">
           +
-        </button>
+        </IconButton>
       </div>
       <div className="settings-stops">
         {stops.map((o) => (

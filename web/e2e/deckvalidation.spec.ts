@@ -30,9 +30,9 @@ async function openJoinDialogWithBadDeck(page: import('@playwright/test').Page):
   await expect(page.getByTestId('join-table-dialog')).toBeVisible()
 
   // importar un mazo con la carta problemática (set "CY" inexistente en XMage)
-  await page.locator('.join-import-toggle-btn').click()
+  await page.locator('[data-testid="join-import-toggle-btn"]').click()
   await page.locator('.import-textarea').fill(`1 [CY:77] Rhystic Tutor\n20 [LEA:288] Island`)
-  await page.locator('.import-submit-btn').click()
+  await page.locator('[data-testid="import-submit-btn"]').click()
   await expect(page.locator('.join-deck-card.selected', { hasText: /Rhystic Tutor/i })).toBeVisible()
   await page.locator('.join-submit-btn').click()
   return buffers
@@ -108,7 +108,7 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
       // importar una carta problemática (set "CY" inexistente en XMage)
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(`1 [CY:77] Rhystic Tutor\n20 [LEA:288] Island`)
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       // ojo: el strip muestra el nombre LOCALIZADO ("Tutor Rístico"); el nombre
       // original va en el atributo title
       await expect(page.locator('.arena-card-strip[title*="Rhystic Tutor"]')).toBeVisible({ timeout: 5000 })
@@ -139,7 +139,7 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
       // sugerencia con un clic
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(`1 [CY:77] Rhystic Tutor`)
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(banner).toBeVisible({ timeout: 8000 })
       await banner.getByTestId('builder-issue-repair').click()
       await expect(banner).not.toBeVisible({ timeout: 8000 })

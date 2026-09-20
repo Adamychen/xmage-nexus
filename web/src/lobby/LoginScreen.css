@@ -29,18 +29,7 @@
   justify-content: flex-end;
 }
 
-.login-settings-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--line-1);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-md);
-  color: var(--fg-2);
-  padding: 5px 8px;
-  cursor: pointer;
-  position: relative;
-}
+.login-settings-btn { position: relative; width: auto; padding: 0 8px; }
 
 .login-news-dot {
   position: absolute;
@@ -68,7 +57,7 @@
   .login-logo-img { width: 96px; height: 96px; }
   .user-name-and-flag-grid { grid-template-columns: 1fr; }
   .login-presets-row { gap: 6px; }
-  .preset-btn { padding: 7px 2px; font-size: var(--fs-3xs); }
+
   .network-field-row { grid-template-columns: 1fr; }
   .login-user-section { flex-direction: column; align-items: stretch; }
   .user-avatar-preview { align-self: center; }
@@ -206,62 +195,7 @@
   letter-spacing: 0.1em;
 }
 
-.login-presets-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 4px;
-  width: 100%;
-  background: var(--ink-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-lg);
-  box-sizing: border-box;
-}
-
-.preset-btn {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 8px 4px;
-  border-radius: var(--r-md);
-  background: transparent;
-  border: 1px solid transparent;
-  box-shadow: none;
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  user-select: none;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.preset-btn span:not(.preset-icon) {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.preset-btn:hover {
-  background: var(--line-1);
-  color: var(--fg-1);
-}
-
-.preset-btn.active {
-  background: var(--brand-soft);
-  border-color: var(--brand-line);
-  color: var(--fg-hi);
-  box-shadow: var(--sheen);
-}
-
-.preset-icon {
-  font-size: var(--fs-sm);
-  flex-shrink: 0;
-}
+.login-presets-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
 
 /* User Identity Section */
 .login-user-section {

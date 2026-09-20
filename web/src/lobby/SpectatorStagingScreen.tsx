@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import IconButton from '../ui/IconButton'
 import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setMyDeck, startStagedMatch, useStore, clearError } from '../state/store'
 import { setState } from '../state/state'
 import type { SeatView, TableView } from '../net/types'
@@ -143,20 +144,15 @@ export default function SpectatorStagingScreen({
     const title = (labelKey: 'staging_seat_move_up' | 'staging_seat_move_down') =>
       locked ? t('lobby', 'staging_seat_move_locked') : t('lobby', labelKey)
     const btn = (dir: -1 | 1, testId: string, labelKey: 'staging_seat_move_up' | 'staging_seat_move_down') => (
-      <button
-        type="button"
-        className="seat-order-btn"
+      <IconButton label={title(labelKey)} size="xs"
         data-testid={testId}
-        title={title(labelKey)}
-        aria-label={title(labelKey)}
         disabled={locked || (dir < 0 ? idx <= 0 : idx >= seats.length - 1)}
-        onClick={() => void handleSwapSeats(idx, dir)}
-      >
+        onClick={() => void handleSwapSeats(idx, dir)}>
         <Icon
           name={variant === 'ring' ? (dir < 0 ? 'rotateCcw' : 'rotateCw') : dir < 0 ? 'chevronUp' : 'chevronDown'}
           size={12}
         />
-      </button>
+      </IconButton>
     )
     return (
       <span className="seat-order-btns">
@@ -341,15 +337,12 @@ export default function SpectatorStagingScreen({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="staging-leave-btn"
+        <Button variant="soft-danger"
           onClick={handleLeave}
           data-testid="staging-back"
-          title={mode === 'player' ? t('lobby','staging_back_hint') : t('lobby','staging_leave_hint')}
-        >
+          title={mode === 'player' ? t('lobby','staging_back_hint') : t('lobby','staging_leave_hint')}>
           <span><Icon name="logout" size={13} /> {t('lobby','staging_back_lobby')}</span>
-        </button>
+        </Button>
       </header>
 
       {/* Center Staging Area */}

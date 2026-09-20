@@ -269,12 +269,12 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
         <footer className="library-order-footer">
           {!isBlockerOrder && (
             <div className="quick-actions">
-              <button type="button" disabled={busy || bottomCards.length === 0} onClick={allToTop}>
+              <Button disabled={busy || bottomCards.length === 0} onClick={allToTop}>
                 <Icon name="chevronUp" size={11} /> {t('dialogs','library_all_to_top')}
-              </button>
-              <button type="button" disabled={busy || topCards.length === 0} onClick={allToBottom}>
+              </Button>
+              <Button disabled={busy || topCards.length === 0} onClick={allToBottom}>
                 {isSurveil ? (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_all_to_graveyard')}</>) : (<><Icon name="chevronDown" size={11} /> {t('dialogs','library_all_to_bottom')}</>)}
-              </button>
+              </Button>
             </div>
           )}
           <div className="dialog-confirm-actions">

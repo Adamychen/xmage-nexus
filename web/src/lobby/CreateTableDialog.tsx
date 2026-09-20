@@ -82,13 +82,13 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         <div className="dialog-actions wizard-actions">
           <div className="wizard-actions-left">
             {!isFirstStep && (
-              <button type="button" onClick={goPrev} disabled={form.busy}>
+              <Button onClick={goPrev} disabled={form.busy}>
                 {t('lobby','wizard_back')}
-              </button>
+              </Button>
             )}
-            <button type="button" onClick={onClose} disabled={form.busy}>
+            <Button onClick={onClose} disabled={form.busy}>
               {t('common','cancel')}
-            </button>
+            </Button>
           </div>
           <div className="wizard-actions-right">
             {!isLastStep ? (

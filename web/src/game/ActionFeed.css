@@ -16,33 +16,6 @@
   border-bottom: 1px solid var(--veil-2);
 }
 
-.action-feed-mode-toggle {
-  display: flex;
-  gap: 4px;
-  background: var(--shade-1);
-  padding: 2px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-3);
-}
-
-.mode-btn {
-  padding: 3px 8px;
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  border: none;
-  background: transparent;
-  color: var(--fg-2);
-  border-radius: var(--r-xs);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.mode-btn.active {
-  background: rgb(var(--gold-rgb) / 0.2);
-  color: var(--gold-300);
-  border: 1px solid rgb(var(--gold-rgb) / 0.4);
-}
-
 .action-count-tag {
   font-size: var(--fs-2xs);
   color: var(--fg-3);
@@ -84,8 +57,3 @@
   gap: 4px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .mode-btn {
-    transition: none;
-  }
-}

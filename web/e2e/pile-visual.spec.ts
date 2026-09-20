@@ -26,7 +26,7 @@ test.describe('PileDialog visual (U14 PickPile)', { tag: '@feedback' }, () => {
       await expect(pile1).toContainText('Grizzly Bears')
       await expect(pile2).toContainText('Lightning Bolt')
       await expect(pile2).toContainText('Shock')
-      await pile1.locator('.pile-choose-btn').click()
+      await pile1.locator('[data-testid="pile-choose-btn"]').click()
       await expect
         .poll(() => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerBoolean' && s.args?.value === true), { timeout: 10_000 })
         .toBeTruthy()

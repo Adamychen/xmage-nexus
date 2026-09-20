@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import type { TableView, TournamentView } from '../net/types'
 import TournamentBracket from './TournamentBracket'
 import DialogShell from '../ui/DialogShell'
@@ -35,9 +36,9 @@ export default function TournamentBracketModal({ table, view, loading, error, on
       title={table.tableName}
       topRight={(
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" className="tournament-refresh-btn" onClick={onRefresh} disabled={loading}>
+          <Button variant="soft" size="sm" onClick={onRefresh} disabled={loading}>
             {loading ? t('lobby', 'matches_loading') : (<><Icon name="refresh" size={12} /> {t('lobby', 'matches_refresh')}</>)}
-          </button>
+          </Button>
           <CloseButton variant="solid" size="md" className="tournament-close-btn" onClick={onClose} />
         </div>
       )}

@@ -72,9 +72,10 @@ export default function Tabs<T extends string>({
             aria-selected={selected}
             aria-controls={idPrefix ? `${idPrefix}-panel-${item.id}` : undefined}
             tabIndex={selected ? 0 : -1}
-            className={['ui-tab', item.className].filter(Boolean).join(' ')}
+            className={['ui-tab', item.label ? '' : 'ui-tab--icon', item.className].filter(Boolean).join(' ')}
             data-testid={item.testId}
             title={item.title}
+            aria-label={item.label ? undefined : item.title}
             disabled={item.disabled}
             onClick={() => onChange(item.id)}
           >

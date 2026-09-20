@@ -1,4 +1,5 @@
 import type { TableView } from '../net/types'
+import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import { useTranslation, toBcp47Locale } from '../i18n'
 import { formatDeckTypeName, formatTimeAgo } from './lobbyUtils'
@@ -75,34 +76,25 @@ export default function ActiveTablesBar({ tables, onOpenStaging, onStart, onResu
 
             <div className="active-table-actions">
               {isReady && (
-                <button
-                  type="button"
-                  className="active-table-action-btn btn-start"
+                <Button variant="success" size="sm" data-testid="btn-start"
                   onClick={() => onStart(tTable)}
-                  title={t('lobby', 'start_match_btn')}
-                >
+                  title={t('lobby', 'start_match_btn')}>
                   <Icon name="play" size={13} /> {t('lobby', 'start_match_btn')}
-                </button>
+                </Button>
               )}
               {isPlaying && (
-                <button
-                  type="button"
-                  className="active-table-action-btn btn-resume"
+                <Button variant="soft" size="sm" data-testid="btn-resume"
                   onClick={() => onResume(tTable)}
-                  title={t('lobby', 'active_table_resume')}
-                >
+                  title={t('lobby', 'active_table_resume')}>
                   <Icon name="swords" size={13} /> {t('lobby', 'active_table_resume')}
-                </button>
+                </Button>
               )}
               {!isPlaying && (
-                <button
-                  type="button"
-                  className="active-table-action-btn btn-staging"
+                <Button variant="subtle" size="sm" data-testid="btn-staging"
                   onClick={() => onOpenStaging(tTable.tableId)}
-                  title={t('lobby', 'active_table_return')}
-                >
+                  title={t('lobby', 'active_table_return')}>
                   <Icon name="chair" size={13} /> {t('lobby', 'active_table_return')}
-                </button>
+                </Button>
               )}
             </div>
           </div>

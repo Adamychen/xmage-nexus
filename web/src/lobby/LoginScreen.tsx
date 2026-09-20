@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import Tabs from '../ui/Tabs'
+import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft } from '../state/store'
 import CountryFlag from './CountryFlag'
@@ -146,29 +148,19 @@ export default function LoginScreen() {
     <div className="login-wrap">
       <div className="login-top-bar">
         <LanguageSelector showCardLangToggle={true} />
-        <button
-          type="button"
+        <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="login-settings-btn"
           onClick={() => setShowSettings(true)}
-          title={t('common', 'settings')}
-          aria-label={t('common', 'settings')}
-          data-testid="open-settings"
-        >
-          <Icon name="settings" size={16} />
-        </button>
-        <button
-          type="button"
+          data-testid="open-settings" />
+        <IconButton label={t('system', 'about_title')} size="lg"
           className="login-settings-btn"
           onClick={() => setShowAbout(true)}
-          title={t('system', 'about_title')}
-          aria-label={t('system', 'about_title')}
-          data-testid="open-about"
-        >
+          data-testid="open-about">
           <Icon name="info" size={16} />
           {unseenNews && (
             <span className="login-news-dot" data-testid="login-news-dot" aria-hidden="true">●</span>
           )}
-        </button>
+        </IconButton>
       </div>
 
       <div className="login-bg-glow login-bg-glow-1" />
@@ -190,35 +182,17 @@ export default function LoginScreen() {
         {/* Server Preset Selector */}
         <div className="login-presets-container">
           <span className="login-presets-title">{t('login.server_target')}</span>
-          <div className="login-presets-row">
-            <button
-              type="button"
-              className={`preset-btn ${preset === 'local' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('local')}
-              title={t('login.server_local')}
-            >
-              <span className="preset-icon"><Icon name="home" size={15} /></span>
-              <span>{t('login.server_local')}</span>
-            </button>
-            <button
-              type="button"
-              className={`preset-btn ${preset === 'official' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('official')}
-              title={t('login.server_official')}
-            >
-              <span className="preset-icon"><Icon name="globe" size={15} /></span>
-              <span>{t('login.server_official')}</span>
-            </button>
-            <button
-              type="button"
-              className={`preset-btn ${preset === 'custom' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('custom')}
-              title={t('login.server_custom')}
-            >
-              <span className="preset-icon"><Icon name="settings" size={15} /></span>
-              <span>{t('login.server_custom')}</span>
-            </button>
-          </div>
+          <Tabs
+            variant="segmented"
+            className="login-presets-row"
+            value={preset}
+            onChange={handleSelectPreset}
+            items={[
+              { id: 'local', icon: 'home', label: t('login.server_local'), title: t('login.server_local') },
+              { id: 'official', icon: 'globe', label: t('login.server_official'), title: t('login.server_official') },
+              { id: 'custom', icon: 'settings', label: t('login.server_custom'), title: t('login.server_custom') },
+            ]}
+          />
         </div>
 
         {/* User Identity Section */}
@@ -352,9 +326,9 @@ export default function LoginScreen() {
             <span>{t('login.connect_btn')}</span>
           )}
         </Button>
-        <button type="button" className="login-firsttime" onClick={openSetupWizard} data-testid="login-open-setup">
+        <Button variant="link" size="sm" onClick={openSetupWizard} data-testid="login-open-setup">
           {t('setup', 'first_time')}
-        </button>
+        </Button>
         <div className="login-attribution">
           {t('login.attribution')}
         </div>

@@ -99,7 +99,7 @@ describe('GenericDialog hooks', () => {
     expect(val.getAttribute('role')).toBe('status')
     expect(val.getAttribute('aria-live')).toBe('polite')
     expect(val.getAttribute('aria-label')).toContain('Ritos')
-    const steppers = Array.from(container.querySelectorAll('.multi-stepper .stepper-btn'))
+    const steppers = Array.from(container.querySelectorAll('.multi-stepper .ui-icon-btn'))
     expect(steppers.length).toBe(2)
     for (const btn of steppers) {
       expect(btn.getAttribute('aria-label')).toContain('Ritos')

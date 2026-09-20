@@ -34,23 +34,6 @@
   color: var(--fg-2);
 }
 
-.deck-import-btn {
-  padding: 6px 10px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  border-radius: var(--r-base);
-  background: rgb(var(--brand-rgb) / 0.2);
-  border: 1px solid var(--brand);
-  color: var(--fg-hi);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.deck-import-btn:hover {
-  background: rgb(var(--brand-rgb) / 0.4);
-  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.4);
-}
-
 .deck-list-items {
   flex: 1;
   overflow-y: auto;

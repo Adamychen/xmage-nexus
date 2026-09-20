@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import Tabs from '../../ui/Tabs'
+import Button from '../../ui/Button'
 import ChipButton from '../../ui/ChipButton'
 import Checkbox from '../../ui/Checkbox'
 import { useTranslation } from '../../i18n'
@@ -132,22 +134,17 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
 
       {(isTourney || form.deckType === 'Limited') && (
         <div className="tourney-box">
-          <div className="tourney-tabs">
-            <button
-              type="button"
-              className={`tourney-tab-btn ${form.tournamentCategory === 'limited' ? 'active' : ''}`}
-              onClick={() => form.setTournamentCategory('limited')}
-            >
-              <Icon name="layers" size={13} /> {t('lobby', 'create_tourney_limited')}
-            </button>
-            <button
-              type="button"
-              className={`tourney-tab-btn ${form.tournamentCategory === 'constructed' ? 'active' : ''}`}
-              onClick={() => form.setTournamentCategory('constructed')}
-            >
-              <Icon name="trophy" size={13} /> {t('lobby', 'create_tourney_constructed')}
-            </button>
-          </div>
+          <Tabs
+            variant="segmented"
+            size="sm"
+            className="tourney-tabs"
+            value={form.tournamentCategory}
+            onChange={form.setTournamentCategory}
+            items={[
+              { id: 'limited', icon: 'layers', label: t('lobby', 'create_tourney_limited') },
+              { id: 'constructed', icon: 'trophy', label: t('lobby', 'create_tourney_constructed') },
+            ]}
+          />
 
           <Checkbox
             card
@@ -243,9 +240,9 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
 
               {isRandomPacksType(tournamentTypeName) && (
                 <div>
-                  <button type="button" onClick={() => setShowPacks(true)} data-testid="random-packs-open">
+                  <Button onClick={() => setShowPacks(true)} data-testid="random-packs-open">
                     {t('lobby','random_packs_open')}
-                  </button>
+                  </Button>
                 </div>
               )}
 

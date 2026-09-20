@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import Icon, { type IconName } from './Icon'
 import './primitives.css'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'success' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'soft' | 'success' | 'ghost' | 'danger' | 'soft-danger' | 'link'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

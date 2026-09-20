@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import Button from './Button'
 import Checkbox from './Checkbox'
+import IconButton from './IconButton'
+import MenuItem from './MenuItem'
 import ChipButton from './ChipButton'
 import Chip from './Chip'
 import EmptyState from './EmptyState'
@@ -100,5 +103,33 @@ describe('useEscape', () => {
     rerender({ on: false })
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(handler).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('IconButton', () => {
+  it('always exposes its label as accessible name and title', () => {
+    const onClick = vi.fn()
+    render(<IconButton label="Zoom in" icon="plus" size="lg" round onClick={onClick} />)
+    const btn = screen.getByRole('button', { name: 'Zoom in' })
+    expect(btn.getAttribute('title')).toBe('Zoom in')
+    expect(btn.className).toContain('ui-icon-btn--lg')
+    expect(btn.className).toContain('ui-icon-btn--round')
+    fireEvent.click(btn)
+    expect(onClick).toHaveBeenCalled()
+  })
+})
+
+describe('MenuItem', () => {
+  it('maps danger and selected to modifier classes', () => {
+    render(<><MenuItem danger>Leave</MenuItem><MenuItem selected>Current</MenuItem></>)
+    expect(screen.getByText('Leave').className).toContain('ui-menu-item--danger')
+    expect(screen.getByText('Current').className).toContain('ui-menu-item--selected')
+  })
+})
+
+describe('Button variants', () => {
+  it.each(['soft', 'soft-danger', 'link'] as const)('renders the %s variant', (variant) => {
+    render(<Button variant={variant}>x</Button>)
+    expect(screen.getByRole('button').className).toContain(`ui-btn--${variant}`)
   })
 })

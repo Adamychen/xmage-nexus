@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import { useState } from 'react'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
@@ -96,13 +97,10 @@ function GameplaySection() {
         </div>
       ))}
       {settings.autoAnswers.length > 0 && (
-        <button
-          type="button"
-          className="settings-link-btn"
-          onClick={() => setSetting('autoAnswers', clearAutoAnswers())}
-        >
+        <Button variant="link" size="sm"
+          onClick={() => setSetting('autoAnswers', clearAutoAnswers())}>
           {t('game', 'auto_answers_clear')}
-        </button>
+        </Button>
       )}
     </div>
   )
@@ -158,14 +156,11 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
           </div>
         </div>
         <div className="settings-footer">
-          <button
-            type="button"
-            className="settings-link-btn"
+          <Button variant="link" size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent('nexus:open-setup'))}
-            data-testid="settings-review-setup"
-          >
+            data-testid="settings-review-setup">
             {t('setup', 'review')}
-          </button>
+          </Button>
         </div>
     </DialogShell>
   )

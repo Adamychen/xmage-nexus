@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
@@ -20,9 +21,9 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             onChange={(e) => form.setPassword(e.target.value)}
             placeholder={t('lobby','placeholder_password')}
           />
-          <button type="button" className="password-toggle-btn" onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')} aria-label={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')}>
+          <IconButton label={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')} size="lg" onClick={() => form.setShowPassword(!form.showPassword)}>
             {form.showPassword ? <Icon name="eyeOff" size={14} /> : <Icon name="eye" size={14} />}
-          </button>
+          </IconButton>
         </div>
       </label>
 

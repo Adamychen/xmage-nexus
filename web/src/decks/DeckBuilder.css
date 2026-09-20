@@ -46,26 +46,6 @@
   gap: 16px;
 }
 
-.arena-nav-back {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-2);
-  border-radius: var(--r-pill);
-  padding: 5px 12px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 120ms ease;
-}
-
-.arena-nav-back:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
 .deck-builder-title {
   font-size: var(--fs-base);
   font-weight: 800;
@@ -233,26 +213,6 @@
   gap: 6px;
 }
 
-.deck-curve-inspect-btn,
-.deck-curve-close-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  border-radius: var(--r-xs);
-  padding: 2px 7px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.deck-curve-inspect-btn:hover,
-.deck-curve-close-btn:hover {
-  background: var(--veil-4);
-  color: var(--fg-hi);
-  border-color: var(--veil-5);
-}
-
 /* Make CurveChart adapt seamlessly when inside .deck-curve-panel */
 .deck-curve-panel .curve-chart {
   background: transparent;
@@ -320,58 +280,11 @@
 .builder-act {
   flex: 1 1 calc(25% - 4px);
   min-width: 70px;
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  border-radius: var(--r-sm);
-  padding: 4px 6px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: var(--fs-2xs);
-  text-align: center;
-  transition: all 120ms ease;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.builder-act:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.builder-act.is-equipped {
-  background: var(--ok);
-  border-color: var(--ok);
-}
-
 /* MTG Arena Signature Big Done Button */
-.builder-done {
-  width: 100%;
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  color: var(--fg-hi);
-  border: 1px solid var(--brand-fg);
-  border-radius: var(--r-pill);
-  padding: 8px 0;
-  font-weight: 900;
-  font-size: var(--fs-base);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.5), inset 0 1px 0 var(--veil-7);
-  transition: all 150ms ease;
-  text-shadow: 0 1px 0 var(--veil-6);
-}
-
-.builder-done:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgb(var(--brand-rgb) / 0.7), inset 0 1px 0 var(--veil-8);
-  filter: brightness(1.1);
-}
-
-.builder-done:active {
-  transform: translateY(1px);
-}
 
 /* Floating Card Preview on Hover */
 .arena-floating-preview {
@@ -466,16 +379,5 @@
 .builder-server-issues .bsi-sug {
   color: var(--ok);
 }
-.builder-server-issues .bsi-repair-btn {
-  margin-left: 6px;
-  padding: 1px 8px;
-  font-size: var(--fs-xs);
-  border-radius: var(--r-sm);
-  border: 1px solid rgb(var(--ok-rgb) / 0.5);
-  background: rgb(var(--ok-rgb) / 0.12);
-  color: var(--ok);
-  cursor: pointer;
-}
-.builder-server-issues .bsi-repair-btn:hover {
-  background: rgb(var(--ok-rgb) / 0.25);
-}
+.builder-server-issues .bsi-repair-btn { margin-left: 6px; }
+

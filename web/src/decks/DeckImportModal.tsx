@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
 import { parseAnyDeck } from './parseDck'
 import type { DeckCard } from '../lobby/decks'
@@ -118,22 +119,16 @@ export function DeckImportModal({
           {/* Mode Selector Row */}
           <div className="deck-import-mode-row">
             <span className="import-mode-label">{t('decks', 'import_hint')}:</span>
-            <div className="import-mode-options">
-              <button
-                type="button"
-                className={`import-mode-btn ${mode === 'add' ? 'active' : ''}`}
-                onClick={() => setMode('add')}
-              >
-                <Icon name="plus" size={12} /> {t('decks', 'import_mode_add')}
-              </button>
-              <button
-                type="button"
-                className={`import-mode-btn ${mode === 'replace' ? 'active' : ''}`}
-                onClick={() => setMode('replace')}
-              >
-                <Icon name="refresh" size={12} /> {t('decks', 'import_mode_replace')}
-              </button>
-            </div>
+            <Tabs
+              variant="segmented"
+              size="sm"
+                          value={mode}
+              onChange={setMode}
+              items={[
+                { id: 'add', icon: 'plus', label: t('decks', 'import_mode_add') },
+                { id: 'replace', icon: 'refresh', label: t('decks', 'import_mode_replace') },
+              ]}
+            />
           </div>
 
           {/* Text Area with Drag & Drop */}
@@ -175,25 +170,19 @@ export function DeckImportModal({
               </label>
 
               {text.trim() && (
-                <button
-                  type="button"
-                  className="import-clear-btn"
+                <Button variant="link" size="sm"
                   onClick={() => {
                     setText('')
                     setError(null)
-                  }}
-                >
+                  }}>
                   {t('common', 'clear')}
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                className="import-paste-btn"
+              <Button variant="subtle" size="sm" data-testid="import-paste-btn"
                 title={t('decks', 'import_paste')}
-                onClick={() => void handlePaste()}
-              >
+                onClick={() => void handlePaste()}>
                 <Icon name="clipboard" size={12} /> {t('decks', 'import_paste')}
-              </button>
+              </Button>
             </div>
 
             <div className="import-status-right">
@@ -218,15 +207,12 @@ export function DeckImportModal({
           <Button variant="subtle" type="button" onClick={onClose}>
             {t('common', 'cancel')}
           </Button>
-          <button
-            type="button"
-            className="import-submit-btn"
+          <Button variant="primary" size="sm" data-testid="import-submit-btn"
             disabled={totalCount === 0}
-            onClick={handleSubmit}
-          >
+            onClick={handleSubmit}>
             {mode === 'replace' ? (<><Icon name="refresh" size={12} /> {t('decks', 'import_mode_replace')}</>) : (<><Icon name="plus" size={12} /> {t('decks', 'import_mode_add')}</>)}{' '}
             {totalCount > 0 ? `(${totalCount} ${t('decks', 'total_cards')})` : ''}
-          </button>
+          </Button>
         </footer>
     </DialogShell>
   )

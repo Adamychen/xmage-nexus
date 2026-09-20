@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Tabs from '../ui/Tabs'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
@@ -53,20 +54,20 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
       kickerLabel={t('game', 'trigger_title').toUpperCase()}
       title={t('game', 'trigger_remaining', { count: remaining })}
       message={t('game', 'trigger_hint')}
-    >      <div className="trigger-scope" role="group" aria-label={t('game', 'trigger_scope')}>
+    >      <div className="trigger-scope">
         <span className="trigger-scope-label">{t('game', 'trigger_scope')}:</span>
-        {(['card', 'name'] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            className={`trigger-scope-btn ${scope === value ? 'is-active' : ''}`}
-            aria-pressed={scope === value}
-            disabled={busy}
-            onClick={() => setScope(value)}
-          >
-            {t('game', value === 'card' ? 'trigger_scope_card' : 'trigger_scope_name')}
-          </button>
-        ))}
+        <Tabs
+          variant="segmented"
+          size="sm"
+          label={t('game', 'trigger_scope')}
+          value={scope}
+          onChange={setScope}
+          items={(['card', 'name'] as const).map((value) => ({
+            id: value,
+            label: t('game', value === 'card' ? 'trigger_scope_card' : 'trigger_scope_name'),
+            disabled: busy,
+          }))}
+        />
       </div>
       <ul className="trigger-list">
         {triggers.map((card) => {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Button from '../ui/Button'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import type { FeedbackCard } from './feedback/types'
@@ -51,14 +52,11 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
           </span>
         ))}
       </span>
-      <button
-        type="button"
-        className="pile-choose-btn"
+      <Button variant="soft" data-testid="pile-choose-btn"
         disabled={busy}
-        onClick={() => choose(pile1)}
-      >
+        onClick={() => choose(pile1)}>
         {t('game', 'pile_choose')}
-      </button>
+      </Button>
     </div>
   )
 

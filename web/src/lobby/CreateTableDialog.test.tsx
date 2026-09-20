@@ -407,7 +407,7 @@ describe('CreateTableDialog', () => {
 
     // Click Modern Swiss (8P) preset
     fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
-    expect(screen.getByRole('button', { name: /^Construido/i }).classList.contains('active')).toBe(true)
+    expect(screen.getByRole('tab', { name: /^Construido/i }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('T8: constructed tournament creates tournament table with constructed format and joins with deck', async () => {
@@ -464,8 +464,8 @@ describe('CreateTableDialog', () => {
     // Switch to tourney mode - should not throw t.startsWith error
     fireEvent.click(screen.getByRole('button', { name: /^Torneo/i }))
 
-    expect(screen.getByRole('button', { name: /^Draft \/ Limit/i })).toBeDefined()
-    expect(screen.getByRole('button', { name: /^Construido/i })).toBeDefined()
+    expect(screen.getByRole('tab', { name: /^Draft \/ Limit/i })).toBeDefined()
+    expect(screen.getByRole('tab', { name: /^Construido/i })).toBeDefined()
   })
 
   it('T10: links gameType and deckType to prevent incompatible combinations', async () => {
@@ -533,7 +533,7 @@ describe('CreateTableDialog', () => {
     expect(setsInput.value).toContain('MH3')
 
     // Switch to custom per-booster mode
-    fireEvent.click(screen.getByRole('button', { name: /Personalizar cada sobre/i }))
+    fireEvent.click(screen.getByRole('tab', { name: /Personalizar cada sobre/i }))
     expect(screen.getByText(/Sobre 1/i)).toBeDefined()
     expect(screen.getByText(/Sobre 2/i)).toBeDefined()
     expect(screen.getByText(/Sobre 3/i)).toBeDefined()

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Tabs from '../../ui/Tabs'
 import ChipButton from '../../ui/ChipButton'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
 import { DEFAULT_BOOSTER_SETS, parseLimitedSetCodes, type BoosterSetItem } from './constants'
@@ -109,25 +110,19 @@ export default function DraftSetsSelector({
         <span className="draft-sets-title">
           <Icon name="layers" size={14} /> {t('lobby', 'create_field_draft_sets')}
         </span>
-        <div className="draft-sets-mode-buttons">
-          <button
-            type="button"
-            className={`draft-sets-mode-btn ${mode === 'same' ? 'active' : ''}`}
-            onClick={() => {
-              setMode('same')
-              handleSelectSame(primaryCode)
-            }}
-          >
-            {t('lobby', 'draft_sets_mode_same')}
-          </button>
-          <button
-            type="button"
-            className={`draft-sets-mode-btn ${mode === 'custom' ? 'active' : ''}`}
-            onClick={() => setMode('custom')}
-          >
-            {t('lobby', 'draft_sets_mode_custom')}
-          </button>
-        </div>
+        <Tabs
+          variant="segmented"
+          size="sm"
+          value={mode}
+          onChange={(next) => {
+            setMode(next)
+            if (next === 'same') handleSelectSame(primaryCode)
+          }}
+          items={[
+            { id: 'same', label: t('lobby', 'draft_sets_mode_same') },
+            { id: 'custom', label: t('lobby', 'draft_sets_mode_custom') },
+          ]}
+        />
       </div>
 
       {/* Popular Sets Quick Chips */}

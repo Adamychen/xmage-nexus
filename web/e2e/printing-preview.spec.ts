@@ -52,7 +52,7 @@ test.describe('Printing change refreshes hover preview', () => {
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill('4 [M10:146] Lightning Bolt')
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       const strip = page.locator('.deck-category-section:not(.deck-sideboard-section) .arena-card-strip', { hasText: /Lightning Bolt|Relámpago/ }).first()
       await expect(strip).toBeVisible({ timeout: 5000 })
       await expect(page.locator('.deck-category-section', { hasText: /instant/i })).toBeVisible({ timeout: 15000 })

@@ -99,26 +99,7 @@
   border-left: 1px solid transparent;
 }
 
-.basic-land-suggest-toggle-btn {
-  margin-left: auto;
-  background: rgb(var(--brand-rgb) / 0.2);
-  border: 1px solid rgb(var(--brand-rgb) / 0.4);
-  color: var(--brand-fg);
-  border-radius: var(--r-pill);
-  padding: 3px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 150ms ease;
-  white-space: nowrap;
-}
-
-.basic-land-suggest-toggle-btn:hover,
-.basic-land-suggest-toggle-btn.active {
-  background: var(--brand);
-  color: white;
-  box-shadow: 0 2px 10px rgb(var(--brand-rgb) / 0.4);
-}
+.basic-land-suggest-toggle-btn { margin-left: auto; }
 
 /* Auto-Suggester Dropdown Panel */
 .basic-land-suggester-panel {
@@ -199,28 +180,6 @@
   font-size: var(--fs-sm);
   padding: 3px 6px;
   text-align: center;
-}
-
-.suggester-apply-btn {
-  background: var(--ok-strong);
-  color: white;
-  border: none;
-  border-radius: var(--r-pill);
-  padding: 6px 14px;
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.suggester-apply-btn:hover:not(:disabled) {
-  box-shadow: 0 2px 10px rgb(var(--ok-rgb) / 0.4);
-  transform: translateY(-1px);
-}
-
-.suggester-apply-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 @keyframes fadeIn {

@@ -193,24 +193,6 @@
   color: var(--fg-1);
 }
 
-.profile-back-my-btn {
-  background: var(--veil-3);
-  border: 1px solid var(--veil-5);
-  color: var(--fg-hi);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.profile-back-my-btn:hover {
-  background: rgb(var(--gold-rgb) / 0.3);
-  border-color: var(--gold-300);
-  color: var(--fg-hi);
-}
-
 .profile-rank-card {
   background: rgb(var(--ink-2-rgb) / 0.6);
   border: 1px solid var(--veil-4);
@@ -489,24 +471,6 @@
   font-weight: 700;
   color: var(--err);
   font-family: var(--font-mono, monospace);
-}
-
-.unignore-action-btn {
-  background: var(--veil-3);
-  border: 1px solid var(--veil-5);
-  color: var(--fg-hi);
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.unignore-action-btn:hover {
-  background: rgb(var(--ok-rgb) / 0.3);
-  border-color: var(--ok);
-  color: var(--ok);
 }
 
 .profile-ignored-empty {

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import MenuItem from '../ui/MenuItem'
 import { useTranslation, type SupportedLanguage } from './index'
 import Icon from '../ui/Icon'
 import './LanguageSelector.css'
@@ -52,10 +53,9 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
 
           <div className="dropdown-options-list">
             {languages.map((l) => (
-              <button
+              <MenuItem
+                selected={l.code === lang}
                 key={l.code}
-                type="button"
-                className={`dropdown-option-item ${l.code === lang ? 'selected' : ''}`}
                 onClick={() => {
                   setLanguage(l.code as SupportedLanguage)
                   setIsOpen(false)
@@ -64,7 +64,7 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
                 <span className="option-flag">{l.flag}</span>
                 <span className="option-name">{l.name}</span>
                 {l.code === lang && <span className="option-check">✓</span>}
-              </button>
+              </MenuItem>
             ))}
           </div>
 
@@ -76,10 +76,9 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
               </div>
               <div className="dropdown-options-list card-lang-list">
                 {cardLanguages.map((cl) => (
-                  <button
+                  <MenuItem
+                    selected={cl.code === cardLang}
                     key={cl.code}
-                    type="button"
-                    className={`dropdown-option-item ${cl.code === cardLang ? 'selected' : ''}`}
                     onClick={() => {
                       setCardLanguage(cl.code)
                     }}
@@ -87,7 +86,7 @@ export default function LanguageSelector({ compact = false, showCardLangToggle =
                     <span className="option-flag">{cl.flag}</span>
                     <span className="option-name">{cl.name}</span>
                     {cl.code === cardLang && <span className="option-check">✓</span>}
-                  </button>
+                  </MenuItem>
                 ))}
               </div>
             </>

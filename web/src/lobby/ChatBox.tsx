@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import ChipButton from '../ui/ChipButton'
 import * as cmds from '../net/commands'
 import { useStore, appendLocalChatMessage } from '../state/store'
 import FormattedText from '../game/FormattedText'
@@ -192,14 +193,14 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
   return (
     <div className="chat">
       <div className="chat-toolbar">
-        <button
-          type="button"
-          className={`chat-toggle-btn ${hideConnections ? 'active' : ''}`}
+        <ChipButton
+          size="sm"
+          active={hideConnections}
           onClick={() => setHideConnections(!hideConnections)}
           title={hideConnections ? t('lobby', 'show_system_msgs') : t('lobby', 'hide_system_msgs')}
         >
           {hideConnections ? (<><Icon name="mute" size={12} /> {t('lobby', 'hide_system_msgs')}</>) : (<><Icon name="eye" size={12} /> {t('lobby', 'show_system_msgs')}</>)}
-        </button>
+        </ChipButton>
       </div>
 
       <div className="chat-list" ref={listRef}>

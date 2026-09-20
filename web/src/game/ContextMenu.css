@@ -17,46 +17,8 @@
   padding: 4px 0;
 }
 
-.context-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 14px;
-  background: none;
-  border: none;
-  color: var(--fg-2);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s;
-}
-
-.context-menu-item:hover:not(:disabled) {
-  background: var(--ink-3);
-}
-
-.context-menu-item.danger {
-  color: var(--err);
-}
-
-.context-menu-item.danger:hover:not(:disabled) {
-  background: var(--err-surface);
-}
-
-.context-menu-item:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .context-menu-icon {
   font-size: var(--fs-md);
   width: 18px;
   text-align: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .context-menu-item {
-    transition: none;
-  }
 }

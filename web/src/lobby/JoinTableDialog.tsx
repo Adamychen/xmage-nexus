@@ -200,13 +200,10 @@ export default function JoinTableDialog({
               <span className="join-deck-section-title">
                 <Icon name="layers" size={13} /> {t('lobby','active_deck')}
               </span>
-              <button
-                type="button"
-                className="join-import-toggle-btn"
-                onClick={() => setShowImport(!showImport)}
-              >
+              <Button variant="soft" size="sm" data-testid="join-import-toggle-btn"
+                onClick={() => setShowImport(!showImport)}>
                 {showImport ? (<><Icon name="x" size={12} /> {t('lobby','join_import_toggle_close')}</>) : (<><Icon name="clipboard" size={12} /> {t('lobby','join_import_toggle_open')}</>)}
-              </button>
+              </Button>
             </div>
 
             {/* Inline Quick Importer */}
@@ -234,6 +231,7 @@ export default function JoinTableDialog({
                   <Button variant="primary"
                     type="button"
                     className="import-submit-btn"
+                    data-testid="import-submit-btn"
                     onClick={handleImportSubmit}
                     disabled={!importText.trim()}
                   >

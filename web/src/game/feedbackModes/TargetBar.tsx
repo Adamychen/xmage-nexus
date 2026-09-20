@@ -1,4 +1,5 @@
 import FormattedText from '../FormattedText'
+import Button from '../../ui/Button'
 import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
@@ -38,7 +39,7 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
       </div>
       <div className="action-prompt-actions">
         {prompt.required === false && (
-          <button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</button>
+          <Button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</Button>
         )}
       </div>
     </div>

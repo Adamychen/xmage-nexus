@@ -37,7 +37,7 @@ describe('DeckBuilder · guardado al cerrar (auditoría UX)', () => {
     const input = await screen.findByDisplayValue('Mazo Original')
 
     fireEvent.change(input, { target: { value: 'Mazo Renombrado' } })
-    fireEvent.click(document.querySelector('.builder-done')!)
+    fireEvent.click(document.querySelector('[data-testid="builder-done"]')!)
 
     await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
     expect(mocks.put.mock.calls[0][0]).toMatchObject({ id: 'd1', name: 'Mazo Renombrado' })

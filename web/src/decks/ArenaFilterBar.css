@@ -54,26 +54,7 @@
   margin-left: 6px;
 }
 
-.arena-search-help-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.arena-search-help-btn:hover {
-  background: rgb(var(--gold-rgb) / 0.18);
-  border-color: var(--gold-500);
-  color: var(--gold-300);
-}
+.arena-search-help-btn:hover:not(:disabled) { background: rgb(var(--gold-rgb) / 0.18); border-color: var(--gold-500); color: var(--gold-300); }
 
 .arena-search-help-popover {
   position: absolute;
@@ -221,72 +202,7 @@
   margin-right: 2px;
 }
 
-.arena-cmc-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-3);
-  background: var(--veil-1);
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 120ms ease;
-}
-
-.arena-cmc-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.arena-cmc-btn.active {
-  background: var(--brand);
-  border-color: var(--brand-fg);
-  color: var(--fg-hi);
-  box-shadow: 0 0 6px rgb(var(--brand-rgb) / 0.6);
-}
-
-.arena-type-btn {
-  padding: 3px 8px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-3);
-  background: var(--veil-1);
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.arena-type-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.arena-type-btn.active {
-  background: rgb(var(--gold-rgb) / 0.15);
-  border-color: var(--gold-500);
-  color: var(--gold-300);
-}
-
-.filter-reset-btn {
-  margin-left: auto;
-  background: transparent;
-  border: 1px dashed var(--veil-5);
-  border-radius: var(--r-xs);
-  color: var(--fg-3);
-  font-size: var(--fs-2xs);
-  padding: 3px 8px;
-  cursor: pointer;
-}
-
-.filter-reset-btn:hover {
-  border-color: var(--err);
-  color: var(--err);
-}
+.filter-reset-btn { margin-left: auto; }
 
 /* Language selector dropdown */
 .arena-lang-select-wrap {
@@ -348,59 +264,6 @@
   gap: 2px;
 }
 
-.arena-lang-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: transparent;
-  border: none;
-  border-radius: var(--r-xs);
-  color: var(--fg-2);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  transition: background 120ms ease;
-}
-
-.arena-lang-item:hover {
-  background: var(--veil-2);
-  color: var(--fg-hi);
-}
-
-.arena-lang-item.selected {
-  background: rgb(var(--gold-rgb) / 0.15);
-  color: var(--gold-500);
-  font-weight: 700;
-}
-
-.filter-advanced-toggle {
-  margin-left: 4px;
-  padding: 4px 10px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-2);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: all 120ms ease;
-  white-space: nowrap;
-}
-
-.filter-advanced-toggle:hover {
-  background: var(--veil-3);
-  color: var(--fg-1);
-}
-
-.filter-advanced-toggle.open {
-  background: rgb(var(--gold-rgb) / 0.15);
-  border-color: var(--gold-500);
-  color: var(--gold-300);
-}
-
 .arena-sort-wrap {
   display: inline-flex;
   align-items: center;
@@ -413,23 +276,6 @@
   font-size: var(--fs-2xs);
   font-weight: 700;
   cursor: pointer;
-}
-
-.arena-sort-dir-btn {
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.arena-sort-dir-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-1);
 }
 
 .arena-grid-size-slider {
@@ -479,18 +325,6 @@
 .rarity-uncommon.active { background: color-mix(in srgb, var(--rarity-uncommon) 40%, var(--ink-2)); border-color: var(--rarity-uncommon); }
 .rarity-rare.active { background: color-mix(in srgb, var(--rarity-rare) 40%, var(--ink-2)); border-color: var(--rarity-rare); }
 .rarity-mythic.active { background: color-mix(in srgb, var(--rarity-mythic) 40%, var(--ink-2)); border-color: var(--rarity-mythic); }
-
-.keyword-more-btn {
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  border: 1px dashed var(--veil-4);
-  background: transparent;
-  color: var(--fg-3);
-  font-size: var(--fs-2xs);
-  cursor: pointer;
-}
-
-.keyword-more-btn:hover { border-color: var(--gold-500); color: var(--gold-500); }
 
 .adv-stats-row {
   gap: 14px;

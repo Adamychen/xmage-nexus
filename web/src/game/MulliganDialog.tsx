@@ -131,14 +131,12 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             {prompt.required === false && (
               <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</Button>
             )}
-            <button
-              className="mulligan-concede"
+            <Button variant="soft-danger"
               data-testid="mulligan-concede"
               disabled={busy}
-              onClick={() => void concede()}
-            >
+              onClick={() => void concede()}>
               <Icon name="flag" size={13} /> {t('dialogs', 'mulligan_concede')}
-            </button>
+            </Button>
           </div>
       </DialogShell>
     )
@@ -181,20 +179,18 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
         )}
 
         <div className="mulligan-actions">
-          <button className="mulligan-keep" disabled={busy} onClick={keep}>
+          <Button variant="success" disabled={busy} onClick={keep}>
             <Icon name="hand" size={13} /> {t('dialogs', 'mulligan_keep_btn', { count: cardCount })}
-          </button>
-          <button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
+          </Button>
+          <Button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
             <Icon name="refresh" size={13} /> {t('dialogs', 'mulligan_btn')}
-          </button>
-          <button
-            className="mulligan-concede"
+          </Button>
+          <Button variant="soft-danger"
             data-testid="mulligan-concede"
             disabled={busy}
-            onClick={() => void concede()}
-          >
+            onClick={() => void concede()}>
             <Icon name="flag" size={13} /> {t('dialogs', 'mulligan_concede')}
-          </button>
+          </Button>
         </div>
     </DialogShell>
   )

@@ -148,42 +148,6 @@
   gap: 8px;
 }
 
-.setup-btn-primary,
-.setup-btn-secondary {
-  border-radius: var(--r-base);
-  cursor: pointer;
-  font-size: var(--fs-md);
-  padding: 8px 18px;
-}
-
-.setup-btn-primary {
-  background: var(--brand-strong);
-  border: 1px solid var(--brand);
-  color: var(--fg-hi);
-}
-
-.setup-btn-primary:hover { background: var(--brand); }
-
-.setup-btn-secondary {
-  background: transparent;
-  border: 1px solid var(--veil-5);
-  color: var(--brand-fg);
-}
-
-.setup-btn-secondary:hover { border-color: var(--veil-6); }
-
-.login-firsttime {
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  cursor: pointer;
-  font-size: var(--fs-xs);
-  margin-top: 10px;
-  text-decoration: underline;
-}
-
-.login-firsttime:hover { color: var(--fg-hi); }
-
 @media (max-width: 560px) {
 .setup-identity,
 .setup-presets { flex-direction: column; }

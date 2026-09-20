@@ -1,4 +1,5 @@
 import type { CombatGroupView, PlayerView } from '../net/types'
+import IconButton from '../ui/IconButton'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './OpponentSwitcherBar.css'
@@ -62,14 +63,11 @@ export default function OpponentSwitcherBar({
 
   return (
     <div className="opponent-switcher-bar">
-      <button
-        type="button"
+      <IconButton label={t('board', 'opp_prev')} variant="ghost" size="sm" round
         className="opp-switch-btn prev"
-        onClick={handlePrev}
-        title={t('board', 'opp_prev')}
-      >
+        onClick={handlePrev}>
         ‹
-      </button>
+      </IconButton>
 
       <div className="opp-pills-list">
         {ordered.map((opp, idx) => {
@@ -142,14 +140,11 @@ export default function OpponentSwitcherBar({
         )}
       </div>
 
-      <button
-        type="button"
+      <IconButton label={t('board', 'opp_next')} variant="ghost" size="sm" round
         className="opp-switch-btn next"
-        onClick={handleNext}
-        title={t('board', 'opp_next')}
-      >
+        onClick={handleNext}>
         ›
-      </button>
+      </IconButton>
     </div>
   )
 }

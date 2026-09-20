@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
 import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
@@ -82,9 +83,9 @@ export default function AvatarPickerModal({
         </div>
 
         <div className="avatar-picker-footer">
-          <button type="button" onClick={onClose}>
+          <Button onClick={onClose}>
             {t('common', 'cancel')}
-          </button>
+          </Button>
         </div>
     </DialogShell>
   )

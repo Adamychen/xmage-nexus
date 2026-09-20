@@ -117,12 +117,6 @@ html.fx-off .mulligan-card-wrap {
 
 .mulligan-auto-toggle { justify-content: center; margin-top: 12px; }
 
-.mulligan-keep {
-  background: var(--ok);
-  color: var(--ink-0);
-  box-shadow: 0 4px 14px rgb(var(--ok-rgb) / 0.3);
-}
-
 .mulligan-mulligan {
   background: linear-gradient(180deg, var(--gold-300) 0%, var(--warn) 100%);
   color: var(--ink-0);

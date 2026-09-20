@@ -83,23 +83,6 @@
   color: var(--brand-fg);
 }
 
-.join-import-toggle-btn {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: var(--r-sm);
-  background: rgb(var(--brand-rgb) / 0.15);
-  border: 1px solid rgb(var(--brand-rgb) / 0.35);
-  color: var(--brand-fg);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.join-import-toggle-btn:hover {
-  background: rgb(var(--brand-rgb) / 0.3);
-  color: var(--fg-hi);
-}
-
 /* Inline Importer */
 .join-inline-importer {
   display: flex;

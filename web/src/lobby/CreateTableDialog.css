@@ -156,20 +156,6 @@
 .password-field-wrap input {
   flex: 1;
 }
-.password-toggle-btn {
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  border-radius: var(--r-base);
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: var(--fs-md);
-  transition: all 0.15s ease;
-}
-.password-toggle-btn:hover {
-  border-color: var(--gold-300);
-  color: var(--fg-hi);
-}
 
 /* Tab Body */
 .create-table-body {
@@ -504,36 +490,5 @@
   gap: 10px;
 }
 
-.tourney-tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.tourney-tab-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-3);
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  color: var(--brand-fg);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.15s ease;
-}
-
-.tourney-tab-btn:hover {
-  background: var(--ink-4);
-  color: var(--fg-hi);
-}
-
-.tourney-tab-btn.active {
-  background: rgb(var(--brand-rgb) / 0.25);
-  border-color: var(--gold-300);
-  color: var(--gold-300);
-  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.15);
-}
+.tourney-tabs { width: 100%; }
+.tourney-tabs .ui-tab { flex: 1; }

@@ -330,38 +330,6 @@
   border: 1.5px solid var(--veil-3);
 }
 
-.stepper-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--veil-2);
-  border: 1.5px solid var(--veil-5);
-  color: var(--fg-hi);
-  font-size: 1.375rem;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.stepper-btn:hover:not(:disabled) {
-  background: var(--brand);
-  border-color: var(--brand-fg);
-  transform: scale(1.08);
-}
-
-.stepper-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.stepper-btn.mini {
-  width: 28px;
-  height: 28px;
-  font-size: var(--fs-lg);
-}
-
 .stepper-display {
   display: flex;
   flex-direction: column;
@@ -398,22 +366,6 @@
 .stepper-quick-row {
   display: flex;
   gap: 10px;
-}
-
-.quick-val-btn {
-  padding: 5px 12px;
-  font-size: var(--fs-xs);
-  border-radius: var(--r-base);
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.quick-val-btn:hover:not(:disabled) {
-  background: var(--veil-4);
-  color: var(--fg-hi);
 }
 
 /* ── Multi-Amount List ──────────────────────────────────────── */

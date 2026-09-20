@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
+import Tabs from '../ui/Tabs'
+import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
@@ -377,32 +379,21 @@ export default function StackZone({
         </div>
         <div className="stack-header-actions">
           {canResolve && (
-            <button
-              type="button"
-              className="stack-resolve-header-btn"
-              onClick={onResolveClick}
-            >
+            <Button variant="success" size="sm" data-testid="stack-resolve-header-btn"
+              onClick={onResolveClick}>
               <Icon name="bolt" size={13} /> {t('game', 'resolve')}
-            </button>
+            </Button>
           )}
-          <div className="stack-view-toggle">
-            <button
-              type="button"
-              className={`toggle-mode-btn ${viewMode === 'compact' ? 'active' : ''}`}
-              title={t('game', 'compact_view')}
-              onClick={() => setViewMode('compact')}
-            >
-              <Icon name="list" size={13} />
-            </button>
-            <button
-              type="button"
-              className={`toggle-mode-btn ${viewMode === 'expanded' ? 'active' : ''}`}
-              title={t('game', 'expanded_view')}
-              onClick={() => setViewMode('expanded')}
-            >
-              <Icon name="layoutGrid" size={13} />
-            </button>
-          </div>
+          <Tabs
+            variant="segmented"
+            size="sm"
+            value={viewMode}
+            onChange={setViewMode}
+            items={[
+              { id: 'compact', icon: 'list', title: t('game', 'compact_view') },
+              { id: 'expanded', icon: 'layoutGrid', title: t('game', 'expanded_view') },
+            ]}
+          />
         </div>
       </div>
 

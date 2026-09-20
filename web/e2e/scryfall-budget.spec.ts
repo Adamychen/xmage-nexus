@@ -75,7 +75,7 @@ test.describe('Scryfall request budget', () => {
       const list = Array.from({ length: CARD_COUNT }, (_, i) => `1 [LEA:${100 + i}] Card ${100 + i}`).join('\n')
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(list)
-      await page.locator('.import-submit-btn').click()
+      await page.locator('[data-testid="import-submit-btn"]').click()
       await expect(page.locator('.arena-card-strip').first()).toBeVisible({ timeout: 5000 })
 
       await expect.poll(async () => {

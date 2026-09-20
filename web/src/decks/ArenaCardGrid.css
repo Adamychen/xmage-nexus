@@ -208,29 +208,6 @@
   color: var(--fg-1);
 }
 
-.arena-footer-load-btn {
-  background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.2) 0%, rgb(var(--warn-rgb) / 0.25) 100%);
-  border: 1px solid rgb(var(--gold-rgb) / 0.5);
-  color: var(--gold-300);
-  font-weight: 700;
-  font-size: var(--fs-xs);
-  padding: 4px 14px;
-  border-radius: var(--r-pill);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.2);
-  transition: all 150ms ease;
-}
-
-.arena-footer-load-btn:hover {
-  background: linear-gradient(135deg, var(--gold-500) 0%, var(--warn) 100%);
-  color: var(--ink-1);
-  box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.6);
-  transform: translateY(-1px);
-}
-
 .arena-footer-loading {
   display: flex;
   align-items: center;
@@ -268,22 +245,6 @@
   font-size: var(--fs-2xs);
   max-width: 90%;
   overflow-wrap: anywhere;
-}
-
-.arena-grid-retry-btn {
-  border: 1px solid var(--veil-5);
-  background: var(--veil-2);
-  color: var(--fg-1);
-  border-radius: var(--r-base);
-  padding: 6px 14px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.arena-grid-retry-btn:hover {
-  background: var(--veil-4);
-  color: var(--fg-hi);
 }
 
 .arena-grid-spinner {

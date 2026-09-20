@@ -50,7 +50,7 @@ describe('StackZone', () => {
     expect(container.textContent).toContain('Pila (1)')
     expect(container.textContent).toContain('Lightning Bolt')
     expect(container.textContent).toContain('Instantáneo')
-    expect(container.querySelector('.stack-resolve-header-btn')).toBeTruthy()
+    expect(container.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
   })
 
   it('renders multiple spells in timeline with newest on top', () => {
@@ -137,7 +137,7 @@ describe('StackZone', () => {
     expect(container.querySelector('.stack-tl-copy-badge')).toBeTruthy()
     expect(container.textContent).toContain('Copia')
 
-    const expandedBtn = container.querySelectorAll('.toggle-mode-btn')[1] as HTMLButtonElement
+    const expandedBtn = container.querySelectorAll('.stack-zone [role="tab"]')[1] as HTMLButtonElement
     expect(expandedBtn).toBeTruthy()
     fireEvent.click(expandedBtn)
     expect(container.querySelector('.view-mode-expanded')).toBeTruthy()
@@ -182,7 +182,7 @@ describe('StackZone', () => {
       <StackZone stack={stack} canResolve={true} onResolveClick={onResolveClick} />,
     )
 
-    const btn = container.querySelector('.stack-resolve-header-btn') as HTMLButtonElement
+    const btn = container.querySelector('[data-testid="stack-resolve-header-btn"]') as HTMLButtonElement
     expect(btn).toBeTruthy()
     fireEvent.click(btn)
     expect(onResolveClick).toHaveBeenCalled()

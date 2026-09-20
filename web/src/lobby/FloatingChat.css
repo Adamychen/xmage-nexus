@@ -39,25 +39,6 @@
   flex-shrink: 0;
 }
 
-.floating-min-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: var(--r-base);
-  background: var(--veil-1);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-3);
-  cursor: pointer;
-}
-
-.floating-min-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
 .floating-chat-body {
   flex: 1;
   min-height: 0;

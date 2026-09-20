@@ -91,25 +91,6 @@
   margin-bottom: 10px;
 }
 
-.settings-step {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-md);
-  background: var(--ink-2);
-  border: 1.5px solid var(--veil-3);
-  color: var(--fg-1);
-  font-size: var(--fs-heading);
-  font-weight: 800;
-  cursor: pointer;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 2px;
-}
-
-.settings-step:hover { border-color: var(--brand); }
-
 .settings-step-value {
   flex: 1;
   height: 34px;
@@ -223,18 +204,6 @@
 .settings-auto-badge.is-yes { background: rgb(var(--ok-rgb) / 0.15); color: var(--ok); }
 .settings-auto-badge.is-no { background: rgb(var(--err-rgb) / 0.15); color: var(--err); }
 
-.settings-link-btn {
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
-  cursor: pointer;
-  padding: 6px 0;
-  text-decoration: underline;
-}
-
-.settings-link-btn:hover { color: var(--fg-hi); }
-
 .settings-footer {
   display: flex;
   justify-content: flex-end;
@@ -293,35 +262,6 @@
   line-height: 1.3;
 }
 
-.settings-sound-card .fx-speed-group {
-  display: flex;
-  gap: 4px;
-}
-
-.settings-sound-card .fx-speed-btn {
-  min-width: 38px;
-  padding: 4px 6px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--ink-4);
-  background: var(--ink-3);
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
-
-.settings-sound-card .fx-speed-btn:hover {
-  background: var(--ink-4);
-  color: var(--fg-1);
-}
-
-.settings-sound-card .fx-speed-btn.active {
-  background: var(--ink-4);
-  border-color: var(--brand);
-  color: var(--purple-fg);
-}
-
 .settings-sound-card .fx-popover-divider {
   height: 1px;
   background: var(--ink-4);
@@ -377,7 +317,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-.settings-sound-card .fx-speed-btn,
 .settings-sound-card .audio-slider::-webkit-slider-thumb {
     transition: none;
   }

@@ -25,34 +25,6 @@
   gap: 6px;
 }
 
-.draft-sets-mode-buttons {
-  display: flex;
-  gap: 4px;
-}
-
-.draft-sets-mode-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-sm);
-  padding: 3px 8px;
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.draft-sets-mode-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.draft-sets-mode-btn.active {
-  background: rgb(var(--brand-rgb) / 0.25);
-  border-color: var(--gold-300);
-  color: var(--gold-300);
-  font-weight: 700;
-}
-
 .draft-sets-chips {
   display: flex;
   align-items: center;

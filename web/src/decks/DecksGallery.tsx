@@ -1,4 +1,5 @@
 import Tabs from '../ui/Tabs'
+import Button from '../ui/Button'
 import CloseButton from '../ui/CloseButton'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
@@ -378,9 +379,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           </div>
 
           <div className="decks-gallery-header-right">
-            <button type="button" className="decks-import-cta" onClick={() => setShowImportDialog(true)}>
+            <Button variant="primary" size="sm" data-testid="decks-import-cta" onClick={() => setShowImportDialog(true)}>
               <Icon name="download" size={14} /> {t('decks', 'import_deck')}
-            </button>
+            </Button>
             {mainView === 'my-decks' && (
               <div className="decks-counter">{customCount}/{MAX_DECKS}</div>
             )}
@@ -446,8 +447,8 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
           <footer className="decks-footer">
             <div className="decks-footer-left">
-              <button type="button" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_backup_count', { count: customCount })}</button>
-              <label className="decks-footer-btn" title={t('decks', 'import_hint')}>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" onClick={handleBackupAll} disabled={customCount === 0} title={t('decks', 'export_deck')}><Icon name="package" size={12} /> {t('decks', 'export_backup_count', { count: customCount })}</Button>
+              <label className="ui-btn ui-btn--subtle ui-btn--sm" title={t('decks', 'import_hint')}>
                 <Icon name="download" size={12} /> {t('decks', 'import_backup_json')}
                 <input type="file" accept=".json" hidden onChange={async (e) => {
                   const f = e.target.files?.[0]
@@ -455,15 +456,15 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                   e.currentTarget.value = ''
                 }} />
               </label>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}><Icon name="save" size={12} /> {t('decks', 'export_deck')} .dck</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}><Icon name="clipboard" size={12} /> {t('decks', 'export_deck')} Arena</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} Plain</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dek')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} .dek</button>
-              <button type="button" className="decks-footer-btn" disabled={!selected} onClick={handleClone}><Icon name="copy" size={12} /> {t('common', 'copy')}</button>
-              <button type="button" className="decks-footer-btn danger" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</button>
-              <button type="button" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} aria-pressed={!!selected?.favorite} onClick={handleFavorite}><span aria-hidden="true">★</span> {t('common', 'all')}</button>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dck')}><Icon name="save" size={12} /> {t('decks', 'export_deck')} .dck</Button>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('arena')}><Icon name="clipboard" size={12} /> {t('decks', 'export_deck')} Arena</Button>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('plain')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} Plain</Button>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" disabled={!selected} onClick={() => handleExport('dek')}><Icon name="file" size={12} /> {t('decks', 'export_deck')} .dek</Button>
+              <Button variant="subtle" size="sm" className="decks-footer-btn" disabled={!selected} onClick={handleClone}><Icon name="copy" size={12} /> {t('common', 'copy')}</Button>
+              <Button variant="soft-danger" size="sm" className="decks-footer-btn" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}><Icon name="trash" size={12} /> {t('common', 'delete')}</Button>
+              <Button variant="subtle" size="sm" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} aria-pressed={!!selected?.favorite} onClick={handleFavorite}><span aria-hidden="true">★</span> {t('common', 'all')}</Button>
             </div>
-            <button type="button" className="decks-edit-btn" disabled={!selected} onClick={() => selected && void openForEdit(selected)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</button>
+            <Button variant="primary" className="decks-edit-btn" disabled={!selected} onClick={() => selected && void openForEdit(selected)}><Icon name="pencil" size={12} /> {t('common', 'edit')}</Button>
           </footer>
         </>
       ) : (

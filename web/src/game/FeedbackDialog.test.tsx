@@ -339,7 +339,7 @@ describe('FeedbackDialog (componente)', () => {
     render(<FeedbackDialog />)
     expect(screen.getByTestId('pile-column-1')).toBeTruthy()
     expect(screen.getByTestId('pile-column-2')).toBeTruthy()
-    fireEvent.click(screen.getByTestId('pile-column-1').querySelector('.pile-choose-btn')!)
+    fireEvent.click(screen.getByTestId('pile-column-1').querySelector('[data-testid="pile-choose-btn"]')!)
     await waitFor(() => {
       const send = getGateway().send as ReturnType<typeof vi.fn>
       expect(send).toHaveBeenCalledWith('sendPlayerBoolean', expect.objectContaining({ value: true, gameId: 'game-1' }))

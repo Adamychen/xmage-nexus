@@ -88,7 +88,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       () => makeTournamentScenario({ includeStartTournament: false, includeInit: false, emitUpdates: 0, emitShowTournamentOnWatch: true }),
       async () => {
         await login(page, 'e2e')
-        const watchBtn = page.locator('.table-card .watch-btn').first()
+        const watchBtn = page.locator('.table-card [data-testid="watch-btn"]').first()
         await expect(watchBtn).toBeVisible({ timeout: 10_000 })
         await watchBtn.click()
         const modal = page.locator('[data-testid="tournament-bracket"]').first()
@@ -151,7 +151,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       await page.getByRole('button', { name: /Nueva/i }).first().click()
       await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
       await page.getByRole('button', { name: /^Torneo/i }).first().click()
-      await page.getByRole('button', { name: /Draft \/ Limitado/i }).click()
+      await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
       await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')
       const draftToggle = page.getByLabel(/Crear como torneo Draft/i)
       if (!(await draftToggle.isChecked())) await draftToggle.check()

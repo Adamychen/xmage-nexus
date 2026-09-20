@@ -81,9 +81,9 @@ export default function GameEndDialog() {
         )}
 
         <div className="end-actions">
-          <button type="button" data-testid="end-download-log" onClick={handleDownloadLog}>
+          <Button data-testid="end-download-log" onClick={handleDownloadLog}>
             {t('system', 'log_download')}
-          </button>
+          </Button>
         </div>
 
         {matchOver ? (
@@ -93,9 +93,9 @@ export default function GameEndDialog() {
               <Button variant="primary" onClick={() => handleWatchGame(followGameId)}>
                 {t('game', 'follow_game')}
               </Button>
-              <button onClick={returnToLobby}>
+              <Button onClick={returnToLobby}>
                 {t('game', 'return_to_lobby')}
-              </button>
+              </Button>
             </div>
           ) : (
             <Button variant="primary" onClick={returnToLobby}>

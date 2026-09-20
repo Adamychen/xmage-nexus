@@ -57,7 +57,7 @@ describe('PassMenu', () => {
   it('marks the active skip and offers cancel', () => {
     const onSkip = vi.fn()
     const { container } = render(<PassMenu game={gameWith({ passedAllTurns: true })} onSkip={onSkip} />)
-    expect(container.querySelector('[data-testid="skip-myTurn"]')?.classList.contains('is-active')).toBe(true)
+    expect(container.querySelector('[data-testid="skip-myTurn"]')?.classList.contains('ui-menu-item--selected')).toBe(true)
     const cancel = container.querySelector('[data-testid="skip-cancel"]')
     expect(cancel).not.toBeNull()
     fireEvent.click(cancel!)

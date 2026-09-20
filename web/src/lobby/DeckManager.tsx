@@ -73,13 +73,10 @@ export default function DeckManager() {
       <div className="deck-sidebar">
         <div className="deck-sidebar-header">
           <h3>{t('decks','my_decks')} ({allDecks.length})</h3>
-          <button
-            type="button"
-            className="deck-import-btn"
-            onClick={() => setShowImportModal(true)}
-          >
+          <Button variant="soft" size="sm"
+            onClick={() => setShowImportModal(true)}>
             <Icon name="download" size={13} /> {t('decks','import_deck')}
-          </button>
+          </Button>
         </div>
 
         <div className="deck-list-items">
@@ -228,9 +225,9 @@ export default function DeckManager() {
             {importError && <div className="error-box">{tError(importError)}</div>}
 
             <div className="import-actions">
-              <button type="button" onClick={() => setShowImportModal(false)}>
+              <Button onClick={() => setShowImportModal(false)}>
                 {t('common','cancel')}
-              </button>
+              </Button>
               <Button variant="primary" onClick={handleImportSubmit}>
                 {t('common','save')}
               </Button>

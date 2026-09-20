@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import Tabs from '../ui/Tabs'
 import EmptyState from '../ui/EmptyState'
 import { useStore, isBlockingModal } from '../state/store'
 import { parseGameEvent, toFeedItem, type ActionFeedItem } from './gameEventParser'
 import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
-import Icon from '../ui/Icon'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
@@ -94,24 +94,16 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   return (
     <div className="action-feed-container">
       <div className="action-feed-controls">
-        <div className="action-feed-mode-toggle">
-          <button
-            type="button"
-            className={`mode-btn ${viewMode === 'visual' ? 'active' : ''}`}
-            onClick={() => setViewMode('visual')}
-            title={t('game', 'visual_feed')}
-          >
-            <Icon name="palette" size={12} /> {t('game', 'visual_feed')}
-          </button>
-          <button
-            type="button"
-            className={`mode-btn ${viewMode === 'raw' ? 'active' : ''}`}
-            onClick={() => setViewMode('raw')}
-            title={t('game', 'text_feed')}
-          >
-            <Icon name="scrollText" size={12} /> {t('game', 'text_feed')}
-          </button>
-        </div>
+        <Tabs
+          variant="segmented"
+          size="sm"
+          value={viewMode}
+          onChange={setViewMode}
+          items={[
+            { id: 'visual', icon: 'palette', label: t('game', 'visual_feed'), title: t('game', 'visual_feed') },
+            { id: 'raw', icon: 'scrollText', label: t('game', 'text_feed'), title: t('game', 'text_feed') },
+          ]}
+        />
         <span className="action-count-tag">{feedItems.length === 1 ? t('game', 'feed_events_one') : t('game', 'feed_events', { count: feedItems.length })}</span>
       </div>
 

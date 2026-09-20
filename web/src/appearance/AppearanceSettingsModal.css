@@ -108,25 +108,6 @@
   margin-bottom: 10px;
 }
 
-.ui-scale-step {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-md);
-  background: var(--ink-2);
-  border: 1.5px solid var(--veil-3);
-  color: var(--fg-1);
-  font-size: var(--fs-heading);
-  font-weight: 800;
-  cursor: pointer;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 2px;
-}
-
-.ui-scale-step:hover { border-color: var(--brand); }
-
 .ui-scale-current {
   flex: 1;
   height: 34px;

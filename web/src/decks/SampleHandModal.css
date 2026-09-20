@@ -95,23 +95,6 @@
   font-size: var(--fs-sm);
 }
 
-.confirm-keep-btn {
-  background: var(--ok-strong);
-  color: white;
-  border: none;
-  border-radius: var(--r-pill);
-  padding: 6px 14px;
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 120ms;
-}
-
-.confirm-keep-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 /* Cards Area */
 .sample-hand-cards-area {
   padding: 24px;

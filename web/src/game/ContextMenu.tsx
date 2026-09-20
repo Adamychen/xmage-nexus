@@ -1,4 +1,5 @@
 import { useEscape } from '../ui/useEscape'
+import MenuItem from '../ui/MenuItem'
 import Icon from '../ui/Icon'
 import './ContextMenu.css'
 
@@ -30,16 +31,16 @@ export default function ContextMenu({ x, y, items, onSelect, onClose, menuRef }:
         style={{ left: x, top: y }}
       >
         {items.map((item) => (
-          <button
+          <MenuItem
             key={item.id}
             data-testid={`ctx-${item.id}`}
-            className={`context-menu-item ${item.danger ? 'danger' : ''}`}
+            danger={item.danger}
             disabled={item.disabled}
             onClick={() => { onSelect(item.id); onClose() }}
           >
             {item.icon && <span className="context-menu-icon"><Icon name={item.icon} size={13} /></span>}
             <span>{item.label}</span>
-          </button>
+          </MenuItem>
         ))}
       </div>
     </>

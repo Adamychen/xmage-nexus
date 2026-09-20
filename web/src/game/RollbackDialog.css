@@ -83,49 +83,8 @@
   color: var(--fg-3);
 }
 
-.rollback-undo-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-5);
-  color: var(--fg-1);
-  padding: 6px 12px;
-  border-radius: var(--r-sm);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 120ms ease;
-}
-
-.rollback-undo-btn:hover:not(:disabled) {
-  background: var(--veil-4);
-  border-color: var(--veil-6);
-}
-
-.rollback-game-btn {
-  background: rgb(var(--warn-rgb) / 0.12);
-  border: 1px solid rgb(var(--warn-rgb) / 0.3);
-  color: var(--warn);
-  padding: 4px 10px;
-  border-radius: var(--r-sm);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 150ms ease;
-}
-
-.rollback-game-btn:hover {
-  background: rgb(var(--warn-rgb) / 0.25);
-  border-color: rgb(var(--warn-rgb) / 0.6);
-  color: var(--gold-300);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rollback-turn-option,
-  .rollback-undo-btn,
-  .rollback-game-btn {
+.rollback-turn-option {
     transition: none;
   }
 }

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import ChipButton from '../ui/ChipButton'
+import Button from '../ui/Button'
 import { BASIC_LAND_PRESETS, BASIC_LAND_SETS, countManaPips, suggestBasicLands, getBasicLandLabel, landPrinting, loadBasicLandSet, saveBasicLandSet, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
@@ -105,14 +107,16 @@ export function BasicLandAdder({
           })}
         </div>
 
-        <button
-          type="button"
-          className={`basic-land-suggest-toggle-btn ${isOpen ? 'active' : ''}`}
+        <ChipButton
+          size="sm"
+          pill
+          className="basic-land-suggest-toggle-btn"
+          active={isOpen}
           onClick={() => setIsOpen(!isOpen)}
           title={t('decks', 'basic_lands')}
         >
           <Icon name="wand" size={13} /> {t('decks', 'basic_lands')}
-        </button>
+        </ChipButton>
       </div>
 
       {/* Expandable Auto-Suggester Assistant */}
@@ -161,14 +165,11 @@ export function BasicLandAdder({
                 className="suggester-input"
               />
             </label>
-            <button
-              type="button"
-              className="suggester-apply-btn"
+            <Button variant="success" size="sm"
               disabled={totalPips === 0}
-              onClick={handleSuggest}
-            >
+              onClick={handleSuggest}>
               {t('common', 'confirm')}
-            </button>
+            </Button>
           </div>
         </div>
       )}

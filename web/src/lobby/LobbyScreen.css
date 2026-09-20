@@ -638,25 +638,7 @@ html:lang(zh) .hero-deck-label {
 }
 
 .lobby-appearance-btn,
-.lobby-disconnect-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 32px;
-  padding: 0 9px;
-  border-radius: var(--r-base);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.lobby-appearance-btn {
-  background: rgb(var(--ink-rgb) / 0.6);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-3);
-}
+.lobby-disconnect-btn { width: auto; min-width: 34px; height: 32px; padding: 0 9px; border-radius: var(--r-base); font-size: var(--fs-xs); font-weight: 600; }
 
 .lobby-appearance-btn:hover {
   background: rgb(var(--ink-2-rgb) / 0.9);
@@ -678,7 +660,7 @@ html:lang(zh) .hero-deck-label {
 
 .lobby-disconnect-btn {
   background: var(--err-surface);
-  border: 1px solid rgb(var(--err-rgb) / 0.3);
+  border-color: var(--err-line);
   color: var(--err);
 }
 
@@ -1209,50 +1191,6 @@ html:lang(zh) .tables-list {
   border-top: 1px solid var(--line-1);
   padding-top: 10px;
   flex-shrink: 0;
-}
-
-.table-action-btn {
-  padding: 6px 12px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: var(--r-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.join-btn {
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  border: 1px solid var(--brand-fg);
-  color: var(--fg-hi);
-  box-shadow: var(--sheen), 0 4px 14px rgb(var(--brand-rgb) / 0.3);
-  font-weight: 700;
-}
-
-.join-btn:hover {
-  transform: translateY(-1px);
-}
-
-.ai-btn {
-  background: rgb(var(--purple-rgb) / 0.4);
-  border: 1px solid var(--purple);
-  color: var(--brand-fg);
-}
-
-.ai-btn:hover {
-  background: var(--purple);
-  color: var(--fg-hi);
-}
-
-.watch-btn {
-  background: var(--line-1);
-  border: 1px solid var(--line-2);
-  color: var(--fg-2);
-}
-
-.watch-btn:hover {
-  background: var(--line-2);
-  color: var(--fg-1);
 }
 
 /* Community & Chat Grid */

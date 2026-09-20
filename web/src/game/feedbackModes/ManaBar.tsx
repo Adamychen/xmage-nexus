@@ -47,9 +47,9 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
             onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
           />
         )}
-        <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
+        <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
           {t('game', 'mana_special')}
-        </button>
+        </Button>
         <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">
           {t('game', 'targeting_cancel')}
         </Button>

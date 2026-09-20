@@ -66,33 +66,6 @@
   padding: 1px 6px;
 }
 
-.cdm-view-toggles {
-  display: flex;
-  gap: 4px;
-}
-
-.cdm-toggle-btn {
-  background: var(--veil-1);
-  border: 1px solid rgb(var(--brand-rgb) / 0.2);
-  border-radius: var(--r-sm);
-  color: var(--fg-2);
-  padding: 2px 7px;
-  font-size: var(--fs-2xs);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.cdm-toggle-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.cdm-toggle-btn.active {
-  background: rgb(var(--brand-rgb) / 0.35);
-  border-color: var(--brand-fg);
-  color: var(--fg-hi);
-}
-
 /* Alert banner */
 .cdm-alert-box {
   display: flex;

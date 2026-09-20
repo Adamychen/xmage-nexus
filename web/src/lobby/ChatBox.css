@@ -16,29 +16,6 @@
   margin-bottom: 6px;
 }
 
-.chat-toggle-btn {
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-  background: var(--veil-1);
-  border: 1px solid var(--veil-2);
-  color: var(--fg-3);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.chat-toggle-btn:hover {
-  background: var(--veil-2);
-  color: var(--fg-hi);
-}
-
-.chat-toggle-btn.active {
-  background: rgb(var(--brand-rgb) / 0.18);
-  border-color: rgb(var(--brand-rgb) / 0.4);
-  color: var(--brand-fg);
-}
-
 .chat-list {
   flex: 1;
   overflow-y: auto;

@@ -64,38 +64,3 @@
   border-top: 1px solid var(--veil-2);
 }
 
-.inspector-copy-btn {
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  color: var(--fg-hi);
-  border: 1px solid var(--brand-fg);
-  border-radius: var(--r-pill);
-  padding: 8px 18px;
-  font-weight: 900;
-  font-size: var(--fs-md);
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgb(var(--brand-rgb) / 0.4);
-  transition: all 120ms ease;
-}
-
-.inspector-copy-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-
-.inspector-edit-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-1);
-  border-radius: var(--r-pill);
-  padding: 8px 16px;
-  font-weight: 700;
-  font-size: var(--fs-md);
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.inspector-edit-btn:hover {
-  background: var(--brand);
-  border-color: var(--brand-fg);
-  color: var(--fg-hi);
-}

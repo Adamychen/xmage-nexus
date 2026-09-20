@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import { SLEEVES } from './sleeves'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
@@ -55,7 +56,7 @@ export default function SleevePickerModal({ onClose }: Props) {
           })}
         </div>
         <div className="sleeve-picker-footer">
-          <button type="button" onClick={onClose}>{t('common', 'close')}</button>
+          <Button onClick={onClose}>{t('common', 'close')}</Button>
         </div>
     </DialogShell>
   )

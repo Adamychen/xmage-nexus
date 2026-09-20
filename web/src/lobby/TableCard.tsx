@@ -247,8 +247,7 @@ export default function TableCard({
 
       <div className="table-actions">
         {isPlaying && (isMine || mySeat) && (
-          <Button variant="primary"
-            className="table-action-btn resume-table-btn"
+          <Button variant="primary" size="sm"
             data-testid="resume-table"
             disabled={busyTable === tTable.tableId}
             onClick={() => onResume(tTable)}
@@ -257,8 +256,7 @@ export default function TableCard({
           </Button>
         )}
         {canReenter && (
-          <Button variant="primary"
-            className="table-action-btn return-table-btn"
+          <Button variant="primary" size="sm"
             data-testid="return-to-table"
             onClick={() => openStagingTable(tTable.tableId)}
           >
@@ -266,8 +264,7 @@ export default function TableCard({
           </Button>
         )}
         {isReady && (
-          <Button variant="primary"
-            className="table-action-btn"
+          <Button variant="primary" size="sm"
             disabled={busyTable === tTable.tableId}
             onClick={() => onStart(tTable)}
           >
@@ -275,39 +272,31 @@ export default function TableCard({
           </Button>
         )}
         {hasHumanSeat && (
-          <button
-            className="table-action-btn join-btn"
+          <Button variant="primary" size="sm"
             disabled={busyTable === tTable.tableId}
-            onClick={() => onJoinHuman(tTable)}
-          >
+            onClick={() => onJoinHuman(tTable)}>
             {t('lobby.join_human_btn')}
-          </button>
+          </Button>
         )}
         {hasAiSeat && import.meta.env.DEV && (
-          <button
-            className="table-action-btn ai-btn"
+          <Button variant="soft" size="sm"
             disabled={busyTable === tTable.tableId}
-            onClick={() => onJoinAi(tTable)}
-          >
+            onClick={() => onJoinAi(tTable)}>
             {t('lobby.join_ai_btn')}
-          </button>
+          </Button>
         )}
-        <button
-          className="table-action-btn watch-btn"
+        <Button variant="subtle" size="sm" data-testid="watch-btn"
           disabled={busyTable === tTable.tableId}
-          onClick={() => onWatch(tTable)}
-        >
+          onClick={() => onWatch(tTable)}>
           <Icon name="eye" size={13} /> {t('lobby.watch_btn')}
-        </button>
+        </Button>
         {tTable.isTournament && (
-          <button
-            className="table-action-btn bracket-btn"
+          <Button variant="subtle" size="sm"
             disabled={busyTable === tTable.tableId}
             onClick={() => void onOpenBracket(tTable)}
-            data-testid="open-bracket"
-          >
+            data-testid="open-bracket">
             <Icon name="trophy" size={13} /> {t('lobby.view_bracket')}
-          </button>
+          </Button>
         )}
       </div>
     </div>

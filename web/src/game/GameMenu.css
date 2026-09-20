@@ -53,52 +53,6 @@
   box-shadow: 0 10px 30px var(--shade-2);
 }
 
-.game-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 12px;
-  background: none;
-  border: none;
-  border-radius: var(--r-sm);
-  color: var(--fg-2);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s;
-}
-
-.game-menu-item:hover {
-  background: var(--ink-3);
-}
-
-.game-menu-panel .leave-game-btn,
-.game-menu-panel .leave-match-btn,
-.game-menu-panel .rollback-game-btn {
-  background: none;
-  border: none;
-  color: var(--fg-2);
-  font-weight: 400;
-  padding: 8px 12px;
-  white-space: normal;
-}
-
-.game-menu-panel .leave-game-btn:hover,
-.game-menu-panel .leave-match-btn:hover {
-  background: var(--err-surface);
-  color: var(--err);
-  border: none;
-  box-shadow: none;
-}
-
-.game-menu-panel .rollback-game-btn:hover {
-  background: var(--ink-3);
-  color: var(--fg-1);
-  border: none;
-  box-shadow: none;
-}
-
 .game-menu-divider {
   height: 1px;
   background: var(--ink-4);
@@ -159,8 +113,7 @@
 .game-menu-check { padding: 4px 12px; color: var(--fg-1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-menu-btn,
-  .game-menu-item {
+  .game-menu-btn {
     transition: none;
   }
 }

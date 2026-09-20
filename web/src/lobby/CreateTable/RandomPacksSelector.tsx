@@ -106,12 +106,12 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
             })}
           </p>
           <div className="random-packs-toolbar">
-            <button type="button" onClick={() => setSelected(new Set(sets.map((s) => s.code)))}>
+            <Button onClick={() => setSelected(new Set(sets.map((s) => s.code)))}>
               {t('lobby', 'random_packs_select_all')}
-            </button>
-            <button type="button" onClick={() => setSelected(new Set())}>
+            </Button>
+            <Button onClick={() => setSelected(new Set())}>
               {t('lobby', 'random_packs_select_none')}
-            </button>
+            </Button>
           </div>
           <div className="random-packs-grid">
             {sets.map((s) => (
@@ -126,9 +126,9 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
             ))}
           </div>
           <div className="random-packs-footer">
-            <button type="button" onClick={onClose}>
+            <Button onClick={onClose}>
               {t('lobby', 'random_packs_cancel')}
-            </button>
+            </Button>
             <Button variant="primary" type="button" onClick={apply} disabled={ordered.length === 0} data-testid="random-packs-apply">
               {t('lobby', 'random_packs_apply')}
             </Button>

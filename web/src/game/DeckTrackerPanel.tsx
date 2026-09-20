@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import ChipButton from '../ui/ChipButton'
 import Chip from '../ui/Chip'
 import CloseButton from '../ui/CloseButton'
 import EmptyState from '../ui/EmptyState'
@@ -212,15 +213,15 @@ export default function DeckTrackerPanel() {
                 </select>
               </div>
 
-              <button
-                type="button"
-                className={`tracker-toggle-btn ${hideEmpty ? 'active' : ''}`}
+              <ChipButton
+                size="sm"
+                active={hideEmpty}
                 onClick={() => setHideEmpty(!hideEmpty)}
                 title={hideEmpty ? t('game', 'tracker_show_all') : t('game', 'tracker_hide_empty')}
               >
                 <Icon name={hideEmpty ? 'eye' : 'eyeOff'} size={12} />
                 <span>{hideEmpty ? t('game', 'tracker_show_all') : t('game', 'tracker_hide_empty')}</span>
-              </button>
+              </ChipButton>
             </div>
           </div>
         )}

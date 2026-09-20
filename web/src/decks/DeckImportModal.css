@@ -37,37 +37,6 @@
   color: var(--fg-2);
 }
 
-.import-mode-options {
-  display: flex;
-  background: var(--shade-1);
-  padding: 3px;
-  border-radius: var(--r-base);
-  border: 1px solid var(--veil-2);
-  gap: 4px;
-}
-
-.import-mode-btn {
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  padding: 5px 12px;
-  border-radius: var(--r-sm);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.import-mode-btn:hover {
-  color: white;
-}
-
-.import-mode-btn.active {
-  background: var(--brand-strong);
-  color: white;
-  box-shadow: 0 2px 8px rgb(var(--brand-rgb) / 0.4);
-}
-
 /* Textarea Wrap */
 .deck-import-textarea-wrap {
   position: relative;
@@ -128,39 +97,6 @@
 }
 
 .import-file-btn:hover {
-  background: var(--veil-3);
-  color: white;
-}
-
-.import-clear-btn {
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  cursor: pointer;
-  padding: 4px 6px;
-  text-decoration: underline;
-}
-
-.import-clear-btn:hover {
-  color: var(--err);
-}
-
-.import-paste-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  border-radius: var(--r-sm);
-  padding: 4px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.import-paste-btn:hover {
   background: var(--veil-3);
   color: white;
 }

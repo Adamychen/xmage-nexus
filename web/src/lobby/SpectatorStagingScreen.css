@@ -56,28 +56,6 @@
   font-weight: 600;
 }
 
-.staging-leave-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--r-base);
-  background: var(--err-surface);
-  border: 1px solid rgb(var(--err-rgb) / 0.35);
-  color: var(--err);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.staging-leave-btn:hover {
-  background: var(--err-surface);
-  border-color: var(--err);
-  color: var(--fg-hi);
-  box-shadow: 0 0 12px rgb(var(--err-rgb) / 0.3);
-}
-
 /* Player action bar (Start / Leave / Delete): sticky so it stays visible */
 .staging-player-actions {
   display: flex;
@@ -350,30 +328,6 @@
   display: inline-flex;
   gap: 2px;
   margin-left: 4px;
-}
-
-.seat-order-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-1);
-  cursor: pointer;
-}
-
-.seat-order-btn:hover:not(:disabled) {
-  background: var(--veil-4);
-  color: var(--fg-hi);
-}
-
-.seat-order-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 
 /* Brief highlight on the two seats involved in a swap */

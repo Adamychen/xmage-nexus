@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
 import Chip from '../ui/Chip'
 import Checkbox from '../ui/Checkbox'
@@ -288,15 +290,13 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             }}
           />
           {filters.searchQuery && (
-            <button
-              type="button"
+            <CloseButton
+              variant="plain"
+              size="sm"
               className="tfb-clear-search-btn"
+              label={t('common.clear')}
               onClick={() => onChange({ ...filters, searchQuery: '' })}
-              title={t('common.clear')}
-              aria-label={t('common.clear')}
-            >
-              &times;
-            </button>
+            />
           )}
         </div>
 
@@ -342,14 +342,11 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           </ChipButton>
 
           {activeCount > 0 && (
-            <button
-              type="button"
-              className="tfb-reset-btn"
+            <Button variant="soft-danger" size="sm"
               onClick={onReset}
-              title={t('lobby.filter_reset')}
-            >
+              title={t('lobby.filter_reset')}>
               <span>{t('lobby.filter_reset')}</span>
-            </button>
+            </Button>
           )}
         </div>
       </div>

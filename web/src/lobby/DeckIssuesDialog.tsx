@@ -121,15 +121,12 @@ export default function DeckIssuesDialog() {
                     {c.suggestions && c.suggestions.length > 0 && (
                       <span className="deck-issue-fixes">
                         {c.suggestions.slice(0, 3).map((s) => (
-                          <button
+                          <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
-                            type="button"
-                            className="deck-issue-suggestion-btn"
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestion(deck, c, s))}
-                          >
+                            onClick={() => retryWith(applySuggestion(deck, c, s))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
-                          </button>
+                          </Button>
                         ))}
                       </span>
                     )}
@@ -153,15 +150,12 @@ export default function DeckIssuesDialog() {
                     {c.suggestions && c.suggestions.length > 0 && (
                       <span className="deck-issue-fixes">
                         {c.suggestions.slice(0, 3).map((s) => (
-                          <button
+                          <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
-                            type="button"
-                            className="deck-issue-suggestion-btn"
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestion(deck, c, s))}
-                          >
+                            onClick={() => retryWith(applySuggestion(deck, c, s))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
-                          </button>
+                          </Button>
                         ))}
                       </span>
                     )}

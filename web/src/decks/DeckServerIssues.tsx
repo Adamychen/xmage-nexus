@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
@@ -25,14 +26,11 @@ export default function DeckServerIssues({ issues, onRepair }: Props) {
             {it.to && (
               <>
                 <span className="bsi-sug"> · {t('decks', 'issues_banner_same_card', { set: it.to.setCode, num: it.to.cardNumber })}</span>{' '}
-                <button
-                  type="button"
-                  className="bsi-repair-btn"
+                <Button variant="success" size="sm" className="bsi-repair-btn"
                   data-testid="builder-issue-repair"
-                  onClick={() => onRepair(it.from, it.to!)}
-                >
+                  onClick={() => onRepair(it.from, it.to!)}>
                   {t('decks', 'issues_use_suggestion', { set: it.to.setCode, num: it.to.cardNumber })}
-                </button>
+                </Button>
               </>
             )}
           </li>

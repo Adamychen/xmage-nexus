@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
@@ -283,13 +284,10 @@ export default function LeaderboardModal({
                   <span>
                     {t('lobby', 'leaderboard_inspecting', { username: targetUser?.userName ?? '' })}
                   </span>
-                  <button
-                    type="button"
-                    className="profile-back-my-btn"
-                    onClick={() => setTargetUsername(currentUsername)}
-                  >
+                  <Button variant="subtle" size="sm"
+                    onClick={() => setTargetUsername(currentUsername)}>
                     <Icon name="user" size={12} /> {t('lobby', 'leaderboard_view_own')}
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -455,14 +453,11 @@ export default function LeaderboardModal({
                       {ignoredList.map((name) => (
                         <div key={name} className="profile-ignored-item">
                           <span className="ignored-item-name"><Icon name="ban" size={12} /> {name}</span>
-                          <button
-                            type="button"
-                            className="unignore-action-btn"
+                          <Button variant="subtle" size="sm"
                             onClick={() => handleUnignoreFromProfile(name)}
-                            title={t('lobby', 'leaderboard_unblock') + ' ' + name}
-                          >
+                            title={t('lobby', 'leaderboard_unblock') + ' ' + name}>
                             <Icon name="unlock" size={12} /> {t('lobby', 'leaderboard_unblock')}
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>

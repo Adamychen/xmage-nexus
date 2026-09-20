@@ -56,20 +56,6 @@
   margin-left: auto;
 }
 
-.deck-issue-suggestion-btn {
-  font-size: var(--fs-xs);
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-5);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.deck-issue-suggestion-btn:hover {
-  background: var(--veil-3);
-}
-
 .deck-issues-footer {
   display: flex;
   justify-content: flex-end;

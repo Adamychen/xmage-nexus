@@ -25,9 +25,9 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
       </div>
       <div className="action-prompt-actions">
         {prompt.special && (
-          <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_combat'))}>
+          <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_combat'))}>
             {t('game', 'combat_attack_all')}
-          </button>
+          </Button>
         )}
         <Button variant="success"
           disabled={busy}

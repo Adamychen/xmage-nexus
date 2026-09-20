@@ -1,4 +1,5 @@
 import * as cmds from '../../net/commands'
+import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import EmptyState from '../../ui/EmptyState'
 import type { FeedbackPrompt } from '../feedback'
@@ -290,15 +291,11 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       {prompt.mode === 'integer' && (
         <div className="feedback-amount-wrap">
           <div className="feedback-amount-stepper">
-            <button
-              type="button"
-              className="stepper-btn"
+            <IconButton label={t('game', 'amount_decrease')} size="xl" round
               disabled={busy || amount <= prompt.min}
-              onClick={() => setAmount((v) => Math.max(prompt.min, v - 1))}
-              aria-label={t('game', 'amount_decrease')}
-            >
+              onClick={() => setAmount((v) => Math.max(prompt.min, v - 1))}>
               −
-            </button>
+            </IconButton>
             <div className="stepper-display">
               <input
                 aria-label={t('game', 'amount_value')}
@@ -311,34 +308,24 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               />
               <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
             </div>
-            <button
-              type="button"
-              className="stepper-btn"
+            <IconButton label={t('game', 'amount_increase')} size="xl" round
               disabled={busy || amount >= prompt.max}
-              onClick={() => setAmount((v) => Math.min(prompt.max, v + 1))}
-              aria-label={t('game', 'amount_increase')}
-            >
+              onClick={() => setAmount((v) => Math.min(prompt.max, v + 1))}>
               +
-            </button>
+            </IconButton>
           </div>
           {prompt.min !== prompt.max && (
             <div className="stepper-quick-row">
-              <button
-                type="button"
-                className="quick-val-btn"
+              <Button variant="subtle" size="sm"
                 disabled={busy || amount === prompt.min}
-                onClick={() => setAmount(prompt.min)}
-              >
+                onClick={() => setAmount(prompt.min)}>
                 {t('game', 'amount_min', { min: prompt.min })}
-              </button>
-              <button
-                type="button"
-                className="quick-val-btn"
+              </Button>
+              <Button variant="subtle" size="sm"
                 disabled={busy || amount === prompt.max}
-                onClick={() => setAmount(prompt.max)}
-              >
+                onClick={() => setAmount(prompt.max)}>
                 {t('game', 'amount_max', { max: prompt.max })}
-              </button>
+              </Button>
             </div>
           )}
           <div className="feedback-dialog-actions">
@@ -359,25 +346,17 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 <div key={item.id} className="multi-amount-row">
                   <span className="multi-amount-label"><FormattedText text={item.label} /></span>
                   <div className="multi-stepper">
-                    <button
-                      type="button"
-                      className="stepper-btn mini"
+                    <IconButton label={`${item.label} — ${t('game', 'amount_decrease')}`} round
                       disabled={busy || cur <= item.min}
-                      aria-label={`${item.label} — ${t('game', 'amount_decrease')}`}
-                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}
-                    >
+                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}>
                       −
-                    </button>
+                    </IconButton>
                     <span className="multi-stepper-val" role="status" aria-live="polite" aria-label={`${item.label}: ${cur}`}>{cur}</span>
-                    <button
-                      type="button"
-                      className="stepper-btn mini"
+                    <IconButton label={`${item.label} — ${t('game', 'amount_increase')}`} round
                       disabled={busy || cur >= item.max}
-                      aria-label={`${item.label} — ${t('game', 'amount_increase')}`}
-                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}
-                    >
+                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}>
                       +
-                    </button>
+                    </IconButton>
                   </div>
                 </div>
               )

@@ -114,14 +114,11 @@ export default function RollbackDialog() {
             <span className="rollback-undo-title">{t('dialogs', 'rollback_undo_btn')}</span>
             <span className="rollback-undo-hint">{t('dialogs', 'rollback_undo_hint')}</span>
           </div>
-          <button
-            type="button"
-            className="rollback-undo-btn"
+          <Button variant="subtle" size="sm"
             onClick={handleUndo}
-            disabled={sending}
-          >
+            disabled={sending}>
             <Icon name="undo" size={12} /> Undo
-          </button>
+          </Button>
         </div>
 
         <div className="feedback-dialog-actions rollback-actions">

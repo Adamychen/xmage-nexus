@@ -10,28 +10,9 @@
   z-index: 25;
 }
 
-.opp-switch-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--ink-3);
-  border: 1px solid var(--veil-4);
-  color: var(--gold-300);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: var(--fs-xs);
-  line-height: 1;
-  transition: all 0.2s ease;
-  padding: 0;
-}
+.opp-switch-btn { color: var(--gold-300); }
 
-.opp-switch-btn:hover {
-  background: var(--ink-4);
-  border-color: var(--gold-300);
-  transform: scale(1.1);
-}
+.opp-switch-btn:hover:not(:disabled) { border-color: var(--gold-300); transform: scale(1.1); }
 
 .opp-pills-list {
   display: flex;

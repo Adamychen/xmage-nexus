@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
 import { SLEEVES } from './sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
@@ -55,16 +56,11 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
           <h3 className="appearance-section-title">{t('lobby', 'ui_scale_title')}</h3>
           <p className="appearance-section-hint">{t('lobby', 'ui_scale_hint_lobby')}</p>
           <div className="ui-scale-stepper">
-            <button
-              type="button"
-              className="ui-scale-step"
+            <IconButton label={t('lobby', 'zoom_out')} size="lg"
               onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, -1))}
-              title={t('lobby', 'zoom_out')}
-              aria-label={t('lobby', 'zoom_out')}
-              data-testid="ui-scale-minus"
-            >
+              data-testid="ui-scale-minus">
               −
-            </button>
+            </IconButton>
             <button
               type="button"
               className="ui-scale-current"
@@ -74,16 +70,11 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
             >
               {zoomPercent(settings.uiScale)}%
             </button>
-            <button
-              type="button"
-              className="ui-scale-step"
+            <IconButton label={t('lobby', 'zoom_in')} size="lg"
               onClick={() => setSetting('uiScale', stepZoom(settings.uiScale, 1))}
-              title={t('lobby', 'zoom_in')}
-              aria-label={t('lobby', 'zoom_in')}
-              data-testid="ui-scale-plus"
-            >
+              data-testid="ui-scale-plus">
               +
-            </button>
+            </IconButton>
           </div>
           <div className="ui-scale-grid">
             {UI_SCALES.map((o) => {

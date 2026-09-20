@@ -83,7 +83,7 @@ describe('ActiveTablesBar', () => {
     )
 
     expect(screen.getByText('Alice Modern Duel')).toBeTruthy()
-    const btn = container.querySelector('.btn-staging') as HTMLButtonElement
+    const btn = container.querySelector('[data-testid="btn-staging"]') as HTMLButtonElement
     expect(btn).not.toBeNull()
     fireEvent.click(btn)
     expect(onOpenStaging).toHaveBeenCalledWith('tab-1')
@@ -102,7 +102,7 @@ describe('ActiveTablesBar', () => {
     )
 
     expect(screen.getByText('Alice vs Bob Standard')).toBeTruthy()
-    const startBtn = container.querySelector('.btn-start') as HTMLButtonElement
+    const startBtn = container.querySelector('[data-testid="btn-start"]') as HTMLButtonElement
     expect(startBtn).not.toBeNull()
     fireEvent.click(startBtn)
     expect(onStart).toHaveBeenCalledWith(MOCK_READY_TABLE)
@@ -121,7 +121,7 @@ describe('ActiveTablesBar', () => {
     )
 
     expect(screen.getByText('Alice vs Charlie Pauper')).toBeTruthy()
-    const resumeBtn = container.querySelector('.btn-resume') as HTMLButtonElement
+    const resumeBtn = container.querySelector('[data-testid="btn-resume"]') as HTMLButtonElement
     expect(resumeBtn).not.toBeNull()
     fireEvent.click(resumeBtn)
     expect(onResume).toHaveBeenCalledWith(MOCK_DUELING_TABLE)

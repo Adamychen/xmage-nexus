@@ -184,24 +184,6 @@
   outline-offset: 1px;
 }
 
-.strip-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-5);
-  background: rgb(var(--ink-2-rgb) / 0.85);
-  color: var(--fg-1);
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: all 100ms ease;
-}
-
 .strip-btn:hover {
   background: var(--brand);
   border-color: var(--brand-fg);

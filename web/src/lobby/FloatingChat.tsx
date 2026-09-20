@@ -1,4 +1,5 @@
 import Tabs from '../ui/Tabs'
+import IconButton from '../ui/IconButton'
 import Chip from '../ui/Chip'
 import EmptyState from '../ui/EmptyState'
 import { useEffect, useRef, useState } from 'react'
@@ -198,15 +199,8 @@ export default function FloatingChat({
           >
             <Icon name="trophy" size={13} />
           </button>
-          <button
-            type="button"
-            className="floating-min-btn"
-            onClick={() => onOpenChange(false)}
-            title={t('common', 'close')}
-            aria-label={t('common', 'close')}
-          >
-            <Icon name="chevronDown" size={15} />
-          </button>
+          <IconButton label={t('common', 'close')} icon="chevronDown"
+            onClick={() => onOpenChange(false)} />
         </div>
       </div>
 

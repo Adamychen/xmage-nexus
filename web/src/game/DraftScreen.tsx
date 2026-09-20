@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
+import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
@@ -440,12 +441,12 @@ export default function DraftScreen() {
                 </div>
               )
             )}
-            <button type="button" className="draft-log-btn" onClick={() => handleDownloadLog()} title={t('game', 'draft_download_log')}>
+            <Button variant="soft" size="sm" data-testid="draft-log-btn" onClick={() => handleDownloadLog()} title={t('game', 'draft_download_log')}>
               {t('game', 'draft_download_log')}
-            </button>
-            <button type="button" className="draft-quit-btn" onClick={() => void handleQuit()} title={t('game', 'draft_quit_title')}>
+            </Button>
+            <Button variant="soft-danger" size="sm" data-testid="draft-quit-btn" onClick={() => void handleQuit()} title={t('game', 'draft_quit_title')}>
               {t('game', 'draft_quit')}
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -547,9 +548,9 @@ export default function DraftScreen() {
         <div className="draft-picks-area" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
           <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(pickCards.length) })}</h3>
           {hiddenCount > 0 && (
-            <button type="button" className="draft-hidden-link" onClick={() => handleShowAllHidden()} title={t('game', 'draft_show_all')}>
+            <Button variant="ghost" size="sm" className="draft-hidden-link" onClick={() => handleShowAllHidden()} title={t('game', 'draft_show_all')}>
               {t('game', 'draft_hidden', { count: String(hiddenCount) })}
-            </button>
+            </Button>
           )}
           {visiblePicks.length === 0 ? (
             <EmptyState size="sm">{t('game', 'draft_empty')}</EmptyState>
@@ -579,17 +580,13 @@ export default function DraftScreen() {
                       </div>
                     )}
                     {isNew && <span className="draft-pick-new-badge" data-testid="draft-pick-new" aria-hidden="true">✓</span>}
-                    <button
-                      type="button"
+                    <IconButton label={t('game', 'draft_hide_pick')} size="xs" round
                       className="draft-pick-hide"
-                      title={t('game', 'draft_hide_pick')}
-                      aria-label={t('game', 'draft_hide_pick')}
                       data-testid="draft-pick-hide"
                       onClick={(e) => { e.stopPropagation(); handleHidePick(key) }}
-                      onMouseEnter={(e) => e.stopPropagation()}
-                    >
+                      onMouseEnter={(e) => e.stopPropagation()}>
                       👁
-                    </button>
+                    </IconButton>
                   </div>
                 )
               })}

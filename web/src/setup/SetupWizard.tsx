@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Button from '../ui/Button'
 import { useTranslation } from '../i18n'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
@@ -243,23 +244,23 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
       </div>
       <div className="setup-footer">
         {!isLast
-          ? <button type="button" className="settings-link-btn" onClick={skip} data-testid="setup-skip">{t('setup', 'skip')}</button>
+          ? <Button variant="link" size="sm" onClick={skip} data-testid="setup-skip">{t('setup', 'skip')}</Button>
           : <span />}
         <div className="setup-nav">
           {step > 0 && (
-            <button type="button" className="setup-btn-secondary" onClick={() => setStep(step - 1)} data-testid="setup-back">
+            <Button onClick={() => setStep(step - 1)} data-testid="setup-back">
               {t('lobby', 'wizard_back')}
-            </button>
+            </Button>
           )}
           {!isLast && (
-            <button type="button" className="setup-btn-primary" onClick={goNext} data-testid="setup-next">
+            <Button variant="primary" onClick={goNext} data-testid="setup-next">
               {t('lobby', 'wizard_next')}
-            </button>
+            </Button>
           )}
           {isLast && (
-            <button type="button" className="setup-btn-primary" onClick={finish} data-testid="setup-enter">
+            <Button variant="primary" onClick={finish} data-testid="setup-enter">
               {t('setup', 'enter')}
-            </button>
+            </Button>
           )}
         </div>
       </div>

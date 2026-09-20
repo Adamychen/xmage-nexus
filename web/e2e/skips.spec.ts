@@ -78,7 +78,7 @@ test('skips: teclas F + menú ▾ envían PASS_PRIORITY_* y marcan el skip activ
 
       // 2. El flag passedUntilStackResolved marca el skip activo en menú y botón
       await openPassMenu(page)
-      await expect(page.locator('[data-testid="skip-stack"]')).toHaveClass(/is-active/, { timeout: 10_000 })
+      await expect(page.locator('[data-testid="skip-stack"]')).toHaveClass(/ui-menu-item--selected/, { timeout: 10_000 })
       await expect(page.locator('.big-action-split')).toHaveClass(/has-skip/)
       await expect(page.locator('.action-btn-sublabel')).toContainText(/Saltando a/)
       await expect(page.locator('[data-testid="skip-cancel"]')).toBeVisible()
@@ -87,14 +87,14 @@ test('skips: teclas F + menú ▾ envían PASS_PRIORITY_* y marcan el skip activ
       await page.locator('[data-testid="skip-myTurn"]').click()
       await sentSkip(page, 'PASS_PRIORITY_UNTIL_MY_NEXT_TURN')
       await openPassMenu(page)
-      await expect(page.locator('[data-testid="skip-myTurn"]')).toHaveClass(/is-active/, { timeout: 10_000 })
+      await expect(page.locator('[data-testid="skip-myTurn"]')).toHaveClass(/ui-menu-item--selected/, { timeout: 10_000 })
 
       // 4. F3 cancela: CANCEL llega al servidor y la marca desaparece
       await page.keyboard.press('Escape')
       await page.keyboard.press('F3')
       await sentSkip(page, 'PASS_PRIORITY_CANCEL_ALL_ACTIONS')
       await openPassMenu(page)
-      await expect(page.locator('[data-testid="skip-myTurn"]')).not.toHaveClass(/is-active/, { timeout: 10_000 })
+      await expect(page.locator('[data-testid="skip-myTurn"]')).not.toHaveClass(/ui-menu-item--selected/, { timeout: 10_000 })
       await expect(page.locator('[data-testid="skip-cancel"]')).toBeHidden()
       await expect(page.locator('.big-action-split')).not.toHaveClass(/has-skip/)
     } else {

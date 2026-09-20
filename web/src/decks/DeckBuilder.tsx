@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
+import IconButton from '../ui/IconButton'
+import Button from '../ui/Button'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { deckMainCount, deckSideCount } from './types'
@@ -313,7 +315,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         {loadFailed ? (
           <>
             <span>{t('decks', 'builder_deck_not_found')}</span>
-            <button type="button" onClick={onClose}>{t('common', 'close')}</button>
+            <Button onClick={onClose}>{t('common', 'close')}</Button>
           </>
         ) : (
           t('common', 'loading')
@@ -327,9 +329,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       {/* Top Navbar */}
       <header className="arena-top-nav deck-builder-top">
         <div className="arena-nav-left">
-          <button type="button" className="arena-nav-back builder-back" onClick={handleClose}>
+          <Button variant="subtle" size="sm" className="builder-back" onClick={handleClose}>
             <span>←</span> {t('decks', 'my_decks')}
-          </button>
+          </Button>
           <span className="deck-builder-title">{t('decks', 'builder_editor')}</span>
         </div>
 
@@ -434,23 +436,15 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
                   <Icon name="chart" size={13} /> {t('decks', 'builder_mana_curve')}
                 </span>
                 <div className="deck-curve-panel-actions">
-                  <button
-                    type="button"
-                    className="deck-curve-inspect-btn"
+                  <Button variant="subtle" size="sm"
                     onClick={() => setShowInspector(true)}
-                    title={t('decks', 'inspect_double_click')}
-                  >
+                    title={t('decks', 'inspect_double_click')}>
                     <Icon name="search" size={12} /> <Icon name="chart" size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    className="deck-curve-close-btn"
-                    onClick={toggleCurve}
-                    title={t('decks', 'builder_hide_curve')}
-                    aria-label={t('decks', 'builder_hide_curve')}
-                  >
+                  </Button>
+                  <IconButton label={t('decks', 'builder_hide_curve')} size="sm"
+                    onClick={toggleCurve}>
                     ▲
-                  </button>
+                  </IconButton>
                 </div>
               </div>
               <CurveChart cards={deck.cards} meta={metaMap} />

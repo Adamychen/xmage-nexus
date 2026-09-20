@@ -1,4 +1,5 @@
 import { useStore, setState } from '../state/store'
+import Button from '../ui/Button'
 import Chip from '../ui/Chip'
 import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
@@ -40,7 +41,7 @@ export default function LimitedDeckDialog() {
           )}
         </div>
         <footer className="card-grid-actions">
-          <button onClick={close}>{t('dialogs', 'viewer_close')}</button>
+          <Button onClick={close}>{t('dialogs', 'viewer_close')}</Button>
         </footer>
     </DialogShell>
   )

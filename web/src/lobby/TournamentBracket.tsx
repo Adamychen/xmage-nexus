@@ -1,4 +1,6 @@
 import CloseButton from '../ui/CloseButton'
+import IconButton from '../ui/IconButton'
+import Button from '../ui/Button'
 import Chip from '../ui/Chip'
 import EmptyState from '../ui/EmptyState'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
@@ -115,9 +117,9 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
           </span>
         )}
         {tournamentId && (canQuit ?? true) && (
-          <button type="button" className="tournament-quit-btn" onClick={() => void handleQuit()} data-testid="tournament-quit">
+          <Button variant="soft-danger" size="sm" onClick={() => void handleQuit()} data-testid="tournament-quit">
             {t('lobby', 'tournament_quit')}
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -229,15 +231,12 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
               {hasOverflowRight && (
                 <>
                   <div className="bracket-fade-right" aria-hidden="true" />
-                  <button
-                    type="button"
+                  <IconButton label={t('lobby', 'bracket_scroll_right')} round
                     className="bracket-scroll-right"
                     data-testid="bracket-scroll-right"
-                    aria-label={t('lobby', 'bracket_scroll_right')}
-                    onClick={scrollBracketRight}
-                  >
+                    onClick={scrollBracketRight}>
                     <span aria-hidden="true">›</span>
-                  </button>
+                  </IconButton>
                 </>
               )}
             </div>

@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import Chip from '../ui/Chip'
 import { useState, useEffect } from 'react'
 import type { MetaDeckItem } from './metaDeckCatalog'
@@ -153,13 +154,13 @@ export function DeckInspectorModal({
         </div>
 
         <footer className="deck-inspector-footer">
-          <button type="button" className="inspector-edit-btn" onClick={() => onEdit(deck)}>
+          <Button onClick={() => onEdit(deck)}>
             <Icon name="pencil" size={13} /> {t('decks', 'deck_builder')}
-          </button>
+          </Button>
 
-          <button type="button" className="inspector-copy-btn" onClick={handleCopy}>
+          <Button variant="primary" data-testid="inspector-copy-btn" onClick={handleCopy}>
             {copied ? (<><Icon name="check" size={12} /> {t('common', 'copied')}</>) : (<><Icon name="copy" size={12} /> {t('common', 'copy')}</>)}
-          </button>
+          </Button>
         </footer>
     </DialogShell>
   )

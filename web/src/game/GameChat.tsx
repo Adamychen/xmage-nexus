@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import IconButton from '../ui/IconButton'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import QuickReactions from './QuickReactions'
 import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
-import Icon from '../ui/Icon'
 import { formatChatTime } from '../lobby/ChatBox'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
@@ -102,14 +102,8 @@ export default function GameChat() {
 
       <form className="game-chat-input" onSubmit={send}>
         <div className="game-chat-emoji-wrap">
-          <button
-            type="button"
-            className="game-chat-emoji-btn"
-            title={t('game', 'insert_emoji')}
-            onClick={() => setPickerOpen((v) => !v)}
-          >
-            <Icon name="smile" size={15} />
-          </button>
+          <IconButton label={t('game', 'insert_emoji')} icon="smile" variant="ghost"
+            onClick={() => setPickerOpen((v) => !v)} />
           {pickerOpen && (
             <div className="game-chat-emoji-picker">
               {EMOJI_PICKS.map((emoji) => (
@@ -128,7 +122,7 @@ export default function GameChat() {
           placeholder={t('game', 'chat_placeholder')}
           maxLength={500}
         />
-        <button type="submit" className="game-chat-send" disabled={!input.trim() || !chatId} aria-label={t('game', 'chat_send')}>▸</button>
+        <IconButton label={t('game', 'chat_send')} variant="primary" size="lg" type="submit" disabled={!input.trim() || !chatId}>▸</IconButton>
       </form>
 
       <QuickReactions />

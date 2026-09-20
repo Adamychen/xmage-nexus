@@ -1,4 +1,5 @@
 import * as cmds from '../net/commands'
+import MenuItem from '../ui/MenuItem'
 import Checkbox from '../ui/Checkbox'
 import { useSettings, setSetting, useStore } from '../state/store'
 import type { GameView } from '../net/types'
@@ -22,31 +23,31 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
     <div className="pass-menu" role="menu" data-testid="pass-menu">
       <div className="pass-menu-section-label">{t('game', 'pass_options')}</div>
       {SKIPS.map((skip) => (
-        <button
+        <MenuItem
           key={skip.key}
-          type="button"
           role="menuitem"
-          className={`pass-menu-item ${activeSkip?.key === skip.key ? 'is-active' : ''}`}
+          selected={activeSkip?.key === skip.key}
+          className="pass-menu-item"
           data-testid={`skip-${skip.key}`}
           title={`${t('game', skip.labelKey)} (${skip.shortcut})`}
           onClick={() => onSkip(skip.action)}
         >
           <span className="pass-menu-item-label">{t('game', skip.labelKey)}</span>
           <kbd className="pass-menu-key">{skip.shortcut}</kbd>
-        </button>
+        </MenuItem>
       ))}
       {activeSkip && (
-        <button
-          type="button"
+        <MenuItem
           role="menuitem"
-          className="pass-menu-item pass-menu-cancel"
+          danger
+          className="pass-menu-item"
           data-testid="skip-cancel"
           title={`${t('game', 'skip_cancel')} (${CANCEL_SKIP_SHORTCUT})`}
           onClick={() => onSkip(CANCEL_SKIP_ACTION)}
         >
           <span className="pass-menu-item-label">✕ {t('game', 'skip_cancel')}</span>
           <kbd className="pass-menu-key">{CANCEL_SKIP_SHORTCUT}</kbd>
-        </button>
+        </MenuItem>
       )}
       <div className="pass-menu-divider" />
       <div className="pass-menu-section-label">{t('game', 'automation')}</div>

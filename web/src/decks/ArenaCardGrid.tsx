@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import Button from '../ui/Button'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
@@ -102,9 +103,9 @@ export function ArenaCardGrid({
           <span><Icon name="alert" size={13} /> {t('decks', 'builder_search_failed')}</span>
           <small>{tError(error)}</small>
           {onRetry && (
-            <button type="button" className="arena-grid-retry-btn" onClick={onRetry}>
+            <Button variant="subtle" size="sm" onClick={onRetry}>
               {t('decks', 'builder_search_retry')}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -207,9 +208,9 @@ export function ArenaCardGrid({
             <div className="arena-grid-status-box">
               <span>{query ? t('decks', 'builder_search_no_results', { query }) : t('decks', 'sample_no_cards')}</span>
               {onClearFilters && (
-                <button type="button" className="arena-grid-retry-btn" onClick={onClearFilters}>
+                <Button variant="subtle" size="sm" onClick={onClearFilters}>
                   {t('decks', 'builder_search_clear_filters')}
-                </button>
+                </Button>
               )}
             </div>
           ) : (
@@ -235,14 +236,11 @@ export function ArenaCardGrid({
               <span>{t('common', 'loading')}</span>
             </div>
           ) : hasMore ? (
-            <button
-              type="button"
-              className="arena-footer-load-btn"
+            <Button variant="soft" size="sm"
               onClick={() => onLoadMore?.()}
-              title={t('decks', 'builder_load_more')}
-            >
+              title={t('decks', 'builder_load_more')}>
               <Icon name="zap" size={13} /> {t('decks', 'builder_load_more')}
-            </button>
+            </Button>
           ) : cards.length > 0 ? (
             <span className="arena-footer-done">✓ {t('common', 'done')}</span>
           ) : null}

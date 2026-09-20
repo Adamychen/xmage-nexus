@@ -153,7 +153,7 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(table).toBeVisible()
     await expect(table).toContainText('←')
     await expect(table.locator('.draft-seat')).toHaveCount(8)
-    await expect(page.locator('.draft-log-btn').first()).toBeVisible()
+    await expect(page.locator('[data-testid="draft-log-btn"]').first()).toBeVisible()
 
     const pick = page.getByTestId('draft-pick-card').first()
     await expect(pick).toBeVisible()

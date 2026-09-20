@@ -63,18 +63,6 @@
   gap: 8px;
 }
 
-.tournament-panel-collapse {
-  padding: 4px 10px;
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  border-radius: var(--r-sm);
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-}
-.tournament-panel-collapse:hover { background: var(--veil-3); color: var(--fg-hi); }
-
 .tournament-panel-quit {
   padding: 4px 10px;
   font-size: var(--fs-2xs);

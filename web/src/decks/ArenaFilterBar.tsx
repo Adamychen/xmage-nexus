@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import MenuItem from '../ui/MenuItem'
+import IconButton from '../ui/IconButton'
+import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
 import CloseButton from '../ui/CloseButton'
 import { ManaPip } from './ArenaManaSymbols'
@@ -167,17 +170,13 @@ export function ArenaFilterBar({
             <CloseButton variant="plain" size="sm" className="arena-search-clear" label={t('common', 'clear')} onClick={() => onQueryChange('')} />
           )}
           <div className="arena-search-help-wrap" ref={helpRef}>
-            <button
-              type="button"
+            <IconButton label={t('decks', 'search_help_title')} size="xs" round
               ref={helpBtnRef}
               className="arena-search-help-btn"
               onClick={() => setHelpOpen((v) => !v)}
-              title={t('decks', 'search_help_title')}
-              aria-label={t('decks', 'search_help_title')}
-              aria-expanded={helpOpen}
-            >
+              aria-expanded={helpOpen}>
               ?
-            </button>
+            </IconButton>
             {helpOpen && (
               <div
                 className="arena-search-help-popover"
@@ -217,10 +216,9 @@ export function ArenaFilterBar({
             {langMenuOpen && (
               <div className="arena-lang-dropdown" role="menu">
                 {allLangOptions.map((l) => (
-                  <button
+                  <MenuItem
+                    selected={l.code === searchLang}
                     key={l.code}
-                    type="button"
-                    className={`arena-lang-item ${l.code === searchLang ? 'selected' : ''}`}
                     onClick={() => {
                       onSearchLangChange(l.code)
                       setLangMenuOpen(false)
@@ -229,7 +227,7 @@ export function ArenaFilterBar({
                     <span>{l.flag}</span>
                     <span>{l.name}</span>
                     {l.code === searchLang && <span style={{ marginLeft: 'auto' }}>✓</span>}
-                  </button>
+                  </MenuItem>
                 ))}
               </div>
             )}
@@ -261,24 +259,24 @@ export function ArenaFilterBar({
         <div className="arena-filter-chips">
           <span className="arena-chip-label">{t('decks', 'filter_cmc')}</span>
           {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
-            <button key={n} type="button" className={`arena-cmc-btn cmc-chip ${cmcFilter === n ? 'active' : ''}`} onClick={() => onCmcChange(cmcFilter === n ? null : n)} aria-pressed={cmcFilter === n} aria-label={`${t('decks', 'filter_cmc')} ${n === 7 ? '7+' : n}`}>
+            <ChipButton size="sm" active={cmcFilter === n} className="cmc-chip" key={n} onClick={() => onCmcChange(cmcFilter === n ? null : n)} aria-label={`${t('decks', 'filter_cmc')} ${n === 7 ? '7+' : n}`}>
               {n === 7 ? '7+' : n}
-            </button>
+            </ChipButton>
           ))}
         </div>
 
         <div className="arena-filter-chips">
           <span className="arena-chip-label">{t('decks', 'filter_type')}</span>
           {TYPES.map((tKey) => (
-            <button key={tKey} type="button" className={`arena-type-btn ${typeFilter === tKey ? 'active' : ''}`} onClick={() => onTypeChange(typeFilter === tKey ? null : tKey)} aria-pressed={typeFilter === tKey}>
+            <ChipButton size="sm" activeTone="gold" active={typeFilter === tKey} key={tKey} onClick={() => onTypeChange(typeFilter === tKey ? null : tKey)}>
               {t('game', TYPE_LABEL_KEYS[tKey])}
-            </button>
+            </ChipButton>
           ))}
         </div>
 
-        <button type="button" className={`filter-advanced-toggle ${advancedOpen ? 'open' : ''}`} onClick={() => setAdvancedOpen((v) => !v)} aria-expanded={advancedOpen}>
+        <ChipButton size="sm" activeTone="gold" active={advancedOpen} onClick={() => setAdvancedOpen((v) => !v)} aria-expanded={advancedOpen}>
           {t('decks', 'filter_advanced')} {advancedOpen ? '▴' : '▾'}
-        </button>
+        </ChipButton>
 
         {onSortOrderChange && sortOrder && (
           <div className="arena-sort-wrap">
@@ -294,15 +292,10 @@ export function ArenaFilterBar({
               ))}
             </select>
             {onSortDirChange && (
-              <button
-                type="button"
-                className="arena-sort-dir-btn"
-                onClick={() => onSortDirChange(sortDir === 'desc' ? 'asc' : 'desc')}
-                title={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
-                aria-label={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
-              >
+              <IconButton data-testid="arena-sort-dir-btn" label={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
+                onClick={() => onSortDirChange(sortDir === 'desc' ? 'asc' : 'desc')}>
                 {sortDir === 'desc' ? '↓' : '↑'}
-              </button>
+              </IconButton>
             )}
           </div>
         )}
@@ -327,9 +320,9 @@ export function ArenaFilterBar({
         )}
 
         {hasActiveFilters && (
-          <button type="button" className="filter-reset-btn" onClick={onReset}>
+          <Button variant="ghost" size="sm" className="filter-reset-btn" onClick={onReset}>
             {t('common', 'clear')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -352,14 +345,14 @@ export function ArenaFilterBar({
               {(moreKeywords ? [...KEYWORDS_PRIMARY, ...KEYWORDS_EXTRA] : [...KEYWORDS_PRIMARY]).map((kw) => {
                 const active = keywordFilter.has(kw)
                 return (
-                  <ChipButton size="sm" pill active={active} key={kw}  onClick={() => onToggleKeyword(kw)} title={kw} aria-pressed={active}>
+                  <ChipButton size="sm" pill active={active} key={kw} onClick={() => onToggleKeyword(kw)} title={kw}>
                     {keywordDisplayName(keywordIdOfLabel(kw), kw, (k) => t('keywords', k))}
                   </ChipButton>
                 )
               })}
-              <button type="button" className="keyword-more-btn" onClick={() => setMoreKeywords((v) => !v)}>
+              <ChipButton size="sm" pill onClick={() => setMoreKeywords((v) => !v)}>
                 {moreKeywords ? t('decks', 'filter_less') : t('decks', 'filter_more')} {moreKeywords ? '▴' : '▾'}
-              </button>
+              </ChipButton>
             </div>
           </div>
 
@@ -464,7 +457,7 @@ export function ArenaFilterBar({
           <div className="adv-row adv-sets-row">
             <div className="arena-filter-chips">
               {QUICK_SETS.map((s) => (
-                <ChipButton size="sm" activeTone="gold" active={setFilter === s} key={s}  onClick={() => onSetChange(setFilter === s ? null : s)} aria-pressed={setFilter === s}>
+                <ChipButton size="sm" activeTone="gold" active={setFilter === s} key={s} onClick={() => onSetChange(setFilter === s ? null : s)}>
                   {s.toUpperCase()}
                 </ChipButton>
               ))}

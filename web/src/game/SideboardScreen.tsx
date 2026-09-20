@@ -548,14 +548,11 @@ export default function SideboardScreen() {
             <span className={sideValid ? 'valid' : 'invalid'}>{t('game', 'sideboard_side_count', { count: String(sideTotal), max: '15' })}</span>
           </div>
           <div className="sideboard-footer-actions">
-            <button
-              type="button"
-              className="secondary"
+            <Button variant="subtle" size="sm"
               onClick={handleReset}
-              title={t('lobby', 'filter_reset')}
-            >
+              title={t('lobby', 'filter_reset')}>
               <Icon name="reset" size={12} /> {t('lobby', 'filter_reset')}
-            </button>
+            </Button>
             <Button variant="primary"
               disabled={busy || !mainValid}
               onClick={() => void submitDeck()}

@@ -173,25 +173,19 @@ export function ImportDeckDialog({
             </label>
 
             {text.trim() && (
-              <button
-                type="button"
-                className="import-clear-btn"
+              <Button variant="link" size="sm"
                 onClick={() => {
                   setText('')
                   setError(null)
-                }}
-              >
+                }}>
                 {t('common', 'clear')}
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
-              className="import-paste-btn"
+            <Button variant="subtle" size="sm" data-testid="import-paste-btn"
               title={t('decks', 'import_paste')}
-              onClick={() => void handlePaste()}
-            >
+              onClick={() => void handlePaste()}>
               <Icon name="clipboard" size={12} /> {t('decks', 'import_paste')}
-            </button>
+            </Button>
           </div>
 
           <div className="import-status-right">
@@ -220,14 +214,11 @@ export function ImportDeckDialog({
         <Button variant="subtle" type="button" onClick={onClose}>
           {t('common', 'cancel')}
         </Button>
-        <button
-          type="button"
-          className="import-submit-btn"
+        <Button variant="primary" size="sm" data-testid="import-submit-btn"
           disabled={busy || !text.trim()}
-          onClick={() => void handleSubmit()}
-        >
+          onClick={() => void handleSubmit()}>
           {busy ? t('common', 'loading') : (<><Icon name="download" size={12} /> {t('decks', 'import_deck')}</>)}
-        </button>
+        </Button>
       </footer>
     </DialogShell>
   )

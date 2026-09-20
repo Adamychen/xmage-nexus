@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
@@ -188,23 +189,17 @@ export default function TournamentPanel() {
             <span className="tournament-panel-name" data-testid="tournament-panel-name">{view.tournamentName}</span>
           </div>
           <div className="tournament-panel-actions">
-            <button
-              type="button"
-              className="tournament-panel-collapse"
+            <Button variant="subtle" size="sm" data-testid="tournament-panel-collapse"
               onClick={() => setExpanded(false)}
-              title={t('game', 'tournament_minimize')}
-            >
+              title={t('game', 'tournament_minimize')}>
               {t('game', 'tournament_minimize')}
-            </button>
-            <button
-              type="button"
-              className="tournament-panel-quit"
+            </Button>
+            <Button variant="soft-danger" size="sm"
               onClick={() => void handleQuit()}
               disabled={quitting}
-              data-testid="tournament-panel-quit"
-            >
+              data-testid="tournament-panel-quit">
               {quitting ? t('game', 'tournament_leaving') : t('game', 'tournament_quit_short')}
-            </button>
+            </Button>
             <CloseButton variant="solid" size="md" label={t('game', 'tournament_close')} className="tournament-panel-close" onClick={() => setExpanded(false)} />
           </div>
         </header>

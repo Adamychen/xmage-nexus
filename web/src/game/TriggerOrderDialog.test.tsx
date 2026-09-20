@@ -76,7 +76,7 @@ describe('TriggerOrderDialog', () => {
   it('name scope sends the rule text instead of the uuid', async () => {
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<TriggerOrderDialog prompt={prompt()} send={send as never} cancel={() => {}} busy={false} />)
-    const scopeBtns = container.querySelectorAll('.trigger-scope-btn')
+    const scopeBtns = container.querySelectorAll('.trigger-scope [role="tab"]')
     fireEvent.click(scopeBtns[1] as Element)
     const firstRow = container.querySelector('[data-testid="trigger-row-t1"]') as Element
     fireEvent.click(firstRow.querySelectorAll('.trigger-actions button')[1] as Element)

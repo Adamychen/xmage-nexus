@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import Tabs from '../ui/Tabs'
 import Chip from '../ui/Chip'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
@@ -189,24 +190,16 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
           <span className="cdm-title"><Icon name="crown" size={13} /> {t('game', 'commander_damage')}</span>
           <span className="cdm-lethal-hint">{t('game', 'commander_lethal_label', { count: String(COMMANDER_LETHAL) })}</span>
         </div>
-        <div className="cdm-view-toggles">
-          <button
-            type="button"
-            className={`cdm-toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
-            onClick={() => setViewMode('cards')}
-            title={t('game', 'commander_view_cards_hint')}
-          >
-            <Icon name="chart" size={13} />
-          </button>
-          <button
-            type="button"
-            className={`cdm-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
-            onClick={() => setViewMode('table')}
-            title={t('game', 'commander_view_table_hint')}
-          >
-            <Icon name="grid" size={13} />
-          </button>
-        </div>
+        <Tabs
+          variant="segmented"
+          size="sm"
+          value={viewMode}
+          onChange={setViewMode}
+          items={[
+            { id: 'cards', icon: 'chart', title: t('game', 'commander_view_cards_hint') },
+            { id: 'table', icon: 'grid', title: t('game', 'commander_view_table_hint') },
+          ]}
+        />
       </div>
 
       {lethalAlerts.length > 0 && (

@@ -209,14 +209,11 @@ export function SampleHandModal({
               {t('decks', 'sample_london')} ({mulliganCount}): {t('decks', 'sample_to_bottom')} {mulliganCount}
               {mustBottomCount > 0 && ` (${mustBottomCount})`}
             </span>
-            <button
-              type="button"
-              className="confirm-keep-btn"
+            <Button variant="success"
               disabled={selectedToBottom.size !== mulliganCount}
-              onClick={handleConfirmKeep}
-            >
+              onClick={handleConfirmKeep}>
               ✓ {t('common', 'confirm')} ({7 - mulliganCount} {t('decks', 'total_cards')})
-            </button>
+            </Button>
           </div>
         )}
 

@@ -56,7 +56,7 @@ function pointerEvent(type: string, init: { clientX: number; clientY: number }) 
 function showMini() {
   setState({ tournament: { tournamentId: 't1', view }, construct: null, draftOverAt: null } as never)
   const { container } = render(<TournamentPanel />)
-  fireEvent.click(container.querySelector('.tournament-panel-collapse') as HTMLElement)
+  fireEvent.click(container.querySelector('[data-testid="tournament-panel-collapse"]') as HTMLElement)
   return container
 }
 

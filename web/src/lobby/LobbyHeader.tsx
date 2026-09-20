@@ -1,4 +1,6 @@
 import { reset } from '../state/store'
+import IconButton from '../ui/IconButton'
+import Button from '../ui/Button'
 import type { ConnectionInfo } from '../state/persistence'
 import type { UsersView } from '../net/types'
 import AvatarImage from './AvatarImage'
@@ -123,33 +125,25 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
-        <button
-          type="button"
+        <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}
-          title={t('common', 'settings')}
-          data-testid="open-settings"
-        >
-          <Icon name="settings" size={16} />
-        </button>
-        <button
-          type="button"
+          data-testid="open-settings" />
+        <IconButton label={t('system', 'about_title')} size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenAbout}
-          title={t('system', 'about_title')}
-          data-testid="open-about"
-        >
+          data-testid="open-about">
           <Icon name="info" size={16} />
           {hasNews && (
             <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
           )}
-        </button>
+        </IconButton>
 
         {confirmDisconnect ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>{t('lobby', 'disconnect_confirm')}</span>
             <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>{t('common', 'yes')}</button>
-            <button onClick={() => onConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>{t('common', 'no')}</button>
+            <Button onClick={() => onConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>{t('common', 'no')}</Button>
           </div>
         ) : (
           <button className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>

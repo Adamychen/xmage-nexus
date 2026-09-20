@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Button from '../ui/Button'
 import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
@@ -118,14 +119,12 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
               </a>
             </div>
             <div className="about-links">
-              <button
-                type="button"
+              <Button
                 data-testid="about-export-diag"
                 title={t('system', 'diag_export_hint')}
-                onClick={() => downloadDiagnostics()}
-              >
+                onClick={() => downloadDiagnostics()}>
                 <Icon name="download" size={13} /> {t('system', 'diag_export')}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (

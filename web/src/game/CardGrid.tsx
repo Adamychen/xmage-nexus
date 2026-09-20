@@ -133,11 +133,11 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             </Button>
           )}
           {prompt.required === false && (
-            <button disabled={busy} onClick={() => {
+            <Button disabled={busy} onClick={() => {
               void send(() => sendSingle(prompt, ''), t('errors','send_failed'))
             }}>
               {t('dialogs','cardgrid_finish')}
-            </button>
+            </Button>
           )}
         </footer>
     </DialogShell>
