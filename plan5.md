@@ -1,5 +1,9 @@
 # PLAN-5 — presentación del protocolo y validación restante (2026-09-18)
 
+> **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
+> pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
+> única de `plan7.md` §4.
+
 > ESTADO AL CREAR: rama `master`, último commit `791af62e872` + el frame
 > `slicer` sin commitear (driver `scripts/drivers/slicer.mjs`, manifest
 > 114→115). El plan4 cerró §3 (mecánicas) y §5.1 (prompts) declarando "0 ❌ de

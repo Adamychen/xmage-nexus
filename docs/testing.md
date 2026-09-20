@@ -32,6 +32,6 @@ Rules: after touching `web/`, run `unit` + `typecheck` (`build` if the build cha
 ## Known flakes (do not "fix" by weakening tests)
 
 - `self-test` `WATCHGAME` fails only on the first game after a cold server start (`SESSION CALLBACK EXCEPTION - Unable to create socket` in `server.out.log`). Retry warm; run `node scripts/warmup.mjs` first. Persistent failure across warm runs is a real bug.
-- Anonymous login to `beta.xmage.today` is intermittent (`Can't receive server state before other data`, server-side handshake). Beta is best-effort; the local server is the CI oracle.
+- Anonymous login to `beta.xmage.today` is stable (17/17 measured 2026-09-20). `Can't receive server state before other data` is **not** a handshake bug — it is logged on *any* failed login (the client fetches the server state only after login succeeds). The real cause is almost always a username longer than `maxUserNameLength` (**14**). Keep generated usernames ≤ 14 chars; the `FixtureServer` enforces this so fake mode catches it. The local server stays the CI oracle for determinism, not because beta is broken.
 - Long real runs saturate `maxGameThreads=10` (abandoned matches keep running): restart server between heavy batches, purge with `node scripts/clean-tables.mjs`.
 - Restart server + proxy **together** (`ctl.mjs restart all`); restarting only the proxy leaves the first login hanging (orphan sessions).

@@ -197,3 +197,71 @@ describe('useBoardPresenter clears stale hovers against the game view', () => {
     expect(result.current.floatingCard).toBe(noId)
   })
 })
+
+describe('useBoardPresenter clears hovers whose anchor node is gone', () => {
+  const card = { name: 'Samwise Gamgee', manaValue: 2 } as CardView
+  const rect = { x: 10, y: 20, left: 10, top: 20, right: 100, bottom: 146, width: 90, height: 126 } as DOMRect
+  let anchor: HTMLDivElement
+  let hovered: boolean
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    anchor = document.createElement('div')
+    document.body.appendChild(anchor)
+    hovered = true
+    anchor.getBoundingClientRect = () => rect
+    const nativeMatches = anchor.matches.bind(anchor)
+    anchor.matches = ((sel: string) => (sel === ':hover' ? hovered && anchor.isConnected : nativeMatches(sel))) as typeof anchor.matches
+    const nativeQsa = document.querySelectorAll.bind(document)
+    vi.spyOn(document, 'querySelectorAll').mockImplementation(((sel: string) =>
+      sel === ':hover' ? ([anchor] as unknown as NodeListOf<Element>) : nativeQsa(sel)) as typeof document.querySelectorAll)
+  })
+
+  afterEach(() => {
+    anchor.remove()
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  it('starts leaving when the hovered slot is detached without mouseleave', () => {
+    const { result } = renderHook(() => useBoardPresenter({ game: null }))
+    act(() => {
+      result.current.handleCardHover(card, rect)
+    })
+    anchor.remove()
+    act(() => {
+      document.body.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    })
+    expect(result.current.previewLeaving).toBe(true)
+    act(() => {
+      vi.advanceTimersByTime(PREVIEW_LEAVE_MS)
+    })
+    expect(result.current.floatingCard).toBeNull()
+  })
+
+  it('keeps the preview while the anchor stays under the pointer', () => {
+    const { result } = renderHook(() => useBoardPresenter({ game: null }))
+    act(() => {
+      result.current.handleCardHover(card, rect)
+    })
+    act(() => {
+      anchor.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    })
+    expect(result.current.previewLeaving).toBe(false)
+    expect(result.current.floatingCard).toBe(card)
+  })
+
+  it('ignores hovers that did not come from the pointer (no anchor)', () => {
+    hovered = false
+    vi.spyOn(document, 'querySelectorAll').mockReturnValue([] as unknown as NodeListOf<Element>)
+    const { result } = renderHook(() => useBoardPresenter({ game: null }))
+    act(() => {
+      result.current.handleCardHover(card, rect)
+    })
+    act(() => {
+      document.body.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    })
+    expect(result.current.floatingCard).toBe(card)
+    expect(result.current.previewLeaving).toBe(false)
+  })
+})

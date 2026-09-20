@@ -1,6 +1,7 @@
 import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { scryfallFetch } from './scryfallClient'
 
 const memory = new Map<string, string | null>()
 const inflight = new Map<string, Promise<string | null>>()
@@ -8,9 +9,7 @@ const MAX_MEMORY_ENTRIES = 2000
 const MAX_CONCURRENT_LOADS = 6
 const REQUEST_TIMEOUT_MS = 10000
 const RETRIES = 1
-const SCRYFALL_DELAY_MS = 75
 let activeLoads = 0
-let lastFetchAt = 0
 const loadQueue: (() => void)[] = []
 
 export const CARD_W = 120
@@ -263,24 +262,10 @@ async function tryFetch(key: string): Promise<string | null> {
   const urls = candidateUrls(key)
   for (const url of urls) {
     for (let attempt = 0; attempt <= RETRIES; attempt++) {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
       try {
-        // User-Agent es forbidden header en fetch del navegador — no se puede setear.
-        // Scryfall identifica el cliente por el User-Agent del navegador + este header Accept.
-        // Si se proxyfica vía Mage.Proxy, ese lado sí puede enviar User-Agent: XMage-Nexus/<version>.
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal })
+        const res = await scryfallFetch(url, { timeoutMs: REQUEST_TIMEOUT_MS })
         if (!res.ok) {
-          if (res.status === 404) break
-          if (res.status === 429) {
-            const retryAfter = res.headers.get('Retry-After')
-            const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000
-            if (attempt < RETRIES) {
-              await new Promise((r) => setTimeout(r, delayMs))
-              continue
-            }
-            break
-          }
+          if (res.status === 404 || res.status === 429) break
           throw new Error(`Scryfall HTTP ${res.status}`)
         }
         const data = (await res.json()) as {
@@ -332,8 +317,6 @@ async function tryFetch(key: string): Promise<string | null> {
       } catch {
         if (attempt === RETRIES) break
         await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)))
-      } finally {
-        clearTimeout(timeout)
       }
     }
   }
@@ -425,20 +408,11 @@ function remember(key: string, url: string | null) {
 
 async function acquireLoadSlot() {
   if (activeLoads < MAX_CONCURRENT_LOADS) {
-    await throttleScryfall()
     activeLoads++
     return
   }
   await new Promise<void>((resolve) => loadQueue.push(resolve))
-  await throttleScryfall()
   activeLoads++
-}
-
-async function throttleScryfall() {
-  const now = Date.now()
-  const wait = SCRYFALL_DELAY_MS - (now - lastFetchAt)
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
-  lastFetchAt = Date.now()
 }
 
 function releaseLoadSlot() {
@@ -454,7 +428,6 @@ export function resetCardImageCache() {
   metaInflight.clear()
   loadQueue.length = 0
   activeLoads = 0
-  lastFetchAt = 0
 }
 
 export function manaLand(card: CardView): string {

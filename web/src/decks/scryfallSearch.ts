@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { scryfallFetch } from '../cards/scryfallClient'
 
 export interface ScryfallSearchCard {
   id: string
@@ -34,15 +35,6 @@ export interface ScryfallSearchResult {
   total_cards?: number
 }
 
-const SCRYFALL_SEARCH_DELAY_MS = 75
-let lastSearchAt = 0
-async function throttleSearch() {
-  const now = Date.now()
-  const wait = SCRYFALL_SEARCH_DELAY_MS - (now - lastSearchAt)
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
-  lastSearchAt = Date.now()
-}
-
 export type ScryfallSortOrder = 'cmc' | 'name' | 'rarity' | 'color' | 'edhrec' | 'released'
 export type ScryfallSortDir = 'asc' | 'desc'
 export const DEFAULT_SORT_ORDER: ScryfallSortOrder = 'cmc'
@@ -52,24 +44,11 @@ export async function searchScryfall(query: string, page = 1, lang?: string, ord
   if (!q) return { data: [], has_more: false }
 
   const execute = async (searchQuery: string): Promise<ScryfallSearchResult> => {
-    await throttleSearch()
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&unique=cards&order=${order}&dir=${dir}&page=${page}`
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 10000)
-    try {
-      const res = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-        },
-        signal: controller.signal,
-      })
-      if (res.status === 404) return { data: [], has_more: false }
-      if (!res.ok) throw new Error(`Scryfall ${res.status}`)
-      const data = (await res.json()) as ScryfallSearchResult
-      return data
-    } finally {
-      clearTimeout(timer)
-    }
+    const res = await scryfallFetch(url, { urgent: true, timeoutMs: 10000 })
+    if (res.status === 404) return { data: [], has_more: false }
+    if (!res.ok) throw new Error(`Scryfall ${res.status}`)
+    return (await res.json()) as ScryfallSearchResult
   }
 
   if (lang && !q.includes('lang:')) {

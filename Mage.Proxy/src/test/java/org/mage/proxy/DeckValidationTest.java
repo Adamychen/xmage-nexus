@@ -123,6 +123,15 @@ class DeckValidationTest {
     }
 
     @Test
+    void accentDifferenceInNameIsNotAMismatch() {
+        // "Andúril" vs "Anduril": el servidor carga la misma carta, no hay nada que revisar
+        JsonObject report = DeckValidation.validate(deck(card("\u00cdsland", "LEA", "288", 1)));
+
+        assertEquals(0, report.getAsJsonArray("missing").size());
+        assertEquals(0, report.getAsJsonArray("mismatches").size());
+    }
+
+    @Test
     void wrongNameOnExistingSetNumberIsMismatchNotRejection() {
         // el servidor oficial ignora el nombre: (C20, 77) es Banisher Priest, así
         // que "Rhystic Tutor - C20 - 77" se acepta PERO carga otra carta; además

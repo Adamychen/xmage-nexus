@@ -148,16 +148,27 @@ describe('CreateTableDialog', () => {
     expect((passwordInput as HTMLInputElement).value).toBe('secret123')
   })
 
-  it('deshabilita la contraseña en beta.xmage.today (U4-2)', async () => {
+  it('mantiene la contraseña operativa en beta.xmage.today (mesas privadas del servidor público)', async () => {
     setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
     render(<CreateTableDialog onClose={onClose} />)
 
-    const securityTab = screen.getByText(/Restricciones|Restrictions/)
-    fireEvent.click(securityTab)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Private Pod' } })
+    fireEvent.click(screen.getByText(/Restricciones|Restrictions/))
 
     const passwordInput = screen.getByPlaceholderText(/Dejar en blanco para mesa pública|Leave blank for public table/i) as HTMLInputElement
-    expect(passwordInput.disabled).toBe(true)
-    expect(screen.getByText(/no se pueden crear mesas con contraseña|can't be created on the public server/i)).toBeDefined()
+    expect(passwordInput.disabled).toBe(false)
+    fireEvent.change(passwordInput, { target: { value: 'secret123' } })
+
+    for (let i = 0; i < 5; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (nextBtn) fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear Mesa/ }))
+
+    await waitFor(() => {
+      expect(cmds.createTable).toHaveBeenCalledWith(expect.objectContaining({ password: 'secret123' }))
+      expect(cmds.joinTable).toHaveBeenCalledWith(expect.objectContaining({ password: 'secret123' }))
+    })
   })
 
   it('submits createTable with selected options and joins own seat', async () => {

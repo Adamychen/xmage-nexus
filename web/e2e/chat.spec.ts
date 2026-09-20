@@ -37,7 +37,7 @@ chatTest(
   { tag: '@chat' },
   async ({ page, chatServer }) => {
     void chatServer
-    const username = `chat-${String(Date.now()).slice(-10)}`
+    const username = `chat-${String(Date.now()).slice(-9)}`
     cleanupUser(username)
 
     await login(page, username)
@@ -78,7 +78,7 @@ chatTest(
   { tag: '@chat' },
   async ({ page, chatServer }) => {
     void chatServer
-    const username = `chat-layout-${String(Date.now()).slice(-10)}`
+    const username = `chatlay-${String(Date.now()).slice(-6)}`
     cleanupUser(username)
 
     await login(page, username)

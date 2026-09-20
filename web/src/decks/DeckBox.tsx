@@ -1,55 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { DeckV2 } from './types'
 import { deckMainCount, deckInitials } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
+import { commanderCardsFor } from './deckUtils'
+import { useDeckMetadata } from './useDeckMetadata'
+import { useCardArtUrl } from './useCardArtUrl'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckBox.css'
 
 function useDeckCoverUrl(deck: DeckV2): string | null {
-  const [url, setUrl] = useState<string | null>(null)
-  useEffect(() => {
-    const cover = deck.coverCard ?? deck.cards[0]
-    if (!cover) { setUrl(null); return }
-    const set = cover.setCode
-    const num = cover.cardNumber
-    if (!set || !num || num === '0') {
-      const name = cover.cardName
-      if (!name) { setUrl(null); return }
-      let cancelled = false
-      fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (cancelled || !data) return
-          const u = data.image_uris?.art_crop ?? data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null
-          setUrl(u)
-        })
-        .catch(() => {})
-      return () => { cancelled = true }
-    }
-    let cancelled = false
-    fetch(`https://api.scryfall.com/cards/${set}/${num}?format=json`, { headers: { Accept: 'application/json' } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (cancelled || !data) {
-          if (!cancelled && cover.cardName) {
-            return fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cover.cardName)}`, { headers: { Accept: 'application/json' } })
-              .then((rr) => (rr.ok ? rr.json() : null))
-              .then((d2) => {
-                if (cancelled || !d2) return
-                setUrl(d2.image_uris?.art_crop ?? d2.image_uris?.normal ?? null)
-              })
-          }
-          return
-        }
-        const u = data.image_uris?.art_crop ?? data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.art_crop ?? null
-        if (!cancelled) setUrl(u)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [deck.coverCard, deck.cards])
-  return url
+  return useCardArtUrl(deck.coverCard ?? deck.cards[0])
 }
 
 export function DeckBox({
@@ -67,7 +29,13 @@ export function DeckBox({
   const coverUrl = useDeckCoverUrl(deck)
   const total = deckMainCount(deck)
   const colors = deck.colors
-  const formatReport = validateDeckForFormat(deck)
+  const { metaMap, updateMetaForDeck } = useDeckMetadata()
+  useEffect(() => {
+    if (!FORMAT_CONFIGS[deck.format]?.hasCommander) return
+    const commanders = commanderCardsFor(deck.cards, deck.commanderCard ?? null, deck.partnerCard ?? null, new Map())
+    if (commanders.length > 0) updateMetaForDeck(commanders)
+  }, [deck.format, deck.cards, deck.commanderCard, deck.partnerCard])
+  const formatReport = validateDeckForFormat(deck, metaMap)
   const hasErrors = formatReport.issues.some((i) => i.severity === 'error')
   const minRequired = FORMAT_CONFIGS[deck.format]?.minMain ?? 60
   const isValid = !hasErrors && total >= minRequired
@@ -89,7 +57,9 @@ export function DeckBox({
           {isValid ? (
             <span className="format-badge-valid">✓ {deck.format}</span>
           ) : (
-            <span className="format-badge-invalid"><Icon name="alert" size={11} /> {total}/{minRequired}</span>
+            <span className="format-badge-invalid">
+              <Icon name="alert" size={11} /> {total < minRequired ? `${total}/${minRequired}` : deck.format}
+            </span>
           )}
         </div>
       </div>

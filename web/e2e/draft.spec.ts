@@ -104,7 +104,7 @@ test.describe('Draft', { tag: '@draft' }, () => {
     // joinDraftSilent: el server real no reenvía DRAFT_INIT al re-unirse a un
     // draft ya empezado; la pantalla solo puede volver con la instantánea local.
     await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 60_000, joinDraftSilent: true }), async () => {
-      await login(page, `draft-reload-${String(Date.now()).slice(-6)}`)
+      await login(page, `draftrl-${String(Date.now()).slice(-6)}`)
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
       const firstId = await page.getByTestId('draft-card').first().getAttribute('data-card-id')

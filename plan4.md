@@ -1,5 +1,9 @@
 # PLAN-4 — verificar que la interfaz es correcta, usable y fiel al juego (2026-09-14)
 
+> **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
+> pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
+> única de `plan7.md` §4.
+
 > ESTADO AL CREAR: rama `master`, último commit `7cafe4ab079`. Resync del draft
 > **sin commitear** (11 ficheros) + 3 PNG sueltos en la raíz. Documento **solo de
 > planificación**: no se ha tocado código.

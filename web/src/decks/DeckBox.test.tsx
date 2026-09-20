@@ -1,5 +1,5 @@
-import { describe, expect, it, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { describe, expect, it, afterEach, vi } from 'vitest'
+import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import { DeckBox } from './DeckBox'
 import type { DeckV2 } from './types'
 import { deckInitials } from './types'
@@ -49,6 +49,71 @@ describe('DeckBox', () => {
     render(<DeckBox deck={deck} />)
     expect(screen.getByText('Incomplete Deck')).toBeDefined()
     expect(screen.getByText('30/60')).toBeDefined()
+  })
+
+  describe('commander pairing', () => {
+    const legendary = (name: string, extra: Record<string, unknown> = {}) => ({
+      name,
+      type_line: 'Legendary Creature — Human',
+      oracle_text: '',
+      keywords: [],
+      colors: ['G'],
+      cmc: 3,
+      ...extra,
+    })
+    const cardsByNumber: Record<string, unknown> = {
+      '1': legendary('Alpha Commander'),
+      '2': legendary('Beta Commander'),
+      '3': legendary('Partner One', { keywords: ['Partner'] }),
+      '4': legendary('Partner Two', { keywords: ['Partner'] }),
+    }
+    const mockScryfall = () => {
+      vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+        const num = /\/cards\/[a-z0-9]+\/(\d+)/i.exec(url)?.[1]
+        const data = num ? cardsByNumber[num] : null
+        return { ok: !!data, json: async () => data }
+      }))
+    }
+    const commanderDeck = (a: string, b: string): DeckV2 => {
+      const first = { cardName: `${a} Commander`, setCode: 'CMD', cardNumber: a === 'Alpha' ? '1' : '3', amount: 1 }
+      const second = { cardName: `${b} Commander`, setCode: 'CMD', cardNumber: b === 'Beta' ? '2' : '4', amount: 1 }
+      return {
+        id: 'deck-cmd',
+        name: 'Pair Deck',
+        format: 'Commander',
+        colors: ['G'],
+        cards: [first, second, { cardName: 'Forest', setCode: 'CMD', cardNumber: '300', amount: 98 }],
+        sideboard: [],
+        commanderCard: first,
+        partnerCard: second,
+        createdAt: 1000,
+        updatedAt: 1000,
+        source: 'custom',
+      }
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('shows a warning instead of the tick when the two commanders cannot pair', async () => {
+      mockScryfall()
+      render(<DeckBox deck={commanderDeck('Alpha', 'Beta')} />)
+      await waitFor(() => expect(screen.queryByText('✓ Commander')).toBeNull())
+      expect(document.querySelector('.format-badge-invalid')).not.toBeNull()
+    })
+
+    it('keeps the tick when both commanders have Partner', async () => {
+      mockScryfall()
+      const deck = commanderDeck('Partner', 'Partner')
+      deck.cards[0] = { ...deck.cards[0], cardName: 'Partner One', cardNumber: '3' }
+      deck.cards[1] = { ...deck.cards[1], cardName: 'Partner Two', cardNumber: '4' }
+      deck.commanderCard = deck.cards[0]
+      deck.partnerCard = deck.cards[1]
+      render(<DeckBox deck={deck} />)
+      await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(1))
+      expect(screen.getByText('✓ Commander')).toBeDefined()
+    })
   })
 
   it('triggers onDoubleClick when double clicked', () => {

@@ -133,24 +133,33 @@ public final class DeckValidation {
         if (requested == null || requested.trim().isEmpty()) {
             return true;
         }
-        String a = requested.trim();
-        String b = resolved == null ? "" : resolved.trim();
-        if (a.equalsIgnoreCase(b)) {
+        String a = foldName(requested);
+        String b = foldName(resolved);
+        if (a.equals(b)) {
             return true;
         }
         // split/transform: "Fire // Ice" (entrada) vs fila de media carta "Fire"
         int cut = a.indexOf("//");
-        if (cut > 0 && a.substring(0, cut).trim().equalsIgnoreCase(b)) {
+        if (cut > 0 && a.substring(0, cut).trim().equals(b)) {
             return true;
         }
         if (b.contains("//")) {
             for (String part : b.split("//")) {
-                if (part.trim().equalsIgnoreCase(a)) {
+                if (part.trim().equals(a)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /** Minúsculas y sin diacríticos: "Andúril" y "Anduril" son la misma carta. */
+    private static String foldName(String name) {
+        if (name == null) {
+            return "";
+        }
+        String decomposed = java.text.Normalizer.normalize(name.trim(), java.text.Normalizer.Form.NFD);
+        return decomposed.replaceAll("\\p{M}+", "").toLowerCase(java.util.Locale.ROOT);
     }
 
     /**

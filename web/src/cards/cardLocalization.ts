@@ -1,6 +1,8 @@
 import type { CardView } from '../net/types'
 import { getLanguage, getCardLanguage } from '../i18n'
 import { isAbilityCard, getSourceCardName } from './cardImages'
+import { scryfallFetch, scryfallJson } from './scryfallClient'
+import { localizedPrintingJsonUrl } from './scryfallCards'
 import { useState, useEffect } from 'react'
 
 const memoryCache = new Map<string, string>()
@@ -108,12 +110,8 @@ export async function fetchLocalizedCardName(
 
       if (set && num && num !== '0' && set !== 'XMAGE') {
         try {
-          const directRes = await fetch(
-            `https://api.scryfall.com/cards/${set.toLowerCase()}/${num}/${lang}?format=json`,
-            { headers: { 'User-Agent': 'XMageNexus/1.0' } },
-          )
-          if (directRes.ok) {
-            const data = await directRes.json()
+          const data = await scryfallJson<any>(localizedPrintingJsonUrl(set, num, lang), { persist: true })
+          if (data) {
             const faceMatch = data.card_faces?.find((f: any) => (f.name ?? '').toLowerCase() === cleanName.toLowerCase())
             const hit = faceMatch?.printed_name || data.printed_name || data.name
             if (hit && typeof hit === 'string') {
@@ -126,9 +124,7 @@ export async function fetchLocalizedCardName(
 
       const escaped = cleanName.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&')
       const q = encodeURIComponent(`name:/^${escaped}$/ lang:${lang}`)
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${q}`, {
-        headers: { 'User-Agent': 'XMageNexus/1.0' },
-      })
+      const res = await scryfallFetch(`https://api.scryfall.com/cards/search?q=${q}`)
       if (!res.ok) return null
       const data = await res.json()
       const first = data.data && data.data[0]

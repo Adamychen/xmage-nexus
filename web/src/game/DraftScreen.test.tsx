@@ -402,7 +402,7 @@ describe('DraftScreen', () => {
         mana_cost: '{1}{G}',
         cmc: 2,
         colors: ['G'],
-        rarity: String(url).includes('/M21/1?') ? 'rare' : 'common',
+        rarity: String(url).toLowerCase().includes('/m21/1?') ? 'rare' : 'common',
         legalities: {},
         image_uris: { normal: 'https://img.test/n.jpg', art_crop: 'https://img.test/a.jpg' },
       }),

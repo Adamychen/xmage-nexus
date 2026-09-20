@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
-import { stripMetaFromJson, type ScryfallJson } from './deckCardOps'
+import { stripMetaFromJson } from './deckCardOps'
+import { fetchCardJson } from '../cards/scryfallCards'
 
 /** Metadatos Scryfall de las cartas del mazo + mapa de CMCs para la curva. */
 export function useDeckMetadata() {
@@ -32,28 +33,8 @@ export function useDeckMetadata() {
     const cardLang = getEffectiveCardLang()
     for (const { card: c, lookup } of toFetch) {
       const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
-      const localizedUrl = hasSetAndNum && cardLang && cardLang !== 'en'
-        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${cardLang}?format=json`
-        : null
-      const defaultUrl = hasSetAndNum
-        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=json`
-        : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
 
-      const fetchMetadata = async () => {
-        try {
-          if (localizedUrl) {
-            const locRes = await fetch(localizedUrl, { headers: { Accept: 'application/json' } })
-            if (locRes.ok) return (await locRes.json()) as ScryfallJson
-          }
-          const defRes = await fetch(defaultUrl, { headers: { Accept: 'application/json' } })
-          if (defRes.ok) return (await defRes.json()) as ScryfallJson
-          return null
-        } catch {
-          return null
-        }
-      }
-
-      fetchMetadata()
+      fetchCardJson(c, { lang: cardLang })
         .then((data) => {
           inFlightRef.current.delete(lookup)
           if (!data) return

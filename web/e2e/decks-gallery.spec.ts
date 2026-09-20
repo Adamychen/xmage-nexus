@@ -12,7 +12,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck_${Date.now()}`
+      const username = `deck_${String(Date.now()).slice(-9)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -101,7 +101,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      await page.getByPlaceholder(/Usuario|Username/i).fill(`precon_${Date.now()}`)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`precon_${String(Date.now()).slice(-7)}`)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
@@ -123,7 +123,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd_${Date.now()}`)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd_${String(Date.now()).slice(-10)}`)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
@@ -196,7 +196,7 @@ test.describe('Decks Gallery', () => {
 
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd2_${Date.now()}`)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`cmd2_${String(Date.now()).slice(-9)}`)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
@@ -239,7 +239,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck2_${Date.now()}`
+      const username = `deck2_${String(Date.now()).slice(-8)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -260,7 +260,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck3_${Date.now()}`
+      const username = `deck3_${String(Date.now()).slice(-8)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -298,7 +298,7 @@ test.describe('Decks Gallery', () => {
       await blockLocalizedEnrich(page)
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck_u6_${Date.now()}`
+      const username = `deck_u6_${String(Date.now()).slice(-6)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -343,7 +343,7 @@ test.describe('Decks Gallery', () => {
       await blockLocalizedEnrich(page)
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck_u7_${Date.now()}`
+      const username = `deck_u7_${String(Date.now()).slice(-6)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -379,7 +379,7 @@ test.describe('Decks Gallery', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `deck_resp_${Date.now()}`
+      const username = `deck_rsp_${String(Date.now()).slice(-5)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
+import { fetchCardJson } from '../cards/scryfallCards'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { MAX_DECKS, makeDeckId } from './types'
@@ -169,17 +170,9 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         for (const c of uniq) {
           if (cancelled || ctrl.signal.aborted) break
           try {
-            let data: { color_identity?: string[] } | null = null
-            if (c.setCode && c.cardNumber && c.cardNumber !== '0') {
-              const r = await fetch(`https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`, { headers: { Accept: 'application/json' }, signal: ctrl.signal })
-              if (r.ok) data = await r.json() as { color_identity?: string[] }
-            }
-            if (!data || !data.color_identity?.length) {
-              const r2 = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`, { headers: { Accept: 'application/json' }, signal: ctrl.signal })
-              if (r2.ok) data = await r2.json() as { color_identity?: string[] }
-            }
+            let data = await fetchCardJson(c)
+            if (!data?.color_identity?.length) data = await fetchCardJson({ cardName: c.cardName })
             if (data?.color_identity) for (const col of data.color_identity) set.add(col)
-            await new Promise((rr) => setTimeout(rr, 75))
           } catch {}
         }
         if (set.size === 0) return d

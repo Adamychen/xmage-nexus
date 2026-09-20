@@ -40,7 +40,7 @@ test.describe('Printing change refreshes hover preview', () => {
 
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `print_${Date.now()}`
+      const username = `print_${String(Date.now()).slice(-8)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()

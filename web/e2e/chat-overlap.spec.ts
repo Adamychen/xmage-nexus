@@ -9,7 +9,7 @@ test.describe('FloatingChat overlap', () => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `chatov_${Date.now()}`
+      const username = `chatov_${String(Date.now()).slice(-7)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()
@@ -50,7 +50,7 @@ test.describe('FloatingChat overlap', () => {
       })
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
-      const username = `chatov_narrow_${Date.now()}`
+      const username = `chatovn_${String(Date.now()).slice(-6)}`
       await page.getByPlaceholder(/Usuario|Username/i).fill(username)
       await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
       await page.getByRole('button', { name: /Conectar/i }).click()

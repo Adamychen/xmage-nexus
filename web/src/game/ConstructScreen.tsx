@@ -10,6 +10,7 @@ import { BasicLandAdder } from '../decks/BasicLandAdder'
 import type { BasicLandPreset } from '../decks/deckUtils'
 import { replaceBasicLands, type SuggestedLand } from '../decks/deckCardOps'
 import Icon from '../ui/Icon'
+import { fetchCardJson } from '../cards/scryfallCards'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
@@ -114,11 +115,7 @@ export default function ConstructScreen() {
       // Sin impresión ni nombre real (pool CONSTRUCT sin nombres) no hay URL
       // que pueda resolver: pedirla solo genera 404s en Scryfall.
       if (!hasPrinting && (isUuidLikeCardName(c.cardName) || c.cardName === `${c.setCode} ${c.cardNumber}`)) continue
-      const url = hasPrinting
-        ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
-        : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
-      fetch(url, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
+      fetchCardJson(c)
         .then((data) => {
           if (!data) return
           const meta: CardStripMeta = {

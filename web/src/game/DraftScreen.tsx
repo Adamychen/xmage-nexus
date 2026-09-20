@@ -10,6 +10,7 @@ import { useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
 import Modal from '../ui/Modal'
+import { fetchCardJson } from '../cards/scryfallCards'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
@@ -191,12 +192,8 @@ export default function DraftScreen() {
       const set = c.expansionSetCode ?? ''
       const num = c.cardNumber ?? ''
       const name = c.name ?? ''
-      const url = set && num && num !== '0'
-        ? `https://api.scryfall.com/cards/${set}/${num}?format=json`
-        : name ? `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}` : null
-      if (!url) continue
-      fetch(url, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
+      if (!(set && num && num !== '0') && !name) continue
+      fetchCardJson({ cardName: name, setCode: set, cardNumber: num })
         .then((data) => {
           if (!data) return
           const meta: CardStripMeta = {

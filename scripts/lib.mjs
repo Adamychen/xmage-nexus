@@ -40,13 +40,27 @@ export function mageArtifactsPresent() {
   return fs.existsSync(path.join(os.homedir(), '.m2', 'repository', 'org', 'mage', 'mage', XMAGE_VERSION, `mage-${XMAGE_VERSION}.jar`))
 }
 
+const mageStampFile = () => path.join(os.homedir(), '.m2', 'repository', 'org', 'mage', '.nexus-fork-commit')
+
+/** Commit HEAD del checkout del fork (null si no es un repo git). */
+export function forkCommit() {
+  const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: forkDir(), encoding: 'utf8' })
+  return res.status === 0 ? res.stdout.trim() : null
+}
+
 /**
  * Garantiza mage/mage-common/mage-sets en ~/.m2 (dependencias del build del
- * proxy). Si faltan, instala desde el checkout del fork (una vez por release).
+ * proxy) y que correspondan al commit actual del fork: si faltan o el sello
+ * `.nexus-fork-commit` no coincide (p. ej. caché de Maven de CI), reinstala.
  */
 export function ensureMageArtifacts() {
-  if (mageArtifactsPresent()) return
-  log('artefactos org.mage ausentes en ~/.m2 — instalando desde el fork…')
+  const commit = forkCommit()
+  let stamped = null
+  try { stamped = fs.readFileSync(mageStampFile(), 'utf8').trim() } catch {}
+  if (mageArtifactsPresent() && (!commit || stamped === commit)) return
+  log(mageArtifactsPresent()
+    ? `artefactos org.mage de otro commit del fork (${stamped ?? 'sin sello'} ≠ ${commit}) — reinstalando…`
+    : 'artefactos org.mage ausentes en ~/.m2 — instalando desde el fork…')
   const res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], {
     cwd: forkDir(),
     timeoutMs: 1_800_000,
@@ -55,6 +69,12 @@ export function ensureMageArtifacts() {
   if (res.code !== 0) {
     throw new Error(`mvn install del fork falló: ${res.stderr.slice(0, 400)}`)
   }
+  stampMageArtifacts(commit)
+}
+
+/** Registra en ~/.m2 el commit del fork del que salen los artefactos org.mage. */
+export function stampMageArtifacts(commit = forkCommit()) {
+  if (commit) fs.writeFileSync(mageStampFile(), commit + '\n')
 }
 
 export const PORTS = {

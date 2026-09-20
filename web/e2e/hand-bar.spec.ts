@@ -135,11 +135,18 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
     })
     const slots = page.locator('[data-testid="hand-bar"] .hand-card-slot')
     await expect(slots.first()).toBeVisible({ timeout: 30_000 })
+    // Con prioridad propia el escenario deja de mover cartas: en CI (runner
+    // lento) el hover podía caer mientras las tierras salían de la mano.
+    await expect(page.locator('.big-action-btn')).toBeEnabled({ timeout: 30_000 })
     const preview = page.locator('.floating-card-preview')
+    await page.mouse.move(8, 8)
     await expect(preview).toHaveCount(0)
 
-    await slots.first().hover()
-    await expect(preview).toBeVisible({ timeout: 10_000 })
+    await expect(async () => {
+      await page.mouse.move(8, 8)
+      await slots.first().hover()
+      await expect(preview).toBeVisible({ timeout: 3_000 })
+    }).toPass({ timeout: 20_000 })
     await expect(preview, 'el preview nace de la carta en mano (morph)').toHaveClass(/is-morph/)
     await expect(preview, 'el morph termina en tamaño completo').toHaveClass(/is-open/, { timeout: 10_000 })
     const boxes = await page.evaluate(() => {

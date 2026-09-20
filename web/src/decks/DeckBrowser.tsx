@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { META_DECK_CATALOG } from './metaDeckCatalog'
 import { DeckInspectorModal } from './DeckInspectorModal'
@@ -8,7 +8,18 @@ import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
+import { useCardArtUrl } from './useCardArtUrl'
+import type { DeckCard } from '../lobby/decks'
 import './DeckBrowser.css'
+
+function BrowserDeckArt({ cover, children }: { cover: DeckCard; children: ReactNode }) {
+  const artUrl = useCardArtUrl(cover)
+  return (
+    <div className="browser-deck-art-header" style={artUrl ? { backgroundImage: `url(${artUrl})` } : undefined}>
+      {children}
+    </div>
+  )
+}
 
 export function DeckBrowser({
   onCloneDeck,
@@ -121,7 +132,6 @@ export function DeckBrowser({
       <div className="browser-decks-grid">
         {filteredCatalog.map((deck) => {
           const cover = deck.coverCard
-          const artUrl = `https://api.scryfall.com/cards/${cover.setCode}/${cover.cardNumber}?format=image&version=art_crop`
 
           return (
             <div
@@ -131,16 +141,13 @@ export function DeckBrowser({
               {...clickableProps(() => setInspectingDeck(deck))}
             >
               {/* Card Art Header */}
-              <div
-                className="browser-deck-art-header"
-                style={{ backgroundImage: `url(${artUrl})` }}
-              >
+              <BrowserDeckArt cover={cover}>
                 <div className="browser-deck-art-gradient" />
                 <div className="browser-deck-badges-overlay">
                   <span className="browser-deck-format-chip">{deck.format}</span>
                   <span className="browser-deck-arch-chip">{deck.archetype}</span>
                 </div>
-              </div>
+              </BrowserDeckArt>
 
               {/* Content */}
               <div className="browser-deck-content">

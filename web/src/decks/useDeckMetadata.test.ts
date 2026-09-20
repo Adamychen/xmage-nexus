@@ -89,7 +89,7 @@ describe('useDeckMetadata printing changes', () => {
       result.current.updateMetaForDeck([bolt])
       result.current.updateMetaForDeck([bolt])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     await act(async () => {
       resolveFetch({ ok: true, json: () => Promise.resolve(scryfallCard('https://img.test/m10-bolt.jpg')) })
     })

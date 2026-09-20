@@ -4,7 +4,7 @@
 //   (sin argumentos: compila servidor + plugins y empaqueta el proxy)
 //   (arg "proxy": solo empaqueta el proxy, asumiendo el resto ya compilado)
 
-import { copyPluginJars, ensureMageArtifacts, forkDir, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
+import { copyPluginJars, ensureMageArtifacts, stampMageArtifacts, forkDir, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
 
 function fail(step, res) {
   logError(`FALLÓ en: ${step}`)
@@ -19,6 +19,7 @@ async function main() {
     log('== paso 1/4: compilar módulos base (Mage.Common, Mage, Mage.Sets, Mage.Server) ==')
     let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], { cwd: forkDir() })
     if (res.code !== 0) fail('compilación de módulos base', res)
+    stampMageArtifacts()
     log('  OK')
 
     log('== paso 2/4: compilar módulos plugin ==')

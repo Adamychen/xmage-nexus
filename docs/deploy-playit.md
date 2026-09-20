@@ -252,7 +252,7 @@ processes on reboot.
 |---|---|
 | Public page loads but the game never connects | `ALLOWED_ORIGINS` missing or wrong. It must be exactly the page origin, e.g. `http://abc.playit.gg:12345`. |
 | `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME` in the proxy log | `beta.xmage.today` moved to a new XMage release. Rebuild with the matching fork (`node scripts/build.mjs`) and restart. |
-| Login is intermittent / `Can't receive server state before other data` | Known server-side handshake issue on `beta.xmage.today`. Retry; the local server is the reliable oracle for testing. |
+| Login fails / `Can't receive server state before other data` | Not a handshake issue: that line is logged on *any* failed login. Check the username length — the server rejects anything over `maxUserNameLength` (**14**) with `User name may not be longer than 14 characters`. |
 | Port already in use | Another `ctl.mjs`/`dev.mjs` instance or process is using 8787/8788. Stop it or change `WS_PORT`/`HTTP_PORT`. |
 | WebSocket rejected with `origin not allowed` | `ALLOWED_ORIGINS` does not match the browser's `Origin` header (scheme included). |
 | Client cannot connect from an `https://` page | The web client currently uses `ws://` only; serve the client over `http://` (as in this guide) or add `wss://` support. |

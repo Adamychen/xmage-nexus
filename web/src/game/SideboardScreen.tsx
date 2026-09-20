@@ -10,6 +10,7 @@ import Icon from '../ui/Icon'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
+import { fetchCardJson } from '../cards/scryfallCards'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Modal from '../ui/Modal'
@@ -95,11 +96,7 @@ export default function SideboardScreen() {
     }
     if (toFetch.length === 0) return
     for (const c of toFetch) {
-      const url = c.setCode && c.cardNumber && c.cardNumber !== '0'
-        ? `https://api.scryfall.com/cards/${c.setCode}/${c.cardNumber}?format=json`
-        : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
-      fetch(url, { headers: { Accept: 'application/json' } })
-        .then((r) => (r.ok ? r.json() : null))
+      fetchCardJson(c)
         .then((data) => {
           if (!data) return
           const meta: CardStripMeta = {

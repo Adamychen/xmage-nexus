@@ -28,6 +28,7 @@ import {
   perfClear,
   perfEntries,
   readAckMs,
+  waitEventsQuiet,
   withDelayedFakeServer,
   type PerfEntry,
 } from './support/perf'
@@ -85,6 +86,8 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const button = page.locator('.big-action-btn')
       await expect(button).toBeEnabled({ timeout: 20_000 })
 
+      await waitEventsQuiet(page)
+
       await perfClear(page)
       await armAckProbe(page, '.big-action-btn', { disabled: true })
       await button.click()
@@ -118,6 +121,9 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
         if (ackMs >= 0) {
           await page.waitForTimeout(WAIT_STATE_MS)
           echoMs = (await echoAfter(page, 'playable')).echoMs
+          // Un eco más rápido que el retardo es un evento del helper enviado
+          // antes del clic (juega su tierra en paralelo): intento contaminado.
+          if (echoMs <= LATENCY_ECHO_MS * 0.6 && attempt < 3) ackMs = -1
         }
       }
       expectAckUnder(ackMs, 'jugar tierra')
@@ -134,6 +140,8 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       expect(boltId, 'Lightning Bolt jugable').toBeTruthy()
       const selector = `[data-testid="hand-bar"] [data-card-id="${boltId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
+
+      await waitEventsQuiet(page)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })
@@ -159,6 +167,8 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const targetId = targetIdsOf(target.frame)[0]
       const selector = `.card-slot[data-card-id="${targetId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
+
+      await waitEventsQuiet(page)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-chosen-pending' })
@@ -189,6 +199,8 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const selector = `.card-slot[data-card-id="${sourceId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
 
+      await waitEventsQuiet(page)
+
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })
       await page.locator(selector).click()
@@ -216,6 +228,8 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       expect(attackerId, 'criatura seleccionable como atacante').toBeTruthy()
       const selector = `.card-slot[data-card-id="${attackerId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
+
+      await waitEventsQuiet(page)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })

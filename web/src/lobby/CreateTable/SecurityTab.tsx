@@ -18,15 +18,11 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             value={form.password}
             onChange={(e) => form.setPassword(e.target.value)}
             placeholder={t('lobby','placeholder_password')}
-            disabled={form.passwordDisabledOnBeta}
           />
-          <button type="button" className="password-toggle-btn" disabled={form.passwordDisabledOnBeta} onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')} aria-label={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')}>
+          <button type="button" className="password-toggle-btn" onClick={() => form.setShowPassword(!form.showPassword)} title={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')} aria-label={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')}>
             {form.showPassword ? <Icon name="eyeOff" size={14} /> : <Icon name="eye" size={14} />}
           </button>
         </div>
-        {form.passwordDisabledOnBeta && (
-          <p className="create-password-beta-note">{t('lobby','create_password_disabled_beta')}</p>
-        )}
       </label>
 
       <div className="create-restrictions-box">

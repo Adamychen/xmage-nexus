@@ -117,6 +117,9 @@ test.describe('galería de estados (P3)', () => {
     await openGallery(page)
     const ids = await entryIds(page)
     expect(ids.length).toBeGreaterThan(40)
+    // El coste crece con la galería (~0,5 s por entrada en local, más del
+    // doble en el runner de CI): presupuesto proporcional, no un tope fijo.
+    test.setTimeout(Math.max(120_000, ids.length * 2_000))
 
     for (const id of ids) {
       await showEntry(page, id)

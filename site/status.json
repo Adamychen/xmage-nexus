@@ -351,9 +351,9 @@
     {
       "id": 4,
       "name": "Desktop Packaging (Tauri)",
-      "status": "pending",
-      "date": "",
-      "desc": "Tauri wrapper, embedded one-click proxy + JRE, auto-updater."
+      "status": "done",
+      "date": "2026-09-19",
+      "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10) and v0.2.0 (2026-09-19). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7."
     },
     {
       "id": 5,
@@ -557,8 +557,8 @@
       "category": "Distribution",
       "feature": "Desktop & Web Deployment",
       "official": "no",
-      "nexus": "partial",
-      "phase": "Phase 4"
+      "nexus": "yes",
+      "phase": "Completed"
     },
     {
       "category": "Advanced Formats",

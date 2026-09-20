@@ -43,4 +43,11 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
 - `web/COMPONENT_PARITY.md` tracks Desktop↔Web feature parity per module
   (15 units): when closing a unit audit, update its row (Estado + Evidencia +
   Última verif.) and mirror only `yes/partial/no` into `site/content.json`.
+- **Every request to `api.scryfall.com` goes through `web/src/cards/scryfallClient.ts`**
+  (`scryfallFetch` / `scryfallJson`, or `fetchCardJson` in `scryfallCards.ts` for cards):
+  one global queue (100 ms spacing, 4 in flight, common pause + `Retry-After` on 429),
+  in-memory + IndexedDB cache. Never call `fetch('https://api.scryfall.com/…')` directly and
+  never use `…?format=image` API URLs as `<img src>` (they count against the limit; use the
+  `image_uris` CDN URLs from the card JSON, e.g. `useCardArtUrl`). Guarded by
+  `e2e/scryfall-budget.spec.ts`. Use `{ urgent: true }` only for user-driven requests.
 - Do not commit unless explicitly requested.

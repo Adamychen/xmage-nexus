@@ -47,11 +47,19 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   the proxy won't connect: the fork must be updated (fetch upstream + merge, in
   `../xmage-fork`) and everything rebuilt.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
-  Note: **anonymous login to `beta.xmage.today` is intermittent** — the fatal
-  `Can't receive server state before other data` / `connectStart=false` originates in the *remote*
-  XMage server's handshake (server-side). The proxy has **no** handshake buffer and cannot fix it;
-  treat beta as best-effort only. (The local server `localhost:17171` is the reliable oracle for
-  real-protocol CI — see `ROADMAP.md` §Phase 0, which already documents this correctly.)
+  **Anonymous login to `beta.xmage.today` is stable** (measured 2026-09-20: 17/17 logins, ~1.6 s each).
+  The former "intermittent beta handshake bug" was a **misdiagnosis**: the server rejects any username
+  longer than `maxUserNameLength` (**14**, `local-server/config/config.xml:48`, enforced in the fork's
+  `Mage.Server/.../Session.java:153`) and answers `User name may not be longer than 14 characters`.
+  `Can't receive server state before other data` (fork `SessionImpl.java:621`) is only a **symptom**:
+  `connectStart()` fetches `getServerState()` *after* a successful login, so on any login failure
+  `serverState` stays `null` and the server's `SHOW_USERMESSAGE` with the real reason trips that log
+  line. It correlates 1:1 with `Logging: FAIL` and happens just as often against `localhost`. The
+  apparent intermittency was generated usernames of varying length (`warmup-825244967` = 16 chars
+  failed, `warmup-510227` = 13 passed). Keep every generated username **≤ 14 chars**; `LoginScreen`
+  already enforces `maxLength={14}` and the `FixtureServer` validates it so fake mode catches drift.
+  (The local server `localhost:17171` remains the oracle for real-protocol CI — it is deterministic,
+  not because beta is broken.)
 - **Web login already separates Proxy and XMage Server**: `LoginScreen` has independent fields for the
   proxy WS (`Proxy` host/port) and the target server (`XMage Server` host/port). No host-split work remains.
   Because the proxy is now **multi-tenant** (see below and `Mage.Proxy/README.md`), a single deployed
@@ -259,6 +267,11 @@ test window).
   (`build.mjs proxy`) + restart proxy.
 - **Before declaring a task "done"**: full suite
   (`node scripts/test.mjs`) with the stack up.
+  - **Y CI remoto en verde** (plan7, 2026-09-19): tras el push, `gh run list -R
+    Adamychen/xmage-nexus -L 5` — `Web client CI` estuvo una semana en rojo en
+    `master` con la suite local 9/9 (caché de Maven con artefactos `org.mage`
+    viejos). Si se toca el fork, publicar `origin/nexus` antes: CI y
+    `release.yml` construyen desde ahí.
   - **Reiniciar el stack justo antes** (`node scripts/ctl.mjs restart all`): un
     server con muchas sesiones/partidas huérfanas acumuladas degrada el canal de
     callbacks y hace flaky `warmup`/`self-test`/`human-test` (WATCHGAME que no

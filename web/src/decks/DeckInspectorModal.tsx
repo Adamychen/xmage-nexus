@@ -8,6 +8,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
+import { fetchCardJson } from '../cards/scryfallCards'
 import './DeckInspectorModal.css'
 
 export function DeckInspectorModal({
@@ -38,28 +39,8 @@ export function DeckInspectorModal({
     const cardLang = getEffectiveCardLang()
     for (const c of all) {
       const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
-      const localizedUrl = hasSetAndNum && cardLang && cardLang !== 'en'
-        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}/${cardLang}?format=json`
-        : null
-      const defaultUrl = hasSetAndNum
-        ? `https://api.scryfall.com/cards/${c.setCode.toLowerCase()}/${c.cardNumber}?format=json`
-        : `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c.cardName)}`
 
-      const fetchMeta = async () => {
-        try {
-          if (localizedUrl) {
-            const locRes = await fetch(localizedUrl, { headers: { Accept: 'application/json' } })
-            if (locRes.ok) return await locRes.json()
-          }
-          const defRes = await fetch(defaultUrl, { headers: { Accept: 'application/json' } })
-          if (defRes.ok) return await defRes.json()
-          return null
-        } catch {
-          return null
-        }
-      }
-
-      fetchMeta()
+      fetchCardJson(c, { lang: cardLang })
         .then((data) => {
           if (!data) return
           const printedName = data.printed_name || data.card_faces?.[0]?.printed_name

@@ -46,6 +46,24 @@ export interface BoardPresenter {
  *  transición inversa (0.18s) con margen. */
 export const PREVIEW_LEAVE_MS = 200
 
+/** Elemento bajo el puntero cuyo rect coincide con el del hover (el
+ *  `currentTarget` del mouseenter); null si el hover no vino del ratón. */
+export function hoverAnchorFor(rect: DOMRect): Element | null {
+  if (typeof document === 'undefined') return null
+  const hovered = Array.from(document.querySelectorAll(':hover'))
+  for (let i = hovered.length - 1; i >= 0; i--) {
+    const r = hovered[i].getBoundingClientRect()
+    if (r.x === rect.x && r.y === rect.y && r.width === rect.width && r.height === rect.height) return hovered[i]
+  }
+  return null
+}
+
+/** El ancla ya no está bajo el puntero: se desmontó/reemplazó (el navegador no
+ *  emite mouseleave sobre nodos desconectados) o el puntero salió de ella. */
+export function hoverAnchorLost(anchor: Element): boolean {
+  return !anchor.isConnected || !anchor.matches(':hover')
+}
+
 /** Lógica común a los tres layouts de tablero (GameBoard/TwoHeaded/Arena):
  *  hover con preview flotante, dispatcher de clicks, sets memoizados y el
  *  puente de escena/transiciones. Evita que los modos diverjan. */
@@ -71,6 +89,7 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
   const [previewLeaving, setPreviewLeaving] = useState(false)
   const [previewFromHand, setPreviewFromHand] = useState(false)
   const hoverTimeoutRef = useRef<number | null>(null)
+  const hoverAnchorRef = useRef<Element | null>(null)
 
   const modalOpen = useStore(isBlockingModal)
   useEffect(() => {
@@ -102,12 +121,14 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       }
 
       if (card && rect) {
+        hoverAnchorRef.current = hoverAnchorFor(rect)
         setPreviewLeaving(false)
         setPreviewFromHand(opts?.fromHand === true)
         setFloatingCard(card)
         setAnchorRect(rect)
         onCardHover?.(card as CardView | null)
       } else {
+        hoverAnchorRef.current = null
         setPreviewLeaving(true)
         hoverTimeoutRef.current = window.setTimeout(() => {
           setFloatingCard(null)
@@ -120,6 +141,19 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     },
     [onCardHover, modalOpen]
   )
+
+  /** Red de seguridad del mouseleave: si el slot con hover se re-renderiza en
+   *  otro nodo bajo el puntero, el leave nunca llega y el preview queda pegado.
+   *  Cualquier mouseover posterior comprueba que el ancla siga bajo el puntero. */
+  useEffect(() => {
+    if (!floatingCard || previewLeaving) return
+    const onOver = () => {
+      const anchor = hoverAnchorRef.current
+      if (anchor && hoverAnchorLost(anchor)) handleCardHover(null)
+    }
+    document.addEventListener('mouseover', onOver, true)
+    return () => document.removeEventListener('mouseover', onOver, true)
+  }, [floatingCard, previewLeaving, handleCardHover])
 
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])

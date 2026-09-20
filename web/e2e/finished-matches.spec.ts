@@ -38,7 +38,7 @@ historyTest(
   { tag: '@history' },
   async ({ page, historyServer }) => {
     void historyServer
-    const username = `hist-${String(Date.now()).slice(-10)}`
+    const username = `hist-${String(Date.now()).slice(-9)}`
     cleanupUser(username)
 
     await login(page, username)

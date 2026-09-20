@@ -63,6 +63,8 @@ async function castBolt(page: import('@playwright/test').Page, helper: HumanHelp
 }
 
 test('best-of-5: sweep 3-0, match terminado en game 3 sin SIDEBOARD extra', { tag: '@fullflow' }, async ({ page }) => {
+  // Tres partidas completas + dos sideboards: en el runner de CI supera los 120 s por defecto.
+  test.setTimeout(300_000)
   await withFakeServer(() => bestOf5Scenario(), async () => {
     const { helper, pageErrors } = await startGame(page, {
       prefix: 'bo5',

@@ -175,6 +175,16 @@ export default function DeckIssuesDialog() {
           <button type="button" className="deck-issues-cancel-btn" data-testid="deck-issues-cancel" onClick={() => closeRequest(null)}>
             {t('decks', 'issues_cancel')}
           </button>
+          {missing.length === 0 && mismatches.length > 0 && (
+            <button
+              type="button"
+              className="primary deck-issues-play-btn"
+              data-testid="deck-issues-accept-and-play"
+              onClick={() => closeRequest(deck)}
+            >
+              {t('decks', 'issues_accept_and_play')}
+            </button>
+          )}
           {missing.length > 0 && report.fixedDeck && (
             <button
               type="button"

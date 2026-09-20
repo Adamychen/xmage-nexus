@@ -24,6 +24,22 @@ export interface FakeServerOptions {
   echoDelayMs?: number
 }
 
+/** Reglas de `Mage.Server` (`Session.validateUserNameLength` + `config.xml`
+ *  `minUserNameLength`/`maxUserNameLength`). Sin esto fake mode acepta nombres
+ *  que el servidor real rechaza y el drift pasa desapercibido. */
+export const SERVER_MIN_USER_NAME_LENGTH = 3
+export const SERVER_MAX_USER_NAME_LENGTH = 14
+
+export function validateServerUserName(userName: string): string | null {
+  if (userName.length < SERVER_MIN_USER_NAME_LENGTH) {
+    return `User name may not be shorter than ${SERVER_MIN_USER_NAME_LENGTH} characters`
+  }
+  if (userName.length > SERVER_MAX_USER_NAME_LENGTH) {
+    return `User name may not be longer than ${SERVER_MAX_USER_NAME_LENGTH} characters`
+  }
+  return null
+}
+
 export interface FakeConn {
   readonly id: number
   /** Usuario de la conexión (login); el proxy real ecoa el chat con este nombre. */
@@ -490,6 +506,13 @@ export class FakeServer {
       const action = String(msg.action ?? '')
       const requestId = msg.requestId ?? null
       const args = ((msg.args ?? {}) as Record<string, unknown>) ?? {}
+      if (action === 'connect') {
+        const nameError = validateServerUserName(String(args.username ?? '').trim())
+        if (nameError) {
+          conn.fail(requestId, action, `Error while connecting to server\n${nameError}`)
+          return
+        }
+      }
       let answered = false
       const respond = () => {
         if (answered) return

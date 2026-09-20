@@ -225,7 +225,6 @@ export interface TranslationSchema {
     create_field_attack_option: string
     create_field_range: string
     create_field_password: string
-    create_password_disabled_beta: string
     create_field_min_rating: string
     create_field_max_rating: string
     create_field_quit_ratio: string
@@ -449,7 +448,6 @@ export interface TranslationSchema {
     staging_step_play: string
     join_requires_password: string
     join_password_enter_placeholder: string
-    join_password_disabled_beta: string
     join_import_toggle_open: string
     join_import_toggle_close: string
     join_save_select: string
@@ -1346,6 +1344,7 @@ export interface TranslationSchema {
     issues_mismatch_resolved: string
     issues_use_suggestion: string
     issues_remove_and_play: string
+    issues_accept_and_play: string
     issues_cancel: string
     issues_validating: string
     issues_banner_title: string

@@ -47,7 +47,7 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
         </div>
       </div>
 
-      <div className="create-restrictions-box" style={{ background: 'rgba(124,92,255,0.08)', borderColor: 'rgba(124,92,255,0.25)' }}>
+      <div className="create-restrictions-box" style={{ background: 'rgb(var(--brand-rgb) / 0.08)', borderColor: 'rgb(var(--brand-rgb) / 0.25)' }}>
         <span className="restrictions-box-title"><Icon name="dice" size={13} /> {t('lobby','create_custom_options')} {(form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase) ? `(${[form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null, form.customStartLifeEnabled ? t('lobby','create_custom_life_tag',{life:form.customStartLife}) : null, form.customStartHandSizeEnabled ? t('lobby','create_custom_hand_tag',{hand:form.customStartHandSize}) : null, form.planeChase ? 'Planechase' : null].filter(Boolean).join(', ')})` : ''}</span>
         <label>
           {t('lobby','create_field_mulligan_type')}

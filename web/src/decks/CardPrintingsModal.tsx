@@ -3,6 +3,7 @@ import { scryfallCardImage } from './scryfallSearch'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
+import { scryfallFetch } from '../cards/scryfallClient'
 import './CardPrintingsModal.css'
 
 export interface CardPrinting {
@@ -55,7 +56,7 @@ export function CardPrintingsModal({
 
     const url = `https://api.scryfall.com/cards/search?q=!%22${encodeURIComponent(cardName)}%22&unique=prints&order=released&dir=desc`
 
-    fetch(url, { headers: { Accept: 'application/json' } })
+    scryfallFetch(url, { urgent: true })
       .then((res) => {
         if (!res.ok) throw new Error(`${t('errors', 'generic_error')} (${res.status})`)
         return res.json()

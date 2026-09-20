@@ -1,5 +1,9 @@
 # PLAN-6 — huecos fuera del plan4/plan5: estados de motor sin representar, UI pendiente, deudas del plan2 y drift documental (2026-09-18)
 
+> **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
+> pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
+> única de `plan7.md` §4.
+
 > ESTADO AL CREAR: rama `master`, commit `bda3b7e4372`, árbol limpio (plan5
 > cerrado y commiteado en `dd17ed3ddd8` + fix del proxy en `bda3b7e4372`).
 > Este plan nace de la pregunta "¿hay algo que no esté contemplado en los

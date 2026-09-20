@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance } from './cardImages'
 import type { CardView } from '../net/types'
+import { setScryfallPacing } from './scryfallClient'
 
 const card = {
   name: 'Forest',
@@ -207,7 +208,8 @@ describe('Scryfall compliance', () => {
     vi.restoreAllMocks()
   })
 
-  it('sends Accept header and throttles ~75ms between Scryfall requests', async () => {
+  it('sends Accept header and spaces Scryfall requests by the shared client pacing', async () => {
+    setScryfallPacing({ spacingMs: 100 })
     const a = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView
     const b = { name: 'Counterspell', expansionSetCode: 'MMQ', cardNumber: '67' } as CardView
     const fetchMock = vi.fn().mockResolvedValue({
@@ -221,7 +223,7 @@ describe('Scryfall compliance', () => {
     await awaitImageUrl(a)
     await awaitImageUrl(b)
     const elapsed = Date.now() - t0
-    expect(elapsed).toBeGreaterThanOrEqual(70)
+    expect(elapsed).toBeGreaterThanOrEqual(90)
     expect(fetchMock).toHaveBeenCalledTimes(2)
     for (const [, opts] of fetchMock.mock.calls) {
       expect((opts as RequestInit).headers).toMatchObject({ Accept: 'application/json' })

@@ -207,28 +207,26 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
     expect(getByTestId('join-table-dialog')).not.toBeNull()
   })
 
-  it('deshabilita la contraseña en beta.xmage.today (U4-2)', () => {
+  it('mantiene la contraseña operativa en beta.xmage.today (mesas privadas del servidor público)', async () => {
     setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
     const onJoin = vi.fn().mockResolvedValue(undefined)
 
-    const { getByPlaceholderText, getByRole, getByText } = render(
-      <JoinTableDialog table={MOCK_PASSWORD_TABLE} onClose={() => {}} onJoin={onJoin} />
-    )
-    const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…') as HTMLInputElement
-    expect(passwordInput.disabled).toBe(true)
-    expect(getByText('En el servidor público (beta) no se puede entrar a mesas con contraseña.')).not.toBeNull()
-    expect(getByRole('button', { name: /Unirse con/i }).hasAttribute('disabled')).toBe(true)
-  })
-
-  it('permite la contraseña fuera de beta (U4-2)', () => {
-    setState({ conn: { serverHost: 'localhost' } } as never)
-    const onJoin = vi.fn().mockResolvedValue(undefined)
-
-    const { getByPlaceholderText, queryByText } = render(
+    const { getByPlaceholderText, getByRole, queryByText } = render(
       <JoinTableDialog table={MOCK_PASSWORD_TABLE} onClose={() => {}} onJoin={onJoin} />
     )
     const passwordInput = getByPlaceholderText('Introduce la contraseña para entrar…') as HTMLInputElement
     expect(passwordInput.disabled).toBe(false)
     expect(queryByText('En el servidor público (beta) no se puede entrar a mesas con contraseña.')).toBeNull()
+
+    fireEvent.change(passwordInput, { target: { value: 'secret123' } })
+    fireEvent.click(getByRole('button', { name: /Unirse con/i }))
+
+    await waitFor(() => {
+      expect(onJoin).toHaveBeenCalledWith(
+        MOCK_PASSWORD_TABLE,
+        expect.objectContaining({ name: expect.any(String) }),
+        'secret123'
+      )
+    })
   })
 })

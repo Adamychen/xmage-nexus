@@ -55,6 +55,26 @@ export async function perfEntries(page: Page): Promise<PerfEntry[]> {
   })
 }
 
+/**
+ * Espera a que no llegue ningún evento del servidor durante `quietMs`: con eco
+ * diferido, los eventos de acciones previas (helper/escenario) siguen en vuelo
+ * y el primero que aterriza tras el clic se confundiría con su eco.
+ */
+export async function waitEventsQuiet(page: Page, quietMs = LATENCY_ECHO_MS + 300, timeoutMs = 15_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const idle = await page.evaluate(() => {
+      const perf = (globalThis as unknown as { __magePerf?: { entries: () => PerfEntry[] } }).__magePerf
+      const events = (perf?.entries() ?? []).filter((e) => e.kind === 'event')
+      const last = events.length ? events[events.length - 1].mono : 0
+      return performance.now() - last
+    })
+    if (idle >= quietMs) return
+    if (Date.now() > deadline) throw new Error(`eventos del servidor sin pausa de ${quietMs}ms`)
+    await page.waitForTimeout(Math.min(200, quietMs - idle + 20))
+  }
+}
+
 export interface AckProbeExpect {
   className?: string
   disabled?: boolean

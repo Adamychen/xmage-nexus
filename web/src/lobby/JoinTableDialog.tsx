@@ -55,8 +55,6 @@ export default function JoinTableDialog({
 }: JoinTableDialogProps) {
   const { t, tError } = useTranslation()
   const currentEquippedDeck = useStore((s) => s.myDeck)
-  const serverHost = useStore((s) => s.conn?.serverHost)
-  const passwordDisabledOnBeta = serverHost === 'beta.xmage.today'
   const [allDecks, setAllDecks] = useState<Deck[]>(() => getAllAvailableDecks())
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(() => currentEquippedDeck ?? allDecks[0] ?? null)
   const selectedDeckRef = useRef(selectedDeck)
@@ -195,14 +193,10 @@ export default function JoinTableDialog({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('lobby','join_password_enter_placeholder')}
                   required
-                  disabled={passwordDisabledOnBeta}
                   className="join-password-input"
-                  autoFocus={!passwordDisabledOnBeta}
+                  autoFocus
                 />
               </label>
-              {passwordDisabledOnBeta && (
-                <p className="join-password-beta-note">{t('lobby','join_password_disabled_beta')}</p>
-              )}
             </div>
           )}
 
