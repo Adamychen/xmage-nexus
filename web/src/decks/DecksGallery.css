@@ -50,35 +50,6 @@
   color: var(--fg-1);
   text-shadow: 0 2px 12px var(--shade-3);
 }
-.gallery-view-tabs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--shade-1);
-  padding: 3px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--veil-2);
-}
-.gallery-view-tab {
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  font-weight: 700;
-  font-size: var(--fs-xs);
-  padding: 5px 12px;
-  border-radius: var(--r-pill);
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-.gallery-view-tab:hover {
-  color: var(--fg-hi);
-}
-.gallery-view-tab.active {
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  color: var(--fg-hi);
-  font-weight: 800;
-  box-shadow: 0 2px 8px rgb(var(--brand-rgb) / 0.35);
-}
 .decks-filters {
   display: flex;
   align-items: center;

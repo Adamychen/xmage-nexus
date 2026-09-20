@@ -41,38 +41,9 @@
 
 /* Tabs */
 .leaderboard-tabs {
-  display: flex;
   background: rgb(var(--ink-rgb) / 0.8);
   border-bottom: 1px solid var(--veil-2);
   padding: 8px 16px;
-  gap: 6px;
-}
-
-.leaderboard-tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--r-base);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.leaderboard-tab-btn:hover {
-  color: var(--fg-hi);
-  background: var(--veil-2);
-}
-
-.leaderboard-tab-btn.active {
-  background: rgb(var(--brand-rgb) / 0.25);
-  border-color: rgb(var(--brand-rgb) / 0.5);
-  color: var(--fg-hi);
-  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.3);
 }
 
 /* Body */

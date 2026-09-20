@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useEffect, useRef, useState } from 'react'
 import type { UsersView } from '../net/types'
 import ChatBox from './ChatBox'
@@ -171,29 +172,21 @@ export default function FloatingChat({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <div className="floating-chat-tabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'chat'}
-            className={`floating-tab ${tab === 'chat' ? 'active' : ''}`}
-            onClick={() => setTab('chat')}
-          >
-            <Icon name="chat" size={13} /> {t('lobby', 'global_chat')}
-            {unreadChat > 0 && (
-              <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'users'}
-            className={`floating-tab ${tab === 'users' ? 'active' : ''}`}
-            onClick={() => setTab('users')}
-          >
-            <Icon name="users" size={13} /> {users.length}
-          </button>
-        </div>
+        <Tabs
+          size="sm"
+          className="floating-chat-tabs"
+          value={tab}
+          onChange={setTab}
+          items={[
+            {
+              id: 'chat',
+              icon: 'chat',
+              label: t('lobby', 'global_chat'),
+              badge: unreadChat > 0 && <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>,
+            },
+            { id: 'users', icon: 'users', label: users.length },
+          ]}
+        />
         <div className="floating-chat-actions">
           <button
             type="button"

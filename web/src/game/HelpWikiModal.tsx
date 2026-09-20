@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import { keywordDisplayName, keywordRuleRef, keywordSummary } from '../data/keywordI18n'
@@ -96,29 +97,16 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
       )}
       onBackdropClick={onClose}
     >
-        <nav className="wiki-nav-tabs">
-          <button
-            type="button"
-            className={`wiki-tab-btn ${activeTab === 'glossary' ? 'active' : ''}`}
-            onClick={() => setActiveTab('glossary')}
-          >
-            <Icon name="bookOpen" size={12} /> {t('wiki', 'tab_keywords')} ({MTG_KEYWORDS.length})
-          </button>
-          <button
-            type="button"
-            className={`wiki-tab-btn ${activeTab === 'phases' ? 'active' : ''}`}
-            onClick={() => setActiveTab('phases')}
-          >
-            <Icon name="clock" size={13} /> {t('wiki', 'tab_phases')}
-          </button>
-          <button
-            type="button"
-            className={`wiki-tab-btn ${activeTab === 'shortcuts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('shortcuts')}
-          >
-            <Icon name="keyboard" size={12} /> {t('wiki', 'tab_shortcuts')}
-          </button>
-        </nav>
+        <Tabs
+          className="wiki-nav-tabs"
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { id: 'glossary', icon: 'bookOpen', label: `${t('wiki', 'tab_keywords')} (${MTG_KEYWORDS.length})` },
+            { id: 'phases', icon: 'clock', label: t('wiki', 'tab_phases') },
+            { id: 'shortcuts', icon: 'keyboard', label: t('wiki', 'tab_shortcuts') },
+          ]}
+        />
 
         <div className="wiki-content">
           {activeTab === 'glossary' && (

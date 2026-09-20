@@ -32,38 +32,6 @@
   flex-shrink: 0;
 }
 
-.floating-chat-tabs {
-  display: flex;
-  gap: 4px;
-  min-width: 0;
-}
-
-.floating-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: var(--r-base);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.floating-tab:hover {
-  background: var(--veil-2);
-  color: var(--fg-1);
-}
-
-.floating-tab.active {
-  background: rgb(var(--brand-rgb) / 0.2);
-  border-color: rgb(var(--brand-rgb) / 0.45);
-  color: var(--fg-hi);
-}
-
 .floating-chat-actions {
   display: flex;
   align-items: center;

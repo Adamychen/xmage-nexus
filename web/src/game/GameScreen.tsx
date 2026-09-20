@@ -1,10 +1,10 @@
+import Tabs from '../ui/Tabs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameBoard from '../board/GameBoard'
 import PodBoard from '../board/PodBoard'
 import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import TurnOrderRing from '../board/TurnOrderRing'
-import Icon from '../ui/Icon'
 import * as cmds from '../net/commands'
 import { maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
@@ -314,56 +314,21 @@ export default function GameScreen() {
           <FeedbackOverlay />
         </div>
         <div className="game-right-panel">
-          <div className="right-panel-tabs">
-            <button
-              type="button"
-              className={`right-tab-btn ${rightTab === 'stack' ? 'active' : ''}`}
-              onClick={() => setRightTab('stack')}
-            >
-              {t('game', 'tab_stack')}
-              {stackCount > 0 && <span className="right-tab-badge active-stack">{stackCount}</span>}
-            </button>
-            <button
-              type="button"
-              className={`right-tab-btn ${rightTab === 'tracker' ? 'active' : ''}`}
-              onClick={() => setRightTab('tracker')}
-              title={t('game', 'tab_tracker')}
-            >
-              <Icon name="layers" size={13} /> {t('game', 'tab_tracker')}
-            </button>
-            <button
-              type="button"
-              className={`right-tab-btn ${rightTab === 'log' ? 'active' : ''}`}
-              onClick={() => setRightTab('log')}
-            >
-              {t('game', 'tab_log')}
-            </button>
-            {hasCommanders && (
-              <button
-                type="button"
-                className={`right-tab-btn ${rightTab === 'commander' ? 'active' : ''}`}
-                onClick={() => setRightTab('commander')}
-                title={t('game', 'commander_damage')}
-              >
-                <Icon name="crown" size={13} /> {t('game', 'tab_commander')}
-              </button>
-            )}
-            <button
-              type="button"
-              className={`right-tab-btn ${rightTab === 'mechanics' ? 'active' : ''}`}
-              onClick={() => setRightTab('mechanics')}
-            >
-              {t('game', 'tab_mechanics')}
-              {hasActiveMechanics && <span className="right-tab-badge active-mechanics">★</span>}
-            </button>
-            <button
-              type="button"
-              className={`right-tab-btn ${rightTab === 'chat' ? 'active' : ''}`}
-              onClick={() => setRightTab('chat')}
-            >
-              {t('game', 'tab_chat')}
-            </button>
-          </div>
+          <Tabs
+            variant="underline"
+            size="sm"
+            className="right-panel-tabs"
+            value={rightTab}
+            onChange={setRightTab}
+            items={[
+              { id: 'stack', className: 'right-tab-btn', label: t('game', 'tab_stack'), badge: stackCount > 0 && <span className="right-tab-badge active-stack">{stackCount}</span> },
+              { id: 'tracker', className: 'right-tab-btn', icon: 'layers', label: t('game', 'tab_tracker'), title: t('game', 'tab_tracker') },
+              { id: 'log', className: 'right-tab-btn', label: t('game', 'tab_log') },
+              { id: 'commander', className: 'right-tab-btn', icon: 'crown', label: t('game', 'tab_commander'), title: t('game', 'commander_damage'), hidden: !hasCommanders },
+              { id: 'mechanics', className: 'right-tab-btn', label: t('game', 'tab_mechanics'), badge: hasActiveMechanics && <span className="right-tab-badge active-mechanics">★</span> },
+              { id: 'chat', className: 'right-tab-btn', label: t('game', 'tab_chat') },
+            ]}
+          />
 
           <div className="right-panel-content">
             {rightTab === 'stack' ? (

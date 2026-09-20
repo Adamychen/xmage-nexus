@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { fetchCardJson } from '../cards/scryfallCards'
@@ -362,22 +363,17 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           <div className="decks-gallery-header-left">
             <h1 className="decks-title">{t('decks', 'my_decks').toUpperCase()}</h1>
 
-            <div className="gallery-view-tabs">
-              <button
-                type="button"
-                className={`gallery-view-tab ${mainView === 'my-decks' ? 'active' : ''}`}
-                onClick={() => setMainView('my-decks')}
-              >
-                <Icon name="package" size={13} /> {t('decks', 'my_decks')} ({customCount})
-              </button>
-              <button
-                type="button"
-                className={`gallery-view-tab ${mainView === 'browser' ? 'active' : ''}`}
-                onClick={() => setMainView('browser')}
-              >
-                <Icon name="globe" size={13} /> {t('decks', 'popular_meta')}
-              </button>
-            </div>
+            <Tabs
+              variant="segmented"
+              size="sm"
+              className="gallery-view-tabs"
+              value={mainView}
+              onChange={setMainView}
+              items={[
+                { id: 'my-decks', icon: 'package', label: `${t('decks', 'my_decks')} (${customCount})` },
+                { id: 'browser', icon: 'globe', label: t('decks', 'popular_meta') },
+              ]}
+            />
           </div>
 
           <div className="decks-gallery-header-right">

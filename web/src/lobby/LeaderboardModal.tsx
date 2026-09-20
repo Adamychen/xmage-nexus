@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
 import type { UsersView } from '../net/types'
 import { getRankInfo, getTierName, getRankLabel, RANK_TIERS_CONFIG } from './ranking'
@@ -154,33 +155,22 @@ export default function LeaderboardModal({
       onBackdropClick={onClose}
     >
         {/* Modal Tabs */}
-        <nav className="leaderboard-tabs">
-          <button
-            type="button"
-            className={`leaderboard-tab-btn ${activeTab === 'room' ? 'active' : ''}`}
-            onClick={() => setActiveTab('room')}
-          >
-            <span><Icon name="trophy" size={13} /> {t('lobby', 'leaderboard_top_room')} ({users.length})</span>
-          </button>
-          <button
-            type="button"
-            className={`leaderboard-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
-            <span>
-              {isMyProfile
-                ? (<><Icon name="user" size={12} /> {t('lobby', 'leaderboard_my_profile')}</>)
-                : (<><Icon name="user" size={12} /> {t('lobby', 'leaderboard_profile_of')}: {targetUser?.userName ?? targetUsername}</>)}
-            </span>
-          </button>
-          <button
-            type="button"
-            className={`leaderboard-tab-btn ${activeTab === 'tiers' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tiers')}
-          >
-            <span><Icon name="bookOpen" size={12} /> {t('lobby', 'leaderboard_rank_guide')}</span>
-          </button>
-        </nav>
+        <Tabs
+          className="leaderboard-tabs"
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { id: 'room', icon: 'trophy', label: `${t('lobby', 'leaderboard_top_room')} (${users.length})` },
+            {
+              id: 'profile',
+              icon: 'user',
+              label: isMyProfile
+                ? t('lobby', 'leaderboard_my_profile')
+                : `${t('lobby', 'leaderboard_profile_of')}: ${targetUser?.userName ?? targetUsername}`,
+            },
+            { id: 'tiers', icon: 'bookOpen', label: t('lobby', 'leaderboard_rank_guide') },
+          ]}
+        />
 
         {/* Tab Content */}
         <div className="leaderboard-body">

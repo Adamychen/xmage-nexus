@@ -21,34 +21,9 @@
 
 /* Nav Tabs */
 .wiki-nav-tabs {
-  display: flex;
   gap: 8px;
   border-bottom: 1px solid var(--veil-2);
   padding-bottom: 8px;
-}
-
-.wiki-tab-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-base);
-  color: var(--fg-2);
-  font-size: var(--fs-md);
-  font-weight: 600;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.wiki-tab-btn:hover {
-  color: var(--fg-1);
-  background: var(--veil-1);
-}
-
-.wiki-tab-btn.active {
-  background: rgb(var(--brand-rgb) / 0.18);
-  border-color: rgb(var(--purple-rgb) / 0.5);
-  color: var(--gold-300);
-  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.25);
 }
 
 /* Content Area */

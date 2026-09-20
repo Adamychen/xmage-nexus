@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
 import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardImages'
 import type { CardView } from '../net/types'
@@ -86,22 +87,16 @@ export default function CardPreview({ card, onClose }: Props) {
 
       {/* Multi-face switch tabs */}
       {hasSecondFace && (
-        <div className="card-preview-face-tabs">
-          <button
-            type="button"
-            className={`face-tab-btn ${selectedFaceIndex === 0 ? 'active' : ''}`}
-            onClick={() => setSelectedFaceIndex(0)}
-          >
-            {t('game', 'card_preview_face1', { name: card.name })}
-          </button>
-          <button
-            type="button"
-            className={`face-tab-btn ${selectedFaceIndex === 1 ? 'active' : ''}`}
-            onClick={() => setSelectedFaceIndex(1)}
-          >
-            <Icon name="refresh" size={12} /> {card.secondCardFace?.name || t('game', 'card_preview_face2')}
-          </button>
-        </div>
+        <Tabs
+          size="sm"
+          className="card-preview-face-tabs"
+          value={selectedFaceIndex === 0 ? 'front' : 'back'}
+          onChange={(id) => setSelectedFaceIndex(id === 'front' ? 0 : 1)}
+          items={[
+            { id: 'front', className: 'face-tab-btn', label: t('game', 'card_preview_face1', { name: card.name }) },
+            { id: 'back', className: 'face-tab-btn', icon: 'refresh', label: card.secondCardFace?.name || t('game', 'card_preview_face2') },
+          ]}
+        />
       )}
 
       <div className="card-preview-card">

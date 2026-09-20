@@ -269,7 +269,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
 
       // Switch to Deck Browser tab
-      await page.getByRole('button', { name: /Meta & Decks Populares/i }).click()
+      await page.getByRole('tab', { name: /Meta & Decks Populares/i }).click()
       await expect(page.locator('.deck-browser-container')).toBeVisible({ timeout: 5000 })
       await expect(page.locator('.browser-deck-card').first()).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('Izzet Murktide')).toBeVisible()

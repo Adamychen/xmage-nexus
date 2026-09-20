@@ -110,32 +110,10 @@
 .right-tab-btn {
   padding: 7px 6px;
   font-size: var(--fs-3xs);
-  font-weight: 700;
   font-family: var(--font-display);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--fg-3);
-  background: transparent;
-  border: 1px solid var(--veil-1);
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 5px;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.right-tab-btn:hover {
-  color: var(--fg-2);
-  background: var(--veil-1);
-}
-
-.right-tab-btn.active {
-  color: var(--fg-hi);
-  border-bottom-color: var(--accent);
-  background: rgb(var(--brand-rgb) / 0.12);
 }
 
 .right-tab-badge {

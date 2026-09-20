@@ -76,9 +76,6 @@
 
 /* Nav bar / category pills */
 .mechanics-nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   padding: 6px 8px;
   background: rgb(var(--ink-rgb) / 0.9);
   border-bottom: 1px solid var(--ink-3);
@@ -86,36 +83,14 @@
   scrollbar-width: none;
 }
 
+.mechanic-tab-btn {
+  padding: 3px 8px;
+  font-size: var(--fs-3xs);
+  border-radius: var(--r-mid);
+}
+
 .mechanics-nav-bar::-webkit-scrollbar {
   display: none;
-}
-
-.mechanic-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: var(--r-mid);
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  background: var(--veil-1);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.mechanic-tab-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.mechanic-tab-btn.active {
-  background: rgb(var(--gold-rgb) / 0.2);
-  border-color: var(--gold-300);
-  color: var(--gold-300);
-  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.3);
 }
 
 .mechanics-content-scroll {

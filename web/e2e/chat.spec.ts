@@ -125,7 +125,7 @@ fakeOnly()
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 
     // el chat de partida es una pestaña del panel derecho
-    await page.getByRole('button', { name: 'Chat', exact: true }).click()
+    await page.getByRole('tab', { name: 'Chat', exact: true }).click()
 
     // find the game chat input
     const chatInput = page.locator('.game-chat-input input')
@@ -176,7 +176,7 @@ fakeOnly()
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 
     // las reacciones rápidas viven dentro del chat de partida (pestaña del panel derecho)
-    await page.getByRole('button', { name: 'Chat', exact: true }).click()
+    await page.getByRole('tab', { name: 'Chat', exact: true }).click()
 
     // click a quick reaction button
     const thumbsUp = page.locator('.quick-reaction-btn', { hasText: '👍' })

@@ -31,7 +31,7 @@ describe('HelpWikiModal', () => {
     render(<HelpWikiModal onClose={onClose} />)
 
     // Switch to Phases tab
-    const phasesTabBtn = screen.getByRole('button', { name: /Fases y Prioridad/i })
+    const phasesTabBtn = screen.getByRole('tab', { name: /Fases y Prioridad/i })
     fireEvent.click(phasesTabBtn)
 
     expect(screen.getAllByText(/Enderezar/i).length).toBeGreaterThan(0)
@@ -39,7 +39,7 @@ describe('HelpWikiModal', () => {
     expect(screen.getAllByText(/Pila — Último/i).length).toBeGreaterThan(0)
 
     // Switch to Shortcuts tab
-    const shortcutsTabBtn = screen.getByRole('button', { name: /Atajos y Controles/i })
+    const shortcutsTabBtn = screen.getByRole('tab', { name: /Atajos y Controles/i })
     fireEvent.click(shortcutsTabBtn)
 
     expect(screen.getAllByText('Espacio').length).toBeGreaterThan(0)

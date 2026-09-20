@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
 import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import Icon from '../ui/Icon'
@@ -102,24 +103,16 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
       )}
       onBackdropClick={onClose}
     >
-        <div className="about-tabs">
-          <button
-            type="button"
-            className={activeTab === 'about' ? 'is-active' : ''}
-            data-testid="about-tab-about"
-            onClick={() => setActiveTab('about')}
-          >
-            {t('system', 'about_tab')}
-          </button>
-          <button
-            type="button"
-            className={activeTab === 'news' ? 'is-active' : ''}
-            data-testid="about-tab-news"
-            onClick={() => setActiveTab('news')}
-          >
-            {t('system', 'news_tab')}
-          </button>
-        </div>
+        <Tabs
+          variant="underline"
+          className="about-tabs"
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { id: 'about', label: t('system', 'about_tab'), testId: 'about-tab-about' },
+            { id: 'news', label: t('system', 'news_tab'), testId: 'about-tab-news' },
+          ]}
+        />
 
         {activeTab === 'about' ? (
           <div className="about-pane">

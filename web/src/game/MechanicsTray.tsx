@@ -1,3 +1,4 @@
+import Tabs from '../ui/Tabs'
 import { useEffect, useMemo, useState } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
@@ -213,19 +214,13 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
 
   return (
     <div className="mechanics-tray">
-      <div className="mechanics-nav-bar">
-        {availableTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`mechanic-tab-btn ${effectiveTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="tab-icon"><Icon name={tab.icon} size={13} /></span>
-            <span className="tab-label">{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <Tabs
+        size="sm"
+        className="mechanics-nav-bar"
+        value={effectiveTab}
+        onChange={setActiveTab}
+        items={availableTabs.map((tab) => ({ id: tab.id, icon: tab.icon, label: tab.label, className: 'mechanic-tab-btn' }))}
+      />
 
       <div className="mechanics-content-scroll">
         {effectiveTab === 'ring' && myRing && (

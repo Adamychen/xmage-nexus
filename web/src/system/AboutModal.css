@@ -1,23 +1,5 @@
 .about-tabs {
-  display: flex;
-  gap: 4px;
   padding: 4px 4px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.about-tabs button {
-  background: none;
-  border: none;
-  color: inherit;
-  padding: 8px 12px;
-  cursor: pointer;
-  opacity: 0.7;
-  font-size: var(--fs-md);
-}
-
-.about-tabs button.is-active {
-  opacity: 1;
-  border-bottom: 2px solid currentColor;
 }
 
 .about-close-btn {

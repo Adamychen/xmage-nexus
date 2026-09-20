@@ -47,30 +47,14 @@
 }
 
 /* Face tabs for MDFCs / Transform / Adventure */
-.card-preview-face-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.face-tab-btn {
+.card-preview-face-tabs .face-tab-btn {
   flex: 1;
   padding: 4px 6px;
-  background: var(--ink-2);
-  border: 1px solid var(--ink-4);
-  border-radius: var(--r-xs);
-  color: var(--fg-3);
   font-size: var(--fs-2xs);
-  cursor: pointer;
-  white-space: nowrap;
+  border-radius: var(--r-xs);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.face-tab-btn.active {
-  background: var(--ink-4);
-  border-color: var(--brand);
-  color: var(--fg-hi);
-  font-weight: 600;
 }
 
 .card-preview-card {

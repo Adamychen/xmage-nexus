@@ -56,7 +56,7 @@ test.describe('fidelidad de render (P2)', () => {
         await page.waitForTimeout(2500)
         const runs = await page.evaluate(() => window.__mageFidelityRuns ?? 0)
         expect(runs, 'el checker debe haber corrido').toBeGreaterThan(0)
-        await page.getByRole('button', { name: 'Log' }).click()
+        await page.getByRole('tab', { name: 'Log' }).click()
         await expect(page.getByText('fidelidad')).toHaveCount(0)
       })
     })
