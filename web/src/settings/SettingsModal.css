@@ -1,17 +1,4 @@
-.settings-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-base);
-  cursor: pointer;
-  padding: 4px 8px;
-}
 
-.settings-close:hover { color: var(--fg-hi); }
 
 .settings-body {
   display: flex;

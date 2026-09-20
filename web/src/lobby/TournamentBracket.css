@@ -105,24 +105,6 @@
   border-radius: var(--r-sm);
 }
 
-.tournament-close-btn {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-sm);
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-  font-size: var(--fs-md);
-}
-.tournament-close-btn:hover {
-  background: rgb(var(--err-rgb) / 0.2);
-  border-color: rgb(var(--err-rgb) / 0.4);
-  color: var(--fg-hi);
-}
-
 .tournament-running-info {
   font-size: var(--fs-sm);
   color: var(--fg-2);

@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
@@ -204,14 +205,7 @@ export default function TournamentPanel() {
             >
               {quitting ? t('game', 'tournament_leaving') : t('game', 'tournament_quit_short')}
             </button>
-            <button
-              type="button"
-              className="tournament-panel-close"
-              onClick={() => setExpanded(false)}
-              aria-label={t('game', 'tournament_close')}
-            >
-              <Icon name="x" size={13} />
-            </button>
+            <CloseButton variant="solid" size="md" label={t('game', 'tournament_close')} className="tournament-panel-close" onClick={() => setExpanded(false)} />
           </div>
         </header>
         {isConstructStalled(draftOverAt, hasConstruct, now) && (

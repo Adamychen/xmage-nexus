@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import Tabs from '../ui/Tabs'
 import { useState, useMemo, useEffect } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
@@ -91,9 +92,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
       title={t('wiki', 'title')}
       message={t('wiki', 'subtitle')}
       topRight={(
-        <button type="button" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-          <Icon name="x" size={13} />
-        </button>
+        <CloseButton variant="solid" size="md" className="wiki-close-btn" onClick={onClose} title={`${t('common', 'close')} (Esc)`} />
       )}
       onBackdropClick={onClose}
     >

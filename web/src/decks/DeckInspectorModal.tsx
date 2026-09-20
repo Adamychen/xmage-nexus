@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState, useEffect } from 'react'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
@@ -85,9 +86,7 @@ export function DeckInspectorModal({
       kickerLabel={deck.format}
       title={deck.name}
       topRight={(
-        <button type="button" className="inspector-close-btn" onClick={onClose}>
-          ×
-        </button>
+        <CloseButton variant="solid" size="lg" className="inspector-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

@@ -88,19 +88,6 @@
 .tournament-panel-quit:hover { background: rgb(var(--err-rgb) / 0.85); color: var(--fg-hi); }
 .tournament-panel-quit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.tournament-panel-close {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-sm);
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-}
-.tournament-panel-close:hover { background: rgb(var(--err-rgb) / 0.2); color: var(--fg-hi); }
-
 .tournament-panel-scroll {
   overflow-y: auto;
   padding: 16px;

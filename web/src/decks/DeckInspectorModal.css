@@ -35,26 +35,6 @@
   font-weight: 700;
 }
 
-.inspector-close-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-2);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: var(--fs-lg);
-  transition: all 120ms ease;
-}
-
-.inspector-close-btn:hover {
-  background: var(--veil-4);
-  color: var(--fg-hi);
-}
-
 .deck-inspector-body {
   display: grid;
   grid-template-columns: 1fr 300px;

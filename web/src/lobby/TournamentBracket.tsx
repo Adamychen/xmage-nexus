@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { TournamentView, RoundView, TournamentGameView } from '../net/types'
 import * as cmds from '../net/commands'
@@ -92,7 +93,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
             <span className="tournament-construction" data-testid="tournament-construction"><Icon name="hourglass" size={12} /> {constructionLabel}</span>
           )}
           {onClose && (
-            <button type="button" className="tournament-close-btn" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={13} /></button>
+            <CloseButton variant="solid" size="md" className="tournament-close-btn" onClick={onClose} />
           )}
         </div>
       </div>

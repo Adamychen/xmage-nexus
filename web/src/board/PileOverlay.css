@@ -47,27 +47,8 @@
   font-weight: 700;
   color: var(--fg-2);
   font-family: var(--font-display);
-}
-
-.pile-overlay-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: var(--r-base);
-  background: var(--veil-2);
-  color: var(--fg-2);
-  font-size: var(--fs-xl);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}.pile-overlay-close {
   flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-.pile-overlay-close:hover {
-  background: var(--veil-4);
-  color: var(--fg-2);
 }
 
 .pile-card-wrapper {
@@ -183,9 +164,7 @@
   outline-color: var(--gold-300);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pile-overlay-close,
-  .pile-card.playable {
+@media (prefers-reduced-motion: reduce) {.pile-card.playable {
     transition: none;
   }
 }

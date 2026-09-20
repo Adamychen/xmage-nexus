@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
 import AvatarImage from './AvatarImage'
@@ -38,9 +39,7 @@ export default function AvatarPickerModal({
       title={t('lobby', 'avatar_pick_title')}
       message={t('lobby', 'avatar_desc')}
       topRight={(
-        <button type="button" className="avatar-picker-close-btn" onClick={onClose}>
-          <Icon name="x" size={13} />
-        </button>
+        <CloseButton variant="solid" size="lg" className="avatar-picker-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

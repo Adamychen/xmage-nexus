@@ -11,26 +11,6 @@
   box-sizing: border-box;
 }
 
-.create-dialog-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-lg);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  transition: all 0.15s ease;
-}
-
-.create-dialog-close-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
 /* Wizard progress */
 .wizard-progress-track {
   height: 4px;

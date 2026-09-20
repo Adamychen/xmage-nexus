@@ -87,30 +87,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.dlg-close {
+}.dlg-close {
   flex: none;
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  background: var(--veil-2);
-  color: var(--fg-1);
-  font-size: var(--fs-sm);
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.dlg-close:hover {
-  background: var(--veil-4);
-  border-color: var(--veil-6);
-  color: var(--fg-hi);
 }
 
 .dlg-title {
@@ -166,9 +144,5 @@
 @media (prefers-reduced-motion: reduce) {
   .dlg-panel {
     animation: none;
-  }
-
-  .dlg-close {
-    transition: none;
   }
 }

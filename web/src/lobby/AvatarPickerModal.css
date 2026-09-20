@@ -1,23 +1,4 @@
 /* Avatar Picker Dialog */
-.avatar-picker-close-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-2);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-base);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-md);
-}
-
-.avatar-picker-close-btn:hover {
-  background: rgb(var(--err-rgb) / 0.25);
-  border-color: var(--err);
-  color: var(--fg-hi);
-}
 
 .avatar-picker-tabs {
   display: flex;

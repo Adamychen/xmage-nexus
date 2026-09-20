@@ -1,7 +1,7 @@
+import CloseButton from './CloseButton'
 import type { HTMLAttributes, MouseEvent, ReactNode } from 'react'
 import Modal from './Modal'
 import Icon, { type IconName } from './Icon'
-import { useTranslation } from '../i18n'
 import './DialogShell.css'
 
 export interface DialogShellProps {
@@ -53,19 +53,8 @@ export default function DialogShell({
   onBackdropClick,
   onClose,
 }: DialogShellProps) {
-  const { t } = useTranslation()
-
   const closeButton = onClose ? (
-    <button
-      type="button"
-      className="dlg-close"
-      onClick={onClose}
-      data-testid={testId ? `${testId}-close` : undefined}
-      title={t('common', 'close')}
-      aria-label={t('common', 'close')}
-    >
-      <Icon name="x" size={13} />
-    </button>
+    <CloseButton variant="solid" size="sm" className="dlg-close" onClick={onClose} data-testid={testId ? `${testId}-close` : undefined} />
   ) : null
 
   return (

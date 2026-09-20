@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
@@ -16,15 +17,7 @@ export default function DeckServerIssues({ issues, onRepair }: Props) {
   return (
     <div className="builder-server-issues" data-testid="builder-server-issues" role="status" aria-live="polite">
       <div className="bsi-title"><Icon name="alert" size={14} /> {t('decks', 'issues_banner_title')}</div>
-      <button
-        type="button"
-        className="bsi-close"
-        onClick={() => setDismissed(true)}
-        aria-label={t('common', 'close')}
-        title={t('common', 'close')}
-      >
-        <Icon name="x" size={13} />
-      </button>
+      <CloseButton variant="plain" size="sm" className="bsi-close" onClick={() => setDismissed(true)} />
       <ul>
         {issues.map((it, i) => (
           <li key={`${it.name}-${it.set}-${it.num}-${i}`}>

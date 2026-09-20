@@ -445,26 +445,10 @@
   border-radius: var(--r-base);
   font-size: var(--fs-sm);
   color: var(--err);
-}
-.builder-server-issues .bsi-close {
+}.builder-server-issues .bsi-close {
   position: absolute;
   top: 6px;
   right: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border-radius: var(--r-sm);
-  border: 1px solid transparent;
-  background: var(--veil-2);
-  color: inherit;
-  cursor: pointer;
-}
-.builder-server-issues .bsi-close:hover {
-  background: var(--veil-4);
-  color: var(--fg-hi);
 }
 .builder-server-issues .bsi-title {
   font-weight: 700;

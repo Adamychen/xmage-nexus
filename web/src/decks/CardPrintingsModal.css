@@ -10,20 +10,6 @@
   animation: fadeIn 150ms ease;
 }
 
-.printings-close-btn {
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-
-.printings-close-btn:hover {
-  color: white;
-}
-
 .printings-body {
   padding: 20px 4px 4px;
   overflow-y: auto;

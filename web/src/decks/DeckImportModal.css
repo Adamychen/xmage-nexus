@@ -15,24 +15,6 @@
   box-shadow: 0 0 30px rgb(var(--gold-rgb) / 0.3);
 }
 
-.deck-import-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-
-.deck-import-close-btn:hover {
-  color: white;
-}
-
 .deck-import-body {
   padding: 20px 22px;
   display: flex;

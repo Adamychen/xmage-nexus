@@ -45,20 +45,6 @@
   background: rgb(var(--gold-rgb) / 0.1);
 }
 
-.sample-hand-close-btn {
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-
-.sample-hand-close-btn:hover {
-  color: white;
-}
-
 .goldfish-projection {
   padding: 10px 20px;
   background: rgb(var(--ink-2-rgb) / 0.9);

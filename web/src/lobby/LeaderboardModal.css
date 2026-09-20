@@ -18,27 +18,6 @@
   max-height: min(52vh, 480px);
 }
 
-.leaderboard-close-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-2);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-base);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-md);
-  transition: all 0.15s ease;
-}
-
-.leaderboard-close-btn:hover {
-  background: rgb(var(--err-rgb) / 0.25);
-  border-color: var(--err);
-  color: var(--fg-hi);
-}
-
 /* Tabs */
 .leaderboard-tabs {
   background: rgb(var(--ink-rgb) / 0.8);

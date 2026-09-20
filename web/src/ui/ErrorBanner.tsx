@@ -1,3 +1,4 @@
+import CloseButton from './CloseButton'
 import Icon from './Icon'
 import { useTranslation } from '../i18n'
 import './ErrorBanner.css'
@@ -10,7 +11,7 @@ interface ErrorBannerProps {
 }
 
 export default function ErrorBanner({ message, onClose, testId, className }: ErrorBannerProps) {
-  const { t, tError } = useTranslation()
+  const { tError } = useTranslation()
   if (!message) return null
   return (
     <div
@@ -23,15 +24,7 @@ export default function ErrorBanner({ message, onClose, testId, className }: Err
       </span>
       <span className="error-banner-msg">{tError(message)}</span>
       {onClose && (
-        <button
-          type="button"
-          className="error-banner-close"
-          onClick={onClose}
-          title={t('common', 'close')}
-          aria-label={t('common', 'close')}
-        >
-          <Icon name="x" size={13} />
-        </button>
+        <CloseButton variant="plain" size="sm" className="error-banner-close" onClick={onClose} />
       )}
     </div>
   )

@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useMemo, useState } from 'react'
 import { parseAnyDeck } from './parseDck'
 import { loadDeckFromOnlineSource } from './onlineDeckService'
@@ -108,9 +109,7 @@ export function ImportDeckDialog({
       title={t('decks', 'import_deck')}
       message={t('decks', 'import_formats_with_url')}
       topRight={(
-        <button type="button" className="deck-import-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          <Icon name="x" size={18} />
-        </button>
+        <CloseButton variant="plain" size="md" className="deck-import-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
       sectionProps={{

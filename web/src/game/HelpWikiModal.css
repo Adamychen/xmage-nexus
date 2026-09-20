@@ -1,23 +1,4 @@
-.wiki-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: var(--veil-1);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  font-size: var(--fs-md);
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: var(--r-base);
-  transition: background 0.15s, color 0.15s;
-}
 
-.wiki-close-btn:hover {
-  background: rgb(var(--err-rgb) / 0.2);
-  border-color: rgb(var(--err-rgb) / 0.4);
-  color: var(--err);
-}
 
 /* Nav Tabs */
 .wiki-nav-tabs {
@@ -339,12 +320,10 @@
   justify-content: flex-end;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .wiki-close-btn,
-  .wiki-tab-btn,
-  .wiki-search-input,
-  .wiki-pill,
-  .wiki-kw-card {
+@media (prefers-reduced-motion: reduce) {.wiki-tab-btn,
+.wiki-search-input,
+.wiki-pill,
+.wiki-kw-card {
     transition: none;
   }
 }

@@ -1,14 +1,4 @@
-.appearance-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: none;
-  border: none;
-  font-size: var(--fs-lg);
-  cursor: pointer;
-  padding: 4px 8px;
-}
+
 
 .appearance-section {
   margin-top: 16px;

@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
 import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardImages'
@@ -140,9 +141,7 @@ export default function CardPreview({ card, onClose }: Props) {
       </div>
 
       {onClose && (
-        <button className="card-preview-close" onClick={onClose} title={t('common', 'close')} aria-label={t('common', 'close')}>
-          <Icon name="x" size={14} />
-        </button>
+        <CloseButton variant="solid" size="sm" className="card-preview-close" onClick={onClose} />
       )}
     </div>
   )

@@ -149,13 +149,13 @@ test.describe('galería de estados (P3)', () => {
       await expect(page.locator('.gallery-stage')).toHaveScreenshot(name, {
         animations: 'disabled',
         caret: 'hide',
-        // Pese a la geometría entera, el rasterizado de los trazos
-        // discontinuos y marcadores SVG cambia de una sesión a otra (también en
-        // Chromium a 2560): medido 452–1008 px con jitter estable dentro de
-        // cada sesión. 1200 px sobre un stage de 840 000–3 300 000 (~0,05 %) lo
-        // absorbe; sigue fallando ante regresiones reales (una flecha medida
-        // antes de asentar el layout daba >2 500 px y un cambio de layout,
-        // decenas de miles).
+        // El rasterizado de los trazos discontinuos y marcadores SVG de las
+        // flechas cambia de una sesión a otra (medido 452–3 504 px en
+        // `board:arena-4` a 2560, con jitter estable dentro de cada sesión), así
+        // que la capa se enmascara: su geometría la cubren los e2e de combate.
+        // 1200 px restantes absorben el AA del resto del stage (~0,05 %) y
+        // siguen fallando ante regresiones reales de layout (decenas de miles).
+        mask: [page.locator('.combat-arrows-overlay')],
         maxDiffPixels: 1200,
       })
     }

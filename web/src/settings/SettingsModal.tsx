@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState } from 'react'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
@@ -7,7 +8,6 @@ import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
 import { PhaseStopGrid } from '../game/PhaseStopSelector'
 import { togglePhaseStop } from '../game/phaseStops'
 import Toggle from '../ui/Toggle'
-import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { LanguageSection, InterfaceSection, BoardSection, SoundSection } from './sections'
 import '../game/GameMenu.css'
@@ -132,7 +132,7 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
       kickerLabel={nav.find((item) => item.id === section)?.label ?? t('common', 'settings')}
       title={t('common', 'settings')}
       topRight={(
-        <button type="button" className="settings-close" onClick={onClose} data-testid="settings-close"><Icon name="x" size={14} /></button>
+        <CloseButton variant="plain" size="md" className="settings-close" onClick={onClose} data-testid="settings-close" />
       )}
       onBackdropClick={onClose}
     >

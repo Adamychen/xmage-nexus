@@ -1,10 +1,10 @@
+import CloseButton from '../ui/CloseButton'
 import { SLEEVES } from './sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
 import DialogShell from '../ui/DialogShell'
-import Icon from '../ui/Icon'
 import './AppearanceSettingsModal.css'
 import './SleevePickerModal.css'
 import Button from '../ui/Button'
@@ -46,7 +46,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
       title={t('lobby', 'appearance_title')}
       message={t('lobby', 'appearance_subtitle')}
       topRight={(
-        <button type="button" className="appearance-close" onClick={onClose} aria-label={t('common', 'close')}><Icon name="x" size={14} /></button>
+        <CloseButton variant="plain" size="md" className="appearance-close" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

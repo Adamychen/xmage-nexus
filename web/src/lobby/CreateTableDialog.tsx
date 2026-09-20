@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useCreateTableForm } from './CreateTable/useCreateTableForm'
 import GeneralTab from './CreateTable/GeneralTab'
 import TimingTab from './CreateTable/TimingTab'
@@ -31,9 +32,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       title={t('lobby.create_table_btn')}
       message={t('lobby', 'create_header_subtitle')}
       topRight={(
-        <button type="button" className="create-dialog-close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          <Icon name="x" size={14} />
-        </button>
+        <CloseButton variant="plain" size="md" className="create-dialog-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

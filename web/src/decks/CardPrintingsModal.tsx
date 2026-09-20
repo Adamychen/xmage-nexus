@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState, useEffect } from 'react'
 import { scryfallCardImage } from './scryfallSearch'
 import Icon from '../ui/Icon'
@@ -90,9 +91,7 @@ export function CardPrintingsModal({
       kickerLabel={cardName}
       title={t('dialogs', 'card_printings_title')}
       topRight={(
-        <button type="button" className="printings-close-btn" onClick={onClose}>
-          ×
-        </button>
+        <CloseButton variant="plain" size="md" className="printings-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

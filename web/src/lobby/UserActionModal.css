@@ -76,28 +76,8 @@
 .user-status-idle {
   color: var(--ok);
   font-weight: 600;
-}
-
-.user-action-close-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-2);
-  width: 30px;
-  height: 30px;
-  border-radius: var(--r-base);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-sm);
+}.user-action-close-btn {
   align-self: flex-start;
-  transition: all 0.15s ease;
-}
-
-.user-action-close-btn:hover {
-  background: rgb(var(--err-rgb) / 0.25);
-  border-color: var(--err);
-  color: var(--fg-hi);
 }
 
 /* Action Body */

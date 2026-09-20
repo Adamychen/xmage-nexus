@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState, useMemo, useEffect } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
@@ -187,9 +188,7 @@ export function SampleHandModal({
       kickerLabel={deckName}
       title={t('decks', 'sample_hand')}
       topRight={(
-        <button type="button" className="sample-hand-close-btn" onClick={onClose}>
-          ×
-        </button>
+        <CloseButton variant="plain" size="md" className="sample-hand-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

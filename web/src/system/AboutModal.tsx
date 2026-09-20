@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
 import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
@@ -91,15 +92,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
       title={activeTab === 'about' ? t('system', 'about_title') : t('system', 'news_tab')}
       message={activeTab === 'about' ? t('system', 'app_tagline') : undefined}
       topRight={(
-        <button
-          type="button"
-          className="about-close-btn"
-          aria-label={t('common', 'close')}
-          data-testid="about-close"
-          onClick={onClose}
-        >
-          <Icon name="x" size={14} />
-        </button>
+        <CloseButton variant="plain" size="md" className="about-close-btn" data-testid="about-close" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

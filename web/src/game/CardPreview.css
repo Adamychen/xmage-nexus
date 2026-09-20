@@ -167,28 +167,9 @@
   font-weight: 700;
   color: var(--gold-500);
   align-self: flex-end;
-}
-
-.card-preview-close {
+}.card-preview-close {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 50%;
-  background: var(--shade-2);
-  color: var(--fg-2);
-  font-size: var(--fs-lg);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
   z-index: 10;
-}
-
-.card-preview-close:hover {
-  background: var(--shade-3);
-  color: var(--fg-hi);
 }

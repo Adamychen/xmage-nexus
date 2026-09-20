@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
 import type { UsersView } from '../net/types'
@@ -148,9 +149,7 @@ export default function LeaderboardModal({
       title={t('lobby', 'nav_ranking')}
       message={t('lobby', 'leaderboard_subtitle')}
       topRight={(
-        <button type="button" className="leaderboard-close-btn" onClick={onClose}>
-          <Icon name="x" size={14} />
-        </button>
+        <CloseButton variant="solid" size="lg" className="leaderboard-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >

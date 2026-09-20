@@ -1,12 +1,6 @@
 .about-tabs {
   padding: 4px 4px 0;
-}
-
-.about-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+}.about-close-btn {
   margin-left: auto;
 }
 

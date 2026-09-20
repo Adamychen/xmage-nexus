@@ -29,20 +29,10 @@
     "radii": 1,
     "fontSizes": 0
   },
-  "decks/CardPrintingsModal.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
-  },
   "decks/DeckBox.css": {
     "colors": 0,
     "radii": 0,
     "fontSizes": 2
-  },
-  "decks/DeckImportModal.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
   },
   "decks/DeckListPanel.css": {
     "colors": 0,
@@ -57,7 +47,7 @@
   "decks/SampleHandModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 2
+    "fontSizes": 1
   },
   "game/CardGrid.css": {
     "colors": 0,

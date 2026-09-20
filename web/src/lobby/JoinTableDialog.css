@@ -22,26 +22,6 @@
   }
 }
 
-.close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-heading);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  transition: all 0.15s ease;
-}
-
-.close-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
 /* Meta Bar */
 .join-table-meta-bar {
   display: flex;

@@ -31,31 +31,6 @@
   align-self: center;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
-}
-
-.error-banner-close {
+}.error-banner-close {
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--r-base);
-  background: var(--veil-2);
-  color: var(--err);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.error-banner-close:hover {
-  background: var(--veil-4);
-  border-color: var(--veil-4);
-  color: var(--fg-hi);
-}
-
-.error-banner-close:focus-visible {
-  outline: 2px solid var(--err);
-  outline-offset: 1px;
 }

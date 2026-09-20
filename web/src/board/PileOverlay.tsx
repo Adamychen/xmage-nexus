@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useEffect, useCallback, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
@@ -70,9 +71,7 @@ export default function PileOverlay({
               </span>
             )}
           </div>
-          <button type="button" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`}>
-            <Icon name="x" size={17} />
-          </button>
+          <CloseButton variant="solid" size="lg" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`} />
         </div>
         <div className="pile-overlay-scroll">
           {entries.map(([id, card], index) => {

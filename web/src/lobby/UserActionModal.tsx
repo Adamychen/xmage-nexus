@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState } from 'react'
 import type { UsersView, TableView } from '../net/types'
 import { isUserIgnored, addIgnoredUser, removeIgnoredUser } from './ignoreList'
@@ -101,9 +102,7 @@ export default function UserActionModal({
             </div>
           </div>
 
-          <button type="button" className="user-action-close-btn" onClick={onClose}>
-            <Icon name="x" size={13} />
-          </button>
+          <CloseButton variant="solid" size="lg" className="user-action-close-btn" onClick={onClose} />
         </div>
 
         {/* Action Buttons Grid */}

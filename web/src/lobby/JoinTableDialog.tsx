@@ -1,3 +1,4 @@
+import CloseButton from '../ui/CloseButton'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import type { TableView } from '../net/types'
 import {
@@ -150,9 +151,7 @@ export default function JoinTableDialog({
       kickerLabel={title ? title.toUpperCase() : t('lobby', 'join_human_btn').toUpperCase()}
       title={table.tableName}
       topRight={(
-        <button type="button" className="close-btn" onClick={onClose} aria-label={t('common', 'close')}>
-          <Icon name="x" size={15} />
-        </button>
+        <CloseButton variant="plain" size="md" className="close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
     >
