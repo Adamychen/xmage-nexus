@@ -6,8 +6,8 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(1100px 560px at 50% -8%, var(--ink-3) 0.17), transparent 62%),
-    radial-gradient(900px 480px at 50% 118%, var(--ink-1) 0.09), transparent 60%),
+    radial-gradient(1100px 560px at 50% -8%, rgb(var(--brand-rgb) / 0.17), transparent 62%),
+    radial-gradient(900px 480px at 50% 118%, rgb(var(--gold-rgb) / 0.09), transparent 60%),
     var(--ink-0);
   overflow-x: hidden;
   overflow-y: auto;

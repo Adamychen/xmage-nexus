@@ -1233,7 +1233,7 @@ html:lang(zh) .tables-list {
 }
 
 .seat-badge.occupied.is-owner {
-  background: linear-gradient(90deg, var(--ink-3) 0.09), var(--line-1));
+  background: linear-gradient(90deg, rgb(var(--gold-rgb) / 0.09), var(--line-1));
   border-color: var(--gold-line);
 }
 
