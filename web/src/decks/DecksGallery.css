@@ -6,10 +6,10 @@
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background: radial-gradient(1200px 600px at 20% -10%, rgba(110,140,200,0.14) 0%, transparent 60%),
+  background: radial-gradient(1200px 600px at 20% -10%, var(--brand-soft) 0%, transparent 60%),
               radial-gradient(900px 500px at 95% 10%, rgb(var(--ok-rgb) / 0.10) 0%, transparent 60%),
               var(--ink-1);
-  color: var(--brand-fg);
+  color: var(--fg-1);
   border-radius: var(--r-mid);
   border: 1px solid var(--veil-2);
   position: relative;
@@ -47,7 +47,7 @@
   letter-spacing: 0.06em;
   font-size: 1.3rem;
   margin: 0;
-  color: var(--gold-300);
+  color: var(--fg-1);
   text-shadow: 0 2px 12px var(--shade-3);
 }
 .gallery-view-tabs {
@@ -225,7 +225,7 @@
 .decks-footer-btn.fav-active { color: var(--gold-300); border-color: rgb(var(--warn-rgb) / 0.5); background: rgb(var(--warn-rgb) / 0.12); }
 .decks-edit-btn {
   margin-left: auto;
-  background: linear-gradient(135deg, #2a5bd7 0%, #1e3fa8 100%);
+  background: var(--brand-strong);
   color: white;
   border: none;
   border-radius: var(--r-pill);

@@ -199,7 +199,7 @@ input::placeholder, textarea::placeholder { color: var(--fg-3); }
   left: 0;
   right: 0;
   z-index: 50;
-  background: #4a3a10;
+  background: var(--warn-surface);
   border-bottom: 1px solid var(--accent-2);
   color: var(--accent-2);
   text-align: center;
@@ -226,7 +226,7 @@ input::placeholder, textarea::placeholder { color: var(--fg-3); }
   transform: translateX(-50%);
   z-index: 40;
   font-size: var(--fs-3xs);
-  color: rgba(232, 234, 246, 0.45);
+  color: var(--fg-3);
   background: rgb(var(--ink-rgb) / 0.65);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-pill);
@@ -249,10 +249,10 @@ input::placeholder, textarea::placeholder { color: var(--fg-3); }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 170, 214, 0.26);
+  background: var(--line-3);
   border-radius: var(--r-xs);
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(148, 170, 214, 0.5); }
+::-webkit-scrollbar-thumb:hover { background: var(--line-3); }
 
 /* Tab fade-in animation (used by lobby body children) */
 @keyframes tabFadeIn {
@@ -293,19 +293,19 @@ input::placeholder, textarea::placeholder { color: var(--fg-3); }
 }
 
 .toast-success {
-  background: rgba(28, 107, 80, 0.92);
+  background: var(--ok-surface);
   border: 1px solid var(--ok);
   color: var(--ok);
 }
 
 .toast-error {
-  background: rgba(80, 20, 30, 0.92);
+  background: var(--err-surface);
   border: 1px solid var(--err);
   color: var(--err);
 }
 
 .toast-info {
-  background: rgba(14, 40, 80, 0.92);
+  background: var(--ink-3);
   border: 1px solid rgb(var(--brand-rgb) / 0.7);
   color: var(--fg-2);
 }

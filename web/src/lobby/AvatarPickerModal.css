@@ -15,7 +15,7 @@
 
 .avatar-picker-close-btn:hover {
   background: rgb(var(--err-rgb) / 0.25);
-  border-color: #ff4757;
+  border-color: var(--err);
   color: var(--fg-hi);
 }
 
@@ -51,7 +51,7 @@
 }
 
 .avatar-picker-item:hover {
-  background: rgba(35, 45, 90, 0.8);
+  background: var(--ink-4);
   border-color: var(--gold-300);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--shade-1);
@@ -73,7 +73,7 @@
   top: -3px;
   right: -3px;
   background: var(--ok);
-  color: #0b0f24;
+  color: var(--ink-0);
   font-size: var(--fs-2xs);
   font-weight: 900;
   width: 18px;

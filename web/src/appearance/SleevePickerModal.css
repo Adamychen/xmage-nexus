@@ -37,7 +37,7 @@
 }
 
 .sleeve-item.selected {
-  border-color: #ffb03a;
+  border-color: var(--warn);
   box-shadow: 0 0 12px rgb(var(--warn-rgb) / 0.45);
 }
 
@@ -76,8 +76,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ffb03a;
-  color: #10131f;
+  background: var(--warn);
+  color: var(--ink-0);
   font-size: var(--fs-2xs);
   font-weight: 800;
   display: flex;

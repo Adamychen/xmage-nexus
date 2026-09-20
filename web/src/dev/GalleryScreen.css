@@ -30,7 +30,7 @@
 
 .gallery-head strong {
   font-size: var(--fs-md);
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .gallery-head span {
@@ -63,7 +63,7 @@
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   background: transparent;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   font-size: var(--fs-xs);
   cursor: pointer;
 }
@@ -74,7 +74,7 @@
 
 .gallery-group button[data-gallery-active='1'] {
   background: var(--ink-4);
-  border-color: #3a4a8f;
+  border-color: var(--brand);
   color: var(--fg-hi);
 }
 

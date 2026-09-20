@@ -24,7 +24,7 @@
 
 .order-zone.bottom-zone {
   border-color: rgb(var(--err-rgb) / 0.4);
-  background: rgba(36, 16, 24, 0.6);
+  background: var(--ink-2);
 }
 
 .order-zone-header {
@@ -38,7 +38,7 @@
 .zone-name {
   font-size: var(--fs-md);
   font-weight: 700;
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .top-zone .zone-name {
@@ -78,12 +78,12 @@
   align-items: center;
   justify-content: center;
   font-size: var(--fs-xs);
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--fg-3);
   font-style: italic;
   padding: 14px 16px;
   border: 1.5px dashed var(--veil-4);
   border-radius: var(--r-base);
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--shade-0);
 }
 
 .order-card-card {
@@ -127,7 +127,7 @@
 .order-card-name {
   font-size: var(--fs-sm);
   font-weight: 700;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   text-align: center;
   max-width: 150px;
   white-space: nowrap;
@@ -154,7 +154,7 @@
   flex: 1;
   padding: 6px 0;
   font-size: var(--fs-sm);
-  background: rgba(40, 50, 90, 0.85);
+  background: var(--ink-4);
   border: 1px solid var(--veil-5);
   border-radius: var(--r-sm);
   color: var(--fg-hi);
@@ -163,7 +163,7 @@
 }
 
 .btn-arrow:hover:not(:disabled) {
-  background: rgba(80, 100, 180, 0.95);
+  background: var(--brand-strong);
   border-color: var(--purple);
 }
 
@@ -222,7 +222,7 @@
 .quick-actions button {
   padding: 6px 12px;
   font-size: var(--fs-xs);
-  background: rgba(30, 36, 70, 0.8);
+  background: var(--ink-4);
   border: 1px solid var(--veil-4);
   border-radius: var(--r-sm);
   color: var(--fg-2);
@@ -231,7 +231,7 @@
 }
 
 .quick-actions button:hover:not(:disabled) {
-  background: rgba(50, 60, 110, 0.9);
+  background: var(--ink-4);
   color: var(--fg-hi);
 }
 

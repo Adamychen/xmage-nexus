@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  color: var(--text, var(--brand-fg));
+  color: var(--text, var(--fg-1));
 }
 
 .tournament-bracket.compact {
@@ -157,7 +157,7 @@
   font-size: var(--fs-2xs);
   font-weight: 700;
   border-radius: var(--r-sm);
-  background: rgba(60,20,30,0.6);
+  background: var(--err-surface);
   border: 1px solid rgb(var(--err-rgb) / 0.35);
   color: var(--err);
   cursor: pointer;
@@ -218,7 +218,7 @@
   align-items: flex-start;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(196, 181, 253, 0.45) var(--veil-1);
+  scrollbar-color: rgb(var(--purple-rgb) / 0.45) var(--veil-1);
 }
 
 .bracket-columns::-webkit-scrollbar {
@@ -231,12 +231,12 @@
 }
 
 .bracket-columns::-webkit-scrollbar-thumb {
-  background: rgba(196, 181, 253, 0.45);
+  background: rgb(var(--purple-rgb) / 0.45);
   border-radius: var(--r-xs);
 }
 
 .bracket-columns::-webkit-scrollbar-thumb:hover {
-  background: rgba(196, 181, 253, 0.7);
+  background: rgb(var(--purple-rgb) / 0.7);
 }
 
 .bracket-fade-right {
@@ -333,7 +333,7 @@
 .bracket-game-players {
   font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   word-break: break-word;
   flex: 1;
 }
@@ -447,7 +447,7 @@ button.bracket-watch-btn:disabled {
 
 .standings-name {
   font-weight: 600;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   display: flex;
   align-items: center;
   gap: 6px;

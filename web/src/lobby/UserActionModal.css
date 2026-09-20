@@ -96,7 +96,7 @@
 
 .user-action-close-btn:hover {
   background: rgb(var(--err-rgb) / 0.25);
-  border-color: #ff4757;
+  border-color: var(--err);
   color: var(--fg-hi);
 }
 
@@ -123,7 +123,7 @@
 }
 
 .user-action-btn:hover {
-  background: rgba(35, 45, 90, 0.85);
+  background: var(--ink-4);
   border-color: rgb(var(--gold-rgb) / 0.4);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--shade-1);
@@ -151,7 +151,7 @@
 
 .user-action-btn.ignore-btn:hover {
   background: rgb(var(--err-rgb) / 0.2);
-  border-color: #ff4757;
+  border-color: var(--err);
 }
 
 .user-action-btn.unignore-btn {

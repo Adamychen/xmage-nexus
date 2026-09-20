@@ -185,7 +185,7 @@
 .mana-orb-btn:hover {
   filter: grayscale(0.2) opacity(0.9);
   transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--veil-6);
 }
 
 .mana-orb-btn.active {
@@ -194,33 +194,33 @@
 }
 
 .mana-orb-btn.active.orb-w {
-  border-color: var(--gold-300);
-  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.7);
+  border-color: var(--mana-w);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-w) 70%, transparent);
 }
 
 .mana-orb-btn.active.orb-u {
-  border-color: var(--brand);
-  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.7);
+  border-color: var(--mana-u);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-u) 70%, transparent);
 }
 
 .mana-orb-btn.active.orb-b {
-  border-color: var(--fg-2);
-  box-shadow: 0 0 10px rgba(160, 174, 192, 0.5);
+  border-color: var(--mana-b);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-b) 70%, transparent);
 }
 
 .mana-orb-btn.active.orb-r {
-  border-color: var(--err);
-  box-shadow: 0 0 10px rgb(var(--err-rgb) / 0.7);
+  border-color: var(--mana-r);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-r) 70%, transparent);
 }
 
 .mana-orb-btn.active.orb-g {
-  border-color: #48bb78;
-  box-shadow: 0 0 10px rgb(var(--ok-rgb) / 0.7);
+  border-color: var(--mana-g);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-g) 70%, transparent);
 }
 
 .mana-orb-btn.active.orb-c {
-  border-color: var(--fg-2);
-  box-shadow: 0 0 8px rgba(203, 213, 224, 0.6);
+  border-color: var(--mana-c);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mana-c) 70%, transparent);
 }
 
 /* Secondary Filter Row (Types and CMC) */
@@ -310,7 +310,7 @@
 }
 
 .filter-reset-btn:hover {
-  border-color: #e53e3e;
+  border-color: var(--err);
   color: var(--err);
 }
 
@@ -509,10 +509,10 @@
 
 .rarity-chip:hover { background: var(--veil-3); color: var(--fg-hi); }
 .rarity-chip.active { color: var(--fg-hi); box-shadow: 0 0 6px var(--veil-5); }
-.rarity-common.active { background: #4a5568; border-color: var(--fg-3); }
-.rarity-uncommon.active { background: var(--fg-3); border-color: var(--fg-2); }
-.rarity-rare.active { background: #b7791f; border-color: var(--gold-500); }
-.rarity-mythic.active { background: #c53030; border-color: var(--err); }
+.rarity-common.active { background: color-mix(in srgb, var(--rarity-common) 40%, var(--ink-2)); border-color: var(--rarity-common); }
+.rarity-uncommon.active { background: color-mix(in srgb, var(--rarity-uncommon) 40%, var(--ink-2)); border-color: var(--rarity-uncommon); }
+.rarity-rare.active { background: color-mix(in srgb, var(--rarity-rare) 40%, var(--ink-2)); border-color: var(--rarity-rare); }
+.rarity-mythic.active { background: color-mix(in srgb, var(--rarity-mythic) 40%, var(--ink-2)); border-color: var(--rarity-mythic); }
 
 .keyword-chip {
   padding: 3px 8px;

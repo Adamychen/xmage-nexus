@@ -125,7 +125,7 @@
 }
 
 .opp .avatar-priority-ring {
-  border-color: #ffa500;
+  border-color: var(--warn);
 }
 
 @keyframes priorityPulse {
@@ -236,14 +236,14 @@ html.fx-off .life-value {
   font-weight: 800;
   padding: 1px 6px;
   border-radius: var(--r-xs);
-  background: rgba(40, 48, 80, 0.8);
+  background: var(--ink-4);
   border: 1px solid var(--veil-4);
   color: var(--fg-1);
 }
 
 .counter-poison {
-  background: rgba(140, 70, 200, 0.15);
-  border-color: rgba(140, 70, 200, 0.35);
+  background: rgb(var(--purple-rgb) / 0.15);
+  border-color: rgb(var(--purple-rgb) / 0.35);
   color: var(--purple);
 }
 
@@ -254,13 +254,13 @@ html.fx-off .life-value {
 .counter-poison.has-poison {
   background: rgb(var(--purple-rgb) / 0.35);
   border-color: var(--purple-fg);
-  color: var(--purple-fg);
+  color: var(--fg-1);
   box-shadow: 0 0 10px rgb(var(--purple-rgb) / 0.7);
   font-weight: 900;
 }
 
 .counter-hand {
-  background: rgba(45, 55, 95, 0.5);
+  background: rgb(var(--ink-2-rgb) / 0.5);
   border-color: rgb(var(--brand-rgb) / 0.3);
   color: var(--fg-2);
 }
@@ -334,7 +334,7 @@ html.fx-off .life-value {
 
 .interactive-badge:hover {
   transform: scale(1.22);
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  filter: drop-shadow(0 0 8px var(--veil-8));
   z-index: 10;
 }
 
@@ -372,7 +372,7 @@ html.fx-off .life-value {
     box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   50% {
-    border-color: #ffffff;
+    border-color: var(--line-3);
     box-shadow: 0 0 32px 6px rgb(var(--gold-rgb) / 0.95), 0 8px 24px var(--shade-3);
   }
 }
@@ -398,7 +398,7 @@ html.fx-off .life-value {
 }
 
 .player-info-bar.targetable:hover {
-  border-color: #ffffff;
+  border-color: var(--line-3);
   box-shadow: 0 0 36px 8px rgb(var(--gold-rgb) / 1), 0 8px 24px var(--shade-4);
 }
 
@@ -430,7 +430,7 @@ html.fx-off .life-value {
 }
 
 .player-status-badge.status-left {
-  background: rgba(140, 150, 190, 0.2);
+  background: var(--line-2);
   color: var(--fg-2);
-  border: 1px solid rgba(140, 150, 190, 0.4);
+  border: 1px solid var(--line-3);
 }

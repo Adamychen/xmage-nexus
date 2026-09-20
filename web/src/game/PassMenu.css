@@ -21,7 +21,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #4a5080;
+  color: var(--fg-3);
   padding: 4px 8px 2px;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .pass-menu-cancel:hover {
-  background: #2a1520;
+  background: var(--err-surface);
 }
 
 .pass-menu-key {

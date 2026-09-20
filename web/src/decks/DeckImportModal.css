@@ -116,7 +116,7 @@
 }
 
 .deck-import-textarea::placeholder {
-  color: #4a5568;
+  color: var(--fg-3);
   font-style: italic;
 }
 

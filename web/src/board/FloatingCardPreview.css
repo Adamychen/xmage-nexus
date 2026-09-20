@@ -70,7 +70,7 @@
   border-color: rgb(var(--warn-rgb) / 0.55);
 }
 .floating-card-kw-box.cat-graveyard {
-  border-color: rgba(217, 70, 239, 0.55);
+  border-color: rgb(var(--purple-rgb) / 0.55);
 }
 .floating-card-kw-box.cat-cards {
   border-color: rgb(var(--brand-rgb) / 0.55);
@@ -181,7 +181,7 @@
   box-sizing: border-box;
   gap: 8px;
   background: linear-gradient(145deg, var(--ink-3) 0%, var(--ink-1) 100%);
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .floating-card-header {
@@ -213,7 +213,7 @@
 .floating-card-rules {
   font-size: var(--fs-xs);
   line-height: 1.4;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   flex: 1;
   overflow-y: auto;
   white-space: pre-wrap;
@@ -255,7 +255,7 @@
   top: 8px;
   right: 8px;
   background: rgb(var(--brand-rgb) / 0.92);
-  border: 1.5px solid #8cb4ff;
+  border: 1.5px solid var(--brand);
   color: var(--fg-hi);
   font-weight: 700;
   font-size: var(--fs-xs);
@@ -268,8 +268,8 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  background: linear-gradient(135deg, #d4af37 0%, #aa8010 100%);
-  color: #000000;
+  background: var(--warn);
+  color: var(--ink-0);
   font-weight: 800;
   font-size: var(--fs-3xs);
   letter-spacing: 0.05em;

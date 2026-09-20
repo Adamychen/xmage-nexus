@@ -48,7 +48,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-300), #f59e0b);
+  background: linear-gradient(135deg, var(--gold-300), var(--warn));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +82,7 @@
   padding: 1px 5px;
   border-radius: var(--r-xs);
   background: rgb(var(--err-rgb) / 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--veil-6);
   color: var(--fg-hi);
   font-size: var(--fs-2xs);
   font-weight: 800;

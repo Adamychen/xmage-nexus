@@ -35,7 +35,7 @@
 
 .leaderboard-close-btn:hover {
   background: rgb(var(--err-rgb) / 0.25);
-  border-color: #ff4757;
+  border-color: var(--err);
   color: var(--fg-hi);
 }
 
@@ -170,7 +170,7 @@
 
 .me-badge {
   background: var(--gold-300);
-  color: #0b0f24;
+  color: var(--ink-0);
   font-size: var(--fs-3xs);
   font-weight: 900;
   padding: 1px 5px;
@@ -253,7 +253,7 @@
   border-radius: var(--r-base);
   padding: 8px 14px;
   font-size: var(--fs-xs);
-  color: var(--purple-fg);
+  color: var(--fg-1);
 }
 
 .profile-back-my-btn {

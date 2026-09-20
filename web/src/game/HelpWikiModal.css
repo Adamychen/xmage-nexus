@@ -164,17 +164,17 @@
 .wiki-kw-card:hover {
   transform: translateY(-2px);
   border-color: rgb(var(--purple-rgb) / 0.4);
-  background: rgba(26, 34, 68, 0.85);
+  background: var(--ink-3);
 }
 
 .wiki-kw-card.cat-combat { border-left: 3px solid var(--err); }
 .wiki-kw-card.cat-evasion { border-left: 3px solid var(--brand-fg); }
 .wiki-kw-card.cat-protection { border-left: 3px solid var(--purple); }
 .wiki-kw-card.cat-cards { border-left: 3px solid var(--brand); }
-.wiki-kw-card.cat-counters { border-left: 3px solid #22c55e; }
-.wiki-kw-card.cat-mana { border-left: 3px solid #eab308; }
-.wiki-kw-card.cat-graveyard { border-left: 3px solid #d946ef; }
-.wiki-kw-card.cat-mechanic { border-left: 3px solid #f97316; }
+.wiki-kw-card.cat-counters { border-left: 3px solid var(--ok); }
+.wiki-kw-card.cat-mana { border-left: 3px solid var(--warn); }
+.wiki-kw-card.cat-graveyard { border-left: 3px solid var(--purple); }
+.wiki-kw-card.cat-mechanic { border-left: 3px solid var(--warn); }
 
 .wiki-kw-card-header {
   display: flex;
@@ -267,7 +267,7 @@
   border: 1px solid var(--veil-2);
 }
 
-.phase-block.phase-beginning { border-left: 4px solid #22c55e; }
+.phase-block.phase-beginning { border-left: 4px solid var(--ok); }
 .phase-block.phase-main { border-left: 4px solid var(--brand); }
 .phase-block.phase-combat { border-left: 4px solid var(--err); }
 .phase-block.phase-ending { border-left: 4px solid var(--purple); }

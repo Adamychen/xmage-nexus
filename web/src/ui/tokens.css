@@ -21,13 +21,27 @@
   --purple: #a855f7;
   --purple-fg: #c084fc;
 
+  --mana-w: #f0d98a;
+  --mana-u: #2a8fe0;
+  --mana-b: #7a5f9a;
+  --mana-r: #e04a2c;
+  --mana-g: #2fa552;
+  --mana-c: #a7afc0;
+  --rarity-common: #718096;
+  --rarity-uncommon: #a0aec0;
+  --rarity-rare: #ecc94b;
+  --rarity-mythic: #f0733a;
+
   --veil-1: rgb(255 255 255 / 0.04);
   --veil-2: rgb(255 255 255 / 0.07);
   --veil-3: rgb(255 255 255 / 0.11);
   --veil-4: rgb(255 255 255 / 0.16);
   --veil-5: rgb(255 255 255 / 0.22);
   --veil-6: rgb(255 255 255 / 0.3);
+  --veil-7: rgb(255 255 255 / 0.6);
+  --veil-8: rgb(255 255 255 / 0.85);
 
+  --shade-0: rgb(0 0 0 / 0.18);
   --shade-1: rgb(0 0 0 / 0.35);
   --shade-2: rgb(0 0 0 / 0.5);
   --shade-3: rgb(0 0 0 / 0.65);
@@ -61,6 +75,14 @@
   --err: #ff5d73;
   --err-soft: rgb(var(--err-rgb) / 0.13);
   --err-line: rgb(var(--err-rgb) / 0.42);
+
+  --ok-strong: #059669;
+  --err-strong: #d13438;
+  --warn-strong: #d97706;
+  --ok-surface: color-mix(in srgb, var(--ok) 22%, var(--ink-2));
+  --err-surface: color-mix(in srgb, var(--err) 22%, var(--ink-2));
+  --warn-surface: color-mix(in srgb, var(--warn) 22%, var(--ink-2));
+  --brand-surface: color-mix(in srgb, var(--brand) 22%, var(--ink-2));
 
   --fs-4xs: 0.562rem;
   --fs-3xs: 0.625rem;

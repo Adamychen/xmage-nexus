@@ -85,12 +85,12 @@
   border: 1px solid rgb(var(--purple-rgb) / 0.35);
   border-radius: var(--r-sm);
   padding: 4px 8px;
-  color: var(--purple-fg);
+  color: var(--fg-1);
 }
 
 .chat-time {
   font-size: var(--fs-2xs);
-  color: #5b6385;
+  color: var(--fg-3);
   flex-shrink: 0;
   margin-right: 6px;
   font-variant-numeric: tabular-nums;

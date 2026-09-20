@@ -66,7 +66,7 @@
 }
 
 .action-feed-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--shade-0);
 }
 
 .action-feed-list::-webkit-scrollbar-thumb {

@@ -152,7 +152,7 @@
   padding: 3px 8px;
   font-size: var(--fs-2xs);
   border-radius: var(--r-md);
-  border: 1px solid var(--gold-dim, #8a6d2f);
+  border: 1px solid var(--gold-dim, var(--warn));
   background: var(--shade-2);
   color: var(--gold, var(--gold-500));
   cursor: pointer;

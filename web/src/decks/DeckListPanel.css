@@ -29,7 +29,7 @@
   justify-content: center;
   gap: 8px;
   padding: 10px;
-  background: linear-gradient(90deg, rgba(28, 24, 10, 0.98), rgba(64, 52, 12, 0.98), rgba(28, 24, 10, 0.98));
+  background: var(--warn-surface);
   border: 1px dashed var(--gold-500);
   border-radius: var(--r-sm);
   color: var(--gold-300);
@@ -84,7 +84,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fg-2);
-  border-left: 3px solid #4a5568;
+  border-left: 3px solid var(--line-3);
 }
 
 .deck-category-count {
@@ -104,7 +104,7 @@
 }
 
 .deck-sideboard-section .deck-category-header {
-  border-left-color: #e53e3e;
+  border-left-color: var(--err);
 }
 
 .deck-sideboard-section.is-side-drag-over {
@@ -182,7 +182,7 @@
 }
 
 .deck-commander-section.is-commander-drop-invalid {
-  border: 1px solid #e53e3e;
+  border: 1px solid var(--err);
   border-radius: var(--r-sm);
   padding: 6px;
   background: rgb(var(--err-rgb) / 0.08);

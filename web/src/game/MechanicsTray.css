@@ -165,7 +165,7 @@
   padding: 2px 6px;
   border-radius: var(--r-sm);
   background: var(--gold-300);
-  color: #101322;
+  color: var(--ink-0);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -212,7 +212,7 @@
 }
 
 .ring-level-card.unlocked {
-  background: rgba(35, 30, 15, 0.85);
+  background: var(--ink-2);
   border-color: rgb(var(--gold-rgb) / 0.5);
   box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.15);
 }
@@ -416,13 +416,13 @@
 }
 
 .daynight-banner.day-active {
-  background: linear-gradient(135deg, rgba(80, 60, 20, 0.9), rgba(30, 20, 10, 0.9));
+  background: linear-gradient(135deg, var(--ink-1), var(--warn-surface));
   border: 1.5px solid var(--gold-300);
   box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.3);
 }
 
 .daynight-banner.night-active {
-  background: linear-gradient(135deg, rgba(30, 25, 65, 0.9), rgb(var(--ink-2-rgb) / 0.9));
+  background: linear-gradient(135deg, var(--ink-3), rgb(var(--ink-2-rgb) / 0.9));
   border: 1.5px solid var(--brand-fg);
   box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.3);
 }

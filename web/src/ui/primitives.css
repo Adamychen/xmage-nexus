@@ -31,7 +31,7 @@
   box-shadow: none;
   color: var(--fg-2);
 }
-.ui-btn--ghost:hover:not(:disabled) { background: rgba(148, 170, 214, 0.1); color: var(--fg-1); }
+.ui-btn--ghost:hover:not(:disabled) { background: var(--line-2); color: var(--fg-1); }
 .ui-btn--danger {
   color: var(--err);
   border-color: var(--err-line);
@@ -48,7 +48,7 @@
   line-height: 1.5;
   white-space: nowrap;
   color: var(--fg-2);
-  background: rgba(148, 170, 214, 0.07);
+  background: var(--line-1);
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
 }

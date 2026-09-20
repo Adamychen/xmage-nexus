@@ -4,7 +4,7 @@
   z-index: 100;
   display: grid;
   place-items: center;
-  background: rgb(4 6 16 / 75%);
+  background: rgb(var(--ink-rgb) / 0.75);
   backdrop-filter: blur(8px);
 }
 

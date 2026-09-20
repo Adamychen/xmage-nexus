@@ -8,7 +8,7 @@
   width: 100%;
   box-sizing: border-box;
   background: var(--ink-1) radial-gradient(circle at 50% 20%, var(--ink-3) 0%, var(--ink-0) 100%);
-  color: var(--brand-fg);
+  color: var(--fg-1);
   overflow: hidden;
   border-radius: var(--r-mid);
   border: 1px solid var(--veil-2);
@@ -69,7 +69,7 @@
 .deck-builder-title {
   font-size: var(--fs-base);
   font-weight: 800;
-  color: var(--gold-300);
+  color: var(--fg-1);
   letter-spacing: 0.04em;
 }
 
@@ -157,7 +157,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: rgba(26, 12, 12, 0.95);
+  background: var(--err-surface);
   border: 2px dashed var(--err);
   border-radius: var(--r-pill);
   color: var(--err);
@@ -347,8 +347,8 @@
 }
 
 .builder-act.is-equipped {
-  background: #276749;
-  border-color: #38a169;
+  background: var(--ok);
+  border-color: var(--ok);
 }
 
 /* MTG Arena Signature Big Done Button */
@@ -364,14 +364,14 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.5), inset 0 1px 0 var(--veil-7);
   transition: all 150ms ease;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 0 var(--veil-6);
 }
 
 .builder-done:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgb(var(--brand-rgb) / 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 6px 20px rgb(var(--brand-rgb) / 0.7), inset 0 1px 0 var(--veil-8);
   filter: brightness(1.1);
 }
 

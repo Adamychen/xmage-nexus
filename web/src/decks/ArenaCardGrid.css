@@ -225,7 +225,7 @@
 }
 
 .arena-footer-load-btn:hover {
-  background: linear-gradient(135deg, var(--gold-500) 0%, #dd6b20 100%);
+  background: linear-gradient(135deg, var(--gold-500) 0%, var(--warn) 100%);
   color: var(--ink-1);
   box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.6);
   transform: translateY(-1px);

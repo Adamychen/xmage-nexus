@@ -3,8 +3,8 @@
 }
 
 .confirm-modal .confirm-ok-danger {
-  background: linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%);
-  border: 1px solid #ef4444;
+  background: var(--err-strong);
+  border: 1px solid var(--err);
   color: var(--fg-hi);
   box-shadow: 0 4px 14px rgb(var(--err-rgb) / 0.4);
 }

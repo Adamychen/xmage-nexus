@@ -51,13 +51,13 @@
 
 .rollback-turn-option.selected {
   background: rgb(var(--brand-rgb) / 0.15);
-  border-color: #4299e1;
+  border-color: var(--brand);
   color: var(--fg-hi);
   box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.2);
 }
 
 .rollback-turn-option input[type="radio"] {
-  accent-color: #4299e1;
+  accent-color: var(--brand);
   cursor: pointer;
 }
 
@@ -82,7 +82,7 @@
 .rollback-undo-title {
   font-size: var(--fs-md);
   font-weight: 600;
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .rollback-undo-hint {

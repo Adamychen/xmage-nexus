@@ -30,8 +30,8 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  border: 1.5px solid #3a3f6b;
-  background: rgba(26, 32, 64, 0.9);
+  border: 1.5px solid var(--brand);
+  background: var(--ink-3);
   color: var(--fg-1);
   transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -39,7 +39,7 @@
 .pw-ability-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: var(--purple-fg);
-  background: rgba(36, 44, 88, 0.95);
+  background: var(--ink-4);
 }
 
 .pw-ability-btn:disabled {
@@ -48,11 +48,11 @@
 }
 
 .pw-ability-btn.delta-pos {
-  border-color: #2ecc71;
+  border-color: var(--ok);
 }
 
 .pw-ability-btn.delta-neg {
-  border-color: #e74c3c;
+  border-color: var(--err);
 }
 
 .pw-ability-btn.delta-zero {
@@ -72,12 +72,12 @@
 
 .delta-pos .pw-delta {
   color: var(--ok);
-  border: 1px solid #2ecc71;
+  border: 1px solid var(--ok);
 }
 
 .delta-neg .pw-delta {
   color: var(--err);
-  border: 1px solid #e74c3c;
+  border: 1px solid var(--err);
 }
 
 .delta-zero .pw-delta {

@@ -28,7 +28,7 @@
   box-shadow: var(--dlg-shadow);
   pointer-events: auto;
   animation: var(--dlg-anim);
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .dlg-sm { width: var(--dlg-width-sm); max-height: var(--dlg-max-h); }
@@ -100,7 +100,7 @@
   border: 1px solid var(--veil-4);
   border-radius: var(--r-sm);
   background: var(--veil-2);
-  color: var(--brand-fg);
+  color: var(--fg-1);
   font-size: var(--fs-sm);
   line-height: 1;
   cursor: pointer;
@@ -188,7 +188,7 @@
   gap: 8px;
   margin-top: 14px;
   font-size: var(--fs-sm);
-  color: var(--brand);
+  color: var(--fg-2);
   cursor: pointer;
 }
 

@@ -168,7 +168,7 @@ html.fx-off .card-slot.attacking {
   }
   50% {
     box-shadow: 0 0 24px 6px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
-    border-color: #ffffff;
+    border-color: var(--line-3);
   }
 }
 
@@ -213,7 +213,7 @@ html.fx-off .card-slot.attacking {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid var(--veil-6);
   border-top-color: transparent;
   animation: pendingSpin 0.7s linear infinite;
   z-index: 8;
@@ -285,7 +285,7 @@ html.fx-off .card-slot.attacking {
 .card-placeholder-name {
   font-size: var(--fs-2xs);
   font-weight: 600;
-  color: #c8cae6;
+  color: var(--fg-1);
   text-align: center;
   word-break: break-word;
   line-height: 1.2;
@@ -313,7 +313,7 @@ html.fx-off .card-slot.attacking {
 
 .pt-badge {
   background: rgb(var(--ink-2-rgb) / 0.95);
-  border: 1.5px solid #4a548c;
+  border: 1.5px solid var(--brand);
   color: var(--fg-hi);
   box-shadow: 0 2px 6px var(--shade-3);
 }
@@ -329,9 +329,9 @@ html.fx-off .card-slot.attacking {
 }
 
 .defense-badge {
-  background: rgba(30, 20, 15, 0.95);
-  border: 1.5px solid #f97316;
-  color: #fdba74;
+  background: var(--err-surface);
+  border: 1.5px solid var(--warn);
+  color: var(--warn);
   box-shadow: 0 2px 6px var(--shade-3);
   display: flex;
   align-items: center;
@@ -362,7 +362,7 @@ html.fx-off .card-slot.attacking {
   font-family: var(--font-display);
   line-height: 1.1;
   background: rgb(var(--gold-rgb) / 0.95);
-  color: #10131f;
+  color: var(--ink-0);
   border: 1px solid rgb(var(--gold-rgb) / 0.8);
   box-shadow: 0 2px 4px var(--shade-3);
   display: inline-flex;
@@ -384,37 +384,37 @@ html.fx-off .counter-badge {
 .counter-badge.p1p1 {
   background: rgb(var(--ok-rgb) / 0.95);
   color: var(--fg-hi);
-  border-color: #2ecc71;
+  border-color: var(--ok);
 }
 
 .counter-badge.m1m1 {
   background: rgb(var(--err-rgb) / 0.95);
   color: var(--fg-hi);
-  border-color: #e74c3c;
+  border-color: var(--err);
 }
 
 .counter-badge.shield {
   background: rgb(var(--brand-rgb) / 0.95);
   color: var(--fg-hi);
-  border-color: #3498db;
+  border-color: var(--brand);
 }
 
 .counter-badge.stun {
   background: rgb(var(--warn-rgb) / 0.95);
-  color: #10131f;
-  border-color: #f1c40f;
+  color: var(--ink-0);
+  border-color: var(--warn);
 }
 
 .counter-badge.oil {
-  background: rgba(142, 68, 173, 0.95);
+  background: rgb(var(--purple-rgb) / 0.95);
   color: var(--fg-hi);
-  border-color: #9b59b6;
+  border-color: var(--purple);
 }
 
 .counter-badge.finality {
-  background: rgba(52, 73, 94, 0.95);
-  color: #ecf0f1;
-  border-color: #7f8c8d;
+  background: var(--ink-4);
+  color: var(--fg-1);
+  border-color: var(--line-3);
 }
 
 /* Card restriction / ability icons (Goad, combat restrictions, keywords) */
@@ -454,7 +454,7 @@ html.fx-off .counter-badge {
 }
 
 .card-icon.ability {
-  background: rgba(44, 62, 80, 0.95);
+  background: var(--ink-4);
   border: 1px solid var(--veil-5);
 }
 
@@ -482,7 +482,7 @@ html.fx-off .counter-badge {
   background: rgb(var(--ink-2-rgb) / 0.7);
   border-radius: 50%;
   padding: 1px 3px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--line-3);
 }
 
 @keyframes sicknessFloat {
@@ -514,10 +514,10 @@ html.fx-off .counter-badge {
   border: 1px solid var(--veil-5);
 }
 
-.facedown-type-badge.morph { border-color: var(--brand); color: #93c5fd; }
-.facedown-type-badge.manifest { border-color: var(--purple); color: #d8b4fe; }
-.facedown-type-badge.disguise { border-color: #10b981; color: var(--ok); }
-.facedown-type-badge.cloak { border-color: var(--brand); color: #a5b4fc; }
+.facedown-type-badge.morph { border-color: var(--brand); color: var(--brand-fg); }
+.facedown-type-badge.manifest { border-color: var(--purple); color: var(--purple-fg); }
+.facedown-type-badge.disguise { border-color: var(--ok); color: var(--ok); }
+.facedown-type-badge.cloak { border-color: var(--brand); color: var(--brand-fg); }
 
 /* Live engine designations (MonstrousHint / RenownedHint in rules) */
 .designation-badges {
@@ -545,16 +545,16 @@ html.fx-off .counter-badge {
   border: 1px solid var(--veil-5);
 }
 
-.designation-badge.is-monstrous { border-color: #f59e0b; color: #fcd34d; }
-.designation-badge.is-renowned { border-color: #eab308; color: #fef08a; }
-.designation-badge.is-suspected { border-color: #fb7185; color: #fecdd3; }
-.designation-badge.is-paired { border-color: #38bdf5; color: #bae6fd; }
-.designation-badge.is-classlevel { border-color: var(--purple-fg); color: #e9d5ff; }
-.designation-badge.is-casesolved { border-color: #4ade80; color: #bbf7d0; }
-.designation-badge.is-harnessed { border-color: #f97316; color: #fed7aa; }
-.designation-badge.is-evidence { border-color: #22d3ee; color: #cffafe; }
-.designation-badge.is-prepared { border-color: var(--brand-fg); color: #dbeafe; }
-.designation-badge.is-protector { border-color: #2dd4bf; color: #ccfbf1; }
+.designation-badge.is-monstrous { border-color: var(--warn); color: var(--warn); }
+.designation-badge.is-renowned { border-color: var(--warn); color: var(--warn); }
+.designation-badge.is-suspected { border-color: var(--err); color: var(--err); }
+.designation-badge.is-paired { border-color: var(--brand); color: var(--brand-fg); }
+.designation-badge.is-classlevel { border-color: var(--purple-fg); color: var(--purple-fg); }
+.designation-badge.is-casesolved { border-color: var(--ok); color: var(--ok); }
+.designation-badge.is-harnessed { border-color: var(--warn); color: var(--warn); }
+.designation-badge.is-evidence { border-color: var(--brand); color: var(--brand-fg); }
+.designation-badge.is-prepared { border-color: var(--brand-fg); color: var(--fg-1); }
+.designation-badge.is-protector { border-color: var(--ok); color: var(--ok); }
 
 .copy-badge {
   position: absolute;
@@ -567,7 +567,7 @@ html.fx-off .counter-badge {
   font-family: var(--font-display);
   background: rgb(var(--brand-rgb) / 0.9);
   color: var(--fg-hi);
-  border: 1px solid rgba(160, 132, 255, 0.6);
+  border: 1px solid rgb(var(--purple-rgb) / 0.6);
   z-index: 5;
   pointer-events: none;
 }
@@ -582,7 +582,7 @@ html.fx-off .counter-badge {
   font-weight: 800;
   font-family: var(--font-display);
   background: rgb(var(--gold-rgb) / 0.9);
-  color: #10131f;
+  color: var(--ink-0);
   border: 1px solid rgb(var(--gold-rgb) / 0.8);
   z-index: 5;
   pointer-events: none;
@@ -648,7 +648,7 @@ html.fx-off .counter-badge {
   line-height: 1.2;
   background: rgb(var(--ok-rgb) / 0.95);
   border: 1.5px solid var(--ok);
-  color: #ecfdf5;
+  color: var(--fg-1);
   z-index: 6;
   pointer-events: none;
   box-shadow: 0 2px 6px var(--shade-3);

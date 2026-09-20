@@ -23,7 +23,7 @@
 }
 
 .arena-card-strip.is-commander {
-  border: 1px solid #d4af37;
+  border: 1px solid var(--warn);
   box-shadow: 0 0 8px rgb(var(--warn-rgb) / 0.35);
   background: linear-gradient(90deg, rgb(var(--warn-rgb) / 0.2) 0%, rgb(var(--ink-2-rgb) / 0.95) 40%);
 }
@@ -80,15 +80,15 @@
   width: 4px;
   height: 100%;
   flex-shrink: 0;
-  background: #4a5568;
+  background: var(--ink-4);
 }
-.strip-color-bar.color-w { background: var(--gold-300); }
-.strip-color-bar.color-u { background: var(--brand); }
-.strip-color-bar.color-b { background: var(--ink-4); }
-.strip-color-bar.color-r { background: #e53e3e; }
-.strip-color-bar.color-g { background: #38a169; }
-.strip-color-bar.color-multi { background: linear-gradient(180deg, var(--gold-500), #d69e2e); }
-.strip-color-bar.color-colorless { background: var(--fg-2); }
+.strip-color-bar.color-w { background: var(--mana-w); }
+.strip-color-bar.color-u { background: var(--mana-u); }
+.strip-color-bar.color-b { background: var(--mana-b); }
+.strip-color-bar.color-r { background: var(--mana-r); }
+.strip-color-bar.color-g { background: var(--mana-g); }
+.strip-color-bar.color-multi { background: linear-gradient(180deg, var(--gold-500), var(--warn)); }
+.strip-color-bar.color-colorless { background: var(--mana-c); }
 
 /* Quantity Badge (1x, 4x, etc.) */
 .strip-qty {
@@ -152,7 +152,7 @@
 }
 
 .mana-symbol.sym-generic {
-  background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 60%, #6b7280 100%);
+  background: radial-gradient(circle at 30% 28%, color-mix(in srgb, var(--mana-c) 45%, white) 0%, var(--mana-c) 60%, color-mix(in srgb, var(--mana-c) 60%, black) 100%);
   color: var(--ink-1);
   font-weight: 900;
   border: 1px solid var(--shade-1);
@@ -209,8 +209,8 @@
 }
 
 .strip-btn.danger:hover {
-  background: #e53e3e;
-  border-color: #feb2b2;
+  background: var(--err);
+  border-color: var(--err);
 }
 
 .strip-btn.star {

@@ -27,7 +27,7 @@
   justify-content: center;
   font-size: var(--fs-lg);
   font-weight: 800;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   pointer-events: none;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .mana-pie-legend-count {
-  color: var(--brand-fg);
+  color: var(--fg-1);
   font-weight: 800;
   text-align: right;
 }

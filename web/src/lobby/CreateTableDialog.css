@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 16, 0.85);
+  background: rgb(var(--ink-rgb) / 0.85);
   backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
@@ -149,7 +149,7 @@
   margin: 0 0 2px;
   font-size: var(--fs-md);
   font-weight: 800;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   letter-spacing: 0.02em;
 }
 .wizard-step-heading p {
@@ -164,7 +164,7 @@
   border: 1px dashed var(--veil-3);
   border-radius: var(--r-base);
   font-size: var(--fs-2xs);
-  color: var(--brand);
+  color: var(--fg-2);
   line-height: 1.4;
 }
 
@@ -309,7 +309,7 @@
 }
 
 .chip:hover {
-  background: rgba(36, 44, 88, 0.8);
+  background: var(--ink-4);
   border-color: rgb(var(--gold-rgb) / 0.4);
   color: var(--fg-hi);
 }
@@ -450,7 +450,7 @@
 
 .dev-options-notice {
   padding: 8px 12px;
-  background: rgba(60, 40, 10, 0.6);
+  background: var(--warn-surface);
   border: 1px solid rgb(var(--warn-rgb) / 0.3);
   border-radius: var(--r-base);
   font-size: var(--fs-2xs);
@@ -549,7 +549,7 @@
   padding: 6px 14px;
   font-size: var(--fs-xs);
   font-weight: 700;
-  background: linear-gradient(135deg, var(--brand-strong) 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--brand-strong) 0%, var(--purple) 100%);
   border: 1px solid var(--veil-5);
 }
 
@@ -578,7 +578,7 @@
 }
 
 .create-mode-card:hover {
-  background: rgba(30, 38, 76, 0.85);
+  background: var(--ink-4);
   border-color: rgb(var(--gold-rgb) / 0.4);
   transform: translateY(-2px);
 }
@@ -607,7 +607,7 @@
   display: block;
   font-size: var(--fs-md);
   font-weight: 800;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   letter-spacing: 0.02em;
   line-height: 1.25;
 }
@@ -705,7 +705,7 @@
 }
 
 .tourney-tab-btn:hover {
-  background: rgba(30, 38, 76, 0.85);
+  background: var(--ink-4);
   color: var(--fg-hi);
 }
 

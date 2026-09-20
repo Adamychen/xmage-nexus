@@ -22,6 +22,37 @@ function fontSizeRem(decls: string): number {
   return Number(resolved[1])
 }
 
+
+function tokenValue(name: string): string {
+  const match = tokens.match(new RegExp(`${name}:\\s*([^;]+);`))
+  if (!match) throw new Error(`token not found: ${name}`)
+  const value = match[1].trim()
+  const ref = value.match(/^var\((--[\w-]+)\)$/)
+  return ref ? tokenValue(ref[1]) : value
+}
+
+function colorOf(decls: string): string {
+  const match = decls.match(/(?:^|[;\s])color:\s*([^;]+);?/)
+  if (!match) throw new Error(`no color in: ${decls.slice(0, 80)}`)
+  const value = match[1].trim()
+  const ref = value.match(/^var\((--[\w-]+)\)$/)
+  return ref ? tokenValue(ref[1]) : value
+}
+
+function luminance(hex: string): number {
+  const h = hex.replace('#', '')
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
 describe('a11y contrast minimums (C.15, inspection-backed)', () => {
   const stack = css('./board/StackZone.css')
   const slot = css('./board/CardSlot.css')
@@ -34,10 +65,10 @@ describe('a11y contrast minimums (C.15, inspection-backed)', () => {
   })
 
   it('stack timeline greys meet 4.5:1 on dark backgrounds', () => {
-    expect(block(stack, '.stack-tl-pos')).toContain('#9ca3af')
-    expect(block(stack, '.stack-tl-pos')).not.toContain('#6b7280')
-    expect(block(stack, '.stack-tl-subtype')).toContain('#cbd5e1')
-    expect(block(stack, '.stack-tl-subtype')).not.toContain('#94a3b8')
+    const lightestSurface = tokenValue('--ink-4')
+    for (const sel of ['.stack-tl-pos', '.stack-tl-subtype']) {
+      expect(contrast(colorOf(block(stack, sel)), lightestSurface), sel).toBeGreaterThanOrEqual(4.5)
+    }
   })
 
   it('card icon / keyword badges are >= 0.687rem', () => {
@@ -49,8 +80,7 @@ describe('a11y contrast minimums (C.15, inspection-backed)', () => {
 
   it('feed description keeps contrast over card art', () => {
     const decls = block(feed, '.action-desc-text')
-    expect(decls).toContain('#cbd5e1')
-    expect(decls).not.toContain('#94a3b8')
+    expect(contrast(colorOf(decls), tokenValue('--ink-4'))).toBeGreaterThanOrEqual(4.5)
     expect(decls).toContain('text-shadow')
     expect(decls).toContain('background')
   })

@@ -16,7 +16,7 @@
 }
 
 .card-preview-hint {
-  color: #4a5080;
+  color: var(--fg-3);
   font-size: var(--fs-sm);
   text-align: center;
 }
@@ -42,7 +42,7 @@
 
 .ability-banner-source {
   font-size: var(--fs-xs);
-  color: var(--brand-fg);
+  color: var(--fg-1);
   font-weight: 600;
 }
 
@@ -68,7 +68,7 @@
 
 .face-tab-btn.active {
   background: var(--ink-4);
-  border-color: #5c6eb0;
+  border-color: var(--brand);
   color: var(--fg-hi);
   font-weight: 600;
 }
@@ -95,7 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4a5080;
+  color: var(--fg-3);
   font-size: var(--fs-md);
   text-align: center;
   padding: 12px;
@@ -138,7 +138,7 @@
 
 .card-preview-text {
   font-size: var(--fs-sm);
-  color: var(--brand-fg);
+  color: var(--fg-2);
   line-height: 1.45;
   white-space: pre-wrap;
 }
@@ -194,7 +194,7 @@
   border: none;
   border-radius: 50%;
   background: var(--shade-2);
-  color: var(--brand-fg);
+  color: var(--fg-2);
   font-size: var(--fs-lg);
   cursor: pointer;
   display: flex;

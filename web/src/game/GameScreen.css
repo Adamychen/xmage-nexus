@@ -235,7 +235,7 @@
   padding: 20px 28px;
   min-width: 160px;
   border-radius: var(--r-lg);
-  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.14) 0%, rgba(60, 40, 120, 0.22) 100%);
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.14) 0%, rgb(var(--purple-rgb) / 0.22) 100%);
   border: 1.5px solid rgb(var(--brand-rgb) / 0.3);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
@@ -245,7 +245,7 @@
 .starting-player-btn:hover:not(:disabled) {
   transform: translateY(-4px) scale(1.03);
   border-color: rgb(var(--brand-rgb) / 0.75);
-  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.28) 0%, rgba(80, 50, 160, 0.38) 100%);
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.28) 0%, rgb(var(--purple-rgb) / 0.38) 100%);
   box-shadow: 0 12px 36px var(--shade-2), 0 0 20px rgb(var(--brand-rgb) / 0.25);
 }
 
@@ -324,7 +324,7 @@
 }
 
 .feedback-choice-card.selected {
-  background: linear-gradient(90deg, rgb(var(--brand-rgb) / 0.28) 0%, rgba(90, 60, 200, 0.2) 100%);
+  background: linear-gradient(90deg, rgb(var(--brand-rgb) / 0.28) 0%, rgb(var(--purple-rgb) / 0.2) 100%);
   border-color: var(--brand-fg);
   color: var(--fg-hi);
   box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.25);
@@ -345,7 +345,7 @@
 
 .feedback-choice-card.selected .choice-number {
   background: var(--brand-fg);
-  color: #0d1222;
+  color: var(--ink-0);
 }
 
 .feedback-choice-card.kb-active {
@@ -600,14 +600,14 @@
 }
 
 .feedback-dialog-actions button.send-btn {
-  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  background: var(--brand-strong);
   border: 1px solid var(--brand-fg);
   color: var(--fg-hi);
   box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.4);
 }
 
 .feedback-dialog-actions button.send-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, var(--brand) 0%, #2563eb 100%);
+  background: var(--brand);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgb(var(--brand-rgb) / 0.5);
 }
@@ -636,7 +636,7 @@
   align-items: stretch;
   gap: 8px;
   padding: 10px 12px;
-  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.98) 0%, rgb(var(--ink-2-rgb) / 0.98) 100%);
+  background: rgb(var(--ink-2-rgb) / 0.98);
   border: 1.5px solid rgb(var(--brand-rgb) / 0.35);
   border-radius: var(--dlg-bar-radius);
   box-shadow: 0 12px 36px var(--shade-4), 0 0 20px rgb(var(--brand-rgb) / 0.18);
@@ -716,7 +716,7 @@
   font-weight: 600;
   border-radius: var(--r-md);
   background: var(--ink-4);
-  border: 1px solid #4a5a9e;
+  border: 1px solid var(--brand);
   color: var(--fg-hi);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -725,17 +725,17 @@
 }
 
 .action-prompt-actions button:hover {
-  background: #354284;
+  background: var(--brand);
 }
 
 .action-prompt-actions button.primary {
-  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  background: linear-gradient(180deg, var(--ok) 0%, var(--ok-surface) 100%);
   border-color: var(--ok);
   box-shadow: 0 2px 10px rgb(var(--ok-rgb) / 0.35);
 }
 
 .action-prompt-actions button.primary:hover {
-  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  background: var(--ok);
 }
 
 .action-prompt-actions button.cancel-btn {

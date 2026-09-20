@@ -16,7 +16,7 @@
 .turn-badge {
   padding: 2px 8px;
   border-radius: var(--r-md);
-  background: rgba(30, 24, 12, 0.85);
+  background: var(--ink-1);
   border: 1px solid rgb(var(--gold-rgb) / 0.5);
   color: var(--gold-300);
   font-size: var(--fs-2xs);
@@ -75,11 +75,11 @@
 .tint-damage { background: linear-gradient(to right, transparent, rgb(var(--err-rgb) / 0.4) 70%); }
 .tint-life { background: linear-gradient(to right, transparent, rgb(var(--ok-rgb) / 0.3) 70%); }
 .tint-ability { background: linear-gradient(to right, transparent, rgb(var(--warn-rgb) / 0.35) 70%); }
-.tint-draw { background: linear-gradient(to right, transparent, rgba(167, 139, 250, 0.35) 70%); }
-.tint-discard { background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.3) 70%); }
+.tint-draw { background: linear-gradient(to right, transparent, rgb(var(--purple-rgb) / 0.35) 70%); }
+.tint-discard { background: linear-gradient(to right, transparent, var(--line-3) 70%); }
 .tint-phase { background: linear-gradient(to right, transparent, rgb(var(--gold-rgb) / 0.3) 70%); }
 .tint-system { background: linear-gradient(to right, transparent, rgb(var(--gold-rgb) / 0.35) 70%); }
-.tint-chat { background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.3) 70%); }
+.tint-chat { background: linear-gradient(to right, transparent, var(--line-3) 70%); }
 
 .action-feed-card.no-art {
   min-height: 0;
@@ -119,7 +119,7 @@
 
 .action-player-tag.opp {
   background: rgb(var(--err-rgb) / 0.25);
-  color: #fca5a5;
+  color: var(--err);
   border: 1px solid rgb(var(--err-rgb) / 0.4);
 }
 
@@ -161,7 +161,7 @@
 .action-card-name {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--fg-1);
   font-family: var(--font-display);
 }
 
@@ -176,7 +176,7 @@
 
 .action-desc-text {
   font-size: var(--fs-2xs);
-  color: #cbd5e1;
+  color: var(--fg-1);
   background: var(--shade-3);
   border-radius: var(--r-xs);
   padding: 0 3px;
@@ -202,11 +202,11 @@
 
 .action-feed-card.type-damage {
   border-left: 3px solid var(--err);
-  background: rgba(35, 15, 20, 0.9);
+  background: var(--err-surface);
 }
 
 .action-feed-card.type-ability {
-  border-left: 3px solid #fbbf24;
+  border-left: 3px solid var(--warn);
 }
 
 .action-feed-card.type-draw {
@@ -214,7 +214,7 @@
 }
 
 .action-feed-card.type-discard {
-  border-left: 3px solid #94a3b8;
+  border-left: 3px solid var(--line-3);
 }
 
 .action-feed-card.type-phase {
@@ -230,7 +230,7 @@
 }
 
 .action-feed-card.type-chat {
-  border-left: 3px solid #94a3b8;
+  border-left: 3px solid var(--line-3);
 }
 
 @media (prefers-reduced-motion: reduce) {

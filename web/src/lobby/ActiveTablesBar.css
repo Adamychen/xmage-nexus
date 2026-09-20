@@ -20,13 +20,13 @@
 
 .active-table-strip.state-waiting {
   background: linear-gradient(90deg, rgb(var(--brand-rgb) / 0.08) 0%, rgb(var(--ink-2-rgb) / 0.95) 45%);
-  border-left: 3.5px solid #38bdf8;
+  border-left: 3.5px solid var(--brand);
   border-color: rgb(var(--brand-rgb) / 0.25);
 }
 
 .active-table-strip.state-ready {
   background: linear-gradient(90deg, rgb(var(--ok-rgb) / 0.12) 0%, rgb(var(--ink-2-rgb) / 0.95) 45%);
-  border-left: 3.5px solid #34d399;
+  border-left: 3.5px solid var(--ok);
   border-color: rgb(var(--ok-rgb) / 0.35);
   box-shadow: 0 0 12px rgb(var(--ok-rgb) / 0.15);
 }
@@ -69,8 +69,8 @@
 }
 
 .state-waiting .status-dot {
-  background: #38bdf8;
-  box-shadow: 0 0 6px #38bdf8;
+  background: var(--brand);
+  box-shadow: 0 0 6px var(--brand);
 }
 
 .state-waiting .active-status-badge {
@@ -78,8 +78,8 @@
 }
 
 .state-ready .status-dot {
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
   animation: pulseReadyDot 1.2s infinite alternate;
 }
 
@@ -170,21 +170,21 @@
 }
 
 .active-table-action-btn.btn-start {
-  background: #10b981;
-  border: 1px solid #34d399;
+  background: var(--ok-strong);
+  border: 1px solid var(--ok);
   color: var(--fg-hi);
   box-shadow: 0 0 8px rgb(var(--ok-rgb) / 0.35);
 }
 
 .active-table-action-btn.btn-start:hover {
-  background: #059669;
+  background: var(--ok);
   transform: translateY(-1px);
 }
 
 .active-table-action-btn.btn-staging {
   background: var(--ink-3);
   border: 1px solid rgb(var(--brand-rgb) / 0.4);
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .active-table-action-btn.btn-staging:hover {
@@ -194,7 +194,7 @@
 }
 
 .active-table-action-btn.btn-resume {
-  background: #7c3aed;
+  background: var(--purple);
   border: 1px solid var(--purple);
   color: var(--fg-hi);
 }

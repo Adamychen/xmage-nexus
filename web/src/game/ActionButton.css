@@ -96,7 +96,7 @@
 .action-btn-sublabel {
   font-size: var(--fs-3xs);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--fg-2);
   margin-top: 2px;
 }
 
@@ -108,42 +108,42 @@
   border-radius: var(--r-xs);
   background: var(--shade-1);
   border: 1px solid var(--veil-5);
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--fg-2);
   z-index: 1;
 }
 
 /* Resolve mode: Cyan / Blue */
 .big-action-btn.action-resolve {
-  background: linear-gradient(135deg, #0e7490 0%, #0369a1 100%);
+  background: var(--brand);
   border-color: var(--brand-fg);
   box-shadow: 0 0 20px rgb(var(--brand-rgb) / 0.4), 0 8px 24px var(--shade-3);
 }
 .big-action-btn.action-resolve:hover {
-  background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%);
+  background: var(--brand);
   box-shadow: 0 0 28px rgb(var(--brand-rgb) / 0.6), 0 8px 24px var(--shade-3);
   transform: translateY(-2px);
 }
 
 /* Combat mode: Crimson / Amber */
 .big-action-btn.action-combat {
-  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  background: var(--err);
   border-color: var(--err);
   box-shadow: 0 0 20px rgb(var(--err-rgb) / 0.4), 0 8px 24px var(--shade-3);
 }
 .big-action-btn.action-combat:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: var(--err);
   box-shadow: 0 0 28px rgb(var(--err-rgb) / 0.6), 0 8px 24px var(--shade-3);
   transform: translateY(-2px);
 }
 
 /* Priority pass mode: Gold / Emerald */
 .big-action-btn.action-priority {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, var(--ok) 0%, var(--ok-surface) 100%);
   border-color: var(--ok);
   box-shadow: 0 0 20px rgb(var(--ok-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 .big-action-btn.action-priority:hover {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--ok);
   box-shadow: 0 0 28px rgb(var(--ok-rgb) / 0.55), 0 8px 24px var(--shade-3);
   transform: translateY(-2px);
 }
@@ -153,7 +153,7 @@
 .big-action-btn.disabled {
   background: var(--ink-3);
   border-color: var(--veil-2);
-  color: #555d7e;
+  color: var(--fg-3);
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.65;

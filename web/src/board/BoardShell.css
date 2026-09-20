@@ -22,7 +22,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  background: radial-gradient(ellipse 96% 92% at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(2, 3, 8, 0.5) 100%);
+  background: radial-gradient(ellipse 96% 92% at 50% 50%, transparent 60%, rgb(var(--ink-rgb) / 0.5) 100%);
 }
 
 /* Grano sutil de fieltro sobre el tapete */
@@ -72,7 +72,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(140, 150, 192, 0.4);
+  color: var(--fg-3);
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;

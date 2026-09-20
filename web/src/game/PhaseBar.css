@@ -51,15 +51,15 @@
 }
 
 .phase-badge.past {
-  color: #586082;
+  color: var(--fg-3);
   background: transparent;
 }
 
 .phase-badge.active {
   color: var(--fg-hi);
-  background: linear-gradient(135deg, var(--brand) 0%, #5636db 100%);
-  border-color: #a084ff;
-  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--purple) 100%);
+  border-color: var(--purple);
+  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7), inset 0 1px 1px var(--veil-6);
   transform: scale(1.08);
   z-index: 2;
   animation: phaseActiveIn calc(0.3s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);

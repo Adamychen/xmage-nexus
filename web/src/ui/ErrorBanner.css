@@ -4,7 +4,7 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: var(--r-md);
-  background: rgba(60, 20, 30, 0.9);
+  background: var(--err-surface);
   border: 1px solid rgb(var(--err-rgb) / 0.55);
   box-shadow: 0 4px 14px rgb(var(--err-rgb) / 0.18);
   color: var(--err);
@@ -56,6 +56,6 @@
 }
 
 .error-banner-close:focus-visible {
-  outline: 2px solid #ff8a8a;
+  outline: 2px solid var(--err);
   outline-offset: 1px;
 }

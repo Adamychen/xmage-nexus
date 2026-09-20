@@ -188,7 +188,7 @@
 
 .cdm-player-title {
   font-weight: 700;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   font-size: var(--fs-xs);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -345,11 +345,11 @@
 }
 
 .cdm-progress-bar.mid {
-  background: linear-gradient(90deg, #eab308 0%, #f59e0b 100%);
+  background: var(--warn);
 }
 
 .cdm-progress-bar.warning {
-  background: linear-gradient(90deg, #f97316 0%, var(--err) 100%);
+  background: linear-gradient(90deg, var(--warn) 0%, var(--err) 100%);
 }
 
 .cdm-progress-bar.lethal {

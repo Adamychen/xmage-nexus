@@ -22,7 +22,7 @@
 
 .game-menu-btn:hover {
   background: var(--ink-3);
-  color: var(--brand-fg);
+  color: var(--fg-2);
 }
 
 .game-menu-btn.is-open {
@@ -86,7 +86,7 @@
 
 .game-menu-panel .leave-game-btn:hover,
 .game-menu-panel .leave-match-btn:hover {
-  background: #2a1520;
+  background: var(--err-surface);
   color: var(--err);
   border: none;
   box-shadow: none;
@@ -110,13 +110,13 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #4a5080;
+  color: var(--fg-3);
   padding: 6px 12px 2px;
 }
 
 .game-menu-auto-empty {
   font-size: var(--fs-xs);
-  color: #4a5080;
+  color: var(--fg-3);
   padding: 2px 12px 6px;
 }
 
@@ -134,7 +134,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--brand-fg);
+  color: var(--fg-1);
 }
 
 .game-menu-auto-badge {
@@ -148,12 +148,12 @@
 
 .game-menu-auto-badge.is-yes {
   color: var(--ok);
-  border-color: #2c6b4a;
+  border-color: var(--ok);
 }
 
 .game-menu-auto-badge.is-no {
   color: var(--err);
-  border-color: #6b2c2c;
+  border-color: var(--err);
 }
 
 .game-menu-check {
@@ -162,7 +162,7 @@
   gap: 8px;
   padding: 4px 12px;
   font-size: var(--fs-xs);
-  color: var(--brand-fg);
+  color: var(--fg-1);
   cursor: pointer;
 }
 

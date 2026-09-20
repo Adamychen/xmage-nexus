@@ -19,7 +19,7 @@
 .draft-sets-title {
   font-size: var(--fs-sm);
   font-weight: 700;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -76,7 +76,7 @@
   font-size: var(--fs-xs);
   font-weight: 600;
   font-family: monospace;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   cursor: pointer;
   transition: all 0.15s ease;
 }

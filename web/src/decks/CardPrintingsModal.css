@@ -86,7 +86,7 @@
 }
 
 .printing-card-item.selected {
-  border-color: #48bb78;
+  border-color: var(--ok);
   box-shadow: 0 0 16px rgb(var(--ok-rgb) / 0.35);
 }
 
@@ -108,7 +108,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #38a169;
+  background: var(--ok-strong);
   color: white;
   padding: 3px 8px;
   border-radius: var(--r-pill);
@@ -152,7 +152,7 @@
   font-weight: 700;
 }
 
-.printing-rarity.mythic { color: var(--warn); }
-.printing-rarity.rare { color: var(--warn); }
-.printing-rarity.uncommon { color: var(--fg-2); }
-.printing-rarity.common { color: var(--fg-3); }
+.printing-rarity.mythic { color: var(--rarity-mythic); }
+.printing-rarity.rare { color: var(--rarity-rare); }
+.printing-rarity.uncommon { color: var(--rarity-uncommon); }
+.printing-rarity.common { color: var(--rarity-common); }

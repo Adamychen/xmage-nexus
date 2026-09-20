@@ -50,7 +50,7 @@
 
 .game-chat-time {
   font-size: var(--fs-2xs);
-  color: #5b6385;
+  color: var(--fg-3);
   flex-shrink: 0;
   margin-right: 6px;
   font-variant-numeric: tabular-nums;
@@ -97,7 +97,7 @@
 }
 
 .game-chat-send:hover {
-  background: #6aa1ff;
+  background: var(--brand);
 }
 
 .game-chat-send:disabled {

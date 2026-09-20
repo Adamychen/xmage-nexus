@@ -13,7 +13,7 @@
 .trigger-scope-btn {
   border: 1px solid var(--ink-4);
   background: transparent;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   border-radius: var(--r-pill);
   padding: 3px 12px;
   font-size: var(--fs-xs);
@@ -97,8 +97,8 @@
 }
 
 .trigger-btn.primary {
-  background: #2f6fed;
-  border-color: #2f6fed;
+  background: var(--brand-strong);
+  border-color: var(--brand);
   color: var(--fg-hi);
   font-weight: 700;
 }

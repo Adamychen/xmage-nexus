@@ -37,13 +37,13 @@
 }
 
 .voting-left {
-  background: linear-gradient(180deg, #2fbf71 0%, #229c5a 100%);
-  color: #06210f;
+  background: var(--ok);
+  color: var(--ink-0);
   box-shadow: 0 4px 14px rgb(var(--ok-rgb) / 0.3);
 }
 
 .voting-right {
-  background: linear-gradient(180deg, #5b8cff 0%, #3f6ae0 100%);
+  background: var(--brand-strong);
   color: var(--fg-hi);
   box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.35);
 }

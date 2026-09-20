@@ -131,7 +131,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #1a1000;
+  color: var(--ink-0);
   background: var(--gold-300);
   padding: 1px 5px;
   border-radius: var(--r-xs);
@@ -142,7 +142,7 @@
 }
 
 .tor-arrow {
-  color: #475569;
+  color: var(--fg-3);
   font-size: var(--fs-2xs);
   font-weight: 800;
 }

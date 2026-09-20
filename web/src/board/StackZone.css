@@ -19,7 +19,7 @@
   justify-content: center;
   height: 100%;
   text-align: center;
-  color: #626b90;
+  color: var(--fg-3);
   padding: 24px;
 }
 
@@ -39,12 +39,12 @@
   font-family: var(--font-display);
   font-size: var(--fs-md);
   font-weight: 700;
-  color: #8c96c0;
+  color: var(--brand);
 }
 
 .stack-empty-desc {
   font-size: var(--fs-2xs);
-  color: #5d668c;
+  color: var(--fg-3);
   line-height: 1.4;
   max-width: 220px;
 }
@@ -83,7 +83,7 @@
 }
 
 .stack-resolve-header-btn {
-  background: linear-gradient(135deg, #15803d, #16a34a);
+  background: var(--ok-strong);
   border: 1px solid rgb(var(--ok-rgb) / 0.5);
   border-radius: var(--r-sm);
   color: var(--fg-hi);
@@ -97,7 +97,7 @@
 }
 
 .stack-resolve-header-btn:hover {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: var(--ok);
   box-shadow: 0 4px 14px rgb(var(--ok-rgb) / 0.5);
   transform: translateY(-1px);
 }
@@ -114,7 +114,7 @@
 .toggle-mode-btn {
   background: transparent;
   border: none;
-  color: #8c96c0;
+  color: var(--brand);
   font-size: var(--fs-xs);
   font-weight: 600;
   padding: 2px 6px;
@@ -186,8 +186,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #4b5563;
-  border: 2px solid #6b7280;
+  background: var(--ink-4);
+  border: 2px solid var(--line-3);
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -197,8 +197,8 @@
 .stack-tl-node.node-top {
   width: 12px;
   height: 12px;
-  background: #22c55e;
-  border-color: #4ade80;
+  background: var(--ok);
+  border-color: var(--ok);
   box-shadow: 0 0 10px rgb(var(--ok-rgb) / 0.6), 0 0 20px rgb(var(--ok-rgb) / 0.3);
   animation: pulse-node 2s infinite ease-in-out;
 }
@@ -218,12 +218,12 @@
   width: 2px;
   flex: 1;
   min-height: 8px;
-  background: linear-gradient(to bottom, #4b5563, var(--ink-4));
+  background: var(--ink-4);
   margin-top: 2px;
 }
 
 .stack-tl-line.line-top {
-  background: linear-gradient(to bottom, #22c55e, #4b5563);
+  background: linear-gradient(to bottom, var(--ok), var(--ink-4));
 }
 
 /* ── Entry Body ── */
@@ -245,11 +245,11 @@
   font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #9ca3af;
+  color: var(--fg-2);
 }
 
 .stack-tl-entry.is-top .stack-tl-pos {
-  color: #4ade80;
+  color: var(--ok);
   text-shadow: 0 0 6px rgb(var(--ok-rgb) / 0.3);
 }
 
@@ -275,7 +275,7 @@
 
 .stack-controller-pill.is-opp {
   background: rgb(var(--err-rgb) / 0.15);
-  color: #ff8591;
+  color: var(--err);
   border: 1px solid rgb(var(--err-rgb) / 0.4);
   box-shadow: 0 0 6px rgb(var(--err-rgb) / 0.12);
 }
@@ -298,7 +298,7 @@
 
 .stack-tl-entry.is-top .stack-tl-card {
   border-color: rgb(var(--ok-rgb) / 0.35);
-  background: rgba(15, 28, 20, 0.75);
+  background: var(--ink-1);
   box-shadow: 0 0 10px rgb(var(--ok-rgb) / 0.1);
 }
 
@@ -329,7 +329,7 @@
   border-radius: var(--r-xs);
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(30, 35, 55, 0.8);
+  background: var(--ink-3);
   border: 1px solid var(--veil-3);
 }
 
@@ -369,7 +369,7 @@
 .stack-tl-name {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--fg-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,20 +411,20 @@
 
 .stack-tl-type-badge.type-ability {
   background: rgb(var(--brand-rgb) / 0.12);
-  color: #a5b4fc;
+  color: var(--brand-fg);
   border: 1px solid rgb(var(--brand-rgb) / 0.2);
 }
 
 .stack-tl-subtype {
   font-size: var(--fs-2xs);
-  color: #cbd5e1;
+  color: var(--fg-1);
   font-style: italic;
 }
 
 .stack-tl-pt {
   font-size: var(--fs-3xs);
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--warn);
   padding: 0 3px;
   background: rgb(var(--warn-rgb) / 0.1);
   border-radius: var(--r-xs);
@@ -436,7 +436,7 @@
   padding: 1px 4px;
   border-radius: var(--r-xs);
   background: linear-gradient(135deg, rgb(var(--purple-rgb) / 0.2), rgb(var(--err-rgb) / 0.2));
-  color: #e879f9;
+  color: var(--purple-fg);
   border: 1px solid rgb(var(--purple-rgb) / 0.3);
 }
 
@@ -464,7 +464,7 @@
 .stack-tl-rules {
   font-size: var(--fs-3xs);
   line-height: 1.4;
-  color: #cbd5e1;
+  color: var(--fg-1);
   white-space: pre-wrap;
   word-break: break-word;
   margin-top: 2px;

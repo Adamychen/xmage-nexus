@@ -219,7 +219,7 @@
   padding: 1px 5px;
   border-radius: var(--r-xs);
   background: var(--shade-1);
-  color: var(--brand-fg);
+  color: var(--fg-2);
 }
 
 .tfb-format-chip.active .tfb-chip-count {

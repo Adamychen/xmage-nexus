@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgb(4 6 16 / 88%);
+  background: rgb(var(--ink-rgb) / 0.88);
   backdrop-filter: blur(4px);
 }
 
@@ -90,7 +90,7 @@
 }
 
 .draft-timer.warn .draft-timer-bar {
-  background: #ffa94d;
+  background: var(--warn);
   opacity: 0.3;
 }
 
@@ -172,7 +172,7 @@
 
 .draft-picked-text {
   font-weight: 700;
-  color: var(--ok);
+  color: var(--fg-1);
 }
 
 .draft-picked-wait {
@@ -192,7 +192,7 @@
   padding: 6px 12px;
   border-radius: var(--r-sm);
   border: 1px solid rgb(var(--err-rgb) / 0.3);
-  background: rgba(60,20,30,0.5);
+  background: var(--err-surface);
   color: var(--err);
   font-size: var(--fs-xs);
   cursor: pointer;
@@ -207,14 +207,14 @@
   padding: 6px 12px;
   border-radius: var(--r-sm);
   border: 1px solid rgb(var(--brand-rgb) / 0.35);
-  background: rgba(40,30,80,0.5);
+  background: rgb(var(--purple-rgb) / 0.5);
   color: var(--brand-fg);
   font-size: var(--fs-xs);
   cursor: pointer;
 }
 
 .draft-log-btn:hover {
-  background: rgba(90,70,180,0.8);
+  background: rgb(var(--purple-rgb) / 0.8);
   color: var(--fg-hi);
 }
 
@@ -274,7 +274,7 @@
 
 .draft-hidden-link:hover {
   color: var(--fg-hi);
-  border-color: rgba(255,255,255,0.5);
+  border-color: var(--veil-6);
 }
 
 .arena-floating-preview {
@@ -328,7 +328,7 @@
 
 .draft-picks-area {
   border-top: 1px solid var(--border, var(--veil-2));
-  background: rgba(0,0,0,0.15);
+  background: var(--shade-0);
   max-height: 260px;
   overflow-y: auto;
 }
@@ -388,7 +388,7 @@
 }
 
 .draft-card-picked {
-  background: rgba(16, 36, 29, 0.72);
+  background: var(--ink-2);
   color: var(--ok);
   font-weight: 800;
 }
@@ -438,7 +438,7 @@
   display: grid;
   place-items: center;
   background: var(--gold-500);
-  color: #1a202c;
+  color: var(--ink-0);
   border-radius: 50%;
   font-size: var(--fs-3xs);
   font-weight: 800;

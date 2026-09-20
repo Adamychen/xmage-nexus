@@ -50,7 +50,7 @@
 .deck-box-art-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, var(--shade-5) 0%, var(--shade-2) 36%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(to top, var(--shade-5) 0%, var(--shade-2) 36%, var(--shade-0) 68%, transparent 100%);
 }
 .deck-box-format-badge {
   position: absolute;
@@ -95,7 +95,7 @@
   min-width: 0;
   background: var(--shade-4);
   backdrop-filter: blur(6px);
-  color: var(--gold-300);
+  color: var(--fg-1);
   font-weight: 700;
   font-size: var(--fs-sm);
   line-height: 1.15;
@@ -126,16 +126,17 @@
   font-size: var(--fs-2xs);
   font-weight: 900;
   color: var(--ink-1);
-  border: 1.5px solid rgba(255,255,255,0.9);
-  box-shadow: 0 1px 6px var(--shade-2), inset 0 1px 0 rgba(255,255,255,0.6);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+  border: 1.5px solid var(--veil-6);
+  box-shadow: 0 1px 6px var(--shade-2), inset 0 1px 0 var(--veil-7);
+  text-shadow: 0 1px 0 var(--veil-6);
+  background: radial-gradient(circle at 30% 28%, color-mix(in srgb, var(--pip) 45%, white) 0%, var(--pip) 55%, color-mix(in srgb, var(--pip) 60%, black) 100%);
 }
-.mana-pip.pip-w { background: radial-gradient(circle at 30% 28%, #fffef0 0%, #e6d9a3 55%, #b8a86a 100%); }
-.mana-pip.pip-u { background: radial-gradient(circle at 30% 28%, #d6eaf8 0%, #6bb3d9 55%, #2a6ea3 100%); }
-.mana-pip.pip-b { background: radial-gradient(circle at 30% 28%, #6b7280 0%, var(--ink-4) 55%, var(--ink-1) 100%); color: var(--fg-1); text-shadow: 0 1px 0 var(--shade-4); border-color: rgba(255,255,255,0.75); }
-.mana-pip.pip-r { background: radial-gradient(circle at 30% 28%, #ffd0b8 0%, #e05a33 55%, #8a1e0f 100%); }
-.mana-pip.pip-g { background: radial-gradient(circle at 30% 28%, #d4edc9 0%, #5faa4b 55%, #1d4d1a 100%); }
-.mana-pip.pip-c { background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 55%, #6b7280 100%); }
+.mana-pip.pip-w { --pip: var(--mana-w); }
+.mana-pip.pip-u { --pip: var(--mana-u); }
+.mana-pip.pip-b { --pip: var(--mana-b); color: var(--fg-1); text-shadow: 0 1px 0 var(--shade-4); border-color: var(--veil-6); }
+.mana-pip.pip-r { --pip: var(--mana-r); }
+.mana-pip.pip-g { --pip: var(--mana-g); }
+.mana-pip.pip-c { --pip: var(--mana-c); }
 .deck-box-meta {
   position: absolute;
   left: 10px;
@@ -144,7 +145,7 @@
   gap: 6px;
   align-items: center;
   font-size: var(--fs-2xs);
-  color: rgba(255,255,255,0.72);
+  color: var(--fg-2);
 }
 .deck-box-count { letter-spacing: 0.03em; }
 .deck-box-fav { color: var(--gold-300); filter: drop-shadow(0 1px 4px var(--shade-3)); }
@@ -174,5 +175,5 @@
   color: var(--fg-2);
   box-shadow: 0 0 22px rgb(var(--brand-rgb) / 0.18), inset 0 1px 0 var(--veil-2);
 }
-.deck-box:hover .deck-box-create-plus { color: var(--brand-fg); border-color: var(--veil-5); }
+.deck-box:hover .deck-box-create-plus { color: var(--fg-1); border-color: var(--veil-5); }
 .deck-box-create-label { color: var(--fg-2); font-weight: 600; font-size: var(--fs-sm); letter-spacing: 0.04em; }

@@ -138,7 +138,7 @@
 }
 
 .confirm-keep-btn {
-  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+  background: var(--ok-strong);
   color: white;
   border: none;
   border-radius: var(--r-pill);
@@ -192,7 +192,7 @@
 .sample-card-item:hover {
   transform: translateY(-8px) scale(1.04);
   box-shadow: 0 12px 28px var(--shade-3);
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--veil-6);
   z-index: 10;
 }
 
@@ -347,7 +347,7 @@
 }
 
 .sample-action-btn.reset {
-  background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
-  border-color: #9f7aea;
+  background: var(--purple);
+  border-color: var(--purple);
   color: white;
 }

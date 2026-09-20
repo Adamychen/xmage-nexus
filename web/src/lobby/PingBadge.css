@@ -50,8 +50,8 @@
 
 .ping-disconnected {
   color: var(--fg-3);
-  border-color: rgba(140, 150, 192, 0.3);
-  background: rgba(140, 150, 192, 0.08);
+  border-color: var(--line-3);
+  background: var(--line-1);
 }
 .ping-disconnected .ping-dot {
   background: var(--fg-3);

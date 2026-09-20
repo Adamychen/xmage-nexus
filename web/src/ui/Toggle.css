@@ -28,18 +28,18 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6b7394;
+  background: var(--ink-4);
   transition: transform 0.15s ease, background 0.15s;
 }
 
 .ui-toggle.on {
-  background: #253a2b;
-  border-color: #2f5c3d;
+  background: var(--ink-3);
+  border-color: var(--ok);
 }
 
 .ui-toggle.on .ui-toggle-knob {
   transform: translateX(18px);
-  background: #4cd07d;
+  background: var(--ok);
 }
 
 .ui-toggle-label { flex: 1; }

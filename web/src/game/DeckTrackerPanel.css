@@ -85,7 +85,7 @@
 }
 
 .seg-creatures {
-  background: #fb923c;
+  background: var(--warn);
 }
 
 .seg-spells {
@@ -129,8 +129,8 @@
 }
 
 .cell-other {
-  background: rgba(192, 132, 252, 0.07);
-  border: 1px solid rgba(192, 132, 252, 0.22);
+  background: rgb(var(--purple-rgb) / 0.07);
+  border: 1px solid rgb(var(--purple-rgb) / 0.22);
 }
 
 .odd-cell-header {
@@ -368,7 +368,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background: linear-gradient(90deg, var(--veil-1) 0%, var(--veil-1) 100%);
+  background: var(--veil-1);
   pointer-events: none;
   z-index: 0;
   transition: width 0.25s ease;
@@ -383,14 +383,14 @@
   background: var(--fg-2);
 }
 
-.tracker-color-bar.color-w { background: #facc15; }
-.tracker-color-bar.color-u { background: var(--brand-fg); }
-.tracker-color-bar.color-b { background: var(--fg-3); }
-.tracker-color-bar.color-r { background: var(--err); }
-.tracker-color-bar.color-g { background: #4ade80; }
-.tracker-color-bar.color-multi { background: linear-gradient(180deg, #facc15, #ea580c); }
-.tracker-color-bar.color-land { background: #78716c; }
-.tracker-color-bar.color-colorless { background: var(--fg-2); }
+.tracker-color-bar.color-w { background: var(--mana-w); }
+.tracker-color-bar.color-u { background: var(--mana-u); }
+.tracker-color-bar.color-b { background: var(--mana-b); }
+.tracker-color-bar.color-r { background: var(--mana-r); }
+.tracker-color-bar.color-g { background: var(--mana-g); }
+.tracker-color-bar.color-multi { background: linear-gradient(180deg, var(--mana-w), var(--warn)); }
+.tracker-color-bar.color-land { background: var(--ink-4); }
+.tracker-color-bar.color-colorless { background: var(--mana-c); }
 
 /* Fixed-width mana/land slot */
 .tracker-mana-slot {
@@ -443,7 +443,7 @@
 .tracker-row-name {
   font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--brand-fg);
+  color: var(--fg-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -456,7 +456,7 @@
   font-size: var(--fs-4xs);
   font-weight: 800;
   background: rgb(var(--warn-rgb) / 0.2);
-  border: 1px solid #eab308;
+  border: 1px solid var(--warn);
   color: var(--warn);
   padding: 1px 4px;
   border-radius: var(--r-xs);

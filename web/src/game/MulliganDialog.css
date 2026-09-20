@@ -65,7 +65,7 @@ html.fx-off .mulligan-card-wrap {
   height: 24px;
   border-radius: 50%;
   background: var(--gold-300);
-  color: #1a0f00;
+  color: var(--ink-0);
   font-size: var(--fs-xs);
   font-weight: 800;
   font-family: var(--font-display);
@@ -125,14 +125,14 @@ html.fx-off .mulligan-card-wrap {
 }
 
 .mulligan-keep {
-  background: linear-gradient(180deg, #2fbf71 0%, #229c5a 100%);
-  color: #06210f;
+  background: var(--ok);
+  color: var(--ink-0);
   box-shadow: 0 4px 14px rgb(var(--ok-rgb) / 0.3);
 }
 
 .mulligan-mulligan {
-  background: linear-gradient(180deg, var(--gold-300) 0%, #e8902f 100%);
-  color: #2a1700;
+  background: linear-gradient(180deg, var(--gold-300) 0%, var(--warn) 100%);
+  color: var(--ink-0);
   box-shadow: 0 4px 14px rgb(var(--warn-rgb) / 0.3);
 }
 
@@ -141,26 +141,26 @@ html.fx-off .mulligan-card-wrap {
   align-items: center;
   gap: 6px;
   background: transparent;
-  border-color: #8c4a4a;
+  border-color: var(--err);
   color: var(--err);
   box-shadow: none;
 }
 
 .mulligan-actions .mulligan-concede:hover:not(:disabled) {
-  border-color: #c25b5b;
+  border-color: var(--err);
   color: var(--err);
 }
 
 .mulligan-actions .primary {
-  background: linear-gradient(180deg, #5b8cff 0%, #3f6ae0 100%);
+  background: var(--brand-strong);
   color: var(--fg-hi);
   box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.35);
 }
 
 .mulligan-actions .cancel-btn {
   background: transparent;
-  border-color: #5a668c;
-  color: var(--brand-fg);
+  border-color: var(--line-3);
+  color: var(--fg-1);
   box-shadow: none;
 }
 

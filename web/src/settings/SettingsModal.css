@@ -348,18 +348,18 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6b7394;
+  background: var(--ink-4);
   transition: transform calc(0.15s / var(--fx-speed, 1)) ease, background 0.15s;
 }
 
 .settings-sound-card .fx-toggle.on {
-  background: #253a2b;
-  border-color: #2f5c3d;
+  background: var(--ink-3);
+  border-color: var(--ok);
 }
 
 .settings-sound-card .fx-toggle.on .fx-toggle-knob {
   transform: translateX(18px);
-  background: #4cd07d;
+  background: var(--ok);
 }
 
 .settings-sound-card .fx-speed-group {
@@ -421,7 +421,7 @@
 
 .settings-sound-card .audio-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  background: #9a80ff;
+  background: var(--purple);
 }
 
 .settings-sound-card .audio-slider:disabled {

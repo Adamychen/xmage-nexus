@@ -41,7 +41,7 @@
 }
 
 .context-menu-item.danger:hover:not(:disabled) {
-  background: #2a1520;
+  background: var(--err-surface);
 }
 
 .context-menu-item:disabled {

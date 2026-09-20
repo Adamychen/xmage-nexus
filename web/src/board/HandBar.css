@@ -33,7 +33,7 @@
   right: 24%;
   bottom: -3px;
   height: 24px;
-  background: radial-gradient(ellipse 52% 100% at 50% 100%, var(--shade-2) 0%, rgba(0, 0, 0, 0) 72%);
+  background: radial-gradient(ellipse 52% 100% at 50% 100%, var(--shade-2) 0%, transparent 72%);
   pointer-events: none;
   z-index: -1;
 }
