@@ -26,11 +26,7 @@
   font-weight: 700;
 }
 
-.end-score {
-  color: var(--fg-3);
-  font-size: var(--fs-sm);
-}
-
+.end-score,
 .end-hint {
   color: var(--fg-3);
   font-size: var(--fs-sm);

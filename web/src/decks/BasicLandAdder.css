@@ -195,10 +195,6 @@
 
 .suggester-input {
   width: 50px;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  color: var(--gold-300);
   font-weight: 800;
   font-size: var(--fs-sm);
   padding: 3px 6px;

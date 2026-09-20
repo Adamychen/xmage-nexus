@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Checkbox from '../ui/Checkbox'
 import { SLEEVES } from './sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
@@ -102,15 +103,13 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
               )
             })}
           </div>
-          <label className="ui-scale-cjk-toggle">
-            <input
-              type="checkbox"
-              checked={settings.cjkBoost}
-              onChange={(e) => setSetting('cjkBoost', e.target.checked)}
-              data-testid="cjk-boost-toggle"
-            />
-            <span>{t('lobby', 'cjk_boost_label')}</span>
-          </label>
+          <Checkbox
+            className="ui-scale-cjk-toggle"
+            checked={settings.cjkBoost}
+            onChange={(next) => setSetting('cjkBoost', next)}
+            inputTestId="cjk-boost-toggle"
+            label={t('lobby', 'cjk_boost_label')}
+          />
           <p className="ui-scale-hint">{t('lobby', 'cjk_boost_combo_hint')}</p>
         </section>
 

@@ -46,7 +46,7 @@ test.describe('Global settings modal', () => {
       await page.getByTestId('settings-nav-sound').click()
       const soundCard = page.getByTestId('settings-sound-card')
       await expect(soundCard).toBeVisible()
-      const toggleBox = await soundCard.locator('.fx-toggle').first().boundingBox()
+      const toggleBox = await soundCard.locator('.ui-toggle').first().boundingBox()
       expect(toggleBox?.width).toBeGreaterThanOrEqual(30)
       const labelBox = await soundCard.locator('.fx-popover-label').first().boundingBox()
       const hintBox = await soundCard.locator('.fx-popover-hint').first().boundingBox()

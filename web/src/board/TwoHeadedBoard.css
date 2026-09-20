@@ -58,10 +58,7 @@
 }
 
 /* BoardShell reparte la altura por flex de fila; en pod la celda manda */
-.pod-board .opponent-zone {
-  flex: unset;
-}
-
+.pod-board .opponent-zone,
 .pod-board .player-zone {
   flex: unset;
 }

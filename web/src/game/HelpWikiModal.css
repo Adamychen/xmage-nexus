@@ -43,30 +43,10 @@
 .wiki-search-input {
   width: 100%;
   padding: 10px 38px 10px 36px;
-  background: var(--shade-1);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-base);
-  color: var(--fg-1);
   font-size: var(--fs-sm);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.wiki-search-input:focus {
-  border-color: var(--accent, var(--brand-fg));
-  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.2);
-}
-
-.wiki-clear-search {
-  position: absolute;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: var(--fg-2);
-  cursor: pointer;
-  font-size: var(--fs-xs);
-  padding: 4px;
-}
+.wiki-clear-search { position: absolute; right: 6px; }
 
 /* Category Pills */
 .wiki-category-pills {
@@ -74,29 +54,6 @@
   flex-wrap: wrap;
   gap: 6px;
   margin: 12px 0 16px;
-}
-
-.wiki-pill {
-  background: var(--veil-1);
-  border: 1px solid var(--veil-2);
-  border-radius: 20px;
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.wiki-pill:hover {
-  background: var(--veil-2);
-  color: var(--fg-hi);
-}
-
-.wiki-pill.active {
-  background: rgb(var(--purple-rgb) / 0.2);
-  border-color: rgb(var(--purple-rgb) / 0.6);
-  color: var(--gold-300);
-  font-weight: 700;
 }
 
 /* Keywords Grid */
@@ -160,14 +117,6 @@
   color: var(--fg-2);
 }
 
-.wiki-kw-type-badge {
-  font-size: var(--fs-2xs);
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  background: var(--shade-1);
-  color: var(--fg-2);
-}
-
 .wiki-kw-summary {
   margin: 0;
   font-size: var(--fs-md);
@@ -184,17 +133,7 @@
   border-top: 1px dashed var(--veil-2);
 }
 
-.wiki-empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px 0;
-  color: var(--fg-2);
-}
-
-.wiki-empty span {
-  font-size: 2rem;
-  opacity: 0.5;
-}
+.wiki-empty { grid-column: 1 / -1; }
 
 /* Phases Tab */
 .wiki-phases-tab {
@@ -320,10 +259,6 @@
   justify-content: flex-end;
 }
 
-@media (prefers-reduced-motion: reduce) {.wiki-tab-btn,
-.wiki-search-input,
-.wiki-pill,
-.wiki-kw-card {
-    transition: none;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .wiki-kw-card { transition: none; }
 }

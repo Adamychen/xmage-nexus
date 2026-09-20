@@ -46,30 +46,12 @@
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
 }
 
-.game-phase {
-  color: var(--fg-3);
-}
-
 .game-controls {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: var(--fs-xs);
   flex-shrink: 0;
-}
-
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--fg-3);
-  cursor: pointer;
-  font-size: var(--fs-xs);
-}
-
-.toggle input {
-  width: 14px;
-  height: 14px;
 }
 
 .game-body {
@@ -156,13 +138,6 @@
   flex-direction: column;
 }
 
-.game-log-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
 .game-log-entries {
   flex: 1;
   overflow-y: auto;
@@ -175,12 +150,6 @@
   color: var(--fg-3);
   padding: 2px 0;
   word-break: break-word;
-}
-
-.game-log-player {
-  color: var(--brand);
-  font-weight: 600;
-  margin-right: 6px;
 }
 
 .game-log-text {
@@ -331,13 +300,6 @@
   box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.5), 0 6px 20px var(--shade-1);
 }
 
-.grid-no-results {
-  padding: 14px 16px;
-  text-align: center;
-  color: var(--fg-3);
-  font-size: var(--fs-sm);
-}
-
 .choice-text {
   flex: 1;
   line-height: 1.4;
@@ -425,14 +387,6 @@
 .stepper-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-.stepper-val {
-  font-size: 2.4rem;
-  font-weight: 800;
-  font-family: var(--font-display);
-  color: var(--gold-300);
-  line-height: 1;
 }
 
 .stepper-range {
@@ -532,18 +486,7 @@
 .feedback-input-box input {
   width: 100%;
   padding: 12px 16px 12px 42px;
-  background: var(--shade-1);
-  border: 1.5px solid var(--veil-4);
-  border-radius: var(--r-mid);
-  color: var(--fg-hi);
   font-size: var(--fs-lg);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.feedback-input-box input:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.3);
 }
 
 /* ── Action Buttons Row ─────────────────────────────────────── */
@@ -554,19 +497,7 @@
   margin-top: 20px;
 }
 
-.feedback-remember-answer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  font-size: var(--fs-sm);
-  color: var(--fg-2);
-  cursor: pointer;
-}
-
-.feedback-remember-answer input {
-  accent-color: var(--brand);
-}
+.feedback-remember-answer { margin-top: 14px; font-size: var(--fs-sm); }
 
 .feedback-dialog-actions button {
   padding: 10px 22px;

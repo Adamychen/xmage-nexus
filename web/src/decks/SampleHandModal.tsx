@@ -1,4 +1,6 @@
 import CloseButton from '../ui/CloseButton'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import { useState, useMemo, useEffect } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
@@ -193,11 +195,11 @@ export function SampleHandModal({
       onBackdropClick={onClose}
     >
         <div className="sample-hand-stats-chips">
-          <span className="stats-chip">{t('decks', 'total_cards')}: {hand.length}</span>
-          <span className="stats-chip lands"><Icon name="tree" size={11} /> {t('decks', 'lands')}: {landsInHand}</span>
-          <span className="stats-chip spells"><Icon name="sparkles" size={11} /> {t('decks', 'spells')}: {spellsInHand}</span>
-          <span className="stats-chip">{t('board', 'zone_library')}: {library.length}</span>
-          <span className="stats-chip turn">{t('game', 'turn')}: {turn}</span>
+          <Chip size="md" pill>{t('decks', 'total_cards')}: {hand.length}</Chip>
+          <Chip size="md" pill tone="ok" icon="tree">{t('decks', 'lands')}: {landsInHand}</Chip>
+          <Chip size="md" pill tone="brand" icon="sparkles">{t('decks', 'spells')}: {spellsInHand}</Chip>
+          <Chip size="md" pill>{t('board', 'zone_library')}: {library.length}</Chip>
+          <Chip size="md" pill tone="gold">{t('game', 'turn')}: {turn}</Chip>
         </div>
 
         {/* London Mulligan Prompt Banner */}
@@ -237,7 +239,7 @@ export function SampleHandModal({
         {/* Hand Cards Area */}
         <div className="sample-hand-cards-area">
           {hand.length === 0 ? (
-            <div className="sample-hand-empty">{t('decks', 'sample_no_cards')}</div>
+            <EmptyState fill>{t('decks', 'sample_no_cards')}</EmptyState>
           ) : (
             <div className="sample-hand-grid">
               {hand.map((card) => {

@@ -32,6 +32,17 @@ describe('css integrity', () => {
     expect(broken).toEqual([])
   })
 
+  it('no rule has an empty body or a dangling selector comma', () => {
+    const broken: string[] = []
+    for (const file of cssFiles) {
+      const css = readFileSync(file, 'utf8')
+      for (const m of css.matchAll(/[^{};]*(?:\{\s*\}|,\s*\})/g)) {
+        broken.push(`${relative(SRC, file)}: ${m[0].trim().slice(0, 100)}`)
+      }
+    }
+    expect(broken).toEqual([])
+  })
+
   it('every var() without fallback points to a defined custom property', () => {
     const sources = walk(SRC, ['.css', '.ts', '.tsx']).map((f) => readFileSync(f, 'utf8')).join('\n')
     const defined = new Set([

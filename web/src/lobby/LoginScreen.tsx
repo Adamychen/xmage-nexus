@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import CloseButton from '../ui/CloseButton'
 import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
@@ -337,9 +338,7 @@ export default function LoginScreen() {
           <div className="error-box">
             <span className="error-icon"><Icon name="alert" size={14} /></span>
             <span className="error-msg">{tError(error)}</span>
-            <button type="button" onClick={clearError} title={t('common.close')} aria-label={t('common', 'close')}>
-              ✕
-            </button>
+            <CloseButton variant="plain" size="sm" onClick={clearError} />
           </div>
         )}
 

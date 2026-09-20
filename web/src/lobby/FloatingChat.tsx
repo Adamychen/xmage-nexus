@@ -1,4 +1,6 @@
 import Tabs from '../ui/Tabs'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import { useEffect, useRef, useState } from 'react'
 import type { UsersView } from '../net/types'
 import ChatBox from './ChatBox'
@@ -243,16 +245,14 @@ export default function FloatingChat({
                 </div>
               </div>
               {isUserInGame(u.infoGames) ? (
-                <span className="game-info-badge"><Icon name="swords" size={13} /></span>
+                <Chip tone="gold" icon="swords" />
               ) : (
                 <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>
               )}
             </li>
           ))}
           {users.length === 0 && (
-            <li className="users-empty-item">
-              <span className="empty">{t('lobby.waiting_players')}</span>
-            </li>
+            <li><EmptyState size="sm">{t('lobby.waiting_players')}</EmptyState></li>
           )}
         </ul>
       )}

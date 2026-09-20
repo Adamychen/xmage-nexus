@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEscape } from '../ui/useEscape'
 import Icon from '../ui/Icon'
 import './ContextMenu.css'
 
@@ -20,13 +20,7 @@ interface ContextMenuProps {
 }
 
 export default function ContextMenu({ x, y, items, onSelect, onClose, menuRef }: ContextMenuProps) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscape(onClose)
   return (
     <>
       <div className="context-menu-overlay" onClick={onClose} aria-hidden />

@@ -119,10 +119,6 @@
   border-color: var(--gold-500);
 }
 
-.ray-icon {
-  color: var(--gold-500);
-}
-
 .stack-mark {
   font-size: var(--fs-heading);
   color: var(--gold-500);
@@ -144,14 +140,6 @@
   border-radius: var(--r-base);
   overflow: hidden;
   pointer-events: none;
-}
-
-.resource-stack .card-slot-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: var(--r-base);
-  display: block;
 }
 
 .resource-stack.has-card-img {

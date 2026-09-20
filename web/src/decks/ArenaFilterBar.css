@@ -43,37 +43,11 @@
 .arena-search-input {
   width: 100%;
   padding: 7px 28px 7px 30px;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-4);
   border-radius: var(--r-pill);
-  color: var(--fg-1);
   font-size: var(--fs-md);
-  outline: none;
-  transition: all 150ms ease;
 }
 
-.arena-search-input:focus {
-  border-color: var(--gold-500);
-  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.35);
-  background: var(--ink-3);
-}
-
-.arena-search-clear {
-  position: absolute;
-  right: 8px;
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  padding: 2px;
-  line-height: 1;
-  border-radius: 50%;
-}
-
-.arena-search-clear:hover {
-  color: var(--fg-hi);
-}
+.arena-search-clear { position: absolute; right: 6px; }
 
 .arena-search-help-wrap {
   position: relative;
@@ -436,17 +410,9 @@
 
 .arena-sort-select {
   padding: 4px 6px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-1);
   font-size: var(--fs-2xs);
   font-weight: 700;
   cursor: pointer;
-}
-
-.arena-sort-select option {
-  background: var(--ink-3);
 }
 
 .arena-sort-dir-btn {
@@ -514,21 +480,6 @@
 .rarity-rare.active { background: color-mix(in srgb, var(--rarity-rare) 40%, var(--ink-2)); border-color: var(--rarity-rare); }
 .rarity-mythic.active { background: color-mix(in srgb, var(--rarity-mythic) 40%, var(--ink-2)); border-color: var(--rarity-mythic); }
 
-.keyword-chip {
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--veil-3);
-  background: var(--veil-1);
-  color: var(--fg-2);
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.keyword-chip:hover { background: var(--veil-3); color: var(--fg-1); }
-.keyword-chip.active { background: rgb(var(--brand-rgb) / 0.18); border-color: var(--brand-fg); color: var(--brand-fg); }
-
 .keyword-more-btn {
   padding: 3px 8px;
   border-radius: var(--r-pill);
@@ -553,72 +504,20 @@
 
 .stat-op-select {
   padding: 4px 6px;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  color: var(--fg-1);
   font-size: var(--fs-xs);
   font-weight: 700;
-  outline: none;
 }
 
 .stat-num-input {
   width: 52px;
   padding: 4px 6px;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  color: var(--fg-1);
   font-size: var(--fs-xs);
-  outline: none;
   text-align: center;
 }
-
-.stat-num-input:focus, .stat-op-select:focus, .set-input:focus {
-  border-color: var(--gold-500);
-  box-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.3);
-}
-
-.stat-clear-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--veil-4);
-  background: var(--veil-2);
-  color: var(--fg-2);
-  font-size: var(--fs-2xs);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-clear-btn:hover { background: rgb(var(--err-rgb) / 0.18); border-color: var(--err); color: var(--err); }
 
 .set-filter-group .set-input {
   width: 110px;
   padding: 4px 8px;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  color: var(--fg-1);
   font-size: var(--fs-xs);
-  outline: none;
 }
-
-.set-chip {
-  padding: 2px 8px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-3);
-  background: var(--veil-1);
-  color: var(--fg-2);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.set-chip:hover { background: var(--veil-3); color: var(--fg-hi); }
-.set-chip.active { background: rgb(var(--gold-rgb) / 0.15); border-color: var(--gold-500); color: var(--gold-300); }
 

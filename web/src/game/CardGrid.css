@@ -1,12 +1,4 @@
-.card-grid-count-badge {
-  font-size: var(--fs-sm);
-  padding: 3px 9px;
-  border-radius: var(--r-mid);
-  background: rgb(var(--brand-rgb) / 0.15);
-  color: var(--accent, var(--brand-fg));
-  border: 1px solid rgb(var(--brand-rgb) / 0.3);
-  font-weight: 500;
-}
+
 
 .card-grid-search-wrap {
   position: relative;
@@ -40,22 +32,7 @@
   box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.2);
 }
 
-.card-grid-clear-btn {
-  position: absolute;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: var(--text-dim, var(--fg-2));
-  cursor: pointer;
-  padding: 4px 6px;
-  font-size: var(--fs-xs);
-  border-radius: var(--r-xs);
-}
-
-.card-grid-clear-btn:hover {
-  color: var(--fg-hi);
-  background: var(--veil-3);
-}
+.card-grid-clear-btn { position: absolute; right: 6px; }
 
 .card-grid-scroll-area {
   flex: 1 1 auto;
@@ -132,22 +109,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.card-grid-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 40px 0;
-  color: var(--text-dim, var(--fg-2));
-  font-size: var(--fs-base);
-}
-
-.card-grid-empty span {
-  font-size: 1.75rem;
-  opacity: 0.6;
 }
 
 .card-grid-actions {

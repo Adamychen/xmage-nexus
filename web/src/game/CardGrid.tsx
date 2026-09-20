@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react'
+import Chip from '../ui/Chip'
+import CloseButton from '../ui/CloseButton'
+import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
 import Icon, { type IconName } from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
@@ -71,11 +74,11 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
       legacyPanelClass="feedback-dialog card-grid-dialog"
       kickerIcon={kickerIcon}
       kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
-      title={<>{cardGridTitle} <span className="card-grid-count-badge">
+      title={<>{cardGridTitle} <Chip tone="brand" size="md">
         {filtered.length === cards.length
           ? `${cards.length} ${t('board','zone_hand')}`
           : `${filtered.length} / ${cards.length}`}
-      </span></>}
+      </Chip></>}
       message={prompt.message ? localizeServerMessage(prompt.message, t as any) : undefined}
       search={(
         <div className="card-grid-search-wrap">
@@ -90,14 +93,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             autoFocus
           />
           {filter && (
-            <button
-              type="button"
-              className="card-grid-clear-btn"
-              onClick={() => setFilter('')}
-              title={t('common','clear')}
-            >
-              ✕
-            </button>
+            <CloseButton variant="plain" size="sm" className="card-grid-clear-btn" label={t('common','clear')} onClick={() => setFilter('')} />
           )}
         </div>
       )}
@@ -123,10 +119,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
           </div>
 
           {filtered.length === 0 && (
-            <div className="card-grid-empty">
-              <span><Icon name="search" size={12} /></span>
-              <p>{t('dialogs','cardgrid_empty', { filter })}</p>
-            </div>
+            <EmptyState icon="search" iconSize={12}>{t('dialogs','cardgrid_empty', { filter })}</EmptyState>
           )}
         </div>
 

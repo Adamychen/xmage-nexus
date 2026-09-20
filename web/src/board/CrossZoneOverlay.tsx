@@ -1,5 +1,6 @@
 import CloseButton from '../ui/CloseButton'
-import { useEffect, useCallback } from 'react'
+import { useEscape } from '../ui/useEscape'
+import EmptyState from '../ui/EmptyState'
 import CardSlot from './CardSlot'
 import type { CrossZonePlayable } from './crossZone'
 import { useTranslation } from '../i18n'
@@ -13,14 +14,7 @@ interface CrossZoneOverlayProps {
 
 export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZoneOverlayProps) {
   const { t } = useTranslation()
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose()
-   }, [onClose])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-   }, [handleKeyDown])
+  useEscape(onClose)
 
   return (
     <div className="pile-overlay-backdrop" onClick={onClose} data-space-shortcut-off="true">
@@ -37,7 +31,7 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
              </div>
            ))}
           {playables.length === 0 && (
-            <div className="pile-overlay-empty">{t('game', 'stack_empty')}</div>
+            <EmptyState>{t('game', 'stack_empty')}</EmptyState>
           )}
         </div>
       </div>

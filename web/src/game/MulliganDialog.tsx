@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Checkbox from '../ui/Checkbox'
 import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
 import { useStore, useSettings, setSetting } from '../state/store'
@@ -156,14 +157,12 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
       message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
       trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
       aside={
-        <label className="toggle mulligan-auto-toggle">
-          <input
-            type="checkbox"
-            checked={settings.autoKeepMulligan}
-            onChange={(e) => setSetting('autoKeepMulligan', e.target.checked)}
-          />
-          {t('game', 'auto_mulligan')}
-        </label>
+        <Checkbox
+          className="mulligan-auto-toggle"
+          checked={settings.autoKeepMulligan}
+          onChange={(next) => setSetting('autoKeepMulligan', next)}
+          label={t('game', 'auto_mulligan')}
+        />
       }
     >
         {cardCount > 0 && (

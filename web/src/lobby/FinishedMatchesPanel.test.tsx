@@ -139,7 +139,7 @@ describe('FinishedMatchesPanel component', () => {
     expect(screen.getAllByText(new RegExp(`${t('lobby', 'tag_rated')}`, 'i')).length).toBeGreaterThan(0)
     expect(screen.getAllByText(new RegExp(`${t('lobby', 'tournament_badge')}`, 'i')).length).toBeGreaterThan(0)
     expect(document.querySelector('.finished-matches-list')).toBeTruthy()
-    expect(document.querySelector('.matches-empty-state')).toBeNull()
+    expect(document.querySelector('.ui-empty')).toBeNull()
   })
 
   it('renders the empty state without the scrollable list when there are no matches', async () => {
@@ -147,7 +147,7 @@ describe('FinishedMatchesPanel component', () => {
     render(<FinishedMatchesPanel roomId="room-1" users={mockUsers} />)
 
     await waitFor(() => {
-      expect(document.querySelector('.matches-empty-state')).toBeTruthy()
+      expect(document.querySelector('.ui-empty')).toBeTruthy()
     })
     expect(document.querySelector('.finished-matches-list')).toBeNull()
   })

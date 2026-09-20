@@ -32,14 +32,10 @@
 }
 
 .random-packs-cell {
-  display: flex;
-  align-items: center;
   gap: 5px;
-  font-size: var(--fs-xs);
   font-family: monospace;
   padding: 3px 6px;
   border-radius: var(--r-sm);
-  cursor: pointer;
 }
 
 .random-packs-cell:hover {

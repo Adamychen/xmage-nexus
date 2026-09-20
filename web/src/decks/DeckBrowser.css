@@ -25,30 +25,16 @@
 .browser-search-input {
   width: 100%;
   padding: 8px 30px 8px 14px;
-  background: var(--ink-2);
-  border: 1px solid var(--veil-3);
   border-radius: var(--r-pill);
-  color: var(--fg-hi);
   font-size: var(--fs-md);
-  outline: none;
-  transition: all 150ms ease;
-}
-
-.browser-search-input:focus {
-  border-color: var(--gold-500);
-  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.3);
 }
 
 .browser-select {
-  background: var(--ink-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
   border-radius: var(--r-pill);
   padding: 7px 14px;
   font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
-  outline: none;
 }
 
 /* Decks Grid */
@@ -105,27 +91,6 @@
   display: flex;
   gap: 6px;
   align-items: center;
-}
-
-.browser-deck-format-chip {
-  background: var(--shade-3);
-  border: 1px solid var(--gold-500);
-  color: var(--gold-300);
-  padding: 2px 7px;
-  border-radius: var(--r-pill);
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.browser-deck-arch-chip {
-  background: var(--shade-3);
-  border: 1px solid var(--brand);
-  color: var(--brand-fg);
-  padding: 2px 7px;
-  border-radius: var(--r-pill);
-  font-size: var(--fs-2xs);
-  font-weight: 800;
 }
 
 .browser-deck-content {

@@ -545,7 +545,7 @@ html.fx-off .counter-badge {
   border: 1px solid var(--veil-5);
 }
 
-.designation-badge.is-monstrous { border-color: var(--warn); color: var(--warn); }
+.designation-badge.is-monstrous,
 .designation-badge.is-renowned { border-color: var(--warn); color: var(--warn); }
 .designation-badge.is-suspected { border-color: var(--err); color: var(--err); }
 .designation-badge.is-paired { border-color: var(--brand); color: var(--brand-fg); }
@@ -555,38 +555,6 @@ html.fx-off .counter-badge {
 .designation-badge.is-evidence { border-color: var(--brand); color: var(--brand-fg); }
 .designation-badge.is-prepared { border-color: var(--brand-fg); color: var(--fg-1); }
 .designation-badge.is-protector { border-color: var(--ok); color: var(--ok); }
-
-.copy-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  font-family: var(--font-display);
-  background: rgb(var(--brand-rgb) / 0.9);
-  color: var(--fg-hi);
-  border: 1px solid rgb(var(--purple-rgb) / 0.6);
-  z-index: 5;
-  pointer-events: none;
-}
-
-.token-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  font-family: var(--font-display);
-  background: rgb(var(--gold-rgb) / 0.9);
-  color: var(--ink-0);
-  border: 1px solid rgb(var(--gold-rgb) / 0.8);
-  z-index: 5;
-  pointer-events: none;
-}
 
 /* Attached Auras & Equipment: Horizontal Right Fan (MTGO / Paper style) */
 .card-attachment-group {

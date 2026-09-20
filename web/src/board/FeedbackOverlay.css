@@ -90,11 +90,8 @@
     opacity: 0;
     transform: translateX(-50%) translateY(-14px) scale(0.92);
   }
-  12% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-  78% {
+12%,
+78% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }

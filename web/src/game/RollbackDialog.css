@@ -3,13 +3,6 @@
   width: 90vw;
 }
 
-.rollback-description {
-  color: var(--fg-2);
-  font-size: var(--fs-md);
-  line-height: 1.4;
-  margin-bottom: 12px;
-}
-
 .rollback-priority-notice {
   background: rgb(var(--warn-rgb) / 0.15);
   border: 1px solid rgb(var(--warn-rgb) / 0.4);

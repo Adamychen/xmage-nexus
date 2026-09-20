@@ -115,13 +115,7 @@ html.fx-off .mulligan-card-wrap {
   cursor: not-allowed;
 }
 
-.mulligan-auto-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
-}
+.mulligan-auto-toggle { justify-content: center; margin-top: 12px; }
 
 .mulligan-keep {
   background: var(--ok);

@@ -68,33 +68,6 @@
   letter-spacing: 0.03em;
 }
 
-.draft-set-chip {
-  background: var(--veil-1);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-sm);
-  padding: 3px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  font-family: monospace;
-  color: var(--fg-1);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.draft-set-chip:hover {
-  background: rgb(var(--brand-rgb) / 0.2);
-  border-color: rgb(var(--gold-rgb) / 0.5);
-  color: var(--gold-300);
-  transform: translateY(-1px);
-}
-
-.draft-set-chip.active {
-  background: rgb(var(--gold-rgb) / 0.18);
-  border-color: var(--gold-300);
-  color: var(--gold-300);
-  box-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.2);
-}
-
 .draft-sets-picker-row {
   display: flex;
   gap: 8px;
@@ -108,17 +81,8 @@
 
 .draft-sets-search-box input {
   width: 100%;
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
   padding: 6px 10px;
   font-size: var(--fs-sm);
-  color: var(--fg-hi);
-}
-
-.draft-sets-search-box input:focus {
-  border-color: var(--gold-300);
-  outline: none;
 }
 
 .draft-sets-select-box {
@@ -128,17 +92,8 @@
 
 .draft-sets-select-box select {
   width: 100%;
-  background: rgb(var(--ink-2-rgb) / 0.85);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
   padding: 6px 10px;
   font-size: var(--fs-sm);
-  color: var(--fg-hi);
-}
-
-.draft-sets-select-box select:focus {
-  border-color: var(--gold-300);
-  outline: none;
 }
 
 .draft-sets-boosters-list {
@@ -167,12 +122,8 @@
 }
 
 .draft-sets-booster-select {
-  background: rgb(var(--ink-2-rgb) / 0.9);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-xs);
   padding: 4px 6px;
   font-size: var(--fs-xs);
-  color: var(--fg-hi);
   width: 100%;
 }
 
@@ -199,16 +150,7 @@
 
 .draft-sets-manual-input-el {
   width: 100%;
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-sm);
   padding: 6px 10px;
   font-size: var(--fs-sm);
-  font-family: monospace;
-  color: var(--gold-300);
 }
 
-.draft-sets-manual-input-el:focus {
-  border-color: var(--gold-300);
-  outline: none;
-}

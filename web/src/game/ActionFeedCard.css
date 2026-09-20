@@ -165,15 +165,6 @@
   font-family: var(--font-display);
 }
 
-.action-target-pill {
-  font-size: var(--fs-2xs);
-  padding: 1px 5px;
-  border-radius: var(--r-xs);
-  background: rgb(var(--gold-rgb) / 0.15);
-  color: var(--gold-300);
-  border: 1px solid rgb(var(--gold-rgb) / 0.35);
-}
-
 .action-desc-text {
   font-size: var(--fs-2xs);
   color: var(--fg-1);
@@ -217,10 +208,7 @@
   border-left: 3px solid var(--line-3);
 }
 
-.action-feed-card.type-phase {
-  border-left: 3px solid var(--gold-300);
-}
-
+.action-feed-card.type-phase,
 .action-feed-card.type-system {
   border-left: 3px solid var(--gold-300);
 }

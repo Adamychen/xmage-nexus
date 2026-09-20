@@ -1,4 +1,6 @@
 import CloseButton from '../ui/CloseButton'
+import { useEscape } from '../ui/useEscape'
+import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
 import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
@@ -32,13 +34,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
   const [offline, setOffline] = useState(false)
   const [loadingNews, setLoadingNews] = useState(false)
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  useEscape(onClose)
 
   useEffect(() => {
     if (activeTab !== 'news' || releases.length > 0 || loadingNews) return
@@ -58,7 +54,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
   const renderFeed = (list: NewsRelease[], title: string, testid: string) => (
     <div className="about-feed" data-testid={testid}>
       <h3>{title}</h3>
-      {list.length === 0 && !loadingNews && <p className="about-empty">{t('system', 'news_empty')}</p>}
+      {list.length === 0 && !loadingNews && <EmptyState size="sm">{t('system', 'news_empty')}</EmptyState>}
       {list.map((r) => (
         <article key={`${r.repo}-${r.tag}`} className="about-release">
           <header>

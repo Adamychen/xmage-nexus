@@ -37,7 +37,7 @@ test.describe('Auto-answers', { tag: '@autoanswers' }, () => {
       const row = menu.locator('[class*="game-menu-auto-row"]')
       await expect(row).toContainText('would you like to draw a card?')
       await expect(row).toContainText('Sí')
-      await menu.locator('[class*="game-menu-auto-delete"]').click()
+      await menu.locator('[data-testid^="game-menu-auto-delete-"]').click()
       await expect(menu.locator('[data-testid="game-menu-auto-answers-label"]')).toContainText('(0)')
     })
   })

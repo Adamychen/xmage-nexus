@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import Chip from '../ui/Chip'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
 import { commanderTax } from '../board/commanders'
@@ -241,7 +242,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                       {isActive ? <Icon name="play" size={10} /> : <Icon name="circle" size={8} />}
                     </span>
                     <span className="cdm-player-title">{p.name}</span>
-                    {p.controlled && <span className="cdm-badge-you">{t('game', 'you').toUpperCase()}</span>}
+                    {p.controlled && <Chip solid tone="ok" size="xs">{t('game', 'you')}</Chip>}
                   </div>
                   <div className="cdm-player-life-pill">
                     <span className="cdm-life-heart"><Icon name="heart" size={12} /></span>
@@ -254,14 +255,14 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                     {playerCommanders.map((cmd) => {
                       const castCount = Number((cmd.card as any).castCount ?? 0)
                       return (
-                        <span key={cmd.id} className="cdm-commander-badge" title={t('game', 'commander_source_label', { name: p.name })}>
-                          <Icon name="crown" size={11} /> {cmd.name}
+                        <Chip key={cmd.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
+                          {cmd.name}
                           {castCount > 0 && (
-                            <span className="cdm-tax-badge" title={`Tax: +{${commanderTax(castCount)}}`}>
+                            <Chip tone="err" size="xs" title={`Tax: +{${commanderTax(castCount)}}`}>
                               +{commanderTax(castCount)}
-                            </span>
+                            </Chip>
                           )}
-                        </span>
+                        </Chip>
                       )
                     })}
                   </div>
@@ -287,7 +288,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                             </div>
                             <div className="cdm-damage-metric">
                               {isLethal ? (
-                                <span className="cdm-lethal-badge"><Icon name="skull" size={11} /> {t('game', 'commander_lethal_short')}</span>
+                                <Chip tone="err" size="xs" icon="skull">{t('game', 'commander_lethal_short')}</Chip>
                               ) : (
                                 <span className="cdm-count-text">
                                   <strong>{dmg}</strong> <span className="cdm-denom">/ 21</span>

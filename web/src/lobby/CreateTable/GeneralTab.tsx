@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import ChipButton from '../../ui/ChipButton'
+import Checkbox from '../../ui/Checkbox'
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
 import RandomPacksSelector, { isRandomPacksType } from './RandomPacksSelector'
@@ -81,18 +83,18 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
       <div className="create-presets-strip">
         <span className="create-presets-label"><Icon name="zap" size={12} /> {t('lobby', 'create_presets_title')}:</span>
         <div className="create-presets-buttons">
-          <button type="button" className="preset-chip" onClick={() => form.applyPreset('modern_bo3')}>
+          <ChipButton size="sm" onClick={() => form.applyPreset('modern_bo3')}>
             Modern Bo3
-          </button>
-          <button type="button" className="preset-chip" onClick={() => form.applyPreset('commander_4p')}>
+          </ChipButton>
+          <ChipButton size="sm" onClick={() => form.applyPreset('commander_4p')}>
             Commander 4P
-          </button>
-          <button type="button" className="preset-chip" onClick={() => form.applyPreset('draft_8p')}>
+          </ChipButton>
+          <ChipButton size="sm" onClick={() => form.applyPreset('draft_8p')}>
             Draft MH3 (8P)
-          </button>
-          <button type="button" className="preset-chip" onClick={() => form.applyPreset('modern_swiss_8p')}>
+          </ChipButton>
+          <ChipButton size="sm" onClick={() => form.applyPreset('modern_swiss_8p')}>
             Modern Swiss (8P)
-          </button>
+          </ChipButton>
         </div>
       </div>
 
@@ -147,17 +149,13 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
             </button>
           </div>
 
-          <label className="toggle-label-row">
-            <input
-              type="checkbox"
-              checked={form.useDraftTournament}
-              onChange={(e) => form.setUseDraftTournament(e.target.checked)}
-            />
-            <div className="toggle-text-block">
-              <span className="toggle-title">{t('lobby','create_field_as_draft_tourney')}</span>
-              <span className="toggle-desc">{t('lobby','create_desc_as_draft_tourney')}</span>
-            </div>
-          </label>
+          <Checkbox
+            card
+            checked={form.useDraftTournament}
+            onChange={form.setUseDraftTournament}
+            label={t('lobby','create_field_as_draft_tourney')}
+            description={t('lobby','create_desc_as_draft_tourney')}
+          />
           {form.tableCategory !== 'tourney' && form.isLimited && !form.isDraftLimited && (
             <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,193,7,0.4)', color: '#ffd54f', marginBottom: 8 }}>
               <Icon name="alert" size={13} /> {t('lobby', 'create_limited_match_hint')}
@@ -193,14 +191,14 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
             <span>{t('lobby', 'create_tourney_players')}</span>
             <div className="chip-row">
               {[2, 4, 8, 16, 32].map((n) => (
-                <button
+                <ChipButton
+                  pill
+                  active={form.numPlayers === n}
                   key={n}
-                  type="button"
-                  className={`chip ${form.numPlayers === n ? 'on' : ''}`}
                   onClick={() => form.setNumPlayers(n)}
                 >
                   {t('lobby','staging_seats_count',{count:n})}
-                </button>
+                </ChipButton>
               ))}
             </div>
           </div>
@@ -275,17 +273,13 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                 </label>
               )}
 
-              <label className="toggle-label-row">
-                <input
-                  type="checkbox"
-                  checked={form.singleGame}
-                  onChange={(e) => form.setSingleGame(e.target.checked)}
-                />
-                <div className="toggle-text-block">
-                  <span className="toggle-title">{t('lobby','create_field_single_game')}</span>
-                  <span className="toggle-desc">{t('lobby','create_desc_single_game')}</span>
-                </div>
-              </label>
+              <Checkbox
+                card
+                checked={form.singleGame}
+                onChange={form.setSingleGame}
+                label={t('lobby','create_field_single_game')}
+                description={t('lobby','create_desc_single_game')}
+              />
             </>
           )}
         </div>
@@ -301,14 +295,14 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
             { label: 'Bo7 (4)', val: 4 },
             { label: 'Bo9 (5)', val: 5 },
           ].map((w) => (
-            <button
+            <ChipButton
+              pill
+              active={form.wins === w.val}
               key={w.val}
-              type="button"
-              className={`chip ${form.wins === w.val ? 'on' : ''}`}
               onClick={() => form.setWins(w.val)}
             >
               {w.label}
-            </button>
+            </ChipButton>
           ))}
         </div>
       </div>
@@ -336,30 +330,27 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
           {SKILL_LEVEL_OPTIONS.map((opt) => {
             const label = opt.value === 'BEGINNER' ? t('lobby','create_skill_beginner') : opt.value === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')
             return (
-              <button
+              <ChipButton
+                pill
+                active={form.skillLevel === opt.value}
                 key={opt.value}
-                type="button"
-                className={`chip ${form.skillLevel === opt.value ? 'on' : ''}`}
                 onClick={() => form.setSkillLevel(opt.value as any)}
               >
                 {Array.from({ length: opt.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {label}
-              </button>
+              </ChipButton>
             )
           })}
         </div>
       </div>
 
-      <label className="toggle-label-row">
-        <input
-          type="checkbox"
-          checked={form.rated}
-          onChange={(e) => form.setRated(e.target.checked)}
-        />
-        <div className="toggle-text-block">
-          <span className="toggle-title"><Icon name="star" size={12} /> {t('lobby','create_field_rated')}</span>
-          <span className="toggle-desc">{t('lobby','create_desc_rated')}</span>
-        </div>
-      </label>
+      <Checkbox
+        card
+        checked={form.rated}
+        onChange={form.setRated}
+        icon="star"
+        label={t('lobby','create_field_rated')}
+        description={t('lobby','create_desc_rated')}
+      />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
 import type { UsersView } from '../net/types'
@@ -264,8 +265,8 @@ export default function LeaderboardModal({
 
                     {sortedUsers.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="leaderboard-empty-cell">
-                          {t('lobby', 'leaderboard_no_results')}
+                        <td colSpan={7}>
+                          <EmptyState italic>{t('lobby', 'leaderboard_no_results')}</EmptyState>
                         </td>
                       </tr>
                     )}

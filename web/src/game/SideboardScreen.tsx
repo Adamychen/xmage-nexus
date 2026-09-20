@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { addLog } from '../state/state'
@@ -477,7 +478,7 @@ export default function SideboardScreen() {
                 )
               })}
               {main.length === 0 && (
-                <div className="deck-list-empty-hint"><span>{t('game', 'sideboard_invalid')}</span></div>
+                <EmptyState boxed size="lg">{t('game', 'sideboard_invalid')}</EmptyState>
               )}
             </div>
           </div>
@@ -527,7 +528,7 @@ export default function SideboardScreen() {
                 )
               })}
               {filteredSide.length === 0 && side.length === 0 && (
-                <div className="deck-list-empty-hint"><small>{t('game', 'sideboard_main')}</small></div>
+                <EmptyState boxed size="lg">{t('game', 'sideboard_main')}</EmptyState>
               )}
             </div>
           </div>

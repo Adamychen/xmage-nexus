@@ -124,13 +124,6 @@
   --card-w: 210px;
 }
 
-.pile-overlay-empty {
-  color: var(--fg-3);
-  font-size: var(--fs-md);
-  padding: 24px;
-  text-align: center;
-}
-
 .cross-zone-overlay {
   width: min(760px, 86vw);
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import CloseButton from '../ui/CloseButton'
 import type { DeckCard } from '../lobby/decks'
 import { ManaCost } from './ArenaManaSymbols'
 import { setFloatingStripDragImage } from './arenaDragHelpers'
@@ -294,14 +295,12 @@ export function ArenaCardStrip({
             <Icon name="crown" size={13} />
           </button>
         )}
-        <button
-          type="button"
+        <CloseButton
+          size="sm"
           className="strip-btn danger"
+          label={t('decks', 'strip_remove_all')}
           onClick={() => void handleRemoveAll()}
-          title={t('decks', 'strip_remove_all')}
-        >
-          ×
-        </button>
+        />
       </div>
     </div>
   )

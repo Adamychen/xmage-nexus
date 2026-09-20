@@ -517,15 +517,3 @@
     animation: none;
   }
 }
-
-.draft-empty,
-.draft-picks-empty {
-  padding: 24px;
-  text-align: center;
-  color: var(--text-dim, var(--fg-2));
-  font-size: var(--fs-xs);
-}
-
-.draft-picks-empty {
-  padding: 12px;
-}

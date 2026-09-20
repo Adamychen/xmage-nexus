@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import ChipButton from '../ui/ChipButton'
+import CloseButton from '../ui/CloseButton'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -162,9 +164,7 @@ export function ArenaFilterBar({
           />
           {loading && <div className="arena-grid-spinner small" style={{ marginRight: 6 }} />}
           {query && !loading && (
-            <button type="button" className="arena-search-clear" onClick={() => onQueryChange('')} title={t('common', 'clear')}>
-              ×
-            </button>
+            <CloseButton variant="plain" size="sm" className="arena-search-clear" label={t('common', 'clear')} onClick={() => onQueryChange('')} />
           )}
           <div className="arena-search-help-wrap" ref={helpRef}>
             <button
@@ -352,9 +352,9 @@ export function ArenaFilterBar({
               {(moreKeywords ? [...KEYWORDS_PRIMARY, ...KEYWORDS_EXTRA] : [...KEYWORDS_PRIMARY]).map((kw) => {
                 const active = keywordFilter.has(kw)
                 return (
-                  <button key={kw} type="button" className={`keyword-chip ${active ? 'active' : ''}`} onClick={() => onToggleKeyword(kw)} title={kw} aria-pressed={active}>
+                  <ChipButton size="sm" pill active={active} key={kw}  onClick={() => onToggleKeyword(kw)} title={kw} aria-pressed={active}>
                     {keywordDisplayName(keywordIdOfLabel(kw), kw, (k) => t('keywords', k))}
-                  </button>
+                  </ChipButton>
                 )
               })}
               <button type="button" className="keyword-more-btn" onClick={() => setMoreKeywords((v) => !v)}>
@@ -399,9 +399,7 @@ export function ArenaFilterBar({
                 }}
               />
               {powerFilter && (
-                <button type="button" className="stat-clear-btn" onClick={() => onPowerChange(null)} title={t('common', 'clear')}>
-                  ×
-                </button>
+                <CloseButton variant="danger" size="sm" label={t('common', 'clear')} onClick={() => onPowerChange(null)} />
               )}
             </div>
 
@@ -440,9 +438,7 @@ export function ArenaFilterBar({
                 }}
               />
               {toughnessFilter && (
-                <button type="button" className="stat-clear-btn" onClick={() => onToughnessChange(null)} title={t('common', 'clear')}>
-                  ×
-                </button>
+                <CloseButton variant="danger" size="sm" label={t('common', 'clear')} onClick={() => onToughnessChange(null)} />
               )}
             </div>
 
@@ -460,9 +456,7 @@ export function ArenaFilterBar({
                 onBlur={handleSetSubmit}
               />
               {setFilter && (
-                <button type="button" className="stat-clear-btn" onClick={() => { setSetInput(''); onSetChange(null) }} title={t('common', 'clear')}>
-                  ×
-                </button>
+                <CloseButton variant="danger" size="sm" label={t('common', 'clear')} onClick={() => { setSetInput(''); onSetChange(null) }} />
               )}
             </div>
           </div>
@@ -470,9 +464,9 @@ export function ArenaFilterBar({
           <div className="adv-row adv-sets-row">
             <div className="arena-filter-chips">
               {QUICK_SETS.map((s) => (
-                <button key={s} type="button" className={`set-chip ${setFilter === s ? 'active' : ''}`} onClick={() => onSetChange(setFilter === s ? null : s)} aria-pressed={setFilter === s}>
+                <ChipButton size="sm" activeTone="gold" active={setFilter === s} key={s}  onClick={() => onSetChange(setFilter === s ? null : s)} aria-pressed={setFilter === s}>
                   {s.toUpperCase()}
-                </button>
+                </ChipButton>
               ))}
             </div>
           </div>

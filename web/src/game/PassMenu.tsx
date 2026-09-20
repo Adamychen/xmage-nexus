@@ -1,9 +1,9 @@
 import * as cmds from '../net/commands'
+import Checkbox from '../ui/Checkbox'
 import { useSettings, setSetting, useStore } from '../state/store'
 import type { GameView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { SKIPS, CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, activeSkipOf } from './skips'
-import Icon from '../ui/Icon'
 import './PassMenu.css'
 
 interface PassMenuProps {
@@ -50,26 +50,25 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
       )}
       <div className="pass-menu-divider" />
       <div className="pass-menu-section-label">{t('game', 'automation')}</div>
-      <label className={`toggle pass-menu-check hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`} title={t('game', 'hold_priority_title')} onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={settings.holdPriority}
-          onChange={(e) => {
-            const val = e.target.checked
-            setSetting('holdPriority', val)
-            if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
-          }}
-        />
-        <Icon name="zap" size={12} /> {t('game', 'hold_priority')}
-      </label>
-      <label className="toggle pass-menu-check" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={settings.autoPass}
-          onChange={(e) => setSetting('autoPass', e.target.checked)}
-        />
-        {t('game', 'auto_pass')}
-      </label>
+      <Checkbox
+        className={`pass-menu-check hold-priority-toggle ${settings.holdPriority ? 'is-active' : ''}`}
+        title={t('game', 'hold_priority_title')}
+        onClick={(e) => e.stopPropagation()}
+        checked={settings.holdPriority}
+        onChange={(val) => {
+          setSetting('holdPriority', val)
+          if (gameId) void cmds.sendPlayerAction(val ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', gameId)
+        }}
+        icon="zap"
+        label={t('game', 'hold_priority')}
+      />
+      <Checkbox
+        className="pass-menu-check"
+        onClick={(e) => e.stopPropagation()}
+        checked={settings.autoPass}
+        onChange={(next) => setSetting('autoPass', next)}
+        label={t('game', 'auto_pass')}
+      />
     </div>
   )
 }

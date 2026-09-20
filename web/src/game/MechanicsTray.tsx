@@ -1,4 +1,5 @@
 import Tabs from '../ui/Tabs'
+import EmptyState from '../ui/EmptyState'
 import { useEffect, useMemo, useState } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
@@ -194,20 +195,25 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   if (availableTabs.length === 0) {
     return (
       <div className="mechanics-tray empty">
-        <div className="mechanics-empty-box">
-          <span className="empty-icon"><Icon name="scrollText" size={26} /></span>
-          <h4>{t('game', 'mechanics_title')}</h4>
-          <p>{t('game', 'mechanics_empty')}</p>
-          <div className="mechanics-glossary-hint">
-            <span>{t('game', 'mechanics_title')}:</span>
-            <ul>
-              <li><Icon name="circle" size={12} /> <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
-              <li><Icon name="map" size={12} /> <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
-              <li><Icon name="sun" size={12} />/<Icon name="moon" size={12} /> <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
-              <li><Icon name="crown" size={12} /> <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
-            </ul>
-          </div>
-        </div>
+        <EmptyState
+          boxed
+          icon="scrollText"
+          iconSize={26}
+          title={t('game', 'mechanics_title')}
+          action={
+            <div className="mechanics-glossary-hint">
+              <span>{t('game', 'mechanics_title')}:</span>
+              <ul>
+                <li><Icon name="circle" size={12} /> <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
+                <li><Icon name="map" size={12} /> <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
+                <li><Icon name="sun" size={12} />/<Icon name="moon" size={12} /> <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
+                <li><Icon name="crown" size={12} /> <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
+              </ul>
+            </div>
+          }
+        >
+          {t('game', 'mechanics_empty')}
+        </EmptyState>
       </div>
     )
   }

@@ -1,6 +1,10 @@
 import CloseButton from '../ui/CloseButton'
+import { useEscape } from '../ui/useEscape'
+import ChipButton from '../ui/ChipButton'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import { keywordDisplayName, keywordRuleRef, keywordSummary } from '../data/keywordI18n'
 import FormattedText from './FormattedText'
@@ -46,15 +50,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
     mechanic: t('wiki', 'cat_mechanic'),
   }), [t])
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  useEscape(onClose)
 
   const filteredKeywords = useMemo(() => {
     let list = MTG_KEYWORDS
@@ -121,22 +117,20 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                   autoFocus
                 />
                 {searchQuery && (
-                  <button type="button" className="wiki-clear-search" onClick={() => setSearchQuery('')}>
-                    ✕
-                  </button>
+                  <CloseButton variant="plain" size="sm" className="wiki-clear-search" label={t('common', 'clear')} onClick={() => setSearchQuery('')} />
                 )}
               </div>
 
               <div className="wiki-category-pills">
                 {Object.entries(categoryLabels).map(([catKey, catLabel]) => (
-                  <button
+                  <ChipButton
+                    pill
+                    active={selectedCategory === catKey}
                     key={catKey}
-                    type="button"
-                    className={`wiki-pill ${selectedCategory === catKey ? 'active' : ''}`}
                     onClick={() => setSelectedCategory(catKey)}
                   >
                     <Icon name={CATEGORY_ICONS[catKey] ?? 'sparkles'} size={12} /> {catLabel}
-                  </button>
+                  </ChipButton>
                 ))}
               </div>
 
@@ -154,7 +148,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                           <strong className="wiki-kw-name-en">{locName}</strong>
                           {showEn && <span className="wiki-kw-name-es">({kw.name})</span>}
                         </div>
-                        <span className="wiki-kw-type-badge"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={11} /> {categoryLabels[kw.category] ?? kw.category}</span>
+                        <Chip size="xs" icon={CATEGORY_ICONS[kw.category] ?? 'sparkles'}>{categoryLabels[kw.category] ?? kw.category}</Chip>
                       </div>
                       <p className="wiki-kw-summary">
                         <FormattedText text={locSummary} />
@@ -169,10 +163,9 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                 })}
 
                 {filteredKeywords.length === 0 && (
-                  <div className="wiki-empty">
-                    <span><Icon name="search" size={13} /></span>
-                    <p>{t('dialogs', 'cardgrid_empty', { filter: searchQuery })}</p>
-                  </div>
+                  <EmptyState className="wiki-empty" icon="search" iconSize={13}>
+                    {t('dialogs', 'cardgrid_empty', { filter: searchQuery })}
+                  </EmptyState>
                 )}
               </div>
             </div>

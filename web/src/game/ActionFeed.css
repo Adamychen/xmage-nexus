@@ -78,18 +78,6 @@
   background: rgb(var(--gold-rgb) / 0.5);
 }
 
-.action-feed-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  font-style: italic;
-  padding: 24px;
-  text-align: center;
-}
-
 .action-feed-raw-list {
   display: flex;
   flex-direction: column;

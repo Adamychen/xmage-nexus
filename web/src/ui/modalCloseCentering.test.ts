@@ -30,6 +30,7 @@ describe('close buttons', () => {
       for (const m of source.matchAll(/<button\b[^>]*className=["'{`][^>]*close[^>]*>([\s\S]*?)<\/button>/gi)) {
         if (/<Icon name="x"/.test(m[1])) offenders.push(file.replace(SRC, ''))
       }
+      if (/<button\b[^>]*>\s*[✕×]\s*<\/button>/.test(source)) offenders.push(file.replace(SRC, ''))
     }
     expect(offenders).toEqual([])
   })

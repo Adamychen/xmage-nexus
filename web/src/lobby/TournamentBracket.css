@@ -51,33 +51,6 @@
   border-radius: var(--r-sm);
 }
 
-.tournament-state-badge {
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: rgb(var(--ok-rgb) / 0.14);
-  border: 1px solid rgb(var(--ok-rgb) / 0.35);
-  color: var(--ok);
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-}
-
-.tournament-watching-badge {
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  background: rgb(var(--ok-rgb) / 0.12);
-  border: 1px solid rgb(var(--ok-rgb) / 0.3);
-  color: var(--ok);
-  padding: 2px 7px;
-  border-radius: var(--r-sm);
-}
-.tournament-watching-badge.off {
-  background: var(--veil-2);
-  border-color: var(--veil-3);
-  color: var(--fg-3);
-}
-
 .tournament-header-actions {
   display: flex;
   align-items: center;
@@ -288,13 +261,6 @@
   gap: 8px;
 }
 
-.bracket-empty {
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
-  text-align: center;
-  padding: 12px 0;
-}
-
 .bracket-game {
   background: rgb(var(--ink-2-rgb) / 0.9);
   border: 1px solid var(--veil-2);
@@ -380,13 +346,6 @@ button.bracket-watch-btn:disabled {
   cursor: wait;
 }
 
-.tournament-empty {
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  text-align: center;
-  padding: 18px 0;
-}
-
 .tournament-standings-wrap {
   overflow-x: auto;
 }
@@ -443,16 +402,6 @@ button.bracket-watch-btn:disabled {
   border-radius: var(--r-xs);
 }
 
-.standings-quit-badge {
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  background: rgb(var(--err-rgb) / 0.18);
-  border: 1px solid rgb(var(--err-rgb) / 0.35);
-  color: var(--err);
-  padding: 1px 6px;
-  border-radius: var(--r-xs);
-}
-
 .standings-points {
   font-weight: 800;
   color: var(--ok);
@@ -472,13 +421,6 @@ button.bracket-watch-btn:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.standings-empty {
-  padding: 16px;
-  text-align: center;
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
 }
 
 .tournament-modal-scroll {

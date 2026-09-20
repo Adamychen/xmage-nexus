@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Chip from '../ui/Chip'
 import type { ActionFeedItem } from './gameEventParser'
 import { awaitImageUrl } from '../cards/cardImages'
 import Icon, { type IconName } from '../ui/Icon'
@@ -115,9 +116,7 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
         <div className="action-card-body">
           {item.cardName && <span className="action-card-name">{item.cardName}</span>}
           {item.targetName && (
-            <span className="action-target-pill">
-              ➔ {item.targetName}
-            </span>
+            <Chip tone="gold" size="xs">➔ {item.targetName}</Chip>
           )}
           <span className="action-desc-text">
             <FormattedText text={item.description} onHover={onHover} />

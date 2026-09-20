@@ -34,14 +34,6 @@
   cursor: not-allowed;
 }
 
-.quick-reaction-more {
-  margin-left: auto;
-  color: var(--fg-3);
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  border: 1px dashed var(--ink-4);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .quick-reaction-btn {
     transition: none;

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import CloseButton from '../ui/CloseButton'
+import Checkbox from '../ui/Checkbox'
 import {
   returnToLobby,
   concedeGame,
@@ -160,14 +162,15 @@ export default function GameMenu() {
                   {t('game', 'mana_payment_title')}
                 </div>
                 {manaRows.map((row) => (
-                  <label key={row.key} className="game-menu-check" title={row.tip} data-testid={row.testid}>
-                    <input
-                      type="checkbox"
-                      checked={settings.manaPayment[row.key]}
-                      onChange={() => toggleManaPayment(row.key)}
-                    />
-                    <span>{row.label}</span>
-                  </label>
+                  <Checkbox
+                    key={row.key}
+                    className="game-menu-check"
+                    title={row.tip}
+                    data-testid={row.testid}
+                    checked={settings.manaPayment[row.key]}
+                    onChange={() => toggleManaPayment(row.key)}
+                    label={row.label}
+                  />
                 ))}
               </>
             )}
@@ -186,16 +189,14 @@ export default function GameMenu() {
                     <span className={`game-menu-auto-badge ${rule.answer ? 'is-yes' : 'is-no'}`}>
                       {rule.answer ? t('common', 'yes') : t('common', 'no')}
                     </span>
-                    <button
-                      type="button"
-                      className="game-menu-auto-delete"
+                    <CloseButton
+                      variant="danger"
+                      size="sm"
                       title={t('common', 'delete') ?? ''}
-                      aria-label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
+                      label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
                       data-testid={`game-menu-auto-delete-${rule.id}`}
                       onClick={() => setSetting('autoAnswers', removeAutoAnswer(settings.autoAnswers, rule.id))}
-                    >
-                      ✕
-                    </button>
+                    />
                   </div>
                 ))}
                 {settings.autoAnswers.length > 0 && (
@@ -220,16 +221,14 @@ export default function GameMenu() {
                 {settings.choiceMemory.map((rule) => (
                   <div key={rule.id} className="game-menu-auto-row" data-testid={`game-menu-choice-rule-${rule.id}`}>
                     <span className="game-menu-auto-text" title={`${rule.pattern} → ${rule.value}`}>{rule.value}</span>
-                    <button
-                      type="button"
-                      className="game-menu-auto-delete"
+                    <CloseButton
+                      variant="danger"
+                      size="sm"
                       title={t('common', 'delete') ?? ''}
-                      aria-label={t('game', 'choice_memory_delete', { pattern: rule.pattern })}
+                      label={t('game', 'choice_memory_delete', { pattern: rule.pattern })}
                       data-testid={`game-menu-choice-delete-${rule.id}`}
                       onClick={() => setSetting('choiceMemory', removeChoiceMemory(settings.choiceMemory, rule.id))}
-                    >
-                      ✕
-                    </button>
+                    />
                   </div>
                 ))}
                 {settings.choiceMemory.length > 0 && (

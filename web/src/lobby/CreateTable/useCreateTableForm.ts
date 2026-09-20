@@ -187,6 +187,14 @@ export interface CreateTableForm {
   runDemoTable: () => Promise<void>
 }
 
+function readSaved(): Record<string, any> {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') ?? {}
+  } catch {
+    return {}
+  }
+}
+
 export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
@@ -240,6 +248,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const isLastStep = activeIndex === wizardSteps.length - 1
   const isFirstStep = activeIndex === 0
 
+  const [saved] = useState(readSaved)
   const [gameTypes, setGameTypes] = useState<GameTypeInfo[]>(DEFAULT_GAME_TYPES)
   const [deckTypes, setDeckTypes] = useState<string[]>(DEFAULT_DECK_TYPES)
   const [playerTypes, setPlayerTypes] = useState<string[]>(DEFAULT_PLAYER_TYPES)
@@ -247,61 +256,12 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [draftCubes, setDraftCubes] = useState<string[]>(DEFAULT_DRAFT_CUBES)
 
   // General tab
-  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.tableCategory === 'duel' || j.tableCategory === 'multi' || j.tableCategory === 'tourney') {
-          return j.tableCategory as TableCategory
-        }
-      }
-    } catch {}
-    return 'duel'
-  })
-  const [tournamentCategory, setTournamentCategoryState] = useState<TournamentCategory>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.tournamentCategory === 'limited' || j.tournamentCategory === 'constructed') {
-          return j.tournamentCategory as TournamentCategory
-        }
-      }
-    } catch {}
-    return 'limited'
-  })
+  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => (saved.tableCategory === 'duel' || saved.tableCategory === 'multi' || saved.tableCategory === 'tourney') ? saved.tableCategory as TableCategory : 'duel')
+  const [tournamentCategory, setTournamentCategoryState] = useState<TournamentCategory>(() => (saved.tournamentCategory === 'limited' || saved.tournamentCategory === 'constructed') ? saved.tournamentCategory as TournamentCategory : 'limited')
 
-  const [name, setName] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.name) return j.name as string
-      }
-    } catch {}
-    return `${username}'s table`
-  })
-  const [gameType, setGameTypeState] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.gameType) return j.gameType as string
-      }
-    } catch {}
-    return 'Two Player Duel'
-  })
-  const [deckType, setDeckTypeState] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.deckType) return j.deckType as string
-      }
-    } catch {}
-    return 'Constructed - Modern'
-  })
+  const [name, setName] = useState<string>(() => saved.name || `${username}'s table`)
+  const [gameType, setGameTypeState] = useState<string>(() => saved.gameType || 'Two Player Duel')
+  const [deckType, setDeckTypeState] = useState<string>(() => saved.deckType || 'Constructed - Modern')
 
   const setGameType = (newGt: string) => {
     setGameTypeState(newGt)
@@ -317,46 +277,10 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       setGameTypeState(getDefaultGameTypeForDeck(newDt, numPlayers))
     }
   }
-  const [wins, setWins] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (typeof j.wins === 'number' && j.wins >= 1 && j.wins <= 5) return j.wins as number
-      }
-    } catch {}
-    return 1
-  })
-  const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.skillLevel) return j.skillLevel as 'BEGINNER' | 'CASUAL' | 'SERIOUS'
-      }
-    } catch {}
-    return 'CASUAL'
-  })
-  const [rated, setRated] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (typeof j.rated === 'boolean') return j.rated as boolean
-      }
-    } catch {}
-    return false
-  })
-  const [useDraftTournament, setUseDraftTournament] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (typeof j.useDraftTournament === 'boolean') return j.useDraftTournament as boolean
-      }
-    } catch {}
-    return false
-  })
+  const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 1)
+  const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => saved.skillLevel || 'CASUAL')
+  const [rated, setRated] = useState<boolean>(() => saved.rated === true)
+  const [useDraftTournament, setUseDraftTournament] = useState<boolean>(() => saved.useDraftTournament === true)
   const [draftSetsRaw, setDraftSetsRaw] = useState('M21, M21, M21')
   const [draftBoostersState, setDraftBoostersState] = useState<3 | 6>(3)
   const setDraftBoosters = (v: 3 | 6) => {
@@ -497,26 +421,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [quitRatio, setQuitRatio] = useState(100)
   const [edhPowerLevel, setEdhPowerLevel] = useState(100)
 
-  const [numPlayers, setNumPlayers] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (typeof j.numPlayers === 'number' && j.numPlayers >= 2 && j.numPlayers <= 10) return j.numPlayers as number
-      }
-    } catch {}
-    return 2
-  })
-  const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (Array.isArray(j.seatConfigs)) return (j.seatConfigs as SeatConfig[]).map((s) => ({ type: normalizeSeatType(String(s.type ?? SIM_SEAT)), deckName: s.deckName, skill: typeof s.skill === 'number' ? s.skill : 2 }))
-      }
-    } catch {}
-    return []
-  })
+  const [numPlayers, setNumPlayers] = useState<number>(() => typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2)
+  const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => Array.isArray(saved.seatConfigs) ? (saved.seatConfigs as SeatConfig[]).map((s) => ({ type: normalizeSeatType(String(s.type ?? SIM_SEAT)), deckName: s.deckName, skill: typeof s.skill === 'number' ? s.skill : 2 })) : [])
   const recommendedMulligans = useMemo(
     () => recommendedFreeMulligans(gameType, numPlayers),
     [gameType, numPlayers],
@@ -527,16 +433,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     lastRecommendedMulligans.current = recommendedMulligans
     setFreeMulligans(recommendedMulligans)
   }, [recommendedMulligans])
-  const [mySkill, setMySkill] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (typeof j.mySkill === 'number' && j.mySkill >= 1 && j.mySkill <= 10) return j.mySkill as number
-      }
-    } catch {}
-    return 2
-  })
+  const [mySkill, setMySkill] = useState<number>(() => typeof saved.mySkill === 'number' && saved.mySkill >= 1 && saved.mySkill <= 10 ? saved.mySkill : 2)
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)

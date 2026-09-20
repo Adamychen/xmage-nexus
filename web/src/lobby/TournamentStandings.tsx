@@ -1,4 +1,6 @@
 import type { TournamentPlayerView } from '../net/types'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import { useTranslation } from '../i18n'
 import { stateLabel } from './lobbyUtils'
 
@@ -11,7 +13,7 @@ export default function TournamentStandings({ players, sortedPlayers }: Props) {
   const { t } = useTranslation()
   const list = sortedPlayers ?? [...players].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
   if (list.length === 0) {
-    return <div className="standings-empty" data-testid="standings-empty">{t('lobby', 'standings_empty')}</div>
+    return <EmptyState size="sm" data-testid="standings-empty">{t('lobby', 'standings_empty')}</EmptyState>
   }
   return (
     <div className="tournament-standings-wrap" data-testid="tournament-standings">
@@ -38,7 +40,7 @@ export default function TournamentStandings({ players, sortedPlayers }: Props) {
               <td className="standings-name" data-testid="standings-name">
                 <span className="standings-name-text">{p.name}</span>
                 {p.flagName && <span className="standings-flag" title={p.flagName}>{p.flagName}</span>}
-                {p.quit && <span className="standings-quit-badge" data-testid="standings-quit">{t('lobby', 'standings_quit_badge')}</span>}
+                {p.quit && <Chip tone="err" size="xs" data-testid="standings-quit">{t('lobby', 'standings_quit_badge')}</Chip>}
               </td>
               <td className="standings-points" data-testid="standings-points">{p.points}</td>
               <td className="standings-state" data-testid="standings-state">{stateLabel(t, p.state)}</td>

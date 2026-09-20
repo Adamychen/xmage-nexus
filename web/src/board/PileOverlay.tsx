@@ -1,5 +1,7 @@
 import CloseButton from '../ui/CloseButton'
-import { useEffect, useCallback, useMemo, useState } from 'react'
+import { useEscape } from '../ui/useEscape'
+import EmptyState from '../ui/EmptyState'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
@@ -36,14 +38,7 @@ export default function PileOverlay({
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose()
-  }, [onClose])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+  useEscape(onClose)
 
   const handleCardHover = (card: any, rect?: DOMRect) => {
     if (card?.faceDown) {
@@ -107,7 +102,7 @@ export default function PileOverlay({
             )
           })}
           {entries.length === 0 && (
-            <div className="pile-overlay-empty">{isLibrary ? t('board', 'pile_library') : t('common', 'search')}</div>
+            <EmptyState>{isLibrary ? t('board', 'pile_library') : t('common', 'search')}</EmptyState>
           )}
         </div>
       </div>

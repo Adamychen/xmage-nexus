@@ -19,11 +19,6 @@
     "radii": 0,
     "fontSizes": 1
   },
-  "board/StackZone.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
-  },
   "decks/ArenaCardGrid.css": {
     "colors": 0,
     "radii": 1,
@@ -34,22 +29,12 @@
     "radii": 0,
     "fontSizes": 2
   },
-  "decks/DeckListPanel.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
-  },
   "decks/DecksGallery.css": {
     "colors": 0,
     "radii": 0,
     "fontSizes": 1
   },
   "decks/SampleHandModal.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
-  },
-  "game/CardGrid.css": {
     "colors": 0,
     "radii": 0,
     "fontSizes": 1
@@ -62,17 +47,17 @@
   "game/GameScreen.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 5
+    "fontSizes": 4
   },
   "game/HelpWikiModal.css": {
     "colors": 0,
-    "radii": 1,
-    "fontSizes": 2
+    "radii": 0,
+    "fontSizes": 1
   },
   "game/MechanicsTray.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 4
+    "fontSizes": 3
   },
   "game/PlayerStatusCard.css": {
     "colors": 0,
@@ -89,11 +74,6 @@
     "radii": 0,
     "fontSizes": 1
   },
-  "lobby/CreateTableDialog.css": {
-    "colors": 0,
-    "radii": 1,
-    "fontSizes": 0
-  },
   "lobby/DeckManager.css": {
     "colors": 0,
     "radii": 0,
@@ -102,17 +82,17 @@
   "lobby/FinishedMatchesPanel.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 2
+    "fontSizes": 1
   },
   "lobby/LeaderboardModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 2
+    "fontSizes": 1
   },
   "lobby/LobbyScreen.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 3
+    "fontSizes": 2
   },
   "lobby/LoginScreen.css": {
     "colors": 0,
@@ -123,11 +103,6 @@
     "colors": 0,
     "radii": 0,
     "fontSizes": 4
-  },
-  "lobby/TableFilterBar.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1
   },
   "lobby/UserActionModal.css": {
     "colors": 0,

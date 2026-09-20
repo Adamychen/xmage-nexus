@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import ChipButton from '../ui/ChipButton'
 import { useState } from 'react'
 import { OFFICIAL_AVATARS } from './avatars'
 import AvatarImage from './AvatarImage'
@@ -45,27 +46,15 @@ export default function AvatarPickerModal({
     >
         {/* Filter Chips */}
         <div className="avatar-picker-tabs">
-          <button
-            type="button"
-            className={`chip ${filter === 'all' ? 'on' : ''}`}
-            onClick={() => setFilter('all')}
-          >
+          <ChipButton pill active={filter === 'all'} onClick={() => setFilter('all')}>
             {t('lobby', 'avatar_filter_all', { count: OFFICIAL_AVATARS.length })}
-          </button>
-          <button
-            type="button"
-            className={`chip ${filter === 'standard' ? 'on' : ''}`}
-            onClick={() => setFilter('standard')}
-          >
+          </ChipButton>
+          <ChipButton pill active={filter === 'standard'} onClick={() => setFilter('standard')}>
             {t('lobby', 'avatar_filter_standard')}
-          </button>
-          <button
-            type="button"
-            className={`chip ${filter === 'special' ? 'on' : ''}`}
-            onClick={() => setFilter('special')}
-          >
+          </ChipButton>
+          <ChipButton pill active={filter === 'special'} onClick={() => setFilter('special')}>
             <Icon name="sparkles" size={12} /> {t('lobby', 'avatar_filter_special')}
-          </button>
+          </ChipButton>
         </div>
 
         {/* Avatars Grid */}

@@ -191,17 +191,7 @@
   justify-content: center;
 }
 
-.ui-scale-cjk-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
-  cursor: pointer;
-}
-
-.ui-scale-cjk-toggle input { width: 14px; height: 14px; }
+.ui-scale-cjk-toggle { margin-top: 12px; }
 
 .ui-scale-hint {
   margin: 6px 0 0;

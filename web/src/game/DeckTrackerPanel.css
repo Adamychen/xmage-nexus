@@ -198,16 +198,6 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.tracker-warning-chip {
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  background: rgb(var(--warn-rgb) / 0.12);
-  border: 1px solid rgb(var(--warn-rgb) / 0.3);
-  color: var(--warn);
-  font-size: var(--fs-3xs);
-  font-weight: 600;
-}
-
 /* ── Control Toolbar ───────────────────────────────── */
 .tracker-controls {
   display: flex;
@@ -233,34 +223,10 @@
   width: 100%;
   height: 24px;
   padding: 2px 20px 2px 22px;
-  background: var(--ink-2);
-  border: 1px solid var(--ink-3);
-  border-radius: var(--r-xs);
-  color: var(--fg-hi);
   font-size: var(--fs-2xs);
-  outline: none;
-  transition: border-color 0.15s ease;
 }
 
-.tracker-search-input:focus {
-  border-color: var(--accent, var(--brand));
-}
-
-.tracker-search-clear {
-  position: absolute;
-  right: 6px;
-  background: transparent;
-  border: none;
-  color: var(--fg-3);
-  cursor: pointer;
-  font-size: var(--fs-3xs);
-  padding: 0;
-  line-height: 1;
-}
-
-.tracker-search-clear:hover {
-  color: var(--fg-hi);
-}
+.tracker-search-clear { position: absolute; right: 2px; }
 
 .tracker-actions-row {
   display: flex;
@@ -277,18 +243,8 @@
   width: 100%;
   height: 24px;
   padding: 1px 6px;
-  background: var(--ink-2);
-  border: 1px solid var(--ink-3);
-  border-radius: var(--r-xs);
-  color: var(--fg-2);
   font-size: var(--fs-3xs);
-  outline: none;
   cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.tracker-sort-select:focus {
-  border-color: var(--accent, var(--brand));
 }
 
 .tracker-toggle-btn {
@@ -538,15 +494,3 @@
   box-shadow: inset 0 0 8px rgb(var(--gold-rgb) / 0.1);
 }
 
-/* ── Empty State ───────────────────────────────────── */
-.tracker-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 36px 16px;
-  color: var(--fg-3);
-  text-align: center;
-  font-size: var(--fs-xs);
-}

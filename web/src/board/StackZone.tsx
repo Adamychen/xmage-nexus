@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
+import EmptyState from '../ui/EmptyState'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import { awaitImageUrl, isAbilityCard } from '../cards/cardImages'
@@ -360,13 +361,9 @@ export default function StackZone({
 
   if (entries.length === 0) {
     return (
-      <div className="stack-zone empty">
-        <div className="stack-empty-state">
-          <span className="stack-empty-icon"><Icon name="bolt" size={24} /></span>
-          <span className="stack-empty-title">{t('game', 'stack_empty')}</span>
-          <span className="stack-empty-desc">{t('game', 'stack_empty_desc')}</span>
-        </div>
-      </div>
+      <EmptyState fill icon="bolt" iconSize={24} title={t('game', 'stack_empty')}>
+        {t('game', 'stack_empty_desc')}
+      </EmptyState>
     )
   }
 

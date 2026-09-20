@@ -15,26 +15,6 @@
   gap: 6px;
 }
 
-.inspector-format-badge {
-  background: rgb(var(--gold-rgb) / 0.15);
-  border: 1px solid var(--gold-500);
-  color: var(--gold-300);
-  border-radius: var(--r-pill);
-  padding: 2px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-}
-
-.inspector-archetype-badge {
-  background: rgb(var(--brand-rgb) / 0.15);
-  border: 1px solid var(--brand);
-  color: var(--brand-fg);
-  border-radius: var(--r-pill);
-  padding: 2px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-}
-
 .deck-inspector-body {
   display: grid;
   grid-template-columns: 1fr 300px;

@@ -58,9 +58,6 @@
   flex-wrap: wrap;
 }
 .decks-select {
-  background: var(--ink-3);
-  color: var(--fg-2);
-  border: 1px solid var(--veil-3);
   border-radius: var(--r-pill);
   padding: 6px 12px;
   font-size: var(--fs-sm);
@@ -71,25 +68,12 @@
   align-items: center;
 }
 .decks-search {
-  background: var(--ink-1);
-  border: 1px solid var(--veil-3);
   border-radius: var(--r-pill);
   padding: 6px 28px 6px 12px;
-  color: var(--fg-2);
   min-width: 160px;
   font-size: var(--fs-sm);
 }
-.decks-search-clear {
-  position: absolute;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-}
+.decks-search-clear { position: absolute; right: 4px; }
 .decks-mana-filter { display: flex; gap: 5px; align-items: center; }
 .mana-filter-btn {
   width: 26px;

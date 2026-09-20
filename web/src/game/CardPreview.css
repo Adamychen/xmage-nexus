@@ -151,16 +151,6 @@
   white-space: pre-wrap;
 }
 
-.card-preview-flavor {
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  font-style: italic;
-  line-height: 1.4;
-  border-top: 1px solid var(--ink-3);
-  padding-top: 6px;
-  margin-top: 2px;
-}
-
 .card-preview-pt {
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
   font-size: var(--fs-md);

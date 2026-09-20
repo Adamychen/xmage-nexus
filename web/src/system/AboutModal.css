@@ -33,10 +33,6 @@
   font-size: var(--fs-base);
 }
 
-.about-empty {
-  opacity: 0.6;
-}
-
 .about-release {
   border: 1px solid var(--border);
   border-radius: var(--r-base);

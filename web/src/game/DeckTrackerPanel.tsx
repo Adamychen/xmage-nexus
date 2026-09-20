@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react'
+import Chip from '../ui/Chip'
+import CloseButton from '../ui/CloseButton'
+import EmptyState from '../ui/EmptyState'
 import { useStore } from '../state/store'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
@@ -172,9 +175,9 @@ export default function DeckTrackerPanel() {
         )}
 
         {stats.faceDownExileCount > 0 && (
-          <div className="tracker-warning-chip" title={t('game', 'tracker_face_down_exile')}>
-            <Icon name="alert" size={12} /> {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
-          </div>
+          <Chip tone="warn" size="xs" icon="alert" title={t('game', 'tracker_face_down_exile')}>
+            {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
+          </Chip>
         )}
 
         {/* Control toolbar */}
@@ -190,14 +193,7 @@ export default function DeckTrackerPanel() {
                 placeholder={t('game', 'tracker_search_placeholder')}
               />
               {searchQuery && (
-                <button
-                  type="button"
-                  className="tracker-search-clear"
-                  onClick={() => setSearchQuery('')}
-                  aria-label={t('game', 'tracker_clear_search')}
-                >
-                  <Icon name="x" size={11} />
-                </button>
+                <CloseButton variant="plain" size="sm" className="tracker-search-clear" label={t('game', 'tracker_clear_search')} onClick={() => setSearchQuery('')} />
               )}
             </div>
 
@@ -233,14 +229,9 @@ export default function DeckTrackerPanel() {
       {/* Cards Scroll Container */}
       <div className="tracker-card-list">
         {stats.initialTotal === 0 ? (
-          <div className="tracker-empty">
-            <Icon name="layers" size={28} />
-            <p>{t('game', 'tracker_no_deck')}</p>
-          </div>
+          <EmptyState size="lg" icon="layers">{t('game', 'tracker_no_deck')}</EmptyState>
         ) : displayedCards.length === 0 ? (
-          <div className="tracker-empty">
-            <p>{t('game', 'tracker_no_results')}</p>
-          </div>
+          <EmptyState size="lg">{t('game', 'tracker_no_results')}</EmptyState>
         ) : (
           displayedCards.map((c) => {
             const isEmpty = c.remainingCount === 0

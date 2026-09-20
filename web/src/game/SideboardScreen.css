@@ -197,67 +197,6 @@
   box-shadow: inset 0 0 16px rgb(var(--brand-rgb) / 0.25);
 }
 
-.sideboard-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.12s, border-color 0.12s;
-}
-
-.sideboard-card:hover {
-  background: var(--veil-1);
-  border-color: var(--border);
-}
-
-.sideboard-card.max-copies {
-  opacity: 0.5;
-}
-
-.sideboard-card-img {
-  width: 38px;
-  height: 53px;
-  object-fit: cover;
-  border-radius: var(--r-xs);
-  flex-shrink: 0;
-}
-
-.sideboard-card-placeholder {
-  width: 38px;
-  height: 53px;
-  border-radius: var(--r-xs);
-  background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-2) 100%);
-  flex-shrink: 0;
-}
-
-.sideboard-card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow: hidden;
-  min-width: 0;
-}
-
-.sideboard-card-name {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sideboard-card-set {
-  font-size: var(--fs-3xs);
-  color: var(--text-dim);
-}
-
 .sideboard-validation {
   display: flex;
   flex-wrap: wrap;
@@ -322,17 +261,6 @@
   padding: 1px 6px;
   border-radius: var(--r-md);
   font-size: var(--fs-3xs);
-}
-
-.deck-list-empty-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 20px;
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-  text-align: center;
 }
 
 .arena-floating-preview {

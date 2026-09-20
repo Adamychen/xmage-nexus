@@ -1,4 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import ChipButton from '../ui/ChipButton'
+import Chip from '../ui/Chip'
+import CloseButton from '../ui/CloseButton'
+import EmptyState from '../ui/EmptyState'
 import type { MatchView, UsersView } from '../net/types'
 import { getFinishedMatches, replayGame } from '../net/commands'
 import AvatarImage from './AvatarImage'
@@ -183,7 +187,7 @@ export default function FinishedMatchesPanel({
           <div className="finished-matches-title-row">
             <span className="finished-matches-icon"><Icon name="scrollText" size={18} /></span>
             <h2 className="finished-matches-title">{t('lobby', 'matches_title')}</h2>
-            <span className="finished-matches-count-badge">{filteredMatches.length}</span>
+            <Chip tone="brand">{filteredMatches.length}</Chip>
           </div>
           <p className="finished-matches-subtitle">
             {t('lobby', 'matches_subtitle')}
@@ -200,38 +204,29 @@ export default function FinishedMatchesPanel({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button
-                type="button"
-                className="matches-search-clear"
-                onClick={() => setSearchQuery('')}
-              >
-                ✕
-              </button>
+              <CloseButton variant="plain" size="sm" className="matches-search-clear" label={t('common', 'clear')} onClick={() => setSearchQuery('')} />
             )}
           </div>
 
           <div className="matches-filter-chips">
-            <button
-              type="button"
-              className={`filter-chip ${filterType === 'all' ? 'active' : ''}`}
+            <ChipButton
+              active={filterType === 'all'}
               onClick={() => setFilterType('all')}
             >
               {t('lobby', 'matches_filter_all', { count: String(matches.length) })}
-            </button>
-            <button
-              type="button"
-              className={`filter-chip ${filterType === 'ranked' ? 'active' : ''}`}
+            </ChipButton>
+            <ChipButton
+              active={filterType === 'ranked'}
               onClick={() => setFilterType('ranked')}
             >
               <Icon name="star" size={12} /> {t('lobby', 'tag_rated')}
-            </button>
-            <button
-              type="button"
-              className={`filter-chip ${filterType === 'tournament' ? 'active' : ''}`}
+            </ChipButton>
+            <ChipButton
+              active={filterType === 'tournament'}
               onClick={() => setFilterType('tournament')}
             >
               <Icon name="trophy" size={12} /> {t('lobby', 'tournament_badge')}
-            </button>
+            </ChipButton>
           </div>
 
           <button
@@ -266,8 +261,8 @@ export default function FinishedMatchesPanel({
                   </div>
 
                   <div className="match-meta-right">
-                    {m.rated && <span className="match-badge rated"><Icon name="star" size={11} /> {t('lobby', 'tag_rated')}</span>}
-                    {m.isTournament && <span className="match-badge tournament"><Icon name="trophy" size={11} /> {t('lobby', 'tournament_badge')}</span>}
+                    {m.rated && <Chip tone="gold" icon="star">{t('lobby', 'tag_rated')}</Chip>}
+                    {m.isTournament && <Chip tone="err" icon="trophy">{t('lobby', 'tournament_badge')}</Chip>}
                     {duration && <span className="match-duration"><Icon name="clock" size={11} /> {duration}</span>}
                     {relativeTime && <span className="match-time-ago">{relativeTime}</span>}
                   </div>
@@ -395,15 +390,9 @@ export default function FinishedMatchesPanel({
       )}
 
       {filteredMatches.length === 0 && !loading && (
-        <div className="matches-empty-state">
-          <span className="empty-icon"><Icon name="inbox" size={26} /></span>
-          <h3 className="empty-title">{t('lobby', 'matches_empty')}</h3>
-          <p className="empty-desc">
-            {searchQuery
-              ? t('lobby', 'no_tables_found')
-              : t('lobby', 'matches_empty')}
-          </p>
-        </div>
+        <EmptyState size="lg" boxed fill icon="inbox" iconSize={26} title={t('lobby', 'matches_empty')}>
+          {searchQuery ? t('lobby', 'no_tables_found') : t('lobby', 'matches_empty')}
+        </EmptyState>
       )}
     </div>
   )

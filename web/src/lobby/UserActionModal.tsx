@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Chip from '../ui/Chip'
 import { useState } from 'react'
 import type { UsersView, TableView } from '../net/types'
 import { isUserIgnored, addIgnoredUser, removeIgnoredUser } from './ignoreList'
@@ -88,7 +89,7 @@ export default function UserActionModal({
             <div className="user-action-badges-row">
               <RankBadge elo={user.constructedRating} compact showElo />
               {user.matchHistory && (
-                <span className="user-action-history-pill"><Icon name="trophy" size={12} /> {user.matchHistory}</span>
+                <Chip size="xs" icon="trophy">{user.matchHistory}</Chip>
               )}
               {user.infoPing && <PingBadge infoPing={user.infoPing} compact />}
             </div>

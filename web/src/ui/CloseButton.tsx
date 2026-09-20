@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n'
 import './primitives.css'
 
 export interface CloseButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
-  variant?: 'solid' | 'plain'
+  variant?: 'solid' | 'plain' | 'danger'
   size?: 'sm' | 'md' | 'lg'
   label?: string
 }

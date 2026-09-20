@@ -284,10 +284,8 @@
   .lobby-mobile-bottom-nav {
     display: flex !important;
   }
-  .lobby-aside {
-    bottom: 56px;
-  }
-  .lobby-aside-backdrop {
+.lobby-aside,
+.lobby-aside-backdrop {
     bottom: 56px;
   }
 }
@@ -537,16 +535,12 @@ html:lang(zh) .hero-deck-label {
   flex-wrap: nowrap;
 }
 
-.aside-users-list .game-info-badge,
 .aside-users-list .lobby-idle-badge {
   flex-shrink: 0;
   font-size: var(--fs-3xs);
 }
 
 /* Nav tabs (kept for backward compat, hidden in new layout) */
-.lobby-nav-tabs {
-  display: none;
-}
 
 /* User identity & Actions */
 .lobby-user-actions {
@@ -555,94 +549,6 @@ html:lang(zh) .hero-deck-label {
   gap: 12px;
   flex-wrap: wrap;
   min-width: 0;
-}
-
-.lobby-mobile-chat-toggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: var(--r-base);
-  background: rgb(var(--brand-rgb) / 0.14);
-  border: 1px solid rgb(var(--brand-rgb) / 0.3);
-  color: var(--fg-2);
-  font-size: var(--fs-lg);
-  cursor: pointer;
-  position: relative;
-}
-
-.lobby-mobile-chat-toggle:hover {
-  background: rgb(var(--brand-rgb) / 0.24);
-  color: var(--fg-hi);
-}
-
-.lobby-mobile-chat-toggle .aside-unread-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-}
-
-@media (max-width: 900px) {
-  .lobby-mobile-chat-toggle { display: flex; }
-}
-
-.lobby-scale-quick {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgb(var(--ink-rgb) / 0.6);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-base);
-  padding: 2px;
-}
-
-.lobby-scale-quick button {
-  padding: 3px 7px;
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  border-radius: var(--r-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--fg-3);
-  cursor: pointer;
-  min-height: 28px;
-  min-width: 32px;
-}
-
-.lobby-scale-quick button.active {
-  background: rgb(var(--brand-rgb) / 0.22);
-  border-color: rgb(var(--brand-rgb) / 0.4);
-  color: var(--fg-hi);
-}
-
-.lobby-scale-quick button:hover { color: var(--fg-hi); background: var(--veil-2); }
-
-.lobby-scale-quick .lobby-scale-readout {
-  color: var(--fg-2);
-  min-width: 44px;
-  font-variant-numeric: tabular-nums;
-}
-
-.lobby-user-actions .lobby-scale-readout {
-  padding: 3px 8px;
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  border-radius: var(--r-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--fg-2);
-  cursor: pointer;
-  min-height: 32px;
-  min-width: 48px;
-  font-variant-numeric: tabular-nums;
-}
-
-.lobby-user-actions .lobby-scale-readout:hover { color: var(--fg-hi); background: var(--veil-2); }
-
-@media (max-width: 640px) {
-  .lobby-scale-quick { display: none; }
 }
 
 .lobby-mobile-bottom-nav {
@@ -684,40 +590,6 @@ html:lang(zh) .hero-deck-label {
 
 .lobby-mobile-bottom-nav .mobile-nav-btn .mobile-nav-icon { font-size: var(--fs-heading); line-height: 1; }
 
-.lobby-fullscreen-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-rgb) / 0.6);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-3);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.lobby-fullscreen-btn svg {
-  width: 17px;
-  height: 17px;
-}
-
-.lobby-fullscreen-btn:hover {
-  background: rgb(var(--ink-2-rgb) / 0.9);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  color: var(--gold-300);
-  transform: translateY(-1px);
-}
-
-.lobby-fullscreen-btn.active {
-  background: rgb(var(--brand-rgb) / 0.2);
-  border-color: rgb(var(--purple-rgb) / 0.6);
-  color: var(--gold-300);
-  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.3);
-}
-
 .lobby-user-badge {
   display: flex;
   align-items: center;
@@ -742,17 +614,6 @@ html:lang(zh) .hero-deck-label {
   gap: 6px;
 }
 
-.leaderboard-nav-tab {
-  background: rgb(var(--gold-rgb) / 0.08) !important;
-  border-color: rgb(var(--gold-rgb) / 0.25) !important;
-  color: var(--gold-300) !important;
-}
-
-.leaderboard-nav-tab:hover {
-  background: rgb(var(--gold-rgb) / 0.18) !important;
-  border-color: var(--gold-300) !important;
-}
-
 .view-leaderboard-btn {
   background: rgb(var(--gold-rgb) / 0.12);
   border: 1px solid rgb(var(--gold-rgb) / 0.3);
@@ -768,20 +629,6 @@ html:lang(zh) .hero-deck-label {
 .view-leaderboard-btn:hover {
   background: rgb(var(--gold-rgb) / 0.25);
   border-color: var(--gold-300);
-}
-
-.lobby-avatar-pill {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-3) 100%);
-  border: 1px solid var(--gold-300);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-xs);
-  font-weight: 900;
-  color: var(--gold-300);
 }
 
 .lobby-username {
@@ -841,7 +688,6 @@ html:lang(zh) .hero-deck-label {
   color: var(--fg-hi);
 }
 
-
 .lobby-tables-view {
   display: flex;
   flex-direction: column;
@@ -849,8 +695,6 @@ html:lang(zh) .hero-deck-label {
   height: 100%;
   min-height: 0;
 }
-
-
 
 .hero-deck-badge {
   display: flex;
@@ -1030,6 +874,8 @@ html:lang(zh) .hero-deck-label {
   align-content: start;
   padding: 4px;
 }
+
+.tables-list > .ui-empty { grid-column: 1 / -1; }
 
 html:lang(ja) .tables-list,
 html:lang(zh) .tables-list {
@@ -1330,21 +1176,6 @@ html:lang(zh) .tables-list {
   }
 }
 
-.seat-history-pill {
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  color: var(--fg-2);
-  background: var(--line-1);
-  border: 1px solid var(--line-1);
-  padding: 1px 6px;
-  border-radius: var(--r-sm);
-  font-family: var(--font-mono, monospace);
-  white-space: nowrap;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-}
-
 .seat-ready-indicator {
   display: inline-flex;
   align-items: center;
@@ -1361,17 +1192,6 @@ html:lang(zh) .tables-list {
   border-radius: 50%;
   background: var(--ok);
   box-shadow: 0 0 6px var(--ok);
-}
-
-.seat-open-badge {
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  color: var(--brand-fg);
-  background: var(--brand-soft);
-  border: 1px solid var(--brand-line);
-  padding: 2px 8px;
-  border-radius: var(--r-sm);
-  white-space: nowrap;
 }
 
 .seat-icon {
@@ -1435,54 +1255,9 @@ html:lang(zh) .tables-list {
   color: var(--fg-1);
 }
 
-/* Empty State */
-.tables-empty-state {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 48px 16px;
-  gap: 10px;
-  color: var(--fg-3);
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  margin-bottom: 4px;
-}
-
-.tables-empty-state h3 {
-  margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  color: var(--fg-hi);
-}
-
-.tables-empty-state p {
-  margin: 0 0 8px;
-  font-size: var(--fs-sm);
-}
-
 /* Community & Chat Grid */
-.lobby-community-grid {
-  display: grid;
-  grid-template-columns: 1fr min(300px, 35vw);
-  gap: 16px;
-  height: 100%;
-  min-height: 0;
-}
 
-@media (max-width: 700px) {
-  .lobby-community-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-  }
-}
-
-.chat-panel,
-.users-panel {
+.chat-panel {
   background: rgb(var(--ink-2-rgb) / 0.7);
   backdrop-filter: blur(14px);
   border: 1px solid var(--veil-3);
@@ -1495,8 +1270,7 @@ html:lang(zh) .tables-list {
   overflow: hidden;
 }
 
-.chat-panel h2,
-.users-panel h2 {
+.chat-panel h2 {
   margin: 0;
   font-size: var(--fs-md);
   font-weight: 800;
@@ -1566,38 +1340,6 @@ html:lang(zh) .tables-list {
   flex-shrink: 1;
 }
 
-.user-flag-tag {
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: var(--r-xs);
-  background: var(--veil-3);
-  color: var(--fg-2);
-  font-family: var(--font-mono, monospace);
-}
-
-.user-rating-pill {
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.12);
-  padding: 1px 5px;
-  border-radius: var(--r-xs);
-}
-
-.user-history-text {
-  font-size: var(--fs-3xs);
-  color: var(--fg-3);
-  font-family: var(--font-mono, monospace);
-}
-
-.users-empty-item {
-  display: flex;
-  justify-content: center;
-  padding: 16px 0;
-  color: var(--fg-3);
-}
-
 .dot {
   width: 8px;
   height: 8px;
@@ -1613,16 +1355,6 @@ html:lang(zh) .tables-list {
 .dot.playing {
   background: var(--gold-300);
   box-shadow: 0 0 6px var(--gold-300);
-}
-
-.game-info-badge {
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.15);
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  white-space: nowrap;
 }
 
 .lobby-idle-badge {

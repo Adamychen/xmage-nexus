@@ -32,30 +32,6 @@
   border-bottom: 1px solid var(--veil-2);
 }
 
-.meta-badge {
-  font-size: var(--fs-xs);
-  padding: 4px 10px;
-  border-radius: var(--r-sm);
-  background: var(--veil-1);
-  border: 1px solid var(--veil-2);
-  color: var(--fg-1);
-}
-
-.meta-badge strong {
-  color: var(--fg-hi);
-}
-
-.meta-badge.meta-format {
-  border-color: rgb(var(--gold-rgb) / 0.3);
-  color: var(--gold-300);
-}
-
-.meta-badge.meta-lock {
-  border-color: rgb(var(--err-rgb) / 0.3);
-  color: var(--err);
-  background: rgb(var(--err-rgb) / 0.1);
-}
-
 /* Form Container */
 .join-modal-form {
   display: flex;
@@ -85,21 +61,7 @@
 
 .join-password-input {
   padding: 10px 14px;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1.5px solid rgb(var(--gold-rgb) / 0.4);
-  color: var(--fg-hi);
   font-size: var(--fs-md);
-  outline: none;
-}
-
-.join-password-input:focus {
-  border-color: var(--gold-300);
-  box-shadow: 0 0 12px rgb(var(--gold-rgb) / 0.3);
-}
-
-.join-password-input:disabled {
-  opacity: 0.45;
 }
 
 /* Deck Selection */
@@ -158,21 +120,13 @@
 .import-name-input {
   width: 100%;
   padding: 8px 12px;
-  border-radius: var(--r-sm);
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-hi);
   font-size: var(--fs-sm);
 }
 
 .import-textarea {
+  font-family: var(--font-mono, monospace);
   width: 100%;
   padding: 8px 12px;
-  border-radius: var(--r-sm);
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-1);
-  font-family: monospace;
   font-size: var(--fs-xs);
   resize: vertical;
 }
@@ -280,15 +234,6 @@
   padding-top: 14px;
   border-top: 1px solid var(--veil-2);
   margin-top: auto;
-}
-
-.join-default-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  cursor: pointer;
 }
 
 .join-footer-buttons {

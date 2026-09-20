@@ -277,7 +277,7 @@ test.describe('Decks Gallery', () => {
       // Inspect a deck modal
       await page.locator('.browser-deck-card', { hasText: 'Izzet Murktide' }).click()
       await expect(page.locator('.deck-inspector-modal')).toBeVisible({ timeout: 3000 })
-      await expect(page.locator('.inspector-format-badge', { hasText: 'Modern' })).toBeVisible()
+      await expect(page.locator('.deck-inspector-modal .ui-chip', { hasText: 'Modern' })).toBeVisible()
       await expect(page.locator('.inspector-copy-btn')).toBeVisible()
 
       // Close modal

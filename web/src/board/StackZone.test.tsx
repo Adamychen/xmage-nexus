@@ -30,7 +30,7 @@ describe('StackZone', () => {
 
   it('renders empty when stack is null or empty', () => {
     const { container } = render(<StackZone stack={null} />)
-    expect(container.querySelector('.stack-zone.empty')).toBeTruthy()
+    expect(container.querySelector('.ui-empty')).toBeTruthy()
   })
 
   it('renders single spell on the stack as top item', () => {
@@ -401,7 +401,7 @@ describe('StackZone', () => {
 
     // La pila se resuelve por completo...
     rerender(<StackZone stack={{}} />)
-    expect(container.querySelector('.stack-zone.empty')).toBeTruthy()
+    expect(container.querySelector('.ui-empty')).toBeTruthy()
 
     // ...y una carta NUEVA abre una pila fresca: el Bolt resuelto no debe reaparecer
     rerender(

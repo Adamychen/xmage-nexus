@@ -44,7 +44,6 @@
 
 /* ── Rows ───────────────────────────────────────────────────────── */
 .bz-row,
-.pz-row,
 .oz-row {
   display: flex;
   gap: 8px;
@@ -56,10 +55,7 @@
 
 .bz-creatures-row,
 .pz-creatures-row,
-.oz-creatures-row {
-  align-items: center;
-}
-
+.oz-creatures-row,
 .bz-permanents-row,
 .pz-permanents-row,
 .oz-permanents-row {
@@ -180,11 +176,7 @@
 
 /* ── Hand Zone in Top vs Bottom row ──────────────────────────────── */
 /* Top zone: hand cards hang down into the board */
-.zone-top .hand-zone {
-  align-items: flex-start !important;
-  height: 100%;
-}
-
+.zone-top .hand-zone,
 .zone-top .hand-card-slot {
   align-items: flex-start !important;
   height: 100%;
@@ -201,11 +193,7 @@
 
 /* Bottom zone: hand cards rise up into the board */
 .zone-bottom .hand-zone,
-.player-zone .hand-zone {
-  align-items: flex-end !important;
-  height: 100%;
-}
-
+.player-zone .hand-zone,
 .zone-bottom .hand-card-slot,
 .player-zone .hand-card-slot {
   align-items: flex-end !important;

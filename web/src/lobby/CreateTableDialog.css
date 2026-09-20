@@ -148,17 +148,6 @@
   line-height: 1.4;
 }
 
-.wizard-warn-badge {
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  color: var(--warn);
-  background: rgb(var(--warn-rgb) / 0.15);
-  border: 1px solid rgb(var(--warn-rgb) / 0.35);
-  padding: 2px 6px;
-  border-radius: var(--r-pill);
-  white-space: nowrap;
-}
-
 .password-field-wrap {
   display: flex;
   gap: 6px;
@@ -200,7 +189,7 @@
   gap: 14px;
 }
 
-.create-table-dialog label {
+.create-table-dialog label:not(.ui-check) {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -215,41 +204,19 @@
 .create-table-dialog input[type="password"],
 .create-table-dialog input[type="number"] {
   padding: 8px 12px;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-rgb) / 0.85);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-hi);
   font-size: var(--fs-sm);
-  outline: none;
-  transition: all 0.15s ease;
-  box-sizing: border-box;
   width: 100%;
 }
 
 .create-table-dialog select {
   padding: 8px 12px;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-2-rgb) / 0.95);
-  border: 1px solid var(--veil-5);
-  color: var(--fg-hi);
   font-size: var(--fs-sm);
-  outline: none;
-  transition: all 0.15s ease;
-  box-sizing: border-box;
   width: 100%;
   cursor: pointer;
 }
 
 .create-table-dialog select option {
-  background: var(--ink-2);
-  color: var(--fg-hi);
   padding: 8px;
-}
-
-.create-table-dialog input:focus,
-.create-table-dialog select:focus {
-  border-color: var(--gold-300);
-  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.35);
 }
 
 .create-grid-2col {
@@ -275,81 +242,7 @@
   gap: 8px;
 }
 
-.chip {
-  padding: 6px 12px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: 20px;
-  background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.chip:hover {
-  background: var(--ink-4);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  color: var(--fg-hi);
-}
-
-.chip.on {
-  background: rgb(var(--brand-rgb) / 0.3);
-  border-color: var(--brand);
-  color: var(--fg-hi);
-  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.4);
-}
-
 /* Toggle Checkbox Row */
-.toggle-label-row {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  background: rgb(var(--ink-rgb) / 0.55);
-  border: 1px solid var(--veil-2);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.15s ease;
-}
-
-.toggle-label-row:hover {
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  border-color: var(--veil-4);
-}
-
-.toggle-label-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  cursor: pointer;
-  accent-color: var(--brand);
-}
-
-.toggle-text-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.toggle-title {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--fg-hi);
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-.toggle-desc {
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
-  text-transform: none;
-  letter-spacing: normal;
-  font-weight: normal;
-}
 
 /* Multiplayer Box */
 .create-multiplayer-box {
@@ -449,28 +342,6 @@
   border-radius: var(--r-base);
 }
 
-.summary-pill {
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--r-xs);
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-}
-
-.summary-pill.security {
-  border-color: rgb(var(--err-rgb) / 0.4);
-  color: var(--err);
-  background: rgb(var(--err-rgb) / 0.15);
-}
-
-.summary-pill.rated {
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.15);
-}
-
 /* Actions */
 .dialog-actions {
   display: flex;
@@ -481,11 +352,7 @@
   padding-top: 12px;
   border-top: 1px solid var(--veil-2);
 }
-.wizard-actions-left {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.wizard-actions-left,
 .wizard-actions-right {
   display: flex;
   gap: 8px;
@@ -624,24 +491,6 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-}
-
-.preset-chip {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-sm);
-  color: var(--fg-2);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  padding: 3px 9px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.preset-chip:hover {
-  background: rgb(var(--brand-rgb) / 0.25);
-  border-color: rgb(var(--brand-rgb) / 0.5);
-  color: var(--fg-hi);
 }
 
 /* Tournament Box */

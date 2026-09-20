@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Checkbox from '../../ui/Checkbox'
 import DialogShell from '../../ui/DialogShell'
 import { useTranslation } from '../../i18n'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
@@ -114,14 +115,14 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
           </div>
           <div className="random-packs-grid">
             {sets.map((s) => (
-              <label key={s.code} title={s.name} className="random-packs-cell">
-                <input
-                  type="checkbox"
-                  checked={selected?.has(s.code) ?? false}
-                  onChange={() => toggle(s.code)}
-                />
-                {s.code}
-              </label>
+              <Checkbox
+                key={s.code}
+                title={s.name}
+                className="random-packs-cell"
+                checked={selected?.has(s.code) ?? false}
+                onChange={() => toggle(s.code)}
+                label={s.code}
+              />
             ))}
           </div>
           <div className="random-packs-footer">

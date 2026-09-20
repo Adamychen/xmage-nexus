@@ -1,4 +1,6 @@
 import CloseButton from '../ui/CloseButton'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { TournamentView, RoundView, TournamentGameView } from '../net/types'
 import * as cmds from '../net/commands'
@@ -76,11 +78,11 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
         <div className="tournament-bracket-title">
           <h2 className="tournament-name" data-testid="tournament-name">{view.tournamentName}</h2>
           <span className="tournament-type" data-testid="tournament-type">{view.tournamentType}</span>
-          <span className="tournament-state-badge" data-testid="tournament-state">{stateLabel(t, view.tournamentState)}</span>
+          <Chip solid tone="ok" data-testid="tournament-state">{stateLabel(t, view.tournamentState)}</Chip>
           {view.watchingAllowed ? (
-            <span className="tournament-watching-badge" data-testid="tournament-watching"><Icon name="eye" size={12} /> {t('lobby', 'tag_spectators')}</span>
+            <Chip tone="ok" icon="eye" data-testid="tournament-watching">{t('lobby', 'tag_spectators')}</Chip>
           ) : (
-            <span className="tournament-watching-badge off"><Icon name="lock" size={12} /> {t('lobby', 'tag_private')}</span>
+            <Chip icon="lock">{t('lobby', 'tag_private')}</Chip>
           )}
         </div>
         <div className="tournament-header-actions">
@@ -134,7 +136,7 @@ function BracketRound({ round, index, watchingAllowed, onWatchMatch, watchingMat
     <div className="bracket-round" data-testid="bracket-round" data-round={index}>
       <h4 className="bracket-round-title">{t('lobby', 'tournament_round_label', { number: index + 1 })}</h4>
       <div className="bracket-games">
-        {round.games.length === 0 && <div className="bracket-empty">{t('lobby', 'bracket_empty')}</div>}
+        {round.games.length === 0 && <EmptyState size="sm">{t('lobby', 'bracket_empty')}</EmptyState>}
         {round.games.map((g: TournamentGameView, gi: number) => (
           <div key={`${g.tableId ?? g.matchId ?? gi}-${gi}`} className="bracket-game" data-testid="bracket-game">
             <div className="bracket-game-top">
@@ -216,7 +218,7 @@ export default function TournamentBracket({ view, tournamentId, onClose, onQuit,
         <section className="tournament-rounds-section" aria-label={t('lobby', 'bracket_title')}>
           <h3 className="tournament-section-title">{t('lobby', 'bracket_title')}</h3>
           {view.rounds.length === 0 ? (
-            <div className="tournament-empty" data-testid="tournament-no-rounds">{t('lobby', 'bracket_no_rounds')}</div>
+            <EmptyState data-testid="tournament-no-rounds">{t('lobby', 'bracket_no_rounds')}</EmptyState>
           ) : (
             <div className="bracket-columns-wrap">
               <div className="bracket-columns" data-testid="bracket-columns" ref={columnsRef}>

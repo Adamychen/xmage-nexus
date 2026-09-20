@@ -1,4 +1,5 @@
 import Tabs from '../ui/Tabs'
+import CloseButton from '../ui/CloseButton'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { fetchCardJson } from '../cards/scryfallCards'
@@ -405,7 +406,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             </select>
             <div className="decks-search-wrap">
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common', 'search')} className="decks-search" />
-              {search && <button className="decks-search-clear" onClick={() => setSearch('')}>×</button>}
+              {search && <CloseButton variant="plain" size="sm" className="decks-search-clear" label={t('common', 'clear')} onClick={() => setSearch('')} />}
             </div>
             <div className="decks-mana-filter">
               {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (

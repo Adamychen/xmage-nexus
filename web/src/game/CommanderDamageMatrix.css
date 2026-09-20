@@ -195,17 +195,6 @@
   white-space: nowrap;
 }
 
-.cdm-badge-you {
-  font-size: var(--fs-4xs);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--ok);
-  background: rgb(var(--ok-rgb) / 0.15);
-  border: 1px solid rgb(var(--ok-rgb) / 0.35);
-  border-radius: var(--r-xs);
-  padding: 0 4px;
-}
-
 .cdm-player-life-pill {
   display: flex;
   align-items: center;
@@ -222,28 +211,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-}
-
-.cdm-commander-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--fs-3xs);
-  font-weight: 600;
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.1);
-  border: 1px solid rgb(var(--gold-rgb) / 0.25);
-  border-radius: var(--r-xs);
-  padding: 1px 6px;
-}
-
-.cdm-tax-badge {
-  font-size: var(--fs-4xs);
-  font-weight: 800;
-  color: var(--err);
-  background: rgb(var(--err-rgb) / 0.15);
-  border-radius: var(--r-xs);
-  padding: 0 3px;
 }
 
 .cdm-damage-list {
@@ -315,16 +282,6 @@
 
 .cdm-damage-item.warning .cdm-count-text {
   color: var(--warn);
-}
-
-.cdm-lethal-badge {
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  color: var(--err);
-  background: rgb(var(--err-rgb) / 0.2);
-  border: 1px solid rgb(var(--err-rgb) / 0.5);
-  border-radius: var(--r-xs);
-  padding: 0 4px;
 }
 
 .cdm-progress-track {

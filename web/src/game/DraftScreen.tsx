@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
+import Button from '../ui/Button'
+import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore, clearActiveDraft } from '../state/store'
 import { getState, setState } from '../state/state'
@@ -472,14 +474,15 @@ export default function DraftScreen() {
         {isDraftStalled(lastDraftEventAt, draft != null, now) && (
           <div className="error-box draft-stalled" data-testid="draft-stalled" role="alert">
             <span>{t('game', 'draft_stalled')}</span>{' '}
-            <button
-              type="button"
+            <Button
+              variant="subtle"
+              size="sm"
               data-testid="draft-retry"
               disabled={retrying}
               onClick={() => void handleRetryJoin()}
             >
               {t('game', 'draft_retry')}
-            </button>
+            </Button>
           </div>
         )}
         {players.length > 0 && (
@@ -495,7 +498,7 @@ export default function DraftScreen() {
         <div className="draft-booster-area">
           <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
           {boosterCards.length === 0 ? (
-            <div className="draft-empty">{t('game', 'draft_loading')}</div>
+            <EmptyState>{t('game', 'draft_loading')}</EmptyState>
           ) : (
             <div className="draft-grid" data-testid="draft-booster">
               {boosterCards.map((card) => {
@@ -549,7 +552,7 @@ export default function DraftScreen() {
             </button>
           )}
           {visiblePicks.length === 0 ? (
-            <div className="draft-picks-empty">{t('game', 'draft_empty')}</div>
+            <EmptyState size="sm">{t('game', 'draft_empty')}</EmptyState>
           ) : (
             <div className="draft-picks-grid" data-testid="draft-picks">
               {visiblePicks.map((card) => {

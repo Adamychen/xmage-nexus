@@ -1,4 +1,6 @@
 import type { UsersView } from '../net/types'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import ChatBox from './ChatBox'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
@@ -36,7 +38,6 @@ export default function LobbyAside({
               {unreadChat > 0 && (
                 <span className="aside-unread-badge">{unreadChat > 9 ? '9+' : unreadChat}</span>
               )}
-              <button type="button" className="view-leaderboard-btn" onClick={onCloseMobile} style={{ display: 'none' }} aria-hidden="true">✕</button>
             </div>
           </div>
           <div className="aside-chat-body">
@@ -88,16 +89,14 @@ export default function LobbyAside({
                   </div>
                 </div>
                 {isUserInGame(u.infoGames) ? (
-                  <span className="game-info-badge"><Icon name="swords" size={13} /></span>
+                  <Chip tone="gold" icon="swords" />
                 ) : (
                   <span className="lobby-idle-badge">{t('lobby.in_lobby')}</span>
                 )}
               </li>
             ))}
             {users.length === 0 && (
-              <li className="users-empty-item">
-                <span className="empty">{t('lobby.waiting_players')}</span>
-              </li>
+              <li><EmptyState size="sm">{t('lobby.waiting_players')}</EmptyState></li>
             )}
           </ul>
         </section>

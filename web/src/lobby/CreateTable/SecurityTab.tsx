@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 
@@ -91,29 +92,23 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         />
       </label>
 
-      <label className="toggle-label-row">
-        <input
-          type="checkbox"
-          checked={form.spectatorsAllowed}
-          onChange={(e) => form.setSpectatorsAllowed(e.target.checked)}
-        />
-        <div className="toggle-text-block">
-          <span className="toggle-title"><Icon name="eye" size={12} /> {t('lobby','create_field_spectators')}</span>
-          <span className="toggle-desc">{t('lobby','create_desc_spectators')}</span>
-        </div>
-      </label>
+      <Checkbox
+        card
+        checked={form.spectatorsAllowed}
+        onChange={form.setSpectatorsAllowed}
+        icon="eye"
+        label={t('lobby','create_field_spectators')}
+        description={t('lobby','create_desc_spectators')}
+      />
 
-      <label className="toggle-label-row">
-        <input
-          type="checkbox"
-          checked={form.rollbackTurnsAllowed}
-          onChange={(e) => form.setRollbackTurnsAllowed(e.target.checked)}
-        />
-        <div className="toggle-text-block">
-          <span className="toggle-title"><Icon name="undo" size={12} /> {t('lobby','create_field_rollback')}</span>
-          <span className="toggle-desc">{t('lobby','create_desc_rollback')}</span>
-        </div>
-      </label>
+      <Checkbox
+        card
+        checked={form.rollbackTurnsAllowed}
+        onChange={form.setRollbackTurnsAllowed}
+        icon="undo"
+        label={t('lobby','create_field_rollback')}
+        description={t('lobby','create_desc_rollback')}
+      />
     </div>
   )
 }

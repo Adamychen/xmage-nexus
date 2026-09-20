@@ -54,16 +54,6 @@
   flex-wrap: wrap;
 }
 
-.user-action-history-pill {
-  font-size: var(--fs-3xs);
-  font-weight: 700;
-  color: var(--fg-2);
-  background: var(--veil-2);
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  font-family: var(--font-mono, monospace);
-}
-
 .user-action-status-row {
   font-size: var(--fs-2xs);
 }

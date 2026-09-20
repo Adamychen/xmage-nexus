@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import ChipButton from '../../ui/ChipButton'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
 import { DEFAULT_BOOSTER_SETS, parseLimitedSetCodes, type BoosterSetItem } from './constants'
 import { useTranslation } from '../../i18n'
@@ -135,15 +136,15 @@ export default function DraftSetsSelector({
         {popularSets.map((s) => {
           const isActive = primaryCode.toUpperCase() === s.code.toUpperCase()
           return (
-            <button
+            <ChipButton
+              activeTone="gold"
+              active={isActive}
               key={s.code}
-              type="button"
-              className={`draft-set-chip ${isActive ? 'active' : ''}`}
               onClick={() => handleSelectSame(s.code)}
               title={`${s.name} (${s.code})`}
             >
               {s.code}
-            </button>
+            </ChipButton>
           )
         })}
       </div>

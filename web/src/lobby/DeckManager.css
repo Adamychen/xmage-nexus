@@ -117,21 +117,6 @@
   border: 1px solid var(--ok);
 }
 
-.deck-delete-btn {
-  background: transparent;
-  border: none;
-  color: var(--err);
-  font-size: var(--fs-md);
-  padding: 2px 6px;
-  cursor: pointer;
-  border-radius: var(--r-xs);
-  transition: background 0.15s ease;
-}
-
-.deck-delete-btn:hover {
-  background: rgb(var(--err-rgb) / 0.2);
-}
-
 /* Main Deck Content View */
 .deck-content-view {
   background: rgb(var(--ink-2-rgb) / 0.7);
@@ -219,22 +204,6 @@
   border: 1px solid var(--veil-1);
 }
 
-.card-amount-pill {
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: var(--r-xs);
-  background: rgb(var(--brand-rgb) / 0.25);
-  color: var(--brand-fg);
-  border: 1px solid rgb(var(--brand-rgb) / 0.4);
-}
-
-.card-amount-pill.sideboard {
-  background: rgb(var(--warn-rgb) / 0.2);
-  color: var(--gold-300);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-}
-
 .card-row-name {
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -251,16 +220,11 @@
 /* Import Dialog */
 
 .import-dialog textarea {
+  font-family: var(--font-mono, monospace);
   width: 100%;
   padding: 10px;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-2-rgb) / 0.9);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-hi);
-  font-family: var(--font-mono, monospace);
   font-size: var(--fs-xs);
   resize: vertical;
-  box-sizing: border-box;
 }
 
 .import-actions {

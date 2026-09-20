@@ -39,7 +39,7 @@ describe('CardGrid', () => {
   it('shows the search filter input and card count badge', () => {
     const { container } = render(<CardGrid prompt={makePrompt()} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.querySelector('input[placeholder]')).toBeTruthy()
-    expect(container.querySelector('.card-grid-count-badge')?.textContent).toContain('3 Mano')
+    expect(container.querySelector('.ui-chip')?.textContent).toContain('3 Mano')
   })
 
   it('labels the search filter for assistive tech', () => {

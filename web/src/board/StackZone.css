@@ -13,42 +13,6 @@
   box-sizing: border-box;
 }
 
-.stack-zone.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  color: var(--fg-3);
-  padding: 24px;
-}
-
-.stack-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.stack-empty-icon {
-  font-size: 2rem;
-  opacity: 0.5;
-}
-
-.stack-empty-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-md);
-  font-weight: 700;
-  color: var(--brand);
-}
-
-.stack-empty-desc {
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
-  line-height: 1.4;
-  max-width: 220px;
-}
-
 /* ── Header ── */
 .stack-header {
   width: 100%;
@@ -483,7 +447,7 @@
 
 /* ── Deprecated selectors kept for test compatibility ── */
 .stack-item--top,
-.stack-item.is-top { /* alias */ }
+.stack-item.is-top,
 .stack-item--underlying,
 .stack-item.is-underlying { /* alias */ }
 

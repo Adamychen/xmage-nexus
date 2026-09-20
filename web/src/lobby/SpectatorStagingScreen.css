@@ -186,17 +186,6 @@
   flex-wrap: wrap;
 }
 
-.staging-status-pill {
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-  background: rgb(var(--brand-rgb) / 0.2);
-  color: var(--brand-fg);
-  border: 1px solid rgb(var(--brand-rgb) / 0.4);
-  letter-spacing: 0.05em;
-}
-
 .staging-table-name {
   margin: 0;
   font-size: 1.375rem;

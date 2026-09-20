@@ -202,27 +202,6 @@
   }
 }
 
-/* Empty deck list placeholder */
-.deck-list-empty-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 16px;
-  text-align: center;
-  color: var(--fg-3);
-  gap: 8px;
-  font-size: var(--fs-sm);
-  border: 2px dashed var(--veil-2);
-  border-radius: var(--r-base);
-  margin: 16px;
-}
-
-.empty-hint-icon {
-  font-size: 1.8rem;
-  opacity: 0.6;
-}
-
 /* Horizontal Columns Layout */
 .arena-deck-cols-layout {
   display: grid;

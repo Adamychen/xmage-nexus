@@ -18,19 +18,6 @@
   gap: 6px;
 }
 
-.game-chat-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 24px;
-  text-align: center;
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  font-style: italic;
-  line-height: 1.5;
-}
-
 .game-chat-entry {
   font-size: var(--fs-xs);
   line-height: 1.4;
@@ -68,17 +55,8 @@
 
 .game-chat-input input {
   flex: 1;
-  background: var(--ink-2);
-  border: 1px solid var(--ink-3);
-  border-radius: var(--r-sm);
   padding: 6px 10px;
-  color: var(--fg-1);
   font-size: var(--fs-sm);
-  outline: none;
-}
-
-.game-chat-input input:focus {
-  border-color: var(--brand);
 }
 
 .game-chat-send {

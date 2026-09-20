@@ -1,4 +1,5 @@
 import { useTranslation } from '../../i18n'
+import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 import Button from '../../ui/Button'
@@ -28,29 +29,23 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
         </Button>
       </div>
 
-      <label className="toggle-label-row">
-        <input
-          type="checkbox"
-          checked={form.skipInitShuffling}
-          onChange={(e) => form.setSkipInitShuffling(e.target.checked)}
-        />
-        <div className="toggle-text-block">
-          <span className="toggle-title"><Icon name="layers" size={12} /> {t('lobby','create_toggle_skip_shuffle')}</span>
-          <span className="toggle-desc">{t('lobby','dev_skip_shuffle_desc')}</span>
-        </div>
-      </label>
+      <Checkbox
+        card
+        checked={form.skipInitShuffling}
+        onChange={form.setSkipInitShuffling}
+        icon="layers"
+        label={t('lobby','create_toggle_skip_shuffle')}
+        description={t('lobby','dev_skip_shuffle_desc')}
+      />
 
-      <label className="toggle-label-row">
-        <input
-          type="checkbox"
-          checked={form.skipStartingPlayerChoice}
-          onChange={(e) => form.setSkipStartingPlayerChoice(e.target.checked)}
-        />
-        <div className="toggle-text-block">
-          <span className="toggle-title"><Icon name="dice" size={12} /> {t('lobby','create_toggle_skip_starting')}</span>
-          <span className="toggle-desc">{t('lobby','dev_skip_starting_desc')}</span>
-        </div>
-      </label>
+      <Checkbox
+        card
+        checked={form.skipStartingPlayerChoice}
+        onChange={form.setSkipStartingPlayerChoice}
+        icon="dice"
+        label={t('lobby','create_toggle_skip_starting')}
+        description={t('lobby','dev_skip_starting_desc')}
+      />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import EmptyState from '../ui/EmptyState'
 import { useStore, isBlockingModal } from '../state/store'
 import { parseGameEvent, toFeedItem, type ActionFeedItem } from './gameEventParser'
 import ActionFeedCard from './ActionFeedCard'
@@ -121,7 +122,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
       >
         {viewMode === 'visual' ? (
           feedItems.length === 0 ? (
-            <div className="action-feed-empty">{t('game', 'feed_waiting')}</div>
+            <EmptyState fill italic>{t('game', 'feed_waiting')}</EmptyState>
           ) : (
             feedItems.map((item) => (
               <ActionFeedCard key={item.id} item={item} onHover={handleCardHover} />

@@ -2,6 +2,7 @@ import { FX_SPEEDS } from '../board/fx'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
+import { Switch } from '../ui/Toggle'
 
 export default function SoundFxControls() {
   const { t } = useTranslation()
@@ -14,16 +15,11 @@ export default function SoundFxControls() {
           <span className="fx-popover-label">{t('game', 'fx_effects')}</span>
           <span className="fx-popover-hint">{t('game', 'fx_effects_hint')}</span>
         </div>
-        <button
-          type="button"
-          className={`fx-toggle ${settings.effects ? 'on' : ''}`}
-          role="switch"
-          aria-checked={settings.effects}
+        <Switch
+          checked={settings.effects}
           title={t('game', 'fx_effects_hint')}
-          onClick={() => setSetting('effects', !settings.effects)}
-        >
-          <span className="fx-toggle-knob" />
-        </button>
+          onChange={(next) => setSetting('effects', next)}
+        />
       </div>
       <div className="fx-popover-row">
         <span className="fx-popover-label">{t('game', 'fx_speed')}</span>
@@ -46,20 +42,14 @@ export default function SoundFxControls() {
           <span className="fx-popover-label">{t('game', 'sound_enabled')}</span>
           <span className="fx-popover-hint">{t('game', 'sound_enabled_hint')}</span>
         </div>
-        <button
-          type="button"
-          className={`fx-toggle ${settings.soundEnabled ? 'on' : ''}`}
-          role="switch"
-          aria-checked={settings.soundEnabled}
+        <Switch
+          checked={settings.soundEnabled}
           title={t('game', 'sound_enabled_hint')}
-          onClick={() => {
-            const next = !settings.soundEnabled
+          onChange={(next) => {
             setSetting('soundEnabled', next)
             if (next) soundManager.play('ui_click', 'ui')
           }}
-        >
-          <span className="fx-toggle-knob" />
-        </button>
+        />
       </div>
       <div className="fx-popover-row">
         <span className="fx-popover-label">{t('game', 'sound_volume_master')}</span>

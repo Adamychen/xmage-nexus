@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEscape } from './useEscape'
 import Button from './Button'
 import DialogShell from './DialogShell'
 import type { ConfirmRequest } from './confirmDialog'
@@ -10,13 +10,7 @@ interface ConfirmModalProps {
 }
 
 export default function ConfirmModal({ request }: ConfirmModalProps) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') resolveConfirm(request.id, false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [request.id])
+  useEscape(() => resolveConfirm(request.id, false))
 
   const cancel = () => resolveConfirm(request.id, false)
 

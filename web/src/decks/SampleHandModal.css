@@ -17,34 +17,6 @@
   flex-wrap: wrap;
 }
 
-.stats-chip {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  padding: 3px 10px;
-  border-radius: var(--r-pill);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--fg-2);
-}
-
-.stats-chip.lands {
-  border-color: rgb(var(--ok-rgb) / 0.4);
-  color: var(--ok);
-  background: rgb(var(--ok-rgb) / 0.1);
-}
-
-.stats-chip.spells {
-  border-color: rgb(var(--brand-rgb) / 0.4);
-  color: var(--brand-fg);
-  background: rgb(var(--brand-rgb) / 0.1);
-}
-
-.stats-chip.turn {
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.1);
-}
-
 .goldfish-projection {
   padding: 10px 20px;
   background: rgb(var(--ink-2-rgb) / 0.9);

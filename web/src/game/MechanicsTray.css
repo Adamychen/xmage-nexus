@@ -15,38 +15,6 @@
   padding: 16px;
 }
 
-.mechanics-empty-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
-  color: var(--fg-2);
-  padding: 16px;
-  background: var(--veil-1);
-  border: 1px dashed var(--veil-3);
-  border-radius: var(--r-md);
-}
-
-.mechanics-empty-box .empty-icon {
-  font-size: 1.75rem;
-}
-
-.mechanics-empty-box h4 {
-  margin: 0;
-  color: var(--fg-1);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  font-family: var(--font-display, serif);
-}
-
-.mechanics-empty-box p {
-  margin: 0;
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
-  line-height: 1.4;
-}
-
 .mechanics-glossary-hint {
   margin-top: 8px;
   text-align: left;

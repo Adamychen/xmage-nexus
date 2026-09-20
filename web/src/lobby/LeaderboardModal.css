@@ -41,13 +41,7 @@
 .leaderboard-search-bar input {
   width: 100%;
   padding: 8px 12px;
-  border-radius: var(--r-base);
-  background: rgb(var(--ink-2-rgb) / 0.9);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-hi);
   font-size: var(--fs-sm);
-  outline: none;
-  box-sizing: border-box;
 }
 
 .leaderboard-table-wrap {
@@ -186,13 +180,6 @@
   font-size: var(--fs-2xs);
 }
 
-.leaderboard-empty-cell {
-  text-align: center;
-  padding: 24px;
-  color: var(--fg-3);
-  font-style: italic;
-}
-
 /* Profile Tab */
 .profile-inspect-banner {
   display: flex;
@@ -252,21 +239,6 @@
   font-size: var(--fs-heading);
   font-weight: 800;
   color: var(--fg-hi);
-}
-
-.profile-rank-emblem {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--r-lg);
-  border: 2px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px var(--shade-2);
-}
-
-.rank-emblem-icon {
-  font-size: 2rem;
 }
 
 .profile-rank-title-col {
@@ -611,10 +583,3 @@
   line-height: 1.4;
 }
 
-.leaderboard-footer {
-  padding: 12px 20px;
-  background: rgb(var(--ink-rgb) / 0.8);
-  border-top: 1px solid var(--veil-2);
-  display: flex;
-  justify-content: flex-end;
-}

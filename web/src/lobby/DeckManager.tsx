@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import Chip from '../ui/Chip'
+import CloseButton from '../ui/CloseButton'
 import { bundledDecks, loadSavedCustomDecks, saveCustomDecks, type Deck } from './decks'
 import { setMyDeck, useStore } from '../state/store'
 import { parseAnyDeck } from '../decks/parseDck'
@@ -106,17 +108,15 @@ export default function DeckManager() {
                 </div>
                 {isActive && <span className="deck-active-badge">✓ {t('common','done')}</span>}
                 {isCustom && (
-                  <button
-                    type="button"
-                    className="deck-delete-btn"
+                  <CloseButton
+                    variant="danger"
+                    size="sm"
+                    label={t('common','delete')}
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDeleteCustom(d)
                     }}
-                    title={t('common','delete')}
-                  >
-                    ✕
-                  </button>
+                  />
                 )}
               </div>
             )
@@ -164,7 +164,7 @@ export default function DeckManager() {
             <div className="deck-cards-list">
               {selectedDeck.cards.map((c, i) => (
                 <div key={i} className="deck-card-row">
-                  <span className="card-amount-pill">{c.amount}x</span>
+                  <Chip tone="brand" size="xs">{c.amount}x</Chip>
                   <span className="card-row-name">{c.cardName}</span>
                   <span className="card-row-set">{c.setCode} #{c.cardNumber}</span>
                 </div>
@@ -178,7 +178,7 @@ export default function DeckManager() {
               <div className="deck-cards-list">
                 {selectedDeck.sideboard.map((c, i) => (
                   <div key={i} className="deck-card-row">
-                    <span className="card-amount-pill sideboard">{c.amount}x</span>
+                    <Chip tone="gold" size="xs">{c.amount}x</Chip>
                     <span className="card-row-name">{c.cardName}</span>
                     <span className="card-row-set">{c.setCode} #{c.cardNumber}</span>
                   </div>

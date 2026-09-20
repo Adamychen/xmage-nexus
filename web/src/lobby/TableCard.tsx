@@ -221,9 +221,9 @@ export default function TableCard({
                     <div className="seat-meta-row">
                       {rating && <RankBadge elo={rating} compact showElo />}
                       {historyInfo.short && (
-                        <span className="seat-history-pill" title={historyInfo.full || `${t('lobby','leaderboard_col_history')}: ${historyInfo.short}`}>
-                          <Icon name="trophy" size={11} /> {historyInfo.short}
-                        </span>
+                        <Chip size="xs" icon="trophy" title={historyInfo.full || `${t('lobby','leaderboard_col_history')}: ${historyInfo.short}`}>
+                          {historyInfo.short}
+                        </Chip>
                       )}
                     </div>
                   )}
@@ -236,7 +236,7 @@ export default function TableCard({
                       <span className="seat-ready-text">{t('lobby.ready_status')}</span>
                     </span>
                   ) : (
-                    <span className="seat-open-badge">{t('lobby.open_seat')}</span>
+                    <Chip tone="brand">{t('lobby.open_seat')}</Chip>
                   )}
                 </div>
               </div>

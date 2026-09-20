@@ -18,12 +18,7 @@
   display: none;
 }
 
-.tor-seats-flow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
+.tor-seats-flow,
 .tor-seat-group {
   display: flex;
   align-items: center;
@@ -135,10 +130,6 @@
   background: var(--gold-300);
   padding: 1px 5px;
   border-radius: var(--r-xs);
-}
-
-.tor-defeated {
-  font-size: var(--fs-2xs);
 }
 
 .tor-arrow {

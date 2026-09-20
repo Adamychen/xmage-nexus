@@ -1,4 +1,5 @@
 import { useState, useMemo, type ReactNode } from 'react'
+import Chip from '../ui/Chip'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { META_DECK_CATALOG } from './metaDeckCatalog'
 import { DeckInspectorModal } from './DeckInspectorModal'
@@ -145,8 +146,8 @@ export function DeckBrowser({
               <BrowserDeckArt cover={cover}>
                 <div className="browser-deck-art-gradient" />
                 <div className="browser-deck-badges-overlay">
-                  <span className="browser-deck-format-chip">{deck.format}</span>
-                  <span className="browser-deck-arch-chip">{deck.archetype}</span>
+                  <Chip solid tone="gold" pill>{deck.format}</Chip>
+                  <Chip tone="brand" pill>{deck.archetype}</Chip>
                 </div>
               </BrowserDeckArt>
 

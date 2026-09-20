@@ -1,4 +1,6 @@
 import CloseButton from '../ui/CloseButton'
+import Chip from '../ui/Chip'
+import Checkbox from '../ui/Checkbox'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import type { TableView } from '../net/types'
 import {
@@ -157,19 +159,11 @@ export default function JoinTableDialog({
     >
         {/* Table summary badges */}
         <div className="join-table-meta-bar">
-          <span className="meta-badge meta-format">
-            <Icon name="scrollText" size={12} /> {t('lobby','create_field_format')}: <strong>{table.deckType || t('common','all')}</strong>
-          </span>
-          <span className="meta-badge meta-mode">
-            <Icon name="gamepad" size={12} /> {t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong>
-          </span>
-          <span className="meta-badge meta-host">
-            <Icon name="crown" size={12} /> {t('lobby','host')}: <strong>{table.controllerName?.split(',')[0]?.trim() || table.controllerName}</strong>
-          </span>
+          <Chip tone="gold" size="md" icon="scrollText">{t('lobby','create_field_format')}: <strong>{table.deckType || t('common','all')}</strong></Chip>
+          <Chip size="md" icon="gamepad">{t('lobby','create_field_num_players')}: <strong>{table.gameType || '1v1'}</strong></Chip>
+          <Chip size="md" icon="crown">{t('lobby','host')}: <strong>{table.controllerName?.split(',')[0]?.trim() || table.controllerName}</strong></Chip>
           {table.passworded && (
-            <span className="meta-badge meta-lock">
-              <Icon name="lock" size={12} /> {t('lobby','join_requires_password')}
-            </span>
+            <Chip tone="err" size="md" icon="lock">{t('lobby','join_requires_password')}</Chip>
           )}
         </div>
 
@@ -298,14 +292,11 @@ export default function JoinTableDialog({
 
           {/* Footer Actions */}
           <div className="join-modal-footer">
-            <label className="join-default-checkbox">
-              <input
-                type="checkbox"
-                checked={setAsDefault}
-                onChange={(e) => setSetAsDefault(e.target.checked)}
-              />
-              <span>{t('lobby','join_remember_default')}</span>
-            </label>
+            <Checkbox
+              checked={setAsDefault}
+              onChange={setSetAsDefault}
+              label={t('lobby','join_remember_default')}
+            />
 
             <div className="join-footer-buttons">
               <Button variant="subtle"

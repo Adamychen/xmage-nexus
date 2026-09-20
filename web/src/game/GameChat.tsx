@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import QuickReactions from './QuickReactions'
@@ -77,9 +78,7 @@ export default function GameChat() {
     <div className="game-chat">
       <div className="game-chat-messages">
         {chatEntries.length === 0 ? (
-          <div className="game-chat-empty">
-            <Icon name="chat" size={16} /> {t('game', 'chat_empty')}
-          </div>
+          <EmptyState fill italic icon="chat" iconSize={16}>{t('game', 'chat_empty')}</EmptyState>
         ) : (
           chatEntries.map((entry) => (
             <div key={entry.id} className={`game-chat-entry${myName && entry.from && entry.from.toLowerCase() === myName.toLowerCase() ? ' own-msg' : ''}`}>

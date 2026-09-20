@@ -75,31 +75,14 @@
 }
 
 .deck-import-textarea {
+  font-family: var(--font-mono, monospace);
   width: 100%;
-  box-sizing: border-box;
-  background: var(--ink-1);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-md);
   padding: 12px 14px;
-  color: var(--fg-1);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: var(--fs-sm);
   line-height: 1.5;
   resize: vertical;
   min-height: 180px;
   max-height: 380px;
-  outline: none;
-  transition: border-color 140ms, box-shadow 140ms;
-}
-
-.deck-import-textarea:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.25);
-}
-
-.deck-import-textarea::placeholder {
-  color: var(--fg-3);
-  font-style: italic;
 }
 
 .import-drop-overlay {

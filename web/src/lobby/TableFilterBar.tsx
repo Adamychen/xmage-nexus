@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react'
+import ChipButton from '../ui/ChipButton'
+import Chip from '../ui/Chip'
+import Checkbox from '../ui/Checkbox'
 import type { TableView } from '../net/types'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -298,9 +301,9 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
         </div>
 
         <div className="tfb-quick-toggles">
-          <button
-            type="button"
-            className={`tfb-pill-btn ${filters.availability === 'open' ? 'active' : ''}`}
+          <ChipButton
+            activeTone="ok"
+            active={filters.availability === 'open'}
             onClick={() =>
               onChange({
                 ...filters,
@@ -311,11 +314,11 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           >
             <span className="tfb-pill-dot open-dot" />
             <span>{t('lobby.filter_only_open')}</span>
-          </button>
+          </ChipButton>
 
-          <button
-            type="button"
-            className={`tfb-pill-btn ${filters.availability === 'dueling' ? 'active' : ''}`}
+          <ChipButton
+            activeTone="ok"
+            active={filters.availability === 'dueling'}
             onClick={() =>
               onChange({
                 ...filters,
@@ -325,18 +328,18 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             title={t('lobby.in_game')}
           >
             <span><Icon name="eye" size={13} /> {t('lobby.in_game')}</span>
-          </button>
+          </ChipButton>
 
-          <button
-            type="button"
-            className={`tfb-pill-btn tfb-advanced-trigger ${showAdvanced || activeCount > 0 ? 'is-open' : ''}`}
+          <ChipButton
+            active={showAdvanced || activeCount > 0}
+            className="tfb-advanced-trigger"
             onClick={() => setShowAdvanced((v) => !v)}
             title={t('common', 'settings')}
           >
             <span><Icon name="settings" size={13} /> {t('common', 'settings')}</span>
             {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
             <span className="tfb-arrow-icon">{showAdvanced ? '▴' : '▾'}</span>
-          </button>
+          </ChipButton>
 
           {activeCount > 0 && (
             <button
@@ -358,16 +361,16 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             const count = formatCounts[pf.id] ?? 0
             const isActive = filters.format === pf.id
             return (
-              <button
+              <ChipButton
+                activeTone="gold"
+                active={isActive}
                 key={pf.id}
-                type="button"
-                className={`tfb-format-chip ${isActive ? 'active' : ''}`}
                 onClick={() => onChange({ ...filters, format: pf.id })}
               >
                 <span className="tfb-chip-icon"><Icon name={pf.icon} size={13} /></span>
                 <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.labelKey ? t('lobby', pf.labelKey) : pf.label}</span>
-                <span className="tfb-chip-count">{count}</span>
-              </button>
+                <Chip size="xs">{count}</Chip>
+              </ChipButton>
             )
           })}
 
@@ -402,27 +405,15 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           <div className="tfb-drawer-section">
             <span className="tfb-section-label">{t('lobby', 'filter_sort_label')}:</span>
             <div className="tfb-button-group">
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.sort === 'desktop' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, sort: 'desktop' })}
-              >
+              <ChipButton active={filters.sort === 'desktop'} onClick={() => onChange({ ...filters, sort: 'desktop' })}>
                 {t('lobby', 'filter_sort_desktop')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.sort === 'newest' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, sort: 'newest' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.sort === 'newest'} onClick={() => onChange({ ...filters, sort: 'newest' })}>
                 {t('lobby', 'filter_sort_newest')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.sort === 'oldest' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, sort: 'oldest' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.sort === 'oldest'} onClick={() => onChange({ ...filters, sort: 'oldest' })}>
                 {t('lobby', 'filter_sort_oldest')}
-              </button>
+              </ChipButton>
             </div>
           </div>
 
@@ -430,58 +421,30 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           <div className="tfb-drawer-section">
             <span className="tfb-section-label">{t('game', 'combat')}:</span>
             <div className="tfb-button-group">
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.mode === 'all' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, mode: 'all' })}
-              >
+              <ChipButton active={filters.mode === 'all'} onClick={() => onChange({ ...filters, mode: 'all' })}>
                 {t('common', 'all')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.mode === '1v1' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, mode: '1v1' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.mode === '1v1'} onClick={() => onChange({ ...filters, mode: '1v1' })}>
                 <Icon name="swords" size={13} /> 1v1
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.mode === 'multi' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, mode: 'multi' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.mode === 'multi'} onClick={() => onChange({ ...filters, mode: 'multi' })}>
                 <Icon name="users" size={13} /> {t('lobby', 'create_tab_multi')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.mode === 'tourney' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, mode: 'tourney' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.mode === 'tourney'} onClick={() => onChange({ ...filters, mode: 'tourney' })}>
                 <Icon name="trophy" size={13} /> {t('lobby', 'tournament_badge')}
-              </button>
+              </ChipButton>
             </div>
             {filters.mode === 'tourney' && (
               <div className="tfb-button-group">
-                <button
-                  type="button"
-                  className={`tfb-sub-pill ${filters.tourneyKind === 'all' ? 'active' : ''}`}
-                  onClick={() => onChange({ ...filters, tourneyKind: 'all' })}
-                >
+                <ChipButton active={filters.tourneyKind === 'all'} onClick={() => onChange({ ...filters, tourneyKind: 'all' })}>
                   {t('common', 'all')}
-                </button>
-                <button
-                  type="button"
-                  className={`tfb-sub-pill ${filters.tourneyKind === 'constructed' ? 'active' : ''}`}
-                  onClick={() => onChange({ ...filters, tourneyKind: 'constructed' })}
-                >
+                </ChipButton>
+                <ChipButton active={filters.tourneyKind === 'constructed'} onClick={() => onChange({ ...filters, tourneyKind: 'constructed' })}>
                   {t('lobby', 'filter_tourney_constructed')}
-                </button>
-                <button
-                  type="button"
-                  className={`tfb-sub-pill ${filters.tourneyKind === 'limited' ? 'active' : ''}`}
-                  onClick={() => onChange({ ...filters, tourneyKind: 'limited' })}
-                >
+                </ChipButton>
+                <ChipButton active={filters.tourneyKind === 'limited'} onClick={() => onChange({ ...filters, tourneyKind: 'limited' })}>
                   {t('lobby', 'filter_tourney_limited')}
-                </button>
+                </ChipButton>
               </div>
             )}
           </div>
@@ -490,34 +453,18 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           <div className="tfb-drawer-section">
             <span className="tfb-section-label">{t('lobby', 'create_field_skill')}:</span>
             <div className="tfb-button-group">
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.skill === 'all' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, skill: 'all' })}
-              >
+              <ChipButton active={filters.skill === 'all'} onClick={() => onChange({ ...filters, skill: 'all' })}>
                 {t('common', 'all')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.skill === 'BEGINNER' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, skill: 'BEGINNER' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.skill === 'BEGINNER'} onClick={() => onChange({ ...filters, skill: 'BEGINNER' })}>
                 <Icon name="star" size={12} /> {t('lobby', 'create_skill_beginner')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.skill === 'CASUAL' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, skill: 'CASUAL' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.skill === 'CASUAL'} onClick={() => onChange({ ...filters, skill: 'CASUAL' })}>
                 <Icon name="star" size={12} /><Icon name="star" size={12} /> {t('lobby', 'create_skill_casual')}
-              </button>
-              <button
-                type="button"
-                className={`tfb-sub-pill ${filters.skill === 'SERIOUS' ? 'active' : ''}`}
-                onClick={() => onChange({ ...filters, skill: 'SERIOUS' })}
-              >
+              </ChipButton>
+              <ChipButton active={filters.skill === 'SERIOUS'} onClick={() => onChange({ ...filters, skill: 'SERIOUS' })}>
                 <Icon name="star" size={12} /><Icon name="star" size={12} /><Icon name="star" size={12} /> {t('lobby', 'create_skill_competitive')}
-              </button>
+              </ChipButton>
             </div>
           </div>
 
@@ -525,68 +472,61 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           <div className="tfb-drawer-section tfb-switches-section">
             <span className="tfb-section-label">{t('lobby','create_tab_restrictions')}:</span>
             <div className="tfb-switches-grid">
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.hidePassworded}
-                  onChange={(e) => onChange({ ...filters, hidePassworded: e.target.checked, passwordedOnly: e.target.checked ? false : filters.passwordedOnly })}
-                />
-                <span><Icon name="unlock" size={12} /> {t('lobby','tag_private')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.hidePassworded}
+                onChange={(next) => onChange({ ...filters, hidePassworded: next, passwordedOnly: next ? false : filters.passwordedOnly })}
+                icon="unlock"
+                label={t('lobby','tag_private')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.passwordedOnly}
-                  onChange={(e) => onChange({ ...filters, passwordedOnly: e.target.checked, hidePassworded: e.target.checked ? false : filters.hidePassworded })}
-                />
-                <span><Icon name="lock" size={12} /> {t('lobby', 'filter_passworded_only')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.passwordedOnly}
+                onChange={(next) => onChange({ ...filters, passwordedOnly: next, hidePassworded: next ? false : filters.hidePassworded })}
+                icon="lock"
+                label={t('lobby', 'filter_passworded_only')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.ratedOnly}
-                  onChange={(e) => onChange({ ...filters, ratedOnly: e.target.checked, unratedOnly: e.target.checked ? false : filters.unratedOnly })}
-                />
-                <span><Icon name="medal" size={12} /> {t('lobby', 'tag_rated')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.ratedOnly}
+                onChange={(next) => onChange({ ...filters, ratedOnly: next, unratedOnly: next ? false : filters.unratedOnly })}
+                icon="medal"
+                label={t('lobby', 'tag_rated')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.unratedOnly}
-                  onChange={(e) => onChange({ ...filters, unratedOnly: e.target.checked, ratedOnly: e.target.checked ? false : filters.ratedOnly })}
-                />
-                <span><Icon name="medal" size={12} /> {t('lobby', 'filter_unrated_only')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.unratedOnly}
+                onChange={(next) => onChange({ ...filters, unratedOnly: next, ratedOnly: next ? false : filters.ratedOnly })}
+                icon="medal"
+                label={t('lobby', 'filter_unrated_only')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.spectatorsOnly}
-                  onChange={(e) => onChange({ ...filters, spectatorsOnly: e.target.checked })}
-                />
-                <span><Icon name="eye" size={12} /> {t('lobby','create_field_spectators')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.spectatorsOnly}
+                onChange={(next) => onChange({ ...filters, spectatorsOnly: next })}
+                icon="eye"
+                label={t('lobby','create_field_spectators')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.aiSeatsOnly}
-                  onChange={(e) => onChange({ ...filters, aiSeatsOnly: e.target.checked })}
-                />
-                <span><Icon name="bot" size={12} /> {t('lobby', 'ai')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.aiSeatsOnly}
+                onChange={(next) => onChange({ ...filters, aiSeatsOnly: next })}
+                icon="bot"
+                label={t('lobby', 'ai')}
+              />
 
-              <label className="tfb-switch-label">
-                <input
-                  type="checkbox"
-                  checked={filters.hideIgnored}
-                  onChange={(e) => onChange({ ...filters, hideIgnored: e.target.checked })}
-                />
-                <span><Icon name="ban" size={12} /> {t('lobby', 'filter_hide_ignored')}</span>
-              </label>
+              <Checkbox
+               
+                checked={filters.hideIgnored}
+                onChange={(next) => onChange({ ...filters, hideIgnored: next })}
+                icon="ban"
+                label={t('lobby', 'filter_hide_ignored')}
+              />
             </div>
           </div>
         </div>

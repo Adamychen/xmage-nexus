@@ -1,4 +1,6 @@
 import * as cmds from '../../net/commands'
+import Checkbox from '../../ui/Checkbox'
+import EmptyState from '../../ui/EmptyState'
 import type { FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
 import DialogShell from '../../ui/DialogShell'
@@ -263,15 +265,13 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             </div>
           )}
           {prompt.choiceSpecial && (
-            <label className="feedback-remember-answer">
-              <input
-                type="checkbox"
-                checked={rememberAnswer}
-                disabled={busy}
-                onChange={(event) => setRememberAnswer(event.target.checked)}
-              />
-              {t('game', 'choice_remember')}
-            </label>
+            <Checkbox
+              className="feedback-remember-answer"
+              checked={rememberAnswer}
+              disabled={busy}
+              onChange={setRememberAnswer}
+              label={t('game', 'choice_remember')}
+            />
           )}
           <div className="feedback-dialog-actions">
             <Button variant="primary"
@@ -426,7 +426,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               )
             })}
             {gridOptions.length === 0 && (
-              <div className="grid-no-results">{t('game', 'grid_no_results')}</div>
+              <EmptyState size="sm">{t('game', 'grid_no_results')}</EmptyState>
             )}
           </div>
           {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
@@ -442,15 +442,13 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             </div>
           )}
           {autoAnswerable && (
-            <label className="feedback-remember-answer">
-              <input
-                type="checkbox"
-                checked={rememberAnswer}
-                disabled={busy}
-                onChange={(event) => setRememberAnswer(event.target.checked)}
-              />
-              {t('game', 'auto_answer_remember')}
-            </label>
+            <Checkbox
+              className="feedback-remember-answer"
+              checked={rememberAnswer}
+              disabled={busy}
+              onChange={setRememberAnswer}
+              label={t('game', 'auto_answer_remember')}
+            />
           )}
         </div>
       )}

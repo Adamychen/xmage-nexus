@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Chip from '../ui/Chip'
 import { useState, useEffect } from 'react'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
@@ -91,9 +92,9 @@ export function DeckInspectorModal({
       onBackdropClick={onClose}
     >
         <div className="deck-inspector-badges">
-          <span className="inspector-format-badge">{deck.format}</span>
-          {archetype && <span className="inspector-archetype-badge">{archetype}</span>}
-          {tier && <span className="inspector-format-badge" style={{ borderColor: '#68d391', color: '#68d391' }}>{tier}</span>}
+          <Chip tone="gold" size="md" pill>{deck.format}</Chip>
+          {archetype && <Chip tone="brand" size="md" pill>{archetype}</Chip>}
+          {tier && <Chip tone="ok" size="md" pill>{tier}</Chip>}
         </div>
 
         <div className="deck-inspector-body">

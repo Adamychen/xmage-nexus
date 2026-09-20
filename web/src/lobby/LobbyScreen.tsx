@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import EmptyState from '../ui/EmptyState'
 import { useLobby, useStore, openStagingTable, clearError } from '../state/store'
 import * as cmds from '../net/commands'
 import type { UsersView } from '../net/types'
@@ -260,33 +261,35 @@ export default function LobbyScreen() {
                   ))}
 
                   {filteredTables.length === 0 && tables.length === 0 && (
-                    <div className="tables-empty-state">
-                      <span className="empty-icon"><Icon name="castle" size={30} /></span>
-                      <h3>{t('lobby','empty_tables')}</h3>
-                      <p>{t('lobby','tables_deck_hint')}</p>
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <EmptyState
+                      size="lg"
+                      icon="castle"
+                      iconSize={30}
+                      title={t('lobby','empty_tables')}
+                      action={
                         <Button variant="primary" onClick={() => setShowCreate(true)}>
                           <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
                         </Button>
-                      </div>
-                    </div>
+                      }
+                    >
+                      {t('lobby','tables_deck_hint')}
+                    </EmptyState>
                   )}
 
                   {filteredTables.length === 0 && tables.length > 0 && (
-                    <div className="tables-empty-match">
-                      <span className="empty-match-icon"><Icon name="search" size={28} /></span>
-                      <span className="empty-match-title">{t('lobby','empty_filtered')}</span>
-                      <p className="empty-match-desc">
-                        {t('lobby','no_tables_found')}
-                      </p>
-                      <button
-                        type="button"
-                        className="empty-reset-btn"
-                        onClick={() => setFilters(INITIAL_TABLE_FILTERS)}
-                      >
-                        {t('lobby','filter_reset')}
-                      </button>
-                    </div>
+                    <EmptyState
+                      size="lg"
+                      boxed
+                      icon="search"
+                      title={t('lobby','empty_filtered')}
+                      action={
+                        <Button size="sm" onClick={() => setFilters(INITIAL_TABLE_FILTERS)}>
+                          {t('lobby','filter_reset')}
+                        </Button>
+                      }
+                    >
+                      {t('lobby','no_tables_found')}
+                    </EmptyState>
                   )}
                 </div>
               </section>

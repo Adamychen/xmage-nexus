@@ -87,14 +87,12 @@ function GameplaySection() {
           <span className={`settings-auto-badge ${rule.answer ? 'is-yes' : 'is-no'}`}>
             {rule.answer ? t('common', 'yes') : t('common', 'no')}
           </span>
-          <button
-            type="button"
-            className="settings-auto-delete"
-            aria-label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
+          <CloseButton
+            variant="danger"
+            size="sm"
+            label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
             onClick={() => setSetting('autoAnswers', removeAutoAnswer(settings.autoAnswers, rule.id))}
-          >
-            ✕
-          </button>
+          />
         </div>
       ))}
       {settings.autoAnswers.length > 0 && (

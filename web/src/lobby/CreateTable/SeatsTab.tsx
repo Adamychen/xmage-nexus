@@ -1,4 +1,6 @@
 import { useTranslation } from '../../i18n'
+import ChipButton from '../../ui/ChipButton'
+import Chip from '../../ui/Chip'
 import Icon from '../../ui/Icon'
 import { deckRef } from '../decks'
 import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
@@ -18,13 +20,9 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
         <div className="create-seat-box human-seat-box">
           <div className="seat-box-header">
             <span className="seat-title"><Icon name="user" size={13} /> {t('common','player')}</span>
-            <button
-              type="button"
-              className={`chip ${form.humanSeat ? 'on' : ''}`}
-              onClick={() => form.setHumanSeat(!form.humanSeat)}
-            >
+            <ChipButton pill active={form.humanSeat} onClick={() => form.setHumanSeat(!form.humanSeat)}>
               {form.humanSeat ? (<><Icon name="check" size={12} /> {t('common','player')}</>) : (<><Icon name="eye" size={12} /> {t('lobby','spectators')}</>)}
-            </button>
+            </ChipButton>
           </div>
           {form.humanSeat && (
             <>
@@ -49,7 +47,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                     </select>
                   </label>
                   {!form.myDeck && (
-                    <span className="wizard-warn-badge"><Icon name="alert" size={11} /> {t('lobby','create_err_no_deck')}</span>
+                    <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>
                   )}
                 </>
               )}
@@ -70,7 +68,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
           <div className="seat-box-header">
             <span className="seat-title"><Icon name="bot" size={13} /> {t('lobby','create_seats_title')} — {form.seatConfigs.length} ({t('lobby','create_seats_waiting_count',{count:humansWaiting})} · {t('lobby','create_seats_bot_count',{count:bots})}, {t('lobby','create_seats_total_count',{total:form.numPlayers})})</span>
             {form.numPlayers !== (form.selectedGameTypeInfo?.maxPlayers ?? form.numPlayers) && form.selectedGameTypeInfo && (
-              <span className="wizard-warn-badge">Config: {form.numPlayers} / {form.selectedGameTypeInfo.maxPlayers} max</span>
+              <Chip tone="warn" size="xs" pill>Config: {form.numPlayers} / {form.selectedGameTypeInfo.maxPlayers} max</Chip>
             )}
           </div>
           {form.numPlayers > 2 && (
@@ -122,7 +120,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                           </select>
                         </label>
                         {(!deck || total === 0) ? (
-                          <span className="wizard-warn-badge"><Icon name="alert" size={11} /> {t('lobby','create_warn_seat_deck_empty')}</span>
+                          <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_warn_seat_deck_empty')}</Chip>
                         ) : (
                           <span className="wizard-hint-box">{total} {t('decks','total_cards')}</span>
                         )}
@@ -138,16 +136,24 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
             <div className="field">
               <span>{t('lobby','create_seats_apply_all_shortcut')}</span>
               <div className="chip-row">
-                <button type="button" className={form.playerTypesSel.includes(HUMAN_SEAT) ? 'chip on' : 'chip'} onClick={() => {
+                <ChipButton
+                  pill
+                  active={form.playerTypesSel.includes(HUMAN_SEAT)}
+  onClick={() => {
                   form.toggleAi(HUMAN_SEAT)
                   form.applySeatTypeToAll(HUMAN_SEAT)
-                }}><Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}</button>
-                <button type="button" className={form.playerTypesSel.includes(SIM_SEAT) ? 'chip on' : 'chip'} onClick={() => form.toggleAi(SIM_SEAT)}><Icon name="bot" size={12} /> SIM</button>
+                }}
+                ><Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}</ChipButton>
+                <ChipButton pill active={form.playerTypesSel.includes(SIM_SEAT)} onClick={() => form.toggleAi(SIM_SEAT)}><Icon name="bot" size={12} /> SIM</ChipButton>
                 {form.playerTypes.map((pt) => (
-                  <button key={pt} type="button" className={form.playerTypesSel.includes(pt) ? 'chip on' : 'chip'} onClick={() => {
+                  <ChipButton
+                    pill
+                    active={form.playerTypesSel.includes(pt)}
+ key={pt}  onClick={() => {
                     form.toggleAi(pt)
                     form.applySeatTypeToAll(pt)
-                  }}>{seatTypeLabel(pt, t)}</button>
+                  }}
+                  >{seatTypeLabel(pt, t)}</ChipButton>
                 ))}
               </div>
             </div>

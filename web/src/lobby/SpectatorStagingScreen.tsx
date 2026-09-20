@@ -358,7 +358,7 @@ export default function SpectatorStagingScreen({
           {/* Table Header Info */}
           <div className="staging-card-header">
             <div className="staging-title-row">
-              <span className="staging-status-pill">{mode === 'player' ? (<><Icon name="chair" size={12} /> {t('lobby','staging_mode_player')}</>) : (<><Icon name="eye" size={12} /> {t('lobby','staging_mode_spectator')}</>)}</span>
+              <Chip tone="brand" icon={mode === 'player' ? 'chair' : 'eye'}>{mode === 'player' ? t('lobby','staging_mode_player') : t('lobby','staging_mode_spectator')}</Chip>
               <h2 className="staging-table-name">{activeTable?.tableName || `${t('lobby','staging_waiting_fallback')} ${t('lobby','staging_title') && ''}`}</h2>
             </div>
 

@@ -1,4 +1,6 @@
 import { useStore, setState } from '../state/store'
+import Chip from '../ui/Chip'
+import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -19,9 +21,9 @@ export default function LimitedDeckDialog() {
       legacyPanelClass="feedback-dialog card-grid-dialog"
       kickerIcon="layers"
       kickerLabel={t('dialogs', 'viewer_title')}
-      title={<>{viewer.title} <span className="card-grid-count-badge">
+      title={<>{viewer.title} <Chip tone="brand" size="md">
         {viewer.cards.length} {viewer.cards.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')}
-      </span></>}
+      </Chip></>}
       onBackdropClick={close}
     >
         <div className="card-grid-scroll-area">
@@ -34,9 +36,7 @@ export default function LimitedDeckDialog() {
             ))}
           </div>
           {viewer.cards.length === 0 && (
-            <div className="card-grid-empty">
-              <p>{t('dialogs', 'viewer_empty')}</p>
-            </div>
+            <EmptyState>{t('dialogs', 'viewer_empty')}</EmptyState>
           )}
         </div>
         <footer className="card-grid-actions">

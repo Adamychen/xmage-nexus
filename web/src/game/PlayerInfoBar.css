@@ -247,18 +247,6 @@ html.fx-off .life-value {
   color: var(--purple);
 }
 
-.counter-poison.poison-zero {
-  opacity: 0.6;
-}
-
-.counter-poison.has-poison {
-  background: rgb(var(--purple-rgb) / 0.35);
-  border-color: var(--purple-fg);
-  color: var(--fg-1);
-  box-shadow: 0 0 10px rgb(var(--purple-rgb) / 0.7);
-  font-weight: 900;
-}
-
 .counter-hand {
   background: rgb(var(--ink-2-rgb) / 0.5);
   border-color: rgb(var(--brand-rgb) / 0.3);

@@ -80,15 +80,15 @@ describe('CreateTableDialog', () => {
     // Select 1 free mulligan (chip now shows just number)
     const mulliganChip = screen.getByText('1')
     fireEvent.click(mulliganChip)
-    expect(mulliganChip.classList.contains('on')).toBe(true)
+    expect(mulliganChip.getAttribute('aria-pressed')).toBe('true')
   })
 
   it('CR 103.5c: preselecciona 1 mulligan gratis en multijugador/Brawl y lo envía', async () => {
     const { container } = await renderDialog()
     const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
     const goToStep = (i: number) => fireEvent.click(stepper.querySelectorAll('button')[i])
-    const chips = () => Array.from(container.querySelectorAll('.chip-row .chip')) as HTMLButtonElement[]
-    const selectedChip = () => chips().find((c) => c.classList.contains('on'))?.textContent
+    const chips = () => Array.from(container.querySelectorAll('.chip-row .ui-chip')) as HTMLButtonElement[]
+    const selectedChip = () => chips().find((c) => c.getAttribute('aria-pressed') === 'true')?.textContent
     const hint = () => screen.queryByText(/recomendado 1|recommended 1/)
     const gameType = () => screen.getAllByRole('combobox')[0] as HTMLSelectElement
 

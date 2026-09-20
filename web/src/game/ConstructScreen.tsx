@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
 import { setState, addLog, getState } from '../state/state'
@@ -425,7 +426,7 @@ export default function ConstructScreen() {
                 )
               })}
               {filteredPool.length === 0 && (
-                <div className="deck-list-empty-hint"><small>{t('game', poolSize === 0 ? 'construct_pool_empty' : 'construct_pool')}</small></div>
+                <EmptyState boxed size="lg">{t('game', poolSize === 0 ? 'construct_pool_empty' : 'construct_pool')}</EmptyState>
               )}
             </div>
           </div>
@@ -492,7 +493,7 @@ export default function ConstructScreen() {
                 )
               })}
               {main.length === 0 && (
-                <div className="deck-list-empty-hint"><span>{t('game', 'sideboard_invalid')}</span></div>
+                <EmptyState boxed size="lg">{t('game', 'sideboard_invalid')}</EmptyState>
               )}
             </div>
           </div>

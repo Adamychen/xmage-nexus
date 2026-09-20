@@ -1,4 +1,6 @@
 import { useTranslation } from '../../i18n'
+import ChipButton from '../../ui/ChipButton'
+import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import { TIME_LIMIT_OPTIONS, BUFFER_TIME_OPTIONS, getTimeLimitLabel, getBufferTimeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
@@ -35,14 +37,14 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
         <span>{t('lobby','create_field_free_mulligans')} {form.recommendedMulligans > 0 && <em style={{ textTransform: 'none', fontWeight: 400, color: '#9aa3c2' }}>{t('lobby','create_mulligan_recommended_commander')}</em>}</span>
         <div className="chip-row">
           {[0, 1, 2, 3, 4, 5].map((m) => (
-            <button
+            <ChipButton
+              pill
+              active={form.freeMulligans === m}
               key={m}
-              type="button"
-              className={`chip ${form.freeMulligans === m ? 'on' : ''}`}
               onClick={() => form.setFreeMulligans(m)}
             >
               {m}
-            </button>
+            </ChipButton>
           ))}
         </div>
       </div>
@@ -61,24 +63,37 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
           </select>
         </label>
         <div className="create-grid-2col">
-          <label className="toggle-label-row" style={{ flexDirection: 'row' as const, alignItems: 'center' }}>
-            <input type="checkbox" checked={form.customStartLifeEnabled} onChange={(e) => form.setCustomStartLifeEnabled(e.target.checked)} />
-            <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: '#c4cae8' }}>{t('lobby','create_field_custom_life')}</span>
-            <input type="number" min={1} max={100} value={form.customStartLife} onChange={(e) => form.setCustomStartLife(Math.min(100, Math.max(1, parseInt(e.target.value,10)||20)))} disabled={!form.customStartLifeEnabled} style={{ width: 72, marginLeft: 8 }} />
-          </label>
-          <label className="toggle-label-row" style={{ flexDirection: 'row' as const, alignItems: 'center' }}>
-            <input type="checkbox" checked={form.customStartHandSizeEnabled} onChange={(e) => form.setCustomStartHandSizeEnabled(e.target.checked)} />
-            <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: '#c4cae8' }}>{t('lobby','create_field_custom_hand')}</span>
-            <input type="number" min={0} max={20} value={form.customStartHandSize} onChange={(e) => form.setCustomStartHandSize(Math.min(20, Math.max(0, parseInt(e.target.value,10)||7)))} disabled={!form.customStartHandSizeEnabled} style={{ width: 72, marginLeft: 8 }} />
-          </label>
+          <Checkbox
+            card
+            checked={form.customStartLifeEnabled}
+            onChange={form.setCustomStartLifeEnabled}
+            label={
+              <>
+                {t('lobby','create_field_custom_life')}
+                <input type="number" min={1} max={100} value={form.customStartLife} onChange={(e) => form.setCustomStartLife(Math.min(100, Math.max(1, parseInt(e.target.value,10)||20)))} disabled={!form.customStartLifeEnabled} style={{ width: 72 }} />
+              </>
+            }
+          />
+          <Checkbox
+            card
+            checked={form.customStartHandSizeEnabled}
+            onChange={form.setCustomStartHandSizeEnabled}
+            label={
+              <>
+                {t('lobby','create_field_custom_hand')}
+                <input type="number" min={0} max={20} value={form.customStartHandSize} onChange={(e) => form.setCustomStartHandSize(Math.min(20, Math.max(0, parseInt(e.target.value,10)||7)))} disabled={!form.customStartHandSizeEnabled} style={{ width: 72 }} />
+              </>
+            }
+          />
         </div>
-        <label className="toggle-label-row">
-          <input type="checkbox" checked={form.planeChase} onChange={(e) => form.setPlaneChase(e.target.checked)} />
-          <div className="toggle-text-block">
-            <span className="toggle-title"><Icon name="map" size={12} /> Planechase</span>
-            <span className="toggle-desc">{t('lobby','create_planechase_desc')}</span>
-          </div>
-        </label>
+        <Checkbox
+          card
+          checked={form.planeChase}
+          onChange={form.setPlaneChase}
+          icon="map"
+          label="Planechase"
+          description={t('lobby','create_planechase_desc')}
+        />
       </div>
 
       {form.showRangeAttack && (

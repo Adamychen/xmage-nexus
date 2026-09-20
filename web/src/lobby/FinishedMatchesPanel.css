@@ -46,17 +46,6 @@
   letter-spacing: -0.01em;
 }
 
-.finished-matches-count-badge {
-  background: rgb(var(--brand-rgb) / 0.2);
-  border: 1px solid rgb(var(--brand-rgb) / 0.4);
-  color: var(--brand-fg);
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: var(--r-mid);
-  font-family: var(--font-mono, monospace);
-}
-
 .finished-matches-subtitle {
   margin: 0;
   font-size: var(--fs-sm);
@@ -77,59 +66,17 @@
 }
 
 .matches-search-input {
-  background: rgb(var(--ink-2-rgb) / 0.8);
-  border: 1px solid var(--veil-3);
-  border-radius: var(--r-base);
   padding: 8px 30px 8px 12px;
-  color: var(--fg-hi);
   font-size: var(--fs-sm);
   min-width: 220px;
-  outline: none;
-  transition: all 0.15s ease;
 }
 
-.matches-search-input:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.25);
-}
-
-.matches-search-clear {
-  position: absolute;
-  right: 8px;
-  background: none;
-  border: none;
-  color: var(--fg-3);
-  font-size: var(--fs-xs);
-  cursor: pointer;
-}
+.matches-search-clear { position: absolute; right: 4px; }
 
 .matches-filter-chips {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.filter-chip {
-  background: var(--veil-1);
-  border: 1px solid var(--veil-2);
-  border-radius: var(--r-sm);
-  padding: 6px 12px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--fg-3);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.filter-chip:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
-.filter-chip.active {
-  background: rgb(var(--brand-rgb) / 0.2);
-  border-color: rgb(var(--brand-rgb) / 0.5);
-  color: var(--brand-fg);
 }
 
 .matches-refresh-btn {
@@ -232,25 +179,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.match-badge {
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: var(--r-sm);
-}
-
-.match-badge.rated {
-  background: rgb(var(--gold-rgb) / 0.15);
-  border: 1px solid rgb(var(--gold-rgb) / 0.3);
-  color: var(--gold-300);
-}
-
-.match-badge.tournament {
-  background: rgb(var(--err-rgb) / 0.15);
-  border: 1px solid rgb(var(--err-rgb) / 0.3);
-  color: var(--err);
 }
 
 .match-duration {
@@ -437,37 +365,3 @@
   font-size: var(--fs-sm);
 }
 
-/* Empty State */
-.matches-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-height: 0;
-  padding: 60px 20px;
-  background: rgb(var(--ink-2-rgb) / 0.4);
-  border: 1px dashed var(--veil-3);
-  border-radius: var(--r-mid);
-  text-align: center;
-  gap: 8px;
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.8;
-}
-
-.empty-title {
-  margin: 0;
-  font-size: var(--fs-heading);
-  font-weight: 800;
-  color: var(--fg-hi);
-}
-
-.empty-desc {
-  margin: 0;
-  font-size: var(--fs-sm);
-  color: var(--fg-3);
-  max-width: 440px;
-}
