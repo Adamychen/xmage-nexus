@@ -4,10 +4,10 @@
   align-items: center;
   justify-content: center;
   padding: 3px 8px;
-  background: rgba(10, 13, 26, 0.94);
-  border: 1px solid rgba(124, 92, 255, 0.28);
-  border-radius: 999px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  background: rgb(var(--ink-rgb) / 0.94);
+  border: 1px solid rgb(var(--brand-rgb) / 0.28);
+  border-radius: var(--r-pill);
+  box-shadow: 0 2px 12px var(--shade-2);
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
@@ -35,46 +35,46 @@
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-pill);
+  background: var(--veil-1);
   border: 1.5px solid transparent;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   line-height: 1;
   text-align: center;
   transition: all 0.15s ease;
   position: relative;
   box-sizing: border-box;
-  color: #cbd5e1;
+  color: var(--fg-2);
 }
 
 .tor-seat:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--veil-2);
 }
 
 .tor-seat-dot {
-  font-size: 0.562rem;
+  font-size: var(--fs-4xs);
   line-height: 1;
-  color: #6b7394;
+  color: var(--fg-3);
 }
 
 .tor-seat.is-active {
-  background: linear-gradient(90deg, rgba(255, 208, 112, 0.22) 0%, rgba(255, 180, 84, 0.14) 100%);
-  border-color: #ffd070;
-  box-shadow: 0 0 10px rgba(255, 208, 112, 0.35);
-  color: #ffffff;
+  background: linear-gradient(90deg, rgb(var(--gold-rgb) / 0.22) 0%, rgb(var(--warn-rgb) / 0.14) 100%);
+  border-color: var(--gold-300);
+  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.35);
+  color: var(--fg-hi);
 }
 
 .tor-seat.is-active .tor-seat-dot {
-  color: #ffd070;
+  color: var(--gold-300);
 }
 
 .tor-seat.has-priority:not(.is-active) {
-  border-color: #a78bfa;
-  box-shadow: 0 0 8px rgba(124, 92, 255, 0.4);
+  border-color: var(--brand-fg);
+  box-shadow: 0 0 8px rgb(var(--brand-rgb) / 0.4);
 }
 
 .tor-seat.has-priority .tor-seat-dot {
-  color: #a78bfa;
+  color: var(--brand-fg);
   animation: torPriorityPulse 1s ease-in-out infinite;
 }
 
@@ -113,41 +113,41 @@
 }
 
 .tor-seat-life {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  color: #94a3b8;
-  background: rgba(0, 0, 0, 0.35);
+  color: var(--fg-2);
+  background: var(--shade-1);
   padding: 1px 5px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .tor-seat.is-active .tor-seat-life {
-  color: #ffd070;
-  background: rgba(0, 0, 0, 0.5);
+  color: var(--gold-300);
+  background: var(--shade-2);
 }
 
 .tor-active-badge {
-  font-size: 0.562rem;
+  font-size: var(--fs-4xs);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #1a1000;
-  background: #ffd070;
+  background: var(--gold-300);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .tor-defeated {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
 }
 
 .tor-arrow {
   color: #475569;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
 }
 
 .tor-arrow.is-active-edge {
-  color: #ffd070;
-  text-shadow: 0 0 6px rgba(255, 208, 112, 0.6);
+  color: var(--gold-300);
+  text-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.6);
 }

@@ -3,27 +3,27 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
 }
 
 .trigger-scope-label {
-  color: #9aa3c0;
+  color: var(--fg-2);
 }
 
 .trigger-scope-btn {
-  border: 1px solid #38436b;
+  border: 1px solid var(--ink-4);
   background: transparent;
-  color: #c6cde6;
-  border-radius: 999px;
+  color: var(--brand-fg);
+  border-radius: var(--r-pill);
   padding: 3px 12px;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   cursor: pointer;
 }
 
 .trigger-scope-btn.is-active {
-  background: #38436b;
-  color: #ffd070;
-  border-color: #ffd070;
+  background: var(--ink-4);
+  color: var(--gold-300);
+  border-color: var(--gold-300);
 }
 
 .trigger-list {
@@ -40,10 +40,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #2b3352;
-  border-radius: 12px;
+  border: 1px solid var(--ink-4);
+  border-radius: var(--r-mid);
   padding: 8px 12px 8px 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--veil-1);
 }
 
 .trigger-art {
@@ -65,13 +65,13 @@
 
 .trigger-name {
   font-weight: 700;
-  font-size: 0.875rem;
-  color: #fff;
+  font-size: var(--fs-md);
+  color: var(--fg-hi);
 }
 
 .trigger-rule {
-  font-size: 0.75rem;
-  color: #9aa3c0;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -86,12 +86,12 @@
 }
 
 .trigger-btn {
-  border: 1px solid #38436b;
+  border: 1px solid var(--ink-4);
   background: transparent;
-  color: #e8ecf6;
-  border-radius: 8px;
+  color: var(--fg-1);
+  border-radius: var(--r-base);
   padding: 4px 10px;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -99,7 +99,7 @@
 .trigger-btn.primary {
   background: #2f6fed;
   border-color: #2f6fed;
-  color: #fff;
+  color: var(--fg-hi);
   font-weight: 700;
 }
 
@@ -109,8 +109,8 @@
 }
 
 .trigger-empty {
-  color: #9aa3c0;
-  font-size: 0.875rem;
+  color: var(--fg-2);
+  font-size: var(--fs-md);
 }
 
 .trigger-footer {

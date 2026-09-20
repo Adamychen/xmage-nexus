@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../state/store'
 import { useTranslation } from '../i18n'
-import Icon from '../ui/Icon'
+import Button from '../ui/Button'
 import { buildDeepLink } from './deepLink'
 
 /** Botones "copiar enlace de invitación" (join + watch) para la sala de espera. */
@@ -49,21 +49,21 @@ export default function InviteLinkButton({ tableId }: { tableId: string | undefi
   }
 
   const render = (kind: 'join' | 'watch') => (
-    <button
+    <Button
       key={kind}
-      type="button"
-      className="staging-tag tag-invite"
+      size="sm"
+      icon={copied === kind ? 'check' : 'copy'}
+      className="tag-invite"
       data-testid={`invite-copy-${kind}`}
       title={t('lobby', kind === 'join' ? 'invite_copy_join' : 'invite_copy_watch')}
       onClick={() => void copy(kind)}
     >
-      <Icon name={copied === kind ? 'check' : 'copy'} size={12} />{' '}
       {copied === kind
         ? t('lobby', 'invite_copied')
         : copyFailed === kind
           ? t('lobby', 'invite_copy_failed')
           : t('lobby', kind === 'join' ? 'invite_copy_join' : 'invite_copy_watch')}
-    </button>
+    </Button>
   )
 
   return (

@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  background: rgba(14, 18, 34, 0.75);
+  background: rgb(var(--ink-2-rgb) / 0.75);
   padding: 3px 8px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-base);
+  border: 1px solid var(--veil-2);
   backdrop-filter: blur(8px);
 }
 
@@ -16,8 +16,8 @@
 }
 
 .phase-sep {
-  color: rgba(255, 255, 255, 0.15);
-  font-size: 0.688rem;
+  color: var(--veil-4);
+  font-size: var(--fs-2xs);
   margin: 0 4px;
   user-select: none;
 }
@@ -31,12 +31,12 @@
   padding: 3px 6px;
   min-width: 24px;
   height: 24px;
-  border-radius: 5px;
-  font-size: 0.688rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs);
   font-weight: 700;
   font-family: var(--font-display, sans-serif);
-  color: #8c96bc;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--brand);
+  background: var(--veil-1);
   border: 1px solid transparent;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
@@ -44,9 +44,9 @@
 }
 
 .phase-badge:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--veil-3);
+  color: var(--fg-hi);
+  border-color: var(--veil-5);
   transform: translateY(-1px);
 }
 
@@ -56,10 +56,10 @@
 }
 
 .phase-badge.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, #7c5cff 0%, #5636db 100%);
+  color: var(--fg-hi);
+  background: linear-gradient(135deg, var(--brand) 0%, #5636db 100%);
   border-color: #a084ff;
-  box-shadow: 0 0 12px rgba(124, 92, 255, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.4);
   transform: scale(1.08);
   z-index: 2;
   animation: phaseActiveIn calc(0.3s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -68,15 +68,15 @@
 @keyframes phaseActiveIn {
   0% {
     transform: scale(0.85);
-    box-shadow: 0 0 4px rgba(124, 92, 255, 0.3);
+    box-shadow: 0 0 4px rgb(var(--brand-rgb) / 0.3);
   }
   60% {
     transform: scale(1.22);
-    box-shadow: 0 0 20px rgba(124, 92, 255, 0.9);
+    box-shadow: 0 0 20px rgb(var(--brand-rgb) / 0.9);
   }
   100% {
     transform: scale(1.08);
-    box-shadow: 0 0 12px rgba(124, 92, 255, 0.7);
+    box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7);
   }
 }
 
@@ -85,7 +85,7 @@ html.fx-off .phase-badge.active {
 }
 
 .phase-badge.has-stop {
-  border-color: rgba(255, 208, 112, 0.35);
+  border-color: rgb(var(--gold-rgb) / 0.35);
 }
 
 /* Stop indicator dots */
@@ -100,15 +100,15 @@ html.fx-off .phase-badge.active {
 /* Opponent turn stop: top dot */
 .stop-dot-opp {
   top: 1px;
-  background: #38bdf8;
-  box-shadow: 0 0 4px #38bdf8;
+  background: var(--brand-fg);
+  box-shadow: 0 0 4px var(--brand-fg);
 }
 
 /* Your turn stop: bottom dot */
 .stop-dot-you {
   bottom: 1px;
-  background: #ffd070;
-  box-shadow: 0 0 4px #ffd070;
+  background: var(--gold-300);
+  box-shadow: 0 0 4px var(--gold-300);
 }
 
 @media (prefers-reduced-motion: reduce) {

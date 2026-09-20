@@ -49,13 +49,13 @@
 
 .hand-card-slot:hover .hand-card {
   transform: translateY(-24px) scale(1.06);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 208, 112, 0.95);
+  box-shadow: 0 14px 32px var(--shade-5), 0 0 0 2px rgb(var(--gold-rgb) / 0.95);
 }
 
 .hand-back-stack {
   position: relative;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: var(--r-base);
 }
 
 .hand-back-stack .hand-card {
@@ -69,12 +69,12 @@
 }
 
 .hand-back-stack.is-viewable .hand-card {
-  box-shadow: 0 0 0 1.5px rgba(56, 189, 248, 0.7), 0 6px 18px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 1.5px rgb(var(--brand-rgb) / 0.7), 0 6px 18px var(--shade-3);
 }
 
 .hand-back-stack.is-viewable:hover .hand-card {
   transform: translateY(-6px);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.95), 0 12px 28px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.95), 0 12px 28px var(--shade-4);
 }
 
 .hand-stack-badge {
@@ -82,11 +82,11 @@
   right: 2px;
   bottom: 2px;
   padding: 1px 7px;
-  border-radius: 999px;
-  background: rgba(10, 13, 26, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-  font-size: 0.75rem;
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.92);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-hi);
+  font-size: var(--fs-xs);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -96,9 +96,9 @@
   position: absolute;
   left: 2px;
   top: 2px;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0 1px 2px var(--shade-4));
   pointer-events: none;
 }
 

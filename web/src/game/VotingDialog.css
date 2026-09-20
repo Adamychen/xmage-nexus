@@ -13,8 +13,8 @@
 .voting-btn {
   min-width: 180px;
   padding: 14px 20px;
-  border-radius: 12px;
-  font-size: 0.938rem;
+  border-radius: var(--r-mid);
+  font-size: var(--fs-base);
   font-weight: 700;
   font-family: var(--font-display);
   border: 1.5px solid transparent;
@@ -39,30 +39,30 @@
 .voting-left {
   background: linear-gradient(180deg, #2fbf71 0%, #229c5a 100%);
   color: #06210f;
-  box-shadow: 0 4px 14px rgba(47, 191, 113, 0.3);
+  box-shadow: 0 4px 14px rgb(var(--ok-rgb) / 0.3);
 }
 
 .voting-right {
   background: linear-gradient(180deg, #5b8cff 0%, #3f6ae0 100%);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
+  color: var(--fg-hi);
+  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.35);
 }
 
 .voting-btn-icon {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
 }
 
 .voting-vs {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
-  color: #8ea0ff;
+  color: var(--brand-fg);
   letter-spacing: 0.1em;
 }
 
 .voting-hint {
   margin-top: 14px;
-  font-size: 0.688rem;
-  color: #7a82a8;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   text-align: center;
 }
 

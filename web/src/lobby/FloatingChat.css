@@ -9,10 +9,10 @@
   height: min(520px, 68vh);
   min-height: 0;
   z-index: 60;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(124, 92, 255, 0.15);
-  background: rgba(12, 15, 32, 0.96);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 48px var(--shade-3), 0 0 24px rgb(var(--brand-rgb) / 0.15);
+  background: rgb(var(--ink-2-rgb) / 0.96);
   backdrop-filter: blur(16px);
   overflow: hidden;
   display: flex;
@@ -25,7 +25,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--veil-2);
   cursor: move;
   user-select: none;
   touch-action: none;
@@ -43,25 +43,25 @@
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   background: transparent;
   border: 1px solid transparent;
-  color: #8c96c0;
-  font-size: 0.75rem;
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .floating-tab:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e6f8;
+  background: var(--veil-2);
+  color: var(--fg-1);
 }
 
 .floating-tab.active {
-  background: rgba(124, 92, 255, 0.2);
-  border-color: rgba(124, 92, 255, 0.45);
-  color: #fff;
+  background: rgb(var(--brand-rgb) / 0.2);
+  border-color: rgb(var(--brand-rgb) / 0.45);
+  color: var(--fg-hi);
 }
 
 .floating-chat-actions {
@@ -78,16 +78,16 @@
   width: 28px;
   height: 28px;
   padding: 0;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #9aa2c8;
+  border-radius: var(--r-base);
+  background: var(--veil-1);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-3);
   cursor: pointer;
 }
 
 .floating-min-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--veil-3);
+  color: var(--fg-hi);
 }
 
 .floating-chat-body {
@@ -113,16 +113,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #5b45e0 0%, #3d2fa3 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border: 1.5px solid var(--veil-5);
+  color: var(--fg-hi);
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 18px rgba(124, 92, 255, 0.4);
+  box-shadow: 0 8px 28px var(--shade-2), 0 0 18px rgb(var(--brand-rgb) / 0.4);
 }
 
 .floating-chat-fab:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(124, 92, 255, 0.55);
+  box-shadow: 0 12px 32px var(--shade-3), 0 0 24px rgb(var(--brand-rgb) / 0.55);
 }
 
 .fab-unread {

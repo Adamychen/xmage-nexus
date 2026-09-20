@@ -6,7 +6,7 @@
   height: 100%;
   overflow: hidden;
   position: relative;
-  background: radial-gradient(circle at 50% 30%, #151c24 0%, #0a0e13 100%);
+  background: radial-gradient(circle at 50% 30%, var(--ink-3) 0%, var(--ink-1) 100%);
 }
 
 .arena-card-grid-scroll {
@@ -42,7 +42,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   cursor: pointer;
   user-select: none;
   transition: transform 150ms cubic-bezier(0.2, 0, 0.2, 1), box-shadow 150ms ease;
@@ -54,8 +54,8 @@
 }
 
 .arena-grid-card:hover .arena-grid-card-img-wrapper {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 12px rgba(236, 201, 75, 0.4);
-  border-color: #ecc94b;
+  box-shadow: 0 8px 24px var(--shade-4), 0 0 12px rgb(var(--gold-rgb) / 0.4);
+  border-color: var(--gold-500);
 }
 
 /* Diamonds / Copy Indicators above card */
@@ -72,32 +72,32 @@
   width: 7px;
   height: 7px;
   transform: rotate(45deg);
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: var(--veil-4);
+  border: 1px solid var(--veil-6);
   border-radius: 1px;
 }
 
 .card-pip-diamond.filled {
-  background: #f6e05e;
-  border-color: #ecc94b;
-  box-shadow: 0 0 4px rgba(246, 224, 94, 0.8);
+  background: var(--gold-300);
+  border-color: var(--gold-500);
+  box-shadow: 0 0 4px rgb(var(--gold-rgb) / 0.8);
 }
 
 .card-pip-count {
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   line-height: 1;
-  color: #f6e05e;
-  background: rgba(246, 224, 94, 0.16);
-  border: 1px solid rgba(236, 201, 75, 0.7);
-  border-radius: 999px;
+  color: var(--gold-300);
+  background: rgb(var(--gold-rgb) / 0.16);
+  border: 1px solid rgb(var(--gold-rgb) / 0.7);
+  border-radius: var(--r-pill);
   padding: 1px 6px;
 }
 
 .arena-grid-card:focus-visible {
-  outline: 2px solid #63b3ed;
+  outline: 2px solid var(--brand-fg);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
 }
 
 /* Card Image Wrapper */
@@ -105,11 +105,11 @@
   position: relative;
   width: 100%;
   aspect-ratio: 2.5 / 3.5;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   overflow: hidden;
-  background: #10141a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  background: var(--ink-2);
+  border: 1px solid var(--veil-4);
+  box-shadow: 0 4px 10px var(--shade-2);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -127,21 +127,21 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: #18202a;
-  color: #e2e8f0;
-  font-size: 0.75rem;
+  background: var(--ink-2);
+  color: var(--fg-1);
+  font-size: var(--fs-xs);
 }
 
 .arena-grid-card-fallback-name {
   font-weight: 700;
-  color: #fff;
+  color: var(--fg-hi);
 }
 
 /* Quick Add Overlay Icon on Hover */
 .arena-grid-card-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--shade-1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,13 +154,13 @@
 }
 
 .arena-add-badge {
-  background: linear-gradient(135deg, #ffa834 0%, #ff7300 100%);
-  color: #111;
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
   font-weight: 900;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   padding: 4px 10px;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  border-radius: var(--r-pill);
+  box-shadow: 0 2px 8px var(--shade-3);
   transform: translateY(6px);
   transition: transform 120ms ease;
 }
@@ -179,14 +179,14 @@
   min-height: 46px;
   max-height: 46px;
   flex-shrink: 0;
-  background: #0a0e13;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.78rem;
-  color: #718096;
+  background: var(--ink-1);
+  border-top: 1px solid var(--veil-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
   gap: 12px;
   z-index: 10;
   box-sizing: border-box;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -4px 16px var(--shade-2);
 }
 
 .arena-footer-left,
@@ -205,29 +205,29 @@
 
 .arena-grid-count {
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--fg-1);
 }
 
 .arena-footer-load-btn {
-  background: linear-gradient(135deg, rgba(236, 201, 75, 0.2) 0%, rgba(221, 107, 32, 0.25) 100%);
-  border: 1px solid rgba(236, 201, 75, 0.5);
-  color: #f6e05e;
+  background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.2) 0%, rgb(var(--warn-rgb) / 0.25) 100%);
+  border: 1px solid rgb(var(--gold-rgb) / 0.5);
+  color: var(--gold-300);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   padding: 4px 14px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 0 10px rgba(236, 201, 75, 0.2);
+  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.2);
   transition: all 150ms ease;
 }
 
 .arena-footer-load-btn:hover {
-  background: linear-gradient(135deg, #ecc94b 0%, #dd6b20 100%);
-  color: #111;
-  box-shadow: 0 0 16px rgba(236, 201, 75, 0.6);
+  background: linear-gradient(135deg, var(--gold-500) 0%, #dd6b20 100%);
+  color: var(--ink-1);
+  box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.6);
   transform: translateY(-1px);
 }
 
@@ -235,15 +235,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ecc94b;
+  color: var(--gold-500);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .arena-footer-done {
-  color: #48bb78;
+  color: var(--ok);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 /* Empty / Loading states */
@@ -254,43 +254,43 @@
   justify-content: center;
   flex: 1;
   gap: 10px;
-  color: #a0aec0;
+  color: var(--fg-2);
   padding: 40px 20px;
   text-align: center;
 }
 
 .arena-grid-status-box.is-error {
-  color: #fc8181;
+  color: var(--err);
 }
 
 .arena-grid-status-box small {
-  color: #a0aec0;
-  font-size: 0.7rem;
+  color: var(--fg-2);
+  font-size: var(--fs-2xs);
   max-width: 90%;
   overflow-wrap: anywhere;
 }
 
 .arena-grid-retry-btn {
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid var(--veil-5);
+  background: var(--veil-2);
+  color: var(--fg-1);
+  border-radius: var(--r-base);
   padding: 6px 14px;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
 }
 
 .arena-grid-retry-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: var(--veil-4);
+  color: var(--fg-hi);
 }
 
 .arena-grid-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #ecc94b;
+  border: 3px solid var(--veil-3);
+  border-top-color: var(--gold-500);
   border-radius: 50%;
   animation: arena-spin 0.8s linear infinite;
 }
@@ -314,7 +314,7 @@
   justify-content: center;
   gap: 10px;
   padding: 20px 0;
-  color: #ecc94b;
+  color: var(--gold-500);
   font-weight: 700;
 }
 

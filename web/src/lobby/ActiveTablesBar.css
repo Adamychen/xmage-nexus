@@ -11,30 +11,30 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border-radius: 6px;
-  background: #0f1324;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  border: 1px solid var(--veil-2);
+  box-shadow: 0 2px 8px var(--shade-1);
   transition: all 0.2s ease;
 }
 
 .active-table-strip.state-waiting {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 19, 36, 0.95) 45%);
+  background: linear-gradient(90deg, rgb(var(--brand-rgb) / 0.08) 0%, rgb(var(--ink-2-rgb) / 0.95) 45%);
   border-left: 3.5px solid #38bdf8;
-  border-color: rgba(56, 189, 248, 0.25);
+  border-color: rgb(var(--brand-rgb) / 0.25);
 }
 
 .active-table-strip.state-ready {
-  background: linear-gradient(90deg, rgba(52, 211, 153, 0.12) 0%, rgba(15, 19, 36, 0.95) 45%);
+  background: linear-gradient(90deg, rgb(var(--ok-rgb) / 0.12) 0%, rgb(var(--ink-2-rgb) / 0.95) 45%);
   border-left: 3.5px solid #34d399;
-  border-color: rgba(52, 211, 153, 0.35);
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.15);
+  border-color: rgb(var(--ok-rgb) / 0.35);
+  box-shadow: 0 0 12px rgb(var(--ok-rgb) / 0.15);
 }
 
 .active-table-strip.state-playing {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.1) 0%, rgba(15, 19, 36, 0.95) 45%);
-  border-left: 3.5px solid #c084fc;
-  border-color: rgba(168, 85, 247, 0.25);
+  background: linear-gradient(90deg, rgb(var(--purple-rgb) / 0.1) 0%, rgb(var(--ink-2-rgb) / 0.95) 45%);
+  border-left: 3.5px solid var(--purple-fg);
+  border-color: rgb(var(--purple-rgb) / 0.25);
 }
 
 .active-table-info {
@@ -55,7 +55,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.6875rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.3px;
   text-transform: uppercase;
@@ -74,7 +74,7 @@
 }
 
 .state-waiting .active-status-badge {
-  color: #7dd3fc;
+  color: var(--brand-fg);
 }
 
 .state-ready .status-dot {
@@ -90,7 +90,7 @@
 }
 
 .state-ready .active-status-badge {
-  color: #6ee7b7;
+  color: var(--ok);
 }
 
 @keyframes pulseReadyDot {
@@ -99,20 +99,20 @@
 }
 
 .state-playing .status-dot {
-  background: #c084fc;
-  box-shadow: 0 0 6px #c084fc;
+  background: var(--purple-fg);
+  box-shadow: 0 0 6px var(--purple-fg);
 }
 
 .state-playing .active-status-badge {
-  color: #d8b4fe;
+  color: var(--purple-fg);
 }
 
 .active-table-time {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.625rem;
-  color: #64748b;
+  font-size: var(--fs-3xs);
+  color: var(--fg-3);
 }
 
 .active-table-title-row {
@@ -123,9 +123,9 @@
 }
 
 .active-table-name {
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--fg-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -135,17 +135,17 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.6875rem;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.06);
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+  background: var(--veil-2);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   white-space: nowrap;
 }
 
 .active-table-type {
-  font-size: 0.625rem;
-  color: #64748b;
+  font-size: var(--fs-3xs);
+  color: var(--fg-3);
   white-space: nowrap;
 }
 
@@ -161,8 +161,8 @@
   align-items: center;
   gap: 5px;
   padding: 5px 11px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: var(--r-xs);
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -172,8 +172,8 @@
 .active-table-action-btn.btn-start {
   background: #10b981;
   border: 1px solid #34d399;
-  color: #ffffff;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+  color: var(--fg-hi);
+  box-shadow: 0 0 8px rgb(var(--ok-rgb) / 0.35);
 }
 
 .active-table-action-btn.btn-start:hover {
@@ -182,23 +182,23 @@
 }
 
 .active-table-action-btn.btn-staging {
-  background: #1c223c;
-  border: 1px solid rgba(124, 92, 255, 0.4);
-  color: #e2e8f0;
+  background: var(--ink-3);
+  border: 1px solid rgb(var(--brand-rgb) / 0.4);
+  color: var(--brand-fg);
 }
 
 .active-table-action-btn.btn-staging:hover {
-  background: #252e50;
-  border-color: #7c5cff;
-  color: #ffffff;
+  background: var(--ink-4);
+  border-color: var(--brand);
+  color: var(--fg-hi);
 }
 
 .active-table-action-btn.btn-resume {
   background: #7c3aed;
-  border: 1px solid #a855f7;
-  color: #ffffff;
+  border: 1px solid var(--purple);
+  color: var(--fg-hi);
 }
 
 .active-table-action-btn.btn-resume:hover {
-  background: #6d28d9;
+  background: var(--brand-strong);
 }

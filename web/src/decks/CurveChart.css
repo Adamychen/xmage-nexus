@@ -1,7 +1,7 @@
 .curve-chart {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: var(--shade-2);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-base);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: center;
   min-height: 72px;
-  color: #a0aec0;
-  font-size: 0.78rem;
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
   text-align: center;
 }
 
@@ -36,9 +36,9 @@
 }
 
 .curve-count {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
-  color: #ecc94b;
+  color: var(--gold-500);
   min-height: 14px;
   line-height: 1;
 }
@@ -49,30 +49,30 @@
   flex: 1;
   display: flex;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px 4px 0 0;
+  background: var(--veil-1);
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
   overflow: hidden;
   position: relative;
 }
 
 .curve-bar-fill {
   width: 100%;
-  background: linear-gradient(180deg, #ecc94b 0%, #dd6b20 100%);
-  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--gold-500) 0%, #dd6b20 100%);
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
   min-height: 2px;
   transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 8px rgba(236, 201, 75, 0.25);
+  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.25);
 }
 
 .curve-bar-col:hover .curve-bar-fill {
   filter: brightness(1.2);
-  box-shadow: 0 0 12px rgba(236, 201, 75, 0.5);
+  box-shadow: 0 0 12px rgb(var(--gold-rgb) / 0.5);
 }
 
 .curve-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  color: #a0aec0;
+  color: var(--fg-2);
   line-height: 1;
 }
 
@@ -81,27 +81,27 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--veil-2);
 }
 
 .curve-stat-pill {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  background: var(--veil-1);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-sm);
   padding: 4px 8px;
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
 }
 
 .curve-stat-name {
-  color: #a0aec0;
+  color: var(--fg-2);
   font-weight: 600;
 }
 
 .curve-stat-val {
-  color: #edf2f7;
+  color: var(--brand-fg);
   font-weight: 800;
 }
 
@@ -114,15 +114,15 @@
 
 .curve-mana-section {
   padding-top: 8px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  border-top: 1px dashed var(--veil-2);
 }
 
 .curve-section-title {
-  font-size: 0.7rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #a0aec0;
+  color: var(--fg-2);
 }
 
 .curve-section-sub {
@@ -147,9 +147,9 @@
 .curve-dist-label {
   width: 14px;
   text-align: right;
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
-  color: #a0aec0;
+  color: var(--fg-2);
   flex-shrink: 0;
 }
 
@@ -157,9 +157,9 @@
   display: flex;
   flex: 1;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--veil-2);
 }
 
 .curve-dist-seg {
@@ -173,7 +173,7 @@
 
 .curve-dist-total {
   min-width: 20px;
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
-  color: #e2e8f0;
+  color: var(--fg-1);
 }

@@ -7,8 +7,8 @@
 }
 
 .setup-counter {
-  font-size: 0.75rem;
-  color: #8a90b8;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
   white-space: nowrap;
 }
 
@@ -23,15 +23,15 @@
 
 .setup-lead {
   margin: 0;
-  color: #c3c8e8;
-  font-size: 0.875rem;
+  color: var(--brand-fg);
+  font-size: var(--fs-md);
   line-height: 1.5;
 }
 
 .setup-hint {
   margin: 0;
-  color: #8a90b8;
-  font-size: 0.75rem;
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
   line-height: 1.5;
 }
 
@@ -45,12 +45,12 @@
   position: relative;
   background: transparent;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--r-mid);
   cursor: pointer;
   padding: 0;
 }
 
-.setup-avatar:hover { border-color: rgba(255, 255, 255, 0.25); }
+.setup-avatar:hover { border-color: var(--veil-5); }
 
 .setup-avatar-flag {
   position: absolute;
@@ -70,30 +70,30 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.75rem;
-  color: #8a90b8;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
 }
 
 .setup-field-error {
-  color: #fc8181;
-  font-size: 0.75rem;
+  color: var(--err);
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
 .setup-field input,
 .setup-field select {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 0.875rem;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-base);
+  color: var(--fg-hi);
+  font-size: var(--fs-md);
   padding: 8px 10px;
 }
 
 .setup-field input:focus,
 .setup-field select:focus {
   outline: none;
-  border-color: rgba(120, 140, 255, 0.6);
+  border-color: rgb(var(--brand-rgb) / 0.6);
 }
 
 .setup-presets {
@@ -107,19 +107,19 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  color: #c3c8e8;
+  background: var(--veil-1);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-md);
+  color: var(--brand-fg);
   cursor: pointer;
-  font-size: 0.813rem;
+  font-size: var(--fs-sm);
   padding: 10px 8px;
 }
 
 .setup-preset.selected {
-  border-color: rgba(120, 140, 255, 0.7);
-  background: rgba(120, 140, 255, 0.12);
-  color: #fff;
+  border-color: rgb(var(--brand-rgb) / 0.7);
+  background: rgb(var(--brand-rgb) / 0.12);
+  color: var(--fg-hi);
 }
 
 .setup-network {
@@ -146,8 +146,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: #c3c8e8;
-  font-size: 0.875rem;
+  color: var(--brand-fg);
+  font-size: var(--fs-md);
 }
 
 .setup-footer {
@@ -155,7 +155,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--veil-2);
   margin-top: 12px;
   padding-top: 12px;
 }
@@ -167,24 +167,24 @@
 
 .setup-btn-primary,
 .setup-btn-secondary {
-  border-radius: 8px;
+  border-radius: var(--r-base);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   padding: 8px 18px;
 }
 
 .setup-btn-primary {
   background: #4c6fff;
   border: 1px solid #4c6fff;
-  color: #fff;
+  color: var(--fg-hi);
 }
 
 .setup-btn-primary:hover { background: #5d7dff; }
 
 .setup-btn-secondary {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #c3c8e8;
+  border: 1px solid var(--veil-5);
+  color: var(--brand-fg);
 }
 
 .setup-btn-secondary:hover { border-color: rgba(255, 255, 255, 0.4); }
@@ -192,14 +192,14 @@
 .login-firsttime {
   background: transparent;
   border: none;
-  color: #8a90b8;
+  color: var(--fg-3);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   margin-top: 10px;
   text-decoration: underline;
 }
 
-.login-firsttime:hover { color: #fff; }
+.login-firsttime:hover { color: var(--fg-hi); }
 
 @media (max-width: 560px) {
   .setup-identity { flex-direction: column; }
@@ -210,8 +210,8 @@
 
 /* U4-2: contraseña deshabilitada en el servidor público (beta) */
 .setup-field-hint {
-  font-size: 0.75rem;
-  color: #f0a35e;
+  font-size: var(--fs-xs);
+  color: var(--warn);
 }
 .setup-field input:disabled,
 .setup-field select:disabled {

@@ -4,44 +4,44 @@
   align-items: center;
   height: 38px;
   min-height: 38px;
-  background: #121820;
-  border-radius: 4px;
+  background: var(--ink-3);
+  border-radius: var(--r-xs);
   overflow: hidden;
   margin-bottom: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--veil-3);
+  box-shadow: 0 1px 4px var(--shade-1);
   cursor: pointer;
   user-select: none;
   transition: transform 120ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .arena-card-strip:hover {
-  border-color: rgba(255, 200, 100, 0.6);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 180, 50, 0.25);
+  border-color: rgb(var(--warn-rgb) / 0.6);
+  box-shadow: 0 2px 8px var(--shade-3), 0 0 8px rgb(var(--warn-rgb) / 0.25);
   transform: translateX(-2px);
   z-index: 2;
 }
 
 .arena-card-strip.is-commander {
   border: 1px solid #d4af37;
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(20, 24, 30, 0.95) 40%);
+  box-shadow: 0 0 8px rgb(var(--warn-rgb) / 0.35);
+  background: linear-gradient(90deg, rgb(var(--warn-rgb) / 0.2) 0%, rgb(var(--ink-2-rgb) / 0.95) 40%);
 }
 
 .arena-card-strip.is-cover {
-  border-color: #ffb84d;
+  border-color: var(--gold-300);
 }
 
 .arena-card-strip.has-issue {
-  border-color: #f56565;
-  box-shadow: 0 0 6px rgba(245, 101, 101, 0.4);
+  border-color: var(--err);
+  box-shadow: 0 0 6px rgb(var(--err-rgb) / 0.4);
 }
 
 .strip-issue-badge {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   margin-right: 4px;
   z-index: 1;
-  filter: drop-shadow(0 0 4px rgba(245, 101, 101, 0.8));
+  filter: drop-shadow(0 0 4px rgb(var(--err-rgb) / 0.8));
 }
 
 /* Background Card Art Crop with gradient */
@@ -67,10 +67,10 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(10, 14, 18, 0.98) 0%,
-    rgba(10, 14, 18, 0.88) 35%,
-    rgba(10, 14, 18, 0.45) 70%,
-    rgba(10, 14, 18, 0.85) 100%
+    rgb(var(--ink-rgb) / 0.98) 0%,
+    rgb(var(--ink-rgb) / 0.88) 35%,
+    rgb(var(--ink-rgb) / 0.45) 70%,
+    rgb(var(--ink-rgb) / 0.85) 100%
   );
   pointer-events: none;
 }
@@ -82,13 +82,13 @@
   flex-shrink: 0;
   background: #4a5568;
 }
-.strip-color-bar.color-w { background: #f6e05e; }
-.strip-color-bar.color-u { background: #3182ce; }
-.strip-color-bar.color-b { background: #4a423e; }
+.strip-color-bar.color-w { background: var(--gold-300); }
+.strip-color-bar.color-u { background: var(--brand); }
+.strip-color-bar.color-b { background: var(--ink-4); }
 .strip-color-bar.color-r { background: #e53e3e; }
 .strip-color-bar.color-g { background: #38a169; }
-.strip-color-bar.color-multi { background: linear-gradient(180deg, #ecc94b, #d69e2e); }
-.strip-color-bar.color-colorless { background: #a0aec0; }
+.strip-color-bar.color-multi { background: linear-gradient(180deg, var(--gold-500), #d69e2e); }
+.strip-color-bar.color-colorless { background: var(--fg-2); }
 
 /* Quantity Badge (1x, 4x, etc.) */
 .strip-qty {
@@ -98,18 +98,18 @@
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 0.82rem;
-  color: #e2e8f0;
-  background: rgba(0, 0, 0, 0.45);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+  background: var(--shade-2);
+  border-right: 1px solid var(--veil-2);
   flex-shrink: 0;
   z-index: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .strip-qty.commander-badge {
-  color: #f6e05e;
-  font-size: 1rem;
+  color: var(--gold-300);
+  font-size: var(--fs-lg);
 }
 
 /* Card Name */
@@ -117,12 +117,12 @@
   flex: 1;
   padding: 0 8px;
   font-weight: 700;
-  font-size: 0.85rem;
-  color: #ffffff;
+  font-size: var(--fs-md);
+  color: var(--fg-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 3px var(--shade-5), 0 0 2px var(--shade-5);
   z-index: 1;
   letter-spacing: -0.01em;
 }
@@ -153,10 +153,10 @@
 
 .mana-symbol.sym-generic {
   background: radial-gradient(circle at 30% 28%, #e5e7eb 0%, #9ca3af 60%, #6b7280 100%);
-  color: #111;
+  color: var(--ink-1);
   font-weight: 900;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--shade-1);
+  box-shadow: 0 1px 2px var(--shade-2);
   line-height: 1;
 }
 
@@ -170,7 +170,7 @@
   align-items: center;
   gap: 2px;
   padding: 0 4px;
-  background: linear-gradient(90deg, transparent 0%, rgba(10, 14, 18, 0.95) 25%);
+  background: linear-gradient(90deg, transparent 0%, rgb(var(--ink-rgb) / 0.95) 25%);
   z-index: 3;
 }
 
@@ -180,18 +180,18 @@
 }
 
 .strip-btn:focus-visible {
-  outline: 2px solid #63b3ed;
+  outline: 2px solid var(--brand-fg);
   outline-offset: 1px;
 }
 
 .strip-btn {
   width: 24px;
   height: 24px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(25, 32, 42, 0.85);
-  color: #e2e8f0;
-  font-size: 0.82rem;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--veil-5);
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  color: var(--fg-1);
+  font-size: var(--fs-sm);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -203,9 +203,9 @@
 }
 
 .strip-btn:hover {
-  background: #3182ce;
-  border-color: #63b3ed;
-  color: #ffffff;
+  background: var(--brand);
+  border-color: var(--brand-fg);
+  color: var(--fg-hi);
 }
 
 .strip-btn.danger:hover {
@@ -214,11 +214,11 @@
 }
 
 .strip-btn.star {
-  color: #a0aec0;
+  color: var(--fg-2);
 }
 
 .strip-btn.star.active {
-  color: #ecc94b;
-  border-color: #ecc94b;
-  background: rgba(236, 201, 75, 0.2);
+  color: var(--gold-500);
+  border-color: var(--gold-500);
+  background: rgb(var(--gold-rgb) / 0.2);
 }

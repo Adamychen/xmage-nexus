@@ -5,7 +5,7 @@
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 50%, #151930 0%, #0d1022 55%, #080a16 100%);
+  background: radial-gradient(circle at 50% 50%, var(--ink-2) 0%, var(--ink-1) 55%, var(--ink-0) 100%);
   --card-w: clamp(80px, 6.8vw, 118px);
 }
 

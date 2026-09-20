@@ -1,7 +1,7 @@
 .sample-hand-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.85);
+  background: rgb(var(--ink-rgb) / 0.85);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -18,37 +18,37 @@
 }
 
 .stats-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
   padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.76rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
   font-weight: 700;
-  color: #cbd5e0;
+  color: var(--fg-2);
 }
 
 .stats-chip.lands {
-  border-color: rgba(72, 187, 120, 0.4);
-  color: #68d391;
-  background: rgba(72, 187, 120, 0.1);
+  border-color: rgb(var(--ok-rgb) / 0.4);
+  color: var(--ok);
+  background: rgb(var(--ok-rgb) / 0.1);
 }
 
 .stats-chip.spells {
-  border-color: rgba(124, 92, 255, 0.4);
-  color: #c4b5fd;
-  background: rgba(124, 92, 255, 0.1);
+  border-color: rgb(var(--brand-rgb) / 0.4);
+  color: var(--brand-fg);
+  background: rgb(var(--brand-rgb) / 0.1);
 }
 
 .stats-chip.turn {
-  border-color: rgba(255, 208, 112, 0.4);
-  color: #ffd070;
-  background: rgba(255, 208, 112, 0.1);
+  border-color: rgb(var(--gold-rgb) / 0.4);
+  color: var(--gold-300);
+  background: rgb(var(--gold-rgb) / 0.1);
 }
 
 .sample-hand-close-btn {
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--fg-2);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0 4px;
@@ -61,19 +61,19 @@
 
 .goldfish-projection {
   padding: 10px 20px;
-  background: rgba(12, 18, 28, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-2-rgb) / 0.9);
+  border-bottom: 1px solid var(--veil-2);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .goldfish-title {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #ecc94b;
+  color: var(--gold-500);
 }
 
 .goldfish-turns {
@@ -85,9 +85,9 @@
 .goldfish-turn {
   flex: 1;
   min-width: 160px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: var(--veil-1);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-base);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -95,34 +95,34 @@
 }
 
 .goldfish-turn.active-turn {
-  border-color: rgba(236, 201, 75, 0.5);
-  background: rgba(236, 201, 75, 0.08);
-  box-shadow: 0 0 8px rgba(236, 201, 75, 0.18);
+  border-color: rgb(var(--gold-rgb) / 0.5);
+  background: rgb(var(--gold-rgb) / 0.08);
+  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.18);
 }
 
 .goldfish-turn-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
-  color: #a0aec0;
+  color: var(--fg-2);
 }
 
 .goldfish-turn-count {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
-  color: #f7fafc;
+  color: var(--fg-1);
 }
 
 .goldfish-turn-names {
-  font-size: 0.68rem;
-  color: #cbd5e0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sample-card-item.is-playable-now {
-  border-color: rgba(72, 187, 120, 0.85) !important;
-  box-shadow: 0 0 12px rgba(72, 187, 120, 0.35);
+  border-color: rgb(var(--ok-rgb) / 0.85) !important;
+  box-shadow: 0 0 12px rgb(var(--ok-rgb) / 0.35);
 }
 
 /* London Mulligan Banner */
@@ -131,19 +131,19 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  background: linear-gradient(90deg, rgba(237, 137, 54, 0.25) 0%, rgba(221, 107, 32, 0.15) 100%);
-  border-bottom: 1px solid rgba(237, 137, 54, 0.4);
-  color: #fbd38d;
-  font-size: 0.84rem;
+  background: linear-gradient(90deg, rgb(var(--warn-rgb) / 0.25) 0%, rgb(var(--warn-rgb) / 0.15) 100%);
+  border-bottom: 1px solid rgb(var(--warn-rgb) / 0.4);
+  color: var(--gold-300);
+  font-size: var(--fs-sm);
 }
 
 .confirm-keep-btn {
   background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
   color: white;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 6px 14px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
   cursor: pointer;
   transition: all 120ms;
@@ -177,31 +177,31 @@
 .sample-card-item {
   width: 130px;
   height: 185px;
-  border-radius: 10px;
-  background: #1a202c;
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  border: 2px solid var(--veil-3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
   cursor: pointer;
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px var(--shade-2);
 }
 
 .sample-card-item:hover {
   transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 12px 28px var(--shade-3);
   border-color: rgba(255, 255, 255, 0.4);
   z-index: 10;
 }
 
 .sample-card-item.is-land {
-  border-color: rgba(72, 187, 120, 0.35);
+  border-color: rgb(var(--ok-rgb) / 0.35);
 }
 
 .sample-card-item.selected-bottom {
-  border-color: #f56565;
+  border-color: var(--err);
   opacity: 0.55;
   transform: translateY(6px);
 }
@@ -210,7 +210,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #0f1419;
+  background: var(--ink-1);
 }
 
 .sample-card-art img {
@@ -226,47 +226,47 @@
   height: 100%;
   font-size: 1.2rem;
   font-weight: 800;
-  color: #718096;
+  color: var(--fg-3);
 }
 
 .sample-card-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.8) 100%);
+  background: linear-gradient(180deg, var(--shade-1) 0%, transparent 40%, var(--shade-4) 100%);
 }
 
 .sample-card-cost {
   position: absolute;
   top: 4px;
   right: 4px;
-  font-size: 0.65rem;
+  font-size: var(--fs-3xs);
   font-weight: 800;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--shade-4);
   padding: 2px 5px;
-  border-radius: 4px;
-  color: #ffd070;
+  border-radius: var(--r-xs);
+  color: var(--gold-300);
 }
 
 .sample-card-footer {
   padding: 6px 8px;
-  background: rgba(10, 14, 20, 0.95);
+  background: rgb(var(--ink-2-rgb) / 0.95);
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .sample-card-name {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--fg-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .land-indicator {
-  font-size: 0.62rem;
-  color: #68d391;
+  font-size: var(--fs-3xs);
+  color: var(--ok);
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -274,12 +274,12 @@
 .bottom-badge {
   position: absolute;
   inset: 0;
-  background: rgba(229, 62, 62, 0.75);
+  background: rgb(var(--err-rgb) / 0.75);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -291,12 +291,12 @@
   right: 20px;
   bottom: 70px;
   width: 200px;
-  border-radius: 12px;
+  border-radius: var(--r-mid);
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 12px 36px var(--shade-4);
   pointer-events: none;
   z-index: 50;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--veil-5);
   animation: fadeIn 100ms ease;
 }
 
@@ -311,8 +311,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: rgba(20, 26, 38, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-2-rgb) / 0.95);
+  border-top: 1px solid var(--veil-2);
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -324,25 +324,25 @@
 }
 
 .sample-action-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  border-radius: 999px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--fg-1);
+  border-radius: var(--r-pill);
   padding: 7px 16px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   cursor: pointer;
   transition: all 120ms ease;
 }
 
 .sample-action-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--veil-4);
   color: white;
 }
 
 .sample-action-btn.primary {
-  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
-  border-color: #4299e1;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border-color: var(--brand);
   color: white;
 }
 

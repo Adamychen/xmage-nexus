@@ -11,10 +11,15 @@ function block(source: string, selector: string): string {
   return match[1]
 }
 
+const tokens = css('./ui/tokens.css')
+
 function fontSizeRem(decls: string): number {
-  const match = decls.match(/font-size:\s*([\d.]+)rem/)
-  if (!match) throw new Error(`no font-size in: ${decls.slice(0, 80)}`)
-  return Number(match[1])
+  const literal = decls.match(/font-size:\s*([\d.]+)rem/)
+  if (literal) return Number(literal[1])
+  const token = decls.match(/font-size:\s*var\((--fs-[\w-]+)\)/)
+  const resolved = token && tokens.match(new RegExp(`${token[1]}:\\s*([\\d.]+)rem`))
+  if (!resolved) throw new Error(`no font-size in: ${decls.slice(0, 80)}`)
+  return Number(resolved[1])
 }
 
 describe('a11y contrast minimums (C.15, inspection-backed)', () => {

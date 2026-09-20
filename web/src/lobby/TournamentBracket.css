@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  color: var(--text, #e2e8f0);
+  color: var(--text, var(--brand-fg));
 }
 
 .tournament-bracket.compact {
@@ -15,9 +15,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(124,92,255,0.18) 0%, rgba(20, 25, 52, 0.9) 100%);
-  border: 1px solid rgba(124,92,255,0.35);
+  border-radius: var(--r-mid);
+  background: linear-gradient(135deg, rgb(var(--brand-rgb) / 0.18) 0%, rgb(var(--ink-2-rgb) / 0.9) 100%);
+  border: 1px solid rgb(var(--brand-rgb) / 0.35);
 }
 
 .tournament-bracket-title-row {
@@ -36,46 +36,46 @@
 
 .tournament-name {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: var(--fs-heading);
   font-weight: 800;
-  color: #fff;
+  color: var(--fg-hi);
 }
 
 .tournament-type {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
-  color: #ffd070;
-  background: rgba(255,208,112,0.14);
-  border: 1px solid rgba(255,208,112,0.3);
+  color: var(--gold-300);
+  background: rgb(var(--gold-rgb) / 0.14);
+  border: 1px solid rgb(var(--gold-rgb) / 0.3);
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .tournament-state-badge {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: rgba(99,230,190,0.14);
-  border: 1px solid rgba(99,230,190,0.35);
-  color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.14);
+  border: 1px solid rgb(var(--ok-rgb) / 0.35);
+  color: var(--ok);
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .tournament-watching-badge {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  background: rgba(99,230,190,0.12);
-  border: 1px solid rgba(99,230,190,0.3);
-  color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.12);
+  border: 1px solid rgb(var(--ok-rgb) / 0.3);
+  color: var(--ok);
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 .tournament-watching-badge.off {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.12);
-  color: #8c96c0;
+  background: var(--veil-2);
+  border-color: var(--veil-3);
+  color: var(--fg-3);
 }
 
 .tournament-header-actions {
@@ -86,23 +86,23 @@
 }
 
 .tournament-timer {
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
-  color: #ffd070;
-  background: rgba(10,13,28,0.6);
-  border: 1px solid rgba(255,208,112,0.3);
+  color: var(--gold-300);
+  background: rgb(var(--ink-rgb) / 0.6);
+  border: 1px solid rgb(var(--gold-rgb) / 0.3);
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
 }
 
 .tournament-construction {
-  font-size: 0.688rem;
-  color: #a5b4fc;
-  background: rgba(99,102,241,0.12);
-  border: 1px solid rgba(99,102,241,0.25);
+  font-size: var(--fs-2xs);
+  color: var(--brand-fg);
+  background: rgb(var(--brand-rgb) / 0.12);
+  border: 1px solid rgb(var(--brand-rgb) / 0.25);
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .tournament-close-btn {
@@ -110,32 +110,32 @@
   height: 28px;
   display: grid;
   place-items: center;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #cbd5e1;
+  border-radius: var(--r-sm);
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
 }
 .tournament-close-btn:hover {
-  background: rgba(255,92,108,0.2);
-  border-color: rgba(255,92,108,0.4);
-  color: #fff;
+  background: rgb(var(--err-rgb) / 0.2);
+  border-color: rgb(var(--err-rgb) / 0.4);
+  color: var(--fg-hi);
 }
 
 .tournament-running-info {
-  font-size: 0.812rem;
-  color: #cbd5e1;
-  background: rgba(10,13,28,0.45);
-  border: 1px solid rgba(255,255,255,0.06);
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+  background: rgb(var(--ink-rgb) / 0.45);
+  border: 1px solid var(--veil-2);
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   line-height: 1.4;
 }
 
 .tournament-state-hint {
-  font-size: 0.688rem;
-  color: #f6ad55;
+  font-size: var(--fs-2xs);
+  color: var(--warn);
   font-weight: 600;
 }
 
@@ -147,25 +147,25 @@
 }
 
 .tournament-meta {
-  font-size: 0.688rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   font-weight: 600;
 }
 
 .tournament-quit-btn {
   padding: 5px 10px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: rgba(60,20,30,0.6);
-  border: 1px solid rgba(255,92,108,0.35);
-  color: #ff9ea8;
+  border: 1px solid rgb(var(--err-rgb) / 0.35);
+  color: var(--err);
   cursor: pointer;
 }
 .tournament-quit-btn:hover {
-  background: rgba(180,40,60,0.85);
-  color: #fff;
-  border-color: #ff5c6c;
+  background: rgb(var(--err-rgb) / 0.85);
+  color: var(--fg-hi);
+  border-color: var(--err);
 }
 
 .tournament-bracket-body {
@@ -188,18 +188,18 @@
 
 .tournament-section-title {
   margin: 0 0 8px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8c96c0;
+  color: var(--fg-3);
 }
 
 .tournament-rounds-section,
 .tournament-standings-section {
-  background: rgba(14,18,38,0.7);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-mid);
   padding: 12px;
   min-width: 0;
   overflow: hidden;
@@ -218,7 +218,7 @@
   align-items: flex-start;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(196, 181, 253, 0.45) rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(196, 181, 253, 0.45) var(--veil-1);
 }
 
 .bracket-columns::-webkit-scrollbar {
@@ -226,13 +226,13 @@
 }
 
 .bracket-columns::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  background: var(--veil-1);
+  border-radius: var(--r-xs);
 }
 
 .bracket-columns::-webkit-scrollbar-thumb {
   background: rgba(196, 181, 253, 0.45);
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .bracket-columns::-webkit-scrollbar-thumb:hover {
@@ -247,7 +247,7 @@
   width: 36px;
   pointer-events: none;
   border-top-right-radius: 10px;
-  background: linear-gradient(to right, rgba(14, 18, 38, 0), rgba(14, 18, 38, 0.85));
+  background: linear-gradient(to right, rgb(var(--ink-2-rgb) / 0), rgb(var(--ink-2-rgb) / 0.85));
 }
 
 .bracket-scroll-right {
@@ -260,22 +260,22 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(20, 25, 52, 0.92);
-  border: 1px solid rgba(124, 92, 255, 0.45);
-  color: #c4b5fd;
-  font-size: 1.125rem;
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border: 1px solid rgb(var(--brand-rgb) / 0.45);
+  color: var(--brand-fg);
+  font-size: var(--fs-heading);
   line-height: 1;
   cursor: pointer;
   z-index: 2;
 }
 
 .bracket-scroll-right:hover {
-  background: rgba(124, 92, 255, 0.35);
-  color: #fff;
+  background: rgb(var(--brand-rgb) / 0.35);
+  color: var(--fg-hi);
 }
 
 .bracket-scroll-right:focus-visible {
-  outline: 2px solid #c4b5fd;
+  outline: 2px solid var(--brand-fg);
   outline-offset: 2px;
 }
 
@@ -284,19 +284,19 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: rgba(10,13,28,0.5);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
+  background: rgb(var(--ink-rgb) / 0.5);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
   padding: 10px;
 }
 
 .bracket-round-title {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
-  color: #ffd070;
+  color: var(--gold-300);
   text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--veil-2);
   padding-bottom: 6px;
 }
 
@@ -307,16 +307,16 @@
 }
 
 .bracket-empty {
-  font-size: 0.688rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   text-align: center;
   padding: 12px 0;
 }
 
 .bracket-game {
-  background: rgba(20,25,52,0.9);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
+  background: rgb(var(--ink-2-rgb) / 0.9);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-base);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -331,66 +331,66 @@
 }
 
 .bracket-game-players {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--brand-fg);
   word-break: break-word;
   flex: 1;
 }
 
 .bracket-game-state {
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   font-weight: 800;
   text-transform: uppercase;
   padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.08);
-  color: #cbd5e1;
+  border-radius: var(--r-xs);
+  background: var(--veil-2);
+  color: var(--fg-2);
   white-space: nowrap;
   flex-shrink: 0;
 }
-.bracket-game-state.state-finished { background: rgba(99,230,190,0.15); color: #63e6be; border: 1px solid rgba(99,230,190,0.3); }
-.bracket-game-state.state-dueling { background: rgba(124,92,255,0.18); color: #c4b5fd; border: 1px solid rgba(124,92,255,0.35); }
-.bracket-game-state.state-ready { background: rgba(255,208,112,0.14); color: #ffd070; border: 1px solid rgba(255,208,112,0.3); }
+.bracket-game-state.state-finished { background: rgb(var(--ok-rgb) / 0.15); color: var(--ok); border: 1px solid rgb(var(--ok-rgb) / 0.3); }
+.bracket-game-state.state-dueling { background: rgb(var(--brand-rgb) / 0.18); color: var(--brand-fg); border: 1px solid rgb(var(--brand-rgb) / 0.35); }
+.bracket-game-state.state-ready { background: rgb(var(--gold-rgb) / 0.14); color: var(--gold-300); border: 1px solid rgb(var(--gold-rgb) / 0.3); }
 
 .bracket-game-result {
-  font-size: 0.688rem;
-  color: #94a3b8;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   font-style: italic;
 }
 
 .bracket-game-meta {
   display: flex;
   gap: 6px;
-  font-size: 0.625rem;
-  color: #64748b;
+  font-size: var(--fs-3xs);
+  color: var(--fg-3);
   align-items: center;
 }
 
 .bracket-round-num {
-  background: rgba(255,255,255,0.06);
+  background: var(--veil-2);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .bracket-watchable {
   display: inline-flex;
   align-items: center;
-  color: #8c96c0;
+  color: var(--fg-3);
 }
 
 button.bracket-watch-btn {
-  background: rgba(124,92,255,0.12);
-  border: 1px solid rgba(124,92,255,0.35);
-  border-radius: 4px;
+  background: rgb(var(--brand-rgb) / 0.12);
+  border: 1px solid rgb(var(--brand-rgb) / 0.35);
+  border-radius: var(--r-xs);
   padding: 1px 5px;
   cursor: pointer;
-  color: #c4b5fd;
+  color: var(--brand-fg);
 }
 
 button.bracket-watch-btn:hover:not(:disabled) {
-  background: rgba(124,92,255,0.28);
-  color: #fff;
+  background: rgb(var(--brand-rgb) / 0.28);
+  color: var(--fg-hi);
 }
 
 button.bracket-watch-btn:disabled {
@@ -399,8 +399,8 @@ button.bracket-watch-btn:disabled {
 }
 
 .tournament-empty {
-  font-size: 0.75rem;
-  color: #8c96c0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
   text-align: center;
   padding: 18px 0;
 }
@@ -412,42 +412,42 @@ button.bracket-watch-btn:disabled {
 .tournament-standings-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .tournament-standings-table th {
   text-align: left;
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--fg-3);
   padding: 6px 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid var(--veil-2);
   white-space: nowrap;
 }
 
 .tournament-standings-table td {
   padding: 7px 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--veil-1);
   vertical-align: middle;
 }
 
 .standings-row.is-quit {
   opacity: 0.55;
-  background: rgba(255,92,108,0.06);
+  background: rgb(var(--err-rgb) / 0.06);
 }
 
 .standings-rank {
   font-weight: 800;
-  color: #ffd070;
+  color: var(--gold-300);
   text-align: center;
   width: 24px;
 }
 
 .standings-name {
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--brand-fg);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -455,37 +455,37 @@ button.bracket-watch-btn:disabled {
 }
 
 .standings-flag {
-  font-size: 0.625rem;
-  background: rgba(255,255,255,0.08);
+  font-size: var(--fs-3xs);
+  background: var(--veil-2);
   padding: 1px 4px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .standings-quit-badge {
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   font-weight: 800;
-  background: rgba(255,92,108,0.18);
-  border: 1px solid rgba(255,92,108,0.35);
-  color: #ff9ea8;
+  background: rgb(var(--err-rgb) / 0.18);
+  border: 1px solid rgb(var(--err-rgb) / 0.35);
+  color: var(--err);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .standings-points {
   font-weight: 800;
-  color: #63e6be;
+  color: var(--ok);
   text-align: center;
 }
 
 .standings-state {
-  font-size: 0.688rem;
-  color: #94a3b8;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }
 
 .standings-results,
 .standings-history {
-  font-size: 0.688rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -495,8 +495,8 @@ button.bracket-watch-btn:disabled {
 .standings-empty {
   padding: 16px;
   text-align: center;
-  color: #8c96c0;
-  font-size: 0.75rem;
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
 }
 
 .tournament-modal-scroll {
@@ -512,21 +512,21 @@ button.bracket-watch-btn:disabled {
 .tournament-modal-error {
   padding: 24px;
   text-align: center;
-  color: #94a3b8;
-  font-size: 0.812rem;
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
 }
 
 .tournament-refresh-btn {
   padding: 5px 10px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  border-radius: 6px;
-  background: rgba(124,92,255,0.14);
-  border: 1px solid rgba(124,92,255,0.35);
-  color: #c4b5fd;
+  border-radius: var(--r-sm);
+  background: rgb(var(--brand-rgb) / 0.14);
+  border: 1px solid rgb(var(--brand-rgb) / 0.35);
+  color: var(--brand-fg);
   cursor: pointer;
 }
 .tournament-refresh-btn:hover {
-  background: rgba(124,92,255,0.25);
-  color: #fff;
+  background: rgb(var(--brand-rgb) / 0.25);
+  color: var(--fg-hi);
 }

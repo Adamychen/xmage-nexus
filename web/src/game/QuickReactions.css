@@ -3,8 +3,8 @@
   align-items: center;
   gap: 4px;
   padding: 6px 10px;
-  border-top: 1px solid #1e2444;
-  background: #0a0d1a;
+  border-top: 1px solid var(--ink-3);
+  background: var(--ink-1);
   flex-shrink: 0;
 }
 
@@ -15,17 +15,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.938rem;
+  font-size: var(--fs-base);
   line-height: 1;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: transparent;
   cursor: pointer;
   transition: background 0.15s, transform 0.05s;
 }
 
 .quick-reaction-btn:hover:not(:disabled) {
-  background: #1a1f3a;
+  background: var(--ink-3);
   transform: scale(1.08);
 }
 
@@ -36,10 +36,10 @@
 
 .quick-reaction-more {
   margin-left: auto;
-  color: #6b7394;
-  font-size: 1rem;
+  color: var(--fg-3);
+  font-size: var(--fs-lg);
   font-weight: 700;
-  border: 1px dashed #2e3560;
+  border: 1px dashed var(--ink-4);
 }
 
 @media (prefers-reduced-motion: reduce) {

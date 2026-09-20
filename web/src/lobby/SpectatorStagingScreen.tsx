@@ -8,6 +8,7 @@ import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import Chip from '../ui/Chip'
 import ErrorBanner from '../ui/ErrorBanner'
 import InviteLinkButton from './InviteLinkButton'
 import { formatSeatHistory } from './lobbyUtils'
@@ -361,22 +362,25 @@ export default function SpectatorStagingScreen({
             </div>
 
             <div className="staging-tags-row">
-              <span className="staging-tag tag-game"><Icon name="gamepad" size={12} /> {activeTable?.gameType || t('lobby','staging_duel_fallback')}</span>
-              <span className="staging-tag tag-deck"><Icon name="scrollText" size={12} /> {activeTable?.deckType || 'Constructed'}</span>
+              <Chip icon="gamepad" className="staging-tag tag-game">{activeTable?.gameType || t('lobby','staging_duel_fallback')}</Chip>
+              <Chip icon="scrollText" className="staging-tag tag-deck">{activeTable?.deckType || 'Constructed'}</Chip>
               {skill && (
-                <span className={`staging-tag tag-skill ${skill.className}`}>
-                  {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {skill.label}
-                </span>
+                <Chip className={`staging-tag tag-skill ${skill.className}`}>
+                  <span className="staging-skill-stars">
+                    {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)}
+                  </span>
+                  {skill.label}
+                </Chip>
               )}
               {activeTable?.rated ? (
-                <span className="staging-tag tag-rated"><Icon name="medal" size={12} /> {t('lobby','tag_rated')}</span>
+                <Chip tone="gold" icon="medal" className="staging-tag tag-rated">{t('lobby','tag_rated')}</Chip>
               ) : (
-                <span className="staging-tag tag-unrated">{t('lobby','tag_unrated')}</span>
+                <Chip className="staging-tag tag-unrated">{t('lobby','tag_unrated')}</Chip>
               )}
               {activeTable?.passworded && (
-                <span className="staging-tag tag-private"><Icon name="lock" size={12} /> {t('lobby','tag_private')}</span>
+                <Chip tone="warn" icon="lock" className="staging-tag tag-private">{t('lobby','tag_private')}</Chip>
               )}
-              <span className="staging-tag tag-seats"><Icon name="users" size={12} /> {activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</span>
+              <Chip icon="users" className="staging-tag tag-seats">{activeTable?.seatsInfo || t('lobby','staging_seats_count', { count: seats.length })}</Chip>
               <InviteLinkButton tableId={activeTable?.tableId} />
             </div>
           </div>

@@ -7,11 +7,11 @@
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background: #080c10 radial-gradient(circle at 50% 20%, #151d27 0%, #080b0f 100%);
-  color: #e6eaf0;
+  background: var(--ink-1) radial-gradient(circle at 50% 20%, var(--ink-3) 0%, var(--ink-0) 100%);
+  color: var(--brand-fg);
   overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-mid);
+  border: 1px solid var(--veil-2);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -21,8 +21,8 @@
   justify-content: center;
   height: 100%;
   flex: 1;
-  font-size: 1.1rem;
-  color: #a0aec0;
+  font-size: var(--fs-heading);
+  color: var(--fg-2);
 }
 
 /* Top Navigation Bar */
@@ -33,8 +33,8 @@
   padding: 0 16px;
   height: 48px;
   min-height: 48px;
-  background: rgba(10, 14, 18, 0.96);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-rgb) / 0.96);
+  border-bottom: 1px solid var(--veil-2);
   backdrop-filter: blur(10px);
   z-index: 10;
   flex-shrink: 0;
@@ -47,12 +47,12 @@
 }
 
 .arena-nav-back {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #cbd5e0;
-  border-radius: 999px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--fg-2);
+  border-radius: var(--r-pill);
   padding: 5px 12px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -62,14 +62,14 @@
 }
 
 .arena-nav-back:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: var(--veil-3);
+  color: var(--fg-hi);
 }
 
 .deck-builder-title {
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   font-weight: 800;
-  color: #f0ede4;
+  color: var(--gold-300);
   letter-spacing: 0.04em;
 }
 
@@ -80,19 +80,19 @@
 }
 
 .builder-save-badge {
-  font-size: 0.75rem;
-  color: #68d391;
+  font-size: var(--fs-xs);
+  color: var(--ok);
   font-weight: 600;
 }
 
 .builder-save-error {
-  color: #fc8181;
+  color: var(--err);
   background: none;
-  border: 1px solid #fc8181;
-  border-radius: 4px;
+  border: 1px solid var(--err);
+  border-radius: var(--r-xs);
   padding: 2px 8px;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -140,11 +140,11 @@
   overflow: hidden;
   position: relative;
   transition: box-shadow 150ms ease, border-color 150ms ease;
-  border-radius: 8px;
+  border-radius: var(--r-base);
 }
 
 .builder-left.is-drag-over {
-  box-shadow: inset 0 0 24px rgba(245, 101, 101, 0.4), 0 0 20px rgba(245, 101, 101, 0.5);
+  box-shadow: inset 0 0 24px rgb(var(--err-rgb) / 0.4), 0 0 20px rgb(var(--err-rgb) / 0.5);
 }
 
 .arena-remove-drop-hint {
@@ -158,12 +158,12 @@
   gap: 8px;
   padding: 10px 20px;
   background: rgba(26, 12, 12, 0.95);
-  border: 2px dashed #f56565;
-  border-radius: 999px;
-  color: #feb2b2;
+  border: 2px dashed var(--err);
+  border-radius: var(--r-pill);
+  color: var(--err);
   font-weight: 800;
-  font-size: 0.85rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(245, 101, 101, 0.6);
+  font-size: var(--fs-md);
+  box-shadow: 0 8px 24px var(--shade-4), 0 0 16px rgb(var(--err-rgb) / 0.6);
   pointer-events: none;
   animation: arena-remove-pulse 1s ease-in-out infinite alternate;
 }
@@ -191,8 +191,8 @@
 
 /* Dedicated Mana Curve Panel in Deck Right Column */
 .deck-curve-panel {
-  background: #111720;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ink-3);
+  border: 1px solid var(--veil-3);
   border-top: none;
   padding: 10px 14px;
   display: flex;
@@ -214,13 +214,13 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--veil-2);
 }
 
 .deck-curve-panel-title {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
-  color: #ecc94b;
+  color: var(--gold-500);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -235,12 +235,12 @@
 
 .deck-curve-inspect-btn,
 .deck-curve-close-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #a0aec0;
-  border-radius: 4px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
+  border-radius: var(--r-xs);
   padding: 2px 7px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   transition: all 120ms ease;
@@ -248,9 +248,9 @@
 
 .deck-curve-inspect-btn:hover,
 .deck-curve-close-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--veil-4);
+  color: var(--fg-hi);
+  border-color: var(--veil-5);
 }
 
 /* Make CurveChart adapt seamlessly when inside .deck-curve-panel */
@@ -271,7 +271,7 @@
 }
 
 .deck-curve-panel .curve-count {
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   min-height: 14px;
 }
 
@@ -280,11 +280,11 @@
 }
 
 .deck-curve-panel .curve-bar-fill {
-  box-shadow: 0 0 6px rgba(236, 201, 75, 0.3);
+  box-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.3);
 }
 
 .deck-curve-panel .curve-label {
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
 }
 
 .deck-curve-panel .curve-stats-grid {
@@ -295,7 +295,7 @@
 
 .deck-curve-panel .curve-stat-pill {
   padding: 3px 6px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
 }
 
 /* Deck Actions Footer */
@@ -304,8 +304,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  background: #11161d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ink-3);
+  border: 1px solid var(--veil-3);
   border-top: none;
   border-radius: 0 0 8px 8px;
 }
@@ -320,14 +320,14 @@
 .builder-act {
   flex: 1 1 calc(25% - 4px);
   min-width: 70px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e0;
-  border-radius: 6px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
+  border-radius: var(--r-sm);
   padding: 4px 6px;
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
   text-align: center;
   transition: all 120ms ease;
   white-space: nowrap;
@@ -336,14 +336,14 @@
 }
 
 .builder-act:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: var(--veil-3);
+  color: var(--fg-hi);
 }
 
 .builder-act.primary {
-  background: #2b6cb0;
-  border-color: #3182ce;
-  color: #ffffff;
+  background: var(--brand-strong);
+  border-color: var(--brand);
+  color: var(--fg-hi);
 }
 
 .builder-act.is-equipped {
@@ -354,24 +354,24 @@
 /* MTG Arena Signature Big Done Button */
 .builder-done {
   width: 100%;
-  background: linear-gradient(180deg, #ffa834 0%, #ff7300 50%, #e65100 100%);
-  color: #111111;
-  border: 1px solid #ffd180;
-  border-radius: 999px;
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
+  border: 1px solid var(--brand-fg);
+  border-radius: var(--r-pill);
   padding: 8px 0;
   font-weight: 900;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(255, 115, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: all 150ms ease;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .builder-done:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 115, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 6px 20px rgb(var(--brand-rgb) / 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   filter: brightness(1.1);
 }
 
@@ -384,8 +384,8 @@
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95), 0 0 32px rgba(236, 201, 75, 0.5);
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 60px var(--shade-5), 0 0 32px rgb(var(--gold-rgb) / 0.5);
   background: transparent;
   display: flex;
   gap: 16px;
@@ -400,11 +400,11 @@
   max-width: calc(48vw - 24px);
   max-height: calc(100vh - 40px);
   aspect-ratio: 2.5 / 3.5;
-  border-radius: 16px;
+  border-radius: var(--r-xl);
   overflow: hidden;
-  border: 2.5px solid rgba(236, 201, 75, 0.85);
-  background: #0d1117;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  border: 2.5px solid rgb(var(--gold-rgb) / 0.85);
+  background: var(--ink-2);
+  box-shadow: 0 16px 40px var(--shade-5);
 }
 
 .preview-face-card img {
@@ -419,13 +419,13 @@
   top: 10px;
   left: 10px;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.82);
-  border: 1px solid #ecc94b;
-  color: #f6e05e;
-  font-size: 0.76rem;
+  background: var(--shade-4);
+  border: 1px solid var(--gold-500);
+  color: var(--gold-300);
+  font-size: var(--fs-xs);
   font-weight: 800;
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   backdrop-filter: blur(4px);
@@ -446,11 +446,11 @@
   position: relative;
   margin: 6px 12px 0;
   padding: 8px 12px;
-  background: rgba(220, 80, 60, 0.12);
-  border: 1px solid rgba(220, 90, 70, 0.45);
-  border-radius: 8px;
-  font-size: 0.812rem;
-  color: #f2b8ad;
+  background: rgb(var(--err-rgb) / 0.12);
+  border: 1px solid rgb(var(--err-rgb) / 0.45);
+  border-radius: var(--r-base);
+  font-size: var(--fs-sm);
+  color: var(--err);
 }
 .builder-server-issues .bsi-close {
   position: absolute;
@@ -462,15 +462,15 @@
   width: 22px;
   height: 22px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--veil-2);
   color: inherit;
   cursor: pointer;
 }
 .builder-server-issues .bsi-close:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: var(--veil-4);
+  color: var(--fg-hi);
 }
 .builder-server-issues .bsi-title {
   font-weight: 700;
@@ -486,18 +486,18 @@
   line-height: 1.4;
 }
 .builder-server-issues .bsi-sug {
-  color: #a8d8b9;
+  color: var(--ok);
 }
 .builder-server-issues .bsi-repair-btn {
   margin-left: 6px;
   padding: 1px 8px;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid rgba(168, 216, 185, 0.5);
-  background: rgba(168, 216, 185, 0.12);
-  color: #a8d8b9;
+  font-size: var(--fs-xs);
+  border-radius: var(--r-sm);
+  border: 1px solid rgb(var(--ok-rgb) / 0.5);
+  background: rgb(var(--ok-rgb) / 0.12);
+  color: var(--ok);
   cursor: pointer;
 }
 .builder-server-issues .bsi-repair-btn:hover {
-  background: rgba(168, 216, 185, 0.25);
+  background: rgb(var(--ok-rgb) / 0.25);
 }

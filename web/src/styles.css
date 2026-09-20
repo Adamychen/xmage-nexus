@@ -1,16 +1,18 @@
+@import './ui/tokens.css';
+
 :root {
   color-scheme: dark;
-  --bg: #000000;
-  --panel: #1a1e33;
-  --panel-2: #232a45;
-  --border: #2e3560;
-  --text: #e8eaf6;
-  --text-dim: #9aa1c0;
-  --accent: #7c5cff;
-  --accent-2: #ffb03a;
-  --gold: #ffb03a;
-  --good: #4cd07d;
-  --bad: #ff5c6c;
+  --bg: var(--ink-0);
+  --panel: var(--ink-2);
+  --panel-2: var(--ink-3);
+  --border: var(--line-2);
+  --text: var(--fg-1);
+  --text-dim: var(--fg-2);
+  --accent: var(--brand);
+  --accent-2: var(--gold-500);
+  --gold: var(--gold-500);
+  --good: var(--ok);
+  --bad: var(--err);
   --font-display: 'Cinzel', 'Merriweather', Georgia, serif;
 
   --sidebar-w: 64px;
@@ -24,42 +26,42 @@
   --cjk-boost: 1;
 
   /* ── Dialog system (D0: feedback-dialog wins; additive only) ── */
-  --dlg-backdrop: rgba(3, 6, 14, 0.78);
+  --dlg-backdrop: rgb(var(--ink-rgb) / 0.78);
   --dlg-backdrop-blur: 8px;
   --dlg-z: 90;
   /* Por encima del rango dinámico de Modal.tsx (nextModalZ, 501-1999): turno/fase
      y vidas/reloj de prioridad no deben quedar tapados por ningún backdrop modal
      (p5-1-prompt-checklist.md hallazgo #1). Por debajo de los toasts (9999). */
   --game-header-z: 2000;
-  --dlg-radius: 18px;
+  --dlg-radius: var(--r-xl);
   --dlg-padding: 24px 28px 28px;
-  --dlg-bg: linear-gradient(180deg, #161b2e 0%, #0d1222 100%);
-  --dlg-border: 1px solid rgba(130, 150, 220, 0.22);
-  --dlg-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --dlg-bg: linear-gradient(180deg, var(--ink-3) 0%, var(--ink-1) 100%);
+  --dlg-border: 1px solid var(--line-2);
+  --dlg-shadow: var(--shadow-3), 0 0 0 1px var(--line-1);
   --dlg-anim: dialogIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --dlg-width-sm: min(440px, 94vw);
   --dlg-width-md: min(600px, 94vw);
   --dlg-width-lg: min(1100px, 96vw);
   --dlg-max-h: min(780px, 90vh);
-  --dlg-kicker-fg: #ffd070;
-  --dlg-kicker-bg: rgba(255, 208, 112, 0.12);
-  --dlg-kicker-border: rgba(255, 208, 112, 0.25);
-  --dlg-title-fg: #ffffff;
-  --dlg-source-fg: #38bdf8;
-  --dlg-msg-fg: #94a3b8;
-  --dlg-primary-bg: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
-  --dlg-primary-border: #60a5fa;
-  --dlg-primary-fg: #ffffff;
-  --dlg-cancel-bg: rgba(255, 255, 255, 0.06);
-  --dlg-cancel-border: rgba(255, 255, 255, 0.15);
-  --dlg-cancel-fg: #94a3b8;
-  --dlg-choice-bg: rgba(255, 255, 255, 0.04);
-  --dlg-choice-border: rgba(255, 255, 255, 0.1);
-  --dlg-choice-hover-bg: rgba(124, 92, 255, 0.15);
-  --dlg-choice-hover-border: rgba(124, 92, 255, 0.6);
-  --dlg-choice-selected-border: #a78bfa;
+  --dlg-kicker-fg: var(--gold-300);
+  --dlg-kicker-bg: var(--gold-soft);
+  --dlg-kicker-border: var(--gold-line);
+  --dlg-title-fg: var(--fg-1);
+  --dlg-source-fg: var(--brand-fg);
+  --dlg-msg-fg: var(--fg-2);
+  --dlg-primary-bg: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  --dlg-primary-border: var(--brand-fg);
+  --dlg-primary-fg: var(--fg-1);
+  --dlg-cancel-bg: var(--line-1);
+  --dlg-cancel-border: var(--line-2);
+  --dlg-cancel-fg: var(--fg-2);
+  --dlg-choice-bg: var(--veil-1);
+  --dlg-choice-border: var(--line-1);
+  --dlg-choice-hover-bg: rgb(var(--brand-rgb) / 0.15);
+  --dlg-choice-hover-border: rgb(var(--brand-rgb) / 0.6);
+  --dlg-choice-selected-border: var(--brand-fg);
   --dlg-bar-w: 234px;
-  --dlg-bar-radius: 12px;
+  --dlg-bar-radius: var(--r-mid);
   --dlg-bar-blur: 12px;
 
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -125,38 +127,49 @@ html, body, #root {
 button {
   font: inherit;
   color: inherit;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
   padding: 8px 14px;
   cursor: pointer;
-  transition: background 0.15s, transform 0.05s;
+  transition: background var(--dur-med), border-color var(--dur-med), transform 0.05s, box-shadow var(--dur-med);
 }
-button:hover { background: #2d3560; }
+button:hover:not(:disabled) { filter: brightness(1.14); }
 button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible,
+a:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  font-weight: 600;
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border-color: var(--brand-fg);
+  color: var(--fg-hi);
+  font-weight: 700;
+  box-shadow: var(--sheen), 0 6px 18px rgb(var(--brand-rgb) / 0.28);
 }
-button.primary:hover { background: #8f74ff; }
 
-input, select {
+input, select, textarea {
   font: inherit;
   color: var(--text);
-  background: #141831;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--ink-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
   padding: 8px 10px;
+  transition: border-color var(--dur-med), box-shadow var(--dur-med);
 }
-input:focus, select:focus { outline: 1px solid var(--accent); }
+input:hover, select:hover, textarea:hover { border-color: var(--line-3); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.22);
+}
+input::placeholder, textarea::placeholder { color: var(--fg-3); }
 
 .panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
   padding: 14px;
+  box-shadow: var(--shadow-1), var(--sheen);
 }
 
 .crash-screen {
@@ -175,7 +188,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   word-break: break-word;
   background: var(--panel-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--r-base);
   padding: 10px;
   color: var(--bad);
 }
@@ -191,7 +204,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   color: var(--accent-2);
   text-align: center;
   padding: 6px 12px;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
 }
 
 .board-error {
@@ -202,7 +215,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   color: var(--text-dim);
   padding: 24px;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
 }
 .board-error code { color: var(--bad); }
 
@@ -212,11 +225,11 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   color: rgba(232, 234, 246, 0.45);
-  background: rgba(10, 13, 28, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
+  background: rgb(var(--ink-rgb) / 0.65);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-pill);
   padding: 2px 10px;
   pointer-events: none;
   backdrop-filter: blur(6px);
@@ -224,7 +237,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 
 .app-attribution a {
   pointer-events: auto;
-  color: rgba(142, 160, 255, 0.85);
+  color: rgb(var(--brand-rgb) / 0.85);
   text-decoration: none;
 }
 
@@ -236,10 +249,10 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 255, 0.4);
-  border-radius: 3px;
+  background: rgba(148, 170, 214, 0.26);
+  border-radius: var(--r-xs);
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(124, 92, 255, 0.7); }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 170, 214, 0.5); }
 
 /* Tab fade-in animation (used by lobby body children) */
 @keyframes tabFadeIn {
@@ -264,10 +277,10 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 0.812rem;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+  box-shadow: 0 8px 24px var(--shade-2);
   backdrop-filter: blur(12px);
   pointer-events: auto;
   animation: toastIn 0.22s cubic-bezier(0.16,1,0.3,1) forwards;
@@ -281,23 +294,23 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 
 .toast-success {
   background: rgba(28, 107, 80, 0.92);
-  border: 1px solid #63e6be;
-  color: #c6fff0;
+  border: 1px solid var(--ok);
+  color: var(--ok);
 }
 
 .toast-error {
   background: rgba(80, 20, 30, 0.92);
-  border: 1px solid #ff5c6c;
-  color: #ffc0c8;
+  border: 1px solid var(--err);
+  color: var(--err);
 }
 
 .toast-info {
   background: rgba(14, 40, 80, 0.92);
-  border: 1px solid rgba(124, 92, 255, 0.7);
-  color: #c4cae8;
+  border: 1px solid rgb(var(--brand-rgb) / 0.7);
+  color: var(--fg-2);
 }
 
-.toast-icon { font-size: 0.938rem; flex-shrink: 0; }
+.toast-icon { font-size: var(--fs-base); flex-shrink: 0; }
 .toast-msg { flex: 1; }
 .toast-close {
   background: none;
@@ -306,7 +319,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
   opacity: 0.6;
   cursor: pointer;
   padding: 0 2px;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   line-height: 1;
   flex-shrink: 0;
 }

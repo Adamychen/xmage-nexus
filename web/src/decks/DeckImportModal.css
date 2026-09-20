@@ -1,7 +1,7 @@
 .deck-import-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.85);
+  background: rgb(var(--ink-rgb) / 0.85);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -11,8 +11,8 @@
 }
 
 .deck-import-modal.drag-over {
-  border-color: #ffd070;
-  box-shadow: 0 0 30px rgba(255, 208, 112, 0.3);
+  border-color: var(--gold-300);
+  box-shadow: 0 0 30px rgb(var(--gold-rgb) / 0.3);
 }
 
 .deck-import-close-btn {
@@ -22,7 +22,7 @@
   line-height: 1;
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--fg-2);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0 4px;
@@ -50,27 +50,27 @@
 }
 
 .import-mode-label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #cbd5e0;
+  color: var(--fg-2);
 }
 
 .import-mode-options {
   display: flex;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--shade-1);
   padding: 3px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-base);
+  border: 1px solid var(--veil-2);
   gap: 4px;
 }
 
 .import-mode-btn {
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--fg-2);
   padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.76rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   transition: all 120ms ease;
@@ -81,9 +81,9 @@
 }
 
 .import-mode-btn.active {
-  background: #2b6cb0;
+  background: var(--brand-strong);
   color: white;
-  box-shadow: 0 2px 8px rgba(43, 108, 176, 0.4);
+  box-shadow: 0 2px 8px rgb(var(--brand-rgb) / 0.4);
 }
 
 /* Textarea Wrap */
@@ -95,13 +95,13 @@
 .deck-import-textarea {
   width: 100%;
   box-sizing: border-box;
-  background: #070a10;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  background: var(--ink-1);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-md);
   padding: 12px 14px;
-  color: #f7fafc;
+  color: var(--fg-1);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.5;
   resize: vertical;
   min-height: 180px;
@@ -111,8 +111,8 @@
 }
 
 .deck-import-textarea:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.25);
 }
 
 .deck-import-textarea::placeholder {
@@ -123,15 +123,15 @@
 .import-drop-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(49, 130, 206, 0.85);
+  background: rgb(var(--brand-rgb) / 0.85);
   backdrop-filter: blur(4px);
-  border-radius: 10px;
+  border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   pointer-events: none;
 }
 
@@ -151,52 +151,52 @@
 }
 
 .import-file-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--fg-1);
   padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.76rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   transition: all 120ms;
 }
 
 .import-file-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--veil-3);
   color: white;
 }
 
 .import-clear-btn {
   background: transparent;
   border: none;
-  color: #a0aec0;
-  font-size: 0.74rem;
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
   cursor: pointer;
   padding: 4px 6px;
   text-decoration: underline;
 }
 
 .import-clear-btn:hover {
-  color: #fc8181;
+  color: var(--err);
 }
 
 .import-paste-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e0;
-  border-radius: 6px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
+  border-radius: var(--r-sm);
   padding: 4px 8px;
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
 }
 
 .import-paste-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--veil-3);
   color: white;
 }
 
@@ -207,35 +207,35 @@
 
 .import-badge {
   padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.76rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
   font-weight: 700;
 }
 
 .import-badge.success {
-  background: rgba(72, 187, 120, 0.15);
-  border: 1px solid rgba(72, 187, 120, 0.35);
-  color: #68d391;
+  background: rgb(var(--ok-rgb) / 0.15);
+  border: 1px solid rgb(var(--ok-rgb) / 0.35);
+  color: var(--ok);
 }
 
 .import-badge.warning {
-  background: rgba(237, 137, 54, 0.15);
-  border: 1px solid rgba(237, 137, 54, 0.35);
-  color: #fbd38d;
+  background: rgb(var(--warn-rgb) / 0.15);
+  border: 1px solid rgb(var(--warn-rgb) / 0.35);
+  color: var(--gold-300);
 }
 
 .import-hint-text {
-  font-size: 0.74rem;
-  color: #718096;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
 }
 
 .deck-import-error {
   padding: 8px 12px;
-  background: rgba(245, 101, 101, 0.15);
-  border: 1px solid rgba(245, 101, 101, 0.3);
-  border-radius: 6px;
-  color: #fc8181;
-  font-size: 0.78rem;
+  background: rgb(var(--err-rgb) / 0.15);
+  border: 1px solid rgb(var(--err-rgb) / 0.3);
+  border-radius: var(--r-sm);
+  color: var(--err);
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -245,44 +245,44 @@
   align-items: center;
   justify-content: flex-end;
   padding: 14px 22px;
-  background: rgba(20, 26, 38, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-2-rgb) / 0.95);
+  border-top: 1px solid var(--veil-2);
   gap: 12px;
 }
 
 .import-cancel-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e0;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
   padding: 8px 18px;
-  border-radius: 999px;
-  font-size: 0.82rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
   font-weight: 700;
   cursor: pointer;
   transition: all 120ms;
 }
 
 .import-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--veil-3);
   color: white;
 }
 
 .import-submit-btn {
-  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
-  border: 1px solid #4299e1;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border: 1px solid var(--brand);
   color: white;
   padding: 8px 22px;
-  border-radius: 999px;
-  font-size: 0.82rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
   font-weight: 800;
   cursor: pointer;
   transition: all 140ms ease;
-  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.35);
+  box-shadow: 0 4px 12px rgb(var(--brand-rgb) / 0.35);
 }
 
 .import-submit-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(49, 130, 206, 0.5);
+  box-shadow: 0 6px 16px rgb(var(--brand-rgb) / 0.5);
 }
 
 .import-submit-btn:disabled {

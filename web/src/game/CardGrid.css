@@ -1,10 +1,10 @@
 .card-grid-count-badge {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   padding: 3px 9px;
-  border-radius: 12px;
-  background: rgba(124, 92, 255, 0.15);
-  color: var(--accent, #a78bfa);
-  border: 1px solid rgba(124, 92, 255, 0.3);
+  border-radius: var(--r-mid);
+  background: rgb(var(--brand-rgb) / 0.15);
+  color: var(--accent, var(--brand-fg));
+  border: 1px solid rgb(var(--brand-rgb) / 0.3);
   font-weight: 500;
 }
 
@@ -18,26 +18,26 @@
 .card-grid-search-icon {
   position: absolute;
   left: 12px;
-  font-size: 0.875rem;
-  color: var(--text-dim, #94a3b8);
+  font-size: var(--fs-md);
+  color: var(--text-dim, var(--fg-2));
   pointer-events: none;
 }
 
 .card-grid-filter {
   width: 100%;
   padding: 9px 36px 9px 34px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.35);
-  color: var(--text, #f8fafc);
-  font-size: 0.812rem;
+  border: 1px solid var(--border, var(--veil-3));
+  border-radius: var(--r-base);
+  background: var(--shade-1);
+  color: var(--text, var(--fg-1));
+  font-size: var(--fs-sm);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .card-grid-filter:focus {
-  border-color: var(--accent, #a78bfa);
-  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.2);
+  border-color: var(--accent, var(--brand-fg));
+  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.2);
 }
 
 .card-grid-clear-btn {
@@ -45,16 +45,16 @@
   right: 10px;
   background: transparent;
   border: none;
-  color: var(--text-dim, #94a3b8);
+  color: var(--text-dim, var(--fg-2));
   cursor: pointer;
   padding: 4px 6px;
-  font-size: 0.75rem;
-  border-radius: 4px;
+  font-size: var(--fs-xs);
+  border-radius: var(--r-xs);
 }
 
 .card-grid-clear-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg-hi);
+  background: var(--veil-3);
 }
 
 .card-grid-scroll-area {
@@ -72,17 +72,17 @@
 }
 
 .card-grid-scroll-area::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 4px;
+  background: var(--shade-1);
+  border-radius: var(--r-xs);
 }
 
 .card-grid-scroll-area::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 255, 0.4);
-  border-radius: 4px;
+  background: rgb(var(--brand-rgb) / 0.4);
+  border-radius: var(--r-xs);
 }
 
 .card-grid-scroll-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 255, 0.7);
+  background: rgb(var(--brand-rgb) / 0.7);
 }
 
 .card-grid {
@@ -99,21 +99,21 @@
   gap: 6px;
   padding: 6px 4px;
   border: 2px solid transparent;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--r-md);
+  background: var(--veil-1);
   cursor: pointer;
   transition: transform 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .card-grid-cell:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--veil-2);
   transform: translateY(-2px);
 }
 
 .card-grid-cell.selected {
-  border-color: var(--accent, #a78bfa);
-  background: rgba(124, 92, 255, 0.18);
-  box-shadow: 0 0 12px rgba(124, 92, 255, 0.35);
+  border-color: var(--accent, var(--brand-fg));
+  background: rgb(var(--brand-rgb) / 0.18);
+  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.35);
 }
 
 .card-grid-cell:disabled {
@@ -123,9 +123,9 @@
 }
 
 .card-grid-label {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 500;
-  color: var(--text-dim, #cbd5e1);
+  color: var(--text-dim, var(--fg-2));
   text-align: center;
   line-height: 1.2;
   max-width: 100%;
@@ -141,8 +141,8 @@
   justify-content: center;
   gap: 8px;
   padding: 40px 0;
-  color: var(--text-dim, #94a3b8);
-  font-size: 0.95rem;
+  color: var(--text-dim, var(--fg-2));
+  font-size: var(--fs-base);
 }
 
 .card-grid-empty span {
@@ -156,7 +156,7 @@
   gap: 10px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--veil-2);
   justify-content: flex-end;
 }
 

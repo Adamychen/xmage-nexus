@@ -1,0 +1,60 @@
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  color: var(--fg-1);
+  background: var(--surface-raised);
+  box-shadow: var(--sheen);
+}
+.ui-btn--sm { padding: 5px 10px; font-size: var(--fs-xs); border-radius: var(--r-sm); }
+.ui-btn--md { padding: 8px 14px; font-size: var(--fs-sm); }
+.ui-btn--lg { padding: 12px 22px; font-size: var(--fs-lg); border-radius: var(--r-lg); }
+.ui-btn--block { width: 100%; }
+
+.ui-btn--primary {
+  color: var(--fg-hi);
+  border-color: var(--brand-fg);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  box-shadow: var(--sheen), 0 6px 18px rgb(var(--brand-rgb) / 0.28);
+  font-weight: 700;
+}
+.ui-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--fg-2);
+}
+.ui-btn--ghost:hover:not(:disabled) { background: rgba(148, 170, 214, 0.1); color: var(--fg-1); }
+.ui-btn--danger {
+  color: var(--err);
+  border-color: var(--err-line);
+  background: linear-gradient(180deg, rgb(var(--err-rgb) / 0.2) 0%, rgb(var(--err-rgb) / 0.1) 100%);
+}
+
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--fg-2);
+  background: rgba(148, 170, 214, 0.07);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-sm);
+}
+.ui-chip--brand { color: var(--brand-fg); background: var(--brand-soft); border-color: var(--brand-line); }
+.ui-chip--gold { color: var(--gold-300); background: var(--gold-soft); border-color: var(--gold-line); }
+.ui-chip--ok { color: var(--ok); background: var(--ok-soft); border-color: var(--ok-line); }
+.ui-chip--warn { color: var(--warn); background: var(--warn-soft); border-color: var(--warn-line); }
+.ui-chip--err { color: var(--err); background: var(--err-soft); border-color: var(--err-line); }
+.ui-chip--solid { font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }

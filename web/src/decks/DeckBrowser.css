@@ -25,27 +25,27 @@
 .browser-search-input {
   width: 100%;
   padding: 8px 30px 8px 14px;
-  background: #0f141c;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  color: #fff;
-  font-size: 0.85rem;
+  background: var(--ink-2);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-pill);
+  color: var(--fg-hi);
+  font-size: var(--fs-md);
   outline: none;
   transition: all 150ms ease;
 }
 
 .browser-search-input:focus {
-  border-color: #ecc94b;
-  box-shadow: 0 0 8px rgba(236, 201, 75, 0.3);
+  border-color: var(--gold-500);
+  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.3);
 }
 
 .browser-select {
-  background: #0f141c;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e0;
-  border-radius: 999px;
+  background: var(--ink-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
+  border-radius: var(--r-pill);
   padding: 7px 14px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -65,21 +65,21 @@
 /* Individual Deck Card */
 .browser-deck-card {
   position: relative;
-  background: #111722;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  background: var(--ink-3);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px var(--shade-2);
   transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
   cursor: pointer;
 }
 
 .browser-deck-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(236, 201, 75, 0.6);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 12px rgba(236, 201, 75, 0.2);
+  border-color: rgb(var(--gold-rgb) / 0.6);
+  box-shadow: 0 8px 24px var(--shade-3), 0 0 12px rgb(var(--gold-rgb) / 0.2);
 }
 
 .browser-deck-art-header {
@@ -87,7 +87,7 @@
   height: 110px;
   background-size: cover;
   background-position: center 25%;
-  background-color: #1a2230;
+  background-color: var(--ink-3);
   display: flex;
   align-items: flex-end;
   padding: 10px;
@@ -96,7 +96,7 @@
 .browser-deck-art-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(17, 23, 34, 1) 0%, rgba(17, 23, 34, 0.4) 60%, rgba(0, 0, 0, 0.6) 100%);
+  background: linear-gradient(0deg, rgb(var(--ink-2-rgb) / 1) 0%, rgb(var(--ink-2-rgb) / 0.4) 60%, var(--shade-3) 100%);
 }
 
 .browser-deck-badges-overlay {
@@ -108,23 +108,23 @@
 }
 
 .browser-deck-format-chip {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #ecc94b;
-  color: #f6e05e;
+  background: var(--shade-3);
+  border: 1px solid var(--gold-500);
+  color: var(--gold-300);
   padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 0.68rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .browser-deck-arch-chip {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #4299e1;
-  color: #63b3ed;
+  background: var(--shade-3);
+  border: 1px solid var(--brand);
+  color: var(--brand-fg);
   padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 0.68rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-2xs);
   font-weight: 800;
 }
 
@@ -138,8 +138,8 @@
 
 .browser-deck-name {
   font-weight: 800;
-  font-size: 0.95rem;
-  color: #ffffff;
+  font-size: var(--fs-base);
+  color: var(--fg-hi);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -147,8 +147,8 @@
 }
 
 .browser-deck-desc {
-  font-size: 0.76rem;
-  color: #a0aec0;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
   line-height: 1.35;
   margin: 0;
   display: -webkit-box;
@@ -163,17 +163,17 @@
   gap: 6px;
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--veil-2);
 }
 
 .browser-deck-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e0;
-  border-radius: 6px;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-3);
+  color: var(--fg-2);
+  border-radius: var(--r-sm);
   padding: 5px 8px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   text-align: center;
@@ -181,13 +181,13 @@
 }
 
 .browser-deck-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: var(--veil-4);
+  color: var(--fg-hi);
 }
 
 .browser-deck-btn.primary {
-  background: linear-gradient(180deg, #ffa834 0%, #ff7300 100%);
-  color: #111;
-  border-color: #ffd180;
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
+  border-color: var(--brand-fg);
 }
 

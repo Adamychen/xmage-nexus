@@ -3,16 +3,16 @@
   grid-template-columns: repeat(3, auto);
   gap: 4px 10px;
   padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(18, 22, 44, 0.9);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-base);
+  background: rgb(var(--ink-2-rgb) / 0.9);
 }
 
 .mana-inline-pip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -24,7 +24,7 @@
 }
 
 .mana-inline-count {
-  color: #e8eaf6;
+  color: var(--fg-1);
   min-width: 12px;
   text-align: right;
 }
@@ -39,6 +39,6 @@ button.mana-inline-pip {
 }
 
 button.mana-inline-pip:hover {
-  outline: 1px solid #7c5cff;
-  border-radius: 4px;
+  outline: 1px solid var(--brand);
+  border-radius: var(--r-xs);
 }

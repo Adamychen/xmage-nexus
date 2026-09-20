@@ -3,7 +3,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   width: 100%;
-  background: rgba(10, 14, 28, 0.95);
+  background: rgb(var(--ink-rgb) / 0.95);
   overflow: hidden;
 }
 
@@ -12,40 +12,40 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
-  background: rgba(18, 24, 48, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-2-rgb) / 0.8);
+  border-bottom: 1px solid var(--veil-2);
 }
 
 .action-feed-mode-toggle {
   display: flex;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--shade-1);
   padding: 2px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--veil-3);
 }
 
 .mode-btn {
   padding: 3px 8px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   border: none;
   background: transparent;
-  color: #94a3b8;
-  border-radius: 4px;
+  color: var(--fg-2);
+  border-radius: var(--r-xs);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .mode-btn.active {
-  background: rgba(255, 208, 112, 0.2);
-  color: #ffd070;
-  border: 1px solid rgba(255, 208, 112, 0.4);
+  background: rgb(var(--gold-rgb) / 0.2);
+  color: var(--gold-300);
+  border: 1px solid rgb(var(--gold-rgb) / 0.4);
 }
 
 .action-count-tag {
-  font-size: 0.688rem;
-  color: #64748b;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }
 
 .action-feed-list {
@@ -58,7 +58,7 @@
   flex-direction: column;
   gap: 6px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: var(--veil-5) transparent;
 }
 
 .action-feed-list::-webkit-scrollbar {
@@ -70,12 +70,12 @@
 }
 
 .action-feed-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: var(--veil-5);
+  border-radius: var(--r-xs);
 }
 
 .action-feed-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 208, 112, 0.5);
+  background: rgb(var(--gold-rgb) / 0.5);
 }
 
 .action-feed-empty {
@@ -83,8 +83,8 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
   font-style: italic;
   padding: 24px;
   text-align: center;

@@ -3,16 +3,16 @@
   align-items: center;
   gap: 6px;
   padding: 3px 5px;
-  background: rgba(18, 22, 45, 0.6);
-  border-radius: 8px;
-  border: 1px dashed rgba(255, 208, 112, 0.4);
+  background: rgb(var(--ink-2-rgb) / 0.6);
+  border-radius: var(--r-base);
+  border: 1px dashed rgb(var(--gold-rgb) / 0.4);
   flex-shrink: 0;
   max-height: 100%;
   box-sizing: border-box;
 }
 
 .command-zone.opp {
-  border-color: rgba(255, 170, 70, 0.35);
+  border-color: rgb(var(--warn-rgb) / 0.35);
 }
 
 .command-zone.multi-commander {
@@ -38,7 +38,7 @@
 }
 
 .commander-slot {
-  box-shadow: 0 0 12px rgba(255, 208, 112, 0.3);
+  box-shadow: 0 0 12px rgb(var(--gold-rgb) / 0.3);
 }
 
 .commander-badge {
@@ -48,12 +48,12 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd070, #f59e0b);
+  background: linear-gradient(135deg, var(--gold-300), #f59e0b);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.688rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  font-size: var(--fs-2xs);
+  box-shadow: 0 2px 6px var(--shade-3);
   z-index: 10;
   pointer-events: none;
 }
@@ -65,12 +65,12 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #c084fc, #a855f7);
+  background: linear-gradient(135deg, var(--purple-fg), var(--purple));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.688rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  font-size: var(--fs-2xs);
+  box-shadow: 0 2px 6px var(--shade-3);
   z-index: 10;
   pointer-events: none;
 }
@@ -80,14 +80,14 @@
   bottom: 2px;
   right: 2px;
   padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(239, 68, 68, 0.9);
+  border-radius: var(--r-xs);
+  background: rgb(var(--err-rgb) / 0.9);
   border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #ffffff;
-  font-size: 0.688rem;
+  color: var(--fg-hi);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   font-family: var(--font-display);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 6px var(--shade-4);
   z-index: 10;
   pointer-events: none;
 }
@@ -104,8 +104,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+  border-color: rgb(var(--purple-rgb) / 0.6);
+  box-shadow: 0 0 10px rgb(var(--purple-rgb) / 0.4);
 }
 
 .emblems-count-badge {
@@ -115,14 +115,14 @@
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  border-radius: 9px;
-  background: #a855f7;
-  color: #ffffff;
-  font-size: 0.688rem;
+  border-radius: var(--r-base);
+  background: var(--purple);
+  color: var(--fg-hi);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 6px var(--shade-4);
   z-index: 20;
 }

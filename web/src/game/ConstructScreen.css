@@ -13,10 +13,10 @@
   max-height: 92vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border, rgba(255,255,255,0.1));
-  border-radius: 16px;
-  background: var(--panel, #0f1226);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  border: 1px solid var(--border, var(--veil-3));
+  border-radius: var(--r-xl);
+  background: var(--panel, var(--ink-2));
+  box-shadow: 0 24px 80px var(--shade-2);
   overflow: hidden;
 }
 
@@ -25,7 +25,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-bottom: 1px solid var(--border, var(--veil-3));
 }
 
 .construct-title {
@@ -40,37 +40,37 @@
 }
 
 .construct-deck-name {
-  color: var(--text-dim, #94a3b8);
-  font-size: 0.812rem;
+  color: var(--text-dim, var(--fg-2));
+  font-size: var(--fs-sm);
 }
 
 .construct-pool-info {
-  font-size: 0.688rem;
-  color: var(--text-dim, #94a3b8);
-  background: rgba(255,255,255,0.06);
+  font-size: var(--fs-2xs);
+  color: var(--text-dim, var(--fg-2));
+  background: var(--veil-2);
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
 }
 
 .construct-timer {
   position: relative;
   width: 120px;
   height: 28px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.06);
+  border-radius: var(--r-sm);
+  background: var(--veil-2);
   overflow: hidden;
 }
 
 .construct-timer-bar {
   position: absolute;
   inset: 0;
-  background: var(--accent, #7c5cff);
+  background: var(--accent, var(--brand));
   opacity: 0.3;
   transition: width 1s linear;
 }
 
 .construct-timer.urgent .construct-timer-bar {
-  background: #ff5c6c;
+  background: var(--err);
 }
 
 .construct-timer-text {
@@ -80,13 +80,13 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   font-family: var(--font-display, sans-serif);
 }
 
 .construct-timer.urgent .construct-timer-text {
-  color: #ff5c6c;
+  color: var(--err);
 }
 
 .construct-columns {
@@ -95,13 +95,13 @@
   gap: 1px;
   flex: 1;
   overflow: hidden;
-  background: var(--border, rgba(255,255,255,0.08));
+  background: var(--border, var(--veil-2));
 }
 
 .construct-column {
   display: flex;
   flex-direction: column;
-  background: var(--panel, #0f1226);
+  background: var(--panel, var(--ink-2));
   overflow: hidden;
 }
 
@@ -114,42 +114,42 @@
 
 .construct-col-header h3 {
   margin: 0;
-  font-size: 0.812rem;
-  color: var(--text-dim, #94a3b8);
+  font-size: var(--fs-sm);
+  color: var(--text-dim, var(--fg-2));
 }
 
 .construct-col-count {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.08);
-  color: var(--text, #e2e8f0);
+  border-radius: var(--r-md);
+  background: var(--veil-2);
+  color: var(--text, var(--fg-1));
 }
 
 .construct-col-count.valid {
-  background: rgba(99,230,190,0.15);
-  color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.15);
+  color: var(--ok);
 }
 
 .construct-col-count.invalid {
-  background: rgba(255,92,108,0.15);
-  color: #ff5c6c;
+  background: rgb(var(--err-rgb) / 0.15);
+  color: var(--err);
 }
 
 .construct-filter {
   margin: 0 12px 8px;
   padding: 6px 10px;
-  border: 1px solid var(--border, rgba(255,255,255,0.1));
-  border-radius: 6px;
-  background: var(--bg, #0a0d1a);
-  color: var(--text, #e2e8f0);
-  font-size: 0.75rem;
+  border: 1px solid var(--border, var(--veil-3));
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+  color: var(--text, var(--fg-1));
+  font-size: var(--fs-xs);
   outline: none;
 }
 
 .construct-filter:focus {
-  border-color: var(--accent, #7c5cff);
+  border-color: var(--accent, var(--brand));
 }
 
 .construct-card-list {
@@ -164,7 +164,7 @@
 
 .construct-arena-list.is-drag-over,
 .construct-column.is-drag-over {
-  box-shadow: inset 0 0 16px rgba(99,179,237,0.25);
+  box-shadow: inset 0 0 16px rgb(var(--brand-rgb) / 0.25);
 }
 
 .construct-validation {
@@ -172,8 +172,8 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 8px 20px;
-  border-top: 1px solid var(--border, rgba(255,255,255,0.1));
-  background: rgba(245,101,101,0.06);
+  border-top: 1px solid var(--border, var(--veil-3));
+  background: rgb(var(--err-rgb) / 0.06);
 }
 
 .construct-footer {
@@ -181,18 +181,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  border-top: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-top: 1px solid var(--border, var(--veil-3));
 }
 
 .construct-counts {
   display: flex;
   gap: 16px;
-  font-size: 0.75rem;
-  color: var(--text-dim, #94a3b8);
+  font-size: var(--fs-xs);
+  color: var(--text-dim, var(--fg-2));
 }
 
-.construct-counts .valid { color: #63e6be; }
-.construct-counts .invalid { color: #ff5c6c; }
+.construct-counts .valid { color: var(--ok); }
+.construct-counts .invalid { color: var(--err); }
 
 .construct-screen .arena-drop-target-hint {
   display: flex;
@@ -201,11 +201,11 @@
   gap: 8px;
   padding: 10px;
   margin: 4px 0 8px;
-  border: 1px dashed rgba(99,179,237,0.5);
-  border-radius: 6px;
-  background: rgba(99,179,237,0.08);
-  color: #63b3ed;
-  font-size: 0.75rem;
+  border: 1px dashed rgb(var(--brand-rgb) / 0.5);
+  border-radius: var(--r-sm);
+  background: rgb(var(--brand-rgb) / 0.08);
+  color: var(--brand-fg);
+  font-size: var(--fs-xs);
   font-weight: 700;
 }
 
@@ -218,18 +218,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 4px 4px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-dim, #94a3b8);
+  color: var(--text-dim, var(--fg-2));
 }
 
 .construct-screen .deck-category-count {
-  background: rgba(255,255,255,0.08);
+  background: var(--veil-2);
   padding: 1px 6px;
-  border-radius: 10px;
-  font-size: 0.625rem;
+  border-radius: var(--r-md);
+  font-size: var(--fs-3xs);
 }
 
 .construct-screen .deck-list-empty-hint {
@@ -238,8 +238,8 @@
   align-items: center;
   gap: 4px;
   padding: 20px;
-  color: var(--text-dim, #94a3b8);
-  font-size: 0.75rem;
+  color: var(--text-dim, var(--fg-2));
+  font-size: var(--fs-xs);
   text-align: center;
 }
 

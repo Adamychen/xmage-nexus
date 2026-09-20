@@ -33,7 +33,7 @@
   right: 24%;
   bottom: -3px;
   height: 24px;
-  background: radial-gradient(ellipse 52% 100% at 50% 100%, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 72%);
+  background: radial-gradient(ellipse 52% 100% at 50% 100%, var(--shade-2) 0%, rgba(0, 0, 0, 0) 72%);
   pointer-events: none;
   z-index: -1;
 }
@@ -132,9 +132,9 @@
 @keyframes handTargetablePulse {
   0%,
   100% {
-    box-shadow: 0 0 0 2px #ffb03a, 0 0 16px rgba(255, 176, 58, 0.4);
+    box-shadow: 0 0 0 2px var(--gold-500), 0 0 16px rgb(var(--gold-rgb) / 0.4);
   }
   50% {
-    box-shadow: 0 0 0 3px #ffd070, 0 0 24px rgba(255, 208, 112, 0.8);
+    box-shadow: 0 0 0 3px var(--gold-300), 0 0 24px rgb(var(--gold-rgb) / 0.8);
   }
 }

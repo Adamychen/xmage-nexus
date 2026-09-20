@@ -4,9 +4,9 @@
   flex: 1;
   min-height: 0;
   height: 100%;
-  background: #0d1218;
-  border-radius: 8px;
+  background: var(--ink-1);
+  border-radius: var(--r-base);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--veil-2);
+  box-shadow: 0 4px 16px var(--shade-1);
 }

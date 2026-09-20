@@ -82,6 +82,19 @@ describe('TournamentPanel — watchdog de cuña draft→construcción', () => {
   })
 })
 
+describe('TournamentPanel — diálogo modal', () => {
+  it('expone role=dialog modal, enfoca su contenido y Escape lo minimiza', () => {
+    setState({ tournament: { tournamentId: 't1', view }, construct: null, draftOverAt: null } as never)
+    render(<TournamentPanel />)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByTestId('tournament-panel-mini')).toBeDefined()
+  })
+})
+
 describe('TournamentPanel — pill arrastrable', () => {
   it('aparece centrado por defecto y un click abre el bracket', () => {
     showMini()

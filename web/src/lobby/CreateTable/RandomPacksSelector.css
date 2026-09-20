@@ -1,7 +1,7 @@
 .random-packs-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--shade-2);
   z-index: 60;
   display: flex;
   align-items: center;
@@ -11,7 +11,7 @@
 
 .random-packs-hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   opacity: 0.85;
 }
 
@@ -26,8 +26,8 @@
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   gap: 4px;
   padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-base);
   min-height: 120px;
 }
 
@@ -35,15 +35,15 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-family: monospace;
   padding: 3px 6px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
 }
 
 .random-packs-cell:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--veil-2);
 }
 
 .random-packs-footer {

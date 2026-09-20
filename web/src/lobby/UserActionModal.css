@@ -2,11 +2,11 @@
 .user-action-dialog {
   max-width: 480px;
   width: 92vw;
-  background: rgba(14, 18, 38, 0.96);
+  background: rgb(var(--ink-2-rgb) / 0.96);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(124, 92, 255, 0.25);
-  border-radius: 16px;
+  border: 1px solid var(--veil-4);
+  box-shadow: 0 20px 60px var(--shade-4), 0 0 30px rgb(var(--brand-rgb) / 0.25);
+  border-radius: var(--r-xl);
   overflow: hidden;
   padding: 0;
   display: flex;
@@ -18,8 +18,8 @@
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
-  background: rgba(22, 28, 56, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  border-bottom: 1px solid var(--veil-2);
 }
 
 .user-action-avatar-col {
@@ -44,7 +44,7 @@
   margin: 0;
   font-size: 1.062rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 .user-action-badges-row {
@@ -55,49 +55,49 @@
 }
 
 .user-action-history-pill {
-  font-size: 0.656rem;
+  font-size: var(--fs-3xs);
   font-weight: 700;
-  color: #c4cae8;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg-2);
+  background: var(--veil-2);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   font-family: var(--font-mono, monospace);
 }
 
 .user-action-status-row {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
 }
 
 .user-status-playing {
-  color: #ffd070;
+  color: var(--gold-300);
   font-weight: 600;
 }
 
 .user-status-idle {
-  color: #63e6be;
+  color: var(--ok);
   font-weight: 600;
 }
 
 .user-action-close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #c4cae8;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--fg-2);
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   align-self: flex-start;
   transition: all 0.15s ease;
 }
 
 .user-action-close-btn:hover {
-  background: rgba(255, 71, 87, 0.25);
+  background: rgb(var(--err-rgb) / 0.25);
   border-color: #ff4757;
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 /* Action Body */
@@ -113,10 +113,10 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: rgba(22, 28, 56, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: #ffffff;
+  background: rgb(var(--ink-2-rgb) / 0.55);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-md);
+  color: var(--fg-hi);
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
@@ -124,43 +124,43 @@
 
 .user-action-btn:hover {
   background: rgba(35, 45, 90, 0.85);
-  border-color: rgba(255, 208, 112, 0.4);
+  border-color: rgb(var(--gold-rgb) / 0.4);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--shade-1);
 }
 
 .user-action-btn.primary {
-  background: linear-gradient(135deg, rgba(255, 208, 112, 0.25) 0%, rgba(200, 140, 40, 0.3) 100%);
-  border-color: #ffd070;
+  background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.25) 0%, rgb(var(--warn-rgb) / 0.3) 100%);
+  border-color: var(--gold-300);
 }
 
 .user-action-btn.primary:hover {
-  background: linear-gradient(135deg, rgba(255, 208, 112, 0.35) 0%, rgba(200, 140, 40, 0.45) 100%);
-  box-shadow: 0 0 14px rgba(255, 208, 112, 0.35);
+  background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.35) 0%, rgb(var(--warn-rgb) / 0.45) 100%);
+  box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.35);
 }
 
 .user-action-btn.spectate-btn {
-  background: rgba(124, 92, 255, 0.2);
-  border-color: #7c5cff;
+  background: rgb(var(--brand-rgb) / 0.2);
+  border-color: var(--brand);
 }
 
 .user-action-btn.spectate-btn:hover {
-  background: rgba(124, 92, 255, 0.35);
-  box-shadow: 0 0 14px rgba(124, 92, 255, 0.4);
+  background: rgb(var(--brand-rgb) / 0.35);
+  box-shadow: 0 0 14px rgb(var(--brand-rgb) / 0.4);
 }
 
 .user-action-btn.ignore-btn:hover {
-  background: rgba(255, 71, 87, 0.2);
+  background: rgb(var(--err-rgb) / 0.2);
   border-color: #ff4757;
 }
 
 .user-action-btn.unignore-btn {
-  background: rgba(99, 230, 190, 0.15);
-  border-color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.15);
+  border-color: var(--ok);
 }
 
 .action-btn-icon {
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
   flex-shrink: 0;
 }
 
@@ -171,12 +171,12 @@
 }
 
 .action-btn-title {
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 .action-btn-desc {
-  font-size: 0.688rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }

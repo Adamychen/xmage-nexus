@@ -10,10 +10,10 @@
   min-width: 180px;
   max-height: calc(100vh - 16px);
   overflow-y: auto;
-  background: #171a21;
-  border: 1px solid #363b46;
-  border-radius: 7px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  background: var(--ink-2);
+  border: 1px solid var(--ink-4);
+  border-radius: var(--r-base);
+  box-shadow: 0 10px 30px var(--shade-2);
   padding: 4px 0;
 }
 
@@ -25,19 +25,19 @@
   padding: 8px 14px;
   background: none;
   border: none;
-  color: #c8cae6;
-  font-size: 0.812rem;
+  color: var(--fg-2);
+  font-size: var(--fs-sm);
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background: #252b4a;
+  background: var(--ink-3);
 }
 
 .context-menu-item.danger {
-  color: #ff5c6c;
+  color: var(--err);
 }
 
 .context-menu-item.danger:hover:not(:disabled) {
@@ -50,7 +50,7 @@
 }
 
 .context-menu-icon {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   width: 18px;
   text-align: center;
 }

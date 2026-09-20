@@ -11,9 +11,9 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-lg);
+  background: var(--veil-1);
+  border: 1.5px solid var(--veil-3);
   color: inherit;
   font: inherit;
   text-align: center;
@@ -22,9 +22,9 @@
 .pile-choose-btn {
   margin-top: 4px;
   padding: 8px 12px;
-  border-radius: 8px;
-  border: 1.5px solid rgba(124, 92, 255, 0.6);
-  background: rgba(124, 92, 255, 0.15);
+  border-radius: var(--r-base);
+  border: 1.5px solid rgb(var(--brand-rgb) / 0.6);
+  background: rgb(var(--brand-rgb) / 0.15);
   color: inherit;
   font: inherit;
   font-weight: 700;
@@ -33,7 +33,7 @@
 }
 
 .pile-choose-btn:hover:not(:disabled) {
-  background: rgba(124, 92, 255, 0.3);
+  background: rgb(var(--brand-rgb) / 0.3);
 }
 
 .pile-choose-btn:disabled {
@@ -42,9 +42,9 @@
 }
 
 .pile-column-name {
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #ffd070;
+  color: var(--gold-300);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -69,9 +69,9 @@
 
 .pile-vs {
   align-self: center;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
-  color: #8ea0ff;
+  color: var(--brand-fg);
   letter-spacing: 0.1em;
 }
 

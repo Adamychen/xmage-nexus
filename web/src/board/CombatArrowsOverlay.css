@@ -15,7 +15,7 @@
 
 .arrow-shadow {
   fill: none;
-  stroke: rgba(0, 0, 0, 0.7);
+  stroke: var(--shade-3);
   stroke-width: 6;
   stroke-linecap: round;
 }
@@ -28,7 +28,7 @@
 
 /* Attack Arrow (Crimson) */
 .arrow-path.arrow-attack {
-  stroke: #ff4757;
+  stroke: var(--err);
   stroke-width: 4;
   stroke-dasharray: 9 5;
   animation: arrowFlowAttack 1.2s linear infinite;
@@ -45,7 +45,7 @@
 
 /* Block Arrow (Cyan / Blue) */
 .arrow-path.arrow-block {
-  stroke: #38bdf8;
+  stroke: var(--brand-fg);
   stroke-width: 4;
   stroke-dasharray: 9 5;
   animation: arrowFlowBlock 1.2s linear infinite;
@@ -62,7 +62,7 @@
 
 /* Target Arrow (Gold / Amber) */
 .arrow-path.arrow-target {
-  stroke: #ffd070;
+  stroke: var(--gold-300);
   stroke-width: 3.5;
   stroke-dasharray: 7 6;
   animation: arrowFlowTarget 0.8s linear infinite;

@@ -40,7 +40,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 100%, rgba(40, 200, 120, 0.07) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 50% 100%, rgb(var(--ok-rgb) / 0.07) 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }

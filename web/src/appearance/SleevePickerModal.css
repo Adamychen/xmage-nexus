@@ -5,7 +5,7 @@
   line-height: 1;
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -27,8 +27,8 @@
   align-items: center;
   gap: 6px;
   padding: 8px;
-  border-radius: 10px;
-  background: #14182e;
+  border-radius: var(--r-md);
+  background: var(--ink-2);
   border: 1.5px solid transparent;
   cursor: pointer;
   min-width: 0;
@@ -38,7 +38,7 @@
 
 .sleeve-item.selected {
   border-color: #ffb03a;
-  box-shadow: 0 0 12px rgba(255,176,58,0.45);
+  box-shadow: 0 0 12px rgb(var(--warn-rgb) / 0.45);
 }
 
 .sleeve-preview {
@@ -46,13 +46,13 @@
   max-width: 110px;
   aspect-ratio: 0.714;
   height: auto;
-  border-radius: 7px;
+  border-radius: var(--r-base);
   overflow: hidden;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid var(--veil-3);
   box-sizing: border-box;
 }
 
@@ -66,7 +66,7 @@
 
 .sleeve-preview-emblem {
   font-size: 1.75rem;
-  text-shadow: 0 0 10px currentColor, 0 2px 8px rgba(0,0,0,0.7);
+  text-shadow: 0 0 10px currentColor, 0 2px 8px var(--shade-3);
 }
 
 .sleeve-check {
@@ -78,15 +78,15 @@
   border-radius: 50%;
   background: #ffb03a;
   color: #10131f;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.sleeve-name { font-size: 0.688rem; font-weight: 600; text-align: center; word-break: break-word; }
-.sleeve-picker-footer { margin-top: 14px; display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+.sleeve-name { font-size: var(--fs-2xs); font-weight: 600; text-align: center; word-break: break-word; }
+.sleeve-picker-footer { margin-top: 14px; display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--veil-2); }
 
 @media (max-width: 480px) {
   .sleeve-picker-grid {

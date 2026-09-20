@@ -3,8 +3,8 @@
   align-items: center;
   gap: 10px;
   margin: 8px 0;
-  font-size: 0.812rem;
-  color: #c4cae8;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
   cursor: pointer;
 }
 
@@ -12,9 +12,9 @@
   width: 40px;
   height: 22px;
   flex-shrink: 0;
-  border-radius: 999px;
-  border: 1px solid #303541;
-  background: #1a1f3a;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-4);
+  background: var(--ink-3);
   cursor: pointer;
   padding: 0;
   position: relative;

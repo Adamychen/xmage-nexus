@@ -4,19 +4,19 @@
 }
 
 .rollback-description {
-  color: #a0aec0;
-  font-size: 0.88rem;
+  color: var(--fg-2);
+  font-size: var(--fs-md);
   line-height: 1.4;
   margin-bottom: 12px;
 }
 
 .rollback-priority-notice {
-  background: rgba(237, 137, 54, 0.15);
-  border: 1px solid rgba(237, 137, 54, 0.4);
-  color: #f6ad55;
+  background: rgb(var(--warn-rgb) / 0.15);
+  border: 1px solid rgb(var(--warn-rgb) / 0.4);
+  color: var(--warn);
   padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.82rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -35,25 +35,25 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: var(--veil-1);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-base);
   cursor: pointer;
   transition: all 120ms ease;
-  font-size: 0.9rem;
-  color: #e2e8f0;
+  font-size: var(--fs-md);
+  color: var(--fg-1);
 }
 
 .rollback-turn-option:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--veil-2);
+  border-color: var(--veil-5);
 }
 
 .rollback-turn-option.selected {
-  background: rgba(99, 179, 237, 0.15);
+  background: rgb(var(--brand-rgb) / 0.15);
   border-color: #4299e1;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+  color: var(--fg-hi);
+  box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.2);
 }
 
 .rollback-turn-option input[type="radio"] {
@@ -66,9 +66,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  background: var(--veil-1);
+  border: 1px dashed var(--veil-4);
+  border-radius: var(--r-base);
   margin-bottom: 16px;
   gap: 12px;
 }
@@ -80,23 +80,23 @@
 }
 
 .rollback-undo-title {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
-  color: #cbd5e0;
+  color: var(--brand-fg);
 }
 
 .rollback-undo-hint {
-  font-size: 0.75rem;
-  color: #718096;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
 }
 
 .rollback-undo-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e2e8f0;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-1);
   padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -104,17 +104,17 @@
 }
 
 .rollback-undo-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--veil-4);
+  border-color: var(--veil-6);
 }
 
 .rollback-game-btn {
-  background: rgba(246, 173, 85, 0.12);
-  border: 1px solid rgba(246, 173, 85, 0.3);
-  color: #f6ad55;
+  background: rgb(var(--warn-rgb) / 0.12);
+  border: 1px solid rgb(var(--warn-rgb) / 0.3);
+  color: var(--warn);
   padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.82rem;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -124,9 +124,9 @@
 }
 
 .rollback-game-btn:hover {
-  background: rgba(246, 173, 85, 0.25);
-  border-color: rgba(246, 173, 85, 0.6);
-  color: #feebc8;
+  background: rgb(var(--warn-rgb) / 0.25);
+  border-color: rgb(var(--warn-rgb) / 0.6);
+  color: var(--gold-300);
 }
 
 @media (prefers-reduced-motion: reduce) {

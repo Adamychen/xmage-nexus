@@ -32,37 +32,37 @@
 }
 
 .player-status-badge.filled {
-  border-color: #ffb03a;
-  background: rgba(255, 176, 58, 0.15);
-  font-size: 0.562rem;
-  color: #ffb03a;
+  border-color: var(--gold-500);
+  background: rgb(var(--gold-rgb) / 0.15);
+  font-size: var(--fs-4xs);
+  color: var(--gold-500);
 }
 
 .player-status-badge.filled {
   transform: rotate(0deg);
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 .player-status-body {
   min-width: 170px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   overflow: hidden;
-  background: #171b30;
-  border: 1px solid #2e3560;
+  background: var(--ink-3);
+  border: 1px solid var(--ink-4);
   box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
 }
 
 .player-status-name {
   padding: 6px 12px;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #c8cae6;
-  background: #1d2140;
-  border-bottom: 1px solid #2e3560;
+  color: var(--fg-2);
+  background: var(--ink-3);
+  border-bottom: 1px solid var(--ink-4);
 }
 
 .player-status-name[data-priority] {
-  color: #ffb03a;
+  color: var(--gold-500);
 }
 
 .player-status-counters {
@@ -76,13 +76,13 @@
   font-size: 1.5rem;
   font-weight: 800;
   font-family: var(--font-display);
-  color: #e8eaf6;
+  color: var(--fg-1);
 }
 
 .player-status-counter + .player-status-counter {
-  border-left: 1px solid #2e3560;
+  border-left: 1px solid var(--ink-4);
 }
 
 .player-status-counter.life {
-  color: #ffb03a;
+  color: var(--gold-500);
 }

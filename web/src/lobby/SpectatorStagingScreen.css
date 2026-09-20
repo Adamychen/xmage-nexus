@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: radial-gradient(circle at 50% 20%, #151936 0%, #080a18 70%);
-  color: #e8eaf6;
+  background: radial-gradient(circle at 50% 20%, var(--ink-3) 0%, var(--ink-1) 70%);
+  color: var(--fg-1);
   font-family: var(--font-sans, system-ui, sans-serif);
   overflow: hidden;
 }
@@ -14,8 +14,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: rgba(10, 13, 28, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--ink-rgb) / 0.85);
+  border-bottom: 1px solid var(--veil-2);
   backdrop-filter: blur(12px);
   flex-shrink: 0;
 }
@@ -29,9 +29,9 @@
 .staging-logo {
   width: 38px;
   height: 38px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 208, 112, 0.4);
-  box-shadow: 0 0 10px rgba(255, 208, 112, 0.2);
+  border-radius: var(--r-base);
+  border: 1px solid rgb(var(--gold-rgb) / 0.4);
+  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.2);
 }
 
 .staging-titles {
@@ -44,15 +44,15 @@
   font-size: 1.062rem;
   font-weight: 900;
   font-family: var(--font-display);
-  background: linear-gradient(135deg, #ffffff 0%, #ffd070 100%);
+  background: linear-gradient(135deg, #ffffff 0%, var(--gold-300) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .staging-subtitle {
-  font-size: 0.719rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
   font-weight: 600;
 }
 
@@ -61,11 +61,11 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: var(--r-base);
   background: rgba(40, 20, 30, 0.6);
-  border: 1px solid rgba(255, 80, 80, 0.35);
-  color: #ff9999;
-  font-size: 0.812rem;
+  border: 1px solid rgb(var(--err-rgb) / 0.35);
+  color: var(--err);
+  font-size: var(--fs-sm);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -74,8 +74,8 @@
 .staging-leave-btn:hover {
   background: rgba(60, 20, 30, 0.9);
   border-color: #ff5252;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(255, 80, 80, 0.3);
+  color: var(--fg-hi);
+  box-shadow: 0 0 12px rgb(var(--err-rgb) / 0.3);
 }
 
 /* Player action bar (Start / Leave / Delete): sticky so it stays visible */
@@ -89,17 +89,17 @@
   padding: 12px 8px 4px;
   position: sticky;
   bottom: 0;
-  background: linear-gradient(to bottom, transparent, rgba(14, 18, 38, 0.92) 30%);
+  background: linear-gradient(to bottom, transparent, rgb(var(--ink-2-rgb) / 0.92) 30%);
   z-index: 2;
 }
 
 .staging-action-btn {
   padding: 10px 22px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(30, 24, 40, 0.7);
-  color: #e8e8f2;
-  font-size: 0.875rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-4);
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  color: var(--brand-fg);
+  font-size: var(--fs-md);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -112,29 +112,29 @@
 }
 
 .staging-action-btn.primary {
-  border-color: rgba(80, 220, 140, 0.55);
+  border-color: rgb(var(--ok-rgb) / 0.55);
   background: rgba(24, 60, 42, 0.8);
-  color: #a9f0c9;
+  color: var(--ok);
 }
 
 .staging-action-btn.primary:hover {
   background: rgba(30, 90, 60, 0.95);
   border-color: #50dc8c;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(80, 220, 140, 0.35);
+  color: var(--fg-hi);
+  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.35);
 }
 
 .staging-action-btn.danger {
-  border-color: rgba(255, 90, 90, 0.45);
+  border-color: rgb(var(--err-rgb) / 0.45);
   background: rgba(60, 22, 30, 0.7);
-  color: #ff9d9d;
+  color: var(--err);
 }
 
 .staging-action-btn.danger:hover {
   background: rgba(90, 28, 38, 0.95);
   border-color: #ff5a5a;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(255, 90, 90, 0.3);
+  color: var(--fg-hi);
+  box-shadow: 0 0 12px rgb(var(--err-rgb) / 0.3);
 }
 
 .staging-action-btn:disabled {
@@ -145,29 +145,29 @@
 }
 
 .staging-action-btn.ready-toggle-on {
-  border-color: rgba(255, 204, 0, 0.5);
+  border-color: rgb(var(--warn-rgb) / 0.5);
   background: rgba(80, 60, 20, 0.7);
-  color: #ffd070;
+  color: var(--gold-300);
 }
 
 .staging-action-btn.ready-toggle-on:hover {
   background: rgba(100, 75, 25, 0.9);
-  border-color: #ffd070;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 204, 0, 0.3);
+  border-color: var(--gold-300);
+  color: var(--fg-hi);
+  box-shadow: 0 0 14px rgb(var(--warn-rgb) / 0.3);
 }
 
 .staging-action-btn.ready-toggle-off {
-  border-color: rgba(80, 220, 140, 0.55);
+  border-color: rgb(var(--ok-rgb) / 0.55);
   background: rgba(24, 60, 42, 0.8);
-  color: #a9f0c9;
+  color: var(--ok);
 }
 
 .staging-action-btn.ready-toggle-off:hover {
   background: rgba(30, 90, 60, 0.95);
   border-color: #50dc8c;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(80, 220, 140, 0.35);
+  color: var(--fg-hi);
+  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.35);
 }
 
 /* Main Staging Grid: full-bleed (no centered max-width cap) */
@@ -195,11 +195,11 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background: rgba(14, 18, 38, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: rgb(var(--ink-2-rgb) / 0.8);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-xl);
   padding: 24px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px var(--shade-3);
   min-height: 0;
   overflow-y: auto;
 }
@@ -208,7 +208,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--veil-2);
   padding-bottom: 16px;
 }
 
@@ -220,13 +220,13 @@
 }
 
 .staging-status-pill {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(124, 92, 255, 0.2);
-  color: #d1c4ff;
-  border: 1px solid rgba(124, 92, 255, 0.4);
+  border-radius: var(--r-sm);
+  background: rgb(var(--brand-rgb) / 0.2);
+  color: var(--brand-fg);
+  border: 1px solid rgb(var(--brand-rgb) / 0.4);
   letter-spacing: 0.05em;
 }
 
@@ -234,7 +234,7 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--fg-hi);
   font-family: var(--font-display);
 }
 
@@ -245,54 +245,7 @@
   flex-wrap: wrap;
 }
 
-.staging-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #b0badc;
-}
-
-.staging-tag.tag-game {
-  background: rgba(99, 230, 190, 0.1);
-  color: #63e6be;
-  border-color: rgba(99, 230, 190, 0.3);
-}
-
-.staging-tag.tag-deck {
-  background: rgba(255, 208, 112, 0.1);
-  color: #ffd070;
-  border-color: rgba(255, 208, 112, 0.3);
-}
-
-.staging-tag.tag-rated {
-  background: rgba(255, 176, 58, 0.15);
-  color: #ffb03a;
-  border-color: rgba(255, 176, 58, 0.4);
-}
-
-.staging-tag.tag-private {
-  background: rgba(255, 100, 100, 0.15);
-  color: #ff8080;
-  border-color: rgba(255, 100, 100, 0.3);
-}
-
-button.staging-tag.tag-invite {
-  font: inherit;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(130, 170, 255, 0.1);
-  color: #82aaff;
-  border-color: rgba(130, 170, 255, 0.3);
-}
-
-button.staging-tag.tag-invite:hover {
-  background: rgba(130, 170, 255, 0.2);
-}
+.staging-skill-stars { display: inline-flex; color: var(--gold-500); }
 
 /* Roster Area */
 .staging-roster-area {
@@ -321,10 +274,10 @@ button.staging-tag.tag-invite:hover {
   align-items: center;
   gap: 12px;
   padding: 20px 16px;
-  border-radius: 12px;
-  background: rgba(20, 26, 54, 0.7);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-radius: var(--r-mid);
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  border: 1.5px solid var(--veil-3);
+  box-shadow: 0 8px 24px var(--shade-1);
   text-align: center;
   transition: all 0.2s ease;
 }
@@ -337,27 +290,27 @@ button.staging-tag.tag-invite:hover {
   min-width: 22px;
   height: 22px;
   padding: 0 5px;
-  border-radius: 11px;
+  border-radius: var(--r-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.719rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #cdd5f0;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--brand-fg);
 }
 
 /* Own seat highlight */
 .staging-player-card.my-seat {
-  border-color: rgba(255, 208, 112, 0.65);
-  box-shadow: 0 0 18px rgba(255, 208, 112, 0.22), 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgb(var(--gold-rgb) / 0.65);
+  box-shadow: 0 0 18px rgb(var(--gold-rgb) / 0.22), 0 8px 24px var(--shade-1);
 }
 
 .staging-player-card.my-seat .seat-index {
-  background: rgba(255, 208, 112, 0.2);
-  border-color: rgba(255, 208, 112, 0.6);
-  color: #ffd070;
+  background: rgb(var(--gold-rgb) / 0.2);
+  border-color: rgb(var(--gold-rgb) / 0.6);
+  color: var(--gold-300);
 }
 
 /* Compact empty-seat chip (multiplayer grid) */
@@ -367,11 +320,11 @@ button.staging-tag.tag-invite:hover {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.03);
-  color: #8c96ba;
-  font-size: 0.781rem;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--veil-5);
+  background: var(--veil-1);
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -382,19 +335,19 @@ button.staging-tag.tag-invite:hover {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #aab3d6;
+  border: 1px solid var(--veil-5);
+  color: var(--brand-fg);
   flex-shrink: 0;
 }
 
 .staging-player-card.occupied {
-  border-color: rgba(99, 230, 190, 0.4);
-  background: radial-gradient(circle at 50% 30%, rgba(30, 42, 80, 0.8), rgba(16, 22, 46, 0.9));
+  border-color: rgb(var(--ok-rgb) / 0.4);
+  background: radial-gradient(circle at 50% 30%, rgba(30, 42, 80, 0.8), rgb(var(--ink-2-rgb) / 0.9));
 }
 
 .staging-player-card.empty {
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--veil-5);
   opacity: 0.7;
 }
 
@@ -402,19 +355,19 @@ button.staging-tag.tag-invite:hover {
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2b356c 0%, #151930 100%);
-  border: 2px solid #ffd070;
+  background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-3) 100%);
+  border: 2px solid var(--gold-300);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.625rem;
-  box-shadow: 0 0 16px rgba(255, 208, 112, 0.25);
+  font-size: var(--fs-2xl);
+  box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.25);
 }
 
 .staging-player-card.empty .player-avatar-circle {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--veil-5);
   box-shadow: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--veil-1);
 }
 
 .player-meta {
@@ -425,16 +378,16 @@ button.staging-tag.tag-invite:hover {
 }
 
 .player-card-name {
-  font-size: 0.938rem;
+  font-size: var(--fs-base);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--fg-hi);
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .player-crown {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
 }
 
 .seat-order-btns {
@@ -450,16 +403,16 @@ button.staging-tag.tag-invite:hover {
   width: 20px;
   height: 20px;
   padding: 0;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: #cdd5f0;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--veil-4);
+  background: var(--veil-2);
+  color: var(--brand-fg);
   cursor: pointer;
 }
 
 .seat-order-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  background: var(--veil-4);
+  color: var(--fg-hi);
 }
 
 .seat-order-btn:disabled {
@@ -474,8 +427,8 @@ button.staging-tag.tag-invite:hover {
 
 /* Drag & drop reorder target */
 .seat-drop-target {
-  border-color: rgba(255, 208, 112, 0.85) !important;
-  box-shadow: 0 0 22px rgba(255, 208, 112, 0.5) !important;
+  border-color: rgb(var(--gold-rgb) / 0.85) !important;
+  box-shadow: 0 0 22px rgb(var(--gold-rgb) / 0.5) !important;
 }
 
 [draggable="true"] {
@@ -487,29 +440,29 @@ button.staging-tag.tag-invite:hover {
 }
 
 @keyframes staging-seat-swapped {
-  0% { box-shadow: 0 0 0 rgba(255, 208, 112, 0); }
-  30% { box-shadow: 0 0 22px rgba(255, 208, 112, 0.65); }
-  100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+  0% { box-shadow: 0 0 0 rgb(var(--gold-rgb) / 0); }
+  30% { box-shadow: 0 0 22px rgb(var(--gold-rgb) / 0.65); }
+  100% { box-shadow: 0 8px 24px var(--shade-1); }
 }
 
 .player-status-tag {
-  font-size: 0.719rem;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
 }
 
 .player-status-tag.ready {
-  background: rgba(99, 230, 190, 0.15);
-  color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.15);
+  color: var(--ok);
 }
 
 .player-seat-meta {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.719rem;
-  color: #9aa3c7;
+  font-size: var(--fs-2xs);
+  color: var(--brand);
   max-width: 100%;
   min-width: 0;
   flex-wrap: wrap;
@@ -528,14 +481,14 @@ button.staging-tag.tag-invite:hover {
 }
 
 .player-status-tag.preparing {
-  background: rgba(255, 204, 0, 0.18);
-  border: 1px solid rgba(255, 204, 0, 0.4);
-  color: #ffd070;
+  background: rgb(var(--warn-rgb) / 0.18);
+  border: 1px solid rgb(var(--warn-rgb) / 0.4);
+  color: var(--gold-300);
   animation: staging-pulse-prep 2s infinite ease-in-out;
 }
 
 .player-status-tag.mini {
-  font-size: 0.656rem;
+  font-size: var(--fs-3xs);
   padding: 1px 6px;
 }
 
@@ -545,8 +498,8 @@ button.staging-tag.tag-invite:hover {
 }
 
 .player-status-tag.waiting {
-  background: rgba(255, 255, 255, 0.06);
-  color: #8c96ba;
+  background: var(--veil-2);
+  color: var(--fg-3);
 }
 
 /* VS Emblem */
@@ -562,17 +515,17 @@ button.staging-tag.tag-invite:hover {
   font-size: 1.5rem;
   font-weight: 900;
   font-family: var(--font-display);
-  background: linear-gradient(135deg, #ff5c6c 0%, #ffd070 100%);
+  background: linear-gradient(135deg, var(--err) 0%, var(--gold-300) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 12px rgba(255, 92, 108, 0.5));
+  filter: drop-shadow(0 0 12px rgb(var(--err-rgb) / 0.5));
 }
 
 .vs-line {
   width: 2px;
   height: 40px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(to bottom, transparent, var(--veil-5), transparent);
 }
 
 /* Pod ring (3-6 players) */
@@ -593,23 +546,23 @@ button.staging-tag.tag-invite:hover {
   align-items: center;
   gap: 2px;
   padding: 18px 26px;
-  border-radius: 16px;
-  background: radial-gradient(circle at 50% 30%, rgba(30, 42, 80, 0.9), rgba(16, 22, 46, 0.95));
-  border: 1px solid rgba(255, 208, 112, 0.35);
-  box-shadow: 0 0 24px rgba(255, 208, 112, 0.12), 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: var(--r-xl);
+  background: radial-gradient(circle at 50% 30%, rgba(30, 42, 80, 0.9), rgb(var(--ink-2-rgb) / 0.95));
+  border: 1px solid rgb(var(--gold-rgb) / 0.35);
+  box-shadow: 0 0 24px rgb(var(--gold-rgb) / 0.12), 0 8px 24px var(--shade-2);
 }
 
 .ring-count {
   font-size: 1.75rem;
   font-weight: 900;
   font-family: var(--font-display);
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 .ring-label {
-  font-size: 0.719rem;
+  font-size: var(--fs-2xs);
   font-weight: 600;
-  color: #8c96c0;
+  color: var(--fg-3);
 }
 
 .ring-seat {
@@ -621,25 +574,25 @@ button.staging-tag.tag-invite:hover {
   gap: 4px;
   width: 132px;
   padding: 10px 8px;
-  border-radius: 12px;
-  background: rgba(20, 26, 54, 0.85);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-radius: var(--r-mid);
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  border: 1.5px solid var(--veil-3);
+  box-shadow: 0 8px 24px var(--shade-1);
   text-align: center;
   transition: left 0.35s ease, top 0.35s ease, border-color 0.2s ease;
 }
 
 .ring-seat.occupied.ready {
-  border-color: rgba(99, 230, 190, 0.45);
+  border-color: rgb(var(--ok-rgb) / 0.45);
 }
 
 .ring-seat.occupied.preparing {
-  border-color: rgba(255, 204, 0, 0.55);
+  border-color: rgb(var(--warn-rgb) / 0.55);
 }
 
 .ring-seat.my-seat {
-  border-color: rgba(255, 208, 112, 0.7);
-  box-shadow: 0 0 18px rgba(255, 208, 112, 0.25), 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgb(var(--gold-rgb) / 0.7);
+  box-shadow: 0 0 18px rgb(var(--gold-rgb) / 0.25), 0 8px 24px var(--shade-1);
 }
 
 .ring-seat-index {
@@ -649,38 +602,38 @@ button.staging-tag.tag-invite:hover {
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #cdd5f0;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--brand-fg);
 }
 
 .ring-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2b356c 0%, #151930 100%);
-  border: 2px solid #ffd070;
+  background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-3) 100%);
+  border: 2px solid var(--gold-300);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #e8eaf6;
+  color: var(--fg-1);
 }
 
 .ring-seat.preparing .ring-avatar {
-  border-color: #ffd070;
+  border-color: var(--gold-300);
   animation: staging-pulse-prep 2s infinite ease-in-out;
 }
 
 .ring-name {
-  font-size: 0.813rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--fg-hi);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -691,7 +644,7 @@ button.staging-tag.tag-invite:hover {
 }
 
 .ring-seat .player-seat-meta {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
 }
 
 .ring-seat .seat-order-btns {
@@ -703,8 +656,8 @@ button.staging-tag.tag-invite:hover {
   min-width: 44px;
   padding: 8px 10px;
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--veil-5);
+  background: var(--veil-1);
   flex-direction: row;
 }
 
@@ -715,8 +668,8 @@ button.staging-tag.tag-invite:hover {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #aab3d6;
+  border: 1px solid var(--veil-5);
+  color: var(--brand-fg);
 }
 
 .ring-seat.empty .ring-seat-index {
@@ -744,7 +697,7 @@ button.staging-tag.tag-invite:hover {
   }
 
   .ring-count {
-    font-size: 1.25rem;
+    font-size: var(--fs-xl);
   }
 
   .ring-seat {
@@ -801,53 +754,53 @@ button.staging-tag.tag-invite:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.719rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #8c96ba;
+  background: var(--veil-2);
+  border: 1px solid var(--veil-4);
+  color: var(--fg-3);
 }
 
 .staging-step.done .staging-step-dot {
-  background: rgba(99, 230, 190, 0.18);
-  border-color: rgba(99, 230, 190, 0.55);
-  color: #63e6be;
+  background: rgb(var(--ok-rgb) / 0.18);
+  border-color: rgb(var(--ok-rgb) / 0.55);
+  color: var(--ok);
 }
 
 .staging-step.active .staging-step-dot {
-  background: rgba(255, 208, 112, 0.16);
-  border-color: rgba(255, 208, 112, 0.6);
-  color: #ffd070;
+  background: rgb(var(--gold-rgb) / 0.16);
+  border-color: rgb(var(--gold-rgb) / 0.6);
+  color: var(--gold-300);
   animation: staging-pulse-prep 2s infinite ease-in-out;
 }
 
 .staging-step-label {
-  font-size: 0.781rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
-  color: #8c96ba;
+  color: var(--fg-3);
   white-space: nowrap;
 }
 
 .staging-step.done .staging-step-label {
-  color: #63e6be;
+  color: var(--ok);
 }
 
 .staging-step.active .staging-step-label {
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 .staging-step-line {
   flex: 1;
   height: 1px;
   margin: 0 10px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--veil-4);
   min-width: 12px;
 }
 
 .staging-step.done + .staging-step .staging-step-line,
 .staging-step.done .staging-step-line {
-  background: rgba(99, 230, 190, 0.4);
+  background: rgb(var(--ok-rgb) / 0.4);
 }
 /* Pulse Banner */
 .staging-pulse-banner {
@@ -855,18 +808,18 @@ button.staging-tag.tag-invite:hover {
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  border-radius: 10px;
-  background: rgba(124, 92, 255, 0.12);
-  border: 1px solid rgba(124, 92, 255, 0.35);
-  box-shadow: 0 0 16px rgba(124, 92, 255, 0.15);
+  border-radius: var(--r-md);
+  background: rgb(var(--brand-rgb) / 0.12);
+  border: 1px solid rgb(var(--brand-rgb) / 0.35);
+  box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.15);
 }
 
 .pulse-spinner {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 3px solid rgba(124, 92, 255, 0.3);
-  border-top-color: #ffd070;
+  border: 3px solid rgb(var(--brand-rgb) / 0.3);
+  border-top-color: var(--gold-300);
   animation: stagingSpin 1s linear infinite;
   flex-shrink: 0;
 }
@@ -884,25 +837,25 @@ button.staging-tag.tag-invite:hover {
 }
 
 .pulse-headline {
-  font-size: 0.844rem;
+  font-size: var(--fs-md);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--fg-hi);
 }
 
 .pulse-subline {
-  font-size: 0.75rem;
-  color: #a2acd4;
+  font-size: var(--fs-xs);
+  color: var(--brand-fg);
 }
 
 /* Chat Card */
 .staging-chat-card {
   display: flex;
   flex-direction: column;
-  background: rgba(14, 18, 38, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: rgb(var(--ink-2-rgb) / 0.8);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-xl);
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px var(--shade-3);
 }
 
 .staging-chat-header {
@@ -910,19 +863,19 @@ button.staging-tag.tag-invite:hover {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--veil-2);
 }
 
 .staging-chat-header h3 {
   margin: 0;
-  font-size: 0.938rem;
+  font-size: var(--fs-base);
   font-weight: 800;
-  color: #c8cae6;
+  color: var(--brand-fg);
 }
 
 .chat-hint {
-  font-size: 0.719rem;
-  color: #8c96c0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }
 
 .staging-chat-body {

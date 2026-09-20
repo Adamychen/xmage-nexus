@@ -12,7 +12,7 @@
   padding: 8px 12px;
   cursor: pointer;
   opacity: 0.7;
-  font-size: 14px;
+  font-size: var(--fs-md);
 }
 
 .about-tabs button.is-active {
@@ -54,7 +54,7 @@
 
 .about-feed h3 {
   margin: 14px 0 8px;
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 
 .about-empty {
@@ -63,7 +63,7 @@
 
 .about-release {
   border: 1px solid var(--border, #333);
-  border-radius: 8px;
+  border-radius: var(--r-base);
   padding: 10px 12px;
   margin-bottom: 10px;
 }
@@ -78,18 +78,18 @@
 
 .about-release-tag {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   opacity: 0.8;
 }
 
 .about-release-date {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   opacity: 0.6;
 }
 
 .about-release-body {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.45;
   max-height: 220px;
   overflow-y: auto;
@@ -99,7 +99,7 @@
 .about-release-body h3,
 .about-release-body h4 {
   margin: 8px 0 4px;
-  font-size: 14px;
+  font-size: var(--fs-md);
 }
 
 .about-release-body p {
@@ -113,11 +113,11 @@
 
 .about-release-body code {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 
 .about-release-link {
   display: inline-block;
   margin-top: 8px;
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }

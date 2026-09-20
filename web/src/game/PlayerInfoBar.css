@@ -7,32 +7,32 @@
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  background: rgba(18, 22, 42, 0.88);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgb(var(--ink-2-rgb) / 0.88);
+  border: 1.5px solid var(--veil-3);
+  border-radius: var(--r-mid);
   min-width: 170px;
   pointer-events: auto;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shade-2);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
 
 .player-info-bar.has-priority {
-  border-color: rgba(99, 230, 190, 0.7);
-  box-shadow: 0 0 20px rgba(99, 230, 190, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
+  border-color: rgb(var(--ok-rgb) / 0.7);
+  box-shadow: 0 0 20px rgb(var(--ok-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 
 .player-info-bar.opp.has-priority {
-  border-color: rgba(255, 170, 70, 0.7);
-  box-shadow: 0 0 20px rgba(255, 170, 70, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
+  border-color: rgb(var(--warn-rgb) / 0.7);
+  box-shadow: 0 0 20px rgb(var(--warn-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 
 /* Turno activo (quién juega ahora): glow dorado estático, distinto del
    anillo de prioridad (verde/naranja). Puede coexistir con has-priority. */
 .player-info-bar.is-turn {
-  border-color: rgba(255, 208, 112, 0.85);
-  box-shadow: 0 0 22px rgba(255, 208, 112, 0.45), 0 8px 24px rgba(0, 0, 0, 0.6);
+  border-color: rgb(var(--gold-rgb) / 0.85);
+  box-shadow: 0 0 22px rgb(var(--gold-rgb) / 0.45), 0 8px 24px var(--shade-3);
 }
 
 /* Compact mode (half-card height) */
@@ -64,8 +64,8 @@
 .player-avatar .avatar-image {
   width: 40px;
   height: 40px;
-  border: 2px solid rgba(255, 208, 112, 0.7);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgb(var(--gold-rgb) / 0.7);
+  box-shadow: 0 0 10px var(--shade-2);
 }
 
 .compact .player-avatar .avatar-image {
@@ -89,14 +89,14 @@
 }
 
 .player-info-bar.compact .player-name {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .player-info-bar.compact .life-counter {
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
 }
 
 .player-info-bar.compact .player-counters {
@@ -108,10 +108,10 @@
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background: #0f132a;
-  border-radius: 4px;
+  background: var(--ink-1);
+  border-radius: var(--r-xs);
   padding: 1px 2px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 4px var(--shade-2);
 }
 
 /* Glowing priority ring animation around avatar */
@@ -119,7 +119,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid #63e6be;
+  border: 2px solid var(--ok);
   animation: priorityPulse 1.6s ease-in-out infinite;
   pointer-events: none;
 }
@@ -159,25 +159,25 @@
 }
 
 .player-name {
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #e4e8f8;
+  color: var(--brand-fg);
   letter-spacing: 0.02em;
 }
 
 .match-wins-dots {
   display: flex;
   gap: 2px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
 }
 
 .win-dot.won {
-  color: #ffd070;
-  text-shadow: 0 0 6px rgba(255, 208, 112, 0.8);
+  color: var(--gold-300);
+  text-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.8);
 }
 
 .win-dot.pending {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--veil-6);
 }
 
 .player-counters {
@@ -191,19 +191,19 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.938rem;
+  font-size: var(--fs-base);
   font-weight: 900;
   font-family: var(--font-display);
-  color: #ffd070;
+  color: var(--gold-300);
 }
 
 .life-counter .counter-icon {
-  color: #ff5252;
-  font-size: 0.875rem;
+  color: var(--err);
+  font-size: var(--fs-md);
 }
 
 .life-counter.life-danger {
-  color: #ff5252;
+  color: var(--err);
   animation: dangerPulse 1s infinite alternate;
 }
 
@@ -225,26 +225,26 @@ html.fx-off .life-value {
 
 @keyframes dangerPulse {
   from { transform: scale(1); }
-  to { transform: scale(1.1); text-shadow: 0 0 8px #ff5252; }
+  to { transform: scale(1.1); text-shadow: 0 0 8px var(--err); }
 }
 
 .player-counter-badge {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   background: rgba(40, 48, 80, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e8eaf6;
+  border: 1px solid var(--veil-4);
+  color: var(--fg-1);
 }
 
 .counter-poison {
   background: rgba(140, 70, 200, 0.15);
   border-color: rgba(140, 70, 200, 0.35);
-  color: #a855f7;
+  color: var(--purple);
 }
 
 .counter-poison.poison-zero {
@@ -252,29 +252,29 @@ html.fx-off .life-value {
 }
 
 .counter-poison.has-poison {
-  background: rgba(168, 85, 247, 0.35);
-  border-color: #c084fc;
-  color: #f3e8ff;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+  background: rgb(var(--purple-rgb) / 0.35);
+  border-color: var(--purple-fg);
+  color: var(--purple-fg);
+  box-shadow: 0 0 10px rgb(var(--purple-rgb) / 0.7);
   font-weight: 900;
 }
 
 .counter-hand {
   background: rgba(45, 55, 95, 0.5);
-  border-color: rgba(140, 160, 220, 0.3);
-  color: #cbd5e1;
+  border-color: rgb(var(--brand-rgb) / 0.3);
+  color: var(--fg-2);
 }
 
 .counter-energy {
-  background: rgba(56, 189, 248, 0.25);
-  border-color: rgba(56, 189, 248, 0.6);
-  color: #38bdf8;
+  background: rgb(var(--brand-rgb) / 0.25);
+  border-color: rgb(var(--brand-rgb) / 0.6);
+  color: var(--brand-fg);
 }
 
 .counter-rad {
-  background: rgba(76, 208, 125, 0.25);
-  border-color: rgba(76, 208, 125, 0.6);
-  color: #4cd07d;
+  background: rgb(var(--ok-rgb) / 0.25);
+  border-color: rgb(var(--ok-rgb) / 0.6);
+  color: var(--ok);
 }
 
 /* Priority Timer Clock */
@@ -282,31 +282,31 @@ html.fx-off .life-value {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 800;
   padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(20, 24, 45, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #94a3b8;
+  border-radius: var(--r-xs);
+  background: rgb(var(--ink-2-rgb) / 0.9);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-2);
   font-family: var(--font-mono, monospace);
 }
 
 .player-timer-badge.timer-active {
-  border-color: #63e6be;
-  color: #63e6be;
-  box-shadow: 0 0 8px rgba(99, 230, 190, 0.3);
+  border-color: var(--ok);
+  color: var(--ok);
+  box-shadow: 0 0 8px rgb(var(--ok-rgb) / 0.3);
 }
 
 .player-timer-badge.timer-low {
-  border-color: #ff5252;
-  color: #ff5252;
+  border-color: var(--err);
+  color: var(--err);
   animation: timerWarning 0.8s infinite alternate;
 }
 
 @keyframes timerWarning {
   from { opacity: 0.7; }
-  to { opacity: 1; text-shadow: 0 0 6px #ff5252; }
+  to { opacity: 1; text-shadow: 0 0 6px var(--err); }
 }
 
 .player-badges {
@@ -321,9 +321,9 @@ html.fx-off .life-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
-  color: #ffd070;
-  filter: drop-shadow(0 0 4px rgba(255, 208, 112, 0.6));
+  font-size: var(--fs-md);
+  color: var(--gold-300);
+  filter: drop-shadow(0 0 4px rgb(var(--gold-rgb) / 0.6));
   transition: transform 0.15s cubic-bezier(0.19, 1, 0.22, 1), filter 0.15s ease;
   user-select: none;
 }
@@ -339,56 +339,56 @@ html.fx-off .life-value {
 }
 
 .badge-sub-level {
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   font-weight: 900;
   font-family: var(--font-display);
-  color: #ffd070;
-  background: rgba(18, 22, 42, 0.9);
-  border: 1px solid rgba(255, 208, 112, 0.6);
-  border-radius: 6px;
+  color: var(--gold-300);
+  background: rgb(var(--ink-2-rgb) / 0.9);
+  border: 1px solid rgb(var(--gold-rgb) / 0.6);
+  border-radius: var(--r-sm);
   padding: 0 3px;
   margin-left: -2px;
   line-height: 1.1;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 4px var(--shade-4);
 }
 
 .badge-curse .badge-sub-level {
-  color: #ff5252;
-  border-color: rgba(255, 82, 82, 0.6);
+  color: var(--err);
+  border-color: rgb(var(--err-rgb) / 0.6);
 }
 
 .badge-daynight.is-day {
-  filter: drop-shadow(0 0 6px #ffd070);
+  filter: drop-shadow(0 0 6px var(--gold-300));
 }
 
 .badge-daynight.is-night {
-  filter: drop-shadow(0 0 6px #818cf8);
+  filter: drop-shadow(0 0 6px var(--brand-fg));
 }
 
 /* Targeting pulse on player */
 @keyframes playerTargetPulse {
   0%, 100% {
-    border-color: #ffd070;
-    box-shadow: 0 0 16px 2px rgba(255, 208, 112, 0.5), 0 8px 24px rgba(0, 0, 0, 0.6);
+    border-color: var(--gold-300);
+    box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   50% {
     border-color: #ffffff;
-    box-shadow: 0 0 32px 6px rgba(255, 208, 112, 0.95), 0 8px 24px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 32px 6px rgb(var(--gold-rgb) / 0.95), 0 8px 24px var(--shade-3);
   }
 }
 
 .player-info-bar.targetable {
   animation: playerTargetPulse 1.2s ease-in-out infinite;
   cursor: pointer;
-  border-color: #ffd070;
+  border-color: var(--gold-300);
   z-index: 30;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .player-info-bar.targetable {
     animation: none;
-    border-color: #ffd070;
-    box-shadow: 0 0 16px 2px rgba(255, 208, 112, 0.5), 0 8px 24px rgba(0, 0, 0, 0.6);
+    border-color: var(--gold-300);
+    box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   .avatar-priority-ring,
   .life-counter.life-danger,
@@ -399,14 +399,14 @@ html.fx-off .life-value {
 
 .player-info-bar.targetable:hover {
   border-color: #ffffff;
-  box-shadow: 0 0 36px 8px rgba(255, 208, 112, 1), 0 8px 24px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 36px 8px rgb(var(--gold-rgb) / 1), 0 8px 24px var(--shade-4);
 }
 
 /* Defeated / Left status */
 .player-info-bar.player-defeated {
   opacity: 0.65;
   filter: grayscale(0.5);
-  border-color: rgba(235, 68, 54, 0.4);
+  border-color: rgb(var(--err-rgb) / 0.4);
 }
 
 .player-status-badge {
@@ -414,8 +414,8 @@ html.fx-off .life-value {
   align-items: center;
   gap: 3px;
   padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 0.562rem;
+  border-radius: var(--r-xs);
+  font-size: var(--fs-4xs);
   font-weight: 800;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -424,13 +424,13 @@ html.fx-off .life-value {
 }
 
 .player-status-badge.status-defeated {
-  background: rgba(235, 68, 54, 0.25);
-  color: #ff7878;
-  border: 1px solid rgba(235, 68, 54, 0.5);
+  background: rgb(var(--err-rgb) / 0.25);
+  color: var(--err);
+  border: 1px solid rgb(var(--err-rgb) / 0.5);
 }
 
 .player-status-badge.status-left {
   background: rgba(140, 150, 190, 0.2);
-  color: #a0aec0;
+  color: var(--fg-2);
   border: 1px solid rgba(140, 150, 190, 0.4);
 }

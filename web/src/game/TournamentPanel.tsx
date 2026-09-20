@@ -10,6 +10,7 @@ import ChatBox from '../lobby/ChatBox'
 import { watchTournamentMatch } from '../lobby/useTournamentBracket'
 import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
+import Modal from '../ui/Modal'
 import { useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { clampDragPos, useDraggablePos } from '../ui/useDraggablePos'
@@ -172,8 +173,13 @@ export default function TournamentPanel() {
   }
 
   return (
-    <div className="tournament-panel-backdrop" role="presentation" data-testid="tournament-panel">
-      <section className="tournament-panel" role="dialog" aria-modal="true" aria-label={t('game', 'tournament_in_progress')}>
+    <Modal
+      backdropClassName="tournament-panel-backdrop"
+      dialogClassName="tournament-panel"
+      label={t('game', 'tournament_in_progress')}
+      testId="tournament-panel"
+      onEscape={() => setExpanded(false)}
+    >
         <header className="tournament-panel-header">
           <div className="tournament-panel-title">
             <span className="tournament-panel-icon"><Icon name="trophy" size={15} /></span>
@@ -227,7 +233,6 @@ export default function TournamentPanel() {
             </div>
           )}
         </div>
-      </section>
-    </div>
+    </Modal>
   )
 }

@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
-  background: #05070f;
+  background: var(--ink-0);
   z-index: 500;
 }
 
@@ -16,8 +16,8 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-right: 1px solid #1e2444;
-  background: #0a0d1a;
+  border-right: 1px solid var(--ink-4);
+  background: var(--ink-1);
 }
 
 .gallery-head {
@@ -25,17 +25,17 @@
   flex-direction: column;
   gap: 2px;
   padding: 12px 14px;
-  border-bottom: 1px solid #1e2444;
+  border-bottom: 1px solid var(--ink-4);
 }
 
 .gallery-head strong {
-  font-size: 14px;
-  color: #e8ecff;
+  font-size: var(--fs-md);
+  color: var(--brand-fg);
 }
 
 .gallery-head span {
-  font-size: 11px;
-  color: #7f8ab5;
+  font-size: var(--fs-2xs);
+  color: var(--brand);
 }
 
 .gallery-nav {
@@ -48,10 +48,10 @@
 
 .gallery-group h3 {
   margin: 10px 6px 6px;
-  font-size: 11px;
+  font-size: var(--fs-2xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #7f8ab5;
+  color: var(--brand);
 }
 
 .gallery-group button {
@@ -61,30 +61,30 @@
   padding: 6px 8px;
   margin-bottom: 2px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: transparent;
-  color: #c8d0ee;
-  font-size: 12px;
+  color: var(--brand-fg);
+  font-size: var(--fs-xs);
   cursor: pointer;
 }
 
 .gallery-group button:hover {
-  background: #141a33;
+  background: var(--ink-3);
 }
 
 .gallery-group button[data-gallery-active='1'] {
-  background: #1b2450;
+  background: var(--ink-4);
   border-color: #3a4a8f;
-  color: #fff;
+  color: var(--fg-hi);
 }
 
 .gallery-hint {
   padding: 10px 14px;
   margin: 0;
-  border-top: 1px solid #1e2444;
-  font-size: 10.5px;
+  border-top: 1px solid var(--ink-4);
+  font-size: var(--fs-3xs);
   line-height: 1.4;
-  color: #7f8ab5;
+  color: var(--brand);
 }
 
 .gallery-stage {

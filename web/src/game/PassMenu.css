@@ -8,16 +8,16 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px;
-  background: #171a21;
-  border: 1px solid #363b46;
-  border-radius: 10px;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  background: var(--ink-2);
+  border: 1px solid var(--ink-4);
+  border-radius: var(--r-md);
+  box-shadow: 0 -8px 30px var(--shade-2);
   max-height: 60vh;
   overflow-y: auto;
 }
 
 .pass-menu-section-label {
-  font-size: 0.625rem;
+  font-size: var(--fs-3xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -34,26 +34,26 @@
   padding: 7px 10px;
   background: none;
   border: 1px solid transparent;
-  border-radius: 6px;
-  color: #c8cae6;
-  font-size: 0.812rem;
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  font-size: var(--fs-sm);
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
 }
 
 .pass-menu-item:hover {
-  background: #252b4a;
+  background: var(--ink-3);
 }
 
 .pass-menu-item.is-active {
-  border-color: rgba(255, 176, 58, 0.6);
-  background: rgba(255, 176, 58, 0.12);
-  color: #ffd27a;
+  border-color: rgb(var(--gold-rgb) / 0.6);
+  background: rgb(var(--gold-rgb) / 0.12);
+  color: var(--warn);
 }
 
 .pass-menu-cancel {
-  color: #ff9ea8;
+  color: var(--err);
 }
 
 .pass-menu-cancel:hover {
@@ -62,37 +62,37 @@
 
 .pass-menu-key {
   font-family: inherit;
-  font-size: 0.688rem;
-  color: #6b7394;
-  background: #10131c;
-  border: 1px solid #262b3d;
-  border-radius: 4px;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  background: var(--ink-1);
+  border: 1px solid var(--ink-4);
+  border-radius: var(--r-xs);
   padding: 1px 6px;
 }
 
 .pass-menu-divider {
   height: 1px;
-  background: #262b3d;
+  background: var(--ink-4);
   margin: 6px 4px;
 }
 
 .pass-menu-check {
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .pass-menu-check:hover {
-  background: #252b4a;
+  background: var(--ink-3);
 }
 
 .pass-menu-check.hold-priority-toggle {
-  color: #ffb03a;
+  color: var(--gold-500);
   font-weight: 600;
 }
 
 .pass-menu-check.hold-priority-toggle.is-active,
 .pass-menu-check.hold-priority-toggle:hover {
-  color: #ffd27a;
+  color: var(--warn);
 }
 
 @media (prefers-reduced-motion: reduce) {

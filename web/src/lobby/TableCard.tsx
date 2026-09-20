@@ -1,6 +1,7 @@
 import { openStagingTable } from '../state/store'
 import type { TableView, UsersView } from '../net/types'
 import Icon from '../ui/Icon'
+import Chip, { type ChipTone } from '../ui/Chip'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
@@ -40,6 +41,14 @@ export default function TableCard({
   const hasAiSeat =
     (isWaiting || isReady) &&
     seats.some((s) => !s.playerName && s.playerType && /COMPUTER|AI/i.test(s.playerType))
+
+  const stateTone: ChipTone = isReady
+    ? 'ok'
+    : isPlaying
+    ? 'brand'
+    : tTable.tableState === 'FINISHED'
+    ? 'neutral'
+    : 'warn'
 
   const statusClass = isReady
     ? 'status-ready'
@@ -81,17 +90,17 @@ export default function TableCard({
         <div className="table-card-top-bar">
           <div className="table-badges-left">
             {isMine && (
-              <span className="table-badge-mine" title={t('lobby', 'active_table_my_badge')}>
-                <Icon name="user" size={11} /> {t('lobby', 'active_table_my_badge')}
-              </span>
+              <Chip solid tone="ok" icon="user" className="table-badge-mine" title={t('lobby', 'active_table_my_badge')}>
+                {t('lobby', 'active_table_my_badge')}
+              </Chip>
             )}
             {tTable.isTournament ? (
-              <span className="table-type-badge tourney" title={t('lobby.tournament_badge')}><Icon name="trophy" size={12} /> {t('lobby.tournament_badge')}</span>
+              <Chip solid tone="gold" icon="trophy" className="table-type-badge tourney" title={t('lobby.tournament_badge')}>{t('lobby.tournament_badge')}</Chip>
             ) : (
-              <span className="table-type-badge match" title={t('lobby','match_badge')}><Icon name="swords" size={12} /> {t('lobby','match_badge')}</span>
+              <Chip solid icon="swords" className="table-type-badge match" title={t('lobby','match_badge')}>{t('lobby','match_badge')}</Chip>
             )}
             {tTable.passworded && (
-              <span className="table-badge-lock" title={t('lobby','tag_private')}><Icon name="lock" size={12} /> {t('lobby','tag_private')}</span>
+              <Chip solid tone="warn" icon="lock" className="table-badge-lock" title={t('lobby','tag_private')}>{t('lobby','tag_private')}</Chip>
             )}
           </div>
           <div className="table-header-right">
@@ -100,7 +109,7 @@ export default function TableCard({
                 <Icon name="clock" size={12} /> {timeAgo}
               </span>
             )}
-            <span className={`table-state-badge ${statusClass}`}>{stateLabel(t, tTable.tableState, tTable.tableStateText)}</span>
+            <Chip solid tone={stateTone} className={`table-state-badge ${statusClass}`}>{stateLabel(t, tTable.tableState, tTable.tableStateText)}</Chip>
           </div>
         </div>
 
@@ -109,36 +118,38 @@ export default function TableCard({
         </div>
 
         <div className="table-meta-row">
-          <span className="table-game-tag"><Icon name="gamepad" size={12} /> {tTable.gameType}</span>
-          <span
-            className="table-deck-tag"
-            title={formatDeckTypeName(tTable.deckType).full}
-          >
-            <Icon name="scrollText" size={12} /> {formatDeckTypeName(tTable.deckType).short}
-          </span>
-          <span className="table-seats-count table-seats"><Icon name="users" size={12} /> {tTable.seatsInfo}</span>
+          <Chip icon="gamepad" className="table-game-tag">{tTable.gameType}</Chip>
+          <Chip icon="scrollText" className="table-deck-tag" title={formatDeckTypeName(tTable.deckType).full}>
+            {formatDeckTypeName(tTable.deckType).short}
+          </Chip>
+          <Chip icon="users" className="table-seats-count table-seats">{tTable.seatsInfo}</Chip>
           {skill && (
-            <span className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
-              {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {skill.label}
-            </span>
+            <Chip className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
+              <span className="table-skill-stars">
+                {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)}
+              </span>
+              {skill.label}
+            </Chip>
           )}
           {tTable.rated ? (
-            <span className="table-tag-rated" title={t('lobby','tag_rated')} role="img" aria-label={t('lobby','tag_rated')}><Icon name="medal" size={12} /></span>
+            <Chip tone="gold" icon="medal" className="table-tag-rated" title={t('lobby','tag_rated')} role="img" aria-label={t('lobby','tag_rated')} />
           ) : (
             <span className="table-tag-unrated" title={t('lobby','tag_unrated')}>{t('lobby','tag_unrated')}</span>
           )}
           {tTable.spectatorsAllowed && (
-            <span className="table-tag-spectate" title={t('lobby','tag_spectators')} aria-label={`${t('lobby','tag_spectators')}: ${t('lobby','spectators')}`}><Icon name="eye" size={12} /> {t('lobby','spectators')}</span>
+            <Chip icon="eye" className="table-tag-spectate" title={t('lobby','tag_spectators')} aria-label={`${t('lobby','tag_spectators')}: ${t('lobby','spectators')}`}>
+              {t('lobby','spectators')}
+            </Chip>
           )}
           {Number(tTable.minimumRating) > 0 && (
-            <span className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>
-              <Icon name="star" size={12} /> {t('lobby', 'table_min_rating', { rating: tTable.minimumRating })}
-            </span>
+            <Chip icon="star" className="table-tag-restriction" title={`${t('lobby','create_field_min_rating')}: ${tTable.minimumRating}`}>
+              {t('lobby', 'table_min_rating', { rating: tTable.minimumRating })}
+            </Chip>
           )}
           {Number(String(tTable.quitRatio ?? '100').replace('%', '')) < 100 && (
-            <span className="table-tag-restriction" title={`${t('lobby','create_field_quit_ratio')}: ${tTable.quitRatio}`}>
-              <Icon name="ban" size={12} /> {t('lobby', 'table_max_quit', { ratio: tTable.quitRatio })}
-            </span>
+            <Chip icon="ban" className="table-tag-restriction" title={`${t('lobby','create_field_quit_ratio')}: ${tTable.quitRatio}`}>
+              {t('lobby', 'table_max_quit', { ratio: tTable.quitRatio })}
+            </Chip>
           )}
         </div>
 
@@ -201,8 +212,8 @@ export default function TableCard({
                     <span className="seat-player-name">
                       {s.playerName || t('lobby.open_seat')}
                     </span>
-                    {isOwner && <span className="seat-crown" title={t('lobby.host')}><Icon name="crown" size={12} /> {t('lobby.host')}</span>}
-                    {!isHuman && <span className="seat-bot-tag" title={t('lobby.ai')}><Icon name="bot" size={12} /> {s.playerType || t('lobby.ai')}</span>}
+                    {isOwner && <Chip tone="gold" icon="crown" className="seat-crown" title={t('lobby.host')}>{t('lobby.host')}</Chip>}
+                    {!isHuman && <Chip icon="bot" className="seat-bot-tag" title={t('lobby.ai')}>{s.playerType || t('lobby.ai')}</Chip>}
                   </div>
 
                   {s.playerName && (rating || historyInfo.short) && (

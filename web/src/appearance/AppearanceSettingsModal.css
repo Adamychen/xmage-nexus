@@ -5,7 +5,7 @@
   line-height: 1;
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -13,7 +13,7 @@
 .appearance-section {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--veil-2);
 }
 
 .appearance-section:first-of-type {
@@ -22,15 +22,15 @@
 
 .appearance-section-title {
   margin: 0 0 4px;
-  font-size: 0.812rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: #e8eaf6;
+  color: var(--fg-1);
 }
 
 .appearance-section-hint {
   margin: 0 0 10px;
-  font-size: 0.688rem;
-  color: #7a82a6;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }
 
 .board-layout-grid {
@@ -52,15 +52,15 @@
   align-items: center;
   gap: 4px;
   padding: 12px 8px;
-  border-radius: 10px;
-  background: #14182e;
+  border-radius: var(--r-md);
+  background: var(--ink-2);
   border: 1.5px solid transparent;
   cursor: pointer;
 }
 
 .board-layout-item.selected {
-  border-color: #7c5cff;
-  box-shadow: 0 0 12px rgba(124,92,255,0.35);
+  border-color: var(--brand);
+  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.35);
 }
 
 .board-layout-icon {
@@ -69,13 +69,13 @@
 }
 
 .board-layout-label {
-  font-size: 0.688rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
 }
 
 .board-layout-desc {
-  font-size: 0.625rem;
-  color: #8a90b8;
+  font-size: var(--fs-3xs);
+  color: var(--fg-3);
   text-align: center;
   line-height: 1.3;
 }
@@ -87,9 +87,9 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #7c5cff;
-  color: #fff;
-  font-size: 0.625rem;
+  background: var(--brand);
+  color: var(--fg-hi);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -121,11 +121,11 @@
 .ui-scale-step {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: #14182e;
-  border: 1.5px solid rgba(255,255,255,0.12);
-  color: #e8eaf6;
-  font-size: 1.125rem;
+  border-radius: var(--r-md);
+  background: var(--ink-2);
+  border: 1.5px solid var(--veil-3);
+  color: var(--fg-1);
+  font-size: var(--fs-heading);
   font-weight: 800;
   cursor: pointer;
   line-height: 1;
@@ -135,16 +135,16 @@
   padding: 0 0 2px;
 }
 
-.ui-scale-step:hover { border-color: #7c5cff; }
+.ui-scale-step:hover { border-color: var(--brand); }
 
 .ui-scale-current {
   flex: 1;
   height: 34px;
-  border-radius: 10px;
-  background: rgba(124,92,255,0.14);
-  border: 1.5px solid rgba(124,92,255,0.4);
-  color: #fff;
-  font-size: 0.938rem;
+  border-radius: var(--r-md);
+  background: rgb(var(--brand-rgb) / 0.14);
+  border: 1.5px solid rgb(var(--brand-rgb) / 0.4);
+  color: var(--fg-hi);
+  font-size: var(--fs-base);
   font-weight: 800;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
@@ -171,19 +171,19 @@
   align-items: center;
   gap: 2px;
   padding: 10px 6px;
-  border-radius: 10px;
-  background: #14182e;
+  border-radius: var(--r-md);
+  background: var(--ink-2);
   border: 1.5px solid transparent;
   cursor: pointer;
 }
 
 .ui-scale-item.selected {
-  border-color: #7c5cff;
-  box-shadow: 0 0 12px rgba(124,92,255,0.35);
+  border-color: var(--brand);
+  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.35);
 }
 
-.ui-scale-label { font-size: 0.812rem; font-weight: 800; }
-.ui-scale-desc { font-size: 0.625rem; color: #8a90b8; text-align: center; }
+.ui-scale-label { font-size: var(--fs-sm); font-weight: 800; }
+.ui-scale-desc { font-size: var(--fs-3xs); color: var(--fg-3); text-align: center; }
 
 .ui-scale-check {
   position: absolute;
@@ -192,9 +192,9 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #7c5cff;
-  color: #fff;
-  font-size: 0.625rem;
+  background: var(--brand);
+  color: var(--fg-hi);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -206,8 +206,8 @@
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  font-size: 0.75rem;
-  color: #c4cae8;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
   cursor: pointer;
 }
 
@@ -215,8 +215,8 @@
 
 .ui-scale-hint {
   margin: 6px 0 0;
-  font-size: 0.688rem;
-  color: #7a82a6;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
 }
 
 .appearance-footer {
