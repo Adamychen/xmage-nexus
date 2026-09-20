@@ -7,6 +7,7 @@ import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
 import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
 import { localizeGameEndMessage } from './serverMessageTranslation'
 import './GameEndDialog.css'
+import Button from '../ui/Button'
 
 export default function GameEndDialog() {
   const end = useStore((s) => s.gameEnd)
@@ -89,24 +90,24 @@ export default function GameEndDialog() {
           followGameId ? (
             <div className="end-actions">
               <p className="end-hint">{t('game', 'spectator_game_changed')}</p>
-              <button className="primary" onClick={() => handleWatchGame(followGameId)}>
+              <Button variant="primary" onClick={() => handleWatchGame(followGameId)}>
                 {t('game', 'follow_game')}
-              </button>
+              </Button>
               <button onClick={returnToLobby}>
                 {t('game', 'return_to_lobby')}
               </button>
             </div>
           ) : (
-            <button className="primary" onClick={returnToLobby}>
+            <Button variant="primary" onClick={returnToLobby}>
               {t('game', 'return_to_lobby')}
-            </button>
+            </Button>
           )
         ) : (
           <div className="end-actions">
             <p className="end-hint">{t('game', 'match_continues')}</p>
-            <button className="primary" onClick={clearGameEnd}>
+            <Button variant="primary" onClick={clearGameEnd}>
               {t('common', 'close')}
-            </button>
+            </Button>
           </div>
         )}
     </DialogShell>

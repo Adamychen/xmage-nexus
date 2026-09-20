@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { t } from '../i18n'
+import Button from '../ui/Button'
 
 interface Props {
   children: ReactNode
@@ -33,9 +34,9 @@ export default class ErrorBoundary extends Component<Props, State> {
         <h1>{t('common', 'crash_title')}</h1>
         <p>{t('common', 'crash_desc')}</p>
         <pre>{String(this.state.error?.message ?? this.state.error)}</pre>
-        <button className="primary" onClick={() => window.location.reload()}>
+        <Button variant="primary" onClick={() => window.location.reload()}>
           {t('common', 'reload')}
-        </button>
+        </Button>
       </div>
     )
   }

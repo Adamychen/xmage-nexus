@@ -317,22 +317,6 @@
   gap: 10px;
 }
 
-.join-cancel-btn {
-  padding: 8px 16px;
-  border-radius: var(--r-base);
-  background: var(--veil-1);
-  border: 1px solid var(--veil-3);
-  color: var(--brand-fg);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.join-cancel-btn:hover {
-  background: var(--veil-3);
-  color: var(--fg-hi);
-}
-
 .join-submit-btn {
   padding: 9px 20px;
   font-size: var(--fs-md);

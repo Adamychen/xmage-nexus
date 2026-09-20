@@ -109,7 +109,7 @@ export default function UserActionModal({
         {/* Action Buttons Grid */}
         <div className="user-action-body">
           {!isMe && (
-            <button type="button" className="user-action-btn primary" onClick={handleWhisper}>
+            <button type="button" className="user-action-btn is-primary" onClick={handleWhisper}>
               <span className="action-btn-icon"><Icon name="chat" size={16} /></span>
               <div className="action-btn-text">
                 <span className="action-btn-title">{t('lobby', 'useraction_whisper')}</span>

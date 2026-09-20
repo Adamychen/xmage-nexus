@@ -45,7 +45,7 @@ describe('TriggerOrderDialog', () => {
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<TriggerOrderDialog prompt={prompt()} send={send as never} cancel={() => {}} busy={false} />)
     const firstRow = container.querySelector('[data-testid="trigger-row-t1"]') as Element
-    fireEvent.click(firstRow.querySelector('.trigger-btn.primary') as Element)
+    fireEvent.click(firstRow.querySelector('.ui-btn--primary') as Element)
     expect(sendPlayerUUID).toHaveBeenCalledWith('t1', 'g1')
   })
 
@@ -53,7 +53,7 @@ describe('TriggerOrderDialog', () => {
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<TriggerOrderDialog prompt={prompt()} send={send as never} cancel={() => {}} busy={false} />)
     const firstRow = container.querySelector('[data-testid="trigger-row-t1"]') as Element
-    const btns = firstRow.querySelectorAll('.trigger-btn')
+    const btns = firstRow.querySelectorAll('.trigger-actions button')
     fireEvent.click(btns[1] as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_ABILITY_FIRST', 'g1', 't1')
@@ -65,7 +65,7 @@ describe('TriggerOrderDialog', () => {
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<TriggerOrderDialog prompt={prompt()} send={send as never} cancel={() => {}} busy={false} />)
     const firstRow = container.querySelector('[data-testid="trigger-row-t1"]') as Element
-    const btns = firstRow.querySelectorAll('.trigger-btn')
+    const btns = firstRow.querySelectorAll('.trigger-actions button')
     fireEvent.click(btns[2] as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_ABILITY_LAST', 'g1', 't1')
@@ -79,7 +79,7 @@ describe('TriggerOrderDialog', () => {
     const scopeBtns = container.querySelectorAll('.trigger-scope-btn')
     fireEvent.click(scopeBtns[1] as Element)
     const firstRow = container.querySelector('[data-testid="trigger-row-t1"]') as Element
-    fireEvent.click(firstRow.querySelectorAll('.trigger-btn')[1] as Element)
+    fireEvent.click(firstRow.querySelectorAll('.trigger-actions button')[1] as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith(
         'TRIGGER_AUTO_ORDER_NAME_FIRST',
@@ -92,7 +92,7 @@ describe('TriggerOrderDialog', () => {
   it('reset sends RESET_ALL without answering', async () => {
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<TriggerOrderDialog prompt={prompt()} send={send as never} cancel={() => {}} busy={false} />)
-    fireEvent.click(container.querySelector('.trigger-footer .trigger-btn') as Element)
+    fireEvent.click(container.querySelector('.trigger-footer button') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_RESET_ALL', 'g1')
     })

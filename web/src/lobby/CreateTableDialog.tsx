@@ -9,6 +9,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './CreateTableDialog.css'
+import Button from '../ui/Button'
 
 export * from './CreateTable/constants'
 export type { CreateTableForm } from './CreateTable/useCreateTableForm'
@@ -92,11 +93,11 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           </div>
           <div className="wizard-actions-right">
             {!isLastStep ? (
-              <button type="button" className="primary" onClick={goNext} disabled={form.busy}>
+              <Button variant="primary" type="button" onClick={goNext} disabled={form.busy}>
                 {t('lobby','wizard_next')}
-              </button>
+              </Button>
             ) : (
-              <button type="button" className="primary create-submit-btn" disabled={form.busy || !!form.compatibilityError || !form.name.trim()} onClick={() => void form.submit()} title={form.compatibilityError || undefined}>
+              <Button variant="primary" type="button" className="create-submit-btn" disabled={form.busy || !!form.compatibilityError || !form.name.trim()} onClick={() => void form.submit()} title={form.compatibilityError || undefined}>
                 {form.busy
                   ? `${t('lobby','create_table_btn')}…`
                   : form.isDraftLimited
@@ -104,7 +105,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
                   : form.isConstructedTournament
                   ? (<><Icon name="trophy" size={13} /> {t('lobby','create_submit_tournament_constructed')}</>)
                   : (<><Icon name="play" size={13} /> {t('lobby','create_table_btn')}</>)}
-              </button>
+              </Button>
             )}
           </div>
         </div>

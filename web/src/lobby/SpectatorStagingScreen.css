@@ -95,33 +95,7 @@
 
 .staging-action-btn {
   padding: 10px 22px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--veil-4);
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  color: var(--fg-1);
   font-size: var(--fs-md);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.staging-action-btn:hover {
-  border-color: var(--veil-6);
-  background: var(--ink-4);
-  transform: translateY(-1px);
-}
-
-.staging-action-btn.primary {
-  border-color: rgb(var(--ok-rgb) / 0.55);
-  background: var(--ink-3);
-  color: var(--ok);
-}
-
-.staging-action-btn.primary:hover {
-  background: var(--ok-surface);
-  border-color: var(--ok);
-  color: var(--fg-hi);
-  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.35);
 }
 
 .staging-action-btn.danger {
@@ -135,13 +109,6 @@
   border-color: var(--err);
   color: var(--fg-hi);
   box-shadow: 0 0 12px rgb(var(--err-rgb) / 0.3);
-}
-
-.staging-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .staging-action-btn.ready-toggle-on {

@@ -501,18 +501,9 @@
   padding: 13px 0;
   border-radius: var(--r-lg);
   font-size: var(--fs-md);
-  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  border: 1px solid var(--brand-fg);
-  color: var(--fg-hi);
-  cursor: pointer;
-  box-shadow: var(--sheen), 0 10px 26px rgb(var(--brand-rgb) / 0.32);
-  transition: transform var(--dur-med), box-shadow var(--dur-med), filter var(--dur-med);
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .login-submit-btn:hover:not(:disabled) {

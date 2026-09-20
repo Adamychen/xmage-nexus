@@ -2,6 +2,7 @@ import * as cmds from '../../net/commands'
 import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import type { UseFeedbackForm } from '../useFeedbackForm'
+import Button from '../../ui/Button'
 
 export default function CombatBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
@@ -28,13 +29,12 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
             {t('game', 'combat_attack_all')}
           </button>
         )}
-        <button
-          className="primary"
+        <Button variant="success"
           disabled={busy}
           onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed_combat'))}
         >
           {confirmLabel}
-        </button>
+        </Button>
       </div>
     </div>
   )

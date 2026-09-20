@@ -21,6 +21,7 @@ function urlProxyPort(): number | null {
 }
 
 import { POPULAR_FLAGS, countryName, type ServerPreset } from './flags'
+import Button from '../ui/Button'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
 // remote proxy host, a stale "local" connection saved in localStorage must not
@@ -342,7 +343,7 @@ export default function LoginScreen() {
           </div>
         )}
 
-        <button className="primary login-submit-btn" disabled={busy} type="submit">
+        <Button variant="primary" className="login-submit-btn" disabled={busy} type="submit">
           {busy ? (
             <span className="btn-connecting-wrap">
               <span className="btn-spinner" />
@@ -351,7 +352,7 @@ export default function LoginScreen() {
           ) : (
             <span>{t('login.connect_btn')}</span>
           )}
-        </button>
+        </Button>
         <button type="button" className="login-firsttime" onClick={openSetupWizard} data-testid="login-open-setup">
           {t('setup', 'first_time')}
         </button>

@@ -12,6 +12,7 @@ import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import { confirmDialog } from '../ui/confirmDialog'
 import './MulliganDialog.css'
+import Button from '../ui/Button'
 
 interface MulliganDialogProps {
   prompt: FeedbackPrompt
@@ -122,12 +123,12 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
 
           <div className="mulligan-actions">
             {prompt.max > 1 && (
-              <button className="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
+              <Button variant="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
                 {t('dialogs', 'mulligan_london_confirm', { selected: selected.length, min: prompt.min })}
-              </button>
+              </Button>
             )}
             {prompt.required === false && (
-              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</button>
+              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</Button>
             )}
             <button
               className="mulligan-concede"

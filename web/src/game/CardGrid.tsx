@@ -6,6 +6,7 @@ import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './CardGrid.css'
+import Button from '../ui/Button'
 
 interface CardGridProps {
   prompt: FeedbackPrompt
@@ -131,13 +132,12 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
 
         <footer className="card-grid-actions">
           {isMulti && (
-            <button
-              className="primary"
+            <Button variant="primary"
               disabled={busy || selected.length < prompt.min}
               onClick={confirmMulti}
             >
               {t('dialogs','cardgrid_confirm', { selected: selected.length, max: prompt.max })}
-            </button>
+            </Button>
           )}
           {prompt.required === false && (
             <button disabled={busy} onClick={() => {

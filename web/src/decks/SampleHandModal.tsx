@@ -6,6 +6,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './SampleHandModal.css'
+import Button from '../ui/Button'
 
 export interface SingleCard {
   instanceId: string
@@ -297,34 +298,23 @@ export function SampleHandModal({
         {/* Actions Footer */}
         <footer className="sample-hand-footer">
           <div className="sample-hand-actions-left">
-            <button
-              type="button"
-              className="sample-action-btn"
-              onClick={handleMulligan}
-              title={t('decks', 'sample_london')}
-            >
+            <Button variant="subtle" onClick={handleMulligan} title={t('decks', 'sample_london')}>
               <Icon name="refresh" size={13} /> {t('decks', 'sample_mulligan')} {mulliganCount > 0 ? `(a ${Math.max(1, 7 - mulliganCount - 1)})` : '(a 6)'}
-            </button>
-            <button
-              type="button"
-              className="sample-action-btn primary"
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleDrawCard}
               disabled={library.length === 0}
               title={t('board', 'zone_library')}
             >
               <Icon name="plus" size={13} /> {t('game', 'draw_card')} ({t('game', 'turn')} {turn + 1})
-            </button>
+            </Button>
           </div>
 
           <div className="sample-hand-actions-right">
-            <button
-              type="button"
-              className="sample-action-btn reset"
-              onClick={startNewHand}
-              title={t('common', 'refresh')}
-            >
+            <Button variant="subtle" className="reset" onClick={startNewHand} title={t('common', 'refresh')}>
               <Icon name="refresh" size={13} /> {t('common', 'refresh')}
-            </button>
+            </Button>
           </div>
         </footer>
     </DialogShell>

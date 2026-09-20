@@ -323,30 +323,7 @@
   gap: 10px;
 }
 
-.sample-action-btn {
-  background: var(--veil-2);
-  border: 1px solid var(--veil-4);
-  color: var(--fg-1);
-  border-radius: var(--r-pill);
-  padding: 7px 16px;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.sample-action-btn:hover:not(:disabled) {
-  background: var(--veil-4);
-  color: white;
-}
-
-.sample-action-btn.primary {
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
-  border-color: var(--brand);
-  color: white;
-}
-
-.sample-action-btn.reset {
+.sample-hand-footer .reset {
   background: var(--purple);
   border-color: var(--purple);
   color: white;

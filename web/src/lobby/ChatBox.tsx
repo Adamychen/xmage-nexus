@@ -8,6 +8,7 @@ import Icon, { type IconName } from '../ui/Icon'
 import type { CardView, ChatMessageEvent } from '../net/types'
 import { useTranslation, getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import './ChatBox.css'
+import Button from '../ui/Button'
 
 export interface ReadyMarker {
   ready: boolean
@@ -254,9 +255,9 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
           placeholder={t('lobby', 'chat_input_placeholder')}
           maxLength={MAX_CHAT_MESSAGE_SIZE + 1}
         />
-        <button className="primary" disabled={!chatId} type="submit">
+        <Button variant="primary" disabled={!chatId} type="submit">
           {t('common', 'send')}
-        </button>
+        </Button>
       </form>
     </div>
   )

@@ -146,7 +146,7 @@ describe('MulliganDialog — grid de London-bottom por teclado', () => {
   it('Space también selecciona, y la selección habilita el botón de confirmar al llegar al mínimo', () => {
     renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
     const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[0] as HTMLElement
-    const confirmBtn = document.querySelector('.mulligan-actions .primary') as HTMLButtonElement
+    const confirmBtn = document.querySelector('.mulligan-actions .ui-btn--primary') as HTMLButtonElement
     expect(confirmBtn.disabled).toBe(true)
 
     fireEvent.keyDown(slot, { key: ' ' })

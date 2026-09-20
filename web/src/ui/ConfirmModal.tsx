@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import Button from './Button'
 import DialogShell from './DialogShell'
 import type { ConfirmRequest } from './confirmDialog'
 import { resolveConfirm } from './confirmDialog'
@@ -36,25 +37,19 @@ export default function ConfirmModal({ request }: ConfirmModalProps) {
       actions={
         <>
           {!request.hideCancel && (
-            <button
-              type="button"
-              className="dlg-btn dlg-btn-cancel"
-              data-testid="confirm-modal-cancel"
-              onClick={cancel}
-              autoFocus
-            >
+            <Button variant="subtle" size="lg" data-testid="confirm-modal-cancel" onClick={cancel} autoFocus>
               {request.cancelLabel}
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            className={request.danger ? 'dlg-btn confirm-ok-danger' : 'dlg-btn dlg-btn-primary'}
+          <Button
+            variant={request.danger ? 'danger' : 'primary'}
+            size="lg"
             data-testid="confirm-modal-ok"
             onClick={() => resolveConfirm(request.id, true)}
             autoFocus={request.hideCancel}
           >
             {request.okLabel}
-          </button>
+          </Button>
         </>
       }
     >

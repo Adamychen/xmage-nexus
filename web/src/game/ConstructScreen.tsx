@@ -19,6 +19,7 @@ import { t as tStatic } from '../i18n'
 import { isUuidLikeCardName } from '../cards/cardLocalization'
 import Modal from '../ui/Modal'
 import './ConstructScreen.css'
+import Button from '../ui/Button'
 
 function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
@@ -511,15 +512,14 @@ export default function ConstructScreen() {
             <span>{t('game', 'construct_pool')}: {poolTotal}</span>
             <span>{t('game', 'construct_total', { count: String(mainTotal + poolTotal) })} / {poolSize}</span>
           </div>
-          <button
-            className="primary"
+          <Button variant="primary"
             disabled={busy || !mainValid}
             onClick={() => void submitDeck()}
             title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
             data-testid="construct-submit"
           >
             {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
-          </button>
+          </Button>
         </div>
       {hoverPreview && (
         <div

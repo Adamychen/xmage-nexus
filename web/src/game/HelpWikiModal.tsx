@@ -6,6 +6,7 @@ import DialogShell from '../ui/DialogShell'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './HelpWikiModal.css'
+import Button from '../ui/Button'
 
 const CATEGORY_ICONS: Record<string, IconName> = {
   all: 'sparkles',
@@ -333,9 +334,9 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
         </div>
 
         <footer className="wiki-footer">
-          <button type="button" className="primary" onClick={onClose}>
+          <Button variant="primary" type="button" onClick={onClose}>
             {t('common', 'done')}
-          </button>
+          </Button>
         </footer>
     </DialogShell>
   )

@@ -85,29 +85,6 @@
   gap: 4px;
 }
 
-.trigger-btn {
-  border: 1px solid var(--ink-4);
-  background: transparent;
-  color: var(--fg-1);
-  border-radius: var(--r-base);
-  padding: 4px 10px;
-  font-size: var(--fs-xs);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.trigger-btn.primary {
-  background: var(--brand-strong);
-  border-color: var(--brand);
-  color: var(--fg-hi);
-  font-weight: 700;
-}
-
-.trigger-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .trigger-empty {
   color: var(--fg-2);
   font-size: var(--fs-md);

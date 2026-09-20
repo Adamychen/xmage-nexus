@@ -512,13 +512,6 @@
   align-items: center;
 }
 
-.create-submit-btn {
-  padding: 8px 20px;
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  letter-spacing: 0.03em;
-}
-
 .dev-demo-box {
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid rgb(var(--brand-rgb) / 0.3);

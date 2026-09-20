@@ -33,6 +33,7 @@ import AboutModal from '../system/AboutModal'
 import { useNewsBadge } from '../system/useNewsBadge'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
+import Button from '../ui/Button'
 
 export default function LobbyScreen() {
   const { t } = useTranslation()
@@ -264,9 +265,9 @@ export default function LobbyScreen() {
                       <h3>{t('lobby','empty_tables')}</h3>
                       <p>{t('lobby','tables_deck_hint')}</p>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <button className="primary" onClick={() => setShowCreate(true)}>
+                        <Button variant="primary" onClick={() => setShowCreate(true)}>
                           <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}

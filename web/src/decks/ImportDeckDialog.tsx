@@ -7,6 +7,7 @@ import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './DeckImportModal.css'
 import './ImportDeckDialog.css'
+import Button from '../ui/Button'
 
 const ONLINE_URL_PATTERN = /(moxfield\.com\/decks\/|archidekt\.com\/decks\/)/i
 
@@ -217,9 +218,9 @@ export function ImportDeckDialog({
       </div>
 
       <footer className="deck-import-footer">
-        <button type="button" className="import-cancel-btn" onClick={onClose}>
+        <Button variant="subtle" type="button" onClick={onClose}>
           {t('common', 'cancel')}
-        </button>
+        </Button>
         <button
           type="button"
           className="import-submit-btn"

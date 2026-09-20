@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import Icon, { type IconName } from './Icon'
 import './primitives.css'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'success' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -31,7 +31,7 @@ export default function Button({
   return (
     <button type={type} className={cls} {...props}>
       {icon && <Icon name={icon} size={ICON_SIZE[size]} />}
-      {children != null && <span className="ui-btn-label">{children}</span>}
+      {children}
     </button>
   )
 }

@@ -340,12 +340,6 @@
   color: var(--fg-hi);
 }
 
-.builder-act.primary {
-  background: var(--brand-strong);
-  border-color: var(--brand);
-  color: var(--fg-hi);
-}
-
 .builder-act.is-equipped {
   background: var(--ok);
   border-color: var(--ok);

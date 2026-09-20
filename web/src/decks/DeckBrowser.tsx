@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n'
 import { useCardArtUrl } from './useCardArtUrl'
 import type { DeckCard } from '../lobby/decks'
 import './DeckBrowser.css'
+import Button from '../ui/Button'
 
 function BrowserDeckArt({ cover, children }: { cover: DeckCard; children: ReactNode }) {
   const artUrl = useCardArtUrl(cover)
@@ -157,20 +158,17 @@ export function DeckBrowser({
                 <p className="browser-deck-desc">{deck.description}</p>
 
                 <div className="browser-deck-actions" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    className="browser-deck-btn"
-                    onClick={() => setInspectingDeck(deck)}
-                  >
+                  <Button variant="subtle" size="sm" className="browser-deck-btn" onClick={() => setInspectingDeck(deck)}>
                     <Icon name="eye" size={12} /> {t('common', 'search')}
-                  </button>
-                  <button
-                    type="button"
-                    className="browser-deck-btn primary"
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="browser-deck-btn"
                     onClick={() => handleCopy(deck)}
                   >
                     <Icon name="copy" size={12} /> {t('common', 'copy')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

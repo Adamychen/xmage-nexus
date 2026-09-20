@@ -2,13 +2,3 @@
   pointer-events: auto;
 }
 
-.confirm-modal .confirm-ok-danger {
-  background: var(--err-strong);
-  border: 1px solid var(--err);
-  color: var(--fg-hi);
-  box-shadow: 0 4px 14px rgb(var(--err-rgb) / 0.4);
-}
-
-.confirm-modal .confirm-ok-danger:hover:not(:disabled) {
-  filter: brightness(1.12);
-}

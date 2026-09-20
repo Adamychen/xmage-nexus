@@ -1,3 +1,4 @@
+import Button from '../ui/Button'
 import type { DeckV2 } from './types'
 import { useTranslation } from '../i18n'
 import { downloadDeckFile } from './exportDeckFile'
@@ -65,15 +66,15 @@ export default function DeckBuilderFooter({ deck, isEquipped, onImport, onSample
         >
           <Icon name="hand" size={12} /> {t('decks', 'builder_sample')}
         </button>
-        <button
-          type="button"
-          className={`builder-act primary ${isEquipped ? 'is-equipped' : ''}`}
+        <Button
+          variant="primary"
+          className={`builder-act ${isEquipped ? 'is-equipped' : ''}`}
           onClick={onEquip}
           disabled={isEquipped}
           title={isEquipped ? t('decks', 'builder_equipped') : t('decks', 'builder_equip')}
         >
           {isEquipped ? `✓ ${t('decks', 'builder_equipped')}` : t('decks', 'builder_equip')}
-        </button>
+        </Button>
       </div>
 
       {/* Glowing Signature Done Button */}

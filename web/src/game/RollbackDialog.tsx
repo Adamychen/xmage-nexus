@@ -5,6 +5,7 @@ import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './RollbackDialog.css'
+import Button from '../ui/Button'
 
 export default function RollbackDialog() {
   const { t } = useTranslation()
@@ -124,23 +125,22 @@ export default function RollbackDialog() {
         </div>
 
         <div className="feedback-dialog-actions rollback-actions">
-          <button
+          <Button variant="primary"
             type="button"
-            className="primary send-btn"
             onClick={handleConfirm}
             disabled={sending || !hasPriority}
             title={!hasPriority ? t('dialogs', 'rollback_priority_warn') : undefined}
           >
             <Icon name="undo" size={13} /> {t('dialogs', 'rollback_confirm')}
-          </button>
-          <button
+          </Button>
+          <Button variant="subtle"
             type="button"
             className="cancel-btn"
             onClick={handleClose}
             disabled={sending}
           >
             {t('dialogs', 'rollback_cancel')}
-          </button>
+          </Button>
         </div>
     </DialogShell>
   )

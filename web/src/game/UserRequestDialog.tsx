@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore, setState, armRollbackPending } from '../state/store'
 import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
+import Button from '../ui/Button'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
@@ -43,14 +44,15 @@ export default function UserRequestDialog() {
     >
         <div className="feedback-dialog-actions user-request-actions">
           {request.buttons.map((button, index) => (
-            <button
+            <Button
               key={`${button.action}-${index}`}
-              className={index === 0 ? 'primary send-btn' : 'cancel-btn'}
+              variant={index === 0 ? 'primary' : 'subtle'}
+              className={index === 0 ? undefined : 'cancel-btn'}
               disabled={busy}
               onClick={() => void onButton(button.action)}
             >
               <FormattedText text={button.text} />
-            </button>
+            </Button>
           ))}
         </div>
     </DialogShell>

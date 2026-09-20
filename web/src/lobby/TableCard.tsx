@@ -8,6 +8,7 @@ import RankBadge from './RankBadge'
 import { useTranslation, toBcp47Locale } from '../i18n'
 import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable, stateLabel } from './lobbyUtils'
+import Button from '../ui/Button'
 
 interface Props {
   tTable: TableView
@@ -246,32 +247,32 @@ export default function TableCard({
 
       <div className="table-actions">
         {isPlaying && (isMine || mySeat) && (
-          <button
-            className="primary table-action-btn resume-table-btn"
+          <Button variant="primary"
+            className="table-action-btn resume-table-btn"
             data-testid="resume-table"
             disabled={busyTable === tTable.tableId}
             onClick={() => onResume(tTable)}
           >
             <Icon name="swords" size={13} /> {t('lobby','active_table_resume')}
-          </button>
+          </Button>
         )}
         {canReenter && (
-          <button
-            className="primary table-action-btn return-table-btn"
+          <Button variant="primary"
+            className="table-action-btn return-table-btn"
             data-testid="return-to-table"
             onClick={() => openStagingTable(tTable.tableId)}
           >
             <Icon name="chair" size={13} /> {t('lobby','staging_return_table')}
-          </button>
+          </Button>
         )}
         {isReady && (
-          <button
-            className="primary table-action-btn"
+          <Button variant="primary"
+            className="table-action-btn"
             disabled={busyTable === tTable.tableId}
             onClick={() => onStart(tTable)}
           >
             {t('lobby.start_match_btn')}
-          </button>
+          </Button>
         )}
         {hasHumanSeat && (
           <button

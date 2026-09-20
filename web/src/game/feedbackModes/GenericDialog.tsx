@@ -11,6 +11,7 @@ import { addChoiceMemory } from '../choiceMemory'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Icon, { type IconName } from '../../ui/Icon'
+import Button from '../../ui/Button'
 
 const GRID_SEARCH_THRESHOLD = 7
 
@@ -273,15 +274,14 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             </label>
           )}
           <div className="feedback-dialog-actions">
-            <button
-              className="primary send-btn"
+            <Button variant="primary"
               disabled={busy || textValue.trim() === ''}
               onClick={() => sendChoice(textValue.trim())}
             >
               {t('game', 'string_confirm')}
-            </button>
+            </Button>
             {prompt.required === false && (
-              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
             )}
           </div>
         </div>
@@ -342,9 +342,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             </div>
           )}
           <div className="feedback-dialog-actions">
-            <button className="primary send-btn" disabled={busy} onClick={confirmAmount}>{t('game', 'integer_confirm')}</button>
+            <Button variant="primary" disabled={busy} onClick={confirmAmount}>{t('game', 'integer_confirm')}</Button>
             {prompt.required === false && (
-              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
             )}
           </div>
         </div>
@@ -384,9 +384,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             })}
           </div>
           <div className="feedback-dialog-actions">
-            <button className="primary send-btn" disabled={busy} onClick={confirmMultiAmount}>{t('game', 'multi_confirm')}</button>
+            <Button variant="primary" disabled={busy} onClick={confirmMultiAmount}>{t('game', 'multi_confirm')}</Button>
             {prompt.required === false && (
-              <button disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</button>
+              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
             )}
           </div>
         </div>
@@ -432,12 +432,12 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
             <div className="feedback-dialog-actions">
               {prompt.mode === 'uuid' && prompt.max > 1 && (
-                <button className="primary send-btn" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
+                <Button variant="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
                   {t('game', 'selected_count', { count: selected.length })}
-                </button>
+                </Button>
               )}
               {prompt.required === false && (
-                <button disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">{t('game', 'targeting_finish')}</button>
+                <Button variant="subtle" disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">{t('game', 'targeting_finish')}</Button>
               )}
             </div>
           )}

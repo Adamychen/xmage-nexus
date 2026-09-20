@@ -18,6 +18,7 @@ import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
 import './JoinTableDialog.css'
+import Button from '../ui/Button'
 
 /**
  * Mínimo de principal para marcar un mazo como recomendado, según el formato
@@ -237,14 +238,14 @@ export default function JoinTableDialog({
                 />
                 {importError && <p className="import-error-msg">{tError(importError)}</p>}
                 <div className="import-actions">
-                  <button
+                  <Button variant="primary"
                     type="button"
-                    className="primary import-submit-btn"
+                    className="import-submit-btn"
                     onClick={handleImportSubmit}
                     disabled={!importText.trim()}
                   >
                     {t('lobby','join_save_select')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -308,22 +309,21 @@ export default function JoinTableDialog({
             </label>
 
             <div className="join-footer-buttons">
-              <button
+              <Button variant="subtle"
                 type="button"
-                className="join-cancel-btn"
                 data-testid="join-cancel-btn"
                 onClick={onClose}
                 disabled={busy}
               >
                 {t('common','cancel')}
-              </button>
-              <button
+              </Button>
+              <Button variant="primary"
                 type="submit"
-                className="primary join-submit-btn"
+                className="join-submit-btn"
                 disabled={busy || !selectedDeck || (table.passworded && !password.trim())}
               >
                 {busy ? t('common','loading') : (submitLabel || (selectedDeck ? t('lobby','join_with_deck', { name: selectedDeck.name }) : t('lobby','join_human_btn')))}
-              </button>
+              </Button>
             </div>
           </div>
         </form>

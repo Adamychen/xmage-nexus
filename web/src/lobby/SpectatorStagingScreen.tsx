@@ -8,6 +8,7 @@ import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
+import Button from '../ui/Button'
 import Chip from '../ui/Chip'
 import ErrorBanner from '../ui/ErrorBanner'
 import InviteLinkButton from './InviteLinkButton'
@@ -630,50 +631,46 @@ export default function SpectatorStagingScreen({
           {mode === 'player' && (
             <div className="staging-player-actions" data-testid="staging-player-actions">
               {isReady && isOwner && (
-                <button
-                  type="button"
-                  className="staging-action-btn primary"
+                <Button
+                  variant="success"
+                  className="staging-action-btn"
                   data-testid="staging-start"
                   onClick={handleStart}
                   disabled={starting}
                   title={!allPlayersReady ? t('lobby','staging_start_unready_confirm') : undefined}
                 >
                   <Icon name="play" size={13} /> {t('lobby','start_match_btn')}
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
+              <Button
                 className={`staging-action-btn ${myIsReady ? 'ready-toggle-on' : 'ready-toggle-off'}`}
                 data-testid="staging-toggle-ready"
                 onClick={handleToggleReady}
               >
                 {myIsReady ? (<><Icon name="hourglass" size={13} /> {t('lobby','staging_btn_not_ready')}</>) : (<><Icon name="check" size={13} /> {t('lobby','staging_btn_ready')}</>)}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 className="staging-action-btn"
                 data-testid="staging-change-deck"
                 onClick={() => setShowChangeDeck(true)}
               >
                 <Icon name="layers" size={13} /> {t('lobby','staging_btn_change_deck')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 className="staging-action-btn"
                 data-testid="staging-leave"
                 onClick={() => void leaveStagingTable()}
               >
                 <Icon name="logout" size={13} /> {t('lobby','staging_leave_table')}
-              </button>
+              </Button>
               {isOwner && (
-                <button
-                  type="button"
+                <Button
                   className="staging-action-btn danger"
                   data-testid="staging-remove"
                   onClick={() => void removeStagingTable()}
                 >
                   <Icon name="trash" size={13} /> {t('lobby','staging_remove_table')}
-                </button>
+                </Button>
               )}
             </div>
           )}

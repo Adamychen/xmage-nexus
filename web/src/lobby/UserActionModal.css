@@ -129,12 +129,12 @@
   box-shadow: 0 4px 12px var(--shade-1);
 }
 
-.user-action-btn.primary {
+.user-action-btn.is-primary {
   background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.25) 0%, rgb(var(--warn-rgb) / 0.3) 100%);
   border-color: var(--gold-300);
 }
 
-.user-action-btn.primary:hover {
+.user-action-btn.is-primary:hover {
   background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.35) 0%, rgb(var(--warn-rgb) / 0.45) 100%);
   box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.35);
 }

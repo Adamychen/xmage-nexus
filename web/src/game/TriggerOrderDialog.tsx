@@ -8,6 +8,7 @@ import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { triggerDisplayName, triggerRuleText, type TriggerRuleScope } from './triggerOrder'
 import './TriggerOrderDialog.css'
+import Button from '../ui/Button'
 
 interface TriggerOrderDialogProps {
   prompt: FeedbackPrompt
@@ -80,32 +81,30 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
                 <span className="trigger-rule" title={rule}>{rule}</span>
               </span>
               <span className="trigger-actions">
-                <button
-                  type="button"
-                  className="trigger-btn primary"
+                <Button
+                  variant="primary"
+                  size="sm"
                   disabled={busy}
                   onClick={() => choose(card.id)}
                 >
                   {t('game', 'trigger_choose')}
-                </button>
-                <button
-                  type="button"
-                  className="trigger-btn"
+                </Button>
+                <Button
+                  size="sm"
                   disabled={busy}
                   title={t('game', 'trigger_first')}
                   onClick={() => remember(card.id, rule, true)}
                 >
                   <Icon name="chevronsUp" size={12} /> {t('game', 'trigger_first')}
-                </button>
-                <button
-                  type="button"
-                  className="trigger-btn"
+                </Button>
+                <Button
+                  size="sm"
                   disabled={busy}
                   title={t('game', 'trigger_last')}
                   onClick={() => remember(card.id, rule, false)}
                 >
                   <Icon name="chevronsDown" size={12} /> {t('game', 'trigger_last')}
-                </button>
+                </Button>
               </span>
             </li>
           )
@@ -115,12 +114,12 @@ export default function TriggerOrderDialog({ prompt, send, cancel, busy }: Trigg
         <p className="trigger-empty"><FormattedText text={prompt.message} /></p>
       )}
       <footer className="trigger-footer">
-        <button type="button" className="trigger-btn" disabled={busy} onClick={reset}>
+        <Button size="sm" disabled={busy} onClick={reset}>
           {t('game', 'trigger_reset')}
-        </button>
-        <button type="button" className="trigger-btn cancel-btn" disabled={busy} onClick={cancel}>
+        </Button>
+        <Button variant="subtle" size="sm" className="cancel-btn" disabled={busy} onClick={cancel}>
           {t('game', 'targeting_cancel')}
-        </button>
+        </Button>
       </footer>
     </DialogShell>
   )

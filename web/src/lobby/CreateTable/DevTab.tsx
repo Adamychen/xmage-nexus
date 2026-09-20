@@ -1,6 +1,7 @@
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
+import Button from '../../ui/Button'
 
 export default function DevTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
@@ -17,14 +18,14 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
       <div className="dev-demo-box">
         <h4>{t('lobby','dev_demo_title')}</h4>
         <p>{t('lobby','dev_demo_desc')}</p>
-        <button
+        <Button variant="primary"
           type="button"
-          className="primary dev-demo-btn"
+          className="dev-demo-btn"
           onClick={() => void form.runDemoTable()}
           disabled={form.busy}
         >
           <Icon name="play" size={13} /> {t('lobby','watch_btn')} ({t('lobby','ai')} vs {t('lobby','ai')})
-        </button>
+        </Button>
       </div>
 
       <label className="toggle-label-row">

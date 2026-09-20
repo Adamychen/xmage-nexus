@@ -5,6 +5,7 @@ import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '..
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import './DeckIssuesDialog.css'
+import Button from '../ui/Button'
 
 /**
  * Diálogo modal pre-unión: muestra las cartas del mazo que el servidor XMage
@@ -172,28 +173,28 @@ export default function DeckIssuesDialog() {
         </div>
 
         <div className="deck-issues-footer">
-          <button type="button" className="deck-issues-cancel-btn" data-testid="deck-issues-cancel" onClick={() => closeRequest(null)}>
+          <Button variant="subtle" type="button" data-testid="deck-issues-cancel" onClick={() => closeRequest(null)}>
             {t('decks', 'issues_cancel')}
-          </button>
+          </Button>
           {missing.length === 0 && mismatches.length > 0 && (
-            <button
+            <Button variant="primary"
               type="button"
-              className="primary deck-issues-play-btn"
+              className="deck-issues-play-btn"
               data-testid="deck-issues-accept-and-play"
               onClick={() => closeRequest(deck)}
             >
               {t('decks', 'issues_accept_and_play')}
-            </button>
+            </Button>
           )}
           {missing.length > 0 && report.fixedDeck && (
-            <button
+            <Button variant="primary"
               type="button"
-              className="primary deck-issues-play-btn"
+              className="deck-issues-play-btn"
               data-testid="deck-issues-remove-and-play"
               onClick={() => closeRequest({ name: deck.name, cards: report.fixedDeck!.cards, sideboard: report.fixedDeck!.sideboard })}
             >
               {t('decks', 'issues_remove_and_play', { count: removable })}
-            </button>
+            </Button>
           )}
         </div>
     </DialogShell>

@@ -6,6 +6,7 @@ import ManaPoolView, { type ManaPoolKey } from '../ManaPoolView'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
+import Button from '../../ui/Button'
 
 const POOL_COLORS: ManaPoolKey[] = ['white', 'blue', 'black', 'red', 'green', 'colorless']
 
@@ -49,9 +50,9 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
         <button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
           {t('game', 'mana_special')}
         </button>
-        <button disabled={busy} onClick={cancel} className="cancel-btn">
+        <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">
           {t('game', 'targeting_cancel')}
-        </button>
+        </Button>
       </div>
     </div>
   )

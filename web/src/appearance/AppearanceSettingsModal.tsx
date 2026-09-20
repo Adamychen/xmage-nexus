@@ -7,6 +7,7 @@ import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import './AppearanceSettingsModal.css'
 import './SleevePickerModal.css'
+import Button from '../ui/Button'
 
 interface Props {
   onClose: () => void
@@ -168,7 +169,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
         </section>
 
         <div className="appearance-footer">
-          <button type="button" className="primary" onClick={onClose}>{t('common', 'close')}</button>
+          <Button variant="primary" type="button" onClick={onClose}>{t('common', 'close')}</Button>
         </div>
     </DialogShell>
   )

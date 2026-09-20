@@ -4,6 +4,7 @@ import { useTranslation } from '../../i18n'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
 import { parseLimitedSetCodes } from './constants'
 import './RandomPacksSelector.css'
+import Button from '../../ui/Button'
 
 /** Tipos de torneo que usan pool aleatorio de sobres (paridad con NewTournamentDialog). */
 export function isRandomPacksType(tournamentType: unknown): boolean {
@@ -127,9 +128,9 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
             <button type="button" onClick={onClose}>
               {t('lobby', 'random_packs_cancel')}
             </button>
-            <button type="button" className="primary" onClick={apply} disabled={ordered.length === 0} data-testid="random-packs-apply">
+            <Button variant="primary" type="button" onClick={apply} disabled={ordered.length === 0} data-testid="random-packs-apply">
               {t('lobby', 'random_packs_apply')}
-            </button>
+            </Button>
           </div>
         </>
       )}

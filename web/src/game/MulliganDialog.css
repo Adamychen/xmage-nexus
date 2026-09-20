@@ -98,7 +98,6 @@ html.fx-off .mulligan-card-wrap {
   font-weight: 700;
   padding: 13px 28px;
   border-radius: var(--r-mid);
-  border: 1px solid transparent;
   cursor: pointer;
   transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
   font-family: var(--font-display);
@@ -149,19 +148,6 @@ html.fx-off .mulligan-card-wrap {
 .mulligan-actions .mulligan-concede:hover:not(:disabled) {
   border-color: var(--err);
   color: var(--err);
-}
-
-.mulligan-actions .primary {
-  background: var(--brand-strong);
-  color: var(--fg-hi);
-  box-shadow: 0 4px 14px rgb(var(--brand-rgb) / 0.35);
-}
-
-.mulligan-actions .cancel-btn {
-  background: transparent;
-  border-color: var(--line-3);
-  color: var(--fg-1);
-  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

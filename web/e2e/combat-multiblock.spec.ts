@@ -64,7 +64,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     fs.writeFileSync(path.join(SHOTS_DIR, 'combat-09-damage-distribution-amounts.png'), damageShot)
 
     // Enviar asignación de daño
-    await page.locator('.feedback-multi-amount-wrap button.primary').click()
+    await page.locator('.feedback-multi-amount-wrap button.ui-btn--primary').click()
 
     // 5. Resolución de daño: los bloqueadores son destruidos
     await expect(page.locator('.feedback-dialog')).toBeHidden({ timeout: 5_000 })

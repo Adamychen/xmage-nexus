@@ -8,12 +8,12 @@
 .end-score,
 .end-duration,
 .end-actions,
-.end-dialog > button.primary {
+.end-dialog > .ui-btn--primary {
   margin-top: 10px;
 }
 
 .end-winner-badge:first-child,
-.end-dialog > button.primary:first-child {
+.end-dialog > .ui-btn--primary:first-child {
   margin-top: 0;
 }
 

@@ -76,21 +76,6 @@
   gap: 10px;
 }
 
-.deck-issues-cancel-btn {
-  padding: 8px 14px;
-  border-radius: var(--r-base);
-  border: 1px solid var(--veil-5);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.deck-issues-play-btn {
-  padding: 8px 14px;
-  border-radius: var(--r-base);
-  cursor: pointer;
-}
-
 .deck-issue-same-card {
   width: 100%;
   font-size: var(--fs-xs);

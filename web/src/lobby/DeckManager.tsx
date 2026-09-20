@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import './DeckManager.css'
+import Button from '../ui/Button'
 
 /** @deprecated Use parseAnyDeck from '../decks/parseDck' — kept for backwards compat (tests + JoinTableDialog legacy). */
 export function parseArenaDeck(text: string, defaultName?: string): Deck | null {
@@ -131,13 +132,13 @@ export default function DeckManager() {
               <h2>{t('decks','my_decks')}</h2>
               <p className="deck-view-subtitle">{t('lobby','create_err_no_deck')}</p>
             </div>
-            <button
+            <Button variant="primary"
               type="button"
-              className="primary deck-select-primary"
+              className="deck-select-primary"
               onClick={() => setShowImportModal(true)}
             >
               {t('decks','import_deck')}
-            </button>
+            </Button>
           </div>
         ) : (
         <>
@@ -148,13 +149,13 @@ export default function DeckManager() {
               {totalCards} {t('decks','total_cards')} {totalSideboard > 0 ? `+ ${totalSideboard} ` + t('decks','sideboard') : ''}
             </p>
           </div>
-          <button
+          <Button variant="primary"
             type="button"
-            className="primary deck-select-primary"
+            className="deck-select-primary"
             onClick={() => handleSelectActive(selectedDeck)}
           >
             {currentStoreDeck?.name === selectedDeck.name ? (<><Icon name="check" size={12} /> {t('common','done')}</>) : t('common','confirm')}
-          </button>
+          </Button>
         </div>
 
         <div className="deck-breakdown-grid">
@@ -230,9 +231,9 @@ export default function DeckManager() {
               <button type="button" onClick={() => setShowImportModal(false)}>
                 {t('common','cancel')}
               </button>
-              <button className="primary" onClick={handleImportSubmit}>
+              <Button variant="primary" onClick={handleImportSubmit}>
                 {t('common','save')}
-              </button>
+              </Button>
             </div>
         </DialogShell>
       )}

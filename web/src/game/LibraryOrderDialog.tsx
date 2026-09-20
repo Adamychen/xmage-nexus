@@ -8,6 +8,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './LibraryOrderDialog.css'
+import Button from '../ui/Button'
 
 interface LibraryOrderDialogProps {
   prompt: FeedbackPrompt
@@ -277,14 +278,14 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
             </div>
           )}
           <div className="dialog-confirm-actions">
-            <button type="button" className="primary" disabled={busy} onClick={handleConfirm}>
+            <Button variant="primary" type="button" disabled={busy} onClick={handleConfirm}>
               {isBlockerOrder
                 ? t('dialogs','library_confirm_blockers', { count: topCards.length })
                 : t('dialogs','library_confirm_order', { top: topCards.length, bottom: bottomCards.length, zone: isSurveil ? t('game','pile_graveyard').toLowerCase() : (lang === 'es' ? 'fondo' : 'bottom') })}
-            </button>
-            <button type="button" disabled={busy} onClick={cancel} className="cancel-btn">
+            </Button>
+            <Button variant="subtle" type="button" disabled={busy} onClick={cancel} className="cancel-btn">
               {t('common','cancel')}
-            </button>
+            </Button>
           </div>
         </footer>
     </DialogShell>

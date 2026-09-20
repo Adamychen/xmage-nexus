@@ -168,26 +168,5 @@
 
 .browser-deck-btn {
   flex: 1;
-  background: var(--veil-2);
-  border: 1px solid var(--veil-3);
-  color: var(--fg-2);
-  border-radius: var(--r-sm);
-  padding: 5px 8px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
-  transition: all 120ms ease;
-}
-
-.browser-deck-btn:hover {
-  background: var(--veil-4);
-  color: var(--fg-hi);
-}
-
-.browser-deck-btn.primary {
-  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
-  color: var(--fg-hi);
-  border-color: var(--brand-fg);
 }
 

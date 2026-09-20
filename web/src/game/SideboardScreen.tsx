@@ -15,6 +15,7 @@ import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Modal from '../ui/Modal'
 import './SideboardScreen.css'
+import Button from '../ui/Button'
 
 function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
@@ -554,14 +555,13 @@ export default function SideboardScreen() {
             >
               <Icon name="reset" size={12} /> {t('lobby', 'filter_reset')}
             </button>
-            <button
-              className="primary"
+            <Button variant="primary"
               disabled={busy || !mainValid}
               onClick={() => void submitDeck()}
               title={!mainValid ? `${t('game', 'sideboard_main')}: ${minMain}` : undefined}
             >
               {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
-            </button>
+            </Button>
           </div>
         </div>
     </Modal>
