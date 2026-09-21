@@ -86,7 +86,8 @@ export default function CombatArrowsOverlay({
 
       const cardEl = boardEl.querySelector(`[data-card-id="${id}"]`) || document.querySelector(`[data-card-id="${id}"]`)
       if (cardEl) {
-        const c = centerOf(cardEl)
+        const thumb = cardEl.querySelector('.stack-thumb')
+        const c = (thumb && centerOf(thumb)) || centerOf(cardEl)
         if (c) return c
       }
 

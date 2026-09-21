@@ -8,6 +8,10 @@
   overflow: visible;
 }
 
+.game:has(.game-drawer[data-tab='stack']) .combat-arrows-overlay {
+  z-index: 45;
+}
+
 .arrow-group {
   opacity: 0.95;
   transition: opacity 0.2s ease;
