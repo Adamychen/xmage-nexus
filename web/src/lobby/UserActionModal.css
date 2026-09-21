@@ -16,8 +16,8 @@
 .user-action-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
+  gap: var(--sp-4);
+  padding: var(--sp-4h) var(--sp-4h);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border-bottom: 1px solid var(--veil-2);
 }
@@ -29,7 +29,7 @@
 .user-action-identity-col {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   flex: 1;
   min-width: 0;
 }
@@ -37,7 +37,7 @@
 .user-action-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .user-action-name {
@@ -50,7 +50,7 @@
 .user-action-badges-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
@@ -72,17 +72,17 @@
 
 /* Action Body */
 .user-action-body {
-  padding: 16px 20px;
+  padding: var(--sp-4) var(--sp-4h);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .user-action-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
   background: rgb(var(--ink-2-rgb) / 0.55);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-md);
@@ -137,7 +137,7 @@
 .action-btn-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .action-btn-title {

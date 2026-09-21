@@ -3,8 +3,8 @@
   flex-direction: column;
   background: rgb(var(--ink-2-rgb) / 0.95);
   border-bottom: 1px solid var(--veil-2);
-  padding: 6px 10px;
-  gap: 6px;
+  padding: var(--sp-1h) var(--sp-2h);
+  gap: var(--sp-1h);
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -12,7 +12,7 @@
 .basic-land-quick-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
@@ -28,7 +28,7 @@
 .basic-land-buttons {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
 }
 
@@ -50,13 +50,13 @@
   background: transparent;
   border: none;
   color: var(--fg-1);
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   transition: background 120ms;
 }
 
@@ -69,10 +69,10 @@
   background: var(--brand);
   color: white;
   border-radius: var(--r-pill);
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   font-size: var(--fs-3xs);
   font-weight: 800;
-  margin-left: 2px;
+  margin-left: var(--sp-0h);
 }
 
 .basic-land-dec-btn {
@@ -80,7 +80,7 @@
   border: none;
   border-left: 1px solid var(--veil-3);
   color: var(--fg-2);
-  padding: 3px 5px;
+  padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
   font-weight: 800;
   cursor: pointer;
@@ -95,7 +95,7 @@
 .basic-land-dec-placeholder {
   display: inline-block;
   width: 22px;
-  padding: 3px 5px;
+  padding: var(--sp-1) var(--sp-1h);
   border-left: 1px solid transparent;
 }
 
@@ -108,8 +108,8 @@
   background: rgb(var(--ink-2-rgb) / 0.98);
   border: 1px solid rgb(var(--brand-rgb) / 0.3);
   border-radius: var(--r-base);
-  padding: 10px 14px;
-  gap: 8px;
+  padding: var(--sp-2h) var(--sp-4);
+  gap: var(--sp-2);
   animation: fadeIn 150ms ease;
 }
 
@@ -117,7 +117,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
@@ -130,7 +130,7 @@
 .suggester-pips-summary {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--fg-2);
 }
@@ -138,15 +138,15 @@
 .pips-chips {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .pip-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   background: var(--shade-1);
-  padding: 2px 6px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-sm);
   font-weight: 700;
   color: var(--fg-1);
@@ -161,14 +161,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding-top: 4px;
+  gap: var(--sp-3);
+  padding-top: var(--sp-1);
 }
 
 .suggester-target-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--fg-2);
   font-weight: 600;
@@ -178,7 +178,7 @@
   width: 50px;
   font-weight: 800;
   font-size: var(--fs-sm);
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   text-align: center;
 }
 

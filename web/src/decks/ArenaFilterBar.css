@@ -1,8 +1,8 @@
 .arena-filter-bar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
   background: rgb(var(--ink-2-rgb) / 0.85);
   border-bottom: 1px solid var(--veil-2);
 }
@@ -10,7 +10,7 @@
 .filter-bar-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -29,7 +29,7 @@
   color: var(--warn);
   font-size: var(--fs-xs);
   font-weight: 600;
-  padding: 2px 4px;
+  padding: var(--sp-0h) var(--sp-1);
 }
 
 .arena-search-icon {
@@ -42,7 +42,7 @@
 
 .arena-search-input {
   width: 100%;
-  padding: 7px 28px 7px 30px;
+  padding: var(--sp-2) var(--sp-6) var(--sp-2) var(--sp-6);
   border-radius: var(--r-pill);
   font-size: var(--fs-md);
 }
@@ -51,7 +51,7 @@
 
 .arena-search-help-wrap {
   position: relative;
-  margin-left: 6px;
+  margin-left: var(--sp-1h);
 }
 
 .arena-search-help-btn:hover:not(:disabled) { background: rgb(var(--gold-rgb) / 0.18); border-color: var(--gold-500); color: var(--gold-300); }
@@ -60,17 +60,17 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 6px;
+  margin-top: var(--sp-1h);
   width: 320px;
   background: var(--ink-3);
   border: 1px solid var(--veil-4);
   border-radius: var(--r-md);
   box-shadow: 0 10px 28px var(--shade-3);
-  padding: 10px 12px;
+  padding: var(--sp-2h) var(--sp-3);
   z-index: 120;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .help-popover-title {
@@ -84,13 +84,13 @@
 .help-popover-examples {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .help-popover-examples code {
   background: var(--veil-2);
   border: 1px solid var(--veil-3);
-  padding: 2px 6px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-xs);
   color: var(--fg-1);
@@ -119,7 +119,7 @@
 .arena-mana-orbs {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .mana-orb-btn {
@@ -182,14 +182,14 @@
 .filter-bar-bottom {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
 .arena-filter-chips {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
 }
 
@@ -199,7 +199,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--fg-3);
-  margin-right: 2px;
+  margin-right: var(--sp-0h);
 }
 
 .filter-reset-btn { margin-left: auto; }
@@ -214,8 +214,8 @@
 .arena-lang-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 10px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1h) var(--sp-2h);
   background: var(--ink-3);
   border: 1px solid var(--veil-4);
   border-radius: var(--r-base);
@@ -251,31 +251,31 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 4px;
+  margin-top: var(--sp-1);
   background: var(--ink-3);
   border: 1px solid var(--veil-4);
   border-radius: var(--r-base);
   box-shadow: 0 8px 24px var(--shade-3);
   z-index: 100;
   min-width: 140px;
-  padding: 4px;
+  padding: var(--sp-1);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .arena-sort-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 4px;
+  gap: var(--sp-1h);
+  margin-left: var(--sp-1);
 }
 
 .arena-sort-select {
-  padding: 4px 6px;
+  padding-block: var(--sp-1);
+  padding-inline-start: var(--sp-1h);
   font-size: var(--fs-2xs);
   font-weight: 700;
-  cursor: pointer;
 }
 
 .arena-grid-size-slider {
@@ -287,10 +287,10 @@
 .filter-advanced-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 0 2px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) 0 var(--sp-0h);
   border-top: 1px solid var(--veil-2);
-  margin-top: 2px;
+  margin-top: var(--sp-0h);
   animation: advFadeIn 140ms ease;
 }
 
@@ -302,7 +302,7 @@
 .adv-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
@@ -327,31 +327,32 @@
 .rarity-mythic.active { background: color-mix(in srgb, var(--rarity-mythic) 40%, var(--ink-2)); border-color: var(--rarity-mythic); }
 
 .adv-stats-row {
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .stat-filter-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .stat-op-select {
-  padding: 4px 6px;
+  padding-block: var(--sp-1);
+  padding-inline-start: var(--sp-1h);
   font-size: var(--fs-xs);
   font-weight: 700;
 }
 
 .stat-num-input {
   width: 52px;
-  padding: 4px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
   text-align: center;
 }
 
 .set-filter-group .set-input {
   width: 110px;
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   font-size: var(--fs-xs);
 }
 

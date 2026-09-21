@@ -2,12 +2,12 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
+  gap: var(--sp-3);
+  padding-right: var(--sp-1);
 }
 
 .deck-issues-section h3 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--sp-1h);
   font-size: var(--fs-md);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -20,15 +20,15 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .deck-issue-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  padding: 8px 10px;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-2h);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-base);
   background: var(--veil-1);
@@ -52,14 +52,14 @@
 .deck-issue-fixes {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-1h);
   margin-left: auto;
 }
 
 .deck-issues-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .deck-issue-same-card {

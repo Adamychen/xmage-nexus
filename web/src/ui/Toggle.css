@@ -1,8 +1,8 @@
 .ui-toggle-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 8px 0;
+  gap: var(--sp-2h);
+  margin: var(--sp-2) 0;
   font-size: var(--fs-sm);
   color: var(--fg-2);
   cursor: pointer;

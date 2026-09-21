@@ -2,7 +2,7 @@
   background: var(--shade-2);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 14px;
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
 }
@@ -20,9 +20,9 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
   height: 100px;
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .curve-bar-col {
@@ -32,7 +32,7 @@
   flex: 1;
   height: 100%;
   justify-content: flex-end;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .curve-count {
@@ -79,8 +79,8 @@
 .curve-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  padding-top: 10px;
+  gap: var(--sp-1h);
+  padding-top: var(--sp-2h);
   border-top: 1px solid var(--veil-2);
 }
 
@@ -91,7 +91,7 @@
   background: var(--veil-1);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-sm);
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   font-size: var(--fs-xs);
 }
 
@@ -108,12 +108,12 @@
 .curve-mana-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding-top: 6px;
+  gap: var(--sp-4);
+  padding-top: var(--sp-1h);
 }
 
 .curve-mana-section {
-  padding-top: 8px;
+  padding-top: var(--sp-2);
   border-top: 1px dashed var(--veil-2);
 }
 
@@ -134,14 +134,14 @@
 .curve-dist-rows {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding-top: 6px;
+  gap: var(--sp-1);
+  padding-top: var(--sp-1h);
 }
 
 .curve-dist-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .curve-dist-label {

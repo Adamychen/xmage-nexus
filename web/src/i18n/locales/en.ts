@@ -1128,6 +1128,7 @@ export const en = {
     export_deck: 'Export Deck',
     export_backup_count: 'Export Deck ({count})',
     import_backup_json: 'Import Deck (JSON)',
+    favorite: 'Favorite',
     mana_curve: 'Mana Curve',
     basic_lands: 'Basic Lands',
     sample_hand: 'Test Sample Hand',

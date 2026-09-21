@@ -1130,6 +1130,7 @@ export const it: TranslationSchema = {
     export_deck: 'Esporta Mazzo',
     export_backup_count: 'Esporta Mazzo ({count})',
     import_backup_json: 'Importa Mazzo (JSON)',
+    favorite: 'Preferito',
     mana_curve: 'Curva di Mana',
     basic_lands: 'Terre Base',
     sample_hand: 'Test Mano Iniziale',

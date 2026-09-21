@@ -3,8 +3,8 @@
 .sleeve-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
-  padding: 2px;
+  gap: var(--sp-3);
+  padding: var(--sp-0h);
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -15,8 +15,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px;
+  gap: var(--sp-1h);
+  padding: var(--sp-2);
   border-radius: var(--r-md);
   background: var(--ink-2);
   border: 1.5px solid transparent;
@@ -76,11 +76,11 @@
 }
 
 .sleeve-name { font-size: var(--fs-2xs); font-weight: 600; text-align: center; word-break: break-word; }
-.sleeve-picker-footer { margin-top: 14px; display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--veil-2); }
+.sleeve-picker-footer { margin-top: var(--sp-4); display: flex; justify-content: flex-end; padding-top: var(--sp-3); border-top: 1px solid var(--veil-2); }
 
 @media (max-width: 480px) {
   .sleeve-picker-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: var(--sp-2h);
   }
 }

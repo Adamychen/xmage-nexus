@@ -14,7 +14,7 @@
   font-weight: 700;
   color: var(--fg-2);
   background: var(--veil-3);
-  padding: 1px 4px;
+  padding: 1px var(--sp-1);
   border-radius: var(--r-xs);
   font-family: var(--font-mono, monospace);
   vertical-align: middle;

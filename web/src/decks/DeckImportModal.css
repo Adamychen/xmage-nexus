@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--sp-4h);
   animation: fadeIn 150ms ease;
 }
 
@@ -16,10 +16,10 @@
 }
 
 .deck-import-body {
-  padding: 20px 22px;
+  padding: var(--sp-4h) var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 /* Mode row */
@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
@@ -46,7 +46,7 @@
 .deck-import-textarea {
   font-family: var(--font-mono, monospace);
   width: 100%;
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-sm);
   line-height: 1.5;
   resize: vertical;
@@ -74,21 +74,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
 .import-status-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .import-file-btn {
   background: var(--veil-2);
   border: 1px solid var(--veil-4);
   color: var(--fg-1);
-  padding: 5px 12px;
+  padding: var(--sp-1h) var(--sp-3);
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -107,7 +107,7 @@
 }
 
 .import-badge {
-  padding: 4px 10px;
+  padding: var(--sp-1) var(--sp-2h);
   border-radius: var(--r-pill);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -131,7 +131,7 @@
 }
 
 .deck-import-error {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   background: rgb(var(--err-rgb) / 0.15);
   border: 1px solid rgb(var(--err-rgb) / 0.3);
   border-radius: var(--r-sm);
@@ -145,9 +145,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 14px 22px;
+  padding: var(--sp-4) var(--sp-5);
   background: rgb(var(--ink-2-rgb) / 0.95);
   border-top: 1px solid var(--veil-2);
-  gap: 12px;
+  gap: var(--sp-3);
 }
 

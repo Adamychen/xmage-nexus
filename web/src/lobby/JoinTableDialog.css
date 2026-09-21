@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--sp-4);
   animation: modalFadeIn 0.15s ease-out;
 }
 
@@ -26,8 +26,8 @@
 .join-table-meta-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5);
   background: rgb(var(--ink-2-rgb) / 0.5);
   border-bottom: 1px solid var(--veil-2);
 }
@@ -39,28 +39,28 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  padding: 20px 24px;
-  gap: 16px;
+  padding: var(--sp-4h) var(--sp-5);
+  gap: var(--sp-4);
 }
 
 /* Password field */
 .join-password-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .join-field-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
   font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--gold-300);
 }
 
 .join-password-input {
-  padding: 10px 14px;
+  padding: var(--sp-2h) var(--sp-4);
   font-size: var(--fs-md);
 }
 
@@ -68,7 +68,7 @@
 .join-deck-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .join-deck-section-header {
@@ -87,8 +87,8 @@
 .join-inline-importer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
   border-radius: var(--r-md);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid rgb(var(--brand-rgb) / 0.3);
@@ -102,14 +102,14 @@
 
 .import-name-input {
   width: 100%;
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-sm);
 }
 
 .import-textarea {
   font-family: var(--font-mono, monospace);
   width: 100%;
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-xs);
   resize: vertical;
 }
@@ -126,7 +126,7 @@
 }
 
 .import-submit-btn {
-  padding: 6px 14px;
+  padding: var(--sp-1h) var(--sp-4);
   font-size: var(--fs-xs);
 }
 
@@ -134,17 +134,17 @@
 .join-deck-cards-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   max-height: 220px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: var(--sp-1);
 }
 
 .join-deck-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-2h) var(--sp-4);
   border-radius: var(--r-md);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid var(--veil-2);
@@ -171,7 +171,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
   min-width: 0;
 }
 
@@ -206,7 +206,7 @@
 
 /* Error Banner */
 .join-error-banner {
-  margin: 0 24px;
+  margin: 0 var(--sp-5);
 }
 
 /* Footer */
@@ -214,7 +214,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 14px;
+  padding-top: var(--sp-4);
   border-top: 1px solid var(--veil-2);
   margin-top: auto;
 }
@@ -222,11 +222,11 @@
 .join-footer-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .join-submit-btn {
-  padding: 9px 20px;
+  padding: var(--sp-2h) var(--sp-4h);
   font-size: var(--fs-md);
   font-weight: 800;
   box-shadow: 0 4px 14px var(--ok-surface);

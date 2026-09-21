@@ -1,8 +1,8 @@
 .ping-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 7px;
+  gap: var(--sp-1h);
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-sm);
   font-size: var(--fs-2xs);
   font-family: var(--font-mono, monospace);
@@ -65,6 +65,6 @@
 }
 
 .ping-compact {
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   font-size: var(--fs-3xs);
 }

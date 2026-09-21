@@ -121,7 +121,7 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
     <DialogShell
       labelledBy="settings-title"
       titleId="settings-title"
-      size="lg"
+      size="md"
       testId="settings-modal"
       legacyPanelClass="settings-modal"
       kickerIcon="settings"

@@ -2,8 +2,8 @@
 
 .avatar-picker-tabs {
   display: flex;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4h);
   background: rgb(var(--ink-rgb) / 0.6);
   border-bottom: 1px solid var(--veil-2);
 }
@@ -11,8 +11,8 @@
 .avatar-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
-  padding: 16px 20px;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4h);
   overflow-y: auto;
   flex: 1;
 }
@@ -21,8 +21,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 8px;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-2);
   background: rgb(var(--ink-2-rgb) / 0.5);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-mid);
@@ -81,7 +81,7 @@
 }
 
 .avatar-picker-footer {
-  padding: 12px 20px;
+  padding: var(--sp-3) var(--sp-4h);
   background: rgb(var(--ink-rgb) / 0.8);
   border-top: 1px solid var(--veil-2);
   display: flex;

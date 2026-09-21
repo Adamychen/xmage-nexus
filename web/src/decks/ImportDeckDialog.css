@@ -1,7 +1,7 @@
 .import-name-row {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--sp-1h);
 }
 
 .import-name-label,
@@ -13,7 +13,7 @@
 
 .import-name-input {
   width: 100%;
-  padding: 9px 12px;
+  padding: var(--sp-2h) var(--sp-3);
   font-size: var(--fs-md);
 }
 

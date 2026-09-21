@@ -27,8 +27,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h);
   background: var(--warn-surface);
   border: 1px dashed var(--gold-500);
   border-radius: var(--r-sm);
@@ -59,8 +59,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h);
   overflow-y: auto;
   flex: 1;
 }
@@ -75,10 +75,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   background: var(--veil-1);
   border-radius: var(--r-xs);
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
   font-size: var(--fs-xs);
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -98,8 +98,8 @@
 
 /* Sideboard container */
 .deck-sideboard-section {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: var(--sp-2h);
+  padding-top: var(--sp-2h);
   border-top: 1px dashed var(--veil-4);
 }
 
@@ -111,7 +111,7 @@
   border-top: none;
   border: 1px dashed var(--gold-500);
   border-radius: var(--r-sm);
-  padding: 6px;
+  padding: var(--sp-1h);
   background: rgb(var(--gold-rgb) / 0.08);
   box-shadow: inset 0 0 16px rgb(var(--gold-rgb) / 0.25);
 }
@@ -120,8 +120,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 14px 10px;
+  gap: var(--sp-1h);
+  padding: var(--sp-4) var(--sp-2h);
   border: 2px dashed var(--veil-4);
   border-radius: var(--r-sm);
   color: var(--fg-3);
@@ -144,7 +144,7 @@
 
 /* Sideboard below the CMC columns (horizontal layout) */
 .deck-cols + .deck-sideboard-section {
-  margin: 0 10px 10px;
+  margin: 0 var(--sp-2h) var(--sp-2h);
 }
 
 /* Commander slot */
@@ -155,7 +155,7 @@
 .deck-commander-section.is-commander-drag-over {
   border: 1px dashed var(--gold-500);
   border-radius: var(--r-sm);
-  padding: 6px;
+  padding: var(--sp-1h);
   background: rgb(var(--gold-rgb) / 0.08);
   box-shadow: inset 0 0 16px rgb(var(--gold-rgb) / 0.25);
 }
@@ -170,8 +170,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 10px;
-  margin-bottom: 4px;
+  padding: var(--sp-2) var(--sp-2h);
+  margin-bottom: var(--sp-1);
   border: 1px dashed var(--gold-500);
   border-radius: var(--r-sm);
   color: var(--gold-300);
@@ -184,7 +184,7 @@
 .deck-commander-section.is-commander-drop-invalid {
   border: 1px solid var(--err);
   border-radius: var(--r-sm);
-  padding: 6px;
+  padding: var(--sp-1h);
   background: rgb(var(--err-rgb) / 0.08);
   animation: commander-drop-reject 380ms ease;
 }
@@ -206,8 +206,8 @@
 .arena-deck-cols-layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
-  gap: 8px;
-  padding: 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h);
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
@@ -220,7 +220,7 @@
   background: var(--shade-1);
   border-radius: var(--r-sm);
   border: 1px solid var(--veil-2);
-  padding: 6px;
+  padding: var(--sp-1h);
   min-height: 120px;
 }
 
@@ -228,11 +228,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
   font-weight: 800;
   color: var(--fg-2);
   text-transform: uppercase;
   border-bottom: 1px solid var(--veil-2);
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-1h);
 }

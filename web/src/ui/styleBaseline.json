@@ -2,121 +2,463 @@
   "appearance/AppearanceSettingsModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "appearance/SleevePickerModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
+  },
+  "board/ArenaBoard.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 5
   },
   "board/BoardShell.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
+  },
+  "board/BoardZone.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 29
   },
   "board/CardSlot.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 21
+  },
+  "board/CommandZone.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 11
+  },
+  "board/FeedbackOverlay.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 3
+  },
+  "board/FloatingCardPreview.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 24
+  },
+  "board/FlyingCardOverlay.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
+  },
+  "board/HandBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 5
+  },
+  "board/HandZone.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 3
+  },
+  "board/OpponentSwitcherBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 9
+  },
+  "board/PileOverlay.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "board/StackZone.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 34
+  },
+  "board/TurnOrderRing.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 8
   },
   "decks/ArenaCardGrid.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 0
+    "fontSizes": 0,
+    "spacing": 1
+  },
+  "decks/CardPrintingsModal.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
   },
   "decks/DeckBox.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 2
+    "fontSizes": 2,
+    "spacing": 0
   },
   "decks/DecksGallery.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "decks/SampleHandModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
+  },
+  "dev/GalleryScreen.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "game/ActionButton.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 9
+  },
+  "game/ActionFeed.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 8
+  },
+  "game/ActionFeedCard.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 16
+  },
+  "game/CardGrid.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 16
+  },
+  "game/CardPreview.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 13
   },
   "game/CommanderDamageMatrix.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 32
+  },
+  "game/ConstructScreen.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 34
+  },
+  "game/ContextMenu.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
+  },
+  "game/DeckTrackerPanel.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 33
+  },
+  "game/DraftScreen.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 35
+  },
+  "game/FormattedText.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
+  },
+  "game/GameChat.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 13
+  },
+  "game/GameDock.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
+  },
+  "game/GameDrawer.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 6
+  },
+  "game/GameEndDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 10
+  },
+  "game/GameLog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 2
+  },
+  "game/GameMenu.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 17
+  },
+  "game/GameScreen.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 4
+  },
+  "game/GameStrip.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 4
   },
   "game/HelpWikiModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 37
+  },
+  "game/LibraryOrderDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 26
+  },
+  "game/ManaPoolView.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 7
   },
   "game/MechanicsTray.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 3
+    "fontSizes": 3,
+    "spacing": 55
+  },
+  "game/MulliganDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 11
+  },
+  "game/PassMenu.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "game/PhaseBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 7
+  },
+  "game/PhaseStopSelector.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 6
+  },
+  "game/PileDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 4
+  },
+  "game/PlaneswalkerAbilityDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 10
+  },
+  "game/PlayerInfoBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 21
   },
   "game/PlayerStatusCard.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 5
+  },
+  "game/QuickReactions.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 3
+  },
+  "game/ResourceBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "game/RollbackDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 14
+  },
+  "game/SideboardScreen.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 41
   },
   "game/TournamentPanel.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 0
+    "fontSizes": 0,
+    "spacing": 19
+  },
+  "game/TriggerOrderDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "game/VotingDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 5
   },
   "game/feedbackModes/GenericDialog.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 27
   },
   "game/feedbackModes/StartingPlayerDialog.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 2
+    "fontSizes": 2,
+    "spacing": 5
+  },
+  "game/feedbackModes/promptBars.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
+  },
+  "i18n/LanguageSelector.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 12
   },
   "lobby/AvatarImage.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "lobby/DeckManager.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "lobby/FinishedMatchesPanel.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "lobby/LeaderboardModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
   },
   "lobby/LobbyScreen.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 2
+    "fontSizes": 2,
+    "spacing": 6
   },
   "lobby/LoginScreen.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 2
   },
   "lobby/SpectatorStagingScreen.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 4
+    "fontSizes": 4,
+    "spacing": 3
+  },
+  "lobby/TableFilterBar.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
   },
   "lobby/UserActionModal.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
+  },
+  "styles.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 13
+  },
+  "system/AboutModal.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 20
   },
   "ui/DialogShell.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 1
+    "fontSizes": 1,
+    "spacing": 0
+  },
+  "ui/primitives.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 0,
+    "spacing": 1
   }
 }

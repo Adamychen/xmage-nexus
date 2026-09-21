@@ -1130,6 +1130,7 @@ export const de: TranslationSchema = {
     export_deck: 'Deck exportieren',
     export_backup_count: 'Deck exportieren ({count})',
     import_backup_json: 'Deck importieren (JSON)',
+    favorite: 'Favorit',
     mana_curve: 'Manakurve',
     basic_lands: 'Standardländer',
     sample_hand: 'Probehand testen',

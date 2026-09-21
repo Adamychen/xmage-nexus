@@ -6,12 +6,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--sp-4h);
   animation: fadeIn 150ms ease;
 }
 
 .printings-body {
-  padding: 20px 4px 4px;
+  padding: var(--sp-4h) var(--sp-1) var(--sp-1);
   overflow-y: auto;
   min-height: 280px;
   max-height: min(58vh, 560px);
@@ -22,8 +22,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 60px 20px;
+  gap: var(--sp-3);
+  padding: 60px var(--sp-4h);
   color: var(--fg-2);
   font-size: var(--fs-md);
 }
@@ -50,7 +50,7 @@
 .printings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .printing-card-item {
@@ -96,7 +96,7 @@
   right: 8px;
   background: var(--ok-strong);
   color: white;
-  padding: 3px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-pill);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -104,11 +104,11 @@
 }
 
 .printing-info {
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   background: rgb(var(--ink-2-rgb) / 0.95);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .printing-set-name {

@@ -1,16 +1,16 @@
 .active-tables-bar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
 .active-table-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   background: var(--ink-2);
   border: 1px solid var(--veil-2);
@@ -40,7 +40,7 @@
 .active-table-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   min-width: 0;
   flex: 1;
 }
@@ -48,13 +48,13 @@
 .active-table-badge-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .active-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
   font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -110,7 +110,7 @@
 .active-table-time {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-3xs);
   color: var(--fg-3);
 }
@@ -118,7 +118,7 @@
 .active-table-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -134,11 +134,11 @@
 .active-table-format {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
   color: var(--fg-2);
   background: var(--veil-2);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   white-space: nowrap;
 }
@@ -152,7 +152,7 @@
 .active-table-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-shrink: 0;
 }
 

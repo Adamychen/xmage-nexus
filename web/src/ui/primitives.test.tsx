@@ -4,6 +4,7 @@ import Button from './Button'
 import Checkbox from './Checkbox'
 import IconButton from './IconButton'
 import MenuItem from './MenuItem'
+import DropdownMenu from './DropdownMenu'
 import ChipButton from './ChipButton'
 import Chip from './Chip'
 import EmptyState from './EmptyState'
@@ -131,5 +132,53 @@ describe('Button variants', () => {
   it.each(['soft', 'soft-danger', 'link'] as const)('renders the %s variant', (variant) => {
     render(<Button variant={variant}>x</Button>)
     expect(screen.getByRole('button').className).toContain(`ui-btn--${variant}`)
+  })
+})
+
+describe('DropdownMenu', () => {
+  it('abre al pulsar el disparador, ejecuta el ítem y se cierra', () => {
+    const onPick = vi.fn()
+    render(
+      <DropdownMenu label="Exportar">
+        <MenuItem role="menuitem" onClick={onPick}>Arena</MenuItem>
+      </DropdownMenu>,
+    )
+    const trigger = screen.getByRole('button', { name: /Exportar/ })
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('menu')).toBeNull()
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Arena' }))
+    expect(onPick).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('se cierra con Escape y al pulsar fuera', () => {
+    render(
+      <div>
+        <span data-testid="outside">fuera</span>
+        <DropdownMenu label="Más">
+          <MenuItem role="menuitem">Uno</MenuItem>
+        </DropdownMenu>
+      </div>,
+    )
+    const trigger = screen.getByRole('button', { name: /Más/ })
+    fireEvent.click(trigger)
+    expect(screen.getByRole('menu')).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).toBeNull()
+    fireEvent.click(trigger)
+    fireEvent.pointerDown(screen.getByTestId('outside'))
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('deshabilitado no abre y aplica dirección y alineación', () => {
+    const { rerender } = render(<DropdownMenu label="X" disabled><MenuItem role="menuitem">a</MenuItem></DropdownMenu>)
+    fireEvent.click(screen.getByRole('button', { name: /X/ }))
+    expect(screen.queryByRole('menu')).toBeNull()
+    rerender(<DropdownMenu label="X" direction="up" align="end"><MenuItem role="menuitem">a</MenuItem></DropdownMenu>)
+    fireEvent.click(screen.getByRole('button', { name: /X/ }))
+    expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--up')
+    expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--end')
   })
 })

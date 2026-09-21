@@ -1130,6 +1130,7 @@ export const es: TranslationSchema = {
     export_deck: 'Exportar Mazo',
     export_backup_count: 'Exportar Mazo ({count})',
     import_backup_json: 'Importar Mazo (JSON)',
+    favorite: 'Favorito',
     mana_curve: 'Curva de Maná',
     basic_lands: 'Tierras Básicas',
     sample_hand: 'Simulador de Mano Inicial',

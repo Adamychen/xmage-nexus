@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--sp-4);
 }
 
 .random-packs-hint {
@@ -17,24 +17,24 @@
 
 .random-packs-toolbar {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .random-packs-grid {
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 4px;
-  padding: 4px;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-base);
   min-height: 120px;
 }
 
 .random-packs-cell {
-  gap: 5px;
+  gap: var(--sp-1h);
   font-family: monospace;
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   border-radius: var(--r-sm);
 }
 
@@ -45,5 +45,5 @@
 .random-packs-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--sp-2);
 }

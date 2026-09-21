@@ -1137,6 +1137,7 @@ export const ja: TranslationSchema = {
     export_backup_count: 'Export Deck ({count})',
     // TODO bulk: interim English until proper ja translation lands
     import_backup_json: 'Import Deck (JSON)',
+    favorite: 'お気に入り',
     mana_curve: 'マナカーブ',
     basic_lands: '基本土地',
     sample_hand: '初手テスト',

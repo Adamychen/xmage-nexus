@@ -1,7 +1,7 @@
 .deck-browser-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -11,7 +11,7 @@
 .browser-filters-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
@@ -24,17 +24,17 @@
 
 .browser-search-input {
   width: 100%;
-  padding: 8px 30px 8px 14px;
+  padding: var(--sp-2) var(--sp-6) var(--sp-2) var(--sp-4);
   border-radius: var(--r-pill);
   font-size: var(--fs-md);
 }
 
 .browser-select {
   border-radius: var(--r-pill);
-  padding: 7px 14px;
+  padding-block: var(--sp-2);
+  padding-inline-start: var(--sp-4);
   font-size: var(--fs-sm);
   font-weight: 600;
-  cursor: pointer;
 }
 
 /* Decks Grid */
@@ -42,10 +42,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   grid-auto-rows: max-content;
-  gap: 14px;
+  gap: var(--sp-4);
   overflow-y: auto;
   flex: 1;
-  padding-right: 4px;
+  padding-right: var(--sp-1);
 }
 
 /* Individual Deck Card */
@@ -76,7 +76,7 @@
   background-color: var(--ink-3);
   display: flex;
   align-items: flex-end;
-  padding: 10px;
+  padding: var(--sp-2h);
 }
 
 .browser-deck-art-gradient {
@@ -89,15 +89,15 @@
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 6px;
+  gap: var(--sp-1h);
   align-items: center;
 }
 
 .browser-deck-content {
-  padding: 12px;
+  padding: var(--sp-3);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   flex: 1;
 }
 
@@ -125,9 +125,9 @@
 .browser-deck-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--veil-2);
 }
 

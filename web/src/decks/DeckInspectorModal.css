@@ -6,20 +6,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--sp-4h);
 }
 
 .deck-inspector-badges {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .deck-inspector-body {
   display: grid;
   grid-template-columns: 1fr 300px;
-  gap: 16px;
-  padding: 16px 4px 4px;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-1) var(--sp-1);
   overflow-y: auto;
   max-height: min(62vh, 620px);
 }
@@ -33,7 +33,7 @@
 .inspector-cards-column {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
   overflow-y: auto;
   max-height: 55vh;
 }
@@ -41,11 +41,11 @@
 .inspector-info-column {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
   background: var(--shade-1);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 14px;
+  padding: var(--sp-4);
 }
 
 .inspector-desc {
@@ -59,7 +59,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: var(--sp-3) var(--sp-4h);
   background: rgb(var(--ink-2-rgb) / 0.95);
   border-top: 1px solid var(--veil-2);
 }

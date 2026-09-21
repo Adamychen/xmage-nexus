@@ -242,9 +242,9 @@
 .tracker-sort-select {
   width: 100%;
   height: 24px;
-  padding: 1px 6px;
+  padding-block: 1px;
+  padding-inline-start: 6px;
   font-size: var(--fs-3xs);
-  cursor: pointer;
 }
 
 /* ── Card List ─────────────────────────────────────── */

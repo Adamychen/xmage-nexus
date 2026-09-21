@@ -1,8 +1,8 @@
 .error-banner {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: var(--sp-2h);
+  padding: var(--sp-2h) var(--sp-3);
   border-radius: var(--r-md);
   background: var(--err-surface);
   border: 1px solid rgb(var(--err-rgb) / 0.55);

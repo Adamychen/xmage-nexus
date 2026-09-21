@@ -1130,6 +1130,7 @@ export const fr: TranslationSchema = {
     export_deck: 'Exporter le Deck',
     export_backup_count: 'Exporter le Deck ({count})',
     import_backup_json: 'Importer un Deck (JSON)',
+    favorite: 'Favori',
     mana_curve: 'Courbe de Mana',
     basic_lands: 'Terrains de Base',
     sample_hand: 'Tester une Main',

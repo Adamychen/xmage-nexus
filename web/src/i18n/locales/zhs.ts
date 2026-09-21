@@ -1137,6 +1137,7 @@ export const zhs: TranslationSchema = {
     export_backup_count: 'Export Deck ({count})',
     // TODO bulk: interim English until proper zhs translation lands
     import_backup_json: 'Import Deck (JSON)',
+    favorite: '收藏',
     mana_curve: '法术力曲线',
     basic_lands: '基本地',
     sample_hand: '起手模拟',

@@ -6,24 +6,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--sp-4h);
   animation: fadeIn 150ms ease;
 }
 
 .sample-hand-stats-chips {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
 .goldfish-projection {
-  padding: 10px 20px;
+  padding: var(--sp-2h) var(--sp-4h);
   background: rgb(var(--ink-2-rgb) / 0.9);
   border-bottom: 1px solid var(--veil-2);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .goldfish-title {
@@ -36,7 +36,7 @@
 
 .goldfish-turns {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -46,10 +46,10 @@
   background: var(--veil-1);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .goldfish-turn.active-turn {
@@ -88,7 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: var(--sp-2h) var(--sp-4h);
   background: linear-gradient(90deg, rgb(var(--warn-rgb) / 0.25) 0%, rgb(var(--warn-rgb) / 0.15) 100%);
   border-bottom: 1px solid rgb(var(--warn-rgb) / 0.4);
   color: var(--gold-300);
@@ -97,7 +97,7 @@
 
 /* Cards Area */
 .sample-hand-cards-area {
-  padding: 24px;
+  padding: var(--sp-5);
   flex: 1;
   overflow-y: auto;
   min-height: 320px;
@@ -108,7 +108,7 @@
 
 .sample-hand-grid {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-4);
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
@@ -183,17 +183,17 @@
   font-size: var(--fs-3xs);
   font-weight: 800;
   background: var(--shade-4);
-  padding: 2px 5px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-xs);
   color: var(--gold-300);
 }
 
 .sample-card-footer {
-  padding: 6px 8px;
+  padding: var(--sp-1h) var(--sp-2);
   background: rgb(var(--ink-2-rgb) / 0.95);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .sample-card-name {
@@ -251,17 +251,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: var(--sp-3) var(--sp-4h);
   background: rgb(var(--ink-2-rgb) / 0.95);
   border-top: 1px solid var(--veil-2);
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
 .sample-hand-actions-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .sample-hand-footer .reset {

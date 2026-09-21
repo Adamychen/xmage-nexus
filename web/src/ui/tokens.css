@@ -96,10 +96,14 @@
   --fs-xl: 1.25rem;
   --fs-2xl: 1.625rem;
 
+  --sp-0h: 2px;
   --sp-1: 4px;
+  --sp-1h: 6px;
   --sp-2: 8px;
+  --sp-2h: 10px;
   --sp-3: 12px;
   --sp-4: 16px;
+  --sp-4h: 20px;
   --sp-5: 24px;
   --sp-6: 32px;
 

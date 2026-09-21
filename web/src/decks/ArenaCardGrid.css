@@ -13,8 +13,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   grid-auto-rows: max-content;
-  gap: 12px;
-  padding: 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
   overflow-y: auto;
   flex: 1 1 0;
   min-height: 0;
@@ -23,16 +23,16 @@
 @media (min-width: 1200px) {
   .arena-card-grid-scroll {
     grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-    gap: 14px;
-    padding: 16px;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
   }
 }
 
 @media (min-width: 1500px) {
   .arena-card-grid-scroll {
     grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-    gap: 16px;
-    padding: 18px;
+    gap: var(--sp-4);
+    padding: var(--sp-4h);
   }
 }
 
@@ -63,8 +63,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  margin-bottom: 4px;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-1);
   height: 12px;
 }
 
@@ -91,7 +91,7 @@
   background: rgb(var(--gold-rgb) / 0.16);
   border: 1px solid rgb(var(--gold-rgb) / 0.7);
   border-radius: var(--r-pill);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
 }
 
 .arena-grid-card:focus-visible {
@@ -123,7 +123,7 @@
 .arena-grid-card-fallback {
   width: 100%;
   height: 100%;
-  padding: 8px;
+  padding: var(--sp-2);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -158,7 +158,7 @@
   color: var(--fg-hi);
   font-weight: 900;
   font-size: var(--fs-xs);
-  padding: 4px 10px;
+  padding: var(--sp-1) var(--sp-2h);
   border-radius: var(--r-pill);
   box-shadow: 0 2px 8px var(--shade-3);
   transform: translateY(6px);
@@ -174,7 +174,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0 var(--sp-4h);
   height: 46px;
   min-height: 46px;
   max-height: 46px;
@@ -183,7 +183,7 @@
   border-top: 1px solid var(--veil-3);
   font-size: var(--fs-xs);
   color: var(--fg-3);
-  gap: 12px;
+  gap: var(--sp-3);
   z-index: 10;
   box-sizing: border-box;
   box-shadow: 0 -4px 16px var(--shade-2);
@@ -193,7 +193,7 @@
 .arena-footer-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .arena-footer-center {
@@ -211,7 +211,7 @@
 .arena-footer-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   color: var(--gold-500);
   font-weight: 700;
   font-size: var(--fs-xs);
@@ -230,9 +230,9 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 10px;
+  gap: var(--sp-2h);
   color: var(--fg-2);
-  padding: 40px 20px;
+  padding: 40px var(--sp-4h);
   text-align: center;
 }
 
@@ -273,8 +273,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 20px 0;
+  gap: var(--sp-2h);
+  padding: var(--sp-4h) 0;
   color: var(--gold-500);
   font-weight: 700;
 }

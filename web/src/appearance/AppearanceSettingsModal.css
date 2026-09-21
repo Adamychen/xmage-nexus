@@ -1,24 +1,24 @@
 
 
 .appearance-section {
-  margin-top: 16px;
-  padding-top: 14px;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
   border-top: 1px solid var(--veil-2);
 }
 
 .appearance-section:first-of-type {
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 
 .appearance-section-title {
-  margin: 0 0 4px;
+  margin: 0 0 var(--sp-1);
   font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--fg-1);
 }
 
 .appearance-section-hint {
-  margin: 0 0 10px;
+  margin: 0 0 var(--sp-2h);
   font-size: var(--fs-2xs);
   color: var(--fg-3);
 }
@@ -26,7 +26,7 @@
 .board-layout-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 @media (max-width: 480px) {
@@ -40,8 +40,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2);
   border-radius: var(--r-md);
   background: var(--ink-2);
   border: 1.5px solid transparent;
@@ -89,23 +89,23 @@
 .appearance-sleeve-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
   align-content: start;
-  padding: 2px;
+  padding: var(--sp-0h);
 }
 
 @media (max-width: 480px) {
   .appearance-sleeve-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: var(--sp-2h);
   }
 }
 
 .ui-scale-stepper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2h);
 }
 
 .ui-scale-current {
@@ -128,7 +128,7 @@
 .ui-scale-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 @media (max-width: 480px) {
@@ -140,8 +140,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 6px;
+  gap: var(--sp-0h);
+  padding: var(--sp-2h) var(--sp-1h);
   border-radius: var(--r-md);
   background: var(--ink-2);
   border: 1.5px solid transparent;
@@ -172,16 +172,16 @@
   justify-content: center;
 }
 
-.ui-scale-cjk-toggle { margin-top: 12px; }
+.ui-scale-cjk-toggle { margin-top: var(--sp-3); }
 
 .ui-scale-hint {
-  margin: 6px 0 0;
+  margin: var(--sp-1h) 0 0;
   font-size: var(--fs-2xs);
   color: var(--fg-3);
 }
 
 .appearance-footer {
-  margin-top: 16px;
+  margin-top: var(--sp-4);
   display: flex;
   justify-content: flex-end;
 }

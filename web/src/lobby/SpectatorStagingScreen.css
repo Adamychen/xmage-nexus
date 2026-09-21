@@ -13,7 +13,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
+  padding: var(--sp-3) var(--sp-5);
   background: rgb(var(--ink-rgb) / 0.85);
   border-bottom: 1px solid var(--veil-2);
   backdrop-filter: blur(12px);
@@ -23,7 +23,7 @@
 .staging-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .staging-logo {
@@ -61,10 +61,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
   margin-top: auto;
-  padding: 12px 8px 4px;
+  padding: var(--sp-3) var(--sp-2) var(--sp-1);
   position: sticky;
   bottom: 0;
   background: linear-gradient(to bottom, transparent, rgb(var(--ink-2-rgb) / 0.92) 30%);
@@ -72,7 +72,7 @@
 }
 
 .staging-action-btn {
-  padding: 10px 22px;
+  padding: var(--sp-2h) var(--sp-5);
   font-size: var(--fs-md);
 }
 
@@ -120,7 +120,7 @@
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 400px;
-  gap: 20px;
+  gap: var(--sp-4h);
   padding: 24px clamp(16px, 2.5vw, 44px);
   min-height: 0;
   width: 100%;
@@ -139,11 +139,11 @@
 .staging-arena-card {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--sp-4h);
   background: rgb(var(--ink-2-rgb) / 0.8);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-xl);
-  padding: 24px;
+  padding: var(--sp-5);
   box-shadow: 0 16px 40px var(--shade-3);
   min-height: 0;
   overflow-y: auto;
@@ -152,15 +152,15 @@
 .staging-card-header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
   border-bottom: 1px solid var(--veil-2);
-  padding-bottom: 16px;
+  padding-bottom: var(--sp-4);
 }
 
 .staging-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
@@ -175,7 +175,7 @@
 .staging-tags-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -187,7 +187,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 0;
+  padding: var(--sp-4h) 0;
 }
 
 /* 1v1 Duel Layout */
@@ -196,7 +196,7 @@
   align-items: center;
   justify-content: space-around;
   width: 100%;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .staging-player-card {
@@ -206,8 +206,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
+  gap: var(--sp-3);
+  padding: var(--sp-4h) var(--sp-4);
   border-radius: var(--r-mid);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1.5px solid var(--veil-3);
@@ -223,7 +223,7 @@
   left: 8px;
   min-width: 22px;
   height: 22px;
-  padding: 0 5px;
+  padding: 0 var(--sp-1h);
   border-radius: var(--r-md);
   display: inline-flex;
   align-items: center;
@@ -252,8 +252,8 @@
   align-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-4);
   border-radius: var(--r-md);
   border: 1.5px dashed var(--veil-5);
   background: var(--veil-1);
@@ -307,7 +307,7 @@
 .player-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   align-items: center;
 }
 
@@ -317,7 +317,7 @@
   color: var(--fg-hi);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .player-crown {
@@ -326,8 +326,8 @@
 
 .seat-order-btns {
   display: inline-flex;
-  gap: 2px;
-  margin-left: 4px;
+  gap: var(--sp-0h);
+  margin-left: var(--sp-1);
 }
 
 /* Brief highlight on the two seats involved in a swap */
@@ -358,7 +358,7 @@
 .player-status-tag {
   font-size: var(--fs-2xs);
   font-weight: 600;
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-xs);
 }
 
@@ -370,14 +370,14 @@
 .player-seat-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
   font-size: var(--fs-2xs);
   color: var(--brand);
   max-width: 100%;
   min-width: 0;
   flex-wrap: wrap;
   justify-content: center;
-  row-gap: 3px;
+  row-gap: var(--sp-1);
 }
 
 .player-seat-meta > * {
@@ -387,7 +387,7 @@
 .player-seat-history {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .player-status-tag.preparing {
@@ -399,7 +399,7 @@
 
 .player-status-tag.mini {
   font-size: var(--fs-3xs);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
 }
 
 @keyframes staging-pulse-prep {
@@ -418,7 +418,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .vs-text {
@@ -454,8 +454,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 18px 26px;
+  gap: var(--sp-0h);
+  padding: var(--sp-4h) var(--sp-5);
   border-radius: var(--r-xl);
   background: radial-gradient(circle at 50% 30%, var(--ink-4), rgb(var(--ink-2-rgb) / 0.95));
   border: 1px solid rgb(var(--gold-rgb) / 0.35);
@@ -481,9 +481,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   width: 132px;
-  padding: 10px 8px;
+  padding: var(--sp-2h) var(--sp-2);
   border-radius: var(--r-mid);
   background: rgb(var(--ink-2-rgb) / 0.85);
   border: 1.5px solid var(--veil-3);
@@ -511,7 +511,7 @@
   left: 6px;
   min-width: 20px;
   height: 20px;
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
   border-radius: var(--r-md);
   display: inline-flex;
   align-items: center;
@@ -546,7 +546,7 @@
   color: var(--fg-hi);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -564,7 +564,7 @@
 .ring-seat.empty {
   width: auto;
   min-width: 44px;
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   border-style: dashed;
   border-color: var(--veil-5);
   background: var(--veil-1);
@@ -591,7 +591,7 @@
   .staging-ring {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-2h);
     height: auto;
     min-height: 0;
   }
@@ -601,7 +601,7 @@
     transform: none;
     order: -1;
     flex-direction: row;
-    gap: 10px;
+    gap: var(--sp-2h);
     align-items: baseline;
     justify-content: center;
   }
@@ -615,8 +615,8 @@
     transform: none;
     width: 100%;
     flex-direction: row;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: var(--sp-2h);
+    padding: var(--sp-2h) var(--sp-3);
     text-align: left;
   }
 
@@ -632,7 +632,7 @@
 .staging-multi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
+  gap: var(--sp-4);
   width: 100%;
   align-items: start;
 }
@@ -642,14 +642,14 @@
   display: flex;
   align-items: flex-start;
   gap: 0;
-  padding: 4px 8px 0;
+  padding: var(--sp-1) var(--sp-2) 0;
 }
 
 .staging-step {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -703,7 +703,7 @@
 .staging-step-line {
   flex: 1;
   height: 1px;
-  margin: 0 10px;
+  margin: 0 var(--sp-2h);
   background: var(--veil-4);
   min-width: 12px;
 }
@@ -716,8 +716,8 @@
 .staging-pulse-banner {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-4h);
   border-radius: var(--r-md);
   background: rgb(var(--brand-rgb) / 0.12);
   border: 1px solid rgb(var(--brand-rgb) / 0.35);
@@ -743,7 +743,7 @@
 .pulse-text-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .pulse-headline {
@@ -772,7 +772,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
+  padding: var(--sp-4) var(--sp-4h);
   border-bottom: 1px solid var(--veil-2);
 }
 
@@ -793,7 +793,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 12px;
+  padding: var(--sp-3);
 }
 
 /* Movimiento reducido (plan4 §5.7): pulsos de preparación y spinner de staging.

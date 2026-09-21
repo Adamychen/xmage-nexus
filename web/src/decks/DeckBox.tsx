@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import type { DeckV2 } from './types'
 import { deckMainCount, deckInitials } from './types'
 import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
@@ -9,6 +9,14 @@ import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './DeckBox.css'
+
+function identityStyle(colors: DeckV2['colors']): CSSProperties {
+  const [first, second] = colors
+  const style: Record<string, string> = {}
+  if (first) style['--identity-a'] = `var(--mana-${first.toLowerCase()})`
+  if (second) style['--identity-b'] = `var(--mana-${second.toLowerCase()})`
+  return style as CSSProperties
+}
 
 function useDeckCoverUrl(deck: DeckV2): string | null {
   return useCardArtUrl(deck.coverCard ?? deck.cards[0])
@@ -51,7 +59,7 @@ export function DeckBox({
       onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}
     >
       <div className="deck-box-art">
-        {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback">{deckInitials(deck.name)}</div>}
+        {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback" style={identityStyle(colors)}>{deckInitials(deck.name)}</div>}
         <div className="deck-box-art-scrim" />
         <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} ${t('decks', 'format_legal')}`}>
           {isValid ? (

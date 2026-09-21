@@ -143,14 +143,20 @@ describe('pruneSelectedId (C.13-mayores §2)', () => {
 })
 
 describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
+  const openMoreMenu = async () => {
+    fireEvent.click(await screen.findByTestId('decks-more-menu'))
+  }
+
   it('deshabilita el backup sin customs y lo habilita con customs', async () => {
     const { unmount } = render(<DecksGallery onEdit={() => {}} />)
+    await openMoreMenu()
     const backupEmpty = await screen.findByText('Exportar Mazo (0)')
     expect((backupEmpty.closest('button') as HTMLButtonElement).disabled).toBe(true)
     unmount()
 
     storeState.decks = [customDeck()]
     render(<DecksGallery onEdit={() => {}} />)
+    await openMoreMenu()
     const backupOne = await screen.findByText('Exportar Mazo (1)')
     expect((backupOne.closest('button') as HTMLButtonElement).disabled).toBe(false)
   })
@@ -158,10 +164,23 @@ describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
   it('etiqueta restore como importar y favorito con ★ visible', async () => {
     storeState.decks = [customDeck({ favorite: true })]
     render(<DecksGallery onEdit={() => {}} />)
+    await openMoreMenu()
     expect(await screen.findByText('Importar Mazo (JSON)')).not.toBeNull()
     const stars = await screen.findAllByText('★')
     const favBtn = stars.map((s) => s.closest('button')).find(Boolean)
     expect(favBtn?.getAttribute('aria-pressed')).toBe('true')
+    expect(favBtn?.textContent).toContain('Favorito')
+  })
+
+  it('agrupa los formatos de exportación en un menú que descarga el mazo elegido', async () => {
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    const trigger = await screen.findByTestId('decks-export-menu')
+    expect((trigger as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(trigger)
+    for (const fmt of ['.dck', 'Arena', 'Plain', '.dek']) {
+      expect(await screen.findByRole('menuitem', { name: fmt })).not.toBeNull()
+    }
   })
 
   it('el confirm de borrado muestra el NOMBRE del mazo', async () => {
@@ -194,7 +213,7 @@ describe('DecksGallery enriching (C.13 nit: progreso Scryfall)', () => {
   it('sin trabajo de enriquecimiento no hay indicador', async () => {
     storeState.decks = [customDeck()]
     render(<DecksGallery onEdit={() => {}} />)
-    await screen.findByText('Mi Burn')
+    await screen.findAllByText('Mi Burn')
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull())
   })
 })

@@ -7,7 +7,7 @@
   background: var(--ink-3);
   border-radius: var(--r-xs);
   overflow: hidden;
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-0h);
   border: 1px solid var(--veil-3);
   box-shadow: 0 1px 4px var(--shade-1);
   cursor: pointer;
@@ -39,7 +39,7 @@
 
 .strip-issue-badge {
   font-size: var(--fs-md);
-  margin-right: 4px;
+  margin-right: var(--sp-1);
   z-index: 1;
   filter: drop-shadow(0 0 4px rgb(var(--err-rgb) / 0.8));
 }
@@ -115,7 +115,7 @@
 /* Card Name */
 .strip-name {
   flex: 1;
-  padding: 0 8px;
+  padding: 0 var(--sp-2);
   font-weight: 700;
   font-size: var(--fs-md);
   color: var(--fg-hi);
@@ -131,8 +131,8 @@
 .strip-mana {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding-right: 8px;
+  gap: var(--sp-0h);
+  padding-right: var(--sp-2);
   z-index: 1;
   flex-shrink: 0;
 }
@@ -140,7 +140,7 @@
 .mana-cost-display {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .mana-symbol {
@@ -168,8 +168,8 @@
   bottom: 0;
   display: none;
   align-items: center;
-  gap: 2px;
-  padding: 0 4px;
+  gap: var(--sp-0h);
+  padding: 0 var(--sp-1);
   background: linear-gradient(90deg, transparent 0%, rgb(var(--ink-rgb) / 0.95) 25%);
   z-index: 3;
 }

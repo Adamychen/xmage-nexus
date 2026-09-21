@@ -1130,6 +1130,7 @@ export const ru: TranslationSchema = {
     export_deck: 'Экспортировать Колоду',
     export_backup_count: 'Экспортировать колоду ({count})',
     import_backup_json: 'Импортировать колоду (JSON)',
+    favorite: 'Избранное',
     mana_curve: 'Кривая Маны',
     basic_lands: 'Базовые Земли',
     sample_hand: 'Тестовая Рука',

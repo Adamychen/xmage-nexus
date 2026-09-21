@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 var(--sp-4);
   height: 48px;
   min-height: 48px;
   background: rgb(var(--ink-rgb) / 0.96);
@@ -43,7 +43,7 @@
 .arena-nav-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .deck-builder-title {
@@ -56,7 +56,7 @@
 .arena-nav-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .builder-save-badge {
@@ -70,7 +70,7 @@
   background: none;
   border: 1px solid var(--err);
   border-radius: var(--r-xs);
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   cursor: pointer;
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -80,8 +80,8 @@
 .deck-builder-body {
   display: grid;
   grid-template-columns: 1fr 380px;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
   flex: 1;
   min-height: 0;
   height: calc(100% - 48px);
@@ -99,8 +99,8 @@
 @media (max-width: 1200px) {
   .deck-builder-body {
     grid-template-columns: 1fr 340px;
-    gap: 10px;
-    padding: 6px 10px;
+    gap: var(--sp-2h);
+    padding: var(--sp-1h) var(--sp-2h);
   }
 }
 
@@ -135,8 +135,8 @@
   z-index: 50;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-4h);
   background: var(--err-surface);
   border: 2px dashed var(--err);
   border-radius: var(--r-pill);
@@ -174,10 +174,10 @@
   background: var(--ink-3);
   border: 1px solid var(--veil-3);
   border-top: none;
-  padding: 10px 14px;
+  padding: var(--sp-2h) var(--sp-4);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   animation: curveSlideDown 150ms ease-out;
   flex-shrink: 0;
   max-height: 38vh;
@@ -193,7 +193,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 6px;
+  padding-bottom: var(--sp-1h);
   border-bottom: 1px solid var(--veil-2);
 }
 
@@ -203,14 +203,14 @@
   color: var(--gold-500);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   letter-spacing: 0.02em;
 }
 
 .deck-curve-panel-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 /* Make CurveChart adapt seamlessly when inside .deck-curve-panel */
@@ -218,16 +218,16 @@
   background: transparent;
   border: none;
   padding: 0;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .deck-curve-panel .curve-bars {
   height: 70px;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .deck-curve-panel .curve-bar-col {
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .deck-curve-panel .curve-count {
@@ -248,13 +248,13 @@
 }
 
 .deck-curve-panel .curve-stats-grid {
-  gap: 4px;
-  padding-top: 6px;
+  gap: var(--sp-1);
+  padding-top: var(--sp-1h);
   grid-template-columns: repeat(2, 1fr);
 }
 
 .deck-curve-panel .curve-stat-pill {
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
 }
 
@@ -262,8 +262,8 @@
 .builder-deck-footer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
+  gap: var(--sp-1h);
+  padding: var(--sp-2);
   background: var(--ink-3);
   border: 1px solid var(--veil-3);
   border-top: none;
@@ -273,7 +273,7 @@
 .builder-action-btns-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
 }
 
@@ -295,7 +295,7 @@
   box-shadow: 0 24px 60px var(--shade-5), 0 0 32px rgb(var(--gold-rgb) / 0.5);
   background: transparent;
   display: flex;
-  gap: 16px;
+  gap: var(--sp-4);
   transition: opacity 100ms ease;
   transform-origin: center center;
   animation: arena-preview-pop 120ms cubic-bezier(0.1, 0.9, 0.2, 1);
@@ -331,7 +331,7 @@
   color: var(--gold-300);
   font-size: var(--fs-xs);
   font-weight: 800;
-  padding: 3px 10px;
+  padding: var(--sp-1) var(--sp-2h);
   border-radius: var(--r-sm);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -351,8 +351,8 @@
 
 .builder-server-issues {
   position: relative;
-  margin: 6px 12px 0;
-  padding: 8px 12px;
+  margin: var(--sp-1h) var(--sp-3) 0;
+  padding: var(--sp-2) var(--sp-3);
   background: rgb(var(--err-rgb) / 0.12);
   border: 1px solid rgb(var(--err-rgb) / 0.45);
   border-radius: var(--r-base);
@@ -365,19 +365,19 @@
 }
 .builder-server-issues .bsi-title {
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 .builder-server-issues ul {
   margin: 0;
-  padding-left: 18px;
+  padding-left: var(--sp-4h);
   list-style: disc;
 }
 .builder-server-issues li {
-  margin: 2px 0;
+  margin: var(--sp-0h) 0;
   line-height: 1.4;
 }
 .builder-server-issues .bsi-sug {
   color: var(--ok);
 }
-.builder-server-issues .bsi-repair-btn { margin-left: 6px; }
+.builder-server-issues .bsi-repair-btn { margin-left: var(--sp-1h); }
 

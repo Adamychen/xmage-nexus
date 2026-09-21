@@ -1,8 +1,13 @@
 
 
+.dlg-panel.settings-modal {
+  width: min(760px, 94vw);
+}
+
 .settings-body {
   display: flex;
-  gap: 16px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-3);
   min-height: 0;
   flex: 1;
 }
@@ -10,14 +15,14 @@
 .settings-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   min-width: 150px;
   flex-shrink: 0;
 }
 
 .settings-nav-item {
   text-align: left;
-  padding: 9px 12px;
+  padding: var(--sp-2h) var(--sp-3);
   border-radius: var(--r-base);
   background: transparent;
   border: 1px solid transparent;
@@ -39,20 +44,20 @@
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: var(--sp-1);
 }
 
 .settings-section-title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-2);
   font-size: var(--fs-sm);
   font-weight: 800;
   color: var(--fg-1);
 }
 
-.settings-section-title:not(:first-child) { margin-top: 18px; }
+.settings-section-title:not(:first-child) { margin-top: var(--sp-4h); }
 
 .settings-hint {
-  margin: 0 0 10px;
+  margin: 0 0 var(--sp-2h);
   font-size: var(--fs-2xs);
   color: var(--fg-3);
 }
@@ -60,8 +65,8 @@
 .settings-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: var(--sp-1h);
+  margin-bottom: var(--sp-4);
 }
 
 .settings-field-label {
@@ -71,24 +76,18 @@
 }
 
 .settings-select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 9px 34px 9px 12px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--fg-3) 50%), linear-gradient(135deg, var(--fg-3) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
+  padding-block: var(--sp-2h);
+  padding-inline-start: var(--sp-3);
   font-size: var(--fs-sm);
   font-weight: 600;
-  cursor: pointer;
   max-width: 320px;
 }
 
 .settings-stepper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2h);
 }
 
 .settings-step-value {
@@ -111,12 +110,12 @@
 .settings-stops {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
 .settings-stop {
-  padding: 9px 4px;
+  padding: var(--sp-2h) var(--sp-1);
   border-radius: var(--r-md);
   background: var(--ink-2);
   border: 1.5px solid transparent;
@@ -136,16 +135,16 @@
 .settings-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1h);
 }
 
 .settings-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 10px;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2h);
   border-radius: var(--r-md);
   background: var(--ink-2);
   border: 1.5px solid transparent;
@@ -177,11 +176,11 @@
 .settings-auto-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2h);
   border-radius: var(--r-base);
   background: var(--ink-2);
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
   font-size: var(--fs-xs);
 }
 
@@ -197,7 +196,7 @@
 .settings-auto-badge {
   font-size: var(--fs-3xs);
   font-weight: 800;
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-pill);
 }
 
@@ -208,8 +207,8 @@
   display: flex;
   justify-content: flex-end;
   border-top: 1px solid var(--veil-2);
-  margin-top: 12px;
-  padding-top: 8px;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
 }
 
 @media (max-width: 560px) {
@@ -228,9 +227,9 @@
 .settings-sound-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 10px 12px 12px;
-  margin: 0 2px 2px;
+  gap: var(--sp-3);
+  padding: var(--sp-2h) var(--sp-3) var(--sp-3);
+  margin: 0 var(--sp-0h) var(--sp-0h);
   background: var(--ink-1);
   border: 1px solid var(--ink-4);
   border-radius: var(--r-sm);
@@ -240,13 +239,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .settings-sound-card .fx-popover-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
   min-width: 0;
 }
 
@@ -265,7 +264,7 @@
 .settings-sound-card .fx-popover-divider {
   height: 1px;
   background: var(--ink-4);
-  margin: 2px 0;
+  margin: var(--sp-0h) 0;
 }
 
 .settings-sound-card .audio-slider {
@@ -304,15 +303,15 @@
 .appearance-sleeve-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
   align-content: start;
-  padding: 2px;
+  padding: var(--sp-0h);
 }
 
 @media (max-width: 480px) {
   .appearance-sleeve-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: var(--sp-2h);
   }
 }
 

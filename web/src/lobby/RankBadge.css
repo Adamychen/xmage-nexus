@@ -1,8 +1,8 @@
 .rank-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
+  gap: var(--sp-1);
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-sm);
   border: 1px solid transparent;
   font-size: var(--fs-2xs);
@@ -18,9 +18,9 @@
 }
 
 .rank-badge.compact {
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   font-size: var(--fs-3xs);
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .rank-badge-icon {

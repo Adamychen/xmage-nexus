@@ -1,11 +1,11 @@
 .draft-sets-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
   background: rgb(var(--ink-2-rgb) / 0.45);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 12px;
+  padding: var(--sp-3);
 }
 
 .draft-sets-top-bar {
@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .draft-sets-title {
@@ -22,13 +22,13 @@
   color: var(--fg-1);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .draft-sets-chips {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
@@ -42,7 +42,7 @@
 
 .draft-sets-picker-row {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -53,7 +53,7 @@
 
 .draft-sets-search-box input {
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
   font-size: var(--fs-sm);
 }
 
@@ -64,24 +64,24 @@
 
 .draft-sets-select-box select {
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
   font-size: var(--fs-sm);
 }
 
 .draft-sets-boosters-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .draft-sets-booster-item {
   background: rgb(var(--ink-2-rgb) / 0.6);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-sm);
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .draft-sets-booster-label {
@@ -90,25 +90,26 @@
   color: var(--gold-300);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .draft-sets-booster-select {
-  padding: 4px 6px;
+  padding-block: var(--sp-1);
+  padding-inline-start: var(--sp-1h);
   font-size: var(--fs-xs);
   width: 100%;
 }
 
 .draft-sets-manual-wrap {
-  margin-top: 4px;
+  margin-top: var(--sp-1);
   border-top: 1px dashed var(--veil-2);
-  padding-top: 8px;
+  padding-top: var(--sp-2);
 }
 
 .draft-sets-manual-label-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .draft-sets-manual-label {
@@ -116,13 +117,13 @@
   color: var(--fg-3);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   font-weight: 600;
 }
 
 .draft-sets-manual-input-el {
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
   font-size: var(--fs-sm);
 }
 

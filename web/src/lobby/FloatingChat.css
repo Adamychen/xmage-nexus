@@ -23,8 +23,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: var(--sp-2);
+  padding: var(--sp-1h) var(--sp-2);
   border-bottom: 1px solid var(--veil-2);
   cursor: move;
   user-select: none;
@@ -35,7 +35,7 @@
 .floating-chat-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-shrink: 0;
 }
 
