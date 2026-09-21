@@ -221,12 +221,6 @@
     "fontSizes": 0,
     "spacing": 10
   },
-  "game/GameLog.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 0,
-    "spacing": 2
-  },
   "game/GameMenu.css": {
     "colors": 0,
     "radii": 0,
@@ -310,12 +304,6 @@
     "radii": 0,
     "fontSizes": 0,
     "spacing": 21
-  },
-  "game/PlayerStatusCard.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 5
   },
   "game/QuickReactions.css": {
     "colors": 0,
