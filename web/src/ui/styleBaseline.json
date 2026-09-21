@@ -44,11 +44,6 @@
     "radii": 0,
     "fontSizes": 1
   },
-  "game/GameScreen.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 4
-  },
   "game/HelpWikiModal.css": {
     "colors": 0,
     "radii": 0,
@@ -68,6 +63,16 @@
     "colors": 0,
     "radii": 1,
     "fontSizes": 0
+  },
+  "game/feedbackModes/GenericDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 1
+  },
+  "game/feedbackModes/StartingPlayerDialog.css": {
+    "colors": 0,
+    "radii": 0,
+    "fontSizes": 2
   },
   "lobby/AvatarImage.css": {
     "colors": 0,

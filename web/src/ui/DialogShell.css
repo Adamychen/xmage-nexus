@@ -146,3 +146,20 @@
     animation: none;
   }
 }
+
+/* ── Legacy dialog actions row (feedback/rollback/user-request) ── */
+.feedback-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.feedback-dialog-actions button {
+  padding: 10px 22px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}

@@ -7,6 +7,8 @@ import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Button from '../../ui/Button'
+import { DockPrompt } from '../GameDock'
+import './promptBars.css'
 
 const POOL_COLORS: ManaPoolKey[] = ['white', 'blue', 'black', 'red', 'green', 'colorless']
 
@@ -27,33 +29,35 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
   if (!prompt) return null
   const localizedManaMsg = localizeServerMessage(prompt.message, t as any)
   return (
-    <div className="action-prompt-bar mana-prompt-bar">
-      <div className="action-prompt-info">
-        <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true"><Icon name="zap" size={14} /></span>{' '}
-          {t('game', 'pay_mana')}
-        </span>
-        <span className="action-prompt-msg">
-          <FormattedText text={localizedManaMsg} />
-        </span>
-        <span className="action-prompt-hint" role="status" aria-live="polite">{t('game', 'mana_hint')}</span>
+    <DockPrompt>
+      <div className="action-prompt-bar mana-prompt-bar">
+        <div className="action-prompt-info">
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true"><Icon name="zap" size={14} /></span>{' '}
+            {t('game', 'pay_mana')}
+          </span>
+          <span className="action-prompt-msg">
+            <FormattedText text={localizedManaMsg} />
+          </span>
+          <span className="action-prompt-hint" role="status" aria-live="polite">{t('game', 'mana_hint')}</span>
+        </div>
+        <div className="action-prompt-actions">
+          {prompt.playerId && (
+            <ManaPoolView
+              pool={poolOf(game)}
+              size={18}
+              canPay={!busy}
+              onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
+            />
+          )}
+          <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
+            {t('game', 'mana_special')}
+          </Button>
+          <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">
+            {t('game', 'targeting_cancel')}
+          </Button>
+        </div>
       </div>
-      <div className="action-prompt-actions">
-        {prompt.playerId && (
-          <ManaPoolView
-            pool={poolOf(game)}
-            size={18}
-            canPay={!busy}
-            onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
-          />
-        )}
-        <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
-          {t('game', 'mana_special')}
-        </Button>
-        <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">
-          {t('game', 'targeting_cancel')}
-        </Button>
-      </div>
-    </div>
+    </DockPrompt>
   )
 }

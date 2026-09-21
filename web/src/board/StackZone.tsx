@@ -440,22 +440,14 @@ export default function StackZone({
 
               {/* Card content */}
               <div className="stack-tl-body">
-                {/* Position and Controller ribbon */}
-                <div className="stack-tl-pos-row">
-                  <span className="stack-tl-pos">
-                    {isTop ? (<><Icon name="play" size={9} /> #1</>) : `#${idx + 1}`}
-                  </span>
-                  <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
-                    <span className="ctrl-icon"><Icon name={ctrlInfo.avatarIcon} size={12} /></span>
-                    <span className="ctrl-name">{ctrlInfo.name}</span>
-                  </span>
-                </div>
-
                 <div className="stack-tl-card">
                   {viewMode === 'compact' && <StackThumbnail card={card} />}
 
                   <div className="stack-tl-info">
                     <div className="stack-tl-name-row">
+                      <span className="stack-tl-pos">
+                        {isTop ? (<><Icon name="play" size={9} />#1</>) : `#${idx + 1}`}
+                      </span>
                       <StackEntryCardName card={card} />
                       {manaCost && (
                         <span className="stack-tl-mana">
@@ -470,6 +462,10 @@ export default function StackZone({
                       {subtype && <span className="stack-tl-subtype">{subtype}</span>}
                       {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
                       {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
+                      <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
+                        <span className="ctrl-icon"><Icon name={ctrlInfo.avatarIcon} size={12} /></span>
+                        <span className="ctrl-name">{ctrlInfo.name}</span>
+                      </span>
                     </div>
                     {tgtLabels.length > 0 && (
                       <div

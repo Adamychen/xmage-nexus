@@ -29,6 +29,14 @@ import {
 } from './frames'
 import { parsedLen } from './frames'
 
+export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
+
+export async function openDrawerTab(page: Page, tab: DrawerTab): Promise<void> {
+  const active = page.locator(`[data-testid="game-drawer"][data-tab="${tab}"]`)
+  if ((await active.count()) === 0) await page.locator(`[data-testid="drawer-tab-${tab}"]`).click()
+  await expect(active).toBeVisible({ timeout: 10_000 })
+}
+
 export function feedbackDialog(page: Page) {
   return page.locator('.feedback-dialog, .targeting-bar, .mana-prompt-bar')
 }

@@ -55,9 +55,8 @@ export default function GameChat() {
   }, [log])
 
   useEffect(() => {
-    if (endRef.current && typeof endRef.current.scrollIntoView === 'function') {
-      endRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
+    const box = endRef.current?.parentElement
+    if (box && typeof box.scrollTo === 'function') box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' })
   }, [chatEntries.length])
 
   const send = async (e: React.FormEvent) => {

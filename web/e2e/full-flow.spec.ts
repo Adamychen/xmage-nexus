@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { cleanupUser } from './cleanup'
 import { login } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 const FINAL_SHOT = path.join(SHOTS_DIR, 'full-flow-final.png')
@@ -72,9 +73,8 @@ test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero av
   await page.waitForTimeout(1000)
 
   // (g) entrada del espectador en el GameLog (markup real: .game-log-entries > .game-log-entry)
-  //     Al espectar una partida EN CURSO el stack no está vacío y el panel
-  //     derecho arranca en la pestaña Stack: volver a Log antes de asertar.
-  await page.getByRole('tab', { name: 'Log', exact: true }).click()
+  //     El log vive en el cajón del dock (cerrado por defecto): abrirlo antes de asertar.
+  await openDrawerTab(page, 'log')
   await expect(page.locator('.game-log-entries')).toContainText(/Espectador: mirando la partida/, {
     timeout: 15_000,
   })

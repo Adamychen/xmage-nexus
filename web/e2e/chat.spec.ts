@@ -2,6 +2,7 @@ import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
 import { cleanupUser } from './cleanup'
 import { login } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 import { FakeServer } from '../fixtures/fake'
 import { chatScenario } from '../fixtures/scenarios/chat'
 import { FAKE_MODE } from './dual'
@@ -124,8 +125,7 @@ fakeOnly()
     // game screen visible
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 
-    // el chat de partida es una pestaña del panel derecho
-    await page.getByRole('tab', { name: 'Chat', exact: true }).click()
+    await openDrawerTab(page, 'chat')
 
     // find the game chat input
     const chatInput = page.locator('.game-chat-input input')
@@ -141,15 +141,19 @@ fakeOnly()
     })
     await expect(page.locator('.game-chat-player').first()).toContainText('player-1', { timeout: 5_000 })
 
-    // Ensure the chat and quick reactions fill the entire vertical height down to the action button
-    const gapToAction = await page.evaluate(() => {
+    // The chat and quick reactions stay inside the drawer, which sits above the action button
+    const layout = await page.evaluate(() => {
+      const drawer = document.querySelector('.game-drawer')
       const reactions = document.querySelector('.quick-reactions')
       const action = document.querySelector('.action-button-container')
-      if (!reactions || !action) return null
-      return Math.abs(action.getBoundingClientRect().top - reactions.getBoundingClientRect().bottom)
+      if (!drawer || !reactions || !action) return null
+      const drawerBottom = drawer.getBoundingClientRect().bottom
+      return {
+        reactionsInsideDrawer: reactions.getBoundingClientRect().bottom <= drawerBottom + 1,
+        drawerAboveAction: drawerBottom <= action.getBoundingClientRect().top,
+      }
     })
-    expect(gapToAction).not.toBeNull()
-    expect(gapToAction).toBeLessThanOrEqual(1)
+    expect(layout).toEqual({ reactionsInsideDrawer: true, drawerAboveAction: true })
   },
 )
 
@@ -175,8 +179,7 @@ fakeOnly()
     // game screen visible
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 
-    // las reacciones rápidas viven dentro del chat de partida (pestaña del panel derecho)
-    await page.getByRole('tab', { name: 'Chat', exact: true }).click()
+    await openDrawerTab(page, 'chat')
 
     // click a quick reaction button
     const thumbsUp = page.locator('.quick-reaction-btn', { hasText: '👍' })

@@ -7,6 +7,7 @@ import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { playableInSceneByName } from './support/scene'
+import { openDrawerTab } from './support/game-screen'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -77,6 +78,32 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         if (entry.assert === 'hasCounterOnStack') {
           await expect(page.locator('.stack-zone')).toBeVisible()
           await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(2)')
+          await page.locator('.stack-zone .stack-tl-entry').first().hover()
+          const preview = page.locator('.stack-zone .floating-card-preview')
+          await expect(preview).toBeVisible({ timeout: 10_000 })
+          const box = await preview.boundingBox()
+          const viewport = page.viewportSize()
+          expect(box, 'el preview de la pila tiene caja').not.toBeNull()
+          expect(box!.x).toBeGreaterThanOrEqual(0)
+          expect(box!.y).toBeGreaterThanOrEqual(0)
+          expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width)
+          expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height)
+        }
+        if (entry.assert === 'hasPlaneswalker') {
+          const marquee = page.locator('.pz-marquee')
+          await expect(marquee).toBeVisible()
+          const stackPanel = page.locator('[data-testid="game-drawer"] .stack-zone')
+          await expect(stackPanel).toBeVisible()
+          const pw = await marquee.boundingBox()
+          const stack = await stackPanel.boundingBox()
+          expect(pw).not.toBeNull()
+          expect(stack).not.toBeNull()
+          const overlaps =
+            pw!.x < stack!.x + stack!.width &&
+            stack!.x < pw!.x + pw!.width &&
+            pw!.y < stack!.y + stack!.height &&
+            stack!.y < pw!.y + pw!.height
+          expect(overlaps, 'la pila no tapa el planeswalker').toBe(false)
         }
         if (entry.assert === 'hasTokens') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Token"]')).toHaveCount(2)
@@ -200,10 +227,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
             (p) => String(p?.name ?? '').toLowerCase() === String(m?.[2] ?? '').trim().toLowerCase(),
           )
           expect(target, 'el rival dañado existe en el frame').toBeTruthy()
-          await page
-            .locator('.right-tab-btn')
-            .filter({ hasText: /Comand/i })
-            .click()
+          await openDrawerTab(page, 'commander')
           await expect(page.locator('[data-testid="commander-damage-matrix"]')).toBeVisible()
           await expect(
             page.locator(`[data-testid="cdm-cell-${target?.playerId}-${cmd?.id}"][data-damage="${dmg}"]`),

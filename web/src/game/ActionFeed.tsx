@@ -19,7 +19,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   const log = useStore((s) => s.log)
   const game = useStore((s) => s.game)
   const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual')
-  const feedEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [autoScroll, setAutoScroll] = useState(true)
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
@@ -86,9 +85,8 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   }
 
   useEffect(() => {
-    if (autoScroll && feedEndRef.current && typeof feedEndRef.current.scrollIntoView === 'function') {
-      feedEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
+    const box = containerRef.current
+    if (autoScroll && box && typeof box.scrollTo === 'function') box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' })
   }, [feedItems.length, autoScroll, viewMode])
 
   return (
@@ -131,7 +129,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             ))}
           </div>
         )}
-        <div ref={feedEndRef} />
       </div>
 
       <FloatingCardPreview

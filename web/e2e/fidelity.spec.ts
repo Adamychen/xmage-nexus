@@ -8,6 +8,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 import { DECK } from '../fixtures/deck-names'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
@@ -56,7 +57,7 @@ test.describe('fidelidad de render (P2)', () => {
         await page.waitForTimeout(2500)
         const runs = await page.evaluate(() => window.__mageFidelityRuns ?? 0)
         expect(runs, 'el checker debe haber corrido').toBeGreaterThan(0)
-        await page.getByRole('tab', { name: 'Log' }).click()
+        await openDrawerTab(page, 'log')
         await expect(page.getByText('fidelidad')).toHaveCount(0)
       })
     })

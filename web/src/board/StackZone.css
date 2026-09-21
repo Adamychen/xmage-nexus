@@ -17,8 +17,10 @@
 .stack-header {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 4px 6px;
   padding-bottom: 8px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--veil-2);
@@ -42,8 +44,11 @@
 
 .stack-header-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
 }
 
 .stack-header-title { white-space: nowrap; }
@@ -92,7 +97,7 @@
   align-items: center;
   flex-shrink: 0;
   position: relative;
-  padding-top: 10px;
+  padding-top: 12px;
 }
 
 .stack-tl-node {
@@ -143,18 +148,13 @@
 .stack-tl-body {
   flex: 1;
   min-width: 0;
-  padding: 4px 6px 8px 2px;
-}
-
-.stack-tl-pos-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  gap: 6px;
+  padding: 2px 6px 4px 2px;
 }
 
 .stack-tl-pos {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -177,6 +177,10 @@
   white-space: nowrap;
   letter-spacing: 0.02em;
   line-height: 1.2;
+  margin-left: auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stack-controller-pill.is-me {
@@ -200,13 +204,13 @@
 .stack-tl-card {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 6px 8px;
+  padding: 5px 8px;
   transition: all 0.15s ease;
   position: relative;
+  align-items: center;
 }
 
 .stack-tl-entry.is-top .stack-tl-card {
@@ -237,8 +241,8 @@
 
 /* ── Thumbnail ── */
 .stack-thumb {
-  width: 40px;
-  height: 56px;
+  width: 34px;
+  height: 48px;
   border-radius: var(--r-xs);
   overflow: hidden;
   flex-shrink: 0;
@@ -275,11 +279,11 @@
 .stack-tl-name-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+  gap: 5px;
 }
 
 .stack-tl-name {
+  flex: 1;
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--fg-1);

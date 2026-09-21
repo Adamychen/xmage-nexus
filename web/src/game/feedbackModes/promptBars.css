@@ -1,0 +1,109 @@
+/* Barras flotantes de acción: targeting, pago de maná y combate.
+   Extraído de game/GameScreen.css (sección «Action floating prompt bars») — refactor de co-locación. */
+
+.action-prompt-bar {
+  position: fixed;
+  right: 8px;
+  bottom: 68px;
+  width: 234px;
+  box-sizing: border-box;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgb(var(--ink-2-rgb) / 0.98);
+  border: 1.5px solid rgb(var(--brand-rgb) / 0.35);
+  border-radius: var(--dlg-bar-radius);
+  box-shadow: 0 12px 36px var(--shade-4), 0 0 20px rgb(var(--brand-rgb) / 0.18);
+  font-size: var(--fs-xs);
+  color: var(--fg-hi);
+  pointer-events: auto;
+  backdrop-filter: blur(12px);
+  animation: promptIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes promptIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.action-prompt-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.action-prompt-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--dlg-kicker-fg);
+  background: var(--dlg-kicker-bg);
+  border: 1px solid var(--dlg-kicker-border);
+  border-radius: var(--r-pill);
+  padding: 2px 8px;
+  font-weight: 700;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.action-prompt-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 3px;
+  font-size: var(--fs-sm);
+}
+
+.action-prompt-msg {
+  color: var(--fg-hi);
+  font-weight: 500;
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+}
+
+.action-prompt-hint {
+  color: var(--fg-2);
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+}
+
+.action-prompt-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.action-prompt-actions button {
+  flex: 1 1 auto;
+  padding: 6px 12px;
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+
+.mana-prompt-bar {
+  border-color: rgb(var(--gold-rgb) / 0.6);
+  box-shadow: 0 16px 48px var(--shade-4), 0 0 20px rgb(var(--gold-rgb) / 0.25);
+}
+
+.targeting-bar {
+  border-color: rgb(var(--ok-rgb) / 0.6);
+  box-shadow: 0 16px 48px var(--shade-4), 0 0 20px rgb(var(--ok-rgb) / 0.2);
+}
+
+.combat-bar {
+  border-color: rgb(var(--err-rgb) / 0.6);
+  box-shadow: 0 16px 48px var(--shade-4), 0 0 20px rgb(var(--err-rgb) / 0.2);
+}

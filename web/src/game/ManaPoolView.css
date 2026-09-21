@@ -1,11 +1,27 @@
+/* Flex y no grid de 3 columnas: el número de pips es variable (solo los
+   colores con maná) y el grid dejaba huecos con 1-2 pips. */
 .mana-inline {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 4px 10px;
   padding: 6px 12px;
   border: 1px solid var(--veil-3);
   border-radius: var(--r-base);
   background: rgb(var(--ink-2-rgb) / 0.9);
+}
+
+/* Placeholder con el pool vacío: la caja no colapsa y la fila no salta. */
+.mana-inline.is-empty {
+  min-width: 42px;
+}
+
+.mana-inline-empty {
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .mana-inline-pip {

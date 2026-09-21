@@ -92,7 +92,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName }))
   }
 
-  const stackEl = document.querySelector('.stack-zone, .stack-list, .right-panel-content') as HTMLElement | null
+  const stackEl = document.querySelector('.stack-zone, .stack-list, [data-testid="drawer-tab-stack"]') as HTMLElement | null
   const stackRect = stackEl ? stackEl.getBoundingClientRect() : null
 
   // 1. Detect New Spells on the Stack (Hand/Battlefield -> Stack)

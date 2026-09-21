@@ -1,0 +1,72 @@
+/* Starting Player Dialog.
+   Extraído de game/GameScreen.css (sección «Starting Player Dialog») — refactor de co-locación. */
+
+.starting-player-dialog {
+  width: min(640px, 96vw);
+  text-align: center;
+}
+
+.starting-player-options {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.starting-player-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 28px;
+  min-width: 160px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.14) 0%, rgb(var(--purple-rgb) / 0.22) 100%);
+  border: 1.5px solid rgb(var(--brand-rgb) / 0.3);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  color: var(--fg-1);
+}
+
+.starting-player-btn:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.03);
+  border-color: rgb(var(--brand-rgb) / 0.75);
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.28) 0%, rgb(var(--purple-rgb) / 0.38) 100%);
+  box-shadow: 0 12px 36px var(--shade-2), 0 0 20px rgb(var(--brand-rgb) / 0.25);
+}
+
+.starting-player-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sp-avatar {
+  font-size: 2.25rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px var(--shade-3));
+}
+
+.sp-name {
+  font-size: 1.062rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--fg-hi);
+  word-break: break-word;
+  text-align: center;
+}
+
+.sp-action {
+  font-size: var(--fs-2xs);
+  color: var(--brand-fg);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.starting-player-btn:hover .sp-action {
+  opacity: 1;
+  transform: translateY(0);
+}

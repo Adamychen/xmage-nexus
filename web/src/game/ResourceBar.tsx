@@ -49,6 +49,7 @@ export default function ResourceBar({
   const gameId = useStore((s) => s.gameId)
   const pool = player.manaPool ?? {}
   const canPayMana = side === 'my' && !!gameId
+  const manaPromptOpen = useStore((s) => s.feedback?.mode === 'mana')
   const payMana = (key: ManaPoolKey) => {
     const manaType = manaTypeOf(key)
     if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
@@ -108,7 +109,7 @@ export default function ResourceBar({
   return (
     <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
       <div className="resource-mana-wrap">
-        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} />
+        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} />
       </div>
 
       <div className={`resource-piles ${micro ? 'micro' : ''}`}>

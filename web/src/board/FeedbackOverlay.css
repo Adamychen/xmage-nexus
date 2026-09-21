@@ -49,20 +49,34 @@
   }
 }
 
+/* Banda alineada con el divisor del tablero, no una caja sobre el campo.
+   Antes vivía en `top: 32%`, que en cualquier viewport cae sobre la fila de
+   criaturas del rival y la tapaba con un panel opaco. Ahora se lee como que
+   el divisor central (`.board-shell-divider`, mismo degradado) se enciende al
+   cambiar de turno: ancho completo, sin panel sólido y desvanecido en los
+   bordes, así que solo roza los bordes de las filas adyacentes. */
 .fx-banner {
   position: fixed;
-  top: 32%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 14px 36px;
-  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.94), rgb(var(--ink-2-rgb) / 0.9));
-  border: 1px solid rgb(var(--brand-rgb) / 0.45);
-  border-radius: var(--r-mid);
-  box-shadow: 0 18px 60px var(--shade-3), 0 0 26px rgb(var(--brand-rgb) / 0.22);
+  gap: 2px;
+  padding: 10px 24px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--ink-rgb) / 0.72) 18%,
+    rgb(var(--ink-rgb) / 0.93) 50%,
+    rgb(var(--ink-rgb) / 0.72) 82%,
+    transparent 100%
+  );
+  border-top: 1px solid rgb(var(--gold-rgb) / 0.28);
+  border-bottom: 1px solid rgb(var(--gold-rgb) / 0.28);
+  box-shadow: 0 0 34px rgb(var(--brand-rgb) / 0.22);
   animation-name: fxBannerIn;
   animation-timing-function: ease;
   animation-fill-mode: both;
@@ -75,7 +89,9 @@
   font-weight: 700;
   color: var(--gold, var(--gold-500));
   letter-spacing: 0.04em;
-  text-shadow: 0 2px 12px var(--shade-4);
+  /* La banda es translúcida (deja ver el tapete), así que el texto necesita
+     su propia sombra opaca para no lavarse sobre el arte de las cartas. */
+  text-shadow: 0 1px 2px rgb(var(--ink-rgb) / 0.95), 0 2px 14px rgb(var(--ink-rgb) / 0.8);
 }
 
 .fx-banner-sub {
@@ -85,19 +101,21 @@
   text-transform: uppercase;
 }
 
+/* La banda ocupa el ancho completo (left/right: 0), así que el centrado es
+   solo vertical: sin `translateX(-50%)`, que la sacaría de cuadro. */
 @keyframes fxBannerIn {
   0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-14px) scale(0.92);
+    transform: translateY(-50%) scaleY(0.6);
   }
 12%,
 78% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(-50%) scaleY(1);
   }
   100% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-10px) scale(0.98);
+    transform: translateY(-50%) scaleY(0.85);
   }
 }
 

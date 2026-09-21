@@ -1,0 +1,47 @@
+.game-dock {
+  position: absolute;
+  right: 8px;
+  bottom: var(--dock-bottom, 104px);
+  width: 250px;
+  max-width: calc(100% - 16px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.game-dock > * {
+  pointer-events: auto;
+}
+
+.game-dock-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+  pointer-events: none;
+}
+
+.game-dock-prompt:empty {
+  display: none;
+}
+
+.game-dock-prompt > * {
+  pointer-events: auto;
+}
+
+.game-dock .action-prompt-bar {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+}
+
+.game-dock > .action-button-container {
+  width: 200px;
+  padding: 0;
+  background: transparent;
+  border-top: 0;
+}

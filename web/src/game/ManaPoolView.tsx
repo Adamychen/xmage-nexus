@@ -19,18 +19,27 @@ interface ManaPoolViewProps {
   canPay?: boolean
   onPay?: (key: ManaPoolKey) => void
   size?: number
+  /** Pinta los seis colores aunque estén a cero. Reservado al pago de maná en
+   *  curso, que es cuando «tengo 0 de azul» es información accionable; `canPay`
+   *  NO sirve como señal (es true durante toda la partida en la barra propia). */
+  showAll?: boolean
 }
 
-export default function ManaPoolView({ pool, canPay = false, onPay, size = 16 }: ManaPoolViewProps) {
+export default function ManaPoolView({ pool, canPay = false, onPay, size = 16, showAll = false }: ManaPoolViewProps) {
   const { t } = useTranslation()
   const total = MANA_POOL_ORDER.reduce((sum, c) => sum + (pool[c.key] ?? 0), 0)
+  /** Fuera del pago solo se pintan los colores con maná: seis ceros
+   *  permanentes eran ruido. Filtrar nunca oculta un pip pagable, porque los
+   *  de cuenta cero no son clicables. */
+  const shown = showAll ? MANA_POOL_ORDER : MANA_POOL_ORDER.filter((c) => (pool[c.key] ?? 0) > 0)
   return (
     <div
-      className="mana-inline"
+      className={`mana-inline ${shown.length === 0 ? 'is-empty' : ''}`}
       title={`${t('game', 'mana_title')}: ${total}`}
       data-testid="mana-inline"
     >
-      {MANA_POOL_ORDER.map((c) => {
+      {shown.length === 0 && <span className="mana-inline-empty" aria-hidden="true">—</span>}
+      {shown.map((c) => {
         const count = pool[c.key] ?? 0
         const clickable = canPay && !!onPay && count > 0
         const pip = (

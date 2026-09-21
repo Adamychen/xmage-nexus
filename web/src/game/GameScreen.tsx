@@ -1,9 +1,10 @@
-import Tabs from '../ui/Tabs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import GameBoard from '../board/GameBoard'
 import PodBoard from '../board/PodBoard'
 import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
+import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
 import { maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
@@ -15,19 +16,17 @@ import PlayerContextMenu from './PlayerContextMenu'
 import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
-import GameChat from './GameChat'
 import PhaseBar from './PhaseBar'
 import ActionButton from './ActionButton'
-import ActionFeed from './ActionFeed'
-import DeckTrackerPanel from './DeckTrackerPanel'
+import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
+import GameStrip from './GameStrip'
+import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import { applyFxRoot } from '../board/fx'
 import { hasCommanders as hasCommandersInGame } from '../board/commanders'
 import { dayNightStateOf } from '../board/dayNight'
-import MechanicsTray from './MechanicsTray'
-import CommanderDamageMatrix from './CommanderDamageMatrix'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/clickable'
@@ -74,16 +73,19 @@ export default function GameScreen() {
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
   const gameBodyRef = useRef<HTMLDivElement>(null)
-  const [rightTab, setRightTab] = useState<'stack' | 'log' | 'tracker' | 'commander' | 'mechanics' | 'chat'>('log')
+  const boardWrapRef = useRef<HTMLDivElement>(null)
+  const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
+  const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
+  const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const stackCount = Object.keys(game?.stack ?? {}).length
   const prevStackCountRef = useRef(0)
 
   useEffect(() => {
-    if (stackCount > 0 && prevStackCountRef.current === 0) {
-      setRightTab('stack')
-    }
+    const prev = prevStackCountRef.current
     prevStackCountRef.current = stackCount
+    if (stackCount > 0 && prev === 0) setDrawerTab((cur) => cur ?? 'stack')
+    if (stackCount === 0 && prev > 0) setDrawerTab((cur) => (cur === 'stack' ? null : cur))
   }, [stackCount])
 
   useEffect(() => {
@@ -269,69 +271,58 @@ export default function GameScreen() {
   const isArenaLayout = effectiveLayout === 'arena'
   const isPodLayout = effectiveLayout === 'pod'
 
-  return (
-    <div className="game" style={{ zoom: inverseZoom(settings.uiScale) }}>
-      <header className="game-top">
-        <div className="game-top-left">
-          {game && (
-            <div className="game-state" data-testid="game-status">
-              <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
-              <PhaseBar step={game.step ?? ''} />
-            </div>
-          )}
-        </div>
-        <div className="game-top-center">
-          {isPodLayout ? (
-            <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
-          ) : (
-            topOpps.length > 1 && (
-              <OpponentSwitcherBar
-                players={game?.players ?? []}
-                controlledId={me?.playerId}
-                selectedOppId={currentOpp?.playerId || ''}
-                onSelectOpponent={(id) => setSelectedOppId(id)}
-                activePlayerId={game?.activePlayerId ?? undefined}
-                targetIds={new Set(targetIds)}
-                onTargetClick={onTargetClick}
-                combat={game?.combat ?? []}
-              />
-            )
-          )}
-        </div>
-        <div className="game-controls">
-          <GameMenu />
-        </div>
-      </header>
-      <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
-        <div className="board-wrap">
-          {isArenaLayout ? (
-            <ArenaBoard {...boardProps} />
-          ) : isPodLayout ? (
-            <PodBoard {...boardProps} />
-          ) : (
-            <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
-          )}
-          <FeedbackOverlay />
-        </div>
-        <div className="game-right-panel">
-          <Tabs
-            variant="underline"
-            size="sm"
-            className="right-panel-tabs"
-            value={rightTab}
-            onChange={setRightTab}
-            items={[
-              { id: 'stack', className: 'right-tab-btn', label: t('game', 'tab_stack'), badge: stackCount > 0 && <span className="right-tab-badge active-stack">{stackCount}</span> },
-              { id: 'tracker', className: 'right-tab-btn', icon: 'layers', label: t('game', 'tab_tracker'), title: t('game', 'tab_tracker') },
-              { id: 'log', className: 'right-tab-btn', label: t('game', 'tab_log') },
-              { id: 'commander', className: 'right-tab-btn', icon: 'crown', label: t('game', 'tab_commander'), title: t('game', 'commander_damage'), hidden: !hasCommanders },
-              { id: 'mechanics', className: 'right-tab-btn', label: t('game', 'tab_mechanics'), badge: hasActiveMechanics && <span className="right-tab-badge active-mechanics">★</span> },
-              { id: 'chat', className: 'right-tab-btn', label: t('game', 'tab_chat') },
-            ]}
-          />
+  useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn])
 
-          <div className="right-panel-content">
-            {rightTab === 'stack' ? (
+  const toggleDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
+  const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
+
+  const strip = (
+    <GameStrip
+      left={
+        game && (
+          <div className="game-state" data-testid="game-status">
+            <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
+            <PhaseBar step={game.step ?? ''} />
+          </div>
+        )
+      }
+      center={
+        isPodLayout ? (
+          <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
+        ) : (
+          topOpps.length > 1 && (
+            <OpponentSwitcherBar
+              players={game?.players ?? []}
+              controlledId={me?.playerId}
+              selectedOppId={currentOpp?.playerId || ''}
+              onSelectOpponent={(id) => setSelectedOppId(id)}
+              activePlayerId={game?.activePlayerId ?? undefined}
+              targetIds={new Set(targetIds)}
+              onTargetClick={onTargetClick}
+              combat={game?.combat ?? []}
+            />
+          )
+        )
+      }
+      right={
+        <>
+          <DrawerToggles
+            active={activeDrawerTab}
+            stackCount={stackCount}
+            onToggle={toggleDrawer}
+            hasCommanders={hasCommanders}
+            hasActiveMechanics={hasActiveMechanics}
+          />
+          <GameMenu />
+        </>
+      }
+      dropdown={
+        activeDrawerTab && (
+          <GameDrawer
+            tab={activeDrawerTab}
+            stackCount={stackCount}
+            onClose={() => setDrawerTab(null)}
+            stack={
               <StackZone
                 stack={game?.stack ?? null}
                 onCardClick={onTargetClick}
@@ -341,48 +332,63 @@ export default function GameScreen() {
                 players={game?.players}
                 myPlayerId={me?.playerId}
               />
-            ) : rightTab === 'tracker' ? (
-              <DeckTrackerPanel />
-            ) : rightTab === 'log' ? (
-              <ActionFeed />
-            ) : rightTab === 'commander' ? (
-              <div className="sidebar-commander-tab">
-                <CommanderDamageMatrix game={game} />
-              </div>
-            ) : rightTab === 'mechanics' ? (
-              <MechanicsTray />
-            ) : (
-              <GameChat />
-            )}
-          </div>
-
-          <ActionButton
-            game={game}
-            feedback={feedback}
-            gameId={gameId}
-            canPass={canPass}
-            onPass={onResolveClick}
-            onSkip={sendSkip}
-            busy={busy}
+            }
           />
+        )
+      }
+    />
+  )
+
+  return (
+    <PromptSlotProvider value={promptSlot}>
+      <DividerSlotContext.Provider value={setDividerSlot}>
+        <div className="game" style={{ zoom: inverseZoom(settings.uiScale) }}>
+          {!dividerSlot && <header className="game-top">{strip}</header>}
+          {dividerSlot && createPortal(strip, dividerSlot)}
+          <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
+            <div className="board-wrap" ref={boardWrapRef}>
+              {isArenaLayout ? (
+                <ArenaBoard {...boardProps} />
+              ) : isPodLayout ? (
+                <PodBoard {...boardProps} />
+              ) : (
+                <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
+              )}
+              <FeedbackOverlay />
+              <GameDock
+                onPromptSlot={setPromptSlot}
+                action={
+                  <ActionButton
+                    game={game}
+                    feedback={feedback}
+                    gameId={gameId}
+                    canPass={canPass}
+                    onPass={onResolveClick}
+                    onSkip={sendSkip}
+                    busy={busy}
+                  />
+                }
+              />
+            </div>
+            <CombatArrowsOverlay
+              game={game}
+              boardRef={gameBodyRef}
+              targetSourceId={targetSourceId}
+              chosenTargetIds={chosenTargetIds}
+              combatChosen={combat?.chosen ?? []}
+              combatMode={combat?.mode ?? null}
+            />
+          </div>
+          <FeedbackDialog />
+          <UserRequestDialog />
+          <RollbackDialog />
+          <LimitedDeckDialog />
+          <PlayerContextMenu />
+          <InfoWindows />
+          <SideboardScreen />
+          <TournamentPanel />
         </div>
-        <CombatArrowsOverlay
-          game={game}
-          boardRef={gameBodyRef}
-          targetSourceId={targetSourceId}
-          chosenTargetIds={chosenTargetIds}
-          combatChosen={combat?.chosen ?? []}
-          combatMode={combat?.mode ?? null}
-        />
-      </div>
-      <FeedbackDialog />
-      <UserRequestDialog />
-      <RollbackDialog />
-      <LimitedDeckDialog />
-      <PlayerContextMenu />
-      <InfoWindows />
-      <SideboardScreen />
-      <TournamentPanel />
-    </div>
+      </DividerSlotContext.Provider>
+    </PromptSlotProvider>
   )
 }

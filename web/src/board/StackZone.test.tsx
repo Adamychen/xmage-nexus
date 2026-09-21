@@ -53,6 +53,17 @@ describe('StackZone', () => {
     expect(container.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
   })
 
+  it('cada entrada lleva posición, nombre y controlador en una sola fila compacta', () => {
+    const stack: Record<string, CardView> = {
+      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(<StackZone stack={stack} />)
+    const entry = container.querySelector('.stack-tl-entry') as HTMLElement
+    expect(entry.querySelector('.stack-tl-name-row .stack-tl-pos')?.textContent).toContain('#1')
+    expect(entry.querySelector('.stack-tl-type-row .stack-controller-pill')).toBeTruthy()
+    expect(entry.querySelector('.stack-tl-pos-row')).toBeNull()
+  })
+
   it('renders multiple spells in timeline with newest on top', () => {
     const stack: Record<string, CardView> = {
       'spell-2': {

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView } from '../net/types'
 import HandBar from './HandBar'
@@ -22,11 +23,17 @@ export interface BoardShellProps {
   children: ReactNode
 }
 
+export const DividerSlotContext = createContext<((el: HTMLElement | null) => void) | null>(null)
+
 /** Divisor horizontal unificado (diamante púrpura/dorado) compartido por los
- *  tres modos. `labels` añade las etiquetas flanking del pod. */
+ *  tres modos. `labels` añade las etiquetas flanking del pod. Si la pantalla de
+ *  juego publica un hueco (`DividerSlotContext`), el divisor pasa a ser la
+ *  franja de control (turno, fases, iconos) y se pinta ahí por portal. */
 export function BoardDivider({ labels = false }: { labels?: boolean }) {
+  const setSlot = useContext(DividerSlotContext)
+  const cls = ['board-shell-divider', labels && !setSlot ? 'with-labels' : '', setSlot ? 'has-strip' : ''].filter(Boolean).join(' ')
   return (
-    <div className={`board-shell-divider ${labels ? 'with-labels' : ''}`}>
+    <div className={cls} ref={setSlot ?? undefined}>
       <span className="board-shell-divider-diamond">◆</span>
     </div>
   )

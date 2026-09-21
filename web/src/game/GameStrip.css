@@ -1,0 +1,57 @@
+.game-strip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.game-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.game-strip-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-strip-center > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.game-strip-center .opponent-switcher-bar {
+  flex-shrink: 1;
+}
+
+.game-strip-center .opp-pills-list {
+  min-width: 0;
+}
+
+.game-strip-center .opp-pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.game-strip-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.game-top {
+  position: relative;
+  height: 40px;
+  flex-shrink: 0;
+  background: var(--ink-1);
+  border-bottom: 1px solid var(--ink-3);
+}

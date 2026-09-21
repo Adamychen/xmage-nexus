@@ -3,6 +3,7 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
 /**
@@ -42,6 +43,7 @@ test.describe('Fizzle feed (aviso real del motor)', { tag: '@recorded' }, () => 
           deck: DECK.advanced,
         })
 
+        await openDrawerTab(page, 'log')
         const feed = page.locator('.action-feed-list')
         await expect(feed).toBeVisible({ timeout: 15_000 })
         await expect(feed).toContainText(

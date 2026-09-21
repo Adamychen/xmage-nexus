@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 import { withFakeServer } from './support/fake-backend'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 fakeOnly()
@@ -38,7 +39,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
     })
   })
 
-  test('mana pips are always visible inline, no dropdown @mechanics', async ({ page }) => {
+  test('mana pool is inline (never a dropdown) and hides the zero colours @mechanics', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'mechm',
@@ -50,8 +51,12 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(myZone).toBeVisible({ timeout: 30_000 })
 
       const pool = myZone.locator('[data-testid="mana-inline"]')
-      await expect(pool, 'pips inline siempre visibles').toBeVisible({ timeout: 30_000 })
-      expect(await pool.locator('.mana-inline-pip').count()).toBe(6)
+      await expect(pool, 'el pool inline siempre está montado').toBeVisible({ timeout: 30_000 })
+      // Este escenario no reparte maná: fuera del pago no se pintan los seis
+      // ceros, solo el placeholder (la caja no colapsa y la fila no salta).
+      expect(await pool.locator('.mana-inline-pip').count()).toBe(0)
+      await expect(pool.locator('.mana-inline-empty')).toHaveCount(1)
+      // La garantía original del test: nunca vuelve a ser un desplegable.
       await expect(myZone.locator('.resource-mana')).toHaveCount(0)
       await expect(myZone.locator('.mana-breakdown')).toHaveCount(0)
 
@@ -86,10 +91,8 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       const fullBoardShot = await page.screenshot({ fullPage: true })
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-01-board-initial.png'), fullBoardShot)
 
-      // 2. Open Mechanics Tab in right panel
-      const mechanicsTabBtn = page.locator('.right-tab-btn', { hasText: 'Mecánicas' })
-      await expect(mechanicsTabBtn).toBeVisible()
-      await mechanicsTabBtn.click()
+      // 2. Open the Mechanics tab of the drawer
+      await openDrawerTab(page, 'mechanics')
 
       const mechanicsTray = page.locator('.mechanics-tray')
       await expect(mechanicsTray).toBeVisible()
@@ -101,7 +104,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(mechanicsTray.locator('.ring-bearer-row')).toContainText('Samwise Gamgee')
       await expect(mechanicsTray.locator('.ring-level-badge')).toContainText('Nivel 2 / 4')
 
-      const ringShot = await page.locator('.game-right-panel').screenshot()
+      const ringShot = await page.locator('.game-drawer').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-02-ring-tab.png'), ringShot)
 
       // 4. Tab 2: Mazmorra (Dungeon)
@@ -110,7 +113,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(mechanicsTray.locator('.panel-dungeon h3')).toContainText('Undercity')
       await expect(mechanicsTray.locator('.dungeon-room-node.active-room')).toBeVisible()
 
-      const dungeonShot = await page.locator('.game-right-panel').screenshot()
+      const dungeonShot = await page.locator('.game-drawer').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-03-dungeon-tab.png'), dungeonShot)
 
       // 5. Tab 3: Día / Noche
@@ -119,7 +122,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(mechanicsTray.locator('.panel-daynight')).toContainText('Es de NOCHE')
       await expect(mechanicsTray.locator('.panel-daynight')).toContainText('Es de DÍA')
 
-      const dayNightShot = await page.locator('.game-right-panel').screenshot()
+      const dayNightShot = await page.locator('.game-drawer').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-04-daynight-tab.png'), dayNightShot)
 
       // 6. Tab 4: Monarca
@@ -128,7 +131,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(mechanicsTray.locator('.panel-monarch h3')).toContainText('El Monarca')
       await expect(mechanicsTray.locator('.panel-monarch')).toContainText('Mage Web')
 
-      const monarchShot = await page.locator('.game-right-panel').screenshot()
+      const monarchShot = await page.locator('.game-drawer').screenshot()
       fs.writeFileSync(path.join(SHOTS_DIR, 'mechanics-05-monarch-tab.png'), monarchShot)
 
       // 7. Implemented-but-previously-untested mechanics coverage

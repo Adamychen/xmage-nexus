@@ -6,6 +6,7 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
+import { openDrawerTab } from './support/game-screen'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { DECK } from '../fixtures/deck-names'
 fakeOnly()
@@ -20,9 +21,7 @@ test.describe('Feed unificado con diseño carta', () => {
       })
 
       const feed = page.locator('.action-feed-list')
-      const chatTab = page.locator('.right-tab-btn', { hasText: /Chat/ })
-      const logTab = page.locator('.right-tab-btn', { hasText: /Log|Registro/ })
-      await expect(chatTab).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('drawer-tab-chat')).toBeVisible({ timeout: 30_000 })
 
       const lines = [
         'feedp1 draws seven cards',
@@ -32,12 +31,12 @@ test.describe('Feed unificado con diseño carta', () => {
         'simx chooses that feedp1 take the first turn',
       ]
       for (const line of lines) {
-        await chatTab.click()
+        await openDrawerTab(page, 'chat')
         const chatInput = page.locator('.game-chat-input input')
         await expect(chatInput).toBeVisible({ timeout: 10_000 })
         await chatInput.fill(line)
         await chatInput.press('Enter')
-        await logTab.click()
+        await openDrawerTab(page, 'log')
       }
 
       await expect(feed).toBeVisible({ timeout: 15_000 })

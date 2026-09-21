@@ -180,7 +180,7 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
       )
       .toBeLessThanOrEqual(0)
 
-    await page.locator('.board-shell-divider-diamond').hover()
+    await page.locator('.board-shell-divider').hover()
     await expect(preview).toHaveCount(0)
     expect(pageErrors).toEqual([])
   })

@@ -108,14 +108,14 @@ describe('ResourceBar', () => {
     expect(rayCard?.getAttribute('data-card-name')).toBe('Faithless Looting')
   })
 
-  it('shows the six mana pips inline in standard mode, without any dropdown', () => {
+  it('shows only the mana actually held inline, without any dropdown', () => {
     const { container } = render(<ResourceBar player={basePlayer} side="my" />)
 
     expect(container.querySelector('[data-testid="mana-inline"]')).toBeTruthy()
     expect(container.querySelector('.resource-mana')).toBeNull()
     expect(container.querySelector('.mana-breakdown')).toBeNull()
     const counts = Array.from(container.querySelectorAll('.mana-inline-count')).map((el) => el.textContent)
-    expect(counts).toEqual(['0', '1', '0', '2', '0', '0'])
+    expect(counts).toEqual(['1', '2'])
   })
 
   it('renders compact micro chips when micro={true}', () => {
@@ -143,10 +143,9 @@ describe('ResourceBar', () => {
     expect(container.querySelector('.resource-mana')).toBeNull()
     expect(container.querySelector('.mana-breakdown')).toBeNull()
     const pips = container.querySelectorAll('.mana-inline-pip')
-    expect(pips.length).toBe(6)
+    expect(pips.length).toBe(2)
     const counts = Array.from(container.querySelectorAll('.mana-inline-count')).map((el) => el.textContent)
-    expect(counts).toEqual(['0', '1', '0', '2', '0', '0'])
-    expect(container.querySelectorAll('.mana-inline-pip.is-zero').length).toBe(4)
+    expect(counts).toEqual(['1', '2'])
 
     // Does NOT render heavy 68x96 card-sized stacks
     expect(container.querySelector('.resource-stack')).toBeNull()

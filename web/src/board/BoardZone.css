@@ -132,8 +132,8 @@
    el botón se monta FUERA de la zona para quedar por encima y ser clicable. */
 .board-shell > .hand-switch-btn {
   position: absolute;
-  right: 10px;
-  bottom: 52px;
+  right: 216px;
+  bottom: calc(var(--dock-bottom, 104px) + 8px);
   z-index: 25;
   box-shadow: 0 2px 8px var(--shade-3);
 }

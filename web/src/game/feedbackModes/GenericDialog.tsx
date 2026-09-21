@@ -15,6 +15,7 @@ import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTran
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Icon, { type IconName } from '../../ui/Icon'
 import Button from '../../ui/Button'
+import './GenericDialog.css'
 
 const GRID_SEARCH_THRESHOLD = 7
 

@@ -4,6 +4,8 @@ import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
+import { DockPrompt } from '../GameDock'
+import './promptBars.css'
 
 export default function TargetBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
@@ -27,21 +29,23 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
   const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
 
   return (
-    <div className="action-prompt-bar targeting-bar">
-      <div className="action-prompt-info">
-        <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
-          <FormattedText text={titleText} />
-        </span>
-        <span className="action-prompt-hint" role="status" aria-live="polite">
-          {hintText}
-        </span>
+    <DockPrompt>
+      <div className="action-prompt-bar targeting-bar">
+        <div className="action-prompt-info">
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
+            <FormattedText text={titleText} />
+          </span>
+          <span className="action-prompt-hint" role="status" aria-live="polite">
+            {hintText}
+          </span>
+        </div>
+        <div className="action-prompt-actions">
+          {prompt.required === false && (
+            <Button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</Button>
+          )}
+        </div>
       </div>
-      <div className="action-prompt-actions">
-        {prompt.required === false && (
-          <Button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</Button>
-        )}
-      </div>
-    </div>
+    </DockPrompt>
   )
 }

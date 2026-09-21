@@ -3,6 +3,8 @@ import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Button from '../../ui/Button'
+import { DockPrompt } from '../GameDock'
+import './promptBars.css'
 
 export default function CombatBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
@@ -13,29 +15,31 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
   const confirmLabel = isAtk ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')
 
   return (
-    <div className="action-prompt-bar combat-bar">
-      <div className="action-prompt-info">
-        <span className="action-prompt-title">
-          <span className="action-prompt-icon" aria-hidden="true"><Icon name="swords" size={14} /></span>{' '}
-          {combatTitle}
-        </span>
-        <span className="action-prompt-hint">
-          {t('game', 'combat_hint')}
-        </span>
-      </div>
-      <div className="action-prompt-actions">
-        {prompt.special && (
-          <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_combat'))}>
-            {t('game', 'combat_attack_all')}
+    <DockPrompt>
+      <div className="action-prompt-bar combat-bar">
+        <div className="action-prompt-info">
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true"><Icon name="swords" size={14} /></span>{' '}
+            {combatTitle}
+          </span>
+          <span className="action-prompt-hint">
+            {t('game', 'combat_hint')}
+          </span>
+        </div>
+        <div className="action-prompt-actions">
+          {prompt.special && (
+            <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_combat'))}>
+              {t('game', 'combat_attack_all')}
+            </Button>
+          )}
+          <Button variant="success"
+            disabled={busy}
+            onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed_combat'))}
+          >
+            {confirmLabel}
           </Button>
-        )}
-        <Button variant="success"
-          disabled={busy}
-          onClick={() => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed_combat'))}
-        >
-          {confirmLabel}
-        </Button>
+        </div>
       </div>
-    </div>
+    </DockPrompt>
   )
 }

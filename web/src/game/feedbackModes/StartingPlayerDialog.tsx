@@ -3,6 +3,7 @@ import Icon from '../../ui/Icon'
 import DialogShell from '../../ui/DialogShell'
 import { useTranslation } from '../../i18n'
 import { sendValue, type UseFeedbackForm } from '../useFeedbackForm'
+import './StartingPlayerDialog.css'
 
 export default function StartingPlayerDialog({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
