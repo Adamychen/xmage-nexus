@@ -33,6 +33,15 @@ describe('PingBadge component & parsePing', () => {
     })
   })
 
+  it('does not dump the raw server string when there is no measured latency', () => {
+    expect(parsePing('(online: 0:00; seen: 4 sec ago)')).toEqual({
+      ms: null,
+      status: 'unknown',
+      label: '—',
+      duration: 'online: 0:00; seen: 4 sec ago',
+    })
+  })
+
   it('renders ping badge with good latency styling', () => {
     render(<PingBadge infoPing="35ms" />)
     expect(screen.getByText('35ms')).toBeDefined()

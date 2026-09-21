@@ -60,6 +60,10 @@
   --gold-300: #f3d488;
   --gold-soft: rgb(var(--gold-rgb) / 0.14);
   --gold-line: rgb(var(--gold-rgb) / 0.42);
+  --medal-gold: #ffd54a;
+  --medal-silver: #cfd6e4;
+  --medal-bronze: #e09a5f;
+  --chat-fab-clearance: 68px;
 
   --ok-rgb: 61 220 151;
   --ok: #3ddc97;

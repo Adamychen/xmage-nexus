@@ -10,6 +10,7 @@ import {
   buildCreateMatchArgs,
   tournamentJoinNeedsDeck,
   healTournamentBranch,
+  tournamentTypeForCategory,
   expandDraftSetCodes,
   validateDraftSets,
   uniformDraftSet,
@@ -462,5 +463,34 @@ describe('healTournamentBranch — invariante single source', () => {
     expect(
       healTournamentBranch({ tableCategory: 'multi', tournamentCategory: 'constructed', useDraftTournament: true }),
     ).toEqual({ tournamentCategory: 'constructed', useDraftTournament: true })
+  })
+})
+
+describe('tournamentTypeForCategory — el tipo sigue a la pestaña de torneo', () => {
+  it('constructed con el tipo por defecto de draft (estado restaurado) pasa a Constructed Swiss', () => {
+    expect(
+      tournamentTypeForCategory({ tableCategory: 'tourney', tournamentCategory: 'constructed', tournamentType: 'Booster Draft Elimination' }),
+    ).toBe('Constructed Swiss')
+  })
+
+  it('limited con un tipo constructed vuelve al tipo de draft por defecto', () => {
+    expect(
+      tournamentTypeForCategory({ tableCategory: 'tourney', tournamentCategory: 'limited', tournamentType: 'Constructed Elimination' }),
+    ).toBe('Booster Draft Elimination')
+  })
+
+  it('respeta un tipo ya coherente (incluido sealed)', () => {
+    expect(
+      tournamentTypeForCategory({ tableCategory: 'tourney', tournamentCategory: 'constructed', tournamentType: 'Constructed Elimination' }),
+    ).toBe('Constructed Elimination')
+    expect(
+      tournamentTypeForCategory({ tableCategory: 'tourney', tournamentCategory: 'limited', tournamentType: 'Sealed Swiss' }),
+    ).toBe('Sealed Swiss')
+  })
+
+  it('fuera de torneo no toca nada', () => {
+    expect(
+      tournamentTypeForCategory({ tableCategory: 'duel', tournamentCategory: 'constructed', tournamentType: 'Booster Draft Elimination' }),
+    ).toBe('Booster Draft Elimination')
   })
 })

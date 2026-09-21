@@ -190,12 +190,12 @@ export default function LeaderboardModal({
                 <table className="leaderboard-table">
                   <thead>
                     <tr>
-                      <th style={{ width: 50, textAlign: 'center' }}>{t('lobby', 'leaderboard_col_pos')}</th>
+                      <th className="col-pos">{t('lobby', 'leaderboard_col_pos')}</th>
                       <th>{t('lobby', 'leaderboard_col_player')}</th>
                       <th>{t('lobby', 'leaderboard_col_tier')}</th>
-                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_elo')}</th>
-                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_col_history')}</th>
-                      <th style={{ textAlign: 'center' }}>{t('lobby', 'leaderboard_fair_play')}</th>
+                      <th className="col-center">{t('lobby', 'leaderboard_col_elo')}</th>
+                      <th className="col-center">{t('lobby', 'leaderboard_col_history')}</th>
+                      <th className="col-center">{t('lobby', 'leaderboard_fair_play')}</th>
                       <th>{t('lobby', 'leaderboard_col_status')}</th>
                     </tr>
                   </thead>
@@ -203,7 +203,7 @@ export default function LeaderboardModal({
                     {sortedUsers.map((u, index) => {
                       const isMe = u.userName.toLowerCase() === currentUsername.toLowerCase()
                       const pos = index + 1
-                      const medalColor = pos === 1 ? '#ffd54a' : pos === 2 ? '#cfd6e4' : pos === 3 ? '#e09a5f' : null
+                      const medalRank = pos <= 3 ? pos : null
 
                       return (
                         <tr
@@ -213,11 +213,10 @@ export default function LeaderboardModal({
                             setTargetUsername(u.userName)
                             setActiveTab('profile')
                           }}
-                          style={{ cursor: 'pointer' }}
                           title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
                         >
                           <td className="pos-cell">
-                            {medalColor ? <span className="pos-medal" style={{ color: medalColor }}><Icon name="medal" size={14} /></span> : `#${pos}`}
+                            {medalRank ? <span className={`pos-medal pos-medal--${medalRank}`}><Icon name="medal" size={14} /></span> : `#${pos}`}
                           </td>
                           <td className="user-cell">
                             <div className="user-cell-wrap">

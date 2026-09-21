@@ -51,6 +51,7 @@ import {
   buildCreateTournamentArgs,
   buildCreateMatchArgs,
   healTournamentBranch,
+  tournamentTypeForCategory,
   validateDraftSets,
   uniformDraftSet,
   limitedTourneyHasAiSeats,
@@ -634,6 +635,12 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     if (healed.useDraftTournament !== useDraftTournament) setUseDraftTournament(healed.useDraftTournament)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const synced = tournamentTypeForCategory({ tableCategory, tournamentCategory, tournamentType })
+    if (synced !== tournamentType) setTournamentType(synced)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableCategory, tournamentCategory, tournamentType])
 
   useEffect(() => {
     if (import.meta.env.DEV && tableCategory === 'tourney' && useDraftTournament !== (tournamentCategory === 'limited')) {

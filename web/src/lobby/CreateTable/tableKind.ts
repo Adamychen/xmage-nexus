@@ -1,4 +1,5 @@
 import {
+  DEFAULT_DRAFT_TOURNAMENT_TYPE,
   DEFAULT_TOURNAMENT_TYPES,
   MAX_DRAFT_PLAYERS,
   MAX_TOURNAMENT_PLAYERS,
@@ -339,4 +340,15 @@ export function healTournamentBranch(args: {
     tournamentCategory: args.tournamentCategory,
     useDraftTournament: args.tournamentCategory === 'limited',
   }
+}
+
+export function tournamentTypeForCategory(args: {
+  tableCategory: TableCategoryInput
+  tournamentCategory: TournamentCategoryInput
+  tournamentType: string
+}): string {
+  if (args.tableCategory !== 'tourney') return args.tournamentType
+  const constructed = isConstructedTournamentType(args.tournamentType)
+  if (args.tournamentCategory === 'constructed') return constructed ? args.tournamentType : 'Constructed Swiss'
+  return constructed ? DEFAULT_DRAFT_TOURNAMENT_TYPE : args.tournamentType
 }

@@ -34,7 +34,7 @@ export function parsePing(infoPing?: string | null, disconnectedLabel = 'Descone
     else status = 'slow'
   }
 
-  const label = ms !== null ? `${ms}ms` : infoPing
+  const label = ms !== null ? `${ms}ms` : '—'
 
   return { ms, status, label, duration }
 }

@@ -358,11 +358,13 @@ export default function FinishedMatchesPanel({
                 </div>
 
                 {/* Match Replays & Footer */}
-                <div className="match-card-footer">
-                  <div className="match-result-summary">
-                    <span className="result-label">{t('lobby', 'match_result_label')}</span>
-                    <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>
-                  </div>
+                <div className={`match-card-footer ${scores.length === 2 && !(m.games && m.games.length > 0) ? 'is-empty' : ''}`}>
+                  {scores.length !== 2 && (
+                    <div className="match-result-summary">
+                      <span className="result-label">{t('lobby', 'match_result_label')}</span>
+                      <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>
+                    </div>
+                  )}
 
                   {m.games && m.games.length > 0 && (
                     <div className="match-replay-actions">

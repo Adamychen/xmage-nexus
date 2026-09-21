@@ -215,6 +215,11 @@
   z-index: 6;
 }
 
+.lobby-columns-single:has(> .floating-chat-fab) > .lobby-main .decks-footer,
+.lobby-columns-single:has(> .floating-chat-fab) > .lobby-main .builder-deck-footer {
+  padding-right: calc(var(--sp-4) + var(--chat-fab-clearance));
+}
+
 .lobby-columns-single:has(> .lobby-main.has-decks-gallery) > aside.lobby-aside.floating-chat {
   z-index: 4;
 }
@@ -224,6 +229,19 @@
     justify-content: flex-start;
     order: 3;
     flex-basis: 100%;
+  }
+}
+
+@media (min-width: 901px) {
+  .lobby-topstrip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .lobby-top-nav {
+    flex: none;
+  }
+  .lobby-user-actions {
+    justify-self: end;
   }
 }
 

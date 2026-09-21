@@ -63,7 +63,7 @@
 
 .leaderboard-table th {
   background: rgb(var(--ink-2-rgb) / 0.85);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-3) var(--sp-3);
   font-size: var(--fs-2xs);
   font-weight: 800;
   text-transform: uppercase;
@@ -74,10 +74,27 @@
 }
 
 .leaderboard-table td {
-  padding: var(--sp-2h) var(--sp-4);
+  padding: var(--sp-2h) var(--sp-3);
   border-bottom: 1px solid var(--veil-1);
   vertical-align: middle;
   white-space: nowrap;
+}
+
+.dlg-panel.leaderboard-dialog {
+  width: min(1180px, 96vw);
+}
+
+.leaderboard-table .col-pos {
+  width: 50px;
+  text-align: center;
+}
+
+.leaderboard-table .col-center {
+  text-align: center;
+}
+
+.leaderboard-row {
+  cursor: pointer;
 }
 
 .leaderboard-row:hover {
@@ -99,6 +116,10 @@
 .pos-medal {
   font-size: var(--fs-base);
 }
+
+.pos-medal--1 { color: var(--medal-gold); }
+.pos-medal--2 { color: var(--medal-silver); }
+.pos-medal--3 { color: var(--medal-bronze); }
 
 .user-cell-wrap {
   display: flex;
