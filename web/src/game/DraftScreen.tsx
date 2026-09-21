@@ -173,7 +173,7 @@ export default function DraftScreen() {
   useEffect(() => {
     if (!pickView || !draftId) return
     if (boosterCards.length > 0) {
-      void cmds.setBoosterLoaded(draftId)
+      void cmds.setBoosterLoaded(draftId).catch(() => {})
     }
   }, [draftId, pickView, boosterCards.length])
 

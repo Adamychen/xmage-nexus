@@ -18,6 +18,8 @@ interface ActionButtonProps {
   busy?: boolean
 }
 
+const SHORTCUT_HINT = /\s*[(（][^)）]*[)）]\s*$/
+
 export default function ActionButton({
   game,
   feedback,
@@ -52,7 +54,8 @@ export default function ActionButton({
     }
   }, [menuOpen])
 
-  let label = t('game', 'pass_priority')
+  const passLabel = t('game', 'pass_priority').replace(SHORTCUT_HINT, '')
+  let label = passLabel
   let sublabel: string | null = null
   let modeClass = 'action-pass'
   let modeIcon: IconName = 'play'
@@ -70,12 +73,12 @@ export default function ActionButton({
     modeClass = 'action-combat'
     modeIcon = 'swords'
   } else if (me?.hasPriority) {
-    label = t('game', 'pass_priority')
+    label = passLabel
     sublabel = me.isActive ? t('game', 'turn') : t('game', 'priority')
     modeClass = 'action-priority'
     modeIcon = 'play'
   } else if (control.priorityIsControlled) {
-    label = t('game', 'pass_priority')
+    label = passLabel
     sublabel = t('game', 'controlling_turn', { name: control.actingName ?? '' })
     modeClass = 'action-priority'
     modeIcon = 'play'

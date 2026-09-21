@@ -72,6 +72,7 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  min-width: 0;
   z-index: 1;
 }
 
@@ -109,6 +110,8 @@
   background: var(--shade-1);
   border: 1px solid var(--veil-5);
   color: var(--fg-2);
+  flex-shrink: 0;
+  margin-left: var(--sp-2);
   z-index: 1;
 }
 

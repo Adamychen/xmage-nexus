@@ -4,9 +4,9 @@
   z-index: 40;
   display: grid;
   place-items: center;
-  padding: 16px;
-  background: rgb(var(--ink-rgb) / 0.88);
-  backdrop-filter: blur(4px);
+  padding: var(--sp-4);
+  background: var(--dlg-backdrop);
+  backdrop-filter: blur(var(--dlg-backdrop-blur));
 }
 
 .draft-screen {
@@ -14,10 +14,10 @@
   max-height: 92vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border, var(--veil-3));
-  border-radius: var(--r-xl);
-  background: var(--panel, var(--ink-2));
-  box-shadow: 0 24px 80px var(--shade-3);
+  border: var(--dlg-border);
+  border-radius: var(--dlg-radius);
+  background: var(--dlg-bg);
+  box-shadow: var(--dlg-shadow);
   overflow: hidden;
 }
 
@@ -25,9 +25,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border, var(--veil-3));
-  gap: 12px;
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--veil-3);
+  gap: var(--sp-3);
 }
 
 .draft-title {
@@ -40,11 +40,22 @@
 .draft-title h2 {
   margin: 0;
   font-size: var(--fs-heading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  color: var(--dlg-title-fg);
 }
 
 .draft-subtitle {
-  color: var(--text-dim, var(--fg-2));
-  font-size: var(--fs-sm);
+  color: var(--dlg-kicker-fg);
+  background: var(--dlg-kicker-bg);
+  border: 1px solid var(--dlg-kicker-border);
+  border-radius: var(--r-pill);
+  padding: var(--sp-1) var(--sp-2h);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .draft-set-names {
