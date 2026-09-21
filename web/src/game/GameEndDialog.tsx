@@ -45,6 +45,9 @@ export default function GameEndDialog() {
     }
   }
 
+  const showScore = !isSpectator && (end.wins != null || end.winsNeeded != null)
+  const hint = matchOver ? (followGameId ? t('game', 'spectator_game_changed') : null) : t('game', 'match_continues')
+
   const gameInfoText = localizeGameEndMessage(end.gameInfo, t)
   const matchInfoText = localizeGameEndMessage(end.matchInfo, t)
 
@@ -65,51 +68,58 @@ export default function GameEndDialog() {
           </div>
         )}
 
-        {end.gameInfo && <p className="end-info">{gameInfoText}</p>}
-        {end.matchInfo && end.matchInfo !== end.gameInfo && <p className="end-match">{matchInfoText}</p>}
-
-        {!isSpectator && (end.wins != null || end.winsNeeded != null) && (
-          <p className="end-score">
-            {t('game', 'score')} {end.wins ?? 0}–{end.loses ?? 0} ({t('game', 'match_wins')}: {end.winsNeeded ?? 1})
-          </p>
+        {(end.gameInfo || (end.matchInfo && end.matchInfo !== end.gameInfo)) && (
+          <div className="end-summary">
+            {end.gameInfo && <p className="end-info">{gameInfoText}</p>}
+            {end.matchInfo && end.matchInfo !== end.gameInfo && <p className="end-match">{matchInfoText}</p>}
+          </div>
         )}
 
-        {duration && (
-          <p className="end-duration">
-            {t('system', 'match_duration')}: {duration}
-          </p>
+        {(showScore || duration) && (
+          <div className="end-stats">
+            {showScore && (
+              <p className="end-score">
+                {t('game', 'score')} {end.wins ?? 0}–{end.loses ?? 0} ({t('game', 'match_wins')}: {end.winsNeeded ?? 1})
+              </p>
+            )}
+            {duration && (
+              <p className="end-duration">
+                {t('system', 'match_duration')}: {duration}
+              </p>
+            )}
+          </div>
         )}
+
+        {hint && <p className="end-hint">{hint}</p>}
 
         <div className="end-actions">
-          <Button data-testid="end-download-log" onClick={handleDownloadLog}>
+          <Button variant="subtle" data-testid="end-download-log" onClick={handleDownloadLog}>
             {t('system', 'log_download')}
           </Button>
-        </div>
-
-        {matchOver ? (
-          followGameId ? (
-            <div className="end-actions">
-              <p className="end-hint">{t('game', 'spectator_game_changed')}</p>
-              <Button variant="primary" onClick={() => handleWatchGame(followGameId)}>
-                {t('game', 'follow_game')}
-              </Button>
-              <Button onClick={returnToLobby}>
-                {t('game', 'return_to_lobby')}
-              </Button>
-            </div>
+          {matchOver ? (
+            <>
+              {followGameId && (
+                <>
+                  <Button onClick={returnToLobby}>
+                    {t('game', 'return_to_lobby')}
+                  </Button>
+                  <Button variant="primary" onClick={() => handleWatchGame(followGameId)}>
+                    {t('game', 'follow_game')}
+                  </Button>
+                </>
+              )}
+              {!followGameId && (
+                <Button variant="primary" onClick={returnToLobby}>
+                  {t('game', 'return_to_lobby')}
+                </Button>
+              )}
+            </>
           ) : (
-            <Button variant="primary" onClick={returnToLobby}>
-              {t('game', 'return_to_lobby')}
-            </Button>
-          )
-        ) : (
-          <div className="end-actions">
-            <p className="end-hint">{t('game', 'match_continues')}</p>
             <Button variant="primary" onClick={clearGameEnd}>
               {t('common', 'close')}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
     </DialogShell>
   )
 }
