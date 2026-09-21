@@ -143,9 +143,14 @@ export default function FloatingCardPreview({
       cancelled = true
     }
   }, [
+    activeCard?.id,
     activeCard?.name,
     activeCard?.expansionSetCode,
     activeCard?.cardNumber,
+    activeCard?.sourceCard?.name,
+    activeCard?.sourceCard?.expansionSetCode,
+    activeCard?.sourceCard?.cardNumber,
+    activeCard?.ability?.name,
     activeCard?.faceDown,
     (activeCard as any)?.isSecondCardFace,
     (activeCard as any)?.isFrontFace,

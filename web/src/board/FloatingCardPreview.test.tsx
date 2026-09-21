@@ -387,4 +387,26 @@ describe('FloatingCardPreview', () => {
     expect(preview.style.transform).toBe('')
     expect(preview.style.bottom).toBeTruthy()
   })
+
+  it('recarga la imagen al pasar entre habilidades que solo se distinguen por su carta origen', async () => {
+    const { awaitImageUrl } = await import('../cards/cardImages')
+    vi.mocked(awaitImageUrl).mockImplementation(async (c: CardView) => `https://img.test/${c.sourceCard?.name ?? c.name}.jpg`)
+    const ability = (id: string, source: string): CardView => ({
+      id,
+      name: 'Ability',
+      manaValue: 0,
+      expansionSetCode: '',
+      cardNumber: '0',
+      sourceCard: { name: source, manaValue: 0 } as CardView,
+    })
+    const anchor = { left: 900, top: 300, right: 1100, bottom: 360, width: 200, height: 60 } as DOMRect
+    const { container, rerender } = render(
+      <FloatingCardPreview card={ability('a1', 'Teferi')} anchorRect={anchor} boardRect={null} fixedSide="left" />,
+    )
+    await act(async () => {})
+    expect(container.querySelector('img.floating-card-img')?.getAttribute('src')).toBe('https://img.test/Teferi.jpg')
+    rerender(<FloatingCardPreview card={ability('a2', 'Jace')} anchorRect={anchor} boardRect={null} fixedSide="left" />)
+    await act(async () => {})
+    expect(container.querySelector('img.floating-card-img')?.getAttribute('src')).toBe('https://img.test/Jace.jpg')
+  })
 })
