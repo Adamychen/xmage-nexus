@@ -333,8 +333,9 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.strip-name', { hasText: /Lightning Bolt/ })).toBeVisible({ timeout: 3000 })
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Pyroblast/ })).toBeVisible({ timeout: 3000 })
 
-      // U6-5: .dek export button present in the footer
-      await expect(page.getByRole('button', { name: /Export(ar)? \.DEK/i })).toBeVisible()
+      // U6-5: .dek export entry present in the footer's export menu
+      await page.getByTestId('builder-export-menu').click()
+      await expect(page.getByRole('menuitem', { name: /\.dek/i })).toBeVisible()
     })
   })
 

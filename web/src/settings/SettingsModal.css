@@ -9,7 +9,8 @@
   gap: var(--sp-4);
   margin-top: var(--sp-3);
   min-height: 0;
-  flex: 1;
+  height: min(460px, 56vh);
+  flex: none;
 }
 
 .settings-nav {

@@ -278,10 +278,9 @@
 }
 
 .builder-act {
-  flex: 1 1 calc(25% - 4px);
-  min-width: 70px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 1 calc(50% - 4px);
+  min-width: 0;
+  white-space: nowrap;
 }
 
 /* MTG Arena Signature Big Done Button */

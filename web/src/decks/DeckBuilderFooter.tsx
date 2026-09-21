@@ -3,6 +3,8 @@ import type { DeckV2 } from './types'
 import { useTranslation } from '../i18n'
 import { downloadDeckFile } from './exportDeckFile'
 import Icon from '../ui/Icon'
+import DropdownMenu from '../ui/DropdownMenu'
+import MenuItem from '../ui/MenuItem'
 
 interface Props {
   deck: DeckV2
@@ -18,26 +20,12 @@ export default function DeckBuilderFooter({ deck, isEquipped, onImport, onSample
   return (
     <div className="builder-deck-footer">
       <div className="builder-action-btns-row builder-actions">
-        <Button variant="subtle" size="sm" className="builder-act"
-          title={`${t('decks', 'export_deck')} .dck`}
-          onClick={() => void downloadDeckFile(deck, 'dck', `✓ ${t('common', 'copied')}`)}>
-          {t('decks', 'export_dck')}
-        </Button>
-        <Button variant="subtle" size="sm" className="builder-act"
-          title={`${t('decks', 'export_deck')} Arena`}
-          onClick={() => void downloadDeckFile(deck, 'arena', `✓ ${t('common', 'copied')}`)}>
-          {t('decks', 'export_arena')}
-        </Button>
-        <Button variant="subtle" size="sm" className="builder-act"
-          title={`${t('decks', 'export_deck')} Plain`}
-          onClick={() => void downloadDeckFile(deck, 'txt', `✓ ${t('common', 'copied')}`)}>
-          {t('decks', 'export_plain')}
-        </Button>
-        <Button variant="subtle" size="sm" className="builder-act"
-          title={`${t('decks', 'export_deck')} MTGO .dek`}
-          onClick={() => void downloadDeckFile(deck, 'dek', `✓ ${t('common', 'copied')}`)}>
-          {t('decks', 'export_dek')}
-        </Button>
+        <DropdownMenu label={t('decks', 'export_deck')} icon="download" direction="up" align="start" className="builder-act" data-testid="builder-export-menu">
+          <MenuItem role="menuitem" icon="save" onClick={() => void downloadDeckFile(deck, 'dck', `✓ ${t('common', 'copied')}`)}>.dck</MenuItem>
+          <MenuItem role="menuitem" icon="clipboard" onClick={() => void downloadDeckFile(deck, 'arena', `✓ ${t('common', 'copied')}`)}>Arena</MenuItem>
+          <MenuItem role="menuitem" icon="file" onClick={() => void downloadDeckFile(deck, 'txt', `✓ ${t('common', 'copied')}`)}>Plain</MenuItem>
+          <MenuItem role="menuitem" icon="file" onClick={() => void downloadDeckFile(deck, 'dek', `✓ ${t('common', 'copied')}`)}>.dek</MenuItem>
+        </DropdownMenu>
         <Button variant="subtle" size="sm" className="builder-act"
           onClick={onImport}
           title={t('decks', 'import_hint')}>
