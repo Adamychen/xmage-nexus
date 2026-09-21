@@ -51,7 +51,6 @@ export default function TournamentBracketModal({ table, view, loading, error, on
             <TournamentBracket
               view={view}
               tournamentId={tournamentId ?? undefined}
-              onClose={onClose}
               onWatchMatch={onWatchMatch}
               watchingMatchId={watchingMatchId}
               canQuit={canQuit}
