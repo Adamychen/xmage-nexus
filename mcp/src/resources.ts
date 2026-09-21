@@ -18,8 +18,14 @@ function projectSummary(): string {
   const end = lines.findIndex((line, index) => index > start && line.startsWith('## 3.'))
   const header = lines.slice(0, 6).join('\n')
   const status = start >= 0 ? lines.slice(start, end > start ? end : start + 40).join('\n') : ''
-  const changelog = lines.slice(-40).join('\n')
-  return `${header}\n\n${status}\n\n--- changelog (cola) ---\n${changelog}`
+  const worklogStart = lines.findIndex((line) => line.startsWith('## 9.'))
+  const changelog = lines
+    .slice(worklogStart >= 0 ? worklogStart : lines.length)
+    .filter((line) => line.startsWith('| 20'))
+    .slice(0, 5)
+    .map((line) => (line.length > 400 ? `${line.slice(0, 400)}…` : line))
+    .join('\n')
+  return `${header}\n\n${status}\n\n--- changelog (recientes) ---\n${changelog}`
 }
 
 export function registerResources(server: McpServer): void {
