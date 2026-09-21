@@ -11,6 +11,9 @@
  * gallery.spec.ts --update-snapshots`; en CI quedan opt-in.
  */
 import { test, expect, type Page } from '@playwright/test'
+import { fileURLToPath } from 'node:url'
+
+const HIDE_ARROWS_CSS = fileURLToPath(new URL('./gallery-visual.css', import.meta.url))
 
 const VISUAL = process.env.E2E_VISUAL === '1'
 
@@ -152,10 +155,12 @@ test.describe('galería de estados (P3)', () => {
         // El rasterizado de los trazos discontinuos y marcadores SVG de las
         // flechas cambia de una sesión a otra (medido 452–3 504 px en
         // `board:arena-4` a 2560, con jitter estable dentro de cada sesión), así
-        // que la capa se enmascara: su geometría la cubren los e2e de combate.
+        // que la capa se oculta (no se enmascara: `.combat-arrows-overlay` mide
+        // el tablero entero y un `mask` lo dejaba todo magenta). Su geometría la
+        // cubren los e2e de combate.
         // 1200 px restantes absorben el AA del resto del stage (~0,05 %) y
         // siguen fallando ante regresiones reales de layout (decenas de miles).
-        mask: [page.locator('.combat-arrows-overlay')],
+        stylePath: HIDE_ARROWS_CSS,
         maxDiffPixels: 1200,
       })
     }

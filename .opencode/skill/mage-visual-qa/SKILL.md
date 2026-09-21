@@ -46,10 +46,11 @@ description: QA visual y UX: MCP Playwright (snapshot para actuar + screenshot p
   `web/e2e/gallery.spec.ts-snapshots/` (`*-<WxH>-<navegador>-<plataforma>.png`),
   recorte de `.gallery-stage`, red externa bloqueada, `GALLERY_EPOCH` fijo y
   `reducedMotion: 'reduce'` (las animaciones infinitas se apagan por CSS).
-- Matriz completa (chromium+webkit × 1366x768/1920x1080/2560x1440 + chromium
-  1600x900): `node scripts/gallery-visual.mjs` (verifica) / `--update` (regenera) /
+- Matriz completa (chromium+webkit × 1366x768/1920x1080/2560x1440):
+  `node scripts/gallery-visual.mjs` (verifica) / `--update` (regenera) /
   `--dry-run` / `--browser=… --viewport=…`. Alternativa directa:
-  `npm --prefix web run test:e2e:visual[:update]` (solo 1600x900, ojo:
+  `npm --prefix web run test:e2e:visual[:update]` (solo chromium 1920x1080; no hay
+  baselines de 1600x900, ese viewport es solo el del loop e2e diario. Ojo:
   `gallery.spec.ts` a secas también matchea `decks-gallery.spec.ts`).
 - Bajo `reducedMotion: 'reduce'` (que la galería activa) las flechas y la línea de
   targeting van **sólidas**: el trazo discontinuo tiene fase ligada a la longitud
