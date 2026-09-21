@@ -102,4 +102,4 @@ El replay es SOLO fake: en modo real los tests de `recorded.spec.ts` salen skipp
 2. `npm --prefix web run test` (guardas incluidas) + `npx playwright test recorded.spec.ts`.
 3. `web/INTERACTION_COVERAGE.md`: fila de la mecánica con `fixtures/recorded/<x>.json` +
    invariante + fecha.
-4. `PROJECT.md` (log con fecha y hallazgos) y `docs/qa/p4-frames-log.md` si es una tanda P4.
+4. `PROJECT.md` (log con fecha y hallazgos) y `docs/history/qa/p4-frames-log.md` si es una tanda P4.

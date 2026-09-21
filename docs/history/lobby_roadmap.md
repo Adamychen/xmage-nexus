@@ -1,6 +1,8 @@
 # XMage Nexus — Lobby Roadmap & Feature Matrix
 
 > Reference document for the evolution of the **XMage Nexus** Web Lobby, based on functional analysis of the desktop XMage client (`Mage.Client`).
+>
+> **Cerrado (archivado 2026-09-21)**: todo lo de este documento está entregado (§1 y §2 con ✅; en el creador de mesas solo queda fuera de alcance F6, emblemas). Las tablas «Gaps funcionales» y «Gaps de UX» de §1.F son el estado **original** de 2026-09-04 y ya no describen el código: el estado vigente es la tabla «Delta 2026-09-06» que las precede. Resumen actual: `ROADMAP.md` §3 (filas de lobby).
 
 ---
 

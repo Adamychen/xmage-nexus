@@ -4,7 +4,7 @@ import { startGame } from './support/start-game'
 import { DECK } from '../fixtures/deck-names'
 
 /**
- * "Nunca se pasa una ventana que el jugador marcó" (plan4.md §3.5): el grid de
+ * "Nunca se pasa una ventana que el jugador marcó" (docs/history/plan4.md §3.5): el grid de
  * `PhaseBar` (equivalente en pantalla a los F-keys de fase — clic = mi turno,
  * Shift+clic = turno rival) envía `updatePreferences({ phases })` al proxy, que
  * lo traduce a `UserSkipPrioritySteps` real y lo aplica en

@@ -47,7 +47,7 @@ description: Subir la versión de XMage: merge del tag upstream en el fork ../xm
    && npm run gen-server-state` y sus `:validate`. Detalle en la skill `mage-contract-codegen`.
 6. Anti-drift de frames: `node scripts/record.mjs all` (o por tandas) + `node scripts/record-sync.mjs`
    + `npx vitest run fixtures/recorded.test.ts` + `npx playwright test recorded.spec.ts`.
-   Ver skill `mage-fixtures` y `docs/qa/p4-frames-log.md`.
+   Ver skill `mage-fixtures` y `docs/history/qa/p4-frames-log.md`.
 7. Suite: `node scripts/test.mjs` (stack arriba) y E2E real (`E2E_BACKEND=real ...`); smoke directo:
    `node scripts/self-test.mjs` / `human-test.mjs`.
 8. Docs: `PROJECT.md` (log + fecha + estado), `AGENTS.md` (versión), `readme.md`,

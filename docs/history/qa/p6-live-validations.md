@@ -9,7 +9,7 @@
 > `pageerror`s: **0**. Único error de consola: un 404 de Scryfall
 > (`api.scryfall.com/cards/SLD/1079b`) al pedir el meta de una carta, benigno.
 >
-> Screenshots y snapshots de evidencia en `docs/qa/p6-live-validations/`
+> Screenshots y snapshots de evidencia en `docs/history/qa/p6-live-validations/`
 > (`c1-*.png`…`c5-*.png`). Snapshots/consola del navegador en
 > `.run/playwright-mcp/`.
 
@@ -216,7 +216,7 @@ errores (`pageerror=0`).
   `browser_hover`, `browser_fill_form`, `browser_evaluate`,
   `browser_take_screenshot` (PNG leídos), `browser_find`,
   `browser_console_messages`, `browser_run_code_unsafe` (setOffline).
-- Screenshots (en `docs/qa/p6-live-validations/`): `c1-game1-start.png`,
+- Screenshots (en `docs/history/qa/p6-live-validations/`): `c1-game1-start.png`,
   `c1-game1-blightsteel.png`, `c1-sideboard.png`, `c1-sideboard-open.png`,
   `c1-sideboard-moved.png`, `c1-game2-start.png`, `c2-web-state.png`,
   `c2-exile-overlay.png`, `c4-after-reload-immediate.png`,

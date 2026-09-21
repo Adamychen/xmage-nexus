@@ -99,5 +99,5 @@ description: QA visual y UX: MCP Playwright (snapshot para actuar + screenshot p
   sidebar dev: no es bug real.
 - Puertos aislados (fake 5175/8789, real 5173/8787): no compartir; el fake usa FixtureServer, no
   el proxy.
-- Hallazgos UX abiertos de plan4 (§5): revisar `plan4.md`, `docs/qa/p5-1-prompt-checklist.md` y
-  `p5-2-heuristic-findings.md` antes de dar por cerrada una auditoría.
+- Hallazgos UX abiertos de plan4 (§5): revisar `docs/history/plan4.md`, `docs/history/qa/p5-1-prompt-checklist.md` y
+  `docs/history/qa/p5-2-heuristic-findings.md` antes de dar por cerrada una auditoría.

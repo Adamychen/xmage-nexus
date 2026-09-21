@@ -486,7 +486,7 @@ describe('maybeAutoPass', () => {
     expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
   })
 
-  it('does not pass a step the player marked as a phase stop, even with autoPass on and nothing playable (plan4.md §3.5: gap real de producto)', () => {
+  it('does not pass a step the player marked as a phase stop, even with autoPass on and nothing playable (docs/history/plan4.md §3.5: gap real de producto)', () => {
     setSetting('autoPass', true)
     handleMessage({
       type: 'event',

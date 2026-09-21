@@ -128,6 +128,6 @@ Estado real de los 5 hallazgos tras el ciclo de correcciones:
    `SideboardScreen` también pasó a `Modal` (foco inicial + Tab-trap).
 
 La heurística queda en **0 hallazgos de severidad 3–4**; la 2ª pasada
-(`docs/qa/p5-2-heuristic-findings-eval2.md`) añadió 7 hallazgos S1–S2, todos
+(`docs/history/qa/p5-2-heuristic-findings-eval2.md`) añadió 7 hallazgos S1–S2, todos
 corregidos el 2026-09-18. Pendiente para cerrar §5.2: pasada 3 (idealmente
 humana/en vivo) y regenerar baselines al commitear.

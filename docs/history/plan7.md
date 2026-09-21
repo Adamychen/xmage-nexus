@@ -7,8 +7,10 @@
 > **Qué es este plan**: no añade producto. Cubre lo que ningún plan miraba:
 > la suite local daba 9/9, pero el workflow `Web client CI` de GitHub estaba
 > **en rojo en `master` desde el 2026-09-13**, y el fork tenía un commit sin
-> publicar del que no salió la release. Además, es **la lista viva única** de
+> publicar del que no salió la release. Además, fue **la lista viva única** de
 > lo que queda abierto de plan4/plan5/plan6 (§4), que se dan por cerrados.
+>
+> **Desde 2026-09-21 la lista viva está en `ROADMAP.md` §4** (este §4 queda como historial).
 
 ---
 

@@ -57,7 +57,7 @@ export interface FeedbackPrompt {
   choiceSearch?: boolean
   pileCards?: { pile1: FeedbackCard[]; pile2: FeedbackCard[] }
   /** Select a card" secuencial de reordenar biblioteca (Ponder/Brainstorm-like; GAME_CHOOSE_CARDS_ORDER
-   *  no existe en el servidor real, ver docs/qa/p4-frames-log.md tanda 8). Solo se marca cuando el
+   *  no existe en el servidor real, ver docs/history/qa/p4-frames-log.md tanda 8). Solo se marca cuando el
    *  mensaje trae el sufijo inequívoco "(last one chosen will be topmost)" o equivalente — el mensaje
    *  genérico "Select a card" (visto en Brainstorm) no se puede distinguir con seguridad de cualquier
    *  otro GAME_TARGET de una carta, así que se queda sin marcar a propósito. */

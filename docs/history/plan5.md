@@ -2,7 +2,7 @@
 
 > **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
 > pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
-> única de `plan7.md` §4.
+> única de `plan7.md` §4 (desde 2026-09-21, en `ROADMAP.md` §4).
 
 > ESTADO AL CREAR: rama `master`, último commit `791af62e872` + el frame
 > `slicer` sin commitear (driver `scripts/drivers/slicer.mjs`, manifest

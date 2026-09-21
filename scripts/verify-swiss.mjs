@@ -14,7 +14,7 @@
 // Uso: node scripts/verify-swiss.mjs
 // Requiere: servidor local (testMode) + proxy (node scripts/ctl.mjs status).
 //
-// Evidencia de plan4.md §3.11 "Suizo | 4+ jugadores | Emparejamientos,
+// Evidencia de docs/history/plan4.md §3.11 "Suizo | 4+ jugadores | Emparejamientos,
 // standings" (2026-09-17).
 
 const WS_URL = 'ws://127.0.0.1:8787'

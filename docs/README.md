@@ -21,10 +21,10 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | Doc | Answers | Freshness rule |
 |---|---|---|
 | `PROJECT.md` | Master status: phases, lessons, quality table, dated work log | Update on every finished task (header date + work-log row) |
-| `ROADMAP.md` | Vision, parity matrix, phased plan | Historical narrative; can lag `PROJECT.md` by design, but flag divergences |
+| `ROADMAP.md` | Vision, current state, parity matrix and **the single live list of pending work** (§4) | Update §4 when something is finished or a new pending item appears; the closed phase plan is archived in `docs/history/roadmap-phases.md` |
 | `web/INTERACTION_COVERAGE.md` | Per-callback and per-mechanic coverage: implemented + tested + test ref + date | Update with every handler/interaction change; enforced by `callbackCoverage.test.ts` |
-| `docs/lobby_roadmap.md` | Lobby feature matrix + Create-Table audit vs desktop `NewTableDialog` | Feature slice doc, referenced from `PROJECT.md` |
-| `docs/history/tcg-arena-ui-replica-spec.md` | Early visual spec (2472 lines) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures |
+| `docs/enhancements.md` | Spec catalog of client-only feature ideas, with per-idea status | Statuses verified against the code; pending items are summarized in `ROADMAP.md` §4.2 |
+| `docs/history/` | Closed plans (`plan4`–`plan7`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`), QA evidence logs (`qa/`) and the archived `PROJECT.md` Work Log (`worklog/`, one file per period) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
 | `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `PROJECT.md`/`ROADMAP.md` when phases change |
 
 ## Ports (do not change without updating `AGENTS.md`, `scripts/lib.mjs`, `docs/deployment.md`)

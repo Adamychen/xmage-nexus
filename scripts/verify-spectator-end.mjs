@@ -16,7 +16,7 @@
 // Requiere: servidor local (testMode) + proxy (node scripts/ctl.mjs status),
 // con el parche de GameSessionWatcher/GameController compilado.
 //
-// Evidencia de plan4.md §3.11 "Espectar partida y torneo" (2026-09-17).
+// Evidencia de docs/history/plan4.md §3.11 "Espectar partida y torneo" (2026-09-17).
 
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'

@@ -32,7 +32,7 @@
   --dlg-z: 90;
   /* Por encima del rango dinámico de Modal.tsx (nextModalZ, 501-1999): turno/fase
      y vidas/reloj de prioridad no deben quedar tapados por ningún backdrop modal
-     (p5-1-prompt-checklist.md hallazgo #1). Por debajo de los toasts (9999). */
+     (docs/history/qa/p5-1-prompt-checklist.md hallazgo #1). Por debajo de los toasts (9999). */
   --game-header-z: 2000;
   --dlg-radius: var(--r-xl);
   --dlg-padding: 24px 28px 28px;

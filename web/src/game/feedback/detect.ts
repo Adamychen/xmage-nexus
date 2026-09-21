@@ -23,7 +23,7 @@ export function isLondonBottoming(message: string): boolean {
 /**
  * Reordenar biblioteca vía `GAME_TARGET` secuencial (Ponder/Brainstorm-like).
  * `GAME_CHOOSE_CARDS_ORDER` no existe en el servidor real 1.4.61 (confirmado en
- * docs/qa/p4-frames-log.md tanda 8 contra `ClientCallbackMethod`); Ponder manda
+ * docs/history/qa/p4-frames-log.md tanda 8 contra `ClientCallbackMethod`); Ponder manda
  * el mensaje exacto documentado abajo con el sufijo "(last one chosen will be
  * topmost)" -- inequívoco. El mensaje de Brainstorm (genérico "Select a card")
  * NO se intenta detectar aquí a propósito: sin ese sufijo es indistinguible de

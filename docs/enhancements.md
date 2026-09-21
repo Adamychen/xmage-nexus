@@ -5,6 +5,8 @@
 >
 > **Principio de diseño**: Todas las mejoras aquí catalogadas son **100% del lado del cliente (Client-Only)**: aprovechan el flujo reactivo de eventos JSON y el contrato existente con el proxy, sin necesidad de modificar el servidor XMage ni alterar el motor de reglas de Java.
 
+> **Estado (verificado contra el código el 2026-09-21)**: ya construido → 1.1 Deck Tracker, 2.1 Deep Linking, el simulador de mano de muestra (parte de 4.3) y el selector de impresión del editor de mazos (parte de 5.2). Todo lo demás sigue sin empezar; la lista viva de pendientes está en `ROADMAP.md` §4.2, y este documento conserva la especificación de cada idea.
+
 ---
 
 ## Índice de Módulos de Mejora
@@ -23,6 +25,7 @@
 Inspirado en herramientas como *17Lands*, *Untap Companion* o *MTG Arena Tool*. El cliente oficial de XMage requiere memorizar la lista o consultar ventanas externas; Nexus puede ofrecer asistentes transparentes en tiempo real.
 
 ### 1.1 In-Game Deck Tracker (Visor de Biblioteca Restante)
+> ✅ **Implementado** — `game/DeckTrackerPanel.tsx` + `game/deckTracker.ts` (biblioteca restante, orden por CMC/nombre/copias/probabilidad de robo y barra de distribución tierras/criaturas).
 * **Descripción**: Panel lateral colapsable (o desplegable desde la biblioteca) que calcula las cartas restantes en el mazo.
 * **Mecánica**:
   * Cruza la lista inicial del mazo cargado con los objetos visibles (`hand`, `battlefield`, `graveyard`, `exile`, `stack`).
@@ -132,6 +135,7 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 * **Impacto**: ⭐⭐⭐.
 
 ### 4.3 Solitario / Goldfish Interactivo Extendido
+> ⚠️ **Parcial** — existe el simulador de mano de muestra (`decks/SampleHandModal.tsx`); el modo solitario contra un dummy, con daño acumulado por turno, no está construido.
 * **Descripción**: Extensión del actual simulador T1–T3 a un modo de juego en solitario completo.
 * **Mecánica**:
   * Permite jugar turnos libres contra un muñeco de prueba (*dummy* de 20/40 vidas), contando el daño acumulado por turno para comprobar la velocidad y consistencia del mazo.
@@ -150,6 +154,7 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 * **Impacto**: ⭐⭐⭐⭐ (Aumenta exponencialmente el apego y la sensación de juego prémium).
 
 ### 5.2 Variantes Estéticas de Cartas (Showcase / Retro / Borderless)
+> ⚠️ **Parcial** — el editor de mazos permite cambiar la impresión de una carta (`ArenaCardStrip`, `e2e/printing-preview.spec.ts`); falta elegirla al inspeccionar una carta en partida y guardar la preferencia por jugador.
 * **Descripción**: Elección visual de versiones sin afectar al juego.
 * **Mecánica**:
   * Al hacer clic derecho o inspeccionar una carta en el mazo o en el campo, permitir elegir su arte alternativo de Scryfall (Marco Retro, Sin borde, Showcase temático).

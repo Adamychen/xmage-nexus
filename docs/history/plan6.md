@@ -2,7 +2,7 @@
 
 > **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
 > pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
-> única de `plan7.md` §4.
+> única de `plan7.md` §4 (desde 2026-09-21, en `ROADMAP.md` §4).
 
 > ESTADO AL CREAR: rama `master`, commit `bda3b7e4372`, árbol limpio (plan5
 > cerrado y commiteado en `dd17ed3ddd8` + fix del proxy en `bda3b7e4372`).
@@ -34,7 +34,7 @@
 | WP-C6 (FloatingChat) | ✅ | `LobbyScreen.css` (panel z-4 / pie z-6 solo con panel abierto; FAB conserva z-60), caso e2e 1000×800 (falla sin el fix) |
 | WP-D5 (flakes) | ✅ | `printing-preview` (leave+enter forzado), `auto-pod` (waitForFunction); estrés 4 workers verde |
 | WP-A (speed/rooms/A3) | ✅ docs | triage en `ENGINE_VIEW_TRIAGE.md` + filas de `INTERACTION_COVERAGE.md`; nivel de speed no emitido upstream |
-| WP-C (C1–C5) | ✅ | C1 pass (submit sideboard UI, biblioteca 54 en game 2), C2 pass (visor de exilio), C3 aceptada con causa (mismo flujo que U5), C4 pass (replay + jugabilidad), C5 pass (staging + bracket en vivo). Evidencia: `docs/qa/p6-live-validations.md` + screenshots en `docs/qa/p6-live-validations/`; filas U4/U5/U10/U11/U12 de `COMPONENT_PARITY.md` |
+| WP-C (C1–C5) | ✅ | C1 pass (submit sideboard UI, biblioteca 54 en game 2), C2 pass (visor de exilio), C3 aceptada con causa (mismo flujo que U5), C4 pass (replay + jugabilidad), C5 pass (staging + bracket en vivo). Evidencia: `docs/history/qa/p6-live-validations.md` + screenshots en `docs/history/qa/p6-live-validations/`; filas U4/U5/U10/U11/U12 de `COMPONENT_PARITY.md` |
 | F1 (hallazgo WP-C) | ✅ | Tablero congelado en la partida 2 de Bo3: `eventHandler.ts` descartaba el `GAME_INIT` nuevo (guard temprano + `switchingGame` solo eximía `START_GAME`); fix + 3 tests rojo→verde en `store.test.ts`; `best-of-3`/`best-of-5` fake verdes |
 | F2 (hallazgo WP-C) | ✅ | Default de `mage_create_tournament_table` cambiado a `Constructed Elimination` (+ descripción); test en `mcp/test/tournament.test.ts`; `mcp` test/typecheck verdes; README del MCP actualizado |
 
@@ -257,7 +257,7 @@ acepta con causa escrita.
    payLifeCostRestrictions/loseByZeroOrLessLife, range/inRange,
    phyrexianColors, bookkeeping…).
 4. **D4 — Validaciones C1–C5**: **hechas ahora** con MCP+web (WP-C en ejecución;
-   evidencia en `docs/qa/p6-live-validations.md` y filas de
+   evidencia en `docs/history/qa/p6-live-validations.md` y filas de
    `web/COMPONENT_PARITY.md`).
 5. **D5 — Guarda de causas**: **implementada** — `engineViewCoverage.test.ts`
    exige fila por campo del baseline (140), detecta huérfanas y exige

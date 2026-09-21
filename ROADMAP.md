@@ -1,7 +1,7 @@
 # Project Roadmap: XMage Nexus
 
 > **A Modern, Web-Based Digital Card Game Client for XMage**  
-> *Last updated: 2026-09-18*
+> *Last updated: 2026-09-21*
 
 ---
 
@@ -32,8 +32,11 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Phase 0: Proxy Bridge** | Java 17 proxy (`Mage.Proxy`), WebSocket gateway, cycle-safe JSON serializer. | ✅ **Completed** | Connect + real game flow works against `beta.xmage.today:17171` AND local `localhost:17171` (same 1.4.61-V1 fork). NOTE (corrected 2026-09-20): beta's anonymous login is **stable** (17/17 measured). The former "intermittently fatal handshake" was a misdiagnosis — `Can't receive server state before other data` is logged on *any* failed login (the client fetches the server state only after login succeeds), and the real cause was generated usernames exceeding `maxUserNameLength` (**14**). CI's real-protocol oracle stays the local server for determinism. The proxy is now **multi-tenant** (one process serves many independent users), which already enables zero-install server-side play today (see `AGENTS.md`). |
 | **Phase 1: Web Foundation** | React 19 + TS + Vite. Lobby, room chat, real-time tables/users, Scryfall HD card cache (IndexedDB), full 1v1 board rendering & spectator mode. | ✅ **Completed** | 100% typecheck clean, live AI vs AI spectator matches working end-to-end. |
 | **Phase 2: Interaction Engine** | London mulligan, priority loops (`GAME_SELECT`), visual targeting (animated dotted lines & pulsing glows), mana tapping & pool payment (`sendPlayerManaType`), floating non-blocking combat UI (attack/block & alpha strike), advanced spell interactions (X-costs, multi-target, modal choices, +1/+1 counters). | ✅ **Completed** | Validated via `human-test.mjs` (83 checks PASS) and Playwright E2E suites (*Blaze*, *Arc Trail*, *Boros Charm*, *Walking Ballista*). |
-| **Quality & QA Foundation** | 105 unit tests (vitest, <1s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
+| **Quality & QA Foundation** | 1,900+ unit tests (vitest, ~13 s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
 | **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`), **sideboard Bo3/Bo5** (`SIDEBOARD` → `SideboardScreen`) y **orden de asignación multi-bloqueador** (`GAME_GET_MULTI_AMOUNT`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `best-of-3.spec.ts`/`best-of-5.spec.ts`, `combat-multiblock.spec.ts`, `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
+| **Phase 3: Visual Polish, Audio & Deck Builder** | Web Audio engine (15 sfx, 3 buses), VFX (floating damage, shake, mana donut), in-app deck builder (Scryfall full syntax, curve, sample hand, Arena/DCK/Plain import/export), card sleeves and avatars, design system (tokens, primitives, style ratchet). | ✅ **Completed** (selectable playmats → §4.2) | Visual-regression gallery (`#/gallery`, 3 resolutions × chromium + webkit), `PROJECT.md` §8 and Work Log. |
+| **Phase 4: Desktop Packaging (Tauri)** | Tauri launcher with embedded proxy + trimmed JRE, signed auto-updater. | ✅ **Published** (v0.1.0 2026-09-10, v0.2.0 2026-09-19) | `release.yml`, signed bundles + `latest.json`. Clean-machine validation still open (§4.1 V7). |
+| **Phase 5: Advanced Modes & Tournaments** | Commander / FFA pod board (2×2 clamp 4; server FFA 3-10), Booster Draft & Sealed (8P `DraftScreen`/`ConstructScreen`), Swiss and elimination brackets, spectating of tournament matches. | ✅ **Completed** | `verify-swiss.mjs`, `verify-spectator-end.mjs`, e2e `draft`/`tournament` specs. |
 
 ---
 
@@ -46,6 +49,11 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Room & Match Chat | ✅ Yes | ✅ Yes | Completed |
 | | 1v1 Table Creation (Human vs Human / Human vs AI) | ✅ Yes | ✅ Yes | Completed |
 | | Table Filters & Private Messaging (Whispers/PM) | ✅ Yes | ✅ Yes | Completed |
+| | Enriched table cards (match/tournament, password, skill, rated, clocks, `SP`/`RB` permissions, quit % / min rating) | ✅ Yes | ✅ Yes | Completed |
+| | User list with flags, ELO, ping and status; Arena-style rank tiers + room leaderboard | ⚠️ Basic | ✅ Yes | Completed (Surpasses Swing) |
+| | Create-Table wizard (per-seat type/deck/skill, clocks, mulligan, custom life/hand, Planechase, banned users, 21 tournament types, 41 cubes, HUMAN seats) | ✅ Yes | ✅ Yes (`lobby/CreateTable/`; only emblem cards out of scope) | Completed |
+| | Finished matches + replays | ✅ Yes | ✅ Yes | Completed |
+| | Invite links (`#join=` / `#watch=`) | ❌ No | ✅ Yes | Completed (Surpasses Swing) |
 | | Match Clocks / Visible Timers | ✅ Yes | ✅ Yes | Completed |
 | **Deck Management** | Predefined / JSON Deck Loading | ✅ Yes | ✅ Yes | Completed |
 | | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ✅ Yes (Scryfall full syntax + help, 9-lang, curve/donut, CMC sort, drag-drop) | Completed |
@@ -54,6 +62,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Stack, Library, Graveyard, Exile | ✅ Yes | ✅ Yes | Completed |
 | | Tap Rotations, Life Totals, Counters (+1/+1, loyalty) | ✅ Yes | ✅ Yes | Completed |
 | | Graveyard / Exile Pile Inspector Overlays | ✅ Yes | ✅ Yes | Completed |
+| | In-game deck tracker (remaining library + draw odds) | ❌ No | ✅ Yes (`DeckTrackerPanel`) | Completed (Surpasses Swing) |
 | | Double-Faced Cards (Transform, MDFC, Sagas) | ✅ Yes | ✅ Yes | Completed |
 | **In-Game Rules & Prompts** | Priority & Turn Passing (`GAME_SELECT`) | ✅ Yes | ✅ Yes | Completed |
 | | Mana Payment (Tapping lands on board + color pool) | ✅ Yes | ✅ Yes | Completed |
@@ -72,160 +81,50 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ---
 
-## 4. Phased Implementation Roadmap
+## 4. Pending Work (single live list)
 
-```mermaid
-flowchart TD
-    subgraph P25["Phase 2.5: 1v1 Competitive Parity (Core Engine Completion)"]
-        A1["Card Selection Modals\n(Tutor, Scry, Surveil, Hand Reveal)"] --> A2["Phase Stops & Keyboard Shortcuts\n(PhaseBar stops, Space, F4, F9)"]
-        A2 --> A3["Sideboarding Screen\n(Bo3 Match Intermission)"]
-        A3 --> A4["Match Chess Clocks & Timers"]
-        A4 --> A5["Double-Faced Cards & Sagas"]
-    end
+> Everything that is not done, in one place. Supersedes the open-items table of `docs/history/plan7.md` §4 and the per-idea status of `docs/enhancements.md`. Verified against the code on 2026-09-21.
 
-    subgraph P3["Phase 3: Visual Polish, Audio & Deck Builder"]
-        B1["Web Audio Engine\n(Spell cast, tap, life damage, turn bell)"] --> B2["VFX & Particle System\n(Damage numbers, spell trails, screen shake)"]
-        B2 --> B3["Integrated Web Deck Builder\n(Scryfall live search, Arena/Text import)"]
-        B3 --> B4["Customization\n(Playmats, card sleeves, avatars)"]
-    end
+### 4.1 Needs people or clean machines (not automatable)
 
-    subgraph P4["Phase 4: Desktop Packaging & One-Click Distribution"]
-        C1["Tauri Desktop Wrapper\n(Mac, Windows, Linux ~15MB)"] --> C2["Embedded One-Click Proxy\n(Zero Java setup for end users)"]
-        C2 --> C3["Auto-Updater & Public Server Presets"]
-    end
-
-    subgraph P5["Phase 5: Advanced Formats & Tournaments (Expansion)"]
-        D1["4-Player Commander / EDH Layout\n(Command zone, tax, commander damage)"] --> D2["Booster Draft & Sealed Mode\n(8-player tables, pick timer, pack passing)"]
-        D2 --> D3["Tournament Swiss & Bracket Views"]
-    end
-
-    P25 --> P3
-    P3 --> P4
-    P4 --> P5
-```
-
----
-
-### Phase 2.5: 1v1 Competitive Parity (Core Engine Completion)
-*Objective: Make the web client 100% playable for all sanctioned 1v1 Constructed formats (Modern, Standard, Pioneer, Legacy, Vintage, Pauper).*
-
-#### 2.5.1 Card Selection Modals (Tutors, Scry, Surveil, Hand Reveal) — **CRITICAL**
-- **XMage Events**: `GAME_CHOOSE_CARDS`, `SHOW_CARDS`, `GAME_TARGET` with `cardsView1` lists.
-- **Features**:
-  - Modal card-grid overlay styled after modern digital card games.
-  - Search library (Fetchlands, Demonic Tutor).
-  - Scry / Surveil / Look at top N cards (allow reordering/placing on top or bottom).
-  - Reveal hand effects (*Thoughtseize*, *Inquisition of Kozilek*): view opponent's hand in a dedicated reveal window (`game.revealed`/`game.opponentHands` en `OpponentZone`) and click to discard — implementado: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` enrutan a la grilla HD `CardGrid` y el clic envía `sendPlayerUUID` (ver `e2e/reveal.spec.ts`, `@reveal`).
-  - Graveyard / Exile selective interactions (reanimation, flashback picker).
-
-#### 2.5.2 Phase Stops & Priority Shortcuts — **CRITICAL**
-- **Features**:
-  - Interactive stop markers on `PhaseBar`: click on specific steps (Upkeep, Draw, Precombat Main, Beginning of Combat, Declare Attackers, End of Combat, Postcombat Main, End Step) to set personal stops.
-  - Standard priority keyboard shortcuts:
-    - **Space / Enter**: Yield current priority (pass).
-    - **F4**: Pass priority until stack is non-empty or an opponent acts.
-    - **F9**: Pass all priority until end of turn.
-    - **Ctrl**: Hold full priority.
-
-#### 2.5.3 Sideboard Screen (Best-of-3 / Best-of-5 Matches) — **HIGH**
-- **Features**:
-  - Intermission screen between match games when `GAME_SIDEBOARD` is received.
-  - Two-column visual deck editor (Maindeck $\leftrightarrow$ Sideboard).
-  - Drag-and-drop / single-click card swap with real-time deck size validation.
-  - Countdown timer for sideboarding with "Submit Deck" action.
-
-#### 2.5.4 Match Clocks & Priority Timers — **MEDIUM**
-- **Features**:
-  - Render active chess clocks for both players (turn timer & match timer).
-  - Visual warning indicators when player time drops below critical thresholds (flashing amber/red).
-
-#### 2.5.5 Double-Faced Cards (DFCs), MDFCs & Sagas — **MEDIUM**
-- **Features**:
-  - Card flip button / keyboard shortcut to preview and choose the back face of MDFCs in hand.
-  - In-play transformation animations/transitions.
-  - Saga layout with active chapter token overlay.
-
-#### 2.5.6 Multi-Blocker Combat Damage Assignment — **LOW**
-- **Features**:
-  - Reorder blocker assignment dialog when an attacking creature is blocked by multiple defending creatures.
-
----
-
-### Phase 3: Visual Polish, Audio & Integrated Deck Builder
-*Objective: Transform the functional client into a premium, responsive Arena-quality experience.*
-
-#### 3.1 Audio Engine (Web Audio API)
-- Sound FX for core interactions: card draw, card tap, spell cast whoosh, land drop, creature attack impact, life total counter tick, turn bell/notification chimes.
-- Volume sliders in settings (Master, SFX, Ambient).
-
-#### 3.2 VFX & Visual Effects (CSS & SVG Overlays)
-- Spell resolution visual trajectories (arcs from hand $\to$ stack $\to$ battlefield/graveyard).
-- Combat impact effects: screen shake on heavy damage, floating $-X$ life numbers.
-
-#### 3.3 Integrated Web Deck Builder
-- In-client Scryfall search with full syntax (`t:creature c:red cmc<=3 o:"haste"`).
-- Visual deck view (stacks sorted by mana cost, color breakdown chart, mana curve histogram).
-- One-click clipboard import/export in Arena, plain text, and `.dck` formats.
-- Sample hand generator (Goldfish opening hand simulator).
-
-#### 3.4 Player Customization
-- Selectable playmat background themes (Dark fantasy, Sci-fi, Minimalist wood, Animated nebula).
-- Custom card back sleeves.
-
----
-
-### Phase 4: Desktop Packaging & One-Click Distribution (Tauri) — ✅ publicado (v0.1.0 2026-09-10, v0.2.0 2026-09-19; validación en máquinas limpias: plan5 V7)
-*Objective: Provide a friction-free, zero-setup desktop application for non-technical users.*
-
-#### 4.1 Tauri Native Wrapper
-- Lightweight desktop application (<15 MB installer for Windows, macOS, and Linux).
-- Native window chrome, hardware-accelerated WebGL viewport, and OS-native notifications when priority arrives while tabbed out.
-
-#### 4.2 Embedded Proxy & JRE Management
-- Bundle a headless, ultra-stripped OpenJDK 17 runtime + `mage-proxy.jar`.
-- One-click launcher: automatically boots the local proxy in the background, handles port binding, and connects the UI instantly without user intervention.
-- Preset selector: "Official Public Server (`beta.xmage.today`)" vs "Local Server" vs "Custom Server".
-
-#### 4.3 Seamless Auto-Updater
-- In-app background update downloads when new proxy or web releases are published.
-
----
-
-### Phase 5: Advanced Game Modes & Tournaments (Expansion)
-*Objective: Extend the platform to support popular casual and limited formats.*
-
-#### 5.1 4-Player Commander (EDH) / Brawl
-- 4-quadrant dynamic board layout with individual player life totals, mana pools, and status bars.
-- Dedicated Command Zone for each player displaying Commander cards.
-- Trackers for Commander Tax ($+2$ per cast) and Commander Damage matrices (tracking damage dealt by each commander to each player).
-- Turn order ring visualizer.
-
-#### 5.2 Booster Draft & Sealed Tournaments
-- 8-player draft table room with synchronous pick timers.
-- Booster pack opening animation and card pick selection grid.
-- Pack passing indicators (Pack 1 Left, Pack 2 Right, Pack 3 Left).
-- Integrated 40-card limited deck builder during deckbuilding rounds.
-
-#### 5.3 Swiss & Single Elimination Tournament Brackets
-- Real-time tournament lobby with bracket visualization, pairing announcements, and standings tables.
-
----
-
-## 5. Technical Complexity & Effort Matrix
-
-| Phase | Milestone | Technical Complexity | Core Dependencies |
+| # | Source | What | Note |
 |---|---|---|---|
-| **Phase 2.5** | Card Selection Modals | 🟡 Medium | React Card Grid, `GAME_CHOOSE_CARDS` mapper |
-| **Phase 2.5** | Phase Stops & F4/F9 Shortcuts | 🟡 Medium | `PhaseBar` state, key listener, auto-pass logic |
-| **Phase 2.5** | Sideboard Screen | 🟢 Low-Medium | 2-column drag-drop UI, `GAME_SIDEBOARD` action |
-| **Phase 2.5** | Match Clocks | 🟢 Low | Client-side countdown syncing with server updates |
-| **Phase 2.5** | Double-Faced Cards / Sagas | 🟢 Low-Medium | Scryfall back-face cache, card hover flip |
-| **Phase 3** | Audio Engine | 🟢 Low | Web Audio API / Howler.js, sound asset pack |
-| **Phase 3** | VFX & Visual Animations | 🟢 Low-Medium | CSS3 keyframes, SVG overlays & tween engine |
-| **Phase 3** | In-App Deck Builder | 🟡 Medium | Scryfall REST API search, text format parsers |
-| **Phase 4** | Tauri Desktop Launcher | 🟢 Low-Medium | Tauri 2.0, Rust process launcher for Java JAR |
-| **Phase 5** | 4-Player Commander Layout | 🔴 High | Complete board geometry overhaul (4 quadrants) |
-| **Phase 5** | Booster Draft & Tournament System | 🔴 High | Multi-client draft synchronization, draft timers |
+| V5 | `docs/history/plan5.md` / `plan4.md` §5.2 | Third live heuristic evaluator (keyboard + opponent view) | 2 of 3 done |
+| V6 | `plan5.md` / `plan4.md` §5.3, §5.5, §5.6 | 5-second test, rounds with real players, dogfooding | — |
+| V7 | `plan5.md` / `plan4.md` §6 | Install on clean Win / macOS / Ubuntu (SmartScreen / Gatekeeper) and end-to-end updater | The blockers noted earlier no longer apply: v0.2.0 ships `darwin-aarch64` and signed `.sig` bundles with `latest.json` |
+
+### 4.2 Product ideas not built yet
+
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), sample-hand simulator (part of 4.3) and the printing selector in the deck editor (part of 5.2).
+
+| Idea | Impact / effort | State |
+|---|---|---|
+| Tactical pings on the board (Commander / 4P) | Very high / ~2 d | Not started |
+| London-mulligan evaluator in `MulliganDialog` | High / ~1 d | Not started |
+| EDHREC suggestions in the deck builder | High / ~1-2 d | Not started (only the Scryfall `edhrec` sort exists) |
+| Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
+| PWA (manifest + service worker) | High / small | Not started |
+| Selectable playmats (Phase 3.4 leftover; sleeves and avatars are done) | Medium / ~1 d | Not started (`BoardShell.css` has one fixed mat) |
+| Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature) |
+| Streaming overlay, match-recap image, price estimator, extended goldfish, alt-art in game | Lower | Not started |
+
+### 4.3 UI polish debt
+
+From the 2026-09-21 audit (see the Work Log): spacing literals still to tokenize in `game/` + `board/` (~770, in-game UI), `system/`, `i18n/` and `styles.css` (~45); ~102 inline `style={{}}`; ~91 loose `<button>`; no `Field`/`Input` primitive; lobby list density mode; Construct pool sorting; translated backup labels in Decks. The style ratchet (`ui/styleTokens.test.ts`) keeps the migrated folders from regressing.
+
+### 4.4 Test-infrastructure risk
+
+Remote CI has `retries: 0` and two runs in a row failed on different `e2e-fake` draft tests and on `self-test` `WATCHGAME` (timing under load, cleared by re-running the failed jobs). Open decision: `retries: 1` for CI only in `web/playwright.config.ts`. There is also an occasional unit flake in `store.test.ts` (GAME_OVER autosave, `getLatest` picking another test's log).
+
+### 4.5 Out of scope on purpose
+
+Emblem cards in Create Table (experimental `.dck` feature of the desktop client; decided 2026-09-06).
+
+---
+
+## 5. Phase Plan (archived)
+
+The original phase plan (2.5 to 5) and its effort matrix are all delivered; kept verbatim in `docs/history/roadmap-phases.md`.
 
 ---
 

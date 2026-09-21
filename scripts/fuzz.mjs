@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// P6 (plan4.md): fuzzing/self-play con mazos aleatorios reales + detector de
+// P6 (docs/history/plan4.md): fuzzing/self-play con mazos aleatorios reales + detector de
 // bloqueos. Dos sesiones independientes conectan al proxy como si fueran 2
 // cuentas: un asiento HUMAN manejado por una política genérica ingenua (jugar
 // tierra/hechizo al azar cuando hay prioridad, si no pasar; nunca ataca ni
@@ -163,7 +163,7 @@ function optionList(choices) {
   if (!choices) return []
   if (Array.isArray(choices)) {
     // "Modo texto" de GAME_CHOOSE_CHOICE (Cavern of Souls/Pithing Needle,
-    // ver plan4.md §3.7): choice.choices puede ser un array de STRINGS
+    // ver docs/history/plan4.md §3.7): choice.choices puede ser un array de STRINGS
     // planos, no de {id,value}. Confirmado en vivo (2026-09-16): con
     // c?.id ?? c?.value sobre un string da '' (falsy) → sendPlayerString
     // nunca se envía y el bot se queda mudo hasta el idle-timeout del
