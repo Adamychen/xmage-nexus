@@ -5,7 +5,7 @@
 >
 > **Principio de diseño**: Todas las mejoras aquí catalogadas son **100% del lado del cliente (Client-Only)**: aprovechan el flujo reactivo de eventos JSON y el contrato existente con el proxy, sin necesidad de modificar el servidor XMage ni alterar el motor de reglas de Java.
 
-> **Estado (verificado contra el código el 2026-09-21)**: ya construido → 1.1 Deck Tracker, 2.1 Deep Linking, el simulador de mano de muestra (parte de 4.3) y el selector de impresión del editor de mazos (parte de 5.2). Todo lo demás sigue sin empezar; la lista viva de pendientes está en `ROADMAP.md` §4.2, y este documento conserva la especificación de cada idea.
+> **Estado (verificado contra el código el 2026-09-22)**: ya construido → 1.1 Deck Tracker, 1.4 Evaluador de London Mulligan, 2.1 Deep Linking, el simulador de mano de muestra (parte de 4.3) y el selector de impresión del editor de mazos (parte de 5.2). Todo lo demás sigue sin empezar; la lista viva de pendientes está en `ROADMAP.md` §4.2, y este documento conserva la especificación de cada idea.
 
 ---
 
@@ -48,6 +48,7 @@ Inspirado en herramientas como *17Lands*, *Untap Companion* o *MTG Arena Tool*. 
 * **Impacto**: ⭐⭐⭐⭐ (Permite repasar instantáneamente cómo se desarrolló la partida).
 
 ### 1.4 Asistente de Evaluación de London Mulligan
+> ✅ **Implementado 2026-09-22** — `game/mulliganEvaluator.ts` (ratio tierras/hechizos, colores producibles por las tierras en mano vía `rules` + fallback de tierras básicas, probabilidad hipergeométrica de la 3ª tierra en T3 reutilizando `computeDeckTracker` para el maño/composición restante de biblioteca) + `MulliganHandEvaluator` en `game/MulliganDialog.tsx` (solo en la decisión inicial Keep/Mulligan, no en el paso de bottoming de London).
 * **Descripción**: Métricas y probabilidades automáticas durante el diálogo de decisión de Mulligan.
 * **Mecánica**:
   * Muestra en el pie del `MulliganDialog`:
@@ -171,7 +172,7 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 | **2** | **Deep Linking (Enlace directo a mesa)** | 🟢 Muy Alto | 🟢 Baja (~1 día) | Hash router en `App.tsx` + auto-join | 🏆 **Top 2 Prioridad** |
 | **3** | **Pings Tácticos en Tablero (Commander)** | 🟢 Muy Alto | 🟡 Media (~2 días) | Evento WS chat/broadcast o canal local | 🏆 **Top 3 Prioridad** |
 | **4** | **Recomendaciones EDHREC en Deck Builder** | 🟢 Alto | 🟢 Baja (~1-2 días) | Fetch API pública EDHREC en `DeckBuilder` | ⚡ **Quick Win** |
-| **5** | **Evaluador de London Mulligan** | 🟢 Alto | 🟢 Baja (~1 día) | Cálculo probabilístico en `MulliganDialog` | ⚡ **Quick Win** |
+| **5** | **Evaluador de London Mulligan** | 🟢 Alto | 🟢 Baja (~1 día) | Cálculo probabilístico en `MulliganDialog` | ✅ **Implementado 2026-09-22** |
 | **6** | **Selector de Tapetes (Playmats)** | 🟡 Medio | 🟢 Baja (~1 día) | CSS background en `BoardShell.tsx` | 🎨 **Estético rápido** |
 | **7** | **Gestos y Adaptación Táctil (iPad)** | 🟢 Muy Alto | 🔴 Alta (~4-5 días) | Pointer events / touch events en zonas | 📱 **Evolutivo estratégico** |
 | **8** | **Calculadora de Letal en Combate** | 🟡 Medio | 🟡 Media (~2 días) | Heurística en `CombatBar.tsx` | 💡 **QoL Competitivo** |

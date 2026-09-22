@@ -77,6 +77,25 @@ html.fx-off .mulligan-card-wrap {
   pointer-events: none;
 }
 
+/* ── Hand evaluator (land ratio, colors, 3rd-land odds) ──────── */
+.mulligan-evaluator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+  margin: var(--sp-1) 0 var(--sp-4);
+}
+
+.mulligan-evaluator .ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.mulligan-eval-colors .mana-cost-display {
+  margin-left: var(--sp-0h);
+}
+
 /* ── Counter and actions ─────────────────────────────────────── */
 .mulligan-counter {
   font-size: var(--fs-sm);

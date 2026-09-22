@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Checkbox from '../ui/Checkbox'
+import Chip from '../ui/Chip'
 import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
 import { useStore, useSettings, setSetting } from '../state/store'
@@ -9,11 +10,46 @@ import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
-import { useTranslation } from '../i18n'
+import { useTranslation, t as staticT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import { confirmDialog } from '../ui/confirmDialog'
+import { ManaCost } from '../decks/ArenaManaSymbols'
+import { computeMulliganEvaluation, type MulliganEvaluation } from './mulliganEvaluator'
 import './MulliganDialog.css'
 import Button from '../ui/Button'
+
+function MulliganHandEvaluator({ evaluation, t }: { evaluation: MulliganEvaluation; t: typeof staticT }) {
+  if (evaluation.cardCount === 0) return null
+  const manaCostStr = evaluation.colorCodes.map((c) => `{${c}}`).join('')
+  return (
+    <div className="mulligan-evaluator" data-testid="mulligan-evaluator">
+      <Chip tone="neutral" size="sm" icon="mountain">
+        {t('game', 'tracker_lands')} {evaluation.landCount}/{evaluation.cardCount}
+      </Chip>
+      <Chip tone="neutral" size="sm" icon="sparkles">
+        {t('game', 'tracker_spells')} {evaluation.spellCount}/{evaluation.cardCount}
+      </Chip>
+      {evaluation.colorCodes.length > 0 ? (
+        <Chip tone="neutral" size="sm" className="mulligan-eval-colors">
+          <span>{t('dialogs', 'mulligan_eval_colors_label')}</span>
+          <ManaCost manaCost={manaCostStr} size={13} />
+        </Chip>
+      ) : (
+        <Chip tone="warn" size="sm">{t('dialogs', 'mulligan_eval_no_color')}</Chip>
+      )}
+      {evaluation.thirdLandProbability !== null && (
+        <Chip
+          tone={evaluation.thirdLandProbability < 50 ? 'warn' : 'ok'}
+          size="sm"
+          icon="gauge"
+          data-testid="mulligan-eval-third-land"
+        >
+          {t('dialogs', 'mulligan_eval_third_land', { pct: evaluation.thirdLandProbability })}
+        </Chip>
+      )}
+    </div>
+  )
+}
 
 interface MulliganDialogProps {
   prompt: FeedbackPrompt
@@ -25,6 +61,7 @@ interface MulliganDialogProps {
 export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganDialogProps) {
   const { t } = useTranslation()
   const game = useStore((s) => s.game)
+  const myDeck = useStore((s) => s.myDeck)
   const settings = useSettings()
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
@@ -33,6 +70,11 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const [bottomCount, setBottomCount] = useState(0)
   const [hoveredCard, setHoveredCard] = useState<CardView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+
+  const evaluation = useMemo(
+    () => computeMulliganEvaluation(Object.values(hand), myDeck, game, game?.myPlayerId),
+    [hand, myDeck, game],
+  )
 
   const keep = () => void send(() => cmds.sendPlayerBoolean(false, prompt.gameId), t('errors', 'send_failed'))
   const mulligan = () => void send(() => cmds.sendPlayerBoolean(true, prompt.gameId), t('errors', 'send_failed_mulligan'))
@@ -177,6 +219,8 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
             ))}
           </div>
         )}
+
+        <MulliganHandEvaluator evaluation={evaluation} t={t} />
 
         <div className="mulligan-actions">
           <Button variant="success" disabled={busy} onClick={keep}>
