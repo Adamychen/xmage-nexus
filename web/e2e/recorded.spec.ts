@@ -7,7 +7,7 @@ import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { playableInSceneByName } from './support/scene'
-import { openDrawerTab } from './support/game-screen'
+import { expectStackCount, openDrawerTab } from './support/game-screen'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -76,8 +76,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toBeVisible()
         }
         if (entry.assert === 'hasCounterOnStack') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(2)')
+          await expectStackCount(page, 2)
           await page.locator('.stack-zone .stack-tl-entry').first().hover()
           const preview = page.locator('.stack-zone .floating-card-preview')
           await expect(preview).toBeVisible({ timeout: 10_000 })
@@ -109,15 +108,13 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Token"]')).toHaveCount(2)
         }
         if (entry.assert === 'hasModalOnStack') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          await expectStackCount(page, 1)
         }
         if (entry.assert === 'hasXCostCounters') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Walking Ballista"]')).toBeVisible()
         }
         if (entry.assert === 'hasStackResponse') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(2)')
+          await expectStackCount(page, 2)
         }
         if (entry.assert === 'hasDoubleTrigger') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Soul Warden"]')).toHaveCount(2)
@@ -129,8 +126,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toHaveCount(4)
         }
         if (entry.assert === 'hasOverload') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          await expectStackCount(page, 1)
         }
         if (entry.assert === 'hasKicker') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Bushwhacker"]')).toBeVisible()
@@ -145,16 +141,13 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('.player-zone .card-slot[data-card-name="Bonecrusher Giant"]')).toBeVisible()
         }
         if (entry.assert === 'hasSplit') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          await expectStackCount(page, 1)
         }
         if (entry.assert === 'hasSnowFight') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          await expectStackCount(page, 1)
         }
         if (entry.assert === 'hasSplitSecond') {
-          await expect(page.locator('.stack-zone')).toBeVisible()
-          await expect(page.locator('.stack-zone .stack-header-title')).toContainText('(1)')
+          await expectStackCount(page, 1)
           // Split second con prioridad nuestra: el servidor solo ofrece
           // habilidades de maná (las tierras) y nunca el Bolt de la mano. La
           // UI debe marcar la fuente de maná como jugable y NO el Bolt

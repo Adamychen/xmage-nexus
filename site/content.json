@@ -2,24 +2,24 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.0",
-    "date": "2026-09-19",
-    "tag": "v0.2.0",
+    "version": "0.2.1",
+    "date": "2026-09-22",
+    "tag": "v0.2.1",
     "status": "published",
-    "notes": "Segunda build publica: cierre de la fase de gameplay (todas las mecanicas verificadas contra el servidor real), guardas anti-drift en CI, MCP headless para jugar por protocolo y launcher con el pipeline de release restaurado.",
+    "notes": "Tercera build publica: arregla el launcher de Windows (el primer arranque se quedaba en «Preparando la base de cartas» por la codificacion del log), estrena un splash con progreso real por fases y desacopla los componentes (JRE+servidor+proxy) de la version de la app, asi que las actualizaciones del launcher son ligeras.",
     "highlights": [
-      "1v1 y Commander afinados: prompts sin residuos, acuse visual <100 ms, paradas de fase y fin de match verificados en real",
-      "115 frames reales del servidor con invariantes + guardas anti-drift (callbacks, contrato, hints, engine a view)",
-      "MCP headless: crea mesa, juega turnos, paga mana y reconecta por protocolo",
-      "Bo3 con banquillo por UI, reconexion mid-game con resync y torneo Suizo/Eliminacion con cuadro en vivo",
-      "9 idiomas, 160+ estados en la galeria de QA y regresion visual opt-in",
-      "Launcher de escritorio (Tauri, Windows/macOS/Linux) con servidor + proxy + JRE en el primer arranque y updater firmado"
+      "Launcher Windows arreglado: wait_log ya no exige UTF-8 (JUL escribe INFORMACION en ANSI) y los logs rotan por arranque",
+      "Splash con barra de progreso por fases, cronometro en la base de cartas y errores traducidos a 9 idiomas con la carpeta de logs",
+      "Sin consolas negras, puerto comprobado antes de arrancar y recuperacion ante procesos huerfanos",
+      "Componentes desacoplados: la actualizacion del launcher son ~9 MB y no re-descargan JRE+servidor+proxy",
+      "Tablero adaptable con arte unico: bandas que reparten criaturas en 2-3 lineas, tokens y boca abajo resueltos con la tabla del motor",
+      "Asientos de jugadores eliminados plegados (pod/arena), pila agrupada xN y pulido de franja, fases y recursos"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

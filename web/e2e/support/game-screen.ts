@@ -37,6 +37,18 @@ export async function openDrawerTab(page: Page, tab: DrawerTab): Promise<void> {
   await expect(active).toBeVisible({ timeout: 10_000 })
 }
 
+/** El contador de la pila vive en la cabecera del drawer cuando está abierto
+ *  (el título se pinta ahí) y en la propia zona cuando se usa suelta. */
+export async function expectStackCount(page: Page, n: number): Promise<void> {
+  await expect(page.locator('.stack-zone')).toBeVisible()
+  const drawer = page.locator('[data-testid="game-drawer"][data-tab="stack"]')
+  const title =
+    (await drawer.count()) > 0
+      ? drawer.locator('.game-drawer-title')
+      : page.locator('.stack-zone .stack-header-title')
+  await expect(title).toContainText(`(${n})`)
+}
+
 export function feedbackDialog(page: Page) {
   return page.locator('.feedback-dialog, .targeting-bar, .mana-prompt-bar')
 }
