@@ -87,7 +87,10 @@ Piezas:
   reutiliza componentes) y publica draft por tag. Falta firma Apple/Windows, JRE por SO y tests de
   primera ejecución (Phase 4 sigue pendiente). v0.2.1 preparada (2026-09-22): fix del launcher en
   Windows (`wait_log` no-UTF-8, rotación de logs, consolas ocultas, códigos `ERR_*` con la ruta de
-  logs), splash con barra por fases y desacople de componentes (reutiliza `v0.2.0`).
+  logs), splash con barra por fases y desacople de componentes (reutiliza `v0.2.0`). v0.2.2
+  (2026-09-22): fix del proxy — `Gateway.originAllowed` rechazaba `http://tauri.localhost`
+  (virtual host de WebView2 en Windows) y el launcher de Windows nunca conectaba; requiere
+  `components_tag` VACÍO en este release (recompila el módulo proxy, no reutiliza v0.2.1/v0.2.0).
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 

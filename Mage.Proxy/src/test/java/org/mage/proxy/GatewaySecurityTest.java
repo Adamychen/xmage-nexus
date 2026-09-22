@@ -19,6 +19,18 @@ class GatewaySecurityTest {
     }
 
     @Test
+    void allowsTheWindowsTauriLauncherVirtualHost() {
+        Gateway gateway = new Gateway(Config.parse(new String[0]), 0);
+
+        // WebView2 (Windows) no soporta el esquema custom tauri:// y sirve la
+        // app vía el virtual host http://tauri.localhost; macOS/Linux usan
+        // tauri://localhost (host ya "localhost", cubierto arriba).
+        assertTrue(gateway.originAllowed("http://tauri.localhost"));
+        assertTrue(gateway.originAllowed("https://tauri.localhost"));
+        assertFalse(gateway.originAllowed("http://evil-tauri.localhost.attacker.example"));
+    }
+
+    @Test
     void explicitOriginsReplaceTheDefaultPolicy() {
         Config config = Config.parse(new String[]{"--allowedOrigins", "https://client.example"});
         Gateway gateway = new Gateway(config, 0);

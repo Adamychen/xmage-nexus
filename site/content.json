@@ -2,24 +2,21 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.1",
+    "version": "0.2.2",
     "date": "2026-09-22",
-    "tag": "v0.2.1",
+    "tag": "v0.2.2",
     "status": "published",
-    "notes": "Tercera build publica: arregla el launcher de Windows (el primer arranque se quedaba en «Preparando la base de cartas» por la codificacion del log), estrena un splash con progreso real por fases y desacopla los componentes (JRE+servidor+proxy) de la version de la app, asi que las actualizaciones del launcher son ligeras.",
+    "notes": "Fix del proxy: el launcher de Windows no podia conectar (Origin http://tauri.localhost rechazado por la comprobacion local-first del WebSocket). Requiere recompilar el componente proxy (components_tag vacio en este release).",
     "highlights": [
-      "Launcher Windows arreglado: wait_log ya no exige UTF-8 (JUL escribe INFORMACION en ANSI) y los logs rotan por arranque",
-      "Splash con barra de progreso por fases, cronometro en la base de cartas y errores traducidos a 9 idiomas con la carpeta de logs",
-      "Sin consolas negras, puerto comprobado antes de arrancar y recuperacion ante procesos huerfanos",
-      "Componentes desacoplados: la actualizacion del launcher son ~9 MB y no re-descargan JRE+servidor+proxy",
-      "Tablero adaptable con arte unico: bandas que reparten criaturas en 2-3 lineas, tokens y boca abajo resueltos con la tabla del motor",
-      "Asientos de jugadores eliminados plegados (pod/arena), pila agrupada xN y pulido de franja, fases y recursos"
+      "Proxy: Gateway.originAllowed acepta el virtual host de WebView2 (tauri.localhost / ipc.localhost) ademas de localhost/127.0.0.1/::1",
+      "Causa: en Windows, Tauri sirve la app via http://tauri.localhost (WebView2 no soporta el esquema custom tauri://); macOS/Linux no se veian afectados",
+      "Test nuevo GatewaySecurityTest.allowsTheWindowsTauriLauncherVirtualHost + verificacion en vivo (attacker.example sigue rechazado)"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

@@ -201,6 +201,14 @@ public class Gateway extends WebSocketServer {
     /**
      * Permite conexiones sin Origin (node/self-test) y orígenes de localhost.
      * Si --allowedOrigins está definido, solo se aceptan esos valores exactos.
+     * <p>
+     * El launcher de escritorio (Tauri) cuenta como "localhost" aunque su
+     * Origin no lo sea literalmente: en macOS/Linux usa el esquema custom
+     * {@code tauri://localhost} (host ya "localhost"), pero en Windows
+     * WebView2 no soporta esquemas custom y Tauri sirve la app vía un
+     * "virtual host" {@code http://tauri.localhost} — mismo proceso local,
+     * pero con host distinto — por eso se acepta explícitamente además del
+     * propio "localhost".
      */
     boolean originAllowed(String origin) {
         if (origin == null || origin.isEmpty()) {
@@ -216,7 +224,8 @@ public class Gateway extends WebSocketServer {
                 return false;
             }
             String h = host.toLowerCase(Locale.ROOT);
-            return h.equals("localhost") || h.equals("127.0.0.1") || h.equals("::1");
+            return h.equals("localhost") || h.equals("127.0.0.1") || h.equals("::1")
+                    || h.equals("tauri.localhost") || h.equals("ipc.localhost");
         } catch (Exception ex) {
             return false;
         }
