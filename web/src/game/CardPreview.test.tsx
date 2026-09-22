@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CardPreview from './CardPreview'
 import type { CardView } from '../net/types'
 
-vi.mock('../cards/cardImages', () => ({
+vi.mock('../cards/cardImages', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/cardImages')>()),
   awaitImageUrl: vi.fn().mockImplementation(async (card: CardView) => `https://img.test/${card.name}.jpg`),
   isAbilityCard: vi.fn().mockImplementation((card: CardView) => {
     const t = card.mageObjectType ?? ''

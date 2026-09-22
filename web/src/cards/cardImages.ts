@@ -2,6 +2,7 @@ import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { scryfallFetch } from './scryfallClient'
+import tokenImageData from '../data/tokenImages.generated.json'
 
 const memory = new Map<string, string | null>()
 const inflight = new Map<string, Promise<string | null>>()
@@ -24,6 +25,9 @@ export interface ScryfallCardInfo {
   toughness?: string
   imageUrl: string | null
 }
+
+const TOKEN_TABLE = tokenImageData as Record<string, string>
+const tokenPins = new Map<string, string>()
 
 const metaMemory = new Map<string, ScryfallCardInfo>()
 const metaInflight = new Map<string, Promise<ScryfallCardInfo | null>>()
@@ -99,8 +103,79 @@ export function isCardBackFace(card: CardView): boolean {
   return false
 }
 
+function tokenImageName(card: CardView): string {
+  const raw = card.imageFileName || card.displayName || card.name || ''
+  return raw.replace(/\s+Token$/i, '').trim()
+}
+
+/**
+ * Carta de Scryfall exacta de un token según la tabla del cliente de escritorio
+ * de XMage (`SET/Nombre[/imageNumber]`): el motor manda set + `imageFileName` +
+ * `imageNumber` y esa terna identifica la variante. Devuelve `set/coleccionista`
+ * (con `#back` si es la cara trasera) o null si la tabla no la conoce.
+ */
+export function tokenTableKey(card: CardView, isBack: boolean): string | null {
+  const set = (card.expansionSetCode ?? '').toUpperCase()
+  if (!set) return null
+  const name = tokenImageName(card)
+  if (!name) return null
+  const base = `${set}/${name}`
+  const n = card.imageNumber ?? 0
+  const lookups = (suffix: string) =>
+    (n > 0 ? TOKEN_TABLE[`${base}/${n}${suffix}`] : undefined) ??
+    TOKEN_TABLE[`${base}${suffix}`] ??
+    (n > 0 ? undefined : TOKEN_TABLE[`${base}/1${suffix}`])
+  const front = lookups('')
+  const back = isBack || front === undefined ? lookups('#back') : undefined
+  const hit = back ?? front
+  if (!hit) return null
+  return back !== undefined || isBack ? `${hit}#back` : hit
+}
+
+const HIDDEN_FACE_DOWN = /^(?:Morph|Manifest|Disguise|Cloak|Face Down|Foretell)\b[^:]*:\s*(.+)$/i
+
+/**
+ * Nombre real de un permanente boca abajo que el motor deja ver a su
+ * controlador ("Morph: Den Protector"); null para el rival o si no hay.
+ */
+export function hiddenFaceDownName(card: CardView): string | null {
+  if (card.faceDown !== true) return null
+  const match = HIDDEN_FACE_DOWN.exec(card.displayName || card.name || '')
+  const name = match?.[1]?.trim()
+  return name || null
+}
+
+function faceDownArtKey(card: CardView): string | null {
+  if ((card.expansionSetCode ?? '').toUpperCase() !== 'XMAGE' || !card.imageFileName) return null
+  const exact = tokenTableKey(card, isCardBackFace(card))
+  return exact ? pinTokenKey(card, exact) : null
+}
+
+/**
+ * El motor puede elegir una variante distinta por cada token (p. ej. 15
+ * Treasures con 4 artes distintos): la primera que se ve de cada jugador + set +
+ * nombre + P/T se mantiene para todos los demás, así el mazo se ve unificado y
+ * sigue respetando el set de la carta que el usuario eligió en su mazo.
+ */
+function pinTokenKey(card: CardView, key: string): string {
+  const controller = card.controllerId
+  if (!controller) return key
+  const pin = [
+    controller,
+    (card.expansionSetCode ?? '').toUpperCase(),
+    tokenImageName(card).toLowerCase(),
+    card.power ?? '',
+    card.toughness ?? '',
+    key.endsWith('#back') ? 'back' : 'front',
+  ].join('|')
+  const pinned = tokenPins.get(pin)
+  if (pinned) return pinned
+  tokenPins.set(pin, key)
+  return key
+}
+
 export function cardKey(card: CardView): string | null {
-  if (card.faceDown === true) return null
+  if (card.faceDown === true) return faceDownArtKey(card)
   const isBack = isCardBackFace(card)
   const backSuffix = isBack ? '#back' : ''
 
@@ -121,6 +196,11 @@ export function cardKey(card: CardView): string | null {
   const set = card.expansionSetCode
   const num = card.cardNumber
   const isToken = isTokenCard(card)
+
+  if (isToken) {
+    const exact = tokenTableKey(card, isBack)
+    if (exact) return pinTokenKey(card, exact)
+  }
 
   // Cards with a real card number (including copy tokens that inherited the original's number)
   if (set && num && num !== '0') {
@@ -146,6 +226,12 @@ export function cardKey(card: CardView): string | null {
   }
 
   return null
+}
+
+/** Imagen ya resuelta y en memoria (sin red), o null. */
+export function peekImageUrl(key: string | null): string | null {
+  if (!key) return null
+  return memory.get(key) ?? null
 }
 
 export function cardFaceDown(card: CardView): boolean {
@@ -426,6 +512,7 @@ export function resetCardImageCache() {
   inflight.clear()
   metaMemory.clear()
   metaInflight.clear()
+  tokenPins.clear()
   loadQueue.length = 0
   activeLoads = 0
 }

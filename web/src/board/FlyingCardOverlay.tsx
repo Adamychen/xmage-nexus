@@ -1,27 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useActiveFlights, markFlightLanded, normalizeFlightRect, type FlightRecord } from './flightManager'
-import { awaitImageUrl } from '../cards/cardImages'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
 import './FlyingCardOverlay.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   const elRef = useRef<HTMLDivElement>(null)
-  const [imgUrl, setImgUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    if (flight.card.faceDown === true) {
-      setImgUrl(CARD_BACK_URL)
-      return
-    }
-    awaitImageUrl(flight.card).then((url) => {
-      if (!cancelled) setImgUrl(url)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [flight.card])
+  const resolvedUrl = useCardImageUrl(flight.card)
+  const imgUrl = resolvedUrl ?? (flight.card.faceDown === true ? CARD_BACK_URL : null)
 
   useLayoutEffect(() => {
     const el = elRef.current

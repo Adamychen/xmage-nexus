@@ -9,6 +9,7 @@ import PlayerInfoBar from '../game/PlayerInfoBar'
 import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
+import { useBandFit } from './useBandFit'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
 import { switchedHandCards, switchableHandKeys } from './handSwitch'
@@ -85,6 +86,18 @@ export default function BoardZone({
   const creaturesBandRef = useDragScroll<HTMLDivElement>()
   const permanentsBandRef = useDragScroll<HTMLDivElement>()
   const marqueeRef = useDragScroll<HTMLDivElement>()
+  const [creaturesBandEl, setCreaturesBandEl] = useState<HTMLDivElement | null>(null)
+  const [permanentsBandEl, setPermanentsBandEl] = useState<HTMLDivElement | null>(null)
+  const setCreaturesBand = useCallback((node: HTMLDivElement | null) => {
+    creaturesBandRef.current = node
+    setCreaturesBandEl(node)
+  }, [creaturesBandRef])
+  const setPermanentsBand = useCallback((node: HTMLDivElement | null) => {
+    permanentsBandRef.current = node
+    setPermanentsBandEl(node)
+  }, [permanentsBandRef])
+  useBandFit(creaturesBandEl, cardW, compactPod)
+  useBandFit(permanentsBandEl, cardW, compactPod)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -259,6 +272,28 @@ export default function BoardZone({
       ? (Object.values(perm.mutateView?.cards ?? {}).filter(Boolean) as CardView[])
       : []
 
+    const renderAttachments = (offsetPx = 0) => (
+      <div className="attachments-list">
+        {attachments.map((attId, ai) => {
+          const attCard = battlefield[attId]
+          if (!attCard) return null
+          return (
+            <CardSlot
+              key={attId}
+              cardId={attId}
+              card={attCard}
+              onClick={onCardClick ? () => onCardClick(attId) : undefined}
+              onHover={onCardHover}
+              isTarget={targetIds.has(attId)}
+              isPlayable={playableIds.has(attId)}
+              className="attachment-subcard"
+              style={{ left: `calc(${offsetPx}px + ${ai + 1} * var(--attach-step))`, zIndex: attachments.length - ai }}
+            />
+          )
+        })}
+      </div>
+    )
+
     const isTarget = targetIds.has(id)
     const isPlayable = playableIds.has(id) || isSelectable || isChosen
 
@@ -268,7 +303,7 @@ export default function BoardZone({
           key={id}
           className={`card-mutate-pile ${attachments.length > 0 ? 'has-attachments' : ''}`}
           data-attachment-host={attachments.length > 0 ? id : undefined}
-          style={{ width: `calc(var(--card-w, 100px) + ${(mutateParts.length + attachments.length) * 14}px)` }}
+          style={{ width: `calc(var(--card-w, 100px) + ${mutateParts.length * 14}px + ${attachments.length} * var(--attach-step))` }}
         >
           <div className="mutate-parts">
             {mutateParts.map((part, mi) => (
@@ -280,27 +315,7 @@ export default function BoardZone({
               />
             ))}
           </div>
-          {attachments.length > 0 && (
-            <div className="attachments-list">
-              {attachments.map((attId, ai) => {
-                const attCard = battlefield[attId]
-                if (!attCard) return null
-                return (
-                  <CardSlot
-                    key={attId}
-                    cardId={attId}
-                    card={attCard}
-                    onClick={onCardClick ? () => onCardClick(attId) : undefined}
-                    onHover={onCardHover}
-                    isTarget={targetIds.has(attId)}
-                    isPlayable={playableIds.has(attId)}
-                    className="attachment-subcard"
-                    style={{ left: `${(ai + 1) * 16}px` }}
-                  />
-                )
-              })}
-            </div>
-          )}
+          {attachments.length > 0 && renderAttachments(mutateParts.length * 14)}
           <CardSlot
             cardId={id}
             card={perm}
@@ -326,27 +341,9 @@ export default function BoardZone({
           key={id}
           className="card-attachment-group"
           data-attachment-host={id}
-          style={{ width: `calc(var(--card-w, 100px) + ${attachments.length * 16}px)` }}
+          style={{ width: `calc(var(--card-w, 100px) + ${attachments.length} * var(--attach-step))` }}
         >
-          <div className="attachments-list">
-            {attachments.map((attId, ai) => {
-              const attCard = battlefield[attId]
-              if (!attCard) return null
-              return (
-                <CardSlot
-                  key={attId}
-                  cardId={attId}
-                  card={attCard}
-                  onClick={onCardClick ? () => onCardClick(attId) : undefined}
-                  onHover={onCardHover}
-                  isTarget={targetIds.has(attId)}
-                  isPlayable={playableIds.has(attId)}
-                  className="attachment-subcard"
-                  style={{ left: `${(ai + 1) * 16}px` }}
-                />
-              )
-            })}
-          </div>
+          {renderAttachments()}
           <CardSlot
             cardId={id}
             card={perm}
@@ -475,7 +472,7 @@ export default function BoardZone({
       key="permanents-row"
       className="bz-row bz-permanents-row oz-permanents-row pz-permanents-row"
     >
-      <div ref={permanentsBandRef} className="bz-band oz-band pz-band permanents-band full-width">
+      <div ref={setPermanentsBand} className="bz-band oz-band pz-band permanents-band full-width">
         {landGroups.map((group) => renderStackGroup(group, false))}
         {tokenGroups.map((group) => renderStackGroup(group, false))}
         {landSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
@@ -503,7 +500,7 @@ export default function BoardZone({
           />
         </div>
       )}
-      <div ref={creaturesBandRef} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && marqueeEntries.length === 0 ? 'full-width' : ''}`}>
+      <div ref={setCreaturesBand} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && marqueeEntries.length === 0 ? 'full-width' : ''}`}>
         {creatureTokenGroups.map((group) => renderStackGroup(group, true))}
         {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>

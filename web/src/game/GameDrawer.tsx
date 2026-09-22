@@ -10,6 +10,7 @@ import GameChat, { isGameChatEntry } from './GameChat'
 import DeckTrackerPanel from './DeckTrackerPanel'
 import MechanicsTray from './MechanicsTray'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
+import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
 export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
@@ -97,6 +98,7 @@ export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, has
 export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: DrawerTab; stackCount: number; stack: ReactNode; onClose: () => void }) {
   const { t } = useTranslation()
   const game = useGame()
+  const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const titles: Record<DrawerTab, string> = {
     stack: `${t('game', 'stack')} (${stackCount})`,
     log: t('game', 'tab_log'),
@@ -109,8 +111,10 @@ export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: D
     <aside className="game-drawer" data-testid="game-drawer" data-tab={tab}>
       <header className="game-drawer-head">
         <span className="game-drawer-title">{titles[tab]}</span>
+        <div className="game-drawer-head-actions" ref={setHeadSlot} data-testid="game-drawer-head-actions" />
         <CloseButton variant="plain" size="sm" onClick={onClose} />
       </header>
+      <DrawerHeadSlotContext.Provider value={headSlot}>
       <div className="game-drawer-content">
         {tab === 'stack' ? (
           stack
@@ -128,6 +132,7 @@ export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: D
           <MechanicsTray />
         )}
       </div>
+      </DrawerHeadSlotContext.Provider>
     </aside>
   )
 }

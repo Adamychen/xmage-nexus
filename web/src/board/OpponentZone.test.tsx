@@ -113,6 +113,44 @@ describe('OpponentZone', () => {
     expect(permBand?.querySelectorAll('.card-slot').length).toBe(0)
   })
 
+  it('varios anexos van detrás del anfitrión: el primero encima, cada uno con su desplazamiento', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 0,
+      controlled: false,
+      battlefield: {
+        'creature-1': {
+          id: 'creature-1',
+          name: 'Grizzly Bears',
+          cardTypes: ['CREATURE'],
+          power: '2',
+          toughness: '2',
+          attachments: ['aura-1', 'equip-1'],
+        } as any,
+        'aura-1': { id: 'aura-1', name: 'Rancor', cardTypes: ['ENCHANTMENT'], attachedTo: 'creature-1' } as any,
+        'equip-1': { id: 'equip-1', name: 'Bonesplitter', cardTypes: ['ARTIFACT'], attachedTo: 'creature-1' } as any,
+      },
+    }
+
+    const { container } = render(<OpponentZone player={oppPlayer as PlayerView} />)
+    const group = container.querySelector('.card-attachment-group') as HTMLElement
+    expect(group.getAttribute('style')).toContain('var(--attach-step)')
+
+    const subs = Array.from(group.querySelectorAll<HTMLElement>('.attachment-subcard'))
+    expect(subs.map((el) => el.getAttribute('data-card-id'))).toEqual(['aura-1', 'equip-1'])
+    expect(subs.map((el) => el.style.zIndex)).toEqual(['2', '1'])
+    expect(subs[0].getAttribute('style')).toContain('1 * var(--attach-step)')
+    expect(subs[1].getAttribute('style')).toContain('2 * var(--attach-step)')
+    expect(subs.map((el) => el.getAttribute('data-card-name'))).toEqual(['Rancor', 'Bonesplitter'])
+
+    const host = group.querySelector('.card-slot[data-card-id="creature-1"]') as HTMLElement
+    expect(host.classList.contains('attachment-subcard')).toBe(false)
+    const list = group.querySelector('.attachments-list') as HTMLElement
+    expect(list.compareDocumentPosition(host) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('renders a mutated creature as a pile with badge and constituent parts', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',

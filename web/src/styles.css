@@ -231,6 +231,16 @@ select option { background: var(--ink-2); color: var(--fg-1); }
   text-decoration: underline;
 }
 
+@media (max-width: 600px) {
+  .app-attribution {
+    max-width: calc(100vw - 24px);
+    text-align: center;
+  }
+  body:has(.lobby-mobile-bottom-nav) .app-attribution {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

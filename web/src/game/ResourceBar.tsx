@@ -235,7 +235,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-graveyard-count={graveyardCount}
-              className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : ''}`}
+              className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : 'is-empty'}`}
               title={
                 topGraveyardCard
                   ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
@@ -263,7 +263,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-exile-count={exileCount}
-              className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : ''}`}
+              className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : 'is-empty'}`}
               title={
                 topExileCard
                   ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`
@@ -291,7 +291,7 @@ export default function ResourceBar({
             {side === 'my' && (
               <button
                 type="button"
-                className={`resource-stack ray-stack clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''} ${topCrossZoneCard ? 'has-card-img' : ''}`}
+                className={`resource-stack ray-stack clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''} ${topCrossZoneCard ? 'has-card-img' : 'is-empty'}`}
                 title={`${t('game', 'pile_stack')}: ${crossZone.length}`}
                 onClick={() => setOpenPile('crosszone')}
                 onMouseEnter={(e) =>

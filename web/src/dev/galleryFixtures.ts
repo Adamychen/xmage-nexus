@@ -452,6 +452,31 @@ function withHandSize(game: GameView, size: number): GameView {
   }
 }
 
+/** Rellena el campo de cada jugador clonando sus criaturas/tierras hasta N (ids nuevos). */
+function withCrowdedBattlefields(game: GameView, creatures: number, lands: number): GameView {
+  const grow = (player: PlayerView, kind: 'creature' | 'land', target: number): PlayerView => {
+    const battlefield = { ...(player.battlefield ?? {}) } as unknown as Record<string, MutableRecord>
+    const pool = Object.entries(battlefield).filter(([, perm]) =>
+      (perm.cardTypes as string[] | undefined ?? []).some((t) => String(t).toLowerCase() === kind),
+    )
+    if (pool.length === 0) return player
+    let have = pool.length
+    let i = 0
+    while (have < target) {
+      const [id, perm] = pool[i % pool.length]
+      const nextId = `${id}-crowd${i + 1}`
+      battlefield[nextId] = { ...(remapIds(perm, (v) => (v === id ? nextId : undefined)) as MutableRecord), id: nextId, attachments: [] }
+      have++
+      i++
+    }
+    return { ...player, battlefield: battlefield as unknown as PlayerView['battlefield'] }
+  }
+  return {
+    ...game,
+    players: players(game).map((p) => grow(grow(p, 'creature', creatures), 'land', lands)),
+  }
+}
+
 const LONG_ME = 'Alejandro-de-la-Vega-Fernández-Castillo'
 const LONG_OPP = 'Bartholomew-Montgomery-Fitzwilliam-III'
 const LONG_CARD = 'Asmoranomardicadaistinaculdacar'
@@ -488,6 +513,7 @@ const FOUR_PLAYER_GAME = GANG_BLOCK_FRAME
       return withClonedOpponent(withClonedOpponent(game, opp, 'c1', 'sim-000042'), opp, 'c2', 'sim-000043')
     })()
   : null
+const CROWDED_POD_GAME = FOUR_PLAYER_GAME ? withCrowdedBattlefields(FOUR_PLAYER_GAME, 16, 14) : null
 const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
 const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
@@ -1038,6 +1064,26 @@ export function buildGalleryEntries(): GalleryEntry[] {
     description: 'Mismo FFA de 4 con layout arena: rivales en columnas compactas.',
     phase: 'game',
     game: FOUR_PLAYER_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'arena',
+  })
+  entries.push({
+    id: 'board:pod-4-crowded',
+    group: 'Tablero',
+    label: 'Pod 2×2 con el campo lleno',
+    description: '4 jugadores con 16 criaturas y 14 tierras cada uno: las bandas encogen las cartas (y se reparten en líneas) en vez de hacer scroll.',
+    phase: 'game',
+    game: CROWDED_POD_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'pod',
+  })
+  entries.push({
+    id: 'board:arena-4-crowded',
+    group: 'Tablero',
+    label: 'Arena con el campo lleno',
+    description: 'Mismo campo lleno con layout arena (rivales en columnas compactas).',
+    phase: 'game',
+    game: CROWDED_POD_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'arena',
   })

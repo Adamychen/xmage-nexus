@@ -1,7 +1,8 @@
 import CloseButton from '../ui/CloseButton'
 import Tabs from '../ui/Tabs'
 import { useEffect, useState } from 'react'
-import { awaitImageUrl, isAbilityCard, getSourceCardName } from '../cards/cardImages'
+import { isAbilityCard, getSourceCardName } from '../cards/cardImages'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { ManaCost } from '../decks/ArenaManaSymbols'
@@ -16,7 +17,6 @@ interface Props {
 export default function CardPreview({ card, onClose }: Props) {
   const { t } = useTranslation()
   const [selectedFaceIndex, setSelectedFaceIndex] = useState<number>(0)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
   function abilityBadge(c: CardView): { icon: import('../ui/Icon').IconName; label: string } {
     const at = c.abilityType ?? ''
@@ -46,25 +46,7 @@ export default function CardPreview({ card, onClose }: Props) {
         } as CardView)
       : card
 
-  useEffect(() => {
-    if (!activeCard) {
-      setImageUrl(null)
-      return
-    }
-    let cancelled = false
-    awaitImageUrl(activeCard).then((url) => {
-      if (!cancelled) setImageUrl(url)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [
-    activeCard?.name,
-    activeCard?.expansionSetCode,
-    activeCard?.cardNumber,
-    (activeCard as any)?.isSecondCardFace,
-    selectedFaceIndex,
-  ])
+  const imageUrl = useCardImageUrl(activeCard)
 
   if (!card || !activeCard) {
     return (

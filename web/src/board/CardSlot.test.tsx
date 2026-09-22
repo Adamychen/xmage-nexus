@@ -16,6 +16,42 @@ vi.mock('../cards/cardImages', async (importOriginal) => {
   return { ...mod, awaitImageUrl: vi.fn(async () => 'https://img.test/art.jpg') }
 })
 
+describe('CardSlot face-down permanents', () => {
+  const morph = (over: Record<string, unknown> = {}) =>
+    ({
+      id: 'm1',
+      name: 'Morph: Den Protector',
+      faceDown: true,
+      morphed: true,
+      expansionSetCode: 'XMAGE',
+      cardNumber: '0',
+      imageFileName: 'Morph',
+      imageNumber: 2,
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+      ...over,
+    }) as unknown as PermanentView
+
+  it('paints the engine face-down art with the Morph badge instead of a text rectangle', async () => {
+    const { container } = render(<CardSlot card={morph()} showPt />)
+    await act(async () => {})
+    expect(container.querySelector('img.card-image')?.getAttribute('src')).toBe('https://img.test/art.jpg')
+    expect(container.querySelector('.card-placeholder')).toBeNull()
+    expect(container.querySelector('.facedown-type-badge.morph')).not.toBeNull()
+    expect(container.querySelector('.pt-badge')?.textContent).toBe('2/2')
+  })
+
+  it('falls back to the sleeve back (never the text placeholder) when the engine sends no art', () => {
+    const { container } = render(
+      <CardSlot card={morph({ expansionSetCode: '', imageFileName: '', name: '', morphed: false, manifested: true })} />,
+    )
+    expect(container.querySelector('.card-placeholder')).toBeNull()
+    expect(container.querySelector('[data-sleeve-id]')).not.toBeNull()
+    expect(container.querySelector('.facedown-type-badge.manifest')).not.toBeNull()
+  })
+})
+
 describe('CardSlot', () => {
   it('renders loyalty badge for planeswalker with loyalty', () => {
     const card = {

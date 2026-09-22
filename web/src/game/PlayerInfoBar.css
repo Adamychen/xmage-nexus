@@ -96,7 +96,7 @@
 }
 
 .player-info-bar.compact .life-counter {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-lg);
 }
 
 .player-info-bar.compact .player-counters {
@@ -190,8 +190,9 @@
 .life-counter {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--fs-base);
+  gap: 5px;
+  font-size: var(--fs-2xl);
+  line-height: 1;
   font-weight: 900;
   font-family: var(--font-display);
   color: var(--gold-300);

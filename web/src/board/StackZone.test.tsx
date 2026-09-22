@@ -1,9 +1,11 @@
 import { act, fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
+import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
 import type { CardView, PlayerView } from '../net/types'
 
-vi.mock('../cards/cardImages', () => ({
+vi.mock('../cards/cardImages', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/cardImages')>()),
   awaitImageUrl: vi.fn().mockResolvedValue('https://img.test/card.jpg'),
   isAbilityCard: vi.fn().mockImplementation((card: CardView) => {
     const t = card.mageObjectType ?? ''
@@ -51,6 +53,24 @@ describe('StackZone', () => {
     expect(container.textContent).toContain('Lightning Bolt')
     expect(container.textContent).toContain('Instantáneo')
     expect(container.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
+  })
+
+  it('dentro del drawer las acciones (Resolver + alternador) van al hueco de su cabecera y no hay fila propia', () => {
+    const slot = document.createElement('div')
+    document.body.appendChild(slot)
+    const stack: Record<string, CardView> = {
+      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(
+      <DrawerHeadSlotContext.Provider value={slot}>
+        <StackZone stack={stack} canResolve={true} onResolveClick={vi.fn()} />
+      </DrawerHeadSlotContext.Provider>,
+    )
+    expect(slot.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
+    expect(slot.querySelector('.ui-tabs, [role="tablist"]')).toBeTruthy()
+    expect(container.querySelector('.stack-header')).toBeNull()
+    expect(container.querySelector('.stack-timeline')).toBeTruthy()
+    slot.remove()
   })
 
   it('cada entrada lleva posición, nombre y controlador en una sola fila compacta', () => {
@@ -133,6 +153,140 @@ describe('StackZone', () => {
     expect(container.textContent).toContain('Cloud, Midgar Mercenary')
     expect(container.textContent).toContain('Disparada')
     expect(container.querySelector('.stack-tl-entry.is-ability')).toBeTruthy()
+  })
+
+  it('muestra las reglas de una habilidad también en modo compacto, y no las de un hechizo', () => {
+    const stack: Record<string, CardView> = {
+      'ab-1': {
+        name: 'Ability',
+        mageObjectType: 'TRIGGERED_ABILITY',
+        abilityType: 'Triggered',
+        manaValue: 0,
+        rules: ['Whenever a creature dies, draw a card.'],
+      },
+      'spell-1': {
+        name: 'Counterspell',
+        cardTypes: ['INSTANT'],
+        manaValue: 2,
+        rules: ['Counter target spell.'],
+      },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    const rules = container.querySelectorAll('.stack-tl-rules')
+    expect(rules.length).toBe(1)
+    expect(rules[0].classList.contains('is-clamped')).toBe(true)
+    expect(rules[0].getAttribute('title')).toBe('Whenever a creature dies, draw a card.')
+
+    fireEvent.click(container.querySelectorAll('.stack-zone [role="tab"]')[1] as HTMLButtonElement)
+    const expanded = container.querySelectorAll('.stack-tl-rules')
+    expect(expanded.length).toBe(2)
+    expect(container.querySelector('.stack-tl-rules.is-clamped')).toBeNull()
+  })
+
+  it('el icono de la habilidad depende de su tipo, no del idioma', () => {
+    const stack: Record<string, CardView> = {
+      trig: { name: 'Ability', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', manaValue: 0 },
+      act: { name: 'Ability', mageObjectType: 'ACTIVATED_ABILITY', abilityType: 'Activated', manaValue: 0 },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    const badges = container.querySelectorAll('.stack-tl-type-badge')
+    const trigIcon = badges[0].querySelector('svg')?.outerHTML
+    const actIcon = badges[1].querySelector('svg')?.outerHTML
+    expect(trigIcon).toBeTruthy()
+    expect(actIcon).toBeTruthy()
+    expect(trigIcon).not.toBe(actIcon)
+  })
+
+  const trigger = (rule: string, extra: Partial<CardView> = {}): CardView => ({
+    name: 'Ability',
+    mageObjectType: 'TRIGGERED_ABILITY',
+    abilityType: 'Triggered',
+    manaValue: 0,
+    rules: [rule],
+    sourceCard: { name: 'Soul Warden', controllerName: 'Yo' } as CardView,
+    controllerName: 'Yo',
+    ...extra,
+  })
+
+  it('agrupa habilidades idénticas consecutivas en una fila con ×N y rango de posición', () => {
+    const stack: Record<string, CardView> = {
+      t1: trigger('You gain 1 life.'),
+      t2: trigger('You gain 1 life.'),
+      t3: trigger('You gain 1 life.'),
+      bolt: { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(entries.length).toBe(2)
+    expect(container.textContent).toContain('Pila (4)')
+    expect(entries[0].getAttribute('data-card-id')).toBe('t1')
+    expect(entries[0].querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×3')
+    expect(entries[0].querySelector('.stack-tl-pos')?.textContent).toContain('#1–3')
+    expect(entries[1].querySelector('.stack-tl-pos')?.textContent).toContain('#4')
+    expect(entries[1].querySelector('[data-testid="stack-group-count"]')).toBeNull()
+  })
+
+  it('no agrupa habilidades no consecutivas, con distintas reglas ni hechizos iguales', () => {
+    const stack: Record<string, CardView> = {
+      a1: trigger('You gain 1 life.'),
+      s1: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+      a2: trigger('You gain 1 life.'),
+      b1: trigger('Draw a card.'),
+      s2: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+      s3: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+
+    const { container } = render(<StackZone stack={stack} />)
+    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(6)
+    expect(container.querySelector('[data-testid="stack-group-count"]')).toBeNull()
+  })
+
+  it('no agrupa entradas que son objetivo elegible, para poder elegir una concreta', () => {
+    const stack: Record<string, CardView> = {
+      t1: trigger('You gain 1 life.'),
+      t2: trigger('You gain 1 life.'),
+    }
+
+    const { container } = render(<StackZone stack={stack} targetIds={new Set(['t2'])} />)
+    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
+  })
+
+  it('no agrupa habilidades de controladores distintos', () => {
+    const stack: Record<string, CardView> = {
+      t1: trigger('You gain 1 life.', { controllerName: 'Yo' }),
+      t2: trigger('You gain 1 life.', { controllerName: 'Rival' }),
+    }
+    const players = [
+      { playerId: 'p1', name: 'Yo', controlled: true },
+      { playerId: 'p2', name: 'Rival', controlled: false },
+    ] as unknown as PlayerView[]
+
+    const { container } = render(<StackZone stack={stack} players={players} />)
+    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
+  })
+
+  it('mantiene la fila del grupo al resolverse la habilidad del tope (sin remontarla)', () => {
+    const three: Record<string, CardView> = {
+      t1: trigger('You gain 1 life.'),
+      t2: trigger('You gain 1 life.'),
+      t3: trigger('You gain 1 life.'),
+    }
+    const { container, rerender } = render(<StackZone stack={three} />)
+    const row = container.querySelector('.stack-tl-entry')
+    expect(row?.getAttribute('data-card-id')).toBe('t1')
+
+    rerender(<StackZone stack={{ t2: three.t2, t3: three.t3 }} />)
+    const after = container.querySelector('.stack-tl-entry')
+    expect(after).toBe(row)
+    expect(after?.getAttribute('data-card-id')).toBe('t2')
+    expect(after?.querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×2')
+
+    rerender(<StackZone stack={{ t3: three.t3 }} />)
+    expect(container.querySelector('.stack-tl-entry')).toBe(row)
+    expect(container.querySelector('[data-testid="stack-group-count"]')).toBeNull()
   })
 
   it('renders storm copy badges and allows toggling view mode', () => {

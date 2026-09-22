@@ -224,9 +224,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   border-radius: var(--r-md);
-  border: 1px solid rgb(var(--brand-rgb) / 0.09);
-  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.055) 0%, rgb(var(--brand-rgb) / 0.02) 100%);
-  box-shadow: inset 0 1px 0 var(--veil-1);
+  border: 0;
+  background: transparent;
   align-items: center;
   justify-content: safe center;
   min-width: 0;
@@ -244,6 +243,15 @@
 .oz-band.creatures-band,
 .oz-band.permanents-band {
   justify-content: safe center;
+}
+
+/* Banda repartida en varias líneas (useBandFit): con cartas más pequeñas caben
+   2-3 filas en la misma altura, así que se envuelve en vez de hacer scroll. */
+.bz-band[data-band-lines] {
+  flex-wrap: wrap;
+  align-content: center;
+  row-gap: var(--sp-0h);
+  overflow-x: hidden;
 }
 
 /* ── Drag-to-Scroll (Hand tool ✋) ────────────────────────────────── */
@@ -407,15 +415,37 @@
   grid-template-rows: 1fr 1fr auto;
 }
 
-/* Empty band slot: dashed cue so the static division reads as intentional.
-   Applies to every layout (not only compact-pod): a player with nothing on
-   the battlefield still renders both bands so each zone is always visible. */
+/* Las bandas no dibujan caja: las cartas descansan sobre el tapete. Una
+   banda vacía deja solo un halo tenue y la frontera entre criaturas y
+   permanentes es una línea fina que se desvanece en los extremos. */
 .board-zone .bz-band:empty,
 .opponent-zone .oz-band:empty,
 .player-zone .pz-band:empty {
-  border-style: dashed;
-  border-color: rgb(var(--brand-rgb) / 0.22);
-  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.03) 0%, rgb(var(--brand-rgb) / 0.008) 100%);
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgb(var(--brand-rgb) / 0.06) 0%, transparent 100%);
+}
+
+.bz-permanents-row {
+  position: relative;
+}
+
+.bz-permanents-row::before {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgb(var(--gold-rgb) / 0.22) 50%, transparent 100%);
+}
+
+.zone-bottom .bz-permanents-row::before,
+.player-zone .bz-permanents-row::before {
+  top: 0;
+}
+
+.zone-top .bz-permanents-row::before,
+.opponent-zone:not(.mirrored) .bz-permanents-row::before {
+  bottom: 0;
 }
 
 .board-zone.compact-pod .bz-band,

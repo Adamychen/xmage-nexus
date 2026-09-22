@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
-import { awaitImageUrl, cardName, getSourceCardName, isAbilityCard } from '../cards/cardImages'
+import { cardName, getSourceCardName, hiddenFaceDownName, isAbilityCard } from '../cards/cardImages'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
@@ -40,7 +41,6 @@ export default function FloatingCardPreview({
 }: FloatingCardPreviewProps) {
   const modalOpen = useStore(isBlockingModal)
   const { t, lang } = useTranslation()
-  const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [showBackFace, setShowBackFace] = useState(false)
   /** `open` pasa a true dos frames después de montar: el primer pintado usa
    *  la pose inicial (encima de la carta) y la transición CSS hace el morph. */
@@ -103,8 +103,23 @@ export default function FloatingCardPreview({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [hasSecondFace])
 
+  const hiddenName = card ? hiddenFaceDownName(card) : null
+
   const activeCard: CardView | PermanentView | null = useMemo(() => {
     if (!card) return null
+    if (hiddenName) {
+      return {
+        ...card,
+        name: hiddenName,
+        displayName: hiddenName,
+        faceDown: false,
+        isToken: false,
+        expansionSetCode: '',
+        cardNumber: '0',
+        imageFileName: '',
+        imageNumber: 0,
+      } as unknown as CardView | PermanentView
+    }
     const isTransformedOnField = (card as PermanentView).transformed === true
     const shouldShowBack = isTransformedOnField ? !showBackFace : showBackFace
 
@@ -128,40 +143,13 @@ export default function FloatingCardPreview({
       } as unknown as CardView | PermanentView
     }
     return { ...card, isSecondCardFace: true } as unknown as CardView | PermanentView
-  }, [card, showBackFace])
+  }, [card, showBackFace, hiddenName])
 
-  useEffect(() => {
-    if ((!inModal && modalOpen) || !activeCard || activeCard.faceDown) {
-      setImgUrl(null)
-      return
-    }
-    let cancelled = false
-    awaitImageUrl(activeCard).then((url) => {
-      if (!cancelled) setImgUrl(url)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [
-    activeCard?.id,
-    activeCard?.name,
-    activeCard?.expansionSetCode,
-    activeCard?.cardNumber,
-    activeCard?.sourceCard?.name,
-    activeCard?.sourceCard?.expansionSetCode,
-    activeCard?.sourceCard?.cardNumber,
-    activeCard?.ability?.name,
-    activeCard?.faceDown,
-    (activeCard as any)?.isSecondCardFace,
-    (activeCard as any)?.isFrontFace,
-    showBackFace,
-    modalOpen,
-    inModal,
-  ])
+  const imgUrl = useCardImageUrl(activeCard, !((!inModal && modalOpen) || !activeCard || activeCard.faceDown))
 
   const keywords = useMemo(() => extractKeywordsFromCard(activeCard), [activeCard])
 
-  if ((!inModal && modalOpen) || !card || !anchorRect || card.faceDown || !activeCard) {
+  if ((!inModal && modalOpen) || !card || !anchorRect || (card.faceDown && !hiddenName) || !activeCard) {
     return null
   }
 

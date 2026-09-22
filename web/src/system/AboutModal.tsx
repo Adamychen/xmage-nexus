@@ -9,6 +9,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { APP_VERSION } from './version'
 import { downloadDiagnostics } from './diagnostics'
+import Attribution from './Attribution'
 import { getNews, markNewsSeen, renderNewsMarkdown, type NewsRelease } from './news'
 import './AboutModal.css'
 
@@ -126,6 +127,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
                 <Icon name="download" size={13} /> {t('system', 'diag_export')}
               </Button>
             </div>
+            <p className="about-attribution"><Attribution /></p>
           </div>
         ) : (
           <div className="about-pane">

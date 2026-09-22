@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance } from './cardImages'
+import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName } from './cardImages'
 import type { CardView } from '../net/types'
 import { setScryfallPacing } from './scryfallClient'
 
@@ -78,25 +78,91 @@ describe('card image cache', () => {
   })
 })
 
+describe('face-down and engine-owned images', () => {
+  beforeEach(() => {
+    resetCardImageCache()
+  })
+
+  const faceDown = (over: Record<string, unknown> = {}) =>
+    ({ name: 'Morph: Den Protector', faceDown: true, expansionSetCode: 'XMAGE', cardNumber: '0', imageFileName: 'Morph', imageNumber: 2, controllerId: 'p1', ...over }) as unknown as CardView
+
+  it('resolves a face-down permanent to the engine face-down image instead of nothing', () => {
+    expect(cardKey(faceDown())).toBe('ta25/15')
+    expect(cardKey(faceDown({ imageFileName: 'Manifest', imageNumber: 3 }))).toBe('tdsk/18')
+    expect(cardKey(faceDown({ imageFileName: 'Cloak', imageNumber: 1 }))).toBe('tmkm/21')
+  })
+
+  it('keeps hidden hand cards without art', () => {
+    expect(cardKey({ name: '?', faceDown: true, expansionSetCode: '', cardNumber: '0' } as unknown as CardView)).toBeNull()
+  })
+
+  it('resolves the engine Copy and Night images', () => {
+    expect(cardKey({ name: 'Copy', expansionSetCode: 'XMAGE', imageFileName: 'Copy', imageNumber: 6, isToken: true } as unknown as CardView)).toBe('tlci/1')
+    expect(cardKey({ name: 'Night', expansionSetCode: 'XMAGE', imageFileName: 'Night', imageNumber: 1, isToken: true } as unknown as CardView)).toBe('tvow/21#back')
+  })
+
+  it('exposes the real name the engine reveals to the controller', () => {
+    expect(hiddenFaceDownName(faceDown())).toBe('Den Protector')
+    expect(hiddenFaceDownName(faceDown({ name: 'Disguise: Unyielding Gatekeeper' }))).toBe('Unyielding Gatekeeper')
+    expect(hiddenFaceDownName(faceDown({ name: '' }))).toBeNull()
+    expect(hiddenFaceDownName(faceDown({ faceDown: false }))).toBeNull()
+  })
+})
+
 describe('token image resolution', () => {
   beforeEach(() => {
     resetCardImageCache()
     vi.restoreAllMocks()
   })
 
-  it('builds token Scryfall key from setCode + name, stripping "Token" suffix', () => {
+  it('resolves a token to the exact Scryfall card from the engine table (set + name)', () => {
     const token = { name: 'Goblin Token', expansionSetCode: 'GRN', cardNumber: '0', isToken: true } as CardView
-    expect(cardKey(token)).toBe('tgrn/goblin')
+    expect(cardKey(token)).toBe('tgrn/4')
   })
 
-  it('handles Treasure token', () => {
-    const token = { name: 'Treasure Token', expansionSetCode: 'XLN', cardNumber: '0', isToken: true } as CardView
-    expect(cardKey(token)).toBe('txln/treasure')
+  it('prefers imageFileName over the display name when the engine sends it', () => {
+    const token = { name: 'Treasure Token', imageFileName: 'Treasure', expansionSetCode: 'LCI', cardNumber: '', isToken: true } as CardView
+    expect(cardKey(token)).toBe('tlci/18')
   })
 
-  it('uses mageObjectType for token detection', () => {
-    const token = { name: 'Soldier Token', expansionSetCode: 'M21', cardNumber: '0', mageObjectType: 'TOKEN' } as CardView
-    expect(cardKey(token)).toBe('tm21/soldier')
+  it('uses imageNumber to pick the variant inside a set', () => {
+    const base = { name: 'Treasure Token', imageFileName: 'Treasure', expansionSetCode: 'XLN', cardNumber: '', isToken: true }
+    expect(cardKey({ ...base, imageNumber: 1 } as CardView)).toBe('txln/7')
+    expect(cardKey({ ...base, imageNumber: 3 } as CardView)).toBe('txln/9')
+    expect(cardKey({ ...base } as CardView)).toBe('txln/7')
+  })
+
+  it('never confuses a Treasure with the Dinosaur token of the same set', () => {
+    const treasure = { name: 'Treasure Token', imageFileName: 'Treasure', expansionSetCode: 'LCI', isToken: true } as CardView
+    const dino = { name: 'Dinosaur Token', imageFileName: 'Dinosaur', imageNumber: 1, expansionSetCode: 'LCI', isToken: true } as CardView
+    expect(cardKey(treasure)).not.toBe(cardKey(dino))
+    expect(cardKey(dino)).toBe('tlci/10')
+  })
+
+  it('pins the first variant seen per controller so all copies share one art', () => {
+    const treasure = (id: string, imageNumber: number, controllerId: string) =>
+      ({ id, name: 'Treasure Token', imageFileName: 'Treasure', imageNumber, expansionSetCode: 'XLN', isToken: true, controllerId }) as CardView
+    expect(cardKey(treasure('a', 2, 'p1'))).toBe('txln/8')
+    expect(cardKey(treasure('b', 4, 'p1'))).toBe('txln/8')
+    expect(cardKey(treasure('c', 3, 'p1'))).toBe('txln/8')
+    expect(cardKey(treasure('d', 4, 'p2'))).toBe('txln/10')
+  })
+
+  it('keeps tokens of different sets of the same controller apart (deck printings are respected)', () => {
+    const treasure = (set: string) =>
+      ({ name: 'Treasure Token', imageFileName: 'Treasure', expansionSetCode: set, isToken: true, controllerId: 'p1' }) as CardView
+    expect(cardKey(treasure('LCI'))).toBe('tlci/18')
+    expect(cardKey(treasure('RNA'))).toBe('trna/12')
+  })
+
+  it('resolves the back face of a double-faced token', () => {
+    const token = { name: 'Goblin Token', imageFileName: 'Goblin', expansionSetCode: 'GK1', isToken: true, isSecondCardFace: true } as unknown as CardView
+    expect(cardKey(token)).toBe('tgk1/3#back')
+  })
+
+  it('falls back to the name slug when the set is not in the engine table', () => {
+    const token = { name: 'Goblin Token', expansionSetCode: 'ZZZ', cardNumber: '0', isToken: true } as CardView
+    expect(cardKey(token)).toBe('tzzz/goblin')
   })
 
   it('returns null for XMAGE set tokens (special/helper)', () => {
@@ -135,14 +201,14 @@ describe('token image resolution', () => {
 
     await expect(awaitImageUrl(token)).resolves.toBe('https://img.test/goblin.jpg')
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.scryfall.com/cards/tgrn/goblin?format=json',
+      'https://api.scryfall.com/cards/tgrn/4?format=json',
       expect.anything(),
     )
   })
 
   it('falls back to name without "Token" suffix on 404', async () => {
     const token = { name: 'Goblin Token', expansionSetCode: 'GRN', cardNumber: '0', isToken: true } as CardView
-    // cardKey already strips "Token", so the key is tgrn/goblin — no fallback needed
+    // el token se resuelve por la tabla del motor (tgrn/4) — sin fallback por nombre
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true, status: 200,
       json: async () => ({ image_uris: { normal: 'https://img.test/goblin.jpg' }, name: 'Goblin' }),
@@ -152,7 +218,7 @@ describe('token image resolution', () => {
     await expect(awaitImageUrl(token)).resolves.toBe('https://img.test/goblin.jpg')
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.scryfall.com/cards/tgrn/goblin?format=json',
+      'https://api.scryfall.com/cards/tgrn/4?format=json',
       expect.anything(),
     )
   })

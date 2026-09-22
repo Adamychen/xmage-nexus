@@ -4,7 +4,8 @@ import FloatingCardPreview from './FloatingCardPreview'
 import { setLanguage } from '../i18n'
 import type { CardView, PermanentView } from '../net/types'
 
-vi.mock('../cards/cardImages', () => ({
+vi.mock('../cards/cardImages', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/cardImages')>()),
   awaitImageUrl: vi.fn().mockResolvedValue('https://img.test/card.jpg'),
   cardName: vi.fn().mockImplementation((c: CardView) => c.name || '?'),
   getSourceCardName: vi.fn().mockImplementation((c: CardView) => c.name || '?'),
@@ -394,6 +395,7 @@ describe('FloatingCardPreview', () => {
     const ability = (id: string, source: string): CardView => ({
       id,
       name: 'Ability',
+      mageObjectType: 'ABILITY',
       manaValue: 0,
       expansionSetCode: '',
       cardNumber: '0',

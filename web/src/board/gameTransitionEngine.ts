@@ -5,6 +5,8 @@ import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { stringList } from '../state/gameUtils'
 import { t } from '../i18n'
+import { isAbilityCard } from '../cards/cardImages'
+import { fxDuration } from './fx'
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -79,6 +81,19 @@ function shakeElement(selector: string, ms = 420): void {
   el.classList.add('took-damage')
   setTimeout(() => el.classList.remove('took-damage'), ms)
 }
+const SOURCE_PULSE_MS = 600
+
+function pulseStackSource(cardId: string): void {
+  const ms = fxDuration(SOURCE_PULSE_MS)
+  if (ms === 0) return
+  const el = document.querySelector(`.card-slot[data-card-id="${cardId}"]`)
+  if (!el) return
+  el.classList.remove('stack-source-pulse')
+  void (el as HTMLElement).offsetWidth
+  el.classList.add('stack-source-pulse')
+  setTimeout(() => el.classList.remove('stack-source-pulse'), ms)
+}
+
 export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView) {
   if (!prevGame || !nextGame) return
   const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId
@@ -107,6 +122,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
 
       let sourceRect: DOMRect | null = null
       let sourceSize: CardSourceSize | null = null
+
+      if (isAbilityCard(spell) && spell.sourceCard?.id) pulseStackSource(spell.sourceCard.id)
 
       // 1a. Check cardPositionRegistry first (card just unmounted from hand/battlefield)
       const srcId = spell.sourceCard?.id ?? spell.id

@@ -93,3 +93,14 @@
   margin-top: 8px;
   font-size: var(--fs-sm);
 }
+
+.about-attribution {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.about-attribution a {
+  color: inherit;
+  text-decoration: underline;
+}

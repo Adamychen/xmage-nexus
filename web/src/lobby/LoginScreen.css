@@ -281,6 +281,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 176px;
   gap: var(--sp-2h);
+  align-items: end;
 }
 
 .login-card label {

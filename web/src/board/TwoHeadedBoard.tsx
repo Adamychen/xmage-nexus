@@ -4,7 +4,8 @@ import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
-import { useSwitchedHand, type BoardProps } from './boardShared'
+import { useSeatStates, useSwitchedHand, type BoardProps } from './boardShared'
+import DefeatedSeat from './DefeatedSeat'
 import { opponentRevealedCards } from './revealedCards'
 import './TwoHeadedBoard.css'
 
@@ -29,6 +30,7 @@ export default function TwoHeadedBoard({
 }: BoardProps) {
   const { me, opps, isSpectator } = useBoardPlayers(game, true)
   const switchedHand = useSwitchedHand(game)
+  const { seatState, toggleSeat } = useSeatStates()
   const presenter = useBoardPresenter({
     game,
     targetIds,
@@ -64,9 +66,20 @@ export default function TwoHeadedBoard({
     return [opps[0], opps[1], me, opps[2]]
   }, [isSpectator, me, opps])
 
-  const oppSlot = (player: PlayerView | undefined, key: string, mirrored = false) => (
-    <div className={`pod-cell${player ? '' : ' pod-cell--empty'}`} key={key}>
-      {player && (
+  const seatCellClass = (player: PlayerView | undefined) => {
+    const state = seatState(player)
+    return state === 'collapsed' ? ' seat-cell--out' : state === 'open' ? ' seat-cell--open' : ''
+  }
+
+  const renderOpponent = (player: PlayerView, mirrored: boolean) => {
+    const state = seatState(player)
+    const seat = state !== 'alive' && (
+      <DefeatedSeat player={player} open={state === 'open'} onToggle={() => toggleSeat(player.playerId)} />
+    )
+    if (state === 'collapsed') return seat
+    return (
+      <>
+        {seat}
         <OpponentZone
           player={player}
           onCardClick={handleCardClick}
@@ -82,13 +95,25 @@ export default function TwoHeadedBoard({
           mirrored={mirrored}
           compactPod
         />
-      )}
+      </>
+    )
+  }
+
+  const oppSlot = (player: PlayerView | undefined, key: string, mirrored = false) => (
+    <div className={`pod-cell${player ? '' : ' pod-cell--empty'}${seatCellClass(player)}`} key={key}>
+      {player && renderOpponent(player, mirrored)}
     </div>
   )
 
+  const rowIsOut = (cells: (PlayerView | undefined)[]) => {
+    const present = cells.filter((c): c is PlayerView => !!c)
+    return present.length > 0 && present.every((c) => seatState(c) === 'collapsed')
+  }
+
   const isTopFull = !topLeft || !topRight
   const isBottomFull = !botRight
-  const shellClass = `pod-board${isBottomFull ? ' pod-board--bottom-full' : ''}${isTopFull ? ' pod-board--top-full' : ''}`
+  const brOut = !!botRight && seatState(botRight) === 'collapsed'
+  const shellClass = `pod-board${isBottomFull ? ' pod-board--bottom-full' : ''}${isTopFull ? ' pod-board--top-full' : ''}${brOut ? ' pod-board--br-out' : ''}`
 
   return (
     <BoardShell
@@ -103,7 +128,7 @@ export default function TwoHeadedBoard({
       } : null}
     >
       {/* ── Top row ── */}
-      <div className="pod-row pod-row--top">
+      <div className={`pod-row pod-row--top${rowIsOut([topLeft, topRight]) ? ' pod-row--out' : ''}`}>
         {oppSlot(topLeft, 'tl')}
         {topLeft && topRight && <BoardColDivider />}
         {oppSlot(topRight, 'tr')}
@@ -113,9 +138,9 @@ export default function TwoHeadedBoard({
       <BoardDivider labels={isBottomFull} />
 
       {/* ── Bottom row ── */}
-      <div className="pod-row pod-row--bottom">
+      <div className={`pod-row pod-row--bottom${rowIsOut([botLeft, botRight]) ? ' pod-row--out' : ''}`}>
         {/* Bottom-left: player or spectator-opp */}
-        <div className={`pod-cell pod-cell--me${!isSpectator || botLeft ? '' : ' pod-cell--empty'}`}>
+        <div className={`pod-cell pod-cell--me${!isSpectator || botLeft ? '' : ' pod-cell--empty'}${isSpectator ? seatCellClass(botLeft) : ''}`}>
           {!isSpectator && botLeft === me ? (
             <PlayerZone
               player={me}
@@ -137,21 +162,7 @@ export default function TwoHeadedBoard({
               showHand={false}
             />
           ) : botLeft ? (
-            <OpponentZone
-              player={botLeft as PlayerView | undefined}
-              onCardClick={handleCardClick}
-              onCardHover={handleCardHover}
-              targetIds={targetIdSet}
-              revealedCards={opponentRevealedCards(game, botLeft as PlayerView | undefined)}
-              playableIds={playableIdSet}
-              combatSelectable={combatSelectable}
-              combatMode={combatMode}
-              combatChosen={combatChosen}
-              attackingIds={attackingIds}
-              blockingIds={blockingIds}
-              mirrored
-              compactPod
-            />
+            renderOpponent(botLeft, true)
           ) : null}
         </div>
 

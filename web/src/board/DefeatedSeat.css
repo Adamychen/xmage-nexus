@@ -1,0 +1,138 @@
+.board-shell {
+  --seat-strip-w: 72px;
+  --seat-strip-h: 44px;
+}
+
+.defeated-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--sp-2);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sp-2h) var(--sp-1);
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  color: var(--fg-2);
+  background: rgb(var(--ink-2-rgb) / 0.55);
+  border: 0;
+  border-left: 2px solid rgb(var(--err-rgb) / 0.45);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.defeated-seat:hover,
+.defeated-seat:focus-visible {
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  color: var(--fg-1);
+}
+
+.defeated-seat-icon {
+  flex-shrink: 0;
+  color: var(--err);
+}
+
+.defeated-seat-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  min-height: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+}
+
+.defeated-seat-status,
+.defeated-seat-chevron {
+  display: none;
+}
+
+.pod-row--out .defeated-seat,
+.defeated-seat.is-open {
+  flex-direction: row;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2h);
+}
+
+.pod-row--out .defeated-seat-name,
+.defeated-seat.is-open .defeated-seat-name {
+  writing-mode: horizontal-tb;
+}
+
+.pod-row--out .defeated-seat-status,
+.defeated-seat.is-open .defeated-seat-status,
+.defeated-seat.is-open .defeated-seat-chevron {
+  display: inline;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.defeated-seat.is-open {
+  flex: 0 0 auto;
+  height: auto;
+}
+
+.pod-cell.seat-cell--open,
+.arena-opp-cell.seat-cell--open {
+  flex-direction: column;
+}
+
+.pod-cell.seat-cell--open {
+  display: flex;
+}
+
+.seat-cell--open > .opponent-zone,
+.seat-cell--open > .player-zone {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+}
+
+.seat-cell--open .zone-defeated-overlay {
+  display: none;
+}
+
+.pod-cell.seat-cell--out,
+.arena-opp-cell.seat-cell--out {
+  flex: 0 0 var(--seat-strip-w);
+}
+
+.pod-row.pod-row--out {
+  flex: 0 0 var(--seat-strip-h);
+}
+
+.pod-row.pod-row--out > .pod-cell.seat-cell--out {
+  flex: 1 1 0;
+}
+
+.pod-board.pod-board--br-out .hand-bar {
+  width: calc(100% - var(--seat-strip-w));
+  max-width: calc(100% - var(--seat-strip-w));
+}
+
+.pod-cell,
+.pod-row,
+.arena-opp-cell {
+  transition: flex calc(0.3s / var(--fx-speed, 1)) ease;
+}
+
+html.fx-off .pod-cell,
+html.fx-off .pod-row,
+html.fx-off .arena-opp-cell {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-cell,
+  .pod-row,
+  .arena-opp-cell {
+    transition: none !important;
+  }
+}

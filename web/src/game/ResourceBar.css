@@ -84,6 +84,29 @@
   flex-shrink: 0;
 }
 
+/* Pilas vacías (cementerio, exilio, jugables de otras zonas): fantasmas
+   pequeños en vez de cartas enteras con un 0 */
+.resource-bar .resource-piles .resource-stack.is-empty {
+  width: 44px;
+  height: 62px;
+  opacity: 0.5;
+  box-shadow: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.resource-bar .resource-piles .resource-stack.is-empty:hover,
+.resource-bar .resource-piles .resource-stack.is-empty:focus-visible {
+  opacity: 1;
+}
+
+.resource-stack.is-empty .stack-count {
+  display: none;
+}
+
+.resource-stack.is-empty .stack-mark {
+  font-size: var(--fs-lg);
+}
+
 /* Library card back image */
 .stack-back-img {
   width: 100%;

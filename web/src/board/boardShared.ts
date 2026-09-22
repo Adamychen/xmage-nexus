@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { CardView, CardsView, GameView, PermanentView, PlayerView } from '../net/types'
 import { simpleToCardsView } from './revealedCards'
 import { switchedHandCards } from './handSwitch'
@@ -6,6 +6,34 @@ import { useStore } from '../state/store'
 import type { CrossZonePlayable } from './crossZone'
 
 export const MAX_BOARD_PLAYERS = 4
+
+export function isPlayerOut(player: PlayerView | undefined | null): boolean {
+  return !!player && (player.hasLeft === true || player.life <= 0)
+}
+
+export type SeatState = 'alive' | 'collapsed' | 'open'
+
+/** Los asientos de jugadores eliminados se pliegan a una tira para dar el
+ *  espacio a los que siguen en juego; el usuario puede reabrir uno para
+ *  consultar su cementerio y su campo. Mi propio asiento nunca se pliega. */
+export function useSeatStates() {
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set())
+  const seatState = useCallback(
+    (player: PlayerView | undefined | null): SeatState => {
+      if (!player || player.controlled || !isPlayerOut(player)) return 'alive'
+      return opened.has(player.playerId) ? 'open' : 'collapsed'
+    },
+    [opened],
+  )
+  const toggleSeat = useCallback((playerId: string) => {
+    setOpened((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(playerId)) next.add(playerId)
+      return next
+    })
+  }, [])
+  return { seatState, toggleSeat }
+}
 
 export interface BoardProps {
   game: GameView | null

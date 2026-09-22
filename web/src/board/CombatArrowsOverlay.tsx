@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { BOARD_RELAYOUT_EVENT } from './useBandFit'
 import type { GameView } from '../net/types'
 import './CombatArrowsOverlay.css'
 
@@ -265,6 +266,7 @@ export default function CombatArrowsOverlay({
     }
     update()
     window.addEventListener('resize', update)
+    window.addEventListener(BOARD_RELAYOUT_EVENT, update)
     const boardEl = boardRef.current
     let observer: ResizeObserver | null = null
     if (boardEl && typeof ResizeObserver === 'function') {
@@ -279,6 +281,7 @@ export default function CombatArrowsOverlay({
     document.addEventListener('scroll', onScroll, true)
     return () => {
       window.removeEventListener('resize', update)
+      window.removeEventListener(BOARD_RELAYOUT_EVENT, update)
       document.removeEventListener('scroll', onScroll, true)
       observer?.disconnect()
     }

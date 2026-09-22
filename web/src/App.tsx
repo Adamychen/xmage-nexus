@@ -19,6 +19,7 @@ import GameEndDialog from './game/GameEndDialog'
 import ConfirmHost from './ui/ConfirmHost'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
+import Attribution from './system/Attribution'
 
 // P3: galería de estados (solo dev). El import dinámico queda tras
 // `import.meta.env.DEV`, así el build de producción no incluye los frames.
@@ -150,19 +151,11 @@ export default function App() {
       <ConfirmHost />
       <DeckIssuesDialog />
       {showSetup && <SetupWizard onClose={() => setShowSetup(false)} />}
-      <footer className="app-attribution">
-        {(() => {
-          const attr = t('common', 'attribution_scryfall')
-          const parts = attr.split('Scryfall')
-          return (
-            <>
-              {parts[0]}
-              <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a>
-              {parts[1] ?? ' · Not affiliated with Wizards of the Coast'}
-            </>
-          )
-        })()}
-      </footer>
+      {phase !== 'game' && (
+        <footer className="app-attribution">
+          <Attribution />
+        </footer>
+      )}
     </>
   )
 }

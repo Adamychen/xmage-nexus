@@ -1,10 +1,12 @@
-import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
+import { useLayoutEffect, useRef, useState, useCallback, useEffect, useContext } from 'react'
+import { createPortal } from 'react-dom'
 import Tabs from '../ui/Tabs'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
-import { awaitImageUrl, isAbilityCard } from '../cards/cardImages'
+import { isAbilityCard } from '../cards/cardImages'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { useLocalizedCardName } from '../cards/cardLocalization'
 import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
@@ -13,6 +15,8 @@ import { recordCardPosition } from './cardPositionRegistry'
 import { useTranslation } from '../i18n'
 import Icon, { type IconName } from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
+import { groupAdjacent } from './groupAdjacent'
+import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -56,6 +60,11 @@ function stackTypeLabel(card: CardView, t: (cat: any, key: any) => string): stri
   if (types.includes('PLANESWALKER')) return t('game', 'type_planeswalker')
   if (types.includes('LAND')) return t('game', 'type_land')
   return t('game', 'type_spell')
+}
+
+function stackAbilityIcon(card: CardView): IconName {
+  const at = card.abilityType ?? ''
+  return at === 'Triggered' || at === 'Triggered Mana' ? 'bell' : 'zap'
 }
 
 function stackSubtype(card: CardView): string | null {
@@ -201,27 +210,29 @@ function getControllerInfo(
   }
 }
 
-function StackThumbnail({ card }: { card: CardView }) {
-  const [imgUrl, setImgUrl] = useState<string | null>(null)
+function stackEntrySignature(
+  id: string,
+  card: CardView,
+  targetIds: Set<string>,
+  players: PlayerView[] | undefined,
+  myPlayerId: string | null | undefined,
+): string | null {
+  if (!isStackAbility(card) || targetIds.has(id)) return null
+  const ctrl = getControllerInfo(card, id, players, myPlayerId)
+  const source = card.sourceCard ?? card
+  return [
+    ctrl.isMe ? 'me' : ctrl.name,
+    card.abilityType ?? '',
+    source.name ?? '',
+    source.expansionSetCode ?? '',
+    source.cardNumber ?? '',
+    stackRulesText(card) ?? '',
+    stackTargetIds(card).join(','),
+  ].join('|')
+}
 
-  useEffect(() => {
-    if (isStackAbility(card)) {
-      const src = card.sourceCard || card.ability
-      if (src) {
-        let cancelled = false
-        awaitImageUrl(src).then((url) => {
-          if (!cancelled) setImgUrl(toSmall(url))
-        })
-        return () => { cancelled = true }
-      }
-      return
-    }
-    let cancelled = false
-    awaitImageUrl(card).then((url) => {
-      if (!cancelled) setImgUrl(toSmall(url))
-    })
-    return () => { cancelled = true }
-  }, [card.expansionSetCode, card.cardNumber, card.name, card.displayName])
+function StackThumbnail({ card }: { card: CardView }) {
+  const imgUrl = useCardImageUrl(card)
 
   return (
     <div className="stack-thumb">
@@ -234,11 +245,6 @@ function StackThumbnail({ card }: { card: CardView }) {
       )}
     </div>
   )
-}
-
-function toSmall(url: string | null): string | null {
-  if (!url) return null
-  return url.replace('/normal/', '/small/')
 }
 
 function StackEntryCardName({ card }: { card: CardView }) {
@@ -311,6 +317,7 @@ export default function StackZone({
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
   const { t } = useTranslation()
+  const headSlot = useContext(DrawerHeadSlotContext)
 
   const zoneRef = useRef<HTMLDivElement>(null)
 
@@ -360,6 +367,7 @@ export default function StackZone({
   )
 
   const entries = Object.entries(stack ?? {})
+  const groups = groupAdjacent(entries, ([id, card]) => stackEntrySignature(id, card, targetIds, players, myPlayerId))
 
   if (entries.length === 0) {
     return (
@@ -369,38 +377,45 @@ export default function StackZone({
     )
   }
 
-  const ordered = entries
+  const headerActions = (
+    <div className="stack-header-actions">
+      {canResolve && (
+        <Button variant="success" size="sm" data-testid="stack-resolve-header-btn"
+          onClick={onResolveClick}>
+          <Icon name="bolt" size={13} /> {t('game', 'resolve')}
+        </Button>
+      )}
+      <Tabs
+        variant="segmented"
+        size="sm"
+        value={viewMode}
+        onChange={setViewMode}
+        items={[
+          { id: 'compact', icon: 'list', title: t('game', 'compact_view') },
+          { id: 'expanded', icon: 'layoutGrid', title: t('game', 'expanded_view') },
+        ]}
+      />
+    </div>
+  )
 
   return (
     <div ref={zoneRef} className={`stack-zone view-mode-${viewMode}`}>
-      <div className="stack-header">
-        <div className="stack-header-left">
-          <span className="stack-header-title">{t('game', 'stack')} ({ordered.length})</span>
+      {headSlot ? createPortal(headerActions, headSlot) : (
+        <div className="stack-header">
+          <div className="stack-header-left">
+            <span className="stack-header-title">{t('game', 'stack')} ({entries.length})</span>
+          </div>
+          {headerActions}
         </div>
-        <div className="stack-header-actions">
-          {canResolve && (
-            <Button variant="success" size="sm" data-testid="stack-resolve-header-btn"
-              onClick={onResolveClick}>
-              <Icon name="bolt" size={13} /> {t('game', 'resolve')}
-            </Button>
-          )}
-          <Tabs
-            variant="segmented"
-            size="sm"
-            value={viewMode}
-            onChange={setViewMode}
-            items={[
-              { id: 'compact', icon: 'list', title: t('game', 'compact_view') },
-              { id: 'expanded', icon: 'layoutGrid', title: t('game', 'expanded_view') },
-            ]}
-          />
-        </div>
-      </div>
+      )}
 
       <div className="stack-timeline">
-        {ordered.map(([id, card], idx) => {
-          const isTop = idx === 0
-          const isLast = idx === ordered.length - 1
+        {groups.map((group, gi) => {
+          const [id, card] = group.items[0]
+          const count = group.items.length
+          const idx = group.start
+          const isTop = gi === 0
+          const isLast = gi === groups.length - 1
           const isAbility = isStackAbility(card)
           const isCopy = isCopyCard(card)
           const typeLabel = stackTypeLabel(card, t)
@@ -417,7 +432,7 @@ export default function StackZone({
 
           return (
             <RecordedStackEntry
-              key={id}
+              key={group.items[count - 1][0]}
               id={id}
               className={[
                 'stack-tl-entry',
@@ -446,9 +461,11 @@ export default function StackZone({
                   <div className="stack-tl-info">
                     <div className="stack-tl-name-row">
                       <span className="stack-tl-pos">
-                        {isTop ? (<><Icon name="play" size={9} />#1</>) : `#${idx + 1}`}
+                        {isTop && <Icon name="play" size={9} />}
+                        {count > 1 ? `#${idx + 1}–${idx + count}` : `#${idx + 1}`}
                       </span>
                       <StackEntryCardName card={card} />
+                      {count > 1 && <span className="stack-tl-count" data-testid="stack-group-count">×{count}</span>}
                       {manaCost && (
                         <span className="stack-tl-mana">
                           <FormattedText text={manaCost} />
@@ -457,7 +474,7 @@ export default function StackZone({
                     </div>
                     <div className="stack-tl-type-row">
                       <span className={`stack-tl-type-badge ${isAbility ? 'type-ability' : 'type-spell'}`}>
-                        {isAbility ? (<><Icon name={typeLabel.includes('Disparada') ? 'bell' : 'zap'} size={11} /> </>) : ''}{typeLabel}
+                        {isAbility ? (<><Icon name={stackAbilityIcon(card)} size={11} /> </>) : ''}{typeLabel}
                       </span>
                       {subtype && <span className="stack-tl-subtype">{subtype}</span>}
                       {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
@@ -479,8 +496,8 @@ export default function StackZone({
                         <span className="stack-target-names" aria-hidden="true">{tgtLabels.join(', ')}</span>
                       </div>
                     )}
-                    {rulesText && viewMode === 'expanded' && (
-                      <div className="stack-tl-rules">
+                    {rulesText && (viewMode === 'expanded' || isAbility) && (
+                      <div className={`stack-tl-rules${viewMode === 'compact' ? ' is-clamped' : ''}`} title={viewMode === 'compact' ? rulesText : undefined}>
                         <FormattedText text={rulesText} cardName={card.displayName ?? card.name} />
                       </div>
                     )}

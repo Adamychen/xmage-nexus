@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
-import { awaitImageUrl, cardName } from '../cards/cardImages'
+import { cardName } from '../cards/cardImages'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
@@ -62,7 +63,9 @@ export default function CardSlot({
   const { t } = useTranslation()
   const settings = useSettings()
   const sleeve = getSleeveDef(settings.sleeveId)
-  const [imgUrl, setImgUrl] = useState<string | null>(null)
+  const imgUrl = useCardImageUrl(card, !faceDown)
+  const isFaceDownCard = faceDown || card.faceDown === true
+  const showBack = faceDown || (card.faceDown === true && !imgUrl)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
@@ -169,15 +172,6 @@ export default function CardSlot({
     return () => clearTimeout(safety)
   }, [flightState])
 
-  useEffect(() => {
-    if (faceDown) return
-    let cancelled = false
-    awaitImageUrl(card).then((url) => {
-      if (!cancelled) setImgUrl(url)
-    })
-    return () => { cancelled = true }
-  }, [card.expansionSetCode, card.cardNumber, card.name, (card as any).displayName, faceDown])
-
   const perm = card as PermanentView
   const counters = card.counters ?? []
 
@@ -268,7 +262,7 @@ export default function CardSlot({
         isChosen ? 'chosen' : '',
         pendingAck === 'pending' ? 'is-pending' : '',
         pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
-        faceDown ? 'face-down' : '',
+        isFaceDownCard ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
@@ -284,7 +278,7 @@ export default function CardSlot({
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       style={style}
     >
-      {faceDown ? (
+      {showBack ? (
         sleeve.kind === 'css' ? (
           <div className="sleeve-css-back" style={{ background: sleeve.css }} data-sleeve-id={sleeve.id} title={sleeve.name}>
             <span className="sleeve-emblem" style={{ color: sleeve.accent }}>{sleeve.emblem}</span>
@@ -396,7 +390,7 @@ export default function CardSlot({
         </div>
       )}
 
-      {faceDown && (
+      {isFaceDownCard && (
         <div className="facedown-badges">
           {perm.morphed && <span className="facedown-type-badge morph" title={t('board', 'morph')}>{t('board', 'morph')}</span>}
           {perm.manifested && <span className="facedown-type-badge manifest" title={t('board', 'manifest')}>{t('board', 'manifest')}</span>}
@@ -405,7 +399,7 @@ export default function CardSlot({
         </div>
       )}
 
-      {(card.transformable || card.secondCardFace != null || card.alternateName != null) && !faceDown && (
+      {(card.transformable || card.secondCardFace != null || card.alternateName != null) && !isFaceDownCard && (
         <div
           className={`card-transform-badge ${perm.transformed ? 'is-transformed' : ''}`}
           title={perm.transformed ? t('wiki', 'face_back') : t('wiki', 'face_front')}

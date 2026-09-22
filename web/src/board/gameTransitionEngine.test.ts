@@ -344,6 +344,64 @@ describe('gameTransitionEngine', () => {
     expect(flights[0].toRect.left).toBe(200)
   })
 
+  it('pulses the source permanent when its ability goes on the stack, not for spells', () => {
+    document.querySelector('[data-card-id="perm-grizzly"]')?.classList.add('card-slot')
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+    const trigger = makeCard({
+      id: 'ab-1',
+      name: 'Ability',
+      mageObjectType: 'TRIGGERED_ABILITY',
+      controllerId: 'p-alice',
+      sourceCard: makeCard({ id: 'perm-grizzly', name: 'Grizzly Bears' }),
+    })
+
+    detectAndAnimateTransitions(
+      makeGameView({ players: [alice], stack: {} }),
+      makeGameView({ players: [alice], stack: { 'ab-1': trigger } }),
+    )
+    const source = document.querySelector('[data-card-id="perm-grizzly"]')
+    expect(source?.classList.contains('stack-source-pulse')).toBe(true)
+
+    vi.advanceTimersByTime(700)
+    expect(source?.classList.contains('stack-source-pulse')).toBe(false)
+
+    const spell = makeCard({
+      id: 'spell-2',
+      name: 'Shock',
+      controllerId: 'p-alice',
+      sourceCard: makeCard({ id: 'perm-grizzly', name: 'Grizzly Bears' }),
+    })
+    detectAndAnimateTransitions(
+      makeGameView({ players: [alice], stack: {} }),
+      makeGameView({ players: [alice], stack: { 'spell-2': spell } }),
+    )
+    expect(source?.classList.contains('stack-source-pulse')).toBe(false)
+  })
+
+  it('does not pulse the source when effects are disabled', async () => {
+    const { setState, getState } = await import('../state/state')
+    const prev = getState().settings
+    setState({ settings: { ...prev, effects: false } } as never)
+    try {
+      document.querySelector('[data-card-id="perm-grizzly"]')?.classList.add('card-slot')
+      const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+      const trigger = makeCard({
+        id: 'ab-1',
+        name: 'Ability',
+        mageObjectType: 'TRIGGERED_ABILITY',
+        controllerId: 'p-alice',
+        sourceCard: makeCard({ id: 'perm-grizzly', name: 'Grizzly Bears' }),
+      })
+      detectAndAnimateTransitions(
+        makeGameView({ players: [alice], stack: {} }),
+        makeGameView({ players: [alice], stack: { 'ab-1': trigger } }),
+      )
+      expect(document.querySelector('[data-card-id="perm-grizzly"]')?.classList.contains('stack-source-pulse')).toBe(false)
+    } finally {
+      setState({ settings: prev } as never)
+    }
+  })
+
   it('shakes creatures whose damage increased', () => {
     const wounded = makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' })
     ;(wounded as unknown as { damage: number }).damage = 2

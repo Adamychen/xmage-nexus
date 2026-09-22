@@ -28,6 +28,17 @@ const STEPS: StepDef[] = [
 
 const GROUPS = ['b', 'm1', 'c', 'm2', 'e']
 
+export function PhaseName({ step }: { step: string }) {
+  const { t } = useTranslation()
+  const def = STEPS.find((s) => s.key === step)
+  if (!def) return null
+  return (
+    <span className="phase-name" data-testid="phase-name" aria-live="polite" key={def.key}>
+      {t('game', def.nameKey)}
+    </span>
+  )
+}
+
 export default function PhaseBar({ step }: { step: string }) {
   const { t } = useTranslation()
   const currentIdx = STEPS.findIndex((s) => s.key === step)

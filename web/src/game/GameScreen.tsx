@@ -16,7 +16,7 @@ import PlayerContextMenu from './PlayerContextMenu'
 import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
-import PhaseBar from './PhaseBar'
+import PhaseBar, { PhaseName } from './PhaseBar'
 import ActionButton from './ActionButton'
 import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
@@ -282,6 +282,7 @@ export default function GameScreen() {
         game && (
           <div className="game-state" data-testid="game-status">
             <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
+            <PhaseName step={game.step ?? ''} />
             <PhaseBar step={game.step ?? ''} />
           </div>
         )

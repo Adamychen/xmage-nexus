@@ -78,6 +78,19 @@
   flex-shrink: 0;
 }
 
+.game-drawer-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-left: auto;
+  margin-right: var(--sp-1);
+  min-width: 0;
+}
+
+.game-drawer-head-actions:empty {
+  display: none;
+}
+
 .game-drawer-title {
   font-family: var(--font-display);
   font-size: var(--fs-xs);
