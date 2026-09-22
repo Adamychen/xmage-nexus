@@ -48,7 +48,7 @@ class GatewayProtocolIntegrationTest {
         assertFalse(unauthorized.get("ok").getAsBoolean());
         assertEquals(ProxyProtocol.ERR_NOT_AUTHORIZED, unauthorized.get("errorCode").getAsString());
 
-        JsonObject connect = sendAndAwait("connect-1", "connect", "{\"host\":\"127.0.0.1\",\"port\":1,\"username\":\"proxy-test\",\"password\":\"x\"}");
+        JsonObject connect = sendAndAwait("connect-1", "connect", "{\"host\":\"127.0.0.1\",\"port\":1,\"username\":\"proxy-test\",\"password\":\"x\"}", 20_000);
         assertFalse(connect.get("ok").getAsBoolean());
         assertEquals("connect-1", connect.get("requestId").getAsString());
 
@@ -97,8 +97,17 @@ class GatewayProtocolIntegrationTest {
     }
 
     private JsonObject sendAndAwait(String requestId, String action, String args) throws Exception {
+        return sendAndAwait(requestId, action, args, 5000);
+    }
+
+    /**
+     * Timeout configurable: el connect fallido (127.0.0.1:1) recorre el
+     * findAlternativeTarget del fork, que inicializa los servicios del
+     * transporter en frío y en un runner de CI puede tardar varios segundos.
+     */
+    private JsonObject sendAndAwait(String requestId, String action, String args, long timeoutMs) throws Exception {
         client.send("{\"requestId\":\"" + requestId + "\",\"action\":\"" + action + "\",\"args\":" + args + "}");
-        long deadline = System.currentTimeMillis() + 5000;
+        long deadline = System.currentTimeMillis() + timeoutMs;
         while (System.currentTimeMillis() < deadline) {
             String raw = client.messages.poll(250, TimeUnit.MILLISECONDS);
             if (raw == null) continue;
