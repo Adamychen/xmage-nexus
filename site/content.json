@@ -2,21 +2,21 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.2",
+    "version": "0.2.3",
     "date": "2026-09-22",
-    "tag": "v0.2.2",
+    "tag": "v0.2.3",
     "status": "published",
-    "notes": "Fix del proxy: el launcher de Windows no podia conectar (Origin http://tauri.localhost rechazado por la comprobacion local-first del WebSocket). Requiere recompilar el componente proxy (components_tag vacio en este release).",
+    "notes": "Fix de mazos: una basica importada sin impresion (texto plano tipo \"17 Forest\") pasaba la validacion en el editor pero el servidor real rechazaba el join con \"Card not found\". Requiere recompilar el componente proxy (components_tag vacio en este release).",
     "highlights": [
-      "Proxy: Gateway.originAllowed acepta el virtual host de WebView2 (tauri.localhost / ipc.localhost) ademas de localhost/127.0.0.1/::1",
-      "Causa: en Windows, Tauri sirve la app via http://tauri.localhost (WebView2 no soporta el esquema custom tauri://); macOS/Linux no se veian afectados",
-      "Test nuevo GatewaySecurityTest.allowsTheWindowsTauriLauncherVirtualHost + verificacion en vivo (attacker.example sigue rechazado)"
+      "Web: normalizeDeckCard/prepareDeckForXMage rellenan una impresion real (BASIC_LAND_PRESETS) para basicas importadas sin set/numero, incluidos mazos ya guardados antes de este fix",
+      "Proxy: DeckValidation.checkCard marca como missing (con sugerencias) cualquier carta sin impresion en vez de dar ready en falso via el fallback-por-nombre exclusivo del fork nexus",
+      "Causa: ese fallback solo existe en el fork nexus (Deck.resolveCardInfo), no en el servidor real de destino, que busca estrictamente por (set, numero)"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

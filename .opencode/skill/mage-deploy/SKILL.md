@@ -91,6 +91,11 @@ Piezas:
   (2026-09-22): fix del proxy — `Gateway.originAllowed` rechazaba `http://tauri.localhost`
   (virtual host de WebView2 en Windows) y el launcher de Windows nunca conectaba; requiere
   `components_tag` VACÍO en este release (recompila el módulo proxy, no reutiliza v0.2.1/v0.2.0).
+  v0.2.3 (2026-09-22): fix de mazos — una básica importada sin impresión (`setCode`/`cardNumber`
+  vacíos, típico de listas en texto plano) pasaba la validación advisory del proxy (fallback por
+  nombre, parche exclusivo del fork nexus) pero el servidor real la rechazaba con "Card not found"
+  al unirse; `DeckValidation.checkCard` ahora la marca como `missing`. También toca `Mage.Proxy`
+  (`DeckValidation.java`) => requiere `components_tag` VACÍO otra vez (no reutiliza v0.2.2/v0.2.1/v0.2.0).
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 
