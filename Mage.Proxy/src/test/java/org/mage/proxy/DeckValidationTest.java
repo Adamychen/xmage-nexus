@@ -112,13 +112,23 @@ class DeckValidationTest {
     }
 
     @Test
-    void nameOnlyEntryResolvesByNameLikeTheServer() {
-        // Imports/pegados sin set:número: Deck.resolveCardInfo cae al nombre, así
-        // que la validación no debe reportarlas como no encontradas.
+    void nameOnlyEntryIsFlaggedAsMissingNotSilentlyResolved() {
+        // Imports/pegados sin set:número (mazos de texto plano, p.ej. "elves
+        // pauper" con "17 Forest"): el fallback-por-nombre de resolveForCommander
+        // es un parche exclusivo del fork nexus, no del servidor real de destino,
+        // que hace un lookup estricto (set, número) y rechaza esto con
+        // "Card not found". Reportarlo como missing (con sugerencias) evita el
+        // falso "ready" que dejaba pasar mazos que luego fallaban al unirse.
         JsonObject report = DeckValidation.validate(deck(card("Sol Ring", "", "", 1), card("Counterspell", "", "", 4)));
 
         assertTrue(report.get("ready").getAsBoolean());
-        assertEquals(0, report.getAsJsonArray("missing").size());
+        JsonObject solRing = firstOf(report.getAsJsonArray("missing"), "Sol Ring");
+        assertNotNull(solRing);
+        assertEquals("OUTDATED_PRINTING", solRing.get("reason").getAsString());
+        assertTrue(solRing.getAsJsonArray("suggestions").size() > 0);
+        JsonObject counterspell = firstOf(report.getAsJsonArray("missing"), "Counterspell");
+        assertNotNull(counterspell);
+        assertEquals(4, counterspell.get("amount").getAsInt());
         assertEquals(0, report.getAsJsonArray("mismatches").size());
     }
 

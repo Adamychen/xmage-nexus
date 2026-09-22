@@ -17,17 +17,25 @@ import java.util.logging.Logger;
 
 /**
  * Pre-validación de mazos contra la base de datos de cartas de la MISMA release
- * de XMage que corre el servidor objetivo. Replica exactamente la semántica del
- * servidor oficial (Deck.load upstream): búsqueda estricta por (setCode, cardNumber)
- * + instanciación de la clase; el nombre de la entrada NO participa en la
- * resolución. No usa ningún código propio del fork, solo APIs upstream públicas
- * (CardRepository, CardScanner).
+ * de XMage que corre el servidor objetivo. Búsqueda estricta por (setCode,
+ * cardNumber) + instanciación de la clase, igual que el servidor real de
+ * destino (upstream {@code Deck.load}: el nombre de la entrada NO participa en
+ * la resolución, solo se usa para detectar mismatches y sugerir impresiones).
  * <p>
- * Detecta dos problemas distintos:
+ * Detecta tres problemas distintos:
  * <ul>
  * <li><b>missing</b>: el servidor rechaza la carta ("Card not found" al unirse) —
  *     set/número desconocidos (el nombre existe en otra impresión => OUTDATED_PRINTING
- *     con sugerencias) o carta sin implementar en ninguna impresión (UNIMPLEMENTED).</li>
+ *     con sugerencias), carta sin implementar en ninguna impresión (UNIMPLEMENTED),
+ *     o entrada sin impresión asignada en absoluto (mazos importados como texto
+ *     plano: "17 Forest" sin `[SET:NUM]`) — también OUTDATED_PRINTING con
+ *     sugerencias. Este último caso resuelve "bien" con el fallback-por-nombre
+ *     de {@link #resolveForCommander}, pero ese fallback es un parche exclusivo
+ *     del fork nexus (`Deck.resolveCardInfo`, no upstream); un servidor real sin
+ *     el parche hace el lookup estricto y lo rechaza igual, así que aquí se
+ *     marca como missing a propósito para no dar un falso "ready" (ver
+ *     `AGENTS.md`/worklog: bug real reportado con "Forest" sin impresión en un
+ *     mazo importado, "elves pauper").</li>
  * <li><b>mismatches</b>: el servidor la acepta pero resuelve a OTRA carta (el
  *     nombre no coincide con la de ese set/número — p.ej. "Rhystic Tutor - C20 - 77"
  *     carga en realidad Banisher Priest). El jugador cree jugar una carta y juega otra.</li>
@@ -101,11 +109,17 @@ public final class DeckValidation {
     }
 
     /**
-     * Semántica del servidor oficial (Deck.load upstream): CardRepository
-     * (set, número) y, si la entrada no trae impresión, resolución por nombre
-     * (imports/pegados sin set:número).
+     * Lookup estricto por (set, número), como hace el servidor real de destino.
+     * Si la entrada no trae impresión, se resuelve por nombre solo para poder
+     * diagnosticar/sugerir (ver {@link #resolveForCommander}), pero se marca
+     * igualmente como {@code missing}: ese fallback-por-nombre no existe en un
+     * servidor sin el parche del fork nexus, así que un "ready" aquí sería un
+     * falso negativo (el join real fallaría con "Card not found").
      */
     private static CardStatus checkCard(DeckCardInfo info) {
+        String set = info.getSetCode() == null ? "" : info.getSetCode().trim();
+        String num = info.getCardNumber() == null ? "" : info.getCardNumber().trim();
+        boolean noPrinting = set.isEmpty() && num.isEmpty();
         CardInfo resolved = null;
         try {
             resolved = resolveForCommander(info);
@@ -115,6 +129,9 @@ public final class DeckValidation {
         }
         if (resolved == null) {
             return new CardStatus(true, false, null);
+        }
+        if (noPrinting) {
+            return new CardStatus(true, false, resolved);
         }
         try {
             if (resolved.createCard() == null) {

@@ -1,5 +1,7 @@
 import type { DeckCard } from '../lobby/decks'
-import { withCommanderFirst } from './deckUtils'
+import { BASIC_LAND_PRESETS, withCommanderFirst } from './deckUtils'
+
+const BASIC_LAND_PRESET_BY_NAME = new Map(BASIC_LAND_PRESETS.map((p) => [p.name, p]))
 
 function stripPromoSuffix(num: string): string {
   const t = num.trim()
@@ -26,6 +28,20 @@ export function normalizeDeckCard(card: DeckCard): DeckCard {
   let rawSet = setCode.trim()
   let rawNum = cardNumber.trim()
   const upperSet = rawSet.toUpperCase()
+
+  // Mazos importados como lista de texto plano (Arena/.dek/.cod/.o8d/mtgjson
+  // sin `code`) dejan las básicas sin impresión asignada (setCode/cardNumber
+  // vacíos). El servidor real busca por (set, número), no por nombre, así
+  // que una básica sin impresión resuelve OK en el fallback-por-nombre del
+  // proxy (parche exclusivo del fork nexus) pero el servidor de destino la
+  // rechaza con "Card not found". Asignamos aquí una impresión real conocida
+  // para que el mazo que se envía al servidor sea siempre resoluble.
+  if (!rawSet && !rawNum) {
+    const preset = BASIC_LAND_PRESET_BY_NAME.get(card.cardName)
+    if (preset) {
+      return { ...card, setCode: preset.setCode, cardNumber: preset.cardNumber }
+    }
+  }
 
   if (upperSet === 'PLST' && rawNum.includes('-')) {
     const parts = rawNum.split('-')
@@ -84,17 +100,27 @@ export function prepareDeckForXMage(
   // y además honra los comandantes designados explícitamente (1 o 2 parejas
   // legales: Partner, Trasfondo…). Si no hay designación, el proxy mantiene su
   // heurística de primera carta legal. No tocamos storage.
+  //
+  // Punto único de paso antes de enviar cualquier mazo (join/create/espectador/
+  // asiento SIM): rellena impresiones de básicas ausentes (setCode/cardNumber
+  // vacíos) para mazos ya guardados desde antes de este fix, sin depender de
+  // volver a pasar por el importador de texto.
+  const normalized = {
+    ...deck,
+    cards: normalizeDeckCards(deck.cards),
+    sideboard: normalizeDeckCards(deck.sideboard),
+  }
   const commanders: DeckCard[] = []
   if (deck.commanderCard) commanders.push(deck.commanderCard)
   if (deck.partnerCard && !sameCommanderKey(deck.partnerCard, deck.commanderCard)) {
     commanders.push(deck.partnerCard)
   }
   if (commanders.length === 0 || !isCommanderFormat(deckType, gameType)) {
-    return deck
+    return normalized
   }
   return {
-    ...deck,
-    cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard),
+    ...normalized,
+    cards: withCommanderFirst(normalized.cards, deck.commanderCard, deck.partnerCard),
     commanders,
   }
 }

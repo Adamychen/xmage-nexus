@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeDeckCard, prepareDeckForXMage } from './deckNormalize'
+import { BASIC_LAND_PRESETS } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 
 const c = (cardName: string, setCode: string, cardNumber: string): DeckCard => ({
@@ -31,6 +32,27 @@ describe('deckNormalize', () => {
   it('sufijos promo del número se limpian', () => {
     expect(normalizeDeckCard(c('Bear', 'M21', '123p')).cardNumber).toBe('123')
     expect(normalizeDeckCard(c('Bear', 'M21', '123★')).cardNumber).toBe('123')
+  })
+
+  it('rellena la impresión de una básica importada sin set/número (mazo de texto plano)', () => {
+    for (const preset of BASIC_LAND_PRESETS) {
+      expect(normalizeDeckCard(c(preset.name, '', ''))).toMatchObject({
+        setCode: preset.setCode,
+        cardNumber: preset.cardNumber,
+      })
+    }
+  })
+
+  it('no toca una no-básica sin impresión (queda para validateDeck/DeckIssuesDialog)', () => {
+    expect(normalizeDeckCard(c('Sol Ring', '', ''))).toMatchObject({ setCode: '', cardNumber: '' })
+  })
+
+  it('prepareDeckForXMage rellena básicas sin impresión en cards y sideboard (mazos ya guardados antes del fix)', () => {
+    const blankForest = c('Forest', '', '')
+    const blankIsland = c('Island', '', '')
+    const out = prepareDeckForXMage({ name: 'D', cards: [blankForest], sideboard: [blankIsland] })
+    expect(out.cards[0]).toMatchObject({ setCode: 'DMU', cardNumber: '281' })
+    expect(out.sideboard[0]).toMatchObject({ setCode: 'DMU', cardNumber: '278' })
   })
 
   it('prepareDeckForXMage adjunta los comandantes designados (1 o 2) y los pone primero', () => {
