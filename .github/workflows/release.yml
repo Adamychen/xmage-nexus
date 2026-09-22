@@ -112,6 +112,7 @@ jobs:
 
   bundle:
     needs: manifest
+    if: ${{ !cancelled() && needs.manifest.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
