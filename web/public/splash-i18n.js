@@ -24,6 +24,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "El runtime descargado está incompleto",
     "err_no_update": "Ya no hay actualización disponible",
     "err_update_failed": "Actualización fallida: {detail}",
+    "err_server_start": "El servidor XMage no ha arrancado (caída o puerto ocupado). Logs: {detail}",
+    "err_proxy_start": "El proxy no ha arrancado. Logs: {detail}",
+    "err_warming": "La base de cartas no ha terminado de prepararse. Logs: {detail}",
+    "err_internal": "Error interno del launcher. Logs: {detail}",
     "bridge_missing": "No se pudo conectar con el puente de la aplicación. Reinstala la aplicación."
   },
   "en": {
@@ -49,6 +53,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "Downloaded runtime is incomplete",
     "err_no_update": "No update available anymore",
     "err_update_failed": "Update failed: {detail}",
+    "err_server_start": "The XMage server did not start (crash or busy port). Logs: {detail}",
+    "err_proxy_start": "The proxy did not start. Logs: {detail}",
+    "err_warming": "The card database did not finish preparing. Logs: {detail}",
+    "err_internal": "Internal launcher error. Logs: {detail}",
     "bridge_missing": "Could not connect to the app bridge. Please reinstall the app."
   },
   "de": {
@@ -74,6 +82,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "Die heruntergeladene Laufzeitumgebung ist unvollständig",
     "err_no_update": "Kein Update mehr verfügbar",
     "err_update_failed": "Update fehlgeschlagen: {detail}",
+    "err_server_start": "Der XMage-Server ist nicht gestartet (Absturz oder belegter Port). Logs: {detail}",
+    "err_proxy_start": "Der Proxy ist nicht gestartet. Logs: {detail}",
+    "err_warming": "Die Kartendatenbank konnte nicht fertig vorbereitet werden. Logs: {detail}",
+    "err_internal": "Interner Launcher-Fehler. Logs: {detail}",
     "bridge_missing": "Keine Verbindung zur App-Brücke. Bitte installiere die App neu."
   },
   "fr": {
@@ -99,6 +111,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "Le runtime téléchargé est incomplet",
     "err_no_update": "Plus aucune mise à jour disponible",
     "err_update_failed": "Échec de la mise à jour : {detail}",
+    "err_server_start": "Le serveur XMage ne s’est pas lancé (plantage ou port occupé). Logs : {detail}",
+    "err_proxy_start": "Le proxy ne s’est pas lancé. Logs : {detail}",
+    "err_warming": "La base de cartes n’a pas fini de se préparer. Logs : {detail}",
+    "err_internal": "Erreur interne du launcher. Logs : {detail}",
     "bridge_missing": "Impossible de se connecter au pont de l’application. Réinstalle l’application."
   },
   "ja": {
@@ -124,6 +140,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "ダウンロードしたランタイムが不完全です",
     "err_no_update": "利用可能なアップデートはもうありません",
     "err_update_failed": "アップデートに失敗しました：{detail}",
+    "err_server_start": "XMage サーバーが起動しませんでした（クラッシュまたはポート使用中）。ログ: {detail}",
+    "err_proxy_start": "プロキシが起動しませんでした。ログ: {detail}",
+    "err_warming": "カードデータベースの準備が完了しませんでした。ログ: {detail}",
+    "err_internal": "ランチャーの内部エラー。ログ: {detail}",
     "bridge_missing": "アプリブリッジに接続できませんでした。再インストールしてください。"
   },
   "it": {
@@ -149,6 +169,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "Il runtime scaricato è incompleto",
     "err_no_update": "Nessun aggiornamento più disponibile",
     "err_update_failed": "Aggiornamento non riuscito: {detail}",
+    "err_server_start": "Il server XMage non si è avviato (crash o porta occupata). Log: {detail}",
+    "err_proxy_start": "Il proxy non si è avviato. Log: {detail}",
+    "err_warming": "Il database delle carte non ha terminato la preparazione. Log: {detail}",
+    "err_internal": "Errore interno del launcher. Log: {detail}",
     "bridge_missing": "Impossibile connettersi al bridge dell’app. Reinstalla l’applicazione."
   },
   "pt": {
@@ -174,6 +198,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "O runtime transferido está incompleto",
     "err_no_update": "Já não há atualização disponível",
     "err_update_failed": "Falha na atualização: {detail}",
+    "err_server_start": "O servidor XMage não arrancou (falha ou porta ocupada). Logs: {detail}",
+    "err_proxy_start": "O proxy não arrancou. Logs: {detail}",
+    "err_warming": "A base de dados de cartas não terminou de preparar. Logs: {detail}",
+    "err_internal": "Erro interno do launcher. Logs: {detail}",
     "bridge_missing": "Não foi possível ligar à ponte da aplicação. Reinstala a aplicação."
   },
   "ru": {
@@ -199,6 +227,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "Загруженная среда выполнения неполна",
     "err_no_update": "Обновление больше недоступно",
     "err_update_failed": "Ошибка обновления: {detail}",
+    "err_server_start": "Сервер XMage не запустился (сбой или занятый порт). Логи: {detail}",
+    "err_proxy_start": "Прокси не запустился. Логи: {detail}",
+    "err_warming": "База карт не успела подготовиться. Логи: {detail}",
+    "err_internal": "Внутренняя ошибка лаунчера. Логи: {detail}",
     "bridge_missing": "Не удалось подключиться к мосту приложения. Переустановите приложение."
   },
   "zhs": {
@@ -224,6 +256,10 @@ window.__SPLASH_I18N = {
     "err_incomplete": "下载的运行时不完整",
     "err_no_update": "已没有可用更新",
     "err_update_failed": "更新失败：{detail}",
+    "err_server_start": "XMage 服务器未能启动（崩溃或端口被占用）。日志：{detail}",
+    "err_proxy_start": "代理未能启动。日志：{detail}",
+    "err_warming": "卡牌数据库未能完成准备。日志：{detail}",
+    "err_internal": "启动器内部错误。日志：{detail}",
     "bridge_missing": "无法连接到应用桥接。请重新安装应用。"
   }
 };

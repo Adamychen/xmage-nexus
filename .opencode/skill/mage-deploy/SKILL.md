@@ -69,17 +69,25 @@ Piezas:
 - Manifest: `node scripts/gen-manifest.mjs --tag vX --repo Adamychen/xmage-nexus --dir <tarballs>
   --out components-manifest.json` — `COMPONENTS jre|server|proxy` x
   `TARGETS linux-x64|win-x64|mac-arm64` (NO mac-x64), con sha256 y bytes; `release` = tag sin `v`.
+  **Componentes desacoplados de la app** (`release.yml` input `components_tag`, 2026-09-22): vacío o
+  igual al tag → `modules.yml` compila el motor (~1 h) y los tarballs van al release nuevo; un tag
+  anterior → NO se compila, se descargan los `nexus-*` de ese release con `gh release download` y el
+  manifest apunta allí (`--tag <components_tag>`), así un fix del launcher no re-descarga ~200 MB.
+  El launcher compara `release` contra `components/<release>/.installed`: la primera release
+  desacoplada (v0.2.1) reutiliza `v0.2.0` y los usuarios actuales no bajan nada.
 - Updater: `node scripts/gen-latest.mjs --tag --repo --target-key --bundle-dir --out` emite el
   fragmento por plataforma (claves `linux-x86_64`/`windows-x86_64`/`darwin-aarch64`, distintas de
   los targets del manifest). `latest.json` = `{version, notes, pub_date, platforms}` y se publica
   en `releases/latest/download/latest.json`.
-- Estado (2026-09-19): el launcher compila y hay `.app`/`.dmg` en `launcher/target/release/bundle/`;
+- Estado (2026-09-22): el launcher compila y hay `.app`/`.dmg` en `launcher/target/release/bundle/`;
   los workflows `modules.yml`/`release.yml` fueron BORRADOS en `aa6a8de39c7` (aislamiento del fork)
   y **restaurados/adaptados el 2026-09-19** desde `git show v0.1.0:.github/workflows/<x>.yml`:
   `modules.yml` es reutilizable (`workflow_dispatch` + `workflow_call`) y checkoutea la rama `nexus`
-  en `xmage-fork/` (`NEXUS_FORK_DIR`); `release.yml` lo llama desde el job `modules` y publica draft
-  por tag. Falta firma Apple/Windows, JRE por SO y tests de primera ejecución (Phase 4 sigue pendiente).
-  Release v0.2.0 en preparación: versiones ya bumpeadas, tag pendiente de decisión del usuario.
+  en `xmage-fork/` (`NEXUS_FORK_DIR`); `release.yml` lo llama desde el job `modules` (salvo cuando
+  reutiliza componentes) y publica draft por tag. Falta firma Apple/Windows, JRE por SO y tests de
+  primera ejecución (Phase 4 sigue pendiente). v0.2.1 preparada (2026-09-22): fix del launcher en
+  Windows (`wait_log` no-UTF-8, rotación de logs, consolas ocultas, códigos `ERR_*` con la ruta de
+  logs), splash con barra por fases y desacople de componentes (reutiliza `v0.2.0`).
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 

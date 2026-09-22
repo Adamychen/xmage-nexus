@@ -22,12 +22,13 @@
   h1 { font-size: 1.1rem; margin: 14px 0 4px; letter-spacing: .04em; }
   .status-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; min-height: 2.4em; }
   .status { font-size: .8rem; color: #9aa0c7; line-height: 1.5; }
-  .spin { display: none; width: 14px; height: 14px; flex: none; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.15); border-top-color: #8a5cf6; animation: rot .8s linear infinite; }
-  .spin.on { display: inline-block; }
-  @keyframes rot { to { transform: rotate(360deg); } }
-  .bar { height: 8px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
-  .fill { height: 100%; width: 0%; border-radius: 6px; background: linear-gradient(90deg,#4c6fff,#8a5cf6); transition: width .2s; }
+  .bar { position: relative; height: 8px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .bar.working::after { content: ''; position: absolute; top: 0; bottom: 0; width: 45%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+    animation: sweep 1.1s linear infinite; }
+  @keyframes sweep { from { left: -45%; } to { left: 100%; } }
+  .fill { height: 100%; width: 0%; border-radius: 6px; background: linear-gradient(90deg,#4c6fff,#8a5cf6); transition: width .3s; }
+  .fill.failed { background: linear-gradient(90deg,#ff5d5d,#c0392b); }
   .pct { font-size: .72rem; color: #8a90b8; margin-top: 6px; min-height: 1.2em; }
   .error { display: none; margin-top: 12px; font-size: .78rem; color: #ff9a9a; background: rgba(255,60,60,.08);
     border: 1px solid rgba(255,60,60,.3); border-radius: 8px; padding: 8px 10px; line-height: 1.5; word-break: break-word; }
@@ -42,8 +43,8 @@
 <div class="card">
   <img class="logo" src="./logo.jpeg" alt="XMage Nexus" draggable="false" />
   <h1>XMage Nexus</h1>
-  <div class="status-row"><span class="spin on" id="spin"></span><span class="status" id="status"></span></div>
-  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div class="status-row"><span class="status" id="status"></span></div>
+  <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
   <div class="pct" id="pct"></div>
   <div class="error" id="error"></div>
   <div class="actions" id="actions">
@@ -64,7 +65,7 @@
   var T = I18N[lang] || I18N.en;
   document.documentElement.lang = lang === 'zhs' ? 'zh-CN' : lang;
   var statusEl = document.getElementById('status');
-  var spinEl = document.getElementById('spin');
+  var barEl = document.getElementById('bar');
   var fillEl = document.getElementById('fill');
   var pctEl = document.getElementById('pct');
   var errorEl = document.getElementById('error');
@@ -75,16 +76,54 @@
   document.getElementById('update').textContent = T.update_btn;
   document.getElementById('continue').textContent = T.continue_btn;
 
+  var DOWNLOAD_START = 6;
+  var DOWNLOAD_END = 74;
+  var DOWNLOAD_SLOTS = 3;
+  var WARM_BASE = 90;
+  var phases = {
+    'checking-update': 2,
+    'checking': 6,
+    'starting-server': 78,
+    'starting-proxy': 86
+  };
+  var progress = 0;
+  var components = [];
+  var stateComponent = '';
+  var warmStarted = 0;
+  var warmClock = null;
+
   function fill(tpl, params) {
     var out = tpl;
     for (var k in params) out = out.split('{' + k + '}').join(params[k]);
     return out;
   }
+  function setBar(p, working) {
+    progress = Math.max(0, Math.min(100, p));
+    fillEl.style.width = progress + '%';
+    barEl.classList.toggle('working', !!working);
+  }
+  function stopClock() {
+    if (warmClock) { clearInterval(warmClock); warmClock = null; }
+  }
+  function componentSlot(name) {
+    var i = components.indexOf(name);
+    if (i < 0) { components.push(name); i = components.length - 1; }
+    return Math.min(i, DOWNLOAD_SLOTS - 1);
+  }
+  function downloadProgress(name, frac) {
+    var span = (DOWNLOAD_END - DOWNLOAD_START) / DOWNLOAD_SLOTS;
+    var start = DOWNLOAD_START + componentSlot(name) * span;
+    return start + Math.max(0, Math.min(1, frac)) * span * 0.8;
+  }
+  function fmtElapsed(secs) {
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    return m + ':' + (s < 10 ? '0' + s : s);
+  }
   function setProgress(done, total) {
     if (!total) { pctEl.textContent = fmtBytes(done); return; }
-    var p = Math.min(100, Math.round(done / total * 100));
-    fillEl.style.width = p + '%';
-    pctEl.textContent = p + '% · ' + fmtBytes(done) + ' / ' + fmtBytes(total);
+    pctEl.textContent = fmtBytes(done) + ' / ' + fmtBytes(total);
+    if (stateComponent) setBar(Math.max(progress, downloadProgress(stateComponent, done / total)), true);
   }
   function fmtBytes(n) {
     if (n > 1048576) return (n / 1048576).toFixed(1) + ' MB';
@@ -110,39 +149,80 @@
   function onState(s) {
     hideError();
     updateActionsEl.classList.remove('show');
-    fillEl.style.width = '0%';
-    pctEl.textContent = '';
+    if (s.state === 'checking-update' && s.component !== 'app') {
+      stopClock();
+      components = [];
+      stateComponent = '';
+      fillEl.classList.remove('failed');
+      setBar(0, false);
+    }
     if (s.state === 'ready') {
-      spinEl.classList.remove('on');
+      stopClock();
       statusEl.textContent = T.ready;
+      pctEl.textContent = '';
+      setBar(100, false);
       return;
     }
     if (s.state === 'error') {
-      spinEl.classList.remove('on');
+      stopClock();
       statusEl.textContent = '';
+      fillEl.classList.add('failed');
+      barEl.classList.remove('working');
       showError(translateError(s.message));
       return;
     }
-    spinEl.classList.add('on');
     if (s.state === 'update-available') {
       var ver = String(s.message || '').split('|')[0];
       statusEl.textContent = T.update_available + (ver ? ' (v' + ver + ')' : '');
       updateActionsEl.classList.add('show');
       return;
     }
-    if (s.state === 'update-downloading') { statusEl.textContent = T.updating; }
-    else if (s.state === 'checking-update') { statusEl.textContent = T.checking_update; }
-    else if (s.state === 'checking') { statusEl.textContent = T.checking; }
-    else if (s.state === 'starting-server') { statusEl.textContent = T.starting_server; }
-    else if (s.state === 'starting-proxy') { statusEl.textContent = T.starting_proxy; }
-    else if (s.state === 'warming') { statusEl.textContent = T.warming; }
-    else if (s.component) {
-      var c = s.component;
-      statusEl.textContent = s.state === 'downloading' ? fill(T.downloading, { component: c })
-        : s.state === 'verifying' ? fill(T.verifying, { component: c })
-        : fill(T.extracting, { component: c });
+    if (s.state === 'update-downloading') {
+      statusEl.textContent = T.updating;
+      setBar(progress, true);
+      return;
     }
-    else { statusEl.textContent = s.state; }
+    if (s.state === 'warming') {
+      statusEl.textContent = T.warming;
+      setBar(Math.max(progress, WARM_BASE), true);
+      if (!warmClock) {
+        warmStarted = Date.now();
+        warmClock = setInterval(function () {
+          var secs = Math.floor((Date.now() - warmStarted) / 1000);
+          pctEl.textContent = fmtElapsed(secs);
+          setBar(WARM_BASE + Math.min(9, secs / 10), true);
+        }, 1000);
+      }
+      return;
+    }
+    stopClock();
+    if (s.state === 'downloading') {
+      stateComponent = s.component || '';
+      statusEl.textContent = fill(T.downloading, { component: stateComponent });
+      setBar(Math.max(progress, downloadProgress(stateComponent, 0)), true);
+      return;
+    }
+    if (s.state === 'verifying' || s.state === 'extracting') {
+      stateComponent = s.component || '';
+      statusEl.textContent = s.state === 'verifying' ? fill(T.verifying, { component: stateComponent })
+        : fill(T.extracting, { component: stateComponent });
+      var end = downloadProgress(stateComponent, s.state === 'verifying' ? 0.9 : 1);
+      pctEl.textContent = '';
+      setBar(Math.max(progress, end - 1), true);
+      return;
+    }
+    if (typeof phases[s.state] === 'number') {
+      stateComponent = '';
+      statusEl.textContent = s.state === 'checking-update' ? T.checking_update
+        : s.state === 'checking' ? T.checking
+        : s.state === 'starting-server' ? T.starting_server
+        : T.starting_proxy;
+      pctEl.textContent = '';
+      setBar(phases[s.state], true);
+      return;
+    }
+    statusEl.textContent = s.state;
+    setBar(progress, true);
   }
   function invoke(cmd) {
     if (window.__TAURI__ && window.__TAURI__.core) return window.__TAURI__.core.invoke(cmd);
@@ -173,8 +253,10 @@
   var bridgeFound = false;
   setTimeout(function () {
     if (!bridgeFound) {
-      spinEl.classList.remove('on');
+      stopClock();
       statusEl.textContent = '';
+      fillEl.classList.add('failed');
+      barEl.classList.remove('working');
       showError(T.bridge_missing);
     }
   }, window.__SPLASH_BRIDGE_TIMEOUT_MS || 15000);

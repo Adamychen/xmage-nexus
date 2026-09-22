@@ -178,8 +178,10 @@ fn installed_release(paths: &layout::Paths) -> Option<String> {
 fn wait_log(path: &Path, marker: &str, secs: u64) -> bool {
     let deadline = Instant::now() + Duration::from_secs(secs);
     while Instant::now() < deadline {
-        if let Ok(text) = std::fs::read_to_string(path) {
-            if text.contains(marker) {
+        // Windows JUL logs "INFORMACIÓN" in the ANSI codepage: read_to_string
+        // fails on the whole file and the marker would never be seen.
+        if let Ok(bytes) = std::fs::read(path) {
+            if String::from_utf8_lossy(&bytes).contains(marker) {
                 return true;
             }
         }
@@ -188,16 +190,53 @@ fn wait_log(path: &Path, marker: &str, secs: u64) -> bool {
     false
 }
 
-fn wait_port(port: u16, secs: u64) -> bool {
+fn port_in_use(port: u16) -> bool {
     let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    TcpStream::connect_timeout(&addr, Duration::from_secs(1)).is_ok()
+}
+
+fn wait_port_free(port: u16, secs: u64) {
+    let deadline = Instant::now() + Duration::from_secs(secs);
+    while Instant::now() < deadline && port_in_use(port) {
+        std::thread::sleep(Duration::from_secs(1));
+    }
+}
+
+fn child_running(processes: &State<Processes>, is_proxy: bool) -> bool {
+    let slot = if is_proxy { &processes.proxy } else { &processes.server };
+    if let Ok(mut guard) = slot.lock() {
+        if let Some(child) = guard.as_mut() {
+            return matches!(child.try_wait(), Ok(None));
+        }
+    }
+    false
+}
+
+fn wait_port_or_exit(processes: &State<Processes>, is_proxy: bool, port: u16, secs: u64) -> bool {
     let deadline = Instant::now() + Duration::from_secs(secs);
     while Instant::now() < deadline {
-        if TcpStream::connect_timeout(&addr, Duration::from_secs(1)).is_ok() {
+        if port_in_use(port) {
             return true;
+        }
+        if !child_running(processes, is_proxy) {
+            return false;
         }
         std::thread::sleep(Duration::from_secs(2));
     }
     false
+}
+
+fn hide_console(cmd: &mut Command) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = cmd;
+    }
 }
 
 fn kill_all(processes: &State<Processes>) {
@@ -238,6 +277,12 @@ fn append_log(path: &Path) -> Stdio {    OpenOptions::new()
         .unwrap_or_else(|_| Stdio::null())
 }
 
+fn rotate_log(path: &Path) {
+    if path.exists() {
+        let _ = std::fs::rename(path, path.with_extension("previous.log"));
+    }
+}
+
 fn java_bin(jre_dir: &Path) -> PathBuf {
     if cfg!(windows) {
         jre_dir.join("bin").join("java.exe")
@@ -256,7 +301,12 @@ fn run_bootstrap(app: AppHandle) {
         *guard = true;
     }
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| bootstrap_or_update(&app)))
-        .map_err(|_| "internal error (see logs)".to_string())
+        .map_err(|_| {
+            format!(
+                "ERR_INTERNAL|{}",
+                data_root(&app).join("logs").display()
+            )
+        })
         .and_then(|r| r);
     *running.running.lock().unwrap_or_else(|e| e.into_inner()) = false;
     if let Err(message) = result {
@@ -427,6 +477,13 @@ fn bootstrap(app: &AppHandle) -> Result<(), String> {
     )?;
 
     emit_state(app, "starting-server", None, None);
+    rotate_log(&paths.logs.join("server.log"));
+    if port_in_use(contract.server.port) {
+        wait_port_free(contract.server.port, 15);
+    }
+    if port_in_use(contract.server.port) {
+        return Err(format!("ERR_SERVER_START|{}", paths.logs.display()));
+    }
     let sep = if cfg!(windows) { ";" } else { ":" };
     let classpath: Vec<String> = contract
         .server
@@ -455,17 +512,17 @@ fn bootstrap(app: &AppHandle) -> Result<(), String> {
         .current_dir(layout::server_data_dir(&paths))
         .stdout(append_log(&paths.logs.join("server.log")))
         .stderr(append_log(&paths.logs.join("server.log")));
+    hide_console(&mut server_cmd);
     let server_child = server_cmd.spawn().map_err(|e| format!("server: {e}"))?;
     *processes.server.lock().unwrap() = Some(server_child);
-    if !wait_port(contract.server.port, 240) {
+    if !wait_port_or_exit(&processes, false, contract.server.port, 240) {
         kill_all(&processes);
-        return Err(format!(
-            "server did not listen on {} (port busy or crash, see logs)",
-            contract.server.port
-        ));
+        wait_port_free(contract.server.port, 10);
+        return Err(format!("ERR_SERVER_START|{}", paths.logs.display()));
     }
 
     emit_state(app, "starting-proxy", None, None);
+    rotate_log(&paths.logs.join("proxy.log"));
     let proxy_jar = layout::component_dir(&paths, &release, "proxy").join(&contract.proxy.jar);
     let mut proxy_cmd = Command::new(&java);
     for flag in &contract.proxy.add_opens {
@@ -482,20 +539,17 @@ fn bootstrap(app: &AppHandle) -> Result<(), String> {
         .current_dir(&paths.root)
         .stdout(append_log(&paths.logs.join("proxy.log")))
         .stderr(append_log(&paths.logs.join("proxy.log")));
+    hide_console(&mut proxy_cmd);
     let proxy_child = proxy_cmd.spawn().map_err(|e| format!("proxy: {e}"))?;
     *processes.proxy.lock().unwrap() = Some(proxy_child);
-    if !wait_port(contract.proxy.http_port, 120) {
+    if !wait_port_or_exit(&processes, true, contract.proxy.http_port, 120) {
         kill_all(&processes);
-        return Err("proxy did not start (see logs)".to_string());
+        return Err(format!("ERR_PROXY_START|{}", paths.logs.display()));
     }
     emit_state(app, "warming", None, None);
-    if !wait_log(
-        &paths.logs.join("proxy.log"),
-        "card db READY",
-        600,
-    ) {
+    if !wait_log(&paths.logs.join("proxy.log"), "card db READY", 600) {
         kill_all(&processes);
-        return Err("proxy card database did not become ready (see logs)".to_string());
+        return Err(format!("ERR_WARMING|{}", paths.logs.display()));
     }
 
     emit_state(app, "ready", None, None);
@@ -742,7 +796,38 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{error_code, update_check_due_secs, UPDATE_CHECK_INTERVAL_SECS};
+    use super::{error_code, rotate_log, update_check_due_secs, wait_log, UPDATE_CHECK_INTERVAL_SECS};
+
+    #[test]
+    fn rotate_log_keeps_previous_content_out_of_the_fresh_file() {
+        let dir = std::env::temp_dir().join(format!("nexus-rotate-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let log = dir.join("proxy.log");
+        std::fs::write(&log, b"card db READY in 1ms\n").unwrap();
+        rotate_log(&log);
+        assert!(!log.exists());
+        assert!(dir.join("proxy.previous.log").exists());
+        assert!(!wait_log(&log, "card db READY", 1));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn wait_log_matches_marker_when_log_is_not_utf8() {
+        let path = std::env::temp_dir().join(format!("nexus-wait-log-{}.log", std::process::id()));
+        let mut bytes = b"Sep 22, 2026 10:39:25 AM INFORMACI\xd3N: card db READY in 10137ms\n".to_vec();
+        bytes.extend_from_slice(b"INFO later line\n");
+        std::fs::write(&path, bytes).unwrap();
+        assert!(wait_log(&path, "card db READY", 1));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn wait_log_returns_false_when_marker_is_absent() {
+        let path = std::env::temp_dir().join(format!("nexus-wait-log-absent-{}.log", std::process::id()));
+        std::fs::write(&path, b"proxy started\n").unwrap();
+        assert!(!wait_log(&path, "card db READY", 1));
+        let _ = std::fs::remove_file(&path);
+    }
 
     #[test]
     fn known_errors_map_to_stable_codes() {

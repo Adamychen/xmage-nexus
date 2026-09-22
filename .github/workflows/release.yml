@@ -1,13 +1,21 @@
 name: Release (Tauri + components)
 
 # Despliegue del Nexus Launcher en las 3 plataformas.
-# Disparo MANUAL con tag (p. ej. v0.2.0): el tag debe coincidir con la versión
+# Disparo MANUAL con tag (p. ej. v0.2.1): el tag debe coincidir con la versión
 # de launcher/src-tauri/tauri.conf.json, Cargo.toml y web/package.json (lo
 # verifica el job check-version). Los instaladores son ligeros: JRE+server+proxy
 # se descargan en el primer arranque desde este mismo release
 # (components-manifest.json).
-# Los módulos (jre+server+proxy) los construye el workflow reutilizable
-# modules.yml, que checkoutea el fork XMage (rama `nexus`) como hermano.
+#
+# Componentes DESACOPLADOS de la versión de la app: `components_tag` decide de
+# qué release salen jre+server+proxy.
+#   - vacío o igual al tag  -> modules.yml compila el motor (~1 h) y se publican
+#                              los tarballs en este release.
+#   - un tag anterior       -> NO se compila nada; se descargan los tarballs de
+#                              ese release y el manifest apunta allí. Así un fix
+#                              del launcher no obliga a re-descargar ~200 MB.
+# Se usa `components_tag` también como `release` del manifest (el launcher
+# compara contra `components/<release>/.installed` para no re-descargar).
 # Secret necesario: TAURI_SIGNING_PRIVATE_KEY (+ TAURI_SIGNING_PRIVATE_KEY_PASSWORD).
 # Sin firmar: Windows/Linux instalan con aviso; macOS exige clic derecho → Abrir.
 # El updater funciona firmado al 100%; en mac sin notarizar es best-effort.
@@ -16,8 +24,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag del release (v0.2.0, debe coincidir con launcher/src-tauri/tauri.conf.json, Cargo.toml y web/package.json)'
+        description: 'Tag del release de la APP (v0.2.1, debe coincidir con launcher/src-tauri/tauri.conf.json, Cargo.toml y web/package.json)'
         required: true
+        type: string
+      components_tag:
+        description: 'Tag del release del que reutilizar componentes (jre+server+proxy); vacío = mismo tag (compila el motor)'
+        required: false
+        default: ''
         type: string
       notes:
         description: 'Notas del release'
@@ -50,21 +63,43 @@ jobs:
 
   modules:
     needs: check-version
+    if: ${{ inputs.components_tag == '' || inputs.components_tag == inputs.tag }}
     uses: ./.github/workflows/modules.yml
 
   manifest:
-    needs: modules
+    needs: [check-version, modules]
+    if: ${{ !cancelled() && needs.check-version.result == 'success' && needs.modules.result != 'failure' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
+      - name: Resolve components tag
+        id: comp
+        env:
+          COMPONENTS_TAG: ${{ inputs.components_tag }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          COMP="$COMPONENTS_TAG"
+          [ -n "$COMP" ] || COMP="$RELEASE_TAG"
+          echo "tag=$COMP" >> "$GITHUB_OUTPUT"
+          echo "componentes desde $COMP (modules: ${{ needs.modules.result }})"
       - uses: actions/download-artifact@v4
+        if: needs.modules.result == 'success'
         with:
           pattern: nexus-modules-*
           merge-multiple: true
           path: artifacts
+      - name: Download components from an existing release
+        if: needs.modules.result != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download '${{ steps.comp.outputs.tag }}' \
+            -R '${{ github.repository }}' -p 'nexus-*' -D artifacts
       - name: Generate components-manifest.json
         run: |
-          node scripts/gen-manifest.mjs --tag '${{ inputs.tag }}' \
+          node scripts/gen-manifest.mjs --tag '${{ steps.comp.outputs.tag }}' \
             --repo '${{ github.repository }}' --dir artifacts \
             --out components-manifest.json
           cat components-manifest.json
@@ -145,13 +180,15 @@ jobs:
           retention-days: 90
 
   publish:
-    needs: bundle
+    needs: [bundle, modules]
+    if: ${{ !cancelled() && needs.bundle.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v4
+        if: needs.modules.result == 'success'
         with:
           pattern: nexus-modules-*
           merge-multiple: true
