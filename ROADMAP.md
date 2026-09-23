@@ -123,12 +123,11 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 | Game FX | Dynamic music: ambient layer that intensifies near lethal | Medium / ~1 d | Done 2026-09-23 |
 | Game FX | Cinematic victory/defeat screen with match stats (key card, turns, life taken/lost, spells cast, creatures destroyed) | Medium / ~1 d | Done 2026-09-23 |
 | Ease of use | "Your turn / response needed" browser notification + title/favicon badge when the tab is hidden | Very high / ~0.5 d | Done 2026-09-23 (toggle in Settings → Gameplay; permission asked on the first in-game click) |
-| Ease of use | "Play now" button: join or create a compatible table on beta with the last deck | High / ~1-2 d | Not started |
 | Ease of use | Highlight lobby tables joinable with one of your legal decks | Medium / ~1 d | Not started |
 | Ease of use | First-game onboarding overlay (4-5 steps) + `?` shortcut cheat-sheet | Medium / ~1 d | Not started |
 | Ease of use | Explicit waiting state ("Waiting for X — thinking 0:23") | Medium / small | Done 2026-09-23 (action button names the actual priority holder, thinking clock + priority timer countdown, warn tint after 60 s) |
-| Attract | Personal match history + per-deck stats (win rate by deck/format/opponent, IndexedDB) | Very high / ~2 d | Not started |
-| Attract | Local friends list: highlight online friends on beta, notify when they open a table | High / ~1-2 d | Not started |
+| Ease of use | Smart mana payment: opt-in exact solver taps the sources for the cost being paid and keeps colours open for instants in hand (public information only) | High / ~1 d | Done 2026-09-23 (toggle in Settings → Gameplay and the game menu, off by default; skips Treasure-style sacrifice, restricted mana and convoke; a multi-spell turn scheduler is not built; validated against the local server by `e2e/smart-mana-real.spec.ts`) |
+| Attract | Personal match history + per-deck stats (win rate by deck/format/opponent, IndexedDB) | Very high / ~2 d | Done 2026-09-23 ("My stats" sub-tab in the History tab; one record per finished game recorded on `GAME_OVER`, only when the player was seated and a winner is reported; deck name comes from the last equipped deck and format from the lobby table, so both can be missing; capped at 500 records) |
 | Attract | Draft pick helper using public 17lands ratings | High / ~2 d | Not started |
 | Attract | Featured live games in the lobby (top-ELO games on beta, one-click watch) | Medium / ~1 d | Not started |
 

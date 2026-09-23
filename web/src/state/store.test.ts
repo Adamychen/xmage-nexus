@@ -1293,6 +1293,54 @@ describe('active game persistence in store', () => {
     expect(end?.matchView?.endTime).toBeDefined()
   })
 
+  it('GAME_OVER records a played game in the local match history but not a spectated one', async () => {
+    const { matchHistoryStore } = await import('../system/matchHistory')
+    await matchHistoryStore.clear()
+    setState({
+      phase: 'game',
+      gameId: 'g-hist-1',
+      game: makeGameView({
+        turn: 7,
+        players: [
+          makePlayer({ playerId: 'p-a', name: 'Alice', controlled: true, life: 9 }),
+          makePlayer({ playerId: 'p-b', name: 'Bob', controlled: false }),
+        ],
+      }),
+    })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_OVER',
+      messageId: 60,
+      objectId: 'g-hist-1',
+      data: { winnerName: 'Bob', message: 'Bob has won the game' },
+    })
+    await vi.waitFor(async () => {
+      const list = await matchHistoryStore.list()
+      expect(list).toHaveLength(1)
+      expect(list[0]).toMatchObject({ gameId: 'g-hist-1', result: 'loss', opponents: ['Bob'], turns: 7, life: 9 })
+    })
+
+    setState({
+      phase: 'game',
+      gameId: 'g-hist-2',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p-c', name: 'Cy', controlled: false }),
+          makePlayer({ playerId: 'p-d', name: 'Di', controlled: false }),
+        ],
+      }),
+    })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_OVER',
+      messageId: 61,
+      objectId: 'g-hist-2',
+      data: { winnerName: 'Cy', message: 'Cy has won the game' },
+    })
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    expect(await matchHistoryStore.list()).toHaveLength(1)
+  })
+
   it('GAME_OVER autosaves the game log when enabled, and skips when disabled', async () => {
     const { gameLogStore } = await import('../system/gameLogs')
     setSetting('gameLogAutoSave', true)

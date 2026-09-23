@@ -347,6 +347,7 @@ export interface ManaPaymentStored {
   restricted: boolean
   useFirstAbility: boolean
   confirmEmptyPool: boolean
+  smart: boolean
 }
 
 const MANA_PAYMENT_KEY = 'mage-web-mana-payment'
@@ -355,6 +356,7 @@ export const DEFAULT_MANA_PAYMENT: ManaPaymentStored = {
   restricted: true,
   useFirstAbility: false,
   confirmEmptyPool: true,
+  smart: false,
 }
 
 export function loadManaPayment(): ManaPaymentStored {
@@ -371,6 +373,7 @@ export function loadManaPayment(): ManaPaymentStored {
           typeof parsed.confirmEmptyPool === 'boolean'
             ? parsed.confirmEmptyPool
             : DEFAULT_MANA_PAYMENT.confirmEmptyPool,
+        smart: typeof parsed.smart === 'boolean' ? parsed.smart : DEFAULT_MANA_PAYMENT.smart,
       }
     }
   } catch {}

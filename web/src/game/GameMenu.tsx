@@ -45,6 +45,7 @@ export default function GameMenu() {
       void updateManaConfirmPreference(next.confirmEmptyPool)
       return
     }
+    if (key === 'smart') return
     if (!gameId) return
     const action: ManaPaymentAction | null =
       key === 'auto'
@@ -68,6 +69,7 @@ export default function GameMenu() {
     { key: 'restricted', label: t('game', 'mana_payment_restricted'), tip: t('game', 'mana_payment_restricted_tip'), testid: 'game-menu-mana-restricted' },
     { key: 'useFirstAbility', label: t('game', 'mana_payment_first'), tip: t('game', 'mana_payment_first_tip'), testid: 'game-menu-mana-first' },
     { key: 'confirmEmptyPool', label: t('game', 'mana_payment_confirm'), tip: t('game', 'mana_payment_confirm_tip'), testid: 'game-menu-mana-confirm' },
+    { key: 'smart', label: t('game', 'mana_payment_smart'), tip: t('game', 'mana_payment_smart_tip'), testid: 'game-menu-mana-smart' },
   ]
 
   const close = () => {

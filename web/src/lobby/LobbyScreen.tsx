@@ -13,7 +13,7 @@ import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
 import ErrorBanner from '../ui/ErrorBanner'
-import FinishedMatchesPanel from './FinishedMatchesPanel'
+import MatchesSection from './MatchesSection'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
@@ -305,7 +305,7 @@ export default function LobbyScreen() {
           )}
 
           {activeTab === 'matches' && (
-            <FinishedMatchesPanel
+            <MatchesSection
               users={users}
               onInspectUser={(username) => openLeaderboard(username, 'profile')}
             />

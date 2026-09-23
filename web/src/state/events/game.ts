@@ -1,5 +1,5 @@
 import * as cmds from '../../net/commands'
-import type { GameEndInfo } from '../../net/types'
+import type { GameEndInfo, GameView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { clonePhaseStops } from '../../game/phaseStops'
@@ -14,8 +14,47 @@ import {
 import { soundManager } from '../../audio/soundManager'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { gameLogStore, toSavedEntries } from '../../system/gameLogs'
+import { matchHistoryStore } from '../../system/matchHistory'
 import { clearFlights } from '../../board/flightManager'
 import type { Snapshot, EmbeddedGame } from './context'
+
+interface GameMeta {
+  gameId: string
+  deckName: string | null
+  format: string | null
+}
+
+let gameMeta: GameMeta | null = null
+let lastSeenGame: GameView | null = null
+
+function rememberGameStart(gameId: string, game: GameView): void {
+  const me = game.players?.find((p) => p.controlled)
+  if (!me) return
+  const tables = getState().lobby?.tables ?? []
+  const table = tables.find((t) => t.games?.includes(gameId)) ?? tables.find((t) => t.seats?.some((seat) => seat.playerName === me.name))
+  gameMeta = { gameId, deckName: getState().myDeck?.name ?? null, format: table?.deckType || null }
+}
+
+function recordMatch(winnerName: string | undefined, gameId: string | null): void {
+  try {
+    const game = getState().game ?? lastSeenGame
+    const me = game?.players?.find((p) => p.controlled)
+    if (!game || !me || !winnerName) return
+    const meta = gameMeta && (!gameId || gameMeta.gameId === gameId) ? gameMeta : null
+    void matchHistoryStore
+      .add({
+        endedAt: Date.now(),
+        gameId: gameId ?? meta?.gameId ?? null,
+        deckName: meta?.deckName ?? null,
+        format: meta?.format ?? null,
+        opponents: (game.players ?? []).filter((p) => !p.controlled).map((p) => p.name),
+        result: winnerName === me.name ? 'win' : 'loss',
+        turns: game.turn ?? null,
+        life: me.life ?? null,
+      })
+      .catch(() => {})
+  } catch {}
+}
 
 export function handleJoinedTable(data: unknown, s: Snapshot): void {
   const d = data as { roomId?: string; tableId?: string; currentTableId?: string; parentTableId?: string; tableName?: string; flag?: boolean } | null
@@ -60,12 +99,14 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     sniffRollbackAnnounce((data as any).message, objectId ?? s.gameId)
   }
   if (embeddedGame) {
+    if (embeddedGame.players?.some((p) => p.controlled)) lastSeenGame = embeddedGame
     const fresh = getState()
     const { ids, window: playableWindow } = consolidatePlayables(
       embeddedGame, method, fresh.feedback, fresh.playableIds, fresh.playableWindow,
     )
     const patch: Partial<typeof s> = { playableIds: ids, playableWindow }
     if (method === 'GAME_INIT') {
+      if (objectId) rememberGameStart(objectId, embeddedGame)
       patch.gameEnd = null
       patch.feedback = null
       if (objectId && !fresh.gameChatId) {
@@ -174,6 +215,7 @@ export function handleGameOver(data: unknown, objectId: string | null): void {
   const fresh = getState()
   const me = fresh.game?.players?.find((p) => p.controlled)
   const won = (typeof d === 'object' && !!d?.winnerName && d.winnerName === me?.name) || false
+  recordMatch(typeof d === 'object' ? d?.winnerName : undefined, objectId ?? gameIdOf(d))
   soundManager.play(won ? 'victory' : 'defeat', 'game')
   if (!me || !fresh.gameEnd) {
     const syntheticEnd: GameEndInfo = {
@@ -187,6 +229,10 @@ export function handleGameOver(data: unknown, objectId: string | null): void {
     }
     setState({ gameEnd: syntheticEnd })
   }
+}
+
+function gameIdOf(d: { gameId?: string } | string | null): string | null {
+  return typeof d === 'object' && d?.gameId ? d.gameId : null
 }
 
 export function handleEndGameInfo(data: unknown): void {

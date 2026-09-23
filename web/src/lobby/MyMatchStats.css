@@ -1,0 +1,85 @@
+.my-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-top: var(--sp-4);
+}
+
+.my-stats-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.my-stats-heading {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--fg-2);
+}
+
+.my-stats-rows,
+.my-stats-recent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-stats-row,
+.my-stats-recent-item {
+  display: grid;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-card);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+}
+
+.my-stats-row {
+  grid-template-columns: minmax(0, 2fr) auto minmax(var(--sp-6), 1fr) auto;
+}
+
+.my-stats-recent-item {
+  grid-template-columns: auto minmax(0, 2fr) minmax(0, 2fr) auto;
+}
+
+.my-stats-row-name,
+.my-stats-recent-deck,
+.my-stats-recent-opp {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-stats-row-record,
+.my-stats-recent-date {
+  color: var(--fg-3);
+}
+
+.my-stats-row-bar {
+  display: block;
+  height: var(--sp-1h);
+  background: var(--err-soft);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.my-stats-row-fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+
+.my-stats-row-rate {
+  min-width: var(--sp-6);
+  text-align: right;
+  font-weight: 600;
+}

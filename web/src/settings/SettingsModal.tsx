@@ -34,6 +34,7 @@ function GameplaySection() {
     { key: 'restricted', label: t('game', 'mana_payment_restricted'), tip: t('game', 'mana_payment_restricted_tip') },
     { key: 'useFirstAbility', label: t('game', 'mana_payment_first'), tip: t('game', 'mana_payment_first_tip') },
     { key: 'confirmEmptyPool', label: t('game', 'mana_payment_confirm'), tip: t('game', 'mana_payment_confirm_tip') },
+    { key: 'smart', label: t('game', 'mana_payment_smart'), tip: t('game', 'mana_payment_smart_tip') },
   ]
   return (
     <div>
