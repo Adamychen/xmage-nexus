@@ -85,6 +85,11 @@ public class ProxyClient implements MageClient, CommandContext {
 
     private final SimManager simManager;
     private String accountKey = null;
+    private volatile String activityUser = null;
+
+    public String getActivityUser() {
+        return activityUser;
+    }
 
     private volatile boolean connected = false;
     private int lobbyPublishFailures = 0;
@@ -191,6 +196,7 @@ public class ProxyClient implements MageClient, CommandContext {
                         } catch (Exception ignored) {
                         }
                         connected = false;
+                        Activity.sessionEnd(activityUser, "grace_expired");
                         if (accountKey != null) {
                             gateway.unregisterSession(accountKey);
                             accountKey = null;
@@ -580,6 +586,10 @@ public class ProxyClient implements MageClient, CommandContext {
             return;
         }
 
+        if (!"connect".equals(action) && activityUser != null) {
+            Activity.action(activityUser, gateway.ipOf(conn), action, args);
+        }
+
         // gameId obligatorio para todas las acciones de partida
         if (requiresGameId(action) && JsonArgs.uuid(args, "gameId", null) == null) {
             gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_GAME_ID_REQUIRED, "gameId is required"));
@@ -608,6 +618,7 @@ public class ProxyClient implements MageClient, CommandContext {
                     simManager.stopSims();
                     session.connectStop(false, false);
                     connected = false;
+                    Activity.sessionEnd(activityUser, "disconnect");
                     if (accountKey != null) {
                         gateway.unregisterSession(accountKey);
                         accountKey = null;
@@ -763,6 +774,8 @@ public class ProxyClient implements MageClient, CommandContext {
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
             accountKey = host + "|" + username;
             gateway.registerSession(accountKey, this);
+            activityUser = username;
+            Activity.login(username, gateway.ipOf(conn), host, port, true, null, false);
             if (conn != null) {
                 authorized.add(conn);
             }
@@ -777,6 +790,7 @@ public class ProxyClient implements MageClient, CommandContext {
             String detail = pollDetailedMessage(start, 4500);
             if (detail == null) detail = ErrorClassifier.stripServerErrorPrefix(session.getLastError());
             if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ProxyProtocol.ERR_FAILED;
+            Activity.login(username, gateway.ipOf(conn), host, port, false, detail, false);
             gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
         }
     }

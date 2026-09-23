@@ -362,3 +362,14 @@ Ports:
 - Proxy WebSocket: `ws://127.0.0.1:8787`
 - Proxy test page: `http://127.0.0.1:8788/index.html`
 - Vite dev: `http://localhost:5173`
+
+## Activity log and admin status
+
+Every WebSocket open/close, login (ok/fail/attach), lifecycle action (createTable, joinTable, watchGame, …) and
+session end is printed to stdout as `[activity] <ISO time> <event> user=… ip=… …` (readable with `docker logs -f`).
+High-frequency game input and polling actions are counted but not logged. Passwords, chat text and deck contents are
+never recorded. The client IP comes from `X-Forwarded-For` when present (reverse proxy), else the socket address.
+
+With `--adminToken <secret>` (Docker: `ADMIN_TOKEN`), `GET /admin/status` on the HTTP port returns JSON — uptime,
+open connections, connected users (server, ip, windows, actions, last action) and the last 500 events. Send
+`Authorization: Bearer <secret>`. Without a token the endpoint does not exist.

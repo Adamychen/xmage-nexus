@@ -38,6 +38,22 @@ public class Gateway extends WebSocketServer {
     private final Map<String, ProxyClient> byAccount = new ConcurrentHashMap<>();
 
     /** recuento de mensajes por conexión (ventana deslizante de 1 s) */
+    private final Map<WebSocket, String> connIp = Collections.synchronizedMap(new IdentityHashMap<WebSocket, String>());
+
+    public String ipOf(WebSocket conn) {
+        String ip = connIp.get(conn);
+        return ip == null ? "" : ip;
+    }
+
+    private static String clientIp(WebSocket conn, ClientHandshake handshake) {
+        String fwd = handshake.hasFieldValue("X-Forwarded-For") ? handshake.getFieldValue("X-Forwarded-For") : "";
+        if (!fwd.isEmpty()) {
+            return fwd.split(",")[0].trim();
+        }
+        InetSocketAddress a = conn.getRemoteSocketAddress();
+        return a == null || a.getAddress() == null ? "" : a.getAddress().getHostAddress();
+    }
+
     private final Map<WebSocket, Deque<Long>> messageTimes =
             Collections.synchronizedMap(new IdentityHashMap<WebSocket, Deque<Long>>());
 
@@ -74,11 +90,15 @@ public class Gateway extends WebSocketServer {
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         String origin = handshake.getFieldValue("Origin");
+        String ip = clientIp(conn, handshake);
         if (!originAllowed(origin)) {
+            Activity.wsRejected(ip, origin);
             System.err.println("[proxy] ws rejected origin=" + origin);
             conn.close(1008, "origin not allowed");
             return;
         }
+        connIp.put(conn, ip);
+        Activity.wsOpen(ip, origin);
         // Lazy: la sesión se crea en handleConnect (al recibir `connect`), para poder
         // re-adjuntar la conexión a una sesión existente de la misma cuenta.
         sendReady(conn);
@@ -90,6 +110,10 @@ public class Gateway extends WebSocketServer {
         ProxyClient pc = byConn.remove(conn);
         if (pc != null) {
             pc.onClientClose(conn);
+        }
+        String ip = connIp.remove(conn);
+        if (ip != null) {
+            Activity.wsClose(ip, pc == null ? null : pc.getActivityUser(), code);
         }
         System.err.println("[proxy] ws close: " + conn.getRemoteSocketAddress() + " code=" + code + " reason='" + reason + "'");
     }
@@ -179,6 +203,7 @@ public class Gateway extends WebSocketServer {
             logger.info("connect: attach conn to existing session key=" + key);
             byConn.put(conn, existing);
             existing.attach(conn, requestId);
+            Activity.login(username, ipOf(conn), host, port, true, null, true);
             return;
         }
         logger.info("connect: NEW ProxyClient key=" + key + " (existing="

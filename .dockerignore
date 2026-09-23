@@ -1,0 +1,17 @@
+**/node_modules
+**/.git
+.run
+local-server
+staging
+launcher
+deploy
+mcp
+site
+docs
+web/dist
+web/coverage
+web/playwright-report
+web/test-results
+Mage.Proxy/db
+Mage.Proxy/target/*
+!Mage.Proxy/target/mage-proxy-1.4.61.jar

@@ -110,6 +110,10 @@ public class Config {
         return out;
     }
 
+    public String getAdminToken() {
+        return get("adminToken", "");
+    }
+
     public int getMaxMessageBytes() {
         return getInt("maxMessageBytes", DEFAULT_MAX_MESSAGE_BYTES);
     }

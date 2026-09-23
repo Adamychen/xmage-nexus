@@ -51,6 +51,9 @@ public class Main {
     private static void startHttpServer(Config config) throws IOException {
         HttpServer httpServer = HttpServer.create(new InetSocketAddress(config.getBindAddress(), config.getHttpPort()), 0);
         httpServer.createContext("/", exchange -> serveFile(exchange, config.getWebDir()));
+        if (!config.getAdminToken().isEmpty()) {
+            httpServer.createContext("/admin/status", exchange -> serveAdmin(exchange, config.getAdminToken()));
+        }
         httpServer.start();
     }
 
@@ -88,6 +91,24 @@ public class Main {
             return true;
         }
         return false;
+    }
+
+    private static void serveAdmin(HttpExchange exchange, String token) throws IOException {
+        String auth = exchange.getRequestHeaders().getFirst("Authorization");
+        String query = exchange.getRequestURI().getRawQuery();
+        boolean ok = ("Bearer " + token).equals(auth) || ("token=" + token).equals(query);
+        if (!ok) {
+            exchange.sendResponseHeaders(401, -1);
+            exchange.close();
+            return;
+        }
+        byte[] body = Activity.snapshot().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+        exchange.getResponseHeaders().add("Cache-Control", "no-store");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
     }
 
     private static void serveFile(HttpExchange exchange, String webDir) {

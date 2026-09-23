@@ -1,0 +1,18 @@
+services:
+  nexus:
+    build: .
+    image: xmage-nexus
+    restart: unless-stopped
+    environment:
+      XMAGE_HOST: ${XMAGE_HOST:-beta.xmage.today}
+      XMAGE_PORT: ${XMAGE_PORT:-17171}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8788}
+    ports:
+      - "8788:8788"
+      - "8787:8787"
+    volumes:
+      - nexus-data:/data
+    mem_limit: 1536m
+volumes:
+  nexus-data:
