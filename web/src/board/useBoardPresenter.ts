@@ -158,6 +158,16 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
 
+  // Pago de maná (GAME_PLAY_MANA): el servidor no siempre puebla
+  // `canPlayObjects` en esta ventana (visto con costes para atacar tipo
+  // Propaganda — canPlayObjects llega vacío aunque haya Treasure/tierras sin
+  // girar disponibles), así que `playableIds` puede quedar vacío. El cliente
+  // oficial (Mage.Client CardPanel.mouseClicked) no gatea el click en
+  // isPlayable: siempre reenvía el UUID y deja que el servidor lo acepte o
+  // rechace. Replicamos eso solo durante el pago de maná: cualquier permanente
+  // clicado se manda igual, evitando que el pago quede sin fuentes clicables.
+  const manaFeedbackActive = useStore((s) => s.feedback?.mode === 'mana')
+
   /** El preview grande también puede quedar huérfano: si la carta con hover
    *  sale del juego (criatura destruida, token que fizzle, mulligan...) su
    *  slot se desmonta sin mouseLeave y el preview persiste pegado al rect
@@ -199,8 +209,9 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       if (combatSelectable.includes(id) || combatChosen.includes(id)) onCombatClick?.(id)
       else if (targetIds.includes(id)) onTargetClick?.(id)
       else if (playableIds.includes(id)) onPlayableClick?.(id)
+      else if (manaFeedbackActive) onPlayableClick?.(id)
     },
-    [combatSelectable, combatChosen, targetIds, playableIds, onCombatClick, onTargetClick, onPlayableClick]
+    [combatSelectable, combatChosen, targetIds, playableIds, manaFeedbackActive, onCombatClick, onTargetClick, onPlayableClick]
   )
 
   useSceneBridge({

@@ -97,6 +97,8 @@ type AssertKind =
   | 'hasWinEffect'
   | 'hasAttackBattle'
   | 'hasAlwaysAttack'
+  | 'hasAttackCostPaid'
+  | 'hasEchoUpkeepPaid'
   | 'hasPlot'
   | 'hasFloatingMana'
   | 'hasDayNight'
@@ -1047,6 +1049,43 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         return /rictus robber/i.test(name) && rules.some((r) => /plot \{2\}\{b\}/i.test(String(r)))
       })
       return plotted && Object.keys(gv.stack ?? {}).length === 0
+    }
+    case 'hasAttackCostPaid': {
+      // Propaganda-like: coste para atacar pagado con un Treasure sacrificado
+      // + una Forest. El Treasure debe haber desaparecido del campo (0 en
+      // battlefield) mientras Grizzly Bears sigue atacando (tapped, en
+      // combat[].attackers) y Propaganda sigue en el campo rival.
+      const me2 = getMe(gv)
+      const sim = (gv.players ?? []).find((p) => !p?.controlled)
+      const propaganda = Object.values(sim?.battlefield ?? {}).some((c) =>
+        /propaganda/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const treasures = Object.values(me2?.battlefield ?? {}).filter((c) =>
+        ((c as { subTypes?: unknown[] })?.subTypes ?? []).includes('TREASURE'),
+      ).length
+      const grizzlyAttacking = (gv.combat ?? []).some((g) =>
+        Object.values((g as { attackers?: Record<string, unknown> })?.attackers ?? {}).some(
+          (c) =>
+            /grizzly bears/i.test(String((c as { name?: unknown })?.name ?? '')) &&
+            (c as { tapped?: boolean })?.tapped === true,
+        ),
+      )
+      return propaganda && treasures === 0 && grizzlyAttacking
+    }
+    case 'hasEchoUpkeepPaid': {
+      // Citanul Centaurs (Echo {3}{G}) pagado en nuestro upkeep: sigue vivo
+      // en el campo (no sacrificado) con al menos 4 Forest giradas y la pila
+      // vacía tras resolver el trigger de Echo.
+      const me2 = getMe(gv)
+      const centaurs = Object.values(me2?.battlefield ?? {}).some((c) =>
+        /citanul centaurs/i.test(String((c as { name?: unknown })?.name ?? '')),
+      )
+      const tappedForests = Object.values(me2?.battlefield ?? {}).filter(
+        (c) =>
+          ((c as { cardTypes?: unknown[] })?.cardTypes ?? []).includes('LAND') &&
+          (c as { tapped?: boolean })?.tapped === true,
+      ).length
+      return centaurs && tappedForests >= 4 && Object.keys(gv.stack ?? {}).length === 0
     }
     case 'hasFloatingMana': {
       const me2 = getMe(gv)

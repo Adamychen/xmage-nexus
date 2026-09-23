@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PREVIEW_LEAVE_MS, useBoardPresenter } from './useBoardPresenter'
 import type { CardView, GameView, PlayerView } from '../net/types'
+import { getState, setState } from '../state/store'
 
 describe('useBoardPresenter preview leaving', () => {
   beforeEach(() => {
@@ -195,6 +196,64 @@ describe('useBoardPresenter clears stale hovers against the game view', () => {
 
     rerender({ game: makeGame([me({})]) })
     expect(result.current.floatingCard).toBe(noId)
+  })
+})
+
+describe('useBoardPresenter handleCardClick dispatcher', () => {
+  afterEach(() => {
+    setState({ feedback: null })
+  })
+
+  // Reporte de usuario: pagar {2} para atacar (Propaganda-like) con 2
+  // Treasure sin girar disponibles no dejaba clicarlos. Causa raíz: el
+  // servidor no siempre puebla `canPlayObjects` durante el GAME_PLAY_MANA de
+  // un coste para atacar, así que `playableIds` llega vacío y el dispatcher
+  // no reenviaba el click (a diferencia del cliente oficial, que nunca gatea
+  // el click en isPlayable — ver CardPanel.mouseClicked). Fix: durante un
+  // feedback de maná (`feedback.mode === 'mana'`), cualquier permanente
+  // clicado se reenvía igual, aunque no esté en playableIds.
+  it('forwards a permanent click during mana payment even when playableIds is empty', () => {
+    setState({ feedback: { mode: 'mana' } as unknown as ReturnType<typeof getState>['feedback'] })
+    const onPlayableClick = vi.fn()
+    const { result } = renderHook(() =>
+      useBoardPresenter({ game: null, playableIds: [], onPlayableClick }),
+    )
+
+    act(() => {
+      result.current.handleCardClick('treasure-1')
+    })
+
+    expect(onPlayableClick).toHaveBeenCalledWith('treasure-1')
+  })
+
+  it('does not forward clicks outside mana payment when the id is not playable', () => {
+    setState({ feedback: null })
+    const onPlayableClick = vi.fn()
+    const { result } = renderHook(() =>
+      useBoardPresenter({ game: null, playableIds: [], onPlayableClick }),
+    )
+
+    act(() => {
+      result.current.handleCardClick('treasure-1')
+    })
+
+    expect(onPlayableClick).not.toHaveBeenCalled()
+  })
+
+  it('still prefers combat/target/playable dispatch over the mana fallback', () => {
+    setState({ feedback: { mode: 'mana' } as unknown as ReturnType<typeof getState>['feedback'] })
+    const onPlayableClick = vi.fn()
+    const onTargetClick = vi.fn()
+    const { result } = renderHook(() =>
+      useBoardPresenter({ game: null, targetIds: ['perm-1'], onTargetClick, onPlayableClick }),
+    )
+
+    act(() => {
+      result.current.handleCardClick('perm-1')
+    })
+
+    expect(onTargetClick).toHaveBeenCalledWith('perm-1')
+    expect(onPlayableClick).not.toHaveBeenCalled()
   })
 })
 

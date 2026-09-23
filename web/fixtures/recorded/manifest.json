@@ -539,6 +539,20 @@
     "note": "Grizzly Bears (2/2 vanilla) propio vía cheatSetup ataca al planeswalker del SIM Tibalt, Rakish Instigator ({2}{R}, starting loyalty 5) también cheateado (~800 ms después) al campo rival; sin criaturas en el SIM el ataque queda sin bloquear y el daño resta lealtad 5→3. Método de elección de defensor: al enviar el UUID del atacante con >1 defensor (jugador + PW) HumanPlayer.selectDefender (HumanPlayer.java:2020) lanza un TargetDefender \"player, planeswalker, or battle to attack\" → GAME_TARGET cuyas opciones (options.possibleTargets, notTarget) incluyen el UUID del PW; se responde sendPlayerUUID(pwId) — ese es el clic en el PW — y la declaración se cierra con sendPlayerBoolean(false) (botón ok; NO usar special con >1 defensor: abre un segundo target de \"all attack\", HumanPlayer.java:1855). Evidencia en el view: el permanente del SIM con cardTypes PLANESWALKER y `loyalty` \"3\" (string derivado del contador LOYALTY, también en counters [{name:\"loyalty\",count:3}]) y gv.combat[] con defenderId = UUID del PW y el Grizzly en attackers. Driver attack-pw con cheatSetup."
   },
   {
+    "file": "attack-cost.json",
+    "mechanic": "attack-cost",
+    "kind": "game",
+    "assert": "hasAttackCostPaid",
+    "note": "Propaganda ({2}{U}, \"Creatures can't attack you or a planeswalker you control unless their controller pays {2} for each of those creatures.\") cheateada al campo del SIM; Grizzly Bears propio cheateado (sin mareo) ataca y un Treasure token (creado por Prosperous Innkeeper lanzado de verdad, pagado con Forest) se sacrifica para cubrir parte del coste {2} (el resto lo paga una Forest). HALLAZGO (reporte de usuario, 2026-09-23: al pagar {2} para atacar con Treasure tokens disponibles, no eran clicables): durante el GAME_PLAY_MANA del coste de Propaganda, canPlayObjects.objects llega VACÍO ({}) aunque haya Treasure y Forest sin girar — a diferencia del pago normal de un hechizo (donde el Treasure sí aparece en canPlayObjects.other, \"{T}, Sacrifice this artifact: Add one mana of any...\"). El servidor igualmente acepta sendPlayerUUID(treasureId) como pago válido (verificado: el driver paga así y el ataque se declara). El bug real estaba en el web: useBoardPresenter.ts gateaba el click de cualquier permanente en playableIds, derivado 1:1 de canPlayObjects — con canPlayObjects vacío, NINGÚN permanente (ni Treasure ni Forest) era clicable para pagar. El cliente oficial (Mage.Client CardPanel.mouseClicked) no gatea el click en isPlayable, siempre reenvía el UUID y deja que el servidor decida. Fix: durante un feedback de maná (mode 'mana') el web reenvía cualquier click de permanente aunque no esté en playableIds. Driver attack-cost con cheatSetup + spell real."
+  },
+  {
+    "file": "echo-upkeep.json",
+    "mechanic": "echo-upkeep",
+    "kind": "game",
+    "assert": "hasEchoUpkeepPaid",
+    "note": "Segundo caso del mismo patrón que attack-cost.json (coste de maná pedido FUERA del flujo normal de cast, vía game.firePlayManaEvent): Citanul Centaurs ({3}{G} 6/3, Shroud, Echo {3}{G}) cheateado directo al campo propio; en nuestro siguiente upkeep EchoAbility dispara EchoEffect (GAME_ASK \"Pay {3}{G}?\" → sí) y el pago sale por el mismo GAME_PLAY_MANA que cualquier otro coste. CONTRASTE (no es el mismo bug): aquí canPlayObjects.objects SÍ llega poblado (las 5 Forest sin girar con basicManaAbilities \"{T}: Add {G}.\", verificado con REC_DUMP_EVENTS) — a diferencia de attack-cost.json, donde llegaba vacío. Confirma que el vacío de canPlayObjects NO es universal a todo pago de maná fuera del cast: está escoped a (al menos) el sub-loop de coste para atacar, no a triggers de upkeep resolviendo. El fix de useBoardPresenter.ts sigue siendo correcto y no cambia el comportamiento en este caso (ya era clicable), pero este frame documenta el caso 'sano' para no asumir que el fix se necesitaba aquí también. Captura: Citanul Centaurs vivo en el campo (no sacrificado) con 4 Forest giradas, pila vacía. Driver echo-upkeep con cheatSetup."
+  },
+  {
     "file": "choice-color.json",
     "mechanic": "choice-color",
     "kind": "game",
