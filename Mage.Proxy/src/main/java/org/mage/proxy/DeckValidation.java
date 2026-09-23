@@ -33,9 +33,9 @@ import java.util.logging.Logger;
  *     de {@link #resolveForCommander}, pero ese fallback es un parche exclusivo
  *     del fork nexus (`Deck.resolveCardInfo`, no upstream); un servidor real sin
  *     el parche hace el lookup estricto y lo rechaza igual, así que aquí se
- *     marca como missing a propósito para no dar un falso "ready" (ver
- *     `AGENTS.md`/worklog: bug real reportado con "Forest" sin impresión en un
- *     mazo importado, "elves pauper").</li>
+ *     marca como missing a propósito para no dar un falso "ready" (bug real
+ *     reportado con "Forest" sin impresión en un mazo importado, "elves
+ *     pauper").</li>
  * <li><b>mismatches</b>: el servidor la acepta pero resuelve a OTRA carta (el
  *     nombre no coincide con la de ese set/número — p.ej. "Rhystic Tutor - C20 - 77"
  *     carga en realidad Banisher Priest). El jugador cree jugar una carta y juega otra.</li>

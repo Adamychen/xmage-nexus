@@ -399,6 +399,51 @@ export function saveHandRequestsAllowed(allowed: boolean) {
   } catch {}
 }
 
+const SMART_STOPS_KEY = 'mage-web-smart-stops'
+
+export function loadSmartStops(): boolean {
+  try {
+    return getStorage().getItem(SMART_STOPS_KEY) === 'true'
+  } catch {}
+  return false
+}
+
+export function saveSmartStops(enabled: boolean) {
+  try {
+    getStorage().setItem(SMART_STOPS_KEY, String(enabled))
+  } catch {}
+}
+
+const BROWSER_NOTIFICATIONS_KEY = 'mage-web-browser-notifications'
+const NOTIFICATION_ASKED_KEY = 'mage-web-notification-asked'
+
+export function loadBrowserNotifications(): boolean {
+  try {
+    const raw = getStorage().getItem(BROWSER_NOTIFICATIONS_KEY)
+    if (raw != null) return JSON.parse(raw) === true
+  } catch {}
+  return true
+}
+
+export function saveBrowserNotifications(enabled: boolean) {
+  try {
+    getStorage().setItem(BROWSER_NOTIFICATIONS_KEY, JSON.stringify(enabled))
+  } catch {}
+}
+
+export function loadNotificationAsked(): boolean {
+  try {
+    return getStorage().getItem(NOTIFICATION_ASKED_KEY) === '1'
+  } catch {}
+  return false
+}
+
+export function saveNotificationAsked() {
+  try {
+    getStorage().setItem(NOTIFICATION_ASKED_KEY, '1')
+  } catch {}
+}
+
 const PHASE_STOPS_KEY = 'mage-web-phase-stops'
 export function loadPhaseStops(): PhaseStops {
   try {
@@ -467,6 +512,34 @@ export function saveAudioSettings(settings: AudioSettings) {
   } catch {}
 }
 
+export interface MusicSettings {
+  musicEnabled: boolean
+  musicVolume: number
+}
+
+const MUSIC_SETTINGS_KEY = 'mage-web-music'
+export const DEFAULT_MUSIC_SETTINGS: MusicSettings = { musicEnabled: true, musicVolume: 0.35 }
+
+export function loadMusicSettings(): MusicSettings {
+  try {
+    const raw = getStorage().getItem(MUSIC_SETTINGS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<MusicSettings>
+      return {
+        musicEnabled: parsed.musicEnabled !== false,
+        musicVolume: typeof parsed.musicVolume === 'number' ? Math.max(0, Math.min(1, parsed.musicVolume)) : DEFAULT_MUSIC_SETTINGS.musicVolume,
+      }
+    }
+  } catch {}
+  return { ...DEFAULT_MUSIC_SETTINGS }
+}
+
+export function saveMusicSettings(settings: MusicSettings) {
+  try {
+    getStorage().setItem(MUSIC_SETTINGS_KEY, JSON.stringify(settings))
+  } catch {}
+}
+
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
@@ -478,6 +551,7 @@ export interface AppearanceSettings {
   uiScale: ZoomLevel
   cjkBoost: boolean
   boardLayoutManual?: boolean
+  playmatId?: string
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
@@ -496,7 +570,8 @@ export function loadAppearanceSettings(): AppearanceSettings {
         : DEFAULT_APPEARANCE.boardLayout
       const scale = normalizeZoom(parsed.uiScale)
       const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
-      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true }
+      const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
+      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, ...(playmatId ? { playmatId } : null) }
     }
   } catch {}
   return { ...DEFAULT_APPEARANCE }

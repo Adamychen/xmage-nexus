@@ -13,7 +13,7 @@ Código de salida 0 = todo verde. Vía MCP: `mage_run_tests { layers, skip }`.
 | Capa | Comando efectivo | Requiere stack | Criterio |
 | --- | --- | --- | --- |
 | `unit` | `npm --prefix web run test` (vitest) | no | todos los tests pasan (incluye las guardas de contrato) |
-| `coverage` | `npm --prefix web run test:coverage` | no | pasa los thresholds de `web/vitest.config.ts` (lines/functions/statements 70, branches 55) y no baja respecto a PROJECT.md |
+| `coverage` | `npm --prefix web run test:coverage` | no | pasa los thresholds de `web/vitest.config.ts` (lines/functions/statements 70, branches 55) |
 | `typecheck` | `npm --prefix web run typecheck` | no | sin errores |
 | `build` | `npm --prefix web run build` | no | build completo (regenera splash-i18n) |
 | `java` | `mvn -f Mage.Proxy/pom.xml test` (con artefactos del fork) | no | tests del proxy pasan |
@@ -64,7 +64,7 @@ Fuera del orquestador (capas del CI en `.github/workflows/web-ci.yml`):
 
 1. Suite completa en verde (`node scripts/test.mjs`) o capas relevantes + validadores de
    generados si se tocó el contrato.
-2. `PROJECT.md` actualizado: tabla de calidad, lecciones y log con fecha (y header).
+2. Docs afectados: `ROADMAP.md` §4, `docs/lessons.md` si hay lección nueva, `site/content.json` si cambian fases.
 3. `web/INTERACTION_COVERAGE.md` (callbacks/mecánicas tocadas + fecha) y `site/content.json` si
    cambian fases/paridad.
 4. Nada sin validar en `web`, Java del proxy ni el fork.

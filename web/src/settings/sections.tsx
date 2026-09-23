@@ -173,6 +173,12 @@ export function GameplayQuickSection() {
         label={t('game', 'auto_pass')}
       />
       <Toggle
+        checked={settings.smartStops}
+        onChange={(v) => setSetting('smartStops', v)}
+        label={t('game', 'smart_stops')}
+        title={t('game', 'smart_stops_hint')}
+      />
+      <Toggle
         checked={settings.autoKeepMulligan}
         onChange={(v) => setSetting('autoKeepMulligan', v)}
         label={t('game', 'auto_mulligan')}

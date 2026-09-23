@@ -56,7 +56,7 @@ export default function SearchPanel({
     [rawQuery, config.scryfallKey, colorFilter, typeFilter, cmcFilter, rarityFilter, keywordFilter, powerFilter, toughnessFilter, setFilter],
   )
 
-  const { cards, loading, loadingMore, hasMore, totalCards, error, loadMore, retry } = useScryfallSearch(scryfallQuery, searchLang, 350, sortOrder, sortDir)
+  const { cards, loading, loadingMore, hasMore, totalCards, error, throttled, loadMore, retry } = useScryfallSearch(scryfallQuery, searchLang, 350, sortOrder, sortDir)
 
   const handleSearchLangChange = (nextLang: string) => {
     setSearchLang(nextLang)
@@ -146,6 +146,7 @@ export default function SearchPanel({
         loadingMore={loadingMore}
         hasMore={hasMore}
         error={error}
+        throttled={throttled}
         totalCards={totalCards}
         countMap={countMap}
         onAdd={onAdd}

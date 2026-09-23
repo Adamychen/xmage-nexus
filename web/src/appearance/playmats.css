@@ -1,0 +1,120 @@
+.board-wrap:not([data-playmat='classic']) .board-shell,
+.board-wrap:not([data-playmat='classic']) .pod-board-wrapper {
+  background: transparent;
+}
+
+.playmat-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--ink-1);
+}
+
+.playmat-layer::before {
+  content: '';
+  position: absolute;
+  inset: -15%;
+  background: var(--mat-bg, none);
+}
+
+.playmat-layer[data-playmat='classic'] {
+  --mat-bg:
+    radial-gradient(ellipse 130% 95% at 50% 112%, rgb(var(--brand-rgb) / 0.30) 0%, rgb(var(--brand-rgb) / 0) 55%),
+    radial-gradient(ellipse 130% 95% at 50% -12%, rgb(var(--ink-2-rgb) / 0.55) 0%, rgb(var(--ink-2-rgb) / 0) 60%),
+    radial-gradient(circle at 50% 50%, var(--ink-2) 0%, var(--ink-1) 55%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='arcane'] {
+  --mat-bg:
+    radial-gradient(ellipse 60% 45% at 22% 30%, rgb(var(--purple-rgb) / 0.32) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 50% at 80% 72%, rgb(var(--brand-rgb) / 0.28) 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, rgb(var(--gold-rgb) / 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, var(--ink-2) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='verdant'] {
+  --mat-bg:
+    radial-gradient(ellipse 80% 55% at 50% 110%, rgb(var(--mana-g-rgb) / 0.38) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 35% at 78% 18%, rgb(var(--gold-rgb) / 0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 15% 35%, rgb(var(--mana-g-rgb) / 0.16) 0%, transparent 70%),
+    linear-gradient(180deg, var(--ink-1) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='tides'] {
+  --mat-bg:
+    radial-gradient(ellipse 90% 50% at 50% -5%, rgb(var(--mana-u-rgb) / 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 60% at 50% 105%, rgb(var(--mana-u-rgb) / 0.34) 0%, transparent 70%),
+    repeating-radial-gradient(circle at 30% 60%, rgb(var(--mana-u-rgb) / 0.05) 0 2px, transparent 2px 38px),
+    linear-gradient(180deg, var(--ink-1) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='ember'] {
+  --mat-bg:
+    radial-gradient(ellipse 85% 45% at 50% 108%, rgb(var(--ember-rgb) / 0.34) 0%, rgb(var(--mana-r-rgb) / 0.18) 40%, transparent 75%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, rgb(var(--blood-rgb) / 0.3) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 12% 25%, rgb(var(--mana-r-rgb) / 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, var(--ink-0) 0%, var(--ink-1) 100%);
+}
+
+.playmat-layer[data-playmat='dawn'] {
+  --mat-bg:
+    radial-gradient(ellipse 70% 55% at 50% -10%, rgb(var(--mana-w-rgb) / 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 110%, rgb(var(--gold-rgb) / 0.22) 0%, transparent 70%),
+    conic-gradient(from 180deg at 50% -10%, transparent 0deg, rgb(var(--mana-w-rgb) / 0.06) 20deg, transparent 40deg, rgb(var(--mana-w-rgb) / 0.05) 60deg, transparent 80deg, rgb(var(--mana-w-rgb) / 0.06) 100deg, transparent 120deg),
+    linear-gradient(180deg, var(--ink-2) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='abyss'] {
+  --mat-bg:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgb(var(--mana-b-rgb) / 0.26) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 20% 80%, rgb(var(--blood-rgb) / 0.16) 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, var(--ink-1) 0%, var(--ink-0) 70%);
+}
+
+.playmat-layer[data-playmat='aurora'] {
+  --mat-bg:
+    radial-gradient(ellipse 70% 30% at 30% 20%, rgb(var(--mana-g-rgb) / 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 28% at 70% 35%, rgb(var(--purple-rgb) / 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 35% at 50% 85%, rgb(var(--brand-rgb) / 0.26) 0%, transparent 70%),
+    linear-gradient(180deg, var(--ink-1) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='identity'] {
+  --mat-bg:
+    radial-gradient(ellipse 65% 45% at 22% 28%, rgb(var(--mat-a-rgb, var(--brand-rgb)) / 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 45% at 78% 70%, rgb(var(--mat-b-rgb, var(--purple-rgb)) / 0.28) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 110%, rgb(var(--mat-c-rgb, var(--gold-rgb)) / 0.22) 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, var(--ink-2) 0%, var(--ink-0) 100%);
+}
+
+.playmat-layer[data-playmat='aurora']::before,
+.playmat-layer[data-playmat='identity']::before {
+  animation: playmatDrift calc(38s / var(--fx-speed, 1)) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes playmatDrift {
+  0% { transform: translate3d(-5%, -3%, 0) rotate(-3deg) scale(1.02); }
+  50% { transform: translate3d(3%, 2%, 0) rotate(2deg) scale(1.08); }
+  100% { transform: translate3d(5%, -2%, 0) rotate(4deg) scale(1.04); }
+}
+
+.playmat-swatch {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+}
+
+html.fx-off .playmat-layer::before {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playmat-layer::before {
+    animation: none;
+  }
+}

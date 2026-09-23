@@ -6,6 +6,8 @@ import PassMenu from './PassMenu'
 import Icon, { type IconName } from '../ui/Icon'
 import { activeSkipOf } from './skips'
 import { controlInfo } from '../state/control'
+import { formatTimer, useTickingTimer } from '../utils/timer'
+import { LONG_WAIT_SECS, formatElapsed, useElapsedSeconds, waitingState, type WaitingState } from './waitingState'
 import './ActionButton.css'
 
 interface ActionButtonProps {
@@ -20,6 +22,30 @@ interface ActionButtonProps {
 
 const SHORTCUT_HINT = /\s*[(（][^)）]*[)）]\s*$/
 
+function WaitingClock({ waiting }: { waiting: WaitingState | null }) {
+  const { t } = useTranslation()
+  const elapsed = useElapsedSeconds(waiting?.key ?? null)
+  const timeLeft = useTickingTimer(waiting?.timeLeftSecs ?? 0, waiting?.timeLeftSecs != null)
+  if (!waiting) return null
+  const long = elapsed >= LONG_WAIT_SECS
+  return (
+    <span
+      className={`action-btn-sublabel action-waiting-clock ${long ? 'is-long' : ''}`}
+      data-testid="waiting-clock"
+      data-elapsed={elapsed}
+      title={long ? t('game', 'waiting_long_hint') : undefined}
+    >
+      {t('game', 'waiting_thinking', { time: formatElapsed(elapsed) })}
+      {waiting.timeLeftSecs != null && (
+        <span className="action-waiting-left">
+          {' · '}
+          <Icon name="timer" size={10} /> {t('game', 'waiting_time_left', { time: formatTimer(timeLeft) })}
+        </span>
+      )}
+    </span>
+  )
+}
+
 export default function ActionButton({
   game,
   feedback,
@@ -33,7 +59,7 @@ export default function ActionButton({
   const [menuOpen, setMenuOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const me = game?.players?.find((p) => p.controlled)
-  const opp = game?.players?.find((p) => !p.controlled)
+  const waiting = waitingState(game, feedback)
   const stackItems = Object.keys(game?.stack ?? {}).length
   const activeSkip = activeSkipOf(me)
   const control = controlInfo(game)
@@ -60,7 +86,11 @@ export default function ActionButton({
   let modeClass = 'action-pass'
   let modeIcon: IconName = 'play'
 
-  if (stackItems > 0) {
+  if (waiting) {
+    label = t('game', 'waiting_for', { name: waiting.name })
+    modeClass = 'action-waiting'
+    modeIcon = 'hourglass'
+  } else if (stackItems > 0) {
     label = t('game', 'resolve')
     sublabel = `${t('game', 'stack')} (${stackItems})`
     modeClass = 'action-resolve'
@@ -82,11 +112,6 @@ export default function ActionButton({
     sublabel = t('game', 'controlling_turn', { name: control.actingName ?? '' })
     modeClass = 'action-priority'
     modeIcon = 'play'
-  } else if (!me?.hasPriority && opp?.hasPriority) {
-    label = t('game', 'waiting_opponent')
-    sublabel = opp.name
-    modeClass = 'action-waiting'
-    modeIcon = 'hourglass'
   } else if (!canPass) {
     label = `${t('common', 'loading')}`
     modeClass = 'action-waiting'
@@ -116,6 +141,7 @@ export default function ActionButton({
               {busy ? t('game', 'action_sending') : label}
             </span>
             {sublabel && !busy && <span className="action-btn-sublabel">{sublabel}</span>}
+            {waiting && !busy && <WaitingClock waiting={waiting} />}
           </div>
           <kbd className="action-btn-shortcut">{t('wiki', 'shortcuts_space').split(':')[0]}</kbd>
         </button>

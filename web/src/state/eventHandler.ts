@@ -8,6 +8,9 @@ import {
 } from './gameUtils'
 import { switchableHandKeys } from '../board/handSwitch'
 import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
+import { recordMatchStats } from '../game/matchStats'
+import { observeTurnRecap, resetTurnRecap } from '../game/turnRecap'
+import { observeBattlefieldEntries, resetBattlefieldEntries, sameEntries } from '../game/battlefieldEntries'
 import { notifyFeedbackOpened } from '../audio/promptSound'
 import { handleChatMessage, handleShowUserMessage, handleServerMessage } from './events/chat'
 import {
@@ -32,7 +35,7 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ phase: 'lobby', connecting: false, error: null })
       break
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, resumingGameId: null })
+      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -123,6 +126,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
       && s.rollbackPendingFor != null && s.rollbackPendingFor === s.gameId
     if (!staleByPosition || rollbackRestored) {
       dispatchGameSounds(currentGame, embeddedGame, method)
+      recordMatchStats(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
+      if (rollbackRestored) resetTurnRecap(objectId ?? s.gameId ?? null)
+      const recap = rollbackRestored ? null : observeTurnRecap(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
+      if (rollbackRestored) resetBattlefieldEntries(objectId ?? s.gameId ?? null)
+      const entered = observeBattlefieldEntries(rollbackRestored ? null : currentGame, embeddedGame, objectId ?? s.gameId ?? null)
       // La mano controlada cambió/desapareció: la barra propia vuelve a la mía.
       const switched = s.switchedHandKey
       const switchedValid =
@@ -133,6 +141,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
         watchingTable: null,
         gameId: objectId ?? s.gameId,
         ...(switched && !switchedValid ? { switchedHandKey: null } : null),
+        ...(recap ? { turnRecap: recap } : switchingGame || rollbackRestored ? { turnRecap: null } : null),
+        ...(sameEntries(entered, s.enteredThisTurn) ? null : { enteredThisTurn: entered }),
         // Solo se limpia al consumir el rollback: un accept normal no debe tumbar
         // un flag recién armado (el aviso por chat puede llegar tarde).
         ...(rollbackRestored ? { rollbackPendingFor: null } : null),

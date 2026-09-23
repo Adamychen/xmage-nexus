@@ -18,7 +18,7 @@
 
 - [ ] No hand-edited generated files (`types.generated.ts`, `schema.generated.ts` — regenerated via `gen-types`/`gen-zod` + `:validate`)
 - [ ] New UI strings added to **all 9 locales** (`web/src/i18n/`)
-- [ ] `PROJECT.md` work-log row added (+ header date)
+- [ ] Affected docs updated when needed (`ROADMAP.md` §4, `docs/lessons.md`, `web/INTERACTION_COVERAGE.md`, `web/COMPONENT_PARITY.md`, `site/content.json`)
 - [ ] `web/INTERACTION_COVERAGE.md` updated (handler/interaction changes)
 - [ ] `web/COMPONENT_PARITY.md` / `site/content.json` updated (parity or phase changes)
 - [ ] No generated/runtime files committed (`dist/`, `.run/`, `target/`, `node_modules/`)

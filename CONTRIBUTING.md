@@ -86,10 +86,13 @@ without depending on the public server:
   (and friends under `gen-*:validate`). Regenerate, then fix the code.
 - **i18n ×9 locales**: every user-facing string goes into all 9 locales in
   `web/src/i18n/` — the `i18n` test layer checks parity.
-- **Docs duties on every finished task**: add a row to the `PROJECT.md` work
-  log (and bump its header date) · update `web/INTERACTION_COVERAGE.md` for
-  handler/interaction changes · update `web/COMPONENT_PARITY.md` when closing a
-  parity unit · mirror phase/feature changes into `site/content.json`.
+- **Docs duties on every finished task**: the narrative goes in the commit
+  message (there is no work log); update only the affected docs —
+  `ROADMAP.md` §4 when a pending item is finished or appears ·
+  `web/INTERACTION_COVERAGE.md` for handler/interaction changes ·
+  `web/COMPONENT_PARITY.md` when closing a parity unit · `docs/lessons.md`
+  for a new durable lesson · mirror phase/feature changes into
+  `site/content.json`.
 - **No comments in code** unless requested. Never commit generated or runtime
   output: `dist/`, `.run/`, `target/`, `local-server/`, `node_modules/`.
 - Do not commit unless explicitly requested.

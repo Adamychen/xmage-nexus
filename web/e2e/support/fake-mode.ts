@@ -11,7 +11,7 @@ import { test as base, type Page } from '@playwright/test'
 import { FAKE_MODE } from '../dual'
 
 export const FAKE_ONLY_REASON =
-  'Solo fake: depende del guion determinista del FixtureServer. En real el helper auto-pasa y el servidor avanza por timers: ver lección en PROJECT.md.'
+  'Solo fake: depende del guion determinista del FixtureServer. En real el helper auto-pasa y el servidor avanza por timers: ver lección en docs/lessons.md.'
 
 /** Anotación: skipea el siguiente test salvo en modo fake. */
 export function fakeOnly(): void {

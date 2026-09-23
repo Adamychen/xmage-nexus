@@ -85,6 +85,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
       }
     }
     if (method === 'GAME_SELECT') {
+      patch.priorityRequest = fresh.game
       const selectFeedback = parseFeedback(method, objectId ?? s.gameId, data)
       if (selectFeedback) notifyFeedbackOpened(selectFeedback)
       patch.feedback = selectFeedback ?? null
@@ -203,6 +204,8 @@ export function handleEndGameInfo(data: unknown): void {
       playableWindow: null,
       combat: null,
       feedback: null,
+      turnRecap: null,
+      enteredThisTurn: {},
       phase: 'lobby',
       gameEnd: end,
       rollbackPendingFor: null,

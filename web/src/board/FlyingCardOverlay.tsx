@@ -110,7 +110,12 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   }, [flight])
 
   return (
-    <div ref={elRef} className="flying-card-item" data-flight-id={flight.flightId}>
+    <div
+      ref={elRef}
+      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}`}
+      data-flight-id={flight.flightId}
+      style={{ '--flight-dur': `${flight.duration}ms` } as React.CSSProperties}
+    >
       {flight.card.faceDown === true ? (
         <img src={CARD_BACK_URL} alt="" className="flying-card-img" draggable={false} />
       ) : imgUrl ? (

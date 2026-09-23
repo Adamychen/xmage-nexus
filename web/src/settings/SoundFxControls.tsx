@@ -76,6 +76,32 @@ export default function SoundFxControls() {
         />
       </div>
       <div className="fx-popover-row">
+        <div className="fx-popover-text">
+          <span className="fx-popover-label">{t('game', 'music_enabled')}</span>
+          <span className="fx-popover-hint">{t('game', 'music_enabled_hint')}</span>
+        </div>
+        <Switch
+          checked={settings.musicEnabled}
+          title={t('game', 'music_enabled_hint')}
+          disabled={!settings.soundEnabled}
+          onChange={(next) => setSetting('musicEnabled', next)}
+        />
+      </div>
+      <div className="fx-popover-row">
+        <span className="fx-popover-label">{t('game', 'music_volume')}</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          className="audio-slider"
+          value={settings.musicVolume}
+          disabled={!settings.soundEnabled || !settings.musicEnabled}
+          aria-label={t('game', 'music_volume')}
+          onChange={(e) => setSetting('musicVolume', parseFloat(e.target.value))}
+        />
+      </div>
+      <div className="fx-popover-row">
         <span className="fx-popover-label">{t('game', 'sound_volume_ui')}</span>
         <input
           type="range"

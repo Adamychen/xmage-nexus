@@ -1,5 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
-import { scryfallFetch } from '../cards/scryfallClient'
+import { scryfallFetch, scryfallThrottleMs } from '../cards/scryfallClient'
+
+/** Scryfall limita por IP: no es un fallo de la búsqueda, es esperar y repetir. */
+export class ScryfallRateLimitError extends Error {
+  constructor() {
+    super('Scryfall 429')
+    this.name = 'ScryfallRateLimitError'
+  }
+}
+
+const THROTTLE_RETRY_GRACE_MS = 500
+const MAX_THROTTLE_RETRIES = 3
 
 export interface ScryfallSearchCard {
   id: string
@@ -47,6 +58,7 @@ export async function searchScryfall(query: string, page = 1, lang?: string, ord
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&unique=cards&order=${order}&dir=${dir}&page=${page}`
     const res = await scryfallFetch(url, { urgent: true, timeoutMs: 10000 })
     if (res.status === 404) return { data: [], has_more: false }
+    if (res.status === 429) throw new ScryfallRateLimitError()
     if (!res.ok) throw new Error(`Scryfall ${res.status}`)
     return (await res.json()) as ScryfallSearchResult
   }
@@ -73,12 +85,14 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
   const [hasMore, setHasMore] = useState(false)
   const [totalCards, setTotalCards] = useState<number | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
+  const [throttled, setThrottled] = useState(false)
   const [retryNonce, setRetryNonce] = useState(0)
   const queryRef = useRef(query)
   const langRef = useRef(lang)
   const orderRef = useRef(order)
   const dirRef = useRef(dir)
   const pageRef = useRef(1)
+  const throttleRetriesRef = useRef(0)
 
   useEffect(() => {
     queryRef.current = query
@@ -91,27 +105,44 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
       setHasMore(false)
       setTotalCards(undefined)
       setError(null)
+      setThrottled(false)
       setLoading(false)
       return
     }
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
     const t = setTimeout(async () => {
       setLoading(true)
       setError(null)
+      const isCurrent = () =>
+        queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir
       try {
         const r = await searchScryfall(queryRef.current, 1, langRef.current, orderRef.current, dirRef.current)
-        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) {
+        if (isCurrent()) {
           setCards(r.data)
           setHasMore(r.has_more)
           setTotalCards(r.total_cards ?? (r.data.length === 0 ? 0 : undefined))
+          setThrottled(false)
+          throttleRetriesRef.current = 0
           pageRef.current = 1
         }
       } catch (e) {
-        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) setError((e as Error).message)
+        if (!isCurrent()) return
+        if (e instanceof ScryfallRateLimitError && throttleRetriesRef.current < MAX_THROTTLE_RETRIES) {
+          throttleRetriesRef.current++
+          setThrottled(true)
+          retryTimer = setTimeout(() => setRetryNonce((n) => n + 1), scryfallThrottleMs() + THROTTLE_RETRY_GRACE_MS)
+          return
+        }
+        setThrottled(false)
+        setError((e as Error).message)
       } finally {
-        if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) setLoading(false)
+        if (isCurrent()) setLoading(false)
       }
     }, debounceMs)
-    return () => clearTimeout(t)
+    return () => {
+      clearTimeout(t)
+      if (retryTimer) clearTimeout(retryTimer)
+    }
   }, [query, lang, debounceMs, order, dir, retryNonce])
 
   const loadMore = async () => {
@@ -132,7 +163,12 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
     }
   }
 
-  return { cards, loading, loadingMore, hasMore, totalCards, error, loadMore, retry: () => setRetryNonce((n) => n + 1) }
+  const retry = () => {
+    throttleRetriesRef.current = 0
+    setRetryNonce((n) => n + 1)
+  }
+
+  return { cards, loading, loadingMore, hasMore, totalCards, error, throttled, loadMore, retry }
 }
 
 export function scryfallCardImage(card: ScryfallSearchCard): string | null {

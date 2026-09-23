@@ -4,7 +4,8 @@ import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { stopKeyForStep } from '../game/phaseStops'
-import { clearActiveGame, saveActiveDeck, saveFxSettings, saveAudioSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
+import { meaningfulPlayables } from '../game/smartStops'
+import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
 import { isControllingPriority } from './control'
@@ -283,35 +284,57 @@ export function returnToLobby() {
     combat: null,
     feedback: null,
     gameEnd: null,
+    turnRecap: null,
+    enteredThisTurn: {},
     sideboardScreen: null,
     pendingSideboardScreen: null,
     error: null,
   })
 }
 
+export function dismissTurnRecap(key?: string) {
+  const current = getState().turnRecap
+  if (!current || (key && current.key !== key)) return
+  setState({ turnRecap: null })
+}
+
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   const next = { ...getState().settings, [key]: value }
   if (key === 'boardLayout') next.boardLayoutManual = true
   setState({ settings: next })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, boardLayout, boardLayoutManual, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost })
+  saveMusicSettings({ musicEnabled, musicVolume })
+  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, playmatId })
   saveAutoAnswers(autoAnswers.map(({ pattern, answer }) => ({ pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })
   savePhaseStops({ ...phaseStops })
+  saveSmartStops(getState().settings.smartStops)
   try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
+  soundManager.setMusicVolume(musicEnabled ? musicVolume : 0)
 }
+
+let lastSmartAnswer: GameView | null = null
 
 export function maybeAutoPass(game: GameView) {
   const s = getState()
   const me = game.players?.find((p) => p.controlled)
-  if (!s.settings.autoPass || s.feedback || !s.gameId) return
+  const smart = s.settings.smartStops
+  if ((!s.settings.autoPass && !smart) || s.feedback || !s.gameId) return
   if (isControllingPriority(game)) return
   if (!me?.hasPriority) return
-  if (s.combat) return
+  if (s.combat && (!smart || s.combat.selectable.length > 0)) return
+  if (smart) {
+    const request = s.priorityRequest
+    if (!request || s.game !== request || request === lastSmartAnswer) return
+    if (meaningfulPlayables(game, s.playableIds).length > 0) return
+    lastSmartAnswer = request
+    void cmds.sendPlayerBoolean(false, s.gameId)
+    return
+  }
   const stopKey = stopKeyForStep(game.step)
   if (stopKey) {
     const turn = me.isActive ? 'yourTurn' : 'opponentTurn'

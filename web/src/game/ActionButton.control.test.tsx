@@ -46,16 +46,16 @@ describe('ActionButton con prioridad controlada', () => {
     expect(getByText("You control sim-000040's turn")).not.toBeNull()
   })
 
-  it('sin control, la prioridad ajena sigue mostrando "Waiting for opponent"', () => {
+  it('without control, foreign priority shows who we are waiting for', () => {
     const game = makeGameView({
       players: [alice(false), sim(true)],
       activePlayerName: SIM_NAME,
       priorityPlayerName: SIM_NAME,
     })
-    const { getByRole, getByText } = renderButton(game, false)
-    const btn = getByRole('button', { name: /Waiting for opponent/ }) as HTMLButtonElement
+    const { getByRole, getByTestId } = renderButton(game, false)
+    const btn = getByRole('button', { name: new RegExp(`Waiting for ${SIM_NAME}`) }) as HTMLButtonElement
     expect(btn.disabled).toBe(true)
-    expect(getByText(SIM_NAME)).not.toBeNull()
+    expect(getByTestId('waiting-clock').textContent).toContain('thinking 0:00')
   })
 
   it('con mi propia prioridad no aparece el sublabel de control', () => {

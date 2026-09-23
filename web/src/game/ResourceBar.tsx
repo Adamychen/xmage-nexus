@@ -187,7 +187,7 @@ export default function ResourceBar({
               <button
                 type="button"
                 className={`resource-chip ray-chip clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''}`}
-                title={`${t('game', 'pile_stack')}: ${crossZone.length}`}
+                title={`${t('game', 'cross_zone_title')}: ${crossZone.length}`}
                 onClick={() => setOpenPile('crosszone')}
                 onMouseEnter={(e) =>
                   topCrossZoneCard && onCardHover?.(topCrossZoneCard, e.currentTarget.getBoundingClientRect())
@@ -292,7 +292,7 @@ export default function ResourceBar({
               <button
                 type="button"
                 className={`resource-stack ray-stack clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''} ${topCrossZoneCard ? 'has-card-img' : 'is-empty'}`}
-                title={`${t('game', 'pile_stack')}: ${crossZone.length}`}
+                title={`${t('game', 'cross_zone_title')}: ${crossZone.length}`}
                 onClick={() => setOpenPile('crosszone')}
                 onMouseEnter={(e) =>
                   topCrossZoneCard && onCardHover?.(topCrossZoneCard, e.currentTarget.getBoundingClientRect())
@@ -302,7 +302,7 @@ export default function ResourceBar({
                 {topCrossZoneCard ? (
                   <>
                     <CardSlot card={topCrossZoneCard} className="ray-top-card" />
-                    <div className="ray-mini-badge" title={t('game', 'pile_stack')}>
+                    <div className="ray-mini-badge" title={t('game', 'cross_zone_title')}>
                       <Icon name="bolt" size={10} />
                     </div>
                   </>

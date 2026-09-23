@@ -13,6 +13,7 @@ export function ArenaCardGrid({
   loadingMore = false,
   hasMore = false,
   error,
+  throttled = false,
   totalCards,
   countMap,
   onAdd,
@@ -29,6 +30,7 @@ export function ArenaCardGrid({
   loadingMore?: boolean
   hasMore?: boolean
   error: string | null
+  throttled?: boolean
   totalCards?: number
   countMap: Map<string, number>
   onAdd: (card: ScryfallSearchCard) => void
@@ -83,6 +85,17 @@ export function ArenaCardGrid({
 
     const imgUrl = scryfallCardImage(card)
     setFloatingCardDragImage(e, imgUrl, displayName)
+  }
+
+  if (throttled && cards.length === 0) {
+    return (
+      <div className="arena-card-grid-container">
+        <div className="arena-grid-status-box" role="status" data-testid="search-throttled">
+          <div className="arena-grid-spinner" />
+          <span>{t('decks', 'builder_search_throttled')}</span>
+        </div>
+      </div>
+    )
   }
 
   if (loading && cards.length === 0) {

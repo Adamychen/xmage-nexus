@@ -176,3 +176,26 @@
     transition: none;
   }
 }
+
+.big-action-btn.action-waiting {
+  opacity: 0.9;
+}
+
+.big-action-btn.action-waiting .action-waiting-clock {
+  font-size: var(--fs-2xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.big-action-btn.action-waiting .action-waiting-clock.is-long {
+  color: var(--warn);
+}
+
+.action-waiting-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+}

@@ -140,7 +140,7 @@ node scripts/build.mjs
 | Proxy WebSocket | `ws://127.0.0.1:8787` | `scripts/lib.mjs:15` |
 | Proxy HTTP (test page) | `http://127.0.0.1:8788/index.html` | Served by the proxy itself |
 | FakeServer (E2E fake) | `ws://127.0.0.1:8789` | Fake E2E only; `8788` is owned by the real proxy — do not reuse (`web/AGENTS.md:21`) |
-| XMage Server (testMode) | `127.0.0.1:17171` / `beta.xmage.today:17171` | Local server is the reliable oracle; `beta.xmage.today` anonymous login is best-effort (`PROJECT.md:30`) |
+| XMage Server (testMode) | `127.0.0.1:17171` / `beta.xmage.today:17171` | Local server is the reliable oracle; `beta.xmage.today` anonymous login is best-effort (`AGENTS.md`) |
 
 ### Verifying the installation
 
@@ -212,7 +212,7 @@ npm run test:e2e:fullflow
 
 - **[docs/](docs/)** — onboarding index: reading order, ports, and what each doc is authoritative for.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to add an event, action, type, or mechanic; enforced rules; file map.
-- **[PROJECT.md](PROJECT.md)** — master document: roadmap, phases, technical decisions, project status.
+- **[ROADMAP.md](ROADMAP.md)** — vision, current state, parity matrix and the single live list of pending work.
 - **[AGENTS.md](AGENTS.md)** — development rules, commands, conventions, known bugs.
 - **[Mage.Proxy/README.md](Mage.Proxy/README.md)** — full protocol reference (actions, events, serialization).
 

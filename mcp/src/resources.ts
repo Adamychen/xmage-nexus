@@ -12,20 +12,22 @@ function readFileOr(file: string, fallback: string): string {
 }
 
 function projectSummary(): string {
-  const full = readFileOr(path.join(repoRoot, 'PROJECT.md'), '(PROJECT.md no encontrado)')
-  const lines = full.split('\n')
-  const start = lines.findIndex((line) => line.startsWith('## 2.'))
-  const end = lines.findIndex((line, index) => index > start && line.startsWith('## 3.'))
-  const header = lines.slice(0, 6).join('\n')
-  const status = start >= 0 ? lines.slice(start, end > start ? end : start + 40).join('\n') : ''
-  const worklogStart = lines.findIndex((line) => line.startsWith('## 9.'))
-  const changelog = lines
-    .slice(worklogStart >= 0 ? worklogStart : lines.length)
-    .filter((line) => line.startsWith('| 20'))
-    .slice(0, 5)
-    .map((line) => (line.length > 400 ? `${line.slice(0, 400)}…` : line))
-    .join('\n')
-  return `${header}\n\n${status}\n\n--- changelog (recientes) ---\n${changelog}`
+  const roadmap = readFileOr(path.join(repoRoot, 'ROADMAP.md'), '(ROADMAP.md no encontrado)')
+  const lessons = readFileOr(path.join(repoRoot, 'docs', 'lessons.md'), '(docs/lessons.md no encontrado)')
+  const lines = roadmap.split('\n')
+  const section = (start: string, end: string): string => {
+    const from = lines.findIndex((line) => line.startsWith(start))
+    if (from < 0) return ''
+    const to = lines.findIndex((line, index) => index > from && line.startsWith(end))
+    return lines.slice(from, to > from ? to : from + 60).join('\n')
+  }
+  return [
+    lines.slice(0, 6).join('\n'),
+    section('## 2.', '## 3.'),
+    section('## 4.', '## 5.'),
+    '--- lecciones durables (docs/lessons.md) ---',
+    lessons,
+  ].join('\n\n')
 }
 
 export function registerResources(server: McpServer): void {
@@ -34,7 +36,7 @@ export function registerResources(server: McpServer): void {
     'mage://status/project',
     {
       title: 'Project status',
-      description: 'Cabecera + tabla de estado de fases de PROJECT.md y cola del changelog (recortado).',
+      description: 'Estado: cabecera y estado actual de ROADMAP.md, pendientes (§4) y lecciones durables (docs/lessons.md).',
       mimeType: 'text/markdown',
     },
     async (uri) => ({

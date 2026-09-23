@@ -10,7 +10,7 @@ export interface ScryfallPacing {
   maxAttempts: number
 }
 
-const DEFAULT_PACING: ScryfallPacing = { spacingMs: 100, maxConcurrent: 4, maxAttempts: 3 }
+const DEFAULT_PACING: ScryfallPacing = { spacingMs: 150, maxConcurrent: 3, maxAttempts: 3 }
 const DEFAULT_BACKOFF_MS = 2000
 const MAX_BACKOFF_MS = 30_000
 const MAX_MEMORY_ENTRIES = 4000
@@ -37,6 +37,50 @@ const queue: Task[] = []
 const memory = new Map<string, unknown>()
 const inflight = new Map<string, Promise<unknown>>()
 
+const BUS_NAME = 'xmage-scryfall-budget'
+type BusMessage = { slotAt: number } | { blockedUntil: number }
+let bus: BroadcastChannel | null | undefined
+
+/**
+ * El límite de Scryfall es por IP, pero la cola vive en el módulo: sin esto,
+ * dos pestañas del mismo usuario gastan el doble del presupuesto y una pausa
+ * por 429 solo frena a la pestaña que la recibió. El canal comparte el reloj de
+ * la cola (cada hueco consumido) y las pausas, así que el ritmo es por usuario.
+ */
+function getBus(): BroadcastChannel | null {
+  if (bus !== undefined) return bus
+  try {
+    if (typeof BroadcastChannel === 'undefined') {
+      bus = null
+      return bus
+    }
+    const channel = new BroadcastChannel(BUS_NAME)
+    channel.onmessage = (ev: MessageEvent<BusMessage>) => {
+      const msg = ev.data
+      if (!msg || typeof msg !== 'object') return
+      if ('slotAt' in msg && Number.isFinite(msg.slotAt)) {
+        nextSlotAt = Math.max(nextSlotAt, msg.slotAt)
+      }
+      if ('blockedUntil' in msg && Number.isFinite(msg.blockedUntil) && msg.blockedUntil > blockedUntil) {
+        blockedUntil = msg.blockedUntil
+        notifyThrottle()
+      }
+      pump()
+    }
+    ;(channel as unknown as { unref?: () => void }).unref?.()
+    bus = channel
+  } catch {
+    bus = null
+  }
+  return bus
+}
+
+function announce(msg: BusMessage) {
+  try {
+    getBus()?.postMessage(msg)
+  } catch {}
+}
+
 function abortError(): Error {
   return new DOMException('Aborted', 'AbortError')
 }
@@ -46,6 +90,35 @@ function retryAfterMs(res: Response): number {
   const seconds = raw ? Number.parseInt(raw, 10) : Number.NaN
   if (!Number.isFinite(seconds) || seconds < 0) return DEFAULT_BACKOFF_MS
   return Math.min(seconds * 1000, MAX_BACKOFF_MS)
+}
+
+const throttleListeners = new Set<(untilMs: number) => void>()
+
+function notifyThrottle() {
+  const remaining = scryfallThrottleMs()
+  for (const listener of throttleListeners) {
+    try {
+      listener(remaining)
+    } catch {}
+  }
+}
+
+/** Pausa común: el 429 de una petición frena a todas (y a las demás pestañas). */
+function throttle(forMs: number) {
+  blockedUntil = Math.max(blockedUntil, Date.now() + forMs)
+  announce({ blockedUntil })
+  notifyThrottle()
+}
+
+/** Milisegundos que falta esperar por un 429 de Scryfall (0 si no hay pausa). */
+export function scryfallThrottleMs(): number {
+  return Math.max(0, blockedUntil - Date.now())
+}
+
+/** Avisa cuando Scryfall impone una pausa, con los ms que quedan. */
+export function onScryfallThrottle(listener: (untilMs: number) => void): () => void {
+  throttleListeners.add(listener)
+  return () => throttleListeners.delete(listener)
 }
 
 function pump() {
@@ -66,6 +139,7 @@ function pump() {
       continue
     }
     nextSlotAt = now + pacing.spacingMs
+    announce({ slotAt: nextSlotAt })
     active++
     void run(task)
   }
@@ -84,10 +158,12 @@ async function run(task: Task) {
       headers: { Accept: 'application/json', ...headers },
       signal: controller.signal,
     })
-    if (res.status === 429 && task.attempts < pacing.maxAttempts) {
-      blockedUntil = Math.max(blockedUntil, Date.now() + retryAfterMs(res))
-      queue.unshift(task)
-      return
+    if (res.status === 429) {
+      throttle(retryAfterMs(res))
+      if (task.attempts < pacing.maxAttempts) {
+        queue.unshift(task)
+        return
+      }
     }
     task.resolve(res)
   } catch (err) {

@@ -24,6 +24,15 @@ import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
+import ImpactOverlay from '../board/ImpactOverlay'
+import LowLifeVignette from '../board/LowLifeVignette'
+import TurnRecapStrip from './TurnRecapStrip'
+import { useAttentionAlerts } from './attentionAlerts'
+import { identityColors, playmatVars } from '../appearance/playmatIdentity'
+import type { ManaColor } from '../board/impactFx'
+import '../appearance/playmats.css'
+import { musicEngine } from '../audio/musicEngine'
+import { musicIntensity } from '../audio/musicIntensity'
 import { applyFxRoot } from '../board/fx'
 import { hasCommanders as hasCommandersInGame } from '../board/commanders'
 import { dayNightStateOf } from '../board/dayNight'
@@ -96,6 +105,28 @@ export default function GameScreen() {
     applyFxRoot()
   }, [settings.effects, settings.animationSpeed])
 
+  const gameOver = useStore((s) => s.gameEnd != null)
+  const hasGame = !!game
+  useEffect(() => {
+    if (!hasGame || gameOver) {
+      musicEngine.stop()
+      return
+    }
+    musicEngine.start()
+  }, [hasGame, gameOver])
+  useEffect(() => () => musicEngine.stop(), [])
+  const intensity = musicIntensity(game)
+  useEffect(() => {
+    musicEngine.setIntensity(intensity)
+  }, [intensity])
+
+  const playmatId = settings.playmatId ?? 'classic'
+  const matKey = playmatId === 'identity' ? identityColors(game).join('') : ''
+  const matStyle = useMemo(
+    () => (matKey ? (playmatVars(matKey.split('') as ManaColor[]) as React.CSSProperties) : undefined),
+    [matKey],
+  )
+
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
   const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
@@ -115,6 +146,7 @@ export default function GameScreen() {
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
+  useAttentionAlerts(game, gameId, feedback, combat, settings.browserNotifications)
 
   // Anti doble-envío del mismo objetivo mientras no llega el eco: el CardSlot
   // cubre las cartas; este ref cubre el resto de superficies (headers, pila...).
@@ -347,7 +379,10 @@ export default function GameScreen() {
           {!dividerSlot && <header className="game-top">{strip}</header>}
           {dividerSlot && createPortal(strip, dividerSlot)}
           <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
-            <div className="board-wrap" ref={boardWrapRef}>
+            <div className="board-wrap" ref={boardWrapRef} data-playmat={playmatId}>
+              {playmatId !== 'classic' && (
+                <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
+              )}
               {isArenaLayout ? (
                 <ArenaBoard {...boardProps} />
               ) : isPodLayout ? (
@@ -355,7 +390,10 @@ export default function GameScreen() {
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
+              <LowLifeVignette game={game} />
+              <TurnRecapStrip />
               <FeedbackOverlay />
+              <ImpactOverlay />
               <GameDock
                 onPromptSlot={setPromptSlot}
                 action={

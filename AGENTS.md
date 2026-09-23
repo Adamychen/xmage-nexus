@@ -4,12 +4,14 @@ A modern, high-performance web client for XMage. The stack consists of:
 XMage server (Java, test mode) + WebSocket proxy (`Mage.Proxy`, Java) + web
 client (`web`, React 19 + TypeScript + Vite).
 
-**Master document: `PROJECT.md`** — source of truth for status, phases and
-lessons. Update it when finishing a task (phases, lessons, quality table,
-dated log) and record the date in the header. Also keep the interaction
-coverage matrix `web/INTERACTION_COVERAGE.md` in sync (mark implemented/tested
-+ test ref + date per callback/interaction); the guard `callbackCoverage.test.ts`
-enforces that every server callback has a handler or is listed as planned. A
+**Docs model — no work log**: the narrative of a task lives in its commit
+message; do not keep a dated log. When finishing a task update only the
+affected docs — pending work in `ROADMAP.md` §4, durable lessons in
+`docs/lessons.md`, phases/features in `site/content.json` — and keep the
+interaction coverage matrix `web/INTERACTION_COVERAGE.md` in sync (mark
+implemented/tested + test ref + date per callback/interaction); the guard
+`callbackCoverage.test.ts` enforces that every server callback has a handler or
+is listed as planned. A
 second guard, `web/src/state/mechanicsCoverage.test.ts` (backed by
 `scripts/view-schema.mjs`, which extracts the exhaustive serializable field set
 from the XMage `mage.view.*` classes via the `JsonUtil` reflection rules),
@@ -168,7 +170,7 @@ multi-sesión (`mage_connect {session}`, `mage_use_session`, `mage_sessions`).
   Strip-only mode: no `enum`/`namespace`/parameter properties.
 - After touching `mcp/`: `npm --prefix mcp test` + `npm --prefix mcp run typecheck`.
 - Never write to stdout outside the MCP transport (diagnostics → stderr).
-- Scoped doc: `mcp/README.md`; roadmap/status: `PROJECT.md`.
+- Scoped doc: `mcp/README.md`; pending work: `ROADMAP.md` §4.
 
 **Interactive browser MCP**: `opencode.json` also registers `playwright`
 (`scripts/playwright-mcp.mjs` → `@playwright/mcp`, reusing web/playwright's
@@ -262,6 +264,12 @@ test window).
 
 ## Rules
 
+- **English only**: every artifact is written in English — commit messages and
+  PRs, docs (`*.md`), skills/commands, code identifiers, comments (when
+  allowed), test names, fixtures and log/error strings. The only exceptions are
+  the translation locales (`web/src/i18n/locales/*`) and quoted server output.
+  Existing Spanish prose is migrated to English as its file is touched; do not
+  do unrelated mass rewrites.
 - **After touching `web`**: run `unit` and `typecheck` (and `build` if
   the build changed). After touching proxy Java: `java` + rebuild jar
   (`build.mjs proxy`) + restart proxy.
@@ -333,4 +341,4 @@ test window).
 - Published by `.github/workflows/pages.yml` (push = lightweight layers; nightly cron = also integration).
   Pages **source must be "GitHub Actions"** (Settings → Pages).
 - `site/content.json` is the dashboard's canonical roadmap/feature/guard source — keep it in sync
-  with `ROADMAP.md` / `PROJECT.md` when phases or the feature matrix change.
+  with `ROADMAP.md` when phases or the feature matrix change.

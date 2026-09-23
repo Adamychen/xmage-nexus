@@ -7,7 +7,7 @@ import { setSetting } from './state/actions'
 import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
-import { loadAudioSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
+import { loadAudioSettings, loadMusicSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
 import LoginScreen from './lobby/LoginScreen'
 import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
@@ -64,6 +64,8 @@ export default function App() {
 
   useEffect(() => {
     soundManager.init(loadAudioSettings())
+    const music = loadMusicSettings()
+    soundManager.setMusicVolume(music.musicEnabled ? music.musicVolume : 0)
     if (!isSetupDone()) return
     if (GalleryScreen && isGalleryHash(window.location.hash)) return
     const saved = loadConn()

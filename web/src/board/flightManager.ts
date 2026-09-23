@@ -18,7 +18,10 @@ export interface FlightRecord {
   rotated90?: boolean
   /** Timers de backstop/limpieza: se reprograman al encadenar un redirect. */
   timers?: Array<ReturnType<typeof setTimeout>>
+  variant?: FlightVariant
 }
+
+export type FlightVariant = 'destroy' | 'exile' | 'heavy'
 
 let activeFlights: FlightRecord[] = []
 let flightCounter = 0
@@ -106,6 +109,7 @@ export interface FlightOptions {
   static?: boolean
   /** Tamaño real de la carta de origen (sin transforms), si se conoce. */
   sourceSize?: CardSourceSize | null
+  variant?: FlightVariant
 }
 
 // ── Diagnóstico de vuelos (F0 animaciones): cada skip silencioso deja una
@@ -219,6 +223,7 @@ export function startCardFlight(
         existing.toRect = to.rect
         existing.toSelector = toSelector ?? existing.toSelector
         existing.card = card
+        if (options?.variant) existing.variant = options.variant
         existing.duration = Math.min(age + Math.round(scaledDuration * 0.8), age + 1200)
         existing.timers?.forEach((t) => clearTimeout(t))
         existing.timers = scheduleFlightTimers(existing)
@@ -248,6 +253,7 @@ export function startCardFlight(
     startTime: performance.now(),
     duration: scaledDuration,
     rotated90: from.rotated90 || undefined,
+    variant: options?.variant,
   }
 
   activeFlights = [...activeFlights, record]
@@ -261,6 +267,8 @@ export function startCardFlight(
     soundManager.play('draw', 'game')
   } else if (toSelector?.includes('stack')) {
     soundManager.play('stack_cast', 'game')
+  } else if (options?.variant === 'exile' || toSelector?.includes('exile')) {
+    soundManager.play('exile', 'game')
   } else if (toSelector?.includes('graveyard')) {
     soundManager.play('destroy', 'game')
   } else {

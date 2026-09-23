@@ -1,7 +1,7 @@
 import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
-import { scryfallFetch } from './scryfallClient'
+import { scryfallJson } from './scryfallClient'
 import tokenImageData from '../data/tokenImages.generated.json'
 
 const memory = new Map<string, string | null>()
@@ -322,88 +322,75 @@ function candidateUrls(key: string): string[] {
   return [`https://api.scryfall.com/cards/${cleanKey}?format=json`]
 }
 
+interface ScryfallImagePayload {
+  data?: {
+    image_uris?: { normal?: string; small?: string }
+    card_faces?: { image_uris?: { normal?: string; small?: string } }[]
+  }[]
+  image_uris?: { normal?: string; small?: string }
+  card_faces?: { image_uris?: { normal?: string; small?: string } }[]
+  name?: string
+  type_line?: string
+  mana_cost?: string
+  power?: string
+  toughness?: string
+}
+
+/** Las búsquedas devuelven listas grandes y son solo el último recurso: se
+ *  deduplican en memoria pero no se guardan en IndexedDB. */
+function isSearchUrl(url: string): boolean {
+  return url.includes('/cards/search?')
+}
+
 async function tryFetch(key: string): Promise<string | null> {
   const isBack = key.endsWith('#back')
   const cleanKey = key.replace(/#back$/, '')
 
-  if (typeof caches !== 'undefined' && !cleanKey.startsWith('named:') && !cleanKey.startsWith('token:') && cleanKey.includes('/')) {
-    try {
-      const cache = await caches.open('xmage-card-images-v1')
-      const cardLang = getCardLanguage()
-      if (cardLang && cardLang !== 'en') {
-        const locUrl = `https://api.scryfall.com/cards/${cleanKey.toLowerCase()}/${cardLang}?format=image&version=normal`
-        const locMatch = await cache.match(locUrl)
-        if (locMatch) {
-          return locUrl
-        }
-      }
-      const directUrl = `https://api.scryfall.com/cards/${cleanKey.toLowerCase()}?format=image&version=normal`
-      const match = await cache.match(directUrl)
-      if (match) {
-        return directUrl
-      }
-    } catch {}
-  }
-
   const urls = candidateUrls(key)
   for (const url of urls) {
     for (let attempt = 0; attempt <= RETRIES; attempt++) {
-      try {
-        const res = await scryfallFetch(url, { timeoutMs: REQUEST_TIMEOUT_MS })
-        if (!res.ok) {
-          if (res.status === 404 || res.status === 429) break
-          throw new Error(`Scryfall HTTP ${res.status}`)
-        }
-        const data = (await res.json()) as {
-          data?: {
-            image_uris?: { normal?: string; small?: string }
-            card_faces?: { image_uris?: { normal?: string; small?: string } }[]
-          }[]
-          image_uris?: { normal?: string; small?: string }
-          card_faces?: { image_uris?: { normal?: string; small?: string } }[]
-          name?: string
-          type_line?: string
-          mana_cost?: string
-          power?: string
-          toughness?: string
-        }
-
-        // Cache double-faced cards in memory for both front and back
-        const faces = data.card_faces || data.data?.[0]?.card_faces
-        if (faces && faces.length > 1) {
-          const frontUrl = faces[0]?.image_uris?.normal ?? faces[0]?.image_uris?.small ?? null
-          const backUrl = faces[1]?.image_uris?.normal ?? faces[1]?.image_uris?.small ?? null
-          if (frontUrl) memory.set(cleanKey, frontUrl)
-          if (backUrl) memory.set(`${cleanKey}#back`, backUrl)
-        }
-
-        const searchFirst = data.data?.[0]
-        const targetFace = isBack && faces && faces.length > 1 ? faces[1] : faces?.[0]
-
-        const imageUrl =
-          (isBack ? targetFace?.image_uris?.normal ?? targetFace?.image_uris?.small : null) ??
-          data.image_uris?.normal ??
-          data.image_uris?.small ??
-          targetFace?.image_uris?.normal ??
-          targetFace?.image_uris?.small ??
-          searchFirst?.image_uris?.normal ??
-          searchFirst?.image_uris?.small ??
-          null
-
-        const info: ScryfallCardInfo = {
-          name: data.name ?? key,
-          typeLine: data.type_line ?? '',
-          manaCost: data.mana_cost ?? '',
-          power: data.power,
-          toughness: data.toughness,
-          imageUrl,
-        }
-        metaMemory.set(key, info)
-        return imageUrl
-      } catch {
+      const data = await scryfallJson<ScryfallImagePayload>(url, {
+        persist: !isSearchUrl(url),
+        timeoutMs: REQUEST_TIMEOUT_MS,
+      })
+      if (!data) {
         if (attempt === RETRIES) break
         await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)))
+        continue
       }
+
+      // Cache double-faced cards in memory for both front and back
+      const faces = data.card_faces || data.data?.[0]?.card_faces
+      if (faces && faces.length > 1) {
+        const frontUrl = faces[0]?.image_uris?.normal ?? faces[0]?.image_uris?.small ?? null
+        const backUrl = faces[1]?.image_uris?.normal ?? faces[1]?.image_uris?.small ?? null
+        if (frontUrl) memory.set(cleanKey, frontUrl)
+        if (backUrl) memory.set(`${cleanKey}#back`, backUrl)
+      }
+
+      const searchFirst = data.data?.[0]
+      const targetFace = isBack && faces && faces.length > 1 ? faces[1] : faces?.[0]
+
+      const imageUrl =
+        (isBack ? targetFace?.image_uris?.normal ?? targetFace?.image_uris?.small : null) ??
+        data.image_uris?.normal ??
+        data.image_uris?.small ??
+        targetFace?.image_uris?.normal ??
+        targetFace?.image_uris?.small ??
+        searchFirst?.image_uris?.normal ??
+        searchFirst?.image_uris?.small ??
+        null
+
+      const info: ScryfallCardInfo = {
+        name: data.name ?? key,
+        typeLine: data.type_line ?? '',
+        manaCost: data.mana_cost ?? '',
+        power: data.power,
+        toughness: data.toughness,
+        imageUrl,
+      }
+      metaMemory.set(key, info)
+      return imageUrl
     }
   }
   return null

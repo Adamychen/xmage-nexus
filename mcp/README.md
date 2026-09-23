@@ -90,7 +90,7 @@ igual que `gameId` de `START_GAME`/`GAME_*`, así que `join/get` lo resuelven po
 > operar sobre una sesión MCP sin cambiar la activa global. Imprescindible en
 > juego paralelo (varios agentes/partidas en un proceso MCP): sin pin, dos
 > agentes conmutando `mage_use_session` se pisan (acciones caídas en la partida
-> ajena). Verificado con self-play PvP + oleada paralela (`PROJECT.md`).
+> ajena). Verificado con self-play PvP + oleada paralela.
 
 ### Bucle de juego
 

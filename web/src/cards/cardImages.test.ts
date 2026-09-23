@@ -35,6 +35,21 @@ describe('card image cache', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('reuses the shared Scryfall cache, so reopening a game does not refetch', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ image_uris: { normal: 'https://img.test/forest.jpg' } }),
+      headers: { get: () => null },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(awaitImageUrl(card)).resolves.toBe('https://img.test/forest.jpg')
+    resetCardImageCache()
+    await expect(awaitImageUrl(card)).resolves.toBe('https://img.test/forest.jpg')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it('retries an HTTP failure and clears the in-flight entry', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: false, status: 503 })

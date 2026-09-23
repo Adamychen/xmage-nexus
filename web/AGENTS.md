@@ -45,8 +45,12 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
   Última verif.) and mirror only `yes/partial/no` into `site/content.json`.
 - **Every request to `api.scryfall.com` goes through `web/src/cards/scryfallClient.ts`**
   (`scryfallFetch` / `scryfallJson`, or `fetchCardJson` in `scryfallCards.ts` for cards):
-  one global queue (100 ms spacing, 4 in flight, common pause + `Retry-After` on 429),
-  in-memory + IndexedDB cache. Never call `fetch('https://api.scryfall.com/…')` directly and
+  one global queue (150 ms spacing, 3 in flight, common pause + `Retry-After` on 429),
+  in-memory + IndexedDB cache. The queue clock and the 429 pause are shared across tabs
+  over a `BroadcastChannel` (`xmage-scryfall-budget`), because Scryfall's limit is per IP,
+  not per tab. Anything that resolves card art or JSON must use the cache-backed
+  `scryfallJson` path (never raw `scryfallFetch`) unless it needs the `Response` itself.
+  Never call `fetch('https://api.scryfall.com/…')` directly and
   never use `…?format=image` API URLs as `<img src>` (they count against the limit; use the
   `image_uris` CDN URLs from the card JSON, e.g. `useCardArtUrl`). Guarded by
   `e2e/scryfall-budget.spec.ts`. Use `{ urgent: true }` only for user-driven requests.

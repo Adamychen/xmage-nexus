@@ -185,3 +185,42 @@
   display: flex;
   justify-content: flex-end;
 }
+
+.appearance-playmat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: var(--sp-2);
+}
+
+.playmat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  color: var(--fg-2);
+  white-space: normal;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.playmat-item:hover {
+  border-color: var(--line-3);
+  translate: 0 -1px;
+}
+
+.playmat-item.selected {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.5), 0 0 14px rgb(var(--gold-rgb) / 0.25);
+  color: var(--fg-1);
+}
+
+.playmat-item .sleeve-check {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  z-index: 1;
+}

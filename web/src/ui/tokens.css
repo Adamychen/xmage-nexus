@@ -27,6 +27,15 @@
   --mana-r: #e04a2c;
   --mana-g: #2fa552;
   --mana-c: #a7afc0;
+  --mana-w-rgb: 240 217 138;
+  --mana-u-rgb: 42 143 224;
+  --mana-b-rgb: 122 95 154;
+  --mana-r-rgb: 224 74 44;
+  --mana-g-rgb: 47 165 82;
+  --mana-c-rgb: 167 175 192;
+  --ember-rgb: 255 138 76;
+  --ash-rgb: 58 52 50;
+  --blood-rgb: 150 16 24;
   --rarity-common: #718096;
   --rarity-uncommon: #a0aec0;
   --rarity-rare: #ecc94b;

@@ -29,7 +29,7 @@ TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
 
 ## Dashboard (GitHub Pages, zero-build static `site/`)
 
-- `site/content.json` — canonical dashboard copy (project, phases, features, guards). Keep in sync with `PROJECT.md`/`ROADMAP.md`.
+- `site/content.json` — canonical dashboard copy (project, phases, features, guards). Keep in sync with `ROADMAP.md`.
 - `scripts/gen-dashboard.mjs` — merges `content.json` + test artefacts → `site/status.json`.
 - `scripts/dashboard-ci.mjs` — lightweight CI layers for Pages pushes.
 - `scripts/integration-report.mjs` — nightly real-stack (self-test/human-test/e2e-real) → `reports/integration-result.json`.

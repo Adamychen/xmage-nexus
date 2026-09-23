@@ -8,11 +8,12 @@ import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import CardIcons from './CardIcons'
+import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
-import { useSettings } from '../state/selectors'
+import { useSettings, useStore } from '../state/selectors'
 import { getSleeveDef } from '../appearance/sleeves'
 import { perfMark } from '../system/perfProbe'
 import './CardSlot.css'
@@ -77,6 +78,8 @@ export default function CardSlot({
   flightStateRef.current = flightState
 
   const effectiveId = cardId || (card as any).id
+  const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
+  const enteredThisTurn = useStore((s) => (effectiveId ? s.enteredThisTurn[effectiveId] === true : false))
 
   const clearPending = useCallback(() => {
     if (pendingTimerRef.current) {
@@ -187,6 +190,12 @@ export default function CardSlot({
   const defenseVal = perm.defense ? parseInt(String(perm.defense), 10) : 0
 
   const hasSummoningSickness = isRealCreature && !tapped && perm.summoningSickness === true
+  const pt = ptTrend(perm)
+  const basePower = basePtValue(perm.originalPower)
+  const baseToughness = basePtValue(perm.originalToughness)
+  const ptTitle = (pt.power !== 'same' || pt.toughness !== 'same') && basePower != null && baseToughness != null
+    ? t('game', 'pt_base', { pt: `${basePower}/${baseToughness}` })
+    : undefined
 
   const keywordBadges = useMemo(() => {
     const kws = extractKeywordsFromCard(card)
@@ -251,6 +260,8 @@ export default function CardSlot({
       data-tapped={tapped ? '1' : '0'}
       data-pt={showPt && isRealCreature && perm.power != null && perm.toughness != null ? `${perm.power}/${perm.toughness}` : undefined}
       data-damage={showDamage && isRealCreature && (perm.damage ?? 0) > 0 ? String(perm.damage) : undefined}
+      data-recap={recapMark}
+      data-entered={enteredThisTurn ? 'turn' : undefined}
       data-counters={showCounters && counters.length > 0 ? counters.map((c) => `${c.name}:${c.count}`).join('|') : undefined}
       className={[
         'card-slot',
@@ -306,7 +317,13 @@ export default function CardSlot({
       )}
 
       {showPt && isRealCreature && perm.power != null && perm.toughness != null && (
-        <div className="pt-badge">{perm.power}/{perm.toughness}</div>
+        <div
+          className="pt-badge"
+          data-trend={pt.power !== 'same' || pt.toughness !== 'same' ? 'changed' : undefined}
+          title={ptTitle}
+        >
+          <span className="pt-value" data-trend={pt.power}>{perm.power}</span>/<span className="pt-value" data-trend={pt.toughness}>{perm.toughness}</span>
+        </div>
       )}
 
       {isPlaneswalker && loyaltyVal > 0 && (
@@ -382,6 +399,14 @@ export default function CardSlot({
 
       {showDamage && isRealCreature && (perm.damage ?? 0) > 0 && (
         <div className="damage-badge">{perm.damage}</div>
+      )}
+
+      {enteredThisTurn && <span className="entered-glow" aria-hidden="true" />}
+
+      {recapMark && (
+        <div className="recap-mark-badge" data-mark={recapMark} data-testid="recap-mark">
+          {t('game', recapMark === 'new' ? 'recap_mark_new' : 'recap_mark_changed')}
+        </div>
       )}
 
       {hasSummoningSickness && (

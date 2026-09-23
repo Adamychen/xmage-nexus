@@ -24,6 +24,10 @@ const ALL_SOUND_KEYS: SoundKey[] = [
   'whisper',
   'player_join',
   'player_leave',
+  'impact_heavy',
+  'impact_epic',
+  'heartbeat',
+  'exile',
 ]
 
 function createMockAudioContext(sampleRate = 44100): AudioContext {

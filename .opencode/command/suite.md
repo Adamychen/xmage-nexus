@@ -15,8 +15,8 @@ Ejecuta la validación completa del Mage.Proxy con este flujo:
 4. Si `self-test` falla en WATCHGAME y se trata del flake conocido de arranque
    en frío (ver skill `mage-stack`), reintenta `node scripts/self-test.mjs`
    con el servidor caliente antes de declarar fallo.
-5. Si todo pasó, actualiza `PROJECT.md` (tabla de calidad, lecciones si aplica,
-   log con fecha y header) — y recuérdamelo si ves que no lo hago.
+5. Si todo pasó, actualiza solo los docs afectados (`ROADMAP.md` §4,
+   `docs/lessons.md` si hay lección nueva, `site/content.json`) — no hay work log.
 
 Nota: si algún argumento viene tras `/suite` (p.ej. `/suite unit typecheck`),
 ejecuta solo esas capas en lugar de la suite completa.

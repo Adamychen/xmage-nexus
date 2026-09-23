@@ -9,6 +9,8 @@
   background: var(--ink-2);
   border: 1.5px solid var(--veil-3);
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.2s ease,
               border-color 0.2s ease,
               margin 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -25,15 +27,16 @@
 }
 
 @keyframes cardAppear {
-  from { opacity: 0; transform: scale(0.88) translateY(6px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; scale: 0.88; translate: 0 6px; }
+  to   { opacity: 1; scale: 1; translate: 0 0; }
 }
 
 .card-slot.entering {
-  /* `backwards` (no `both`): un fill forwards clavaría el keyframe final
-     (transform identidad) por encima de `.tapped`/`.attacking` si la clase
-     quedara pegada — las animaciones ganan a la cascada. Así, al terminar,
-     manda el transform de estado (rotate 90°) con su transition. */
+  /* Anima `scale`/`translate` (propiedades independientes), NUNCA `transform`:
+     el giro de `.tapped` vive en `transform` y una animación gana a la cascada
+     mientras dura, así que animar `transform` enderezaba la carta durante los
+     0.22 s. Las independientes se componen con el giro en vez de pisarlo.
+     `backwards` (no `both`) por el mismo motivo en el fotograma final. */
   animation: cardAppear 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
@@ -52,8 +55,11 @@
   animation: cardLand 0.17s ease-out both;
 }
 
+/* `translate` (no `transform: translateY`) para que el alzado se componga con
+   el giro de `.tapped` en vez de sustituirlo: una carta girada se levanta
+   girada, sin necesidad de una regla aparte por cada combinación. */
 .card-slot.clickable:hover {
-  transform: translateY(-6px);
+  translate: 0 -6px;
   box-shadow: 0 12px 28px var(--shade-4);
   z-index: 20;
 }
@@ -153,12 +159,6 @@ html.fx-off .card-slot.stack-source-pulse {
   .card-slot.stack-source-pulse {
     animation: none !important;
   }
-}
-
-.card-slot.tapped.clickable:hover {
-  transform: rotate(90deg) translateY(-6px);
-  box-shadow: 0 12px 28px var(--shade-4);
-  z-index: 20;
 }
 
 /* Playable glow (green) */
@@ -769,4 +769,90 @@ html.fx-off .counter-badge {
 .keyword-badge.cat-protection {
   background: rgb(var(--ok-rgb) / 0.92);
   border-color: rgb(var(--brand-rgb) / 0.7);
+}
+
+.card-slot[data-recap] {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  animation: recapMarkPulse calc(1.6s / var(--fx-speed, 1)) ease-in-out 3;
+}
+
+.card-slot[data-recap='changed'] {
+  outline-color: var(--gold-500);
+}
+
+.recap-mark-badge {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 0 var(--sp-1);
+  border-radius: 0 0 var(--r-xs) var(--r-xs);
+  background: var(--brand);
+  color: var(--brand-fg);
+  font-size: var(--fs-4xs);
+  font-weight: 700;
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.recap-mark-badge[data-mark='changed'] {
+  background: var(--gold-500);
+  color: var(--ink-0);
+}
+
+@keyframes recapMarkPulse {
+  0%, 100% { outline-offset: 2px; }
+  50% { outline-offset: 5px; }
+}
+
+html.fx-off .card-slot[data-recap] {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot[data-recap] {
+    animation: none;
+  }
+}
+
+.pt-value[data-trend='up'] {
+  color: var(--ok);
+}
+
+.pt-value[data-trend='down'] {
+  color: var(--err);
+}
+
+.pt-badge[data-trend='changed'] {
+  border-color: var(--gold-500);
+}
+
+.entered-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1.5px rgb(var(--gold-rgb) / 0.55), inset 0 0 14px rgb(var(--gold-rgb) / 0.35);
+  animation: enteredGlow calc(2.4s / var(--fx-speed, 1)) ease-in-out infinite alternate;
+}
+
+@keyframes enteredGlow {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+html.fx-off .entered-glow {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entered-glow {
+    animation: none;
+  }
 }

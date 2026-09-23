@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetScryfallClient, scryfallFetch, scryfallJson, setScryfallPacing } from './scryfallClient'
+import { onScryfallThrottle, resetScryfallClient, scryfallFetch, scryfallJson, scryfallThrottleMs, setScryfallPacing } from './scryfallClient'
 import { fetchCardJson } from './scryfallCards'
 
 function ok(body: unknown): Response {
@@ -214,5 +214,36 @@ describe('fetchCardJson', () => {
     const card = { cardName: 'Sol Ring', setCode: 'ZZZ', cardNumber: '9' }
     expect(await fetchCardJson(card)).toBeNull()
     expect(await fetchCardJson(card, { fallbackToName: true })).toEqual({ name: 'Sol Ring' })
+  })
+})
+
+describe('estado de limitación (429)', () => {
+  beforeEach(() => {
+    resetScryfallClient()
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('expone la pausa pendiente y avisa a los suscriptores', async () => {
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1, maxAttempts: 1 })
+    vi.stubGlobal('fetch', vi.fn(async () => status(429, { 'Retry-After': '2' })))
+    const seen: number[] = []
+    const off = onScryfallThrottle((ms) => seen.push(ms))
+
+    const res = await scryfallFetch('https://api.scryfall.com/cards/a/1')
+
+    expect(res.status).toBe(429)
+    expect(seen.length).toBe(1)
+    expect(seen[0]).toBeGreaterThan(1000)
+    expect(scryfallThrottleMs()).toBeGreaterThan(1000)
+    off()
+  })
+
+  it('no deja pausa pendiente cuando no hay 429', async () => {
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    vi.stubGlobal('fetch', vi.fn(async () => ok({})))
+    await scryfallFetch('https://api.scryfall.com/cards/a/1')
+    expect(scryfallThrottleMs()).toBe(0)
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { cardName, getSourceCardName, hiddenFaceDownName, isAbilityCard } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
@@ -9,6 +9,7 @@ import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import { useStore, isBlockingModal } from '../state/store'
 import Icon from '../ui/Icon'
+import { fxEnabled } from './fx'
 import './FloatingCardPreview.css'
 
 interface FloatingCardPreviewProps {
@@ -24,6 +25,24 @@ interface FloatingCardPreviewProps {
    *  Sin esto nunca hay morph (la posición sola no basta: las tierras del
    *  campo también viven en la franja inferior del tablero). */
   fromHand?: boolean
+}
+
+export function foilKind(rarity: string | undefined | null): 'mythic' | 'rare' | null {
+  const r = String(rarity ?? '').toUpperCase()
+  if (r === 'MYTHIC') return 'mythic'
+  if (r === 'RARE') return 'rare'
+  return null
+}
+
+export function tiltFromPointer(x: number, y: number, rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>): { rx: number; ry: number; gx: number; gy: number } {
+  const nx = Math.max(0, Math.min(1, (x - rect.left) / Math.max(1, rect.width)))
+  const ny = Math.max(0, Math.min(1, (y - rect.top) / Math.max(1, rect.height)))
+  return {
+    rx: Math.round((0.5 - ny) * 16 * 10) / 10,
+    ry: Math.round((nx - 0.5) * 20 * 10) / 10,
+    gx: Math.round(nx * 100),
+    gy: Math.round(ny * 100),
+  }
 }
 
 const PREVIEW_WIDTH = 320
@@ -45,6 +64,7 @@ export default function FloatingCardPreview({
   /** `open` pasa a true dos frames después de montar: el primer pintado usa
    *  la pose inicial (encima de la carta) y la transición CSS hace el morph. */
   const [morphOpen, setMorphOpen] = useState(false)
+  const mainRef = useRef<HTMLDivElement>(null)
 
   const prefersReducedMotion = useMemo(
     () =>
@@ -89,6 +109,21 @@ export default function FloatingCardPreview({
   useEffect(() => {
     setShowBackFace(false)
   }, [card?.id, card?.name])
+
+  useEffect(() => {
+    if (!card || !anchorRect || prefersReducedMotion || !fxEnabled()) return
+    const onMove = (e: PointerEvent) => {
+      const el = mainRef.current
+      if (!el) return
+      const { rx, ry, gx, gy } = tiltFromPointer(e.clientX, e.clientY, anchorRect)
+      el.style.setProperty('--tilt-x', `${rx}deg`)
+      el.style.setProperty('--tilt-y', `${ry}deg`)
+      el.style.setProperty('--glare-x', `${gx}%`)
+      el.style.setProperty('--glare-y', `${gy}%`)
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => window.removeEventListener('pointermove', onMove)
+  }, [card, anchorRect, prefersReducedMotion])
 
   const hasSecondFace = !card?.faceDown && (!!card?.secondCardFace || !!card?.transformable || !!card?.alternateName)
 
@@ -260,8 +295,8 @@ export default function FloatingCardPreview({
       className={`floating-card-preview ${isNearRightEdge ? 'flip-keywords' : ''}${morphActive ? ' is-morph' : ''}${isMorphOpen ? ' is-open' : ''}${morphActive && leaving ? ' is-leaving' : ''}`}
       style={style}
     >
-      <div className="floating-card-main">
-        <div className="floating-card-inner">
+      <div className="floating-card-main" ref={mainRef}>
+        <div className="floating-card-inner" data-foil={imgUrl ? foilKind(activeCard.rarity) ?? undefined : undefined}>
           {hasSecondFace && (
             <div className="floating-card-flip-badge" title={t('wiki', 'flip_hint')}>
               <span className="flip-icon"><Icon name="refresh" size={12} /></span>
@@ -270,7 +305,11 @@ export default function FloatingCardPreview({
           )}
 
           {imgUrl ? (
-            <img src={imgUrl} alt={name} className="floating-card-img" draggable={false} />
+            <>
+              <img src={imgUrl} alt={name} className="floating-card-img" draggable={false} />
+              <div className="floating-card-foil" aria-hidden="true" />
+              <div className="floating-card-glare" aria-hidden="true" />
+            </>
           ) : (
             <div className="floating-card-fallback">
               <div className="floating-card-header">

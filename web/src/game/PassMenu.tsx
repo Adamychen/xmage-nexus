@@ -70,6 +70,15 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
         onChange={(next) => setSetting('autoPass', next)}
         label={t('game', 'auto_pass')}
       />
+      <Checkbox
+        className="pass-menu-check"
+        onClick={(e) => e.stopPropagation()}
+        checked={settings.smartStops}
+        onChange={(next) => setSetting('smartStops', next)}
+        label={t('game', 'smart_stops')}
+        title={t('game', 'smart_stops_hint')}
+        data-testid="smart-stops-toggle"
+      />
     </div>
   )
 }

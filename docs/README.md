@@ -15,17 +15,18 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 8. `docs/user-manual.md` — how to play (for users, also useful for testers).
 9. `docs/deployment.md` — running the stack and publishing the dashboard.
 10. `docs/enhancements.md` — high-value feature proposals beyond desktop parity (Deck Tracker, Deep Linking, Commander pings, Touch/iPad, EDHREC).
+11. `docs/lessons.md` — durable cross-cutting lessons worth re-reading before debugging.
 
 ## Status docs (what is authoritative for what)
 
 | Doc | Answers | Freshness rule |
 |---|---|---|
-| `PROJECT.md` | Master status: phases, lessons, quality table, dated work log | Update on every finished task (header date + work-log row) |
 | `ROADMAP.md` | Vision, current state, parity matrix and **the single live list of pending work** (§4) | Update §4 when something is finished or a new pending item appears; the closed phase plan is archived in `docs/history/roadmap-phases.md` |
+| `docs/lessons.md` | Durable cross-cutting lessons (one line each) | Add a line only when the lesson is reusable; the dated narrative lives in `git log` (no work log) |
 | `web/INTERACTION_COVERAGE.md` | Per-callback and per-mechanic coverage: implemented + tested + test ref + date | Update with every handler/interaction change; enforced by `callbackCoverage.test.ts` |
 | `docs/enhancements.md` | Spec catalog of client-only feature ideas, with per-idea status | Statuses verified against the code; pending items are summarized in `ROADMAP.md` §4.2 |
-| `docs/history/` | Closed plans (`plan4`–`plan7`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`), QA evidence logs (`qa/`) and the archived `PROJECT.md` Work Log (`worklog/`, one file per period) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
-| `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `PROJECT.md`/`ROADMAP.md` when phases change |
+| `docs/history/` | Closed plans (`plan4`–`plan7`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`) and QA evidence logs (`qa/`) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
+| `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `ROADMAP.md` when phases change |
 
 ## Ports (do not change without updating `AGENTS.md`, `scripts/lib.mjs`, `docs/deployment.md`)
 

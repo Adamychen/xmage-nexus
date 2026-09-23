@@ -50,7 +50,7 @@ description: Subir la versión de XMage: merge del tag upstream en el fork ../xm
    Ver skill `mage-fixtures` y `docs/history/qa/p4-frames-log.md`.
 7. Suite: `node scripts/test.mjs` (stack arriba) y E2E real (`E2E_BACKEND=real ...`); smoke directo:
    `node scripts/self-test.mjs` / `human-test.mjs`.
-8. Docs: `PROJECT.md` (log + fecha + estado), `AGENTS.md` (versión), `readme.md`,
+8. Docs: `ROADMAP.md` (estado), `AGENTS.md` (versión), `readme.md`,
    `docs/deployment.md`, `site/content.json`.
 
 ## Checklist de cierre

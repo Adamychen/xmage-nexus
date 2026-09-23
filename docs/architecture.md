@@ -32,3 +32,14 @@ Browser (React 19 + TS + Vite) ──WS JSON──▶ Mage.Proxy (Java 17) ─�
 
 - `BoardScene` publishes `window.__mageScene` (cards, playable, targeting, game). Tests assert against that state + DOM, never canvas pixels.
 - Recorded real frames (`scripts/record.mjs` → `web/fixtures/recorded/*.json` + `manifest.json`) are validated against the contract schema and replayed in fake E2E (`recorded.spec.ts`).
+
+## Technical decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Client stack | React 19 + Vite + TypeScript + Web Audio | Hardware-accelerated CSS transforms + SVG overlays for targeting/combat; pure React DOM (no canvas). Crisp text, no GPU memory leaks, native responsiveness. |
+| State architecture | Snapshot-diff → animation | Each `GAME_UPDATE` is a full `GameView`; the client derives transitions (card hand→battlefield, tapped…) and animates them. Pure testable logic, data-driven effects. |
+| Effects | Declarative transitions (`gameTransitionEngine.ts`, `feedbackFx.ts`) | Animations, shake, floating damage, sound dispatch without canvas overhead. |
+| Distribution | Browser (Phases 1-2) → Tauri launcher | Web link = zero installation; Tauri = ~15 MB desktop app embedding the proxy. |
+| Maintainability | `types.ts` = single protocol truth; pure logic decoupled from rendering; minimal pinned dependencies | Real risk is XMage protocol versions, not client-side churn. |
+| Performance | Shared sprite sheets, unique card textures, particle pooling, DPI-aware rendering | Memory and GC pauses kept bounded; the game is not performance-bound. |

@@ -55,6 +55,66 @@
   to { opacity: 1; }
 }
 
+.flying-card-item.flight-destroy {
+  border-color: rgb(var(--ember-rgb) / 0.8);
+  box-shadow: 0 24px 48px var(--shade-4), 0 0 26px rgb(var(--ember-rgb) / 0.75);
+}
+
+.flight-destroy .flying-card-img {
+  animation: flightBurn var(--flight-dur, 350ms) ease-in both;
+}
+
+.flight-destroy .flying-card-glow {
+  background: linear-gradient(0deg, rgb(var(--ember-rgb) / 0.7) 0%, rgb(var(--blood-rgb) / 0.35) 45%, transparent 100%);
+  animation: flightScorch var(--flight-dur, 350ms) ease-in both;
+}
+
+@keyframes flightBurn {
+  0% { filter: none; }
+  45% { filter: sepia(0.8) saturate(1.8) brightness(1.1) contrast(1.2); }
+  100% { filter: grayscale(0.9) brightness(0.35) contrast(1.4); }
+}
+
+@keyframes flightScorch {
+  0% { opacity: 0; translate: 0 60%; }
+  60% { opacity: 1; }
+  100% { opacity: 0.9; translate: 0 0; }
+}
+
+.flying-card-item.flight-exile {
+  border-color: rgb(var(--mana-w-rgb) / 0.9);
+  box-shadow: 0 0 36px rgb(var(--mana-w-rgb) / 0.85);
+}
+
+.flight-exile .flying-card-img {
+  animation: flightFadeLight var(--flight-dur, 350ms) ease-in both;
+}
+
+.flight-exile .flying-card-glow {
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.9) 0%, rgb(var(--gold-rgb) / 0.4) 60%, transparent 100%);
+  animation: flightFadeGlow var(--flight-dur, 350ms) ease-in both;
+}
+
+@keyframes flightFadeLight {
+  0% { filter: none; opacity: 1; }
+  100% { filter: brightness(2.6) saturate(0.2) blur(1px); opacity: 0.35; }
+}
+
+@keyframes flightFadeGlow {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.flying-card-item.flight-heavy {
+  box-shadow: 0 30px 60px var(--shade-5), 0 0 40px rgb(var(--gold-rgb) / 0.8);
+  border-color: rgb(var(--gold-rgb) / 0.9);
+}
+
+html.fx-off .flight-destroy .flying-card-img,
+html.fx-off .flight-exile .flying-card-img {
+  animation: none !important;
+}
+
 html.fx-off .flying-card-glow {
   animation: none !important;
 }

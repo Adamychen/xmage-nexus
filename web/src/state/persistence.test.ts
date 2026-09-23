@@ -11,6 +11,9 @@ import {
   saveConn,
   saveFxSettings,
   loadAudioSettings,
+  loadMusicSettings,
+  saveMusicSettings,
+  DEFAULT_MUSIC_SETTINGS,
   saveAudioSettings,
   loadPhaseStops,
   savePhaseStops,
@@ -256,6 +259,20 @@ describe('persistence', () => {
     it('falls back to defaults for corrupt payloads', () => {
       mockStorage['mage-web-audio'] = '{invalid json'
       expect(loadAudioSettings()).toEqual(DEFAULT_AUDIO_SETTINGS)
+    })
+  })
+
+  describe('music settings persistence', () => {
+    it('defaults to adaptive music on at a modest volume', () => {
+      expect(loadMusicSettings()).toEqual(DEFAULT_MUSIC_SETTINGS)
+      expect(DEFAULT_MUSIC_SETTINGS.musicEnabled).toBe(true)
+    })
+
+    it('round-trips and clamps the music volume', () => {
+      saveMusicSettings({ musicEnabled: false, musicVolume: 0.6 })
+      expect(loadMusicSettings()).toEqual({ musicEnabled: false, musicVolume: 0.6 })
+      mockStorage['mage-web-music'] = JSON.stringify({ musicEnabled: true, musicVolume: 3 })
+      expect(loadMusicSettings().musicVolume).toBe(1)
     })
   })
 

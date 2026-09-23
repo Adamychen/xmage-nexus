@@ -3,6 +3,7 @@ import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
 import type { PhaseStops } from '../../net/commands'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
 import { loadActiveDeck } from '../persistence'
+import type { TurnRecap } from '../../game/turnRecap'
 
 export interface CombatState {
   mode: 'attack' | 'block'
@@ -88,6 +89,9 @@ export interface GameSlice {
   phaseStops: PhaseStops
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
+  turnRecap: TurnRecap | null
+  enteredThisTurn: Record<string, true>
+  priorityRequest: GameView | null
 }
 
 export const initialGame: GameSlice = {
@@ -110,5 +114,8 @@ export const initialGame: GameSlice = {
   viewer: null,
   playerMenu: null,
   dungeonProgress: {},
+  turnRecap: null,
+  enteredThisTurn: {},
+  priorityRequest: null,
   phaseStops: clonePhaseStops(DEFAULT_PHASE_STOPS),
 }

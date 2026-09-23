@@ -553,6 +553,92 @@ describe('maybeAutoPass', () => {
   })
 })
 
+describe('maybeAutoPass with smart stops', () => {
+  const mana = { basicManaAbilities: [{ id: 'm', value: '{T}: Add {R}.' }], basicPlayAbilities: [], basicCastAbilities: [], other: [] }
+  const cast = { basicManaAbilities: [], basicPlayAbilities: [], basicCastAbilities: [{ id: 'c', value: 'Cast Shock' }], other: [] }
+  const me = (isActive = false) => makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive })
+
+  function select(game: ReturnType<typeof makeGameView>) {
+    setState({ game, priorityRequest: game })
+    return game
+  }
+
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+    setSetting('autoPass', false)
+    setSetting('smartStops', true)
+    handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-1', data: { gameId: 'g-1' } })
+  })
+
+  it('passes a window where only mana sources are available, even with every phase stop on', () => {
+    const game = select(makeGameView({
+      step: 'UPKEEP',
+      players: [me()],
+      canPlayObjects: { objects: { mountain: mana } },
+      myHand: { 'h-1': makeCard({ name: 'Grizzly Bears', parentId: 'h-1' }) },
+    }))
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+  })
+
+  it('stops when a spell can be cast', () => {
+    const game = select(makeGameView({ step: 'UPKEEP', players: [me()], canPlayObjects: { objects: { mountain: mana, shock: cast } } }))
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('passes with an empty hand (classic auto-pass never did)', () => {
+    const game = select(makeGameView({ step: 'END_TURN', players: [me()], myHand: {} }))
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).toHaveBeenCalledTimes(1)
+  })
+
+  it('answers each GAME_SELECT once and never on the GAME_UPDATEs around it', () => {
+    const request = select(makeGameView({ step: 'DRAW', players: [me()] }))
+    maybeAutoPass(request)
+    maybeAutoPass(request)
+    expect(sendPlayerBoolean).toHaveBeenCalledTimes(1)
+    const update = makeGameView({ step: 'PRECOMBAT_MAIN', players: [me(true)] })
+    setState({ game: update })
+    maybeAutoPass(update)
+    expect(sendPlayerBoolean).toHaveBeenCalledTimes(1)
+    maybeAutoPass(select(makeGameView({ step: 'PRECOMBAT_MAIN', players: [me(true)] })))
+    expect(sendPlayerBoolean).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not answer a request the player already answered by hand', () => {
+    select(makeGameView({ step: 'PRECOMBAT_MAIN', players: [me(true)], canPlayObjects: { objects: { shock: cast } } }))
+    maybeAutoPass(getState().game!)
+    const next = makeGameView({ step: 'BEGIN_COMBAT', players: [me(true)] })
+    setState({ game: next })
+    maybeAutoPass(next)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('passes a combat step with nothing to declare', () => {
+    setState({ combat: { mode: 'attack', selectable: [], special: false, chosen: [] } })
+    maybeAutoPass(select(makeGameView({ step: 'DECLARE_ATTACKERS', players: [me(true)] })))
+    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+  })
+
+  it('never passes combat decisions or prompts', () => {
+    setState({ combat: { mode: 'block', selectable: ['c1'], special: false, chosen: [] } })
+    maybeAutoPass(select(makeGameView({ players: [me()] })))
+    setState({ combat: null, feedback: { method: 'GAME_ASK', gameId: 'g-1', title: '', message: 'Pay?', mode: 'boolean', options: [], min: 0, max: 0 } })
+    maybeAutoPass(select(makeGameView({ players: [me()] })))
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('marks the GAME_SELECT view as the priority request', () => {
+    const view = makeGameView({ step: 'UPKEEP', players: [me()] })
+    handleMessage({ type: 'event', method: 'GAME_SELECT', messageId: 2, objectId: 'g-1', data: { gameView: view, message: 'Pass priority' } })
+    expect(getState().priorityRequest).toBe(getState().game)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 3, objectId: 'g-1', data: { gameView: { ...view, gameCycle: 7 } } })
+    expect(getState().priorityRequest).not.toBe(getState().game)
+  })
+})
+
 describe('playables consolidados', () => {
   beforeEach(() => {
     reset()

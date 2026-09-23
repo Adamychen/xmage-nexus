@@ -6,8 +6,48 @@ import { useTranslation } from '../i18n'
 import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
 import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
 import { localizeGameEndMessage } from './serverMessageTranslation'
+import { getMatchStats, keyCardOf } from './matchStats'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
+import { particleVectors } from '../board/impactFx'
+import { cardName } from '../cards/cardImages'
+import type { CardView } from '../net/types'
 import './GameEndDialog.css'
 import Button from '../ui/Button'
+
+type Tone = 'victory' | 'defeat' | 'neutral'
+
+function EndCinematic({ tone, title }: { tone: Tone; title: string }) {
+  return (
+    <div className={`end-cinematic ${tone}`} data-testid="end-cinematic" aria-hidden="true">
+      <span className="end-cinematic-rays" />
+      <span className="end-cinematic-title" data-title={title} />
+      {tone !== 'neutral' && particleVectors(tone === 'victory' ? 7 : 13, 22, 420).map((p, i) => (
+        <span
+          key={i}
+          className="end-cinematic-particle"
+          style={{
+            '--px': `${50 + p.dx / 9}%`,
+            '--dx': `${Math.round(p.dx / 4)}px`,
+            '--s': p.size.toFixed(2),
+            animationDelay: `${p.delay * 8}ms`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  )
+}
+
+function KeyCard({ card, label }: { card: CardView; label: string }) {
+  const url = useCardImageUrl(card)
+  const name = cardName(card)
+  return (
+    <div className="end-key-card" data-testid="end-key-card">
+      {url ? <img src={url} alt={name} draggable={false} /> : <span className="end-key-card-fallback">{name}</span>}
+      <span className="end-key-card-label">{label}</span>
+      <span className="end-key-card-name">{name}</span>
+    </div>
+  )
+}
 
 export default function GameEndDialog() {
   const end = useStore((s) => s.gameEnd)
@@ -48,6 +88,21 @@ export default function GameEndDialog() {
   const showScore = !isSpectator && (end.wins != null || end.winsNeeded != null)
   const hint = matchOver ? (followGameId ? t('game', 'spectator_game_changed') : null) : t('game', 'match_continues')
 
+  const tone: Tone = isSpectator ? 'neutral' : end.won ? 'victory' : 'defeat'
+  const title = isSpectator ? t('game', 'game_over') : (end.won ? t('game', 'victory') : t('game', 'defeat'))
+  const stats = getMatchStats()
+  const ownStats = !isSpectator && stats.gameId != null && stats.gameId === watchedGameId
+  const keyCard = ownStats ? keyCardOf(stats) : null
+  const statTiles = ownStats
+    ? [
+        { key: 'turns', label: t('game', 'end_stat_turns'), value: stats.turns },
+        { key: 'taken', label: t('game', 'end_stat_life_taken'), value: stats.lifeTaken },
+        { key: 'lost', label: t('game', 'end_stat_life_lost'), value: stats.lifeLost },
+        { key: 'spells', label: t('game', 'end_stat_spells'), value: stats.spellsCast },
+        { key: 'kills', label: t('game', 'end_stat_kills'), value: stats.creaturesKilled },
+      ]
+    : []
+
   const gameInfoText = localizeGameEndMessage(end.gameInfo, t)
   const matchInfoText = localizeGameEndMessage(end.matchInfo, t)
 
@@ -60,7 +115,8 @@ export default function GameEndDialog() {
       legacyPanelClass="end-dialog"
       kickerIcon={isSpectator || end.won ? 'trophy' : 'skull'}
       kickerLabel={t('lobby', 'match_result_label')}
-      title={isSpectator ? t('game', 'game_over') : (end.won ? t('game', 'victory') : t('game', 'defeat'))}
+      title={title}
+      trailing={<EndCinematic tone={tone} title={title} />}
     >
         {winnerName && (
           <div className="end-winner-badge">
@@ -86,6 +142,22 @@ export default function GameEndDialog() {
               <p className="end-duration">
                 {t('system', 'match_duration')}: {duration}
               </p>
+            )}
+          </div>
+        )}
+
+        {(statTiles.length > 0 || keyCard) && (
+          <div className="end-match-stats" data-testid="end-match-stats">
+            {keyCard && <KeyCard card={keyCard} label={t('game', 'end_key_card')} />}
+            {statTiles.length > 0 && (
+              <dl className="end-stat-grid">
+                {statTiles.map((s) => (
+                  <div key={s.key} className="end-stat-tile" data-stat={s.key}>
+                    <dt>{s.label}</dt>
+                    <dd>{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
             )}
           </div>
         )}

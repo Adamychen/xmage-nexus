@@ -1,7 +1,7 @@
 # Project Roadmap: XMage Nexus
 
 > **A Modern, Web-Based Digital Card Game Client for XMage**  
-> *Last updated: 2026-09-21*
+> *Last updated: 2026-09-23*
 
 ---
 
@@ -34,7 +34,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Phase 2: Interaction Engine** | London mulligan, priority loops (`GAME_SELECT`), visual targeting (animated dotted lines & pulsing glows), mana tapping & pool payment (`sendPlayerManaType`), floating non-blocking combat UI (attack/block & alpha strike), advanced spell interactions (X-costs, multi-target, modal choices, +1/+1 counters). | ✅ **Completed** | Validated via `human-test.mjs` (83 checks PASS) and Playwright E2E suites (*Blaze*, *Arc Trail*, *Boros Charm*, *Walking Ballista*). |
 | **Quality & QA Foundation** | 1,900+ unit tests (vitest, ~13 s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
 | **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`), **sideboard Bo3/Bo5** (`SIDEBOARD` → `SideboardScreen`) y **orden de asignación multi-bloqueador** (`GAME_GET_MULTI_AMOUNT`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `best-of-3.spec.ts`/`best-of-5.spec.ts`, `combat-multiblock.spec.ts`, `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
-| **Phase 3: Visual Polish, Audio & Deck Builder** | Web Audio engine (15 sfx, 3 buses), VFX (floating damage, shake, mana donut), in-app deck builder (Scryfall full syntax, curve, sample hand, Arena/DCK/Plain import/export), card sleeves and avatars, design system (tokens, primitives, style ratchet). | ✅ **Completed** (selectable playmats → §4.2) | Visual-regression gallery (`#/gallery`, 3 resolutions × chromium + webkit), `PROJECT.md` §8 and Work Log. |
+| **Phase 3: Visual Polish, Audio & Deck Builder** | Web Audio engine (15 sfx, 3 buses), VFX (floating damage, shake, mana donut), in-app deck builder (Scryfall full syntax, curve, sample hand, Arena/DCK/Plain import/export), card sleeves and avatars, design system (tokens, primitives, style ratchet). | ✅ **Completed** (selectable playmats delivered 2026-09-23) | Visual-regression gallery (`#/gallery`, 3 resolutions × chromium + webkit) and the gallery/recorded E2E specs. |
 | **Phase 4: Desktop Packaging (Tauri)** | Tauri launcher with embedded proxy + trimmed JRE, signed auto-updater. | ✅ **Published** (v0.1.0 2026-09-10, v0.2.0 2026-09-19, v0.2.1 2026-09-22, v0.2.2 2026-09-22, v0.2.3 2026-09-22) | `release.yml`, signed bundles + `latest.json`. Clean-machine validation still open (§4.1 V7). |
 | **Phase 5: Advanced Modes & Tournaments** | Commander / FFA pod board (2×2 clamp 4; server FFA 3-10), Booster Draft & Sealed (8P `DraftScreen`/`ConstructScreen`), Swiss and elimination brackets, spectating of tournament matches. | ✅ **Completed** | `verify-swiss.mjs`, `verify-spectator-end.mjs`, e2e `draft`/`tournament` specs. |
 
@@ -73,8 +73,8 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | **Phase Stops & Priority Shortcuts (F4, F9, Space)** | ✅ Yes | ✅ Yes | Completed |
 | | **Sideboarding Screen between Bo3 Matches** | ✅ Yes | ✅ Yes | Completed |
 | | Multi-blocker Damage Assignment Order | ✅ Yes | ✅ Yes | Completed |
-| **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ✅ Yes (Web Audio 15 sfx, 3 buses, JIT unlock) | Completed |
-| | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | ✅ Yes (donut color pie, bars, shake, floating damage) | Completed |
+| **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ✅ Yes (Web Audio 22 sfx, 4 buses incl. adaptive music, JIT unlock) | Completed (Surpasses Swing) |
+| | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | ✅ Yes (donut color pie, bars, shake, floating damage, spell-weight slam, hit sparks, destroy/exile/token deaths, low-life vignette, foil + tilt preview, playmats, cinematic end screen) | Completed (Surpasses Swing) |
 | **Distribution** | Desktop & Web Deployment | ❌ Heavy JRE required | ✅ Web + Tauri launcher (v0.2.3, updater firmado y componentes desacoplados) | Completed |
 | **Advanced Formats** | 4-Player Commander / EDH (Command zone, tax, damage) | ✅ Yes | ✅ Yes (PodBoard 2×2 clamp 4; server FFA 3-10) | Completed |
 | | Booster Draft & Sealed Tournaments (Pick timer, packs) | ✅ Yes | ✅ Yes (8P DraftScreen/ConstructScreen) | Completed |
@@ -95,7 +95,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3) and the printing selector in the deck editor (part of 5.2).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2) and selectable playmats (5.1, 2026-09-23).
 
 | Idea | Impact / effort | State |
 |---|---|---|
@@ -103,9 +103,34 @@ Full spec and rationale per idea: `docs/enhancements.md`. Already built from tha
 | EDHREC suggestions in the deck builder | High / ~1-2 d | Not started (only the Scryfall `edhrec` sort exists) |
 | Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
 | PWA (manifest + service worker) | High / small | Not started |
-| Selectable playmats (Phase 3.4 leftover; sleeves and avatars are done) | Medium / ~1 d | Not started (`BoardShell.css` has one fixed mat) |
-| Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature) |
+| Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature; see the combat-preview and life-history rows below) |
 | Streaming overlay, match-recap image, price estimator, extended goldfish, alt-art in game | Lower | Not started |
+
+Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
+
+| Area | Idea | Impact / effort | State |
+|---|---|---|---|
+| Game UI | Opponent-turn recap: highlight new/changed/died permanents when priority returns + one-line summary ("played X, attacked with Y, you lost 4") | Very high / ~1-2 d | Done 2026-09-23 (non-blocking strip at my turn start: summary + departed-card chips by destination; NEW/CHANGED marks on the board) |
+| Game UI | Smart stops (Arena-style): only stop when the server reports something playable | High / ~1 d | Done 2026-09-23 (opt-in toggle, off by default; ignores mana-only `canPlayObjects`; answers each `GAME_SELECT` once; validated against the local server by `e2e/smart-stops-real.spec.ts`) |
+| Game UI | Combat preview / lethal warning while declaring attackers (subsumes the lethal calculator above) | High / ~1-2 d | Not started |
+| Game UI | P/T tinted vs base (green up / red down), summoning-sickness marker, "entered this turn" glow | Medium / ~1 d | Done 2026-09-23 (per-component tint vs printed value with base in the tooltip; client-tracked entered-this-turn glow; sickness badge already existed) |
+| Game UI | Life-history graph inside `ActionFeed`; hovering an entry highlights the card on the board | Medium / ~1-2 d | Not started |
+| Game FX | Spell weight impact: high-CMC / mythic spells darken the board, shake and flash in the card's colours | High / ~1 d | Done 2026-09-23 |
+| Game FX | Physical combat: impact particles on damage, distinct deaths (destroy = burn, exile = beam of light, token = pop/puff); the attacker lunge already existed | High / ~2 d | Done 2026-09-23 |
+| Game FX | Low-life tension: red vignette + heartbeat at ≤ 5 life | Medium / small | Done 2026-09-23 |
+| Game FX | Foil shimmer + 3D tilt on the enlarged card preview | Medium / small | Done 2026-09-23 |
+| Game FX | Selectable playmats, including animated mats tinted by colour identity (Phase 3 leftover; 7 static + 2 animated mats) | Medium / ~1 d | Done 2026-09-23 |
+| Game FX | Dynamic music: ambient layer that intensifies near lethal | Medium / ~1 d | Done 2026-09-23 |
+| Game FX | Cinematic victory/defeat screen with match stats (key card, turns, life taken/lost, spells cast, creatures destroyed) | Medium / ~1 d | Done 2026-09-23 |
+| Ease of use | "Your turn / response needed" browser notification + title/favicon badge when the tab is hidden | Very high / ~0.5 d | Done 2026-09-23 (toggle in Settings → Gameplay; permission asked on the first in-game click) |
+| Ease of use | "Play now" button: join or create a compatible table on beta with the last deck | High / ~1-2 d | Not started |
+| Ease of use | Highlight lobby tables joinable with one of your legal decks | Medium / ~1 d | Not started |
+| Ease of use | First-game onboarding overlay (4-5 steps) + `?` shortcut cheat-sheet | Medium / ~1 d | Not started |
+| Ease of use | Explicit waiting state ("Waiting for X — thinking 0:23") | Medium / small | Done 2026-09-23 (action button names the actual priority holder, thinking clock + priority timer countdown, warn tint after 60 s) |
+| Attract | Personal match history + per-deck stats (win rate by deck/format/opponent, IndexedDB) | Very high / ~2 d | Not started |
+| Attract | Local friends list: highlight online friends on beta, notify when they open a table | High / ~1-2 d | Not started |
+| Attract | Draft pick helper using public 17lands ratings | High / ~2 d | Not started |
+| Attract | Featured live games in the lobby (top-ELO games on beta, one-click watch) | Medium / ~1 d | Not started |
 
 ### 4.3 UI polish debt
 

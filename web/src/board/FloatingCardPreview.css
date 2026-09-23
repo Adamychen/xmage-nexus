@@ -26,6 +26,76 @@
   flex-shrink: 0;
 }
 
+.floating-card-main .floating-card-inner {
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.14s ease-out;
+  transform-style: preserve-3d;
+}
+
+.floating-card-glare,
+.floating-card-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.floating-card-glare {
+  background: radial-gradient(circle at var(--glare-x, 30%) var(--glare-y, 20%), var(--veil-6) 0%, var(--veil-2) 25%, transparent 55%);
+  mix-blend-mode: overlay;
+}
+
+.floating-card-foil {
+  display: none;
+  background-size: 300% 300%;
+  animation: foilSweep calc(5s / var(--fx-speed, 1)) linear infinite;
+}
+
+.floating-card-inner[data-foil='rare'] .floating-card-foil {
+  display: block;
+  opacity: 0.35;
+  mix-blend-mode: color-dodge;
+  background-image: linear-gradient(115deg, transparent 30%, rgb(var(--gold-rgb) / 0.55) 45%, rgb(var(--mana-w-rgb) / 0.7) 50%, rgb(var(--gold-rgb) / 0.55) 55%, transparent 70%);
+}
+
+.floating-card-inner[data-foil='mythic'] .floating-card-foil {
+  display: block;
+  opacity: 0.42;
+  mix-blend-mode: color-dodge;
+  background-image: linear-gradient(115deg,
+    transparent 18%,
+    rgb(var(--mana-r-rgb) / 0.55) 30%,
+    rgb(var(--gold-rgb) / 0.6) 38%,
+    rgb(var(--mana-g-rgb) / 0.55) 46%,
+    rgb(var(--mana-u-rgb) / 0.6) 54%,
+    rgb(var(--purple-rgb) / 0.55) 62%,
+    transparent 76%);
+}
+
+@keyframes foilSweep {
+  0% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+html.fx-off .floating-card-main .floating-card-inner {
+  transform: none;
+}
+
+html.fx-off .floating-card-foil {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-card-main .floating-card-inner {
+    transform: none;
+    transition: none;
+  }
+
+  .floating-card-foil {
+    animation: none;
+  }
+}
+
 .floating-card-keywords {
   width: 240px;
   max-height: 448px;

@@ -2,6 +2,8 @@ import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
 import { SLEEVES } from './sleeves'
+import { PLAYMATS } from './playmats'
+import './playmats.css'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
@@ -123,6 +125,33 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                   <span className="board-layout-desc">{t('lobby', l.descKey as any)}</span>
                   {isSelected && <span className="board-layout-check">✓</span>}
                 </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">{t('lobby', 'playmat_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'playmat_hint')}</p>
+          <div className="appearance-playmat-grid">
+            {PLAYMATS.map((m) => {
+              const isSelected = settings.playmatId === m.id
+              const label = t('lobby', `playmat_${m.id}` as 'playmat_classic')
+              return (
+                <Button
+                  key={m.id}
+                  variant="ghost"
+                  className={`playmat-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSetting('playmatId', m.id)}
+                  data-testid={`playmat-${m.id}`}
+                  aria-pressed={isSelected}
+                  title={label}
+                >
+                  <span className="playmat-layer playmat-swatch" data-playmat={m.id} aria-hidden="true">
+                    {isSelected && <span className="sleeve-check">✓</span>}
+                  </span>
+                  <span className="sleeve-name">{label}</span>
+                </Button>
               )
             })}
           </div>

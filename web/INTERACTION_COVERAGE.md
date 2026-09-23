@@ -9,8 +9,8 @@ servidor→cliente y cada interacción especial, si está **implementado** y **p
   enum y falla si un callback no tiene `case` en `eventHandler.ts`/`feedback.ts` ni está en
   la allowlist de planificados, y si esta matriz no lista todos los callbacks. Mantiene el
   doc y el código sincronizados (anti-drift).
-- **Regla de mantenimiento**: al terminar una tarea, además de `PROJECT.md`, actualiza las
-  filas afectadas aquí (marca Manejado/Unit/E2E + `Ref de test` + `Última verif.`).
+- **Regla de mantenimiento**: al terminar una tarea, actualiza las filas afectadas aquí
+  (marca Manejado/Unit/E2E + `Ref de test` + `Última verif.`).
 
 Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica / sin test dedicado.
 

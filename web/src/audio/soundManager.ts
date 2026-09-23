@@ -15,6 +15,8 @@ class SoundManager {
   private masterGain: GainNode | null = null
   private sfxGain: GainNode | null = null
   private uiGain: GainNode | null = null
+  private musicGain: GainNode | null = null
+  private musicVolume = 0.35
   private buffers: Map<SoundKey, AudioBuffer> = new Map()
   private lastPlayed: Map<SoundKey, number> = new Map()
   private settings: AudioSettings = { ...DEFAULT_SETTINGS }
@@ -66,9 +68,11 @@ class SoundManager {
         this.masterGain = this.ctx.createGain()
         this.sfxGain = this.ctx.createGain()
         this.uiGain = this.ctx.createGain()
+        this.musicGain = this.ctx.createGain()
 
         this.sfxGain.connect(this.masterGain)
         this.uiGain.connect(this.masterGain)
+        this.musicGain.connect(this.masterGain)
         this.masterGain.connect(this.ctx.destination)
         this.applySettings()
       } catch {
@@ -88,12 +92,27 @@ class SoundManager {
     return { ...this.settings }
   }
 
+  setMusicVolume(volume: number) {
+    this.musicVolume = Math.max(0, Math.min(1, volume))
+    this.applySettings()
+  }
+
+  isMusicAudible(): boolean {
+    return this.settings.soundEnabled && this.settings.masterVolume > 0 && this.musicVolume > 0
+  }
+
+  getMusicBus(): { ctx: AudioContext; out: GainNode } | null {
+    if (!this.ensureContext() || !this.ctx || !this.musicGain) return null
+    return { ctx: this.ctx, out: this.musicGain }
+  }
+
   private applySettings() {
     if (!this.masterGain || !this.sfxGain || !this.uiGain) return
     const { soundEnabled, masterVolume, sfxVolume, uiVolume } = this.settings
     this.masterGain.gain.value = soundEnabled ? Math.max(0, Math.min(1, masterVolume)) : 0
     this.sfxGain.gain.value = Math.max(0, Math.min(1, sfxVolume))
     this.uiGain.gain.value = Math.max(0, Math.min(1, uiVolume))
+    if (this.musicGain) this.musicGain.gain.value = this.musicVolume
   }
 
   private getBuffer(key: SoundKey): AudioBuffer | null {

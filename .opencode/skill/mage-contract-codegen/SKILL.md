@@ -101,7 +101,7 @@ CI: `.github/workflows/web-ci.yml` (jobs web/mcp/proxy/e2e-fake/integration) y
   los callbacks aparezcan como primera celda de una fila.
 - Catálogo de mecánicas (tablas A-M): `| Mecánica | Implementado | Testeado | Ref | Última verif. |`;
   cita frames reales (`fixtures/recorded/<x>.json` + invariante) y fecha.
-- Leyenda `✅ / ❌ / ⚠️ / — / ➖`; fechas `YYYY-MM-DD`. Actualizar al cerrar tarea junto a `PROJECT.md`.
+- Leyenda `✅ / ❌ / ⚠️ / — / ➖`; fechas `YYYY-MM-DD`. Actualizar al cerrar tarea (junto a `ROADMAP.md` §4 / `docs/lessons.md`).
 
 ## Trampas
 

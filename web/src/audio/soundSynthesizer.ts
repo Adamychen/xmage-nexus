@@ -291,5 +291,66 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       }
       return buf
     }
+    case 'impact_heavy':
+    case 'impact_epic': {
+      const epic = key === 'impact_epic'
+      const duration = epic ? 1.1 : 0.6
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      let lp = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const env = Math.exp(-t * (epic ? 3.2 : 5.5))
+        const freq = (epic ? 62 : 78) * Math.exp(-t * 6) + (epic ? 28 : 34)
+        const sub = Math.sin(2 * Math.PI * freq * t)
+        const white = Math.random() * 2 - 1
+        lp = lp * 0.96 + white * 0.04
+        const crack = t < 0.03 ? white * (1 - t / 0.03) * 0.5 : 0
+        const rumble = lp * 6 * Math.exp(-t * 4)
+        const shimmer = epic ? Math.sin(2 * Math.PI * 523.25 * t) * Math.exp(-t * 2.4) * 0.12 * Math.min(1, t / 0.12) : 0
+        data[i] = Math.tanh((sub * 0.95 + rumble * 0.35 + crack) * 1.6) * env * 0.8 + shimmer
+      }
+      return buf
+    }
+
+    case 'heartbeat': {
+      const duration = 0.42
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      const beat = (t: number) => {
+        if (t < 0) return 0
+        const env = Math.exp(-t * 26) * Math.min(1, t / 0.006)
+        const freq = 58 * Math.exp(-t * 9) + 36
+        return Math.sin(2 * Math.PI * freq * t) * env
+      }
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        data[i] = Math.tanh((beat(t) + beat(t - 0.17) * 0.7) * 1.8) * 0.7
+      }
+      return buf
+    }
+
+    case 'exile': {
+      const duration = 0.7
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      let hp = 0
+      let prev = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const attack = Math.min(1, t / 0.05)
+        const env = attack * Math.exp(-t * 4.2)
+        const rise = 660 + 900 * (t / duration)
+        const tone = Math.sin(2 * Math.PI * rise * t) * 0.25 + Math.sin(2 * Math.PI * rise * 1.5 * t) * 0.12
+        const white = Math.random() * 2 - 1
+        hp = 0.9 * (hp + white - prev)
+        prev = white
+        data[i] = (tone + hp * 0.12) * env * 0.55
+      }
+      return buf
+    }
   }
 }

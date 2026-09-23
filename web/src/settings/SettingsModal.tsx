@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import type { ManaPaymentStored } from '../state/persistence'
-import { saveGameLogAutoSave } from '../state/persistence'
+import { saveBrowserNotifications, saveGameLogAutoSave } from '../state/persistence'
+import { notificationsSupported, requestNotificationPermission } from '../game/attentionAlerts'
 import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
 import { PhaseStopGrid } from '../game/PhaseStopSelector'
 import { togglePhaseStop } from '../game/phaseStops'
@@ -25,6 +26,9 @@ interface Props {
 function GameplaySection() {
   const { t } = useTranslation()
   const settings = useSettings()
+  const [permission, setPermission] = useState<NotificationPermission | null>(() =>
+    notificationsSupported() ? Notification.permission : null,
+  )
   const manaRows: Array<{ key: keyof ManaPaymentStored; label: string; tip: string }> = [
     { key: 'auto', label: t('game', 'mana_payment_auto'), tip: t('game', 'mana_payment_auto_tip') },
     { key: 'restricted', label: t('game', 'mana_payment_restricted'), tip: t('game', 'mana_payment_restricted_tip') },
@@ -46,6 +50,12 @@ function GameplaySection() {
         label={t('game', 'auto_pass')}
       />
       <Toggle
+        checked={settings.smartStops}
+        onChange={(v) => setSetting('smartStops', v)}
+        label={t('game', 'smart_stops')}
+        title={t('game', 'smart_stops_hint')}
+      />
+      <Toggle
         checked={settings.autoKeepMulligan}
         onChange={(v) => setSetting('autoKeepMulligan', v)}
         label={t('game', 'auto_mulligan')}
@@ -59,6 +69,23 @@ function GameplaySection() {
         label={t('system', 'log_autosave')}
         title={t('system', 'log_autosave_hint')}
       />
+      {notificationsSupported() && (
+        <>
+          <Toggle
+            checked={settings.browserNotifications}
+            onChange={(v) => {
+              setSetting('browserNotifications', v)
+              saveBrowserNotifications(v)
+              if (v) void requestNotificationPermission().then((p) => setPermission(p))
+            }}
+            label={t('game', 'notify_setting')}
+            title={t('game', 'notify_setting_hint')}
+          />
+          {settings.browserNotifications && permission === 'denied' && (
+            <p className="settings-hint" data-testid="notify-blocked">{t('game', 'notify_blocked')}</p>
+          )}
+        </>
+      )}
       <h3 className="settings-section-title">{t('game', 'mana_payment_title')}</h3>
       {manaRows.map((row) => (
         <Toggle
