@@ -10,7 +10,7 @@ import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { MAX_DECKS, deckMainCount, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
-import { parseAnyDeck, exportDck, exportArena, exportTxt, exportDek } from './parseDck'
+import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
@@ -108,6 +108,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [inspectingDeck, setInspectingDeck] = useState<DeckV2 | null>(null)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importPrefill, setImportPrefill] = useState<{ text: string; name: string } | null>(null)
   // Enriquecimiento de colores vía Scryfall en curso (C.13 nit: sin indicador).
   const [enriching, setEnriching] = useState(false)
 
@@ -355,10 +356,8 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         // no es backup: probar como mazo mtgjson
       }
     }
-    const parsed = parseAnyDeck(text, name || t('decks', 'import_placeholder'))
-    if (!parsed) { await alertDialog(`${t('errors', 'deck_read_failed')}: ${f.name}`); return }
-    const v2: DeckV2 = { ...parsed, id: makeDeckId(), format: parsed.cards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Freeform', colors: [], coverCard: parsed.cards[0], createdAt: Date.now(), updatedAt: Date.now(), source: 'imported' }
-    await storage.put(v2); await load(); setSelectedId(v2.id)
+    setImportPrefill({ text, name })
+    setShowImportDialog(true)
   }
 
   return (
@@ -495,8 +494,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
       {showImportDialog && (
         <ImportDeckDialog
+          initialText={importPrefill?.text}
+          initialName={importPrefill?.name}
           onImport={handleImportedDeck}
-          onClose={() => setShowImportDialog(false)}
+          onClose={() => {
+            setShowImportDialog(false)
+            setImportPrefill(null)
+          }}
         />
       )}
 

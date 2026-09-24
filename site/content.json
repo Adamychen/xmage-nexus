@@ -162,7 +162,7 @@
     { "category": "Connectivity & Lobby", "feature": "Match Clocks / Visible Timers", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Deck Management", "feature": "Predefined / JSON Deck Loading", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Deck Management", "feature": "Full In-App Deck Builder (Scryfall)", "official": "yes", "nexus": "yes", "phase": "Completed" },
-    { "category": "Deck Management", "feature": "Text / Arena / Standard Import & Export", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Deck Management", "feature": "Text / Arena / Standard Import & Export (import wizard: format detection, bulk printing resolution, legality review)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Board", "feature": "Hand, Battlefield (HD Art)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Board", "feature": "Stack, Library, Graveyard, Exile", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "In-Game Board", "feature": "Tap Rotations, Life Totals, Counters", "official": "yes", "nexus": "yes", "phase": "Completed" },

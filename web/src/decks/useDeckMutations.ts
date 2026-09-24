@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { DeckV2 } from './types'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
@@ -11,6 +12,7 @@ import {
   mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
   dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
+import { applyPrintingsByName, countUnresolved, resolveDeckPrintings } from './importResolve'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
@@ -32,6 +34,20 @@ export function useDeckMutations(deps: Deps) {
     deck, schedulePersist, metaMap, setMetaMap, updateMetaForDeck,
     serverFlaggedKeys, printingTargetCard, setPrintingTargetCard,
   } = deps
+
+  const deckRef = useRef(deck)
+  deckRef.current = deck
+
+  const handleResolvePrintings = async () => {
+    const start = deckRef.current
+    if (!start || countUnresolved(start) === 0) return
+    const res = await resolveDeckPrintings(start, { strategy: 'default' })
+    const latest = deckRef.current
+    if (!latest || latest.id !== start.id || res.printingsByName.size === 0) return
+    const next = applyPrintingsByName(latest, res.printingsByName)
+    schedulePersist({ ...latest, cards: next.cards, sideboard: next.sideboard })
+    updateMetaForDeck([...next.cards, ...next.sideboard])
+  }
 
   const handleAddFromSearch = (card: ScryfallSearchCard) => {
     if (!deck) return
@@ -346,6 +362,7 @@ export function useDeckMutations(deps: Deps) {
       })
       updateMetaForDeck([...result.cards, ...result.sideboard])
     }
+    void handleResolvePrintings().catch(() => {})
   }
 
   const handleDropFile = async (f: File) => {
@@ -365,6 +382,6 @@ export function useDeckMutations(deps: Deps) {
     handleAddFromSearch, handleSwap, handleDropCardOnDeck,
     handleInc, handleDec, handleRemove, handleSetCover, handleSetCommander, handleSetPartner,
     handleAddBasicLand, handleRemoveBasicLand, handleApplySuggestedLands,
-    handleChangePrinting, handleApplyPrinting, handleApplyImport, handleDropFile,
+    handleChangePrinting, handleApplyPrinting, handleApplyImport, handleDropFile, handleResolvePrintings,
   }
 }
