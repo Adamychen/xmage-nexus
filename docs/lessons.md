@@ -10,6 +10,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - `deckType` must match a real server config name (e.g. `Constructed - Modern`); client and server versions must match strictly (local: `config.xml` + `plugins/`).
 - `createTable` requires the deck's `quitRatio` ≥ the user's (default 100); AI seats are filled **before** the human seat.
 - "Any target" prompts include both players: use the opponent's UUID, not `targets[0]` (it can be yourself).
+- `watchTable` only yields `WATCHGAME` once the table is `DUELING`, and the XMage client's `SessionImpl.watchTable` returns `true` regardless, so one sent right after `startMatch` can be silently dropped: re-send it every ~500 ms until `WATCHGAME` (a single retry 20 s later loses to fast AI-vs-AI games that already ended).
 - Game events keep arriving ~1 min after the watcher closes; "broadcast to 0 connections" is normal for game events, a bug signal for lobby events.
 - A killed proxy session (`kill -9`) leaves its socket on the server: new logins then fail with `SESSION CALLBACK EXCEPTION - Unable to create socket` until server+proxy restart.
 - Test mode caps `maxGameThreads` (10); browser E2E leaves matches running — restart the server between heavy batches.

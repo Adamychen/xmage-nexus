@@ -215,7 +215,18 @@ async function runOnce() {
     res = await Promise.race([c.send('watchTable', { tableId }), timeout(15000, 'watchTable')])
     if (!res.ok) throw new Error(`watchTable falló: ${res.error ?? ''}`)
 
-    const watch = await Promise.race([c.waitEvent((m) => m.method === 'WATCHGAME', 'WATCHGAME'), timeout(30000, 'WATCHGAME')])
+    // watchTable before the table is DUELING is dropped by the server (and the
+    // XMage client still reports true): re-send it until WATCHGAME arrives
+    let watch = null
+    const watched = c.waitEvent((m) => m.method === 'WATCHGAME', 'WATCHGAME', 30000)
+    watched.then((e) => { watch = e }, () => {})
+    const watchDeadline = Date.now() + 30000
+    while (!watch && Date.now() < watchDeadline) {
+      await new Promise((r) => setTimeout(r, 500))
+      if (watch) break
+      await Promise.race([c.send('watchTable', { tableId }), timeout(15000, 'watchTable')]).catch(() => {})
+    }
+    watch = await watched
     gameId = watch.objectId
 
     res = await Promise.race([c.send('watchGame', { gameId }), timeout(15000, 'watchGame')])

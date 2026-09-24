@@ -207,21 +207,27 @@ async function main() {
     }
 
     // 5) watchTable -> WATCHGAME -> watchGame -> GAME_INIT
-    // La primera partida tras un arranque en frío del servidor puede tardar en emitir el
-    // WATCHGAME (o perderlo); reintentamos el watchTable una vez antes de declarar el fallo.
+    // The server only answers watchTable with WATCHGAME once the table is DUELING,
+    // and the XMage client (SessionImpl.watchTable) always reports true, so a
+    // watchTable sent a few ms before the game starts is silently dropped. Re-send
+    // it every 500 ms until WATCHGAME arrives: waiting 20 s before retrying let the
+    // fast AI-vs-AI game finish first and the retry was dropped too.
     let ev = null
-    for (let attempt = 0; attempt < 2 && !ev; attempt++) {
-      res = await Promise.race([send('watchTable', { tableId }), timeout(15000, 'watchTable')])
-      if (attempt === 0) check('watchTable', !!res.ok, res.error ?? '')
-      if (!res.ok) break
-      try {
-        ev = await Promise.race([
-          waitEvent((m) => m.method === 'WATCHGAME', 'WATCHGAME', attempt === 0 ? 20000 : 60000),
-          timeout(attempt === 0 ? 20000 : 60000, 'WATCHGAME'),
-        ])
-      } catch {
-        if (attempt === 0) console.log('  nota: WATCHGAME lento, reintentando watchTable…')
+    res = await Promise.race([send('watchTable', { tableId }), timeout(15000, 'watchTable')])
+    check('watchTable', !!res.ok, res.error ?? '')
+    if (res.ok) {
+      const watchDeadline = Date.now() + 20000
+      const watched = waitEvent((m) => m.method === 'WATCHGAME', 'WATCHGAME', 20000)
+      watched.then((e) => { ev = e }, () => {})
+      let resends = 0
+      while (!ev && Date.now() < watchDeadline) {
+        await new Promise((r) => setTimeout(r, 500))
+        if (ev) break
+        resends++
+        await Promise.race([send('watchTable', { tableId }), timeout(15000, 'watchTable')]).catch(() => {})
       }
+      await watched.catch(() => {})
+      if (ev && resends > 0) console.log(`  nota: WATCHGAME tras ${resends} reenvío(s) de watchTable (la mesa aún no estaba en DUELING)`)
     }
     if (res.ok && ev) {
       check('evento WATCHGAME recibido', true, `gameId=${String(ev.objectId).slice(0, 8)}…`)

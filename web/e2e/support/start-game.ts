@@ -54,6 +54,10 @@ export function installCapture(page: Page, buffers: CaptureBuffers, maxFrames = 
 export interface LoginOptions {
   /** Reintentar "Conectar" si el lobby no aparece (switch de sesión del proxy). */
   retryLobby?: boolean
+  /** CSS selector of the screen the session lands on instead of the lobby
+   *  (e.g. a scenario that starts a draft right after connect: the lobby heading
+   *  can be replaced before it ever becomes visible on a slow runner). */
+  landsOn?: string
 }
 
 export async function dismissSetupWizard(page: Page): Promise<void> {
@@ -83,7 +87,9 @@ export async function login(page: Page, username: string, opts: LoginOptions = {
   // contraseña); rellenarlo a ciegas agota el timeout del test.
   const password = page.getByLabel(/Contraseña|Password/i)
   if (await password.isEnabled().catch(() => false)) await password.fill('x')
-  const lobby = page.getByRole('heading', { name: /Lobby|XMage Nexus/i })
+  const lobby = opts.landsOn
+    ? page.getByRole('heading', { name: /Lobby|XMage Nexus/i }).or(page.locator(opts.landsOn)).first()
+    : page.getByRole('heading', { name: /Lobby|XMage Nexus/i })
   const connect = page.getByRole('button', { name: /Conectar|Connect/i })
   await connect.click()
   if (opts.retryLobby) {

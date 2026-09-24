@@ -74,12 +74,14 @@ test.describe('Draft', { tag: '@draft' }, () => {
 
   test('el pick acusa al instante y espera a los demás (sin contador fantasma)', { tag: '@draft' }, async ({ page }) => {
     await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 2500 }), async () => {
-      await login(page, `draft-${String(Date.now()).slice(-6)}`)
+      await login(page, `draft-${String(Date.now()).slice(-6)}`, { landsOn: '.draft-screen' })
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
-      const first = page.getByTestId('draft-card').first()
-      const firstId = await first.getAttribute('data-card-id')
-      await first.click()
+      const firstId = await page.getByTestId('draft-card').first().getAttribute('data-card-id')
+      expect(firstId).toBeTruthy()
+      // click the card whose id was read: `.first()` re-resolves on click and a
+      // re-rendered booster (DRAFT_INIT + DRAFT_PICK) may put another card first
+      await page.locator(`[data-testid="draft-card"][data-card-id="${firstId}"]`).click()
       // Acuse inmediato: banner con la carta elegida + espera (sin contador).
       const banner = page.getByTestId('draft-picked-banner')
       await expect(banner).toBeVisible({ timeout: 5_000 })
@@ -104,7 +106,7 @@ test.describe('Draft', { tag: '@draft' }, () => {
     // joinDraftSilent: el server real no reenvía DRAFT_INIT al re-unirse a un
     // draft ya empezado; la pantalla solo puede volver con la instantánea local.
     await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 60_000, joinDraftSilent: true }), async () => {
-      await login(page, `draftrl-${String(Date.now()).slice(-6)}`)
+      await login(page, `draftrl-${String(Date.now()).slice(-6)}`, { landsOn: '.draft-screen' })
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
       await expect(page.getByTestId('draft-timeout').first()).toHaveText(/\d+:\d+/)
       const firstId = await page.getByTestId('draft-card').first().getAttribute('data-card-id')
