@@ -7,6 +7,8 @@ import { deckMainCount, deckSideCount } from './types'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import SearchPanel from './SearchPanel'
+import SuggestionsPanel from './SuggestionsPanel'
+import Tabs from '../ui/Tabs'
 import DeckListPanel from './DeckListPanel'
 import Icon from '../ui/Icon'
 import { ArenaDeckHeader } from './ArenaDeckHeader'
@@ -53,6 +55,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
   const [serverIssues, setServerIssues] = useState<DeckValidationResult | null>(null)
+  const [leftTab, setLeftTab] = useState<'search' | 'suggestions'>('search')
   const [showCurve, setShowCurve] = useState(() => {
     try {
       const saved = localStorage.getItem('nexus_deck_show_curve')
@@ -307,6 +310,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const mainCount = deck ? deckMainCount(deck) : 0
   const sideCount = deck ? deckSideCount(deck) : 0
   const isCommanderFormat = !!(FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform).hasCommander
+  const commanderName = deck?.commanderCard?.cardName ?? null
   const coverKey = deck?.coverCard ? deckCardKey(deck.coverCard) : null
 
   if (!deck) {
@@ -392,13 +396,39 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               <span><Icon name="trash" size={14} /></span> {t('decks', 'builder_drag_remove_hint')}
             </div>
           )}
-          <SearchPanel
-            onAdd={mutations.handleAddFromSearch}
-            countMap={countMap}
-            format={format}
-            onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
-            onLeave={handleLeaveCard}
+          <Tabs
+            className="builder-left-tabs"
+            variant="segmented"
+            size="sm"
+            value={leftTab}
+            onChange={setLeftTab}
+            items={[
+              { id: 'search', label: t('decks', 'suggestions_tab_search') },
+              {
+                id: 'suggestions',
+                label: t('decks', 'suggestions_tab'),
+                title: !isCommanderFormat ? t('decks', 'suggestions_not_commander') : undefined,
+              },
+            ]}
           />
+          {leftTab === 'search' ? (
+            <SearchPanel
+              onAdd={mutations.handleAddFromSearch}
+              countMap={countMap}
+              format={format}
+              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onLeave={handleLeaveCard}
+            />
+          ) : (
+            <SuggestionsPanel
+              commanderName={commanderName}
+              isCommanderFormat={isCommanderFormat}
+              countMap={countMap}
+              onAdd={mutations.handleAddFromSearch}
+              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onLeave={handleLeaveCard}
+            />
+          )}
         </aside>
 
         {/* Right: Deck Panel */}

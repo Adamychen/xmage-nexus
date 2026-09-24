@@ -95,12 +95,12 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2) and selectable playmats (5.1, 2026-09-23).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
 
 | Idea | Impact / effort | State |
 |---|---|---|
 | Tactical pings on the board (Commander / 4P) | Very high / ~2 d | Not started |
-| EDHREC suggestions in the deck builder | High / ~1-2 d | Not started (only the Scryfall `edhrec` sort exists) |
+| EDHREC suggestions in the deck builder | High / ~1-2 d | Done 2026-09-24 ("Suggestions" tab next to Search in the deck editor; EDHREC public JSON for the designated commander, cached, cards resolved via Scryfall collection, synergy badges, click/drag to add) |
 | Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
 | PWA (manifest + service worker) | High / small | Not started |
 | Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature; see the combat-preview and life-history rows below) |

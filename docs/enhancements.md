@@ -121,6 +121,7 @@ El cliente Swing de XMage es 100% inutilizable en dispositivos móviles o tácti
 El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Podemos llevarlo al siguiente nivel con integración de datos comunitarios:
 
 ### 4.1 Recomendaciones de Sinergias EDHREC Integradas
+* **Estado**: ✅ Implementado (2026-09-24, `web/src/decks/SuggestionsPanel.tsx`, `edhrec.ts`).
 * **Descripción**: Al editar un mazo de Commander, ofrecer sugerencias de cartas sin salir de Nexus.
 * **Mecánica**:
   * Al seleccionar la carta de Comandante, se consulta la API pública de EDHREC para ese comandante.

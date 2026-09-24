@@ -127,6 +127,21 @@
   box-shadow: inset 0 0 24px rgb(var(--err-rgb) / 0.4), 0 0 20px rgb(var(--err-rgb) / 0.5);
 }
 
+.builder-left-tabs {
+  width: 100%;
+  border-bottom: none;
+  border-radius: var(--r-base) var(--r-base) 0 0;
+}
+
+.builder-left-tabs .ui-tab {
+  flex: 1;
+}
+
+.builder-left-tabs + .arena-search-panel,
+.builder-left-tabs + .sg-panel {
+  border-radius: 0 0 var(--r-base) var(--r-base);
+}
+
 .arena-remove-drop-hint {
   position: absolute;
   top: 12px;
