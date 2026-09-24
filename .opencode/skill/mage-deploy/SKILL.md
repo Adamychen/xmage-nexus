@@ -100,6 +100,8 @@ Piezas:
   EDHREC commander recommendations, opt-in smart mana payment, local match history with per-deck stats,
   visual presentation polish (recap strip, smart stops, combat/death FX, playmats, adaptive music,
   cinematic end screen), proxy activity logging, /admin/status, and Docker support.
+  v0.2.5 (2026-09-24): web-only fix (commander lost on Moxfield/Archidekt URL import + import stepper
+  polish); `components_tag` = `v0.2.4`.
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 

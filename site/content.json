@@ -2,24 +2,20 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.4",
+    "version": "0.2.5",
     "date": "2026-09-24",
-    "tag": "v0.2.4",
+    "tag": "v0.2.5",
     "status": "published",
-    "notes": "v0.2.4: 3-step deck import wizard, EDHREC commander suggestions, smart mana payment, local match history with per-deck stats, visual presentation polish (recap strip, smart stops, combat/death FX, playmats, adaptive music, cinematic end screen), proxy activity logging, /admin/status, and Docker support.",
+    "notes": "v0.2.5: fix commander detection when importing a Moxfield/Archidekt URL (the wizard showed a false \"designate a commander\" error) and a cleaner import stepper (duplicated step numbers removed). Web-only: components are reused from v0.2.4.",
     "highlights": [
-      "Deck import wizard: 3-step workflow with format detection, bulk printing resolution and legality review",
-      "EDHREC integration: in-app commander recommendations with synergy scores and 1-click addition",
-      "Smart mana payment: opt-in exact solver preserving colors for instant-speed responses in hand",
-      "Match history & stats: finished games recorded in IndexedDB with per-deck, format, and opponent stats",
-      "Presentation polish: opponent-turn recap strip, smart stops, combat/death FX, customizable playmats, adaptive music, and cinematic victory/defeat screen",
-      "Proxy & DevOps: structured [activity] logging, token-protected /admin/status, and Docker support"
+      "Deck import: Moxfield and Archidekt URL imports now carry the commander/partner into the wizard, so a correct Commander deck no longer fails the final legality review",
+      "Import wizard stepper: removed the duplicated step numbers and redesigned it with connectors, active halo and completed states"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },
