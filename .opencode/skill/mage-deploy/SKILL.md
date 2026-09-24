@@ -104,6 +104,8 @@ Piezas:
   polish) — never released, superseded by v0.2.6.
   v0.2.6 (2026-09-24): v0.2.5 fixes + EDHREC via proxy (`OnlineDeckCommands` source `edhrec`; json.edhrec.com has no CORS)
   + mana sources chart colors; touches `Mage.Proxy` => `components_tag` VACÍO.
+  v0.2.7 (2026-09-24): web-only — join-table dialog + waiting room redesign, spectator "Follow game" fix,
+  stack drawer auto-open on stack targets, CI flake fixes => `components_tag=v0.2.6` (reuses its modules).
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 

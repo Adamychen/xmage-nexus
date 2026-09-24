@@ -43,6 +43,7 @@ export const TABLE = {
   mulliganShowcase: 'Mulligan Showcase',
   stackPriority: 'stack-priority-test',
   tokens: 'tokens-test',
+  stackTarget: 'stack-target-test',
   thoughtseize: 'thoughtseize-test',
   voting: 'voting-test',
   gridSearch: 'grid-search-test',

@@ -1,13 +1,28 @@
 import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import JoinTableDialog, { recommendedMinMain } from './JoinTableDialog'
-import { setState } from '../state/state'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import JoinTableDialog from './JoinTableDialog'
+import { getState, setState } from '../state/state'
 import type { TableView } from '../net/types'
 
+function memoryStorage(): Storage {
+  const m = new Map<string, string>()
+  return {
+    get length() { return m.size },
+    clear: () => m.clear(),
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => { m.set(k, String(v)) },
+    removeItem: (k) => { m.delete(k) },
+    key: (i) => [...m.keys()][i] ?? null,
+  }
+}
+
+beforeEach(() => { vi.stubGlobal('localStorage', memoryStorage()) })
 afterEach(() => {
   cleanup()
-  setState({ conn: null } as never)
+  setState({ conn: null, myDeck: null } as never)
+  vi.unstubAllGlobals()
 })
+
 
 const MOCK_TABLE: TableView = {
   tableId: 'tab-123',
@@ -53,8 +68,10 @@ describe('JoinTableDialog', () => {
     )
 
     expect(getByText("Diana's Modern Arena")).not.toBeNull()
-    expect(getByText('Constructed - Modern')).not.toBeNull()
+    expect(getByText('Modern')).not.toBeNull()
+    expect(getByText('Constructed - Modern · Two Player Duel')).not.toBeNull()
     expect(getByText('Diana')).not.toBeNull()
+    expect(getByText('1/2 jugadores')).not.toBeNull()
     expect(getAllByText(/Mage Web bolt/).length).toBeGreaterThanOrEqual(1)
   })
 
@@ -147,39 +164,35 @@ describe('JoinTableDialog', () => {
   })
 })
 
-describe('recommendedMinMain (C.13-mayores §4)', () => {
-  it('Commander → 100, Limitado → 40, Construido → 60', () => {
-    expect(recommendedMinMain('Variant Magic - Commander', 'Commander Free For All')).toBe(100)
-    expect(recommendedMinMain('Constructed - Modern', 'Two Player Duel')).toBe(60)
-    expect(recommendedMinMain('Limited', 'Booster Draft')).toBe(40)
-  })
-
-  it('sin dato de formato no recomienda (null)', () => {
-    expect(recommendedMinMain('', '')).toBeNull()
-    expect(recommendedMinMain('Variant Magic - Momir Basic', 'Momir Basic')).toBeNull()
-    expect(recommendedMinMain(undefined, undefined)).toBeNull()
-  })
-})
-
 describe('JoinTableDialog UX (C.13-mayores §4)', () => {
-  it('el checkbox dice "Recordar como predeterminado", no "Guardar"', () => {
+  it('no longer offers a "remember as default" toggle: the chosen deck is the one in play', async () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
-    const { getByText, queryByLabelText } = render(
+    const { queryByText, queryByRole, getByRole } = render(
       <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
     )
-    expect(getByText('Recordar como predeterminado')).not.toBeNull()
-    expect(queryByLabelText('Guardar')).toBeNull()
+    expect(queryByText('Recordar como predeterminado')).toBeNull()
+    expect(queryByRole('checkbox')).toBeNull()
+    expect(getByRole('radiogroup', { name: 'Elige tu mazo' })).not.toBeNull()
+    fireEvent.click(getByRole('button', { name: /Unirse con/i }))
+    await waitFor(() => expect(onJoin).toHaveBeenCalled())
+    const played = onJoin.mock.calls[0][1] as { name: string }
+    expect(getState().myDeck?.name).toBe(played.name)
   })
 
-  it('marca recomendado el mazo de 60 en mesa Modern', () => {
+  it('ranks decks that fit the table first and preselects one of them', () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
     const { container } = render(
       <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
     )
-    expect(container.querySelectorAll('.join-deck-card.recommended').length).toBeGreaterThan(0)
+    const tiles = [...container.querySelectorAll('.join-deck-card')]
+    expect(tiles.length).toBeGreaterThan(0)
+    expect(tiles[0].className).toMatch(/fit-(match|ok)/)
+    const selected = container.querySelector('.join-deck-card.selected')
+    expect(selected?.className).toMatch(/fit-(match|ok)/)
+    expect(selected?.getAttribute('aria-checked')).toBe('true')
   })
 
-  it('sin formato conocido no marca ninguna recomendación', () => {
+  it('without a known format shows every deck as playable', () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
     const { container } = render(
       <JoinTableDialog
@@ -188,7 +201,8 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
         onJoin={onJoin}
       />
     )
-    expect(container.querySelectorAll('.join-deck-card.recommended').length).toBe(0)
+    expect(container.querySelectorAll('.join-deck-card.fit-short').length).toBe(0)
+    expect(container.querySelectorAll('.join-deck-group-label').length).toBe(0)
   })
 
   it('el fallo de unión se muestra dentro del diálogo, traducido y con cierre', async () => {

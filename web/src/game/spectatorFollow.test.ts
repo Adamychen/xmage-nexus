@@ -28,4 +28,8 @@ describe('findFollowGameId', () => {
   it('picks the last of several newer games', () => {
     expect(findFollowGameId([table('t-1', ['g-1', 'g-2', 'g-3'])], 'g-1')).toBe('g-3')
   })
+  it('never follows an older, finished game of the same table', () => {
+    expect(findFollowGameId([table('t-1', ['g-1', 'g-2'])], 'g-2')).toBeNull()
+    expect(findFollowGameId([table('t-1', ['g-1', 'g-2', 'g-3'])], 'g-2')).toBe('g-3')
+  })
 })

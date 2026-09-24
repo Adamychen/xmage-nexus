@@ -18,6 +18,7 @@ import type {
 import type { DraftState, ConstructState } from '../state/slices/limited'
 import type { ConnectionInfo } from '../state/persistence'
 import type { SupportedLanguage } from '../i18n'
+import type { Deck } from '../lobby/decks'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
 
@@ -98,6 +99,9 @@ export interface GalleryEntry {
   lastDraftEventAt?: number | null
   /** `table` explícita de SpectatorStagingScreen (modo jugador). */
   stagingTable?: TableView
+  stagingMode?: 'player' | 'spectator'
+  /** Deck in play (`myDeck` in the store); omitted = keep the current one. */
+  myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
   boardLayout?: 'standard' | 'pod' | 'arena'
   uiScale?: number
@@ -530,6 +534,50 @@ const STAGING_TABLE = makeLobbyTable(0, {
   seats: [
     { playerName: 'gallery-dev', seatIndex: 0, playerType: 'HUMAN', flagName: 'es', constructedRating: 1520, history: '3-1' },
     { playerName: 'bora-the-bold', seatIndex: 1, playerType: 'HUMAN', flagName: 'ru', constructedRating: 1602, history: '12-5' },
+  ],
+})
+
+const STAGING_DECK: Deck = {
+  id: 'gallery-staging-deck',
+  name: 'Rakdos Midrange',
+  cards: [
+    { cardName: 'Bloodtithe Harvester', setCode: 'VOW', cardNumber: '232', amount: 4 },
+    { cardName: 'Fable of the Mirror-Breaker', setCode: 'NEO', cardNumber: '141', amount: 4 },
+    { cardName: 'Swamp', setCode: 'LEA', cardNumber: '295', amount: 26 },
+    { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 26 },
+  ],
+  sideboard: [],
+}
+
+const STAGING_POD_TABLE = makeLobbyTable(0, {
+  tableId: 'gallery-staging-pod',
+  tableName: 'Viernes de Commander',
+  gameType: 'Commander Free For All',
+  deckType: 'Variant Magic - Commander',
+  controllerName: 'gallery-dev',
+  tableState: 'WAITING',
+  tableStateText: 'Waiting for players',
+  seatsInfo: '3/4',
+  seats: [
+    { playerName: 'gallery-dev', seatIndex: 0, playerType: 'HUMAN', flagName: 'es', constructedRating: 1520, history: '3-1' },
+    { playerName: 'bora-the-bold', seatIndex: 1, playerType: 'HUMAN', flagName: 'ru', constructedRating: 1602, history: '12-5' },
+    { playerName: 'sim-000042', seatIndex: 2, playerType: 'SIM' },
+    { playerName: '', seatIndex: 3, playerType: 'HUMAN' },
+  ],
+})
+
+const STAGING_OPEN_TABLE = makeLobbyTable(0, {
+  tableId: 'gallery-staging-open',
+  tableName: 'Pauper a 1',
+  gameType: 'Two Player Duel',
+  deckType: 'Constructed - Pauper',
+  controllerName: 'bora-the-bold',
+  tableState: 'WAITING',
+  tableStateText: 'Waiting for players',
+  seatsInfo: '1/2',
+  seats: [
+    { playerName: 'bora-the-bold', seatIndex: 0, playerType: 'HUMAN', flagName: 'ru', constructedRating: 1602, history: '12-5' },
+    { playerName: '', seatIndex: 1, playerType: 'HUMAN' },
   ],
 })
 
@@ -981,6 +1029,33 @@ export function buildGalleryEntries(): GalleryEntry[] {
     lobby: LOBBY_OVERFLOW,
     stagingTable: STAGING_TABLE,
     chatMessages: STAGING_CHAT,
+    myDeck: STAGING_DECK,
+  })
+  entries.push({
+    id: 'screen:staging-pod',
+    group: 'Pantallas',
+    label: 'Sala de espera (pod Commander)',
+    description: 'Mesa multijugador 3/4 con bot y plaza libre alrededor de la mesa.',
+    phase: 'game',
+    screen: 'staging',
+    conn: GALLERY_CONN,
+    lobby: LOBBY_OVERFLOW,
+    stagingTable: STAGING_POD_TABLE,
+    chatMessages: STAGING_CHAT,
+    myDeck: STAGING_DECK,
+  })
+  entries.push({
+    id: 'screen:staging-spectator',
+    group: 'Pantallas',
+    label: 'Sala de espera (espectador)',
+    description: 'Espectando una mesa 1/2 que espera rival.',
+    phase: 'game',
+    screen: 'staging',
+    stagingMode: 'spectator',
+    conn: GALLERY_CONN,
+    lobby: LOBBY_OVERFLOW,
+    stagingTable: STAGING_OPEN_TABLE,
+    chatMessages: [],
   })
   entries.push({
     id: 'screen:tournament-panel',

@@ -1,10 +1,10 @@
 import type { TableView } from '../net/types'
 
-/** B.10: sin auto-follow (paridad desktop), el espectador recibe un aviso con
- * botón Seguir cuando su partida terminó pero la mesa ya tiene otra en curso
- * (Bo3/torneo). Devuelve el id de la partida nueva o null si no hay que seguir.
- * Nota i18n: los literales del aviso viven en GameEndDialog hasta que el carril
- * de locales extraiga las claves. */
+/** B.10: no auto-follow (desktop parity). When the watched game ends but its
+ * table already runs a newer one (Bo3/tournament), the spectator gets a Follow
+ * button. `TableView.games` follows `Match.getGames()` order (oldest first), so
+ * only a game AFTER the watched one counts: earlier games are finished and the
+ * server rejects `watchGame` on them (GameManagerImpl.watchGame → false). */
 export function findFollowGameId(
   tables: TableView[] | undefined | null,
   watchedGameId: string | null | undefined,
@@ -12,8 +12,9 @@ export function findFollowGameId(
   if (!watchedGameId) return null
   for (const t of tables ?? []) {
     const games = t.games ?? []
-    if (games.includes(watchedGameId)) {
-      return games.filter((g) => g !== watchedGameId).pop() ?? null
+    const idx = games.indexOf(watchedGameId)
+    if (idx >= 0) {
+      return idx < games.length - 1 ? games[games.length - 1] : null
     }
   }
   return null

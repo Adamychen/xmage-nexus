@@ -16,6 +16,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - Keep the demo AI deck stable (Islands + Mountains + 4 Bolts): 16 Bolts make AI-vs-AI matches end in 2-3 turns, hiding board interactions.
 - macOS `/usr/bin/java` is a stub: resolve the real binary (Homebrew `openjdk@17` first); `scripts/lib.mjs` `javaBin()` does this.
 - Generated usernames must be ≤14 chars (`maxUserNameLength`); login failures log the misleading `Can't receive server state before other data`.
+- `TableView.games` is `Match.getGames()` order (oldest first) and keeps finished games: `watchGame` on one of those returns `false` (no `GameController`), so a spectator "follow" must only pick a game *after* the watched one (`findFollowGameId`).
 
 ## Proxy & sessions
 
@@ -42,3 +43,6 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - Real-mode Playwright (`E2E_BACKEND=real`) targets `beta.xmage.today` unless `E2E_SERVER_HOST` is set (`e2e/support/start-game.ts`); when running a spec by hand against the local stack, always pass `E2E_SERVER_HOST=localhost` or it creates tables on the public server.
 - Real-mode E2E cannot use scripted fixtures: the server never auto-starts AI-vs-AI tables and advances by priority timers, so the WS helper auto-passes (fake mode is the deterministic loop).
 - Keep every generated/imported deck with a concrete printing: the proxy's name-only fallback (`Deck.resolveCardInfo`) is a fork patch, so a real server rejects "17 Forest" with `Card not found`.
+- `scripts/gallery-visual.mjs --update` rewrites every baseline in the matrix, not only the ones that changed: after regenerating for one screen, `git checkout` the unrelated PNGs so drift from other work is not baked in.
+- Fake-mode specs that inject views through `__mageStore.handleMessage` race the scenario's own frames (the `HumanHelper` acting makes the FakeServer re-broadcast its base view): a frame at the *same* turn/step is not stale and overwrites the injected one, so inject at a later turn than the scenario (`game-assist` P/T test failed ~60% under load at turn 1).
+- `expect.poll` fails immediately when its callback throws (no retry): return a sentinel value for transient DOM gaps instead of throwing.

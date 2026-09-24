@@ -136,8 +136,8 @@ test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async 
     const pumped = { ...knight, power: '4', toughness: '3', originalPower: base(2), originalToughness: base(1) }
     const shrunk = { ...wall, toughness: '5', originalPower: base(0), originalToughness: base(8) }
     const goblin = makePermanent({ id: 'rc-goblin', name: 'Raging Goblin', power: '1', toughness: '1', cardTypes: ['CREATURE'], controlled: true, summoningSickness: true, originalPower: base(1), originalToughness: base(1) })
-    await push(page, recapView({ mine: true, turn: 1, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk } }))
-    await push(page, recapView({ mine: true, turn: 1, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk, [goblin.id!]: goblin } }))
+    await push(page, recapView({ mine: true, turn: 3, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk } }))
+    await push(page, recapView({ mine: true, turn: 3, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk, [goblin.id!]: goblin } }))
 
     const slot = (id: string) => page.locator(`.card-slot[data-card-id="${id}"]`)
     await expect(slot(knight.id!).locator('.pt-value').first()).toHaveAttribute('data-trend', 'up')
@@ -149,7 +149,7 @@ test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async 
     const box = (await slot(knight.id!).boundingBox())!
     await page.screenshot({ path: 'test-results/pt-marks.png', clip: { x: box.x - 20, y: box.y - 20, width: 420, height: box.height + 40 } })
 
-    await push(page, recapView({ mine: false, turn: 2, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk, [goblin.id!]: goblin } }))
+    await push(page, recapView({ mine: false, turn: 4, myBf: { [knight.id!]: pumped, [wall.id!]: shrunk, [goblin.id!]: goblin } }))
     await expect(slot(goblin.id!)).not.toHaveAttribute('data-entered', 'turn')
 
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])

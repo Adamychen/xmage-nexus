@@ -51,6 +51,8 @@ const VISUAL_ENTRIES = [
   'screen:lobby-error',
   'screen:wizard',
   'screen:staging-player',
+  'screen:staging-pod',
+  'screen:staging-spectator',
   'screen:gameend-game',
   'screen:gameend-match',
   'screen:settings',

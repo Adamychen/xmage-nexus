@@ -39,7 +39,7 @@ function stageOf(entry: GalleryEntry | undefined) {
   if (entry.screen === 'construct') return <ConstructScreen />
   if (entry.screen === 'setup') return <SetupWizard onClose={() => {}} />
   if (entry.screen === 'wizard') return <CreateTableDialog onClose={() => {}} />
-  if (entry.screen === 'staging') return <SpectatorStagingScreen table={entry.stagingTable ?? null} mode="player" />
+  if (entry.screen === 'staging') return <SpectatorStagingScreen table={entry.stagingTable ?? null} mode={entry.stagingMode ?? 'player'} />
   if (entry.screen === 'settings') return <SettingsModal onClose={() => {}} />
   if (entry.screen === 'appearance') return <AppearanceSettingsModal onClose={() => {}} />
   if (entry.screen === 'about') return <AboutModal onClose={() => {}} />
@@ -135,6 +135,7 @@ export default function GalleryScreen() {
       conn: active.conn ?? base.conn,
       draft: active.draft ?? null,
       construct: active.construct ?? null,
+      ...(active.myDeck !== undefined ? { myDeck: active.myDeck } : null),
     })
     const lang = active.lang ?? savedLang.current
     if (lang !== getLanguage()) setLanguage(lang)

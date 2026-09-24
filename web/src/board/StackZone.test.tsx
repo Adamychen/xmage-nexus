@@ -254,6 +254,22 @@ describe('StackZone', () => {
     expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
   })
 
+  it('marks eligible targets on the stack as targetable and clickable, and only those', () => {
+    const onCardClick = vi.fn()
+    const stack: Record<string, CardView> = {
+      'spell-2': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+      'spell-1': { name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(
+      <StackZone stack={stack} targetIds={new Set(['spell-1'])} onCardClick={onCardClick} />,
+    )
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(entries[0].classList.contains('targetable')).toBe(false)
+    expect(entries[1].classList.contains('targetable')).toBe(true)
+    fireEvent.click(entries[1])
+    expect(onCardClick).toHaveBeenCalledWith('spell-1')
+  })
+
   it('no agrupa habilidades de controladores distintos', () => {
     const stack: Record<string, CardView> = {
       t1: trigger('You gain 1 life.', { controllerName: 'Yo' }),

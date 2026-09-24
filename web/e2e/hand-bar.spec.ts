@@ -8,6 +8,25 @@ import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { HAND_BAR_REST_OVERLAP_RATIO } from '../src/board/handSizing'
 import type { Page } from '@playwright/test'
 
+async function waitHandStable(page: Page, quietMs = 1_200, timeoutMs = 15_000) {
+  const signature = () =>
+    page.locator('[data-testid="hand-bar"] .hand-card-slot').evaluateAll((els) =>
+      els.map((el) => el.querySelector('[data-card-id]')?.getAttribute('data-card-id') ?? el.textContent ?? '').join('|'),
+    )
+  const deadline = Date.now() + timeoutMs
+  let last = await signature()
+  let since = Date.now()
+  while (Date.now() - since < quietMs) {
+    if (Date.now() > deadline) throw new Error('hand never settled')
+    await page.waitForTimeout(150)
+    const now = await signature()
+    if (now !== last) {
+      last = now
+      since = Date.now()
+    }
+  }
+}
+
 fakeOnly()
 
 interface Box {
@@ -138,6 +157,9 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
     // Con prioridad propia el escenario deja de mover cartas: en CI (runner
     // lento) el hover podía caer mientras las tierras salían de la mano.
     await expect(page.locator('.big-action-btn')).toBeEnabled({ timeout: 30_000 })
+    // El HumanHelper juega su tierra al recibir esa prioridad: la mano se
+    // recoloca bajo el cursor y cierra el preview. Se espera a que se asiente.
+    await waitHandStable(page)
     const preview = page.locator('.floating-card-preview')
     await page.mouse.move(8, 8)
     await expect(preview).toHaveCount(0)
@@ -172,7 +194,7 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
           page.evaluate(() => {
             const pv = document.querySelector('.floating-card-preview') as HTMLElement | null
             const slot = document.querySelector('[data-testid="hand-bar"] .hand-card-slot')
-            if (!pv || !slot) throw new Error('preview o slot no encontrado')
+            if (!pv || !slot) return Number.POSITIVE_INFINITY
             const r = pv.getBoundingClientRect()
             return r.y + r.height - (slot.getBoundingClientRect().y + 40)
           }),

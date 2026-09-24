@@ -117,7 +117,7 @@ describe('i18n system', () => {
     const keys = [
       'game.spectator_game_changed',
       'game.follow_game',
-      'lobby.join_remember_default',
+      'lobby.join_pick_deck',
       'lobby.invite_cancelled_stay',
       'lobby.invite_searching',
       'decks.export_backup_count',

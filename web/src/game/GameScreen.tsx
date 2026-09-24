@@ -22,6 +22,7 @@ import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import StackZone from '../board/StackZone'
+import { targetsStackObject } from './stackTargeting'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
@@ -154,6 +155,11 @@ export default function GameScreen() {
   useEffect(() => {
     pendingTargetsRef.current.clear()
   }, [game, feedback])
+
+  const stackTargeted = targetsStackObject(game?.stack, targetIds)
+  useEffect(() => {
+    if (stackTargeted) setDrawerTab('stack')
+  }, [stackTargeted])
 
   const onTargetClick = async (id: string) => {
     if (!gameId) return
