@@ -24,7 +24,7 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   min-height: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .board-wrap {
@@ -32,7 +32,7 @@
   min-height: 0;
   position: relative;
   background: var(--ink-2);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .game-log-entries {

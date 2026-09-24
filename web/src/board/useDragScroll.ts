@@ -18,6 +18,15 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
     let startX = 0
     let initialScrollLeft = 0
     let hasDragged = false
+    let clickGuard: ((e: MouseEvent) => void) | null = null
+    let clickGuardTimer: ReturnType<typeof setTimeout> | null = null
+
+    const releaseClickGuard = () => {
+      if (clickGuardTimer != null) clearTimeout(clickGuardTimer)
+      clickGuardTimer = null
+      if (clickGuard) window.removeEventListener('click', clickGuard, { capture: true })
+      clickGuard = null
+    }
 
     const updateOverflow = () => {
       if (!el) return
@@ -65,14 +74,13 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
       el.classList.remove('is-dragging')
 
       if (hasDragged) {
-        const capturePrevent = (clickEvt: MouseEvent) => {
+        releaseClickGuard()
+        clickGuard = (clickEvt: MouseEvent) => {
           clickEvt.stopImmediatePropagation()
           clickEvt.preventDefault()
         }
-        window.addEventListener('click', capturePrevent, { capture: true, once: true })
-        setTimeout(() => {
-          window.removeEventListener('click', capturePrevent, { capture: true })
-        }, 60)
+        window.addEventListener('click', clickGuard, { capture: true, once: true })
+        clickGuardTimer = setTimeout(releaseClickGuard, 60)
       }
     }
 
@@ -97,6 +105,7 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
     el.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
+      releaseClickGuard()
       ro?.disconnect()
       mo?.disconnect()
       el.removeEventListener('pointerdown', onPointerDown)

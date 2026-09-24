@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { useDragScroll } from './useDragScroll'
 
@@ -20,8 +20,12 @@ function TestBand() {
 }
 
 describe('useDragScroll', () => {
+  const originalRect = Element.prototype.getBoundingClientRect
+
   afterEach(() => {
     cleanup()
+    Element.prototype.getBoundingClientRect = originalRect
+    vi.useRealTimers()
   })
 
   beforeEach(() => {
@@ -60,6 +64,31 @@ describe('useDragScroll', () => {
 
     window.dispatchEvent(new MouseEvent('pointerup'))
     expect(band.classList.contains('is-dragging')).toBe(false)
+  })
+
+  it('cancels the post-drag click guard on unmount (no timer outlives the component)', () => {
+    vi.useFakeTimers()
+    const { getByTestId, unmount } = render(<TestBand />)
+    const band = getByTestId('band')
+    Object.defineProperty(band, 'clientWidth', { value: 200, configurable: true })
+    Object.defineProperty(band, 'scrollWidth', { value: 600, configurable: true })
+    Object.defineProperty(band, 'scrollLeft', { value: 0, writable: true, configurable: true })
+
+    const pDown = new MouseEvent('pointerdown', { button: 0 })
+    Object.defineProperty(pDown, 'pageX', { value: 100 })
+    band.dispatchEvent(pDown)
+    const pMove = new MouseEvent('pointermove', {})
+    Object.defineProperty(pMove, 'pageX', { value: 50 })
+    window.dispatchEvent(pMove)
+    window.dispatchEvent(new MouseEvent('pointerup'))
+
+    expect(vi.getTimerCount()).toBe(1)
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+    document.body.dispatchEvent(click)
+    expect(click.defaultPrevented).toBe(false)
   })
 
   it('translates vertical wheel to horizontal scroll when overflowing', () => {

@@ -202,3 +202,5 @@ jobs:
             web/test-results/**
             web/playwright-report/**
           if-no-files-found: ignore
+          # .run/ is a hidden dir: upload-artifact@v4 skips it unless asked
+          include-hidden-files: true

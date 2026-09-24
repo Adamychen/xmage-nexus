@@ -15,6 +15,9 @@ const SERVER_PORT = 17171
 // caché del servidor): hasta READY todo connect responde ERR_WARMING_UP.
 const READY_TIMEOUT_MS = Number(process.env.NEXUS_PROXY_WARMUP_MS ?? 600_000)
 const READY_POLL_MS = 5000
+// transient failures right after `dev.mjs start` (proxy socket not listening
+// yet, server still booting) are retried for this long before giving up
+const TRANSIENT_WINDOW_MS = Number(process.env.NEXUS_WARMUP_TRANSIENT_MS ?? 180_000)
 // el servidor limita el nombre de usuario a 14 caracteres (config.xml maxUserNameLength)
 const USER = `warmup-${String(Date.now()).slice(-6)}`
 
@@ -119,13 +122,17 @@ async function cleanup(tableId, gameId) {
   }
 }
 
-/** Espera (sondeando connect) a que el proxy termine de cargar la BD de cartas.
- *  Solo espera ante ERR_WARMING_UP: cualquier otro error de connect falla al
- *  momento (mismo comportamiento que antes para problemas reales del stack). */
+/** Waits (polling connect) until the proxy has loaded its card DB.
+ *  ERR_WARMING_UP is retried up to READY_TIMEOUT_MS. Any other failure (socket
+ *  not open yet, timeout, connect error while the server finishes booting) is
+ *  retried only within TRANSIENT_WINDOW_MS, so a real stack problem still fails
+ *  fast instead of spinning for the whole cold-scan budget. */
 async function waitProxyReady() {
   const deadline = Date.now() + READY_TIMEOUT_MS
+  const transientDeadline = Date.now() + TRANSIENT_WINDOW_MS
   for (;;) {
     const c = client()
+    let reason
     try {
       await Promise.race([c.opened, timeout(10000, 'apertura del WebSocket')])
       const res = await Promise.race([
@@ -133,9 +140,13 @@ async function waitProxyReady() {
         timeout(15000, 'resultado de connect (readiness)'),
       ])
       if (res.ok) return
-      if (!/still loading card data/i.test(res.error ?? '')) {
-        throw new Error(`connect falló: ${res.error ?? ''}`)
+      if (/still loading card data/i.test(res.error ?? '')) {
+        reason = 'warming'
+      } else {
+        reason = `connect falló: ${res.error ?? res.errorCode ?? ''}`
       }
+    } catch (e) {
+      reason = e instanceof Error ? e.message : String(e)
     } finally {
       try {
         c.ws.close()
@@ -146,7 +157,12 @@ async function waitProxyReady() {
     if (Date.now() > deadline) {
       throw new Error(`el proxy no terminó de cargar la BD de cartas en ${READY_TIMEOUT_MS / 1000}s`)
     }
-    console.log(`  [warmup] proxy cargando BD de cartas (ERR_WARMING_UP) — reintento en ${READY_POLL_MS / 1000}s`)
+    if (reason === 'warming') {
+      console.log(`  [warmup] proxy cargando BD de cartas (ERR_WARMING_UP) — reintento en ${READY_POLL_MS / 1000}s`)
+    } else {
+      if (Date.now() > transientDeadline) throw new Error(reason)
+      console.log(`  [warmup] stack aún no listo (${reason}) — reintento en ${READY_POLL_MS / 1000}s`)
+    }
     await new Promise((r) => setTimeout(r, READY_POLL_MS))
   }
 }
@@ -222,7 +238,12 @@ async function runOnce() {
 }
 
 async function main() {
-  await waitProxyReady()
+  try {
+    await waitProxyReady()
+  } catch (e) {
+    console.log(`[warmup] FALLÓ esperando al proxy: ${e instanceof Error ? e.message : String(e)}`)
+    process.exit(1)
+  }
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const { gameId } = await runOnce()
@@ -238,4 +259,7 @@ async function main() {
   }
 }
 
-await main()
+await main().catch((e) => {
+  console.log(`[warmup] FALLÓ: ${e instanceof Error ? e.message : String(e)}`)
+  process.exit(1)
+})

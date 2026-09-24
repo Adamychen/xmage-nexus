@@ -5,7 +5,9 @@
   width: 100%;
   height: 100%;
   position: relative;
-  overflow: hidden;
+  /* clip, not hidden: a hidden box is still a scroll container, so focusing a
+     hand card that peeks below the edge scrolled the whole board up */
+  overflow: clip;
   /* Bizonal: mitad rival fría arriba / propia cálida abajo + base viñeta */
   background:
     radial-gradient(ellipse 130% 95% at 50% 112%, rgb(var(--brand-rgb) / 0.30) 0%, rgb(var(--brand-rgb) / 0) 55%),
