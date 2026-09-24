@@ -251,7 +251,8 @@ test.describe('Decks Gallery', () => {
       await page.locator('.import-name-input').fill('Mi Test DCK')
       await page.locator('.deck-import-textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
       await page.locator('[data-testid="import-submit-btn"]').click()
-      await expect(page.getByText('Mi Test DCK')).toBeVisible({ timeout: 5000 })
+      // the name also shows in the footer once the new deck is selected
+      await expect(page.locator('.deck-box-name', { hasText: 'Mi Test DCK' })).toBeVisible({ timeout: 5000 })
       await expect(page.getByText('43/75').first().or(page.getByText(/1\/75/))).toBeVisible({ timeout: 3000 })
     })
   })
