@@ -2,20 +2,22 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.5",
+    "version": "0.2.6",
     "date": "2026-09-24",
-    "tag": "v0.2.5",
+    "tag": "v0.2.6",
     "status": "published",
-    "notes": "v0.2.5: fix commander detection when importing a Moxfield/Archidekt URL (the wizard showed a false \"designate a commander\" error) and a cleaner import stepper (duplicated step numbers removed). Web-only: components are reused from v0.2.4.",
+    "notes": "v0.2.6 (includes the v0.2.5 fixes): commander detection on Moxfield/Archidekt import, cleaner import stepper, EDHREC suggestions working again (fetched through the proxy because json.edhrec.com sends no CORS headers) and non-confusing colors in the mana sources chart. Touches Mage.Proxy, so components are rebuilt.",
     "highlights": [
       "Deck import: Moxfield and Archidekt URL imports now carry the commander/partner into the wizard, so a correct Commander deck no longer fails the final legality review",
-      "Import wizard stepper: removed the duplicated step numbers and redesigned it with connectors, active halo and completed states"
+      "Import wizard stepper: removed the duplicated step numbers and redesigned it with connectors, active halo and completed states",
+      "EDHREC suggestions: fetched through the proxy (fetchOnlineDeck source edhrec) instead of the browser, fixing 'Could not load suggestions' on hosted instances",
+      "Deck editor: mana sources chart no longer uses green for lands (it read as green mana); lands are gold and nonland sources violet"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

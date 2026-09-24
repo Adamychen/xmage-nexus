@@ -15,7 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Import de mazos desde servicios externos (Moxfield/Archidekt).
+ * Import de mazos desde servicios externos (Moxfield/Archidekt) y paginas de
+ * comandante de EDHREC (json.edhrec.com tampoco envia CORS).
  * <p>
  * El fetch corre aqui, en el proxy (Java), en vez de en el navegador: las APIs
  * de Moxfield/Archidekt no envian cabeceras CORS que permitan {@code fetch()}
@@ -30,6 +31,7 @@ final class OnlineDeckCommands {
     // una URL completa en vez de fallar y caer al urlOrId.trim() de abajo.
     private static final Pattern MOXFIELD_ID = Pattern.compile("moxfield\\.com/decks/([A-Za-z0-9_-]+)|id=([A-Za-z0-9_-]+)");
     private static final Pattern ARCHIDEKT_ID = Pattern.compile("archidekt\\.com/decks/(\\d+)|id=(\\d+)");
+    private static final Pattern EDHREC_SLUG = Pattern.compile("[a-z0-9][a-z0-9-]{0,99}");
     private static final int TIMEOUT_MS = 8000;
     private static final int MAX_BODY_BYTES = 2_000_000;
 
@@ -52,13 +54,19 @@ final class OnlineDeckCommands {
             JsonObject data = JsonParser.parseString(body).getAsJsonObject();
             ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, data));
         } catch (Exception ex) {
-            ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_FAILED, "fetch failed: " + ex.getMessage()));
+            boolean notFound = "edhrec".equals(source) && "HTTP 404".equals(ex.getMessage());
+            ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false,
+                    notFound ? ProxyProtocol.ERR_CARD_NOT_FOUND : ProxyProtocol.ERR_FAILED, "fetch failed: " + ex.getMessage()));
         }
         return true;
     }
 
     /** Resuelve la URL de API real (host/paths fijos, allowlist implicita) a partir de source + URL/id pegado por el usuario. */
     static String resolveApiUrl(String source, String urlOrId) {
+        if ("edhrec".equals(source)) {
+            String slug = urlOrId == null ? "" : urlOrId.trim();
+            return EDHREC_SLUG.matcher(slug).matches() ? "https://json.edhrec.com/pages/commanders/" + slug + ".json" : null;
+        }
         String id = extractId(source, urlOrId);
         if (id == null || id.isEmpty()) {
             return null;

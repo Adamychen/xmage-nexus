@@ -1,4 +1,5 @@
 import { scryfallFetch } from '../cards/scryfallClient'
+import { fetchEdhrecPageViaProxy } from '../net/commands'
 import type { ScryfallSearchCard } from './scryfallSearch'
 
 export interface EdhrecCardView {
@@ -145,6 +146,25 @@ async function idbPut(slug: string, value: EdhrecResult) {
   } catch {}
 }
 
+/** json.edhrec.com sends no CORS headers, so browsers can't fetch it directly;
+ *  the proxy fetches it server-side. Null = proxy unavailable (not connected,
+ *  older proxy build) → caller falls back to a direct fetch. */
+async function loadViaProxy(slug: string): Promise<EdhrecResult | null> {
+  try {
+    const res = await fetchEdhrecPageViaProxy(slug)
+    if (res.ok) {
+      const data = parseEdhrecPage(slug, res.data)
+      return data ? { status: 'ok', data } : { status: 'not_found' }
+    }
+    const code = (res as { errorCode?: string }).errorCode
+    if (code === 'CARD_NOT_FOUND') return { status: 'not_found' }
+    if (code === 'FAILED') return { status: 'error' }
+    return null
+  } catch {
+    return null
+  }
+}
+
 async function loadCommander(slug: string): Promise<EdhrecResult> {
   const cached = await idbGet(slug)
   if (cached) {
@@ -152,6 +172,14 @@ async function loadCommander(slug: string): Promise<EdhrecResult> {
     return cached
   }
   let result: EdhrecResult
+  const proxied = await loadViaProxy(slug)
+  if (proxied) {
+    if (proxied.status !== 'error') {
+      memory.set(slug, proxied)
+      void idbPut(slug, proxied)
+    }
+    return proxied
+  }
   try {
     const res = await fetch(jsonUrl(slug), { headers: { Accept: 'application/json' } })
     if (res.status === 404) {

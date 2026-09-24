@@ -151,8 +151,8 @@ export default function CurveChart({
 
   const totalSources = sourceLands + sourceNonlands
   const sourceSlices: ManaPieSlice[] = [
-    { key: 'lands', label: t('decks', 'mana_from_lands'), value: sourceLands, color: '#4caf6e', icon: <Icon name="tree" size={13} /> },
-    { key: 'nonlands', label: t('decks', 'mana_from_nonlands'), value: sourceNonlands, color: '#9aa0a6', icon: <Icon name="sparkles" size={13} /> },
+    { key: 'lands', label: t('decks', 'mana_from_lands'), value: sourceLands, color: '#e2b24a', icon: <Icon name="tree" size={13} /> },
+    { key: 'nonlands', label: t('decks', 'mana_from_nonlands'), value: sourceNonlands, color: '#a855f7', icon: <Icon name="sparkles" size={13} /> },
   ].filter((slice) => slice.value > 0)
 
   const distMax = Math.max(1, ...distByCmc.map((d) => Object.values(d).reduce((s, v) => s + v, 0)))

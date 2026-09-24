@@ -48,4 +48,13 @@ class OnlineDeckCommandsTest {
         // al marcador real "moxfield.com/decks/".
         assertEquals("nX0-VuJKOEuFVfDDLnKrTA", OnlineDeckCommands.extractId("moxfield", "https://moxfield.com/decks/nX0-VuJKOEuFVfDDLnKrTA"));
     }
+
+    @Test
+    void resolvesEdhrecSlugAndRejectsAnythingElse() {
+        assertEquals("https://json.edhrec.com/pages/commanders/atraxa-praetors-voice.json",
+                OnlineDeckCommands.resolveApiUrl("edhrec", "atraxa-praetors-voice"));
+        assertNull(OnlineDeckCommands.resolveApiUrl("edhrec", "../../etc/passwd"));
+        assertNull(OnlineDeckCommands.resolveApiUrl("edhrec", "Has Spaces"));
+        assertNull(OnlineDeckCommands.resolveApiUrl("edhrec", ""));
+    }
 }

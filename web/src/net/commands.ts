@@ -238,6 +238,10 @@ export async function fetchOnlineDeckJson(source: 'moxfield' | 'archidekt', urlO
   return res.ok ? (res.data ?? null) : null
 }
 
+export async function fetchEdhrecPageViaProxy(slug: string) {
+  return getGateway().send<unknown>('fetchOnlineDeck', { source: 'edhrec', urlOrId: slug })
+}
+
 export interface PhaseStops {
   yourTurn: Record<string, boolean>
   opponentTurn: Record<string, boolean>

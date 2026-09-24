@@ -101,7 +101,9 @@ Piezas:
   visual presentation polish (recap strip, smart stops, combat/death FX, playmats, adaptive music,
   cinematic end screen), proxy activity logging, /admin/status, and Docker support.
   v0.2.5 (2026-09-24): web-only fix (commander lost on Moxfield/Archidekt URL import + import stepper
-  polish); `components_tag` = `v0.2.4`.
+  polish) — never released, superseded by v0.2.6.
+  v0.2.6 (2026-09-24): v0.2.5 fixes + EDHREC via proxy (`OnlineDeckCommands` source `edhrec`; json.edhrec.com has no CORS)
+  + mana sources chart colors; touches `Mage.Proxy` => `components_tag` VACÍO.
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 
