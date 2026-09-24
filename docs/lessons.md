@@ -27,6 +27,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 ## Web client
 
 - The tap rotation lives in `transform`, so any hover/animation that also writes `transform` replaces it and the card straightens: board effects must use the independent `translate`/`scale` properties, which compose with it (guard: `web/e2e/tapped-rotation.spec.ts`).
+- A mouse-clicked `<button>` keeps focus, so a global shortcut guarded by "ignore keys on native controls" dies after any toolbar click (Space stopped passing priority after clicking the log toggle): release mouse-focused game controls on Space instead (`mouseFocusedGameControl`), keep the guard only for keyboard focus, text entry, dialogs and menus (guard: `web/e2e/control.spec.ts`).
 - Decorative duplicates of visible text (e.g. the cinematic end title) go in a `data-*` attribute rendered with `::before { content: attr(...) }`: a second text node with the same string makes `getByText` find multiple elements and breaks existing tests.
 - Fixed-size layout boxes that crop content must use `overflow: clip`, not `hidden`: a `hidden` box is still a scroll container, so focusing a child that peeks past its edge (a clicked hand card) scrolls the whole board by up to ~100px and it never scrolls back (guard: `e2e/board-scroll.spec.ts`).
 - `state/slices/*` must only import dependency-free modules: pulling a helper that reaches `board/*` (e.g. via `commanders.ts`) creates an import cycle and a TDZ crash at store init; keep catalogs (`appearance/playmats.ts`) separate from game-aware helpers (`playmatIdentity.ts`).

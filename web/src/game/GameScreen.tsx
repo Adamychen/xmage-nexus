@@ -74,6 +74,23 @@ export function isSpaceShortcutBlocked(target: EventTarget | null): boolean {
   return isSpaceShortcutTargetIgnored(target) || Boolean(document.querySelector(SPACE_SHORTCUT_OFF_SELECTOR))
 }
 
+const MOUSE_RELEASABLE_CONTROL =
+  'button, a, summary, [role="button"], [role="tab"], [role="switch"], input[type="checkbox"], input[type="radio"]'
+const MOUSE_RELEASE_EXCLUDED = '[role="dialog"], [aria-modal="true"], [role="menu"], [role="listbox"], [contenteditable]'
+
+/** Game-screen control (button, tab, toggle…) still holding focus after a
+ *  mouse click. Space releases it and keeps passing priority instead of being
+ *  swallowed until the user clicks elsewhere. Text fields, dialogs and menus
+ *  are excluded: Space keeps its native behavior there. */
+export function mouseFocusedGameControl(target: EventTarget | null, root: HTMLElement | null): HTMLElement | null {
+  const el = target as HTMLElement | null
+  if (!el || !root || typeof el.closest !== 'function' || !root.contains(el)) return null
+  const control = el.closest<HTMLElement>(MOUSE_RELEASABLE_CONTROL)
+  if (!control || !root.contains(control)) return null
+  if (control.closest(MOUSE_RELEASE_EXCLUDED)) return null
+  return control
+}
+
 export default function GameScreen() {
   const { t } = useTranslation()
   const game = useGame()
@@ -82,6 +99,7 @@ export default function GameScreen() {
   const feedback = useStore((s) => s.feedback)
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
+  const gameRootRef = useRef<HTMLDivElement>(null)
   const gameBodyRef = useRef<HTMLDivElement>(null)
   const boardWrapRef = useRef<HTMLDivElement>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
@@ -222,10 +240,32 @@ export default function GameScreen() {
     }
   }, [gameId, busy, t])
 
+  const pointerFocusRef = useRef(false)
+  useEffect(() => {
+    const onPointerDown = () => {
+      pointerFocusRef.current = true
+    }
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') pointerFocusRef.current = false
+    }
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onTab, true)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onTab, true)
+    }
+  }, [])
+
   // Space activates main action / pass priority
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !isSpaceShortcutBlocked(e.target)) {
+      if (e.code !== 'Space') return
+      const released =
+        pointerFocusRef.current && !e.defaultPrevented && !document.querySelector(SPACE_SHORTCUT_OFF_SELECTOR)
+          ? mouseFocusedGameControl(e.target, gameRootRef.current)
+          : null
+      if (released) released.blur()
+      if (released || !isSpaceShortcutBlocked(e.target)) {
         e.preventDefault()
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
@@ -381,7 +421,7 @@ export default function GameScreen() {
   return (
     <PromptSlotProvider value={promptSlot}>
       <DividerSlotContext.Provider value={setDividerSlot}>
-        <div className="game" style={{ zoom: inverseZoom(settings.uiScale) }}>
+        <div className="game" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
           {!dividerSlot && <header className="game-top">{strip}</header>}
           {dividerSlot && createPortal(strip, dividerSlot)}
           <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">

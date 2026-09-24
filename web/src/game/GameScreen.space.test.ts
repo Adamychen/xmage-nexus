@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { isSpaceShortcutBlocked, isSpaceShortcutTargetIgnored } from './GameScreen'
+import { isSpaceShortcutBlocked, isSpaceShortcutTargetIgnored, mouseFocusedGameControl } from './GameScreen'
 
 function el(tag: string, attrs: Record<string, string> = {}, parent?: HTMLElement): HTMLElement {
   const node = document.createElement(tag)
@@ -74,5 +74,37 @@ describe('isSpaceShortcutBlocked (Space shortcut guard + visores abiertos)', () 
     expect(isSpaceShortcutBlocked(card)).toBe(true)
     overlay.remove()
     expect(isSpaceShortcutBlocked(document.body)).toBe(false)
+  })
+})
+
+describe('mouseFocusedGameControl (Space releases mouse-focused game controls)', () => {
+  it('releases buttons and toggles inside the game screen (e.g. the log drawer toggle)', () => {
+    const root = el('div')
+    const toolbar = el('div', { role: 'toolbar' }, root)
+    const logToggle = el('button', { 'aria-pressed': 'true' }, toolbar)
+    const icon = el('span', {}, logToggle)
+    expect(mouseFocusedGameControl(logToggle, root)).toBe(logToggle)
+    expect(mouseFocusedGameControl(icon, root)).toBe(logToggle)
+    const tab = el('div', { role: 'tab' }, root)
+    expect(mouseFocusedGameControl(tab, root)).toBe(tab)
+  })
+
+  it('keeps text entry, dialogs and menus untouched', () => {
+    const root = el('div')
+    for (const tag of ['input', 'textarea', 'select']) {
+      expect(mouseFocusedGameControl(el(tag, {}, root), root), tag).toBeNull()
+    }
+    const dialog = el('div', { role: 'dialog' }, root)
+    expect(mouseFocusedGameControl(el('button', {}, dialog), root)).toBeNull()
+    const menu = el('div', { role: 'menu' }, root)
+    expect(mouseFocusedGameControl(el('button', {}, menu), root)).toBeNull()
+  })
+
+  it('ignores controls outside the game screen and plain surfaces', () => {
+    const root = el('div')
+    expect(mouseFocusedGameControl(el('button'), root)).toBeNull()
+    expect(mouseFocusedGameControl(el('div', {}, root), root)).toBeNull()
+    expect(mouseFocusedGameControl(document.body, root)).toBeNull()
+    expect(mouseFocusedGameControl(el('button', {}, root), null)).toBeNull()
   })
 })
