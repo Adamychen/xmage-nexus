@@ -96,6 +96,10 @@ Piezas:
   nombre, parche exclusivo del fork nexus) pero el servidor real la rechazaba con "Card not found"
   al unirse; `DeckValidation.checkCard` ahora la marca como `missing`. También toca `Mage.Proxy`
   (`DeckValidation.java`) => requiere `components_tag` VACÍO otra vez (no reutiliza v0.2.2/v0.2.1/v0.2.0).
+  v0.2.4 (2026-09-24): 3-step deck import wizard (format detection, bulk printings, legality),
+  EDHREC commander recommendations, opt-in smart mana payment, local match history with per-deck stats,
+  visual presentation polish (recap strip, smart stops, combat/death FX, playmats, adaptive music,
+  cinematic end screen), proxy activity logging, /admin/status, and Docker support.
 - Dev local sin releases: `NEXUS_MANIFEST` a un manifest con URLs `file://`; overrides
   `NEXUS_DATA_DIR`, `NEXUS_TARGET`, `NEXUS_SERVER_PORT/WS_PORT/HTTP_PORT`.
 
