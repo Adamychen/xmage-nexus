@@ -47,4 +47,26 @@ test.describe('About modal and remote news', () => {
       await expect(page.getByTestId('lobby-news-dot')).toBeHidden()
     })
   })
+
+  test('news with GitHub unreachable (desktop CSP / rate limit) fetches once and stays responsive', async ({ page }) => {
+    await withFakeServer(lobbyScenario, async () => {
+      let githubCalls = 0
+      await page.route('https://api.github.com/**', (route) => {
+        githubCalls++
+        return route.abort()
+      })
+      await page.addInitScript(() => {
+        window.localStorage.clear()
+      })
+      await login(page, 'about-offline')
+      const beforeOpen = githubCalls
+      await page.getByTestId('open-about').click()
+      await page.getByTestId('about-tab-news').click()
+      await expect(page.getByTestId('about-modal')).toContainText(/offline|sin conexión|GitHub/i, { timeout: 10000 })
+      await page.waitForTimeout(3000)
+      expect(githubCalls - beforeOpen, 'news must not refetch in a loop when GitHub fails').toBeLessThanOrEqual(2)
+      await page.getByTestId('about-close').click()
+      await expect(page.getByTestId('about-modal')).toBeHidden()
+    })
+  })
 })

@@ -3,7 +3,7 @@ import Button from '../ui/Button'
 import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import Tabs from '../ui/Tabs'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
@@ -38,8 +38,11 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
 
   useEscape(onClose)
 
+  const newsRequested = useRef(false)
+
   useEffect(() => {
-    if (activeTab !== 'news' || releases.length > 0 || loadingNews) return
+    if (activeTab !== 'news' || newsRequested.current) return
+    newsRequested.current = true
     setLoadingNews(true)
     void getNews()
       .then(({ releases: list, offline: off }) => {
@@ -48,7 +51,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
         markNewsSeen(list)
       })
       .finally(() => setLoadingNews(false))
-  }, [activeTab, releases.length, loadingNews])
+  }, [activeTab])
 
   const nexusReleases = releases.filter((r) => r.repo === 'nexus')
   const xmageReleases = releases.filter((r) => r.repo === 'xmage')

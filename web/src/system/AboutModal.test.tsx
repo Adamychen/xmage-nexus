@@ -58,6 +58,19 @@ describe('AboutModal', () => {
     expect(seen).toEqual({ nexus: 'v9.9', xmage: 'xmage_9' })
   })
 
+  it('fetches the news once when GitHub is unreachable instead of looping', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<AboutModal onClose={() => {}} initialTab="news" />)
+    await waitFor(() => expect(screen.getByTestId('about-feed-nexus')).toBeTruthy())
+    await new Promise((r) => setTimeout(r, 100))
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    fireEvent.click(screen.getByTestId('about-tab-about'))
+    fireEvent.click(screen.getByTestId('about-tab-news'))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   it('closes on ✕ and on Escape', () => {
     const onClose = vi.fn()
     render(<AboutModal onClose={onClose} />)

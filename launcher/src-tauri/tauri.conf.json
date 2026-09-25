@@ -32,7 +32,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: https://*.scryfall.io data: blob:; connect-src 'self' ipc: http://ipc.localhost ws: wss: https://api.scryfall.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: https://*.scryfall.io data: blob:; connect-src 'self' ipc: http://ipc.localhost ws: wss: https://api.scryfall.com https://api.github.com https://json.edhrec.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'"
     }
   },
   "plugins": {

@@ -40,6 +40,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - Smart mana payment (`game/smartManaPayment.ts`) must enumerate sources from the controlled player's battlefield `rules`, not `canPlayObjects`, and re-solve at every `GAME_PLAY_MANA` because the server asks once per tap. It never uses hidden information (only the own hand, own board and the opponent's visible untapped mana) and bails to manual play instead of guessing (unknown cost tokens, sacrifice or restricted sources, convoke).
 - Board FX must stay in the style ratchet: colours come from `ui/tokens.css` (`--mana-*-rgb`, `--ember-rgb`, …) and every decorative animation needs its `html.fx-off` and `prefers-reduced-motion` opt-outs.
 - Scryfall's rate limit is per IP, not per tab: the request queue shares its clock and its 429 pause across tabs over a `BroadcastChannel`, and every card lookup must go through the IndexedDB-backed `scryfallJson` (raw `scryfallFetch` means refetching everything on each reload).
+- Never guard a fetch effect on "result is still empty" (`releases.length > 0 || loading`): when the fetch fails and returns `[]`, clearing `loading` re-fires it forever (AboutModal news: ~1,400 req/s, froze the desktop app). Use a once-per-mount ref. Every external API the web fetches must also be in the desktop CSP `connect-src` (`launcher/src-tauri/tauri.conf.json`), guarded by `system/desktopCsp.test.ts`.
 
 ## Testing & tooling
 
