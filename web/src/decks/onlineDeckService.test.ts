@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { META_DECK_CATALOG } from './metaDeckCatalog'
-import { fetchArchidektDeck, fetchMoxfieldDeck, loadDeckFromOnlineSource } from './onlineDeckService'
+import { archidektExcludedCategories, archidektFormat, fetchArchidektDeck, fetchMoxfieldDeck, loadDeckFromOnlineSource } from './onlineDeckService'
+import archidektRealDeck from './__fixtures__/archidekt-deck-15000794.json'
 import { fetchOnlineDeckJson } from '../net/commands'
 
 // El fetch a Moxfield/Archidekt corre en el proxy (Java), no vía `fetch()` del
@@ -114,6 +115,30 @@ Deck
     expect(deck?.commanderCard).toMatchObject({ cardName: "Atraxa, Praetors' Voice", setCode: 'C16' })
     expect(deck?.partnerCard).toBeUndefined()
     expect(deck?.cards.filter((c) => c.cardName === "Atraxa, Praetors' Voice")).toHaveLength(1)
+  })
+
+  it('archidekt: real full-endpoint response keeps the deck and drops the Maybeboard', async () => {
+    mockedFetchOnlineDeckJson.mockResolvedValueOnce(archidektRealDeck)
+    const deck = await fetchArchidektDeck('https://archidekt.com/decks/15000794/bracket_3_slicer_no_infinit')
+    expect(mockedFetchOnlineDeckJson).toHaveBeenCalledWith('archidekt', '15000794')
+    const total = (deck?.cards ?? []).reduce((n, c) => n + c.amount, 0)
+    expect(total).toBe(91)
+    expect(deck?.sideboard).toEqual([])
+    expect(deck?.cards.some((c) => c.cardName === 'Bladegraft Aspirant')).toBe(false)
+    expect(deck?.commanderCard).toMatchObject({ cardName: 'Slicer, Hired Muscle // Slicer, High-Speed Antagonist' })
+    expect(deck?.format).toBe('Commander')
+  })
+
+  it('archidekt: excluded categories come from includedInDeck, with Maybeboard as the fallback', () => {
+    expect([...archidektExcludedCategories([{ name: 'Maybe', includedInDeck: false }, { name: 'Ramp', includedInDeck: true }])]).toEqual(['Maybe'])
+    expect(archidektExcludedCategories(undefined).has('Maybeboard')).toBe(true)
+  })
+
+  it('archidekt: format from deckFormat, else a designated commander, else card count', () => {
+    expect(archidektFormat(3, false, 60)).toBe('Commander')
+    expect(archidektFormat(2, false, 60)).toBe('Modern')
+    expect(archidektFormat(99, true, 91)).toBe('Commander')
+    expect(archidektFormat(undefined, false, 60)).toBe('Standard')
   })
 
   it('moxfield: si el proxy no está conectado, degrada a null en vez de lanzar', async () => {

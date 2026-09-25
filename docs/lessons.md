@@ -24,6 +24,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 
 - `connect` must be idempotent per `host|username` (browser reloads): restarting the session clears WS registries and triggers reconnect loops; test mode kicks duplicate connections from the same host.
 - Every `SessionImpl` (web client, SIM, future bots) needs its own keep-alive ping or `UserManagerImpl` expires it (~4 min lease) and the game declares the seat lost/quit.
+- Archidekt's `/api/decks/{id}/small/` now returns `cards: []`: import from the full `/api/decks/{id}/` (~350 KB) and drop cards in any category with `includedInDeck: false` (Maybeboard); `deckFormat` is numeric (3 = Commander). Fixture: `web/src/decks/__fixtures__/archidekt-deck-15000794.json`.
 
 ## Web client
 

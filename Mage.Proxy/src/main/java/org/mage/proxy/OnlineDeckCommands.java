@@ -75,7 +75,7 @@ final class OnlineDeckCommands {
             return "https://api.moxfield.com/v2/decks/all/" + id;
         }
         if ("archidekt".equals(source)) {
-            return "https://archidekt.com/api/decks/" + id + "/small/";
+            return "https://archidekt.com/api/decks/" + id + "/";
         }
         return null;
     }

@@ -20,9 +20,9 @@ class OnlineDeckCommandsTest {
     }
 
     @Test
-    void archidektUrlResolvesToNumericDeckIdApiUrl() {
+    void archidektUrlResolvesToTheFullDeckEndpoint() {
         String url = OnlineDeckCommands.resolveApiUrl("archidekt", "https://archidekt.com/decks/123456/some-deck-name");
-        assertEquals("https://archidekt.com/api/decks/123456/small/", url);
+        assertEquals("https://archidekt.com/api/decks/123456/", url);
     }
 
     @Test

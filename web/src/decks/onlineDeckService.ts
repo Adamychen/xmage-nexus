@@ -131,6 +131,34 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
   }
 }
 
+const ARCHIDEKT_FORMATS: Record<number, DeckFormat> = {
+  1: 'Standard',
+  2: 'Modern',
+  3: 'Commander',
+  4: 'Legacy',
+  5: 'Vintage',
+  6: 'Pauper',
+}
+
+const ARCHIDEKT_DEFAULT_EXCLUDED = ['Maybeboard', 'Considering']
+
+/** Archidekt categories flagged `includedInDeck: false` (Maybeboard by
+ * default): a card in any of them is not part of the deck. */
+export function archidektExcludedCategories(categories: unknown): Set<string> {
+  if (!Array.isArray(categories)) return new Set(ARCHIDEKT_DEFAULT_EXCLUDED)
+  return new Set(
+    categories
+      .filter((c: any) => c && typeof c.name === 'string' && c.includedInDeck === false)
+      .map((c: any) => c.name as string),
+  )
+}
+
+export function archidektFormat(deckFormat: unknown, hasCommander: boolean, mainCount: number): DeckFormat {
+  const known = typeof deckFormat === 'number' ? ARCHIDEKT_FORMATS[deckFormat] : undefined
+  if (known) return known
+  return hasCommander || mainCount >= 99 ? 'Commander' : 'Standard'
+}
+
 /**
  * Parses and extracts deck from Archidekt API.
  */
@@ -147,9 +175,12 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
     const mainCards: DeckCard[] = []
     const sideCards: DeckCard[] = []
     const commanderList: DeckCard[] = []
+    const excluded = archidektExcludedCategories(data.categories)
 
     if (Array.isArray(data.cards)) {
       for (const entry of data.cards) {
+        if (entry.deletedAt) continue
+        if ((entry.categories || []).some((c: string) => excluded.has(c))) continue
         const cardName = entry.card?.oracleCard?.name || entry.card?.name
         if (!cardName) continue
         const setCode = entry.card?.edition?.editioncode?.toUpperCase() || 'M10'
@@ -170,7 +201,7 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
     return {
       id: makeDeckId(),
       name,
-      format: mainCards.reduce((s, c) => s + c.amount, 0) >= 99 ? 'Commander' : 'Standard',
+      format: archidektFormat(data.deckFormat, commanderList.length > 0, mainCards.reduce((s, c) => s + c.amount, 0)),
       cards: mainCards,
       sideboard: sideCards,
       colors: [],
