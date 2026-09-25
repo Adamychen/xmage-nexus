@@ -5,6 +5,8 @@ import { SLEEVES } from '../appearance/sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
 import Toggle from '../ui/Toggle'
+import Button from '../ui/Button'
+import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './SettingsModal.css'
 import '../appearance/SleevePickerModal.css'
 
@@ -124,6 +126,42 @@ export function BoardSection() {
             <span className="settings-card-desc">{t('lobby', l.descKey as 'board_standard_desc')}</span>
             {settings.boardLayout === l.id && <span className="settings-card-check">✓</span>}
           </button>
+        ))}
+      </div>
+      <h3 className="settings-section-title">{t('lobby', 'card_style_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'card_style_hint')}</p>
+      <div className="settings-cards">
+        {CARD_STYLES.map((style) => (
+          <Button
+            key={style}
+            variant="ghost"
+            className={`settings-card ${settings.cardStyle === style ? 'selected' : ''}`}
+            onClick={() => setSetting('cardStyle', style)}
+            aria-pressed={settings.cardStyle === style}
+            data-testid={`settings-card-style-${style}`}
+          >
+            <span className="settings-card-label">{t('lobby', `card_style_${style}`)}</span>
+            <span className="settings-card-desc">{t('lobby', `card_style_${style}_desc`)}</span>
+            {settings.cardStyle === style && <span className="settings-card-check">✓</span>}
+          </Button>
+        ))}
+      </div>
+      <h3 className="settings-section-title">{t('lobby', 'tap_style_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'tap_style_hint')}</p>
+      <div className="settings-cards">
+        {TAP_STYLES.map((style) => (
+          <Button
+            key={style}
+            variant="ghost"
+            className={`settings-card ${settings.tapStyle === style ? 'selected' : ''}`}
+            onClick={() => setSetting('tapStyle', style)}
+            aria-pressed={settings.tapStyle === style}
+            data-testid={`settings-tap-style-${style}`}
+          >
+            <span className="settings-card-label">{t('lobby', `tap_style_${style}`)}</span>
+            <span className="settings-card-desc">{t('lobby', `tap_style_${style}_desc`)}</span>
+            {settings.tapStyle === style && <span className="settings-card-check">✓</span>}
+          </Button>
         ))}
       </div>
       <h3 className="settings-section-title">{t('lobby', 'sleeve_pick_title')}</h3>

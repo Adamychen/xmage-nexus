@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { CLASSIC_CARD_ASPECT } from './compactCard'
 
 const MIN_CARD_W = 44
 const MAX_CARD_W = 145
 const MAX_PLAYER_CARD_W = 175
-const CARD_ASPECT = 1.4
+const MAX_COMPACT_CARD_W = 190
+const MAX_COMPACT_PLAYER_CARD_W = 230
 
 /**
  * Galería de estados (dev): congela el alto de la fila de estado que usa la
@@ -24,7 +26,7 @@ interface ZoneScale {
   ref: React.RefCallback<HTMLDivElement> & React.RefObject<HTMLDivElement | null>
 }
 
-export function useZoneScale(): ZoneScale {
+export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT): ZoneScale {
   const [el, setEl] = useState<HTMLDivElement | null>(null)
   const nodeRef = useRef<HTMLDivElement | null>(null)
   const [cardW, setCardW] = useState(120)
@@ -78,10 +80,13 @@ export function useZoneScale(): ZoneScale {
 
       const rowHeight = availH / cardRows
       const safeCardH = Math.max(28, rowHeight - (isCompactPod ? 2 : 4))
-      const fromHeight = safeCardH / CARD_ASPECT
+      const fromHeight = safeCardH / cardAspect
 
       const isPlayerZone = el.classList.contains('player-zone')
-      const maxW = isPlayerZone ? MAX_PLAYER_CARD_W : MAX_CARD_W
+      const compact = cardAspect < 1
+      const maxW = compact
+        ? (isPlayerZone ? MAX_COMPACT_PLAYER_CARD_W : MAX_COMPACT_CARD_W)
+        : (isPlayerZone ? MAX_PLAYER_CARD_W : MAX_CARD_W)
 
       const w = Math.max(MIN_CARD_W, Math.min(maxW, fromHeight))
       setCardW(Math.round(w))
@@ -126,7 +131,7 @@ export function useZoneScale(): ZoneScale {
       ro?.disconnect()
       mo?.disconnect()
     }
-  }, [el])
+  }, [el, cardAspect])
 
   return { cardW, ref: refCallback }
 }

@@ -523,3 +523,44 @@
     transition: none;
   }
 }
+
+/* Compact card style: battlefield tiles are landscape art crops (CardSlot `is-compact`). */
+.board-zone.card-style-compact .bz-band,
+.board-zone.card-style-compact .bz-marquee {
+  --card-h-ratio: 0.75;
+}
+
+.board-zone.card-style-compact .stack-group .card-slot + .card-slot {
+  margin-left: calc(-1 * var(--card-w) * 0.86);
+}
+
+.board-zone.card-style-compact .stack-group .card-slot.tapped + .card-slot.tapped {
+  margin-left: calc(-1 * var(--card-w) * 0.66);
+}
+
+.board-zone.card-style-compact .stack-group:not(:hover) .card-slot:has(+ .card-slot) :is(.compact-plate, .compact-mana-source) {
+  opacity: 0;
+}
+
+.board-zone.card-style-compact .stack-group:hover .card-slot + .card-slot {
+  margin-left: var(--sp-1h);
+}
+
+/* Tilted tapped permanents (settings → tapped cards "tilted"): 45° instead of
+   90°, scaled so the rotated box keeps the row height and the 90° footprint. */
+.board-zone.tap-tilted .card-slot.tapped {
+  transform: rotate(45deg) scale(0.825);
+}
+
+.board-zone.tap-tilted .card-slot.is-compact.tapped {
+  transform: rotate(45deg) scale(0.606);
+}
+
+/* Lower specificity than the stack-group overlap so piles keep overlapping. */
+.tap-tilted .card-slot.is-compact.tapped {
+  margin: 0 calc(var(--card-w) * -0.125);
+}
+
+.board-zone.card-style-compact.tap-tilted .stack-group .card-slot.tapped + .card-slot.tapped {
+  margin-left: calc(-1 * var(--card-w) * 0.725);
+}

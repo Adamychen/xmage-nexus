@@ -334,11 +334,11 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   const next = { ...getState().settings, [key]: value }
   if (key === 'boardLayout') next.boardLayoutManual = true
   setState({ settings: next })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, boardLayout, boardLayoutManual, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, boardLayout, boardLayoutManual, uiScale, cjkBoost, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   saveMusicSettings({ musicEnabled, musicVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, playmatId })
+  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, playmatId, cardStyle, tapStyle })
   saveAutoAnswers(autoAnswers.map(({ pattern, answer }) => ({ pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })

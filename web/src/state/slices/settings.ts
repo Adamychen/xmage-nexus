@@ -4,6 +4,7 @@ import type { PhaseStops } from '../../net/commands'
 import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
+import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
 
 export interface SettingsState {
   autoKeepMulligan: boolean
@@ -30,6 +31,8 @@ export interface SettingsState {
   musicVolume: number
   sleeveId: string
   playmatId: PlaymatId
+  cardStyle: CardStyle
+  tapStyle: TapStyle
   uiScale: ZoomLevel
   cjkBoost: boolean
 }
@@ -57,5 +60,7 @@ export const initialSettings: SettingsSlice = {
     ...loadAppearanceSettings(),
     boardLayoutManual: loadAppearanceSettings().boardLayoutManual ?? false,
     playmatId: normalizePlaymat(loadAppearanceSettings().playmatId),
+    cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
+    tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),
   },
 }

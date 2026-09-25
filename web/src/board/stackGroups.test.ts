@@ -78,6 +78,19 @@ describe('stackGroupKeyOf', () => {
 })
 
 describe('groupStackables', () => {
+  it('puts untapped cards at the right end of a pile (drawn on top), keeping order within each state', () => {
+    const { groups } = groupStackables(
+      entries([
+        land('Swamp'),
+        land('Swamp', { tapped: true }),
+        land('Swamp'),
+        land('Swamp', { tapped: true }),
+      ]),
+      'lands',
+    )
+    expect(groups[0].items.map(([id]) => id)).toEqual(['c1', 'c3', 'c0', 'c2'])
+  })
+
   it(`stacks from ${STACK_GROUP_MIN} but leaves pairs solo`, () => {
     const { groups, solos } = groupStackables(entries([land('Island'), land('Island')]), 'lands')
     expect(groups).toHaveLength(0)

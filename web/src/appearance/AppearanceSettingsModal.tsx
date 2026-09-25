@@ -3,6 +3,7 @@ import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
 import { SLEEVES } from './sleeves'
 import { PLAYMATS } from './playmats'
+import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './playmats.css'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
@@ -125,6 +126,54 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                   <span className="board-layout-desc">{t('lobby', l.descKey as any)}</span>
                   {isSelected && <span className="board-layout-check">✓</span>}
                 </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">{t('lobby', 'card_style_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'card_style_hint')}</p>
+          <div className="board-layout-grid">
+            {CARD_STYLES.map((style) => {
+              const isSelected = settings.cardStyle === style
+              return (
+                <Button
+                  key={style}
+                  variant="ghost"
+                  className={`board-layout-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSetting('cardStyle', style)}
+                  aria-pressed={isSelected}
+                  data-testid={`card-style-${style}`}
+                >
+                  <span className="board-layout-label">{t('lobby', `card_style_${style}`)}</span>
+                  <span className="board-layout-desc">{t('lobby', `card_style_${style}_desc`)}</span>
+                  {isSelected && <span className="board-layout-check">✓</span>}
+                </Button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">{t('lobby', 'tap_style_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'tap_style_hint')}</p>
+          <div className="board-layout-grid">
+            {TAP_STYLES.map((style) => {
+              const isSelected = settings.tapStyle === style
+              return (
+                <Button
+                  key={style}
+                  variant="ghost"
+                  className={`board-layout-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSetting('tapStyle', style)}
+                  aria-pressed={isSelected}
+                  data-testid={`tap-style-${style}`}
+                >
+                  <span className="board-layout-label">{t('lobby', `tap_style_${style}`)}</span>
+                  <span className="board-layout-desc">{t('lobby', `tap_style_${style}_desc`)}</span>
+                  {isSelected && <span className="board-layout-check">✓</span>}
+                </Button>
               )
             })}
           </div>

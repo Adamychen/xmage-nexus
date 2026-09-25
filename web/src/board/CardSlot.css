@@ -1,6 +1,6 @@
 .card-slot {
   width: var(--card-w, 100px);
-  height: calc(var(--card-w, 100px) * 1.4);
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
   position: relative;
   border-radius: var(--r-base);
   overflow: hidden;
@@ -587,7 +587,7 @@ html.fx-off .counter-badge {
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-  height: calc(var(--card-w, 100px) * 1.4);
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
 }
 
 .card-attachment-group > .card-slot,
@@ -682,7 +682,7 @@ html.fx-off .counter-badge {
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-  height: calc(var(--card-w, 100px) * 1.4);
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
 }
 
 .mutate-parts {
@@ -855,4 +855,142 @@ html.fx-off .entered-glow {
   .entered-glow {
     animation: none;
   }
+}
+
+/* ── Compact battlefield tiles (settings → card style "compact") ───────
+   Art crop with the name bottom-left, the type bottom-right and the mana a
+   source produces top-left. Tile height comes from `--card-h-ratio` (0.75),
+   set on the battlefield bands of a `.card-style-compact` zone. */
+.card-slot.is-compact {
+  --plate-h: clamp(13px, calc(var(--card-w, 100px) * 0.15), 24px);
+  background: var(--ink-1);
+}
+
+.card-slot.is-compact .card-art-crop {
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+.card-slot.is-compact .card-art-fallback {
+  object-fit: cover;
+  object-position: 50% 16%;
+  transform: scale(1.14);
+  transform-origin: 50% 25%;
+}
+
+.card-slot.is-compact.tapped {
+  transform: rotate(90deg) scale(0.75);
+  margin: 0 calc(var(--card-w) * -0.21875);
+}
+
+.compact-plate {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--plate-h);
+  padding: 0 var(--sp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  background: linear-gradient(180deg, transparent 0%, rgb(var(--ink-rgb) / 0.72) 38%, rgb(var(--ink-rgb) / 0.92) 100%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.compact-plate.has-stat {
+  padding-right: calc(var(--plate-h) * 2.6);
+}
+
+.compact-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-display);
+  font-size: clamp(8px, calc(var(--card-w, 100px) * 0.085), 13px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-hi);
+  text-shadow: 0 1px 2px var(--shade-5);
+}
+
+.compact-type {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: clamp(6px, calc(var(--card-w, 100px) * 0.058), 10px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  text-shadow: 0 1px 2px var(--shade-5);
+}
+
+.compact-mana-source {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  gap: var(--sp-0h);
+  padding: var(--sp-0h);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.78);
+  box-shadow: 0 1px 4px var(--shade-4);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.compact-mana-pip {
+  width: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px) !important;
+  height: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px) !important;
+}
+
+.compact-mana-any {
+  display: block;
+  width: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px);
+  height: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px);
+  border-radius: 50%;
+  background: conic-gradient(rgb(var(--mana-w-rgb)) 0 20%, rgb(var(--mana-u-rgb)) 0 40%, rgb(var(--mana-b-rgb)) 0 60%, rgb(var(--mana-r-rgb)) 0 80%, rgb(var(--mana-g-rgb)) 0);
+  border: 1px solid var(--veil-5);
+}
+
+.card-slot.is-compact .pt-badge,
+.card-slot.is-compact .loyalty-badge,
+.card-slot.is-compact .defense-badge {
+  bottom: 2px;
+  right: 2px;
+  padding: 0 var(--sp-1);
+  font-size: clamp(9px, calc(var(--card-w, 100px) * 0.09), 13px);
+}
+
+.card-slot.is-compact .card-counters-wrap {
+  bottom: calc(var(--plate-h) + 3px);
+}
+
+.card-slot.is-compact .damage-badge {
+  bottom: calc(var(--plate-h) + 3px);
+}
+
+.card-slot.is-compact .card-icons {
+  bottom: calc(var(--plate-h) + 22px);
+}
+
+.card-slot.is-compact .sickness-badge {
+  top: 4px;
+  left: 50%;
+  margin-left: -10px;
+}
+
+.card-slot.is-compact .keyword-badges {
+  top: 4px;
+  right: 4px;
+}
+
+.card-slot.is-compact .card-transform-badge {
+  top: auto;
+  bottom: calc(var(--plate-h) + 3px);
+  left: auto;
+  right: 4px;
 }

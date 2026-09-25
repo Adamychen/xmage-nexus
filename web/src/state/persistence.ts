@@ -544,6 +544,7 @@ export function saveMusicSettings(settings: MusicSettings) {
 }
 
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
+import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
 export type ZoomLevel = number
@@ -555,6 +556,8 @@ export interface AppearanceSettings {
   cjkBoost: boolean
   boardLayoutManual?: boolean
   playmatId?: string
+  cardStyle?: CardStyle
+  tapStyle?: TapStyle
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
@@ -574,7 +577,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
       const scale = normalizeZoom(parsed.uiScale)
       const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
       const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
-      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, ...(playmatId ? { playmatId } : null) }
+      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), ...(playmatId ? { playmatId } : null) }
     }
   } catch {}
   return { ...DEFAULT_APPEARANCE }

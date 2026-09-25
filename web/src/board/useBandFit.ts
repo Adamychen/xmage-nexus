@@ -18,7 +18,7 @@ function px(value: string): number {
  * scroll horizontal. Escribe `--card-w` directamente en la banda (los hijos lo
  * heredan) y marca `data-band-lines`; el scroll solo queda por debajo del suelo.
  */
-export function useBandFit(el: HTMLElement | null, baseW: number, compact: boolean): void {
+export function useBandFit(el: HTMLElement | null, baseW: number, compact: boolean, aspect?: number): void {
   useLayoutEffect(() => {
     if (!el) return
 
@@ -77,6 +77,7 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
         availH,
         maxW: baseW,
         minW,
+        aspect,
       })
       apply(fit.cardW, fit.lines)
     }
@@ -104,5 +105,5 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
       el.style.removeProperty('--card-w')
       el.removeAttribute('data-band-lines')
     }
-  }, [el, baseW, compact])
+  }, [el, baseW, compact, aspect])
 }

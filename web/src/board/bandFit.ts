@@ -1,4 +1,6 @@
-export const CARD_ASPECT = 1.4
+import { CLASSIC_CARD_ASPECT } from './compactCard'
+
+export const CARD_ASPECT = CLASSIC_CARD_ASPECT
 export const MAX_BAND_LINES = 3
 const WRAP_WASTE = 1.12
 
@@ -15,6 +17,8 @@ export interface BandFitInput {
   maxW: number
   /** Suelo: por debajo de esto se prefiere el scroll horizontal a seguir encogiendo. */
   minW: number
+  /** Card height / width (classic 1.4, compact tiles less than 1). */
+  aspect?: number
 }
 
 export interface BandFit {
@@ -39,7 +43,7 @@ function widthFit(input: BandFitInput, lines: number): number {
 
 function heightFit(input: BandFitInput, lines: number): number {
   const rowGap = lines > 1 ? Math.max(2, Math.round(input.gap / 2)) : 0
-  return (input.availH - (lines - 1) * rowGap) / (CARD_ASPECT * lines)
+  return (input.availH - (lines - 1) * rowGap) / ((input.aspect ?? CARD_ASPECT) * lines)
 }
 
 /**

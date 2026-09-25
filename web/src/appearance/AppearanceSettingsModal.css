@@ -46,6 +46,9 @@
   background: var(--ink-2);
   border: 1.5px solid transparent;
   cursor: pointer;
+  justify-content: flex-start;
+  white-space: normal;
+  font-weight: 400;
 }
 
 .board-layout-item.selected {

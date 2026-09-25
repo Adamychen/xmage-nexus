@@ -19,6 +19,7 @@ import { setState, setSwitchedHandKey, useStore } from '../state/store'
 import { groupStackables } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import { isMarqueePermanent } from './marquee'
+import { cardAspectFor } from './compactCard'
 import './BoardZone.css'
 
 export interface BoardZoneProps {
@@ -82,7 +83,11 @@ export default function BoardZone({
   const statusSide = effectiveControlled ? 'my' : 'opp'
   const isTop = effectivePosition === 'top'
 
-  const { cardW, ref: zoneRef } = useZoneScale()
+  const cardStyle = useStore((s) => s.settings.cardStyle)
+  const compactCards = cardStyle === 'compact'
+  const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
+  const cardAspect = cardAspectFor(cardStyle)
+  const { cardW, ref: zoneRef } = useZoneScale(cardAspect)
   const creaturesBandRef = useDragScroll<HTMLDivElement>()
   const permanentsBandRef = useDragScroll<HTMLDivElement>()
   const marqueeRef = useDragScroll<HTMLDivElement>()
@@ -96,8 +101,8 @@ export default function BoardZone({
     permanentsBandRef.current = node
     setPermanentsBandEl(node)
   }, [permanentsBandRef])
-  useBandFit(creaturesBandEl, cardW, compactPod)
-  useBandFit(permanentsBandEl, cardW, compactPod)
+  useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
+  useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -287,6 +292,7 @@ export default function BoardZone({
               isTarget={targetIds.has(attId)}
               isPlayable={playableIds.has(attId)}
               className="attachment-subcard"
+              compact={compactCards}
               style={{ left: `calc(${offsetPx}px + ${ai + 1} * var(--attach-step))`, zIndex: attachments.length - ai }}
             />
           )
@@ -311,6 +317,7 @@ export default function BoardZone({
                 key={(part as any).id ?? `mp-${mi}`}
                 card={part}
                 className="mutate-part"
+                compact={compactCards}
                 style={{ left: `${(mi + 1) * 12}px`, top: `${(mi + 1) * 6}px` }}
               />
             ))}
@@ -330,6 +337,7 @@ export default function BoardZone({
             showPt={isCreature}
             showCounters
             showDamage={isCreature}
+            compact={compactCards}
           />
         </div>
       )
@@ -358,6 +366,7 @@ export default function BoardZone({
             showPt={isCreature}
             showCounters
             showDamage={isCreature}
+            compact={compactCards}
           />
         </div>
       )
@@ -379,6 +388,7 @@ export default function BoardZone({
         showPt={isCreature}
         showCounters
         showDamage={isCreature}
+        compact={compactCards}
       />
     )
   }
@@ -522,6 +532,8 @@ export default function BoardZone({
     effectiveControlled ? 'player-zone' : 'opponent-zone',
     mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
+    compactCards ? 'card-style-compact' : '',
+    tiltedTaps ? 'tap-tilted' : '',
     noCreatures ? 'no-creatures' : '',
     noPermanents ? 'no-permanents' : '',
     !hasAnyBoardCards ? 'zone-empty' : '',

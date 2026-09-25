@@ -151,6 +151,10 @@
   border: 1.5px solid transparent;
   cursor: pointer;
   text-align: left;
+  align-items: stretch;
+  justify-content: flex-start;
+  white-space: normal;
+  font-weight: 400;
 }
 
 .settings-card.selected { border-color: var(--brand); }

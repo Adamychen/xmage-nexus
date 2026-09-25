@@ -16,6 +16,8 @@ import { soundManager } from '../audio/soundManager'
 import { useSettings, useStore } from '../state/selectors'
 import { getSleeveDef } from '../appearance/sleeves'
 import { perfMark } from '../system/perfProbe'
+import { ManaPip } from '../decks/ArenaManaSymbols'
+import { artCropUrl, manaSourceSymbols, primaryCardType } from './compactCard'
 import './CardSlot.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
@@ -40,6 +42,8 @@ interface CardSlotProps {
   showPt?: boolean
   showCounters?: boolean
   showDamage?: boolean
+  /** Compact battlefield tile: art crop with the name, type and mana source overlaid. */
+  compact?: boolean
 }
 
 export default function CardSlot({
@@ -60,6 +64,7 @@ export default function CardSlot({
   showPt = false,
   showCounters = false,
   showDamage = false,
+  compact = false,
 }: CardSlotProps) {
   const { t } = useTranslation()
   const settings = useSettings()
@@ -67,6 +72,8 @@ export default function CardSlot({
   const imgUrl = useCardImageUrl(card, !faceDown)
   const isFaceDownCard = faceDown || card.faceDown === true
   const showBack = faceDown || (card.faceDown === true && !imgUrl)
+  const cropUrl = compact ? artCropUrl(imgUrl) : null
+  const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
@@ -207,6 +214,11 @@ export default function CardSlot({
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
   const evidence = useMemo(() => evidenceCounts(card.rules), [card.rules])
   const protector = useMemo(() => protectorName(card.rules), [card.rules])
+  const manaSymbols = useMemo(() => (compact ? manaSourceSymbols(card) : []), [compact, card.rules, card.subTypes])
+  const tileType = compact ? primaryCardType(card) : null
+  const showPtBadge = showPt && isRealCreature && perm.power != null && perm.toughness != null
+  const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
+  const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
 
   const handleClick = onClick ? () => {
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
@@ -275,6 +287,7 @@ export default function CardSlot({
         pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
         isFaceDownCard ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
+        compact ? 'is-compact' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
         flightState === 'hidden' ? 'flight-hidden' : '',
@@ -300,10 +313,11 @@ export default function CardSlot({
       ) : imgUrl ? (
         <>
           <img
-            src={imgUrl}
+            src={compact && tileArt ? tileArt : imgUrl}
             alt={cardName(card)}
-            className="card-image"
+            className={compact ? (tileArt ? 'card-image card-art-crop' : 'card-image card-art-fallback') : 'card-image'}
             draggable={false}
+            onError={tileArt ? () => setCropFailed(tileArt) : undefined}
           />
           {/* Nombre siempre presente como texto (a11y + selectores estables):
               con arte no hay .card-placeholder-name y el nombre visible puede
@@ -312,11 +326,31 @@ export default function CardSlot({
         </>
       ) : (
         <div className="card-placeholder">
-          <span className="card-placeholder-name">{cardName(card)}</span>
+          {!compact && <span className="card-placeholder-name">{cardName(card)}</span>}
         </div>
       )}
 
-      {showPt && isRealCreature && perm.power != null && perm.toughness != null && (
+      {compact && !showBack && (
+        <>
+          {manaSymbols.length > 0 && (
+            <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
+              {manaSymbols.map((sym) => (
+                sym === 'ANY'
+                  ? <span key={sym} className="compact-mana-any" />
+                  : <ManaPip key={sym} symbol={sym} size={16} className="compact-mana-pip" />
+              ))}
+            </div>
+          )}
+          <div className={`compact-plate${hasCornerStat ? ' has-stat' : ''}`} aria-hidden="true">
+            <span className="compact-name">{cardName(card)}</span>
+            {tileType && !hasCornerStat && (
+              <span className="compact-type">{t('game', `type_${tileType}`)}</span>
+            )}
+          </div>
+        </>
+      )}
+
+      {showPtBadge && (
         <div
           className="pt-badge"
           data-trend={pt.power !== 'same' || pt.toughness !== 'same' ? 'changed' : undefined}
