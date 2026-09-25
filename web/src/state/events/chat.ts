@@ -4,6 +4,7 @@ import { setState, addLog } from '../state'
 import { soundManager } from '../../audio/soundManager'
 import type { Snapshot } from './context'
 import { sniffRollbackAnnounce } from './game'
+import { ingestRollbackChat } from '../rollbackVote'
 
 export function handleChatMessage(data: unknown, objectId: string | null, s: Snapshot): void {
   const m = data as ChatMessageEvent
@@ -28,6 +29,7 @@ export function handleChatMessage(data: unknown, objectId: string | null, s: Sna
   // El anuncio de rollback del servidor solo viaja por el chat de la partida:
   // señal secundaria para aceptar la vista restaurada (ver sniffRollbackAnnounce).
   if (channel === 'game' && s.gameId) sniffRollbackAnnounce(m.message, s.gameId)
+  if (channel === 'chat' && s.gameId) ingestRollbackChat(m.username, m.message, s.gameId)
   addLog(m.username, m.message, objectId ?? undefined, channel)
 }
 

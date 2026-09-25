@@ -28,6 +28,8 @@ import { handleViewLimitedDeck, handleViewSideboard } from './events/views'
 import { notifyStagingRoster } from './stagingSounds'
 import { maybeRunFidelityCheck } from '../system/fidelity'
 import { perfMark } from '../system/perfProbe'
+import { isRollbackPending } from './actions'
+import { applyRollbackOutcome } from './rollbackVote'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -35,7 +37,7 @@ export function handleMessage(msg: ProxyMessage) {
       setState({ phase: 'lobby', connecting: false, error: null })
       break
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
+      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -123,7 +125,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
     // la vigente. Sin esto ambos clientes se congelan en la vista pre-rollback (partida muerta).
     // El flag se arma con la acción propia (pedir/aceptar) o el anuncio del servidor.
     const rollbackRestored = staleByPosition && sameGame && !!currentGame
-      && s.rollbackPendingFor != null && s.rollbackPendingFor === s.gameId
+      && isRollbackPending(s, s.gameId)
     if (!staleByPosition || rollbackRestored) {
       dispatchGameSounds(currentGame, embeddedGame, method)
       recordMatchStats(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
@@ -145,12 +147,15 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
         ...(sameEntries(entered, s.enteredThisTurn) ? null : { enteredThisTurn: entered }),
         // Solo se limpia al consumir el rollback: un accept normal no debe tumbar
         // un flag recién armado (el aviso por chat puede llegar tarde).
-        ...(rollbackRestored ? { rollbackPendingFor: null } : null),
+        ...(rollbackRestored ? { rollbackPendingFor: null, rollbackPendingAt: null } : null),
         // La UI apuntaba al estado pre-rollback: diálogo de prioridad, jugables y
         // combate viejos hay que tirarlos para que lleguen los frescos.
         ...(rollbackRestored ? { feedback: null, playableIds: [], playableWindow: null, combat: null } : null),
       })
-      if (rollbackRestored) addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
+      if (rollbackRestored) {
+        addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
+        applyRollbackOutcome(objectId ?? s.gameId, embeddedGame.turn)
+      }
       // La partida re-unida ya está adoptada: el guard de lobby vuelve a aplicar.
       if (objectId && getState().resumingGameId === objectId) setState({ resumingGameId: null })
       // P2: comprobador de fidelidad de render (solo con mage-web-fidelity=1).

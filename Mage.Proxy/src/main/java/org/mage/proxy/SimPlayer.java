@@ -4,6 +4,7 @@ import mage.cards.decks.DeckCardLists;
 import mage.constants.CardType;
 import mage.constants.Constants;
 import mage.constants.PhaseStep;
+import mage.constants.PlayerAction;
 import mage.interfaces.MageClient;
 import mage.interfaces.callback.ClientCallback;
 import mage.interfaces.callback.ClientCallbackMethod;
@@ -20,6 +21,7 @@ import mage.view.GameView;
 import mage.view.PermanentView;
 import mage.view.PlayerView;
 import mage.view.TableClientMessage;
+import mage.view.UserRequestMessage;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -302,6 +304,12 @@ public class SimPlayer implements MageClient {
                     // el guion nunca las provoca; por seguridad, cancelar
                     cancel();
                     break;
+                case USER_REQUEST_DIALOG: {
+                    if (data instanceof UserRequestMessage) {
+                        onUserRequest((UserRequestMessage) data, cb.getObjectId());
+                    }
+                    break;
+                }
                 case GAME_OVER:
                     logger.info("sim " + username + ": game over");
                     break;
@@ -336,6 +344,27 @@ public class SimPlayer implements MageClient {
         } catch (Exception ex) {
             logger.log(Level.WARNING, "sim " + username + " callback error: " + ex.getMessage(), ex);
         }
+    }
+
+    /** The server counts SIM seats as human voters in a rollback vote, so an
+     *  unanswered request would block every rollback: accept it. Other
+     *  requests (e.g. hand permission) are left unanswered. */
+    void onUserRequest(UserRequestMessage msg, UUID fallbackGameId) {
+        if (!isRollbackRequest(msg)) {
+            return;
+        }
+        UUID game = msg.getGameId() != null ? msg.getGameId() : (fallbackGameId != null ? fallbackGameId : gameId);
+        if (game == null) {
+            return;
+        }
+        logger.info("sim " + username + " accepts rollback requested by " + msg.getRelatedUserName());
+        session.sendPlayerAction(PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN, game, msg.getRelatedUserId());
+    }
+
+    static boolean isRollbackRequest(UserRequestMessage msg) {
+        return msg != null && (msg.getButton1Action() == PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN
+                || msg.getButton2Action() == PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN
+                || msg.getButton3Action() == PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN);
     }
 
     private void onSelect(GameClientMessage gcm) {

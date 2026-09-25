@@ -37,6 +37,7 @@ export function useSettings() {
 export function isBlockingModal(s: AppState): boolean {
   if (s.userRequest) return true
   if (s.rollbackDialogOpen) return true
+  if (s.rollbackVote && !s.rollbackVote.hidden) return true
   if (s.sideboardScreen) return true
   if (s.viewer) return true
   if (s.draft) return true

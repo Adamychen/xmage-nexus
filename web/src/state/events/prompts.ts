@@ -10,6 +10,7 @@ import { setState, addLog } from '../state'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
 import type { Snapshot } from './context'
+import { isRollbackRequest, startIncomingRollbackVote } from '../rollbackVote'
 
 export function handleGameTarget(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
 
@@ -97,6 +98,7 @@ export function handleUserRequestDialog(data: unknown, objectId: string | null, 
     message?: string
     gameId?: string
     relatedUserId?: string
+    relatedUserName?: string
     button1Text?: string
     button1Action?: string
     button2Text?: string
@@ -110,6 +112,11 @@ export function handleUserRequestDialog(data: unknown, objectId: string | null, 
   if (d?.button2Text && d?.button2Action) buttons.push({ text: d.button2Text, action: d.button2Action })
   if (d?.button3Text && d?.button3Action) buttons.push({ text: d.button3Text, action: d.button3Action })
   const relatedUserId = typeof d?.relatedUserId === 'string' && d.relatedUserId !== '' ? d.relatedUserId : undefined
+  if (gameId && isRollbackRequest(buttons)) {
+    startIncomingRollbackVote(gameId, d?.relatedUserName ?? '', d?.message ?? '', relatedUserId)
+    addLog('partida', `Rollback requested by ${d?.relatedUserName ?? '?'}: ${d?.message ?? ''}`)
+    return
+  }
   setState({ userRequest: { title: d?.title ?? 'Solicitud', message: d?.message ?? '', gameId, relatedUserId, buttons } })
   addLog('partida', `Solicitud del servidor: ${d?.title ?? ''}`)
 }

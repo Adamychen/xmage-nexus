@@ -7,10 +7,11 @@ import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
-import { maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
+import RollbackVoteDialog from './RollbackVoteDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
 import PlayerContextMenu from './PlayerContextMenu'
 import InfoWindows from './InfoWindows'
@@ -99,6 +100,7 @@ export default function GameScreen() {
   const feedback = useStore((s) => s.feedback)
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
+  const rollbackBlocking = useStore((s) => isRollbackVoteBlocking(s.rollbackVote))
   const gameRootRef = useRef<HTMLDivElement>(null)
   const gameBodyRef = useRef<HTMLDivElement>(null)
   const boardWrapRef = useRef<HTMLDivElement>(null)
@@ -269,12 +271,13 @@ export default function GameScreen() {
         e.preventDefault()
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
+        if (rollbackBlocking) return
         if (canPass) void onResolveClick()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [canPass, feedback, onResolveClick])
+  }, [canPass, feedback, onResolveClick, rollbackBlocking])
 
   // Skips one-shot estilo desktop (F4/F5/F7/F9/F10/F11) + F3 cancela.
   // Sin F6: el propio desktop lo tiene desactivado ("Skip action don't used").
@@ -298,12 +301,13 @@ export default function GameScreen() {
       e.preventDefault()
       // Sin diálogos modales abiertos (misma guarda que Space)
       if (feedback && feedback.mode !== 'combat') return
+      if (rollbackBlocking) return
       const skip = skipForShortcut(e.key)
       void sendSkip(skip ? skip.action : CANCEL_SKIP_ACTION)
     }
     window.addEventListener('keydown', handleSkipKeys)
     return () => window.removeEventListener('keydown', handleSkipKeys)
-  }, [feedback, sendSkip])
+  }, [feedback, sendSkip, rollbackBlocking])
 
   const opps = game?.players?.filter((p) => !p.controlled) ?? []
   const isSpectator = !me
@@ -467,6 +471,7 @@ export default function GameScreen() {
           <FeedbackDialog />
           <UserRequestDialog />
           <RollbackDialog />
+          <RollbackVoteDialog />
           <LimitedDeckDialog />
           <PlayerContextMenu />
           <InfoWindows />

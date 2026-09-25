@@ -37,7 +37,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `WATCHGAME` | ✅ | — | ✅ | self-test (real) | 2026-08-24 |
 | `VIEW_LIMITED_DECK` | ✅ | ✅ | ✅ | eventHandler.test.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
 | `VIEW_SIDEBOARD` | ✅ | ✅ | ✅ | eventHandler.test.ts / player-menu.spec.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
-| `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts / UserRequestDialog.test.tsx / verify-hand-permission.mjs (real: permiso de mano) | 2026-09-08 |
+| `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts / UserRequestDialog.test.tsx / verify-hand-permission.mjs (real: hand permission); rollback vote → `RollbackVoteDialog` (state/rollbackVote.test.ts, RollbackVoteDialog.test.tsx, `scripts/verify-rollback-vote.mjs` real 4-player: all accept / deny / late vote / SIM seats auto-accept) | 2026-09-25 |
 | `GAME_REDRAW_GUI` | ➖ fuera de alcance | — | — | Decisión 2026-09-14: log-only permanente; el tablero ya reacciona a `GAME_UPDATE` | 2026-09-14 |
 | `START_GAME` | ✅ | — | ✅ | full-flow.spec.ts | 2026-08-24 |
 | `GAME_INIT` | ✅ | — | ✅ | full-flow.spec.ts / spells.spec.ts | 2026-08-24 |

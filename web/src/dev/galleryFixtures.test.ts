@@ -34,6 +34,7 @@ describe('galería de estados (P3)', () => {
       'Prompts',
       'Pantallas',
       'Tablero',
+      'Dialogs',
       'Global',
     ])
   })

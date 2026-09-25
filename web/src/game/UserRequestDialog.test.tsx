@@ -62,30 +62,6 @@ describe('UserRequestDialog (permiso de mano)', () => {
     expect(getState().rollbackPendingFor).toBeNull()
   })
 
-  it('Accept de rollback arma la espera de la vista restaurada', async () => {
-    setState({
-      userRequest: {
-        title: 'Request by Hero',
-        message: 'Allow rollback to the start of the previous turn?',
-        gameId: 'g1',
-        relatedUserId: 'u-hero',
-        buttons: [
-          { text: 'Accept', action: 'ADD_PERMISSION_TO_ROLLBACK_TURN' },
-          { text: 'Deny', action: 'DENY_PERMISSION_TO_ROLLBACK_TURN' },
-        ],
-      },
-    })
-    const { getByText } = render(<UserRequestDialog />)
-    fireEvent.click(getByText('Accept'))
-    await vi.waitFor(() => expect(send).toHaveBeenCalled())
-    expect(send).toHaveBeenCalledWith('sendPlayerAction', {
-      action: 'ADD_PERMISSION_TO_ROLLBACK_TURN',
-      gameId: 'g1',
-      data: 'u-hero',
-    })
-    await vi.waitFor(() => expect(getState().rollbackPendingFor).toBe('g1'))
-  })
-
   it('deshabilita los botones mientras la petición está en vuelo y evita doble-envío', async () => {
     let resolveSend: (value: { ok: boolean; action: string; requestId: number; args: unknown }) => void = () => {}
     const deferred = new Promise<{ ok: boolean; action: string; requestId: number; args: unknown }>((resolve) => {

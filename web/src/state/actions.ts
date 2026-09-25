@@ -12,6 +12,10 @@ import { isControllingPriority } from './control'
 import { soundManager } from '../audio/soundManager'
 import { resetPromptSound } from '../audio/promptSound'
 import type { AppState } from './state'
+import {
+  ROLLBACK_ACCEPT_ACTION, ROLLBACK_DENY_ACTION, ROLLBACK_PENDING_TTL_MS, rollbackAcceptChatText,
+  startOwnRollbackVote, markMyVote, isRollbackVoting, dismissRollbackVote,
+} from './rollbackVote'
 
 export function clearError() {
   setState({ error: null })
@@ -208,13 +212,31 @@ export function closeRollbackDialog() {
 }
 
 export async function requestRollback(gameId: string, turnsToRollback = 0) {
+  startOwnRollbackVote(gameId, turnsToRollback)
   const res = await cmds.sendPlayerAction('ROLLBACK_TURNS', gameId, turnsToRollback)
   if (!res.ok) {
+    dismissRollbackVote()
     setState({ error: res.error ?? 'Error requesting rollback' })
   } else {
     // El ok del proxy solo confirma el envío: el servidor puede negar después.
     // Armar ya (sin carreras) para aceptar la vista restaurada cuando ejecute.
     armRollbackPending(gameId)
+  }
+  return res
+}
+
+export async function voteRollback(gameId: string, accept: boolean, requesterUserId?: string) {
+  const action = accept ? ROLLBACK_ACCEPT_ACTION : ROLLBACK_DENY_ACTION
+  const res = await cmds.sendPlayerAction(action, gameId, requesterUserId)
+  if (!res.ok) {
+    setState({ error: res.error ?? 'Error sending rollback vote' })
+    return res
+  }
+  markMyVote(gameId, accept ? 'accepted' : 'denied')
+  if (accept) {
+    armRollbackPending(gameId)
+    const chatId = getState().gameChatId
+    if (chatId) void cmds.sendChatMessage(chatId, rollbackAcceptChatText(getState().game?.turn ?? 0))
   }
   return res
 }
@@ -232,11 +254,21 @@ export async function requestUndo(gameId: string) {
  * Se arma con la acción propia (pedir/aceptar) o el anuncio del servidor, y se
  * desarma al consumir, al denegarse o al cerrar la partida. */
 export function armRollbackPending(gameId: string | null | undefined): void {
-  if (gameId) setState({ rollbackPendingFor: gameId })
+  if (gameId) setState({ rollbackPendingFor: gameId, rollbackPendingAt: Date.now() })
 }
 
 export function disarmRollbackPending(): void {
-  if (getState().rollbackPendingFor != null) setState({ rollbackPendingFor: null })
+  if (getState().rollbackPendingFor != null) setState({ rollbackPendingFor: null, rollbackPendingAt: null })
+}
+
+/** Armed for gameId and still fresh: a vote still on screen keeps it alive;
+ * otherwise it expires ROLLBACK_PENDING_TTL_MS after the last arm (request,
+ * accept or server announce), so a vote that never resolves cannot later let
+ * a stale, out-of-order view overwrite the board. */
+export function isRollbackPending(s: Pick<AppState, 'rollbackPendingFor' | 'rollbackPendingAt' | 'rollbackVote'>, gameId: string | null | undefined, now = Date.now()): boolean {
+  if (!gameId || s.rollbackPendingFor !== gameId) return false
+  if (isRollbackVoting(s.rollbackVote, gameId) && !s.rollbackVote?.hidden) return true
+  return s.rollbackPendingAt != null && now - s.rollbackPendingAt < ROLLBACK_PENDING_TTL_MS
 }
 
 export function returnToLobby() {
@@ -324,6 +356,7 @@ export function maybeAutoPass(game: GameView) {
   const me = game.players?.find((p) => p.controlled)
   const smart = s.settings.smartStops
   if ((!s.settings.autoPass && !smart) || s.feedback || !s.gameId) return
+  if (isRollbackVoting(s.rollbackVote, s.gameId)) return
   if (isControllingPriority(game)) return
   if (!me?.hasPriority) return
   if (s.combat && (!smart || s.combat.selectable.length > 0)) return

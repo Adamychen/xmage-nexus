@@ -119,6 +119,7 @@ export default function GalleryScreen() {
       viewer: null,
       sideboardScreen: null,
       rollbackDialogOpen: false,
+      rollbackVote: active.rollbackVote ?? null,
       playerMenu: null,
       tournament: active.tournament ?? null,
       error: active.error ?? null,

@@ -4,7 +4,8 @@ import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
-import { sniffDungeonEntry, enterTableChat, exitTableChat } from '../actions'
+import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending } from '../actions'
+import { ingestRollbackServerMessage } from '../rollbackVote'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame } from '../persistence'
 import {
@@ -79,7 +80,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   if (!d?.gameId || d.gameId !== s.gameId) {
     setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
   }
-  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null })
+  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
     void cmds.joinGame(d!.gameId!)
@@ -198,11 +199,12 @@ const ROLLBACK_DENY_RE = /rollback request denied|not possible to rollback|only 
 export function sniffRollbackAnnounce(message: string, gameId: string | null | undefined): void {
   if (!gameId) return
   if (ROLLBACK_ANNOUNCE_RE.test(message)) {
-    setState({ rollbackPendingFor: gameId })
+    armRollbackPending(gameId)
   } else if (ROLLBACK_DENY_RE.test(message)) {
     const s = getState()
-    if (s.rollbackPendingFor === gameId) setState({ rollbackPendingFor: null })
+    if (s.rollbackPendingFor === gameId) disarmRollbackPending()
   }
+  ingestRollbackServerMessage(message, gameId)
 }
 
 export function handleGameOver(data: unknown, objectId: string | null): void {
@@ -255,10 +257,12 @@ export function handleEndGameInfo(data: unknown): void {
       phase: 'lobby',
       gameEnd: end,
       rollbackPendingFor: null,
+      rollbackPendingAt: null,
+      rollbackVote: null,
       resumingGameId: null,
     })
   } else {
-    setState({ gameEnd: end })
+    setState({ gameEnd: end, rollbackVote: null })
   }
 }
 

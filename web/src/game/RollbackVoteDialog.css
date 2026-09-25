@@ -1,0 +1,141 @@
+.rollback-vote-dialog {
+  max-width: 460px;
+  width: min(92vw, 460px);
+}
+
+.rollback-vote-progress {
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+  margin-bottom: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rollback-voter-list {
+  list-style: none;
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+}
+
+.rollback-voter {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: var(--sp-2h);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--veil-1);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-base);
+  font-size: var(--fs-md);
+  color: var(--fg-1);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.rollback-voter-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--veil-2);
+  color: var(--fg-2);
+}
+
+.rollback-voter-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rollback-voter-me {
+  color: var(--fg-2);
+  font-size: var(--fs-sm);
+}
+
+.rollback-voter-status {
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+
+.rollback-voter.is-accepted,
+.rollback-voter.is-requested {
+  border-color: rgb(var(--ok-rgb) / 0.45);
+  background: rgb(var(--ok-rgb) / 0.08);
+}
+
+.rollback-voter.is-accepted .rollback-voter-icon,
+.rollback-voter.is-requested .rollback-voter-icon {
+  background: rgb(var(--ok-rgb) / 0.2);
+  color: var(--ok);
+}
+
+.rollback-voter.is-denied {
+  border-color: rgb(var(--err-rgb) / 0.5);
+  background: rgb(var(--err-rgb) / 0.08);
+}
+
+.rollback-voter.is-denied .rollback-voter-icon {
+  background: rgb(var(--err-rgb) / 0.2);
+  color: var(--err);
+}
+
+.rollback-voter.is-pending .rollback-voter-icon {
+  animation: rollback-voter-pulse 1.4s ease-in-out infinite;
+}
+
+.rollback-vote-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-1);
+}
+
+.rollback-vote-banner.is-wait {
+  background: var(--veil-1);
+  color: var(--fg-1);
+}
+
+.rollback-vote-banner.is-ok {
+  background: rgb(var(--ok-rgb) / 0.15);
+  border: 1px solid rgb(var(--ok-rgb) / 0.4);
+  color: var(--ok);
+}
+
+.rollback-vote-banner.is-err {
+  background: rgb(var(--err-rgb) / 0.15);
+  border: 1px solid rgb(var(--err-rgb) / 0.4);
+  color: var(--err);
+}
+
+.rollback-vote-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--veil-5);
+  border-top-color: var(--brand);
+  animation: rollback-vote-spin 0.9s linear infinite;
+  flex: none;
+}
+
+@keyframes rollback-vote-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rollback-voter-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rollback-vote-spinner,
+  .rollback-voter.is-pending .rollback-voter-icon {
+    animation: none;
+  }
+}

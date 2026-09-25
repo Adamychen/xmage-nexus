@@ -19,6 +19,7 @@ import type { DraftState, ConstructState } from '../state/slices/limited'
 import type { ConnectionInfo } from '../state/persistence'
 import type { SupportedLanguage } from '../i18n'
 import type { Deck } from '../lobby/decks'
+import type { RollbackVote } from '../state/rollbackVote'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
 
@@ -104,6 +105,8 @@ export interface GalleryEntry {
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
   boardLayout?: 'standard' | 'pod' | 'arena'
+  /** Rollback vote dialog state (`rollbackVote` in the store). */
+  rollbackVote?: RollbackVote | null
   uiScale?: number
   cjkBoost?: boolean
   /** Idioma de la i18n para este estado (se restaura al salir). */
@@ -1132,6 +1135,74 @@ export function buildGalleryEntries(): GalleryEntry[] {
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'pod',
   })
+  if (FOUR_PLAYER_GAME) {
+    const fourGameId = GANG_BLOCK_FRAME?.gameId ?? 'gallery-4p'
+    const names = (FOUR_PLAYER_GAME.players ?? []).map((p) => ({ name: p.name, me: !!p.controlled }))
+    const requester = names.find((n) => !n.me)?.name ?? 'Opponent'
+    const turn = FOUR_PLAYER_GAME.turn ?? 3
+    const baseVote = (over: Partial<RollbackVote>, statuses: RollbackVote['voters'][number]['status'][]): RollbackVote => ({
+      gameId: fourGameId,
+      requester,
+      requesterUserId: 'gallery-requester',
+      requestedByMe: false,
+      turns: 0,
+      requestedAtTurn: turn,
+      voters: [
+        { name: requester, status: 'requested', me: false },
+        ...names.filter((n) => n.name !== requester).map((n, i) => ({ name: n.name, me: n.me, status: statuses[i] ?? 'pending' })),
+      ],
+      myVote: 'pending',
+      outcome: 'voting',
+      hidden: false,
+      startedAt: Date.now(),
+      ...over,
+    })
+    const meIdx = names.filter((n) => n.name !== requester).findIndex((n) => n.me)
+    const withMe = (mine: RollbackVote['voters'][number]['status'], others: RollbackVote['voters'][number]['status'][]) => {
+      const list = [...others]
+      list.splice(meIdx < 0 ? 0 : meIdx, 0, mine)
+      return list
+    }
+    const rollbackEntries: { id: string; label: string; description: string; vote: RollbackVote; game?: GameView }[] = [
+      {
+        id: 'dialog:rollback-vote',
+        label: 'Rollback vote (my vote pending)',
+        description: 'Blocking vote with every player and their status; Accept/Deny.',
+        vote: baseVote({}, withMe('pending', ['accepted', 'pending'])),
+      },
+      {
+        id: 'dialog:rollback-vote-waiting',
+        label: 'Rollback vote (waiting, game moved on)',
+        description: 'I accepted; one player still pending and the game advanced a turn (server counts from the last vote).',
+        vote: baseVote({ myVote: 'accepted', requestedAtTurn: Math.max(1, turn - 1) }, withMe('accepted', ['accepted', 'pending'])),
+      },
+      {
+        id: 'dialog:rollback-vote-denied',
+        label: 'Rollback vote (denied)',
+        description: 'Resolution: one player denied; Close dismisses.',
+        vote: baseVote({ myVote: 'accepted', outcome: 'denied', deniedBy: names.filter((n) => n.name !== requester && !n.me)[1]?.name ?? '?' }, withMe('accepted', ['accepted', 'denied'])),
+      },
+      {
+        id: 'dialog:rollback-vote-applied',
+        label: 'Rollback vote (applied)',
+        description: 'Resolution: all accepted and the server restored the turn.',
+        vote: baseVote({ myVote: 'accepted', outcome: 'applied', appliedTurn: turn }, withMe('accepted', ['accepted', 'accepted'])),
+      },
+    ]
+    for (const e of rollbackEntries) {
+      entries.push({
+        id: e.id,
+        group: 'Dialogs',
+        label: e.label,
+        description: e.description,
+        phase: 'game',
+        game: FOUR_PLAYER_GAME,
+        gameId: fourGameId,
+        boardLayout: 'pod',
+        rollbackVote: e.vote,
+      })
+    }
+  }
   entries.push({
     id: 'board:arena-4',
     group: 'Tablero',

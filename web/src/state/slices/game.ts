@@ -4,6 +4,7 @@ import type { PhaseStops } from '../../net/commands'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
 import { loadActiveDeck } from '../persistence'
 import type { TurnRecap } from '../../game/turnRecap'
+import type { RollbackVote } from '../rollbackVote'
 
 export interface CombatState {
   mode: 'attack' | 'block'
@@ -84,6 +85,10 @@ export interface GameSlice {
   rollbackDialogOpen: boolean
   /** gameId con rollback pendiente: lo pedí/acepté yo o el servidor lo anunció (ver armRollbackPending). */
   rollbackPendingFor: string | null
+  /** Epoch ms of the last arm of `rollbackPendingFor` (expires after ROLLBACK_PENDING_TTL_MS). */
+  rollbackPendingAt: number | null
+  /** Rollback vote in progress or just resolved (blocking dialog). */
+  rollbackVote: RollbackVote | null
   viewer: CardViewerState | null
   playerMenu: PlayerMenuState | null
   phaseStops: PhaseStops
@@ -111,6 +116,8 @@ export const initialGame: GameSlice = {
   userRequest: null,
   rollbackDialogOpen: false,
   rollbackPendingFor: null,
+  rollbackPendingAt: null,
+  rollbackVote: null,
   viewer: null,
   playerMenu: null,
   dungeonProgress: {},

@@ -2,11 +2,13 @@ package org.mage.proxy;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import mage.constants.PlayerAction;
 import mage.players.PlayerType;
 import mage.game.match.MatchOptions;
 import mage.remote.SessionImpl;
 import mage.view.CardsView;
 import mage.view.GameClientMessage;
+import mage.view.UserRequestMessage;
 import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
@@ -203,6 +205,41 @@ class SimPlayerTest {
         assertEquals(Boolean.FALSE, session.lastBoolean);
     }
 
+    @Test
+    void acceptsRollbackRequestsSoTheVoteCanComplete() {
+        RecordingSession session = new RecordingSession();
+        SimPlayer sim = new SimPlayer("sim-test", session);
+        UUID game = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
+        UUID requester = UUID.fromString("00000000-0000-0000-0000-0000000000b2");
+        UserRequestMessage request = new UserRequestMessage("Request by sim-test", "Allow rollback to the start of the current turn?");
+        request.setGameId(game);
+        request.setRelatedUser(requester, "Alice");
+        request.setButton1("Accept", PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN);
+        request.setButton2("Deny", PlayerAction.DENY_PERMISSION_TO_ROLLBACK_TURN);
+
+        sim.onUserRequest(request, null);
+
+        assertEquals(PlayerAction.ADD_PERMISSION_TO_ROLLBACK_TURN, session.lastAction);
+        assertEquals(game, session.lastActionGame);
+        assertEquals(requester, session.lastActionData);
+    }
+
+    @Test
+    void ignoresOtherUserRequests() {
+        RecordingSession session = new RecordingSession();
+        SimPlayer sim = new SimPlayer("sim-test", session);
+        UserRequestMessage request = new UserRequestMessage("User request", "Allow user <b>Eve</b> for this match to see your hand cards?");
+        request.setGameId(UUID.randomUUID());
+        request.setRelatedUser(UUID.randomUUID(), "Eve");
+        request.setButton1("Accept", PlayerAction.ADD_PERMISSION_TO_SEE_HAND_CARDS);
+        request.setButton2("Reject", null);
+
+        sim.onUserRequest(request, null);
+
+        assertNull(session.lastAction);
+        assertTrue(!SimPlayer.isRollbackRequest(null));
+    }
+
     private static Set<Character> setOf(Character... values) {
         return new LinkedHashSet<>(Arrays.asList(values));
     }
@@ -210,6 +247,9 @@ class SimPlayerTest {
     private static final class RecordingSession extends SessionImpl {
         private UUID lastUuid;
         private Boolean lastBoolean;
+        private PlayerAction lastAction;
+        private UUID lastActionGame;
+        private Object lastActionData;
 
         private RecordingSession() {
             super(null);
@@ -224,6 +264,14 @@ class SimPlayerTest {
         @Override
         public boolean sendPlayerBoolean(UUID gameId, boolean data) {
             lastBoolean = data;
+            return true;
+        }
+
+        @Override
+        public boolean sendPlayerAction(PlayerAction action, UUID gameId, Object data) {
+            lastAction = action;
+            lastActionGame = gameId;
+            lastActionData = data;
             return true;
         }
     }

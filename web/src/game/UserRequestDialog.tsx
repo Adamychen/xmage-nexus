@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore, setState, armRollbackPending } from '../state/store'
+import { useStore, setState } from '../state/store'
 import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
 import Button from '../ui/Button'
@@ -22,8 +22,6 @@ export default function UserRequestDialog() {
       if (request.gameId) {
         const result = await cmds.sendPlayerAction(action, request.gameId, request.relatedUserId)
         if (!result.ok) setState({ error: result.error ?? t('dialogs', 'userrequest_error') })
-        // Aceptar un rollback arma la espera de la vista restaurada (ver armRollbackPending).
-        else if (action === 'ADD_PERMISSION_TO_ROLLBACK_TURN') armRollbackPending(request.gameId)
       }
       close()
     } finally {
