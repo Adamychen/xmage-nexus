@@ -10,9 +10,15 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(base())).toBe(false)
   })
 
-  it('is true for mulligan feedback', () => {
+  it('is false for the keep/mulligan decision (bar over the hand)', () => {
     const s = base()
     s.feedback = { method: 'GAME_ASK', isMulligan: true, gameId: 'g', title: '', message: '', min: 0, max: 0 } as never
+    expect(isBlockingModal(s)).toBe(false)
+  })
+
+  it('is true for the London bottom pick', () => {
+    const s = base()
+    s.feedback = { method: 'GAME_TARGET', isMulliganLondon: true, cards: [{}], gameId: 'g', title: '', message: '', min: 1, max: 1 } as never
     expect(isBlockingModal(s)).toBe(true)
   })
 

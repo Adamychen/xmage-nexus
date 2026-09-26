@@ -4,7 +4,7 @@ import { getState, setState, addLog } from './state'
 import { translateError } from '../i18n'
 import { attributeStackControllers } from '../game/stackAttribution'
 import {
-  gameViewFrom, isOlderThanCurrentGame,
+  gameViewFrom, isOlderThanCurrentGame, gameEventOrder, noteGameEvent, resetGameEventOrder,
 } from './gameUtils'
 import { switchableHandKeys } from '../board/handSwitch'
 import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
@@ -33,11 +33,18 @@ import { applyRollbackOutcome } from './rollbackVote'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
-    case 'connected':
-      setState({ phase: 'lobby', connecting: false, error: null })
+    case 'connected': {
+      resetGameEventOrder()
+      // A re-attach after a network blip also announces `connected`: keep the
+      // board of the game in progress (the rejoin replay refreshes it) instead
+      // of dropping the player into the lobby.
+      const s = getState()
+      if (s.phase === 'game' && s.gameId) setState({ connecting: false, error: null })
+      else setState({ phase: 'lobby', connecting: false, error: null })
       break
+    }
     case 'disconnected':
-      setState({ phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
+      setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -84,12 +91,12 @@ export function handleMessage(msg: ProxyMessage) {
     }
     case 'event':
       perfMark('event', msg.method, undefined, { gameId: msg.objectId ?? null })
-      handleEvent(msg.method, msg.objectId ?? null, msg.data)
+      handleEvent(msg.method, msg.objectId ?? null, msg.data, msg.messageId)
       break
   }
 }
 
-function handleEvent(method: string, objectId: string | null, data: unknown) {
+function handleEvent(method: string, objectId: string | null, data: unknown, messageId?: number) {
   const s = getState()
 
   // Guard: If we are in an active game, ignore game-specific events belonging to another gameId
@@ -119,14 +126,25 @@ function handleEvent(method: string, objectId: string | null, data: unknown) {
     const switchingGame = method === 'GAME_INIT'
       || (method === 'START_GAME' && objectId != null && objectId !== s.gameId)
     const currentGame = switchingGame ? null : s.game
-    const staleByPosition = isOlderThanCurrentGame(embeddedGame, objectId, currentGame, s.gameId)
+    const positionRegressed = isOlderThanCurrentGame(embeddedGame, objectId, currentGame, s.gameId)
     const sameGame = !!objectId && objectId === s.gameId
+    // Same game: the server messageId orders events exactly. A step going back
+    // within the turn is legitimate (extra combats/main phases, combat damage
+    // steps, the rejoin replay), so only an older messageId or an earlier turn
+    // (a rollback, accepted below when armed) is stale.
+    const order = sameGame && currentGame ? gameEventOrder(objectId, messageId) : 'unknown'
+    const turnRegressed = !!currentGame && currentGame.myPlayerId === embeddedGame.myPlayerId
+      && embeddedGame.turn < currentGame.turn
+    const stale = sameGame && currentGame && typeof messageId === 'number'
+      ? order === 'older' || turnRegressed
+      : positionRegressed
     // Rollback del servidor: la vista restaurada va hacia atrás en turno/paso pero es
-    // la vigente. Sin esto ambos clientes se congelan en la vista pre-rollback (partida muerta).
+    // la vigente; hay que tirar el estado de UI pre-rollback (prioridad, jugables, combate).
     // El flag se arma con la acción propia (pedir/aceptar) o el anuncio del servidor.
-    const rollbackRestored = staleByPosition && sameGame && !!currentGame
+    const rollbackRestored = positionRegressed && sameGame && !!currentGame && order !== 'older'
       && isRollbackPending(s, s.gameId)
-    if (!staleByPosition || rollbackRestored) {
+    if (!stale || rollbackRestored) {
+      if (objectId) noteGameEvent(objectId, messageId, method === 'GAME_INIT')
       dispatchGameSounds(currentGame, embeddedGame, method)
       recordMatchStats(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
       if (rollbackRestored) resetTurnRecap(objectId ?? s.gameId ?? null)

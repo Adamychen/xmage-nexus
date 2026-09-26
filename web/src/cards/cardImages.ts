@@ -1,6 +1,6 @@
 import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
-import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { scryfallJson } from './scryfallClient'
 import tokenImageData from '../data/tokenImages.generated.json'
 
@@ -44,23 +44,9 @@ export function isTokenCard(card: CardView): boolean {
 /** Returns true if the permanent/card has Vigilance (does not tap when attacking). */
 export function hasVigilance(card: CardView | unknown): boolean {
   if (!card || typeof card !== 'object') return false
-  const c = card as Record<string, unknown>
-  const rules = Array.isArray(c.rules) ? c.rules.join('\n') : String(c.rules ?? '')
-  const abilities = Array.isArray(c.abilities)
-    ? c.abilities.map((a) => (typeof a === 'string' ? a : (a as any)?.rule || (a as any)?.name || '')).join('\n')
-    : ''
-  const fullText = `${rules}\n${abilities}\n${c.name ?? ''}`.toLowerCase()
-  const keywordHit = /\bvigilance\b|\bvigilancia\b/.test(fullText)
-  if (keywordHit) return true
-  if (Array.isArray(c.rules) || Array.isArray(c.abilities)) {
-    try {
-      const detected = extractKeywordsFromCard(card as CardView)
-      return detected.some((k) => k.id === 'vigilance')
-    } catch {
-      return false
-    }
-  }
-  return false
+  const icons = (card as { cardIcons?: Array<{ cardIconType?: string } | null> }).cardIcons
+  if (Array.isArray(icons) && icons.some((i) => i?.cardIconType === 'ABILITY_VIGILANCE')) return true
+  return extractOwnedKeywords(card as CardView).some((k) => k.id === 'vigilance')
 }
 
 export function getSourceCard(card: CardView): CardView | null {

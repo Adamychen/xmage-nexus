@@ -21,7 +21,9 @@
   pointer-events: none;
 }
 
-.hand-bar .hand-card-slot {
+/* Only the painted card is hoverable: the static slot box would sit on top of
+   a neighbour that slid aside and steal its hover. */
+.hand-bar .hand-card-slot .hand-card {
   pointer-events: auto;
 }
 
@@ -42,16 +44,12 @@
   position: relative;
   display: flex;
   align-items: flex-end;
-  /* La caja estática de hover es SOLO la banda visible (~cardH×0.5): la carta
-     la desborda hacia arriba. Si el slot creciera a la altura completa de la
-     carta, un puntero sobre las tierras dispararía el hover sin carta visible
-     y, al elevarse la mano, las áreas renderizadas en movimiento crearían un
-     bucle de feedback (oscilación arriba/abajo). */
+  /* The slot is only the visible band (~cardH×0.5) and never takes the
+     pointer: hover comes from the painted card, so the part sunk below the
+     board edge and the empty space above the fan never trigger it. */
   height: var(--sink, 95px);
   /* Rest state: narrower hand with compact card overlap (token in handSizing.ts) */
-  margin-left: calc(
-    var(--hand-gap, 0px) - var(--card-w, 136px) * var(--hand-rest-overlap, 0.5)
-  );
+  margin-left: calc(var(--hand-gap, 0px) - var(--card-w, 136px) * var(--hand-rest-overlap, 0.5));
   overflow: visible;
   transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -60,46 +58,154 @@
   margin-left: 0 !important;
 }
 
-/* Hover over the hand: expands horizontally to full browsing width */
-.hand-bar:hover .hand-card-slot,
-.hand-bar:has(.hand-card-slot:hover) .hand-card-slot {
-  margin-left: var(--hand-gap, 0px);
-}
-
-.hand-bar:hover .hand-card-slot:first-child,
-.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:first-child {
-  margin-left: 0 !important;
+/* Hover over the hand (or an opening-hand decision): the fan keeps its
+   overlap and rises from ~50% to ~90% visible. */
+.hand-bar:hover,
+.hand-bar.is-raised,
+.hand-bar:has(.hand-card-slot:hover) {
+  --hand-sink-k: 0.2;
 }
 
 /* Fan pose: rotate around a pivot below the card, rising toward the center.
-   The hand rests tucked below the board edge in rest state. */
-.hand-bar .hand-card-slot .hand-card {
+   The hand rests tucked below the board edge in rest state. `--shift-x` makes
+   room around the hovered card. */
+.hand-bar .hand-card-slot .hand-card,
+.hand-bar .hand-card-slot .hand-card-cost {
   width: var(--card-w, 136px);
   height: calc(var(--card-w, 136px) * 1.4);
   transform-origin: 50% 150%;
-  transform: rotate(var(--rot, 0deg)) translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 1.12));
-  transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease, opacity 0.2s ease-out;
-  will-change: transform;
+  transform: translateX(var(--shift-x, 0px)) rotate(var(--rot, 0deg))
+    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * var(--hand-sink-k, 1.12))) scale(1);
+  transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease-out, filter 0.18s ease-out;
 }
 
 .hand-bar .hand-card-slot:hover {
   z-index: 50;
 }
 
-/* Hover on any card or hand area: the whole hand rises to ~90% visible… */
-.hand-bar:hover .hand-card-slot:not(:hover) .hand-card,
-.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:not(:hover) .hand-card {
-  transform: rotate(var(--rot, 0deg))
-    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 0.2));
+/* The hovered card itself grows in place until legible (no floating
+   preview): upright, scaled around the fan pivot and pushed back down so its
+   bottom edge stays anchored to the band — the pointer never leaves it. Same
+   function list as the fan pose so the transition interpolates per function. */
+.hand-bar .hand-card-slot:hover .hand-card,
+.hand-bar .hand-card-slot:hover .hand-card-cost {
+  transform: translateX(0px) rotate(0deg)
+    translateY(calc(var(--card-w, 136px) * 0.7 * (var(--hover-scale, 1.5) - 1))) scale(var(--hover-scale, 1.5));
 }
 
-/* …while the hovered card dims back into the fan: the floating preview grows
-   out of its position instead, so the card neither scales nor glows. */
 .hand-bar .hand-card-slot:hover .hand-card {
-  transform: rotate(var(--rot, 0deg))
-    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * 0.2));
-  opacity: 0.3;
-  box-shadow: none;
+  box-shadow: 0 18px 44px var(--shade-5), 0 0 0 2px rgb(var(--gold-rgb) / 0.9);
+}
+
+/* Neighbours slide just enough to keep the fan packed while every card next
+   to the grown one keeps a strip of at least one pitch (and 35% of a card).
+   Left cards clear the grown card's extra half-width. The right neighbour,
+   which the grown card now covers, clears one pitch but stays tucked 20%
+   under it: fan rotation opens gaps otherwise, and a gap drops the hover and
+   collapses the fan. The extra slide that widens a thin strip goes to every
+   left card (a left card's strip depends on its own shift) and to right cards
+   from the second one on (a right card's strip ends where the next begins).
+   Moving sideways always lands on the adjacent card. */
+.hand-bar .hand-card-slot {
+  --hand-pitch: calc(var(--card-w, 136px) * (1 - var(--hand-rest-overlap, 0.5)) + var(--hand-gap, 0px));
+  --hand-strip-extra: max(0px, calc(var(--card-w, 136px) * 0.35 - var(--hand-pitch)));
+  --shift-right: calc(var(--card-w, 136px) * ((var(--hover-scale, 1.5) + 1) * 0.5 - 0.2) - var(--hand-pitch));
+  --shift-left: calc(var(--card-w, 136px) * (var(--hover-scale, 1.5) - 1) * -0.5);
+}
+
+.hand-bar .hand-card-slot:hover + .hand-card-slot {
+  --shift-x: var(--shift-right);
+}
+
+.hand-bar .hand-card-slot:hover + .hand-card-slot ~ .hand-card-slot {
+  --shift-x: calc(var(--shift-right) + var(--card-w, 136px) * 0.2 + var(--hand-strip-extra));
+}
+
+.hand-bar .hand-card-slot:has(~ .hand-card-slot:hover) {
+  --shift-x: calc(var(--shift-left) - var(--hand-strip-extra));
+}
+
+/* The rest of the fan dims so the grown card reads on its own. */
+.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:not(:hover) .hand-card {
+  filter: brightness(0.55) saturate(0.75);
+  animation: none;
+}
+
+.hand-bar:has(.hand-card-slot:hover) .hand-card-slot:not(:hover) .hand-card-cost {
+  filter: brightness(0.55) saturate(0.75);
+}
+
+/* Printed cost bubbles: a layer with the card's exact box and transform, so
+   they ride the fan, the hover growth and the dimming; they poke out above
+   the top edge, which the card itself clips. */
+.hand-bar .hand-card-slot .hand-card-cost {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 21;
+  pointer-events: none;
+}
+
+/* The hand card already grows on hover: drop the generic clickable lift so
+   the card and its cost layer stay aligned. */
+.hand-bar .hand-card-slot .hand-card.clickable:hover {
+  translate: none;
+}
+
+.hand-card-cost-pips {
+  position: absolute;
+  right: var(--cost-rest-right, var(--sp-1));
+  top: 0;
+  display: flex;
+  transform: translateY(-55%);
+  transition: right 0.2s ease-out;
+}
+
+/* The grown card shows whole: its cost goes back to the printed corner. */
+.hand-bar .hand-card-slot:hover .hand-card-cost-pips {
+  right: var(--sp-1);
+}
+
+.hand-card-cost-pips > .mana-symbol + .mana-symbol {
+  margin-left: var(--pip-overlap, var(--sp-0h));
+  transition: margin-left 0.2s ease-out;
+}
+
+.hand-bar .hand-card-slot:hover .hand-card-cost-pips > .mana-symbol + .mana-symbol {
+  margin-left: var(--sp-0h);
+}
+
+.hand-card-cost .mana-symbol-svg {
+  box-shadow: 0 2px 6px var(--shade-4);
+}
+
+/* Prompts about the hand (mulligan) float centred just above the raised fan. */
+.hand-bar-prompt {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: calc(var(--card-w, 136px) * 1.4 * 0.9 + 20px);
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  pointer-events: none;
+}
+
+.hand-bar-prompt:empty {
+  display: none;
+}
+
+.hand-bar-prompt > * {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-bar .hand-card-slot,
+  .hand-bar .hand-card-slot .hand-card {
+    transition: none;
+  }
 }
 
 /* Playable cards breathe softly: animates `filter` (composited) instead of

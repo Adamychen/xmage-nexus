@@ -145,7 +145,7 @@ test('la mano propia flota como overlay anclado al fondo sin consumir layout (st
   })
 })
 
-test('el hover en la mano propia muestra la carta en grande y legible (preview flotante) @fullflow @hand-bar', async ({ page }) => {
+test('hovering an own hand card grows it in place until legible, without a floating preview @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hbh',
@@ -157,58 +157,52 @@ test('el hover en la mano propia muestra la carta en grande y legible (preview f
     // Con prioridad propia el escenario deja de mover cartas: en CI (runner
     // lento) el hover podía caer mientras las tierras salían de la mano.
     await expect(page.locator('.big-action-btn')).toBeEnabled({ timeout: 30_000 })
-    // El HumanHelper juega su tierra al recibir esa prioridad: la mano se
-    // recoloca bajo el cursor y cierra el preview. Se espera a que se asiente.
     await waitHandStable(page)
-    const preview = page.locator('.floating-card-preview')
     await page.mouse.move(8, 8)
-    await expect(preview).toHaveCount(0)
+
+    const cardBox = (i: number) =>
+      slots.nth(i).locator('.hand-card').evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        return { x: r.x, y: r.y, width: r.width, height: r.height }
+      })
+    const count = await slots.count()
+    const target = Math.min(1, count - 1)
+    const before = await cardBox(target)
 
     await expect(async () => {
       await page.mouse.move(8, 8)
-      await slots.first().hover()
-      await expect(preview).toBeVisible({ timeout: 3_000 })
+      await slots.nth(target).hover()
+      const grown = await cardBox(target)
+      expect(grown.width, 'the hovered card grows to a legible size').toBeGreaterThanOrEqual(before.width * 1.3)
     }).toPass({ timeout: 20_000 })
-    await expect(preview, 'el preview nace de la carta en mano (morph)').toHaveClass(/is-morph/)
-    await expect(preview, 'el morph termina en tamaño completo').toHaveClass(/is-open/, { timeout: 10_000 })
+
     const boxes = await page.evaluate(() => {
-      const rectOf = (el: Element) => {
-        const r = el.getBoundingClientRect()
-        return { y: r.y, height: r.height }
-      }
-      const pv = document.querySelector('.floating-card-preview') as HTMLElement | null
-      const slot = document.querySelector('[data-testid="hand-bar"] .hand-card-slot')
-      if (!pv || !slot) throw new Error('preview o slot no encontrado')
-      // offsetWidth ignora la escala transitoria de la animación de entrada
-      return { pv: { ...rectOf(pv), width: pv.offsetWidth }, slot: rectOf(slot) }
+      const board = document.querySelector('[data-testid="hand-bar"]')?.closest('.game-board, .pod-board, .arena-board')
+      const rb = board?.getBoundingClientRect()
+      return { boardBottom: rb ? rb.y + rb.height : 0 }
     })
-    expect(
-      boxes.pv.width,
-      'el preview es grande y legible (320px frente a ~136px de la carta en mano)',
-    ).toBeGreaterThanOrEqual(300)
-    // La caja final solo es estable al terminar la transición del morph:
-    // se sondea hasta que el borde inferior deja de moverse por encima de la carta.
     await expect
-      .poll(
-        async () =>
-          page.evaluate(() => {
-            const pv = document.querySelector('.floating-card-preview') as HTMLElement | null
-            const slot = document.querySelector('[data-testid="hand-bar"] .hand-card-slot')
-            if (!pv || !slot) return Number.POSITIVE_INFINITY
-            const r = pv.getBoundingClientRect()
-            return r.y + r.height - (slot.getBoundingClientRect().y + 40)
-          }),
-        { timeout: 10_000 },
-      )
-      .toBeLessThanOrEqual(0)
+      .poll(async () => {
+        const b = await cardBox(target)
+        return b.y + b.height
+      }, { message: 'the grown card settles fully on screen', timeout: 5_000 })
+      .toBeLessThanOrEqual(boxes.boardBottom + 2)
+    const grown = await cardBox(target)
+    expect(grown.width, 'legible width (~260px)').toBeGreaterThanOrEqual(200)
+    await expect(page.locator('.floating-card-preview'), 'no separate preview for hand cards').toHaveCount(0)
+
+    if (count > target + 1) {
+      const next = await cardBox(target + 1)
+      expect(next.x, 'the right neighbour slides out of the way').toBeGreaterThanOrEqual(grown.x + grown.width * 0.5)
+    }
 
     await page.locator('.board-shell-divider').hover()
-    await expect(preview).toHaveCount(0)
+    await expect.poll(async () => (await cardBox(target)).width, { timeout: 5_000 }).toBeLessThan(before.width * 1.1)
     expect(pageErrors).toEqual([])
   })
 })
 
-test('el hover en tierras del campo no hace morph (preview clásico) @fullflow @hand-bar', async ({ page }) => {
+test('hovering a battlefield land still opens the floating preview @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(mechanicsScenario, async () => {
     const { pageErrors } = await startGame(page, {
       prefix: 'hbl',
@@ -224,7 +218,6 @@ test('el hover en tierras del campo no hace morph (preview clásico) @fullflow @
 
     await landSlot.hover()
     await expect(preview).toBeVisible({ timeout: 10_000 })
-    await expect(preview, 'las tierras del campo no usan el morph de la mano').not.toHaveClass(/is-morph/)
 
     await page.mouse.move(8, 8)
     await expect(preview).toHaveCount(0)

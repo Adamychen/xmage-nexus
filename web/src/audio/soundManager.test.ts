@@ -204,7 +204,7 @@ describe('gameSoundDispatcher', () => {
     expect(soundManager.play).toHaveBeenCalledWith('draw', 'game')
   })
 
-  it('plays life_loss or combat_hit on damage', () => {
+  it('leaves combat damage to the strike sequence and plays life_loss otherwise', () => {
     const prev = {
       phase: 'COMBAT',
       step: 'DECLARE_BLOCKERS',
@@ -216,7 +216,8 @@ describe('gameSoundDispatcher', () => {
       players: [{ controlled: true, life: 17, name: 'Alice' }],
     } as unknown as GameView
     dispatchGameSounds(prev, next)
-    expect(soundManager.play).toHaveBeenCalledWith('combat_hit', 'game')
+    expect(soundManager.play).not.toHaveBeenCalledWith('combat_hit', 'game')
+    expect(soundManager.play).not.toHaveBeenCalledWith('life_loss', 'game')
 
     const prev2 = {
       phase: 'MAIN_PRE',

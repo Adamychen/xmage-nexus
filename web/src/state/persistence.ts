@@ -133,6 +133,15 @@ export function saveActiveGame(gameId: string | null, tableId?: string | null, r
   } catch {}
 }
 
+/** Whether a login is the account of the saved connection (its active game
+ *  and draft belong to it and must survive the login). */
+export function isSameAccount(saved: ConnectionInfo | null, serverHost: string, port: number, username: string): boolean {
+  if (!saved) return false
+  return saved.serverHost.toLowerCase() === serverHost.toLowerCase()
+    && saved.port === port
+    && saved.username.toLowerCase() === username.toLowerCase()
+}
+
 export function clearActiveGame() {
   try {
     const storage = getStorage()

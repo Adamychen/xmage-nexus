@@ -2,7 +2,9 @@ package org.mage.proxy;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GatewaySecurityTest {
@@ -37,5 +39,14 @@ class GatewaySecurityTest {
 
         assertTrue(gateway.originAllowed("https://client.example"));
         assertFalse(gateway.originAllowed("http://localhost:5173"));
+    }
+
+    @Test
+    void pingIsRecognizedWithoutRoutingItToTheSessionQueue() {
+        assertEquals("hb-1", Gateway.pingRequestId("{\"requestId\":\"hb-1\",\"action\":\"ping\",\"args\":{}}"));
+        assertEquals("", Gateway.pingRequestId("{\"action\":\"ping\"}"));
+        assertNull(Gateway.pingRequestId("{\"requestId\":\"1\",\"action\":\"sendChatMessage\",\"args\":{\"text\":\"ping\"}}"));
+        assertNull(Gateway.pingRequestId("{\"requestId\":\"2\",\"action\":\"joinGame\",\"args\":{}}"));
+        assertNull(Gateway.pingRequestId("\"ping\" not json"));
     }
 }

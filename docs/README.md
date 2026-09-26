@@ -16,6 +16,7 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 9. `docs/deployment.md` — running the stack and publishing the dashboard.
 10. `docs/enhancements.md` — high-value feature proposals beyond desktop parity (Deck Tracker, Deep Linking, Commander pings, Touch/iPad, EDHREC).
 11. `docs/lessons.md` — durable cross-cutting lessons worth re-reading before debugging.
+12. `docs/mcp-overview.md` — MCP server architecture, 26 tools catalog, and autonomous LLM gameplay guide.
 
 ## Status docs (what is authoritative for what)
 

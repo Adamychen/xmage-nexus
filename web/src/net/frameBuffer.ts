@@ -38,15 +38,22 @@ function kindOf(msg: ProxyMessage): string {
   return msg.type
 }
 
-export function recordFrame(msg: ProxyMessage): void {
+/** `rawLength` is the length of the frame as received: re-serializing a
+ *  200–800 KB game frame only to measure it cost a stringify per frame on the
+ *  main thread. */
+export function recordFrame(msg: ProxyMessage, rawLength?: number): void {
   let bytes = 0
   let full: unknown
-  try {
-    bytes = JSON.stringify(msg).length
-    if (bytes <= MAX_FULL_BYTES) full = msg
-  } catch {
-    bytes = -1
+  if (typeof rawLength === 'number') {
+    bytes = rawLength
+  } else {
+    try {
+      bytes = JSON.stringify(msg).length
+    } catch {
+      bytes = -1
+    }
   }
+  if (bytes >= 0 && bytes <= MAX_FULL_BYTES) full = msg
   frames = [...frames.slice(-(MAX_FRAMES - 1)), { at: Date.now(), kind: kindOf(msg), bytes, digest: digestOf(msg), full }]
 }
 

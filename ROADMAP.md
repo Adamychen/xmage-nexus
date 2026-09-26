@@ -115,7 +115,8 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 | Game UI | Combat preview / lethal warning while declaring attackers (subsumes the lethal calculator above) | High / ~1-2 d | Not started |
 | Game UI | P/T tinted vs base (green up / red down), summoning-sickness marker, "entered this turn" glow | Medium / ~1 d | Done 2026-09-23 (per-component tint vs printed value with base in the tooltip; client-tracked entered-this-turn glow; sickness badge already existed) |
 | Game UI | Life-history graph inside `ActionFeed`; hovering an entry highlights the card on the board | Medium / ~1-2 d | Not started |
-| Game FX | Spell weight impact: high-CMC / mythic spells darken the board, shake and flash in the card's colours | High / ~1 d | Done 2026-09-23 |
+| Game FX | Spell weight impact: high-CMC / mythic spells darken the board, shake and flash in the card's colours | High / ~1 d | Done 2026-09-23 (2026-09-25: fires when the spell resolves, not when it is cast; countered permanents and cancelled casts never slam) |
+| Game FX | Sequential combat strikes: when combat damage resolves, attackers lunge one after another at their blocker or at the player/planeswalker/battle they attack, each landing with the hit sound, sparks and a shake; dying combatants stay on screen until the sequence ends and damage/life numbers pop on each impact | High / small | Done 2026-09-25 (first-strike and regular damage steps animate separately; declaring attackers only shows the existing nudge) |
 | Game FX | Physical combat: impact particles on damage, distinct deaths (destroy = burn, exile = beam of light, token = pop/puff); the attacker lunge already existed | High / ~2 d | Done 2026-09-23 |
 | Game FX | Low-life tension: red vignette + heartbeat at ≤ 5 life | Medium / small | Done 2026-09-23 |
 | Game FX | Foil shimmer + 3D tilt on the enlarged card preview | Medium / small | Done 2026-09-23 |
@@ -143,6 +144,20 @@ Remote CI has `retries: 0` and two runs in a row failed on different `e2e-fake` 
 ### 4.5 Out of scope on purpose
 
 Emblem cards in Create Table (experimental `.dck` feature of the desktop client; decided 2026-09-06).
+
+### 4.6 Public proxy operations
+
+Since 2026-09-26 a proxy restart no longer ends the games in progress: the proxy does not disconnect its sessions on shutdown, the server sees a lost connection and keeps the tables for 3 minutes, and a re-login through the new proxy restores the game with its pending prompt; the SIM seats of that account are logged in again from the on-disk roster (`--simRoster`) and keep playing (`scripts/verify-reconnect.mjs`, restart and SIM phases). Limit: the players must log in again within those 3 minutes (the web reconnects on its own while the tab is open). Not built: a drain mode (stop accepting new tables, restart when no game is running) or an in-app notice before a restart.
+
+### 4.7 Connection resilience follow-ups
+
+The 2026-09-26 freeze/reconnect work is done: short drops, proxy restarts, out-of-order callbacks, the login race, the WebSocket deadlock, the proxy re-logging in by itself after losing the XMage server (`serverLink` banner instead of the login screen), a visible retry of the automatic re-login, the restore id on re-login, the resumable `seq` stream, the prompt cache kept until the answer, SIM seats across restarts, the short grace period for a closed tab (`leaving`, 45 s), the slower lobby poll during a game and the cheaper `recordFrame` (guarded by `scripts/verify-reconnect.mjs`, `OutboundLogTest`, `ReplayCacheTest`, `SimRosterTest`, `ProxyClientStreamTest`, `CallbackSequencerTest`, `GatewayCompressionTest`, `gateway-resilience.test.ts`). What is left:
+
+| What | Why |
+|---|---|
+| Persist the resume token (`streamId`, `seq`) across a page reload | A reload loses the in-memory board anyway, so it still rejoins with the latest state + prompt; events of the gap other than those are not shown after a reload |
+| The restore id survives a proxy restart only for the same address | The proxy keeps it in memory; an IP change **and** a proxy restart together still hit "already connected or your IP address changed" until the server expires the old session |
+| After a proxy restart the first re-logins can take one to several minutes | Every session the old proxy left behind costs the server ~40 s per callback (`SESSION CALLBACK EXCEPTION - Unable to create socket`, fork `Session.fireCallback`), and a login broadcasts to the lobby, so it waits on all of them until their owners are back; measured 2 min with four stale sessions. The web shows the restore banner meanwhile. Fixable only in the server (upstream) |
 
 ---
 

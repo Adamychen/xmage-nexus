@@ -61,8 +61,8 @@ export function dispatchGameSounds(
 
   if (prevMe && nextMe && typeof prevMe.life === 'number' && typeof nextMe.life === 'number') {
     if (nextMe.life < prevMe.life) {
-      const isCombat = nextGame.phase === 'COMBAT' || nextGame.step === 'COMBAT_DAMAGE' || nextGame.step === 'FIRST_COMBAT_DAMAGE'
-      soundManager.play(isCombat ? 'combat_hit' : 'life_loss', 'game')
+      const combatDamage = nextGame.step === 'COMBAT_DAMAGE' || nextGame.step === 'FIRST_COMBAT_DAMAGE'
+      if (!combatDamage) soundManager.play('life_loss', 'game')
     } else if (nextMe.life > prevMe.life) {
       soundManager.play('life_gain', 'game')
     }

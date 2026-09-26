@@ -9,12 +9,22 @@ export const HAND_BAR_PADDING_X = 24
 export const HAND_BAR_PADDING_Y = 12
 
 export const HAND_BAR_PEEK_RATIO = 0.5
-export const HAND_BAR_HOVER_SINK_RATIO = 0.1
 
-export const HAND_ARC_ROT_PER_CARD = 1.6
-export const HAND_ARC_MAX_ROT_DEG = 10
-export const HAND_ARC_MAX_RISE_RATIO = 0.03
-export const HAND_ARC_MAX_RISE_PX = 4
+export const HAND_HOVER_TARGET_W = 260
+export const HAND_HOVER_MAX_VIEWPORT_H_RATIO = 0.55
+export const HAND_HOVER_MIN_SCALE = 1.15
+
+export const HAND_COST_PIP_CARD_RATIO = 0.13
+export const HAND_COST_PIP_STRIP_RATIO = 0.45
+export const HAND_COST_PIP_MIN_PX = 10
+export const HAND_COST_PIP_GAP_PX = 2
+export const HAND_COST_MIN_STEP_RATIO = 0.35
+export const HAND_COST_INSET_PX = 4
+
+export const HAND_ARC_ROT_PER_CARD = 2.6
+export const HAND_ARC_MAX_ROT_DEG = 18
+export const HAND_ARC_MAX_RISE_RATIO = 0.08
+export const HAND_ARC_MAX_RISE_PX = 16
 export const HAND_ARC_PLAYABLE_RISE_PX = 3
 
 export interface HandArcEntry {
@@ -66,4 +76,39 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
   const gap = Math.max(maxOverlap, Math.min(HAND_BAR_MAX_GAP, naturalGap))
 
   return { cardW, gap, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
+}
+
+export function computeHandHoverScale(cardW: number, viewportH: number): number {
+  if (cardW <= 0) return HAND_HOVER_MIN_SCALE
+  const byHeight = viewportH > 0 ? (viewportH * HAND_HOVER_MAX_VIEWPORT_H_RATIO) / HAND_CARD_ASPECT : HAND_HOVER_TARGET_W
+  const targetW = Math.min(HAND_HOVER_TARGET_W, byHeight)
+  return Math.max(HAND_HOVER_MIN_SCALE, targetW / cardW)
+}
+
+/** Visible width of a hand card at rest: the distance to the next card. */
+export function handRestStripWidth(cardW: number, gap: number): number {
+  return cardW * (1 - HAND_BAR_REST_OVERLAP_RATIO) + gap
+}
+
+export interface CostPipLayout {
+  size: number
+  /** Offset between consecutive bubble starts; below `size` they stack. */
+  step: number
+}
+
+/** One bubble size for the whole hand, proportional to the card and to the
+ *  strip each card shows at rest. */
+export function computeCostPipSize(stripW: number, cardW: number): number {
+  const size = Math.min(cardW * HAND_COST_PIP_CARD_RATIO, stripW * HAND_COST_PIP_STRIP_RATIO)
+  return Math.max(HAND_COST_PIP_MIN_PX, Math.round(size))
+}
+
+/** Long costs stack their bubbles so the group stays inside the card's
+ *  visible strip (never over the neighbour's cost). */
+export function computeCostPipLayout(stripW: number, size: number, count: number): CostPipLayout {
+  const natural = size + HAND_COST_PIP_GAP_PX
+  if (count <= 1) return { size, step: natural }
+  const fit = (stripW - 2 * HAND_COST_INSET_PX - size) / (count - 1)
+  const step = Math.max(size * HAND_COST_MIN_STEP_RATIO, Math.min(natural, fit))
+  return { size, step: Math.round(step * 10) / 10 }
 }

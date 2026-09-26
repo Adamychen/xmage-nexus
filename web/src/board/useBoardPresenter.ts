@@ -7,7 +7,8 @@ import { findCardViewInGame, looksLikeBattlefieldPermanent } from './boardShared
 import { useStore, isBlockingModal } from '../state/store'
 
 export interface HoverOptions {
-  /** El hover viene de la mano propia (HandBar): el preview hace morph. */
+  /** The hover comes from the own hand (HandBar): the card grows in place,
+   *  so no floating preview is shown. */
   fromHand?: boolean
 }
 
@@ -32,8 +33,6 @@ export interface BoardPresenter {
   anchorRect: DOMRect | null
   /** Salida en curso: el preview vuelve sobre la carta antes de desmontar. */
   previewLeaving: boolean
-  /** El hover activo viene de la mano propia (permite el morph del preview). */
-  previewFromHand: boolean
   handleCardHover: (card: CardView | PermanentView | null, rect?: DOMRect, opts?: HoverOptions) => void
   /** Dispatcher de clicks de zona con la prioridad combat → target → playable,
    *  idéntica en los tres modos de tablero. */
@@ -87,7 +86,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
   const [floatingCard, setFloatingCard] = useState<CardView | PermanentView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
   const [previewLeaving, setPreviewLeaving] = useState(false)
-  const [previewFromHand, setPreviewFromHand] = useState(false)
   const hoverTimeoutRef = useRef<number | null>(null)
   const hoverAnchorRef = useRef<Element | null>(null)
 
@@ -101,7 +99,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       setFloatingCard(null)
       setAnchorRect(null)
       setPreviewLeaving(false)
-      setPreviewFromHand(false)
     }
   }, [modalOpen])
 
@@ -116,14 +113,18 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
         setFloatingCard(null)
         setAnchorRect(null)
         setPreviewLeaving(false)
-        setPreviewFromHand(false)
         return
       }
 
-      if (card && rect) {
+      if (card && rect && opts?.fromHand) {
+        hoverAnchorRef.current = null
+        setFloatingCard(null)
+        setAnchorRect(null)
+        setPreviewLeaving(false)
+        onCardHover?.(card as CardView | null)
+      } else if (card && rect) {
         hoverAnchorRef.current = hoverAnchorFor(rect)
         setPreviewLeaving(false)
-        setPreviewFromHand(opts?.fromHand === true)
         setFloatingCard(card)
         setAnchorRect(rect)
         onCardHover?.(card as CardView | null)
@@ -134,7 +135,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
           setFloatingCard(null)
           setAnchorRect(null)
           setPreviewLeaving(false)
-          setPreviewFromHand(false)
           onCardHover?.(null)
         }, PREVIEW_LEAVE_MS)
       }
@@ -188,7 +188,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
       setFloatingCard(null)
       setAnchorRect(null)
       setPreviewLeaving(false)
-      setPreviewFromHand(false)
       onCardHover?.(null)
     }
 
@@ -232,7 +231,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     floatingCard,
     anchorRect,
     previewLeaving,
-    previewFromHand,
     handleCardHover,
     handleCardClick,
     targetIdSet,

@@ -107,6 +107,7 @@ export default function GameScreen() {
   const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
+  const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const stackCount = Object.keys(game?.stack ?? {}).length
   const prevStackCountRef = useRef(0)
@@ -423,7 +424,7 @@ export default function GameScreen() {
   )
 
   return (
-    <PromptSlotProvider value={promptSlot}>
+    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div className="game" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
           {!dividerSlot && <header className="game-top">{strip}</header>}

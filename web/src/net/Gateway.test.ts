@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Gateway } from './Gateway'
+import { Gateway, HEARTBEAT_INTERVAL_MS, HEARTBEAT_TIMEOUT_MS } from './Gateway'
 
 /** WebSocket simulado: estáticos de readyState, y helpers para disparar onopen/onmessage/onclose. */
 class FakeWebSocket {
@@ -161,5 +161,139 @@ describe('Gateway', () => {
     g.close()
     await vi.advanceTimersByTimeAsync(20000)
     expect(FakeWebSocket.instances).toHaveLength(1)
+  })
+
+  describe('heartbeat (half-open sockets)', () => {
+    const pings = (ws: FakeWebSocket) => ws.sent.map((m) => JSON.parse(m)).filter((m) => m.action === 'ping')
+
+    it('probes an idle connection and keeps it while the proxy answers', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      const ws = currentWs(g)
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS + 100)
+      expect(pings(ws)).toHaveLength(1)
+      ws.triggerMessage(JSON.stringify({ type: 'result', action: 'ping', requestId: pings(ws)[0].requestId, ok: true, data: 'pong' }))
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_TIMEOUT_MS + 100)
+      expect(currentWs(g)).toBe(ws)
+      expect(FakeWebSocket.instances).toHaveLength(1)
+    })
+
+    it('drops a socket that stops answering, fails pending actions and reconnects', async () => {
+      const onClose = vi.fn()
+      const onOpen = vi.fn()
+      const g = new Gateway({ onClose, onOpen })
+      await connectOpen(g)
+      const ws = currentWs(g)
+      const pending = g.send('sendPlayerUUID', { gameId: 'g-1' })
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS + 200)
+      expect(pings(ws)).toHaveLength(1)
+      expect(onClose).toHaveBeenCalledWith('heartbeat timeout')
+      await expect(pending).resolves.toMatchObject({ ok: false, error: 'heartbeat timeout' })
+      await vi.advanceTimersByTimeAsync(1100)
+      expect(FakeWebSocket.instances).toHaveLength(2)
+      FakeWebSocket.instances[1].triggerOpen()
+      expect(onOpen).toHaveBeenCalledTimes(2)
+    })
+
+    it('any inbound frame counts as alive (no probe while events flow)', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      const ws = currentWs(g)
+      for (let i = 0; i < 6; i++) {
+        await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS / 2)
+        ws.triggerMessage(JSON.stringify({ type: 'info', message: 'tick' }))
+      }
+      expect(pings(ws)).toHaveLength(0)
+    })
+
+    it('stops probing after a user close', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      const ws = currentWs(g)
+      g.close()
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 3)
+      expect(pings(ws)).toHaveLength(0)
+      expect(FakeWebSocket.instances).toHaveLength(1)
+    })
+  })
+
+  describe('resumable stream', () => {
+    const connectResult = (requestId: string, data: Record<string, unknown>) =>
+      JSON.stringify({ type: 'result', action: 'connect', requestId, ok: true, data })
+    const event = (seq: number, method: string) =>
+      JSON.stringify({ seq, type: 'event', method, messageId: seq })
+
+    it('tracks the last frame of the proxy stream for the resume token', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      expect(g.resumeToken()).toBeNull()
+      const ws = currentWs(g)
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('0', { attached: false, streamId: 's1' }))
+      ws.triggerMessage(event(1, 'GAME_INIT'))
+      ws.triggerMessage(event(2, 'GAME_SELECT'))
+      expect(g.resumeToken()).toEqual({ streamId: 's1', seq: 2 })
+    })
+
+    it('drops a replayed frame it already processed', async () => {
+      const seen: string[] = []
+      const g = new Gateway({ onMessage: (m) => { if (m.type === 'event') seen.push(m.method) } })
+      await connectOpen(g)
+      const ws = currentWs(g)
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('0', { streamId: 's1' }))
+      ws.triggerMessage(event(1, 'A'))
+      ws.triggerMessage(event(2, 'B'))
+      ws.triggerMessage(event(2, 'B'))
+      ws.triggerMessage(event(3, 'C'))
+      ws.triggerMessage(JSON.stringify({ type: 'event', method: 'REPLAY', messageId: 9 }))
+      expect(seen).toEqual(['A', 'B', 'C', 'REPLAY'])
+    })
+
+    it('a login onto another stream restarts the numbering', async () => {
+      const seen: string[] = []
+      const g = new Gateway({ onMessage: (m) => { if (m.type === 'event') seen.push(m.method) } })
+      await connectOpen(g)
+      const ws = currentWs(g)
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('0', { streamId: 's1' }))
+      ws.triggerMessage(event(40, 'OLD'))
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('1', { streamId: 's2' }))
+      ws.triggerMessage(event(1, 'NEW'))
+      expect(seen).toEqual(['OLD', 'NEW'])
+      expect(g.resumeToken()).toEqual({ streamId: 's2', seq: 1 })
+    })
+
+    it('keeps the numbering when it re-attaches to the same stream', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      const ws = currentWs(g)
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('0', { streamId: 's1' }))
+      ws.triggerMessage(event(7, 'A'))
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('1', { streamId: 's1', attached: true, resumed: false }))
+      expect(g.resumeToken()).toEqual({ streamId: 's1', seq: 7 })
+    })
+  })
+
+  describe('leaving', () => {
+    it('tells the proxy when the page is being closed', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      window.dispatchEvent(new Event('pagehide'))
+      const sent = currentWs(g).sent.map((m) => JSON.parse(m) as { action: string })
+      expect(sent.map((m) => m.action)).toContain('leaving')
+    })
+
+    it('stays silent once the socket is closed by the app', async () => {
+      const g = new Gateway()
+      await connectOpen(g)
+      const ws = currentWs(g)
+      g.close()
+      window.dispatchEvent(new Event('pagehide'))
+      expect(ws.sent.some((m) => m.includes('leaving'))).toBe(false)
+    })
   })
 })

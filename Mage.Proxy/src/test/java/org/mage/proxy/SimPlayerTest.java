@@ -26,6 +26,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SimPlayerTest {
 
     @Test
+    void nextBlockerSkipsBlockersTheServerAlreadyRejected() {
+        UUID wall = UUID.randomUUID();
+        UUID bear = UUID.randomUUID();
+        Set<UUID> tried = new LinkedHashSet<>();
+        assertEquals(wall, SimPlayer.nextBlocker(Arrays.asList(wall, bear), tried));
+        tried.add(wall);
+        assertEquals(bear, SimPlayer.nextBlocker(Arrays.asList(wall, bear), tried));
+        tried.add(bear);
+        assertNull(SimPlayer.nextBlocker(Arrays.asList(wall, bear), tried));
+        assertNull(SimPlayer.nextBlocker(null, tried));
+    }
+
+    @Test
     void parseMatchOptionsMapsSimSeatsToHuman() {
         JsonObject args = new JsonObject();
         args.addProperty("name", "t");

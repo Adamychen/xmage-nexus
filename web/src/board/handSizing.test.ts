@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   computeHandArc,
   computeHandBarSizing,
+  computeHandHoverScale,
+  computeCostPipLayout,
+  computeCostPipSize,
+  handRestStripWidth,
   HAND_ARC_MAX_RISE_PX,
   HAND_ARC_MAX_RISE_RATIO,
   HAND_ARC_MAX_ROT_DEG,
@@ -13,6 +17,14 @@ import {
   HAND_BAR_PEEK_RATIO,
   HAND_CARD_ASPECT,
   HAND_BAR_PADDING_Y,
+  HAND_HOVER_MIN_SCALE,
+  HAND_COST_PIP_CARD_RATIO,
+  HAND_COST_PIP_STRIP_RATIO,
+  HAND_COST_PIP_MIN_PX,
+  HAND_COST_PIP_GAP_PX,
+  HAND_COST_MIN_STEP_RATIO,
+  HAND_COST_INSET_PX,
+  HAND_HOVER_TARGET_W,
 } from './handSizing'
 
 const bandHeight = (cardW: number) => cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y
@@ -133,5 +145,46 @@ describe('computeHandArc', () => {
       expect(arc[6].rise).toBe(0)
       arc.forEach((e) => expect(e.rise).toBeGreaterThanOrEqual(0))
     }
+  })
+})
+
+describe('computeHandHoverScale', () => {
+  it('grows the hovered card to the legible target width on a tall viewport', () => {
+    expect(computeHandHoverScale(130, 1000) * 130).toBeCloseTo(HAND_HOVER_TARGET_W, 6)
+  })
+
+  it('caps the grown card height on short viewports', () => {
+    const scale = computeHandHoverScale(100, 500)
+    expect(scale * 100 * HAND_CARD_ASPECT).toBeLessThanOrEqual(500 * 0.55 + 1e-6)
+  })
+
+  it('always grows at least a little, even when the card is already large', () => {
+    expect(computeHandHoverScale(HAND_BAR_MAX_CARD_W * 2, 1000)).toBe(HAND_HOVER_MIN_SCALE)
+    expect(computeHandHoverScale(0, 1000)).toBe(HAND_HOVER_MIN_SCALE)
+  })
+})
+
+describe('cost bubbles', () => {
+  it('uses one size proportional to the card, bounded by the visible strip', () => {
+    expect(computeCostPipSize(200, 156)).toBe(Math.round(156 * HAND_COST_PIP_CARD_RATIO))
+    expect(computeCostPipSize(30, 156)).toBe(Math.round(30 * HAND_COST_PIP_STRIP_RATIO))
+    expect(computeCostPipSize(5, 156)).toBe(HAND_COST_PIP_MIN_PX)
+  })
+
+  it('keeps short costs spread and stacks long ones inside the strip', () => {
+    const size = 18
+    expect(computeCostPipLayout(200, size, 3).step).toBe(size + HAND_COST_PIP_GAP_PX)
+    const strip = 50
+    const { step } = computeCostPipLayout(strip, size, 4)
+    expect(step).toBeLessThan(size)
+    expect(size + 3 * step).toBeLessThanOrEqual(strip - 2 * HAND_COST_INSET_PX + 0.1)
+  })
+
+  it('never stacks beyond the minimum visible share of each bubble', () => {
+    expect(computeCostPipLayout(20, 18, 8).step).toBeCloseTo(18 * HAND_COST_MIN_STEP_RATIO, 5)
+  })
+
+  it('the rest strip is the distance to the next card', () => {
+    expect(handRestStripWidth(100, -10)).toBe(100 * 0.5 - 10)
   })
 })

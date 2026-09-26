@@ -29,6 +29,12 @@ export function useSettings() {
   return useStore((s) => s.settings)
 }
 
+/** Keep/mulligan decision on the opening hand: shown as a bar over the raised
+ *  hand, not as a modal (the London bottom pick is a separate card dialog). */
+export function isMulliganDecision(f: FeedbackPrompt | null | undefined): boolean {
+  return f?.isMulligan === true && f.isMulliganLondon !== true
+}
+
 /**
  * True when a screen-covering modal is open (and the board's hover preview
  * should be suppressed). Excludes in-board interactions like targeting bars,
@@ -45,6 +51,7 @@ export function isBlockingModal(s: AppState): boolean {
   const f = s.feedback as FeedbackPrompt | null
   if (f) {
     if (f.mode === 'mana' || f.mode === 'combat') return false
+    if (isMulliganDecision(f)) return false
     if (f.method === 'GAME_TARGET' && (!f.cards || f.cards.length === 0)) return false
     return true
   }

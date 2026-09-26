@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { doConnect, reset } from './gateway'
+import { ALREADY_CONNECTED_RETRIES, doConnect, reset } from './gateway'
 import { getState } from './state'
 import * as cmds from '../net/commands'
+import { gameEventOrder, noteGameEvent } from './gameUtils'
 
 vi.mock('../net/commands', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../net/commands')>()
@@ -115,5 +116,57 @@ describe('doConnect — intentos concurrentes', () => {
     await retry
     expect(getState().phase).toBe('lobby')
     expect(getState().error).toBeNull()
+  })
+
+  it('stops retrying "already connected" after a few attempts and shows the error', async () => {
+    const already = 'User u already connected or your IP address changed - try another user'
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: false, error: already } as never)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    for (let i = 0; i < 30; i++) {
+      for (const w of FakeWebSocket.instances) if (w.readyState === FakeWebSocket.CONNECTING) w.triggerOpen()
+      await vi.advanceTimersByTimeAsync(1000)
+    }
+    await done
+    expect(cmds.connect).toHaveBeenCalledTimes(ALREADY_CONNECTED_RETRIES + 1)
+    expect(getState().phase).toBe('idle')
+    expect(getState().error).toContain('already connected')
+  })
+
+  it('a login that opened a new XMage session resets the game event order', async () => {
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: false } } as never)
+    noteGameEvent('g-1', 800)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await done
+    expect(gameEventOrder('g-1', 5)).toBe('unknown')
+  })
+
+  it('re-attaching to the live proxy session keeps the game event order', async () => {
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: true } } as never)
+    noteGameEvent('g-1', 800)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await done
+    expect(gameEventOrder('g-1', 5)).toBe('older')
+  })
+
+  it('an automatic WS reconnect that lands on a new XMage session resets the game event order', async () => {
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: true } } as never)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await done
+    noteGameEvent('g-1', 800)
+
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: false } } as never)
+    FakeWebSocket.instances[0].onclose?.({ code: 1006 })
+    await vi.advanceTimersByTimeAsync(1100)
+    expect(FakeWebSocket.instances).toHaveLength(2)
+    FakeWebSocket.instances[1].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    expect(cmds.connect).toHaveBeenCalledTimes(2)
+    expect(gameEventOrder('g-1', 5)).toBe('unknown')
   })
 })

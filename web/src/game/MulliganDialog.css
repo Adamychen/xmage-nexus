@@ -26,7 +26,8 @@
   }
 }
 
-html.fx-off .mulligan-card-wrap {
+html.fx-off .mulligan-card-wrap,
+html.fx-off .mulligan-bar {
   animation: none !important;
 }
 
@@ -75,6 +76,141 @@ html.fx-off .mulligan-card-wrap {
   box-shadow: 0 2px 8px var(--shade-3);
   z-index: 20;
   pointer-events: none;
+}
+
+/* ── Opening-hand bar (keep / mulligan over the raised hand) ─── */
+.mulligan-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-3);
+  background: rgb(var(--ink-2-rgb) / 0.94);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2), 0 0 28px rgb(var(--brand-rgb) / 0.22);
+  color: var(--fg-hi);
+  backdrop-filter: blur(12px);
+  animation: mulliganBarIn calc(0.22s / var(--fx-speed, 1)) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mulliganBarIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mulligan-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.mulligan-bar-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-0h);
+  padding-right: var(--sp-3);
+  border-right: 1px solid var(--veil-5);
+}
+
+.mulligan-bar-title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mulligan-bar-count {
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.mulligan-bar-starter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-2);
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--fg-1);
+}
+
+.mulligan-bar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-0h);
+  padding: var(--sp-1h) var(--sp-4);
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--r-md);
+  color: var(--brand-fg);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.mulligan-bar-option:hover:not(:disabled) {
+  background: rgb(var(--brand-rgb) / 0.24);
+  transform: translateY(-1px);
+}
+
+.mulligan-bar-option:focus-visible {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: 2px;
+}
+
+.mulligan-bar-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mulligan-bar-option-label {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.mulligan-bar-option-hint {
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+}
+
+.mulligan-bar-concede {
+  color: var(--err);
+}
+
+.mulligan-bar-keep {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  font-weight: 700;
+  box-shadow: 0 0 18px rgb(var(--brand-rgb) / 0.35);
+}
+
+.mulligan-bar .mulligan-evaluator {
+  justify-content: flex-start;
+  margin: 0;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--veil-5);
+}
+
+@media (max-width: 640px) {
+  .mulligan-bar-row {
+    flex-wrap: wrap;
+  }
+
+  .mulligan-bar-info {
+    border-right: 0;
+    padding-right: 0;
+  }
 }
 
 /* ── Hand evaluator (land ratio, colors, 3rd-land odds) ──────── */
@@ -134,14 +270,6 @@ html.fx-off .mulligan-card-wrap {
   cursor: not-allowed;
 }
 
-.mulligan-auto-toggle { justify-content: center; margin-top: 12px; }
-
-.mulligan-mulligan {
-  background: linear-gradient(180deg, var(--gold-300) 0%, var(--warn) 100%);
-  color: var(--ink-0);
-  box-shadow: 0 4px 14px rgb(var(--warn-rgb) / 0.3);
-}
-
 .mulligan-actions .mulligan-concede {
   display: inline-flex;
   align-items: center;
@@ -158,7 +286,8 @@ html.fx-off .mulligan-card-wrap {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mulligan-card-wrap {
+  .mulligan-card-wrap,
+  .mulligan-bar {
     animation: none;
   }
 

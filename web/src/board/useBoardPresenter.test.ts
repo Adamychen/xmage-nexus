@@ -63,29 +63,21 @@ describe('useBoardPresenter preview leaving', () => {
     expect(onCardHover).not.toHaveBeenCalledWith(null)
   })
 
-  it('tracks whether the hover comes from the hand', () => {
-    const { result } = renderHook(() => useBoardPresenter({ game: null }))
-    expect(result.current.previewFromHand).toBe(false)
+  it('does not open the floating preview for hand hovers (the card grows in place)', () => {
+    const onCardHover = vi.fn()
+    const { result } = renderHook(() => useBoardPresenter({ game: null, onCardHover }))
 
     act(() => {
       result.current.handleCardHover(card, rect)
     })
-    expect(result.current.previewFromHand).toBe(false)
+    expect(result.current.floatingCard).toBe(card)
 
     act(() => {
       result.current.handleCardHover(card, rect, { fromHand: true })
     })
-    expect(result.current.previewFromHand).toBe(true)
-
-    act(() => {
-      result.current.handleCardHover(null)
-    })
-    expect(result.current.previewFromHand).toBe(true)
-
-    act(() => {
-      vi.advanceTimersByTime(PREVIEW_LEAVE_MS)
-    })
-    expect(result.current.previewFromHand).toBe(false)
+    expect(result.current.floatingCard).toBeNull()
+    expect(result.current.anchorRect).toBeNull()
+    expect(onCardHover).toHaveBeenLastCalledWith(card)
   })
 })
 
@@ -156,14 +148,13 @@ describe('useBoardPresenter clears stale hovers against the game view', () => {
     )
 
     act(() => {
-      result.current.handleCardHover(handCard1, rect, { fromHand: true })
+      result.current.handleCardHover(handCard1, rect)
     })
     expect(result.current.floatingCard).toBe(handCard1)
 
     // Update que reenvía la mano (nuevo objeto, mismo id)
     rerender({ game: makeGame([], { myHand: { 'h-1': handCard1b } }) })
     expect(result.current.floatingCard).toBe(handCard1b)
-    expect(result.current.previewFromHand).toBe(true)
   })
 
   it('clears the preview when the id exists nowhere in the game', () => {

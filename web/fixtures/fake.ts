@@ -506,6 +506,10 @@ export class FakeServer {
       const action = String(msg.action ?? '')
       const requestId = msg.requestId ?? null
       const args = ((msg.args ?? {}) as Record<string, unknown>) ?? {}
+      if (action === 'ping') {
+        conn.ok(requestId, action, 'pong')
+        return
+      }
       if (action === 'connect') {
         const nameError = validateServerUserName(String(args.username ?? '').trim())
         if (nameError) {

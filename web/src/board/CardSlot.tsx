@@ -4,7 +4,9 @@ import { cardName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
-import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
+import { fxDuration } from './fx'
+import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import CardIcons from './CardIcons'
@@ -83,6 +85,8 @@ export default function CardSlot({
   const [flightState, setFlightState] = useState<'none' | 'hidden' | 'landing'>('none')
   const flightStateRef = useRef(flightState)
   flightStateRef.current = flightState
+  const [held, setHeld] = useState(false)
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const effectiveId = cardId || (card as any).id
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
@@ -110,6 +114,7 @@ export default function CardSlot({
 
   useEffect(() => () => {
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
   }, [])
 
   useLayoutEffect(() => {
@@ -129,10 +134,10 @@ export default function CardSlot({
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
-            const flightId = startCardFlight(card, prev, lastRect, 340, `[data-card-id="${effectiveId}"]`, {
-              sourceSize: getPreviousCardSize(effectiveId),
-            })
-            if (flightId) {
+            const sourceSize = getPreviousCardSize(effectiveId)
+            const flyIn = (toRect: DOMRect) => {
+              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize })
+              if (!flightId) return
               setFlightState('hidden')
               const land = () => {
                 if (flightStateRef.current !== 'hidden') return
@@ -147,6 +152,17 @@ export default function CardSlot({
                   unsub()
                 }
               })
+            }
+            const holdMs = combatHoldRemaining(String(effectiveId))
+            if (holdMs > 0) {
+              setHeld(true)
+              holdTimerRef.current = setTimeout(() => {
+                holdTimerRef.current = null
+                setHeld(false)
+                if (el.isConnected) flyIn(el.getBoundingClientRect())
+              }, holdMs)
+            } else {
+              flyIn(lastRect)
             }
           } else {
             noteFlightEvent({ kind: 'skip', reason: 'same-zone', cardId: String(effectiveId), detail: `slot:${prevZone || '?'}>${curZoneClass || '?'}` })
@@ -175,6 +191,16 @@ export default function CardSlot({
       }
     }
   }, [effectiveId, card])
+
+  useLayoutEffect(() => {
+    const el = slotRef.current
+    if (!el || !effectiveId) return
+    const holdMs = combatHoldRemaining(String(effectiveId))
+    if (holdMs <= 0 || !isOffBattlefield(el)) return
+    setHeld(true)
+    const release = setTimeout(() => setHeld(false), holdMs + 40 + fxDuration(420))
+    return () => clearTimeout(release)
+  }, [effectiveId])
 
   useEffect(() => {
     if (flightState !== 'hidden') return
@@ -205,7 +231,7 @@ export default function CardSlot({
     : undefined
 
   const keywordBadges = useMemo(() => {
-    const kws = extractKeywordsFromCard(card)
+    const kws = extractOwnedKeywords(card)
     return kws.filter((k) => ['combat', 'evasion', 'protection'].includes(k.category)).slice(0, 4)
   }, [card.rules, (card as unknown as { abilities?: unknown }).abilities, card.name])
 
@@ -290,7 +316,7 @@ export default function CardSlot({
         compact ? 'is-compact' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
-        flightState === 'hidden' ? 'flight-hidden' : '',
+        flightState === 'hidden' || held ? 'flight-hidden' : '',
         flightState === 'landing' ? 'flight-land' : '',
         className,
       ].filter(Boolean).join(' ')}

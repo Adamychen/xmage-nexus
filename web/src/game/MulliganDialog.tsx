@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
-import Checkbox from '../ui/Checkbox'
 import Chip from '../ui/Chip'
 import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
-import { useStore, useSettings, setSetting } from '../state/store'
+import { useStore } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
@@ -15,8 +14,20 @@ import { localizeServerMessage } from './serverMessageTranslation'
 import { confirmDialog } from '../ui/confirmDialog'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { computeMulliganEvaluation, type MulliganEvaluation } from './mulliganEvaluator'
+import { HandPrompt } from './GameDock'
 import './MulliganDialog.css'
 import Button from '../ui/Button'
+
+/** Short hint under the Mulligan option, from the server ask
+ *  (`Mulligan down to 6 cards?` / `Mulligan for free, draw another 7 cards?`). */
+export function mulliganOptionHint(message: string, t: typeof staticT): string | null {
+  const plain = message.replace(/<[^>]*>/g, '')
+  const free = plain.match(/for\s+free.*?(\d+)\s+cards?/i)
+  if (free) return t('dialogs', 'mulligan_free_hint', { count: Number(free[1]) })
+  const down = plain.match(/down\s+to\s+(\d+)\s+cards?/i)
+  if (down) return t('dialogs', 'mulligan_down_hint', { count: Number(down[1]) })
+  return null
+}
 
 function MulliganHandEvaluator({ evaluation, t }: { evaluation: MulliganEvaluation; t: typeof staticT }) {
   if (evaluation.cardCount === 0) return null
@@ -62,7 +73,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const { t } = useTranslation()
   const game = useStore((s) => s.game)
   const myDeck = useStore((s) => s.myDeck)
-  const settings = useSettings()
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
   const isLondon = prompt.isMulliganLondon === true
@@ -184,58 +194,50 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     )
   }
 
+  const optionHint = mulliganOptionHint(prompt.message, t)
+  const starterId = game?.activePlayerId ?? null
+  const starterName = starterId ? game?.players?.find((p) => p.playerId === starterId)?.name : undefined
+  const starterLabel = !starterId
+    ? null
+    : starterId === game?.myPlayerId
+      ? t('dialogs', 'mulligan_you_start')
+      : starterName
+        ? t('dialogs', 'mulligan_they_start', { name: starterName })
+        : null
+
   return (
-    <DialogShell
-      labelledBy="mulligan-title"
-      titleId="mulligan-title"
-      size="lg"
-      legacyBackdropClass="mulligan-backdrop"
-      legacyPanelClass="mulligan-dialog"
-      kickerIcon="layers"
-      kickerLabel={t('dialogs', 'mulligan_decision_title')}
-      title={<FormattedText text={prompt.title === 'Mulligan' ? t('dialogs', 'mulligan_title') : prompt.title} />}
-      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
-      trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
-      aside={
-        <Checkbox
-          className="mulligan-auto-toggle"
-          checked={settings.autoKeepMulligan}
-          onChange={(next) => setSetting('autoKeepMulligan', next)}
-          label={t('game', 'auto_mulligan')}
-        />
-      }
-    >
-        {cardCount > 0 && (
-          <div className="mulligan-hand-grid">
-            {handEntries.map(([id, card], i) => (
-              <div key={id} className="mulligan-card-wrap" style={{ animationDelay: `${i * 55}ms` }}>
-                <CardSlot
-                  cardId={id}
-                  card={card}
-                  isPlayable={false}
-                  onHover={handleHover}
-                />
-              </div>
-            ))}
+    <HandPrompt>
+      <div className="mulligan-bar" role="group" aria-labelledby="mulligan-title" data-testid="mulligan-bar">
+        <div className="mulligan-bar-row">
+          <div className="mulligan-bar-info">
+            <span id="mulligan-title" className="mulligan-bar-title">{t('dialogs', 'mulligan_opening_hand')}</span>
+            <span className="mulligan-bar-count">{t('dialogs', 'mulligan_cards', { count: cardCount })}</span>
+            {starterLabel && (
+              <span className="mulligan-bar-starter" data-testid="mulligan-starter">
+                <Icon name="play" size={11} /> {starterLabel}
+              </span>
+            )}
           </div>
-        )}
-
-        <MulliganHandEvaluator evaluation={evaluation} t={t} />
-
-        <div className="mulligan-actions">
-          <Button variant="success" disabled={busy} onClick={keep}>
-            <Icon name="hand" size={13} /> {t('dialogs', 'mulligan_keep_btn', { count: cardCount })}
-          </Button>
-          <Button className="mulligan-mulligan" disabled={busy} onClick={mulligan}>
-            <Icon name="refresh" size={13} /> {t('dialogs', 'mulligan_btn')}
-          </Button>
-          <Button variant="soft-danger"
+          <button type="button" className="mulligan-bar-option" disabled={busy} onClick={mulligan}>
+            <span className="mulligan-bar-option-label">{t('dialogs', 'mulligan_btn')}</span>
+            {optionHint && <span className="mulligan-bar-option-hint">{optionHint}</span>}
+          </button>
+          <Button
+            variant="ghost"
+            className="mulligan-bar-concede"
             data-testid="mulligan-concede"
             disabled={busy}
-            onClick={() => void concede()}>
+            title={t('dialogs', 'mulligan_concede')}
+            onClick={() => void concede()}
+          >
             <Icon name="flag" size={13} /> {t('dialogs', 'mulligan_concede')}
           </Button>
+          <Button variant="primary" className="mulligan-bar-keep" disabled={busy} onClick={keep}>
+            {t('dialogs', 'mulligan_keep_hand')} <span aria-hidden="true">→</span>
+          </Button>
         </div>
-    </DialogShell>
+        <MulliganHandEvaluator evaluation={evaluation} t={t} />
+      </div>
+    </HandPrompt>
   )
 }

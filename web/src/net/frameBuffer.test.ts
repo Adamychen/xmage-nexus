@@ -29,6 +29,24 @@ describe('frameBuffer (P7)', () => {
     expect(last.digest?.method).toBe('GAME_UPDATE')
   })
 
+  it('uses the received length instead of re-serializing the frame', () => {
+    const big = { type: 'event', method: 'GAME_UPDATE', messageId: 3, data: { pad: 'x'.repeat(100_000) } } as unknown as ProxyMessage
+    const original = JSON.stringify
+    let calls = 0
+    JSON.stringify = ((...args: Parameters<typeof JSON.stringify>) => {
+      calls++
+      return original(...args)
+    }) as typeof JSON.stringify
+    try {
+      recordFrame(big, 123_456)
+    } finally {
+      JSON.stringify = original
+    }
+    expect(calls).toBe(0)
+    expect(recentFrames()[0].bytes).toBe(123_456)
+    expect(recentFrames()[0].full).toBeUndefined()
+  })
+
   it('recorta al límite y expone copia', () => {
     for (let i = 0; i < FRAME_BUFFER_LIMITS.MAX_FRAMES + 10; i++) {
       recordFrame({ type: 'info', message: `m${i}` } as ProxyMessage)

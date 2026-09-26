@@ -187,39 +187,16 @@ html.fx-off .floating-card-foil {
   }
 }
 
-.floating-card-preview.is-morph {
-  animation: none;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.floating-card-preview.is-morph.is-leaving {
-  transition-duration: 0.18s;
-  transition-timing-function: ease-in;
-}
-
-.floating-card-preview.is-morph .floating-card-keywords {
+.floating-card-preview.is-leaving {
   opacity: 0;
-  transition: opacity 0.18s ease 0.15s;
-}
-
-.floating-card-preview.is-morph.is-open:not(.is-leaving) .floating-card-keywords {
-  opacity: 1;
-}
-
-.floating-card-preview.is-morph.is-leaving .floating-card-keywords {
-  transition-delay: 0s;
-  transition-duration: 0.12s;
+  transition: opacity 0.15s ease-in;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .floating-card-preview {
     animation: none;
   }
-  .floating-card-preview.is-morph {
-    transition: none;
-  }
-  .floating-card-preview.is-morph .floating-card-keywords {
-    opacity: 1;
+  .floating-card-preview.is-leaving {
     transition: none;
   }
 }

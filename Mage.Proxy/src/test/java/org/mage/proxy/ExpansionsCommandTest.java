@@ -64,6 +64,23 @@ class ExpansionsCommandTest {
         }
 
         @Override
+        public void markGameActive(java.util.UUID gameId) {
+        }
+
+        @Override
+        public void markGameInactive(java.util.UUID gameId) {
+        }
+
+        @Override
+        public ReplayCache.Prompt takePrompt(java.util.UUID gameId, boolean onlySelect) {
+            return null;
+        }
+
+        @Override
+        public void restorePrompt(java.util.UUID gameId, ReplayCache.Prompt prompt) {
+        }
+
+        @Override
         public void startSims(JsonObject args, java.util.UUID roomId, java.util.UUID tableId) {
         }
     }

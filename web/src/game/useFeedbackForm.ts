@@ -23,9 +23,9 @@ export function sendValue(prompt: FeedbackPrompt, value: string) {
   }
 }
 
-function isResultOk(result: { ok: boolean; error?: string }, fallback: string) {
+function isResultOk(result: { ok: boolean; error?: string }, fallback: string, answered: FeedbackPrompt | null) {
   if (result.ok) {
-    clearFeedback()
+    if (getState().feedback === answered) clearFeedback()
     return true
   }
   setStoreError(result.error ?? fallback)
@@ -83,8 +83,9 @@ export function useFeedbackForm(): UseFeedbackForm {
     perfMark('click', 'prompt', undefined, perfExtra)
     setBusy(true)
     perfMark('ack', 'prompt', undefined, perfExtra)
+    const answered = getState().feedback
     try {
-      isResultOk(await action(), fallback)
+      isResultOk(await action(), fallback, answered)
     } catch (error) {
       setStoreError(error instanceof Error ? error.message : fallback)
     } finally {

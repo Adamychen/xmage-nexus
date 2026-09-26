@@ -269,7 +269,7 @@ export default function BoardZone({
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
     const isSelectable = combatSelectableSet.has(id)
     const isChosen = combatChosenSet.has(id)
-    const isAttacking = attackingSet.has(id) || (isChosen && combatMode === 'attack')
+    const isAttacking = attackingSet.has(id)
     const isBlocking = blockingSet.has(id) || (isChosen && combatMode === 'block')
     const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
     const attachments = perm.attachments ?? []

@@ -34,6 +34,25 @@ describe('HandBar', () => {
     expect(getByTestId('hand-bar').getAttribute('data-hand-count')).toBe('3')
   })
 
+  it('shows the printed mana cost as bubbles, both halves for split cards and none for lands', () => {
+    const { container } = render(
+      <HandBar
+        cards={{
+          bolt: makeCard({ id: 'bolt', name: 'Lightning Bolt', manaCostLeftStr: ['{R}'] }),
+          angel: makeCard({ id: 'angel', name: 'Serra Angel', manaCostLeftStr: ['{3}', '{W}', '{W}'] }),
+          split: makeCard({ id: 'split', name: 'Fire // Ice', manaCostLeftStr: ['{1}', '{R}'], manaCostRightStr: ['{1}', '{U}'] }),
+          land: makeCard({ id: 'land', name: 'Forest', manaCostLeftStr: [] }),
+        }}
+      />,
+    )
+    const costs = Array.from(container.querySelectorAll('.hand-card-slot')).map((slot) =>
+      Array.from(slot.querySelectorAll('.hand-card-cost img')).map((img) => img.getAttribute('alt')).join(''),
+    )
+    expect(costs).toEqual(['{R}', '{3}{W}{W}', '{1}{R}{1}{U}', ''])
+    const sizes = new Set(Array.from(container.querySelectorAll<HTMLImageElement>('.hand-card-cost img')).map((img) => img.style.width))
+    expect(sizes.size, 'one bubble size for the whole hand').toBe(1)
+  })
+
   it('exposes sizing CSS variables, sink and the visible band height', () => {
     const { getByTestId } = render(<HandBar cards={hand()} />)
     const bar = getByTestId('hand-bar') as HTMLElement

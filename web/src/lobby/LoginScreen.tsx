@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
-import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft } from '../state/store'
+import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, isSameAccount } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
@@ -130,8 +130,11 @@ export default function LoginScreen() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (busy) return
-    clearActiveGame()
-    clearActiveDraft()
+    // the same account logging in again (its session was lost) resumes its game
+    if (!isSameAccount(loadConn(), serverHost.trim() || proxyHost.trim(), parseInt(port, 10) || 17171, username.trim())) {
+      clearActiveGame()
+      clearActiveDraft()
+    }
     void doConnect(
       proxyHost.trim(),
       proxyPort,

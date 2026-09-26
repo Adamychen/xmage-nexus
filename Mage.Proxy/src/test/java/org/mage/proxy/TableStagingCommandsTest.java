@@ -85,6 +85,23 @@ class TableStagingCommandsTest {
             return true;
         }
 
+        boolean answerResult = true;
+        java.util.function.BooleanSupplier onAnswer = () -> true;
+        UUID answeredWith;
+
+        @Override
+        public boolean sendPlayerUUID(UUID gameId, UUID data) {
+            answeredWith = data;
+            onAnswer.getAsBoolean();
+            return answerResult;
+        }
+
+        @Override
+        public boolean sendPlayerAction(mage.constants.PlayerAction passPriorityAction, UUID gameId, Object data) {
+            onAnswer.getAsBoolean();
+            return answerResult;
+        }
+
         @Override
         public java.util.Optional<UUID> getTableChatId(UUID tableId) {
             return TABLE.equals(tableId) ? java.util.Optional.of(CHAT) : java.util.Optional.empty();
@@ -107,6 +124,7 @@ class TableStagingCommandsTest {
     static final class StubCtx implements CommandContext {
         final StubSession session = new StubSession();
         final CapturingGateway gateway = new CapturingGateway();
+        final java.util.List<UUID> activeGames = new java.util.ArrayList<>();
 
         @Override
         public SessionImpl session() {
@@ -131,6 +149,28 @@ class TableStagingCommandsTest {
         @Override
         public void replayGameState(WebSocket conn, UUID gameId) {
             gateway.send(conn, ProxyProtocol.resultJson("joinGame", "", true, null, "replayed:" + gameId));
+        }
+
+        @Override
+        public void markGameActive(UUID gameId) {
+            activeGames.add(gameId);
+        }
+
+        final ReplayCache replay = new ReplayCache();
+
+        @Override
+        public void markGameInactive(UUID gameId) {
+            activeGames.remove(gameId);
+        }
+
+        @Override
+        public ReplayCache.Prompt takePrompt(UUID gameId, boolean onlySelect) {
+            return onlySelect ? replay.takePromptIfSelect(gameId) : replay.takePrompt(gameId);
+        }
+
+        @Override
+        public void restorePrompt(UUID gameId, ReplayCache.Prompt prompt) {
+            replay.restorePrompt(gameId, prompt);
         }
 
         @Override
@@ -238,6 +278,7 @@ class TableStagingCommandsTest {
         assertEquals(game, ctx.session.joinedGame);
         assertTrue(lastResult(ctx).get("ok").getAsBoolean());
         assertTrue(ctx.gateway.sent.stream().anyMatch(json -> json.contains("replayed:" + game)));
+        assertEquals(java.util.Collections.singletonList(game), ctx.activeGames);
     }
 
     @Test
@@ -247,6 +288,7 @@ class TableStagingCommandsTest {
         assertTrue(routed);
         assertFalse(lastResult(ctx).get("ok").getAsBoolean());
         assertTrue(ctx.gateway.sent.stream().noneMatch(json -> json.contains("replayed:")));
+        assertTrue(ctx.activeGames.isEmpty());
     }
 
     @Test
@@ -276,5 +318,53 @@ class TableStagingCommandsTest {
         JsonObject res = lastResult(ctx);
         assertTrue(res.get("ok").getAsBoolean());
         assertTrue(!res.has("data") || res.get("data").isJsonNull());
+    }
+
+    private static final UUID GAME = UUID.fromString("00000000-0000-0000-0000-000000000006");
+
+    @Test
+    void anAnswerTakesTheCachedPromptOutBeforeTheServerCall() throws Exception {
+        StubCtx ctx = new StubCtx();
+        ctx.replay.onState(GAME, "state", false);
+        ctx.replay.onPrompt(GAME, "GAME_TARGET", "target");
+        java.util.List<Integer> replayDuringCall = new java.util.ArrayList<>();
+        ctx.session.onAnswer = () -> replayDuringCall.add(ctx.replay.replay(GAME).size());
+        UUID target = UUID.randomUUID();
+        GameCommands.handle("sendPlayerUUID", null, "a1",
+                args("{\"gameId\":\"" + GAME + "\",\"value\":\"" + target + "\"}"), ctx);
+        assertEquals(target, ctx.session.answeredWith);
+        assertEquals(java.util.Collections.singletonList(1), replayDuringCall, "the next prompt may arrive during the call");
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+        assertEquals(java.util.Collections.singletonList("state"), ctx.replay.replay(GAME));
+    }
+
+    @Test
+    void aRejectedAnswerKeepsThePromptCached() throws Exception {
+        StubCtx ctx = new StubCtx();
+        ctx.replay.onPrompt(GAME, "GAME_TARGET", "target");
+        ctx.session.answerResult = false;
+        GameCommands.handle("sendPlayerUUID", null, "a2",
+                args("{\"gameId\":\"" + GAME + "\",\"value\":\"" + UUID.randomUUID() + "\"}"), ctx);
+        assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+        assertEquals(java.util.Collections.singletonList("target"), ctx.replay.replay(GAME));
+    }
+
+    @Test
+    void aPriorityPassAnswersOnlyAPrioritySelect() throws Exception {
+        StubCtx ctx = new StubCtx();
+        ctx.replay.onPrompt(GAME, "GAME_TARGET", "target");
+        GameCommands.handle("sendPlayerAction", null, "a3",
+                args("{\"gameId\":\"" + GAME + "\",\"action\":\"PASS_PRIORITY_UNTIL_NEXT_TURN\"}"), ctx);
+        assertEquals(java.util.Collections.singletonList("target"), ctx.replay.replay(GAME));
+
+        ctx.replay.onPrompt(GAME, "GAME_SELECT", "select");
+        GameCommands.handle("sendPlayerAction", null, "a4",
+                args("{\"gameId\":\"" + GAME + "\",\"action\":\"PASS_PRIORITY_UNTIL_NEXT_TURN\"}"), ctx);
+        assertEquals(0, ctx.replay.replay(GAME).size());
+
+        ctx.replay.onPrompt(GAME, "GAME_SELECT", "select");
+        GameCommands.handle("sendPlayerAction", null, "a5",
+                args("{\"gameId\":\"" + GAME + "\",\"action\":\"REQUEST_PERMISSION_TO_SEE_HAND_CARDS\"}"), ctx);
+        assertEquals(java.util.Collections.singletonList("select"), ctx.replay.replay(GAME));
     }
 }

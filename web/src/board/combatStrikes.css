@@ -1,0 +1,19 @@
+.combat-strike-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999970;
+  overflow: hidden;
+}
+
+.combat-strike-ghost {
+  position: absolute;
+  will-change: translate;
+  transform-origin: center center;
+  filter: drop-shadow(0 14px 22px var(--shade-4)) drop-shadow(0 0 10px rgb(var(--ember-rgb) / 0.55));
+}
+
+.combat-strike-ghost > .card-slot {
+  position: relative;
+  pointer-events: none;
+}

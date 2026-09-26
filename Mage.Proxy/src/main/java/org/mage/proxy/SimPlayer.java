@@ -26,6 +26,7 @@ import mage.view.UserRequestMessage;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -80,11 +81,17 @@ public class SimPlayer implements MageClient {
     private final CompletableFuture<Boolean> ready = new CompletableFuture<>();
 
     private volatile boolean running = true;
+    private volatile boolean everConnected = false;
+    private volatile boolean reconnecting = false;
+    private volatile Runnable onStopped = null;
+    private volatile long lastGameEventAt = 0;
     private volatile UUID roomId;
     private volatile UUID tableId;
     private volatile UUID gameId;
     private UUID myPlayerId;
     private int lastLandTurn = -1;
+    private int blockTurn = -1;
+    private final Set<UUID> triedBlockers = new HashSet<>();
     private String lastCastSignature = null;
 
     public SimPlayer(String username, String password, DeckCardLists deck, String host, int port) {
@@ -144,13 +151,44 @@ public class SimPlayer implements MageClient {
         }
     }
 
+    /**
+     * Logs the bot in again after a proxy restart: the server treats a login with the same name
+     * from the same host as a reconnection and re-sends the bot's games (START_GAME, GAME_INIT and
+     * the pending prompt), which the normal callback flow then plays. A bot whose game ended
+     * meanwhile gets nothing and stops after {@code idleStopMs}.
+     */
+    public boolean startRestored(long idleStopMs) {
+        boolean ok = startAndJoin(null, null);
+        if (ok) {
+            try {
+                pingTimer.schedule(() -> {
+                    if (running && lastGameEventAt == 0) {
+                        logger.info("sim " + username + " restored without any game, stopping");
+                        stop();
+                    }
+                }, idleStopMs, TimeUnit.MILLISECONDS);
+            } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            }
+        }
+        return ok;
+    }
+
+    void setOnStopped(Runnable onStopped) {
+        this.onStopped = onStopped;
+    }
+
     public void stop() {
+        boolean wasRunning = running;
         running = false;
         pingTimer.shutdownNow();
         executor.shutdownNow();
         try {
             session.connectStop(false, false);
         } catch (Exception ignored) {
+        }
+        Runnable hook = onStopped;
+        if (wasRunning && hook != null) {
+            hook.run();
         }
     }
 
@@ -174,7 +212,50 @@ public class SimPlayer implements MageClient {
     public void disconnected(boolean askToReconnect, boolean keepMySessionActive) {
         logger.info("sim " + username + " disconnected");
         ready.complete(false);
+        if (running && everConnected && !reconnecting) {
+            reconnecting = true;
+            try {
+                executor.execute(this::reconnectLoop);
+            } catch (java.util.concurrent.RejectedExecutionException ex) {
+                reconnecting = false;
+            }
+        }
     }
+
+    /**
+     * The link to the server dropped under a running game: the server keeps the bot's tables for
+     * a few minutes, and logging in again (keeping the old session hidden, as the desktop client
+     * does) restores them. Without it the human's game stalled on the bot's turn.
+     */
+    private void reconnectLoop() {
+        try {
+            // a false alarm of jboss' validator must not kick this healthy session out
+            if (SessionProbe.answers(session, ProxyClient.LOST_LINK_PROBE_TIMEOUT_MS)) {
+                logger.info("sim " + username + ": the server still answers, no reconnect");
+                return;
+            }
+            long delay = 1000;
+            for (int attempt = 1; running && attempt <= RECONNECT_ATTEMPTS; attempt++) {
+                try {
+                    session.connectStop(false, true);
+                } catch (Exception ignored) {
+                }
+                if (connect()) {
+                    logger.info("sim " + username + " reconnected after " + attempt + " attempt(s)");
+                    return;
+                }
+                Thread.sleep(delay);
+                delay = Math.min(delay * 2, 15000);
+            }
+            logger.warning("sim " + username + " could not reconnect, giving up");
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } finally {
+            reconnecting = false;
+        }
+    }
+
+    static final int RECONNECT_ATTEMPTS = 40;
 
     @Override
     public void showMessage(String message) {
@@ -218,6 +299,9 @@ public class SimPlayer implements MageClient {
     }
 
     private boolean connect() {
+        if (!running) {
+            return false;
+        }
         Connection connection = new Connection();
         connection.setHost(host);
         connection.setPort(port);
@@ -227,6 +311,9 @@ public class SimPlayer implements MageClient {
         connection.setUserData(UserData.getDefaultUserDataView());
         connection.setProxyType(Connection.ProxyType.NONE);
         boolean ok = session.connectStart(connection);
+        if (ok) {
+            everConnected = true;
+        }
         logger.info("sim " + username + " connectStart=" + ok + " host=" + host + ":" + port
                 + " lastError='" + session.getLastError() + "'");
         return ok;
@@ -257,6 +344,10 @@ public class SimPlayer implements MageClient {
                     && cb.getMethod() != ClientCallbackMethod.GAME_UPDATE_AND_INFORM) {
                 logger.info("sim " + username + " event >> " + cb.getMethod()
                         + (cb.getObjectId() != null ? " (obj=" + cb.getObjectId() + ")" : ""));
+            }
+            if (cb.getObjectId() != null && cb.getMethod().name().startsWith("GAME_")
+                    || cb.getMethod() == ClientCallbackMethod.START_GAME) {
+                lastGameEventAt = System.currentTimeMillis();
             }
             switch (cb.getMethod()) {
                 case START_GAME:
@@ -396,9 +487,15 @@ public class SimPlayer implements MageClient {
         }
         // bloqueadores: un bloqueador por select; fin (false) cuando no quedan
         if (step == PhaseStep.DECLARE_BLOCKERS) {
+            if (view.getTurn() != blockTurn) {
+                blockTurn = view.getTurn();
+                triedBlockers.clear();
+            }
             Object possible = options != null ? options.get(Constants.Option.POSSIBLE_BLOCKERS) : null;
-            if (possible instanceof List && !((List<?>) possible).isEmpty() && ((List<?>) possible).get(0) instanceof UUID) {
-                session.sendPlayerUUID(gameId, (UUID) ((List<?>) possible).get(0));
+            UUID blocker = nextBlocker(possible, triedBlockers);
+            if (blocker != null) {
+                triedBlockers.add(blocker);
+                session.sendPlayerUUID(gameId, blocker);
             } else {
                 session.sendPlayerBoolean(gameId, false);
             }
@@ -413,6 +510,18 @@ public class SimPlayer implements MageClient {
             }
         }
         pass();
+    }
+
+    static UUID nextBlocker(Object possible, Set<UUID> tried) {
+        if (!(possible instanceof List)) {
+            return null;
+        }
+        for (Object candidate : (List<?>) possible) {
+            if (candidate instanceof UUID && !tried.contains(candidate)) {
+                return (UUID) candidate;
+            }
+        }
+        return null;
     }
 
     private boolean tryPlayLand(GameView view) {

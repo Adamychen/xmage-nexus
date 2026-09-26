@@ -1,6 +1,7 @@
 import { createContext, useContext, useLayoutEffect } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import { createPortal } from 'react-dom'
+import { HandPromptSlotContext } from '../board/BoardShell'
 import './GameDock.css'
 
 const DOCK_GAP = 8
@@ -9,11 +10,36 @@ const BOTTOM_RESOURCES_SELECTOR = '.pz-bottom-row .resource-bar'
 
 const PromptSlotContext = createContext<HTMLElement | null>(null)
 
-export const PromptSlotProvider = PromptSlotContext.Provider
+const HandPromptContext = createContext<HTMLElement | null>(null)
+
+interface PromptSlotProviderProps {
+  value: HTMLElement | null
+  /** Slot above the own hand, published by the board through `onHandSlot`. */
+  hand?: HTMLElement | null
+  onHandSlot?: ((el: HTMLElement | null) => void) | null
+  children: ReactNode
+}
+
+export function PromptSlotProvider({ value, hand = null, onHandSlot = null, children }: PromptSlotProviderProps) {
+  return (
+    <PromptSlotContext.Provider value={value}>
+      <HandPromptContext.Provider value={hand}>
+        <HandPromptSlotContext.Provider value={onHandSlot}>{children}</HandPromptSlotContext.Provider>
+      </HandPromptContext.Provider>
+    </PromptSlotContext.Provider>
+  )
+}
 
 export function DockPrompt({ children }: { children: ReactNode }) {
   const slot = useContext(PromptSlotContext)
   return slot ? createPortal(children, slot) : <>{children}</>
+}
+
+/** Prompt about the own hand: floats above the fan when the board publishes
+ *  its hand slot, otherwise falls back to the dock. */
+export function HandPrompt({ children }: { children: ReactNode }) {
+  const slot = useContext(HandPromptContext)
+  return slot ? createPortal(children, slot) : <DockPrompt>{children}</DockPrompt>
 }
 
 export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: readonly unknown[]) {

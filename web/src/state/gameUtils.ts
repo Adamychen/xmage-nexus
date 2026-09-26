@@ -6,16 +6,19 @@ import type { CombatState } from './state'
 export const BASIC_LANDS = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest']
 
 export const STEP_RANK: Record<string, number> = {
+  UNTAP: 0,
   UPKEEP: 1,
   DRAW: 2,
   PRECOMBAT_MAIN: 3,
   BEGIN_COMBAT: 4,
   DECLARE_ATTACKERS: 5,
   DECLARE_BLOCKERS: 6,
-  END_COMBAT: 7,
-  POSTCOMBAT_MAIN: 8,
-  END_TURN: 9,
-  CLEANUP: 10,
+  FIRST_COMBAT_DAMAGE: 7,
+  COMBAT_DAMAGE: 8,
+  END_COMBAT: 9,
+  POSTCOMBAT_MAIN: 10,
+  END_TURN: 11,
+  CLEANUP: 12,
 }
 
 export function emptyCombat(): CombatState {
@@ -147,6 +150,12 @@ export function consolidatePlayables(
   return { ids: currentPlayableIds, window: currentPlayableWindow }
 }
 
+/**
+ * Turn/step comparison against the view on screen. Only a heuristic: extra
+ * combats/main phases and rollbacks legitimately move the step backwards, so
+ * events of the same game are ordered by server messageId (`gameEventOrder`)
+ * and this is the fallback for frames without one (and rollback detection).
+ */
 export function isOlderThanCurrentGame(
   next: GameView,
   objectId: string | null,
@@ -162,4 +171,32 @@ export function isOlderThanCurrentGame(
   if (next.turn < currentGame.turn) return true
   if (next.turn > currentGame.turn) return false
   return (next.step ? STEP_RANK[next.step] ?? 0 : 0) < (currentGame.step ? STEP_RANK[currentGame.step] ?? 0 : 0)
+}
+
+/**
+ * Server callback ids are monotonic per XMage session (mage.server.Session),
+ * so within one game they order events exactly. A new session (re-login after
+ * the proxy grace period) restarts them: `resetGameEventOrder` on every
+ * `connected` and on a login that opened a new session (`attached: false`).
+ * Until the first event after a reset the order is unknown. A GAME_INIT is the
+ * authoritative start of a game, so it re-bases the order instead of only
+ * raising it (a session restart must not leave a stale high-water mark).
+ */
+const lastGameMessageId = new Map<string, number>()
+
+export function resetGameEventOrder(): void {
+  lastGameMessageId.clear()
+}
+
+export function gameEventOrder(gameId: string, messageId: unknown): 'older' | 'current' | 'unknown' {
+  if (typeof messageId !== 'number') return 'unknown'
+  const last = lastGameMessageId.get(gameId)
+  if (last == null) return 'unknown'
+  return messageId < last ? 'older' : 'current'
+}
+
+export function noteGameEvent(gameId: string, messageId: unknown, rebase = false): void {
+  if (typeof messageId !== 'number') return
+  const last = lastGameMessageId.get(gameId)
+  if (rebase || last == null || messageId > last) lastGameMessageId.set(gameId, messageId)
 }

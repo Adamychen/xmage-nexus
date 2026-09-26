@@ -4,10 +4,143 @@ import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
 import { clonePhaseStops } from '../game/phaseStops'
 import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, type ConnectionInfo } from './persistence'
+import { resetGameEventOrder } from './gameUtils'
+import { t } from '../i18n'
+import type { ProxyMessage, ServerLinkEnvelope } from '../net/types'
 
 let gateway: Gateway | null = null
 let activeAttempt = 0
 let inFlight: { key: string; promise: Promise<void> } | null = null
+
+/** "Already connected" retries: the server may still hold the previous session
+ *  for a few seconds, but when the account is logged in elsewhere it never
+ *  clears, so the retries are capped instead of looping forever. */
+export const ALREADY_CONNECTED_RETRIES = 3
+const ALREADY_CONNECTED_BASE_DELAY_MS = 1500
+
+/** The game we tried to rejoin is gone (ended while we were away): leave its
+ *  board instead of showing a frozen table. */
+function abandonResume(gameId: string): void {
+  clearActiveGame()
+  const s = getState()
+  if (s.gameId === gameId && s.phase === 'game') {
+    setState({
+      phase: 'lobby', game: null, gameId: null, gameChatId: null, playableIds: [], playableWindow: null,
+      combat: null, feedback: null, turnRecap: null, enteredThisTurn: {}, resumingGameId: null,
+    })
+  } else {
+    setState({ resumingGameId: null })
+  }
+}
+
+/** `connect` re-attached to a live proxy session; otherwise a new XMage session
+ *  started and its callback ids restart at 1. */
+function isAttached(data: unknown): boolean {
+  return typeof data === 'object' && data !== null && (data as { attached?: unknown }).attached === true
+}
+
+/** The proxy replayed every frame missed while away: nothing to rejoin. */
+function isResumed(data: unknown): boolean {
+  return typeof data === 'object' && data !== null && (data as { resumed?: unknown }).resumed === true
+}
+
+/** Automatic re-login attempts after the socket to the proxy came back. */
+export const RELOGIN_RETRIES = 6
+const RELOGIN_BASE_DELAY_MS = 1500
+
+/** Restores the session over a socket that came back: resumes the proxy
+ *  stream (or rejoins the game), retrying visibly when the proxy refuses the
+ *  login (`already connected` while the old session is still closing,
+ *  `WARMING_UP` after a restart) instead of leaving an open socket where every
+ *  command answers NOT_AUTHORIZED. */
+async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promise<void> {
+  const res = await cmds.connect(
+    conn.serverHost,
+    conn.port,
+    conn.username,
+    conn.password,
+    conn.flagName,
+    conn.avatarId,
+    g.resumeToken(),
+  )
+  if (gateway !== g) return
+  if (res.ok) {
+    setState({ link: 'ok', linkAttempt: 0 })
+    if (!isAttached(res.data)) resetGameEventOrder()
+    if (isResumed(res.data)) {
+      addLog('conexión', 'sesión reanudada sin pérdida de eventos')
+      return
+    }
+    restoreLimited()
+    resumeActiveGame()
+    return
+  }
+  // the socket dropped again: its next onOpen starts over
+  if (!g.isOpen) return
+  if (attempt + 1 >= RELOGIN_RETRIES) {
+    setState({
+      link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false,
+      error: `${t('common', 'relogin_failed')}${res.error ? ` (${res.error})` : ''}`,
+    })
+    return
+  }
+  setState({ link: 'relogin-retry', linkAttempt: attempt + 1 })
+  addLog('conexión', `re-login fallido (${res.error ?? res.errorCode ?? '?'}): reintento ${attempt + 1}`)
+  await new Promise((r) => setTimeout(r, Math.min(RELOGIN_BASE_DELAY_MS * 2 ** attempt, 15000)))
+  if (gateway !== g || !g.isOpen) return
+  const s = getState()
+  if (!s.conn || s.phase === 'idle' || s.phase === 'connecting') return
+  await relogin(g, s.conn, attempt + 1)
+}
+
+/** The proxy lost the XMage server and logs the session in again by itself:
+ *  keep the board, show the progress, and rejoin once the server is back. */
+export function handleServerLink(msg: ServerLinkEnvelope): void {
+  switch (msg.state) {
+    case 'lost':
+    case 'retrying':
+      // the new server session numbers its callbacks from 1 again
+      resetGameEventOrder()
+      setState({ link: 'server-lost', linkAttempt: msg.attempt ?? 0 })
+      break
+    case 'restored':
+      addLog('conexión', 'enlace con el servidor restaurado')
+      setState({ link: 'ok', linkAttempt: 0, error: null })
+      restoreLimited()
+      resumeActiveGame()
+      break
+    case 'failed':
+      setState({
+        link: 'ok', linkAttempt: 0,
+        error: t('common', msg.reason === 'superseded' ? 'session_taken_over' : 'server_link_failed'),
+      })
+      break
+  }
+}
+
+function dispatch(msg: ProxyMessage): void {
+  if (msg.type === 'serverLink') handleServerLink(msg)
+  else handleMessage(msg)
+}
+
+function resumeActiveGame(): void {
+  const active = loadActiveGame()
+  if (!active?.gameId) return
+  const gameId = active.gameId
+  if (active.role === 'watcher') {
+    addLog('conexión', 'Restaurando modo espectador…')
+    void cmds.watchGame(gameId).then((r) => {
+      if (!r?.ok) abandonResume(gameId)
+    })
+  } else {
+    addLog('conexión', 'Restaurando partida en curso…')
+    setState({ resumingGameId: gameId })
+    void cmds.joinGame(gameId).then((r) => {
+      if (!r?.ok) abandonResume(gameId)
+    })
+  }
+  void cmds.getGameChatId(gameId).then((cid) => setState({ gameChatId: cid ?? null }))
+}
 
 /** Re-une draft/torneo activos: primero el estado en memoria; tras recargar la
  *  página se re-pinta la última instantánea persistida (el server NO reenvía
@@ -43,46 +176,20 @@ function restoreLimited(): void {
 
 export function attachGateway(g: Gateway) {
   gateway = g
-  g.events.onMessage = handleMessage
+  g.events.onMessage = dispatch
   g.events.onOpen = async () => {
     const s = getState()
     setState({ connecting: false, wsAlive: true, error: null })
     if (s.conn && s.phase !== 'connecting') {
       addLog('conexión', 'reconectado: re-logueando…')
-      const res = await cmds.connect(
-        s.conn.serverHost,
-        s.conn.port,
-        s.conn.username,
-        s.conn.password,
-        s.conn.flagName,
-        s.conn.avatarId,
-      )
-      if (res.ok) {
-        restoreLimited()
-        const active = loadActiveGame()
-        if (active?.gameId) {
-          if (active.role === 'watcher') {
-            addLog('conexión', 'Restaurando modo espectador…')
-            void cmds.watchGame(active.gameId).then((r) => {
-              if (!r?.ok) clearActiveGame()
-            })
-          } else {
-            addLog('conexión', 'Restaurando partida en curso…')
-            setState({ resumingGameId: active.gameId })
-            void cmds.joinGame(active.gameId).then((r) => {
-              if (!r?.ok) {
-                clearActiveGame()
-                setState({ resumingGameId: null })
-              }
-            })
-          }
-          void cmds.getGameChatId(active.gameId).then((cid) => setState({ gameChatId: cid ?? null }))
-        }
-      }
+      setState({ link: 'relogging', linkAttempt: 0 })
+      await relogin(g, s.conn, 0)
     }
   }
   g.events.onClose = (reason) => {
-    setState({ connecting: false, wsAlive: false })
+    const s = getState()
+    const inSession = !!s.conn && s.phase !== 'idle' && s.phase !== 'connecting'
+    setState({ connecting: false, wsAlive: false, ...(inSession ? { link: 'ws-down' as const, linkAttempt: 0 } : null) })
     addLog('conexión', `desconectado: ${reason}`)
   }
 }
@@ -114,7 +221,7 @@ export function doConnect(
   const key = `${wsHost}|${proxyPort}|${serverHost}|${port}|${username}`
   if (inFlight?.key === key) return inFlight.promise
   const attempt = ++activeAttempt
-  const promise = runConnect(attempt, wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId)
+  const promise = runConnect(attempt, wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId, 0)
   inFlight = { key, promise }
   void promise.finally(() => {
     if (inFlight?.promise === promise) inFlight = null
@@ -132,12 +239,13 @@ async function runConnect(
   password: string,
   flagName?: string,
   avatarId?: number,
+  alreadyConnectedRetries = 0,
 ): Promise<void> {
   // Un intento anterior (p.ej. auto-connect lento) no puede volver a 'idle' ni
   // escribir un error encima del intento vigente que ya logueó.
   const stale = () => attempt !== activeAttempt
   const conn: ConnectionInfo = { wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId }
-  setState({ phase: 'connecting', conn, connecting: true, error: null })
+  setState({ phase: 'connecting', conn, connecting: true, error: null, link: 'ok', linkAttempt: 0 })
   detachGateway()
   const g = new Gateway()
   attachGateway(g)
@@ -154,35 +262,18 @@ async function runConnect(
   if (stale()) return
   const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId)
   if (stale()) return
-  if (!res.ok && /already connected|already logged in/i.test(res.error ?? '')) {
+  if (!res.ok && /already connected|already logged in/i.test(res.error ?? '') && alreadyConnectedRetries < ALREADY_CONNECTED_RETRIES) {
     await cmds.disconnect()
-    await new Promise((r) => setTimeout(r, 500))
+    await new Promise((r) => setTimeout(r, ALREADY_CONNECTED_BASE_DELAY_MS * 2 ** alreadyConnectedRetries))
     if (stale()) return
-    return runConnect(attempt, wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId)
+    return runConnect(attempt, wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId, alreadyConnectedRetries + 1)
   }
   if (res.ok) {
+    if (!isAttached(res.data)) resetGameEventOrder()
     setState({ phase: 'lobby', connecting: false, error: null, conn })
     saveConn(conn)
     restoreLimited()
-    const active = loadActiveGame()
-    if (active?.gameId) {
-      if (active.role === 'watcher') {
-        addLog('conexión', 'Restaurando modo espectador…')
-        void cmds.watchGame(active.gameId).then((r) => {
-          if (!r?.ok) clearActiveGame()
-        })
-      } else {
-        addLog('conexión', 'Restaurando partida en curso…')
-        setState({ resumingGameId: active.gameId })
-        void cmds.joinGame(active.gameId).then((r) => {
-          if (!r?.ok) {
-            clearActiveGame()
-            setState({ resumingGameId: null })
-          }
-        })
-      }
-      void cmds.getGameChatId(active.gameId).then((cid) => setState({ gameChatId: cid ?? null }))
-    }
+    resumeActiveGame()
     const chatId = await cmds.getRoomChatId()
     if (stale()) return
     setState({ roomChatId: chatId ?? null })
@@ -199,5 +290,6 @@ export function reset() {
   saveConn(null)
   clearActiveGame()
   clearActiveDraft()
+  resetGameEventOrder()
   setState(initialState)
 }

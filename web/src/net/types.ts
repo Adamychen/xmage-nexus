@@ -29,13 +29,25 @@ export type {
 // ─── Proxy envelope types (proxy → cliente) ─────────────────────────────────
 
 export type ProxyMessage =
-  | { type: 'connected'; message?: string }
-  | { type: 'disconnected'; reason?: string }
-  | { type: 'info'; message: string }
-  | { type: 'error'; message: string }
+  | { type: 'connected'; message?: string; seq?: number }
+  | { type: 'disconnected'; reason?: string; seq?: number }
+  | { type: 'info'; message: string; seq?: number }
+  | { type: 'error'; message: string; seq?: number }
+  | ServerLinkEnvelope
   | LobbyEnvelope
   | ResultEnvelope
   | EventEnvelope
+
+/** The proxy lost its link to the XMage server and logs the session in again
+ *  (`lost` → `retrying` per attempt → `restored` | `failed`). */
+export interface ServerLinkEnvelope {
+  type: 'serverLink'
+  state: 'lost' | 'retrying' | 'restored' | 'failed'
+  attempt?: number
+  /** `superseded`: another login of the same account took the session over. */
+  reason?: 'superseded'
+  seq?: number
+}
 
 /** Broadcast del lobby, cada ~2 s. */
 export interface LobbyEnvelope {
@@ -63,6 +75,8 @@ export interface ResultEnvelope {
 /** Callback del servidor XMage reexpuesto (method = nombre del método MageClient). */
 export interface EventEnvelope {
   type: 'event'
+  /** Position in the proxy session's stream (absent on replays sent to one connection). */
+  seq?: number
   method: string
   messageId: number
   objectId?: UUID | null

@@ -18,6 +18,13 @@ public class Config {
     public static final String DEFAULT_BIND_ADDRESS = "127.0.0.1";
     public static final int DEFAULT_MAX_MESSAGE_BYTES = 1024 * 1024;
     public static final int DEFAULT_MAX_MESSAGES_PER_SECOND = 100;
+    /**
+     * Seconds an XMage session stays alive after its last WebSocket closed, so a reload, a
+     * network switch or a phone in the background can re-attach to the running game. Matches
+     * the window the server itself gives a desktop client that lost its connection
+     * (UserManagerImpl.USER_CONNECTION_TIMEOUT_SESSION_EXPIRE_AFTER_SECS).
+     */
+    public static final int DEFAULT_GRACE_SECS = 180;
 
     /**
      * Protocolo JSON del gateway. Se incrementa con cada cambio incompatible del
@@ -120,5 +127,42 @@ public class Config {
 
     public int getMaxMessagesPerSecond() {
         return getInt("maxMessagesPerSecond", DEFAULT_MAX_MESSAGES_PER_SECOND);
+    }
+
+    public int getGraceSecs() {
+        return Math.max(1, getInt("graceSecs", DEFAULT_GRACE_SECS));
+    }
+
+    /**
+     * Grace period when the last page announced it was closing (tab closed, navigated away):
+     * a reload comes back within seconds, a player who left keeps the opponent waiting only this
+     * long. A dropped connection (no announcement) keeps the full {@link #getGraceSecs()}.
+     */
+    public int getLeaveGraceSecs() {
+        return Math.max(1, Math.min(getGraceSecs(), getInt("leaveGraceSecs", DEFAULT_LEAVE_GRACE_SECS)));
+    }
+
+    public static final int DEFAULT_LEAVE_GRACE_SECS = 45;
+
+    /**
+     * Seconds the proxy keeps logging a session in again after it lost its link to the XMage
+     * server, before telling the web client the session is gone.
+     */
+    public int getRelinkSecs() {
+        return Math.max(1, getInt("relinkSecs", DEFAULT_RELINK_SECS));
+    }
+
+    public static final int DEFAULT_RELINK_SECS = 600;
+
+    /** File that keeps the playing SIM seats across proxy restarts ("none" disables it). */
+    public String getSimRosterPath() {
+        String raw = get("simRoster", "");
+        if ("none".equalsIgnoreCase(raw)) {
+            return "";
+        }
+        if (!raw.isEmpty()) {
+            return raw;
+        }
+        return new java.io.File(System.getProperty("java.io.tmpdir"), "mage-proxy-sims-" + getWsPort() + ".json").getPath();
     }
 }

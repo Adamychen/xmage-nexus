@@ -1,9 +1,9 @@
 // ── Re-exports ──────────────────────────────────────────────────────
 export type { ConnectionInfo } from './persistence'
-export { loadConn, saveActiveGame, clearActiveGame, clearActiveDraft } from './persistence'
+export { loadConn, saveActiveGame, clearActiveGame, clearActiveDraft, isSameAccount } from './persistence'
 export type { LogEntry, CombatState, AppState } from './state'
 export { getState, setState } from './state'
-export { useStore, usePhase, useLobby, useGame, useSettings, isBlockingModal } from './selectors'
+export { useStore, usePhase, useLobby, useGame, useSettings, isBlockingModal, isMulliganDecision } from './selectors'
 export { attachGateway, detachGateway, doConnect, reset } from './gateway'
 export { handleMessage } from './eventHandler'
 export type { RollbackVote, RollbackVoter } from './rollbackVote'
@@ -11,7 +11,7 @@ export { hideRollbackVote, dismissRollbackVote, isRollbackVoteBlocking } from '.
 export { dismissTurnRecap, clearError, setStoreError, clearFeedback, setSwitchedHandKey, setMyDeck, clearGameEnd, returnToLobby, concedeGame, concedeMatch, setSetting, maybeAutoPass, setWatchingTable, openStagingTable, hideStaging, leaveStagingTable, removeStagingTable, startStagedMatch, appendLocalChatMessage, openRollbackDialog, closeRollbackDialog, requestRollback, voteRollback, requestUndo, armRollbackPending, disarmRollbackPending, isRollbackPending, recordDungeonRoom, sniffDungeonEntry, enterTableChat, exitTableChat, enterTournamentChat, exitTournamentChat } from './actions'
 
 // gancho de depuración para E2E (estado del store en vivo): solo builds dev
-import { getState as _getState, setState as _setState } from './state'
+import { getState as _getState, setState as _setState, listeners as _listeners } from './state'
 import { setSetting as _setSetting } from './actions'
 import { handleMessage as _handleMessage } from './eventHandler'
 if (import.meta.env.DEV) {
@@ -20,5 +20,9 @@ if (import.meta.env.DEV) {
     setState: _setState,
     setSetting: _setSetting,
     handleMessage: _handleMessage,
+    subscribe: (fn: () => void) => {
+      _listeners.add(fn)
+      return () => _listeners.delete(fn)
+    },
   }
 }

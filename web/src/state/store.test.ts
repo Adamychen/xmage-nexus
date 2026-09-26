@@ -146,6 +146,58 @@ describe('handleMessage', () => {
     expect(getState().game).toBe(t3)
   })
 
+  it('accepts an extra combat: the step goes back within the same turn (board no longer freezes)', () => {
+    const endCombat = makeGameView({ turn: 4, phase: 'COMBAT', step: 'END_COMBAT' })
+    const extraCombat = makeGameView({ turn: 4, phase: 'COMBAT', step: 'DECLARE_ATTACKERS' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 10, objectId: 'g-1', data: endCombat })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 11, objectId: 'g-1', data: extraCombat })
+    expect(getState().game).toBe(extraCombat)
+  })
+
+  it('accepts the combat damage steps after blockers', () => {
+    const blockers = makeGameView({ turn: 2, phase: 'COMBAT', step: 'DECLARE_BLOCKERS' })
+    const damage = makeGameView({ turn: 2, phase: 'COMBAT', step: 'COMBAT_DAMAGE' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 5, objectId: 'g-1', data: blockers })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 6, objectId: 'g-1', data: damage })
+    expect(getState().game).toBe(damage)
+  })
+
+  it('drops a replayed view with an older messageId of the same game', () => {
+    const newer = makeGameView({ turn: 2, phase: 'COMBAT', step: 'DECLARE_BLOCKERS' })
+    const older = makeGameView({ turn: 2, phase: 'COMBAT', step: 'DECLARE_ATTACKERS' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 9, objectId: 'g-1', data: newer })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 7, objectId: 'g-1', data: older })
+    expect(getState().game).toBe(newer)
+  })
+
+  it('a re-attach (`connected`) mid-game keeps the board and accepts the rejoin replay', () => {
+    const blockers = makeGameView({ turn: 6, phase: 'COMBAT', step: 'DECLARE_BLOCKERS' })
+    const extraCombat = makeGameView({ turn: 6, phase: 'COMBAT', step: 'BEGIN_COMBAT' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 400, objectId: 'g-1', data: blockers })
+    handleMessage({ type: 'connected', message: 'Connected (attached to existing session)' })
+    expect(getState().phase).toBe('game')
+    expect(getState().game).toBe(blockers)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 3, objectId: 'g-1', data: extraCombat })
+    expect(getState().game).toBe(extraCombat)
+  })
+
+  it('a GAME_INIT of a new server session re-bases the order: its low ids are not dropped as stale', () => {
+    const before = makeGameView({ turn: 5, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN' })
+    const restored = makeGameView({ turn: 5, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN' })
+    const next = makeGameView({ turn: 5, phase: 'COMBAT', step: 'DECLARE_ATTACKERS' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 800, objectId: 'g-1', data: before })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 4, objectId: 'g-1', data: restored })
+    expect(getState().game).toBe(restored)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 6, objectId: 'g-1', data: next })
+    expect(getState().game).toBe(next)
+  })
+
+  it('`connected` outside a game still lands in the lobby', () => {
+    setState({ phase: 'connecting' })
+    handleMessage({ type: 'connected', message: 'Connected' })
+    expect(getState().phase).toBe('lobby')
+  })
+
   it('reemplaza la vista si el mismo turno+paso trae estado nuevo (carta movida)', () => {
     const first = makeGameView({ turn: 2, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN' })
     const second = makeGameView({ turn: 2, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN', myHand: { 'h-1': makeCard({ name: 'Bolt' }) } })

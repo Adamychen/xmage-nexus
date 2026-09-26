@@ -7,6 +7,11 @@ export interface GatewayEvents {
   onClose?: (reason: string) => void
 }
 
+/** Idle time before the client probes the connection with a `ping`. */
+export const HEARTBEAT_INTERVAL_MS = 15000
+/** A probe without any inbound frame within this time means a dead socket. */
+export const HEARTBEAT_TIMEOUT_MS = 10000
+
 interface PendingRequest<T = unknown> {
   id: string
   action: string
@@ -28,6 +33,14 @@ export class Gateway {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private userClosed = false
   private connectedAt = 0
+  private lastInboundAt = 0
+  private probeSentAt = 0
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
+  private probeCheckTimer: ReturnType<typeof setTimeout> | null = null
+  private readonly onWake = () => this.probe()
+  private readonly onLeave = () => this.announceLeaving()
+  private streamId: string | null = null
+  private lastSeq = 0
 
   constructor(events: GatewayEvents = {}) {
     this.events = events
@@ -35,6 +48,12 @@ export class Gateway {
 
   get isOpen() {
     return this.ws?.readyState === WebSocket.OPEN
+  }
+
+  /** The proxy numbers every session frame (`seq`) of a stream; a re-login sends
+   *  this back so the proxy replays exactly the frames missed while away. */
+  resumeToken(): { streamId: string; seq: number } | null {
+    return this.streamId ? { streamId: this.streamId, seq: this.lastSeq } : null
   }
 
   get elapsedSecs() {
@@ -56,17 +75,110 @@ export class Gateway {
     ws.onopen = () => {
       this.reconnectAttempts = 0
       this.connectedAt = Date.now()
+      this.lastInboundAt = this.connectedAt
+      this.startHeartbeat()
       this.events.onOpen?.()
     }
-    ws.onmessage = (ev) => this.handleMessage(ev.data)
+    ws.onmessage = (ev) => {
+      this.lastInboundAt = Date.now()
+      this.handleMessage(ev.data)
+    }
     ws.onerror = () => ws.close()
     ws.onclose = (ev) => {
       if (this.ws !== ws) return
-      const reason = ev.reason || `close(${ev.code})`
-      this.events.onClose?.(reason)
-      this.rejectAll(reason)
-      if (!this.userClosed && this.url) this.scheduleReconnect()
+      this.connectionLost(ev.reason || `close(${ev.code})`)
     }
+  }
+
+  private connectionLost(reason: string) {
+    this.stopHeartbeat()
+    this.events.onClose?.(reason)
+    this.rejectAll(reason)
+    if (!this.userClosed && this.url) this.scheduleReconnect()
+  }
+
+  /**
+   * Half-open sockets (a tunnel or NAT that stalls without closing, a laptop
+   * waking up) stay OPEN in the browser for minutes while every action goes
+   * nowhere: the game looks frozen until a reload. An idle connection is
+   * probed with a `ping`; no inbound frame in time drops the socket and the
+   * normal reconnect + rejoin path takes over.
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat()
+    this.heartbeatTimer = setInterval(() => this.heartbeatTick(), HEARTBEAT_INTERVAL_MS / 3)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', this.onWake)
+      window.addEventListener('focus', this.onWake)
+      window.addEventListener('pagehide', this.onLeave)
+    }
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', this.onWake)
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer)
+    if (this.probeCheckTimer) clearTimeout(this.probeCheckTimer)
+    this.heartbeatTimer = null
+    this.probeCheckTimer = null
+    this.probeSentAt = 0
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onWake)
+      window.removeEventListener('focus', this.onWake)
+      window.removeEventListener('pagehide', this.onLeave)
+    }
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onWake)
+  }
+
+  private heartbeatTick() {
+    if (!this.isOpen) return
+    const now = Date.now()
+    if (this.probeSentAt && this.lastInboundAt < this.probeSentAt) {
+      if (now - this.probeSentAt >= HEARTBEAT_TIMEOUT_MS) this.dropDeadSocket()
+      return
+    }
+    if (now - this.lastInboundAt >= HEARTBEAT_INTERVAL_MS) this.probe()
+  }
+
+  private probe() {
+    if (!this.isOpen) return
+    if (this.probeSentAt && this.lastInboundAt < this.probeSentAt) return
+    this.probeSentAt = Date.now()
+    try {
+      this.ws?.send(JSON.stringify({ requestId: `hb-${this.probeSentAt}`, action: 'ping', args: {} }))
+    } catch {
+      this.dropDeadSocket()
+      return
+    }
+    if (this.probeCheckTimer) clearTimeout(this.probeCheckTimer)
+    this.probeCheckTimer = setTimeout(() => this.heartbeatTick(), HEARTBEAT_TIMEOUT_MS)
+  }
+
+  /**
+   * The page is being closed, reloaded or navigated away: the proxy then keeps
+   * the session only for a short grace period instead of the one for a dropped
+   * connection, so the opponent of a player who closed the tab does not wait
+   * minutes (a reload is back within seconds).
+   */
+  private announceLeaving() {
+    if (!this.isOpen) return
+    try {
+      this.ws?.send(JSON.stringify({ action: 'leaving', args: {} }))
+    } catch {
+      // closing anyway
+    }
+  }
+
+  private dropDeadSocket() {
+    const ws = this.ws
+    if (!ws) return
+    this.ws = null
+    ws.onmessage = null
+    try {
+      ws.close()
+    } catch {
+      // already closing
+    }
+    this.connectionLost('heartbeat timeout')
   }
 
   private cleanup() {
@@ -74,6 +186,7 @@ export class Gateway {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
     }
+    this.stopHeartbeat()
   }
 
   private scheduleReconnect() {
@@ -95,18 +208,38 @@ export class Gateway {
   }
 
   private handleMessage(data: unknown) {
+    const raw = String(data)
     let msg: ProxyMessage
     try {
-      msg = JSON.parse(String(data)) as ProxyMessage
+      msg = JSON.parse(raw) as ProxyMessage
     } catch {
       console.warn('[gateway] mensaje no JSON', data)
       return
     }
     if (msg.type === 'result') {
+      this.adoptStream(msg)
       this.resolvePending(msg)
     }
-    recordFrame(msg)
+    const seq = (msg as { seq?: unknown }).seq
+    if (typeof seq === 'number') {
+      // already processed before the socket dropped: the resume replays from
+      // the last seq sent, but a frame may have been in flight both ways
+      if (seq <= this.lastSeq) return
+      this.lastSeq = seq
+    }
+    recordFrame(msg, raw.length)
     this.events.onMessage?.(msg)
+  }
+
+  /** A login onto another proxy stream (a new proxy session) restarts its numbering. */
+  private adoptStream(msg: ResultEnvelope) {
+    if (msg.action !== 'connect' || !msg.ok) return
+    const streamId = (msg.data as { streamId?: unknown } | undefined)?.streamId
+    if (typeof streamId !== 'string') return
+    if (streamId !== this.streamId) {
+      this.streamId = streamId
+      this.lastSeq = 0
+    }
   }
 
   private resolvePending(msg: ResultEnvelope) {

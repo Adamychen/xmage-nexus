@@ -56,31 +56,104 @@ Request format:
 
 ### Connection & Session
 
-**Multi-tenant:** cada conexión WebSocket posee su propia sesión XMage (`SessionImpl`);
-un solo proceso proxy sirve a muchos usuarios a la vez. Si una segunda conexión
-hace `connect` con la **misma cuenta** (`host|username`), se adjunta a la sesión
-ya existente (varias pestañas/ventanas = una sola sesión) en vez de abrir una
-nueva. Cuentas distintas son sesiones aisladas: los eventos server→cliente de una
-sesión solo llegan a sus propias conexiones.
+**Multi-tenant:** every WebSocket connection owns its own XMage session
+(`SessionImpl`); one proxy process serves many users at once. A second connection
+that sends `connect` with the **same account** (`host|username`) attaches to the
+existing session (several tabs/windows = one session) instead of opening a new
+one. Different accounts are isolated sessions: server→client events of a session
+only reach that session's connections.
 
-El `result` de `connect` incluye `data.attached`: `true` si la conexión se ha
-adjuntado a una sesión ya viva (re-login/reconexión dentro del grace de 60 s) y
-`false` si ha creado una sesión nueva (la anterior caducó → las partidas en
-curso ya no existen y hay que re-`joinGame`). El cliente web y el MCP lo usan
-para decidir si resincronizar la partida activa.
+The `connect` result carries `data.attached`: `true` when the connection
+re-attached to a live session (reload or reconnect within the grace period) and
+`false` when it opened a new XMage session. With `attached: false` the server
+callback ids restart at 1, so the web resets its per-game event ordering. It also
+carries `data.streamId` (see the resumable stream below) and, on an attach,
+`data.resumed`.
 
-**Replay al re-attach:** como el `GameClient` del proxy nunca se desconecta del
-servidor, XMage no reenvía el estado al re-loguear. Para que la resincronización
-funcione, el proxy cachea por partida el último `GAME_INIT`/`GAME_UPDATE` y el
-último prompt pendiente (`GAME_ASK`, `GAME_TARGET`, `GAME_SELECT`,
-`GAME_PLAY_MANA`, …) y, al recibir `joinGame` de una conexión, los reenvía **solo
-a esa conexión**. El caché se limpia al crear una sesión nueva.
+**Resumable stream:** every frame a session broadcasts except `lobby` carries a
+`seq`, numbered per proxy session (`OutboundLog`). A `connect` with
+`resume: {streamId, seq}` (the last frame the client processed) that attaches to
+that same stream gets every later frame replayed in order before the live stream
+(`resumed: true`): a `SIDEBOARD`, a game 2 `START_GAME`, a `GAME_OVER` or chat sent
+while the client was away is not lost. A newer plain `GAME_UPDATE` of a game
+replaces the older one in the log; frames are kept 60 s once delivered and
+without limit (up to 2000 frames / 16 MB) while no client is attached. When the
+requested `seq` is no longer available the attach answers `resumed: false` and the
+client rejoins its game (`joinGame` replay below). Clients drop a frame whose
+`seq` they already processed.
+
+**Lost link to the server:** when the proxy loses its XMage server (network,
+server hiccup) while clients are attached, it logs the session in again by itself
+for up to `--relinkSecs` (default 600 s), hiding the old server session and
+passing its restore id as the desktop client does, so the server hands the tables
+back. A lost-link report is checked first by pinging the server with the session
+itself (`SessionProbe`, up to 45 s): jboss' validator gives up after a 3 s ping
+timeout, which a server busy with dead sessions' callbacks exceeds, and logging in
+again on such a false alarm would kick the healthy session out. After a false
+alarm the proxy's own keep-alive probe (every 20 s) watches the session instead. Clients get `serverLink` frames (`lost`, `retrying` + `attempt`, then
+`restored` or `failed`); only after `failed` is `disconnected` sent. A session
+lost again within 2 minutes of its relink was taken over by another login of the
+same account (the server disconnects the older instance of a user, which looks
+exactly like a lost link): the proxy then gives up with
+`serverLink: failed, reason: "superseded"` instead of fighting it. A second
+`connect` of an account whose login is still running waits for that login and
+attaches to it, so one account never opens two server sessions through the proxy. The restore id
+also lets a re-login of the same account through the same proxy session get its
+old session back after an IP change.
+
+**Grace period (`--graceSecs`, default 180 s).** When the last WebSocket of a
+session closes, the XMage session stays alive so a reload, a network switch or a
+phone in the background can re-attach to the running game. Only when nobody comes
+back is it closed for good (the server then removes the player from its tables).
+When the last page announced it was closing (`leaving`, sent by the web on
+`pagehide`: tab closed, reload, navigation) the shorter `--leaveGraceSecs`
+(default 45 s) applies instead: a reload is back within seconds, and the opponent
+of a player who closed the tab waits 45 s instead of 3 minutes.
+The proxy never closes a session early with `keepMySessionActive`: the server
+keeps a zombie session whose callbacks block its threads. When the proxy process
+itself stops (restart, deploy) it does **not** disconnect its sessions: the server
+sees a lost connection, keeps the tables for its 3-minute window, and the next
+login restores them (`User.onReconnect`). A re-login of an account whose session
+is idle but not released reuses the same client (its SIM seats included).
+
+**Replay on re-attach:** the proxy's session stays connected, so XMage does not
+re-send the state when the web logs in again. The proxy caches, per game, the
+last `GAME_INIT`/`GAME_UPDATE` and the last pending prompt (`GAME_ASK`,
+`GAME_TARGET`, `GAME_SELECT`, `GAME_PLAY_MANA`, …) and on `joinGame` re-sends them
+**to that connection only** (`ReplayCache`). The prompt stays cached until the
+player answers it (`sendPlayer*`, or a `PASS_PRIORITY_*` action for a
+`GAME_SELECT`; put back if the server rejects the answer) or the game ends — state
+updates keep arriving while a prompt is open. The cache is cleared when a new
+session starts.
+
+**SIM seats across restarts:** the playing SIM seats are kept on disk
+(`--simRoster`, default `<tmpdir>/mage-proxy-sims-<wsPort>.json`, `none` disables
+it; ignored when older than 10 minutes). When their owner logs in again through a
+restarted proxy the bots log in with the same name, the server takes it as a
+reconnection and hands them their games; a restored bot with no game stops after
+60 s. SIM names start from the clock so a new bot never reuses the name of one of
+a previous process. A bot whose own link to the server drops logs in again too.
+
+**Lobby while playing:** with a game in progress (played or watched, with events
+in the last 2 minutes) the lobby is published every 20 s instead of every 2 s,
+and the server news every 60 s.
+
+**Callback order and login backlog:** server callbacks can reach the proxy out of
+order; they are re-sequenced by their per-session `messageId`
+(`CallbackSequencer`; a gap not filled within 400 ms is skipped). Everything
+broadcast while a login is in progress (the server's reconnect restore arrives
+then) is delivered to the logging-in connection right after its `connect` result.
+
+**Compression:** the WebSocket negotiates `permessage-deflate` (a `GameView` frame
+of ~200 KB shrinks 10–50×). Sends to one connection are serialized on a private
+per-connection lock (`Gateway.send`).
 
 | Action | Args | Description |
 |---|---|---|
-| `connect` | `{host, port, username, password}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. Result data: `{attached: boolean}` |
+| `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
 | `disconnect` | `{}` | Disconnect from server |
-| `ping` | `{}` | Keepalive |
+| `leaving` | `{}` | The page is closing; no answer. The session then gets the short grace period (`--leaveGraceSecs`) when this was its last connection |
+| `ping` | `{}` | Keepalive and web heartbeat; answered at once on the WebSocket thread (before or after `connect`), never queued behind the session's commands |
 | `getServerInfo` | `{}` | Server version, protocol version |
 | `getGameTypes` | `{}` | Available game types |
 | `getDeckTypes` | `{}` | Available deck types |
@@ -217,7 +290,8 @@ empty.
 | Type | Description |
 |---|---|
 | `connected` | WebSocket connected, ready to send `connect` |
-| `disconnected` | WebSocket closed |
+| `disconnected` | The XMage session ended (after `serverLink: failed`, or no relink possible) |
+| `serverLink` | The proxy lost the XMage server and logs in again: `{state: "lost" \| "retrying" \| "restored" \| "failed", attempt?}` |
 | `info` | Server info message |
 | `error` | Error message |
 | `lobby` | Lobby state (tables, users) — broadcast every ~2s |

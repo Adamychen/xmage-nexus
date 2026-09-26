@@ -28,8 +28,9 @@ export async function connect(
   password: string,
   flagName?: string,
   avatarId?: number,
+  resume?: { streamId: string; seq: number } | null,
 ) {
-  return getGateway().send('connect', { host, port, username, password, flagName, avatarId })
+  return getGateway().send('connect', { host, port, username, password, flagName, avatarId, ...(resume ? { resume } : null) })
 }
 
 export async function getGameTypes(): Promise<GameTypeInfo[]> {

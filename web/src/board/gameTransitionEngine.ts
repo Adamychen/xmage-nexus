@@ -1,13 +1,47 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { CardView, GameView } from '../net/types'
 import { startCardFlight, noteFlightEvent, type FlightVariant } from './flightManager'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
 import { announceBanner, spawnFloater } from './feedbackFx'
-import { stringList } from '../state/gameUtils'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
 import { fxDuration } from './fx'
-import { slamSpell, spawnImpact } from './impactFx'
+import { slamSpell, spawnImpact, spellWeight } from './impactFx'
+import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
+
+const pendingSlams = new Map<string, CardView>()
+
+export function clearPendingSlams(): void {
+  pendingSlams.clear()
+}
+
+const PERMANENT_TYPES = ['CREATURE', 'ARTIFACT', 'ENCHANTMENT', 'PLANESWALKER', 'BATTLE', 'LAND']
+
+function isPermanentSpell(spell: CardView): boolean {
+  return (spell.cardTypes ?? []).some((t) => PERMANENT_TYPES.includes(String(t).toUpperCase()))
+}
+
+function resolvedTo(spellId: string, game: GameView): 'battlefield' | 'graveyard' | null {
+  for (const p of game.players ?? []) {
+    const battlefield = p.battlefield ?? {}
+    if (spellId in battlefield) return 'battlefield'
+    if (Object.values(battlefield).some((perm) => (perm as { parentId?: string }).parentId === spellId)) return 'battlefield'
+  }
+  for (const p of game.players ?? []) {
+    if (spellId in (p.graveyard ?? {}) || spellId in (p.exile ?? {})) return 'graveyard'
+  }
+  return null
+}
+
+function slamResolvedSpells(nextGame: GameView): void {
+  const nextStack = nextGame.stack ?? {}
+  for (const [spellId, spell] of pendingSlams) {
+    if (spellId in nextStack) continue
+    pendingSlams.delete(spellId)
+    const destination = resolvedTo(spellId, nextGame)
+    if (destination === 'battlefield' || (destination === 'graveyard' && !isPermanentSpell(spell))) slamSpell(spell, 320)
+  }
+}
 
 function getRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector) as HTMLElement | null
@@ -101,6 +135,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId
   const nextId = (nextGame as any).gameId ?? (nextGame as any).matchId
   if (prevId && nextId && prevId !== nextId) return
+  const combatants = new Set(combatantIds(prevGame))
+  const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
+  const later = (ms: number, fn: () => void) => (ms > 0 ? void setTimeout(fn, ms) : fn())
+  const deathDelay = (id: string) => (combatants.has(id) ? strikes.holdMs : 0)
 
   // 0. Turn change → banner centrado con el jugador activo
   if (nextGame.turn !== prevGame.turn) {
@@ -126,7 +164,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       let sourceSize: CardSourceSize | null = null
 
       if (isAbilityCard(spell) && spell.sourceCard?.id) pulseStackSource(spell.sourceCard.id)
-      const weight = slamSpell(spell)
+      const weight = spellWeight(spell)
+      if (weight > 0) pendingSlams.set(spellId, spell)
 
       // 1a. Check cardPositionRegistry first (card just unmounted from hand/battlefield)
       const srcId = spell.sourceCard?.id ?? spell.id
@@ -164,6 +203,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
     }
   }
+  slamResolvedSpells(nextGame)
 
   // 2. Detect Player-specific Transitions (Draws, Lands, Battlefield Resolves, Graveyard)
   const nextPlayers = nextGame.players ?? []
@@ -320,7 +360,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       const registered = getPreviousCardPosition(permId)
       if (!inGrave && !inExile && !bouncedToHand) {
         if ((perm as { isToken?: boolean }).isToken) {
-          spawnImpact('token-fade', registered ?? getRect(`[data-card-id="${permId}"]`))
+          const fadeRect = registered ?? getRect(`[data-card-id="${permId}"]`)
+          later(deathDelay(permId), () => spawnImpact('token-fade', fadeRect))
         }
         continue
       }
@@ -330,27 +371,29 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         continue
       }
       const prevSize = registered ? getPreviousCardSize(permId) : null
-      if (inExile) {
-        spawnImpact('exile', prevCardRect)
-        flyAfterLayout(permId, perm, prevCardRect, [
-          `${pSel} .exile-stack [data-card-id="${permId}"]`,
-          `${pSel} .exile-stack`,
-        ], getRect(`${pSel} .exile-stack`), 420, prevSize, 'exile')
-      } else if (bouncedToHand) {
-        flyAfterLayout(permId, perm, prevCardRect, [
-          `[data-card-id="${permId}"]`,
-          '.hand-bar .hand-card-slot:last-child',
-          `${pSel} .hand-zone .hand-card-slot:last-child`,
-        ], getRect('.hand-bar') ?? getRect(`${pSel} .hand-zone`), 350, prevSize)
-      } else {
-        // Destino con ámbito al cementerio: el id puede seguir presente como
-        // top-card del propio montón del cementerio (nunca el slot de origen).
-        const isLand = (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
-        if (!isLand) spawnImpact('destroy', prevCardRect)
-        flyAfterLayout(permId, perm, prevCardRect, [
-          `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
-        ], graveRect, isLand ? 350 : 420, prevSize, isLand ? undefined : 'destroy')
-      }
+      later(deathDelay(permId), () => {
+        if (inExile) {
+          spawnImpact('exile', prevCardRect)
+          flyAfterLayout(permId, perm, prevCardRect, [
+            `${pSel} .exile-stack [data-card-id="${permId}"]`,
+            `${pSel} .exile-stack`,
+          ], getRect(`${pSel} .exile-stack`), 420, prevSize, 'exile')
+        } else if (bouncedToHand) {
+          flyAfterLayout(permId, perm, prevCardRect, [
+            `[data-card-id="${permId}"]`,
+            '.hand-bar .hand-card-slot:last-child',
+            `${pSel} .hand-zone .hand-card-slot:last-child`,
+          ], getRect('.hand-bar') ?? getRect(`${pSel} .hand-zone`), 350, prevSize)
+        } else {
+          // Destino con ámbito al cementerio: el id puede seguir presente como
+          // top-card del propio montón del cementerio (nunca el slot de origen).
+          const isLand = (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
+          if (!isLand) spawnImpact('destroy', prevCardRect)
+          flyAfterLayout(permId, perm, prevCardRect, [
+            `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
+          ], graveRect, isLand ? 350 : 420, prevSize, isLand ? undefined : 'destroy')
+        }
+      })
     }
 
     // D) Combat/ability damage feedback: creatures and players that lost life shake
@@ -363,23 +406,26 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         : 0
       if (nextDamage > prevDamage) {
         const sel = `[data-card-id="${permId}"]`
-        shakeElement(sel)
-        const el = document.querySelector(sel) as HTMLElement | null
-        if (el) {
+        const struckAt = strikes.impactAt.get(permId)
+        later(struckAt ?? 0, () => {
+          if (struckAt === undefined) shakeElement(sel)
+          const el = document.querySelector(sel) as HTMLElement | null
+          if (!el) return
           const rect = el.getBoundingClientRect()
           spawnFloater(`card:${permId}`, rect, `-${nextDamage - prevDamage}`, 'bad')
-          spawnImpact('sparks', rect)
-        }
+          if (struckAt === undefined) spawnImpact('sparks', rect)
+        })
       }
     }
 
     const prevLife = prevP.life ?? 0
     const nextLife = nextP.life ?? 0
-    if (nextLife !== prevLife) {
+    const lifeStruckAt = strikes.impactAt.get(nextP.playerId)
+    if (nextLife !== prevLife) later(lifeStruckAt ?? 0, () => {
       const playerEls = Array.from(document.querySelectorAll(`[data-player-id="${nextP.playerId}"]`))
       const deepest = playerEls.reduce<Element | null>((acc, el) => (!acc || acc.contains(el) ? el : acc), null)
       if (deepest) {
-        if (nextLife < prevLife) {
+        if (nextLife < prevLife && lifeStruckAt === undefined) {
           deepest.classList.remove('took-damage')
           void (deepest as HTMLElement).offsetWidth
           deepest.classList.add('took-damage')
@@ -393,7 +439,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           nextLife < prevLife ? 'bad' : 'good'
         )
       }
-    }
+    })
   }
 
   // E) Stack resolution: items que salen del stack sin entrar en battlefield.
@@ -436,27 +482,18 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     }
   }
 
-  // F) Nuevos atacantes → sacudida del jugador/grupo defensor atacado.
-  const prevAttackers = new Set<string>()
-  for (const group of prevGame.combat ?? []) {
-    stringList((group as { attackers?: unknown }).attackers).forEach((id) => prevAttackers.add(id))
-  }
-  for (const group of nextGame.combat ?? []) {
-    const rec = group as Record<string, unknown>
-    const attackers = stringList(rec.attackers)
-    if (attackers.length === 0 || !attackers.some((id) => !prevAttackers.has(id))) continue
-    for (const defId of stringList(rec.defenders)) {
-      shakeElement(`[data-player-id="${defId}"]`)
-    }
-  }
+  snapshotCombatants(nextGame)
 }
 
 export function useGameTransitions(game: GameView | null) {
   const prevGameRef = useRef<GameView | null>(null)
+  useMemo(() => primeCombatHolds(prevGameRef.current, game), [game])
 
   useEffect(() => {
     if (!game) {
       prevGameRef.current = null
+      clearPendingSlams()
+      clearCombatSnapshots()
       return
     }
 
@@ -466,6 +503,8 @@ export function useGameTransitions(game: GameView | null) {
       const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId ?? null
       if (gameId && prevId && gameId !== prevId) {
         clearCardPositionRegistry()
+        clearPendingSlams()
+        clearCombatSnapshots()
       } else {
         detectAndAnimateTransitions(prevGame, game)
       }

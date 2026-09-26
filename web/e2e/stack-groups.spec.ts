@@ -32,7 +32,7 @@ test.describe('Apilado visual de tokens (×3)', () => {
       // Sueltos: 2 Treasure girados (bajo el umbral) + Soldier con contador + Grizzly Bears
       expect(await myZone.locator('.bz-band > .card-slot').count()).toBe(4)
 
-      // Hover sobre una carta de la pila (tras expandir el grupo): preview clásico, sin morph de mano
+      // Hover sobre una carta de la pila (tras expandir el grupo): preview flotante clásico
       const preview = page.locator('.floating-card-preview')
       await expect(preview).toHaveCount(0)
       await treasureGroup.hover()
@@ -44,7 +44,6 @@ test.describe('Apilado visual de tokens (×3)', () => {
       } else {
         await expect(preview.locator('.floating-card-name')).toContainText('Treasure')
       }
-      await expect(preview, 'las cartas apiladas no usan el morph de la mano').not.toHaveClass(/is-morph/)
 
       // Click en una carta concreta de la pila: el uuid atraviesa el grupo
       await treasureGroup.hover()

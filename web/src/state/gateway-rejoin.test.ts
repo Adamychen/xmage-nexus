@@ -25,7 +25,7 @@ describe('attachGateway — re-unión al reconectar', () => {
 
   async function attachStub() {
     const events: { onOpen?: () => void } = {}
-    attachGateway({ events, close: vi.fn() } as never)
+    attachGateway({ events, close: vi.fn(), resumeToken: () => null, isOpen: true } as never)
     return events
   }
 

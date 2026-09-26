@@ -23,6 +23,7 @@ export const resultSchema = z.object({
 
 export const eventSchema = z.object({
   type: z.literal('event'),
+  seq: z.number().optional(),
   method: z.string(),
   messageId: z.number(),
   objectId: z.union([z.string(), z.null()]).optional(),
@@ -47,6 +48,14 @@ export const infoSchema = z.object({
   message: z.string(),
 })
 
+export const serverLinkSchema = z.object({
+  type: z.literal('serverLink'),
+  state: z.enum(['lost', 'retrying', 'restored', 'failed']),
+  attempt: z.number().optional(),
+  reason: z.literal('superseded').optional(),
+  seq: z.number().optional(),
+})
+
 /** Evento de partida: el payload debe traer el gameView (directo o en data).
  *  (gameViewSchema se genera desde el contrato en ./schema.generated.ts.) */
 export const gameEventSchema = z.object({
@@ -61,6 +70,7 @@ export type ParsedMessage =
   | z.infer<typeof lobbySchema>
   | z.infer<typeof connectedSchema>
   | z.infer<typeof infoSchema>
+  | z.infer<typeof serverLinkSchema>
 
 const baseSchemas: Record<string, z.ZodTypeAny> = {
   result: resultSchema,
@@ -68,6 +78,7 @@ const baseSchemas: Record<string, z.ZodTypeAny> = {
   lobby: lobbySchema,
   connected: connectedSchema,
   info: infoSchema,
+  serverLink: serverLinkSchema,
 }
 
 /** Valida un mensaje entrante y devuelve true si es conforme. */

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { linkBanner } from './system/linkBanner'
 import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
@@ -30,6 +31,8 @@ export default function App() {
   const phase = usePhase()
   const connecting = useStore((s) => s.connecting)
   const wsAlive = useStore((s) => s.wsAlive)
+  const link = useStore((s) => s.link)
+  const linkAttempt = useStore((s) => s.linkAttempt)
   const settings = useStore((s) => s.settings)
   const [showSetup, setShowSetup] = useState(() => !isSetupDone())
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
@@ -113,7 +116,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onZoomKeys)
   }, [settings.uiScale])
 
-  const reconnecting = connecting && !wsAlive
+  const banner = linkBanner({ connecting, wsAlive, link, linkAttempt })
 
   if (gallery && GalleryScreen) {
     return (
@@ -125,7 +128,11 @@ export default function App() {
 
   return (
     <>
-      {reconnecting && <div className="reconnect-banner">{t('common', 'reconnecting')}</div>}
+      {banner && (
+        <div className="reconnect-banner" role="status" data-testid="link-banner" data-link={link}>
+          {t('common', banner.key, { n: banner.n })}
+        </div>
+      )}
       {phase === 'lobby' ? (
         <LobbyScreen />
       ) : phase === 'spectating_pending' ? (

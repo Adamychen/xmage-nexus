@@ -34,10 +34,11 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
       autoKeepMulligan: false,
     })
 
-    // la ventana de mulligan (GAME_ASK) debe pintarse
-    const dialog = page.locator('.mulligan-dialog')
+    // la barra de mano inicial (GAME_ASK) debe pintarse sobre la mano elevada
+    const dialog = page.getByTestId('mulligan-bar')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
     await expect(dialog).toContainText(/mulligan/i)
+    await expect(page.locator('[data-testid="hand-bar"]')).toHaveClass(/is-raised/)
 
     // screenshot de la ventana de mulligan
     const shot = await page.screenshot({ fullPage: true })
@@ -46,8 +47,8 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
     // el ask llegó al cliente (frame GAME_ASK)
     expect(parseFrames(framesOf(page)).some((f) => f.method === 'GAME_ASK' && /mulligan/i.test(String(f.data?.question ?? '')))).toBeTruthy()
 
-    // elegir "Keep hand" (boolean=false); la UI dedicada pinta "✋ Mantener (N)"
-    await page.locator('.mulligan-dialog').getByRole('button', { name: /Mantener/ }).click()
+    // elegir "Keep hand" (boolean=false)
+    await dialog.getByRole('button', { name: /Conservar mano/ }).click()
 
     // el cliente envió sendPlayerBoolean(false) y la partida continúa (GAME_SELECT)
     await expect
@@ -69,11 +70,11 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
       autoKeepMulligan: false,
     })
 
-    const dialog = page.locator('.mulligan-dialog')
+    const dialog = page.getByTestId('mulligan-bar')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
 
     // elegir "Mulligan" (boolean=true)
-    await page.getByRole('button', { name: 'Mulligan' }).click()
+    await dialog.getByRole('button', { name: /^Mulligan/ }).click()
 
     // el servidor responde con el diálogo de London (poner cartas al fondo)
     await expect(page.locator('.mulligan-dialog.mulligan-london')).toBeVisible({ timeout: 10_000 })
@@ -102,7 +103,7 @@ test('mulligan: la ventana ofrece "Conceder" y confirma el envío de CONCEDE', {
       autoKeepMulligan: false,
     })
 
-    const dialog = page.locator('.mulligan-dialog')
+    const dialog = page.getByTestId('mulligan-bar')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
 
     const concedeBtn = dialog.getByTestId('mulligan-concede')

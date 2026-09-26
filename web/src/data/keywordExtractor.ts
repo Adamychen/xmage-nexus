@@ -10,21 +10,13 @@ export interface DetectedKeyword {
   parameter?: string
 }
 
-/**
- * Normalizes rule text and extracts matching MTG keywords from a card's rules,
- * abilities, and sub-abilities.
- */
-export function extractKeywordsFromCard(card: CardView | PermanentView | null): DetectedKeyword[] {
-  if (!card) return []
-
+function cardTextLines(card: CardView | PermanentView): string[] {
   const textLines: string[] = []
 
-  // Collect text lines from rules
   if (Array.isArray(card.rules)) {
     textLines.push(...card.rules)
   }
 
-  // Collect text from abilities if present
   if (Array.isArray((card as any).abilities)) {
     for (const ab of (card as any).abilities) {
       if (typeof ab === 'string') textLines.push(ab)
@@ -32,6 +24,61 @@ export function extractKeywordsFromCard(card: CardView | PermanentView | null): 
     }
   }
 
+  return textLines
+}
+
+const escapeRegex = (s: string) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+
+const KEYWORD_ITEM = new RegExp(
+  `^(?:${MTG_KEYWORDS.filter((k) => k.type === 'ability')
+    .map((k) => escapeRegex(k.name))
+    .sort((a, b) => b.length - a.length)
+    .join('|')})\\b`,
+  'i',
+)
+
+/**
+ * Keeps only the items of keyword-ability lines ("Flying, vigilance",
+ * "Ward {2} (reminder)", "Protection from red"). Lines that merely mention a
+ * keyword ("can't be blocked except by creatures with flying or reach",
+ * "create a token with vigilance") are not abilities the object has.
+ */
+function keywordAbilityItems(textLines: string[]): string[] {
+  const items: string[] = []
+  for (const line of textLines) {
+    const bare = line
+      .replace(/\([^)]*\)/g, '')
+      .replace(/<[^>]+>/g, '')
+      .trim()
+      .replace(/\.$/, '')
+    if (!bare) continue
+    const parts = bare.split(/\s*[,;]\s*/).filter(Boolean)
+    if (parts.length > 0 && parts.every((p) => KEYWORD_ITEM.test(p))) items.push(...parts)
+  }
+  return items
+}
+
+/**
+ * Normalizes rule text and extracts matching MTG keywords from a card's rules,
+ * abilities, and sub-abilities. Includes keywords that are only referenced by
+ * the text (glossary use); see `extractOwnedKeywords` for the abilities the
+ * object actually has.
+ */
+export function extractKeywordsFromCard(card: CardView | PermanentView | null): DetectedKeyword[] {
+  if (!card) return []
+  return detectKeywords(cardTextLines(card), false)
+}
+
+/**
+ * Keyword abilities the object actually has: only keyword-ability lines count,
+ * so a keyword named inside another ability's text is ignored.
+ */
+export function extractOwnedKeywords(card: CardView | PermanentView | null): DetectedKeyword[] {
+  if (!card) return []
+  return detectKeywords(keywordAbilityItems(cardTextLines(card)), true)
+}
+
+function detectKeywords(textLines: string[], anchored: boolean): DetectedKeyword[] {
   if (textLines.length === 0) return []
 
   const combinedText = textLines.join('\n')
@@ -39,6 +86,7 @@ export function extractKeywordsFromCard(card: CardView | PermanentView | null): 
   const seenIds = new Set<string>()
 
   for (const kw of MTG_KEYWORDS) {
+    if (anchored && kw.type !== 'ability') continue
     if (kw.parameterRegex) {
       const match = combinedText.match(kw.parameterRegex)
       if (match) {
@@ -79,8 +127,8 @@ export function extractKeywordsFromCard(card: CardView | PermanentView | null): 
     }
 
     // Exact word boundary matching (e.g. \bFlying\b, \bTrample\b, \bVigilance\b)
-    const escapedName = kw.name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
-    const regex = new RegExp(`\\b${escapedName}\\b`, 'i')
+    const escapedName = escapeRegex(kw.name)
+    const regex = anchored ? new RegExp(`^${escapedName}\\b`, 'im') : new RegExp(`\\b${escapedName}\\b`, 'i')
 
     if (regex.test(combinedText) && !seenIds.has(kw.id)) {
       seenIds.add(kw.id)

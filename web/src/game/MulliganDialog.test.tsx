@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import MulliganDialog from './MulliganDialog'
+import MulliganDialog, { mulliganOptionHint } from './MulliganDialog'
 import type { FeedbackPrompt } from './feedback'
 import * as cmds from '../net/commands'
 import { confirmDialog } from '../ui/confirmDialog'
 import { reset } from '../state/store'
 import { setState } from '../state/state'
-import { setLanguage } from '../i18n'
+import { setLanguage, t } from '../i18n'
 import { makeGameView } from '../__fixtures__/gameViews'
 
 vi.mock('../ui/confirmDialog', () => ({
@@ -152,5 +152,64 @@ describe('MulliganDialog — grid de London-bottom por teclado', () => {
     fireEvent.keyDown(slot, { key: ' ' })
 
     expect(confirmBtn.disabled).toBe(false)
+  })
+})
+
+describe('MulliganDialog — barra de mano inicial', () => {
+  beforeEach(() => {
+    reset()
+    setLanguage('es')
+    vi.clearAllMocks()
+    setState({
+      game: makeGameView({
+        myPlayerId: 'p1',
+        activePlayerId: 'p1',
+        players: [{ playerId: 'p1', name: 'Yo' }, { playerId: 'p2', name: 'Rival' }] as any,
+        myHand: {
+          'h-1': { id: 'h-1', name: 'Forest' } as any,
+          'h-2': { id: 'h-2', name: 'Mountain' } as any,
+        },
+      }),
+      gameId: 'game-1',
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('pinta la barra con el número de cartas y quién empieza, sin modal', () => {
+    renderDialog(mulliganPrompt({ message: 'Mulligan <font color=green>for free</font>, draw another 7 cards?' }))
+    const bar = screen.getByTestId('mulligan-bar')
+    expect(bar.textContent).toContain('Mano inicial')
+    expect(bar.textContent).toContain('2 cartas')
+    expect(screen.getByTestId('mulligan-starter').textContent).toContain('Empiezas tú')
+    expect(bar.textContent).toContain('Roba 7, gratis')
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('nombra al rival cuando empieza él', () => {
+    setState({ game: makeGameView({ myPlayerId: 'p1', activePlayerId: 'p2', players: [{ playerId: 'p2', name: 'Rival' }] as any }) })
+    renderDialog(mulliganPrompt())
+    expect(screen.getByTestId('mulligan-starter').textContent).toContain('Empieza Rival')
+  })
+
+  it('Conservar mano envía false y Mulligan envía true', async () => {
+    const bool = vi.spyOn(cmds, 'sendPlayerBoolean').mockResolvedValue({ ok: true } as never)
+    renderDialog(mulliganPrompt())
+    fireEvent.click(screen.getByRole('button', { name: /Conservar mano/ }))
+    await waitFor(() => expect(bool).toHaveBeenCalledWith(false, 'game-1'))
+    fireEvent.click(screen.getByRole('button', { name: /^Mulligan/ }))
+    await waitFor(() => expect(bool).toHaveBeenCalledWith(true, 'game-1'))
+  })
+})
+
+describe('mulliganOptionHint', () => {
+  beforeEach(() => setLanguage('es'))
+
+  it('reads free and paid mulligans from the server ask', () => {
+    expect(mulliganOptionHint('Mulligan <font color=#00ff00>for free</font>, draw another 7 cards?', t)).toBe('Roba 7, gratis')
+    expect(mulliganOptionHint('Mulligan <font color=#ffff00>down to 6 cards</font>?', t)).toBe('Baja a 6 cartas')
+    expect(mulliganOptionHint('Keep your hand or mulligan?', t)).toBeNull()
   })
 })

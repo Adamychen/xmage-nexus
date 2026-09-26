@@ -5,6 +5,7 @@ import HandBar from './HandBar'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import type { BoardPresenter } from './useBoardPresenter'
+import { useStore, isMulliganDecision } from '../state/store'
 import './BoardShell.css'
 
 export interface BoardShellProps {
@@ -24,6 +25,10 @@ export interface BoardShellProps {
 }
 
 export const DividerSlotContext = createContext<((el: HTMLElement | null) => void) | null>(null)
+
+/** Publishes the slot above the own hand where hand prompts (mulligan) are
+ *  portaled; the game screen owns the element state. */
+export const HandPromptSlotContext = createContext<((el: HTMLElement | null) => void) | null>(null)
 
 /** Divisor horizontal unificado (diamante púrpura/dorado) compartido por los
  *  tres modos. `labels` añade las etiquetas flanking del pod. Si la pantalla de
@@ -47,6 +52,8 @@ export function BoardColDivider() {
 /** Marco común de los tableros: tapete, montaje de HandBar y de las capas
  *  flotantes (preview + vuelos). El layout específico va en `children`. */
 export default function BoardShell({ className, testId, presenter, handBar = null, children }: BoardShellProps) {
+  const setHandPromptSlot = useContext(HandPromptSlotContext)
+  const raised = useStore((s) => isMulliganDecision(s.feedback))
   return (
     <div className={`board-shell ${className}`} data-testid={testId} ref={presenter.boardRef}>
       {children}
@@ -57,6 +64,8 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
           onHover={handBar.onHover}
           playableIds={handBar.playableIds}
           targetIds={handBar.targetIds}
+          raised={raised}
+          promptSlotRef={setHandPromptSlot ?? undefined}
         />
       )}
       <FloatingCardPreview
@@ -64,7 +73,6 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         anchorRect={presenter.anchorRect}
         boardRect={presenter.boardRef.current?.getBoundingClientRect() ?? null}
         leaving={presenter.previewLeaving}
-        fromHand={presenter.previewFromHand}
       />
       <FlyingCardOverlay />
     </div>

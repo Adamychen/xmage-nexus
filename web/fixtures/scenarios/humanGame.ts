@@ -687,7 +687,9 @@ export class HumanGame {
             const simAttackerId = this.simAttackerId()
             const simAtt = this.simBattle.find((c) => c.parentId === simAttackerId || c.id === simAttackerId)
             if (simAtt) simAtt.tapped = true
-            this.combat = [{ attackers: { [simAttackerId]: {} } }]
+            this.phase = 'COMBAT'
+            this.step = 'DECLARE_ATTACKERS'
+            this.combat = [{ attackers: { [simAttackerId]: {} }, blockers: {}, defenderId: HUMAN_PLAYER_ID }]
             this.emitUpdate()
             if (this.options.humanBlock && this.myBattle.length > 0) { this.startHumanBlock(); return }
           }
@@ -695,6 +697,8 @@ export class HumanGame {
         case 2:
           if (this.options.simCombatDamage) {
             this.combat = []
+            this.phase = 'POSTCOMBAT_MAIN'
+            this.step = 'POSTCOMBAT_MAIN'
             this.humanLife = Math.max(0, this.humanLife - (this.options.simCombatDamage ?? 0))
             this.emitUpdate()
           }

@@ -50,6 +50,28 @@ final class GameCommands {
         return userData;
     }
 
+    interface Answer {
+        boolean send() throws Exception;
+    }
+
+    /**
+     * Sends the player's answer to the open prompt. The cached prompt is taken out first (the
+     * server may already send the next prompt while this call runs) and put back if the server
+     * rejected the answer.
+     */
+    static void answer(WebSocket conn, String action, String requestId, UUID gameId, CommandContext ctx, Answer answer) throws Exception {
+        ReplayCache.Prompt prompt = ctx.takePrompt(gameId, false);
+        boolean ok = false;
+        try {
+            ok = answer.send();
+        } finally {
+            if (!ok) {
+                ctx.restorePrompt(gameId, prompt);
+            }
+        }
+        ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, null, null));
+    }
+
     static boolean handle(String action, WebSocket conn, String requestId, JsonObject args, CommandContext ctx) throws Exception {
         switch (action) {
             case "replayGame": {
@@ -86,12 +108,16 @@ final class GameCommands {
             }
             case "stopWatching": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
+                ctx.markGameInactive(gameId);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().stopWatching(gameId), null, null));
                 return true;
             }
             case "joinGame": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 boolean ok = gameId != null && ctx.session().joinGame(gameId);
+                if (ok) {
+                    ctx.markGameActive(gameId);
+                }
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, ok ? null : ProxyProtocol.ERR_FAILED, null));
                 if (ok && gameId != null) {
                     ctx.replayGameState(conn, gameId);
@@ -100,6 +126,7 @@ final class GameCommands {
             }
             case "quitMatch": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
+                ctx.markGameInactive(gameId);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().quitMatch(gameId), null, null));
                 return true;
             }
@@ -143,38 +170,44 @@ final class GameCommands {
                 PlayerAction playerAction = PlayerAction.valueOf(actionName);
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 Object data = JsonArgs.parseActionData(args.get("data"), actionName);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerAction(playerAction, gameId, data), null, null));
+                boolean passes = actionName.startsWith("PASS_PRIORITY_") && playerAction != PlayerAction.PASS_PRIORITY_CANCEL_ALL_ACTIONS;
+                ReplayCache.Prompt prompt = passes ? ctx.takePrompt(gameId, true) : null;
+                boolean ok = ctx.session().sendPlayerAction(playerAction, gameId, data);
+                if (!ok) {
+                    ctx.restorePrompt(gameId, prompt);
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, null, null));
                 return true;
             }
             case "sendPlayerUUID": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 UUID value = JsonArgs.uuid(args, "value", null);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerUUID(gameId, value), null, null));
+                answer(conn, action, requestId, gameId, ctx, () -> ctx.session().sendPlayerUUID(gameId, value));
                 return true;
             }
             case "sendPlayerBoolean": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 boolean value = JsonArgs.getBool(args, "value", false);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerBoolean(gameId, value), null, null));
+                answer(conn, action, requestId, gameId, ctx, () -> ctx.session().sendPlayerBoolean(gameId, value));
                 return true;
             }
             case "sendPlayerInteger": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 int value = JsonArgs.getInt(args, "value", 0);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerInteger(gameId, value), null, null));
+                answer(conn, action, requestId, gameId, ctx, () -> ctx.session().sendPlayerInteger(gameId, value));
                 return true;
             }
             case "sendPlayerString": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 String value = JsonArgs.str(args, "value", "");
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerString(gameId, value), null, null));
+                answer(conn, action, requestId, gameId, ctx, () -> ctx.session().sendPlayerString(gameId, value));
                 return true;
             }
             case "sendPlayerManaType": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
                 UUID playerId = JsonArgs.uuid(args, "playerId", null);
                 ManaType manaType = ManaType.valueOf(JsonArgs.str(args, "manaType", ""));
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().sendPlayerManaType(gameId, playerId, manaType), null, null));
+                answer(conn, action, requestId, gameId, ctx, () -> ctx.session().sendPlayerManaType(gameId, playerId, manaType));
                 return true;
             }
             case "cheatSetup": {

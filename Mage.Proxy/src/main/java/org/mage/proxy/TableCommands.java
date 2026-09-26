@@ -91,7 +91,11 @@ final class TableCommands {
             }
             case "watchGame": {
                 UUID gameId = JsonArgs.uuid(args, "gameId", null);
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().watchGame(gameId), null, null));
+                boolean ok = ctx.session().watchGame(gameId);
+                if (ok) {
+                    ctx.markGameActive(gameId);
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ok, null, null));
                 return true;
             }
             default:

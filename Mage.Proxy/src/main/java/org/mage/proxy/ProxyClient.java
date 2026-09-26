@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -63,9 +62,12 @@ public class ProxyClient implements MageClient, CommandContext {
     // all commands from web clients are processed in order on one thread
     private final ExecutorService commandExecutor = Executors.newSingleThreadExecutor();
     // server callbacks are processed in order on one thread (recreated on user switch to drain stale ones)
-    private ExecutorService callbackExecutor = Executors.newSingleThreadExecutor();
+    private volatile ExecutorService callbackExecutor = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService lobbyTimer = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService pingTimer = Executors.newSingleThreadScheduledExecutor();
+    // the keep-alive probe can wait on a busy server: never on pingTimer (sequencer gaps, grace)
+    private final ScheduledExecutorService keepAliveTimer = Executors.newSingleThreadScheduledExecutor();
+    private int failedKeepAlives = 0;
 
     // out-of-order protection for reconnect/bad network (same logic as the original client)
     private final Map<ClientCallbackType, Integer> lastMessages = new java.util.HashMap<>();
@@ -77,11 +79,38 @@ public class ProxyClient implements MageClient, CommandContext {
      * to games this session never joined/watched, so they must not reach the new web client
      * (they flooded the single-threaded callback queue and starved real dialogs like WATCHGAME).
      */
-    private final Set<UUID> sessionGameIds = new java.util.HashSet<>();
-    /** Último GAME_INIT/GAME_UPDATE serializado por partida (replay al re-attach). */
-    private final ConcurrentMap<UUID, String> latestGameEvents = new ConcurrentHashMap<>();
-    /** Último prompt de partida pendiente de respuesta (replay al re-attach). */
-    private final ConcurrentMap<UUID, String> pendingPromptEvents = new ConcurrentHashMap<>();
+    private final Set<UUID> sessionGameIds = ConcurrentHashMap.newKeySet();
+    /** Latest state and open prompt per game (replayed when a connection joins the game). */
+    private final ReplayCache replay = new ReplayCache();
+    /** Every non-lobby frame broadcast, numbered, so a returning connection resumes the stream. */
+    private final OutboundLog outbound = new OutboundLog();
+    private final String streamId = UUID.randomUUID().toString();
+
+    /** Games being played or watched now: the lobby is polled much less meanwhile. */
+    private final Set<UUID> gamesInProgress = ConcurrentHashMap.newKeySet();
+    private volatile long lastGameEventAt = 0;
+    private volatile long lastLobbyPublishAt = 0;
+    private volatile long serverMessagesAt = 0;
+    private volatile JsonElement serverMessagesCache = null;
+    static final long LOBBY_IN_GAME_INTERVAL_MS = 20_000;
+    static final long SERVER_MESSAGES_INTERVAL_MS = 60_000;
+    static final long GAME_IDLE_MS = 120_000;
+
+    /** Login data of the live session, to log in again when the link to the server drops. */
+    private volatile Connection lastConnection = null;
+    private volatile String lastSessionId = "";
+    /** Set while the proxy itself stops or starts the XMage session (not a lost link). */
+    private volatile boolean expectDisconnect = false;
+    private volatile boolean relinking = false;
+    private ExecutorService relinkExecutor = null;
+    private volatile long lastLoginAt = 0;
+    private volatile boolean lastLoginWasRelink = false;
+    /**
+     * A session logged in again by the relink that is lost again this soon was taken over by
+     * another login of the same account (the server disconnects the older instance of a user,
+     * which looks exactly like a lost link): relinking again would start a login fight.
+     */
+    static final long SUPERSEDED_WINDOW_MS = 120_000;
 
     private final SimManager simManager;
     private String accountKey = null;
@@ -98,7 +127,22 @@ public class ProxyClient implements MageClient, CommandContext {
     private volatile long lastDetailedMessageAt = 0;
 
     private ScheduledFuture<?> graceDisconnectTimer = null;
-    public static final int DISCONNECT_GRACE_PERIOD_SECS = 60;
+    private volatile boolean released = false;
+
+    private final CallbackSequencer<ClientCallback> sequencer = new CallbackSequencer<>(
+            ClientCallback::getMessageId,
+            cb -> callbackExecutor.execute(() -> processCallback(cb)),
+            pingTimer,
+            CallbackSequencer.GAP_TIMEOUT_MS);
+
+    /**
+     * Frames broadcast while a login is in progress (guarded by {@code authorized}). The
+     * logging-in connection is not authorized until connectStart returns, but a reconnect's
+     * restore (START_GAME, GAME_INIT, the re-asked prompt) can arrive before that; it is
+     * handed to the connection right after its connect result instead of being lost.
+     */
+    private List<String> loginBacklog = null;
+    static final int LOGIN_BACKLOG_LIMIT = 500;
 
     /**
      * Normaliza el host del servidor para que la clave de sesión
@@ -115,25 +159,47 @@ public class ProxyClient implements MageClient, CommandContext {
         this.config = config;
         this.gateway = gateway;
         this.session = new SessionImpl(this);
-        this.simManager = new SimManager(config, this::broadcastError);
+        this.simManager = new SimManager(config, this::broadcastError, gateway.simRoster());
         Arrays.stream(ClientCallbackType.values()).forEach(t -> this.lastMessages.put(t, 0));
         lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 2, 2, TimeUnit.SECONDS);
         // keep the server session alive (the original client pings from its UI; we have no UI)
-        pingTimer.scheduleWithFixedDelay(this::pingServer, PING_SERVER_SECS, PING_SERVER_SECS, TimeUnit.SECONDS);
+        keepAliveTimer.scheduleWithFixedDelay(this::pingServer, PING_SERVER_SECS, PING_SERVER_SECS, TimeUnit.SECONDS);
     }
 
     // must be less than the server's connection timeout (UserManagerImpl.USER_CONNECTION_TIMEOUTS_CHECK_SECS)
     // shared with SimPlayer: its own session also needs periodic pings
     static final int PING_SERVER_SECS = 20;
 
-    private void pingServer() {
-        try {
-            if (connected) {
-                session.ping();
-            }
-        } catch (Throwable ex) {
-            logger.log(Level.FINE, "ping failed", ex);
+    /**
+     * Keeps the session alive and watches it: jboss' own validator fires only once, so after a
+     * false alarm (below) a real loss is only noticed here, after two failed probes in a row.
+     */
+    void pingServer() {
+        if (!connected || relinking || released) {
+            failedKeepAlives = 0;
+            return;
         }
+        if (sessionAnswers(KEEP_ALIVE_PROBE_TIMEOUT_MS)) {
+            failedKeepAlives = 0;
+        } else if (++failedKeepAlives >= 2 && connected && !relinking && !released) {
+            failedKeepAlives = 0;
+            logger.info("The XMage server stopped answering this session's pings");
+            connected = false;
+            if (lastConnection != null) {
+                startRelink();
+            } else {
+                broadcastDisconnected();
+            }
+        }
+    }
+
+    static final long KEEP_ALIVE_PROBE_TIMEOUT_MS = 15_000;
+    /** A server busy with dead sessions' callbacks can take ~40-60 s to answer. */
+    static final long LOST_LINK_PROBE_TIMEOUT_MS = 45_000;
+
+    /** Whether the server still answers a ping of this session (see {@link SessionProbe}). */
+    boolean sessionAnswers(long timeoutMs) {
+        return SessionProbe.answers(session, timeoutMs);
     }
 
     public SessionImpl getSession() {
@@ -154,61 +220,161 @@ public class ProxyClient implements MageClient, CommandContext {
         return connected;
     }
 
+    public boolean isReleased() {
+        return released;
+    }
+
+    /**
+     * Proxy shutdown (restart, deploy). The XMage session is deliberately NOT disconnected:
+     * an explicit disconnect is DisconnectedByUser on the server, which removes the player from
+     * every table (the game counts as abandoned). When the process exits the server sees a lost
+     * connection instead, keeps the tables for its session-expiry window and restores them on
+     * the next login (User.onReconnect).
+     */
     public synchronized void shutdown() {
+        cancelGraceTimer();
+        released = true;
+        commandExecutor.shutdownNow();
+        callbackExecutor.shutdownNow();
+        lobbyTimer.shutdownNow();
+        pingTimer.shutdownNow();
+        keepAliveTimer.shutdownNow();
+        synchronized (relinkLock) {
+            if (relinkExecutor != null) {
+                relinkExecutor.shutdownNow();
+            }
+        }
+    }
+
+    private synchronized void cancelGraceTimer() {
         if (graceDisconnectTimer != null) {
-            graceDisconnectTimer.cancel(true);
+            graceDisconnectTimer.cancel(false);
             graceDisconnectTimer = null;
+        }
+    }
+
+    /**
+     * No WebSocket came back within the grace period: the player is gone. The session is closed
+     * for good (the server removes the player from its tables) and the client is released.
+     * Closing it with keepMySessionActive instead leaves a zombie session on the server whose
+     * callbacks block server threads for a minute each and that expires with the same table
+     * removal three minutes later.
+     */
+    private synchronized void expireGrace() {
+        graceDisconnectTimer = null;
+        if (authorizedCount() != 0 || released || (!connected && !relinking)) {
+            return;
+        }
+        logger.info("Grace period expired without client reconnect. Cleaning up XMage session (server link "
+                + (session.isConnected() ? "up" : "DOWN") + ", games " + gamesInProgress + ").");
+        released = true;
+        simManager.stopSims();
+        stopSession(false);
+        connected = false;
+        Activity.sessionEnd(activityUser, "grace_expired");
+        if (accountKey != null) {
+            gateway.unregisterSession(accountKey, this);
+            accountKey = null;
         }
         commandExecutor.shutdownNow();
         callbackExecutor.shutdownNow();
         lobbyTimer.shutdownNow();
+        pingTimer.shutdownNow();
+        keepAliveTimer.shutdownNow();
+        synchronized (relinkLock) {
+            if (relinkExecutor != null) {
+                relinkExecutor.shutdownNow();
+            }
+        }
+    }
+
+    /** Stops the XMage session on the proxy's own initiative (never taken for a lost link). */
+    private void stopSession(boolean keepMySessionActive) {
+        expectDisconnect = true;
         try {
-            session.connectStop(false, false);
+            session.connectStop(false, keepMySessionActive);
         } catch (Exception ignored) {
+        } finally {
+            expectDisconnect = false;
         }
     }
 
     // ============================ websocket client callbacks ============================
 
     public synchronized void onClientOpen(WebSocket conn) {
-        if (graceDisconnectTimer != null) {
-            graceDisconnectTimer.cancel(false);
-            graceDisconnectTimer = null;
-            logger.info("New WebSocket client connected; cancelled grace disconnect timer.");
-        }
+        cancelGraceTimer();
         sendInfo(conn, "Proxy ready. Send {\"action\":\"connect\",...} to log in.");
     }
 
-    public synchronized void onClientClose(WebSocket conn) {
-        authorized.remove(conn);
-        if (authorized.isEmpty() && connected) {
-            logger.info("All WebSocket clients disconnected. Starting " + DISCONNECT_GRACE_PERIOD_SECS + "s grace period before stopping session.");
-            if (graceDisconnectTimer != null) {
-                graceDisconnectTimer.cancel(false);
-            }
-            graceDisconnectTimer = pingTimer.schedule(() -> {
-                synchronized (ProxyClient.this) {
-                    if (authorized.isEmpty() && connected) {
-                        logger.info("Grace period expired without client reconnect. Cleaning up XMage session.");
-                        simManager.stopSims();
-                        try {
-                            session.connectStop(false, false);
-                        } catch (Exception ignored) {
-                        }
-                        connected = false;
-                        Activity.sessionEnd(activityUser, "grace_expired");
-                        if (accountKey != null) {
-                            gateway.unregisterSession(accountKey);
-                            accountKey = null;
-                        }
-                    }
-                }
-            }, DISCONNECT_GRACE_PERIOD_SECS, TimeUnit.SECONDS);
+    /**
+     * Runs on the WebSocket selector thread, so it must never wait for this client's monitor
+     * (held by connect() through a whole login, up to a minute on a slow server): that would
+     * stall every connection of the proxy. The grace timer is armed from the timer thread.
+     */
+    public void onClientClose(WebSocket conn) {
+        onClientClose(conn, false);
+    }
+
+    /**
+     * {@code left}: the page announced it was closing, so the session gets the short grace
+     * period (a reload is back within seconds); a dropped connection gets the full one.
+     */
+    public void onClientClose(WebSocket conn, boolean left) {
+        boolean noClientsLeft;
+        synchronized (authorized) {
+            authorized.remove(conn);
+            noClientsLeft = authorized.isEmpty();
         }
+        if (noClientsLeft && (connected || relinking)) {
+            try {
+                pingTimer.execute(() -> startGraceIfIdle(left));
+            } catch (java.util.concurrent.RejectedExecutionException ignored) {
+                // already released
+            }
+        }
+    }
+
+    private synchronized void startGraceIfIdle(boolean left) {
+        if (authorizedCount() != 0 || (!connected && !relinking) || released) {
+            return;
+        }
+        int secs = left ? config.getLeaveGraceSecs() : config.getGraceSecs();
+        logger.info("All WebSocket clients disconnected" + (left ? " (page closed)" : "") + ". Starting " + secs
+                + "s grace period before stopping session.");
+        if (graceDisconnectTimer != null) {
+            graceDisconnectTimer.cancel(false);
+        }
+        graceDisconnectTimer = pingTimer.schedule(this::expireGrace, secs, TimeUnit.SECONDS);
+    }
+
+    /** Seconds left on the grace timer, or -1 when none is running. */
+    synchronized long graceRemainingSecs() {
+        return graceDisconnectTimer == null ? -1 : graceDisconnectTimer.getDelay(TimeUnit.SECONDS);
     }
 
     /** Reenvía estado solo a conexiones que han autenticado su sesión local. */
     private void broadcastAuthorized(String json) {
+        broadcastAuthorized(json, null);
+    }
+
+    /**
+     * Numbers the frame in the session's stream (a frame with a {@code supersedeKey} replaces
+     * the older one with the same key there) and sends it to every authorized connection.
+     */
+    private void broadcastAuthorized(String json, String supersedeKey) {
+        synchronized (authorized) {
+            String framed = outbound.append(json, supersedeKey, !authorized.isEmpty());
+            if (loginBacklog != null && loginBacklog.size() < LOGIN_BACKLOG_LIMIT) {
+                loginBacklog.add(framed);
+            }
+            for (WebSocket conn : authorized) {
+                gateway.send(conn, framed);
+            }
+        }
+    }
+
+    /** The lobby is a snapshot re-sent every few seconds: never numbered nor kept. */
+    private void broadcastLobby(String json) {
         synchronized (authorized) {
             for (WebSocket conn : authorized) {
                 gateway.send(conn, json);
@@ -216,8 +382,119 @@ public class ProxyClient implements MageClient, CommandContext {
         }
     }
 
+    /** {@code connect} result data shared by every successful login or attach. */
+    private JsonObject connectData(boolean attached, Boolean resumed) {
+        JsonObject data = new JsonObject();
+        data.addProperty("attached", attached);
+        data.addProperty("streamId", streamId);
+        if (resumed != null) {
+            data.addProperty("resumed", resumed);
+        }
+        return data;
+    }
+
+    private boolean isAuthorized(WebSocket conn) {
+        synchronized (authorized) {
+            return authorized.contains(conn);
+        }
+    }
+
+    private int authorizedCount() {
+        synchronized (authorized) {
+            return authorized.size();
+        }
+    }
+
+    private void authorize(WebSocket conn) {
+        if (conn != null) {
+            synchronized (authorized) {
+                authorized.add(conn);
+            }
+        }
+    }
+
+    private void deauthorize(WebSocket conn) {
+        synchronized (authorized) {
+            if (conn == null) {
+                authorized.clear();
+            } else {
+                authorized.remove(conn);
+            }
+        }
+    }
+
+    /** Sends the successful connect result, then everything broadcast during the login. */
+    private void finishLogin(WebSocket conn, String resultJson) {
+        synchronized (authorized) {
+            List<String> backlog = loginBacklog;
+            loginBacklog = null;
+            gateway.send(conn, resultJson);
+            if (conn != null) {
+                authorized.add(conn);
+                if (backlog != null) {
+                    for (String json : backlog) {
+                        gateway.send(conn, json);
+                    }
+                }
+            }
+        }
+    }
+
+    /** New server session: nothing of the previous one may leak into it. */
+    private void resetSessionState() {
+        // its message ids restart at 1, so the outdated-guard would silently drop every
+        // UPDATE event of the new session otherwise
+        lastMessages.replaceAll((t, v) -> 0);
+        // events of the previous user's still-running games (re-sent by the server over the
+        // same channel) must be dropped, not forwarded
+        sessionGameIds.clear();
+        gamesInProgress.clear();
+        replay.clear();
+        // drop callbacks still queued from the previous session instead of replaying them
+        // to the new client (e.g. a WATCHGAME that lagged behind the update flood). Done
+        // BEFORE connectStart: the reconnect restore of the new session can arrive while
+        // the login is still running and must survive it.
+        sequencer.reset();
+        callbackExecutor.shutdownNow();
+        callbackExecutor = Executors.newSingleThreadExecutor();
+        synchronized (authorized) {
+            loginBacklog = new java.util.ArrayList<>();
+        }
+    }
+
+    @Override
+    public void markGameActive(UUID gameId) {
+        if (gameId != null) {
+            sessionGameIds.add(gameId);
+            gamesInProgress.add(gameId);
+            lastGameEventAt = System.currentTimeMillis();
+        }
+    }
+
+    @Override
+    public void markGameInactive(UUID gameId) {
+        if (gameId != null) {
+            gamesInProgress.remove(gameId);
+        }
+    }
+
+    @Override
+    public ReplayCache.Prompt takePrompt(UUID gameId, boolean onlySelect) {
+        return onlySelect ? replay.takePromptIfSelect(gameId) : replay.takePrompt(gameId);
+    }
+
+    @Override
+    public void restorePrompt(UUID gameId, ReplayCache.Prompt prompt) {
+        replay.restorePrompt(gameId, prompt);
+    }
+
     public void onClientMessage(WebSocket conn, String message) {
-        commandExecutor.execute(() -> handleCommand(conn, message));
+        try {
+            commandExecutor.execute(() -> handleCommand(conn, message));
+        } catch (java.util.concurrent.RejectedExecutionException ex) {
+            // released between the gateway lookup and now: the client retries on a fresh one
+            gateway.send(conn, ProxyProtocol.resultJson("", "", false, ProxyProtocol.ERR_FAILED, "session closed, retry"));
+        }
     }
 
     // ============================ MageClient implementation ============================
@@ -248,10 +525,156 @@ public class ProxyClient implements MageClient, CommandContext {
     @Override
     public void disconnected(boolean askToReconnect, boolean keepMySessionActive) {
         connected = false;
+        if (expectDisconnect || relinking) {
+            return;
+        }
+        if (!released && lastConnection != null) {
+            if (isSuperseded(lastLoginWasRelink, lastLoginAt, System.currentTimeMillis())) {
+                logger.info("Session lost again right after a relink: another login of this account took over");
+                broadcastLink("failed", 0, "superseded");
+                broadcastDisconnected();
+                return;
+            }
+            startRelink();
+            return;
+        }
+        broadcastDisconnected();
+    }
+
+    static boolean isSuperseded(boolean lastLoginWasRelink, long lastLoginAt, long now) {
+        return lastLoginWasRelink && now - lastLoginAt < SUPERSEDED_WINDOW_MS;
+    }
+
+    private void broadcastDisconnected() {
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "disconnected");
         ev.addProperty("info", "Disconnected from server");
         broadcastAuthorized(ev.toString());
+    }
+
+    private void broadcastLink(String state, int attempt) {
+        broadcastLink(state, attempt, null);
+    }
+
+    private void broadcastLink(String state, int attempt, String reason) {
+        JsonObject ev = new JsonObject();
+        ev.addProperty("type", "serverLink");
+        ev.addProperty("state", state);
+        if (attempt > 0) {
+            ev.addProperty("attempt", attempt);
+        }
+        if (reason != null) {
+            ev.addProperty("reason", reason);
+        }
+        broadcastAuthorized(ev.toString());
+    }
+
+    /**
+     * The link to the XMage server dropped (network, server hiccup) while the web clients are
+     * still attached. The server keeps the player's tables for a few minutes, so the session is
+     * logged in again in the background — keeping the old server session hidden and passing its
+     * restore id, as the desktop client does — and the server restores the games. The web shows a
+     * banner meanwhile instead of dropping the player on the login screen.
+     */
+    private void startRelink() {
+        // called by SessionImpl with its own monitor held: taking this client's monitor here
+        // would deadlock against connect(), which holds it while it waits for the session's
+        synchronized (relinkLock) {
+            if (relinking || released) {
+                return;
+            }
+            relinking = true;
+            if (relinkExecutor == null) {
+                relinkExecutor = Executors.newSingleThreadExecutor();
+            }
+            try {
+                relinkExecutor.execute(this::relinkLoop);
+            } catch (java.util.concurrent.RejectedExecutionException ex) {
+                relinking = false;
+            }
+        }
+    }
+
+    private final Object relinkLock = new Object();
+
+    private void relinkLoop() {
+        broadcastLink("lost", 0);
+        // a false alarm of jboss' validator must not kick this healthy session out
+        if (!released && sessionAnswers(LOST_LINK_PROBE_TIMEOUT_MS)) {
+            logger.info("The XMage server still answers this session: false alarm, no relink");
+            connected = true;
+            relinking = false;
+            broadcastLink("restored", 0);
+            return;
+        }
+        logger.info("Lost the link to the XMage server: logging in again");
+        long deadline = System.currentTimeMillis() + config.getRelinkSecs() * 1000L;
+        long delay = 1000;
+        int attempt = 0;
+        try {
+            while (!released && System.currentTimeMillis() < deadline) {
+                attempt++;
+                broadcastLink("retrying", attempt);
+                if (relinkOnce()) {
+                    logger.info("Link to the XMage server restored after " + attempt + " attempt(s)");
+                    relinking = false;
+                    broadcastLink("restored", attempt);
+                    return;
+                }
+                Thread.sleep(delay);
+                delay = Math.min(delay * 2, 15000);
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+        relinking = false;
+        if (!released) {
+            logger.warning("Could not restore the link to the XMage server");
+            broadcastLink("failed", attempt);
+            broadcastDisconnected();
+        }
+    }
+
+    private synchronized boolean relinkOnce() {
+        if (released) {
+            return false;
+        }
+        if (connected) {
+            return true;
+        }
+        Connection connection = lastConnection;
+        if (connection == null) {
+            return false;
+        }
+        expectDisconnect = true;
+        try {
+            try {
+                session.connectStop(false, true);
+            } catch (Exception ignored) {
+            }
+            session.setRestoreSessionId(lastSessionId);
+            resetSessionState();
+            boolean ok;
+            try {
+                ok = session.connectStart(connection);
+            } catch (Exception ex) {
+                logger.log(Level.FINE, "relink attempt failed", ex);
+                ok = false;
+            }
+            synchronized (authorized) {
+                loginBacklog = null;
+            }
+            connected = ok;
+            if (ok) {
+                lastSessionId = session.getSessionId();
+                lastLobbyPublishAt = 0;
+                lastLoginAt = System.currentTimeMillis();
+                lastLoginWasRelink = true;
+            }
+            return ok;
+        } finally {
+            expectDisconnect = false;
+        }
     }
 
     @Override
@@ -334,7 +757,7 @@ public class ProxyClient implements MageClient, CommandContext {
 
     @Override
     public void onCallback(ClientCallback callback) {
-        callbackExecutor.execute(() -> processCallback(callback));
+        sequencer.offer(callback);
     }
 
     private void tryCaptureFromCallback(ClientCallback callback) {
@@ -421,11 +844,17 @@ public class ProxyClient implements MageClient, CommandContext {
                         || callback.getMethod() == ClientCallbackMethod.START_GAME
                         || callback.getMethod() == ClientCallbackMethod.GAME_INIT) {
                     sessionGameIds.add(callbackObjectId);
+                    gamesInProgress.add(callbackObjectId);
                 }
                 if (!sessionGameIds.contains(callbackObjectId)) {
                     logger.info("event IGNORED (game not active in this session): " + callback.getMethod()
                             + " (msgId=" + callback.getMessageId() + ", obj=" + callbackObjectId + ")");
                     return;
+                }
+                lastGameEventAt = System.currentTimeMillis();
+                if (callback.getMethod() == ClientCallbackMethod.GAME_OVER
+                        || callback.getMethod() == ClientCallbackMethod.END_GAME_INFO) {
+                    gamesInProgress.remove(callbackObjectId);
                 }
             }
 
@@ -455,15 +884,22 @@ public class ProxyClient implements MageClient, CommandContext {
                         + ", data=" + (data == null ? "null" : data.getClass().getSimpleName()) + ")");
             }
             String eventJson = ev.toString();
+            String supersedeKey = null;
             if (callbackObjectId != null && isGameRelated(callback.getMethod())) {
-                if (callback.getMethod() == ClientCallbackMethod.GAME_INIT || isGameUpdate(callback)) {
-                    latestGameEvents.put(callbackObjectId, eventJson);
-                    pendingPromptEvents.remove(callbackObjectId);
-                } else if (isGamePrompt(callback.getMethod())) {
-                    pendingPromptEvents.put(callbackObjectId, eventJson);
+                ClientCallbackMethod m = callback.getMethod();
+                if (m == ClientCallbackMethod.GAME_INIT || isGameUpdate(callback)) {
+                    replay.onState(callbackObjectId, eventJson, m == ClientCallbackMethod.GAME_INIT);
+                } else if (isGamePrompt(m)) {
+                    replay.onPrompt(callbackObjectId, m.name(), eventJson);
+                } else if (m == ClientCallbackMethod.GAME_OVER || m == ClientCallbackMethod.END_GAME_INFO) {
+                    replay.onGameEnded(callbackObjectId);
+                }
+                if (m == ClientCallbackMethod.GAME_UPDATE) {
+                    // a plain state snapshot: only the latest one matters to a resuming client
+                    supersedeKey = "state:" + callbackObjectId;
                 }
             }
-            broadcastAuthorized(eventJson);
+            broadcastAuthorized(eventJson, supersedeKey);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error processing callback " + callback.getInfo(), ex);
             JsonObject ev = new JsonObject();
@@ -509,20 +945,33 @@ public class ProxyClient implements MageClient, CommandContext {
     /** Reenvía a una conexión recién adjuntada el último estado y prompt pendiente de esa partida. */
     @Override
     public void replayGameState(WebSocket conn, UUID gameId) {
-        String state = latestGameEvents.get(gameId);
-        if (state != null) {
-            gateway.send(conn, state);
-        }
-        String prompt = pendingPromptEvents.get(gameId);
-        if (prompt != null) {
-            gateway.send(conn, prompt);
+        for (String json : replay.replay(gameId)) {
+            gateway.send(conn, json);
         }
     }
 
     // ============================ lobby polling ============================
 
+    /**
+     * A game in progress (played or watched, with recent activity) hides the lobby: it is then
+     * polled every {@link #LOBBY_IN_GAME_INTERVAL_MS} instead of every tick, which saves three
+     * server calls and ~50 KB per tick on a busy server while the player is in a game.
+     */
+    boolean lobbyDue(long now) {
+        return lobbyDue(gamesInProgress.size(), lastGameEventAt, lastLobbyPublishAt, now);
+    }
+
+    static boolean lobbyDue(int gamesInProgress, long lastGameEventAt, long lastPublishAt, long now) {
+        boolean inGame = gamesInProgress > 0 && now - lastGameEventAt < GAME_IDLE_MS;
+        return !inGame || now - lastPublishAt >= LOBBY_IN_GAME_INTERVAL_MS;
+    }
+
     private void publishLobby() {
         if (!connected) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (!lobbyDue(now)) {
             return;
         }
         try {
@@ -539,8 +988,13 @@ public class ProxyClient implements MageClient, CommandContext {
                     ? roomUsers.iterator().next()
                     : new RoomUsersView(Collections.emptyList(), 0, 0, 0);
             lobby.add("users", JsonParser.parseString(JsonUtil.toJson(usersView)));
-            lobby.add("serverMessages", JsonParser.parseString(JsonUtil.toJson(session.getServerMessages())));
-            broadcastAuthorized(lobby.toString());
+            if (serverMessagesCache == null || now - serverMessagesAt >= SERVER_MESSAGES_INTERVAL_MS) {
+                serverMessagesCache = JsonParser.parseString(JsonUtil.toJson(session.getServerMessages()));
+                serverMessagesAt = now;
+            }
+            lobby.add("serverMessages", serverMessagesCache);
+            broadcastLobby(lobby.toString());
+            lastLobbyPublishAt = now;
             lobbyPublishFailures = 0;
         } catch (Throwable ex) {
             // errores transitorios (p.ej. un reinicio del server) no deben inundar el log:
@@ -581,7 +1035,7 @@ public class ProxyClient implements MageClient, CommandContext {
 
         // auth por conexión: connect/ping son públicos; el resto exige sesión autorizada
         boolean isPublic = "connect".equals(action) || "ping".equals(action);
-        if (!isPublic && !authorized.contains(conn)) {
+        if (!isPublic && !isAuthorized(conn)) {
             gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_NOT_AUTHORIZED, "not connected: send connect first"));
             return;
         }
@@ -605,25 +1059,22 @@ public class ProxyClient implements MageClient, CommandContext {
                     String password = JsonArgs.str(args, "password", config.getPassword());
                     String flagName = JsonArgs.str(args, "flagName", "world.png");
                     int avatarId = JsonArgs.getInt(args, "avatarId", 51);
-                    connect(conn, requestId, host, port, username, password, flagName, avatarId);
+                    connect(conn, requestId, host, port, username, password, flagName, avatarId,
+                            resumeStream(args), resumeSeq(args));
                     break;
                 }
                 case "disconnect": {
-                    synchronized (this) {
-                        if (graceDisconnectTimer != null) {
-                            graceDisconnectTimer.cancel(false);
-                            graceDisconnectTimer = null;
-                        }
-                    }
+                    cancelGraceTimer();
                     simManager.stopSims();
-                    session.connectStop(false, false);
+                    lastConnection = null;
+                    stopSession(false);
                     connected = false;
                     Activity.sessionEnd(activityUser, "disconnect");
                     if (accountKey != null) {
-                        gateway.unregisterSession(accountKey);
+                        gateway.unregisterSession(accountKey, this);
                         accountKey = null;
                     }
-                    authorized.clear();
+                    deauthorize(null);
                     gateway.send(conn, ProxyProtocol.resultJson(action, requestId, true, null, null));
                     break;
                 }
@@ -682,7 +1133,25 @@ public class ProxyClient implements MageClient, CommandContext {
         }
     }
 
-    private synchronized void connect(WebSocket conn, String requestId, String host, int port, String username, String password, String flagName, int avatarId) {
+    static String resumeStream(JsonObject args) {
+        JsonObject resume = args.has("resume") && args.get("resume").isJsonObject() ? args.getAsJsonObject("resume") : null;
+        return resume == null ? null : JsonArgs.str(resume, "streamId", null);
+    }
+
+    static long resumeSeq(JsonObject args) {
+        JsonObject resume = args.has("resume") && args.get("resume").isJsonObject() ? args.getAsJsonObject("resume") : null;
+        if (resume == null || !resume.has("seq") || !resume.get("seq").isJsonPrimitive()) {
+            return -1;
+        }
+        try {
+            return resume.get("seq").getAsLong();
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
+
+    private synchronized void connect(WebSocket conn, String requestId, String host, int port, String username, String password,
+                                      String flagName, int avatarId, String resumeStreamId, long resumeSeq) {
         // mage.remote.Connection.getURI() sustituye "localhost" por la primera IP
         // no-loopback que encuentra enumerando interfaces (Connection.getLocalAddress).
         // Con interfaces bridge/túnel de VMs activas (p.ej. 192.168.97.0) construye un
@@ -691,38 +1160,29 @@ public class ProxyClient implements MageClient, CommandContext {
         // (La misma normalización se aplica en Gateway.handleConnect para que la
         // clave host|username coincida con el accountKey registrado aquí.)
         host = normalizeHost(host);
-        if (graceDisconnectTimer != null) {
-            graceDisconnectTimer.cancel(false);
-            graceDisconnectTimer = null;
-            logger.info("connect: cancelled grace disconnect timer");
-        }
+        cancelGraceTimer();
         // idempotent connect: same user + same server already connected (e.g. several browser
         // tabs re-login after a proxy restart). Restarting the session here would kill the
         // server session and start a reconnect loop (test mode kicks duplicate users on the
         // same host), leaving the WebSocket registry empty and broadcasts at 0 connections.
-        if (connected && isSameSession(host, port, username)) {
+        if ((connected || relinking) && isSameSession(host, port, username)) {
             logger.info("connect: already connected as " + username + " at " + host + ":" + port + " — no session restart");
-            if (conn != null) {
-                authorized.add(conn);
-            }
-            JsonObject data = new JsonObject();
-            data.addProperty("attached", true);
-            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, data));
+            attach(conn, requestId, resumeStreamId, resumeSeq);
             return;
         }
         if (conn != null) {
-            authorized.remove(conn);
+            deauthorize(conn);
         }
         if (connected) {
             // replace the old session instead of rejecting the new client (refresh/reconnect case)
             logger.info("connect: already connected, disconnecting old session first");
             if (accountKey != null) {
-                gateway.unregisterSession(accountKey);
+                gateway.unregisterSession(accountKey, this);
                 accountKey = null;
             }
             simManager.stopSims();
-            authorized.clear();
-            session.connectStop(false, false);
+            deauthorize(null);
+            stopSession(false);
             connected = false;
             try {
                 Thread.sleep(500);
@@ -751,22 +1211,23 @@ public class ProxyClient implements MageClient, CommandContext {
 
         simManager.setServer(host, port);
 
-        boolean ok = session.connectStart(connection);
+        // the same account logging in again through this client (its link was lost): the
+        // restore id lets the server hand it the old session even from another address
+        Connection previous = lastConnection;
+        boolean sameAccount = previous != null && previous.getHost().equalsIgnoreCase(host)
+                && previous.getPort() == port && previous.getUsername().equalsIgnoreCase(username);
+        session.setRestoreSessionId(sameAccount ? lastSessionId : "");
+        resetSessionState();
+        boolean ok;
+        expectDisconnect = true;
+        try {
+            ok = session.connectStart(connection);
+        } finally {
+            expectDisconnect = false;
+        }
         connected = ok;
         logger.info("connectStart=" + ok + " lastError='" + session.getLastError() + "'");
         if (ok) {
-            // new server session => its message ids restart low, so the outdated-guard
-            // would silently drop every UPDATE event of the new session otherwise
-            lastMessages.replaceAll((t, v) -> 0);
-            // new session owns a fresh set of games; events of the previous user's still-running
-            // games (re-sent by the server over the same channel) must be dropped, not forwarded
-            sessionGameIds.clear();
-            latestGameEvents.clear();
-            pendingPromptEvents.clear();
-            // drop callbacks still queued from the previous session instead of replaying them
-            // to the new client (e.g. a WATCHGAME that lagged behind the update flood)
-            callbackExecutor.shutdownNow();
-            callbackExecutor = Executors.newSingleThreadExecutor();
             // a dead lobby timer (e.g. an uncatchable error during a server restart) must be
             // healed on reconnect, or the lobby UI would never receive table broadcasts again
             lobbyTimer.shutdownNow();
@@ -775,14 +1236,19 @@ public class ProxyClient implements MageClient, CommandContext {
             accountKey = host + "|" + username;
             gateway.registerSession(accountKey, this);
             activityUser = username;
+            lastConnection = connection;
+            lastSessionId = session.getSessionId();
+            lastLobbyPublishAt = 0;
+            lastLoginAt = System.currentTimeMillis();
+            lastLoginWasRelink = false;
             Activity.login(username, gateway.ipOf(conn), host, port, true, null, false);
-            if (conn != null) {
-                authorized.add(conn);
-            }
-            JsonObject connectData = new JsonObject();
-            connectData.addProperty("attached", false);
-            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connectData));
+            finishLogin(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connectData(false, false)));
+            simManager.setOwner(accountKey);
+            simManager.restoreSims();
         } else {
+            synchronized (authorized) {
+                loginBacklog = null;
+            }
             // el servidor manda el detalle del fallo por un callback SHOW_USERMESSAGE
             // (llega ~3s después, tras su sleep anti-bruteforce): sondearlo para no
             // responder con un error vacío
@@ -792,23 +1258,47 @@ public class ProxyClient implements MageClient, CommandContext {
             if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ProxyProtocol.ERR_FAILED;
             Activity.login(username, gateway.ipOf(conn), host, port, false, detail, false);
             gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
+            if (lastConnection == null) {
+                // never logged in: stop holding the account's slot for concurrent logins
+                gateway.unregisterSession(host + "|" + username, this);
+            }
         }
     }
 
     public void connect(String host, int port, String username, String password) {
-        connect(null, "", host, port, username, password, "world.png", 51);
+        connect(null, "", host, port, username, password, "world.png", 51, null, -1);
     }
 
-    /** Adjunta una conexión ya autenticada a esta sesión existente (misma cuenta, otra ventana). */
-    public synchronized void attach(WebSocket conn, String requestId) {
-        authorized.add(conn);
-        JsonObject data = new JsonObject();
-        data.addProperty("attached", true);
-        gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, data));
-        JsonObject ev = new JsonObject();
-        ev.addProperty("type", "connected");
-        ev.addProperty("info", "Connected (attached to existing session)");
-        gateway.send(conn, ev.toString());
+    public boolean isRelinking() {
+        return relinking;
+    }
+
+    /**
+     * Attaches an authenticated connection to this live session (same account, another window or
+     * a reload). Runs on the WebSocket selector thread, so it must not take this client's monitor.
+     * A connection that names this session's stream and the last frame it processed gets every
+     * frame it missed, in order ({@code resumed: true}); otherwise it rejoins its game and gets
+     * the latest state and prompt. Done under the broadcast lock, so no frame is lost or doubled
+     * between the replay and the live stream.
+     */
+    public void attach(WebSocket conn, String requestId, String resumeStreamId, long resumeSeq) {
+        synchronized (authorized) {
+            List<String> missed = streamId.equals(resumeStreamId) && resumeSeq >= 0 ? outbound.since(resumeSeq) : null;
+            gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connectData(true, missed != null)));
+            JsonObject ev = new JsonObject();
+            ev.addProperty("type", "connected");
+            ev.addProperty("info", "Connected (attached to existing session)");
+            gateway.send(conn, ev.toString());
+            if (missed != null) {
+                for (String json : missed) {
+                    gateway.send(conn, json);
+                }
+            }
+            if (conn != null) {
+                authorized.add(conn);
+            }
+        }
+        lastLobbyPublishAt = 0;
     }
 
     public boolean isSameSession(String host, int port, String username) {
@@ -823,16 +1313,10 @@ public class ProxyClient implements MageClient, CommandContext {
 
     // ============================ helpers ============================
 
-    private static void sendInfo(WebSocket conn, String message) {
+    private void sendInfo(WebSocket conn, String message) {
         JsonObject ev = new JsonObject();
         ev.addProperty("type", "info");
         ev.addProperty("message", message);
-        gatewaySend(conn, ev.toString());
-    }
-
-    private static void gatewaySend(WebSocket conn, String json) {
-        if (conn != null && conn.isOpen()) {
-            conn.send(json);
-        }
+        gateway.send(conn, ev.toString());
     }
 }

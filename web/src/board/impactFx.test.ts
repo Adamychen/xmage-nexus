@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cardManaColors, clearImpacts, getImpacts, particleVectors, slamSpell, spawnImpact, spellWeight } from './impactFx'
-import { detectAndAnimateTransitions } from './gameTransitionEngine'
+import { clearPendingSlams, detectAndAnimateTransitions } from './gameTransitionEngine'
 import { clearFlights, getActiveFlights } from './flightManager'
 import { clearCardPositionRegistry } from './cardPositionRegistry'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import type { CardView } from '../net/types'
 
 const rect = (left: number, top: number, width = 80, height = 112): DOMRect =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
@@ -104,6 +105,7 @@ describe('transition engine impacts', () => {
     clearImpacts()
     clearFlights()
     clearCardPositionRegistry()
+    clearPendingSlams()
     document.body.innerHTML = `
       <div class="player-zone" data-player-id="p-bob" data-player-name="Bob">
         <div class="creatures-band"><div data-card-id="c-bear"></div><div data-card-id="t-new"></div></div>
@@ -171,6 +173,44 @@ describe('transition engine impacts', () => {
     detectAndAnimateTransitions(prev, next)
     vi.advanceTimersByTime(40)
     expect(getImpacts().map((f) => f.kind)).toContain('token-pop')
+  })
+
+  describe('heavy spell slam waits for the spell to resolve', () => {
+    const titan = makeCard({ id: 's-titan', name: 'Titan', manaValue: 8, rarity: 'MYTHIC', cardTypes: ['CREATURE'], controllerName: 'Bob' })
+    const wrath = makeCard({ id: 's-wrath', name: 'Wrath', manaValue: 7, rarity: 'RARE', cardTypes: ['SORCERY'], controllerName: 'Bob' })
+    const view = (stack: Record<string, CardView>, bob: Partial<Parameters<typeof makePlayer>[0]> = {}, extra: Partial<Parameters<typeof makeGameView>[0]> = {}) =>
+      makeGameView({ players: [makePlayer({ playerId: 'p-bob', name: 'Bob', ...bob })], stack, priorityPlayerName: 'Bob', ...extra })
+    const slams = () => getImpacts().filter((f) => f.kind === 'slam')
+
+    it('does not slam while the spell is on the stack, even once the cast is paid', () => {
+      detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
+      detectAndAnimateTransitions(view({ 's-titan': titan }), view({ 's-titan': titan }, {}, { priorityPlayerName: 'Alice' }))
+      vi.advanceTimersByTime(1000)
+      expect(slams()).toHaveLength(0)
+    })
+
+    it('slams when a permanent spell resolves onto the battlefield', () => {
+      detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
+      detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, { battlefield: { 's-titan': makePermanent({ id: 's-titan', name: 'Titan' }) } }))
+      vi.advanceTimersByTime(400)
+      expect(slams()).toEqual([expect.objectContaining({ weight: 2 })])
+    })
+
+    it('slams when an instant or sorcery resolves to the graveyard', () => {
+      detectAndAnimateTransitions(view({}), view({ 's-wrath': wrath }))
+      detectAndAnimateTransitions(view({ 's-wrath': wrath }), view({}, { graveyard: { 's-wrath': wrath } }))
+      vi.advanceTimersByTime(400)
+      expect(slams()).toHaveLength(1)
+    })
+
+    it('never slams a countered creature or a cast cancelled back to hand', () => {
+      detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
+      detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, { graveyard: { 's-titan': titan } }))
+      detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
+      detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, {}, { myHand: { 's-titan': titan } }))
+      vi.advanceTimersByTime(1000)
+      expect(slams()).toHaveLength(0)
+    })
   })
 
   it('throws sparks when a creature takes damage', () => {
