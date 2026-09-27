@@ -150,8 +150,8 @@ public final class DeckValidation {
         if (requested == null || requested.trim().isEmpty()) {
             return true;
         }
-        String a = foldName(requested);
-        String b = foldName(resolved);
+        String a = foldSplitSeparator(foldName(requested));
+        String b = foldSplitSeparator(foldName(resolved));
         if (a.equals(b)) {
             return true;
         }
@@ -168,6 +168,11 @@ public final class DeckValidation {
             }
         }
         return false;
+    }
+
+    /** "Fire / Ice" (single slash, as some exporters write it) reads as "Fire // Ice". */
+    private static String foldSplitSeparator(String name) {
+        return name.replaceAll("\\s*/{1,2}\\s*", " // ");
     }
 
     /** Minúsculas y sin diacríticos: "Andúril" y "Anduril" son la misma carta. */
@@ -191,6 +196,14 @@ public final class DeckValidation {
      * </pre>
      */
     public static JsonObject validate(DeckCardLists deck) {
+        return validate(deck, java.util.Collections.emptyMap());
+    }
+
+    /**
+     * @param sources raw client printings rewritten by {@link DeckJson} normalization,
+     *                keyed by name|set|number; echoed as {@code sources} on each problem
+     */
+    public static JsonObject validate(DeckCardLists deck, Map<String, java.util.Set<List<String>>> sources) {
         State state = STATE.get();
         boolean ready = state == State.READY && isDatabasePopulated();
         JsonObject report = new JsonObject();
@@ -201,8 +214,8 @@ public final class DeckValidation {
             // dedup por entrada: la misma carta N veces acumula el amount una sola vez
             Map<String, JsonObject> rejections = new LinkedHashMap<>();
             Map<String, JsonObject> swaps = new LinkedHashMap<>();
-            collectProblems(deck.getCards(), rejections, swaps);
-            collectProblems(deck.getSideboard(), rejections, swaps);
+            collectProblems(deck.getCards(), rejections, swaps, sources);
+            collectProblems(deck.getSideboard(), rejections, swaps, sources);
             for (JsonObject problem : rejections.values()) {
                 missing.add(problem);
             }
@@ -219,7 +232,8 @@ public final class DeckValidation {
     }
 
     private static void collectProblems(List<DeckCardInfo> cards, Map<String, JsonObject> rejections,
-                                        Map<String, JsonObject> swaps) {
+                                        Map<String, JsonObject> swaps,
+                                        Map<String, java.util.Set<List<String>>> sources) {
         if (cards == null) {
             return;
         }
@@ -248,6 +262,17 @@ public final class DeckValidation {
                 } else {
                     problem.addProperty("resolvedName", status.resolved.getName());
                     problem.add("suggestions", suggestionsJson(info.getCardName()));
+                }
+                java.util.Set<List<String>> raw = sources.get(key);
+                if (raw != null && !raw.isEmpty()) {
+                    JsonArray arr = new JsonArray();
+                    for (List<String> printing : raw) {
+                        JsonObject src = new JsonObject();
+                        src.addProperty("setCode", printing.get(0));
+                        src.addProperty("cardNumber", printing.get(1));
+                        arr.add(src);
+                    }
+                    problem.add("sources", arr);
                 }
                 target.put(key, problem);
             } else {

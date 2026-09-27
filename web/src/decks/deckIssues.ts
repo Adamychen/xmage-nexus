@@ -1,5 +1,5 @@
 import { validateDeck } from '../net/commands'
-import type { DeckValidationResult } from '../net/types'
+import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
 
 /** Cualquier mazo {name, cards, sideboard} con entradas DeckCard. */
 export interface DeckLike {
@@ -31,8 +31,9 @@ export function deckIssueKey(cardName: string, setCode: string, cardNumber: stri
 /** Set de claves con problemas (rechazadas o cargadas como otra carta). */
 export function issueKeysFromReport(report: DeckValidationResult): Set<string> {
   const keys = new Set<string>()
-  for (const c of report.missing) keys.add(deckIssueKey(c.cardName, c.setCode, c.cardNumber))
-  for (const c of report.mismatches) keys.add(deckIssueKey(c.cardName, c.setCode, c.cardNumber))
+  for (const c of [...report.missing, ...report.mismatches]) {
+    for (const p of issuePrintings(c)) keys.add(deckIssueKey(p.cardName, p.setCode, p.cardNumber))
+  }
   return keys
 }
 
@@ -40,6 +41,32 @@ export interface DeckPrinting {
   cardName: string
   setCode: string
   cardNumber: string
+}
+
+type DeckIssue = DeckMissingCard | DeckMismatchCard
+
+/**
+ * Every deck printing a report entry stands for: the (normalized) printing the
+ * proxy validated plus the raw printings the client actually stored.
+ */
+export function issuePrintings(issue: DeckIssue): DeckPrinting[] {
+  const out: DeckPrinting[] = [{ cardName: issue.cardName, setCode: issue.setCode, cardNumber: issue.cardNumber }]
+  for (const s of issue.sources ?? []) {
+    if (out.some((p) => p.setCode === s.setCode && p.cardNumber === s.cardNumber)) continue
+    out.push({ cardName: issue.cardName, setCode: s.setCode, cardNumber: s.cardNumber })
+  }
+  return out
+}
+
+export interface DeckFix {
+  from: DeckPrinting
+  to: DeckPrinting
+}
+
+/** Fixes that move every deck printing behind `issue` to `to`. */
+export function fixesForIssue(issue: DeckIssue, to: DeckPrinting): DeckFix[] {
+  const target = { cardName: to.cardName, setCode: to.setCode, cardNumber: to.cardNumber }
+  return issuePrintings(issue).map((from) => ({ from, to: target }))
 }
 
 /** Reemplaza la impresión `from` por `to` en main y sideboard (misma cantidad). */
@@ -69,6 +96,22 @@ export function applySuggestion<D extends { cards: DeckPrinting[]; sideboard: De
     }
   }
   return next
+}
+
+/** Applies every `from → to` replacement in order (one-click auto-resolve). */
+export function applySuggestions<D extends { cards: DeckPrinting[]; sideboard: DeckPrinting[] }>(
+  deck: D,
+  fixes: DeckFix[],
+): D {
+  return fixes.reduce((acc, f) => applySuggestion(acc, f.from, f.to), deck)
+}
+
+/** First suggestion of every flagged card that has one (missing + mismatches). */
+export function autoResolveFixes(report: DeckValidationResult): DeckFix[] {
+  return [...report.missing, ...report.mismatches].flatMap((c) => {
+    const s = c.suggestions?.[0]
+    return s ? fixesForIssue(c, s) : []
+  })
 }
 
 /** Índice de la entrada con ese nombre marcada como problemática por el servidor (-1 si no hay). */

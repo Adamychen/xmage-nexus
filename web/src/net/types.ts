@@ -124,16 +124,24 @@ export interface DeckPrintingSuggestion {
   cardNumber: string
 }
 
+/** Raw printing the client sent that the proxy normalized before validating (e.g. PWOE #242s → WOE #242s). */
+export interface DeckPrintingSource {
+  setCode: string
+  cardNumber: string
+}
+
 /** Carta que el servidor rechazará al unirse ("Card not found"). */
 export interface DeckMissingCard extends DeckCardEntry {
   reason: DeckIssueReason
   suggestions?: DeckPrintingSuggestion[]
+  sources?: DeckPrintingSource[]
 }
 
 /** Carta aceptada pero que el servidor carga como OTRA carta (set/número de otra). */
 export interface DeckMismatchCard extends DeckCardEntry {
   resolvedName: string
   suggestions?: DeckPrintingSuggestion[]
+  sources?: DeckPrintingSource[]
 }
 
 /** Informe de validateDeck. ready=false => BD de cartas del proxy no disponible. */

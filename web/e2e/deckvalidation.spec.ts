@@ -75,6 +75,22 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
     })
   })
 
+  test('auto-resolve applies every suggestion and joins', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'requiere una mesa ajena con asiento libre (solo el escenario fake la provee)')
+    await withFakeServer(deckIssuesScenario, async () => {
+      const buffers = await openJoinDialogWithBadDeck(page)
+
+      await expect(page.getByTestId('deck-issues-dialog')).toBeVisible({ timeout: 10_000 })
+      await page.getByTestId('deck-issues-auto-resolve').click()
+      await expect(page.getByTestId('deck-issues-dialog')).toBeHidden({ timeout: 10_000 })
+
+      const joinSent = await waitJoinSent(buffers)
+      const deck = (joinSent.args as { deck?: { cards: Array<{ cardName: string; setCode: string }> } }).deck!
+      expect(deck.cards.some((c) => c.setCode === 'CY')).toBe(false)
+      expect(deck.cards.some((c) => c.setCode === 'PCY' && c.cardName === 'Rhystic Tutor')).toBe(true)
+    })
+  })
+
   test('remove-and-play joins with the fixed deck', async ({ page }) => {
     test.skip(!FAKE_MODE, 'requiere una mesa ajena con asiento libre (solo el escenario fake la provee)')
     await withFakeServer(deckIssuesScenario, async () => {
@@ -147,6 +163,67 @@ test.describe('Deck validation pre-join @deckvalidation', () => {
 
       // el mazo reparado no conserva ninguna entrada CY (el fake solo limpia
       // el informe cuando la CY ha desaparecido del mazo)
+      await expect(banner).not.toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
+    })
+  })
+
+  test('deck builder banner: accept a substitution warning, then auto-resolve the rest', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'the mismatch card is declared by the fake scenario')
+    await withFakeServer(deckIssuesScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill(`1 [CY:77] Rhystic Tutor\n1 [C20:77] Banisher Priest\n20 [LEA:288] Island`)
+      await page.locator('[data-testid="import-submit-btn"]').click()
+
+      const banner = page.getByTestId('builder-server-issues')
+      await expect(banner).toBeVisible({ timeout: 8000 })
+      await expect(banner).toContainText(/Fiend Hunter/)
+      await expect(banner.getByTestId('builder-issue-auto-resolve')).toBeVisible()
+
+      await banner.getByTestId('builder-issue-accept').click()
+      await expect(banner).not.toContainText(/Fiend Hunter/)
+      await expect(banner).toContainText(/Rhystic Tutor/)
+
+      await banner.getByTestId('builder-issue-auto-resolve').click()
+      await expect(banner).not.toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.arena-card-strip[title*="Rhystic Tutor"]')).toHaveCount(1)
+    })
+  })
+
+  test('deck builder banner repairs a promo printing the proxy normalized (PWOE #242s → WOE)', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'the normalized promo is declared by the fake scenario')
+    await withFakeServer(deckIssuesScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+
+      await page.getByRole('button', { name: /Importar Mazo/i }).click()
+      await page.locator('.deck-import-textarea').fill(`1 [PWOE:242s] Agatha's Soul Cauldron\n20 [LEA:288] Island`)
+      await page.locator('[data-testid="import-submit-btn"]').click()
+
+      const banner = page.getByTestId('builder-server-issues')
+      await expect(banner).toBeVisible({ timeout: 8000 })
+      await expect(banner).toContainText(/WOE #242s/)
+      await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(1)
+      await banner.getByTestId('builder-issue-repair').click()
       await expect(banner).not.toBeVisible({ timeout: 8000 })
       await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
     })

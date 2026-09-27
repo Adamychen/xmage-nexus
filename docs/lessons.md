@@ -43,6 +43,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 
 - playit forwards public traffic to `127.0.0.1`, so on the host every tunnel visitor looks like localhost (`ip=127.x.y.z` in `[activity]`): "local only" must mean a port with no tunnel **plus** a LAN CIDR allowlist that rejects loopback (`ops/status/server.mjs` `clientAllowed`), never "allow 127.0.0.1".
 - Parsing the proxy's journal: JUL writes the header (`sept 27, 2026 3:08:13 A. M. Class method`, with U+202F/U+00A0 inside `A. M.` on JDK 17 + es locale) and the `LEVEL: message` line as separate journal entries, and log4j lines from other threads can land between them; match with `\s` and only let a JUL level line consume the header.
+- `validateDeck` reports the printing **after** `DeckJson` normalization (promo `PWOE #242s` → `WOE #242s`, because the `P`-prefixed promo set does not exist in XMage), so the client cannot find its own entry by exact key. Each problem echoes the raw client printings in `sources`; client-side matching/repair must go through `issuePrintings`/`fixesForIssue` (`web/src/decks/deckIssues.ts`), never compare the report key alone.
 
 ## Web client
 

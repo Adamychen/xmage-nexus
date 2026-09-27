@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applySuggestion, deckIssueKey, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
+import { applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
 import type { DeckValidationResult } from '../net/types'
 
 const report: DeckValidationResult = {
@@ -61,6 +61,55 @@ describe('deckIssues helpers', () => {
     expect(next.commanderCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
     expect(next.coverCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
     expect(next.cards[0]).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
+  })
+
+  it('autoResolveFixes takes the first suggestion of every flagged card that has one', () => {
+    const withMismatchSuggestion: DeckValidationResult = {
+      ...report,
+      mismatches: [
+        { ...report.mismatches[0], suggestions: [{ cardName: 'Banisher Priest', setCode: 'M14', cardNumber: '7' }, { cardName: 'Banisher Priest', setCode: 'C20', cardNumber: '1' }] },
+      ],
+    }
+    expect(autoResolveFixes(report)).toEqual([
+      { from: { cardName: 'Rhystic Tutor', setCode: 'CY', cardNumber: '77' }, to: { cardName: 'Rhystic Tutor', setCode: 'PCY', cardNumber: '77' } },
+    ])
+    expect(autoResolveFixes(withMismatchSuggestion).map((f) => f.to.setCode)).toEqual(['PCY', 'M14'])
+  })
+
+  it('applySuggestions applies every fix across main and sideboard', () => {
+    const deck = {
+      name: 't',
+      cards: [
+        { cardName: 'Rhystic Tutor', setCode: 'CY', cardNumber: '77' },
+        { cardName: 'Banisher Priest', setCode: 'C20', cardNumber: '77' },
+      ],
+      sideboard: [{ cardName: 'Rhystic Tutor', setCode: 'CY', cardNumber: '77' }],
+    }
+    const next = applySuggestions(deck, [
+      { from: { cardName: 'Rhystic Tutor', setCode: 'CY', cardNumber: '77' }, to: { cardName: 'Rhystic Tutor', setCode: 'PCY', cardNumber: '77' } },
+      { from: { cardName: 'Banisher Priest', setCode: 'C20', cardNumber: '77' }, to: { cardName: 'Banisher Priest', setCode: 'M14', cardNumber: '7' } },
+    ])
+    expect(next.cards.map((c) => c.setCode)).toEqual(['PCY', 'M14'])
+    expect(next.sideboard[0].setCode).toBe('PCY')
+    expect(applySuggestions(deck, [])).toBe(deck)
+  })
+
+  it('a normalized promo printing still reaches the raw entry stored in the deck', () => {
+    const promo: DeckValidationResult = {
+      ready: true,
+      missing: [{
+        cardName: "Agatha's Soul Cauldron", setCode: 'WOE', cardNumber: '242s', amount: 1, reason: 'OUTDATED_PRINTING',
+        suggestions: [{ cardName: "Agatha's Soul Cauldron", setCode: 'WOE', cardNumber: '242' }],
+        sources: [{ setCode: 'PWOE', cardNumber: '242s' }],
+      }],
+      mismatches: [],
+    }
+    expect(issueKeysFromReport(promo).has("Agatha's Soul Cauldron|PWOE|242s")).toBe(true)
+    expect(issuePrintings(promo.missing[0]).map((p) => p.setCode)).toEqual(['WOE', 'PWOE'])
+    const deck = { name: 't', cards: [{ cardName: "Agatha's Soul Cauldron", setCode: 'PWOE', cardNumber: '242s' }], sideboard: [] }
+    const viaRow = applySuggestions(deck, fixesForIssue(promo.missing[0], promo.missing[0].suggestions![0]))
+    expect(viaRow.cards[0]).toEqual({ cardName: "Agatha's Soul Cauldron", setCode: 'WOE', cardNumber: '242' })
+    expect(applySuggestions(deck, autoResolveFixes(promo)).cards[0].setCode).toBe('WOE')
   })
 
   it('findFlaggedSameName localiza solo entradas marcadas', () => {

@@ -155,9 +155,11 @@ final class GameCommands {
                 return true;
             }
             case "validateDeck": {
-                DeckCardLists deck = args.has("deck") && args.get("deck").isJsonObject()
-                        ? DeckJson.parse(args.getAsJsonObject("deck")) : null;
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, DeckValidation.validate(deck)));
+                JsonObject deckJson = args.has("deck") && args.get("deck").isJsonObject()
+                        ? args.getAsJsonObject("deck") : null;
+                DeckCardLists deck = deckJson != null ? DeckJson.parse(deckJson) : null;
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        DeckValidation.validate(deck, DeckJson.sourcePrintings(deckJson))));
                 return true;
             }
             case "updatePreferences": {

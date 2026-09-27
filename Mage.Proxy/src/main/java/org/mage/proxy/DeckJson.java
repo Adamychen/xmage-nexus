@@ -7,7 +7,12 @@ import mage.cards.decks.DeckCardInfo;
 import mage.cards.decks.DeckCardLists;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Parses a deck from the web client JSON format into the XMage DeckCardLists:
@@ -80,45 +85,87 @@ public final class DeckJson {
             String cardNumber = card.has("cardNumber") ? card.get("cardNumber").getAsString() : "";
             int amount = card.has("amount") ? card.get("amount").getAsInt() : 1;
             if (!cardName.isEmpty()) {
-                String normSet = setCode.trim();
-                String normNum = cardNumber.trim();
-                if (normSet.equalsIgnoreCase("PLST") && normNum.contains("-")) {
-                    String[] parts = normNum.split("-");
-                    String num = parts[parts.length - 1].trim();
-                    String origSet = parts[0].trim();
-                    if (!origSet.isEmpty() && !num.isEmpty()) {
-                        normSet = origSet;
-                        normNum = num.replaceAll("(?i)[p★]$", "");
-                        if (normNum.isEmpty()) normNum = num;
-                    }
-                } else if (normNum.contains("-") && normNum.matches("(?i)^[A-Z0-9]+-\\d+[a-z★*+]*$")) {
-                    String[] parts = normNum.split("-");
-                    String num = parts[parts.length - 1].trim();
-                    if (!num.isEmpty()) normNum = num.replaceAll("(?i)[p★]$", "");
-                } else {
-                    String stripped = normNum.replaceAll("(?i)[p★]$", "");
-                    if (!stripped.equals(normNum) && stripped.matches(".*\\d.*")) normNum = stripped;
-                }
-                if (normSet.length() >= 3 && normSet.charAt(0) == 'P' && !normSet.equalsIgnoreCase("PLST")) {
-                    String base = normSet.substring(1);
-                    if (base.matches("(?i)^[A-Z0-9]{2,4}$")) {
-                        try {
-                            // Solo tratarlo como promo si el ORIGINAL no es un set real
-                            // y el base sí. Nunca decidir por la existencia de la carta
-                            // por nombre: eso mutila sets reales con P (PCY, PRO, PC2...)
-                            // y rompe la validación en bucle (PCY -> CY -> PCY -> ...).
-                            if (mage.cards.Sets.findSet(normSet) == null
-                                    && mage.cards.Sets.findSet(base) != null) {
-                                normSet = base;
-                            }
-                        } catch (Exception ignored) {
-                            // no tocar el set ante errores del índice
-                        }
-                    }
-                }
-                result.add(new DeckCardInfo(cardName, normNum, normSet, amount));
+                String[] printing = normalizePrinting(setCode, cardNumber);
+                result.add(new DeckCardInfo(cardName, printing[1], printing[0], amount));
             }
         }
         return result;
+    }
+
+    /** Normalizes a client printing the way it is sent to the server: {set, number}. */
+    static String[] normalizePrinting(String setCode, String cardNumber) {
+        String normSet = setCode.trim();
+        String normNum = cardNumber.trim();
+        if (normSet.equalsIgnoreCase("PLST") && normNum.contains("-")) {
+            String[] parts = normNum.split("-");
+            String num = parts[parts.length - 1].trim();
+            String origSet = parts[0].trim();
+            if (!origSet.isEmpty() && !num.isEmpty()) {
+                normSet = origSet;
+                normNum = num.replaceAll("(?i)[p★]$", "");
+                if (normNum.isEmpty()) normNum = num;
+            }
+        } else if (normNum.contains("-") && normNum.matches("(?i)^[A-Z0-9]+-\\d+[a-z★*+]*$")) {
+            String[] parts = normNum.split("-");
+            String num = parts[parts.length - 1].trim();
+            if (!num.isEmpty()) normNum = num.replaceAll("(?i)[p★]$", "");
+        } else {
+            String stripped = normNum.replaceAll("(?i)[p★]$", "");
+            if (!stripped.equals(normNum) && stripped.matches(".*\\d.*")) normNum = stripped;
+        }
+        if (normSet.length() >= 3 && normSet.charAt(0) == 'P' && !normSet.equalsIgnoreCase("PLST")) {
+            String base = normSet.substring(1);
+            if (base.matches("(?i)^[A-Z0-9]{2,4}$")) {
+                try {
+                    // Solo tratarlo como promo si el ORIGINAL no es un set real
+                    // y el base sí. Nunca decidir por la existencia de la carta
+                    // por nombre: eso mutila sets reales con P (PCY, PRO, PC2...)
+                    // y rompe la validación en bucle (PCY -> CY -> PCY -> ...).
+                    if (mage.cards.Sets.findSet(normSet) == null
+                            && mage.cards.Sets.findSet(base) != null) {
+                        normSet = base;
+                    }
+                } catch (Exception ignored) {
+                    // no tocar el set ante errores del índice
+                }
+            }
+        }
+        return new String[]{normSet, normNum};
+    }
+
+    /**
+     * Raw printings the client sent that normalization rewrote, keyed by the
+     * normalized entry key (name|set|number) that validation reports. Lets the
+     * client find its own entry (e.g. PWOE #242s is validated as WOE #242s).
+     */
+    public static Map<String, Set<List<String>>> sourcePrintings(JsonObject deckJson) {
+        Map<String, Set<List<String>>> out = new HashMap<>();
+        if (deckJson == null) {
+            return out;
+        }
+        for (String field : new String[]{"cards", "sideboard", "commanders"}) {
+            if (!deckJson.has(field) || !deckJson.get(field).isJsonArray()) {
+                continue;
+            }
+            for (JsonElement element : deckJson.getAsJsonArray(field)) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject card = element.getAsJsonObject();
+                String cardName = card.has("cardName") ? card.get("cardName").getAsString() : "";
+                String setCode = card.has("setCode") ? card.get("setCode").getAsString() : "";
+                String cardNumber = card.has("cardNumber") ? card.get("cardNumber").getAsString() : "";
+                if (cardName.isEmpty()) {
+                    continue;
+                }
+                String[] printing = normalizePrinting(setCode, cardNumber);
+                if (printing[0].equals(setCode) && printing[1].equals(cardNumber)) {
+                    continue;
+                }
+                out.computeIfAbsent(cardName + "|" + printing[0] + "|" + printing[1], k -> new LinkedHashSet<>())
+                        .add(Arrays.asList(setCode, cardNumber));
+            }
+        }
+        return out;
     }
 }

@@ -378,6 +378,11 @@
   right: 6px;
 }
 .builder-server-issues .bsi-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-right: var(--sp-5);
   font-weight: 700;
   margin-bottom: var(--sp-1);
 }

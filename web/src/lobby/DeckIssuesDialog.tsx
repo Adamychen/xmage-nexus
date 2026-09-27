@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { Deck } from './decks'
-import { applySuggestion, fetchDeckIssues } from '../decks/deckIssues'
+import { applySuggestions, autoResolveFixes, fetchDeckIssues, fixesForIssue } from '../decks/deckIssues'
 import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -74,6 +74,8 @@ export default function DeckIssuesDialog() {
   const missing: DeckMissingCard[] = report.missing
   const mismatches: DeckMismatchCard[] = report.mismatches
   const removable = missing.reduce((acc, c) => acc + c.amount, 0)
+  const autoFixes = autoResolveFixes(report)
+  const autoFixable = [...missing, ...mismatches].filter((c) => (c.suggestions?.length ?? 0) > 0).length
 
   const retryWith = (next: Deck) => {
     // resolver la petición original con el resultado de la re-validación
@@ -124,7 +126,7 @@ export default function DeckIssuesDialog() {
                           <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestion(deck, c, s))}>
+                            onClick={() => retryWith(applySuggestions(deck, fixesForIssue(c, s)))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
                           </Button>
                         ))}
@@ -153,7 +155,7 @@ export default function DeckIssuesDialog() {
                           <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestion(deck, c, s))}>
+                            onClick={() => retryWith(applySuggestions(deck, fixesForIssue(c, s)))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
                           </Button>
                         ))}
@@ -170,6 +172,16 @@ export default function DeckIssuesDialog() {
           <Button variant="subtle" type="button" data-testid="deck-issues-cancel" onClick={() => closeRequest(null)}>
             {t('decks', 'issues_cancel')}
           </Button>
+          {autoFixes.length > 0 && (
+            <Button variant="success"
+              type="button"
+              data-testid="deck-issues-auto-resolve"
+              title={t('decks', 'issues_auto_resolve_hint')}
+              onClick={() => retryWith(applySuggestions(deck, autoFixes))}
+            >
+              {t('decks', 'issues_auto_resolve', { count: autoFixable })}
+            </Button>
+          )}
           {missing.length === 0 && mismatches.length > 0 && (
             <Button variant="primary"
               type="button"

@@ -220,6 +220,35 @@ class DeckValidationTest {
                 "PCY #77 existe en la BD: no puede marcarse missing");
     }
 
+    @Test
+    void singleSlashSplitNameIsNotAMismatch() {
+        JsonObject report = DeckValidation.validate(deck(card("Malakir Rebirth / Malakir Mire", "ZNR", "111", 1)));
+        assertEquals(0, report.getAsJsonArray("missing").size());
+        assertEquals(0, report.getAsJsonArray("mismatches").size());
+    }
+
+    @Test
+    void normalizedPromoPrintingEchoesTheClientSource() {
+        JsonObject json = new JsonObject();
+        json.addProperty("name", "promo");
+        JsonArray cards = new JsonArray();
+        cards.add(cardJson("Counterspell", "PLEA", "9999s"));
+        cards.add(cardJson("Counterspell", "ZZZ", "999"));
+        json.add("cards", cards);
+
+        JsonObject report = DeckValidation.validate(DeckJson.parse(json), DeckJson.sourcePrintings(json));
+        JsonArray missing = report.getAsJsonArray("missing");
+        assertEquals(2, missing.size());
+        JsonObject promo = missing.get(0).getAsJsonObject();
+        assertEquals("LEA", promo.get("setCode").getAsString());
+        JsonArray sources = promo.getAsJsonArray("sources");
+        assertNotNull(sources);
+        assertEquals(1, sources.size());
+        assertEquals("PLEA", sources.get(0).getAsJsonObject().get("setCode").getAsString());
+        assertEquals("9999s", sources.get(0).getAsJsonObject().get("cardNumber").getAsString());
+        assertNull(missing.get(1).getAsJsonObject().get("sources"), "untouched printings carry no sources");
+    }
+
     private static JsonObject cardJson(String cardName, String setCode, String cardNumber) {
         JsonObject c = new JsonObject();
         c.addProperty("cardName", cardName);

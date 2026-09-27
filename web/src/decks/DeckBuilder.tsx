@@ -20,7 +20,7 @@ import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
 import { exportTxt } from './parseDck'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { applySuggestion, fetchDeckIssues } from './deckIssues'
+import { applySuggestions, fetchDeckIssues, type DeckFix } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
 import { withCommanderFirst, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
@@ -32,7 +32,7 @@ import { useTranslation } from '../i18n'
 import LanguageSelector from '../i18n/LanguageSelector'
 import { useDeckMetadata } from './useDeckMetadata'
 import { useDeckMutations } from './useDeckMutations'
-import { useDeckValidation, type ServerIssueItem } from './useDeckValidation'
+import { useDeckValidation } from './useDeckValidation'
 import DeckBuilderFooter from './DeckBuilderFooter'
 import DeckServerIssues from './DeckServerIssues'
 import DeckHoverPreview, { type HoverPreview } from './DeckHoverPreview'
@@ -296,9 +296,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     setHoverPreview(null)
   }
 
-  const handleRepairIssue = (from: ServerIssueItem['from'], to: NonNullable<ServerIssueItem['to']>) => {
+  const handleRepairIssue = (fixes: DeckFix[]) => {
     if (!deck) return
-    schedulePersist(applySuggestion(deck, from, to))
+    schedulePersist(applySuggestions(deck, fixes))
   }
 
   // Cover Card Art for Header
