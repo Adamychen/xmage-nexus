@@ -18,6 +18,7 @@ import Icon from '../ui/Icon'
 import { setState, setSwitchedHandKey, useStore } from '../state/store'
 import { groupStackables } from './stackGroups'
 import type { StackGroup } from './stackGroups'
+import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
 import { cardAspectFor } from './compactCard'
 import './BoardZone.css'
@@ -397,22 +398,17 @@ export default function BoardZone({
   const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other')
   const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { busyIds })
 
-  const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
-    const count = group.items.length
-    return (
-      <div
-        key={`sg-${group.key}`}
-        className={`stack-group${group.kind === 'land' ? ' land-group' : ''} stack-group--${group.kind}`}
-        data-stack-name={group.name}
-        data-count={count}
-        {...(group.kind === 'land' ? { 'data-land-name': group.name } : {})}
-        title={`${group.name} (×${count})`}
-      >
-        {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature))}
-        <span className="stack-group-badge land-group-badge">×{count}</span>
-      </div>
-    )
-  }
+  const renderStackGroup = (group: StackGroup, isCreature: boolean) => (
+    <StackPile
+      key={`sg-${group.key}`}
+      className={`stack-group${group.kind === 'land' ? ' land-group' : ''} stack-group--${group.kind}`}
+      name={group.name}
+      count={group.items.length}
+      landName={group.kind === 'land' ? group.name : undefined}
+    >
+      {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature))}
+    </StackPile>
+  )
 
   const handSwitchButton = (
     <button

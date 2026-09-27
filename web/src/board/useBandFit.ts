@@ -97,11 +97,18 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
     ro?.observe(el)
     const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(schedule) : null
     mo?.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+    // A class change (tap, untap) animates margins: the mutation-triggered
+    // measure sees mid-transition widths, so settle again once it ends.
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName.startsWith('margin') || e.propertyName === 'width') schedule()
+    }
+    el.addEventListener('transitionend', onTransitionEnd)
 
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId)
       ro?.disconnect()
       mo?.disconnect()
+      el.removeEventListener('transitionend', onTransitionEnd)
       el.style.removeProperty('--card-w')
       el.removeAttribute('data-band-lines')
     }

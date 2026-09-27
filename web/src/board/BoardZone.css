@@ -321,18 +321,45 @@
   position: relative;
   align-items: center;
   flex-shrink: 0;
-  transition: all 0.25s ease;
 }
 
-.stack-group .card-slot + .card-slot,
-.land-group .card-slot + .card-slot {
+.stack-group .card-slot + .card-slot {
   margin-left: calc(-1 * var(--card-w, 100px) * 0.72);
-  transition: margin 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
 }
 
-.stack-group:hover .card-slot + .card-slot,
-.land-group:hover .card-slot + .card-slot {
-  margin-left: 6px;
+/* Hover fans the pile out as an overlay (StackPile): `left` offsets each card
+   without changing the pile's footprint, so the band never reflows or re-fits. */
+.stack-group > :not(.stack-group-badge) {
+  position: relative;
+  left: 0;
+}
+
+.stack-group > .card-slot {
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              margin 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.18s ease,
+              left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stack-group[data-spread] {
+  z-index: 30;
+}
+
+.stack-group[data-spread] > :not(.stack-group-badge) {
+  left: var(--spread-x, 0px);
+}
+
+.stack-group[data-spread]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--spread-l, 0px);
+  width: var(--spread-w, 100%);
 }
 
 .stack-group-badge,
@@ -355,8 +382,7 @@
   line-height: 1.2;
 }
 
-.stack-group:hover .stack-group-badge,
-.land-group:hover .land-group-badge {
+.stack-group[data-spread] .stack-group-badge {
   opacity: 0;
 }
 
@@ -514,12 +540,8 @@
   .bz-band,
   .pz-band,
   .oz-band,
-  .stack-group,
-  .land-group,
-  .stack-group .card-slot + .card-slot,
-  .land-group .card-slot + .card-slot,
-  .stack-group-badge,
-  .land-group-badge {
+  .stack-group > .card-slot,
+  .stack-group-badge {
     transition: none;
   }
 }
@@ -539,12 +561,8 @@
   margin-left: calc(-1 * var(--card-w) * 0.66);
 }
 
-.board-zone.card-style-compact .stack-group:not(:hover) .card-slot:has(+ .card-slot) :is(.compact-plate, .compact-mana-source) {
+.board-zone.card-style-compact .stack-group:not([data-spread]) .card-slot:has(+ .card-slot) :is(.compact-plate, .compact-mana-source) {
   opacity: 0;
-}
-
-.board-zone.card-style-compact .stack-group:hover .card-slot + .card-slot {
-  margin-left: var(--sp-1h);
 }
 
 /* Tilted tapped permanents (settings → tapped cards "tilted"): 45° instead of
