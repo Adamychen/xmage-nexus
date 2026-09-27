@@ -5,6 +5,7 @@ import AvatarImage from '../lobby/AvatarImage'
 import CountryFlag from '../lobby/CountryFlag'
 import { useTweenNumber } from './useTweenNumber'
 import { dayNightStateOfPlayer } from '../board/dayNight'
+import { useCombatHeld } from '../board/useCombatHeld'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
@@ -250,10 +251,11 @@ export default function PlayerInfoBar({
   const wins = player.wins ?? 0
   const showMatchWins = winsNeeded > 1 || wins > 0
 
-  const life = useTweenNumber(player.life ?? 0)
+  const shownLife = useCombatHeld(player.playerId, player.life ?? 0)
+  const life = useTweenNumber(shownLife)
 
   const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
-  const isDefeated = player.hasLeft === true || player.life <= 0
+  const isDefeated = player.hasLeft === true || shownLife <= 0
   const showTurn = isTurnActive && !isDefeated
 
   const ringInfo = getRingInfo(player)
@@ -314,7 +316,7 @@ export default function PlayerInfoBar({
           </span>
           {player.hasLeft ? (
             <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
-          ) : player.life <= 0 ? (
+          ) : shownLife <= 0 ? (
             <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
           ) : null}
           {showMatchWins && (
@@ -329,9 +331,9 @@ export default function PlayerInfoBar({
         </div>
 
         <div className="player-counters">
-          <span className={`counter life-counter ${player.life <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
+          <span className={`counter life-counter ${shownLife <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
             <span className="counter-icon"><Icon name="heart" size={12} /></span>
-            <span className="life-value" key={player.life}>{life}</span>
+            <span className="life-value" key={shownLife}>{life}</span>
           </span>
 
           {activeCounters.map((c) => {

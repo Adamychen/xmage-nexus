@@ -5,6 +5,7 @@ import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
+import { useCombatHeld } from './useCombatHeld'
 import { fxDuration } from './fx'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
@@ -91,6 +92,7 @@ export default function CardSlot({
   const effectiveId = cardId || (card as any).id
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
   const enteredThisTurn = useStore((s) => (effectiveId ? s.enteredThisTurn[effectiveId] === true : false))
+  const shownDamage = useCombatHeld(effectiveId ? String(effectiveId) : null, (card as PermanentView).damage ?? 0)
 
   const clearPending = useCallback(() => {
     if (pendingTimerRef.current) {
@@ -470,8 +472,8 @@ export default function CardSlot({
         </div>
       )}
 
-      {showDamage && isRealCreature && (perm.damage ?? 0) > 0 && (
-        <div className="damage-badge">{perm.damage}</div>
+      {showDamage && isRealCreature && shownDamage > 0 && (
+        <div className="damage-badge">{shownDamage}</div>
       )}
 
       {enteredThisTurn && <span className="entered-glow" aria-hidden="true" />}

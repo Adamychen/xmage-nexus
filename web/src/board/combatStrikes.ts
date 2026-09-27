@@ -120,15 +120,24 @@ function slotElement(id: string): HTMLElement | null {
 }
 
 const holds = new Map<string, number>()
+const impacts = new Map<string, number>()
 
-export function combatHoldRemaining(id: string | null | undefined): number {
+function remaining(timers: Map<string, number>, id: string | null | undefined): number {
   if (!id) return 0
-  const until = holds.get(id)
+  const until = timers.get(id)
   if (until === undefined) return 0
   const left = until - Date.now()
   if (left > 0) return left
-  holds.delete(id)
+  timers.delete(id)
   return 0
+}
+
+export function combatHoldRemaining(id: string | null | undefined): number {
+  return remaining(holds, id)
+}
+
+export function combatImpactRemaining(id: string | null | undefined): number {
+  return remaining(impacts, id)
 }
 
 export function strikeTargetElement(id: string): HTMLElement | null {
@@ -223,6 +232,22 @@ function holdCombatants(ids: Iterable<string>, ms: number): void {
   for (const id of ids) holds.set(id, until)
 }
 
+function impactSchedule(plans: StrikePlan[], duration: number): Map<string, number> {
+  const gap = fxDuration(STRIKE_GAP_MS)
+  const impactAt = new Map<string, number>()
+  plans.slice(0, MAX_STRIKES).forEach((plan, i) => {
+    const hit = i * gap + Math.round(duration * IMPACT_AT)
+    if (!impactAt.has(plan.targetId)) impactAt.set(plan.targetId, hit)
+    if (!impactAt.has(plan.attackerId)) impactAt.set(plan.attackerId, hit)
+  })
+  return impactAt
+}
+
+function holdUntilImpact(impactAt: Map<string, number>): void {
+  const now = Date.now()
+  impactAt.forEach((ms, id) => impacts.set(id, now + ms))
+}
+
 export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame: GameView | null | undefined): void {
   if (!prevGame || !nextGame) return
   const plans = planDamageStrikes(prevGame, nextGame)
@@ -230,11 +255,13 @@ export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame
   if (plans.length === 0 || !duration) return
   snapshotCombatants(prevGame)
   holdCombatants(combatantIds(prevGame), sequenceMs(plans.length, duration))
+  holdUntilImpact(impactSchedule(plans, duration))
 }
 
 export function clearCombatSnapshots(): void {
   snapshots.clear()
   holds.clear()
+  impacts.clear()
 }
 
 export function strikeVector(from: DOMRect, to: DOMRect): { dx: number; dy: number } {
@@ -327,10 +354,8 @@ export function playDamageStrikes(plans: StrikePlan[], combatants: string[]): St
 
   const gap = fxDuration(STRIKE_GAP_MS)
   const strikes = plans.slice(0, MAX_STRIKES)
+  schedule.impactAt = impactSchedule(strikes, duration)
   strikes.forEach((plan, i) => {
-    const hit = i * gap + Math.round(duration * IMPACT_AT)
-    if (!schedule.impactAt.has(plan.targetId)) schedule.impactAt.set(plan.targetId, hit)
-    if (!schedule.impactAt.has(plan.attackerId)) schedule.impactAt.set(plan.attackerId, hit)
     setTimeout(() => {
       if (!runStrike(plan, duration, standIns)) {
         const el = strikeTargetElement(plan.targetId) ?? standIns.get(plan.targetId)
@@ -341,6 +366,7 @@ export function playDamageStrikes(plans: StrikePlan[], combatants: string[]): St
   })
   schedule.holdMs = sequenceMs(strikes.length, duration)
   holdCombatants(combatants, schedule.holdMs)
+  holdUntilImpact(schedule.impactAt)
   setTimeout(() => standIns.forEach((ghost) => ghost.remove()), schedule.holdMs + 30)
   return schedule
 }

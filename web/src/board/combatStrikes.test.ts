@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearCombatSnapshots,
+  combatImpactRemaining,
   planDamageStrikes,
+  primeCombatHolds,
   playDamageStrikes,
   snapshotCombatants,
   strikeKind,
@@ -164,6 +166,22 @@ describe('strike sequence', () => {
     expect(hits()).toBe(2)
     expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(0)
     expect((document.querySelector('[data-card-id="a1"]') as HTMLElement).style.visibility).toBe('')
+  })
+
+  it('holds each combatant until its own strike lands, before the board re-renders', () => {
+    const groups = [
+      { attackers: ['a1'], blockers: [], defenderId: 'p-opp' },
+      { attackers: ['a2'], blockers: ['b1'], defenderId: 'p-opp' },
+    ]
+    primeCombatHolds(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))
+    expect(combatImpactRemaining('p-opp')).toBe(280)
+    expect(combatImpactRemaining('b1')).toBe(520)
+    expect(combatImpactRemaining('a2')).toBe(520)
+    vi.advanceTimersByTime(300)
+    expect(combatImpactRemaining('p-opp')).toBe(0)
+    expect(combatImpactRemaining('b1')).toBe(220)
+    clearCombatSnapshots()
+    expect(combatImpactRemaining('b1')).toBe(0)
   })
 
   it('declaring attackers alone does not animate or sound a hit', () => {
