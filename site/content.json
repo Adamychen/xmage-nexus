@@ -2,23 +2,24 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.6",
+    "version": "0.3.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.7",
-    "date": "2026-09-24",
-    "tag": "v0.2.7",
+    "version": "0.3.0",
+    "date": "2026-09-27",
+    "tag": "v0.3.0",
     "status": "published",
-    "notes": "v0.2.7: redesigned join-table dialog (pick a deck for the table's format, not an 'active deck') and waiting room, spectator 'Follow game' fix, auto-open the stack when a target is on it, and two CI flake fixes. Web-only: components are reused from v0.2.6.",
+    "notes": "v0.3.0: games survive dropped connections, proxy restarts and server outages; compact Arena-style battlefield cards with a configurable tap style; combat strikes land before life drops; table owners can delete tables from the lobby; blocking rollback vote dialog; Archidekt import and desktop News freeze fixed. Rebuilds the proxy component.",
     "highlights": [
-      "Join table: format hero, visual deck grid with cover art ranked by fit to the table's format (ready / other format / too short), per-format memory of the last deck used; the 'remember as default' toggle is gone and the chosen deck is always the one in play",
-      "Waiting room: format hero, player cards with real avatars and a ready/preparing ring, your deck with art on your seat (click to change), unified status + steps panel, clearer action hierarchy and a fixed Commander pod ring; mobile layout fixed",
-      "Spectator 'Follow game' no longer points to an older finished game of the table (the server rejected it and an error was shown)",
-      "Targeting a spell on the stack (counterspell/Stifle) opens the stack drawer automatically",
-      "CI: fixed flaky game-assist and hand-bar e2e specs"
+      "Games survive every kind of disconnect: a proxy restart keeps the games, a dropped connection has a grace period, the proxy re-logs in by itself after losing the XMage server, and a resumable stream replays exactly the frames a reconnecting tab missed",
+      "Compact Arena-style battlefield cards (art-crop tiles with name, type, P/T and mana pips) and a Tilted 45° tap style, with a {T} marker and compact command-zone tiles",
+      "Combat strikes: attackers lunge one after another and life and damage drop when each strike lands",
+      "Table owners can delete their tables from the lobby; a failed table creation no longer leaves stray tables behind",
+      "Rollback vote dialog listing every player's vote; SIM seats accept rollbacks",
+      "Fixes: Archidekt URL import, desktop About → News freeze, Space passing priority after a click, board scrolling up while playing"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

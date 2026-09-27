@@ -4,6 +4,21 @@
 
 > **Note:** XMage Nexus is an independent modern client interface. The rules engine and card database remain the battle-tested XMage Java server (`Mage.Server`).
 
+<p align="center">
+  <img src="docs/media/mythic-summon.gif" alt="Casting a mythic: the board darkens and the card slams onto the battlefield" width="800">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/combat-strikes.gif" alt="Sequential combat strikes: attackers lunge one after another and life drops on impact"></td>
+    <td width="50%"><img src="docs/media/arena-design.gif" alt="Switching the battlefield from classic cards to compact Arena-style tiles"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Combat strikes</b>: attackers lunge one by one, life drops as each hit lands</td>
+    <td align="center"><b>Compact cards</b>: Arena-style art-crop tiles, one click in Settings → Board</td>
+  </tr>
+</table>
+
 ## Play
 
 | Way | How |
