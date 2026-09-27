@@ -172,7 +172,7 @@ per-connection lock (`Gateway.send`).
 | `createTable` | `{name, gameType, deckType, winsNeeded, playerTypes, password, ...}` | Create a table |
 | `joinTable` | `{roomId, tableId, playerName, playerType, skill, deck, password}` | Join a table |
 | `leaveTable` | `{tableId}` | Leave a table |
-| `removeTable` | `{tableId}` | Remove a table |
+| `removeTable` | `{tableId}` | Remove a table (owner only; a table that no longer exists counts as removed; non-owners get `NOT_AUTHORIZED`) |
 | `startMatch` | `{tableId}` | Start the match |
 | `startTournament` | `{tableId}` | Start the tournament (tournament tables) |
 | `joinTournament` | `{tournamentId}` | Panel-join a started tournament (humans must join or the draft never fires) |

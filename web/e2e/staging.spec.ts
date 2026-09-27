@@ -57,6 +57,34 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
     })
   })
 
+  test('the owner can delete the table from the lobby after leaving the waiting room', async ({ page }) => {
+    const removed: string[] = []
+    const scenario = () => makeBaseScenario({
+      tableId: TABLE_ID,
+      tableName: TABLE_NAME,
+      gameId: 'game-stg-1',
+      gameView: playerGameView,
+      onRequest: (conn, action, args, requestId) => {
+        if (action !== 'removeTable') return false
+        removed.push(String((args as Record<string, unknown>).tableId))
+        conn.ok(requestId, action, {})
+        conn.lobby([])
+        return true
+      },
+    })
+    await withFakeServer(scenario, async () => {
+      await createAndWaitStaging(page)
+      await page.getByTestId('staging-back').click()
+      await expect(page.getByTestId('staging-player-actions')).toBeHidden()
+      await page.getByTestId('btn-remove-table').click()
+      await expect(page.getByTestId('confirm-modal')).toBeVisible()
+      await page.getByTestId('confirm-modal-ok').click()
+      await expect.poll(() => removed).toEqual([TABLE_ID])
+      await expect(page.getByTestId('active-tables-bar')).toBeHidden({ timeout: 15_000 })
+      await expect(page.getByTestId('btn-remove-table')).toHaveCount(0)
+    })
+  })
+
   test('permite alternar entre listo/no listo y abrir selector de cambiar baraja', async ({ page }) => {
     await withFakeServer(stagingScenario, async () => {
       await createAndWaitStaging(page)

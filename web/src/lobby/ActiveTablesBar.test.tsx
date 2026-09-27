@@ -142,4 +142,38 @@ describe('ActiveTablesBar', () => {
     expect(screen.getByText('Alice vs Bob Standard')).toBeTruthy()
     expect(screen.getByText('Alice vs Charlie Pauper')).toBeTruthy()
   })
+
+  it('offers delete only to the owner of a table that has not started', () => {
+    const onRemove = vi.fn()
+    const { container } = render(
+      <ActiveTablesBar
+        tables={[MOCK_WAITING_TABLE, MOCK_DUELING_TABLE]}
+        username="alice"
+        onOpenStaging={vi.fn()}
+        onStart={vi.fn()}
+        onWatch={vi.fn()}
+        onResume={vi.fn()}
+        onRemove={onRemove}
+      />,
+    )
+    const buttons = container.querySelectorAll('[data-testid="btn-remove-table"]')
+    expect(buttons).toHaveLength(1)
+    fireEvent.click(buttons[0])
+    expect(onRemove).toHaveBeenCalledWith(MOCK_WAITING_TABLE)
+  })
+
+  it('hides delete for tables owned by someone else', () => {
+    const { container } = render(
+      <ActiveTablesBar
+        tables={[MOCK_READY_TABLE]}
+        username="Bob"
+        onOpenStaging={vi.fn()}
+        onStart={vi.fn()}
+        onWatch={vi.fn()}
+        onResume={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    )
+    expect(container.querySelector('[data-testid="btn-remove-table"]')).toBeNull()
+  })
 })

@@ -205,6 +205,10 @@ export function translateError(error: string | null | undefined, action?: string
     return str
   }
 
+  if (action === 'removeTable') {
+    if (str === 'NOT_AUTHORIZED' || lower.includes('only the table owner')) return t('errors.remove_table_not_owner')
+    if (str === 'FAILED' || lower === 'failed' || lower === 'command failed') return t('errors.remove_table_failed')
+  }
   if (lower.includes('login fallido') || lower.includes('login failed') || lower.includes('invalid username or password') || lower.includes('can\'t receive server state')) {
     return t('errors.login_failed')
   }

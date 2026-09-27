@@ -709,6 +709,10 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     }
   }
 
+  const discardTable = (tableId: string) => {
+    void cmds.removeTable(tableId)
+  }
+
   const submit = async () => {
     if (!name.trim()) {
       setError(t('errors','create_table_name_required'))
@@ -834,6 +838,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
             }
             if (!botDeck) {
               setError(t('lobby', 'create_err_no_deck'))
+              discardTable(tableId)
               return
             }
           }
@@ -849,6 +854,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
             const code = (joinBot as { errorCode?: string }).errorCode
             const raw = joinBot.error || code || t('errors', 'join_table_failed')
             setError(tError(raw, 'joinTournamentTable', code) ?? raw)
+            discardTable(tableId)
             return
           }
         }
@@ -868,6 +874,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
             const code = (join as { errorCode?: string }).errorCode
             const raw = join.error || code || t('errors','join_table_failed')
             setError(tError(raw, 'joinTournamentTable', code) ?? raw)
+            discardTable(tableId)
             return
           }
         }
@@ -1015,6 +1022,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           const code = (joinBot as { errorCode?: string }).errorCode
           const raw = joinBot.error || code || t('errors', 'join_table_failed')
           setError(tError(raw, 'joinTable', code) ?? raw)
+          discardTable(tableId)
           return
         }
       }
@@ -1035,6 +1043,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
           const code = (join as { errorCode?: string }).errorCode
           const raw = join.error || code || t('errors','join_table_failed')
           setError(tError(raw, 'joinTable', code) ?? raw)
+          discardTable(tableId)
           return
         }
       }

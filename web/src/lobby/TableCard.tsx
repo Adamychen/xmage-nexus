@@ -9,6 +9,7 @@ import { useTranslation, toBcp47Locale } from '../i18n'
 import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable, stateLabel } from './lobbyUtils'
 import Button from '../ui/Button'
+import { tableOwnerName } from './TableFilterBar'
 
 interface Props {
   tTable: TableView
@@ -24,11 +25,12 @@ interface Props {
   onResume: (t: TableView) => void
   onOpenBracket: (t: TableView) => void
   onSelectUser: (u: UsersView) => void
+  onRemove?: (t: TableView) => void
 }
 
 export default function TableCard({
   tTable, users, username, avatarId, stagingTableId, busyTable,
-  onJoinHuman, onJoinAi, onStart, onWatch, onResume, onOpenBracket, onSelectUser,
+  onJoinHuman, onJoinAi, onStart, onWatch, onResume, onOpenBracket, onSelectUser, onRemove,
 }: Props) {
   const { t, lang } = useTranslation()
   const seats = tTable.seats ?? []
@@ -63,6 +65,9 @@ export default function TableCard({
   const mySeat = !!username
     && seats.some((s) => s.playerName?.toLowerCase() === username.toLowerCase())
   const canReenter = isMine || mySeat || stagingTableId === tTable.tableId
+  const ownerName = tableOwnerName(tTable)
+  const canRemove = !!onRemove && !isPlaying && tTable.tableState !== 'FINISHED'
+    && !!ownerName && !!username && ownerName.toLowerCase() === username.toLowerCase()
 
   return (
     <div
@@ -296,6 +301,15 @@ export default function TableCard({
             onClick={() => void onOpenBracket(tTable)}
             data-testid="open-bracket">
             <Icon name="trophy" size={13} /> {t('lobby.view_bracket')}
+          </Button>
+        )}
+        {canRemove && (
+          <Button variant="soft-danger" size="sm" data-testid="remove-table"
+            disabled={busyTable === tTable.tableId}
+            title={t('lobby', 'staging_remove_table')}
+            aria-label={t('lobby', 'staging_remove_table')}
+            onClick={() => onRemove(tTable)}>
+            <Icon name="trash" size={13} /> {t('lobby', 'staging_remove_table')}
           </Button>
         )}
       </div>

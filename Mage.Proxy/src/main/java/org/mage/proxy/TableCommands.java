@@ -64,6 +64,18 @@ final class TableCommands {
                 // access" para usuarios normales, dejando mesas huérfanas
                 UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
                 UUID tableId = JsonArgs.uuid(args, "tableId", null);
+                if (tableId == null) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_INVALID_ARGUMENT, "tableId required"));
+                    return true;
+                }
+                if (!ctx.session().getTable(roomId, tableId).isPresent()) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, null));
+                    return true;
+                }
+                if (!ctx.session().isTableOwner(roomId, tableId)) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_NOT_AUTHORIZED, "Only the table owner can delete this table"));
+                    return true;
+                }
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().removeTable(roomId, tableId), null, null));
                 return true;
             }

@@ -233,10 +233,13 @@ export default function LobbyScreen() {
                 {myActiveTables.length > 0 && (
                   <ActiveTablesBar
                     tables={myActiveTables}
+                    username={conn?.username}
+                    busyTable={busyTable}
                     onOpenStaging={(tableId) => openStagingTable(tableId)}
                     onStart={tableActions.startTable}
                     onWatch={tableActions.watchTable}
                     onResume={tableActions.resumeGame}
+                    onRemove={(t) => void tableActions.removeTable(t)}
                   />
                 )}
 
@@ -257,6 +260,7 @@ export default function LobbyScreen() {
                       onResume={tableActions.resumeGame}
                       onOpenBracket={bracket.openBracket}
                       onSelectUser={setSelectedUser}
+                      onRemove={(t) => void tableActions.removeTable(t)}
                     />
                   ))}
 

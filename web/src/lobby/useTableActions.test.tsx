@@ -4,6 +4,9 @@ import { useTableActions } from './useTableActions'
 import * as cmds from '../net/commands'
 import { getState } from '../state/state'
 import { reset } from '../state/store'
+import { setState } from '../state/state'
+import { confirmDialog } from '../ui/confirmDialog'
+import { t } from '../i18n'
 
 vi.mock('../net/commands', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../net/commands')>()
@@ -14,8 +17,11 @@ vi.mock('../net/commands', async (importOriginal) => {
     startMatch: vi.fn(),
     startTournament: vi.fn(),
     watchTable: vi.fn(),
+    removeTable: vi.fn(),
   }
 })
+
+vi.mock('../ui/confirmDialog', () => ({ confirmDialog: vi.fn() }))
 
 const tourTable = (over: Record<string, unknown> = {}) => ({
   tableId: 't-tourney',
@@ -196,5 +202,45 @@ describe('useTableActions.watchTable', () => {
     })
     expect(getState().watchingTable?.tableId).toBe('t-match')
     expect(getState().phase).toBe('spectating_pending')
+  })
+})
+
+describe('useTableActions.removeTable', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.removeTable).mockReset().mockResolvedValue({ ok: true } as any)
+    vi.mocked(confirmDialog).mockReset().mockResolvedValue(true)
+  })
+
+  it('removes the table after confirmation and clears a matching staging seat', async () => {
+    setState({ stagingTableId: 't-match' })
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    await act(async () => {
+      await result.current.removeTable(matchTable())
+    })
+    expect(confirmDialog).toHaveBeenCalledOnce()
+    expect(cmds.removeTable).toHaveBeenCalledWith('t-match')
+    expect(getState().stagingTableId).toBeNull()
+    expect(getState().error).toBeFalsy()
+  })
+
+  it('does nothing when the confirmation is cancelled', async () => {
+    vi.mocked(confirmDialog).mockResolvedValue(false)
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    await act(async () => {
+      await result.current.removeTable(matchTable())
+    })
+    expect(cmds.removeTable).not.toHaveBeenCalled()
+  })
+
+  it('surfaces a non-owner rejection instead of failing silently', async () => {
+    vi.mocked(cmds.removeTable).mockResolvedValue({
+      ok: false, errorCode: 'NOT_AUTHORIZED', error: 'Only the table owner can delete this table',
+    } as any)
+    const { result } = renderHook(() => useTableActions({ username: 'player1' } as any))
+    await act(async () => {
+      await result.current.removeTable(matchTable())
+    })
+    expect(getState().error).toBe(t('errors.remove_table_not_owner'))
   })
 })

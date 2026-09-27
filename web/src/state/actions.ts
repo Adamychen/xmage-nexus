@@ -153,7 +153,11 @@ export function leaveStagingTable() {
 }
 
 export function removeStagingTable() {
-  return exitStagingVia((tableId) => cmds.removeTable(tableId))
+  return exitStagingVia(async (tableId) => {
+    const res = await cmds.removeTable(tableId)
+    if (!res.ok) setState({ error: translateError(res.error || res.errorCode || 'FAILED', 'removeTable', res.errorCode) })
+    return res
+  })
 }
 
 /** Arranca la partida de la mesa en staging (solo dueño, la UI lo gatea). */

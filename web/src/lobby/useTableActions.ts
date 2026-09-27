@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { setWatchingTable } from '../state/store'
-import { setState } from '../state/state'
+import { exitTableChat, setWatchingTable } from '../state/store'
+import { getState, setState } from '../state/state'
+import { confirmDialog } from '../ui/confirmDialog'
 import type { ConnectionInfo } from '../state/persistence'
 import * as cmds from '../net/commands'
 import type { TableView } from '../net/types'
@@ -247,9 +248,34 @@ export function useTableActions(conn: ConnectionInfo | null) {
     }
   }
 
+  const removeTable = async (t: TableView) => {
+    const confirmed = await confirmDialog(tStatic('lobby', 'staging_remove_table_confirm', { name: t.tableName }), {
+      okLabel: tStatic('lobby', 'staging_remove_table'),
+      danger: true,
+    })
+    if (!confirmed) return
+    setBusyTable(t.tableId)
+    setState({ error: null })
+    setNotice(null)
+    try {
+      const res = await withTimeout(cmds.removeTable(t.tableId), 15000, 'removeTable')
+      if (!res.ok) {
+        setState({ error: translateError(res.error || res.errorCode || 'FAILED', 'removeTable', res.errorCode) })
+      } else if (getState().stagingTableId === t.tableId) {
+        exitTableChat()
+        setState({ stagingTableId: null, stagingIsTournament: false })
+      }
+    } catch (e) {
+      const err = e as Error & { errorCode?: string }
+      setState({ error: translateError(err.message, 'removeTable', err.errorCode) })
+    } finally {
+      setBusyTable(null)
+    }
+  }
+
   return {
     joiningTable, setJoiningTable, joinPassword, setJoinPassword,
     busyTable, notice, setNotice,
-    joinHuman, handleJoinWithDeck, joinAi, startTable, watchTable, resumeGame,
+    joinHuman, handleJoinWithDeck, joinAi, startTable, watchTable, resumeGame, removeTable,
   }
 }

@@ -102,6 +102,36 @@ class TableStagingCommandsTest {
             return answerResult;
         }
 
+        boolean tableExists = true;
+        boolean owner = true;
+        UUID removedTable;
+
+        @Override
+        public java.util.Optional<mage.view.TableView> getTable(UUID roomId, UUID tableId) {
+            return tableExists ? java.util.Optional.of(blankTableView()) : java.util.Optional.empty();
+        }
+
+        private static mage.view.TableView blankTableView() {
+            try {
+                java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                f.setAccessible(true);
+                return (mage.view.TableView) ((sun.misc.Unsafe) f.get(null)).allocateInstance(mage.view.TableView.class);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Override
+        public boolean isTableOwner(UUID roomId, UUID tableId) {
+            return owner;
+        }
+
+        @Override
+        public boolean removeTable(UUID roomId, UUID tableId) {
+            removedTable = tableId;
+            return true;
+        }
+
         @Override
         public java.util.Optional<UUID> getTableChatId(UUID tableId) {
             return TABLE.equals(tableId) ? java.util.Optional.of(CHAT) : java.util.Optional.empty();
@@ -219,6 +249,48 @@ class TableStagingCommandsTest {
         TableCommands.handle("swapSeats", null, "r3",
                 args("{\"tableId\":\"" + TABLE + "\",\"seatNum1\":1,\"seatNum2\":0}"), ctx);
         assertFalse(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void removeTableByOwnerRemovesIt() throws Exception {
+        StubCtx ctx = new StubCtx();
+        boolean routed = TableCommands.handle("removeTable", null, "rt1",
+                args("{\"tableId\":\"" + TABLE + "\"}"), ctx);
+        assertTrue(routed);
+        assertEquals(TABLE, ctx.session.removedTable);
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+    }
+
+    @Test
+    void removeTableByNonOwnerFailsWithoutCallingServer() throws Exception {
+        StubCtx ctx = new StubCtx();
+        ctx.session.owner = false;
+        TableCommands.handle("removeTable", null, "rt2",
+                args("{\"tableId\":\"" + TABLE + "\"}"), ctx);
+        JsonObject res = lastResult(ctx);
+        assertFalse(res.get("ok").getAsBoolean());
+        assertEquals(ProxyProtocol.ERR_NOT_AUTHORIZED, res.get("errorCode").getAsString());
+        assertEquals(null, ctx.session.removedTable);
+    }
+
+    @Test
+    void removeTableThatIsAlreadyGoneSucceeds() throws Exception {
+        StubCtx ctx = new StubCtx();
+        ctx.session.tableExists = false;
+        ctx.session.owner = false;
+        TableCommands.handle("removeTable", null, "rt3",
+                args("{\"tableId\":\"" + TABLE + "\"}"), ctx);
+        assertTrue(lastResult(ctx).get("ok").getAsBoolean());
+        assertEquals(null, ctx.session.removedTable);
+    }
+
+    @Test
+    void removeTableWithoutTableIdFails() throws Exception {
+        StubCtx ctx = new StubCtx();
+        TableCommands.handle("removeTable", null, "rt4", args("{}"), ctx);
+        JsonObject res = lastResult(ctx);
+        assertFalse(res.get("ok").getAsBoolean());
+        assertEquals(ProxyProtocol.ERR_INVALID_ARGUMENT, res.get("errorCode").getAsString());
     }
 
     @Test

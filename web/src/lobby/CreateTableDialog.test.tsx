@@ -28,6 +28,7 @@ vi.mock('../net/commands', () => ({
   ]),
   createTable: vi.fn().mockResolvedValue({ ok: true, data: { tableId: 'table-123' } }),
   joinTable: vi.fn().mockResolvedValue({ ok: true }),
+  removeTable: vi.fn().mockResolvedValue({ ok: true }),
   createTournamentTable: vi.fn().mockResolvedValue({ ok: true, data: { tableId: 'table-t1' } }),
   joinTournamentTable: vi.fn().mockResolvedValue({ ok: true }),
   validateDeck: vi.fn().mockResolvedValue({ ok: true }),
@@ -209,6 +210,23 @@ describe('CreateTableDialog', () => {
       )
       expect(onClose).toHaveBeenCalled()
     })
+  })
+
+  it('deletes the just-created table when joining the own seat fails, so retries leave no stray tables', async () => {
+    vi.mocked(cmds.joinTable).mockResolvedValueOnce({ ok: false, error: 'Invalid deck' } as never)
+    render(<CreateTableDialog onClose={onClose} />)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Broken Deck Duel' } })
+    for (let i = 0; i < 5; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (nextBtn) fireEvent.click(nextBtn)
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Crear Mesa/ }))
+
+    await waitFor(() => {
+      expect(cmds.joinTable).toHaveBeenCalledWith(expect.objectContaining({ tableId: 'table-123' }))
+      expect(cmds.removeTable).toHaveBeenCalledWith('table-123')
+    })
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('U2: blocks Siguiente on General with an empty name', async () => {
