@@ -1119,6 +1119,7 @@ export const ru: TranslationSchema = {
     skip_active_to: 'Skipping to {dest}',
     switch_hand: 'Сменить руку',
     looked_at_window: 'Просмотрено ({name})',
+    revealed_window: 'Открыто ({name})',
     companion_window: 'Компаньон ({name})',
     spectator_game_changed: 'Игра изменилась: за столом началась новая игра.',
     follow_game: 'Следить за игрой',

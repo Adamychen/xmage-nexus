@@ -1122,6 +1122,7 @@ export const ja: TranslationSchema = {
     skip_active_to: 'Skipping to {dest}',
     switch_hand: '手札を切替',
     looked_at_window: '見たカード ({name})',
+    revealed_window: '公開されたカード ({name})',
     companion_window: '相棒 ({name})',
     // TODO bulk: interim English until proper ja translation lands
     spectator_game_changed: 'The game changed: the table has started a new game.',

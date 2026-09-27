@@ -15,6 +15,7 @@ import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTran
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Icon, { type IconName } from '../../ui/Icon'
 import Button from '../../ui/Button'
+import ClaimedInfoCards from './ClaimedInfoCards'
 import './GenericDialog.css'
 
 const GRID_SEARCH_THRESHOLD = 7
@@ -212,6 +213,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
         </div>
       ) : undefined}
     >
+      <ClaimedInfoCards />
       {/* string/integer/multiString: cancel manda sendPlayerBoolean(false), una respuesta de
           tipo incorrecto para estos métodos (CHOICE/AMOUNT/MULTI_AMOUNT esperan string/integer/
           multi-amount) — solo mostrar Cancelar cuando el propio prompt se declaró opcional

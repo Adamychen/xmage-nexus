@@ -1117,6 +1117,7 @@ export const en = {
     skip_active_to: 'Skipping to {dest}',
     switch_hand: 'Switch hand',
     looked_at_window: 'Looked at ({name})',
+    revealed_window: 'Revealed ({name})',
     companion_window: 'Companion ({name})',
     spectator_game_changed: 'The game changed: the table has started a new game.',
     follow_game: 'Follow game',

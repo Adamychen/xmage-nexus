@@ -1122,6 +1122,7 @@ export const zhs: TranslationSchema = {
     skip_active_to: 'Skipping to {dest}',
     switch_hand: '切换手牌',
     looked_at_window: '已查看 ({name})',
+    revealed_window: '已展示 ({name})',
     companion_window: '伙伴 ({name})',
     // TODO bulk: interim English until proper zhs translation lands
     spectator_game_changed: 'The game changed: the table has started a new game.',

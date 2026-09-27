@@ -1119,6 +1119,7 @@ export const es: TranslationSchema = {
     skip_active_to: 'Saltando a {dest}',
     switch_hand: 'Cambiar de mano',
     looked_at_window: 'Miradas ({name})',
+    revealed_window: 'Reveladas ({name})',
     companion_window: 'Compañero ({name})',
     spectator_game_changed: 'La partida cambió: la mesa ha empezado una nueva partida.',
     follow_game: 'Seguir partida',
