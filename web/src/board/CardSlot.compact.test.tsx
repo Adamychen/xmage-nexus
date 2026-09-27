@@ -61,6 +61,32 @@ describe('CardSlot compact tile', () => {
     expect(container.querySelector('[data-testid="compact-mana-source"]')).toBeNull()
   })
 
+  it('marks tapped tiles with the tap symbol', async () => {
+    const { container, rerender } = render(<CardSlot card={perm()} compact />)
+    await act(async () => {})
+    expect(container.querySelector('[data-testid="compact-tap-badge"]')).toBeNull()
+    rerender(<CardSlot card={perm()} compact tapped />)
+    expect(container.querySelector('[data-testid="compact-tap-badge"]')?.getAttribute('title')).toBe(t('game', 'tapped'))
+    rerender(<CardSlot card={perm()} tapped />)
+    expect(container.querySelector('[data-testid="compact-tap-badge"]')).toBeNull()
+  })
+
+  it('does not repeat the loyalty counter next to the loyalty badge', async () => {
+    const walker = perm({
+      name: 'Tibalt, Rakish Instigator',
+      cardTypes: ['PLANESWALKER'],
+      subTypes: ['TIBALT'],
+      rules: [],
+      loyalty: '3',
+      counters: [{ name: 'loyalty', count: 3 }, { name: 'shield', count: 1 }],
+    })
+    const { container } = render(<CardSlot card={walker} compact showCounters />)
+    await act(async () => {})
+    expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
+    const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('title'))
+    expect(badges).toEqual(['shield: 1'])
+  })
+
   it('renders the classic card when compact is off', async () => {
     const { container } = render(<CardSlot card={perm()} />)
     await act(async () => {})

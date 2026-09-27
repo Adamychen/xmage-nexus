@@ -667,6 +667,7 @@ export const pt: TranslationSchema = {
     draw_card: 'Comprar card',
     tap_mana: 'Virar para gerar mana',
     summoning_sickness: 'Enjoo de invocação — não pode atacar nem usar habilidades {T}',
+    tapped: 'Virada',
     hold_priority: 'Manter Prioridade (Ctrl)',
     help_wiki: 'Wiki, Glossário & Ajuda (F1)',
     enter_fullscreen: 'Tela cheia (F11)',

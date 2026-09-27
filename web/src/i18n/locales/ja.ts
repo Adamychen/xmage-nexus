@@ -670,6 +670,7 @@ export const ja: TranslationSchema = {
     draw_card: 'カードを引く',
     tap_mana: 'マナを出す',
     summoning_sickness: '召喚酔い — 攻撃も{T}能力の使用もできない',
+    tapped: 'タップ状態',
     hold_priority: '優先権保持 (Ctrl)',
     help_wiki: 'ルールWiki & ヘルプ (F1)',
     enter_fullscreen: 'フルスクリーン (F11)',

@@ -526,7 +526,8 @@
 
 /* Compact card style: battlefield tiles are landscape art crops (CardSlot `is-compact`). */
 .board-zone.card-style-compact .bz-band,
-.board-zone.card-style-compact .bz-marquee {
+.board-zone.card-style-compact .bz-marquee,
+.board-zone.card-style-compact .bz-commander {
   --card-h-ratio: 0.75;
 }
 

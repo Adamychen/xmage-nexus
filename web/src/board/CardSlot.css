@@ -956,6 +956,29 @@ html.fx-off .entered-glow {
   border: 1px solid var(--veil-5);
 }
 
+.compact-tap-badge {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  display: flex;
+  padding: var(--sp-0h);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.82);
+  box-shadow: 0 1px 4px var(--shade-4);
+  transform: translateX(-50%) rotate(-90deg);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.tap-tilted .compact-tap-badge {
+  transform: translateX(-50%) rotate(-45deg);
+}
+
+.compact-tap-pip {
+  width: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px) !important;
+  height: clamp(11px, calc(var(--card-w, 100px) * 0.12), 18px) !important;
+}
+
 .card-slot.is-compact .pt-badge,
 .card-slot.is-compact .loyalty-badge,
 .card-slot.is-compact .defense-badge {

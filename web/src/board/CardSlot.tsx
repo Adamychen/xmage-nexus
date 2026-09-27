@@ -245,6 +245,14 @@ export default function CardSlot({
   const showPtBadge = showPt && isRealCreature && perm.power != null && perm.toughness != null
   const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
   const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
+  const visibleCounters = compact
+    ? counters.filter((c) => {
+      const n = c.name.toLowerCase()
+      if (n === 'loyalty') return !(isPlaneswalker && loyaltyVal > 0)
+      if (n === 'defense') return !(isBattle && defenseVal > 0)
+      return true
+    })
+    : counters
 
   const handleClick = onClick ? () => {
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
@@ -367,6 +375,11 @@ export default function CardSlot({
               ))}
             </div>
           )}
+          {tapped && (
+            <div className="compact-tap-badge" data-testid="compact-tap-badge" title={t('game', 'tapped')}>
+              <ManaPip symbol="T" size={16} className="compact-tap-pip" />
+            </div>
+          )}
           <div className={`compact-plate${hasCornerStat ? ' has-stat' : ''}`} aria-hidden="true">
             <span className="compact-name">{cardName(card)}</span>
             {tileType && !hasCornerStat && (
@@ -406,9 +419,9 @@ export default function CardSlot({
         </div>
       )}
 
-      {showCounters && counters.length > 0 && (
+      {showCounters && visibleCounters.length > 0 && (
         <div className="card-counters-wrap">
-          {counters.map((c, ci) => {
+          {visibleCounters.map((c, ci) => {
             const n = c.name.toLowerCase()
             let iconElement: React.ReactNode = null
             let customClass = ''

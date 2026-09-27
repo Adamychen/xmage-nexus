@@ -16,6 +16,8 @@ interface CommandZoneProps {
   targetIds?: Set<string>
   helperEmblems?: Record<string, CardView>
   compact?: boolean
+  /** Card style "compact": commanders and emblems render as art-crop tiles like the battlefield. */
+  compactCards?: boolean
 }
 
 interface CommandObject {
@@ -155,6 +157,7 @@ export default function CommandZone({
   targetIds = new Set(),
   helperEmblems,
   compact = false,
+  compactCards = false,
 }: CommandZoneProps) {
   const { t } = useTranslation()
   const hoverHandler = onHover ?? onCardHover
@@ -175,7 +178,7 @@ export default function CommandZone({
   const isMulti = commanders.length > 1
 
   return (
-    <div className={`command-zone ${side} ${isMulti ? 'multi-commander' : ''} ${compact ? 'compact' : ''}`}>
+    <div className={`command-zone ${side} ${isMulti ? 'multi-commander' : ''} ${compact ? 'compact' : ''} ${compactCards ? 'art-tiles' : ''}`}>
       {commanders.map((item) => {
         const isPlayable = playableIds.has(item.id)
         const isTarget = targetIds.has(item.id)
@@ -191,6 +194,7 @@ export default function CommandZone({
               isPlayable={isPlayable}
               isTarget={isTarget}
               className="commander-slot"
+              compact={compactCards}
             />
             {item.isCompanion ? (
               <div className="companion-badge" title={t('board', 'zone_command')}>
@@ -220,6 +224,7 @@ export default function CommandZone({
               onClick={onCardClick ? () => onCardClick(item.id) : undefined}
               onHover={hoverHandler}
               className="emblem-slot"
+              compact={compactCards}
               style={{
                 top: `${ei * 6}px`,
                 left: `${ei * 6}px`,

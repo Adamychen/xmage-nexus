@@ -507,6 +507,7 @@ export default function BoardZone({
             targetIds={targetIds}
             helperEmblems={effectiveControlled ? helperEmblems : undefined}
             compact={compactPod}
+            compactCards={compactCards}
           />
         </div>
       )}

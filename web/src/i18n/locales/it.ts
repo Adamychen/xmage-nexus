@@ -667,6 +667,7 @@ export const it: TranslationSchema = {
     draw_card: 'Pesca carta',
     tap_mana: 'Tappa per mana',
     summoning_sickness: 'Malattia da evocazione — non può attaccare né usare abilità {T}',
+    tapped: 'Tappata',
     hold_priority: 'Tieni Priorità (Ctrl)',
     help_wiki: 'Wiki, Glossario & Aiuto (F1)',
     enter_fullscreen: 'Schermo intero (F11)',

@@ -667,6 +667,7 @@ export const es: TranslationSchema = {
     draw_card: 'Robar carta',
     tap_mana: 'Girar para maná',
     summoning_sickness: 'Enfermedad de invocación — no puede atacar ni usar habilidades {T}',
+    tapped: 'Girada',
     hold_priority: 'Mantener Prioridad (Ctrl)',
     help_wiki: 'Wiki, Glosario y Ayuda (F1)',
     enter_fullscreen: 'Pantalla completa (F11)',

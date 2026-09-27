@@ -665,6 +665,7 @@ export const en = {
     draw_card: 'Draw card',
     tap_mana: 'Tap for mana',
     summoning_sickness: "Summoning sickness — can't attack or use {T} abilities",
+    tapped: 'Tapped',
     hold_priority: 'Hold Priority (Ctrl)',
     help_wiki: 'Wiki, Glossary & Help (F1)',
     enter_fullscreen: 'Fullscreen (F11)',

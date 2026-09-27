@@ -667,6 +667,7 @@ export const fr: TranslationSchema = {
     draw_card: 'Piocher une carte',
     tap_mana: 'Engager pour du mana',
     summoning_sickness: "Maladie d'invocation — ne peut pas attaquer ni utiliser les capacités {T}",
+    tapped: 'Engagée',
     hold_priority: 'Garder la Priorité (Ctrl)',
     help_wiki: 'Wiki, Glossaire & Aide (F1)',
     enter_fullscreen: 'Plein écran (F11)',

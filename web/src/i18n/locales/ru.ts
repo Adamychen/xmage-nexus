@@ -667,6 +667,7 @@ export const ru: TranslationSchema = {
     draw_card: 'Взять карту',
     tap_mana: 'Повернуть для маны',
     summoning_sickness: 'Болезнь вызова — не может атаковать или использовать способности {T}',
+    tapped: 'Повёрнута',
     hold_priority: 'Держать Приоритет (Ctrl)',
     help_wiki: 'Вики, Глоссарий и Помощь (F1)',
     enter_fullscreen: 'Во весь экран (F11)',

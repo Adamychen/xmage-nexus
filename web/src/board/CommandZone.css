@@ -92,11 +92,18 @@
   pointer-events: none;
 }
 
+.command-zone.art-tiles .commander-tax-badge {
+  top: -4px;
+  bottom: auto;
+  left: 18px;
+  right: auto;
+}
+
 /* Emblems Stack */
 .emblems-wrap {
   position: relative;
   width: var(--card-w, 116px);
-  height: calc(var(--card-w, 116px) * 1.4);
+  height: calc(var(--card-w, 116px) * var(--card-h-ratio, 1.4));
   flex-shrink: 0;
 }
 

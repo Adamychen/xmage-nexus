@@ -667,6 +667,7 @@ export const de: TranslationSchema = {
     draw_card: 'Karte ziehen',
     tap_mana: 'Für Mana tappen',
     summoning_sickness: 'Beschwörungskrankheit — kann nicht angreifen oder {T}-Fähigkeiten nutzen',
+    tapped: 'Getappt',
     hold_priority: 'Priorität halten (Strg)',
     help_wiki: 'Wiki, Glossar & Hilfe (F1)',
     enter_fullscreen: 'Vollbild (F11)',

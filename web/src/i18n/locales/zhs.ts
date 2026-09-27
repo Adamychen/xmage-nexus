@@ -670,6 +670,7 @@ export const zhs: TranslationSchema = {
     draw_card: '抓一张牌',
     tap_mana: '横置产生法术力',
     summoning_sickness: '召唤失调 — 不能攻击或使用{T}异能',
+    tapped: '已横置',
     hold_priority: '保留优先权 (Ctrl)',
     help_wiki: '规则百科与帮助 (F1)',
     enter_fullscreen: '全屏模式 (F11)',

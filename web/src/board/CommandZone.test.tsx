@@ -53,6 +53,25 @@ describe('CommandZone', () => {
     }
   })
 
+  it('renders commanders and emblems as compact tiles with the compact card style', () => {
+    const fakePlayer: Partial<PlayerView> = {
+      name: 'Player1',
+      commandList: [
+        { id: 'cmd-1', name: 'Krenko, Mob Boss', manaValue: 4, mageObjectType: 'COMMANDER' } as any,
+        { id: 'emb-1', name: 'Emblem Gideon', mageObjectType: 'EMBLEM' } as any,
+      ],
+    }
+
+    const { container, rerender } = render(<CommandZone player={fakePlayer as PlayerView} side="my" compactCards />)
+    expect(container.querySelector('.command-zone.art-tiles')).not.toBeNull()
+    expect(container.querySelector('[data-card-id="cmd-1"]')?.classList.contains('is-compact')).toBe(true)
+    expect(container.querySelector('[data-card-id="emb-1"]')?.classList.contains('is-compact')).toBe(true)
+
+    rerender(<CommandZone player={fakePlayer as PlayerView} side="my" />)
+    expect(container.querySelector('.command-zone.art-tiles')).toBeNull()
+    expect(container.querySelector('.is-compact')).toBeNull()
+  })
+
   it('renders 2 partner commanders with independent tax badges and click triggers', () => {
     const onCardClick = vi.fn()
     const fakePlayer: Partial<PlayerView> = {
