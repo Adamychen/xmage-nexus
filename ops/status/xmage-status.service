@@ -1,0 +1,24 @@
+[Unit]
+Description=XMage Nexus status dashboard (LAN only, never tunnelled)
+Wants=network-online.target
+After=network-online.target xmage-proxy.service
+
+[Service]
+Type=simple
+User=adam
+WorkingDirectory=/home/adam/xmage-status
+Environment=STATUS_PORT=8790
+Environment=STATUS_BIND=0.0.0.0
+Environment=STATUS_ALLOW=192.168.1.0/24
+Environment=STATUS_DB=/home/adam/xmage-status/data/status.db
+ExecStart=/usr/bin/node --no-warnings /home/adam/xmage-status/server.mjs
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/adam/xmage-status/data
+PrivateTmp=true
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

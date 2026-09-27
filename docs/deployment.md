@@ -27,6 +27,14 @@ TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
 `node scripts/deploy-bundle.mjs`; start scripts live in `scripts/deploy/`
 (`start-proxy.sh` for Linux/macOS, `start-proxy.bat` for Windows).
 
+## Host status dashboard (LAN only)
+
+`ops/status/` is a dependency-free Node service (`xmage-status.service`) that runs next to the proxy on the
+host and serves `http://<host-lan-ip>:8790/`: players online, history/statistics, proxy and playit logs, host
+metrics and restarts, indexed from `journalctl -u xmage-proxy` and `/var/log/playit/playit.log` into SQLite.
+It has no playit tunnel and rejects every non-LAN client, loopback included (playit visitors arrive as `127.x`).
+Deploy/update with `ops/status/deploy.sh` (never restarts the proxy). Details: `ops/status/README.md`.
+
 ## Dashboard (GitHub Pages, zero-build static `site/`)
 
 - `site/content.json` — canonical dashboard copy (project, phases, features, guards). Keep in sync with `ROADMAP.md`.

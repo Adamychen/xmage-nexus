@@ -149,6 +149,14 @@ Emblem cards in Create Table (experimental `.dck` feature of the desktop client;
 
 Since 2026-09-26 a proxy restart no longer ends the games in progress: the proxy does not disconnect its sessions on shutdown, the server sees a lost connection and keeps the tables for 3 minutes, and a re-login through the new proxy restores the game with its pending prompt; the SIM seats of that account are logged in again from the on-disk roster (`--simRoster`) and keep playing (`scripts/verify-reconnect.mjs`, restart and SIM phases). Limit: the players must log in again within those 3 minutes (the web reconnects on its own while the tab is open). Not built: a drain mode (stop accepting new tables, restart when no game is running) or an in-app notice before a restart.
 
+Since 2026-09-27 the host runs `xmage-status` (`ops/status/`, LAN-only on `:8790`, no tunnel): players online, history, statistics, proxy/playit logs, host metrics and restarts, built from the journal and the playit log without touching the proxy. Findings from its first run, still open:
+
+| What | Why |
+|---|---|
+| `ProxyClient.expireGrace()` never emits `session_end` when the XMage link was already down (`!connected && !relinking` returns early) | The session is never released in `Activity`, so `/admin/status` lists that user forever (the dashboard hides users with no window for 15 min) and the session objects may leak until the proxy restarts |
+| 48 `Server error` / `Card not found - <card> - <set> - <number>` on join in three days | Imported decks with printings the server does not know still reach `joinTable`; `DeckValidation` could flag them before the join |
+| Login success is ~34 %: most failures are `User already connected or your IP address changed` retry loops (one user: 172) | The web retries the same name while the old session lives; a clearer message or a back-off would stop the loop |
+
 ### 4.7 Connection resilience follow-ups
 
 The 2026-09-26 freeze/reconnect work is done: short drops, proxy restarts, out-of-order callbacks, the login race, the WebSocket deadlock, the proxy re-logging in by itself after losing the XMage server (`serverLink` banner instead of the login screen), a visible retry of the automatic re-login, the restore id on re-login, the resumable `seq` stream, the prompt cache kept until the answer, SIM seats across restarts, the short grace period for a closed tab (`leaving`, 45 s), the slower lobby poll during a game and the cheaper `recordFrame` (guarded by `scripts/verify-reconnect.mjs`, `OutboundLogTest`, `ReplayCacheTest`, `SimRosterTest`, `ProxyClientStreamTest`, `CallbackSequencerTest`, `GatewayCompressionTest`, `gateway-resilience.test.ts`). What is left:

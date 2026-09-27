@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Nexus Server Status</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M7 20h4l3-9 4 13 3-8h4' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M7 20h4l3-9 4 13 3-8h4"/></svg>
+        <div>
+          <div class="brand-name">XMage Nexus</div>
+          <div class="brand-sub" data-i18n="subtitle">Server status</div>
+        </div>
+      </div>
+      <div class="pills" id="pills"></div>
+      <div class="top-actions">
+        <span class="updated" id="updated"></span>
+        <button class="icon-btn" id="lang-btn" type="button" title="Language">ES</button>
+        <button class="icon-btn" id="theme-btn" type="button" title="Theme" aria-label="Theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+        </button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button role="tab" data-tab="now" data-i18n="tab.now">Now</button>
+      <button role="tab" data-tab="stats" data-i18n="tab.stats">Statistics</button>
+      <button role="tab" data-tab="players" data-i18n="tab.players">Players</button>
+      <button role="tab" data-tab="logs" data-i18n="tab.logs">Logs</button>
+      <button role="tab" data-tab="system" data-i18n="tab.system">System</button>
+    </nav>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main>
+    <section class="view" id="view-now" hidden></section>
+    <section class="view" id="view-stats" hidden></section>
+    <section class="view" id="view-players" hidden></section>
+    <section class="view" id="view-logs" hidden></section>
+    <section class="view" id="view-system" hidden></section>
+  </main>
+
+  <footer class="foot" id="foot"></footer>
+  <div class="tip" id="tip" role="tooltip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
