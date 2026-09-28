@@ -6,7 +6,7 @@ import { useEdhrecSuggestions, SUGGESTIONS_PER_LIST } from './useEdhrecSuggestio
 import { setFloatingCardDragImage } from './arenaDragHelpers'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { toBcp47Locale, useTranslation } from '../i18n'
 import type { TranslationSchema } from '../i18n'
 import './SuggestionsPanel.css'
 
@@ -188,12 +188,19 @@ function ReadyPanel({
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   return (
     <div className="sg-scroll">
       {data.numDecks !== null && (
         <div className="sg-deck-count">
-          {t('decks', 'suggestions_based_on', { count: data.numDecks.toLocaleString(), name: data.commanderName })}
+          {t('decks', 'suggestions_based_on', {
+            // formatted in the language the app is in, not the one the browser happens to report:
+            // `toLocaleString()` with no argument gave a Spanish reader "4.321" in a UI set to
+            // English (and a bare "4321" in some locales), and made this line depend on the host
+            // locale, so the same build rendered differently per machine.
+            count: data.numDecks.toLocaleString(toBcp47Locale(lang)),
+            name: data.commanderName,
+          })}
         </div>
       )}
       {data.lists.map((list) => (
