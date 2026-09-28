@@ -5,7 +5,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { daemon, forkPath, isAlive, log, logError, logFileFor, PORTS, readPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPort, buildServerClasspath } from './lib.mjs'
+import { daemon, forkPath, isAlive, log, logError, logFileFor, PORTS, readPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPort, waitForPortDown, buildServerClasspath } from './lib.mjs'
 
 const arg = process.argv[2] ?? 'status'
 const target = process.argv[3] ?? 'all'
@@ -95,6 +95,28 @@ function stopTargets(list) {
   if (list.includes('server')) stopPid('server')
 }
 
+/**
+ * Waits for the ports of the listed components to stop answering, instead of sleeping a fixed
+ * 1.5 s and hoping. The proxy's shutdown hook walks every session before it releases the port, so
+ * with a few sessions alive the old process still held 8787 when the new one started: the new
+ * WebSocket server failed to bind (`BindException: Address already in use`) but the process stayed
+ * up anyway, answering HTTP and reporting `/ready`, while the WebSocket port belonged to the
+ * process on its way out. Every script then failed in a different, confusing way.
+ */
+async function waitForPortsDown(list) {
+  const ports = []
+  if (list.includes('proxy')) ports.push([PORTS.proxy, 'proxy WebSocket'])
+  if (list.includes('server')) ports.push([PORTS.server, 'servidor XMage'])
+  if (list.includes('vite')) ports.push([PORTS.vite, 'Vite'])
+  for (const [port, label] of ports) {
+    try {
+      await waitForPortDown(port, 60_000)
+    } catch (e) {
+      logError(`${label}: ${e.message} — arranco igualmente`)
+    }
+  }
+}
+
 function status() {
   const rows = []
   for (const name of ['server', 'proxy', 'vite']) {
@@ -157,11 +179,13 @@ async function main() {
     case 'stop':
       stopTargets(targetsOf())
       break
-    case 'restart':
-      stopTargets(targetsOf())
-      await new Promise((r) => setTimeout(r, 1500))
-      await startAll(targetsOf())
+    case 'restart': {
+      const list = targetsOf()
+      stopTargets(list)
+      await waitForPortsDown(list)
+      await startAll(list)
       break
+    }
     case 'status':
       status()
       break

@@ -256,6 +256,11 @@ async function main() {
       } catch { /* noop */ }
     }
     try {
+      await send('disconnect', {}, 5000)
+    } catch {
+      /* noop */
+    }
+    try {
       ws.close()
     } catch { /* noop */ }
   }

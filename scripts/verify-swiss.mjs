@@ -283,6 +283,11 @@ async function main() {
       }
     }
     try {
+      await call('disconnect', {}, 5000)
+    } catch {
+      /* noop */
+    }
+    try {
       ws.close()
     } catch {
       /* noop */

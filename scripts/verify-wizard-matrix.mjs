@@ -70,6 +70,12 @@ async function cleanup() {
       await send('removeTable', { tableId })
     } catch {}
   }
+  // A script that is done should log out: leaving the session to the grace period piles up
+  // live sessions and their SIM seats for every script that runs after this one, and the
+  // server's callback channel degrades until the games stop producing views.
+  try {
+    await send('disconnect', {}, 5000)
+  } catch {}
 }
 
 // A. match duelo 1v1 HUMAN+SIM (buildCreateMatchArgs)

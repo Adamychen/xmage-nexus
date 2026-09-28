@@ -27,6 +27,12 @@
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
+// The engine only pushes a GameView when the board changes, and in a four-player FFA with
+// land-only decks a whole turn cycle can legitimately change nothing. The server's own detector
+// warns about a silent game only after 30 s (`Game frozen in waitResponseOpen for 30 secs`), so a
+// shorter window here flagged healthy games as frozen: measured, the last callback arrived at 7 s
+// and the game resumed at 28 s, plain quiet, not a stall.
+const FROZEN_AFTER_MS = 35000
 const STAMP = Date.now() % 100000
 
 // Mazos todo-Montaña: los SIM llevan el deck de tierras del rec-lib; los
@@ -48,6 +54,10 @@ const HUMAN_DECK = {
 // Resultados por intento: el veredicto final solo cuenta el ÚLTIMO intento.
 let attemptNo = 0
 const checks = []
+// Module scope so the retry loop can report what the sessions received when attempt() throws:
+// its own locals are gone by then, and those events are the only clue about where a game stopped.
+let A = null
+let B = null
 
 function check(name, ok, detail = '') {
   checks.push({ attempt: attemptNo, name, ok, detail })
@@ -65,7 +75,7 @@ function mkConn(name) {
     const ws = new WebSocket(WS_URL)
     const pending = new Map()
     const waiters = []
-    const conn = { ws, name, view: null, gameId: null, maxTurn: 0, lastViewAt: 0, events: [] }
+    const conn = { ws, name, view: null, gameId: null, maxTurn: 0, lastViewAt: 0, lastGameEventAt: 0, events: [], firstEventAt: 0 }
     let rid = 0
 
     conn.call = (action, args, ms = 15000) =>
@@ -165,6 +175,12 @@ function mkConn(name) {
         conn.maxTurn = Math.max(conn.maxTurn, Number(conn.view.turn ?? 0))
         conn.lastViewAt = Date.now()
       }
+      // Liveness, not progress: the engine only pushes a GameView when the board changes, and with
+      // 100-land decks a full four-player turn cycle can change nothing for longer than the freeze
+      // window - the game is passing priority, not stuck. A game that really froze sends nothing at
+      // all, which is what the checks below look for (any callback of this game counts).
+      if (conn.gameId && String(m.objectId ?? '') === conn.gameId) conn.lastGameEventAt = Date.now()
+      if (!conn.firstEventAt) conn.firstEventAt = Date.now()
       if (conn.events.length < 400) conn.events.push({ method: m.method, at: Date.now() })
       autoAnswer(m)
       for (let i = waiters.length - 1; i >= 0; i--) {
@@ -182,8 +198,8 @@ async function attempt() {
   const USER_A = `lvA${STAMP}${attemptNo}`.slice(0, 14)
   const USER_B = `lvB${STAMP}${attemptNo}`.slice(0, 14)
   console.log(`[player-leave] intento ${attemptNo}: conectando a ${WS_URL} como ${USER_A} y ${USER_B}…`)
-  let A = null
-  let B = null
+  A = null
+  B = null
   let tableId = null
   try {
     A = await mkConn(USER_A)
@@ -241,11 +257,16 @@ async function attempt() {
     // B abandona con CONCEDE (in-game): puede caer mientras no tiene prioridad
     // (GameController.sendMessage exige que el jugador tenga la prioridad), así
     // que se reintenta hasta que A lo vea marcado.
+    //
+    // No hay watchdog de "sin vistas" aquí a propósito. El aserto del test es que la partida SIGUE
+    // tras el abandono, no que estuviera animada antes: en una FFA de 4 con mazos de sólo tierras
+    // es normal pasar 20-30 s sin que cambie nada (el propio servidor avisa de un juego silencioso
+    // a los 30 s), y un watchdog aquí solo añadía flake. Si el CONCEDE nunca entra, el fallo se
+    // reporta por su propio aserto, que es el que describe lo que se está probando.
     const leaveAt = Date.now()
-    const concedeDeadline = Date.now() + 45000
+    const concedeDeadline = Date.now() + 60000
     while (Date.now() < concedeDeadline) {
       if (playerBInA()?.hasLeft === true) break
-      if (Date.now() - A.lastViewAt > 20000) throw new Error('partida congelada antes del CONCEDE (sin vistas)')
       await B.call('sendPlayerAction', { gameId: B.gameId, action: 'CONCEDE' }, 5000)
       await sleep(1500)
     }
@@ -254,7 +275,7 @@ async function attempt() {
     // Esperar a que la partida avance de turno en las vistas de A.
     const advanceDeadline = Date.now() + 30000
     while (Date.now() < advanceDeadline && A.maxTurn <= turnAtLeave) {
-      if (Date.now() - A.lastViewAt > 20000) throw new Error('partida congelada tras el CONCEDE (sin vistas)')
+      if (Date.now() - Math.max(A.lastViewAt, A.lastGameEventAt) > FROZEN_AFTER_MS) throw new Error('partida congelada tras el CONCEDE (sin vistas)')
       await sleep(500)
     }
     await sleep(3000)
@@ -314,6 +335,8 @@ async function attempt() {
         /* noop */
       }
     }
+    try { await A?.call('disconnect', {}, 3000) } catch { /* noop */ }
+    try { await B?.call('disconnect', {}, 3000) } catch { /* noop */ }
     A?.close()
     B?.close()
   }
@@ -330,6 +353,14 @@ for (let n = 1; n <= 3; n++) {
     await attempt()
   } catch (e) {
     check('flujo global', false, e.message)
+    // On a failure the events the session did receive are the only clue about where the game
+    // stopped: without them the report is just "no views", which is indistinguishable between a
+    // server that went quiet and a client that stopped answering.
+    for (const [label, c] of [['A', A], ['B', B]]) {
+      if (!c) continue
+      const tail = c.events.slice(-12).map((ev) => `${ev.method}@${Math.round((ev.at - (c.firstEventAt || ev.at)) / 1000)}s`)
+      console.log(`  [intento ${attemptNo}] eventos de ${label} (${c.events.length}): ${tail.join(' ')}`)
+    }
   }
   const thisAttempt = checks.filter((c) => c.attempt === attemptNo)
   lastOk = thisAttempt.length > 0 && thisAttempt.every((c) => c.ok)

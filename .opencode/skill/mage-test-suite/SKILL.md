@@ -1,6 +1,6 @@
 ---
 name: mage-test-suite
-description: Use cuando haya que ejecutar o interpretar la suite de tests del Mage (scripts/test.mjs), decidir qué capas correr tras un cambio, validar criterios de éxito (unit, coverage, typecheck, build, java, self-test, human-test, e2e, i18n) o antes de declarar una tarea "terminada". Keywords: tests, suite, capas, coverage, self-test, human-test, e2e, i18n, mcp, fuzz, validación.
+description: Use cuando haya que ejecutar o interpretar la suite de tests del Mage (scripts/test.mjs), decidir qué capas correr tras un cambio, validar criterios de éxito (unit, coverage, typecheck, build, java, self-test, human-test, verify, verify-restart, fuzz, e2e, i18n) o antes de declarar una tarea "terminada". Keywords: tests, suite, capas, coverage, self-test, human-test, e2e, i18n, mcp, fuzz, validación.
 ---
 
 # Mage.Proxy — Suite de tests
@@ -13,19 +13,25 @@ Código de salida 0 = todo verde. Vía MCP: `mage_run_tests { layers, skip }`.
 | Capa | Comando efectivo | Requiere stack | Criterio |
 | --- | --- | --- | --- |
 | `unit` | `npm --prefix web run test` (vitest) | no | todos los tests pasan (incluye las guardas de contrato) |
-| `coverage` | `npm --prefix web run test:coverage` | no | pasa los thresholds de `web/vitest.config.ts` (lines/functions/statements 70, branches 55) |
+| `coverage` | `npm --prefix web run test:coverage` | no | pasa los thresholds de `web/vitest.config.ts` (líneas/funciones/statements 60, branches 45; el ámbito es net+state+board+cards+feedback, unas 4.950 líneas) |
 | `typecheck` | `npm --prefix web run typecheck` | no | sin errores |
 | `build` | `npm --prefix web run build` | no | build completo (regenera splash-i18n) |
 | `java` | `mvn -f Mage.Proxy/pom.xml test` (con artefactos del fork) | no | tests del proxy pasan |
-| `self-test` | `node scripts/self-test.mjs` (E2E headless WS) | server + proxy | todos PASS, 0 FAIL |
-| `human-test` | `node scripts/human-test.mjs` (jugador humano vs IA) | server + proxy | todos PASS |
+| `self-test` | `node scripts/self-test.mjs` (E2E headless WS) | server + proxy, READY | todos PASS, 0 FAIL |
+| `human-test` | `node scripts/human-test.mjs` (jugador humano vs IA) | server + proxy, READY | todos PASS |
+| `verify` | `node scripts/test.mjs verify` (9 scripts, ~100 s) | server + proxy, READY | los 9 salen con código 0 |
+| `verify-restart` | `node scripts/test.mjs verify-restart` | server + proxy | `verify-reconnect.mjs` 100% (reinicia el proxy: no lo mezcles con otras capas) |
+| `fuzz` | `node scripts/fuzz.mjs [--games=N --concurrency=N]` | server + proxy | 0 anomalías (20 partidas por defecto: nightly) |
 | `e2e` | `npx playwright test` (en web) | solo en real | 0 failed |
 | `i18n` | `node scripts/i18n-coverage.mjs` (894 claves, whitelist) | no | sin claves faltantes ni copias por encima del umbral |
 
+El orquestador espera a `/ready` del proxy antes de las capas con stack, y avisa si el stack
+lleva más de una hora en pie o acumula 20+ sesiones: ahí el canal de callbacks del servidor se
+degrada y `verify`/`self-test` fallan con "sin vistas" (el juego se ve congelado en el turno 2
+porque no llega ninguna vista). Eso no es un fallo de código: reinicia el stack y repite.
+
 Fuera del orquestador (capas del CI en `.github/workflows/web-ci.yml`):
 - MCP: `npm --prefix mcp run typecheck` + `npm --prefix mcp test` (nunca escribe a stdout).
-- Fuzz/soak: `node scripts/fuzz.mjs [--games=N --concurrency=N]` (protocolo/proxy/servidor).
-- Multi-tenant: `node scripts/multi-tenant-test.mjs` (aislamiento de sesiones del proxy).
 - Validadores de generados: `mage_validate_generated` / `npm run gen-*:validate` (skill
   `mage-contract-codegen`).
 

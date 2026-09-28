@@ -349,6 +349,10 @@ async function main() {
         await Promise.race([A.send('removeTable', { tableId }), timeout(10000, 'removeTable')])
       } catch { /* noop */ }
     }
+    // log out before dropping the sockets: otherwise the proxy holds both sessions for the
+    // whole grace period and the next script pays for them
+    try { await Promise.race([A.send('disconnect', {}), timeout(5000, 'disconnect')]) } catch { /* noop */ }
+    try { await Promise.race([B.send('disconnect', {}), timeout(5000, 'disconnect')]) } catch { /* noop */ }
     try { A.ws.close() } catch { /* noop */ }
     try { B.ws.close() } catch { /* noop */ }
   }

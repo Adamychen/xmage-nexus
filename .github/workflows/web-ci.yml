@@ -189,6 +189,8 @@ jobs:
         run: node scripts/dev.mjs start
       - name: Run stack self-tests (headless + human, con stack local)
         run: node scripts/test.mjs self-test human-test
+      - name: Run anti-drift verify suite (multi-tenant, permisos, torneos…)
+        run: node scripts/test.mjs verify
       - name: Stop local stack
         if: always()
         run: node scripts/dev.mjs stop

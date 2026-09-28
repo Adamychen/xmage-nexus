@@ -2,7 +2,8 @@
 // Orquestador de todas las capas de test del Mage.Proxy.
 // Uso: node scripts/test.mjs [layer...] [--skip=unit,typecheck]
 //   (sin argumentos: ejecuta todas las capas en orden)
-// Capas: unit, coverage, typecheck, build, java, self-test, human-test, e2e, i18n
+// Capas: unit, coverage, typecheck, build, java, self-test, human-test, verify,
+//        verify-restart, fuzz, e2e, i18n
 
 import path from 'node:path'
 import fs from 'node:fs'
@@ -10,6 +11,28 @@ import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, wait
 
 const WEB_DIR = path.join(repoRoot, 'web')
 const STACK_HINT = 'el stack no está corriendo — ejecuta primero: node scripts/ctl.mjs start'
+
+/**
+ * Anti-drift scripts against the real stack. Each one drives the real protocol and exits
+ * non-zero on its own failure, but nothing ran them: they were not in any layer, so they only
+ * executed when someone remembered. Ordered cheapest-first so a broken fundamental surfaces
+ * before the long ones.
+ */
+const VERIFY_SCRIPTS = [
+  'multi-tenant-test.mjs',
+  // second, before anything that starts a game: it is the most sensitive to a server that other
+  // scripts have been hammering (it needs a fresh view within its window, and its CONCEDE only
+  // lands when the player has priority), and running it late made it fail three attempts in a row
+  // while passing on its own
+  'verify-player-leave.mjs',
+  'verify-wizard-matrix.mjs',
+  'verify-hand-permission.mjs',
+  'verify-spectator-end.mjs',
+  'verify-range-attack.mjs',
+  'verify-rollback-vote.mjs',
+  'verify-swiss.mjs',
+  'verify-tournament-watch.mjs',
+]
 
 const LAYERS = [
   { name: 'unit', desc: 'vitest run (web)' },
@@ -19,6 +42,9 @@ const LAYERS = [
   { name: 'java', desc: 'mvn -f Mage.Proxy/pom.xml test (con artefactos del fork en ~/.m2)' },
   { name: 'self-test', desc: 'E2E headless (ws://127.0.0.1:8787)' },
   { name: 'human-test', desc: 'E2E jugador humano contra IA (ws://127.0.0.1:8787)' },
+  { name: 'verify', desc: `${VERIFY_SCRIPTS.length} verify/* scripts anti-drift (multi-tenant, permisos, torneos…)` },
+  { name: 'verify-restart', desc: 'verify-reconnect (reinicia el proxy: no lo mezcles con otras capas)' },
+  { name: 'fuzz', desc: 'fuzz.mjs self-play (20 partidas por defecto: nightly, no en cada push)' },
   { name: 'e2e', desc: 'playwright test (web)' },
   { name: 'i18n', desc: 'i18n coverage guard (894 claves, whitelist)' },
 ]
@@ -71,6 +97,78 @@ async function stackUp(port, label) {
   }
 }
 
+/** Una petición al endpoint HTTP del proxy, o null si no contesta. */
+async function proxyHttp(path) {
+  try {
+    const res = await fetch(`http://127.0.0.1:${PORTS.proxyHttp}${path}`, { signal: AbortSignal.timeout(3000) })
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Waits for `/ready`, not just for the port. A proxy that has just started answers on 8787 while
+ * it is still building its card database, and every script then fails with "Proxy is still loading
+ * card data, retry in a few seconds" — a real failure that looks exactly like a broken test.
+ */
+async function waitForReady(timeoutMs = 900_000) {
+  const deadline = Date.now() + timeoutMs
+  let waited = false
+  while (Date.now() < deadline) {
+    const ready = await proxyHttp('/ready')
+    if (ready?.ready === true) {
+      if (waited) log(`proxy READY (cardDb=${ready.cardDb})`)
+      return true
+    }
+    if (!waited) {
+      log(`esperando a que el proxy esté READY (cardDb=${ready?.cardDb ?? 'sin respuesta'})…`)
+      waited = true
+    }
+    await new Promise((r) => setTimeout(r, 3000))
+  }
+  logError('el proxy no llegó a READY en el tiempo esperado')
+  return false
+}
+
+/**
+ * The verify/self-test scripts degrade on a stack that has been up for hours: orphaned sessions
+ * and finished games clog the server's callback channel (`WATCHGAME` never arrives, the game
+ * looks frozen at turn 2 because no view ever comes). It is not a code failure, but it reads
+ * exactly like one, so say it out loud instead of letting the next person debug it.
+ */
+async function warnIfStackStale() {
+  const health = await proxyHttp('/health')
+  if (!health) return
+  const minutes = Math.round((health.uptimeSeconds ?? 0) / 60)
+  const sessions = health.sessions ?? 0
+  if (minutes >= 60 || sessions >= 20) {
+    log(`AVISO: el stack lleva ${minutes} min con ${sessions} sesiones; si las capas verify/self-test`)
+    log('       fallan con "sin vistas" o timeouts, reinícialo antes: node scripts/ctl.mjs restart all')
+  }
+}
+
+/** True when server and proxy answer and the proxy finished building its card database. */
+async function stackReady() {
+  const upServer = await stackUp(PORTS.server, 'servidor')
+  const upProxy = await stackUp(PORTS.proxy, 'proxy')
+  if (!upServer || !upProxy) return false
+  return waitForReady()
+}
+
+/**
+ * Runs one verify script and prints its own last line (they all end with a RESULTADO summary),
+ * so a failure in the middle of the layer is attributable without digging into the log.
+ */
+function runVerifyScript(file) {
+  const started = Date.now()
+  const res = run('node', [`scripts/${file}`], { timeoutMs: 1_200_000, quiet: true })
+  const secs = ((Date.now() - started) / 1000).toFixed(1)
+  const last = `${res.stdout}\n${res.stderr}`.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).pop() ?? ''
+  console.log(`  ${res.code === 0 ? '✓' : '✗'} ${file} (${secs}s) ${last}`)
+  return res
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2))
 
@@ -99,7 +197,6 @@ async function main() {
   const startedAt = Date.now()
   const results = []
   let fails = 0
-  let skips = 0
 
   // warm-up del stack antes de las capas E2E que requieren proxy (self-test/human-test):
   // la PRIMERA partida tras un arranque en frío del servidor puede perder el socket de
@@ -107,6 +204,10 @@ async function main() {
   // descartable la "tripa" fuera de los tests (no afecta al conteo de la suite).
   // En modo fake (e2e) no se necesita el stack, así que se omite el warmup.
   const stackE2eLayers = selected.filter((l) => l === 'self-test' || l === 'human-test')
+  const stackVerifyLayers = selected.filter((l) => l === 'verify' || l === 'verify-restart' || l === 'fuzz')
+  if (stackE2eLayers.length > 0 || stackVerifyLayers.length > 0) {
+    await warnIfStackStale()
+  }
   if (stackE2eLayers.length > 0) {
     const upServer = await stackUp(PORTS.server, 'servidor')
     if (upServer) {
@@ -125,7 +226,6 @@ async function main() {
   for (const name of selected) {
     const layerStart = Date.now()
     let res = null
-    let skipReason = ''
 
     switch (name) {
       case 'unit':
@@ -158,9 +258,7 @@ async function main() {
         }
         break
       case 'self-test': {
-        const upServer = await stackUp(PORTS.server, 'servidor')
-        const upProxy = await stackUp(PORTS.proxy, 'proxy')
-        if (!upServer || !upProxy) {
+        if (!(await stackReady())) {
           res = { code: 1, stdout: '', stderr: STACK_HINT }
         } else {
           res = run('node', ['scripts/self-test.mjs'])
@@ -168,9 +266,7 @@ async function main() {
         break
       }
       case 'human-test': {
-        const upServer = await stackUp(PORTS.server, 'servidor')
-        const upProxy = await stackUp(PORTS.proxy, 'proxy')
-        if (!upServer || !upProxy) {
+        if (!(await stackReady())) {
           res = { code: 1, stdout: '', stderr: STACK_HINT }
         } else {
           res = run('node', ['scripts/human-test.mjs'])
@@ -194,17 +290,45 @@ async function main() {
         res = run(binName('npx'), ['playwright', 'test'], { cwd: WEB_DIR, timeoutMs: 3_600_000 })
         break
       }
+      case 'verify': {
+        if (!(await stackReady())) {
+          res = { code: 1, stdout: '', stderr: STACK_HINT }
+          break
+        }
+        const failed = []
+        for (const file of VERIFY_SCRIPTS) {
+          if (runVerifyScript(file).code !== 0) failed.push(file)
+        }
+        res = failed.length
+          ? { code: 1, stdout: '', stderr: `${failed.length} de ${VERIFY_SCRIPTS.length} verify scripts fallaron: ${failed.join(', ')}` }
+          : { code: 0, stdout: '', stderr: '' }
+        break
+      }
+      case 'verify-restart': {
+        // Reanuda/restaura tras reiniciar el proxy: deja el stack en otro estado y tarda minutos,
+        // así que vive en su propia capa y no se mezcla con self-test/human-test/verify.
+        if (!(await stackReady())) {
+          res = { code: 1, stdout: '', stderr: STACK_HINT }
+          break
+        }
+        res = runVerifyScript('verify-reconnect.mjs')
+        break
+      }
+      case 'fuzz': {
+        if (!(await stackReady())) {
+          res = { code: 1, stdout: '', stderr: STACK_HINT }
+          break
+        }
+        res = run('node', ['scripts/fuzz.mjs'], { timeoutMs: 3_600_000 })
+        break
+      }
       case 'i18n':
         res = run('node', ['scripts/i18n-coverage.mjs'])
         break
     }
 
     const seconds = ((Date.now() - layerStart) / 1000).toFixed(1)
-    if (skipReason) {
-      skips++
-      results.push({ name, status: 'skip' })
-      console.log(`[SKIP] ${name} (${seconds}s) — ${skipReason}`)
-    } else if (res.code === 0) {
+    if (res.code === 0) {
       results.push({ name, status: 'pass' })
       console.log(`[PASS] ${name} (${seconds}s)`)
     } else {
@@ -221,7 +345,7 @@ async function main() {
 
   const total = ((Date.now() - startedAt) / 1000).toFixed(1)
   const pass = results.filter((r) => r.status === 'pass').length
-  log(`RESULTADO: ${pass} pass, ${fails} fail, ${skips} skip (${total}s)`)
+  log(`RESULTADO: ${pass} pass, ${fails} fail (${total}s)`)
   process.exit(fails === 0 ? 0 : 1)
 }
 

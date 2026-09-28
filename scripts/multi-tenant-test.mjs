@@ -101,6 +101,8 @@ async function main() {
   const sa2 = await A.getSessionId()
   check('A sigue viendo su propia sesión', sa2 === sa)
 
+  await A.send('disconnect', {})
+  await B.send('disconnect', {})
   A.close()
   B.close()
 
@@ -116,6 +118,8 @@ async function main() {
   const sc2 = await C2.getSessionId()
   check('C2 se adjunta a la sesión de C1 (mismo sessionId)', !!sc2 && sc1 === sc2, `${sc1} vs ${sc2}`)
 
+  // the second connection of the same account is an attach, so one disconnect covers both
+  await C1.send('disconnect', {})
   C1.close()
   C2.close()
 

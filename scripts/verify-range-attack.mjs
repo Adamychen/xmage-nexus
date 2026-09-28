@@ -331,6 +331,13 @@ async function runPhase({ label, range, attackOption }) {
           /* noop */
         }
       }
+      // log out before dropping the socket: the proxy would otherwise hold the session (and its
+      // SIM seats) for the whole grace period, degrading the server for the next script
+      try {
+        await conn.call('disconnect', {}, 3000)
+      } catch {
+        /* noop */
+      }
       conn.close()
     }
   }

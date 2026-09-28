@@ -286,6 +286,8 @@ async function main() {
         /* noop */
       }
     }
+    try { await P?.call('disconnect', {}, 3000) } catch { /* noop */ }
+    try { await S?.call('disconnect', {}, 3000) } catch { /* noop */ }
     P?.close()
     S?.close()
   }

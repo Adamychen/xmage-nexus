@@ -264,6 +264,8 @@ function integNote(integ) {
   const parts = [];
   if (integ.selfTest) parts.push("self-test:" + integ.selfTest);
   if (integ.humanTest) parts.push("human-test:" + integ.humanTest);
+  if (integ.verify) parts.push("verify:" + integ.verify);
+  if (integ.verifyRestart) parts.push("verify-restart:" + integ.verifyRestart);
   if (integ.e2eReal) parts.push("e2e-real:" + integ.e2eReal);
   return parts.length ? parts.join(" · ") : integ.status;
 }

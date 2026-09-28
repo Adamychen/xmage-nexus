@@ -11,6 +11,9 @@ const TEST_LAYERS = [
   'java',
   'self-test',
   'human-test',
+  'verify',
+  'verify-restart',
+  'fuzz',
   'e2e',
   'i18n',
 ] as const
@@ -46,10 +49,13 @@ function formatRun(prefix: string, res: { code: number; timedOut: boolean; secon
 }
 
 const VALIDATORS = [
-  { name: 'gen-types', script: 'scripts/gen-types.mjs' },
-  { name: 'gen-zod', script: 'scripts/gen-zod.mjs' },
-  { name: 'gen-server-state', script: 'scripts/server-state-schema.mjs' },
-  { name: 'gen-splash-i18n', script: 'scripts/gen-splash-i18n.mjs' },
+  { name: 'gen-types', script: 'scripts/gen-types.mjs', flag: '--validate' },
+  { name: 'gen-zod', script: 'scripts/gen-zod.mjs', flag: '--validate' },
+  { name: 'gen-server-state', script: 'scripts/server-state-schema.mjs', flag: '--validate' },
+  { name: 'gen-splash-i18n', script: 'scripts/gen-splash-i18n.mjs', flag: '--validate' },
+  // the keywords section is generated too, and it was the one generator with no validator wired:
+  // it reports drift with --check instead of --validate
+  { name: 'gen-keywords-i18n', script: 'scripts/gen-keywords-i18n.mjs', flag: '--check' },
 ] as const
 
 export function registerTestTools(server: McpServer): void {
@@ -175,7 +181,7 @@ export function registerTestTools(server: McpServer): void {
       const rows: { name: string; ok: boolean; code: number; seconds: number }[] = []
       const details: string[] = []
       for (const check of VALIDATORS) {
-        const res = await runNode(check.script, ['--validate'], { timeoutMs: 300_000 })
+        const res = await runNode(check.script, [check.flag], { timeoutMs: 300_000 })
         rows.push({ name: check.name, ok: res.code === 0, code: res.code, seconds: res.seconds })
         if (res.code !== 0) {
           details.push(`===== ${check.name} =====\n${truncate(tailLines(`${res.stdout}\n${res.stderr}`, 60), 10_000)}`)

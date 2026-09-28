@@ -13,6 +13,13 @@ const webDir = path.join(repoRoot, "web");
 async function main() {
   const selfTest = run("node", ["scripts/self-test.mjs"], { cwd: repoRoot, timeoutMs: 1_800_000 });
   const humanTest = run("node", ["scripts/human-test.mjs"], { cwd: repoRoot, timeoutMs: 1_800_000 });
+  // the anti-drift scripts, and then the one that restarts the proxy (it must run after the
+  // others: it replaces the process and leaves the stack in a different state)
+  const verify = run("node", ["scripts/test.mjs", "verify"], { cwd: repoRoot, timeoutMs: 2_400_000 });
+  const verifyRestart = run("node", ["scripts/test.mjs", "verify-restart"], {
+    cwd: repoRoot,
+    timeoutMs: 1_800_000,
+  });
   const e2eReal = run(
     "npx",
     [
@@ -39,6 +46,8 @@ async function main() {
     generatedAt: new Date().toISOString(),
     selfTest: selfTest.code === 0 ? "pass" : "fail",
     humanTest: humanTest.code === 0 ? "pass" : "fail",
+    verify: verify.code === 0 ? "pass" : "fail",
+    verifyRestart: verifyRestart.code === 0 ? "pass" : "fail",
     e2eReal: e2eReal.code === 0 ? "pass" : "fail",
   };
   status.status = Object.values(status).includes("fail") ? "fail" : "pass";

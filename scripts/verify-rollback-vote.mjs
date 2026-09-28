@@ -272,6 +272,7 @@ async function simPhase() {
       if (c.gameId) await c.call('sendPlayerAction', { gameId: c.gameId, action: 'CONCEDE' }, 3000).catch(() => {})
     }
     if (tableId && conns[0]) await conns[0].call('removeTable', { tableId }, 5000).catch(() => {})
+    for (const c of conns) await c.call('disconnect', {}, 3000).catch(() => {})
     for (const c of conns) c.close()
   }
 }
@@ -394,6 +395,7 @@ async function main() {
       if (c.gameId) await c.call('sendPlayerAction', { gameId: c.gameId, action: 'CONCEDE' }, 3000).catch(() => {})
     }
     if (tableId && conns[0]) await conns[0].call('removeTable', { tableId }, 5000).catch(() => {})
+    for (const c of conns) await c.call('disconnect', {}, 3000).catch(() => {})
     for (const c of conns) c.close()
   }
   await simPhase()
