@@ -270,9 +270,12 @@ public class Gateway extends WebSocketServer {
             return;
         }
         ProxyClient pc = byConn.get(conn);
-        if (pc != null) {
+        if (pc != null && !pc.isReleased()) {
             pc.onClientMessage(conn, message);
             return;
+        }
+        if (pc != null) {
+            byConn.remove(conn, pc);
         }
         // Pre-auth: solo se acepta `connect` (y `ping`, keep-alive público).
         String action = "";
