@@ -74,6 +74,15 @@
 
   /* ---------------------------- Landing ---------------------------- */
 
+  function playHref(d) {
+    var p = d.project || {};
+    var base = p.playUrl || (d.release && d.release.playUrl) || "";
+    if (!base) return "";
+    var params = p.playParams || "";
+    if (!params) return base;
+    return base + (base.indexOf("?") === -1 ? "?" : "&") + params;
+  }
+
   function renderHero(d, t) {
     var h = t.hero || {};
     setText("hero-eyebrow", h.eyebrow);
@@ -87,7 +96,7 @@
     var secondary = document.getElementById("hero-secondary");
     if (secondary && h.secondaryCta) secondary.textContent = h.secondaryCta;
 
-    var playUrl = (d.project && d.project.playUrl) || rel.playUrl || "";
+    var playUrl = playHref(d);
     var play = document.getElementById("hero-play");
     if (play) {
       if (playUrl) {
@@ -113,6 +122,43 @@
         trust.appendChild(el("li", null, esc(item)));
       });
     }
+  }
+
+  function renderDemoSection(t) {
+    setText("demo-title", t.demoTitle);
+    setText("demo-sub", t.demoSubtitle);
+    var grid = document.getElementById("demo-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    (t.demoSteps || []).forEach(function (step, i) {
+      var card = el("figure", "demo-card");
+      var media = el("div", "demo-media");
+      var pic = el("picture");
+      if (step.gif) {
+        var source = el("source");
+        source.srcset = "./assets/demo/" + step.gif + ".webp";
+        source.type = "image/webp";
+        pic.appendChild(source);
+        var img = el("img");
+        img.src = "./assets/demo/" + step.gif + ".gif";
+        img.alt = step.alt || "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        pic.appendChild(img);
+      }
+      media.appendChild(pic);
+      card.appendChild(media);
+      var cap = el("figcaption");
+      var head = el("h3");
+      var badge = el("span", "demo-step", String(i + 1));
+      badge.setAttribute("aria-hidden", "true");
+      head.appendChild(badge);
+      head.appendChild(document.createTextNode(step.title || ""));
+      cap.appendChild(head);
+      cap.appendChild(el("p", "muted", esc(step.desc || "")));
+      card.appendChild(cap);
+      grid.appendChild(card);
+    });
   }
 
   function renderFeaturesSection(t) {
@@ -148,7 +194,7 @@
     grid.innerHTML = "";
     var rel = d.release || {};
     var os = detectOS();
-    var playUrl = (d.project && d.project.playUrl) || "";
+    var playUrl = playHref(d);
     if (playUrl) {
       var play = el("a", "download-card play");
       play.href = playUrl;
@@ -228,15 +274,16 @@
     var t = D();
 
     setText("skip-link", t.skip);
+    setText("nav-demo", t.nav && t.nav.demo);
     setText("nav-features", t.nav && t.nav.features);
     setText("nav-formats", t.nav && t.nav.formats);
     setText("nav-download", t.nav && t.nav.download);
-    setText("nav-roadmap", t.nav && t.nav.roadmap);
     setText("nav-status", t.nav && t.nav.status);
     setText("nav-cta", t.nav && t.nav.cta);
     setText("lang-toggle", toggleLabel());
 
     renderHero(d, t);
+    renderDemoSection(t);
     renderFeaturesSection(t);
     renderFormatsSection(t);
     renderDownloads(d, t);

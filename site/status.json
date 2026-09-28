@@ -1,28 +1,29 @@
 {
-  "generatedAt": "2026-09-19T09:13:49.095Z",
+  "generatedAt": "2026-09-28T18:27:03.820Z",
   "commit": null,
   "runUrl": null,
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
+    "playParams": "auto=1&server=beta.xmage.today",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.2.0",
-    "date": "2026-09-19",
-    "tag": "v0.2.0",
+    "version": "0.3.0",
+    "date": "2026-09-27",
+    "tag": "v0.3.0",
     "status": "published",
-    "notes": "Segunda build publica: cierre de la fase de gameplay (todas las mecanicas verificadas contra el servidor real), guardas anti-drift en CI, MCP headless para jugar por protocolo y launcher con el pipeline de release restaurado.",
+    "notes": "v0.3.0: games survive dropped connections, proxy restarts and server outages; compact Arena-style battlefield cards with a configurable tap style; combat strikes land before life drops; table owners can delete tables from the lobby; blocking rollback vote dialog; Archidekt import and desktop News freeze fixed. Rebuilds the proxy component.",
     "highlights": [
-      "1v1 y Commander afinados: prompts sin residuos, acuse visual <100 ms, paradas de fase y fin de match verificados en real",
-      "115 frames reales del servidor con invariantes + guardas anti-drift (callbacks, contrato, hints, engine a view)",
-      "MCP headless: crea mesa, juega turnos, paga mana y reconecta por protocolo",
-      "Bo3 con banquillo por UI, reconexion mid-game con resync y torneo Suizo/Eliminacion con cuadro en vivo",
-      "9 idiomas, 160+ estados en la galeria de QA y regresion visual opt-in",
-      "Launcher de escritorio (Tauri, Windows/macOS/Linux) con servidor + proxy + JRE en el primer arranque y updater firmado"
+      "Games survive every kind of disconnect: a proxy restart keeps the games, a dropped connection has a grace period, the proxy re-logs in by itself after losing the XMage server, and a resumable stream replays exactly the frames a reconnecting tab missed",
+      "Compact Arena-style battlefield cards (art-crop tiles with name, type, P/T and mana pips) and a Tilted 45° tap style, with a {T} marker and compact command-zone tiles",
+      "Combat strikes: attackers lunge one after another and life and damage drop when each strike lands",
+      "Table owners can delete their tables from the lobby; a failed table creation no longer leaves stray tables behind",
+      "Rollback vote dialog listing every player's vote; SIM seats accept rollbacks",
+      "Fixes: Archidekt URL import, desktop About → News freeze, Space passing priority after a click, board scrolling up while playing"
     ],
     "downloads": [
       {
@@ -56,6 +57,7 @@
       "es": {
         "skip": "Saltar al contenido",
         "nav": {
+          "demo": "Cómo jugar",
           "features": "Features",
           "formats": "Formatos",
           "download": "Descarga",
@@ -70,7 +72,7 @@
           "primaryCta": "Descargar para",
           "secondaryCta": "Ver en GitHub",
           "playCta": "Probar ahora",
-          "playNote": "Demo en vivo en tu navegador · servidor comunitario beta.xmage.today",
+          "playNote": "Demo en vivo · entras como invitado al servidor comunitario beta.xmage.today · sin instalar nada",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",
@@ -78,6 +80,28 @@
             "Web o escritorio"
           ]
         },
+        "demoTitle": "Así se juega",
+        "demoSubtitle": "Sin descargas ni cuentas: abre la web y en segundos estás en una mesa. Clips de partidas reales sobre el motor de XMage.",
+        "demoSteps": [
+          {
+            "title": "Entra sin instalar nada",
+            "desc": "Elige servidor, pon tu nombre y crea una mesa contra la IA o contra otros jugadores. Todo en el navegador.",
+            "gif": "login-and-create-table",
+            "alt": "Lobby de XMage Nexus creando una mesa"
+          },
+          {
+            "title": "Lanza hechizos con reglas completas",
+            "desc": "Maná, targeting visual, X-costs y elecciones modales: el motor de XMage valida cada jugada.",
+            "gif": "cast-spell",
+            "alt": "Lanzamiento de un hechizo con pago de maná y targeting"
+          },
+          {
+            "title": "Combate con impacto",
+            "desc": "Declara atacantes y bloqueadores: los golpes aterrizan en orden con VFX, sonido y vidas bajando.",
+            "gif": "combat",
+            "alt": "Combate con atacantes y bloqueadores"
+          }
+        ],
         "featuresTitle": "Todo lo que esperas de un cliente moderno",
         "featuresSubtitle": "Experiencia moderna y pulida sobre las reglas de XMage.",
         "features": [
@@ -155,6 +179,7 @@
       "en": {
         "skip": "Skip to content",
         "nav": {
+          "demo": "How to play",
           "features": "Features",
           "formats": "Formats",
           "download": "Download",
@@ -169,7 +194,7 @@
           "primaryCta": "Download for",
           "secondaryCta": "View on GitHub",
           "playCta": "Play now",
-          "playNote": "Live demo in your browser · community server beta.xmage.today",
+          "playNote": "Live demo · you join as a guest on the community server beta.xmage.today · no install",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",
@@ -177,6 +202,28 @@
             "Web or desktop"
           ]
         },
+        "demoTitle": "See it in action",
+        "demoSubtitle": "No downloads, no account: open the page and you're at a table in seconds. Real gameplay clips on the XMage engine.",
+        "demoSteps": [
+          {
+            "title": "Join without installing",
+            "desc": "Pick a server, type a name and create a table against the AI or other players. All in your browser.",
+            "gif": "login-and-create-table",
+            "alt": "XMage Nexus lobby creating a table"
+          },
+          {
+            "title": "Cast spells with full rules",
+            "desc": "Mana, visual targeting, X-costs and modal choices: the XMage engine validates every play.",
+            "gif": "cast-spell",
+            "alt": "Casting a spell with mana payment and targeting"
+          },
+          {
+            "title": "Combat with impact",
+            "desc": "Declare attackers and blockers: strikes land in order with VFX, sound and lives ticking down.",
+            "gif": "combat",
+            "alt": "Combat with attackers and blockers"
+          }
+        ],
         "featuresTitle": "Everything you expect from a modern client",
         "featuresSubtitle": "A polished, modern experience on XMage's rules.",
         "features": [
@@ -287,11 +334,7 @@
     {
       "name": "proxy",
       "label": "Proxy (java)",
-      "status": "pass",
-      "total": 89,
-      "passed": 89,
-      "failed": 0,
-      "durationMs": null
+      "status": "pending"
     },
     {
       "name": "integration",
@@ -301,10 +344,10 @@
     }
   ],
   "coverage": {
-    "lines": 83.23,
-    "functions": 71.87,
-    "branches": 70.52,
-    "statements": 81.8
+    "lines": 85.35,
+    "functions": 80.08,
+    "branches": 74.95,
+    "statements": 82.97
   },
   "coverageThresholds": {
     "lines": 70,
@@ -346,7 +389,7 @@
       "name": "Visual Polish, Audio & Deck Builder",
       "status": "done",
       "date": "2026-09-03",
-      "desc": "Web Audio engine (15 sfx, 3 buses), VFX (donut color pie, bars, shake), in-app deck builder (Scryfall full syntax t:creature c:red cmc<=3 o:haste, help, 9-lang, curve+donut, vertical CMC sort, plain/dck/arena export+clipboard, file drag-drop, goldfish T1-3) — customization playmats/sleeves tracked as Phase 3.1 stretch."
+      "desc": "Web Audio engine (22 sfx, 4 buses incl. adaptive generative music), VFX (donut color pie, bars, shake, spell-weight slam, hit sparks, destroy/exile/token deaths, low-life vignette, foil + 3D-tilt preview, cinematic end screen with match stats), selectable playmats (7 static + 2 animated, one tinted by colour identity), in-app deck builder (Scryfall full syntax t:creature c:red cmc<=3 o:haste, help, 9-lang, curve+donut, vertical CMC sort, plain/dck/arena export+clipboard, file drag-drop, goldfish T1-3)."
     },
     {
       "id": 4,
@@ -429,7 +472,7 @@
     },
     {
       "category": "Deck Management",
-      "feature": "Text / Arena / Standard Import & Export",
+      "feature": "Text / Arena / Standard Import & Export (import wizard: format detection, bulk printing resolution, legality review)",
       "official": "yes",
       "nexus": "yes",
       "phase": "Completed"

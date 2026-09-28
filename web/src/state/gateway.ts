@@ -207,6 +207,10 @@ export function getGateway(): Gateway | null {
   return gateway
 }
 
+export function proxyUrl(wsHost: string, proxyPort: number): string {
+  return wsHost.includes('://') ? wsHost : `ws://${wsHost}:${proxyPort}`
+}
+
 export function doConnect(
   wsHost: string,
   proxyPort: number,
@@ -252,7 +256,7 @@ async function runConnect(
   const g = new Gateway()
   attachGateway(g)
   cmds.setGateway(g)
-  const url = `ws://${wsHost}:${proxyPort}`
+  const url = proxyUrl(wsHost, proxyPort)
   setState({ wsUrl: url })
   try {
     await g.connect(url)

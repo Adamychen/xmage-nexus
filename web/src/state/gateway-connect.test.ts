@@ -87,6 +87,15 @@ describe('doConnect — intentos concurrentes', () => {
     expect(getState().error).toBeNull()
   })
 
+  it('usa la URL completa cuando el host del proxy trae esquema', async () => {
+    const p = doConnect('wss://nexus.example.com', 443, 'beta.xmage.today', 17171, 'u', 'p')
+    expect(FakeWebSocket.instances[0].url).toBe('wss://nexus.example.com')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await p
+    expect(getState().phase).toBe('lobby')
+  })
+
   it('un intento anterior que expira no pisa el estado del intento vigente', async () => {
     const slow = doConnect('slow-host', 8787, 'localhost', 17171, 'u', 'p')
     const fast = doConnect('fast-host', 8788, 'localhost', 17171, 'u', 'p')

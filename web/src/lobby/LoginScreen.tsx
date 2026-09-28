@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
@@ -15,12 +15,12 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
+import { guestUsername, parseAutoConnect } from './autoConnect'
 import type { ConnectionInfo } from '../state/persistence'
 import './LoginScreen.css'
 
 function urlProxyPort(): number | null {
-  const n = Number(new URLSearchParams(window.location.search).get('proxyPort'))
-  return Number.isFinite(n) && n > 0 ? n : null
+  return parseAutoConnect(window.location.search).proxyPort ?? null
 }
 
 import { POPULAR_FLAGS, countryName, type ServerPreset } from './flags'
@@ -52,30 +52,39 @@ export default function LoginScreen() {
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [preset, setPreset] = useState<ServerPreset>(REMOTE_PROXY ? 'official' : 'local')
   const pendingDeepLink = useStore((s) => s.pendingDeepLink)
+  const autoRef = useRef(false)
 
   useEffect(() => {
-    const urlPort = urlProxyPort()
+    const url = parseAutoConnect(window.location.search)
     const saved = loadConn()
     const staleLocalConn = !!saved && REMOTE_PROXY && isLoopbackHost(saved.wsHost)
     if (saved && !staleLocalConn) {
-      setProxyHost(saved.wsHost)
-      setProxyPort(urlPort ?? saved.proxyPort)
-      setServerHost(saved.serverHost)
-      setPort(String(saved.port))
-      setUsername(saved.username)
-      setPassword(saved.password)
+      const sameUser = !url.username || url.username === saved.username
+      setProxyHost(url.proxyHost ?? saved.wsHost)
+      setProxyPort(url.proxyPort ?? saved.proxyPort)
+      setServerHost(url.serverHost ?? saved.serverHost)
+      setPort(String(url.serverPort ?? saved.port))
+      setUsername(url.username ?? saved.username)
+      setPassword(sameUser ? saved.password : '')
       if (saved.flagName) setFlagName(saved.flagName)
       if (saved.avatarId) setAvatarId(saved.avatarId)
 
-      if (saved.serverHost === 'beta.xmage.today') {
+      const target = url.serverHost ?? saved.serverHost
+      if (target === 'beta.xmage.today') {
         setPreset('official')
-      } else if (saved.serverHost === 'localhost' || saved.serverHost === '127.0.0.1') {
+      } else if (target === 'localhost' || target === '127.0.0.1') {
         setPreset('local')
       } else {
         setPreset('custom')
       }
-    } else if (urlPort !== null) {
-      setProxyPort(urlPort)
+    } else {
+      if (url.proxyHost) setProxyHost(url.proxyHost)
+      if (url.proxyPort != null) setProxyPort(url.proxyPort)
+      if (url.serverHost) setServerHost(url.serverHost)
+      if (url.serverPort != null) setPort(String(url.serverPort))
+      if (url.username) setUsername(url.username)
+      if (url.serverHost === 'beta.xmage.today') setPreset('official')
+      else if (url.proxyHost || url.serverHost) setPreset('custom')
     }
     const applySetupConn = (e: Event) => {
       const conn = (e as CustomEvent<ConnectionInfo>).detail
@@ -100,6 +109,25 @@ export default function LoginScreen() {
     }
     window.addEventListener(SETUP_CONN_EVENT, applySetupConn)
     return () => window.removeEventListener(SETUP_CONN_EVENT, applySetupConn)
+  }, [])
+
+  useEffect(() => {
+    const url = parseAutoConnect(window.location.search)
+    if (!url.auto || autoRef.current) return
+    const saved = loadConn()
+    if (saved?.username) return
+    autoRef.current = true
+    const host = url.proxyHost || proxyHost.trim() || 'localhost'
+    const hostPort = url.proxyPort ?? proxyPort
+    const target = url.serverHost || serverHost.trim() || host
+    const targetPort = url.serverPort ?? (parseInt(port, 10) || 17171)
+    const user = url.username || guestUsername()
+    if (!isSameAccount(saved, target, targetPort, user)) {
+      clearActiveGame()
+      clearActiveDraft()
+    }
+    setUsername(user)
+    void doConnect(host, hostPort, target, targetPort, user, '')
   }, [])
 
   const handleSelectPreset = (nextPreset: ServerPreset) => {

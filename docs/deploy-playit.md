@@ -149,6 +149,26 @@ Give players `http://<web-tunnel>`. Each player needs an account on
 the login screen is already pointed at your tunnels and they only enter
 user/password.
 
+### One-click / guest links
+
+The client also accepts query parameters, so a landing page can open a ready-to-play
+link (no typing, no setup wizard):
+
+```
+http://<web-tunnel>/?auto=1&server=beta.xmage.today
+```
+
+| Param | Meaning |
+| --- | --- |
+| `auto=1` | Connect immediately on load (skips the setup wizard). Without `username` it joins as `guestNNNNNN`. |
+| `proxy=host[:port]` | Proxy host (or a full `ws://` / `wss://` URL). Overrides the `VITE_DEFAULT_PROXY_*` build defaults. |
+| `proxyPort=8789` | Proxy port override (also used by the fake-mode E2E). |
+| `server=host[:port]` | XMage server to join. |
+| `serverPort=17171` | XMage server port override. |
+| `username=name` | Prefills (and auto-uses) a specific name; max 14 chars on the server. |
+
+Safe for groups because the same proxy serves many players (multi-tenant).
+
 ## Alternative — host builds from the repo (clone + rebuild)
 
 Instead of the prebuilt bundle (Parts 1–5), the host can keep a clone of this

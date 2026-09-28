@@ -221,6 +221,55 @@ img { max-width: 100%; }
 .section-head { max-width: 720px; margin-bottom: 28px; }
 .section-head p { margin: 6px 0 0; font-size: 16px; }
 
+/* ------------------------------ Demo ----------------------------- */
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 18px;
+}
+.demo-card {
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.demo-card:hover { transform: translateY(-3px); border-color: rgba(108, 140, 255, 0.5); }
+.demo-media {
+  aspect-ratio: 16 / 9;
+  background: #080b18;
+  border-bottom: 1px solid var(--border);
+}
+.demo-media img, .demo-media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.demo-card figcaption { padding: 16px 18px 20px; }
+.demo-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.demo-step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--grad);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(96, 108, 255, 0.35);
+}
+.demo-card p { margin: 0; font-size: 14px; }
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
