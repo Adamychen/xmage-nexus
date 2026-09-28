@@ -12,11 +12,13 @@ let gateway: Gateway | null = null
 let activeAttempt = 0
 let inFlight: { key: string; promise: Promise<void> } | null = null
 
-/** "Already connected" retries: the server may still hold the previous session
- *  for a few seconds, but when the account is logged in elsewhere it never
- *  clears, so the retries are capped instead of looping forever. */
-export const ALREADY_CONNECTED_RETRIES = 3
-const ALREADY_CONNECTED_BASE_DELAY_MS = 1500
+/** "Already connected" retries: the server may still hold the account's previous session
+ *  (a dropped connection, an IP change, a restarted proxy) and hands it over on its own or
+ *  when the restore id matches, but when the account is logged in elsewhere it never clears,
+ *  so the retries are capped instead of looping forever. The wait doubles each time
+ *  (2+4+8+16 ≈ 30 s in total) and the connecting splash shows it counting down. */
+export const ALREADY_CONNECTED_RETRIES = 4
+const ALREADY_CONNECTED_BASE_DELAY_MS = 2000
 
 /** The game we tried to rejoin is gone (ended while we were away): leave its
  *  board instead of showing a frozen table. */
@@ -245,7 +247,7 @@ async function runConnect(
   // escribir un error encima del intento vigente que ya logueó.
   const stale = () => attempt !== activeAttempt
   const conn: ConnectionInfo = { wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId }
-  setState({ phase: 'connecting', conn, connecting: true, error: null, link: 'ok', linkAttempt: 0 })
+  setState({ phase: 'connecting', conn, connecting: true, error: null, link: 'ok', linkAttempt: 0, loginRetry: null })
   detachGateway()
   const g = new Gateway()
   attachGateway(g)
@@ -263,8 +265,11 @@ async function runConnect(
   const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId)
   if (stale()) return
   if (!res.ok && /already connected|already logged in/i.test(res.error ?? '') && alreadyConnectedRetries < ALREADY_CONNECTED_RETRIES) {
+    const waitMs = ALREADY_CONNECTED_BASE_DELAY_MS * 2 ** alreadyConnectedRetries
+    addLog('conexión', `la sesión anterior sigue viva en el servidor: reintento ${alreadyConnectedRetries + 1}/${ALREADY_CONNECTED_RETRIES} en ${Math.round(waitMs / 1000)} s`)
+    setState({ loginRetry: { attempt: alreadyConnectedRetries + 1, max: ALREADY_CONNECTED_RETRIES, until: Date.now() + waitMs } })
     await cmds.disconnect()
-    await new Promise((r) => setTimeout(r, ALREADY_CONNECTED_BASE_DELAY_MS * 2 ** alreadyConnectedRetries))
+    await new Promise((r) => setTimeout(r, waitMs))
     if (stale()) return
     return runConnect(attempt, wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId, alreadyConnectedRetries + 1)
   }
@@ -279,7 +284,15 @@ async function runConnect(
     setState({ roomChatId: chatId ?? null })
     void cmds.updatePreferences(clonePhaseStops(getState().settings.phaseStops))
   } else {
-    setState({ phase: 'idle', connecting: false, error: res.error ?? 'login fallido' })
+    // final failure: the retries ran out with the server still holding the old session, which
+    // no amount of waiting-here fixes — the user needs to know what to do (wait it out, close
+    // the other tab/device). The raw server detail stays in the log for bug reports.
+    const sessionInUse = /already connected|already logged in/i.test(res.error ?? '')
+    if (sessionInUse && res.error) addLog('conexión', `login rechazado: ${res.error}`)
+    setState({
+      phase: 'idle', connecting: false, loginRetry: null,
+      error: sessionInUse ? t('errors', 'session_in_use') : (res.error ?? 'login fallido'),
+    })
   }
 }
 

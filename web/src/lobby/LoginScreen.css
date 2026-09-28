@@ -475,6 +475,14 @@
   align-self: center;
 }
 
+.connecting-retry-hint {
+  max-width: 36ch;
+  margin: var(--sp-3) auto 0 auto;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
 .login-attribution {
   font-size: var(--fs-2xs);
   color: var(--fg-3);

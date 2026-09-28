@@ -19,12 +19,12 @@ const STACK_HINT = 'el stack no está corriendo — ejecuta primero: node script
  * before the long ones.
  */
 const VERIFY_SCRIPTS = [
-  'multi-tenant-test.mjs',
-  // second, before anything that starts a game: it is the most sensitive to a server that other
-  // scripts have been hammering (it needs a fresh view within its window, and its CONCEDE only
-  // lands when the player has priority), and running it late made it fail three attempts in a row
-  // while passing on its own
+  // first: it is the most sensitive script (it needs a fresh view within its window and its
+  // CONCEDE only lands when the player has priority). Running it after any other script - even
+  // multi-tenant-test, which only logs in and out - made it fail all three attempts with
+  // "partida congelada tras el CONCEDE", while it passes when it runs on a fresh proxy
   'verify-player-leave.mjs',
+  'multi-tenant-test.mjs',
   'verify-wizard-matrix.mjs',
   'verify-hand-permission.mjs',
   'verify-spectator-end.mjs',

@@ -178,4 +178,20 @@ public class Config {
         }
         return new java.io.File(System.getProperty("java.io.tmpdir"), "mage-proxy-sims-" + getWsPort() + ".json").getPath();
     }
+
+    /**
+     * File that keeps the per-account restore ids across proxy restarts ("none" disables it),
+     * so a re-login after a deploy takes the account's session back instead of being refused
+     * with "already connected" while the server still holds it.
+     */
+    public String getRestoreIdsPath() {
+        String raw = get("restoreIds", "");
+        if ("none".equalsIgnoreCase(raw)) {
+            return "";
+        }
+        if (!raw.isEmpty()) {
+            return raw;
+        }
+        return new java.io.File(System.getProperty("java.io.tmpdir"), "mage-proxy-restore-" + getWsPort() + ".json").getPath();
+    }
 }

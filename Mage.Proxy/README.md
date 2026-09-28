@@ -99,7 +99,10 @@ exactly like a lost link): the proxy then gives up with
 `connect` of an account whose login is still running waits for that login and
 attaches to it, so one account never opens two server sessions through the proxy. The restore id
 also lets a re-login of the same account through the same proxy session get its
-old session back after an IP change.
+old session back after an IP change, and it is remembered per account across
+clients and restarts (see below), so a retry, a reload or a deploy is not refused
+with "already connected or your IP address changed" while the server still holds
+the old session.
 
 **Grace period (`--graceSecs`, default 180 s).** When the last WebSocket of a
 session closes, the XMage session stays alive so a reload, a network switch or a
@@ -125,6 +128,17 @@ player answers it (`sendPlayer*`, or a `PASS_PRIORITY_*` action for a
 `GAME_SELECT`; put back if the server rejects the answer) or the game ends — state
 updates keep arriving while a prompt is open. The cache is cleared when a new
 session starts.
+
+**Restore ids across restarts:** the server hands a user's session to any login
+that presents the session id as its `restoreSessionId`, even from another address.
+The proxy remembers, per `host|username`, the id of the account's last live
+session and presents it on the next login; the store is bounded and kept on disk
+(`--restoreIds`, default `<tmpdir>/mage-proxy-restore-<wsPort>.json`, `none`
+disables it; entries older than 10 minutes are dropped, by which time the server
+has already removed the user). Without it a re-login after a proxy deploy or an
+IP change is refused with "User ... already connected or your IP address changed"
+until the server's own timeout. An explicit `disconnect` (logout) drops the
+account's entry, so the next login is a fresh session.
 
 **SIM seats across restarts:** the playing SIM seats are kept on disk
 (`--simRoster`, default `<tmpdir>/mage-proxy-sims-<wsPort>.json`, `none` disables

@@ -780,7 +780,10 @@ public class ProxyClient implements MageClient, CommandContext {
             }
             connected = ok;
             if (ok) {
-                lastSessionId = session.getSessionId();
+                Connection live = lastConnection;
+                if (live != null) {
+                    rememberLiveSession(live.getHost(), live.getUsername());
+                }
                 lastLobbyPublishAt = 0;
                 lastLoginAt = System.currentTimeMillis();
                 lastLoginWasRelink = true;
@@ -1212,7 +1215,11 @@ public class ProxyClient implements MageClient, CommandContext {
                 case "disconnect": {
                     cancelGraceTimer();
                     simManager.stopSims();
+                    Connection logged = lastConnection;
                     lastConnection = null;
+                    if (logged != null) {
+                        RestoreIds.clear(logged.getHost(), logged.getUsername());
+                    }
                     stopSession(false);
                     connected = false;
                     Activity.sessionEnd(activityUser, "disconnect");
@@ -1360,12 +1367,12 @@ public class ProxyClient implements MageClient, CommandContext {
 
         simManager.setServer(host, port);
 
-        // the same account logging in again through this client (its link was lost): the
-        // restore id lets the server hand it the old session even from another address
-        Connection previous = lastConnection;
-        boolean sameAccount = previous != null && previous.getHost().equalsIgnoreCase(host)
-                && previous.getPort() == port && previous.getUsername().equalsIgnoreCase(username);
-        session.setRestoreSessionId(sameAccount ? lastSessionId : "");
+        // a fresh ProxyClient (the previous one was disposed after a failed login, or the proxy
+        // restarted) has no lastSessionId of its own, so the id the account last used is read
+        // from the cross-client store: without it every retry is refused with "already
+        // connected" until the server expires the old session, and the same account in another
+        // tab cannot take over after an IP change
+        session.setRestoreSessionId(restoreIdFor(host, port, username));
         resetSessionState();
         boolean ok;
         expectDisconnect = true;
@@ -1386,7 +1393,7 @@ public class ProxyClient implements MageClient, CommandContext {
             gateway.registerSession(accountKey, this);
             activityUser = username;
             lastConnection = connection;
-            lastSessionId = session.getSessionId();
+            rememberLiveSession(host, username);
             lastLobbyPublishAt = 0;
             lastLoginAt = System.currentTimeMillis();
             lastLoginWasRelink = false;
@@ -1462,6 +1469,27 @@ public class ProxyClient implements MageClient, CommandContext {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    /**
+     * Restore id to present on a login: this client's live session id when it is the same
+     * account, otherwise the id that account last used through this proxy, so a retry or a
+     * reload can take over a session the server still holds (see {@link RestoreIds}).
+     */
+    String restoreIdFor(String host, int port, String username) {
+        Connection previous = lastConnection;
+        boolean sameAccount = previous != null && previous.getHost().equalsIgnoreCase(host)
+                && previous.getPort() == port && previous.getUsername().equalsIgnoreCase(username);
+        if (sameAccount && lastSessionId != null && !lastSessionId.isEmpty()) {
+            return lastSessionId;
+        }
+        return RestoreIds.get(host, username);
+    }
+
+    /** The session id just established is the account's restore ticket across clients (see {@link RestoreIds}). */
+    void rememberLiveSession(String host, String username) {
+        lastSessionId = session.getSessionId();
+        RestoreIds.put(host, username, lastSessionId);
     }
 
     // ============================ helpers ============================

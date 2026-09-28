@@ -3,6 +3,7 @@ import { ALREADY_CONNECTED_RETRIES, doConnect, reset } from './gateway'
 import { getState } from './state'
 import * as cmds from '../net/commands'
 import { gameEventOrder, noteGameEvent } from './gameUtils'
+import { t } from '../i18n'
 
 vi.mock('../net/commands', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../net/commands')>()
@@ -118,18 +119,37 @@ describe('doConnect — intentos concurrentes', () => {
     expect(getState().error).toBeNull()
   })
 
-  it('stops retrying "already connected" after a few attempts and shows the error', async () => {
+  it('stops retrying "already connected" after a few attempts and explains the session is in use', async () => {
     const already = 'User u already connected or your IP address changed - try another user'
     vi.mocked(cmds.connect).mockResolvedValue({ ok: false, error: already } as never)
     const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       for (const w of FakeWebSocket.instances) if (w.readyState === FakeWebSocket.CONNECTING) w.triggerOpen()
       await vi.advanceTimersByTimeAsync(1000)
     }
     await done
     expect(cmds.connect).toHaveBeenCalledTimes(ALREADY_CONNECTED_RETRIES + 1)
     expect(getState().phase).toBe('idle')
-    expect(getState().error).toContain('already connected')
+    expect(getState().loginRetry).toBeNull()
+    expect(getState().error).toBe(t('errors', 'session_in_use'))
+  })
+
+  it('announces the wait before retrying a login the server refused as already connected', async () => {
+    vi.mocked(cmds.connect)
+      .mockResolvedValueOnce({ ok: false, error: 'User u already connected or your IP address changed' } as never)
+      .mockResolvedValue({ ok: true } as never)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    expect(getState().loginRetry).toMatchObject({ attempt: 1, max: ALREADY_CONNECTED_RETRIES })
+    expect(getState().loginRetry!.until).toBeGreaterThan(Date.now())
+    for (let i = 0; i < 20 && getState().phase !== 'lobby'; i++) {
+      for (const w of FakeWebSocket.instances) if (w.readyState === FakeWebSocket.CONNECTING) w.triggerOpen()
+      await vi.advanceTimersByTimeAsync(1000)
+    }
+    await done
+    expect(getState().phase).toBe('lobby')
+    expect(getState().loginRetry).toBeNull()
   })
 
   it('a login that opened a new XMage session resets the game event order', async () => {

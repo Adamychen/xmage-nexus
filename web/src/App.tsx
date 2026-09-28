@@ -21,6 +21,7 @@ import ConfirmHost from './ui/ConfirmHost'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 import Attribution from './system/Attribution'
+import LoginRetryHint from './system/LoginRetryHint'
 
 // P3: galería de estados (solo dev). El import dinámico queda tras
 // `import.meta.env.DEV`, así el build de producción no incluye los frames.
@@ -33,6 +34,7 @@ export default function App() {
   const wsAlive = useStore((s) => s.wsAlive)
   const link = useStore((s) => s.link)
   const linkAttempt = useStore((s) => s.linkAttempt)
+  const loginRetry = useStore((s) => s.loginRetry)
   const settings = useStore((s) => s.settings)
   const [showSetup, setShowSetup] = useState(() => !isSetupDone())
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
@@ -149,6 +151,7 @@ export default function App() {
               <p className="subtitle">{t('common', 'connecting_server')}</p>
             </div>
             <div className="connecting-spinner" />
+            {loginRetry && <LoginRetryHint attempt={loginRetry.attempt} max={loginRetry.max} until={loginRetry.until} />}
           </div>
         </div>
       ) : (

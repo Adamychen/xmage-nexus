@@ -31,6 +31,10 @@ public class Main {
         // construcción perezosa de la BD de cartas del proxy (validación de mazos)
         DeckValidation.ensureCardDatabaseAsync();
 
+        // restore ids en disco: un re-login tras un deploy (o un cambio de IP del host) recupera
+        // la sesión que el servidor aún mantiene en vez de ser rechazado con "already connected"
+        RestoreIds.configure(config);
+
         System.out.println("[proxy] XMage proxy started");
         System.out.println("[proxy]   websocket gateway : ws://" + config.getBindAddress() + ":" + config.getWsPort() + "/");
         System.out.println("[proxy]   test page         : http://" + config.getBindAddress() + ":" + config.getHttpPort() + "/index.html");
