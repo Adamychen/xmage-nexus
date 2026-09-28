@@ -23,6 +23,23 @@ description: Subir la versión de XMage: merge del tag upstream en el fork ../xm
   (test-mode options en GameOptions/MatchOptions/TableController, campos de vista/Deck,
   The Zeta Set) + `cheatSetup` para siembra determinista (testMode). El tag upstream usado fue
   `xmage_1.4.61V1`.
+
+## Inventario de parches nexus (qué hay que conservar en cada merge)
+
+Un merge upstream **solo puede romper lo que tocamos**. Esta es la lista completa; si un merge trae
+conflicto fuera de estos ficheros, es que upstream reescribió algo que damos por sentado y hay que
+mirarlo. Actualízala al añadir o quitar un parche.
+
+| Fichero (en `Mage.Common` salvo donde se diga) | Qué es | Cómo saber si sigue vivo |
+|---|---|---|
+| `Mage.Server/.../TableController.java`, `GameOptions`, `MatchOptions` | propagación de `skipInitShuffling` / `skipStartingPlayerChoice` (testMode) | `node scripts/test.mjs self-test` (arranca partidas deterministas) |
+| `MageServer`, `Testable`, `SessionImpl`, `MageServerImpl`, `GameManager`, `GameController` | canal `cheatSetup` (P1, testMode) | `Mage.Proxy` tests + `mage_cheat_setup` del MCP |
+| `mage/view/*`, `mage/remote/Deck` (según el fork state) | campos de vista y de mazo que el contrato serializa | `node scripts/view-schema.mjs` y `engine-view-schema.mjs` |
+| **`mage/remote/CustomThreadPool.java`** | **fuga de 4 hilos por sesión**: cada instancia delega en un pool compartido (jboss-remoting nunca para el pool que crea por conexión) | `jcmd <pid> Thread.print \| grep -cE '^"ThreadPool\('` tras 2-3 scripts de `verify`: debe quedarse en 0 |
+| `mage/server/.../` (commit «informar a los espectadores del fin de partida») | aviso de fin de partida a espectadores | `node scripts/test.mjs verify` (`verify-spectator-end`) |
+
+`CustomThreadPool` es **aditivo y de un solo fichero**: si upstream arregla la fuga por su cuenta, se
+revierte ese fichero y ya está; nada más del fork depende de él.
 - Artefactos org.mage en `~/.m2` POR VERSIÓN: `scripts/lib.mjs` (`XMAGE_VERSION`) +
   `ensureMageArtifacts()` los instala desde el fork si faltan.
 - Versión replicada en: `scripts/lib.mjs` (`XMAGE_VERSION`), `Mage.Proxy/pom.xml`, nombre del jar
@@ -41,16 +58,20 @@ description: Subir la versión de XMage: merge del tag upstream en el fork ../xm
    `server-state-schema.json`.
 4. Rebuild total: `node scripts/build.mjs` (módulos base + plugins + jar; `ensureMageArtifacts`
    instala la versión nueva). Reiniciar: `node scripts/ctl.mjs restart all`.
-5. Re-validar contrato/oráculos (requiere fork): `node scripts/view-schema.mjs`,
+5. Comprobar que los parches siguen vivos, sobre todo los que no fallan ruidosamente:
+   `jcmd <pid> Thread.print | grep -cE '^"ThreadPool\('` tras un par de scripts de `verify` debe
+   quedar en 0 (si no, el merge revirtió `CustomThreadPool` y el proxy vuelve a filtrar 4 hilos por
+   sesión, que no se nota hasta que la partida se queda sin vistas).
+6. Re-validar contrato/oráculos (requiere fork): `node scripts/view-schema.mjs`,
    `node scripts/engine-view-schema.mjs` (triar y, si procede, `--update-baseline`),
    `node scripts/server-state-schema.mjs`; luego `cd web && npm run gen-types && npm run gen-zod
    && npm run gen-server-state` y sus `:validate`. Detalle en la skill `mage-contract-codegen`.
-6. Anti-drift de frames: `node scripts/record.mjs all` (o por tandas) + `node scripts/record-sync.mjs`
+7. Anti-drift de frames: `node scripts/record.mjs all` (o por tandas) + `node scripts/record-sync.mjs`
    + `npx vitest run fixtures/recorded.test.ts` + `npx playwright test recorded.spec.ts`.
    Ver skill `mage-fixtures` y `docs/history/qa/p4-frames-log.md`.
-7. Suite: `node scripts/test.mjs` (stack arriba) y E2E real (`E2E_BACKEND=real ...`); smoke directo:
+8. Suite: `node scripts/test.mjs` (stack arriba) y E2E real (`E2E_BACKEND=real ...`); smoke directo:
    `node scripts/self-test.mjs` / `human-test.mjs`.
-8. Docs: `ROADMAP.md` (estado), `AGENTS.md` (versión), `readme.md`,
+9. Docs: `ROADMAP.md` (estado), `AGENTS.md` (versión), `readme.md`,
    `docs/deployment.md`, `site/content.json`.
 
 ## Checklist de cierre

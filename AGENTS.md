@@ -140,7 +140,25 @@ Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
 `build` (tsc -b && vite build) · `java` (mvn -pl Mage.Proxy -am test) ·
 `self-test` (headless E2E against the proxy; requires stack) ·
 `human-test` (E2E human player vs AI; requires stack) ·
-`e2e` (playwright in web; requires vite)
+`verify` (9 anti-drift scripts: multi-tenant isolation, hand permissions, player leave,
+range attack, rollback vote, spectator end, swiss, tournament watch, create-table matrix) ·
+`verify-restart` (`verify-reconnect.mjs`; restarts the proxy, so it runs alone) ·
+`fuzz` (`fuzz.mjs` self-play soak; nightly, not per push) ·
+`e2e` (playwright in web; requires vite) · `i18n` (translation coverage guard)
+
+The stack layers wait for the proxy's `/ready`, not just for its port: a proxy that has just
+started answers on 8787 while its card database is still building, and every script then fails
+with `Proxy is still loading card data` — a real failure that reads exactly like a broken test.
+They also warn when the stack has been up for over an hour, because a long-lived stack with
+dozens of sessions degrades the server's callback channel and the games stop producing views
+(`WATCHGAME` never arrives, a spec "freezes" at turn 2). If `verify`/`self-test` fail that way,
+`node scripts/ctl.mjs restart all` before touching anything.
+
+Every script in `verify` logs out with `disconnect` before closing its socket. Without it the
+proxy holds each session (and its SIM seats) for the whole grace period, so a run accumulated
+21 live sessions and 458 threads by the seventh script and the sensitive ones failed on a
+degraded server; `clientsAlive` in the watchdog line went from `created=21 disposed=0` to
+`created=47 disposed=46`.
 
 Success criteria and details in the `mage-test-suite` skill.
 
@@ -240,6 +258,63 @@ the source of flakes).
    (`Can't read build time in jar manifest`) for `ProxyClient` and every
    `SimPlayer`. **Fix**: the shaded jar's `ManifestResourceTransformer` now
    writes `${maven.build.timestamp}` (the ISO format `JarVersion` expects).
+7. **Every failed login leaked 2-5 non-daemon threads (RESOLVED 2026-09-28)**:
+   `Gateway.handleConnect` builds a `ProxyClient` per `connect` and its
+   constructor schedules `lobbyTimer` (2 s) and `keepAliveTimer` (20 s) on the
+   spot, but the failed-login branch only called `unregisterSession`. Nothing
+   else could reach the client: the grace timer is only armed for a *connected*
+   or *relinking* one, and the process shutdown hook walks `byAccount`, where
+   the client had already been unregistered. The web re-sends `connect` on a
+   fresh WebSocket after every failure (`gateway.ts:265`), so a wrong password,
+   a username over the server's 14-char limit or the `already connected` retry
+   loop leaked the whole set per attempt — and being non-daemon, they also kept
+   the JVM from exiting. **Fix**: `ProxyClient.dispose()` (the six
+   `shutdownNow()` that `shutdown()` and `expireGrace()` had duplicated), called
+   from the failed-login branch and from `Gateway.onClose` behind
+   `isDisposable()`. **Lesson**: `isDisposable()` must also require **no
+   pending grace timer** — it is scheduled on `pingTimer`, the very executor
+   being shut down, so disposing there cancels the server-side cleanup it
+   exists to perform and leaves a zombie session on the server. Guarded by
+   `ProxyClientFailedLoginTest` (75 extra threads over 25 failed logins before
+   the fix, 0 after).
+8. **Single-thread executors need `catch (Throwable)`, and a probe that cannot
+   ask must never answer "no" (RESOLVED 2026-09-28)**: `processCallback` and
+   `handleCommand` run on `callbackExecutor`/`commandExecutor`, and both caught
+   `Exception`, so any `Error` killed the thread for good —
+   `ThreadPoolExecutor` never replaces a dead one — leaving a session deaf
+   with no log line. The lobby timer already had a healing path for exactly
+   this (`:1231`); the two that matter most did not. Symmetrically,
+   `SessionProbe` reflected `SessionImpl.server` on every call and swallowed
+   the failure into `return false`, and `false` means "the link is down", so
+   a field renamed in the fork would have put every session in a permanent
+   relink loop — a self-inflicted outage with nothing logged. **Lesson**: on
+   the path in front of a destructive action (login again, dispose), an
+   unknown result must not act; resolve reflection once, log loudly if it
+   breaks, and treat unaskable as "leave it alone".
+10. **One thread pool per session, never released (RESOLVED 2026-09-28)**: jboss-remoting
+   2.5.4 instantiates the fork's `CustomThreadPool` from the `onewayThreadPool` locator parameter,
+   once per connection, and never stops that pool (`Client.disconnect()`, `ServerInvoker.stop()`
+   and `ServerInvoker.destroy()` do not touch it - checked against the 2.5.4.SP5 bytecode). The
+   desktop client logs in once per run and leaks four parked threads; the proxy creates one
+   `SessionImpl` per browser session **plus one per SIM seat**, so it leaked four threads per
+   session forever - a single four-player game left 12 pools / 48 threads, ~100 sessions reached
+   105 pools / 420 parked threads - until callbacks slowed down enough that games stopped producing
+   views. **Fix (one file, additive)**: `CustomThreadPool` delegates every instance to one shared
+   pool, so the threads are bounded by that pool's size instead of by the number of sessions that
+   ever lived. Measured 48 -> 0 leaked threads, proxy total 143 -> 61. Diagnose with
+   `jcmd <pid> Thread.print` grouped by thread name; a leaked pool shows as a family
+   (`ThreadPool(N)-N`) that does not shrink. Reverting it is a one-file revert; see the
+   `mage-fork-upgrade` skill for the fork patch inventory.
+
+9. **The proxy's watchdog is the only thing that would catch a leak like #7
+   again (NEW 2026-09-28)**: one line per minute with `threads`,
+   `clientsAlive` (`clientsCreated - clientsDisposed`), `openConns`, `accounts`,
+   `wsErrors` and the card-DB state, plus the same under `/admin/status`
+   (`runtime`, and per-connection detail under `sessions`). Read `clientsAlive`
+   across ticks: one live session accounts for one, a client released after a
+   rejected login for none, so a climb with flat `openConns`/`accounts` is a
+   client nothing can reach. The fork routes JUL through log4j, so these lines
+   are on **stderr** (`.run/proxy.err.log`), not `proxy.out.log`.
 
 ## E2E with simulated opponents (Sim) and WS helper
 
@@ -256,11 +331,22 @@ game per test. Common libraries in `web/e2e/support/`
 `fake-backend.ts`) and declarative scenarios for the FixtureServer in
 `web/fixtures/scenarios/` (mini-engine `humanGame.ts`). Tags by
 domain: `@spells`, `@targeting`, `@combat`, `@fullflow` (scripts
-`test:e2e:spells|targeting|combat|fullflow`). All specs run in fake
-(no stack, ~56s) and in real (contract). When touching `e2e/support/` or the
-scenarios, run the full fake + real suite. **The helper does NOT answer the
-mulligan** (the web's auto-keep already does it; a second false breaks the
-test window).
+`test:e2e:spells|targeting|combat|fullflow`). Every spec runs in fake
+(no stack, ~10 min for all 281) and can run in real; the nightly real-mode job
+covers the five protocol-sensitive specs (`deckvalidation`, `multi-user`,
+`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all 281.
+When touching `e2e/support/` or the scenarios, run the full fake + real suite.
+**The helper does NOT answer the mulligan** (the web's auto-keep already does it;
+a second false breaks the test window).
+
+A viewer that latches open covers the board and silently breaks specs that are not about it:
+`infoWindowState` opens a `.pile-overlay` for a looked-at/revealed/companion group and keeps it
+until closed, so a spec that hovers or clicks the board beneath must call
+`dismissInfoWindows(page)` (`e2e/support/info-windows.ts`) first. The failure looks unrelated
+(`locator.click` timing out "waiting for element to be visible, enabled and stable", or a 120 s
+timeout in a spec about badges) — read the failure screenshot before blaming flake. Shared
+fixtures are the other half: `mechanics`/`podGame` publish a `revealed` group that is load-bearing
+for `mechanics.spec.ts`, so a fixture change must be checked against every spec using it.
 
 ## Rules
 
