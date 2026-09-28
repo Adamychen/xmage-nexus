@@ -36,12 +36,25 @@ public class Config {
 
     public static Config parse(String[] args) {
         Config config = new Config();
-        for (int i = 0; i + 1 < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             String key = args[i];
-            if (key.startsWith("--")) {
-                config.values.put(key.substring(2), args[i + 1]);
-                i++;
+            if (!key.startsWith("--")) {
+                continue;
             }
+            String name = key.substring(2);
+            if (i + 1 >= args.length) {
+                // a trailing --key with no value: previously it was silently dropped, and the
+                // loop then read the key before it as this key's value
+                throw new IllegalArgumentException("missing value for --" + name);
+            }
+            String value = args[i + 1];
+            if (value.startsWith("--")) {
+                // a flag can never be a value: --host --port 17171 used to set host="--port"
+                // and drop 17171, leaving the proxy on host "--port" and the default port
+                throw new IllegalArgumentException("--" + name + " needs a value, got the flag " + value);
+            }
+            config.values.put(name, value);
+            i++;
         }
         return config;
     }

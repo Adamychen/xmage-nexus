@@ -12,6 +12,7 @@ import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -43,6 +44,9 @@ public class Gateway extends WebSocketServer {
 
     /** recuento de mensajes por conexión (ventana deslizante de 1 s) */
     private final Map<WebSocket, String> connIp = Collections.synchronizedMap(new IdentityHashMap<WebSocket, String>());
+
+    /** WebSocket transport errors, only to throttle the log: one stack, then one line per minute. */
+    private volatile int wsErrors = 0;
 
     public String ipOf(WebSocket conn) {
         String ip = connIp.get(conn);
@@ -117,6 +121,93 @@ public class Gateway extends WebSocketServer {
         return byAccount.values();
     }
 
+    /**
+     * Clients built since start, and how many of them have already been released. The difference
+     * is the leak detector: a client that is neither alive nor disposed owns six non-daemon
+     * threads and nothing ever reaches it again. Counted from the {@link ProxyClient} constructor
+     * and from {@link ProxyClient#dispose()}, not from {@link #newClient()}, so a test double (or a
+     * future factory) cannot make the counters drift from the resources they describe.
+     */
+    private final java.util.concurrent.atomic.AtomicLong clientsCreated =
+            new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong clientsDisposed =
+            new java.util.concurrent.atomic.AtomicLong();
+    private volatile int peakThreads = 0;
+
+    void clientCreated() {
+        clientsCreated.incrementAndGet();
+    }
+
+    void clientDisposed() {
+        clientsDisposed.incrementAndGet();
+    }
+
+    /**
+     * One line per minute on the existing roster tick.
+     *
+     * <p>{@code clientsAlive} is the number to read across ticks: a session that is playing
+     * accounts for one, a client released after a failed login for none, so anything that climbs
+     * while the connection count does not is a client nothing ever reached. The warning fires on
+     * that shape rather than on any single transient, because a client stays registered on its
+     * (still open) socket for a moment after a rejected login - flagging that would be noise.
+     */
+    private void watchdogTick() {
+        int threads = java.lang.management.ManagementFactory.getThreadMXBean().getThreadCount();
+        if (threads > peakThreads) {
+            peakThreads = threads;
+        }
+        long created = clientsCreated.get();
+        long disposed = clientsDisposed.get();
+        long alive = created - disposed;
+        int open;
+        synchronized (byConn) {
+            open = byConn.size();
+        }
+        int accounts = byAccount.size();
+        logger.info("watchdog: threads=" + threads + " (peak " + peakThreads + "), openConns=" + open
+                + ", accounts=" + accounts + ", clientsAlive=" + alive + " (created=" + created
+                + " disposed=" + disposed + "), wsErrors=" + wsErrors + ", cardDb=" + DeckValidation.getState());
+        int reachable = accounts + open;
+        if (alive > reachable + 5) {
+            logger.warning("watchdog: " + alive + " clients alive but only " + reachable
+                    + " reachable through an account key or a connection; the difference holds six "
+                    + "non-daemon threads each and will not be released until the proxy restarts");
+        }
+    }
+
+    /**
+     * Runtime counters for the admin endpoint: everything here was already derivable from state
+     * the process keeps, and each missing one has cost a debugging session (a thread count that
+     * showed a leak nobody could see, a card database that silently failed).
+     */
+    com.google.gson.JsonObject runtime() {
+        com.google.gson.JsonObject out = new com.google.gson.JsonObject();
+        java.lang.management.MemoryMXBean heap = java.lang.management.ManagementFactory.getMemoryMXBean();
+        out.addProperty("threads", java.lang.management.ManagementFactory.getThreadMXBean().getThreadCount());
+        out.addProperty("peakThreads", peakThreads);
+        out.addProperty("heapUsedBytes", heap.getHeapMemoryUsage().getUsed());
+        out.addProperty("heapMaxBytes", heap.getHeapMemoryUsage().getMax());
+        out.addProperty("gcCount", java.lang.management.ManagementFactory.getGarbageCollectorMXBeans().stream()
+                .mapToLong(java.lang.management.GarbageCollectorMXBean::getCollectionCount).sum());
+        out.addProperty("clientsCreated", clientsCreated.get());
+        out.addProperty("clientsDisposed", clientsDisposed.get());
+        out.addProperty("clientsAlive", clientsCreated.get() - clientsDisposed.get());
+        out.addProperty("accountsRegistered", byAccount.size());
+        out.addProperty("wsErrors", wsErrors);
+        out.addProperty("cardDb", DeckValidation.getState().name());
+        out.addProperty("deckImportsInFlight", OnlineDeckCommands.inFlight());
+        return out;
+    }
+
+    /** Per-session state, for the sessions that are stuck rather than the ones that are missing. */
+    com.google.gson.JsonArray sessionsDetail() {
+        com.google.gson.JsonArray out = new com.google.gson.JsonArray();
+        for (ProxyClient pc : byConn.values()) {
+            out.add(pc.diagnostics());
+        }
+        return out;
+    }
+
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         String origin = handshake.getFieldValue("Origin");
@@ -142,6 +233,12 @@ public class Gateway extends WebSocketServer {
         ProxyClient pc = byConn.remove(conn);
         if (pc != null) {
             pc.onClientClose(conn, left);
+            // a client that never held a session (failed login, or a link that could not be
+            // restored) has nothing left to serve and no grace timer to run, so its threads
+            // would otherwise outlive the WebSocket for the life of the process
+            if (pc.isDisposable()) {
+                pc.dispose();
+            }
         }
         String ip = connIp.remove(conn);
         if (ip != null) {
@@ -199,12 +296,31 @@ public class Gateway extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("[proxy] websocket error: " + ex);
+        // A bind failure is not a degraded proxy, it is a corpse: the process would keep answering
+        // HTTP (and report /ready) while another process owns the WebSocket port, which reads as
+        // every script failing in a different way. Refuse to look alive.
+        if (ex instanceof java.net.BindException) {
+            logger.log(Level.SEVERE, "cannot bind the WebSocket port " + config.getWsPort()
+                    + " (another proxy still holds it?); exiting instead of running half-alive", ex);
+            System.exit(1);
+        }
+        // A client that desyncs or drops can raise this on every frame, and System.err has no
+        // rotation: the raw exception text alone also hides the cause. First one with its stack,
+        // then one line per minute, the same shape as the lobby publish throttle.
+        String where = conn == null ? "no connection" : String.valueOf(conn.getRemoteSocketAddress());
+        wsErrors++;
+        if (wsErrors == 1) {
+            logger.log(Level.SEVERE, "WebSocket error on " + where, ex);
+        } else if (wsErrors % 30 == 0) {
+            logger.log(Level.WARNING, "WebSocket errors still coming (" + wsErrors + " so far, last on "
+                    + where + "): " + ex);
+        }
     }
 
     @Override
     public void onStart() {
         rosterTimer.scheduleWithFixedDelay(simRoster::touch, 60, 60, java.util.concurrent.TimeUnit.SECONDS);
+        rosterTimer.scheduleWithFixedDelay(this::watchdogTick, 60, 60, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     /**

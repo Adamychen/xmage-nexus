@@ -40,6 +40,28 @@ class OutboundLogTest {
     }
 
     @Test
+    void injectsSeqInFrontOfARealFrameWithoutLosingAnything() {
+        String frame = "{\"type\":\"event\",\"method\":\"GAME_UPDATE\",\"data\":{\"a\":1,\"b\":[1,2,3]}}";
+        assertEquals("{\"seq\":42,\"type\":\"event\",\"method\":\"GAME_UPDATE\",\"data\":{\"a\":1,\"b\":[1,2,3]}}",
+                OutboundLog.withSeq(frame, 42));
+        // not a JSON object: left untouched, the stream token would corrupt it
+        assertEquals("[1,2]", OutboundLog.withSeq("[1,2]", 42));
+        assertEquals("", OutboundLog.withSeq("", 42));
+    }
+
+    @Test
+    void framingIsStableForALargeFrame() {
+        // the frame is a whole GameUpdate; the rewrite has to stay exact, not "close enough"
+        StringBuilder sb = new StringBuilder("{\"type\":\"event\"");
+        for (int i = 0; i < 5000; i++) {
+            sb.append(",\"f").append(i).append("\":\"v").append(i).append("\"");
+        }
+        sb.append('}');
+        String framed = OutboundLog.withSeq(sb.toString(), 9);
+        assertEquals("{\"seq\":9," + sb.substring(1), framed);
+    }
+
+    @Test
     void resumesWithTheFramesAfterTheLastOneSeen() {
         OutboundLog log = new OutboundLog(now::get, 100, 1_000_000);
         log.append(frame("A"), null, true);

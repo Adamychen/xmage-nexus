@@ -445,5 +445,51 @@ High-frequency game input and polling actions are counted but not logged. Passwo
 never recorded. The client IP comes from `X-Forwarded-For` when present (reverse proxy), else the socket address.
 
 With `--adminToken <secret>` (Docker: `ADMIN_TOKEN`), `GET /admin/status` on the HTTP port returns JSON — uptime,
-open connections, connected users (server, ip, windows, actions, last action) and the last 500 events. Send
-`Authorization: Bearer <secret>`. Without a token the endpoint does not exist.
+open connections, live sessions, connected users (server, ip, windows, actions, last action) and the last 500 events.
+Send `Authorization: Bearer <secret>` (header only — a `?token=` query string was removed: it landed in the access
+log, the browser history and every proxy in between). Only `GET` is accepted, and without a token the endpoint does
+not exist.
+
+## Health and readiness
+
+Both are unauthenticated, carry no session data, and answer on the HTTP port:
+
+- `GET /health` — liveness. `200` as long as the process answers, whatever the card database is doing.
+- `GET /ready` — readiness. `503` until `DeckValidation` is `READY`, then `200`. Gate traffic (or the
+  launcher's own wait) on this one: a proxy whose card database `FAILED` still accepts logins, which is the
+  usual reason a player sees a confusing "login failed" during a deploy.
+
+```json
+{"ok":true,"liveness":false,"ready":true,"cardDb":"READY","sessions":3,"threads":41,"uptimeSeconds":3600}
+```
+
+The static file server sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and a
+`Content-Security-Policy`; fingerprinted `assets/*` (`name-<8 char base64url hash>.ext`) are cached for a year,
+everything else is `no-cache` so a deploy does not keep serving the old client.
+
+## Watchdog
+
+The proxy logs one line per minute on its roster tick, and the same numbers are in
+`/admin/status` under `runtime` and `sessions`.
+
+```
+watchdog: threads=54 (peak 79), openConns=0, accounts=0, clientsAlive=0 (created=3 disposed=3),
+          wsErrors=0, cardDb=READY
+```
+
+`clientsAlive` is `clientsCreated - clientsDisposed` and is the number to read across ticks: one
+live session accounts for one, a client released after a rejected login for none. Anything that
+climbs while `openConns`/`accounts` do not is a client that nothing can reach, and the line turns
+into a `WARNING` once it exceeds the reachable count by more than five. This exists because the
+proxy ran for weeks leaking two to five non-daemon threads per failed login with no counter
+anywhere that would have shown it.
+
+`sessions` holds the per-connection detail: `connected`/`relinking`/`released`, the grace timer
+countdown, `gamesInProgress`, `pendingGapEvents` (callbacks held by the ordering sequencer),
+`outboundFrames`/`outboundChars` (the resumable stream buffer), `replayStates`/`replayPrompts`
+(the reconnect cache), `sessionGameIds`, `failedKeepAlives`, `lobbyPublishFailures`,
+`relinkAttempts` and `simsAlive`. A session that is stuck on a silent relink or a lobby that
+stopped publishing is otherwise indistinguishable from a player who went away.
+
+Note that the fork routes JUL through log4j, so these lines land on **stderr** (`.run/proxy.err.log`),
+not `proxy.out.log`.

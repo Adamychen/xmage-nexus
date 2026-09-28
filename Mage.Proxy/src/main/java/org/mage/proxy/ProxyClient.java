@@ -30,6 +30,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,10 +69,19 @@ public class ProxyClient implements MageClient, CommandContext {
     private final ScheduledExecutorService pingTimer = Executors.newSingleThreadScheduledExecutor();
     // the keep-alive probe can wait on a busy server: never on pingTimer (sequencer gaps, grace)
     private final ScheduledExecutorService keepAliveTimer = Executors.newSingleThreadScheduledExecutor();
+    // the sequencer's 400 ms gap budget: never on pingTimer either, because expireGrace runs there
+    // and blocks for a whole server round-trip, which silently overran the budget for every session
+    // whose grace period expired
+    private final ScheduledExecutorService sequencerTimer = Executors.newSingleThreadScheduledExecutor();
     private int failedKeepAlives = 0;
 
-    // out-of-order protection for reconnect/bad network (same logic as the original client)
-    private final Map<ClientCallbackType, Integer> lastMessages = new java.util.HashMap<>();
+    // Out-of-order protection for reconnect/bad network (same logic as the original client).
+    // ConcurrentHashMap, not HashMap: connectStart() resets it wholesale from the command thread
+    // under this client's monitor, while the callback thread reads and writes it without one, and
+    // a plain HashMap mutated from two threads can lose entries or spin on a resize.
+    private final Map<ClientCallbackType, Integer> lastMessages = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Highest message id seen for this session, so the guard does not scan the map on every callback. */
+    private volatile int highestMessageId = 0;
 
     /**
      * Game ids "owned" by the current server session (seen via START_GAME / WATCHGAME / GAME_INIT
@@ -102,6 +113,7 @@ public class ProxyClient implements MageClient, CommandContext {
     /** Set while the proxy itself stops or starts the XMage session (not a lost link). */
     private volatile boolean expectDisconnect = false;
     private volatile boolean relinking = false;
+    private volatile int relinkAttempts = 0;
     private ExecutorService relinkExecutor = null;
     private volatile long lastLoginAt = 0;
     private volatile boolean lastLoginWasRelink = false;
@@ -125,14 +137,19 @@ public class ProxyClient implements MageClient, CommandContext {
     private final List<ClientCallback> handshakeBuffer = new java.util.LinkedList<>();
     private volatile String lastDetailedMessage = null;
     private volatile long lastDetailedMessageAt = 0;
+    /** Leaf lock guarding the wait for the server's error detail; never held across a call out. */
+    private final ReentrantLock detailLock = new ReentrantLock();
+    private final Condition detailSignal = detailLock.newCondition();
 
     private ScheduledFuture<?> graceDisconnectTimer = null;
     private volatile boolean released = false;
+    /** dispose() is idempotent but reachable from several paths; the counter must be once-only. */
+    private boolean disposeCounted = false;
 
     private final CallbackSequencer<ClientCallback> sequencer = new CallbackSequencer<>(
             ClientCallback::getMessageId,
             cb -> callbackExecutor.execute(() -> processCallback(cb)),
-            pingTimer,
+            sequencerTimer,
             CallbackSequencer.GAP_TIMEOUT_MS);
 
     /**
@@ -161,6 +178,7 @@ public class ProxyClient implements MageClient, CommandContext {
         this.session = new SessionImpl(this);
         this.simManager = new SimManager(config, this::broadcastError, gateway.simRoster());
         Arrays.stream(ClientCallbackType.values()).forEach(t -> this.lastMessages.put(t, 0));
+        gateway.clientCreated();
         lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 2, 2, TimeUnit.SECONDS);
         // keep the server session alive (the original client pings from its UI; we have no UI)
         keepAliveTimer.scheduleWithFixedDelay(this::pingServer, PING_SERVER_SECS, PING_SERVER_SECS, TimeUnit.SECONDS);
@@ -233,17 +251,82 @@ public class ProxyClient implements MageClient, CommandContext {
      */
     public synchronized void shutdown() {
         cancelGraceTimer();
+        dispose();
+    }
+
+    /**
+     * Releases the six per-client executors and marks the client unusable.
+     *
+     * <p>Every {@code ProxyClient} spawns its threads in the constructor
+     * ({@code lobbyTimer} and {@code keepAliveTimer} at construction, the rest on first use) and
+     * they are all non-daemon. A client that never gets an XMage session - a login that failed
+     * (wrong password, a username over the server limit, the "already connected" retry loop) or
+     * a link that could not be restored - can never use them again, and nothing else reaches it:
+     * the grace timer is only armed for a connected or relinking client, and the process shutdown
+     * hook walks {@link Gateway#getSessions()}, which only holds the clients still registered
+     * under an account key. Without this those threads, and their 2 s lobby / 20 s keep-alive
+     * tasks, pile up for the life of the process and also keep the JVM from exiting.
+     */
+    public synchronized void dispose() {
         released = true;
+        // once per client, not once per call: shutdown() routes through here, and expireGrace()
+        // sets released itself, so "already released" is not a usable guard
+        if (!disposeCounted) {
+            disposeCounted = true;
+            gateway.clientDisposed();
+        }
         commandExecutor.shutdownNow();
         callbackExecutor.shutdownNow();
         lobbyTimer.shutdownNow();
         pingTimer.shutdownNow();
         keepAliveTimer.shutdownNow();
+        sequencerTimer.shutdownNow();
         synchronized (relinkLock) {
             if (relinkExecutor != null) {
                 relinkExecutor.shutdownNow();
             }
         }
+    }
+
+    /**
+     * True when this client can never serve a session again, so closing its last WebSocket
+     * should also release it. Requires no pending grace timer: that timer is scheduled on
+     * {@link #pingTimer} and its whole job is the server-side cleanup, so disposing here would
+     * silently cancel it and leave the session alive on the server until it expires.
+     */
+    public synchronized boolean isDisposable() {
+        return released || (!connected && !relinking && lastConnection == null && graceDisconnectTimer == null);
+    }
+
+    /**
+     * What one session is doing, for the admin endpoint. Every field here already existed and was
+     * reachable (some of it through accessors nothing ever called); a session that is stuck on a
+     * silent relink, an unbounded replay cache or a lobby that stopped publishing is otherwise
+     * indistinguishable from a player who simply went away.
+     */
+    JsonObject diagnostics() {
+        JsonObject out = new JsonObject();
+        out.addProperty("user", activityUser);
+        out.addProperty("account", accountKey);
+        out.addProperty("connected", connected);
+        out.addProperty("relinking", relinking);
+        out.addProperty("released", released);
+        out.addProperty("authorizedConnections", authorizedCount());
+        out.addProperty("graceRemainingSecs", graceRemainingSecs());
+        out.addProperty("gamesInProgress", gamesInProgress.size());
+        out.addProperty("pendingGapEvents", sequencer.pending());
+        out.addProperty("outboundFrames", outbound.size());
+        out.addProperty("outboundChars", outbound.chars());
+        out.addProperty("replayStates", replay.stateCount());
+        out.addProperty("replayPrompts", replay.promptCount());
+        out.addProperty("sessionGameIds", sessionGameIds.size());
+        out.addProperty("failedKeepAlives", failedKeepAlives);
+        out.addProperty("lobbyPublishFailures", lobbyPublishFailures);
+        out.addProperty("relinkAttempts", relinkAttempts);
+        out.addProperty("lastLoginWasRelink", lastLoginWasRelink);
+        out.addProperty("lastLoginAt", lastLoginAt);
+        out.addProperty("simsAlive", simManager.aliveCount());
+        return out;
     }
 
     private synchronized void cancelGraceTimer() {
@@ -262,30 +345,37 @@ public class ProxyClient implements MageClient, CommandContext {
      */
     private synchronized void expireGrace() {
         graceDisconnectTimer = null;
-        if (authorizedCount() != 0 || released || (!connected && !relinking)) {
+        if (authorizedCount() != 0 || released) {
+            return;
+        }
+        boolean linkUsable = connected || relinking;
+        if (!linkUsable) {
+            // The grace expired with the XMage link already down, so there is nothing to
+            // disconnect (the round trip would fail and be swallowed). The local cleanup below
+            // is still owed: returning early here left the account registered in byAccount and
+            // the user listed in Activity forever, and the threads alive.
+            logger.info("Grace period expired while the XMage link was already down. Releasing the "
+                    + "local session only (games " + gamesInProgress + ").");
+            releaseLocalOnly();
             return;
         }
         logger.info("Grace period expired without client reconnect. Cleaning up XMage session (server link "
                 + (session.isConnected() ? "up" : "DOWN") + ", games " + gamesInProgress + ").");
-        released = true;
         simManager.stopSims();
         stopSession(false);
         connected = false;
+        releaseLocalOnly();
+    }
+
+    /** Everything {@link #expireGrace()} releases apart from the server round trip. */
+    private void releaseLocalOnly() {
+        released = true;
         Activity.sessionEnd(activityUser, "grace_expired");
         if (accountKey != null) {
             gateway.unregisterSession(accountKey, this);
             accountKey = null;
         }
-        commandExecutor.shutdownNow();
-        callbackExecutor.shutdownNow();
-        lobbyTimer.shutdownNow();
-        pingTimer.shutdownNow();
-        keepAliveTimer.shutdownNow();
-        synchronized (relinkLock) {
-            if (relinkExecutor != null) {
-                relinkExecutor.shutdownNow();
-            }
-        }
+        dispose();
     }
 
     /** Stops the XMage session on the proxy's own initiative (never taken for a lost link). */
@@ -445,6 +535,7 @@ public class ProxyClient implements MageClient, CommandContext {
         // its message ids restart at 1, so the outdated-guard would silently drop every
         // UPDATE event of the new session otherwise
         lastMessages.replaceAll((t, v) -> 0);
+        highestMessageId = 0;
         // events of the previous user's still-running games (re-sent by the server over the
         // same channel) must be dropped, not forwarded
         sessionGameIds.clear();
@@ -462,11 +553,32 @@ public class ProxyClient implements MageClient, CommandContext {
         }
     }
 
+    /**
+     * The allowlist of games this server session joined, so the previous user's still-running games
+     * can be dropped. It only ever grows (nothing removes an id once the game is over), which on a
+     * session that plays for months is one UUID per game retained forever. Trim the finished ones
+     * only: every id still in {@link #gamesInProgress} is a game the client is in, and dropping one
+     * of those would silently swallow its events as foreign.
+     */
+    private void boundSessionGameIds() {
+        if (sessionGameIds.size() <= SESSION_GAME_ID_LIMIT) {
+            return;
+        }
+        int before = sessionGameIds.size();
+        sessionGameIds.removeIf(id -> !gamesInProgress.contains(id));
+        logger.info("Trimmed the per-session game allowlist from " + before + " to "
+                + sessionGameIds.size() + " ids (" + gamesInProgress.size() + " still in progress)");
+    }
+
+    /** Well above any real number of simultaneous games; only reached by months-long sessions. */
+    private static final int SESSION_GAME_ID_LIMIT = 256;
+
     @Override
     public void markGameActive(UUID gameId) {
         if (gameId != null) {
             sessionGameIds.add(gameId);
             gamesInProgress.add(gameId);
+            boundSessionGameIds();
             lastGameEventAt = System.currentTimeMillis();
         }
     }
@@ -611,9 +723,11 @@ public class ProxyClient implements MageClient, CommandContext {
         long deadline = System.currentTimeMillis() + config.getRelinkSecs() * 1000L;
         long delay = 1000;
         int attempt = 0;
+        relinkAttempts = 0;
         try {
             while (!released && System.currentTimeMillis() < deadline) {
                 attempt++;
+                relinkAttempts = attempt;
                 broadcastLink("retrying", attempt);
                 if (relinkOnce()) {
                     logger.info("Link to the XMage server restored after " + attempt + " attempt(s)");
@@ -697,26 +811,50 @@ public class ProxyClient implements MageClient, CommandContext {
     }
 
     private void captureDetailedMessage(String message) {
-        if (message != null && !message.isEmpty()) {
+        if (message == null || message.isEmpty()) {
+            return;
+        }
+        detailLock.lock();
+        try {
             lastDetailedMessage = message;
             lastDetailedMessageAt = System.currentTimeMillis();
+            detailSignal.signalAll();
+        } finally {
+            detailLock.unlock();
         }
     }
 
+    /**
+     * Waits for the server's {@code SHOW_USERMESSAGE} detail that follows a rejected command.
+     *
+     * <p>This runs on {@code commandExecutor}, the session's only server-facing thread, so it used
+     * to be a {@code Thread.sleep(60)} poll loop: one failed action held the whole command queue for
+     * up to 4.5 s (1.6 s for a game action, 0.9 s when covering an error), and a burst of rejected
+     * actions serialised into tens of seconds of dead queue. A leaf lock plus a condition turns that
+     * into a real wait that also returns the moment the message is captured.
+     */
     private String pollDetailedMessage(long sinceMillis, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
-        while (System.currentTimeMillis() < deadline) {
-            String msg = lastDetailedMessage;
-            long at = lastDetailedMessageAt;
-            if (msg != null && at >= sinceMillis) {
-                return msg;
+        detailLock.lock();
+        try {
+            while (true) {
+                String msg = lastDetailedMessage;
+                if (msg != null && lastDetailedMessageAt >= sinceMillis) {
+                    return msg;
+                }
+                long remaining = deadline - System.currentTimeMillis();
+                if (remaining <= 0) {
+                    break;
+                }
+                try {
+                    detailSignal.await(remaining, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
-            try {
-                Thread.sleep(60);
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-                break;
-            }
+        } finally {
+            detailLock.unlock();
         }
         String msg = lastDetailedMessage;
         long at = lastDetailedMessageAt;
@@ -821,7 +959,7 @@ public class ProxyClient implements MageClient, CommandContext {
 
             // ignore outdated game updates on reconnect/bad network (same logic as original client)
             if (!callback.getMethod().getType().equals(ClientCallbackType.CLIENT_SIDE_EVENT)) {
-                int lastAnyMessageId = lastMessages.values().stream().mapToInt(x -> x).max().orElse(0);
+                int lastAnyMessageId = highestMessageId;
                 if (lastAnyMessageId > callback.getMessageId()) {
                     if (callback.getMethod().getType().mustIgnoreOnOutdated()) {
                         logger.info("event DROPPED as outdated: " + callback.getMethod() + " (msgId=" + callback.getMessageId()
@@ -831,6 +969,9 @@ public class ProxyClient implements MageClient, CommandContext {
                 }
                 if (!callback.getMethod().getType().canComeInAnyOrder()) {
                     lastMessages.put(callback.getMethod().getType(), callback.getMessageId());
+                    if (callback.getMessageId() > highestMessageId) {
+                        highestMessageId = callback.getMessageId();
+                    }
                 }
             }
 
@@ -845,6 +986,7 @@ public class ProxyClient implements MageClient, CommandContext {
                         || callback.getMethod() == ClientCallbackMethod.GAME_INIT) {
                     sessionGameIds.add(callbackObjectId);
                     gamesInProgress.add(callbackObjectId);
+                    boundSessionGameIds();
                 }
                 if (!sessionGameIds.contains(callbackObjectId)) {
                     logger.info("event IGNORED (game not active in this session): " + callback.getMethod()
@@ -900,11 +1042,15 @@ public class ProxyClient implements MageClient, CommandContext {
                 }
             }
             broadcastAuthorized(eventJson, supersedeKey);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+            // Throwable, not Exception: this runs on callbackExecutor, a single thread, and an
+            // Error (a StackOverflowError from the recursive serializer is the realistic one)
+            // would kill it for good - ThreadPoolExecutor never replaces a dead thread, so the
+            // session would go deaf with nothing at all in the log.
             logger.log(Level.SEVERE, "Error processing callback " + callback.getInfo(), ex);
             JsonObject ev = new JsonObject();
             ev.addProperty("type", "error");
-            ev.addProperty("message", "Callback error: " + callback.getMethod() + " - " + ex.getMessage());
+            ev.addProperty("message", "Callback error: " + callback.getMethod() + " - " + ex);
             ev.addProperty("fatal", false);
             broadcastAuthorized(ev.toString());
         }
@@ -1096,7 +1242,10 @@ public class ProxyClient implements MageClient, CommandContext {
                 detail = "Invalid argument: " + detail;
             }
             gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, code, detail != null ? detail : "Invalid argument: " + ex.getMessage()));
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+            // Throwable, not Exception: this runs on commandExecutor, a single thread, and an
+            // Error would kill it for good with no log line - ThreadPoolExecutor never replaces
+            // a dead thread, so the session would stop answering any action at all.
             logger.log(Level.SEVERE, "Command failed: " + action, ex);
             String raw = ex.getMessage() != null ? ex.getMessage() : ex.toString();
             String detail = ErrorClassifier.stripServerErrorPrefix(raw);
@@ -1259,8 +1408,12 @@ public class ProxyClient implements MageClient, CommandContext {
             Activity.login(username, gateway.ipOf(conn), host, port, false, detail, false);
             gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
             if (lastConnection == null) {
-                // never logged in: stop holding the account's slot for concurrent logins
+                // never logged in: stop holding the account's slot for concurrent logins, and
+                // stop holding five non-daemon threads and their timers for a client that can
+                // never reach a session. A retry arrives on a new WebSocket, so this client
+                // has no further use (onClientMessage answers anything else with "retry").
                 gateway.unregisterSession(host + "|" + username, this);
+                dispose();
             }
         }
     }

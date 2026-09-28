@@ -148,4 +148,51 @@ class JsonUtilTest {
         assertTrue(json.get("negInfFloat").isJsonNull());
         assertEquals(1.5, json.get("normal").getAsDouble());
     }
+
+    /** Inherited fields are part of the cached set, so the cache has to be built from the class up. */
+    static class Base {
+        String baseField = "base";
+    }
+
+    static class Derived extends Base {
+        String derivedField = "derived";
+    }
+
+    @Test
+    void theFieldCacheIsReusedAndDoesNotChangeTheOutput() {
+        Derived value = new Derived();
+        String first = JsonUtil.toJson(value);
+        String second = JsonUtil.toJson(value);
+
+        assertEquals(first, second, "caching the fields must not change what is serialized");
+        JsonObject json = JsonParser.parseString(second).getAsJsonObject();
+        assertEquals("base", json.get("baseField").getAsString());
+        assertEquals("derived", json.get("derivedField").getAsString());
+    }
+
+    @Test
+    void aSecondInstanceOfTheSameClassSerializesWithItsOwnValues() {
+        // guards the cache against ever being keyed on the instance rather than the class
+        Derived a = new Derived();
+        Derived b = new Derived();
+        b.baseField = null;
+
+        assertTrue(JsonParser.parseString(JsonUtil.toJson(b)).getAsJsonObject().get("baseField").isJsonNull());
+        assertEquals("base", JsonParser.parseString(JsonUtil.toJson(a)).getAsJsonObject()
+                .get("baseField").getAsString());
+    }
+
+    @Test
+    void controlCharactersAreEscapedAsFourHexDigits() {
+        JsonObject json = JsonParser.parseString(JsonUtil.toJson(new ControlChars())).getAsJsonObject();
+        assertEquals(String.valueOf(new char[]{0x01, 0x1f}), json.get("controls").getAsString());
+        assertEquals(String.valueOf((char) 0), json.get("nul").getAsString());
+        assertEquals("tab\there", json.get("tab").getAsString());
+    }
+
+    static class ControlChars {
+        String controls = String.valueOf(new char[]{0x01, 0x1f});
+        String nul = String.valueOf((char) 0);
+        String tab = "tab\there";
+    }
 }

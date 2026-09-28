@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Reflection based JSON serializer for XMage view objects.
@@ -24,11 +26,15 @@ import java.util.UUID;
  */
 public final class JsonUtil {
 
+    private static final ConcurrentMap<Class<?>, Field[]> WRITABLE_FIELDS = new ConcurrentHashMap<>();
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
+
     private JsonUtil() {
     }
 
     public static String toJson(Object root) {
-        StringBuilder sb = new StringBuilder(16 * 1024);
+        // a GameUpdate carries hundreds of views, so this reallocates 4 times per frame otherwise
+        StringBuilder sb = new StringBuilder(64 * 1024);
         writeValue(sb, root, new IdentityHashMap<>());
         return sb.toString();
     }
@@ -213,28 +219,54 @@ public final class JsonUtil {
     private static void writeObject(StringBuilder sb, Object obj, IdentityHashMap<Object, Boolean> stack) {
         sb.append('{');
         boolean first = true;
-        for (Class<?> clazz = obj.getClass(); clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
+        for (Field field : writableFields(obj.getClass())) {
+            if (!first) {
+                sb.append(',');
+            }
+            first = false;
+            writeString(sb, field.getName());
+            sb.append(':');
+            try {
+                writeValue(sb, field.get(obj), stack);
+            } catch (Exception e) {
+                sb.append("null");
+            }
+        }
+        sb.append('}');
+    }
+
+    /**
+     * The writable fields of a class and of its superclasses, resolved once.
+     *
+     * <p>This is the hot loop of the proxy: a single {@code GAME_UPDATE} walks a thousand views, so
+     * re-running {@code getDeclaredFields()} plus a dozen string comparisons per field, for every
+     * object, on every event, was the bulk of the garbage the callback thread had to keep up with.
+     * The filter only depends on the class, so the answer cannot change between calls.
+     */
+    private static Field[] writableFields(Class<?> type) {
+        Field[] cached = WRITABLE_FIELDS.get(type);
+        if (cached != null) {
+            return cached;
+        }
+        List<Field> out = new ArrayList<>();
+        for (Class<?> clazz = type; clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
             for (Field field : clazz.getDeclaredFields()) {
                 if (!isWritableField(field)) {
                     continue;
                 }
-                if (!first) {
-                    sb.append(',');
-                }
-                first = false;
-                writeString(sb, field.getName());
-                sb.append(':');
                 try {
-                    if (!field.isAccessible()) {
-                        field.setAccessible(true);
-                    }
-                    writeValue(sb, field.get(obj), stack);
-                } catch (Exception e) {
-                    sb.append("null");
+                    field.setAccessible(true);
+                } catch (RuntimeException ex) {
+                    // a module-protected field: read it reflectively and it will fail per value,
+                    // which writeObject already turns into null
+                    continue;
                 }
+                out.add(field);
             }
         }
-        sb.append('}');
+        Field[] result = out.toArray(new Field[0]);
+        Field[] raced = WRITABLE_FIELDS.putIfAbsent(type, result);
+        return raced != null ? raced : result;
     }
 
     private static boolean isWritableField(Field field) {
@@ -297,7 +329,12 @@ public final class JsonUtil {
                     break;
                 default:
                     if (c < 0x20) {
-                        sb.append(String.format("\\u%04x", (int) c));
+                        // String.format per control character re-parsed the format every time
+                        sb.append("\\u")
+                                .append(HEX[(c >> 12) & 0xf])
+                                .append(HEX[(c >> 8) & 0xf])
+                                .append(HEX[(c >> 4) & 0xf])
+                                .append(HEX[c & 0xf]);
                     } else {
                         sb.append(c);
                     }

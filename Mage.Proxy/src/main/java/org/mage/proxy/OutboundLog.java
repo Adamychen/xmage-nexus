@@ -107,6 +107,11 @@ final class OutboundLog {
         return live;
     }
 
+    /** Retained characters: with {@link #MAX_CHARS} per session this is the memory a session holds. */
+    synchronized long chars() {
+        return chars;
+    }
+
     private void trim() {
         long now = clock.getAsLong();
         Iterator<Entry> it = entries.iterator();
@@ -130,10 +135,30 @@ final class OutboundLog {
         }
     }
 
+    /**
+     * Prepends the stream sequence so a resuming client can ask for everything after it.
+     *
+     * <p>The exact-capacity builder matters: the frame is a whole {@code GameUpdate} (200-800 KB
+     * by the proxy's own estimate) and the obvious {@code "{\"seq\":" + seq + "," + json.substring(1)}
+     * allocated a full copy of it and then grew a default-16 StringBuilder through it, so every
+     * broadcast copied the frame several more times on the callback thread, which is the one that
+     * must not fall behind or the sequencer's 400 ms gap budget blows.
+     *
+     * <p>Building the {@code seq} into the frame at the source instead would be one copy rather
+     * than two, but it is not safe: the sequence has to be assigned inside the {@code authorized}
+     * lock in broadcast order, and callers build their JSON before reaching that lock, so the
+     * numbers would interleave differently from the order the clients actually receive.
+     */
     static String withSeq(String json, long seq) {
         if (json.length() < 2 || json.charAt(0) != '{') {
             return json;
         }
-        return "{\"seq\":" + seq + (json.charAt(1) == '}' ? "" : ",") + json.substring(1);
+        StringBuilder sb = new StringBuilder(json.length() + 16);
+        sb.append("{\"seq\":").append(seq);
+        if (json.charAt(1) != '}') {
+            sb.append(',');
+        }
+        sb.append(json, 1, json.length());
+        return sb.toString();
     }
 }

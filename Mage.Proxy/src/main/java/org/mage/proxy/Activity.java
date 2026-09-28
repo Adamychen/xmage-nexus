@@ -129,12 +129,22 @@ public final class Activity {
         emit("session_end", user, s == null ? null : s.ip, extra);
     }
 
+    /** Users with a session recorded and not yet ended, for the unauthenticated health endpoints. */
+    public static int sessionCount() {
+        return users.size();
+    }
+
+    public static long uptimeSeconds() {
+        return (System.currentTimeMillis() - startedAt) / 1000;
+    }
+
     public static String snapshot() {
         long now = System.currentTimeMillis();
         JsonObject out = new JsonObject();
         out.addProperty("uptimeSeconds", (now - startedAt) / 1000);
         out.addProperty("openConnections", openConnections.get());
         out.addProperty("totalConnections", totalConnections.get());
+        out.addProperty("liveSessions", users.size());
         JsonArray list = new JsonArray();
         for (UserStats s : users.values()) {
             JsonObject u = new JsonObject();

@@ -11,6 +11,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +39,24 @@ final class OnlineDeckCommands {
     private static final int TIMEOUT_MS = 8000;
     private static final int MAX_BODY_BYTES = 2_000_000;
 
+    /**
+     * The fetch runs here, off the session's only server-facing thread.
+     *
+     * <p>{@code handle} is reached from {@code commandExecutor}, so a synchronous HTTP call held
+     * every other action of that session for up to {@link #TIMEOUT_MS}: one slow import was an
+     * eight-second freeze for a player who was not even importing anything. The pool is shared by
+     * every session and bounded on purpose - a full queue answers "try again" instead of growing
+     * an unbounded backlog of open sockets.
+     */
+    private static final ThreadPoolExecutor FETCHES = new ThreadPoolExecutor(
+            2, 4, 30L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(16),
+            r -> {
+                Thread t = new Thread(r, "deck-import");
+                t.setDaemon(true);
+                return t;
+            },
+            new ThreadPoolExecutor.AbortPolicy());
+
     private OnlineDeckCommands() {
     }
 
@@ -50,6 +72,17 @@ final class OnlineDeckCommands {
             return true;
         }
         try {
+            FETCHES.execute(() -> fetchAndAnswer(source, apiUrl, conn, requestId, action, ctx));
+        } catch (RejectedExecutionException ex) {
+            ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_FAILED,
+                    "too many deck imports in flight, try again in a moment"));
+        }
+        return true;
+    }
+
+    private static void fetchAndAnswer(String source, String apiUrl, WebSocket conn, String requestId,
+                                       String action, CommandContext ctx) {
+        try {
             String body = httpGetJson(apiUrl);
             JsonObject data = JsonParser.parseString(body).getAsJsonObject();
             ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, data));
@@ -58,7 +91,10 @@ final class OnlineDeckCommands {
             ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false,
                     notFound ? ProxyProtocol.ERR_CARD_NOT_FOUND : ProxyProtocol.ERR_FAILED, "fetch failed: " + ex.getMessage()));
         }
-        return true;
+    }
+
+    static int inFlight() {
+        return FETCHES.getActiveCount() + FETCHES.getQueue().size();
     }
 
     /** Resuelve la URL de API real (host/paths fijos, allowlist implicita) a partir de source + URL/id pegado por el usuario. */

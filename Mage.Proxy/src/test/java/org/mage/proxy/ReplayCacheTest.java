@@ -67,4 +67,56 @@ class ReplayCacheTest {
         cache.onGameEnded(GAME);
         assertEquals(Collections.singletonList("init"), cache.replay(GAME));
     }
+
+    @Test
+    void onlyTheLastFinishedGameKeepsItsState() {
+        // The states map held one GameUpdate (200-800 KB) per game the session ever played,
+        // for as long as the user stayed logged in. A client that re-attaches right after a game
+        // over still needs that final board, so the most recent one is kept - in a single slot.
+        UUID first = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+        UUID second = UUID.fromString("00000000-0000-0000-0000-00000000000c");
+        ReplayCache cache = new ReplayCache();
+        cache.onState(first, "state1", false);
+        cache.onGameEnded(first);
+        assertEquals(Collections.singletonList("state1"), cache.replay(first));
+
+        cache.onState(second, "state2", false);
+        cache.onGameEnded(second);
+        assertEquals(Collections.singletonList("state2"), cache.replay(second));
+        assertEquals(Collections.emptyList(), cache.replay(first), "the older finished game is gone");
+        assertEquals(0, cache.stateCount(), "no finished game is retained in the map");
+    }
+
+    @Test
+    void gamesInProgressKeepTheirStates() {
+        // only finished games are dropped: a state is what a resuming client replays, so the
+        // games still being played are the ones that must stay (and there are few of them)
+        ReplayCache cache = new ReplayCache();
+        cache.onState(GAME, "state", false);
+        cache.onState(UUID.fromString("00000000-0000-0000-0000-00000000000b"), "other", false);
+        assertEquals(2, cache.stateCount());
+        assertEquals(Collections.singletonList("state"), cache.replay(GAME));
+        assertEquals(Collections.singletonList("other"),
+                cache.replay(UUID.fromString("00000000-0000-0000-0000-00000000000b")));
+    }
+
+    @Test
+    void aNewStateForAFinishedGameTakesItOutOfTheSlot() {
+        ReplayCache cache = new ReplayCache();
+        cache.onState(GAME, "ended", false);
+        cache.onGameEnded(GAME);
+        cache.onState(GAME, "restarted", true);
+        assertEquals(Collections.singletonList("restarted"), cache.replay(GAME));
+        assertEquals(0, cache.finishedSlotCount(), "the map is the only holder now");
+    }
+
+    @Test
+    void clearDropsTheFinishedGameToo() {
+        ReplayCache cache = new ReplayCache();
+        cache.onState(GAME, "state", false);
+        cache.onGameEnded(GAME);
+        cache.clear();
+        assertEquals(Collections.emptyList(), cache.replay(GAME));
+        assertEquals(0, cache.finishedSlotCount());
+    }
 }

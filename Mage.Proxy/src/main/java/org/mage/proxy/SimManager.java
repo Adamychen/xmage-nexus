@@ -211,4 +211,11 @@ final class SimManager {
             }
         }
     }
+
+    /** SIM seats this session is keeping logged in, for the admin diagnostics. */
+    int aliveCount() {
+        synchronized (sims) {
+            return sims.size();
+        }
+    }
 }
