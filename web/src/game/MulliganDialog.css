@@ -48,36 +48,6 @@ html.fx-off .mulligan-bar {
   z-index: 10;
 }
 
-/* Selection highlight (London mode) */
-.mulligan-card-wrap.is-selected .card-slot {
-  box-shadow: 0 0 0 3px var(--gold-300), 0 12px 32px rgb(var(--warn-rgb) / 0.5);
-}
-
-.mulligan-card-wrap.is-selected:hover .card-slot {
-  transform: translateY(-10px) scale(1.04);
-  box-shadow: 0 0 0 3px var(--gold-300), 0 18px 40px rgb(var(--warn-rgb) / 0.55);
-}
-
-.mulligan-card-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--gold-300);
-  color: var(--ink-0);
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  font-family: var(--font-display);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px var(--shade-3);
-  z-index: 20;
-  pointer-events: none;
-}
-
 /* ── Opening-hand bar (keep / mulligan over the raised hand) ─── */
 .mulligan-bar {
   display: flex;
@@ -232,17 +202,10 @@ html.fx-off .mulligan-bar {
   margin-left: var(--sp-0h);
 }
 
-/* ── Counter and actions ─────────────────────────────────────── */
-.mulligan-counter {
-  font-size: var(--fs-sm);
-  color: var(--brand-fg);
-  margin: 6px 0 16px;
-  min-height: 20px;
-  text-align: center;
-}
-
+/* ── Actions ─────────────────────────────────────────────────── */
 .mulligan-actions {
   display: flex;
+  margin-top: 16px;
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;

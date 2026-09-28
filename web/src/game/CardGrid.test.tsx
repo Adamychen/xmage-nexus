@@ -39,7 +39,7 @@ describe('CardGrid', () => {
   it('shows the search filter input and card count badge', () => {
     const { container } = render(<CardGrid prompt={makePrompt()} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.querySelector('input[placeholder]')).toBeTruthy()
-    expect(container.querySelector('.ui-chip')?.textContent).toContain('3 Mano')
+    expect(container.querySelector('.ui-chip')?.textContent).toContain('3 cartas')
   })
 
   it('labels the search filter for assistive tech', () => {
@@ -64,9 +64,14 @@ describe('CardGrid', () => {
     expect(container.querySelector('.card-grid-actions button')).toBeNull()
   })
 
-  it('shows confirm button for multi-select', () => {
-    const { container } = render(<CardGrid prompt={makePrompt({ max: 3 })} selected={['c-1', 'c-2']} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+  it('shows confirm button for a client-side multi-select', () => {
+    const { container } = render(<CardGrid prompt={makePrompt({ method: 'GAME_SELECT_CARDS', max: 3 })} selected={['c-1', 'c-2']} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.textContent).toContain('Confirmar')
+  })
+
+  it('never batches GAME_TARGET picks behind a confirm button (the server keeps only the latest answer)', () => {
+    const { container } = render(<CardGrid prompt={makePrompt({ max: 3 })} selected={['c-1', 'c-2']} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+    expect(container.textContent).not.toContain('Confirmar')
   })
 
   it('does not show confirm button for single-select', () => {
@@ -97,5 +102,31 @@ describe('CardGrid', () => {
     expect(container.textContent).not.toContain('Cancelar')
     fireEvent.click(Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Terminar selección'))!)
     expect(send).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows server-side picks as chosen and sends one card per click (GAME_TARGET)', async () => {
+    const send = vi.fn(async (action: () => Promise<{ ok: boolean }>) => { await action() })
+    const commands = await import('../net/commands')
+    const uuid = vi.spyOn(commands, 'sendPlayerUUID').mockResolvedValue({ ok: true } as never)
+    const prompt = makePrompt({
+      message: 'Select cards from your graveyard (selected 1 of 3, min 1)',
+      chosenTargets: ['c-1'],
+      progress: { selected: 1, max: 3, min: 1 },
+      options: [{ id: 'c-1', label: 'Grizzly Bears', value: 'c-1' }, { id: 'c-2', label: 'Lightning Bolt', value: 'c-2' }],
+      required: false,
+    })
+    const { container, getByTestId } = render(<CardGrid prompt={prompt} selected={['c-2']} setSelected={vi.fn()} send={send} busy={false} />)
+    const cells = container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')
+    expect(cells[0].classList.contains('selected')).toBe(true)
+    expect(cells[1].classList.contains('selected')).toBe(false)
+    expect(cells[2].disabled).toBe(true)
+    expect(getByTestId('card-grid-progress').textContent).toBe('Seleccionadas 1 de 3 · mín. 1')
+    expect(container.textContent).not.toContain('(selected 1 of 3')
+    expect(container.textContent).toContain('Hecho (1)')
+
+    fireEvent.click(cells[1])
+    await vi.waitFor(() => expect(uuid).toHaveBeenCalledWith('c-2', 'g-1'))
+    expect(uuid).toHaveBeenCalledTimes(1)
+    uuid.mockRestore()
   })
 })

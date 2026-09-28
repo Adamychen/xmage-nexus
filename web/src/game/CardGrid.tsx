@@ -5,7 +5,7 @@ import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
 import Icon, { type IconName } from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
-import type { FeedbackPrompt } from './feedback'
+import { stripTargetProgress, targetProgressLabel, type FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './CardGrid.css'
@@ -23,7 +23,10 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const cards = prompt.cards ?? []
-  const isMulti = prompt.max > 1
+  const serverDriven = prompt.method === 'GAME_TARGET'
+  const isMulti = !serverDriven && prompt.max > 1
+  const chosen = serverDriven ? (prompt.chosenTargets ?? []) : selected
+  const selectable = new Set(prompt.options.map((option) => option.id))
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return cards
@@ -37,6 +40,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   }, [cards, filter])
 
   const toggle = (cardId: string) => {
+    if (busy) return
     if (isMulti) {
       setSelected((current) => current.includes(cardId)
         ? current.filter((id) => id !== cardId)
@@ -57,6 +61,8 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
     }, t('errors','send_failed_choice'))
   }
 
+  const progressText = serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, t as never) : null
+  const message = serverDriven ? stripTargetProgress(prompt.message) : prompt.message
   const isDiscard = /descart|discard/i.test(prompt.message)
   const cardGridTitle = prompt.isLibraryOrderPick
     ? t('game', 'library_order_title')
@@ -76,10 +82,10 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
       kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
       title={<>{cardGridTitle} <Chip tone="brand" size="md">
         {filtered.length === cards.length
-          ? `${cards.length} ${t('board','zone_hand')}`
+          ? t('dialogs','cardgrid_count', { count: cards.length })
           : `${filtered.length} / ${cards.length}`}
       </Chip></>}
-      message={prompt.message ? localizeServerMessage(prompt.message, t as any) : undefined}
+      message={message ? localizeServerMessage(message, t as any) : undefined}
       search={(
         <div className="card-grid-search-wrap">
           <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
@@ -103,15 +109,16 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             {filtered.map((card) => (
               <button
                 key={card.id}
-                className={`card-grid-cell ${selected.includes(card.id) ? 'selected' : ''}`}
-                disabled={busy}
+                className={`card-grid-cell ${chosen.includes(card.id) ? 'selected' : ''}`}
+                disabled={busy || (serverDriven && selectable.size > 0 && !selectable.has(card.id) && !chosen.includes(card.id))}
+                aria-pressed={serverDriven || isMulti ? chosen.includes(card.id) : undefined}
                 onClick={() => toggle(card.id)}
                 title={`${card.displayName ?? card.name}${card.power && card.toughness ? ` (${card.power}/${card.toughness})` : ''}`}
               >
                 <CardSlot
                   card={card as never}
                   cardId={card.id}
-                  isChosen={selected.includes(card.id)}
+                  isChosen={chosen.includes(card.id)}
                 />
                 <span className="card-grid-label">{card.displayName ?? card.name}</span>
               </button>
@@ -124,6 +131,9 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
         </div>
 
         <footer className="card-grid-actions">
+          {progressText && (
+            <span className="card-grid-progress" data-testid="card-grid-progress" role="status" aria-live="polite">{progressText}</span>
+          )}
           {isMulti && (
             <Button variant="primary"
               disabled={busy || selected.length < prompt.min}
@@ -136,7 +146,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             <Button disabled={busy} onClick={() => {
               void send(() => sendSingle(prompt, ''), t('errors','send_failed'))
             }}>
-              {t('dialogs','cardgrid_finish')}
+              {serverDriven && chosen.length > 0 ? t('dialogs','cardgrid_done', { count: chosen.length }) : t('dialogs','cardgrid_finish')}
             </Button>
           )}
         </footer>

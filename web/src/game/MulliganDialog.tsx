@@ -4,13 +4,11 @@ import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
 import { useStore } from '../state/store'
 import type { FeedbackPrompt } from './feedback'
-import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { useTranslation, t as staticT } from '../i18n'
-import { localizeServerMessage } from './serverMessageTranslation'
 import { confirmDialog } from '../ui/confirmDialog'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { computeMulliganEvaluation, type MulliganEvaluation } from './mulliganEvaluator'
@@ -76,8 +74,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
   const isLondon = prompt.isMulliganLondon === true
-  const [selected, setSelected] = useState<string[]>([])
-  const [bottomCount, setBottomCount] = useState(0)
   const [hoveredCard, setHoveredCard] = useState<CardView | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
@@ -95,29 +91,9 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
     }
   }
 
-  const toggle = (id: string) => {
-    setSelected((current) =>
-      current.includes(id)
-        ? current.filter((value) => value !== id)
-        : current.length < prompt.max ? [...current, id] : current,
-    )
-  }
-
   const pickOne = (id: string) => {
-    setBottomCount((count) => count + 1)
+    if (busy) return
     void send(() => cmds.sendPlayerUUID(id, prompt.gameId), t('errors', 'send_failed'))
-  }
-
-  const confirmSelected = () => {
-    void send(async () => {
-      let result: { ok: boolean; error?: string } = { ok: true }
-      for (const value of selected) {
-        result = await cmds.sendPlayerUUID(value, prompt.gameId)
-        if (!result.ok) break
-      }
-      return result
-    }, t('errors', 'send_failed'))
-    setBottomCount((count) => count + selected.length)
   }
 
   const handleHover = (card: CardView | null, rect?: DOMRect) => {
@@ -126,14 +102,11 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   }
 
   const cardCount = handEntries.length
-  const needToBottom = isLondon
-    ? prompt.max > 1
-      ? t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })
-      : `${t('game', 'targeting_hint')} (${bottomCount})`
-    : null
 
   if (isLondon) {
-    const handleCardClick = prompt.max > 1 ? toggle : pickOne
+    const targetIds = new Set(prompt.options.map((option) => option.id))
+    const pickable = targetIds.size > 0 ? handEntries.filter(([id]) => targetIds.has(id)) : handEntries
+    const remaining = prompt.progress?.remaining ?? 1
     return (
       <DialogShell
         labelledBy="mulligan-title"
@@ -143,43 +116,35 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
         legacyPanelClass="mulligan-dialog mulligan-london"
         kickerIcon="layers"
         kickerLabel={t('dialogs', 'mulligan_london_title')}
-        title={t('dialogs', 'mulligan_london_counter', { min: prompt.min, max: prompt.max })}
-        message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+        title={(
+          <span data-testid="mulligan-london-remaining" role="status" aria-live="polite">
+            {t('dialogs', 'mulligan_london_remaining', { count: remaining })}
+          </span>
+        )}
+        message={t('dialogs', 'mulligan_london_pick_hint')}
         trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
       >
-          {cardCount > 0 && (
-            <div className="mulligan-hand-grid">
-              {handEntries.map(([id, card], i) => (
+          {pickable.length > 0 && (
+            <div className="mulligan-hand-grid" data-testid="mulligan-london-grid" aria-busy={busy}>
+              {pickable.map(([id, card], i) => (
                 <div
                   key={id}
-                  className={`mulligan-card-wrap ${selected.includes(id) ? 'is-selected' : ''}`}
+                  className="mulligan-card-wrap"
                   style={{ animationDelay: `${i * 55}ms` }}
                 >
                   <CardSlot
                     cardId={id}
                     card={card}
-                    isPlayable={false}
-                    isTarget={selected.includes(id)}
+                    isPlayable={!busy}
                     onHover={handleHover}
-                    onClick={() => handleCardClick(id)}
-                    ariaPressed={prompt.max > 1 ? selected.includes(id) : undefined}
+                    onClick={() => pickOne(id)}
                   />
-                  {selected.includes(id) && (
-                    <div className="mulligan-card-badge">#{selected.indexOf(id) + 1}</div>
-                  )}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="mulligan-counter">{needToBottom}</div>
-
           <div className="mulligan-actions">
-            {prompt.max > 1 && (
-              <Button variant="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
-                {t('dialogs', 'mulligan_london_confirm', { selected: selected.length, min: prompt.min })}
-              </Button>
-            )}
             {prompt.required === false && (
               <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('common', 'cancel')}</Button>
             )}

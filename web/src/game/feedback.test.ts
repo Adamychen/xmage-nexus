@@ -656,6 +656,29 @@ describe('parseFeedback', () => {
       expect(prompt?.title).toBe('Elige objetivo')
     })
 
+    it('flags the real London bottom prompt and reads how many cards are left', () => {
+      const prompt = parseFeedback('GAME_TARGET', 'game-30', {
+        targets: ['c1', 'c2'],
+        message: 'Select a card (2 more) to put on the bottom of your library',
+        min: 0,
+        max: 0,
+      })
+      expect(prompt?.isMulliganLondon).toBe(true)
+      expect(prompt?.progress).toEqual({ selected: 0, remaining: 2 })
+    })
+
+    it('reads multi-target progress from the server message and chosenTargets', () => {
+      const prompt = parseFeedback('GAME_TARGET', 'game-31', {
+        message: 'Select cards from your graveyard (selected 1 of 3, min 1)',
+        cardsView1: { g1: { id: 'g1', name: 'Bear' }, g2: { id: 'g2', name: 'Elf' } },
+        options: { chosenTargets: ['g1'], possibleTargets: ['g1', 'g2'] },
+        flag: false,
+      })
+      expect(prompt?.chosenTargets).toEqual(['g1'])
+      expect(prompt?.progress).toEqual({ selected: 1, max: 3, min: 1 })
+      expect(prompt?.required).toBe(false)
+    })
+
     it('does not flag the bottom-of-library mulligan message (isMulliganLondon owns that pattern)', () => {
       const prompt = parseFeedback('GAME_TARGET', 'game-29', {
         targets: ['c1'],

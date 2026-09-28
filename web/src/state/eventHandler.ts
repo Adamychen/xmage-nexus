@@ -183,6 +183,9 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {
     setState({ events: [...s.events, { method, time: Date.now() }].slice(-12) })
   }
+  if (/^GAME_(?:SELECT|ASK|TARGET|CHOOSE_|PLAY_|GET_)/.test(method) && getState().waitingFor) {
+    setState({ waitingFor: null })
+  }
   if (method !== 'GAME_ASK') {
     const feedback = parseFeedback(method, objectId ?? s.gameId, data)
     if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) {

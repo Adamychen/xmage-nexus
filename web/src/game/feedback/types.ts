@@ -1,3 +1,5 @@
+import type { TargetProgress } from './progress'
+
 export type FeedbackMode = 'boolean' | 'string' | 'uuid' | 'integer' | 'multiString' | 'mana' | 'combat' | 'order'
 
 export interface FeedbackOption {
@@ -43,6 +45,7 @@ export interface FeedbackPrompt {
   required?: boolean
   sourceName?: string
   chosenTargets?: string[]
+  progress?: TargetProgress
   special?: boolean
   cards?: FeedbackCard[]
   isMulligan?: boolean

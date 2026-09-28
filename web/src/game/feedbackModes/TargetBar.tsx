@@ -4,6 +4,7 @@ import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
+import { stripTargetProgress, targetProgressLabel } from '../feedback'
 import { DockPrompt } from '../GameDock'
 import './promptBars.css'
 
@@ -11,7 +12,6 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
   const { prompt, busy, finishOptionalTarget } = form
   if (!prompt) return null
-  const chosenCount = prompt.chosenTargets?.length ?? 0
   const isDiscard = /descart|discard/i.test(prompt.message)
   const titleText = prompt.isStartingPlayer
     ? t('game', 'who_starts')
@@ -20,12 +20,11 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
       : prompt.isLibraryOrderPick
         ? t('game', 'library_order_title')
         : (prompt.sourceName ?? t('game', 'choose_target'))
-  const localizedMessage = localizeServerMessage(prompt.message, t as any)
+  const localizedMessage = localizeServerMessage(stripTargetProgress(prompt.message), t as any)
   const hintText = prompt.isStartingPlayer
     ? t('game', 'starting_player_board_hint')
-    : chosenCount > 0
-      ? t('game', 'targeting_chosen', { count: chosenCount })
-      : (localizedMessage ? <FormattedText text={localizedMessage} /> : t('game', 'targeting_hint'))
+    : (localizedMessage ? <FormattedText text={localizedMessage} /> : t('game', 'targeting_hint'))
+  const progressText = !prompt.isStartingPlayer && prompt.progress ? targetProgressLabel(prompt.progress, t as never) : null
   const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
 
   return (
@@ -38,6 +37,7 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
           </span>
           <span className="action-prompt-hint" role="status" aria-live="polite">
             {hintText}
+            {progressText && <span className="action-prompt-progress" data-testid="target-progress"> · {progressText}</span>}
           </span>
         </div>
         <div className="action-prompt-actions">

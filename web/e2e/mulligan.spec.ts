@@ -5,9 +5,9 @@ import { DECK } from '../fixtures/deck-names'
  * Mulligan (Keep + Mulligan London): con auto-keep desactivado, la ventana de
  * mulligan (FeedbackDialog con GAME_ASK) debe aparecer y poderse ejercitar.
  *  - Keep hand: la partida continúa (GAME_SELECT).
- *  - Mulligan: aparece la barra de target de London (poner carta al fondo) y al
- *    elegir la carta en mano la partida continúa. Se captura una screenshot de la
- *    ventana de mulligan.
+ *  - Mulligan: the London dialog shows how many cards are left, each click
+ *    bottoms exactly one card (one UUID per server re-ask) and the game goes on.
+ *    Se captura una screenshot de la ventana de mulligan.
  */
 
 import * as fs from 'node:fs'
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
 fakeOnly()
-import { mulliganScenario, MULLIGAN_HAND_IDS } from '../fixtures/scenarios/mulligan'
+import { mulliganScenario, MULLIGAN_BOTTOM_COUNT, MULLIGAN_HAND_IDS } from '../fixtures/scenarios/mulligan'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
 import { framesOf, parseFrames, parseSent, sentOf } from './support/frames'
@@ -76,17 +76,22 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
     // elegir "Mulligan" (boolean=true)
     await dialog.getByRole('button', { name: /^Mulligan/ }).click()
 
-    // el servidor responde con el diálogo de London (poner cartas al fondo)
-    await expect(page.locator('.mulligan-dialog.mulligan-london')).toBeVisible({ timeout: 10_000 })
+    const london = page.locator('.mulligan-dialog.mulligan-london')
+    const remaining = page.getByTestId('mulligan-london-remaining')
+    for (let left = MULLIGAN_BOTTOM_COUNT; left > 0; left -= 1) {
+      await expect(london).toBeVisible({ timeout: 10_000 })
+      await expect(remaining).toContainText(String(left))
+      const grid = page.getByTestId('mulligan-london-grid')
+      await expect(grid.locator('.card-slot')).toHaveCount(MULLIGAN_HAND_IDS.length - (MULLIGAN_BOTTOM_COUNT - left))
+      const targetId = MULLIGAN_HAND_IDS[MULLIGAN_BOTTOM_COUNT - left]
+      await grid.locator(`.card-slot[data-card-id="${targetId}"]`).first().click()
+      await expect
+        .poll(() => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === targetId), { timeout: 10_000 })
+        .toBeTruthy()
+    }
 
-    // elegir la primera carta de la mano como objetivo (se pone al fondo)
-    const targetId = MULLIGAN_HAND_IDS[0]
-    await page.locator(`.mulligan-dialog .card-slot[data-card-id="${targetId}"]`).first().click()
-
-    // el cliente envió el UUID y la partida continúa
-    await expect
-      .poll(() => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === targetId), { timeout: 10_000 })
-      .toBeTruthy()
+    await expect(london).toBeHidden({ timeout: 10_000 })
+    expect(parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID')).toHaveLength(MULLIGAN_BOTTOM_COUNT)
     await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 15_000 })
 
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])

@@ -39,6 +39,7 @@ describe('feedback detectors (pure, no i18n)', () => {
 
   it('matches London bottoming prompts (exact server phrasing)', () => {
     expect(isLondonBottoming('Select a card to put on the bottom of your library')).toBe(true)
+    expect(isLondonBottoming('Select a card (2 more) to put on the bottom of your library')).toBe(true)
     expect(isLondonBottoming('Put a card on the bottom')).toBe(false)
   })
 

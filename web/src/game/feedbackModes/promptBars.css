@@ -107,3 +107,8 @@
   border-color: rgb(var(--err-rgb) / 0.6);
   box-shadow: 0 16px 48px var(--shade-4), 0 0 20px rgb(var(--err-rgb) / 0.2);
 }
+
+.action-prompt-progress {
+  color: var(--fg-1);
+  font-weight: 600;
+}

@@ -11,8 +11,10 @@ const HAND_IDS = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
  * del motor HumanGame, NO auto-avanza la partida, así que el feedback del mulligan
  * no se pisa con GAME_SELECT posteriores.
  *  - Keep hand (boolean=false) → GAME_SELECT (sigue la partida).
- *  - Mulligan (boolean=true) → GAME_TARGET de London (poner carta al fondo) y al
- *    recibir el UUID elegido → GAME_SELECT.
+ *  - Mulligan (boolean=true) → London bottoming exactly as the real server asks it:
+ *    one GAME_TARGET per card ("Select a card (N more) to put on the bottom of your
+ *    library", min/max 0 on the wire), re-asked after every UUID until none is left
+ *    → GAME_SELECT.
  */
 export function mulliganScenario(): Scenario {
   const hand: Record<string, ReturnType<typeof makeCard>> = {}
@@ -79,6 +81,24 @@ export function mulliganScenario(): Scenario {
     spectatorsAllowed: true,
   })
 
+  let bottomLeft = 0
+
+  const askBottom = (conn: Parameters<Scenario['onAction']>[0]) =>
+    conn.broadcast(
+      'GAME_TARGET',
+      {
+        message: `Select a card (${bottomLeft} more) to put on the bottom of your library`,
+        targets: Object.keys(gameView.myHand ?? {}),
+        flag: true,
+        min: 0,
+        max: 0,
+        options: { chosenTargets: [], targetZone: 'HAND' },
+        gameView,
+        gameId: GAME_ID,
+      },
+      GAME_ID,
+    )
+
   const proceed = (conn: Parameters<Scenario['onAction']>[0]) =>
     conn.broadcast(
       'GAME_SELECT',
@@ -121,26 +141,26 @@ export function mulliganScenario(): Scenario {
           conn.ok(requestId, action, {})
           const takeMulligan = (args as { value?: boolean } | undefined)?.value === true
           if (takeMulligan) {
-            conn.broadcast(
-              'GAME_TARGET',
-              {
-                message: 'Select a card to put on the bottom of your library',
-                secondMessage: 'London mulligan: 1 more',
-                targets: HAND_IDS,
-                flag: true,
-                gameId: GAME_ID,
-              },
-              GAME_ID,
-            )
+            bottomLeft = MULLIGAN_BOTTOM_COUNT
+            askBottom(conn)
           } else {
             proceed(conn)
           }
           break
         }
-        case 'sendPlayerUUID':
+        case 'sendPlayerUUID': {
           conn.ok(requestId, action, {})
-          proceed(conn)
+          const picked = String((args as { value?: unknown } | undefined)?.value ?? '')
+          if (bottomLeft > 0 && gameView.myHand?.[picked]) {
+            const rest = { ...gameView.myHand }
+            delete rest[picked]
+            gameView.myHand = rest
+            bottomLeft -= 1
+          }
+          if (bottomLeft > 0) askBottom(conn)
+          else proceed(conn)
           break
+        }
         case 'sendPlayerString':
         case 'sendPlayerInteger':
           conn.ok(requestId, action, {})
@@ -154,3 +174,4 @@ export function mulliganScenario(): Scenario {
 }
 
 export const MULLIGAN_HAND_IDS = HAND_IDS
+export const MULLIGAN_BOTTOM_COUNT = 2

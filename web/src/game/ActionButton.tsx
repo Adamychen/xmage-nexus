@@ -6,6 +6,7 @@ import PassMenu from './PassMenu'
 import Icon, { type IconName } from '../ui/Icon'
 import { activeSkipOf } from './skips'
 import { controlInfo } from '../state/control'
+import { useStore } from '../state/store'
 import { formatTimer, useTickingTimer } from '../utils/timer'
 import { LONG_WAIT_SECS, formatElapsed, useElapsedSeconds, waitingState, type WaitingState } from './waitingState'
 import './ActionButton.css'
@@ -59,7 +60,8 @@ export default function ActionButton({
   const [menuOpen, setMenuOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const me = game?.players?.find((p) => p.controlled)
-  const waiting = waitingState(game, feedback)
+  const waitingFor = useStore((s) => s.waitingFor)
+  const waiting = waitingState(game, feedback, waitingFor)
   const stackItems = Object.keys(game?.stack ?? {}).length
   const activeSkip = activeSkipOf(me)
   const control = controlInfo(game)
@@ -86,7 +88,11 @@ export default function ActionButton({
   let modeClass = 'action-pass'
   let modeIcon: IconName = 'play'
 
-  if (waiting) {
+  if (waiting?.preGame) {
+    label = waiting.name ? t('game', 'mulligan_waiting_for', { name: waiting.name }) : t('game', 'mulligan_waiting_others')
+    modeClass = 'action-waiting'
+    modeIcon = 'hourglass'
+  } else if (waiting) {
     label = t('game', 'waiting_for', { name: waiting.name })
     modeClass = 'action-waiting'
     modeIcon = 'hourglass'
@@ -132,7 +138,7 @@ export default function ActionButton({
           className={`big-action-btn ${modeClass} ${isInteractive ? 'interactive' : 'disabled'}`}
           disabled={!isInteractive}
           onClick={onPass}
-          title={t('game', 'action_main_hint')}
+          title={waiting?.preGame ? t('game', 'mulligan_waiting_hint') : t('game', 'action_main_hint')}
         >
           <span className="action-btn-glow" aria-hidden="true" />
           <div className="action-btn-content">

@@ -97,6 +97,7 @@ export interface GameSlice {
   turnRecap: TurnRecap | null
   enteredThisTurn: Record<string, true>
   priorityRequest: GameView | null
+  waitingFor: string | null
 }
 
 export const initialGame: GameSlice = {
@@ -124,5 +125,6 @@ export const initialGame: GameSlice = {
   turnRecap: null,
   enteredThisTurn: {},
   priorityRequest: null,
+  waitingFor: null,
   phaseStops: clonePhaseStops(DEFAULT_PHASE_STOPS),
 }

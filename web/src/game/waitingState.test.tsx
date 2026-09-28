@@ -5,6 +5,7 @@ import ActionButton from './ActionButton'
 import { LONG_WAIT_SECS, formatElapsed, waitingState } from './waitingState'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { setLanguage } from '../i18n'
+import { setState } from '../state/state'
 import { UNLIMITED_TIME } from '../utils/timer'
 import type { FeedbackPrompt } from './feedback'
 import type { GameView } from '../net/types'
@@ -44,6 +45,26 @@ describe('waitingState', () => {
     const b = waitingState(makeGameView({ players: [me(), ana(true)], step: 'DRAW' }), null)!.key
     const c = waitingState(makeGameView({ players: [me(), ana(true)], step: 'DRAW', stack: { s1: makeCard({ id: 's1', name: 'Opt' }) } }), null)!.key
     expect(new Set([a, b, c]).size).toBe(3)
+  })
+
+  it('explains the mulligan phase instead of an unexplained wait', () => {
+    const pregame = makeGameView({ players: [me(), ana()], turn: 1, step: null, phase: null } as never)
+    expect(waitingState(pregame, null)).toMatchObject({ preGame: true, name: '' })
+    expect(waitingState(pregame, null, 'Ana')).toMatchObject({ preGame: true, playerId: 'a', name: 'Ana' })
+    expect(waitingState(pregame, null, 'Me')).toMatchObject({ preGame: true, name: '' })
+    expect(waitingState(makeGameView({ players: [me(), ana()], step: 'UPKEEP', phase: 'BEGINNING' } as never), null)).toBeNull()
+  })
+
+  it('labels the action button with the mulligan wait', () => {
+    const pregame = makeGameView({ players: [me(), ana()], turn: 1, step: null, phase: null } as never)
+    setState({ waitingFor: null })
+    const first = renderButton(pregame)
+    expect(first.getByRole('button', { name: /Mulligan — waiting for other players/ })).not.toBeNull()
+    first.unmount()
+    setState({ waitingFor: 'Ana' })
+    const second = renderButton(pregame)
+    expect(second.getByRole('button', { name: /Mulligan — waiting for Ana/ })).not.toBeNull()
+    setState({ waitingFor: null })
   })
 
   it('formats elapsed time', () => {

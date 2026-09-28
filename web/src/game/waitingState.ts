@@ -11,18 +11,29 @@ export interface WaitingState {
   name: string
   timeLeftSecs: number | null
   key: string
+  preGame: boolean
 }
 
-export function waitingState(game: GameView | null, feedback: FeedbackPrompt | null): WaitingState | null {
+export function isPreGame(game: GameView): boolean {
+  return !game.step && !game.phase
+}
+
+export function waitingState(game: GameView | null, feedback: FeedbackPrompt | null, waitingFor: string | null = null): WaitingState | null {
   if (!game || feedback) return null
   const players = game.players ?? []
   const me = players.find((p) => p.controlled)
   if (me?.hasPriority) return null
   if (controlInfo(game).priorityIsControlled) return null
+  const preGame = isPreGame(game)
   const holder =
     players.find((p) => p !== me && p.hasPriority) ??
-    (game.priorityPlayerName ? players.find((p) => p !== me && p.name === game.priorityPlayerName) : undefined)
-  if (!holder) return null
+    (game.priorityPlayerName ? players.find((p) => p !== me && p.name === game.priorityPlayerName) : undefined) ??
+    (waitingFor ? players.find((p) => p !== me && p.name === waitingFor) : undefined)
+  if (!holder) {
+    if (!preGame || !me) return null
+    const name = waitingFor && waitingFor !== me.name ? waitingFor : ''
+    return { playerId: '', name, timeLeftSecs: null, key: `pregame|${game.turn}|${name}`, preGame }
+  }
   const secs = holder.priorityTimeLeftSecs
   const timeLeftSecs = typeof secs === 'number' && secs > 0 && !isUnlimitedTime(secs) ? secs : null
   const stackKey = Object.keys(game.stack ?? {}).join(',')
@@ -31,7 +42,15 @@ export function waitingState(game: GameView | null, feedback: FeedbackPrompt | n
     name: holder.name,
     timeLeftSecs,
     key: `${holder.playerId}|${game.turn}|${game.step ?? ''}|${stackKey}`,
+    preGame,
   }
+}
+
+const WAITING_FOR_RE = /(?:^|\s-\s)Waiting for\s+(.+?)\s*$/i
+
+export function waitingForName(message: string): string | null {
+  const match = WAITING_FOR_RE.exec(message.replace(/<[^>]*>/g, '').trim())
+  return match ? match[1] : null
 }
 
 export function formatElapsed(seconds: number): string {

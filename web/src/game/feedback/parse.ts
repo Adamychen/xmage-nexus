@@ -40,6 +40,7 @@ import {
 } from './record'
 import { defaultText } from './text'
 import { sanitizePromptText } from './promptText'
+import { targetProgress } from './progress'
 
 export function parseFeedback(
   method: string,
@@ -157,7 +158,11 @@ export function parseFeedback(
               : isOrderPick
                 ? t('game', 'library_order_title')
                 : t('game', 'choose_target')
-      return prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargetsOf(data), undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
+      const chosenTargets = chosenTargetsOf(data)
+      const fp = prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargets, undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
+      const progress = targetProgress(message, chosenTargets)
+      if (progress) fp.progress = progress
+      return fp
     }
     case 'GAME_SELECT_CARDS':
     case 'GAME_SELECT_TARGETS':

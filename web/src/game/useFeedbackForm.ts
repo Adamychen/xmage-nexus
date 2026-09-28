@@ -68,7 +68,7 @@ export function useFeedbackForm(): UseFeedbackForm {
     setSelected([])
     setMultiAmounts(Object.fromEntries((prompt?.items ?? []).map((item) => [item.id, item.defaultValue ?? item.min])))
     setTextValue('')
-  }, [prompt?.method, prompt?.gameId])
+  }, [prompt])
 
   const filteredStringOptions = useMemo(() => {
     if (!prompt?.options) return []

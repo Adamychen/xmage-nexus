@@ -90,7 +90,7 @@ describe('MulliganDialog — conceder', () => {
   })
 
   it('el diálogo de London (poner cartas al fondo) también ofrece Conceder', () => {
-    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
+    renderDialog(mulliganPrompt({ method: 'GAME_TARGET', mode: 'uuid', isMulligan: false, isMulliganLondon: true }))
     expect(screen.getByTestId('mulligan-concede')).toBeTruthy()
   })
 
@@ -122,8 +122,22 @@ describe('MulliganDialog — grid de London-bottom por teclado', () => {
     cleanup()
   })
 
+  const londonPrompt = (partial: Partial<FeedbackPrompt> = {}) => mulliganPrompt({
+    method: 'GAME_TARGET',
+    mode: 'uuid',
+    message: 'Select a card (2 more) to put on the bottom of your library',
+    options: [
+      { id: 'h-1', label: 'Forest', value: 'h-1' },
+      { id: 'h-2', label: 'Mountain', value: 'h-2' },
+    ],
+    isMulligan: false,
+    isMulliganLondon: true,
+    progress: { selected: 0, remaining: 2 },
+    ...partial,
+  })
+
   it('cada carta del grid es un elemento con role=button y tabIndex operable', () => {
-    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
+    renderDialog(londonPrompt())
     const slots = document.querySelectorAll('.mulligan-hand-grid .card-slot')
     expect(slots.length).toBe(2)
     for (const slot of slots) {
@@ -132,26 +146,35 @@ describe('MulliganDialog — grid de London-bottom por teclado', () => {
     }
   })
 
-  it('Enter selecciona una carta para el fondo igual que el click, y refleja aria-pressed', () => {
-    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
-    const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[0] as HTMLElement
-    expect(slot.getAttribute('aria-pressed')).toBe('false')
+  it('muestra cuántas cartas faltan por poner al fondo', () => {
+    renderDialog(londonPrompt())
+    expect(screen.getByTestId('mulligan-london-remaining').textContent).toBe('Cartas por poner al fondo: 2')
+  })
+
+  it('Enter envía la carta al fondo en el acto, igual que el click', async () => {
+    const uuid = vi.spyOn(cmds, 'sendPlayerUUID').mockResolvedValue({ ok: true } as never)
+    const send = renderDialog(londonPrompt())
+    const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[1] as HTMLElement
 
     fireEvent.keyDown(slot, { key: 'Enter' })
 
-    expect(slot.getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByText('#1')).toBeTruthy()
+    await waitFor(() => expect(uuid).toHaveBeenCalledWith('h-2', 'game-1'))
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(document.querySelector('.mulligan-actions .ui-btn--primary')).toBeNull()
   })
 
-  it('Space también selecciona, y la selección habilita el botón de confirmar al llegar al mínimo', () => {
-    renderDialog(mulliganPrompt({ isMulligan: false, isMulliganLondon: true, min: 1, max: 2 }))
-    const slot = document.querySelectorAll('.mulligan-hand-grid .card-slot')[0] as HTMLElement
-    const confirmBtn = document.querySelector('.mulligan-actions .ui-btn--primary') as HTMLButtonElement
-    expect(confirmBtn.disabled).toBe(true)
+  it('solo ofrece las cartas que el servidor admite como objetivo', () => {
+    renderDialog(londonPrompt({ options: [{ id: 'h-1', label: 'Forest', value: 'h-1' }] }))
+    const slots = document.querySelectorAll('.mulligan-hand-grid .card-slot')
+    expect(slots.length).toBe(1)
+    expect(slots[0].getAttribute('data-card-id')).toBe('h-1')
+  })
 
-    fireEvent.keyDown(slot, { key: ' ' })
-
-    expect(confirmBtn.disabled).toBe(false)
+  it('no envía nada mientras hay un envío en curso', () => {
+    const uuid = vi.spyOn(cmds, 'sendPlayerUUID').mockResolvedValue({ ok: true } as never)
+    renderDialog(londonPrompt(), true)
+    fireEvent.click(document.querySelectorAll('.mulligan-hand-grid .card-slot')[0])
+    expect(uuid).not.toHaveBeenCalled()
   })
 })
 

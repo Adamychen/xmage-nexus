@@ -121,6 +121,14 @@
   justify-content: flex-end;
 }
 
+.card-grid-progress {
+  margin-right: auto;
+  align-self: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text, var(--fg-1));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-grid-filter,
   .card-grid-cell {

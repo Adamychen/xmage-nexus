@@ -52,10 +52,10 @@ export function localizeServerMessage(
   }
 
   const bottomMatch = plain.match(
-    /^(?:Select|Choose)\s+(?:a|(\d+))\s+cards?\s+to\s+put\s+on\s+the\s+bottom\s+of\s+(?:your|the)\s+library$/i
+    /^(?:Select|Choose)\s+(?:a|(\d+))\s+cards?(?:\s*\((\d+)\s+more\))?\s+to\s+put\s+on\s+the\s+bottom\s+of\s+(?:your|the)\s+library$/i
   )
   if (bottomMatch) {
-    const count = bottomMatch[1] ? Number(bottomMatch[1]) : 1
+    const count = bottomMatch[2] ? Number(bottomMatch[2]) : bottomMatch[1] ? Number(bottomMatch[1]) : 1
     return count === 1
       ? t('dialogs', 'mulligan_london_hint')
       : `${t('dialogs', 'mulligan_london_hint')} (${count})`

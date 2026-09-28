@@ -145,3 +145,18 @@ describe('eventHandler — callbacks críticos', () => {
     expect(getState().viewer?.cards).toHaveLength(1)
   })
 })
+
+describe('eventHandler — who the game is waiting for', () => {
+  beforeEach(() => setState({ waitingFor: null, feedback: null }))
+
+  it('remembers the name from the server "Waiting for" inform and clears it when a prompt reaches us', () => {
+    handleMessage({ type: 'event', method: 'GAME_UPDATE_AND_INFORM', objectId: 'g1', data: { message: "Waiting for <font color='#20B2AA'>Ana</font>" } } as never)
+    expect(getState().waitingFor).toBe('Ana')
+
+    handleMessage({ type: 'event', method: 'GAME_UPDATE_AND_INFORM', objectId: 'g1', data: { message: 'Upkeep - Waiting for Bo' } } as never)
+    expect(getState().waitingFor).toBe('Bo')
+
+    handleMessage({ type: 'event', method: 'GAME_ASK', objectId: 'g1', data: { question: 'Pay {1}?', gameId: 'g1' } } as never)
+    expect(getState().waitingFor).toBeNull()
+  })
+})

@@ -17,7 +17,7 @@ export function isDiscardMessage(message: string): boolean {
 }
 
 export function isLondonBottoming(message: string): boolean {
-  return /^select a card to put on the bottom of (your|the) library/i.test(message)
+  return /^select\s+(?:a|\d+)\s+cards?(?:\s*\(\d+\s+more\))?\s+to put on the bottom of (your|the) library/i.test(message.replace(/<[^>]*>/g, '').trim())
 }
 
 /**

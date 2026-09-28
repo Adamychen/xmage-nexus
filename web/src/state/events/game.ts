@@ -18,6 +18,7 @@ import { gameLogStore, toSavedEntries } from '../../system/gameLogs'
 import { matchHistoryStore } from '../../system/matchHistory'
 import { clearFlights } from '../../board/flightManager'
 import type { Snapshot, EmbeddedGame } from './context'
+import { waitingForName } from '../../game/waitingState'
 
 interface GameMeta {
   gameId: string
@@ -95,6 +96,8 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
   if (method === 'GAME_INIT') clearFlights()
   if (objectId) saveActiveGame(objectId)
   if (method === 'GAME_UPDATE_AND_INFORM' && (data as any)?.message) {
+    const waitingFor = waitingForName(String((data as any).message))
+    if (waitingFor) setState({ waitingFor })
     addLog('partida', (data as any).message, objectId ?? undefined)
     sniffDungeonEntry((data as any).message, objectId ?? s.gameId)
     sniffRollbackAnnounce((data as any).message, objectId ?? s.gameId)
@@ -110,6 +113,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
       if (objectId) rememberGameStart(objectId, embeddedGame)
       patch.gameEnd = null
       patch.feedback = null
+      patch.waitingFor = null
       if (objectId && !fresh.gameChatId) {
         void cmds.getGameChatId(objectId).then((cid) => {
           setState({ gameChatId: cid ?? null })
