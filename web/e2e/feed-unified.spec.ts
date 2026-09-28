@@ -5,6 +5,7 @@ import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
+import { dismissInfoWindows } from './support/info-windows'
 import { startGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
@@ -19,6 +20,8 @@ test.describe('Feed unificado con diseño carta', () => {
         tableName: TABLE.mechanics,
         deck: DECK.advanced,
       })
+      // the scenario reveals a card, which latches its viewer open over the board
+      await dismissInfoWindows(page)
 
       const feed = page.locator('.action-feed-list')
       await expect(page.getByTestId('drawer-tab-chat')).toBeVisible({ timeout: 30_000 })

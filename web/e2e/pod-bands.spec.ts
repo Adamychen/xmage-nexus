@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
+import { dismissInfoWindows } from './support/info-windows'
 import { dismissSetupWizard } from './support/start-game'
 import type { Page } from '@playwright/test'
 
@@ -115,7 +116,10 @@ test('pod: la mano enemiga colapsa a stack ×N sin marca de vista (privada) @pod
 test('pod: mano revelada abre el visor con conocidas + dorsos @pod', async ({ page }) => {
   const bolt = { id: 'rk1', name: 'Lightning Bolt', manaValue: 1, expansionSetCode: 'lea', cardNumber: '1' }
   const shock = { id: 'rk2', name: 'Shock', manaValue: 1, expansionSetCode: 'lea', cardNumber: '2' }
-  await loadPodGame(page, podGame({}, 4, [{ cards: { rk1: bolt, rk2: shock } }]))
+  await loadPodGame(page, podGame({}, 4, [{ name: 'Bob', cards: { rk1: bolt, rk2: shock } }]))
+  // that revealed group latches its own viewer open over the board; this spec is about the
+  // face-down hand stack's viewer, so get rid of the other one first
+  await dismissInfoWindows(page)
   const stack = page.locator('[data-testid="opp-hand-stack"]')
   await expect(stack, 'stack de dorsos visible').toBeVisible({ timeout: 10_000 })
   await expect(stack).toHaveAttribute('data-count', '2')

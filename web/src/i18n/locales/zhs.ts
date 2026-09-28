@@ -1129,6 +1129,9 @@ export const zhs: TranslationSchema = {
     looked_at_window: '已查看 ({name})',
     revealed_window: '已展示 ({name})',
     companion_window: '伙伴 ({name})',
+    looked_at_window_plain: '已查看',
+    revealed_window_plain: '已展示',
+    companion_window_plain: '伙伴',
     // TODO bulk: interim English until proper zhs translation lands
     spectator_game_changed: 'The game changed: the table has started a new game.',
     // TODO bulk: interim English until proper zhs translation lands

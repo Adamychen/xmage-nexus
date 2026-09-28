@@ -3,6 +3,7 @@ import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
+import { dismissInfoWindows } from './support/info-windows'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { HAND_BAR_REST_OVERLAP_RATIO } from '../src/board/handSizing'
@@ -209,6 +210,8 @@ test('hovering a battlefield land still opens the floating preview @fullflow @ha
       tableName: TABLE.mechanics,
       skipAsks: true,
     })
+    // the scenario reveals a card, which latches its viewer open over the board
+    await dismissInfoWindows(page)
     // La Mountain propia vive en la fila de permanentes, pegada a la mano.
     const landSlot = page.locator('.player-zone:not(.mirrored) .permanents-band .card-slot').first()
     await expect(landSlot).toBeVisible({ timeout: 30_000 })

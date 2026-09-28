@@ -1,6 +1,6 @@
 import PileOverlay from '../board/PileOverlay'
 import { t as tStatic } from '../i18n'
-import { INFO_WINDOW_TITLE_KEY, dismissInfoWindow, useInfoWindows } from './infoWindowState'
+import { dismissInfoWindow, infoWindowTitle, useInfoWindows } from './infoWindowState'
 
 /** Looked-at / revealed / companion viewers (parity with the desktop
  *  CardInfoWindowDialog). While a prompt dialog shows the looked-at/revealed
@@ -15,7 +15,7 @@ export default function InfoWindows() {
       {visible.map((w) => (
         <PileOverlay
           key={w.key}
-          title={tStatic('game', INFO_WINDOW_TITLE_KEY[w.kind], { name: w.name })}
+          title={infoWindowTitle(tStatic, w.kind, w.name)}
           cards={w.cards}
           onClose={() => dismissInfoWindow(w.key)}
         />

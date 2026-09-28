@@ -3,7 +3,7 @@ import CardSlot from '../../board/CardSlot'
 import FloatingCardPreview from '../../board/FloatingCardPreview'
 import { useTranslation } from '../../i18n'
 import type { CardView, PermanentView } from '../../net/types'
-import { INFO_WINDOW_TITLE_KEY, useClaimedInfoWindows } from '../infoWindowState'
+import { infoWindowTitle, useClaimedInfoWindows } from '../infoWindowState'
 import './ClaimedInfoCards.css'
 
 /** The looked-at/revealed cards behind the pending decision (e.g. Jace, the
@@ -18,7 +18,7 @@ export default function ClaimedInfoCards() {
     <div className="feedback-info-cards" data-testid="feedback-info-cards">
       {windows.map((w) => (
         <section key={w.key} className="feedback-info-group" data-info-window={w.kind}>
-          <div className="feedback-info-title">{t('game', INFO_WINDOW_TITLE_KEY[w.kind], { name: w.name })}</div>
+          <div className="feedback-info-title">{infoWindowTitle(t, w.kind, w.name)}</div>
           <div className="feedback-info-row">
             {Object.entries(w.cards).map(([id, card]) => (
               <CardSlot

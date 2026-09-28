@@ -2,6 +2,7 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
+import { dismissInfoWindows } from './support/info-windows'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
@@ -16,6 +17,8 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
         deck: DECK.advanced,
       })
       expect(pageErrors).toEqual([])
+      // the scenario reveals a card, which latches its viewer open over the board
+      await dismissInfoWindows(page)
 
       const beast = page.locator('[data-card-name="Keyword Beast"]').first()
       await expect(beast).toBeVisible()

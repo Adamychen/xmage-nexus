@@ -1129,6 +1129,9 @@ export const ja: TranslationSchema = {
     looked_at_window: '見たカード ({name})',
     revealed_window: '公開されたカード ({name})',
     companion_window: '相棒 ({name})',
+    looked_at_window_plain: '見たカード',
+    revealed_window_plain: '公開されたカード',
+    companion_window_plain: '相棒',
     // TODO bulk: interim English until proper ja translation lands
     spectator_game_changed: 'The game changed: the table has started a new game.',
     // TODO bulk: interim English until proper ja translation lands

@@ -178,8 +178,12 @@ export function mechanicsScenario(): Scenario {
         },
       }),
     ],
+    // `revealed` is load-bearing for this scenario: mechanics.spec.ts asserts the Shock shows up
+    // as a known card in the opponent's zone. It also opens its viewer as a modal the first time
+    // it appears, so specs that are about hovers must dismiss it (dismissInfoWindows in support/).
     revealed: [
       {
+        name: 'Bob',
         cards: {
           'rev-1': makeCard({ name: 'Shock', cardTypes: ['Instant'], manaValue: 1, expansionSetCode: 'TST', cardNumber: '1' }),
         },

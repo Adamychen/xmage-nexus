@@ -2,6 +2,9 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { getState, listeners } from '../state/state'
 import type { CardView, RevealedView } from '../net/types'
 
+/** The `t(category, key, params)` overload, so this module needs no runtime import of i18n. */
+type Translate = (category: string, key: string, params?: Record<string, string | number>) => string
+
 export type InfoWindowKind = 'lookedAt' | 'revealed' | 'companion'
 
 export interface InfoWindow {
@@ -31,6 +34,23 @@ export const INFO_WINDOW_TITLE_KEY: Record<InfoWindowKind, 'looked_at_window' | 
   companion: 'companion_window',
 }
 
+/** Used when the server sends the group without a name: "Revealed cards", not "Revealed (undefined)". */
+const INFO_WINDOW_TITLE_KEY_PLAIN: Record<InfoWindowKind, 'looked_at_window_plain' | 'revealed_window_plain' | 'companion_window_plain'> = {
+  lookedAt: 'looked_at_window_plain',
+  revealed: 'revealed_window_plain',
+  companion: 'companion_window_plain',
+}
+
+/**
+ * Title of a looked-at / revealed / companion viewer.
+ *
+ * <p>`RevealedView.name` is not always filled: a group the engine publishes without a name (the
+ * mechanics scenario's single revealed card, and the XMage classes themselves declare it
+ * nullable) used to render "Reveladas (undefined)" right in the dialog header.
+ */
+export function infoWindowTitle(t: Translate, kind: InfoWindowKind, name?: string | null): string {
+  return name ? t('game', INFO_WINDOW_TITLE_KEY[kind], { name }) : t('game', INFO_WINDOW_TITLE_KEY_PLAIN[kind])
+}
 export const EMPTY_INFO_WINDOWS: InfoWindowState = { open: [], seen: {}, dismissed: {} }
 
 function sig(cards: Record<string, unknown>): string {

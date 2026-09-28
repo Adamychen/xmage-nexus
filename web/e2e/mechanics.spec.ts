@@ -8,6 +8,7 @@ import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { startGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 import { withFakeServer } from './support/fake-backend'
+import { dismissInfoWindows } from './support/info-windows'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
 fakeOnly()
 
@@ -79,6 +80,9 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       })
 
       expect(pageErrors).toEqual([])
+      // the scenario reveals a card, which latches its viewer open over the board; the Shock it
+      // reveals is still asserted below, in the opponent's zone, where the server puts it
+      await dismissInfoWindows(page)
 
       // 1. Verify PlayerInfoBar badges are rendered
       const myInfoBar = page.locator('.player-info-bar.my')
