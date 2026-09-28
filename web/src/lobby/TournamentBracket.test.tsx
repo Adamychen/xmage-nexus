@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import TournamentBracket from './TournamentBracket'
 import ConfirmHost from '../ui/ConfirmHost'
-import { setLanguage } from '../i18n'
+import { setLanguage, useLanguage } from '../i18n'
 import type { TournamentView, TournamentPlayerView, RoundView, TournamentGameView } from '../net/types'
 
 function sampleTournamentView(overrides: Partial<TournamentView> = {}): TournamentView {
@@ -85,20 +85,20 @@ describe('TournamentBracket', () => {
     expect(screen.getByTestId('standings-state').textContent).toBe('Finalizada (Winner)')
   })
 
-  it('no duplica los encabezados de la clasificación en en y ru (sin .replace)', () => {
-    const headersFor = (lang: 'en' | 'ru') => {
-      setLanguage(lang)
+  it('no duplica los encabezados de la clasificación en en y ru (sin .replace)', async () => {
+    const headersFor = async (lang: 'en' | 'ru') => {
+      await useLanguage(lang)
       const { container, unmount } = render(<TournamentBracket view={sampleTournamentView()} />)
       const texts = Array.from(container.querySelectorAll('thead th')).map((el) => el.textContent ?? '')
       unmount()
       return texts
     }
-    const en = headersFor('en')
+    const en = await headersFor('en')
     expect(new Set(en).size).toBe(en.length)
     expect(en).toContain('Results')
     expect(en).toContain('History')
     expect(en).toContain('Pts')
-    const ru = headersFor('ru')
+    const ru = await headersFor('ru')
     expect(new Set(ru).size).toBe(ru.length)
     expect(ru).toContain('Результаты')
     expect(ru).toContain('История')

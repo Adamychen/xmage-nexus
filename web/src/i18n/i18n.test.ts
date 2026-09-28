@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
-import { t, translateError, setLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage, toBcp47Locale } from './index'
+import { t, translateError, setLanguage, useLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage, toBcp47Locale } from './index'
 import { ja } from './locales/ja'
 
 describe('i18n system', () => {
@@ -13,47 +13,47 @@ describe('i18n system', () => {
     setCardLanguage('en')
   })
 
-  it('translates basic keys in Spanish', () => {
+  it('translates basic keys in Spanish', async () => {
     expect(t('common.save')).toBe('Guardar')
     expect(t('lobby.nav_tables')).toBe('Mesas')
     expect(t('game.concede')).toBe('Conceder')
   })
 
-  it('switches to all 9 supported languages dynamically', () => {
-    setLanguage('en')
+  it('switches to all 9 supported languages dynamically', async () => {
+    await useLanguage('en')
     expect(getLanguage()).toBe('en')
     expect(t('common.save')).toBe('Save')
 
-    setLanguage('de')
+    await useLanguage('de')
     expect(getLanguage()).toBe('de')
     expect(t('common.save')).toBe('Speichern')
 
-    setLanguage('fr')
+    await useLanguage('fr')
     expect(getLanguage()).toBe('fr')
     expect(t('common.save')).toBe('Enregistrer')
 
-    setLanguage('it')
+    await useLanguage('it')
     expect(getLanguage()).toBe('it')
     expect(t('common.save')).toBe('Salva')
 
-    setLanguage('pt')
+    await useLanguage('pt')
     expect(getLanguage()).toBe('pt')
     expect(t('common.save')).toBe('Salvar')
 
-    setLanguage('ru')
+    await useLanguage('ru')
     expect(getLanguage()).toBe('ru')
     expect(t('common.save')).toBe('Сохранить')
 
-    setLanguage('ja')
+    await useLanguage('ja')
     expect(getLanguage()).toBe('ja')
     expect(t('common.save')).toBe('保存')
 
-    setLanguage('zhs')
+    await useLanguage('zhs')
     expect(getLanguage()).toBe('zhs')
     expect(t('common.save')).toBe('保存')
   })
 
-  it('translates error messages and raw server phrases across languages', () => {
+  it('translates error messages and raw server phrases across languages', async () => {
     setLanguage('es')
     expect(translateError('login failed')).toBe('Error de inicio de sesión: credenciales incorrectas o servidor no disponible')
     expect(translateError('table full')).toBe('La mesa ya está completa')
@@ -62,21 +62,21 @@ describe('i18n system', () => {
       'No se pudo unir a la mesa seleccionada: You can join a table only one time.',
     )
 
-    setLanguage('en')
+    await useLanguage('en')
     expect(translateError('login failed')).toBe('Login failed: invalid credentials or server unavailable')
     expect(translateError('table full')).toBe('This table is already full')
 
-    setLanguage('de')
+    await useLanguage('de')
     expect(translateError('login failed')).toBe('Anmeldung fehlgeschlagen: Ungültige Anmeldedaten oder Server nicht erreichbar')
 
-    setLanguage('ja')
+    await useLanguage('ja')
     expect(translateError('login failed')).toBe('ログイン失敗: 認証情報が無効か、サーバーが利用できません')
   })
 
-  it('falls back to English (not Spanish) for keys missing in the active language', () => {
+  it('falls back to English (not Spanish) for keys missing in the active language', async () => {
     const backup = ja.game.concede
     try {
-      setLanguage('ja')
+      await useLanguage('ja')
       delete (ja.game as unknown as Record<string, unknown>).concede
       expect(t('game.concede')).toBe('Concede')
       expect(t('game', 'concede')).toBe('Concede')
@@ -86,26 +86,26 @@ describe('i18n system', () => {
     }
   })
 
-  it('maps game language to BCP-47 for Intl formatters', () => {
+  it('maps game language to BCP-47 for Intl formatters', async () => {
     expect(toBcp47Locale('zhs')).toBe('zh')
     expect(toBcp47Locale('ja')).toBe('ja')
     expect(toBcp47Locale('es')).toBe('es')
     expect(toBcp47Locale('en')).toBe('en')
   })
 
-  it('supports interpolation parameters', () => {
+  it('supports interpolation parameters', async () => {
     setLanguage('es')
     expect(t('common.search')).toBe('Buscar...')
   })
 
-  it('manages card language settings', () => {
+  it('manages card language settings', async () => {
     expect(getCardLanguage()).toBe('en')
     setCardLanguage('ja')
     expect(getCardLanguage()).toBe('ja')
     expect(CARD_LANGUAGES.some((c) => c.code === 'ja')).toBe(true)
   })
 
-  it('has identical length and codes between UI languages and card languages', () => {
+  it('has identical length and codes between UI languages and card languages', async () => {
     expect(LANGUAGES).toHaveLength(9)
     expect(CARD_LANGUAGES).toHaveLength(9)
     const uiCodes = LANGUAGES.map((l) => l.code).sort()
@@ -113,7 +113,7 @@ describe('i18n system', () => {
     expect(uiCodes).toEqual(cardCodes)
   })
 
-  it('exposes the B.10/C.13 keys in all 9 languages with working interpolation', () => {
+  it('exposes the B.10/C.13 keys in all 9 languages with working interpolation', async () => {
     const keys = [
       'game.spectator_game_changed',
       'game.follow_game',
@@ -124,7 +124,7 @@ describe('i18n system', () => {
       'decks.import_backup_json',
     ]
     for (const lang of LANGUAGES) {
-      setLanguage(lang.code)
+      await useLanguage(lang.code)
       for (const key of keys) {
         const value = t(key)
         expect(value, `${lang.code}:${key}`).not.toBe('')
@@ -137,33 +137,33 @@ describe('i18n system', () => {
     expect(t('lobby.invite_searching', { current: 1, total: 10 })).toContain('10')
   })
 
-  it('traduce las pestañas Log/Chat en ru/ja/zhs (préstamo aceptado en los latinos)', () => {
-    setLanguage('ru')
+  it('traduce las pestañas Log/Chat en ru/ja/zhs (préstamo aceptado en los latinos)', async () => {
+    await useLanguage('ru')
     expect(t('game.tab_log')).toBe('Лог')
     expect(t('game.tab_chat')).toBe('Чат')
-    setLanguage('ja')
+    await useLanguage('ja')
     expect(t('game.tab_log')).toBe('ログ')
     expect(t('game.tab_chat')).toBe('チャット')
-    setLanguage('zhs')
+    await useLanguage('zhs')
     expect(t('game.tab_log')).toBe('日志')
     expect(t('game.tab_chat')).toBe('聊天')
   })
 
-  it('expone las claves de fin de partida sin turno y la de enfermedad de invocación', () => {
+  it('expone las claves de fin de partida sin turno y la de enfermedad de invocación', async () => {
     setLanguage('es')
     expect(t('game.end_won_game', { player: 'Ana' })).toBe('Ana gana la partida')
     expect(t('game.end_lost_game', { player: 'Ana' })).toBe('Ana pierde la partida')
     expect(t('game.end_won_game_you')).toBe('Has ganado la partida')
     expect(t('game.end_lost_game_you')).toBe('Has perdido la partida')
     expect(t('game.summoning_sickness')).toContain('{T}')
-    setLanguage('en')
+    await useLanguage('en')
     expect(t('game.summoning_sickness')).toContain('{T}')
   })
 
-  it('falls back to English for the new keys when missing in the active language', () => {
+  it('falls back to English for the new keys when missing in the active language', async () => {
     const backup = ja.game.follow_game
     try {
-      setLanguage('ja')
+      await useLanguage('ja')
       delete (ja.game as unknown as Record<string, unknown>).follow_game
       expect(t('game.follow_game')).toBe('Follow game')
       expect(t('game', 'follow_game')).toBe('Follow game')

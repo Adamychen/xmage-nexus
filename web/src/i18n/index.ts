@@ -1,14 +1,6 @@
 import { useSyncExternalStore, useCallback } from 'react'
 import type { SupportedLanguage, LanguageInfo, TranslationSchema } from './types'
-import { es } from './locales/es'
 import { en } from './locales/en'
-import { de } from './locales/de'
-import { fr } from './locales/fr'
-import { ja } from './locales/ja'
-import { it } from './locales/it'
-import { pt } from './locales/pt'
-import { ru } from './locales/ru'
-import { zhs } from './locales/zhs'
 
 export * from './types'
 
@@ -36,16 +28,50 @@ export const CARD_LANGUAGES: Array<{ code: string; name: string; flag: string }>
   { code: 'zhs', name: '简体中文', flag: '🇨🇳' },
 ]
 
-const LOCALES: Record<SupportedLanguage, TranslationSchema> = {
-  es,
-  en,
-  de,
-  fr,
-  ja,
-  it,
-  pt,
-  ru,
-  zhs,
+/**
+ * The nine locales are ~1.15 MB of source: statically imported they were roughly half the bundle,
+ * and a player only ever reads one of them. English stays eager because it is also the fallback
+ * every `t()` call falls back to, so the app is never without strings; the other eight load as
+ * their own chunk on demand and the store notifies when they land.
+ */
+const LOCALE_LOADERS: Record<SupportedLanguage, () => Promise<TranslationSchema>> = {
+  en: () => import('./locales/en').then((m) => m.en),
+  es: () => import('./locales/es').then((m) => m.es),
+  de: () => import('./locales/de').then((m) => m.de),
+  fr: () => import('./locales/fr').then((m) => m.fr),
+  it: () => import('./locales/it').then((m) => m.it),
+  pt: () => import('./locales/pt').then((m) => m.pt),
+  ru: () => import('./locales/ru').then((m) => m.ru),
+  ja: () => import('./locales/ja').then((m) => m.ja),
+  zhs: () => import('./locales/zhs').then((m) => m.zhs),
+}
+
+/** Only the locales whose strings are in memory right now. */
+const loaded = new Map<SupportedLanguage, TranslationSchema>([['en', en]])
+const inFlight = new Map<SupportedLanguage, Promise<void>>()
+
+/** Fills the store with a language, at most once per language. */
+export function ensureLocaleLoaded(lang: SupportedLanguage): Promise<void> {
+  if (loaded.has(lang)) return Promise.resolve()
+  const running = inFlight.get(lang)
+  if (running) return running
+  const promise = LOCALE_LOADERS[lang]()
+    .then((schema) => {
+      loaded.set(lang, schema)
+      notifyListeners()
+    })
+    .catch(() => {
+      // a chunk that fails to arrive leaves English in place, which is better than a blank UI
+    })
+    .finally(() => {
+      inFlight.delete(lang)
+    })
+  inFlight.set(lang, promise)
+  return promise
+}
+
+function localeOf(lang: SupportedLanguage): TranslationSchema {
+  return loaded.get(lang) ?? en
 }
 
 const STORAGE_KEY_LANG = 'nexus_lang'
@@ -54,10 +80,10 @@ const STORAGE_KEY_CARD_LANG = 'nexus_card_lang'
 function getInitialLanguage(): SupportedLanguage {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_LANG) as SupportedLanguage | null
-    if (saved && LOCALES[saved]) return saved
+    if (saved && saved in LOCALE_LOADERS) return saved
 
     const browserLang = navigator.language.slice(0, 2).toLowerCase()
-    if (browserLang in LOCALES) return browserLang as SupportedLanguage
+    if (browserLang in LOCALE_LOADERS) return browserLang as SupportedLanguage
   } catch {}
   return 'en'
 }
@@ -74,6 +100,14 @@ let currentLanguage: SupportedLanguage = getInitialLanguage()
 let currentCardLanguage: string = getInitialCardLanguage()
 let storeVersion = 0
 const listeners = new Set<() => void>()
+
+/**
+ * Starts the fetch of the saved/browser language. English renders until it lands, so this is
+ * fire-and-forget and the app never waits on it; the listeners re-render when it resolves.
+ */
+export function preloadInitialLocale(): void {
+  void ensureLocaleLoaded(currentLanguage)
+}
 
 function notifyListeners() {
   storeVersion++
@@ -93,13 +127,25 @@ export function toBcp47Locale(lang: SupportedLanguage): string {
 }
 
 export function setLanguage(lang: SupportedLanguage): void {
-  if (LOCALES[lang] && lang !== currentLanguage) {
+  if (lang in LOCALE_LOADERS && lang !== currentLanguage) {
     currentLanguage = lang
     try {
       localStorage.setItem(STORAGE_KEY_LANG, lang)
     } catch {}
     notifyListeners()
+    // English renders until the chunk lands, then every subscriber re-renders translated
+    void ensureLocaleLoaded(lang)
   }
+}
+
+/**
+ * Switches language and resolves once its strings are in memory, so a caller can read `t()`
+ * immediately after. `setLanguage` alone paints English for the few ms the chunk takes, which is
+ * what a player sees; a test has no such grace period and would assert the fallback.
+ */
+export async function useLanguage(lang: SupportedLanguage): Promise<void> {
+  setLanguage(lang)
+  await ensureLocaleLoaded(lang)
 }
 
 export function getCardLanguage(): string {
@@ -152,14 +198,16 @@ export function t(
   }
 
   const parts = path.split('.')
-  let current: any = LOCALES[currentLanguage] || LOCALES.en
+  // until a language's chunk has arrived this is English, and the notifyListeners() in
+  // ensureLocaleLoaded re-renders everything with the real strings
+  let current: any = localeOf(currentLanguage)
 
   for (const part of parts) {
     if (current && typeof current === 'object' && part in current) {
       current = current[part]
     } else {
       // Fallback to English or key if missing
-      let fallback: any = LOCALES.en
+      let fallback: any = en
       for (const p of parts) {
         if (fallback && typeof fallback === 'object' && p in fallback) {
           fallback = fallback[p]

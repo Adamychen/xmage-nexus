@@ -8,8 +8,30 @@ export interface FrameRecord {
   full?: unknown
 }
 
-const MAX_FRAMES = 60
-const MAX_FULL_BYTES = 64 * 1024
+/**
+ * `import.meta.env` only exists in a Vite-transformed context; this module is also imported
+ * directly by Node-side test harnesses, where reading it at module scope throws.
+ */
+function isDevBuild(): boolean {
+  try {
+    return Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV)
+  } catch {
+    return false
+  }
+}
+
+/** Frames kept for the diagnostics bundle a player exports from About. */
+export const FRAME_BUFFER_LIMITS = {
+  MAX_FRAMES: 60,
+  /**
+   * A frame at or below this size is retained whole so the bundle can reproduce it; anything
+   * larger keeps only its digest. A `GAME_UPDATE` is 200-800 KB, so retaining whole frames was
+   * 60 x this many bytes per session. Development keeps the fat budget because reproducing a
+   * real board state locally is the point; a shipped build keeps a small one, where the frames
+   * worth having in a bug report are the prompts and results, not the bulk state pushes.
+   */
+  MAX_FULL_BYTES: isDevBuild() ? 64 * 1024 : 8 * 1024,
+} as const
 
 let frames: FrameRecord[] = []
 
@@ -53,8 +75,10 @@ export function recordFrame(msg: ProxyMessage, rawLength?: number): void {
       bytes = -1
     }
   }
-  if (bytes >= 0 && bytes <= MAX_FULL_BYTES) full = msg
-  frames = [...frames.slice(-(MAX_FRAMES - 1)), { at: Date.now(), kind: kindOf(msg), bytes, digest: digestOf(msg), full }]
+  if (bytes >= 0 && bytes <= FRAME_BUFFER_LIMITS.MAX_FULL_BYTES) full = msg
+  // push + shift rather than a fresh array per frame: this runs on every inbound message
+  frames.push({ at: Date.now(), kind: kindOf(msg), bytes, digest: digestOf(msg), full })
+  if (frames.length > FRAME_BUFFER_LIMITS.MAX_FRAMES) frames.shift()
 }
 
 export function recentFrames(): FrameRecord[] {
@@ -62,7 +86,5 @@ export function recentFrames(): FrameRecord[] {
 }
 
 export function clearFrames(): void {
-  frames = []
+  frames.length = 0
 }
-
-export const FRAME_BUFFER_LIMITS = { MAX_FRAMES, MAX_FULL_BYTES }
