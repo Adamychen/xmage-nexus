@@ -17,12 +17,12 @@ vi.mock('./edhrec', async (importOriginal) => {
 const fetchMock = vi.mocked(fetchEdhrecCommander)
 const resolveMock = vi.mocked(resolveCardsByNames)
 
-function makeCard(name: string): ScryfallSearchCard {
+function makeCard(name: string, collectorNumber = '1'): ScryfallSearchCard {
   return {
     id: `id-${name}`,
     name,
     set: 'tst',
-    collector_number: '1',
+    collector_number: collectorNumber,
     cmc: 1,
     type_line: 'Artifact',
     colors: [],
@@ -62,7 +62,7 @@ const EDHREC_OK = {
 
 function resolvedMap() {
   return new Map<string, ScryfallSearchCard>([
-    ['sol ring', makeCard('Sol Ring')],
+    ['sol ring', makeCard('Sol Ring', '999')],
     ['arcane signet', makeCard('Arcane Signet')],
     ['llanowar elves', makeCard('Llanowar Elves')],
     ['elvish mystic', makeCard('Elvish Mystic')],
@@ -128,7 +128,31 @@ describe('SuggestionsPanel', () => {
     expect(resolveMock).toHaveBeenCalledWith(['Sol Ring', 'Arcane Signet', 'Llanowar Elves', 'Elvish Mystic'])
 
     fireEvent.click(solRing.closest('[role="button"]')!)
-    expect(onAdd).toHaveBeenCalledWith(makeCard('Sol Ring'))
+    expect(onAdd).toHaveBeenCalledWith(makeCard('Sol Ring', '999'))
+  })
+
+  it('marks cards already in the deck with a gold badge and pulses when the count grows', async () => {
+    fetchMock.mockResolvedValue(EDHREC_OK)
+    resolveMock.mockResolvedValue(resolvedMap())
+    const baseProps = {
+      commanderName: 'Test Commander',
+      isCommanderFormat: true,
+      onAdd: () => {},
+    }
+    const { rerender } = render(<SuggestionsPanel {...baseProps} countMap={new Map()} />)
+    await screen.findByAltText('Sol Ring')
+    const tile = () => screen.getByAltText('Sol Ring').closest('[role="button"]') as HTMLElement
+
+    expect(tile().className).not.toContain('is-in-deck')
+    expect(tile().querySelector('[data-testid="sg-in-deck-badge"]')).toBeNull()
+
+    rerender(<SuggestionsPanel {...baseProps} countMap={new Map([['TST/999', 1], ['sol ring', 2]])} />)
+
+    expect(tile().className).toContain('is-in-deck')
+    expect(tile().className).toContain('is-pulsing')
+    expect(tile().querySelector('[data-testid="sg-in-deck-badge"]')?.textContent).toContain('×2')
+    expect(tile().getAttribute('title')).toContain('In deck ×2')
+    expect(screen.getByAltText('Arcane Signet').closest('[role="button"]')?.className).not.toContain('is-in-deck')
   })
 
   it('shows not_found for commanders without EDHREC data', async () => {

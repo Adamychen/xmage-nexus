@@ -67,6 +67,65 @@
   position: relative;
 }
 
+/* Cards already in the deck: gold frame + check badge, art stays full color */
+.sg-tile.is-in-deck .arena-grid-card-img-wrapper {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.45), 0 0 14px rgb(var(--gold-rgb) / 0.25);
+}
+
+.sg-tile.is-in-deck:hover .arena-grid-card-img-wrapper {
+  border-color: var(--gold-300);
+  box-shadow: 0 8px 24px var(--shade-4), 0 0 16px rgb(var(--gold-rgb) / 0.55);
+}
+
+.sg-in-deck-badge {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: 1px var(--sp-1h);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, var(--gold-300) 0%, var(--gold-500) 100%);
+  color: var(--ink-1);
+  font-size: var(--fs-3xs);
+  font-weight: 900;
+  line-height: 1.5;
+  box-shadow: 0 1px 6px var(--shade-3);
+  pointer-events: none;
+}
+
+.sg-in-deck-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-tile.is-pulsing .arena-grid-card-img-wrapper {
+  animation: sg-in-deck-glow 650ms ease;
+}
+
+.sg-in-deck-badge.is-pulsing {
+  animation: sg-in-deck-pop 650ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@keyframes sg-in-deck-glow {
+  0% { box-shadow: 0 0 0 2px rgb(var(--gold-rgb) / 0.9), 0 0 26px rgb(var(--gold-rgb) / 0.75); }
+  100% { box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.45), 0 0 14px rgb(var(--gold-rgb) / 0.25); }
+}
+
+@keyframes sg-in-deck-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  45% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-tile.is-pulsing .arena-grid-card-img-wrapper,
+  .sg-in-deck-badge.is-pulsing {
+    animation: none;
+  }
+}
+
 .sg-synergy-badge {
   position: absolute;
   right: var(--sp-1);

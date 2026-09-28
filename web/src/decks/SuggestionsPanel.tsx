@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import type { EdhrecCommanderData, EdhrecList } from './edhrec'
@@ -35,7 +36,7 @@ function synergyPct(synergy: number | null): string | null {
 
 function deckCountFor(card: ScryfallSearchCard, countMap: Map<string, number>): number {
   const keySetNum = `${card.set.toUpperCase()}/${card.collector_number}`
-  return countMap.get(keySetNum) ?? countMap.get(card.name.toLowerCase()) ?? 0
+  return Math.max(countMap.get(keySetNum) ?? 0, countMap.get(card.name.toLowerCase()) ?? 0)
 }
 
 function SuggestionTile({
@@ -57,8 +58,25 @@ function SuggestionTile({
   const imgUrl = scryfallCardImage(card)
   const displayName = card.printed_name || card.name
   const count = deckCountFor(card, countMap)
+  const inDeck = count > 0
   const pct = synergyPct(synergy)
   const maxPips = 4
+  const [pulsing, setPulsing] = useState(false)
+  const prevCountRef = useRef(count)
+
+  useEffect(() => {
+    if (count > prevCountRef.current) {
+      setPulsing(true)
+      prevCountRef.current = count
+      const timer = window.setTimeout(() => setPulsing(false), 650)
+      return () => window.clearTimeout(timer)
+    }
+    prevCountRef.current = count
+  }, [count])
+
+  const addLabel = t('decks', 'builder_grid_add')
+  const inDeckLabel = t('decks', 'suggestions_in_deck', { count })
+  const actionLabel = inDeck ? `${inDeckLabel} — ${addLabel}` : addLabel
 
   const handleDragStart = (e: React.DragEvent) => {
     onLeave?.()
@@ -80,11 +98,11 @@ function SuggestionTile({
 
   return (
     <div
-      className="arena-grid-card search-card sg-tile"
+      className={`arena-grid-card search-card sg-tile${inDeck ? ' is-in-deck' : ''}${pulsing ? ' is-pulsing' : ''}`}
       draggable
       role="button"
       tabIndex={0}
-      aria-label={`${displayName} — ${t('decks', 'builder_grid_add')}`}
+      aria-label={`${displayName} — ${actionLabel}`}
       onDragStart={handleDragStart}
       onClick={() => onAdd(card)}
       onKeyDown={(e) => {
@@ -95,7 +113,7 @@ function SuggestionTile({
       }}
       onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
       onMouseLeave={onLeave}
-      title={`${displayName} — ${t('decks', 'builder_grid_add')}`}
+      title={`${displayName} — ${actionLabel}`}
     >
       <div className="arena-card-pips">
         {count > maxPips ? (
@@ -115,8 +133,18 @@ function SuggestionTile({
           </div>
         )}
         <div className="arena-grid-card-overlay">
-          <span className="arena-add-badge search-card-add">+ {t('decks', 'builder_grid_add')}</span>
+          <span className="arena-add-badge search-card-add">+ {addLabel}</span>
         </div>
+        {inDeck && (
+          <span
+            className={`sg-in-deck-badge${pulsing ? ' is-pulsing' : ''}`}
+            data-testid="sg-in-deck-badge"
+            aria-hidden="true"
+          >
+            <Icon name="check" size={10} />
+            <span className="sg-in-deck-count">×{count}</span>
+          </span>
+        )}
         {pct && (
           <span
             className={`sg-synergy-badge ${synergy !== null && synergy > 0 ? 'is-positive' : ''}`}
