@@ -8,7 +8,7 @@ export { attachGateway, detachGateway, doConnect, reset } from './gateway'
 export { handleMessage } from './eventHandler'
 export type { RollbackVote, RollbackVoter } from './rollbackVote'
 export { hideRollbackVote, dismissRollbackVote, isRollbackVoteBlocking } from './rollbackVote'
-export { dismissTurnRecap, clearError, setStoreError, clearFeedback, setSwitchedHandKey, setMyDeck, clearGameEnd, returnToLobby, concedeGame, concedeMatch, setSetting, maybeAutoPass, setWatchingTable, openStagingTable, hideStaging, leaveStagingTable, removeStagingTable, startStagedMatch, appendLocalChatMessage, openRollbackDialog, closeRollbackDialog, requestRollback, voteRollback, requestUndo, armRollbackPending, disarmRollbackPending, isRollbackPending, recordDungeonRoom, sniffDungeonEntry, enterTableChat, exitTableChat, enterTournamentChat, exitTournamentChat } from './actions'
+export { dismissTurnRecap, clearError, setStoreError, clearFeedback, setSwitchedHandKey, setMyDeck, clearGameEnd, returnToLobby, concedeGame, concedeMatch, setSetting, applyGameplayPreset, maybeAutoPass, setWatchingTable, openStagingTable, hideStaging, leaveStagingTable, removeStagingTable, startStagedMatch, appendLocalChatMessage, openRollbackDialog, closeRollbackDialog, requestRollback, voteRollback, requestUndo, armRollbackPending, disarmRollbackPending, isRollbackPending, recordDungeonRoom, sniffDungeonEntry, enterTableChat, exitTableChat, enterTournamentChat, exitTournamentChat } from './actions'
 
 // gancho de depuración para E2E (estado del store en vivo): solo builds dev
 import { getState as _getState, setState as _setState, listeners as _listeners } from './state'

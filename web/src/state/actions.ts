@@ -3,9 +3,11 @@ import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
-import { stopKeyForStep } from '../game/phaseStops'
+import { clonePhaseStops, stopKeyForStep } from '../game/phaseStops'
 import { meaningfulPlayables } from '../game/smartStops'
-import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
+import { manaPaymentActions } from '../game/manaPayment'
+import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
+import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
 import { isControllingPriority } from './control'
@@ -334,11 +336,8 @@ export function dismissTurnRecap(key?: string) {
   setState({ turnRecap: null })
 }
 
-export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
-  const next = { ...getState().settings, [key]: value }
-  if (key === 'boardLayout') next.boardLayoutManual = true
-  setState({ settings: next })
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops } = getState().settings
+function persistClientSettings(settings: AppState['settings']) {
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   saveMusicSettings({ musicEnabled, musicVolume })
@@ -347,10 +346,36 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })
   savePhaseStops({ ...phaseStops })
-  saveSmartStops(getState().settings.smartStops)
+  saveSmartStops(smartStops)
   try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   soundManager.setMusicVolume(musicEnabled ? musicVolume : 0)
+}
+
+export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
+  const next = { ...getState().settings, [key]: value }
+  if (key === 'boardLayout') next.boardLayoutManual = true
+  if (PRESET_OWNED_KEYS.has(key) && next.gameplayPreset) {
+    next.gameplayPreset = null
+    saveGameplayPreset(null)
+  }
+  setState({ settings: next })
+  persistClientSettings(next)
+}
+
+/** Aplica un preset de automatización completo (maná, auto-pass, paradas) y lo empuja al servidor si hay partida. */
+export function applyGameplayPreset(id: GameplayPresetId) {
+  const s = getState()
+  const preset = gameplayPreset(id)
+  const next: AppState['settings'] = { ...s.settings, ...preset.bundle, gameplayPreset: id }
+  setState({ settings: next })
+  saveGameplayPreset(id)
+  persistClientSettings(next)
+  if (!s.gameId) return
+  for (const action of manaPaymentActions(next.manaPayment)) void cmds.sendManaPaymentMode(action, s.gameId)
+  void cmds.updateManaConfirmPreference(next.manaPayment.confirmEmptyPool)
+  void cmds.updatePreferences(clonePhaseStops(next.phaseStops))
+  void cmds.sendPlayerAction(next.holdPriority ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', s.gameId)
 }
 
 let lastSmartAnswer: GameView | null = null

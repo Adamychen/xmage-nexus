@@ -12,6 +12,7 @@ import { togglePhaseStop } from '../game/phaseStops'
 import Toggle from '../ui/Toggle'
 import DialogShell from '../ui/DialogShell'
 import { LanguageSection, InterfaceSection, BoardSection, SoundSection } from './sections'
+import PresetPicker from './PresetPicker'
 import '../game/GameMenu.css'
 import '../game/PhaseStopSelector.css'
 import './SettingsModal.css'
@@ -38,6 +39,9 @@ function GameplaySection() {
   ]
   return (
     <div>
+      <h3 className="settings-section-title">{t('game', 'presets_title')}</h3>
+      <p className="settings-hint">{t('game', 'presets_hint')}</p>
+      <PresetPicker />
       <h3 className="settings-section-title">{t('game', 'automation')}</h3>
       <Toggle
         checked={settings.holdPriority}

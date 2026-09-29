@@ -17,6 +17,8 @@ import {
   saveAudioSettings,
   loadPhaseStops,
   savePhaseStops,
+  loadGameplayPreset,
+  saveGameplayPreset,
   DEFAULT_AUDIO_SETTINGS,
   type ConnectionInfo,
   type FxSettings,
@@ -306,6 +308,25 @@ describe('persistence', () => {
       mockStorage['mage-web-phase-stops'] = '{invalid json'
       expect(loadPhaseStops()).toEqual(loadPhaseStops())
       expect(loadPhaseStops().yourTurn.upkeep).toBe(true)
+    })
+  })
+
+  describe('gameplay preset persistence', () => {
+    it('returns null when nothing is stored', () => {
+      expect(loadGameplayPreset()).toBeNull()
+    })
+
+    it('saves and loads the selected preset', () => {
+      saveGameplayPreset('simple')
+      expect(loadGameplayPreset()).toBe('simple')
+      expect(mockStorage['mage-web-gameplay-preset']).toBe('simple')
+    })
+
+    it('clears the selection when saved as null', () => {
+      saveGameplayPreset('balanced')
+      saveGameplayPreset(null)
+      expect(loadGameplayPreset()).toBeNull()
+      expect(mockStorage['mage-web-gameplay-preset']).toBeUndefined()
     })
   })
 })

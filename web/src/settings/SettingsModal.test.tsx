@@ -2,7 +2,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import SettingsModal from './SettingsModal'
 import { setSetting } from '../state/store'
-import { loadPhaseStops } from '../state/persistence'
+import { loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from '../state/persistence'
 
 afterEach(() => cleanup())
 
@@ -70,5 +70,21 @@ describe('SettingsModal', () => {
     render(<SettingsModal onClose={onClose} />)
     fireEvent.click(screen.getByTestId('settings-close'))
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('shows the gameplay presets and applies one on click', () => {
+    saveGameplayPreset(null)
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-gameplay'))
+    expect(screen.getByTestId('settings-presets')).toBeTruthy()
+    for (const id of ['simple', 'balanced', 'manual']) {
+      expect(screen.getByTestId(`settings-preset-${id}`)).toBeTruthy()
+    }
+    fireEvent.click(screen.getByTestId('settings-preset-simple'))
+    expect(screen.getByTestId('settings-preset-simple').className).toContain('selected')
+    expect(loadGameplayPreset()).toBe('simple')
+    fireEvent.click(screen.getByTestId('settings-preset-balanced'))
+    expect(loadGameplayPreset()).toBe('balanced')
+    saveGameplayPreset(null)
   })
 })

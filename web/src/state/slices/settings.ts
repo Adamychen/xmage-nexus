@@ -1,15 +1,17 @@
-import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadSmartStops } from '../persistence'
+import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadSmartStops, loadGameplayPreset } from '../persistence'
 import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { PhaseStops } from '../../net/commands'
 import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
+import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
   autoKeepMulligan: boolean
   autoPass: boolean
   smartStops: boolean
+  gameplayPreset: GameplayPresetId | null
   autoSubmitSideboard?: boolean
   holdPriority: boolean
   autoAnswers: AutoAnswerRule[]
@@ -42,11 +44,15 @@ export interface SettingsSlice {
   settings: SettingsState
 }
 
+const storedPresetId = loadGameplayPreset()
+const storedPreset = isGameplayPresetId(storedPresetId) ? gameplayPreset(storedPresetId) : null
+
 export const initialSettings: SettingsSlice = {
   settings: {
     autoKeepMulligan: false,
     autoPass: false,
     smartStops: loadSmartStops(),
+    gameplayPreset: storedPreset?.id ?? null,
     holdPriority: false,
     autoAnswers: loadAutoAnswers().map((entry, index) => ({ id: `auto-${index}`, ...entry })),
     choiceMemory: loadChoiceMemory().map((entry, index) => ({ id: `choice-${index}`, ...entry })),
@@ -64,5 +70,6 @@ export const initialSettings: SettingsSlice = {
     playmatId: normalizePlaymat(loadAppearanceSettings().playmatId),
     cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
     tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),
+    ...(storedPreset ? storedPreset.bundle : null),
   },
 }

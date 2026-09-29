@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { joinGame, sendPlayerBoolean, sendPlayerUUID, updatePreferences } from '../net/commands'
+import { joinGame, sendManaPaymentMode, sendPlayerAction, sendPlayerBoolean, sendPlayerUUID, updateManaConfirmPreference, updatePreferences } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
 import { getState, setState, addLog } from './state'
-import { handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
+import { applyGameplayPreset, handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
 import { handleWatchGame } from './events/game'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
-import { loadActiveGame } from './persistence'
+import { loadActiveGame, loadGameplayPreset, saveGameplayPreset } from './persistence'
 
 vi.mock('../net/commands', () => ({
   setGateway: vi.fn(),
@@ -1628,5 +1628,78 @@ describe('SHOW_TOURNAMENT — resolución tableId→tournamentId (watch de torne
     expect(getState().spectateTournament).toBeNull()
     handleMessage({ type: 'event', method: 'SHOW_TOURNAMENT', messageId: 2, objectId: 't-real', data: null })
     expect(getState().spectateTournament).toBeNull()
+  })
+})
+
+describe('applyGameplayPreset', () => {
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+    saveGameplayPreset(null)
+  })
+
+  it('applies the simple bundle and pushes it to the server mid-game', () => {
+    handleMessage({
+      type: 'event',
+      method: 'START_GAME',
+      messageId: 1,
+      objectId: 'g-1',
+      data: { gameId: 'g-1' },
+    })
+    applyGameplayPreset('simple')
+    const s = getState().settings
+    expect(s.gameplayPreset).toBe('simple')
+    expect(s.autoPass).toBe(true)
+    expect(s.smartStops).toBe(true)
+    expect(s.manaPayment).toEqual({
+      auto: true,
+      restricted: false,
+      useFirstAbility: false,
+      confirmEmptyPool: false,
+      smart: true,
+    })
+    expect(s.phaseStops.yourTurn.main1).toBe(false)
+    expect(s.phaseStops.opponentTurn.endStep).toBe(false)
+    expect(sendManaPaymentMode).toHaveBeenCalledWith('MANA_AUTO_PAYMENT_ON', 'g-1')
+    expect(sendManaPaymentMode).toHaveBeenCalledWith('MANA_AUTO_PAYMENT_RESTRICTED_OFF', 'g-1')
+    expect(sendManaPaymentMode).toHaveBeenCalledWith('USE_FIRST_MANA_ABILITY_OFF', 'g-1')
+    expect(updateManaConfirmPreference).toHaveBeenCalledWith(false)
+    expect(updatePreferences).toHaveBeenCalledWith(
+      expect.objectContaining({ yourTurn: expect.objectContaining({ main1: false }) }),
+    )
+    expect(sendPlayerAction).toHaveBeenCalledWith('UNHOLD_PRIORITY', 'g-1')
+    expect(loadGameplayPreset()).toBe('simple')
+  })
+
+  it('manual turns every automation off', () => {
+    applyGameplayPreset('manual')
+    const s = getState().settings
+    expect(s.autoPass).toBe(false)
+    expect(s.smartStops).toBe(false)
+    expect(s.holdPriority).toBe(false)
+    expect(s.manaPayment.auto).toBe(false)
+    expect(s.manaPayment.smart).toBe(false)
+  })
+
+  it('does not send server commands from the lobby', () => {
+    applyGameplayPreset('simple')
+    expect(sendManaPaymentMode).not.toHaveBeenCalled()
+    expect(updatePreferences).not.toHaveBeenCalled()
+    expect(sendPlayerAction).not.toHaveBeenCalled()
+    expect(loadGameplayPreset()).toBe('simple')
+  })
+
+  it('switches to custom when a preset-owned setting is touched manually', () => {
+    applyGameplayPreset('simple')
+    setSetting('smartStops', false)
+    expect(getState().settings.gameplayPreset).toBeNull()
+    expect(loadGameplayPreset()).toBeNull()
+    expect(getState().settings.autoPass).toBe(true)
+  })
+
+  it('never touches the auto-keep mulligan preference', () => {
+    setSetting('autoKeepMulligan', true)
+    applyGameplayPreset('simple')
+    expect(getState().settings.autoKeepMulligan).toBe(true)
   })
 })

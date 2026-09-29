@@ -426,6 +426,22 @@ export function saveSmartStops(enabled: boolean) {
   } catch {}
 }
 
+const GAMEPLAY_PRESET_KEY = 'mage-web-gameplay-preset'
+
+export function loadGameplayPreset(): string | null {
+  try {
+    return getStorage().getItem(GAMEPLAY_PRESET_KEY)
+  } catch {}
+  return null
+}
+
+export function saveGameplayPreset(id: string | null) {
+  try {
+    if (id) getStorage().setItem(GAMEPLAY_PRESET_KEY, id)
+    else getStorage().removeItem(GAMEPLAY_PRESET_KEY)
+  } catch {}
+}
+
 const BROWSER_NOTIFICATIONS_KEY = 'mage-web-browser-notifications'
 const NOTIFICATION_ASKED_KEY = 'mage-web-notification-asked'
 

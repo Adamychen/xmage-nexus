@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
+import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
@@ -205,6 +206,9 @@ export function GameplayQuickSection() {
   const settings = useSettings()
   return (
     <div>
+      <h3 className="settings-section-title">{t('game', 'presets_title')}</h3>
+      <p className="settings-hint">{t('game', 'presets_hint')}</p>
+      <PresetPicker />
       <Toggle
         checked={settings.autoPass}
         onChange={(v) => setSetting('autoPass', v)}
