@@ -44,6 +44,20 @@ const mockMatches: MatchView[] = [
     isTournament: true,
     replayAvailable: true,
   },
+  {
+    tableId: 't3',
+    matchId: 'm3',
+    matchName: 'Commander Pod',
+    gameType: 'Commander',
+    deckType: 'Constructed - Commander',
+    games: [],
+    result: 'Ari [2-0], Bea [1-1], Cid [1-1], Dora [0-2]',
+    players: 'Ari, Bea, Cid, Dora [quit]',
+    startTime: Date.now() - 1000 * 60 * 90,
+    endTime: Date.now() - 1000 * 60 * 60,
+    rated: false,
+    replayAvailable: false,
+  },
 ]
 
 const mockUsers: UsersView[] = [
@@ -102,6 +116,30 @@ describe('FinishedMatchesPanel helpers', () => {
     expect(scores[1].quit).toBe(true)
   })
 
+  it('parses a multiplayer pod with every player and a single winner', () => {
+    const scores = parseMatchResult(
+      'Ari [2-0], Bea [1-1], Cid [1-1], Dora [0-2]',
+      'Ari, Bea, Cid, Dora',
+    )
+    expect(scores).toHaveLength(4)
+    expect(scores.map((s) => s.name)).toEqual(['Ari', 'Bea', 'Cid', 'Dora'])
+    expect(scores.filter((s) => s.isWinner)).toHaveLength(1)
+    expect(scores[0]).toMatchObject({ name: 'Ari', wins: 2, losses: 0, isWinner: true })
+  })
+
+  it('parses [wins-draws-losses] when the match had draws', () => {
+    const scores = parseMatchResult('Ari [1-2-3], Bea [1-0-3]', 'Ari, Bea')
+    expect(scores[0]).toMatchObject({ name: 'Ari', wins: 1, draws: 2, losses: 3 })
+    expect(scores[1]).toMatchObject({ name: 'Bea', wins: 1, draws: 0, losses: 3 })
+  })
+
+  it('merges quit markers from the players string into the result scores', () => {
+    const scores = parseMatchResult('Ari [2-0], Bea [0-2], Cid [1-1]', 'Ari, Bea [timer], Cid')
+    expect(scores[1]).toMatchObject({ name: 'Bea', quit: true, timeoutType: 'timer' })
+    expect(scores[0].quit).toBeUndefined()
+    expect(scores[2].quit).toBeUndefined()
+  })
+
   it('formats match duration properly', () => {
     const start = 1000000
     const end = 1000000 + 1000 * 60 * 14 + 1000 * 25 // 14m 25s
@@ -140,6 +178,24 @@ describe('FinishedMatchesPanel component', () => {
     expect(screen.getAllByText(new RegExp(`${t('lobby', 'tournament_badge')}`, 'i')).length).toBeGreaterThan(0)
     expect(document.querySelector('.finished-matches-list')).toBeTruthy()
     expect(document.querySelector('.ui-empty')).toBeNull()
+  })
+
+  it('renders every player of a multiplayer match', async () => {
+    render(<FinishedMatchesPanel roomId="room-1" users={mockUsers} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Ari').length).toBeGreaterThan(0)
+    })
+
+    for (const name of ['Ari', 'Bea', 'Cid', 'Dora']) {
+      expect(screen.getAllByText(name).length).toBeGreaterThan(0)
+    }
+
+    const boards = document.querySelectorAll('.match-scoreboard.is-multi')
+    expect(boards).toHaveLength(1)
+    expect(boards[0].querySelectorAll('.player-slot')).toHaveLength(4)
+    expect(boards[0].querySelectorAll('.player-slot.winner')).toHaveLength(1)
+    expect(boards[0].querySelector('.player-quit-tag')).toBeTruthy()
   })
 
   it('renders the empty state without the scrollable list when there are no matches', async () => {

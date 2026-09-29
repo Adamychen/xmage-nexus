@@ -33,7 +33,7 @@ export function parseMatchResult(result?: string, players?: string): ParsedPlaye
       name: p.replace(/\[(timer|idle|quit)\]/i, '').trim(),
       wins: 0,
       losses: 0,
-      quit: /\[quit\]/i.test(p),
+      quit: /\[(timer|idle|quit)\]/i.test(p),
       timeoutType: /\[timer\]/i.test(p) ? 'timer' : /\[idle\]/i.test(p) ? 'idle' : null,
     }))
   }
@@ -46,13 +46,25 @@ export function parseMatchResult(result?: string, players?: string): ParsedPlaye
     if (match) {
       const name = match[1].trim()
       const wins = parseInt(match[2], 10)
-      const losses = parseInt(match[3], 10)
-      const draws = match[4] ? parseInt(match[4], 10) : 0
+      // Server format: [wins-losses] or, when the match had draws, [wins-draws-losses]
+      const draws = match[4] !== undefined ? parseInt(match[3], 10) : 0
+      const losses = parseInt(match[4] !== undefined ? match[4] : match[3], 10)
       if (wins > maxWins) maxWins = wins
       scores.push({ name, wins, losses, draws })
     } else {
       const plainName = part.replace(/\[.*?\]/g, '').trim()
       scores.push({ name: plainName || part, wins: 0, losses: 0 })
+    }
+  }
+
+  for (const raw of playerList) {
+    const marker = raw.match(/\[(timer|idle|quit)\]/i)?.[1]?.toLowerCase()
+    if (!marker) continue
+    const name = raw.replace(/\[(timer|idle|quit)\]/i, '').trim().toLowerCase()
+    const score = scores.find((s) => s.name.toLowerCase() === name)
+    if (score) {
+      score.quit = true
+      score.timeoutType = marker === 'timer' ? 'timer' : marker === 'idle' ? 'idle' : null
     }
   }
 
@@ -64,6 +76,19 @@ export function parseMatchResult(result?: string, players?: string): ParsedPlaye
   }
 
   return scores
+}
+
+function PlayerQuitTag({ score }: { score: ParsedPlayerScore }) {
+  if (!score.quit) return null
+  return (
+    <span className="player-quit-tag">
+      {score.timeoutType === 'timer'
+        ? (<><Icon name="clock" size={11} /> {tStatic('lobby', 'match_quit_timeout')}</>)
+        : score.timeoutType === 'idle'
+        ? (<><Icon name="moon" size={11} /> {tStatic('lobby', 'match_quit_idle')}</>)
+        : (<><Icon name="logout" size={11} /> {tStatic('lobby', 'match_quit_abandon')}</>)}
+    </span>
+  )
 }
 
 export function formatMatchDuration(startTime?: number | string, endTime?: number | string): string {
@@ -120,7 +145,7 @@ export default function FinishedMatchesPanel({
       const data = await getFinishedMatches(roomId)
       setMatches(data)
     } catch {
-      // Ignorar errores transitorios
+      // Ignore transient errors
     } finally {
       setLoading(false)
     }
@@ -161,7 +186,7 @@ export default function FinishedMatchesPanel({
       )
     }
 
-    // Ordenar de mas reciente a mas antigua
+    // Sort newest first
     list.sort((a, b) => {
       const timeA = typeof a.endTime === 'string' ? new Date(a.endTime).getTime() : (a.endTime ?? 0)
       const timeB = typeof b.endTime === 'string' ? new Date(b.endTime).getTime() : (b.endTime ?? 0)
@@ -268,86 +293,104 @@ export default function FinishedMatchesPanel({
                 </div>
 
                 {/* Match Players & Score Board */}
-                <div className="match-scoreboard">
+                <div className={`match-scoreboard ${scores.length > 2 ? 'is-multi' : ''}`}>
                   {scores.length >= 2 ? (
-                    <>
-                      {/* Player 1 (Left) */}
-                      <div className={`player-slot ${scores[0].isWinner ? 'winner' : ''}`}>
-                        <div
-                          className="player-info-wrap"
-                          onClick={() => onInspectUser?.(scores[0].name)}
-                          style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
-                        >
-                          <AvatarImage
-                            avatarId={userMap.get(scores[0].name.toLowerCase())?.avatarId ?? 10}
-                            username={scores[0].name}
-                            size="medium"
-                          />
-                          <div className="player-name-col">
-                            <div className="player-name-line">
-                              {userMap.get(scores[0].name.toLowerCase())?.flagName && (
-                                <CountryFlag
-                                  flagName={userMap.get(scores[0].name.toLowerCase())!.flagName}
-                                />
-                              )}
-                              <span className="player-name">{scores[0].name}</span>
-                              {scores[0].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                    scores.length === 2 ? (
+                      <>
+                        {/* Player 1 (Left) */}
+                        <div className={`player-slot ${scores[0].isWinner ? 'winner' : ''}`}>
+                          <div
+                            className="player-info-wrap"
+                            onClick={() => onInspectUser?.(scores[0].name)}
+                            style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
+                          >
+                            <AvatarImage
+                              avatarId={userMap.get(scores[0].name.toLowerCase())?.avatarId ?? 10}
+                              username={scores[0].name}
+                              size="medium"
+                            />
+                            <div className="player-name-col">
+                              <div className="player-name-line">
+                                {userMap.get(scores[0].name.toLowerCase())?.flagName && (
+                                  <CountryFlag
+                                    flagName={userMap.get(scores[0].name.toLowerCase())!.flagName}
+                                  />
+                                )}
+                                <span className="player-name">{scores[0].name}</span>
+                                {scores[0].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                              </div>
+                              <PlayerQuitTag score={scores[0]} />
                             </div>
-                            {scores[0].quit && (
-                              <span className="player-quit-tag">
-                                {scores[0].timeoutType === 'timer'
-                                  ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
-                                  : scores[0].timeoutType === 'idle'
-                                  ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
-                                  : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
-                              </span>
-                            )}
+                          </div>
+                          <div className="player-score-box">{scores[0].wins}</div>
+                        </div>
+
+                        {/* Center VS Indicator */}
+                        <div className="match-vs-divider">
+                          <span className="vs-text">{t('lobby', 'staging_vs')}</span>
+                        </div>
+
+                        {/* Player 2 (Right) */}
+                        <div className={`player-slot right ${scores[1].isWinner ? 'winner' : ''}`}>
+                          <div className="player-score-box">{scores[1].wins}</div>
+                          <div
+                            className="player-info-wrap"
+                            onClick={() => onInspectUser?.(scores[1].name)}
+                            style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
+                          >
+                            <div className="player-name-col right-align">
+                              <div className="player-name-line">
+                                {scores[1].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                                <span className="player-name">{scores[1].name}</span>
+                                {userMap.get(scores[1].name.toLowerCase())?.flagName && (
+                                  <CountryFlag
+                                    flagName={userMap.get(scores[1].name.toLowerCase())!.flagName}
+                                  />
+                                )}
+                              </div>
+                              <PlayerQuitTag score={scores[1]} />
+                            </div>
+                            <AvatarImage
+                              avatarId={userMap.get(scores[1].name.toLowerCase())?.avatarId ?? 10}
+                              username={scores[1].name}
+                              size="medium"
+                            />
                           </div>
                         </div>
-                        <div className="player-score-box">{scores[0].wins}</div>
-                      </div>
-
-                      {/* Center VS Indicator */}
-                      <div className="match-vs-divider">
-                        <span className="vs-text">{t('lobby', 'staging_vs')}</span>
-                      </div>
-
-                      {/* Player 2 (Right) */}
-                      <div className={`player-slot right ${scores[1].isWinner ? 'winner' : ''}`}>
-                        <div className="player-score-box">{scores[1].wins}</div>
-                        <div
-                          className="player-info-wrap"
-                          onClick={() => onInspectUser?.(scores[1].name)}
-                          style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
-                        >
-                          <div className="player-name-col right-align">
-                            <div className="player-name-line">
-                              {scores[1].isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
-                              <span className="player-name">{scores[1].name}</span>
-                              {userMap.get(scores[1].name.toLowerCase())?.flagName && (
-                                <CountryFlag
-                                  flagName={userMap.get(scores[1].name.toLowerCase())!.flagName}
-                                />
-                              )}
+                      </>
+                    ) : (
+                      /* Multiplayer pod (3+ players, e.g. Commander) */
+                      scores.map((score, scoreIndex) => {
+                        const player = userMap.get(score.name.toLowerCase())
+                        return (
+                          <div
+                            key={`${score.name}-${scoreIndex}`}
+                            className={`player-slot ${score.isWinner ? 'winner' : ''}`}
+                          >
+                            <div
+                              className="player-info-wrap"
+                              onClick={() => onInspectUser?.(score.name)}
+                              style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
+                            >
+                              <AvatarImage
+                                avatarId={player?.avatarId ?? 10}
+                                username={score.name}
+                                size="medium"
+                              />
+                              <div className="player-name-col">
+                                <div className="player-name-line">
+                                  {player?.flagName && <CountryFlag flagName={player.flagName} />}
+                                  <span className="player-name">{score.name}</span>
+                                  {score.isWinner && <span className="winner-crown"><Icon name="crown" size={13} /></span>}
+                                </div>
+                                <PlayerQuitTag score={score} />
+                              </div>
                             </div>
-                            {scores[1].quit && (
-                              <span className="player-quit-tag">
-                                {scores[1].timeoutType === 'timer'
-                                  ? (<><Icon name="clock" size={11} /> {t('lobby', 'match_quit_timeout')}</>)
-                                  : scores[1].timeoutType === 'idle'
-                                  ? (<><Icon name="moon" size={11} /> {t('lobby', 'match_quit_idle')}</>)
-                                  : (<><Icon name="logout" size={11} /> {t('lobby', 'match_quit_abandon')}</>)}
-                              </span>
-                            )}
+                            <div className="player-score-box">{score.wins}</div>
                           </div>
-                          <AvatarImage
-                            avatarId={userMap.get(scores[1].name.toLowerCase())?.avatarId ?? 10}
-                            username={scores[1].name}
-                            size="medium"
-                          />
-                        </div>
-                      </div>
-                    </>
+                        )
+                      })
+                    )
                   ) : (
                     <div className="match-single-player-row">
                       <span className="player-raw-text">
@@ -358,8 +401,8 @@ export default function FinishedMatchesPanel({
                 </div>
 
                 {/* Match Replays & Footer */}
-                <div className={`match-card-footer ${scores.length === 2 && !(m.games && m.games.length > 0) ? 'is-empty' : ''}`}>
-                  {scores.length !== 2 && (
+                <div className={`match-card-footer ${scores.length >= 2 && !(m.games && m.games.length > 0) ? 'is-empty' : ''}`}>
+                  {scores.length < 2 && (
                     <div className="match-result-summary">
                       <span className="result-label">{t('lobby', 'match_result_label')}</span>
                       <span className="result-text">{m.result || m.players || t('lobby', 'match_concluded')}</span>

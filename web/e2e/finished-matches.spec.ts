@@ -6,8 +6,8 @@ import { finishedMatchesScenario } from '../fixtures/scenarios/finishedMatches'
 import { FAKE_MODE } from './dual'
 import { getFakePort, setFakePort } from './support/fake-port'
 
-// Regresión 2026-09-14: el panel del Historial desbordaba el `.lobby-main`
-// (overflow:hidden) y la lista no se podía desplazar.
+// 2026-09-14 regression: the History panel overflowed `.lobby-main`
+// (overflow:hidden) and the list could not be scrolled.
 
 const historyTest = test.extend<{ historyServer: FakeServer | null }>({
   historyServer: [
@@ -47,6 +47,15 @@ historyTest(
     const list = page.locator('.finished-matches-list')
     await expect(list).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('.match-card')).toHaveCount(14)
+
+    if (FAKE_MODE) {
+      const multiCard = page.locator('.match-card', { has: page.locator('.match-scoreboard.is-multi') })
+      await expect(multiCard).toHaveCount(1)
+      await expect(multiCard.locator('.player-slot')).toHaveCount(4)
+      for (const name of ['Ari', 'Bea', 'Cid', 'Dora']) {
+        await expect(multiCard.getByText(name)).toBeVisible()
+      }
+    }
 
     const metrics = await list.evaluate((el) => ({
       scrollH: el.scrollHeight,
