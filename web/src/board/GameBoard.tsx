@@ -5,6 +5,7 @@ import BoardShell, { BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { EMPTY_TARGET_ZONES } from './targetZones'
 import './GameBoard.css'
 
 export interface GameBoardProps extends BoardProps {
@@ -16,6 +17,8 @@ export default function GameBoard({
   targetIds = [],
   chosenTargetIds = [],
   onTargetClick,
+  targetZone = null,
+  targetZones = EMPTY_TARGET_ZONES,
   playableIds = [],
   onPlayableClick,
   onCardHover,
@@ -34,6 +37,7 @@ export default function GameBoard({
     game,
     targetIds,
     chosenTargetIds,
+    targetZone,
     playableIds,
     combatSelectable,
     combatMode,
@@ -87,6 +91,8 @@ export default function GameBoard({
         onCardClick={handleCardClick}
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
+        targetZone={targetZone}
+        targetZones={targetZones}
         revealedCards={opponentRevealedCards(game, currentOpp)}
         playableIds={playableIdSet}
         combatSelectable={combatSelectable}
@@ -103,6 +109,8 @@ export default function GameBoard({
         onHandCardClick={onPlayableClick}
         onCardHover={handleCardHover}
         targetIds={targetIdSet}
+        targetZone={targetZone}
+        targetZones={targetZones}
         playableIds={playableIdSet}
         combatSelectable={combatSelectable}
         combatMode={combatMode}

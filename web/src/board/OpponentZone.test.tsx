@@ -389,4 +389,86 @@ describe('OpponentZone', () => {
     // 2 crown badges
     expect(container.querySelectorAll('.commander-badge').length).toBe(2)
   })
+
+  it('highlights the whole hand zone when the server declares a target in a hidden hand', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 3,
+      battlefield: {},
+    }
+    const { container } = render(
+      <OpponentZone
+        player={oppPlayer as PlayerView}
+        targetIds={new Set()}
+        targetZone="hand"
+        targetZones={new Set()}
+      />,
+    )
+    expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(true)
+  })
+
+  it('does not highlight hands when the hand target already resolved (discard in my own hand)', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 3,
+      battlefield: {},
+    }
+    const { container } = render(
+      <OpponentZone
+        player={oppPlayer as PlayerView}
+        targetIds={new Set()}
+        targetZone="hand"
+        targetZones={new Set(['hand'])}
+      />,
+    )
+    expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(false)
+  })
+
+  it('highlights only the battlefield row that contains the targeted permanent', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 0,
+      battlefield: {
+        'bear-1': { id: 'bear-1', name: 'Grizzly Bears', cardTypes: ['Creature'], power: '2', toughness: '2' } as any,
+        'rock-1': { id: 'rock-1', name: 'Sol Ring', cardTypes: ['Artifact'] } as any,
+      },
+    }
+    const { container, rerender } = render(
+      <OpponentZone player={oppPlayer as PlayerView} targetIds={new Set(['bear-1'])} />
+    )
+    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(false)
+
+    rerender(<OpponentZone player={oppPlayer as PlayerView} targetIds={new Set(['rock-1'])} />)
+    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(false)
+    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(true)
+  })
+
+  it('highlights both battlefield rows only on the declared-zone fallback', () => {
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 0,
+      battlefield: {
+        'bear-1': { id: 'bear-1', name: 'Grizzly Bears', cardTypes: ['Creature'], power: '2', toughness: '2' } as any,
+      },
+    }
+    const { container } = render(
+      <OpponentZone
+        player={oppPlayer as PlayerView}
+        targetIds={new Set(['missing-id'])}
+        targetZone="battlefield"
+        targetZones={new Set()}
+      />,
+    )
+    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(true)
+  })
 })

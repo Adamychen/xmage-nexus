@@ -4,6 +4,7 @@ import { simpleToCardsView } from './revealedCards'
 import { switchedHandCards } from './handSwitch'
 import { useStore } from '../state/store'
 import type { CrossZonePlayable } from './crossZone'
+import type { TargetZoneKind } from './targetZones'
 
 export const MAX_BOARD_PLAYERS = 4
 
@@ -40,6 +41,12 @@ export interface BoardProps {
   targetIds?: string[]
   chosenTargetIds?: string[]
   onTargetClick?: (id: string) => void
+  /** Zone declared by the server for the current target (when any). */
+  targetZone?: TargetZoneKind | null
+  /** Zones where the GameView actually found the target ids: lets `targetZone`
+   *  act as a fallback only when nothing resolved (e.g. hidden cards in the
+   *  opponent's hand). */
+  targetZones?: ReadonlySet<TargetZoneKind>
   playableIds?: string[]
   onPlayableClick?: (id: string) => void
   onCardHover?: (card: CardView | null) => void

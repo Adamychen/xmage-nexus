@@ -5,6 +5,7 @@ import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
 import { findCardViewInGame, looksLikeBattlefieldPermanent } from './boardShared'
 import { useStore, isBlockingModal } from '../state/store'
+import type { TargetZoneKind } from './targetZones'
 
 export interface HoverOptions {
   /** The hover comes from the own hand (HandBar): the card grows in place,
@@ -16,6 +17,7 @@ export interface BoardPresenterArgs {
   game: GameView | null
   targetIds?: string[]
   chosenTargetIds?: string[]
+  targetZone?: TargetZoneKind | null
   playableIds?: string[]
   combatSelectable?: string[]
   combatMode?: 'attack' | 'block' | null
@@ -71,6 +73,7 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     game,
     targetIds = [],
     chosenTargetIds = [],
+    targetZone = null,
     playableIds = [],
     combatSelectable = [],
     combatMode = null,
@@ -218,6 +221,7 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     playableIds,
     targetIds,
     chosenTargetIds,
+    targetZone,
     combatSelectable,
     combatMode,
     combatChosen,

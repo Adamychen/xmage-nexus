@@ -21,7 +21,9 @@ import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
 import { cardAspectFor } from './compactCard'
+import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import './BoardZone.css'
+import './targetZone.css'
 
 export interface BoardZoneProps {
   player: PlayerView | undefined
@@ -33,6 +35,8 @@ export interface BoardZoneProps {
   onHandCardClick?: (id: string, e?: React.MouseEvent) => void
   onCardHover?: (card: any, rect?: DOMRect) => void
   targetIds?: Set<string>
+  targetZone?: TargetZoneKind | null
+  targetZones?: ReadonlySet<TargetZoneKind>
   playableIds?: Set<string>
   combatSelectable?: string[]
   combatMode?: 'attack' | 'block' | null
@@ -65,6 +69,8 @@ export default function BoardZone({
   onHandCardClick,
   onCardHover,
   targetIds = new Set(),
+  targetZone = null,
+  targetZones = EMPTY_TARGET_ZONES,
   playableIds = new Set(),
   combatSelectable = [],
   combatMode = null,
@@ -226,6 +232,14 @@ export default function BoardZone({
   const [handViewerOpen, setHandViewerOpen] = useState(false)
   const handViewable = !effectiveControlled && knownHandEntries.length > 0
 
+  // Target zone: a card in THIS hand is a target, or the server declares the
+  // hand as the zone and nothing resolved (hidden opponent hand: Duress). The
+  // own hand lives in the HandBar, so the fallback never touches it.
+  const handTargeted = useMemo(() => {
+    if (handEntries.some(([id]) => targetIds.has(id))) return true
+    return targetZone === 'hand' && !targetZones.has('hand') && !effectiveControlled
+  }, [handEntries, targetIds, targetZone, targetZones, effectiveControlled])
+
   const hasCommander = useMemo(() => {
     return hasCommandObjects(
       player,
@@ -266,6 +280,18 @@ export default function BoardZone({
   const marqueeEntries = others.filter(([, p]) => isMarqueePermanent(p))
   const marqueeIds = new Set(marqueeEntries.map(([id]) => id))
   const restOthers = others.filter(([id]) => !marqueeIds.has(id))
+
+  // Target zone on the battlefield: highlight the row holding the pointed
+  // card (or both when the server declares BATTLEFIELD and nothing resolved).
+  const battlefieldFallback = targetZone === 'battlefield' && !targetZones.has('battlefield')
+  const permanentsRowTargeted =
+    battlefieldFallback ||
+    lands.some(([id]) => targetIds.has(id)) ||
+    restOthers.some(([id]) => targetIds.has(id))
+  const creaturesRowTargeted =
+    battlefieldFallback ||
+    creatures.some(([id]) => targetIds.has(id)) ||
+    marqueeEntries.some(([id]) => targetIds.has(id))
 
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
     const isSelectable = combatSelectableSet.has(id)
@@ -448,6 +474,7 @@ export default function BoardZone({
           onHover={onCardHover}
           playableIds={playableIds}
           targetIds={targetIds}
+          isTargetZone={handTargeted}
           compact={isTop || compactPod}
           stackBacks={compactPod}
           viewable={handViewable}
@@ -468,6 +495,8 @@ export default function BoardZone({
         onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
         onCardHover={onCardHover}
         targetIds={targetIds}
+        targetZone={targetZone}
+        targetZones={targetZones}
         onTargetClick={onCardClick}
       />
     </div>
@@ -476,7 +505,7 @@ export default function BoardZone({
   const permanentsRow = (
     <div
       key="permanents-row"
-      className="bz-row bz-permanents-row oz-permanents-row pz-permanents-row"
+      className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${permanentsRowTargeted ? ' target-zone' : ''}`}
     >
       <div ref={setPermanentsBand} className="bz-band oz-band pz-band permanents-band full-width">
         {landGroups.map((group) => renderStackGroup(group, false))}
@@ -490,7 +519,7 @@ export default function BoardZone({
   const creaturesRow = (
     <div
       key="creatures-row"
-      className="bz-row bz-creatures-row oz-creatures-row pz-creatures-row"
+      className={`bz-row bz-creatures-row oz-creatures-row pz-creatures-row${creaturesRowTargeted ? ' target-zone' : ''}`}
     >
       {hasCommander && (
         <div className="bz-commander oz-commander pz-commander">

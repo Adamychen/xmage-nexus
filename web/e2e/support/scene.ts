@@ -18,6 +18,7 @@ export interface MageSceneState {
     source: string | null
     ids: string[]
     chosen: string[]
+    zone: string | null
    }
   combat: {
     active: boolean
@@ -45,6 +46,7 @@ export interface SceneTargeting {
   source: string | null
   ids: string[]
   chosen: string[]
+  zone?: string | null
 }
 
 export interface SceneCombat {

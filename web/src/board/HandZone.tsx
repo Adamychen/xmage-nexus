@@ -16,6 +16,8 @@ interface HandZoneProps {
   onHover?: (card: CardView | null, rect?: DOMRect) => void
   playableIds?: Set<string>
   targetIds?: Set<string>
+  /** Highlights the whole zone: the targeting prompt points at cards in this hand. */
+  isTargetZone?: boolean
   faceDown?: boolean
   compact?: boolean
   /** Colapsa los dorsos en un stack ×N (manos enemigas en pod/arena). */
@@ -32,6 +34,7 @@ export default function HandZone({
   onHover,
   playableIds = new Set(),
   targetIds = new Set(),
+  isTargetZone = false,
   faceDown = false,
   compact = false,
   stackBacks = false,
@@ -95,7 +98,7 @@ export default function HandZone({
   return (
     <div
       ref={zoneRef}
-      className={`hand-zone ${faceDown ? 'face-down' : ''} ${compact ? 'compact' : ''}`}
+      className={`hand-zone ${faceDown ? 'face-down' : ''} ${compact ? 'compact' : ''} ${isTargetZone ? 'target-zone' : ''}`}
       data-hand-count={entries.length}
       style={{ '--card-w': `${cardW}px`, '--overlap': `${overlap}px` } as React.CSSProperties}
     >

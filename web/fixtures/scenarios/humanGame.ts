@@ -346,7 +346,11 @@ export class HumanGame {
           message: step.message,
           flag: step.required === false ? false : undefined,
           targets: step.targets ?? [SIM_PLAYER_ID],
-          options: { secondMessage: this.lastPlayedName() ?? '', possibleTargets: step.targets ?? [SIM_PLAYER_ID] },
+          options: {
+            secondMessage: this.lastPlayedName() ?? '',
+            possibleTargets: step.targets ?? [SIM_PLAYER_ID],
+            ...(step.targetZone ? { targetZone: step.targetZone } : {}),
+          },
           gameView: this.view(),
         })
         break

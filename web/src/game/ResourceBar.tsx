@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import PileOverlay from '../board/PileOverlay'
 import CrossZoneOverlay from '../board/CrossZoneOverlay'
 import { crossZoneCounts } from '../board/crossZone'
 import type { CrossZonePlayable } from '../board/crossZone'
+import { cardsContainTarget, EMPTY_TARGET_IDS, EMPTY_TARGET_ZONES, type TargetZoneKind } from '../board/targetZones'
 import CardSlot from '../board/CardSlot'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -12,8 +13,11 @@ import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
 import { manaTypeOf } from './manaPayment'
 import './ResourceBar.css'
+import '../board/targetZone.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
+
+type PileKind = 'graveyard' | 'exile' | 'library'
 
 interface ResourceBarProps {
   player: PlayerView
@@ -24,6 +28,8 @@ interface ResourceBarProps {
   onPlayCrossZone?: (id: string) => void
   onCardHover?: (card: any, rect?: DOMRect) => void
   targetIds?: Set<string>
+  targetZone?: TargetZoneKind | null
+  targetZones?: ReadonlySet<TargetZoneKind>
   onTargetClick?: (id: string) => void
 }
 
@@ -42,6 +48,8 @@ export default function ResourceBar({
   onPlayCrossZone,
   onCardHover,
   targetIds,
+  targetZone = null,
+  targetZones = EMPTY_TARGET_ZONES,
   onTargetClick,
 }: ResourceBarProps) {
   const { t } = useTranslation()
@@ -106,6 +114,46 @@ export default function ResourceBar({
     return res
   }, [player.libraryCount, player.topCard, player.playerId])
 
+  // ── Target zone (GAME_TARGET with targetZone): highlight the pile holding
+  //    the card to pick. The local id match rules; if the prompt declares the
+  //    zone but no id resolved there, the own pile stays as a "look here"
+  //    fallback.
+  const targetSet: ReadonlySet<string> = targetIds ?? EMPTY_TARGET_IDS
+  const graveyardTargeted = useMemo(() => cardsContainTarget(player.graveyard, targetSet), [player.graveyard, targetSet])
+  const exileTargeted = useMemo(() => cardsContainTarget(player.exile, targetSet), [player.exile, targetSet])
+  const libraryTargeted = useMemo(() => {
+    const top = player.topCard
+    if (!top) return false
+    return (top.id != null && targetSet.has(top.id)) || (top.parentId != null && targetSet.has(top.parentId))
+  }, [player.topCard, targetSet])
+
+  const pendingZone = (kind: PileKind) => targetZone === kind && !targetZones.has(kind) && side === 'my'
+  const graveyardHighlight = graveyardTargeted || (pendingZone('graveyard') && graveyardCount > 0)
+  const exileHighlight = exileTargeted || (pendingZone('exile') && exileCount > 0)
+  const libraryHighlight = libraryTargeted || (pendingZone('library') && (player.libraryCount ?? 0) > 0)
+
+  // Auto-opens the target pile (only when the real card is located: the
+  // library overlay paints synthetic backs that are not clickable targets) and
+  // closes it when the targeting ends.
+  const autoOpenPile: PileKind | null =
+    targetZone === 'graveyard' && graveyardTargeted ? 'graveyard'
+      : targetZone === 'exile' && exileTargeted ? 'exile'
+        : targetZone === 'library' && libraryTargeted ? 'library'
+          : null
+  const autoOpenedRef = useRef<PileKind | null>(null)
+  useEffect(() => {
+    if (autoOpenPile) {
+      autoOpenedRef.current = autoOpenPile
+      setOpenPile(autoOpenPile)
+      return
+    }
+    const previous = autoOpenedRef.current
+    if (previous) {
+      autoOpenedRef.current = null
+      setOpenPile((current) => (current === previous ? null : current))
+    }
+  }, [autoOpenPile])
+
   return (
     <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
       <div className="resource-mana-wrap">
@@ -118,7 +166,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-library-count={player.libraryCount}
-              className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}`}
+              className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''}`}
               title={
                 player.topCard
                   ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
@@ -142,7 +190,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-graveyard-count={graveyardCount}
-              className={`resource-chip graveyard-chip clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}`}
+              className={`resource-chip graveyard-chip clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}${graveyardHighlight ? ' target-zone' : ''}`}
               title={
                 topGraveyardCard
                   ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
@@ -164,7 +212,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-exile-count={exileCount}
-              className={`resource-chip exile-chip clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}`}
+              className={`resource-chip exile-chip clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}${exileHighlight ? ' target-zone' : ''}`}
               title={
                 topExileCard
                   ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`
@@ -207,7 +255,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-library-count={player.libraryCount}
-              className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}`}
+              className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''}`}
               title={
                 player.topCard
                   ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
@@ -235,7 +283,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-graveyard-count={graveyardCount}
-              className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : 'is-empty'}`}
+              className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : 'is-empty'}${graveyardHighlight ? ' target-zone' : ''}`}
               title={
                 topGraveyardCard
                   ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
@@ -263,7 +311,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-exile-count={exileCount}
-              className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : 'is-empty'}`}
+              className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : 'is-empty'}${exileHighlight ? ' target-zone' : ''}`}
               title={
                 topExileCard
                   ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`

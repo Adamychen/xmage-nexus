@@ -1,5 +1,6 @@
 import type { CardView, CardsView, PlayerView } from '../net/types'
 import type { CrossZonePlayable } from './crossZone'
+import type { TargetZoneKind } from './targetZones'
 import BoardZone from './BoardZone'
 import './PlayerZone.css'
 
@@ -10,6 +11,8 @@ export interface PlayerZoneProps {
   onHandCardClick?: (id: string) => void
   onCardHover?: (card: any, rect?: DOMRect) => void
   targetIds?: Set<string>
+  targetZone?: TargetZoneKind | null
+  targetZones?: ReadonlySet<TargetZoneKind>
   playableIds?: Set<string>
   combatSelectable?: string[]
   combatMode?: 'attack' | 'block' | null

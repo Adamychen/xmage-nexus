@@ -5,6 +5,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { useSeatStates, useSwitchedHand, type BoardProps } from './boardShared'
+import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
 import { opponentRevealedCards } from './revealedCards'
 import './TwoHeadedBoard.css'
@@ -16,6 +17,8 @@ export default function TwoHeadedBoard({
   targetIds = [],
   chosenTargetIds = [],
   onTargetClick,
+  targetZone = null,
+  targetZones = EMPTY_TARGET_ZONES,
   playableIds = [],
   onPlayableClick,
   onCardHover,
@@ -35,6 +38,7 @@ export default function TwoHeadedBoard({
     game,
     targetIds,
     chosenTargetIds,
+    targetZone,
     playableIds,
     combatSelectable,
     combatMode,
@@ -85,6 +89,8 @@ export default function TwoHeadedBoard({
           onCardClick={handleCardClick}
           onCardHover={handleCardHover}
           targetIds={targetIdSet}
+          targetZone={targetZone}
+          targetZones={targetZones}
           revealedCards={opponentRevealedCards(game, player)}
           playableIds={playableIdSet}
           combatSelectable={combatSelectable}
@@ -149,6 +155,8 @@ export default function TwoHeadedBoard({
               onHandCardClick={onPlayableClick}
               onCardHover={handleCardHover}
               targetIds={targetIdSet}
+              targetZone={targetZone}
+              targetZones={targetZones}
               playableIds={playableIdSet}
               combatSelectable={combatSelectable}
               combatMode={combatMode}

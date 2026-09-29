@@ -11,6 +11,8 @@ export default function PodBoard({
   targetIds = [],
   chosenTargetIds = [],
   onTargetClick,
+  targetZone = null,
+  targetZones,
   playableIds = [],
   onPlayableClick,
   onCardHover,
@@ -39,6 +41,8 @@ export default function PodBoard({
           targetIds={targetIds}
           chosenTargetIds={chosenTargetIds}
           onTargetClick={onTargetClick}
+          targetZone={targetZone}
+          targetZones={targetZones}
           playableIds={playableIds}
           onPlayableClick={onPlayableClick}
           onCardHover={onCardHover}

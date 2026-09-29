@@ -48,6 +48,13 @@ export function chosenTargetsOf(data: JsonRecord): string[] | undefined {
   return targets.length ? targets : undefined
 }
 
+/** `HumanPlayer.getOptions` publishes `options.targetZone` with the Target's
+ *  `Zone` (HAND, GRAVEYARD, EXILED, LIBRARY…); player targets carry null.
+ *  Kept as sent (just normalized to uppercase) so the board maps it. */
+export function targetZoneOf(data: JsonRecord): string | undefined {
+  return stringValue(asRecord(data.options).targetZone)?.trim().toUpperCase() || undefined
+}
+
 export function controlledPlayerId(value: unknown): string | undefined {
   const game = asRecord(value)
   const players = Array.isArray(game.players) ? game.players : []

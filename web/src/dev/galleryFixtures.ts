@@ -1,5 +1,6 @@
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import type {
+  CardView,
   GameView,
   PlayerView,
   LobbyEnvelope,
@@ -672,7 +673,28 @@ export function buildGalleryEntries(): GalleryEntry[] {
       cardTypes: card.cardTypes,
     }))
 
-    const prompts: { id: string; label: string; description: string; prompt: FeedbackPrompt; playableIds?: string[] }[] = [
+    const graveZoneCard: CardView = {
+      id: 'zone-grave-1',
+      parentId: 'zone-grave-1',
+      name: 'Grizzly Bears',
+      displayName: 'Grizzly Bears',
+      manaValue: 2,
+      expansionSetCode: 'IMA',
+      cardNumber: '165',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+    }
+    const graveyardGame: GameView = {
+      ...game,
+      players: (game.players ?? []).map((player) =>
+        player.controlled
+          ? { ...player, graveyard: { ...player.graveyard, 'zone-grave-1': graveZoneCard } }
+          : player,
+      ),
+    }
+
+    const prompts: { id: string; label: string; description: string; prompt: FeedbackPrompt; playableIds?: string[]; game?: GameView }[] = [
       {
         id: 'prompt:target',
         label: 'GAME_TARGET (obligatorio)',
@@ -791,6 +813,25 @@ export function buildGalleryEntries(): GalleryEntry[] {
         },
       },
       {
+        id: 'prompt:target-zone-graveyard',
+        label: 'Target zone (graveyard)',
+        description: 'GAME_TARGET with targetZone GRAVEYARD: the graveyard pile is highlighted and auto-opens with the target card inside.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Choose target',
+          message: 'Select target creature card in a graveyard',
+          mode: 'uuid',
+          options: [{ id: 'zone-grave-1', label: 'Grizzly Bears', value: 'zone-grave-1' }],
+          min: 1,
+          max: 1,
+          required: true,
+          targetZone: 'GRAVEYARD',
+          sourceName: 'Reanimate',
+        },
+        game: graveyardGame,
+      },
+      {
         id: 'prompt:graveyard-grid',
         label: 'Selección múltiple (cementerio)',
         description: 'GAME_TARGET con cartas: la selección la lleva el servidor y se ve el contador.',
@@ -825,6 +866,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
           max: 1,
           required: true,
           cards: myHandCards,
+          targetZone: 'HAND',
           sourceName: 'Mind Rot',
         },
       },
@@ -908,7 +950,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
         label: p.label,
         description: p.description,
         phase: 'game',
-        game,
+        game: p.game ?? game,
         gameId,
         feedback: p.prompt,
         playableIds: p.playableIds,

@@ -1,5 +1,6 @@
 import type { GameView } from '../net/types'
 import type { CrossZonePlayable } from './crossZone'
+import type { TargetZoneKind } from './targetZones'
 import { getActiveFlights } from './flightManager'
 import { useCallback, useEffect, useRef } from 'react'
 
@@ -14,6 +15,8 @@ export interface MageSceneState {
    source: string | null
    ids: string[]
    chosen: string[]
+   /** Zona declarada por el servidor para el target en curso (targetZone). */
+   zone: TargetZoneKind | null
   }
   combat: {
    active: boolean
@@ -37,6 +40,7 @@ interface SceneBridgeOptions {
   playableIds: string[]
   targetIds: string[]
   chosenTargetIds: string[]
+  targetZone: TargetZoneKind | null
   combatSelectable: string[]
   combatMode: 'attack' | 'block' | null
   combatChosen: string[]
@@ -48,13 +52,14 @@ export function useSceneBridge({
   playableIds,
   targetIds,
   chosenTargetIds,
+  targetZone,
   combatSelectable,
   combatMode,
   combatChosen,
   crossZonePlayables,
 }: SceneBridgeOptions) {
   const stateRef = useRef<Partial<SceneBridgeOptions>>({})
-  stateRef.current = { game, playableIds, targetIds, chosenTargetIds, combatSelectable, combatMode, combatChosen, crossZonePlayables }
+  stateRef.current = { game, playableIds, targetIds, chosenTargetIds, targetZone, combatSelectable, combatMode, combatChosen, crossZonePlayables }
 
   const computeCards = useCallback(() => {
     const cards: Record<string, { x: number; y: number }> = {}
@@ -98,7 +103,8 @@ export function useSceneBridge({
             source: null,
             ids: s.targetIds ?? [],
             chosen: s.chosenTargetIds ?? [],
-          },
+            zone: s.targetZone ?? null,
+         },
          combat: {
             active: (s.combatSelectable?.length ?? 0) > 0,
             mode: s.combatMode ?? null,

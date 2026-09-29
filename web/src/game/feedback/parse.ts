@@ -37,6 +37,7 @@ import {
   stringValue,
   subMessageOf,
   targetOptions,
+  targetZoneOf,
 } from './record'
 import { defaultText } from './text'
 import { sanitizePromptText } from './promptText'
@@ -162,6 +163,8 @@ export function parseFeedback(
       const fp = prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargets, undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
       const progress = targetProgress(message, chosenTargets)
       if (progress) fp.progress = progress
+      const targetZone = targetZoneOf(data)
+      if (targetZone) fp.targetZone = targetZone
       return fp
     }
     case 'GAME_SELECT_CARDS':

@@ -118,4 +118,14 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(container.querySelector('[data-testid="opp-hand-stack"]')).toBeNull()
     expect(container.querySelectorAll('.hand-card-slot').length).toBe(2)
   })
+
+  it('marks the whole zone when isTargetZone is set (GAME_TARGET apuntando a esta mano)', () => {
+    const { container, rerender } = render(
+      <HandZone cards={Object.fromEntries([back('a'), back('b')])} stackBacks isTargetZone />
+    )
+    expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(true)
+
+    rerender(<HandZone cards={Object.fromEntries([back('a'), back('b')])} stackBacks />)
+    expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(false)
+  })
 })

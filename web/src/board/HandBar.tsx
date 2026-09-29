@@ -18,6 +18,7 @@ import {
   HAND_BAR_PADDING_Y,
 } from './handSizing'
 import './HandBar.css'
+import './targetZone.css'
 
 /** Printed mana cost as bubbles over the card's top edge (split cards show
  *  both halves). The server never sends the reduced cost of a card in hand.
@@ -100,11 +101,12 @@ export default function HandBar({
   const cardH = cardW * HAND_CARD_ASPECT
   const stripW = handRestStripWidth(cardW, gap)
   const pipSize = computeCostPipSize(stripW, cardW)
+  const isTargetZone = entries.some(([id]) => targetIds.has(id))
 
   return (
     <div
       ref={zoneRef}
-      className={`hand-bar${raised ? ' is-raised' : ''}`}
+      className={`hand-bar${raised ? ' is-raised' : ''}${isTargetZone ? ' target-zone' : ''}`}
       data-testid="hand-bar"
       data-hand-count={entries.length}
       style={

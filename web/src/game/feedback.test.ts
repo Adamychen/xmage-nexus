@@ -131,6 +131,31 @@ describe('parseFeedback', () => {
     expect(parseFeedback('GAME_TARGET', 'game-2', { targets: [], gameView: {} })?.chosenTargets).toBeUndefined()
   })
 
+  it('keeps options.targetZone so the board can highlight the zone the target lives in', () => {
+    const discard = parseFeedback('GAME_TARGET', 'game-2', {
+      message: 'Select a card to discard',
+      targets: ['card-1'],
+      options: { chosenTargets: [], targetZone: 'HAND' },
+    })
+    expect(discard?.targetZone).toBe('HAND')
+
+    const graveyard = parseFeedback('GAME_TARGET', 'game-2', {
+      message: 'Select target creature card in a graveyard',
+      targets: ['card-1'],
+      options: { targetZone: 'graveyard' },
+    })
+    expect(graveyard?.targetZone).toBe('GRAVEYARD')
+
+    // Targets de jugador: el motor manda targetZone null -> sin zona.
+    const player = parseFeedback('GAME_TARGET', 'game-2', {
+      message: 'Choose a player',
+      targets: ['player-2'],
+      options: { targetZone: null },
+    })
+    expect(player?.targetZone).toBeUndefined()
+    expect(parseFeedback('GAME_TARGET', 'game-2', { targets: ['card-1'] })?.targetZone).toBeUndefined()
+  })
+
   it('maps "pass anyway?" asks to a boolean (XMage: true = pass)', () => {
     const prompt = parseFeedback('GAME_ASK', 'game-1', {
       message: 'You still have mana in your mana pool. Do you want to continue playing or pass anyway?',

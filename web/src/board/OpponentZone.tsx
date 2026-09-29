@@ -1,4 +1,5 @@
 import type { CardView, PlayerView } from '../net/types'
+import type { TargetZoneKind } from './targetZones'
 import BoardZone from './BoardZone'
 import './OpponentZone.css'
 
@@ -7,6 +8,8 @@ export interface OpponentZoneProps {
   onCardClick?: (id: string) => void
   onCardHover?: (card: any, rect?: DOMRect) => void
   targetIds?: Set<string>
+  targetZone?: TargetZoneKind | null
+  targetZones?: ReadonlySet<TargetZoneKind>
   revealedCards?: Record<string, CardView>
   playableIds?: Set<string>
   combatSelectable?: string[]

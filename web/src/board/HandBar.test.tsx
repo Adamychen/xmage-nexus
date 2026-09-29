@@ -92,4 +92,12 @@ describe('HandBar', () => {
     expect(cards[0].classList.contains('playable')).toBe(true)
     expect(cards[2].classList.contains('targetable')).toBe(true)
   })
+
+  it('marks the strip as target zone only while a card in hand is the target', () => {
+    const { getByTestId, rerender } = render(<HandBar cards={hand()} targetIds={new Set(['h-3'])} />)
+    expect(getByTestId('hand-bar').classList.contains('target-zone')).toBe(true)
+
+    rerender(<HandBar cards={hand()} targetIds={new Set()} />)
+    expect(getByTestId('hand-bar').classList.contains('target-zone')).toBe(false)
+  })
 })

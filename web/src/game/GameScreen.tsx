@@ -42,6 +42,7 @@ import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/clickable'
 import { crossZonePlayables } from '../board/crossZone'
+import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
 import { useTranslation } from '../i18n'
@@ -166,6 +167,8 @@ export default function GameScreen() {
       ((controllingPriority || !!me?.isActive) && (!feedback || feedback.mode === 'combat')))
   const targetIds = feedback?.method === 'GAME_TARGET' ? feedback.options.map((option) => option.id) : []
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
+  const targetZone = feedback?.method === 'GAME_TARGET' ? targetZoneKindOf(feedback.targetZone) : null
+  const targetZones = useMemo(() => resolveTargetHits(game, targetIds).zones, [game, targetIds])
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
   useAttentionAlerts(game, gameId, feedback, combat, settings.browserNotifications)
@@ -218,6 +221,8 @@ export default function GameScreen() {
     targetIds,
     chosenTargetIds,
     onTargetClick,
+    targetZone,
+    targetZones,
     playableIds,
     onPlayableClick,
     combatSelectable: combat?.selectable ?? [],

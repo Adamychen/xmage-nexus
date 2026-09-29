@@ -21,7 +21,7 @@ export function reanimateTargetScenario() {
     playable: ['Reanimate'],
     otherZoneCards: [{ name: 'Grizzly Bears', zone: 'graveyard' }],
     cast: [
-      { type: 'target', message: 'Select target creature card in a graveyard', targets: [REANIMATE_GRIZZLY_ID] },
+      { type: 'target', message: 'Select target creature card in a graveyard', targets: [REANIMATE_GRIZZLY_ID], targetZone: 'GRAVEYARD' },
       { type: 'mana', message: 'Pay {B}', sources: 1 },
     ],
     resolveEffect: { addToMyBattle: [{ name: 'Grizzly Bears' }] },

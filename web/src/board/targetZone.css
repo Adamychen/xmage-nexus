@@ -1,0 +1,104 @@
+/* Zone highlight for the zone a GAME_TARGET declares (`options.targetZone`):
+   the target card already pulses, but some prompts never make clear where the
+   choice comes from (graveyard, exile, opponent's hand…) and players read that
+   as a bug. The golden ring marks the zone. */
+
+@keyframes targetZoneRing {
+  0%,
+  100% {
+    border-color: rgb(var(--gold-rgb) / 0.45);
+    box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.3);
+  }
+  50% {
+    border-color: rgb(var(--gold-rgb) / 0.95);
+    box-shadow: 0 0 20px rgb(var(--gold-rgb) / 0.65);
+  }
+}
+
+/* ── Pilas (cementerio / exilio / biblioteca en la ResourceBar) ────── */
+
+.resource-stack.target-zone::after,
+.resource-chip.target-zone::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--gold-300);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 6;
+  animation: targetZoneRing 1.2s ease-in-out infinite;
+}
+
+/* ── Manos (tira propia en HandBar / mano rival en HandZone) ───────── */
+
+.hand-zone.target-zone {
+  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.03) 20%, rgb(var(--gold-rgb) / 0.12) 100%);
+  border-radius: var(--r-base);
+}
+
+.hand-zone.target-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gold-300);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: targetZoneRing 1.2s ease-in-out infinite;
+}
+
+/* La barra propia ocupa todo el ancho: en vez de un anillo de lado a lado,
+   una luz dorada bajo el abanico de cartas. */
+.hand-bar.target-zone::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 72%;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgb(var(--gold-rgb) / 0.45) 0%, transparent 70%);
+  pointer-events: none;
+  animation: targetZoneGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes targetZoneGlow {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Filas del campo de batalla (BoardZone) ────────────────────────── */
+
+.bz-row.target-zone {
+  position: relative;
+  border-radius: var(--r-base);
+  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.03), rgb(var(--gold-rgb) / 0.09));
+}
+
+.bz-row.target-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gold-300);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  animation: targetZoneRing 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resource-stack.target-zone::after,
+  .resource-chip.target-zone::after,
+  .hand-zone.target-zone::after,
+  .hand-bar.target-zone::after,
+  .bz-row.target-zone::after {
+    animation: none;
+    border-color: var(--gold-300);
+    box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.5);
+  }
+}

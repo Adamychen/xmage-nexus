@@ -45,6 +45,10 @@ export interface FeedbackPrompt {
   required?: boolean
   sourceName?: string
   chosenTargets?: string[]
+  /** Zone declared by the server for the target (`options.targetZone` from
+   *  `HumanPlayer.getOptions`, e.g. HAND/GRAVEYARD/EXILED/LIBRARY). The board
+   *  uses it to highlight the zone the choice lives in; it can be absent. */
+  targetZone?: string
   progress?: TargetProgress
   special?: boolean
   cards?: FeedbackCard[]

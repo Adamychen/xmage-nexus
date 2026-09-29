@@ -205,4 +205,105 @@ describe('ResourceBar', () => {
     // Pile overlay opens in portal (document.body)
     expect(document.body.querySelector('.pile-overlay')).toBeTruthy()
   })
+
+  it('highlights and auto-opens the graveyard pile when the target lives inside it', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      graveyard: {
+        'g-1': { id: 'g-1', name: 'Grizzly Bears', manaValue: 2, expansionSetCode: 'ima', cardNumber: '165' },
+      },
+    }
+
+    const { container } = render(
+      <ResourceBar
+        player={playerWithPiles}
+        side="my"
+        targetIds={new Set(['g-1'])}
+        targetZone="graveyard"
+        targetZones={new Set(['graveyard'])}
+      />,
+    )
+
+    const gyStack = container.querySelector('.graveyard-stack')
+    expect(gyStack?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('.exile-stack')?.classList.contains('target-zone')).toBe(false)
+
+    // La pila se abre sola y la carta objetivo es clicable dentro.
+    const overlay = document.body.querySelector('.pile-overlay')
+    expect(overlay).toBeTruthy()
+    expect(overlay?.querySelector('.pile-card.targetable')).toBeTruthy()
+  })
+
+  it('closes the auto-opened pile once the targeting ends', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      graveyard: { 'g-1': { id: 'g-1', name: 'Grizzly Bears', manaValue: 2 } },
+    }
+    const { rerender } = render(
+      <ResourceBar
+        player={playerWithPiles}
+        side="my"
+        targetIds={new Set(['g-1'])}
+        targetZone="graveyard"
+        targetZones={new Set(['graveyard'])}
+      />,
+    )
+    expect(document.body.querySelector('.pile-overlay')).toBeTruthy()
+
+    rerender(<ResourceBar player={playerWithPiles} side="my" targetIds={new Set()} />)
+    expect(document.body.querySelector('.pile-overlay')).toBeNull()
+  })
+
+  it('falls back to the declared zone only for own non-empty piles, without auto-opening hidden ids', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      graveyard: { 'g-1': { id: 'g-1', name: 'Lightning Bolt', manaValue: 1 } },
+    }
+    const { container } = render(
+      <ResourceBar
+        player={playerWithPiles}
+        side="my"
+        targetIds={new Set(['hidden-card'])}
+        targetZone="graveyard"
+        targetZones={new Set()}
+      />,
+    )
+    expect(container.querySelector('.graveyard-stack')?.classList.contains('target-zone')).toBe(true)
+    expect(document.body.querySelector('.pile-overlay')).toBeNull()
+
+    cleanup()
+    const opp = render(
+      <ResourceBar
+        player={playerWithPiles}
+        side="opp"
+        targetIds={new Set(['hidden-card'])}
+        targetZone="graveyard"
+        targetZones={new Set()}
+      />,
+    )
+    expect(opp.container.querySelector('.graveyard-stack')?.classList.contains('target-zone')).toBe(false)
+
+    cleanup()
+    const empty = render(
+      <ResourceBar player={basePlayer} side="my" targetIds={new Set(['ghost'])} targetZone="exile" targetZones={new Set()} />,
+    )
+    expect(empty.container.querySelector('.exile-stack')?.classList.contains('target-zone')).toBe(false)
+  })
+
+  it('does not fall back to the own zone when the target resolved somewhere else of that kind', () => {
+    const playerWithPiles: PlayerView = {
+      ...basePlayer,
+      graveyard: { 'g-1': { id: 'g-1', name: 'Lightning Bolt', manaValue: 1 } },
+    }
+    const { container } = render(
+      <ResourceBar
+        player={playerWithPiles}
+        side="my"
+        targetIds={new Set(['g-2'])}
+        targetZone="graveyard"
+        targetZones={new Set(['graveyard'])}
+      />,
+    )
+    expect(container.querySelector('.graveyard-stack')?.classList.contains('target-zone')).toBe(false)
+  })
 })
