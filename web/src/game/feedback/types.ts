@@ -28,6 +28,9 @@ export interface FeedbackCard {
   toughness?: string
   color?: { white?: boolean; blue?: boolean; black?: boolean; red?: boolean; green?: boolean } | null
   rules?: string[]
+  /** Targets already chosen for the ability (`CardView.targets`), used to tell
+   *  apart duplicate triggers in the order dialog. */
+  targets?: string[]
   faceDown?: boolean
 }
 

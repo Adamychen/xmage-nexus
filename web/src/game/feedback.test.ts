@@ -88,6 +88,63 @@ describe('parseFeedback', () => {
     expect(prompt?.options).toEqual([{ id: 'perm-1', label: 'Grizzly Bears', value: 'perm-1' }])
   })
 
+  it('flattens real AbilityView trigger picks (name "Ability" + sourceCard) into the source card', () => {
+    const prompt = parseFeedback('GAME_TARGET', 'game-3', {
+      message: 'Pick triggered ability (goes to the stack first)',
+      options: { queryType: 'PICK_ABILITY' },
+      targets: ['ab-1', 'ab-2'],
+      cardsView1: {
+        'ab-1': {
+          id: 'ab-1',
+          name: 'Ability',
+          displayName: null,
+          sourceName: 'Soul Warden',
+          sourceCard: { id: 'src-1', name: 'Soul Warden', displayName: 'Soul Warden', expansionSetCode: 'TMP', cardNumber: '35' },
+          rules: ['Whenever another creature enters the battlefield, you gain 1 life.'],
+        },
+        'ab-2': {
+          id: 'ab-2',
+          name: 'Ability',
+          displayName: null,
+          sourceCard: { id: 'src-2', name: 'Blood Artist', displayName: 'Blood Artist', expansionSetCode: 'AVR', cardNumber: '82' },
+          rules: ['Whenever Blood Artist or another creature dies, target player loses 1 life.'],
+        },
+      },
+    })
+    expect(prompt?.isTriggerOrder).toBe(true)
+    expect(prompt?.cards).toEqual([
+      {
+        id: 'ab-1',
+        name: 'Soul Warden',
+        displayName: 'Soul Warden',
+        expansionSetCode: 'TMP',
+        cardNumber: '35',
+        manaCost: [],
+        cardTypes: [],
+        power: undefined,
+        toughness: undefined,
+        color: null,
+        rules: ['Whenever another creature enters the battlefield, you gain 1 life.'],
+        faceDown: false,
+      },
+      {
+        id: 'ab-2',
+        name: 'Blood Artist',
+        displayName: 'Blood Artist',
+        expansionSetCode: 'AVR',
+        cardNumber: '82',
+        manaCost: [],
+        cardTypes: [],
+        power: undefined,
+        toughness: undefined,
+        color: null,
+        rules: ['Whenever Blood Artist or another creature dies, target player loses 1 life.'],
+        faceDown: false,
+      },
+    ])
+    expect(prompt?.options.map((option) => option.label)).toEqual(['Soul Warden', 'Blood Artist'])
+  })
+
   it('exposes the source object name from options.secondMessage', () => {
     const prompt = parseFeedback('GAME_TARGET', 'game-2', {
       message: 'Choose target creature or player',

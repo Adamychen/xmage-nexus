@@ -44,6 +44,7 @@ function form(p: FeedbackPrompt, busy = false): UseFeedbackForm {
     setTextValue: () => {},
     filteredStringOptions: [],
     send: () => Promise.resolve(),
+    sendNow: () => Promise.resolve(true),
     cancel: () => {},
     finishOptionalTarget: () => {},
     selectOption: () => {},

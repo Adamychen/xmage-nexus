@@ -89,18 +89,30 @@ export function optionEntries(value: unknown): FeedbackOption[] {
   })
 }
 
+/**
+ * Display label of a raw cardsView entry. AbilityViews (trigger order) are named
+ * "Ability" and carry the real card in `sourceCard`/`sourceName`, so fall back to
+ * the source before showing a bare "Ability".
+ */
+function cardLabel(card: JsonRecord, fallback: string): string {
+  const direct = stringValue(card.displayName) ?? stringValue(card.name)
+  if (direct && !/^ability$/i.test(direct)) return direct
+  const source = asRecord(card.sourceCard)
+  return stringValue(card.sourceName) ?? stringValue(source.displayName) ?? stringValue(source.name) ?? direct ?? fallback
+}
+
 export function cardOptions(value: unknown): FeedbackOption[] {
   if (Array.isArray(value)) {
     return value.map((item, index) => {
       const card = asRecord(item)
       const id = stringValue(card.id) ?? stringValue(card.parentId) ?? String(index)
-      return { id, label: stringValue(card.displayName) ?? stringValue(card.name) ?? stringValue(item) ?? id, value: id }
+      return { id, label: cardLabel(card, stringValue(item) ?? id), value: id }
     })
   }
   return Object.entries(asRecord(value)).map(([id, item]) => {
     const card = asRecord(item)
     const actualId = stringValue(card.id) ?? id
-    return { id: actualId, label: stringValue(card.displayName) ?? stringValue(card.name) ?? stringValue(item) ?? actualId, value: actualId }
+    return { id: actualId, label: cardLabel(card, stringValue(item) ?? actualId), value: actualId }
   })
 }
 
@@ -184,7 +196,16 @@ export function cardSummary(value: unknown, fallback: string, summarize: (fallba
   return cards.length ? summarize(fallback, cards.length) : fallback
 }
 
-/** Card data from a single cardsView (cardsView1/cardsView2) for visual rendering. */
+/**
+ * Card data from a single cardsView (cardsView1/cardsView2) for visual rendering.
+ *
+ * `CardsView(Collection<? extends Ability>, Game)` (Mage.Common) keys each entry
+ * by the ability UUID and serializes an `AbilityView`: `name` is literally
+ * "Ability", `displayName` is null and the real card (`name`, set, number) sits
+ * nested in `sourceCard`. Trigger order (GAME_TARGET PICK_ABILITY) is the only
+ * prompt that sends abilities, so flatten the source card here or the dialog
+ * shows "Ability" with no art.
+ */
 export function feedbackCardsFrom(view: unknown): FeedbackCard[] | undefined {
   if (!view || typeof view !== 'object') return undefined
   const entries = Object.entries(asRecord(view))
@@ -192,12 +213,21 @@ export function feedbackCardsFrom(view: unknown): FeedbackCard[] | undefined {
   return entries.map(([id, item]) => {
     const c = asRecord(item)
     const color = asRecord(c.color)
+    const source = asRecord(c.sourceCard)
+    const rawName = stringValue(c.name) ?? id
+    const sourceName = stringValue(c.sourceName)
+    const isAbility = Boolean(sourceName) || /^ability$/i.test(rawName) || /ability/i.test(stringValue(c.mageObjectType) ?? '')
+    const abilityName = sourceName ?? stringValue(source.displayName) ?? stringValue(source.name)
+    const setName = stringValue(c.expansionSetCode)
+    const setNumber = stringValue(c.cardNumber)
+    const sourceSet = stringValue(source.expansionSetCode)
+    const sourceNumber = stringValue(source.cardNumber)
     return {
       id: stringValue(c.id) ?? id,
-      name: stringValue(c.name) ?? id,
-      displayName: stringValue(c.displayName),
-      expansionSetCode: stringValue(c.expansionSetCode),
-      cardNumber: stringValue(c.cardNumber),
+      name: isAbility && abilityName ? abilityName : rawName,
+      displayName: stringValue(c.displayName) ?? (isAbility ? abilityName : undefined),
+      expansionSetCode: isAbility ? (sourceSet || setName) : setName,
+      cardNumber: isAbility ? (sourceNumber && sourceNumber !== '0' ? sourceNumber : setNumber) : setNumber,
       manaCost: stringList(c.manaCostLeftStr),
       cardTypes: stringList(c.cardTypes),
       power: stringValue(c.power),
@@ -206,6 +236,7 @@ export function feedbackCardsFrom(view: unknown): FeedbackCard[] | undefined {
         ? { white: !!color.white, blue: !!color.blue, black: !!color.black, red: !!color.red, green: !!color.green }
         : null,
       rules: Array.isArray(c.rules) ? c.rules.map((r) => String(r)) : undefined,
+      targets: stringList(c.targets).length ? stringList(c.targets) : undefined,
       faceDown: c.faceDown === true,
     }
   })

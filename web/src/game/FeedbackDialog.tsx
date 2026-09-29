@@ -38,7 +38,7 @@ export default function FeedbackDialog() {
 }
 
 function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick: () => void) {
-  const { prompt, selected, setSelected, send, cancel, busy } = form
+  const { prompt, selected, setSelected, send, sendNow, cancel, busy } = form
 
   if (!prompt) return null
 
@@ -69,7 +69,7 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   // ── Trigger order: diálogo dedicado (GAME_TARGET PICK_ABILITY)
   if (prompt.isTriggerOrder) {
-    return <TriggerOrderDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
+    return <TriggerOrderDialog prompt={prompt} send={send} sendNow={sendNow} busy={busy} />
   }
 
   // ── GAME_TARGET con cardsView1: grid de cartas (tutores, scry, descarte, etc.)

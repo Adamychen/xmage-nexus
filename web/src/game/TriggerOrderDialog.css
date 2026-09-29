@@ -30,6 +30,47 @@
   background: var(--veil-1);
 }
 
+.trigger-row.is-sent {
+  opacity: 0.55;
+  border-color: var(--ok-line);
+}
+
+.trigger-row.is-next {
+  border-color: var(--brand-line);
+  box-shadow: 0 0 0 1px var(--brand-soft);
+}
+
+.trigger-row.is-dragging {
+  opacity: 0.4;
+}
+
+.trigger-order-cell {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 26px;
+}
+
+.trigger-index {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--fg-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+.trigger-move {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+}
+
+.trigger-move .ui-btn {
+  min-width: 0;
+  padding: var(--sp-0h) var(--sp-1h);
+}
+
 .trigger-art {
   flex: 0 0 54px;
   width: 54px;
@@ -37,6 +78,8 @@
 
 .trigger-art .card-slot {
   width: 100%;
+  height: auto;
+  aspect-ratio: 63 / 88;
 }
 
 .trigger-text {
@@ -62,11 +105,46 @@
   overflow: hidden;
 }
 
+.trigger-related {
+  font-size: var(--fs-xs);
+  color: var(--fg-3, var(--fg-2));
+  font-style: italic;
+}
+
+.trigger-targets {
+  font-size: var(--fs-xs);
+  color: var(--brand-fg);
+}
+
+.trigger-saved {
+  font-size: var(--fs-xs);
+  color: var(--ok);
+}
+
 .trigger-actions {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-items: stretch;
+}
+
+.trigger-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.trigger-state.is-sent {
+  color: var(--ok);
+}
+
+.trigger-state.is-next {
+  color: var(--brand-fg);
 }
 
 .trigger-empty {

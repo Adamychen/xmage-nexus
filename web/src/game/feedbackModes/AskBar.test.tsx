@@ -20,6 +20,7 @@ function stubForm(prompt: FeedbackPrompt, overrides: Partial<UseFeedbackForm> = 
     setTextValue: () => {},
     filteredStringOptions: [],
     send: () => Promise.resolve(),
+    sendNow: () => Promise.resolve(true),
     cancel: () => {},
     finishOptionalTarget: () => {},
     selectOption: () => {},

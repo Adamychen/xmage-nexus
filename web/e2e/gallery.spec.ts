@@ -17,7 +17,9 @@ const HIDE_ARROWS_CSS = fileURLToPath(new URL('./gallery-visual.css', import.met
 
 const VISUAL = process.env.E2E_VISUAL === '1'
 
-const VISUAL_ENTRIES = [
+// `E2E_VISUAL_ENTRIES=prompt:trigger-order,...` regenera/verifica solo esas
+// entradas (p. ej. tras cambiar un diálogo) sin reescribir toda la matriz.
+const VISUAL_ENTRIES_ALL = [
   'frame:mutate',
   'frame:combat',
   'frame:xcosts',
@@ -69,6 +71,10 @@ const VISUAL_ENTRIES = [
   'global:zoom-lobby-125',
   'global:reconnecting',
 ]
+
+const VISUAL_ENTRIES = process.env.E2E_VISUAL_ENTRIES
+  ? process.env.E2E_VISUAL_ENTRIES.split(',').map((id) => id.trim()).filter(Boolean)
+  : VISUAL_ENTRIES_ALL
 
 async function openGallery(page: Page) {
   await page.addInitScript(() => localStorage.clear())

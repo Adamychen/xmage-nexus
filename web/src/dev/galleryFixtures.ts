@@ -663,7 +663,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
     const me = controlledPlayer(game)
     const myLands = landIds(me)
     const myPermanents = battlefieldIds(me)
-    const triggers = myPermanents.slice(0, 2).map((id) => cardOf(me, id))
+    // Forma real del server: `CardsView(abilities, game)` serializa AbilityView
+    // (name "Ability" + sourceCard/sourceName anidados) — no FeedbackCard plana.
+    const triggers = myPermanents.slice(0, 2).map((id, index) => {
+      const source = cardOf(me, id)
+      const sourceName = source.name ?? id
+      return {
+        id: `${id}:ability-${index}`,
+        name: sourceName,
+        sourceName,
+        sourceCard: source,
+        expansionSetCode: source.expansionSetCode,
+        cardNumber: source.cardNumber,
+        rules: [`Whenever ${sourceName} or another creature enters the battlefield, you gain 1 life.`],
+      }
+    })
     const myHandCards = Object.entries(game.myHand ?? {}).map(([id, card]) => ({
       id: card.id ?? id,
       name: card.name ?? id,

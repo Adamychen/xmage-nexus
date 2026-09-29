@@ -45,6 +45,9 @@ export interface UseFeedbackForm {
   setTextValue: (v: string) => void
   filteredStringOptions: FeedbackOption[]
   send: (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => Promise<void>
+  /** Same as `send` but returns whether the action was accepted and skips the
+   *  `busy` guard: used to chain the answer to consecutive server prompts. */
+  sendNow: (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => Promise<boolean>
   cancel: () => void
   finishOptionalTarget: () => void
   selectOption: (option: FeedbackOption) => void
@@ -77,17 +80,36 @@ export function useFeedbackForm(): UseFeedbackForm {
     return prompt.options.filter((opt) => opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q))
   }, [prompt?.options, textValue])
 
-  const send = async (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => {
-    if (busy) return
+  const perform = async (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string): Promise<boolean> => {
     const perfExtra = { method: prompt?.method ?? null, mode: prompt?.mode ?? null }
     perfMark('click', 'prompt', undefined, perfExtra)
-    setBusy(true)
     perfMark('ack', 'prompt', undefined, perfExtra)
     const answered = getState().feedback
     try {
-      isResultOk(await action(), fallback, answered)
+      return isResultOk(await action(), fallback, answered)
     } catch (error) {
       setStoreError(error instanceof Error ? error.message : fallback)
+      return false
+    }
+  }
+
+  const send = async (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await perform(action, fallback)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // The next server prompt can arrive before the previous action's ack (server
+  // callbacks travel on another socket), so the chained answers must not be
+  // gated on `busy`: each prompt is claimed exactly once by the caller instead.
+  const sendNow = async (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string): Promise<boolean> => {
+    setBusy(true)
+    try {
+      return await perform(action, fallback)
     } finally {
       setBusy(false)
     }
@@ -170,6 +192,7 @@ export function useFeedbackForm(): UseFeedbackForm {
     setTextValue,
     filteredStringOptions,
     send,
+    sendNow,
     cancel,
     finishOptionalTarget,
     selectOption,
