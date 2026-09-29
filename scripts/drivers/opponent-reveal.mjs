@@ -6,17 +6,19 @@ import { runRecorder } from '../rec-lib.mjs'
 // pero el rival dice que no le llega ningún popup. Este driver monta el caso
 // sin tocar al humano: la SIM juega un mazo de Islas + Trinket Mage ({2}{U},
 // ETB: busca un artefacto MV ≤ 1, LO REVELA y va a la mano) y el humano solo
-// pasa. captureWhen exige una entrada de `GameView.revealed` con la carta
-// revelada (Ornithopter/Memnite) — es decir, el revelado del rival llegando a
-// MI vista. Si el frame no captura, el canal no lo está emitiendo.
+// pasa. Como objetivo de la búsqueda va Aether Vial: es un artefacto no
+// criatura, así que el SimPlayer NUNCA lo lanza (isSpell = criatura/instantáneo/
+// conjuro) y sigue en la biblioteca cuando el primer Trinket Mage resuelve —
+// captura temprana y frame pequeño. captureWhen exige una entrada de
+// `GameView.revealed` con la carta revelada llegando a MI vista; si el frame no
+// captura, el canal no lo está emitiendo.
 //
 // El visor del web (InfoWindows) pinta `game.revealed` automáticamente; este
 // frame fija la forma real para el replay y el invariante.
 const FOREST = { cardName: 'Forest', setCode: 'iko', cardNumber: '272' }
 const ISLAND = { cardName: 'Island', setCode: 'iko', cardNumber: '263' }
 const TRINKET = { cardName: 'Trinket Mage', setCode: 'ddu', cardNumber: '41' }
-const ORNITHOPTER = { cardName: 'Ornithopter', setCode: 'm10', cardNumber: '216' }
-const MEMNITE = { cardName: 'Memnite', setCode: 'som', cardNumber: '174' }
+const VIAL = { cardName: 'Aether Vial', setCode: '2x2', cardNumber: '298' }
 
 function humanDeck(name) {
   return { name, cards: [{ ...FOREST, amount: 60 }], sideboard: [] }
@@ -26,10 +28,9 @@ function simDeck(name) {
   return {
     name,
     cards: [
-      { ...ISLAND, amount: 38 },
-      { ...TRINKET, amount: 6 },
-      { ...ORNITHOPTER, amount: 8 },
-      { ...MEMNITE, amount: 6 },
+      { ...ISLAND, amount: 44 },
+      { ...TRINKET, amount: 4 },
+      { ...VIAL, amount: 4 },
     ],
     sideboard: [],
   }
@@ -44,6 +45,7 @@ function makeOpponentRevealDriver() {
     gameType: 'Constructed - Pioneer',
     maxMs: 300_000,
     _landTurn: -1,
+    _cheated: false,
     onSelect(ctx) {
       // Humano espectador de lujo: juega su tierra (mantiene la mano en 7, sin
       // descarte de limpieza) y pasa; la SIM hace todo.
@@ -53,6 +55,17 @@ function makeOpponentRevealDriver() {
           this._landTurn = turn
           return
         }
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        const sim = (ctx.gv?.players ?? []).find((p) => !p?.controlled)
+        const simId = sim?.playerId ?? sim?.id
+        ctx.log('cheatSetup SIM: Trinket Mage a la mano + 3 Aether Vial a la biblioteca')
+        void ctx.cheatSetup(
+          { hand: ['Trinket Mage'], library: ['Aether Vial', 'Aether Vial', 'Aether Vial'] },
+          simId,
+        )
+        return
       }
       ctx.pass()
     },
@@ -72,7 +85,7 @@ function makeOpponentRevealDriver() {
         }))))
       }
       return entries.some((e) =>
-        Object.values(e?.cards ?? {}).some((c) => /ornithopter|memnite|trinket mage/i.test(String(c?.name ?? ''))),
+        Object.values(e?.cards ?? {}).some((c) => /aether vial/i.test(String(c?.name ?? ''))),
       )
     },
   }
@@ -84,7 +97,7 @@ export const meta = {
   mechanic: 'opponent-reveal',
   kind: 'game',
   assert: 'hasOpponentReveal',
-  note: 'Revelado del RIVAL (issue #1): la SIM juega Trinket Mage ({2}{U}; ETB busca un artefacto MV ≤ 1, lo revela y lo pone en su mano) y el humano (60 Bosques, solo pasa) captura el game view con la entrada de `GameView.revealed` del oponente. Fija que el revelado de una búsqueda ajena llega a MI vista (y por tanto el visor `InfoWindows` del web debe pintarlo): la entrada se llama como la carta fuente ("Trinket Mage") y trae el artefacto buscado (Ornithopter/Memnite) como CardView.',
+  note: 'Revelado del RIVAL (issue #1): la SIM juega Trinket Mage ({2}{U}; ETB busca un artefacto MV ≤ 1, lo revela y lo pone en su mano) y el humano (60 Bosques, juega tierra y pasa) captura el game view con la entrada de `GameView.revealed` del oponente. Para que la captura sea temprana y determinista, el cheatSetup pone un Trinket Mage en la mano de la SIM y 3 Aether Vial en su biblioteca; el Aether Vial es un artefacto no criatura, así que el SimPlayer nunca lo lanza y la búsqueda siempre encuentra. Fija que el revelado de una búsqueda ajena llega a MI vista (y por tanto el visor `InfoWindows` del web debe pintarlo): la entrada se llama como la carta fuente ("Trinket Mage …") y trae el Aether Vial revelado como CardView.',
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

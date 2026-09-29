@@ -830,6 +830,6 @@
     "mechanic": "opponent-reveal",
     "kind": "game",
     "assert": "hasOpponentReveal",
-    "note": "Revelado del RIVAL (issue #1): la SIM juega Trinket Mage ({2}{U}; ETB busca un artefacto MV ≤ 1, lo revela y lo pone en su mano) y el humano (60 Bosques, solo pasa) captura el game view con la entrada de `GameView.revealed` del oponente. Fija que el revelado de una búsqueda ajena llega a MI vista (y por tanto el visor `InfoWindows` del web debe pintarlo): la entrada se llama como la carta fuente (\"Trinket Mage\") y trae el artefacto buscado (Ornithopter/Memnite) como CardView."
+    "note": "Revelado del RIVAL (issue #1): la SIM juega Trinket Mage ({2}{U}; ETB busca un artefacto MV ≤ 1, lo revela y lo pone en su mano) y el humano (60 Bosques, juega tierra y pasa) captura el game view con la entrada de `GameView.revealed` del oponente. Para que la captura sea temprana y determinista, el cheatSetup pone un Trinket Mage en la mano de la SIM y 3 Aether Vial en su biblioteca; el Aether Vial es un artefacto no criatura, así que el SimPlayer nunca lo lanza y la búsqueda siempre encuentra. Fija que el revelado de una búsqueda ajena llega a MI vista (y por tanto el visor `InfoWindows` del web debe pintarlo): la entrada se llama como la carta fuente (\"Trinket Mage …\") y trae el Aether Vial revelado como CardView."
   }
 ]

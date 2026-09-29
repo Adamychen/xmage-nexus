@@ -1324,7 +1324,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       return (gv.revealed ?? []).some((v) => {
         const entry = v as { name?: unknown; cards?: Record<string, { name?: unknown }> }
         if (!/trinket mage/i.test(String(entry?.name ?? ''))) return false
-        return Object.values(entry?.cards ?? {}).some((c) => /ornithopter|memnite/i.test(String(c?.name ?? '')))
+        return Object.values(entry?.cards ?? {}).some((c) => /aether vial/i.test(String(c?.name ?? '')))
       })
     }
     case 'hasMultikicker': {

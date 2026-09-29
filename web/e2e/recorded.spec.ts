@@ -190,7 +190,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           // llega en `revealed` y el visor debe pintarlo con la carta revelada.
           const revealWindow = page.locator('.pile-overlay', { hasText: 'Trinket Mage' })
           await expect(revealWindow).toBeVisible()
-          await expect(revealWindow.locator('.card-slot[data-card-name="Ornithopter"]')).toBeVisible()
+          await expect(revealWindow.locator('.card-slot[data-card-name="Aether Vial"]')).toBeVisible()
         }
         if (entry.assert === 'hasMultikicker') {
           // Chalice con 2 contadores de carga (2 kicks pagados).
