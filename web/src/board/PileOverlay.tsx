@@ -7,6 +7,7 @@ import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
 import FloatingCardPreview from './FloatingCardPreview'
+import { overlayRoot } from './overlayRoot'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
 
@@ -114,6 +115,6 @@ export default function PileOverlay({
         inModal
       />
     </div>,
-    document.body
+    overlayRoot()
   )
 }

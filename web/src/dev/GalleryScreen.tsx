@@ -217,6 +217,7 @@ export default function GalleryScreen() {
       <main className="gallery-stage" data-gallery-stage={active?.id ?? ''}>
         {active?.connecting && <div className="reconnect-banner">{t('common', 'reconnecting')}</div>}
         <Fragment key={active?.id ?? ''}>{stageOf(active)}</Fragment>
+        <div className="gallery-overlay-root" data-overlay-root="" />
       </main>
     </div>
   )

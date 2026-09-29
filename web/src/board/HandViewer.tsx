@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import FloatingCardPreview from './FloatingCardPreview'
+import { overlayRoot } from './overlayRoot'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
 
@@ -89,6 +90,6 @@ export default function HandViewer({
         inModal
       />
     </div>,
-    document.body
+    overlayRoot()
   )
 }

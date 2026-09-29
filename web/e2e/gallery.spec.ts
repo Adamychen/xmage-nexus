@@ -149,6 +149,23 @@ test.describe('galería de estados (P3)', () => {
     await expect(dialog.locator('.action-prompt-msg')).toContainText('Slicer, Hired Muscle')
   })
 
+  test('los visores revelados se pintan por encima de la galería', async ({ page }) => {
+    await openGallery(page)
+    await showEntry(page, 'frame:opponent-reveal')
+
+    const overlay = page.locator('.pile-overlay')
+    await expect(overlay).toBeVisible()
+    await expect(overlay).toContainText('Aether Vial')
+    // `toBeVisible` no detecta oclusión: el portal quedaba bajo la galería
+    // (z-index 100 vs 500) y la aserción de visibilidad pasaba igual.
+    const topmost = await overlay.evaluate((el) => {
+      const rect = el.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + 10)
+      return hit === el || el.contains(hit)
+    })
+    expect(topmost).toBe(true)
+  })
+
   test('regresión visual de la selección representativa', async ({ page }) => {
     test.skip(!VISUAL, 'E2E_VISUAL=1 requerido (baselines por plataforma)')
     await openGallery(page)

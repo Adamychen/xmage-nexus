@@ -4,6 +4,7 @@ import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import CardSlot from './CardSlot'
 import type { CrossZonePlayable } from './crossZone'
+import { overlayRoot } from './overlayRoot'
 import { useTranslation } from '../i18n'
 import './PileOverlay.css'
 
@@ -57,6 +58,6 @@ export default function CrossZoneOverlay({ playables, onClose, onPlay }: CrossZo
         </div>
       </div>
     </div>,
-    document.body,
+    overlayRoot(),
   )
 }
