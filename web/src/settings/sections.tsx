@@ -210,11 +210,6 @@ export function GameplayQuickSection() {
       <p className="settings-hint">{t('game', 'presets_hint')}</p>
       <PresetPicker />
       <Toggle
-        checked={settings.autoPass}
-        onChange={(v) => setSetting('autoPass', v)}
-        label={t('game', 'auto_pass')}
-      />
-      <Toggle
         checked={settings.smartStops}
         onChange={(v) => setSetting('smartStops', v)}
         label={t('game', 'smart_stops')}

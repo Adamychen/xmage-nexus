@@ -66,13 +66,6 @@ export default function PassMenu({ game, onSkip }: PassMenuProps) {
       <Checkbox
         className="pass-menu-check"
         onClick={(e) => e.stopPropagation()}
-        checked={settings.autoPass}
-        onChange={(next) => setSetting('autoPass', next)}
-        label={t('game', 'auto_pass')}
-      />
-      <Checkbox
-        className="pass-menu-check"
-        onClick={(e) => e.stopPropagation()}
         checked={settings.smartStops}
         onChange={(next) => setSetting('smartStops', next)}
         label={t('game', 'smart_stops')}

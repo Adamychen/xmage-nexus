@@ -300,14 +300,6 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                     <p>{t('common', 'close')}</p>
                   </div>
                 </div>
-
-                <div className="shortcut-card">
-                  <span className="shortcut-key">{t('wiki', 'shortcuts_auto_pass')}</span>
-                  <div className="shortcut-info">
-                    <strong>{t('game', 'auto_pass')}</strong>
-                    <p>{t('game', 'auto_pass')}</p>
-                  </div>
-                </div>
               </div>
             </div>
           )}

@@ -6,7 +6,6 @@ import { handleMessage, requestRollback, voteRollback, maybeAutoPass, isRollback
 import { reset } from './gateway'
 import { ROLLBACK_ACCEPT_CHAT, ROLLBACK_PENDING_TTL_MS, parseRollbackTurns, rollbackAcceptChatText, isRollbackAcceptChat } from './rollbackVote'
 import * as cmds from '../net/commands'
-import { togglePhaseStop } from '../game/phaseStops'
 
 vi.mock('../net/commands', () => ({
   setGateway: vi.fn(),
@@ -262,10 +261,9 @@ describe('rollback vote (4-player commander)', () => {
 
   it('auto-pass does not pass priority while the vote is open', async () => {
     const view = commander({ me: 'Alice', turn: 3, priority: 'Alice' })
-    update(view)
+    handleMessage({ type: 'event', method: 'GAME_SELECT', messageId: 9, objectId: GAME, data: { gameView: view, message: 'Pass priority' } })
     setState({
-      settings: { ...getState().settings, autoPass: true, smartStops: false },
-      phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1'),
+      settings: { ...getState().settings, smartStops: true },
       feedback: null,
     })
     maybeAutoPass(view)

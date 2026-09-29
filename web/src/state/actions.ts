@@ -1,9 +1,8 @@
 import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
-import { BASIC_LANDS } from './gameUtils'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
-import { clonePhaseStops, stopKeyForStep } from '../game/phaseStops'
+import { clonePhaseStops } from '../game/phaseStops'
 import { meaningfulPlayables } from '../game/smartStops'
 import { manaPaymentActions } from '../game/manaPayment'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
@@ -382,37 +381,16 @@ let lastSmartAnswer: GameView | null = null
 
 export function maybeAutoPass(game: GameView) {
   const s = getState()
-  const me = game.players?.find((p) => p.controlled)
-  const smart = s.settings.smartStops
-  if ((!s.settings.autoPass && !smart) || s.feedback || !s.gameId) return
+  if (!s.settings.smartStops || s.feedback || !s.gameId) return
   if (isRollbackVoting(s.rollbackVote, s.gameId)) return
   if (isControllingPriority(game)) return
+  const me = game.players?.find((p) => p.controlled)
   if (!me?.hasPriority) return
-  if (s.combat && (!smart || s.combat.selectable.length > 0)) return
-  if (smart) {
-    const request = s.priorityRequest
-    if (!request || s.game !== request || request === lastSmartAnswer) return
-    if (meaningfulPlayables(game, s.playableIds).length > 0) return
-    lastSmartAnswer = request
-    void cmds.sendPlayerBoolean(false, s.gameId)
-    return
-  }
-  const stopKey = stopKeyForStep(game.step)
-  if (stopKey) {
-    const turn = me.isActive ? 'yourTurn' : 'opponentTurn'
-    if (s.phaseStops?.[turn]?.[stopKey]) return
-  }
-  const myHand = game.myHand ?? {}
-  if (Object.keys(myHand).length === 0) return
-  if (game.phase === 'PRECOMBAT_MAIN') {
-    const playable = s.playableIds.length > 0
-    const fallback = game.canPlayObjects?.objects ? Object.keys(game.canPlayObjects.objects).length > 0 : false
-    const myTurn = me.isActive === true
-    const landInHand = Object.values(myHand).some(
-      (c) => BASIC_LANDS.includes(c.name ?? '') || BASIC_LANDS.includes(c.displayName ?? ''),
-    )
-    if (playable || fallback || (myTurn && landInHand)) return
-  }
+  if (s.combat && s.combat.selectable.length > 0) return
+  const request = s.priorityRequest
+  if (!request || s.game !== request || request === lastSmartAnswer) return
+  if (meaningfulPlayables(game, s.playableIds).length > 0) return
+  lastSmartAnswer = request
   void cmds.sendPlayerBoolean(false, s.gameId)
 }
 

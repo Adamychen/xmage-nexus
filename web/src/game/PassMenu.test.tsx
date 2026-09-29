@@ -81,9 +81,10 @@ describe('PassMenu', () => {
     expect(onSkip).toHaveBeenCalledWith('PASS_PRIORITY_UNTIL_STACK_RESOLVED')
   })
 
-  it('keeps hold-priority and auto-pass checks, with stops living only in the header bar', () => {
+  it('keeps the hold-priority and smart-stops checks, with stops living only in the header bar', () => {
     const { container } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
     expect(container.querySelector('.hold-priority-toggle input')).not.toBeNull()
+    expect(container.querySelector('[data-testid="smart-stops-toggle"]')).not.toBeNull()
     expect(container.querySelectorAll('.phase-stop-btn').length).toBe(0)
   })
 })

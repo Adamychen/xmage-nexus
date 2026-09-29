@@ -5,7 +5,6 @@ import { PHASES } from '../game/phaseStops'
 export type GameplayPresetId = 'simple' | 'balanced' | 'manual'
 
 export interface GameplayPresetBundle {
-  autoPass: boolean
   smartStops: boolean
   holdPriority: boolean
   manaPayment: ManaPaymentStored
@@ -30,7 +29,6 @@ export const GAMEPLAY_PRESETS: GameplayPreset[] = [
     labelKey: 'preset_simple',
     descKey: 'preset_simple_desc',
     bundle: {
-      autoPass: true,
       smartStops: true,
       holdPriority: false,
       manaPayment: { auto: true, restricted: false, useFirstAbility: false, confirmEmptyPool: false, smart: true },
@@ -42,7 +40,6 @@ export const GAMEPLAY_PRESETS: GameplayPreset[] = [
     labelKey: 'preset_balanced',
     descKey: 'preset_balanced_desc',
     bundle: {
-      autoPass: false,
       smartStops: true,
       holdPriority: false,
       manaPayment: { auto: true, restricted: true, useFirstAbility: false, confirmEmptyPool: true, smart: true },
@@ -54,7 +51,6 @@ export const GAMEPLAY_PRESETS: GameplayPreset[] = [
     labelKey: 'preset_manual',
     descKey: 'preset_manual_desc',
     bundle: {
-      autoPass: false,
       smartStops: false,
       holdPriority: false,
       manaPayment: { auto: false, restricted: true, useFirstAbility: false, confirmEmptyPool: true, smart: false },
@@ -64,7 +60,7 @@ export const GAMEPLAY_PRESETS: GameplayPreset[] = [
 ]
 
 export const PRESET_OWNED_KEYS: ReadonlySet<string> = new Set([
-  'autoPass', 'smartStops', 'holdPriority', 'manaPayment', 'phaseStops',
+  'smartStops', 'holdPriority', 'manaPayment', 'phaseStops',
 ])
 
 export function isGameplayPresetId(value: unknown): value is GameplayPresetId {

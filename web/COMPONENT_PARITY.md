@@ -94,7 +94,7 @@ Base desktop: `PreferencesDialog.java` (4311 lín., 9 pestañas) · `DownloadIma
 | Prefs: avatar 6×4, GUI size, sounds | Avatar en login, `uiScale` presets + CJK, 3 buses + volúmenes (sin música de carpeta: sin FS) | ✅ esencial |
 | Prefs: theme + fondos de mesa | `boardLayout` + `sleeveId`; playmats → ROADMAP 3.4 | ⚠️ diferido (ya roadmap) |
 | Prefs: phases 7×2 + 10 skips | `PhaseStopGrid` persistente + skips F4–F11 (G11-1/G11-5) | ✅ |
-| Prefs: perfil de automatización | Presets Sencillo (estilo Arena) / Equilibrado / Manual (2026-09-29): fijan maná (`auto`/`restricted`/`smart`), confirmación de reserva, auto-pass, smart stops y paradas de fase en un clic; persistentes (`mage-web-gameplay-preset`) y con push al servidor en partida (`updatePreferences` + `MANA_AUTO_PAYMENT_*`). El auto-mulligan nunca se toca; tocar un control pasa a personalizado | ✅ web (el desktop no tiene perfiles) |
+| Prefs: perfil de automatización | Presets Sencillo (estilo Arena) / Equilibrado / Manual (2026-09-29): fijan maná (`auto`/`restricted`/`smart`), confirmación de reserva, smart stops y paradas de fase en un clic; persistentes (`mage-web-gameplay-preset`) y con push al servidor en partida (`updatePreferences` + `MANA_AUTO_PAYMENT_*`). El auto-pass clásico se eliminó (smart stops es el único pase automático). El auto-mulligan nunca se toca; tocar un control pasa a personalizado | ✅ web (el desktop no tiene perfiles) |
 | Prefs: 11 hotkeys custom | Atajos fijos documentados (`HelpWikiModal`) | — diferencia declarada |
 | Prefs: proxy SOCKS | No-aplica navegador (proxy/servidor en login) | — no-aplica |
 | Descarga imágenes | Retirada: el gestor de cartas/símbolos dependía de Cache Storage (no disponible sobre HTTP no seguro) → UI oculta (2026-09-10) | — retirada |

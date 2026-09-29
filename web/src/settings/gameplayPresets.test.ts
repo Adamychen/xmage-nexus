@@ -8,7 +8,6 @@ function allValues(stops: Record<string, boolean>): boolean[] {
 describe('gameplay presets', () => {
   it('simple: full automation, smart pool payment and no phase stops', () => {
     const { bundle } = gameplayPreset('simple')
-    expect(bundle.autoPass).toBe(true)
     expect(bundle.smartStops).toBe(true)
     expect(bundle.holdPriority).toBe(false)
     expect(bundle.manaPayment).toEqual({
@@ -24,7 +23,6 @@ describe('gameplay presets', () => {
 
   it('balanced: smart automation, but pool confirmation and default phase stops', () => {
     const { bundle } = gameplayPreset('balanced')
-    expect(bundle.autoPass).toBe(false)
     expect(bundle.smartStops).toBe(true)
     expect(bundle.manaPayment.auto).toBe(true)
     expect(bundle.manaPayment.smart).toBe(true)
@@ -36,7 +34,6 @@ describe('gameplay presets', () => {
 
   it('manual: no automation and default phase stops', () => {
     const { bundle } = gameplayPreset('manual')
-    expect(bundle.autoPass).toBe(false)
     expect(bundle.smartStops).toBe(false)
     expect(bundle.manaPayment.auto).toBe(false)
     expect(bundle.manaPayment.smart).toBe(false)

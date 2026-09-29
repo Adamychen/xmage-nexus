@@ -40,7 +40,6 @@ const WHITELIST = new Set<string>([
   'game.opp_hand_stack',
   'game.opp_hand_view',
   'game.auto_mulligan',
-  'game.auto_pass',
   'game.preset_manual',
   'game.pass_options',
   'game.automation',

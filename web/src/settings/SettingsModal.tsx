@@ -50,11 +50,6 @@ function GameplaySection() {
         title={t('game', 'hold_priority_title')}
       />
       <Toggle
-        checked={settings.autoPass}
-        onChange={(v) => setSetting('autoPass', v)}
-        label={t('game', 'auto_pass')}
-      />
-      <Toggle
         checked={settings.smartStops}
         onChange={(v) => setSetting('smartStops', v)}
         label={t('game', 'smart_stops')}

@@ -127,7 +127,6 @@ export default function GalleryScreen() {
       lastDraftEventAt: active.lastDraftEventAt ?? null,
       settings: {
         ...base.settings,
-        autoPass: false,
         boardLayout: active.boardLayout ?? base.settings.boardLayout,
         uiScale: active.uiScale ?? base.settings.uiScale,
         cjkBoost: active.cjkBoost ?? base.settings.cjkBoost,

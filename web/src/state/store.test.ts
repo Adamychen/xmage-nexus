@@ -405,204 +405,6 @@ describe('maybeAutoPass', () => {
     expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 
-  it('passes priority with XMage boolean feedback when autoPass is on', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    // El paso actual (step por defecto PRECOMBAT_MAIN → stopKey 'main1') viene
-    // marcado como parada por defecto (DEFAULT_PHASE_STOPS); se desmarca para
-    // aislar lo que este test comprueba (autoPass pasa cuando nada es jugable).
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
-    const game = makeGameView({
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
-      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
-  })
-
-  it('does nothing when the controlled player has no priority', () => {
-    const game = makeGameView({
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: false })],
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
-
-  it('respects the autoPass setting', () => {
-    setSetting('autoPass', false)
-    const game = makeGameView({
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
-
-  it('does not pass in my precombat main phase while something is playable', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    const game = makeGameView({
-      phase: 'PRECOMBAT_MAIN',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
-      canPlayObjects: { objects: { 'h-1': {} } },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
-
-  it('passes in my precombat main phase when nothing is playable', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
-    const game = makeGameView({
-      phase: 'PRECOMBAT_MAIN',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
-      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
-  })
-
-  it('does not pass in my precombat main phase with a basic land in hand (el auto-pase no se salta el drop de tierra)', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    const game = makeGameView({
-      phase: 'PRECOMBAT_MAIN',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: true })],
-      myHand: { 'h-1': makeCard({ name: 'Mountain', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
-
-  it('passes in the opponent main phase with a basic land in hand (no se puede jugar tierra en el turno del rival)', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
-    const game = makeGameView({
-      phase: 'PRECOMBAT_MAIN',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: false })],
-      myHand: { 'h-1': makeCard({ name: 'Mountain', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
-  })
-
-  it('passes in non-main phases even with playables (el jugador solo actúa en su main phase)', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'upkeep') })
-    const game = makeGameView({
-      phase: 'UPKEEP',
-      step: 'UPKEEP',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true })],
-      canPlayObjects: { objects: { 'h-1': {} } },
-      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
-  })
-
-  it('does not pass a step the player marked as a phase stop, even with autoPass on and nothing playable (docs/history/plan4.md §3.5: gap real de producto)', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    // DEFAULT_PHASE_STOPS marca TODAS las fases como parada por defecto: sin
-    // tocar nada, el upkeep del rival ya viene marcado.
-    const game = makeGameView({
-      phase: 'UPKEEP',
-      step: 'UPKEEP',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: false })],
-      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
-
-  it('the phase-stop check is per turn side: marking only the opponent upkeep does not block auto-pass on your own upkeep', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'yourTurn', 'upkeep') })
-    const game = makeGameView({
-      phase: 'UPKEEP',
-      step: 'UPKEEP',
-      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true, isActive: true })],
-      myHand: { 'h-1': makeCard({ name: 'Lightning Bolt', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
-  })
-
-  it('nunca pasa la prioridad del jugador controlado (Mindslaver)', () => {
-    setSetting('autoPass', true)
-    handleMessage({
-      type: 'event',
-      method: 'START_GAME',
-      messageId: 1,
-      objectId: 'g-1',
-      data: { gameId: 'g-1' },
-    })
-    setState({ phaseStops: togglePhaseStop(getState().phaseStops, 'opponentTurn', 'main1') })
-    const game = makeGameView({
-      phase: 'PRECOMBAT_MAIN',
-      players: [
-        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true }),
-        makePlayer({ playerId: 'p2', name: 'Bob', isActive: true, hasPriority: true }),
-      ],
-      opponentHands: { Bob: { 'oh-1': { id: 'oh-1', name: 'Lightning Bolt' } } },
-      activePlayerName: 'Bob',
-      priorityPlayerName: 'Bob',
-      myHand: { 'h-1': makeCard({ name: 'Counterspell', parentId: 'h-1' }) },
-    })
-    maybeAutoPass(game)
-    expect(sendPlayerBoolean).not.toHaveBeenCalled()
-  })
 })
 
 describe('maybeAutoPass with smart stops', () => {
@@ -618,7 +420,6 @@ describe('maybeAutoPass with smart stops', () => {
   beforeEach(() => {
     reset()
     vi.clearAllMocks()
-    setSetting('autoPass', false)
     setSetting('smartStops', true)
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-1', data: { gameId: 'g-1' } })
   })
@@ -679,6 +480,37 @@ describe('maybeAutoPass with smart stops', () => {
     maybeAutoPass(select(makeGameView({ players: [me()] })))
     setState({ combat: null, feedback: { method: 'GAME_ASK', gameId: 'g-1', title: '', message: 'Pay?', mode: 'boolean', options: [], min: 0, max: 0 } })
     maybeAutoPass(select(makeGameView({ players: [me()] })))
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when the controlled player has no priority', () => {
+    const game = select(makeGameView({
+      players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: false })],
+    }))
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('does not pass when smart stops are off (classic auto-pass was removed)', () => {
+    setSetting('smartStops', false)
+    const game = select(makeGameView({ step: 'END_TURN', players: [me()] }))
+    maybeAutoPass(game)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('nunca pasa la prioridad del jugador controlado (Mindslaver)', () => {
+    const game = select(makeGameView({
+      phase: 'PRECOMBAT_MAIN',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: true }),
+        makePlayer({ playerId: 'p2', name: 'Bob', isActive: true, hasPriority: true }),
+      ],
+      opponentHands: { Bob: { 'oh-1': { id: 'oh-1', name: 'Lightning Bolt' } } },
+      activePlayerName: 'Bob',
+      priorityPlayerName: 'Bob',
+      myHand: { 'h-1': makeCard({ name: 'Counterspell', parentId: 'h-1' }) },
+    }))
+    maybeAutoPass(game)
     expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 
@@ -1649,7 +1481,6 @@ describe('applyGameplayPreset', () => {
     applyGameplayPreset('simple')
     const s = getState().settings
     expect(s.gameplayPreset).toBe('simple')
-    expect(s.autoPass).toBe(true)
     expect(s.smartStops).toBe(true)
     expect(s.manaPayment).toEqual({
       auto: true,
@@ -1674,7 +1505,6 @@ describe('applyGameplayPreset', () => {
   it('manual turns every automation off', () => {
     applyGameplayPreset('manual')
     const s = getState().settings
-    expect(s.autoPass).toBe(false)
     expect(s.smartStops).toBe(false)
     expect(s.holdPriority).toBe(false)
     expect(s.manaPayment.auto).toBe(false)
@@ -1694,7 +1524,7 @@ describe('applyGameplayPreset', () => {
     setSetting('smartStops', false)
     expect(getState().settings.gameplayPreset).toBeNull()
     expect(loadGameplayPreset()).toBeNull()
-    expect(getState().settings.autoPass).toBe(true)
+    expect(getState().settings.smartStops).toBe(false)
   })
 
   it('never touches the auto-keep mulligan preference', () => {

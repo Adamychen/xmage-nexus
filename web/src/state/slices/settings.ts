@@ -9,7 +9,6 @@ import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../..
 
 export interface SettingsState {
   autoKeepMulligan: boolean
-  autoPass: boolean
   smartStops: boolean
   gameplayPreset: GameplayPresetId | null
   autoSubmitSideboard?: boolean
@@ -50,7 +49,6 @@ const storedPreset = isGameplayPresetId(storedPresetId) ? gameplayPreset(storedP
 export const initialSettings: SettingsSlice = {
   settings: {
     autoKeepMulligan: false,
-    autoPass: false,
     smartStops: loadSmartStops(),
     gameplayPreset: storedPreset?.id ?? null,
     holdPriority: false,
