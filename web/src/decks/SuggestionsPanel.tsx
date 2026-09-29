@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
-import type { ScryfallSearchCard } from './scryfallSearch'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ScryfallSearchCard, ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
-import type { EdhrecCommanderData, EdhrecList } from './edhrec'
+import type { EdhrecCardView, EdhrecCommanderData, EdhrecList } from './edhrec'
 import { edhrecPageUrl } from './edhrec'
-import { useEdhrecSuggestions, SUGGESTIONS_PER_LIST } from './useEdhrecSuggestions'
+import { useEdhrecSuggestions } from './useEdhrecSuggestions'
+import { hasActiveArenaFilters, matchesArenaFilters, sortSuggestionEntries, type ArenaFilterValues } from './filterMatch'
+import { useArenaFilters } from './useArenaFilters'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
+import { ArenaFilterBar } from './ArenaFilterBar'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import { toBcp47Locale, useTranslation } from '../i18n'
@@ -29,6 +32,8 @@ const CATEGORY_KEYS: Record<string, DeckKey> = {
   utilitylands: 'suggestions_cat_utilitylands',
 }
 
+type ResolvedSuggestion = { view: EdhrecCardView; card: ScryfallSearchCard }
+
 function synergyPct(synergy: number | null): string | null {
   if (synergy === null || !Number.isFinite(synergy)) return null
   return `${synergy > 0 ? '+' : ''}${Math.round(synergy * 100)}%`
@@ -37,6 +42,15 @@ function synergyPct(synergy: number | null): string | null {
 function deckCountFor(card: ScryfallSearchCard, countMap: Map<string, number>): number {
   const keySetNum = `${card.set.toUpperCase()}/${card.collector_number}`
   return Math.max(countMap.get(keySetNum) ?? 0, countMap.get(card.name.toLowerCase()) ?? 0)
+}
+
+function resolveSection(list: EdhrecList, cards: Map<string, ScryfallSearchCard>, filters: ArenaFilterValues): ResolvedSuggestion[] {
+  const resolved: ResolvedSuggestion[] = []
+  for (const view of list.cards) {
+    const card = cards.get(view.name.toLowerCase())
+    if (card && matchesArenaFilters(card, filters)) resolved.push({ view, card })
+  }
+  return resolved
 }
 
 function SuggestionTile({
@@ -160,32 +174,28 @@ function SuggestionTile({
 
 function SuggestionSection({
   list,
-  cards,
+  entries,
   countMap,
   onAdd,
   onHover,
   onLeave,
 }: {
   list: EdhrecList
-  cards: Map<string, ScryfallSearchCard>
+  entries: ResolvedSuggestion[]
   countMap: Map<string, number>
   onAdd: (card: ScryfallSearchCard) => void
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
 }) {
   const { t } = useTranslation()
-  const resolved = list.cards
-    .slice(0, SUGGESTIONS_PER_LIST)
-    .map((c) => ({ view: c, card: cards.get(c.name.toLowerCase()) }))
-    .filter((e): e is { view: EdhrecList['cards'][number]; card: ScryfallSearchCard } => !!e.card)
-  if (resolved.length === 0) return null
+  if (entries.length === 0) return null
   const catKey = CATEGORY_KEYS[list.tag] as DeckKey | undefined
   const label = catKey ? t('decks', catKey) : list.header || list.tag
   return (
     <section className="sg-section">
       <h3 className="sg-section-title">{label}</h3>
       <div className="sg-grid">
-        {resolved.map(({ view, card }) => (
+        {entries.map(({ view, card }) => (
           <SuggestionTile
             key={card.id}
             card={card}
@@ -205,6 +215,10 @@ function ReadyPanel({
   data,
   cards,
   countMap,
+  filters,
+  sortOrder,
+  sortDir,
+  onClearFilters,
   onAdd,
   onHover,
   onLeave,
@@ -212,11 +226,26 @@ function ReadyPanel({
   data: EdhrecCommanderData
   cards: Map<string, ScryfallSearchCard>
   countMap: Map<string, number>
+  filters: ArenaFilterValues
+  sortOrder: ScryfallSortOrder
+  sortDir: ScryfallSortDir
+  onClearFilters: () => void
   onAdd: (card: ScryfallSearchCard) => void
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
 }) {
   const { t, lang } = useTranslation()
+  const prepared = useMemo(
+    () =>
+      data.lists.map((list) => ({
+        list,
+        entries: sortSuggestionEntries(resolveSection(list, cards, filters), sortOrder, sortDir),
+      })),
+    [data, cards, filters, sortOrder, sortDir],
+  )
+  const visible = prepared.filter((s) => s.entries.length > 0)
+  const hasFilters = hasActiveArenaFilters(filters)
+
   return (
     <div className="sg-scroll">
       {data.numDecks !== null && (
@@ -231,17 +260,33 @@ function ReadyPanel({
           })}
         </div>
       )}
-      {data.lists.map((list) => (
-        <SuggestionSection
-          key={list.tag}
-          list={list}
-          cards={cards}
-          countMap={countMap}
-          onAdd={onAdd}
-          onHover={onHover}
-          onLeave={onLeave}
-        />
-      ))}
+      {visible.length === 0 ? (
+        <div className="sg-status" data-testid="sg-no-results">
+          <Icon name="search" size={14} />
+          <span>
+            {filters.rawQuery.trim()
+              ? t('decks', 'builder_search_no_results', { query: filters.rawQuery.trim() })
+              : t('decks', 'sample_no_cards')}
+          </span>
+          {hasFilters && (
+            <Button variant="subtle" size="sm" onClick={onClearFilters}>
+              {t('decks', 'builder_search_clear_filters')}
+            </Button>
+          )}
+        </div>
+      ) : (
+        visible.map(({ list, entries }) => (
+          <SuggestionSection
+            key={list.tag}
+            list={list}
+            entries={entries}
+            countMap={countMap}
+            onAdd={onAdd}
+            onHover={onHover}
+            onLeave={onLeave}
+          />
+        ))
+      )}
       <div className="sg-attribution">
         <a href={edhrecPageUrl(data.commanderName)} target="_blank" rel="noopener noreferrer">
           {t('decks', 'suggestions_powered_by')}
@@ -258,6 +303,8 @@ export default function SuggestionsPanel({
   onAdd,
   onHover,
   onLeave,
+  gridSize: gridSizeProp,
+  onGridSizeChange,
 }: {
   commanderName: string | null
   isCommanderFormat: boolean
@@ -265,10 +312,44 @@ export default function SuggestionsPanel({
   onAdd: (card: ScryfallSearchCard) => void
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
+  gridSize?: number
+  onGridSizeChange?: (size: number) => void
 }) {
   const { t } = useTranslation()
   const enabled = isCommanderFormat && !!commanderName
   const { state, retry } = useEdhrecSuggestions(commanderName, enabled)
+  const filters = useArenaFilters()
+  const [sortOrder, setSortOrder] = useState<ScryfallSortOrder>('edhrec')
+  const [sortDir, setSortDir] = useState<ScryfallSortDir>('asc')
+  const [localGridSize, setLocalGridSize] = useState(50)
+
+  const gridSize = gridSizeProp ?? localGridSize
+  const setGridSize = onGridSizeChange ?? setLocalGridSize
+
+  const filterValues = useMemo<ArenaFilterValues>(
+    () => ({
+      rawQuery: filters.rawQuery,
+      colorFilter: filters.colorFilter,
+      cmcFilter: filters.cmcFilter,
+      typeFilter: filters.typeFilter,
+      rarityFilter: filters.rarityFilter,
+      keywordFilter: filters.keywordFilter,
+      powerFilter: filters.powerFilter,
+      toughnessFilter: filters.toughnessFilter,
+      setFilter: filters.setFilter,
+    }),
+    [
+      filters.rawQuery,
+      filters.colorFilter,
+      filters.cmcFilter,
+      filters.typeFilter,
+      filters.rarityFilter,
+      filters.keywordFilter,
+      filters.powerFilter,
+      filters.toughnessFilter,
+      filters.setFilter,
+    ],
+  )
 
   if (!isCommanderFormat) {
     return (
@@ -329,11 +410,42 @@ export default function SuggestionsPanel({
   }
 
   return (
-    <div className="sg-panel">
+    <div className="sg-panel" style={{ '--sg-card-min': `${90 + gridSize}px` } as React.CSSProperties}>
+      <ArenaFilterBar
+        query={filters.rawQuery}
+        onQueryChange={filters.setRawQuery}
+        colorFilter={filters.colorFilter}
+        onToggleColor={filters.toggleColor}
+        cmcFilter={filters.cmcFilter}
+        onCmcChange={filters.setCmcFilter}
+        typeFilter={filters.typeFilter}
+        onTypeChange={filters.setTypeFilter}
+        rarityFilter={filters.rarityFilter}
+        onToggleRarity={filters.toggleRarity}
+        keywordFilter={filters.keywordFilter}
+        onToggleKeyword={filters.toggleKeyword}
+        powerFilter={filters.powerFilter}
+        onPowerChange={filters.setPowerFilter}
+        toughnessFilter={filters.toughnessFilter}
+        onToughnessChange={filters.setToughnessFilter}
+        setFilter={filters.setFilter}
+        onSetChange={filters.setSetFilter}
+        onReset={filters.reset}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        gridSize={gridSize}
+        onGridSizeChange={setGridSize}
+      />
       <ReadyPanel
         data={state.data}
         cards={state.cards}
         countMap={countMap}
+        filters={filterValues}
+        sortOrder={sortOrder}
+        sortDir={sortDir}
+        onClearFilters={filters.reset}
         onAdd={onAdd}
         onHover={onHover}
         onLeave={onLeave}

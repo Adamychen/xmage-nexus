@@ -100,7 +100,7 @@ Full spec and rationale per idea: `docs/enhancements.md`. Already built from tha
 | Idea | Impact / effort | State |
 |---|---|---|
 | Tactical pings on the board (Commander / 4P) | Very high / ~2 d | Not started |
-| EDHREC suggestions in the deck builder | High / ~1-2 d | Done 2026-09-24 ("Suggestions" tab next to Search in the deck editor; EDHREC public JSON for the designated commander, cached, cards resolved via Scryfall collection, synergy badges, click/drag to add) |
+| EDHREC suggestions in the deck builder | High / ~1-2 d | Done 2026-09-24 ("Suggestions" tab next to Search in the deck editor; EDHREC public JSON for the designated commander, cached, cards resolved via Scryfall collection, synergy badges, click/drag to add). 2026-09-29: DFC commanders use the front-face slug (Slicer), the panel consumes the whole EDHREC page (~277 cards for Slicer, parallel 75-name batches, per-name cache in memory + IndexedDB), and got the Arena filter bar (client-side matching of chips + Scryfall-syntax text), per-section sort and the shared card size |
 | Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
 | PWA (manifest + service worker) | High / small | Not started |
 | Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature; see the combat-preview and life-history rows below) |

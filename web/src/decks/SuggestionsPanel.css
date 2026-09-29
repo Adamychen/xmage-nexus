@@ -59,7 +59,7 @@
 
 .sg-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--sg-card-min, 110px), 1fr));
   gap: var(--sp-2);
 }
 

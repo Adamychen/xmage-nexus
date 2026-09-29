@@ -27,6 +27,10 @@ export interface ScryfallSearchCard {
   color_identity: string[]
   oracle_text?: string
   keywords?: string[]
+  rarity?: string
+  power?: string
+  toughness?: string
+  released_at?: string
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
   image_uris?: { small: string; normal: string; art_crop: string }
   card_faces?: {
@@ -36,6 +40,9 @@ export interface ScryfallSearchCard {
     mana_cost?: string
     type_line?: string
     printed_type_line?: string
+    oracle_text?: string
+    power?: string
+    toughness?: string
   }[]
 }
 

@@ -307,7 +307,7 @@ export function ArenaFilterBar({
               type="range"
               className="arena-grid-size-slider"
               min={0}
-              max={100}
+              max={150}
               step={5}
               value={gridSize}
               onChange={(e) => onGridSizeChange(Number(e.target.value))}

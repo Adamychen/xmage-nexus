@@ -6,7 +6,8 @@ import { ArenaCardGrid } from './ArenaCardGrid'
 import type { DeckFormat } from './types'
 import { FORMAT_CONFIGS } from './formatRules'
 import { useTranslation } from '../i18n'
-import { buildScryfallQuery, type Rarity, type StatFilter } from './filterQuery'
+import { buildScryfallQuery } from './filterQuery'
+import { useArenaFilters } from './useArenaFilters'
 import './SearchPanel.css'
 
 export default function SearchPanel({
@@ -15,45 +16,55 @@ export default function SearchPanel({
   format = 'Freeform',
   onHover,
   onLeave,
+  gridSize: gridSizeProp,
+  onGridSizeChange,
 }: {
   onAdd: (card: ScryfallSearchCard) => void
   countMap?: Map<string, number>
   format?: DeckFormat
   onHover?: (card: ScryfallSearchCard, rect: DOMRect) => void
   onLeave?: () => void
+  gridSize?: number
+  onGridSizeChange?: (size: number) => void
 }) {
   const { cardLang, setCardLanguage, lang: uiLang } = useTranslation()
   const [searchLang, setSearchLang] = useState<string>(() => cardLang || uiLang || 'es')
-  const [rawQuery, setRawQuery] = useState('')
-  const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
-  const [cmcFilter, setCmcFilter] = useState<number | null>(null)
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
-  const [rarityFilter, setRarityFilter] = useState<Set<Rarity>>(new Set())
-  const [keywordFilter, setKeywordFilter] = useState<Set<string>>(new Set())
-  const [powerFilter, setPowerFilter] = useState<StatFilter | null>(null)
-  const [toughnessFilter, setToughnessFilter] = useState<StatFilter | null>(null)
-  const [setFilter, setSetFilter] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<ScryfallSortOrder>(DEFAULT_SORT_ORDER)
   const [sortDir, setSortDir] = useState<ScryfallSortDir>('asc')
-  const [gridSize, setGridSize] = useState(50)
+  const [localGridSize, setLocalGridSize] = useState(50)
+  const filters = useArenaFilters()
+
+  const gridSize = gridSizeProp ?? localGridSize
+  const setGridSize = onGridSizeChange ?? setLocalGridSize
 
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
 
   const scryfallQuery = useMemo(
     () =>
       buildScryfallQuery({
-        rawQuery,
+        rawQuery: filters.rawQuery,
         formatKey: config.scryfallKey ?? null,
-        colorFilter,
-        typeFilter,
-        cmcFilter,
-        rarityFilter,
-        keywordFilter,
-        powerFilter,
-        toughnessFilter,
-        setFilter,
+        colorFilter: filters.colorFilter,
+        typeFilter: filters.typeFilter,
+        cmcFilter: filters.cmcFilter,
+        rarityFilter: filters.rarityFilter,
+        keywordFilter: filters.keywordFilter,
+        powerFilter: filters.powerFilter,
+        toughnessFilter: filters.toughnessFilter,
+        setFilter: filters.setFilter,
       }),
-    [rawQuery, config.scryfallKey, colorFilter, typeFilter, cmcFilter, rarityFilter, keywordFilter, powerFilter, toughnessFilter, setFilter],
+    [
+      filters.rawQuery,
+      config.scryfallKey,
+      filters.colorFilter,
+      filters.typeFilter,
+      filters.cmcFilter,
+      filters.rarityFilter,
+      filters.keywordFilter,
+      filters.powerFilter,
+      filters.toughnessFilter,
+      filters.setFilter,
+    ],
   )
 
   const { cards, loading, loadingMore, hasMore, totalCards, error, throttled, loadMore, retry } = useScryfallSearch(scryfallQuery, searchLang, 350, sortOrder, sortDir)
@@ -65,70 +76,33 @@ export default function SearchPanel({
     }
   }
 
-  const toggleColor = (c: string) => {
-    const next = new Set(colorFilter)
-    if (next.has(c)) {
-      next.delete(c)
-    } else if (c === 'C') {
-      next.clear()
-      next.add('C')
-    } else {
-      next.delete('C')
-      next.add(c)
-    }
-    setColorFilter(next)
-  }
-
-  const toggleRarity = (r: Rarity) => {
-    const next = new Set(rarityFilter)
-    if (next.has(r)) next.delete(r)
-    else next.add(r)
-    setRarityFilter(next)
-  }
-
-  const toggleKeyword = (kw: string) => {
-    const next = new Set(keywordFilter)
-    if (next.has(kw)) next.delete(kw)
-    else next.add(kw)
-    setKeywordFilter(next)
-  }
-
   const handleReset = () => {
-    setRawQuery('')
-    setColorFilter(new Set())
-    setCmcFilter(null)
-    setTypeFilter(null)
-    setRarityFilter(new Set())
-    setKeywordFilter(new Set())
-    setPowerFilter(null)
-    setToughnessFilter(null)
-    setSetFilter(null)
+    filters.reset()
     setSortOrder(DEFAULT_SORT_ORDER)
     setSortDir('asc')
-    setGridSize(50)
   }
 
   return (
     <div className="arena-search-panel">
       <ArenaFilterBar
-        query={rawQuery}
-        onQueryChange={setRawQuery}
-        colorFilter={colorFilter}
-        onToggleColor={toggleColor}
-        cmcFilter={cmcFilter}
-        onCmcChange={setCmcFilter}
-        typeFilter={typeFilter}
-        onTypeChange={setTypeFilter}
-        rarityFilter={rarityFilter}
-        onToggleRarity={toggleRarity}
-        keywordFilter={keywordFilter}
-        onToggleKeyword={toggleKeyword}
-        powerFilter={powerFilter}
-        onPowerChange={setPowerFilter}
-        toughnessFilter={toughnessFilter}
-        onToughnessChange={setToughnessFilter}
-        setFilter={setFilter}
-        onSetChange={setSetFilter}
+        query={filters.rawQuery}
+        onQueryChange={filters.setRawQuery}
+        colorFilter={filters.colorFilter}
+        onToggleColor={filters.toggleColor}
+        cmcFilter={filters.cmcFilter}
+        onCmcChange={filters.setCmcFilter}
+        typeFilter={filters.typeFilter}
+        onTypeChange={filters.setTypeFilter}
+        rarityFilter={filters.rarityFilter}
+        onToggleRarity={filters.toggleRarity}
+        keywordFilter={filters.keywordFilter}
+        onToggleKeyword={filters.toggleKeyword}
+        powerFilter={filters.powerFilter}
+        onPowerChange={filters.setPowerFilter}
+        toughnessFilter={filters.toughnessFilter}
+        onToughnessChange={filters.setToughnessFilter}
+        setFilter={filters.setFilter}
+        onSetChange={filters.setSetFilter}
         onReset={handleReset}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}

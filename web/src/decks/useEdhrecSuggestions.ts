@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import type { EdhrecCommanderData } from './edhrec'
-import { collectSuggestionNames, fetchEdhrecCommander, resolveCardsByNames } from './edhrec'
-
-export const SUGGESTIONS_PER_LIST = 12
+import { collectAllSuggestionNames, fetchEdhrecCommander, resolveCardsByNames } from './edhrec'
 
 export type SuggestionsState =
   | { status: 'loading' }
@@ -30,7 +28,7 @@ export function useEdhrecSuggestions(commanderName: string | null, enabled: bool
         setState({ status: 'error' })
         return
       }
-      const names = collectSuggestionNames(result.data.lists, SUGGESTIONS_PER_LIST)
+      const names = collectAllSuggestionNames(result.data.lists)
       const cards = await resolveCardsByNames(names)
       if (cancelled) return
       setState({ status: 'ready', data: result.data, cards })

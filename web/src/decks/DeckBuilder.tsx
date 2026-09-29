@@ -56,6 +56,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
   const [serverIssues, setServerIssues] = useState<DeckValidationResult | null>(null)
   const [leftTab, setLeftTab] = useState<'search' | 'suggestions'>('search')
+  const [gridSize, setGridSize] = useState(50)
   const [showCurve, setShowCurve] = useState(() => {
     try {
       const saved = localStorage.getItem('nexus_deck_show_curve')
@@ -418,6 +419,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               format={format}
               onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
               onLeave={handleLeaveCard}
+              gridSize={gridSize}
+              onGridSizeChange={setGridSize}
             />
           ) : (
             <SuggestionsPanel
@@ -427,6 +430,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               onAdd={mutations.handleAddFromSearch}
               onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
               onLeave={handleLeaveCard}
+              gridSize={gridSize}
+              onGridSizeChange={setGridSize}
             />
           )}
         </aside>

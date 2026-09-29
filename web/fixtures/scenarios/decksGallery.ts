@@ -36,6 +36,31 @@ function demoTable(): TableView {
   }
 }
 
+/** Página mínima de EDHREC para el panel de Sugerencias del deck builder:
+ *  tres cartas en dos listas, con tipos distintos para poder filtrar. */
+function edhrecPayload() {
+  const view = (name: string, synergy: number) => ({ name, synergy, num_decks: 10, potential_decks: 20 })
+  return {
+    container: {
+      json_dict: {
+        card: { name: 'Test Commander', num_decks: 1234 },
+        cardlists: [
+          {
+            tag: 'highsynergycards',
+            header: 'High Synergy Cards',
+            cardviews: [view('Sol Ring', 0.5), view('Arcane Signet', 0.3)],
+          },
+          {
+            tag: 'creatures',
+            header: 'Creatures',
+            cardviews: [view('Llanowar Elves', 0.2)],
+          },
+        ],
+      },
+    },
+  }
+}
+
 export function decksGalleryScenario(): Scenario {
   return {
     onConnect(conn: FakeConn) {
@@ -47,10 +72,13 @@ export function decksGalleryScenario(): Scenario {
       const lobbyTimer = setInterval(() => conn.lobby([demoTable()]), 2000)
       return () => clearInterval(lobbyTimer)
     },
-    onAction(conn, action, requestId) {
+    onAction(conn, action, _args, requestId) {
       switch (action) {
         case 'connect':
           conn.ok(requestId, action, {})
+          break
+        case 'fetchOnlineDeck':
+          conn.ok(requestId, action, edhrecPayload())
           break
         case 'disconnect':
           break

@@ -28,13 +28,21 @@ export type EdhrecResult =
   | { status: 'error' }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
+const CARD_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const DB_NAME = 'xmage-edhrec-cache'
+const DB_VERSION = 2
 const DB_STORE = 'pages'
-const MAX_RESOLVE_NAMES = 150
+const DB_CARD_STORE = 'cards'
+/** Tope de seguridad: las páginas de EDHREC rondan 220–300 nombres únicos, así
+ *  que en la práctica se resuelve la página entera (≈4 POSTs, cacheados por nombre). */
+export const MAX_RESOLVE_NAMES = 600
 const COLLECTION_BATCH = 75
 
 export function edhrecSlug(name: string): string {
+  // DFC commanders (e.g. "Slicer, Hired Muscle // Slicer, High-Speed Antagonist")
+  // live on EDHREC under the front-face slug only; the full name returns AccessDenied.
   return name
+    .split(/\s*\/\/\s*/)[0]
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -96,6 +104,9 @@ export function parseEdhrecPage(slug: string, raw: unknown): EdhrecCommanderData
 
 const memory = new Map<string, EdhrecResult>()
 const inflight = new Map<string, Promise<EdhrecResult>>()
+/** Nombre (minúsculas) → carta resuelta; null = Scryfall no la conoce.
+ *  Evita repetir los POST a /cards/collection cada vez que se monta el panel. */
+const cardMemory = new Map<string, ScryfallSearchCard | null>()
 
 let dbPromise: Promise<IDBDatabase | null> | null = null
 
@@ -107,9 +118,11 @@ function openDb(): Promise<IDBDatabase | null> {
         resolve(null)
         return
       }
-      const req = indexedDB.open(DB_NAME, 1)
+      const req = indexedDB.open(DB_NAME, DB_VERSION)
       req.onupgradeneeded = () => {
-        req.result.createObjectStore(DB_STORE)
+        const db = req.result
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE)
+        if (!db.objectStoreNames.contains(DB_CARD_STORE)) db.createObjectStore(DB_CARD_STORE)
       }
       req.onsuccess = () => resolve(req.result)
       req.onerror = () => resolve(null)
@@ -144,6 +157,39 @@ async function idbPut(slug: string, value: EdhrecResult) {
   try {
     db.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).put({ value, at: Date.now() }, slug)
   } catch {}
+}
+
+function cardIdbGetMany(db: IDBDatabase, keys: string[]): Promise<Map<string, ScryfallSearchCard | null>> {
+  return new Promise((resolve) => {
+    const out = new Map<string, ScryfallSearchCard | null>()
+    try {
+      const store = db.transaction(DB_CARD_STORE, 'readonly').objectStore(DB_CARD_STORE)
+      let remaining = keys.length
+      const done = () => {
+        if (--remaining === 0) resolve(out)
+      }
+      for (const key of keys) {
+        const req = store.get(key)
+        req.onsuccess = () => {
+          const entry = req.result as { value: ScryfallSearchCard | null; at: number } | undefined
+          if (entry && Date.now() - entry.at < CARD_CACHE_TTL_MS) out.set(key, entry.value)
+          done()
+        }
+        req.onerror = done
+      }
+    } catch {
+      resolve(out)
+    }
+  })
+}
+
+function cardIdbPut(key: string, value: ScryfallSearchCard | null) {
+  void openDb().then((db) => {
+    if (!db) return
+    try {
+      db.transaction(DB_CARD_STORE, 'readwrite').objectStore(DB_CARD_STORE).put({ value, at: Date.now() }, key)
+    } catch {}
+  })
 }
 
 /** json.edhrec.com sends no CORS headers, so browsers can't fetch it directly;
@@ -229,6 +275,11 @@ export function collectSuggestionNames(lists: EdhrecList[], perListCap: number, 
   return names
 }
 
+/** Toda la página de EDHREC (deduplicada, con el tope global de seguridad). */
+export function collectAllSuggestionNames(lists: EdhrecList[]): string[] {
+  return collectSuggestionNames(lists, Number.POSITIVE_INFINITY, MAX_RESOLVE_NAMES)
+}
+
 interface CollectionResponse {
   object?: string
   data?: Array<Record<string, unknown>>
@@ -252,36 +303,91 @@ function toSearchCard(raw: Record<string, unknown>): ScryfallSearchCard | null {
 
 /** Batch name → Scryfall card resolution via /cards/collection (POST, 75 per
  *  request) through the shared Scryfall queue. Indexed by full and front-face
- *  name (lowercase). Unmatched names are simply absent from the map. */
+ *  name (lowercase). Unmatched names are simply absent from the map.
+ *
+ *  Resultado cacheado por nombre (memoria + IndexedDB, 7 días: los datos de una
+ *  carta cambian poco y el pool de sugerencias repite nombres entre comandantes);
+ *  solo se piden a Scryfall los nombres que falten, así reabrir el panel o
+ *  cambiar de pestaña no vuelve a pagar los ~3 s del POST. */
 export async function resolveCardsByNames(names: string[]): Promise<Map<string, ScryfallSearchCard>> {
   const out = new Map<string, ScryfallSearchCard>()
-  for (let i = 0; i < names.length; i += COLLECTION_BATCH) {
-    const chunk = names.slice(i, i + COLLECTION_BATCH)
-    let res: Response
-    try {
-      res = await scryfallFetch('https://api.scryfall.com/cards/collection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifiers: chunk.map((name) => ({ name })) }),
-        urgent: true,
-        timeoutMs: 15000,
+  const pending = new Map<string, string>()
+  const seen = new Set<string>()
+  for (const name of names) {
+    const key = name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    const cached = cardMemory.get(key)
+    if (cached !== undefined) {
+      if (cached) out.set(key, cached)
+    } else {
+      pending.set(key, name)
+    }
+  }
+
+  let missing = [...pending.keys()]
+  if (missing.length > 0) {
+    const db = await openDb()
+    if (db) {
+      const stored = await cardIdbGetMany(db, missing)
+      missing = missing.filter((key) => {
+        if (!stored.has(key)) return true
+        const value = stored.get(key) ?? null
+        cardMemory.set(key, value)
+        if (value) out.set(key, value)
+        return false
       })
-    } catch {
-      continue
     }
-    if (!res.ok) continue
-    let payload: CollectionResponse
-    try {
-      payload = (await res.json()) as CollectionResponse
-    } catch {
-      continue
+  }
+
+  const index = (card: ScryfallSearchCard) => {
+    cardMemory.set(card.name.toLowerCase(), card)
+    cardIdbPut(card.name.toLowerCase(), card)
+    out.set(card.name.toLowerCase(), card)
+    const faceName = card.card_faces?.[0]?.name
+    if (faceName) {
+      cardMemory.set(faceName.toLowerCase(), card)
+      cardIdbPut(faceName.toLowerCase(), card)
+      out.set(faceName.toLowerCase(), card)
     }
+  }
+
+  const batches: string[][] = []
+  for (let i = 0; i < missing.length; i += COLLECTION_BATCH) {
+    batches.push(missing.slice(i, i + COLLECTION_BATCH))
+  }
+  // En paralelo: el cliente de Scryfall ya limita concurrencia (3 en vuelo,
+  // 150 ms de espaciado), y una página entera son ~4 batches.
+  const payloads = await Promise.all(
+    batches.map(async (chunk): Promise<CollectionResponse | null> => {
+      try {
+        const res = await scryfallFetch('https://api.scryfall.com/cards/collection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifiers: chunk.map((key) => ({ name: pending.get(key) ?? key })) }),
+          urgent: true,
+          timeoutMs: 15000,
+        })
+        if (!res.ok) return null
+        return (await res.json()) as CollectionResponse
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  for (const payload of payloads) {
+    if (!payload) continue
     for (const raw of payload.data ?? []) {
       const card = toSearchCard(raw)
       if (!card) continue
-      out.set(card.name.toLowerCase(), card)
-      const faceName = card.card_faces?.[0]?.name
-      if (faceName) out.set(faceName.toLowerCase(), card)
+      index(card)
+    }
+    for (const raw of payload.not_found ?? []) {
+      const name = typeof raw?.name === 'string' ? raw.name.toLowerCase() : null
+      if (!name) continue
+      cardMemory.set(name, null)
+      cardIdbPut(name, null)
     }
   }
   return out
@@ -289,6 +395,7 @@ export async function resolveCardsByNames(names: string[]): Promise<Map<string, 
 
 export function resetEdhrecCacheForTests() {
   memory.clear()
+  cardMemory.clear()
   inflight.clear()
   dbPromise = null
 }

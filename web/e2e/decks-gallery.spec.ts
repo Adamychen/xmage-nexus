@@ -319,11 +319,12 @@ test.describe('Decks Gallery', () => {
       await page.getByTestId('arena-sort-dir-btn').click()
       await expect(page.getByTestId('arena-sort-dir-btn')).toHaveText('↓')
 
-      // U6 minor: card-size slider changes the grid min column width
+      // U6 minor: card-size slider changes the grid min column width (max 150%)
       const slider = page.locator('.arena-grid-size-slider')
       await expect(slider).toBeVisible()
-      await slider.fill('100')
-      await expect(page.locator('.arena-card-grid-scroll')).toHaveAttribute('style', /minmax\(190px/)
+      await expect(slider).toHaveAttribute('max', '150')
+      await slider.fill('150')
+      await expect(page.locator('.arena-card-grid-scroll')).toHaveAttribute('style', /minmax\(240px/)
 
       // U6-4: paste .cod XML into the import modal (local parse, no Scryfall needed)
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
@@ -422,6 +423,76 @@ test.describe('Decks Gallery', () => {
       // Verify done button works cleanly
       await page.locator('[data-testid="builder-done"]').click()
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+    })
+  })
+
+  test('U8: suggestions panel filters, sorts and shares the card size @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await blockLocalizedEnrich(page)
+      await page.route('**/api.scryfall.com/cards/collection', (route) => {
+        const body = route.request().postDataJSON() as { identifiers: Array<{ name: string }> }
+        const data = body.identifiers.map((identifier, index) => {
+          const creature = /Elves/.test(identifier.name)
+          return {
+            id: `sg-${index}`,
+            name: identifier.name,
+            set: 'tst',
+            collector_number: String(index),
+            cmc: creature ? 1 : 2,
+            type_line: creature ? 'Creature — Elf Druid' : 'Artifact',
+            colors: [],
+            color_identity: [],
+            rarity: creature ? 'common' : 'uncommon',
+            image_uris: { small: 'https://img/s.png', normal: 'https://img/n.png', art_crop: 'https://img/a.png' },
+          }
+        })
+        return route.fulfill({ json: { object: 'list', data, not_found: [] } })
+      })
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`deck_u8_${String(Date.now()).slice(-6)}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+
+      // Commander deck imported locally (no Scryfall) + format switched
+      await page.getByRole('button', { name: /Importar Mazo|Import deck/i }).click()
+      await page.locator('.deck-import-textarea').fill(
+        'Commander\n1 Test Commander\nDeck\n1 Sol Ring\n1 Arcane Signet\n1 Llanowar Elves\n',
+      )
+      await page.locator('[data-testid="import-submit-btn"]').click()
+      await page.locator('.deck-header-format-select').selectOption('Commander')
+
+      // El fake sirve la página de EDHREC y el stub resuelve las cartas por nombre
+      await page.getByRole('tab', { name: /Sugerencias|Suggestions/ }).click()
+      await expect(page.locator('.sg-panel .arena-filter-bar')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.sg-tile')).toHaveCount(3)
+
+      // Chip de tipo: solo criaturas
+      await page.locator('.sg-panel').getByRole('button', { name: /^(Criatura|Creature)$/ }).click()
+      await expect(page.locator('.sg-tile')).toHaveCount(1)
+      await expect(page.locator('.sg-tile img[alt="Llanowar Elves"]')).toBeVisible()
+      await expect(page.locator('.sg-tile img[alt="Sol Ring"]')).toHaveCount(0)
+
+      // El texto se combina con el chip (creature + artifact = vacío) y se limpia
+      await page.locator('.sg-panel .arena-search-input').fill('t:artifact')
+      await expect(page.getByTestId('sg-no-results')).toBeVisible()
+      await page.getByRole('button', { name: /Limpiar filtros|Clear filters/ }).click()
+      await expect(page.locator('.sg-tile')).toHaveCount(3)
+
+      // Orden por nombre dentro de la sección
+      await page.locator('.sg-panel .arena-sort-select').selectOption('name')
+      await expect(page.locator('.sg-section').first().locator('img').first()).toHaveAttribute('alt', 'Arcane Signet')
+
+      // El tamaño de carta se comparte con la pestaña Buscar
+      await page.locator('.sg-panel .arena-grid-size-slider').fill('150')
+      expect(await page.locator('.sg-panel').evaluate((el) => getComputedStyle(el).getPropertyValue('--sg-card-min').trim())).toBe('240px')
+      await page.getByRole('tab', { name: /Buscar|Search/ }).click()
+      await expect(page.locator('.arena-grid-size-value')).toHaveText('150%')
     })
   })
 })

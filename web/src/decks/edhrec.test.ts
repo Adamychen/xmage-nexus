@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest'
 import {
+  collectAllSuggestionNames,
   collectSuggestionNames,
   edhrecSlug,
   fetchEdhrecCommander,
@@ -48,6 +49,13 @@ describe('edhrecSlug', () => {
   it('builds the public page url with the same slug', () => {
     expect(edhrecPageUrl('The Ur-Dragon')).toBe('https://edhrec.com/commanders/the-ur-dragon')
   })
+
+  it('uses the front face for double-faced commanders', () => {
+    expect(edhrecSlug('Slicer, Hired Muscle // Slicer, High-Speed Antagonist')).toBe('slicer-hired-muscle')
+    expect(edhrecSlug('Esika, God of the Tree // The Prismatic Bridge')).toBe('esika-god-of-the-tree')
+    expect(edhrecPageUrl('Slicer, Hired Muscle // Slicer, High-Speed Antagonist'))
+      .toBe('https://edhrec.com/commanders/slicer-hired-muscle')
+  })
 })
 
 describe('parseEdhrecPage', () => {
@@ -78,6 +86,11 @@ describe('collectSuggestionNames', () => {
     expect(collectSuggestionNames(data.lists, 12)).toEqual(['Sol Ring', 'Arcane Signet', 'Llanowar Elves'])
     expect(collectSuggestionNames(data.lists, 1)).toEqual(['Sol Ring', 'Llanowar Elves'])
     expect(collectSuggestionNames(data.lists, 12, 2)).toEqual(['Sol Ring', 'Arcane Signet'])
+  })
+
+  it('collects the whole page (all entries, deduped)', () => {
+    const data = parseEdhrecPage('x', samplePayload())!
+    expect(collectAllSuggestionNames(data.lists)).toEqual(['Sol Ring', 'Arcane Signet', 'Llanowar Elves'])
   })
 })
 
@@ -112,6 +125,18 @@ describe('fetchEdhrecCommander', () => {
     expect(await fetchEdhrecCommander('Unknown Dude')).toEqual({ status: 'not_found' })
   })
 
+  it('fetches the front-face page for a double-faced commander', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(samplePayload()),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const result = await fetchEdhrecCommander('Slicer, Hired Muscle // Slicer, High-Speed Antagonist')
+    expect(result.status).toBe('ok')
+    expect(fetchMock.mock.calls[0][0]).toBe('https://json.edhrec.com/pages/commanders/slicer-hired-muscle.json')
+  })
+
   it('maps network failures to error without caching them in memory', async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('offline'))
     vi.stubGlobal('fetch', fetchMock)
@@ -125,6 +150,7 @@ describe('resolveCardsByNames', () => {
   beforeEach(() => {
     resetScryfallClient()
     setScryfallPacing({ spacingMs: 0 })
+    resetEdhrecCacheForTests()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -217,5 +243,40 @@ describe('resolveCardsByNames', () => {
     const resolved = await resolveCardsByNames(names)
     expect(resolved.size).toBe(1)
     expect(resolved.get('card 75')?.name).toBe('Card 75')
+  })
+
+  it('caches resolved cards and only requests the missing names', async () => {
+    const calls = stubCollectionFetch()
+    const first = await resolveCardsByNames(['Card 0', 'Card 1'])
+    expect(calls).toHaveLength(1)
+    expect(first.get('card 0')?.name).toBe('Card 0')
+
+    const second = await resolveCardsByNames(['Card 1', 'Card 2'])
+    expect(calls).toHaveLength(2)
+    expect(calls[1].body.identifiers.map((i) => i.name)).toEqual(['Card 2'])
+    expect(second.get('card 1')?.name).toBe('Card 1')
+    expect(second.get('card 2')?.name).toBe('Card 2')
+
+    await resolveCardsByNames(['Card 0', 'Card 1', 'Card 2'])
+    expect(calls).toHaveLength(2)
+  })
+
+  it('remembers names Scryfall does not know', async () => {
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      calls++
+      const body = JSON.parse(String(init?.body)) as { identifiers: Array<{ name: string }> }
+      return {
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ object: 'list', data: [], not_found: body.identifiers }),
+      } as unknown as Response
+    }))
+    const first = await resolveCardsByNames(['Ghost Card'])
+    expect(first.size).toBe(0)
+    expect(calls).toBe(1)
+    const second = await resolveCardsByNames(['Ghost Card'])
+    expect(second.size).toBe(0)
+    expect(calls).toBe(1)
   })
 })
