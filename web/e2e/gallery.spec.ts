@@ -137,10 +137,10 @@ test.describe('galería de estados (P3)', () => {
     await openGallery(page)
     await showEntry(page, 'prompt:ask-slicer')
 
-    const dialog = page.locator('.feedback-dialog')
+    const dialog = page.locator('.ask-prompt-bar')
     await expect(dialog).toBeVisible()
     await expect(dialog).not.toContainText('{this}')
-    await expect(dialog.locator('.dlg-message')).toContainText('Slicer, Hired Muscle')
+    await expect(dialog.locator('.action-prompt-msg')).toContainText('Slicer, Hired Muscle')
   })
 
   test('regresión visual de la selección representativa', async ({ page }) => {

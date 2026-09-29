@@ -1,5 +1,6 @@
 import FormattedText from '../FormattedText'
 import Button from '../../ui/Button'
+import IconButton from '../../ui/IconButton'
 import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
@@ -8,7 +9,7 @@ import { stripTargetProgress, targetProgressLabel } from '../feedback'
 import { DockPrompt } from '../GameDock'
 import './promptBars.css'
 
-export default function TargetBar({ form }: { form: UseFeedbackForm }) {
+export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; onExpand?: () => void }) {
   const { t } = useTranslation()
   const { prompt, busy, finishOptionalTarget } = form
   if (!prompt) return null
@@ -41,6 +42,17 @@ export default function TargetBar({ form }: { form: UseFeedbackForm }) {
           </span>
         </div>
         <div className="action-prompt-actions">
+          {onExpand && (
+            <IconButton
+              label={t('game', 'hand_pick_expand')}
+              icon="maximize"
+              size="sm"
+              className="hand-pick-expand"
+              data-testid="hand-pick-expand"
+              disabled={busy}
+              onClick={onExpand}
+            />
+          )}
           {prompt.required === false && (
             <Button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</Button>
           )}

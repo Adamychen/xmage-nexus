@@ -53,6 +53,7 @@ export default function Modal({
   sectionProps,
 }: ModalProps) {
   const [z] = useState(() => zIndex ?? nextModalZ())
+  const [peek, setPeek] = useState(false)
   const backdropStyle: CSSProperties = { zIndex: z }
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -62,6 +63,29 @@ export default function Modal({
       activeModalZ.delete(z)
     }
   }, [z])
+
+  // Alt held = peek at the board behind the dialog (visual only: the backdrop
+  // keeps intercepting clicks, so no accidental game actions while peeking).
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        e.preventDefault()
+        setPeek(true)
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') setPeek(false)
+    }
+    const onBlur = () => setPeek(false)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
 
   useEffect(() => {
     if (!onEscape) return
@@ -121,7 +145,7 @@ export default function Modal({
     if (e.target === e.currentTarget) onBackdropClick?.(e)
   }
   return (
-    <div className={backdropClassName} role="presentation" style={backdropStyle} onClick={handleBackdropClick}>
+    <div className={backdropClassName} role="presentation" style={backdropStyle} data-peek={peek ? '1' : undefined} onClick={handleBackdropClick}>
       <section
         ref={sectionRef}
         className={dialogClassName}

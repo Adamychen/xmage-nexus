@@ -567,10 +567,11 @@ export interface AppearanceSettings {
   playmatId?: string
   cardStyle?: CardStyle
   tapStyle?: TapStyle
+  transparentDialogs?: boolean
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
@@ -586,7 +587,8 @@ export function loadAppearanceSettings(): AppearanceSettings {
       const scale = normalizeZoom(parsed.uiScale)
       const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
       const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
-      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), ...(playmatId ? { playmatId } : null) }
+      const transparentDialogs = parsed.transparentDialogs === true
+      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, ...(playmatId ? { playmatId } : null) }
     }
   } catch {}
   return { ...DEFAULT_APPEARANCE }
@@ -603,6 +605,7 @@ export function applyAppearanceToDocument(s: AppearanceSettings, lang?: string) 
     if (typeof document === 'undefined') return
     const root = document.documentElement
     root.dataset.uiScale = String(s.uiScale)
+    root.dataset.dialogBackdrop = s.transparentDialogs ? 'clear' : 'dim'
     root.style.setProperty('zoom', String(s.uiScale))
     const isCjk = lang === 'ja' || lang === 'zhs' || lang === 'zh'
     const boost = s.cjkBoost && isCjk ? 1.15 : 1

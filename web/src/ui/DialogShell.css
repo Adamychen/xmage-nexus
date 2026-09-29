@@ -17,6 +17,19 @@
   pointer-events: auto;
 }
 
+/* «Diálogos transparentes» (Apariencia): deja legible el tablero detrás del
+   panel sin quitar el velo (los clics siguen sin pasar al juego). */
+:root[data-dialog-backdrop='clear'] .dlg-backdrop {
+  background: rgb(var(--ink-rgb) / 0.14);
+  backdrop-filter: none;
+}
+
+/* Alt mantenido = asomarse al tablero (solo visual). */
+.dlg-backdrop[data-peek='1'] {
+  background: transparent;
+  backdrop-filter: none;
+}
+
 .dlg-panel {
   position: relative;
   overflow-y: auto;

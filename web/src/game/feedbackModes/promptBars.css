@@ -112,3 +112,30 @@
   color: var(--fg-1);
   font-weight: 600;
 }
+
+/* ── Non-modal yes/no ask bar (pay life, optional costs, ward…) ── */
+.ask-prompt-bar .action-prompt-source {
+  color: var(--brand-fg);
+  font-weight: 700;
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+}
+
+.ask-prompt-bar .feedback-options-grid {
+  max-height: 40vh;
+}
+
+.ask-prompt-bar .feedback-choice-card {
+  padding: var(--sp-2) var(--sp-2h);
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.ask-prompt-bar .feedback-remember-answer {
+  margin-top: var(--sp-0h);
+  font-size: var(--fs-2xs);
+}
+
+.hand-pick-expand {
+  flex: none;
+}

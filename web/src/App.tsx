@@ -90,8 +90,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    applyAppearanceToDocument({ sleeveId: settings.sleeveId, boardLayout: settings.boardLayout, uiScale: settings.uiScale, cjkBoost: settings.cjkBoost }, lang)
-  }, [settings.sleeveId, settings.boardLayout, settings.uiScale, settings.cjkBoost, lang])
+    applyAppearanceToDocument({ sleeveId: settings.sleeveId, boardLayout: settings.boardLayout, uiScale: settings.uiScale, cjkBoost: settings.cjkBoost, transparentDialogs: settings.transparentDialogs }, lang)
+  }, [settings.sleeveId, settings.boardLayout, settings.uiScale, settings.cjkBoost, settings.transparentDialogs, lang])
 
   useEffect(() => {
     applyAppearanceToDocument(loadAppearanceSettings(), lang)

@@ -35,6 +35,7 @@ export interface SettingsState {
   tapStyle: TapStyle
   uiScale: ZoomLevel
   cjkBoost: boolean
+  transparentDialogs: boolean
 }
 
 export interface SettingsSlice {
@@ -59,6 +60,7 @@ export const initialSettings: SettingsSlice = {
     ...loadMusicSettings(),
     ...loadAppearanceSettings(),
     boardLayoutManual: loadAppearanceSettings().boardLayoutManual ?? false,
+    transparentDialogs: loadAppearanceSettings().transparentDialogs ?? false,
     playmatId: normalizePlaymat(loadAppearanceSettings().playmatId),
     cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
     tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),

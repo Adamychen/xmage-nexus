@@ -70,7 +70,7 @@ export function localizeServerMessage(
     return `${t('dialogs', 'mulligan_take')} (${mulliganDownMatch[1]})`
   }
 
-  if (/^Choose\s+a\s+card\s+(?:for\s+them\s+)?to\s+discard$/i.test(plain)) {
+  if (/^(?:Choose|Select)\s+a\s+card\s+(?:for\s+them\s+)?to\s+discard$/i.test(plain)) {
     return t('game', 'choose_discard')
   }
 

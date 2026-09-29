@@ -130,6 +130,20 @@ describe('Modal', () => {
     expect(onEscape).not.toHaveBeenCalled()
   })
 
+  it('Alt held peeks at the board behind the backdrop (visual only)', () => {
+    render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
+        <h2 id="t">Title</h2>
+      </Modal>,
+    )
+    const backdrop = screen.getByRole('dialog').parentElement as HTMLElement
+    expect(backdrop.getAttribute('data-peek')).toBeNull()
+    fireEvent.keyDown(window, { key: 'Alt' })
+    expect(backdrop.getAttribute('data-peek')).toBe('1')
+    fireEvent.keyUp(window, { key: 'Alt' })
+    expect(backdrop.getAttribute('data-peek')).toBeNull()
+  })
+
   it('mueve el foco al primer control al abrir y lo restaura al cerrar (AUDIT)', () => {
     const outside = document.createElement('button')
     outside.textContent = 'fuera'

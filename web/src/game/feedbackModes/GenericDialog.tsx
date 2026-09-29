@@ -11,6 +11,7 @@ import { setSetting } from '../../state/store'
 import { getState } from '../../state/state'
 import { addAutoAnswer } from '../autoAnswers'
 import { addChoiceMemory } from '../choiceMemory'
+import { isPlainBooleanAsk } from '../handPick'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Icon, { type IconName } from '../../ui/Icon'
@@ -157,12 +158,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   }
   const kicker = getFeedbackKicker(prompt, t as any)
   const title = getLocalizedTitle(prompt, t as any)
-  const autoAnswerable =
-    prompt.method === 'GAME_ASK' &&
-    prompt.mode === 'boolean' &&
-    !prompt.isMulligan &&
-    !prompt.isVoting &&
-    !prompt.isStartingPlayer
+  const autoAnswerable = isPlainBooleanAsk(prompt)
   const chooseBoolean = (option: { value: string }) => {
     if (rememberAnswer && autoAnswerable) {
       const rules = getState().settings.autoAnswers ?? []

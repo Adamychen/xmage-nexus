@@ -663,6 +663,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     const myLands = landIds(me)
     const myPermanents = battlefieldIds(me)
     const triggers = myPermanents.slice(0, 2).map((id) => cardOf(me, id))
+    const myHandCards = Object.entries(game.myHand ?? {}).map(([id, card]) => ({
+      id: card.id ?? id,
+      name: card.name ?? id,
+      displayName: card.displayName,
+      expansionSetCode: card.expansionSetCode,
+      cardNumber: card.cardNumber,
+      cardTypes: card.cardTypes,
+    }))
 
     const prompts: { id: string; label: string; description: string; prompt: FeedbackPrompt; playableIds?: string[] }[] = [
       {
@@ -800,6 +808,24 @@ export function buildGalleryEntries(): GalleryEntry[] {
           progress: { selected: 1, max: 3, min: 1 },
           cards: LIBRARY_CARDS,
           sourceName: 'Raise the Past',
+        },
+      },
+      {
+        id: 'prompt:discard-hand',
+        label: 'Descarte desde la mano (barra)',
+        description: 'GAME_TARGET con las cartas de tu mano: se resuelve clicando la mano, sin grid modal y con el tablero visible.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Choose a card to discard',
+          message: 'Select a card to discard',
+          mode: 'uuid',
+          options: myHandCards.map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 1,
+          max: 1,
+          required: true,
+          cards: myHandCards,
+          sourceName: 'Mind Rot',
         },
       },
       {

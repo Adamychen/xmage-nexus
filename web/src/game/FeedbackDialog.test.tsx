@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import FeedbackDialog from './FeedbackDialog'
 import { clearFeedback, handleMessage, setSetting } from '../state/store'
-import { getState } from '../state/state'
+import { getState, setState } from '../state/state'
 import { setGateway, getGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
 
@@ -29,6 +29,7 @@ describe('FeedbackDialog (componente)', () => {
 
   afterEach(() => {
     clearFeedback()
+    setState({ game: null })
     setGateway(null)
     cleanup()
   })
@@ -188,7 +189,7 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.queryByText('Zombie')).toBeNull()
   })
 
-  it('muestra el subtítulo sourceName cuando está disponible', () => {
+  it('muestra la barra no-modal para GAME_ASK Sí/No con sourceName', () => {
     handleMessage({
       type: 'event',
       method: 'GAME_ASK',
@@ -204,11 +205,63 @@ describe('FeedbackDialog (componente)', () => {
       },
     } as never)
     render(<FeedbackDialog />)
-    expect(screen.getByText('Confirmación')).toBeTruthy()
-    expect(screen.getByText('Steam Vents')).toBeTruthy()
+    expect(document.querySelector('.ask-prompt-bar')).toBeTruthy()
+    expect(document.querySelector('.feedback-backdrop')).toBeNull()
+    expect(screen.getAllByText('CONFIRMACIÓN').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('ask-source').textContent).toContain('Steam Vents')
     expect(screen.getByRole('button', { name: /Sí/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
     expect(screen.queryByText('ASK')).toBeNull()
+  })
+
+  it('resuelve el descarte desde la mano en barra y deja ampliar al grid', () => {
+    const hand = {
+      'h-1': { id: 'h-1', name: 'Lightning Bolt', expansionSetCode: 'LEA', cardNumber: '161' },
+      'h-2': { id: 'h-2', name: 'Forest', expansionSetCode: 'LEA', cardNumber: '294' },
+    }
+    handleMessage({
+      type: 'event',
+      method: 'GAME_TARGET',
+      messageId: 8,
+      objectId: 'game-1',
+      data: {
+        message: 'Select a card to discard',
+        min: 1,
+        max: 1,
+        cardsView1: hand,
+        options: { possibleTargets: ['h-1', 'h-2'] },
+      },
+    } as never)
+    setState({ game: { myHand: hand } as never })
+    render(<FeedbackDialog />)
+    expect(document.querySelector('.targeting-bar')).toBeTruthy()
+    expect(document.querySelector('.card-grid-dialog')).toBeNull()
+    expect(screen.getAllByText('Elige una carta para que descarte').length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByTestId('hand-pick-expand'))
+    expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
+  })
+
+  it('mantiene el grid cuando el GAME_TARGET no es de la mano propia', () => {
+    const other = {
+      'g-1': { id: 'g-1', name: 'Serra Angel', expansionSetCode: 'LEA', cardNumber: '36' },
+    }
+    handleMessage({
+      type: 'event',
+      method: 'GAME_TARGET',
+      messageId: 9,
+      objectId: 'game-1',
+      data: {
+        message: 'Select a card to discard',
+        min: 1,
+        max: 1,
+        cardsView1: other,
+        options: { possibleTargets: ['g-1'] },
+      },
+    } as never)
+    setState({ game: { myHand: { 'h-1': { id: 'h-1', name: 'Forest' } } } as never })
+    render(<FeedbackDialog />)
+    expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
   })
 
   function openGridPrompt(count = 10, method = 'GAME_CHOOSE_MODE') {

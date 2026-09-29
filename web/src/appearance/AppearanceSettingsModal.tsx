@@ -129,6 +129,14 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
               )
             })}
           </div>
+          <Checkbox
+            className="ui-scale-cjk-toggle"
+            checked={settings.transparentDialogs}
+            onChange={(next) => setSetting('transparentDialogs', next)}
+            inputTestId="transparent-dialogs-toggle"
+            label={t('lobby', 'dialog_backdrop_label')}
+          />
+          <p className="ui-scale-hint">{t('lobby', 'dialog_backdrop_hint')}</p>
         </section>
 
         <section className="appearance-section">

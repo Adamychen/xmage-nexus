@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { getState, listeners } from './state'
 import type { AppState } from './state'
 import type { FeedbackPrompt } from '../game/feedback'
+import { handPickIds, isPlainBooleanAsk } from '../game/handPick'
 
 export function useStore<T>(selector: (s: AppState) => T): T {
   return useSyncExternalStore(
@@ -52,6 +53,11 @@ export function isBlockingModal(s: AppState): boolean {
   if (f) {
     if (f.mode === 'mana' || f.mode === 'combat') return false
     if (isMulliganDecision(f)) return false
+    if (isPlainBooleanAsk(f)) return false
+    if (f.method === 'GAME_TARGET' && f.cards && f.cards.length > 0 && s.game) {
+      const hand = new Set(Object.keys(s.game.myHand ?? {}))
+      if (handPickIds(f, hand)) return false
+    }
     if (f.method === 'GAME_TARGET' && (!f.cards || f.cards.length === 0)) return false
     return true
   }
