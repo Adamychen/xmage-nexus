@@ -7,7 +7,7 @@ import FormattedText from '../FormattedText'
 import DialogShell from '../../ui/DialogShell'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../i18n'
-import { setSetting } from '../../state/store'
+import { setSetting, useStore } from '../../state/store'
 import { getState } from '../../state/state'
 import { addAutoAnswer } from '../autoAnswers'
 import { addChoiceMemory } from '../choiceMemory'
@@ -97,6 +97,20 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   }, [form.prompt?.method, form.prompt?.gameId, form.prompt?.message])
   const [gridQuery, setGridQuery] = useState('')
   const [activeIdx, setActiveIdx] = useState(0)
+  const playableIds = useStore((s) => s.playableIds)
+  const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
+  const targetIdSet = useMemo(
+    () => new Set(prompt?.method === 'GAME_TARGET' ? prompt.options.map((option) => option.id) : []),
+    [prompt],
+  )
+  const playClaimedCard = (id: string) => {
+    if (!prompt) return
+    void send(() => cmds.sendPlayerUUID(id, prompt.gameId), t('errors', 'send_failed'))
+  }
+  const targetClaimedCard = (id: string) => {
+    const option = prompt?.options.find((opt) => opt.id === id)
+    if (option) selectOption(option)
+  }
   useEffect(() => {
     setGridQuery('')
     setActiveIdx(0)
@@ -209,7 +223,12 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
         </div>
       ) : undefined}
     >
-      <ClaimedInfoCards />
+      <ClaimedInfoCards
+        playableIds={playableIdSet}
+        onPlayCard={playClaimedCard}
+        targetIds={targetIdSet}
+        onTargetClick={targetClaimedCard}
+      />
       {/* string/integer/multiString: cancel manda sendPlayerBoolean(false), una respuesta de
           tipo incorrecto para estos métodos (CHOICE/AMOUNT/MULTI_AMOUNT esperan string/integer/
           multi-amount) — solo mostrar Cancelar cuando el propio prompt se declaró opcional

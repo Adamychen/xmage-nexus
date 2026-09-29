@@ -6,6 +6,10 @@ import { makeCard, makeGameView, makePermanent, makePlayer } from '../../src/__f
  * Escenario estático para los visores looked-at / companion (G12-2, U12):
  * el GAME_INIT trae una entrada en `lookedAt` y otra en `companion`.
  * Las acciones del menú de jugador se verifican por frame WS enviado.
+ *
+ * El compañero se anuncia jugable en `canPlayObjects` con la forma real del
+ * wire (clave = id de la carta, `record.id` = id de la habilidad): es lo que
+ * habilita pagar {3} desde el visor (issue #3).
  */
 export function infoWindowsScenario(): ReturnType<typeof makeBaseScenario> {
   return makeBaseScenario({
@@ -33,6 +37,11 @@ export function infoWindowsScenario(): ReturnType<typeof makeBaseScenario> {
         companion: [
           { name: 'Bob', cards: { 'c-1': makeCard({ name: 'Lurrus of the Dream-Den', parentId: 'c-1' }) } },
         ],
+        canPlayObjects: {
+          objects: {
+            'c-1': { other: [{ id: 'ability-c-1', value: 'Pay {3} to put Lurrus of the Dream-Den into your hand' }] },
+          },
+        },
       }),
   })
 }

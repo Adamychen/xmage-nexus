@@ -817,5 +817,12 @@
     "kind": "game",
     "assert": "hasSlicerCeded",
     "note": "Slicer, Hired Muscle (BOT 6/21, Transformers; DFC 3/4 doble estocada + prisa) con cheatSetup al campo propio en el T1: en el upkeep del SIM su trigger (BeginningOfUpkeepTriggeredAbility OPPONENT) pregunta al CONTROLADOR \"you may have that player gain control of Slicer until end of turn. If you do, untap Slicer, goad it, and it can't be sacrificed this turn. If you don't, convert it.\" y el driver responde SÍ (GAME_ASK chooseUse). Captura: Slicer en el battlefield del SIM (el view sigue al controlador real) desgirada (tapped:false por el untap) y con el hint de goad en `rules`/`cardIcons` (OTHER_HAS_RESTRICTIONS, \"Goaded by <jugador> (must attack)\" — mismo camino que goad.json; `goadingPlayers` no se serializa). Prueba el caso \"ceder control de tu permanente al rival en SU upkeep\" (dirección inversa a Threaten) sin campos nuevos del contrato."
+  },
+  {
+    "file": "companion-available.json",
+    "mechanic": "companion-available",
+    "kind": "game",
+    "assert": "hasCompanionPlayable",
+    "note": "Companion DISPONIBLE (Lurrus of the Dream-Den en el banquillo; mazo 24 Bosques + 36 Grizzly Bears, MV ≤ 2 para que la condición sea legal). Al inicializar el motor pregunta \"Use Lurrus … as your companion?\" (chooseUse) y el driver responde SÍ; el compañero queda en la zona de compañero (GameView.companion, RevealedView). El driver juega la tierra del turno + 2 Bosques por cheatSetup y se detiene SIN pagar: captura el primer game view en el que el id de la carta (clave de canPlayObjects.objects) aparece con un record de los buckets jugables [normalmente `other`, CompanionAbility extends SpecialAction] — la forma exacta que debe habilitar el clic del visor web (issue #3). El record.id es el id de la habilidad, DISTINTO de la clave: un cliente que compare ambos nunca ofrece la acción (bug que el frame fija). Captura: Lurrus aún en la zona de compañero (NO en la mano), canPlayObjects.objects[id] con bucket no vacío."
   }
 ]

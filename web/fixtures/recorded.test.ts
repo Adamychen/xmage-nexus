@@ -115,6 +115,7 @@ type AssertKind =
   | 'hasEnergy'
   | 'hasReanimateTarget'
   | 'hasCompanion'
+  | 'hasCompanionPlayable'
   | 'hasLookedAt'
   | 'hasMultikicker'
   | 'hasStrive'
@@ -1284,6 +1285,32 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         return myName ? !owner.toLowerCase().includes(myName.toLowerCase()) : true
       })
       return hand.some((n) => /lurrus/i.test(n)) && rivalCompanion
+    }
+    case 'hasCompanionPlayable': {
+      // Issue #3: el compañero sigue en la zona de compañero (NO en mano) y su
+      // id de carta (clave de canPlayObjects.objects) trae un record de alguno
+      // de los buckets jugables — `other` para CompanionAbility. Es la forma
+      // exacta que habilita el clic del visor; record.id es el id de la
+      // habilidad, distinto de la clave.
+      const me2 = getMe(gv)
+      const myName = String((me2 as { name?: unknown })?.name ?? '')
+      const myCompanionId = (gv.companion ?? []).flatMap((v) => {
+        const owner = String((v as { name?: unknown })?.name ?? '')
+        if (myName && !owner.toLowerCase().includes(myName.toLowerCase())) return []
+        return Object.keys((v as { cards?: Record<string, unknown> })?.cards ?? {})
+      })[0]
+      if (!myCompanionId) return false
+      const hand = Object.values(gv.myHand ?? gv.hand ?? {}).map((c) =>
+        String((c as { name?: unknown })?.name ?? ''),
+      )
+      if (hand.some((n) => /lurrus/i.test(n))) return false
+      const stats = (gv.canPlayObjects?.objects ?? {})[myCompanionId] as
+        | Record<string, unknown[] | undefined>
+        | undefined
+      if (!stats) return false
+      return ['basicCastAbilities', 'basicPlayAbilities', 'other'].some(
+        (bucket) => (stats[bucket] ?? []).length > 0,
+      )
     }
     case 'hasLookedAt': {
       const views = gv.lookedAt ?? []

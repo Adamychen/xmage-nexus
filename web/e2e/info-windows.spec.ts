@@ -12,6 +12,7 @@ fakeOnly()
 import { infoWindowsScenario } from '../fixtures/scenarios/infoWindows'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
+import { parseSent, sentOf } from './support/frames'
 
 test('info windows: lookedAt y companion se abren solos con sus cartas', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => infoWindowsScenario(), async () => {
@@ -31,6 +32,18 @@ test('info windows: lookedAt y companion se abren solos con sus cartas', { tag: 
     const myZone = page.locator('.board-zone.player-zone')
     await expect(myZone).toContainText('Steady Guy')
     await expect(myZone).not.toContainText('Phased Out Guy')
+
+    // Issue #3: el compañero anunciado en canPlayObjects es clicable desde su
+    // visor (paridad con el CardInfoWindowDialog del desktop) y envía su UUID.
+    const companionCard = page.locator('.pile-overlay', { hasText: 'Lurrus of the Dream-Den' }).locator('.card-slot.playable')
+    await expect(companionCard, 'Lurrus jugable (pagable {3}) en el visor').toBeVisible()
+    await companionCard.click()
+    await expect
+      .poll(() => parseSent(sentOf(page)).some((f) => f.action === 'sendPlayerUUID' && f.args?.value === 'c-1'), {
+        timeout: 10_000,
+        message: 'clic en el compañero debe enviar sendPlayerUUID(c-1)',
+      })
+      .toBe(true)
 
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })

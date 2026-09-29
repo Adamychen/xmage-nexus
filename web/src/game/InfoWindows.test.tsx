@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, fireEvent, cleanup, act } from '@testing-library/react'
 import InfoWindows from './InfoWindows'
 import ClaimedInfoCards from './feedbackModes/ClaimedInfoCards'
@@ -71,6 +71,41 @@ describe('InfoWindows', () => {
     act(() => setState({ game: makeGameView({ revealed: [] }) as never }))
     expect(document.body.textContent).toContain('Lightning Bolt')
   })
+
+  it('plays a playable companion card from its floating viewer', () => {
+    setState({ game: makeGameView({ companion: [comp] }) as never, playableIds: ['c-1'] })
+    const onPlay = vi.fn()
+    render(<InfoWindows playableIds={new Set(['c-1'])} onPlayCard={onPlay} />)
+    const card = document.querySelector<HTMLElement>('.pile-overlay .card-slot.playable')
+    expect(card).not.toBeNull()
+    fireEvent.click(card!)
+    expect(onPlay).toHaveBeenCalledWith('c-1')
+  })
+
+  it('targets a targetable card from a floating viewer', () => {
+    setState({ game: makeGameView({ revealed: [reveal] }) as never })
+    const onTarget = vi.fn()
+    render(<InfoWindows targetIds={new Set(['r-1'])} onTargetClick={onTarget} />)
+    const card = document.querySelector<HTMLElement>('.pile-overlay .card-slot.targetable')
+    expect(card).not.toBeNull()
+    fireEvent.click(card!)
+    expect(onTarget).toHaveBeenCalledWith('r-1')
+  })
+
+  it('reopens a dismissed companion viewer when its card becomes playable', () => {
+    render(<InfoWindows />)
+    act(() => setState({ game: makeGameView({ companion: [comp] }) as never, playableIds: [] }))
+    fireEvent.click(document.querySelector('.pile-overlay-close')!)
+    expect(document.querySelector('.pile-overlay')).toBeNull()
+
+    act(() => setState({ playableIds: ['c-1'] }))
+    expect(document.querySelector('.pile-overlay')).not.toBeNull()
+
+    // Cerrado de nuevo mientras sigue pagable: se respeta (sin bucle).
+    fireEvent.click(document.querySelector('.pile-overlay-close')!)
+    act(() => setState({ playableIds: ['c-1'] }))
+    expect(document.querySelector('.pile-overlay')).toBeNull()
+  })
 })
 
 describe('InfoWindows inside a prompt dialog', () => {
@@ -99,6 +134,18 @@ describe('InfoWindows inside a prompt dialog', () => {
     const overlays = document.querySelectorAll('.pile-overlay')
     expect(overlays).toHaveLength(1)
     expect(overlays[0].textContent).toContain('Lurrus of the Dream-Den')
+  })
+
+  it('plays a playable card shown inside the decision dialog', () => {
+    render(<InfoWindows />)
+    act(() => setState({ game: makeGameView({ lookedAt: [jace] }) as never }))
+    act(() => setState({ game: makeGameView({ lookedAt: [] }) as never }))
+    const onPlay = vi.fn()
+    render(<ClaimedInfoCards playableIds={new Set(['top-1'])} onPlayCard={onPlay} />)
+    const card = document.querySelector<HTMLElement>('[data-testid="feedback-info-cards"] .card-slot.playable')
+    expect(card).not.toBeNull()
+    fireEvent.click(card!)
+    expect(onPlay).toHaveBeenCalledWith('top-1')
   })
 })
 
@@ -138,6 +185,21 @@ describe('foldInfoWindows', () => {
     let s = foldInfoWindows(EMPTY_INFO_WINDOWS, { companion: [comp] })
     s = closeInfoWindow(s, 'companion:Bob')
     s = foldInfoWindows(s, { companion: [comp] })
+    expect(s.open).toHaveLength(0)
+  })
+
+  it('reopens a dismissed companion when one of its cards becomes playable', () => {
+    let s = foldInfoWindows(EMPTY_INFO_WINDOWS, { companion: [comp] })
+    s = closeInfoWindow(s, 'companion:Bob')
+    s = foldInfoWindows(s, { companion: [comp] }, new Set(['c-1']))
+    expect(s.open.map((w) => w.key)).toEqual(['companion:Bob'])
+    expect(s.dismissed['companion:Bob']).toBeUndefined()
+  })
+
+  it('does not reopen a dismissed companion for an unrelated playable transition', () => {
+    let s = foldInfoWindows(EMPTY_INFO_WINDOWS, { companion: [comp] })
+    s = closeInfoWindow(s, 'companion:Bob')
+    s = foldInfoWindows(s, { companion: [comp] }, new Set(['some-land']))
     expect(s.open).toHaveLength(0)
   })
 })

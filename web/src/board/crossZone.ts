@@ -15,7 +15,10 @@ export interface CrossZonePlayable {
 const PLAYABLE_BUCKETS = ['basicCastAbilities', 'basicPlayAbilities', 'other'] as const
 
 /** Recupera una CardView de cualquier vista disponible del juego por id,
- *  en orden de prioridad, devolviendo además la zona de origen. */
+ *  en orden de prioridad, devolviendo además la zona de origen. El compañero
+ *  se resuelve antes que el banquillo: un compañero aún en Zone.OUTSIDE también
+ *  aparece en `PlayerView.sideboard` (viene del banquillo del mazo), pero la
+ *  zona canónica es la de compañero. */
 function lookupCard(game: GameView, me: PlayerView | undefined, id: string): { card: CardView; zone: string } | null {
   const inView = (view: Record<string, CardView> | null | undefined, zone: string): { card: CardView; zone: string } | null => {
     const card = view?.[id]
@@ -23,7 +26,7 @@ function lookupCard(game: GameView, me: PlayerView | undefined, id: string): { c
   }
 
   if (me) {
-    const found = inView(me.graveyard, 'graveyard') ?? inView(me.exile, 'exile') ?? inView(me.sideboard, 'sideboard') ?? inView(me.helperCards, 'helper')
+    const found = inView(me.graveyard, 'graveyard') ?? inView(me.exile, 'exile') ?? inView(me.helperCards, 'helper')
     if (found) return found
     if (me.topCard) {
       const top = me.topCard
@@ -32,6 +35,9 @@ function lookupCard(game: GameView, me: PlayerView | undefined, id: string): { c
     }
     for (const perm of Object.values(me.battlefield ?? {})) {
       if ((perm.parentId ?? perm.id ?? perm.name) === id) return { card: perm, zone: 'battlefield' }
+    }
+    for (const command of me.commandList as unknown as CardView[]) {
+      if ((command.parentId ?? command.id ?? command.name) === id) return { card: command, zone: 'command' }
     }
   }
 
@@ -43,9 +49,19 @@ function lookupCard(game: GameView, me: PlayerView | undefined, id: string): { c
   const inStack = inView(game.stack, 'stack')
   if (inStack) return inStack
 
+  for (const entry of game.companion ?? []) {
+    const found = inView(entry.cards, 'companion')
+    if (found) return found
+  }
+
   for (const revealed of game.revealed ?? []) {
     const found = inView(revealed.cards, `revealed:${revealed.name}`)
     if (found) return found
+  }
+
+  if (me) {
+    const sideboard = inView(me.sideboard, 'sideboard')
+    if (sideboard) return sideboard
   }
 
   return null
@@ -53,10 +69,16 @@ function lookupCard(game: GameView, me: PlayerView | undefined, id: string): { c
 
 /** Devuelve las cartas jugables que NO están en la mano ni en el battlefield del
  *  jugador controlado (los "ray" cross-zone de XMage: lanzar desde cementerio,
- *  exilio, biblioteca, etc.). Derivado de `canPlayObjects` — la fuente
+ *  exilio, biblioteca, compañero, etc.). Derivado de `canPlayObjects` — la fuente
  *  autoritativa del servidor — filtrando los buckets de jugadas cruzadas.
  *  El pago de maná (`basicManaAbilities`) queda fuera: es una afordance del
- *  tablero, no un lanzamiento. */
+ *  tablero, no un lanzamiento.
+ *
+ *  `canPlayObjects.objects` está indexado por el id del objeto fuente, mientras
+ *  que cada `PlayableObjectRecord.id` es el id de la habilidad (UUID distinto):
+ *  la jugabilidad se decide por presencia de records en los buckets, nunca
+ *  comparando ids (los frames reales lo confirman; los fixtures deben copiar
+ *  esa forma). */
 export function crossZonePlayables(game: GameView | null, feedback?: { method?: string }): CrossZonePlayable[] {
   if (!game) return []
   const me = game.players?.find((p) => p.controlled)
@@ -75,21 +97,12 @@ export function crossZonePlayables(game: GameView | null, feedback?: { method?: 
     if (id in battlefield && feedback?.method !== 'GAME_PLAY_MANA') continue
     if (seen.has(id)) continue
 
-    let matched = false
-    for (const bucket of PLAYABLE_BUCKETS) {
-      for (const record of stats[bucket] ?? []) {
-        if (record.id === id || record.id == null) {
-          matched = true
-          break
-        }
-      }
-      if (matched) break
-    }
+    const matched = PLAYABLE_BUCKETS.some((bucket) => (stats[bucket] ?? []).length > 0)
     if (!matched) continue
 
     seen.add(id)
     const resolved = lookupCard(game, me, id)
-    const value = firstValue(stats, id)
+    const value = firstValue(stats)
     const card: CardView =
       resolved?.card ?? { name: value || id, manaValue: 0, expansionSetCode: '', cardNumber: '0', parentId: id, id }
     out.push({ id, card, value: value || resolved?.card.name || id, zone: resolved?.zone ?? 'other' })
@@ -109,10 +122,10 @@ export function crossZoneCounts(playables: CrossZonePlayable[]): { graveyard: nu
   return { graveyard, exile }
 }
 
-function firstValue(stats: { basicCastAbilities?: { id?: string; value: string }[]; basicPlayAbilities?: { id?: string; value: string }[]; other?: { id?: string; value: string }[] }, id: string): string {
+function firstValue(stats: { basicCastAbilities?: { id?: string; value: string }[]; basicPlayAbilities?: { id?: string; value: string }[]; other?: { id?: string; value: string }[] }): string {
   for (const bucket of PLAYABLE_BUCKETS) {
     for (const record of stats[bucket] ?? []) {
-      if (record.id === id || record.id == null) return record.value ?? ''
+      return record.value ?? ''
     }
   }
   return ''

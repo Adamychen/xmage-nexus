@@ -20,11 +20,13 @@ const ZONE_KEYS = {
   battlefield: 'zone_battlefield',
   revealed: 'zone_revealed',
   sideboard: 'zone_sideboard',
+  command: 'zone_command',
 } as const
 
 export function crossZoneLabel(zone: string, t: ReturnType<typeof useTranslation>['t']): string {
   const [kind, detail] = zone.split(/:(.*)/s)
   if (kind === 'stack') return t('game', 'pile_stack')
+  if (kind === 'companion') return t('game', 'companion_window_plain')
   const key = ZONE_KEYS[kind as keyof typeof ZONE_KEYS]
   if (!key) return zone
   const label = t('board', key)

@@ -77,8 +77,17 @@ function entries(views: InfoWindowViews): InfoWindow[] {
  *  the Mind Sculptor's "Put that card on the bottom?") arrives with them empty:
  *  like the desktop `CardInfoWindowDialog`, those windows open when an entry
  *  appears or changes and stay until the user closes them. Companion windows
- *  mirror the view (the desktop closes them once the companion leaves). */
-export function foldInfoWindows(prev: InfoWindowState, views: InfoWindowViews): InfoWindowState {
+ *  mirror the view (the desktop closes them once the companion leaves).
+ *
+ *  `becamePlayable` carries the ids that just entered `canPlayObjects`: a
+ *  companion the user dismissed at game start must resurface when its {3}
+ *  becomes payable (the desktop window cannot be closed at all), but closing
+ *  it again while it stays playable is respected until the next transition. */
+export function foldInfoWindows(
+  prev: InfoWindowState,
+  views: InfoWindowViews,
+  becamePlayable?: ReadonlySet<string>,
+): InfoWindowState {
   const current = entries(views)
   const seen: Record<string, string> = {}
   for (const w of current) seen[w.key] = sig(w.cards)
@@ -88,7 +97,9 @@ export function foldInfoWindows(prev: InfoWindowState, views: InfoWindowViews): 
   for (const w of current) {
     const s = seen[w.key]
     if (w.kind === 'companion') {
-      if (prev.dismissed[w.key] === s) dismissed[w.key] = s
+      const playableAgain = becamePlayable != null
+        && Object.keys(w.cards).some((id) => becamePlayable.has(id))
+      if (!playableAgain && prev.dismissed[w.key] === s) dismissed[w.key] = s
       else open = [...open, w]
       continue
     }
@@ -120,8 +131,15 @@ export interface InfoWindowsSnapshot {
 let snapshot: InfoWindowsSnapshot = { windows: EMPTY_INFO_WINDOWS, claimed: false }
 let lastGame: unknown
 let lastGameId: string | null | undefined
+let lastPlayableIds: ReadonlySet<string> = new Set()
 let claims = 0
 const subscribers = new Set<() => void>()
+
+function sameIds(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  if (a.size !== b.size) return false
+  for (const id of a) if (!b.has(id)) return false
+  return true
+}
 
 function publish(next: InfoWindowsSnapshot) {
   snapshot = next
@@ -129,12 +147,19 @@ function publish(next: InfoWindowsSnapshot) {
 }
 
 function sync() {
-  const { game, gameId } = getState()
-  if (game === lastGame && gameId === lastGameId) return
+  const { game, gameId, playableIds } = getState()
+  const currentPlayable = new Set(playableIds ?? [])
+  if (game === lastGame && gameId === lastGameId && sameIds(currentPlayable, lastPlayableIds)) return
   const reset = !game || gameId !== lastGameId
+  const becamePlayable = new Set<string>()
+  for (const id of currentPlayable) if (!lastPlayableIds.has(id)) becamePlayable.add(id)
   lastGame = game
   lastGameId = gameId
-  publish({ ...snapshot, windows: foldInfoWindows(reset ? EMPTY_INFO_WINDOWS : snapshot.windows, game ?? {}) })
+  lastPlayableIds = currentPlayable
+  publish({
+    ...snapshot,
+    windows: foldInfoWindows(reset ? EMPTY_INFO_WINDOWS : snapshot.windows, game ?? {}, becamePlayable),
+  })
 }
 
 listeners.add(sync)

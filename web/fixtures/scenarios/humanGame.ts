@@ -231,9 +231,13 @@ export class HumanGame {
 
     const playableIds = this.playableIds()
     const crossZoneIds = this.crossZoneIds()
+    // Forma del wire real: `canPlayObjects.objects` va indexado por el id del
+    // objeto (carta) y cada `PlayableObjectRecord.id` es el id de la habilidad
+    // (UUID distinto). Un fake con `record.id === clave` enmascara el bug de
+    // crossZone (issue #2).
     const objects: Record<string, { basicCastAbilities?: { id: string; value: string }[]; other?: { id: string; value: string }[] }> = {}
-    for (const id of playableIds) objects[id] = { basicCastAbilities: [{ id, value: 'cast' }] }
-    for (const id of crossZoneIds) objects[id] = { other: [{ id, value: 'other' }] }
+    for (const id of playableIds) objects[id] = { basicCastAbilities: [{ id: `ability-${id}`, value: 'cast' }] }
+    for (const id of crossZoneIds) objects[id] = { other: [{ id: `ability-${id}`, value: 'other' }] }
     return makeGameView({
       players: [human, sim],
       myPlayerId: HUMAN_PLAYER_ID,

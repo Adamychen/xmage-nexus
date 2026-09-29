@@ -163,6 +163,24 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           // sigue en su zona de compañero.
           await expect(page.locator('.hand-bar .card-slot[data-card-name="Lurrus of the Dream-Den"]')).toHaveCount(1)
         }
+        if (entry.assert === 'hasCompanionPlayable') {
+          // Issue #3: con el compañero anunciado en canPlayObjects (bucket
+          // `other`), su visor lo pinta jugable — antes era un visor inerte.
+          // El del SIM también abre su ventana (mismo nombre), pero solo el
+          // propio está en canPlayObjects.
+          await expect(page.locator('.pile-overlay .card-slot.playable[data-card-name="Lurrus of the Dream-Den"]')).toBeVisible()
+
+          // Issue #2: el mismo objeto jugable fuera de mano/campo entra en el
+          // "ray" cross-zone (clave = id de carta, record.id = habilidad).
+          await page.locator('.pile-overlay-close').last().click()
+          await page.locator('.pile-overlay-close').last().click()
+          await expect(page.locator('.pile-overlay')).toHaveCount(0)
+          await page.locator('.ray-stack').click()
+          const rayOverlay = page.locator('.cross-zone-overlay')
+          await expect(rayOverlay).toBeVisible()
+          await expect(rayOverlay.locator('.card-slot[data-card-name="Lurrus of the Dream-Den"]')).toBeVisible()
+          await expect(rayOverlay.locator('.cross-zone-source')).toContainText(/compañero|companion/i)
+        }
         if (entry.assert === 'hasLookedAt') {
           // Mirar la mano del rival abre el visor temporal (G12-2).
           await expect(page.locator('.pile-overlay')).toBeVisible()

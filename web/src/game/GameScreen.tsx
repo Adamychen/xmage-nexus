@@ -169,6 +169,8 @@ export default function GameScreen() {
   const chosenTargetIds = feedback?.method === 'GAME_TARGET' ? (feedback.chosenTargets ?? []) : []
   const targetZone = feedback?.method === 'GAME_TARGET' ? targetZoneKindOf(feedback.targetZone) : null
   const targetZones = useMemo(() => resolveTargetHits(game, targetIds).zones, [game, targetIds])
+  const playableIdSet = useMemo(() => new Set(playableIds), [playableIds])
+  const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
   useAttentionAlerts(game, gameId, feedback, combat, settings.browserNotifications)
@@ -480,7 +482,12 @@ export default function GameScreen() {
           <RollbackVoteDialog />
           <LimitedDeckDialog />
           <PlayerContextMenu />
-          <InfoWindows />
+          <InfoWindows
+            playableIds={playableIdSet}
+            onPlayCard={onPlayableClick}
+            targetIds={targetIdSet}
+            onTargetClick={onTargetClick}
+          />
           <SideboardScreen />
           <TournamentPanel />
         </div>
