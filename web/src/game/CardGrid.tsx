@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import Chip from '../ui/Chip'
+import ChipButton from '../ui/ChipButton'
 import CloseButton from '../ui/CloseButton'
 import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
@@ -22,22 +23,31 @@ interface CardGridProps {
 export default function CardGrid({ prompt, selected, setSelected, send, busy }: CardGridProps) {
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
+  const [showAll, setShowAll] = useState(false)
   const cards = prompt.cards ?? []
   const serverDriven = prompt.method === 'GAME_TARGET'
   const isMulti = !serverDriven && prompt.max > 1
   const chosen = serverDriven ? (prompt.chosenTargets ?? []) : selected
   const selectable = new Set(prompt.options.map((option) => option.id))
 
+  // Pre-filtro por la petición del servidor: en GAME_TARGET las cartas legales
+  // llegan en options.possibleTargets (el filtro real del objetivo, p. ej.
+  // "artifact card"); el resto de cardsView1 son candidatas no elegibles. Las
+  // ya elegidas se mantienen visibles para poder deshacer la elección.
+  const validCards = cards.filter((card) => selectable.has(card.id) || chosen.includes(card.id))
+  const hiddenCount = cards.length - validCards.length
+  const scoped = selectable.size > 0 && hiddenCount > 0 && !showAll ? validCards : cards
+
   const filtered = useMemo(() => {
-    if (!filter.trim()) return cards
+    if (!filter.trim()) return scoped
     const q = filter.toLowerCase()
-    return cards.filter((c) => {
+    return scoped.filter((c) => {
       const name = (c.displayName ?? c.name).toLowerCase()
       const types = (c.cardTypes ?? []).join(' ').toLowerCase()
       const rules = (c.rules ?? []).join(' ').toLowerCase()
       return name.includes(q) || types.includes(q) || rules.includes(q)
     })
-  }, [cards, filter])
+  }, [scoped, filter])
 
   const toggle = (cardId: string) => {
     if (busy) return
@@ -87,19 +97,34 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
       </Chip></>}
       message={message ? localizeServerMessage(message, t as any) : undefined}
       search={(
-        <div className="card-grid-search-wrap">
-          <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
-          <input
-            className="card-grid-filter"
-            type="text"
-            aria-label={t('dialogs','cardgrid_search_placeholder')}
-            placeholder={t('dialogs','cardgrid_search_placeholder')}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            autoFocus
-          />
-          {filter && (
-            <CloseButton variant="plain" size="sm" className="card-grid-clear-btn" label={t('common','clear')} onClick={() => setFilter('')} />
+        <div className="card-grid-search">
+          <div className="card-grid-search-wrap">
+            <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
+            <input
+              className="card-grid-filter"
+              type="text"
+              aria-label={t('dialogs','cardgrid_search_placeholder')}
+              placeholder={t('dialogs','cardgrid_search_placeholder')}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              autoFocus
+            />
+            {filter && (
+              <CloseButton variant="plain" size="sm" className="card-grid-clear-btn" label={t('common','clear')} onClick={() => setFilter('')} />
+            )}
+          </div>
+          {selectable.size > 0 && hiddenCount > 0 && (
+            <ChipButton
+              size="sm"
+              active={!showAll}
+              icon={showAll ? 'eye' : 'filter'}
+              className="card-grid-scope-toggle"
+              onClick={() => setShowAll((value) => !value)}
+            >
+              {showAll
+                ? t('dialogs','cardgrid_only_valid', { count: validCards.length })
+                : t('dialogs','cardgrid_show_all', { count: cards.length })}
+            </ChipButton>
           )}
         </div>
       )}

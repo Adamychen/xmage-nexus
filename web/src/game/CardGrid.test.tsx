@@ -112,14 +112,14 @@ describe('CardGrid', () => {
       message: 'Select cards from your graveyard (selected 1 of 3, min 1)',
       chosenTargets: ['c-1'],
       progress: { selected: 1, max: 3, min: 1 },
-      options: [{ id: 'c-1', label: 'Grizzly Bears', value: 'c-1' }, { id: 'c-2', label: 'Lightning Bolt', value: 'c-2' }],
+      options: [{ id: 'c-1', label: 'Grizzly Bears', value: 'c-1' }, { id: 'c-2', label: 'Lightning Bolt', value: 'c-2' }, { id: 'c-3', label: 'Island', value: 'c-3' }],
       required: false,
     })
     const { container, getByTestId } = render(<CardGrid prompt={prompt} selected={['c-2']} setSelected={vi.fn()} send={send} busy={false} />)
     const cells = container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')
+    expect(cells.length).toBe(3)
     expect(cells[0].classList.contains('selected')).toBe(true)
     expect(cells[1].classList.contains('selected')).toBe(false)
-    expect(cells[2].disabled).toBe(true)
     expect(getByTestId('card-grid-progress').textContent).toBe('Seleccionadas 1 de 3 · mín. 1')
     expect(container.textContent).not.toContain('(selected 1 of 3')
     expect(container.textContent).toContain('Hecho (1)')
@@ -128,5 +128,55 @@ describe('CardGrid', () => {
     await vi.waitFor(() => expect(uuid).toHaveBeenCalledWith('c-2', 'g-1'))
     expect(uuid).toHaveBeenCalledTimes(1)
     uuid.mockRestore()
+  })
+
+  it('pre-filters the grid to the server-selectable cards (the request filter)', () => {
+    const prompt = makePrompt({
+      message: 'Search your library for an artifact card',
+      options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
+    })
+    const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+    const cells = container.querySelectorAll('.card-grid-cell')
+    expect(cells.length).toBe(1)
+    expect(container.textContent).toContain('Island')
+    expect(container.textContent).not.toContain('Grizzly Bears')
+    expect(container.textContent).not.toContain('Lightning Bolt')
+    expect(container.querySelector('.ui-chip')?.textContent).toContain('1 / 3')
+  })
+
+  it('toggles between only valid cards and the full candidate list', () => {
+    const prompt = makePrompt({
+      options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
+    })
+    const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+    const toggle = () => Array.from(container.querySelectorAll('button')).find((b) => b.classList.contains('card-grid-scope-toggle')) as HTMLButtonElement
+
+    expect(toggle().textContent).toContain('Mostrar todas (3)')
+    fireEvent.click(toggle())
+    expect(container.querySelectorAll('.card-grid-cell').length).toBe(3)
+    expect(toggle().textContent).toContain('Solo válidas (1)')
+    fireEvent.click(toggle())
+    expect(container.querySelectorAll('.card-grid-cell').length).toBe(1)
+  })
+
+  it('keeps chosen cards visible even when they are no longer selectable', () => {
+    const prompt = makePrompt({
+      chosenTargets: ['c-1'],
+      options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
+    })
+    const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+    expect(container.textContent).toContain('Grizzly Bears')
+    expect(container.textContent).toContain('Island')
+    expect(container.textContent).not.toContain('Lightning Bolt')
+  })
+
+  it('disables the non-selectable cells when the full list is shown', () => {
+    const prompt = makePrompt({ options: [{ id: 'c-3', label: 'Island', value: 'c-3' }] })
+    const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
+    fireEvent.click(container.querySelector('.card-grid-scope-toggle')!)
+    const cells = container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')
+    expect(cells[0].disabled).toBe(true)
+    expect(cells[1].disabled).toBe(true)
+    expect(cells[2].disabled).toBe(false)
   })
 })

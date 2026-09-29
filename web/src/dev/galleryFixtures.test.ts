@@ -58,6 +58,15 @@ describe('galería de estados (P3)', () => {
     expect(mana?.playableIds?.length).toBeGreaterThan(0)
   })
 
+  it('la búsqueda filtrada declara solo parte de las candidatas como elegibles', () => {
+    const filtered = entry(entries, 'prompt:card-grid-filtered').feedback
+    expect(filtered?.options.length).toBeGreaterThan(0)
+    expect(filtered!.options.length).toBeLessThan(filtered!.cards!.length)
+    for (const option of filtered!.options) {
+      expect(filtered!.cards!.some((card) => card.id === option.id), option.id).toBe(true)
+    }
+  })
+
   it('la entrada de login no arrastra partida', () => {
     const login = entry(entries, 'screen:login')
     expect(login.phase).toBe('idle')

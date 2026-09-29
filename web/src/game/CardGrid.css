@@ -1,10 +1,21 @@
 
 
+.card-grid-search {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .card-grid-search-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
   margin-top: 8px;
+}
+
+.card-grid-scope-toggle {
+  margin-top: var(--sp-2);
 }
 
 .card-grid-search-icon {
