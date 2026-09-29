@@ -116,6 +116,7 @@ type AssertKind =
   | 'hasReanimateTarget'
   | 'hasCompanion'
   | 'hasCompanionPlayable'
+  | 'hasOpponentReveal'
   | 'hasLookedAt'
   | 'hasMultikicker'
   | 'hasStrive'
@@ -1315,6 +1316,16 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
     case 'hasLookedAt': {
       const views = gv.lookedAt ?? []
       return views.some((v) => Object.keys((v as { cards?: Record<string, unknown> })?.cards ?? {}).length >= 1)
+    }
+    case 'hasOpponentReveal': {
+      // Issue #1: la búsqueda+reveal del RIVAL (Trinket Mage busca y revela un
+      // artefacto) llega a MI GameView en `revealed`; el visor del web debe
+      // pintarla. El nombre de la entrada es la carta fuente ("Trinket Mage…").
+      return (gv.revealed ?? []).some((v) => {
+        const entry = v as { name?: unknown; cards?: Record<string, { name?: unknown }> }
+        if (!/trinket mage/i.test(String(entry?.name ?? ''))) return false
+        return Object.values(entry?.cards ?? {}).some((c) => /ornithopter|memnite/i.test(String(c?.name ?? '')))
+      })
     }
     case 'hasMultikicker': {
       const me2 = getMe(gv)

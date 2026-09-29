@@ -185,6 +185,13 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           // Mirar la mano del rival abre el visor temporal (G12-2).
           await expect(page.locator('.pile-overlay')).toBeVisible()
         }
+        if (entry.assert === 'hasOpponentReveal') {
+          // Issue #1: el revelado de una búsqueda del RIVAL (Trinket Mage)
+          // llega en `revealed` y el visor debe pintarlo con la carta revelada.
+          const revealWindow = page.locator('.pile-overlay', { hasText: 'Trinket Mage' })
+          await expect(revealWindow).toBeVisible()
+          await expect(revealWindow.locator('.card-slot[data-card-name="Ornithopter"]')).toBeVisible()
+        }
         if (entry.assert === 'hasMultikicker') {
           // Chalice con 2 contadores de carga (2 kicks pagados).
           const chalice = page.locator('.player-zone .card-slot[data-card-name="Everflowing Chalice"]')

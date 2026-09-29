@@ -824,5 +824,12 @@
     "kind": "game",
     "assert": "hasCompanionPlayable",
     "note": "Companion DISPONIBLE (Lurrus of the Dream-Den en el banquillo; mazo 24 Bosques + 36 Grizzly Bears, MV ≤ 2 para que la condición sea legal). Al inicializar el motor pregunta \"Use Lurrus … as your companion?\" (chooseUse) y el driver responde SÍ; el compañero queda en la zona de compañero (GameView.companion, RevealedView). El driver juega la tierra del turno + 2 Bosques por cheatSetup y se detiene SIN pagar: captura el primer game view en el que el id de la carta (clave de canPlayObjects.objects) aparece con un record de los buckets jugables [normalmente `other`, CompanionAbility extends SpecialAction] — la forma exacta que debe habilitar el clic del visor web (issue #3). El record.id es el id de la habilidad, DISTINTO de la clave: un cliente que compare ambos nunca ofrece la acción (bug que el frame fija). Captura: Lurrus aún en la zona de compañero (NO en la mano), canPlayObjects.objects[id] con bucket no vacío."
+  },
+  {
+    "file": "opponent-reveal.json",
+    "mechanic": "opponent-reveal",
+    "kind": "game",
+    "assert": "hasOpponentReveal",
+    "note": "Revelado del RIVAL (issue #1): la SIM juega Trinket Mage ({2}{U}; ETB busca un artefacto MV ≤ 1, lo revela y lo pone en su mano) y el humano (60 Bosques, solo pasa) captura el game view con la entrada de `GameView.revealed` del oponente. Fija que el revelado de una búsqueda ajena llega a MI vista (y por tanto el visor `InfoWindows` del web debe pintarlo): la entrada se llama como la carta fuente (\"Trinket Mage\") y trae el artefacto buscado (Ornithopter/Memnite) como CardView."
   }
 ]
