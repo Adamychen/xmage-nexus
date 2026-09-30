@@ -8,7 +8,6 @@
     "version": "0.3.0",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
-    "playParams": "auto=1&server=beta.xmage.today",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
@@ -72,7 +71,7 @@
           "primaryCta": "Descargar para",
           "secondaryCta": "Ver en GitHub",
           "playCta": "Probar ahora",
-          "playNote": "Demo en vivo · entras como invitado al servidor comunitario beta.xmage.today · sin instalar nada",
+          "playNote": "Demo en vivo · abre el cliente y elige tu servidor · sin instalar nada",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",
@@ -266,7 +265,7 @@
           "primaryCta": "Download for",
           "secondaryCta": "View on GitHub",
           "playCta": "Play now",
-          "playNote": "Live demo · you join as a guest on the community server beta.xmage.today · no install",
+          "playNote": "Live demo · opens the client, pick your server · no install",
           "trust": [
             "React 19 + TypeScript",
             "XMage 1.4.61-V1",

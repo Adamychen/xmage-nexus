@@ -1,10 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { usePhase, useStore } from './state/store'
 import { linkBanner } from './system/linkBanner'
 import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
-import { parseAutoConnect } from './lobby/autoConnect'
 import { setSetting } from './state/actions'
 import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { useTranslation } from './i18n'
@@ -15,7 +14,7 @@ import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
 import DeckIssuesDialog from './lobby/DeckIssuesDialog'
 import SetupWizard from './setup/SetupWizard'
-import { isSetupDone, markSetupDone, OPEN_SETUP_EVENT } from './setup/setupFlag'
+import { isSetupDone, OPEN_SETUP_EVENT } from './setup/setupFlag'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
 import ConfirmHost from './ui/ConfirmHost'
@@ -37,8 +36,7 @@ export default function App() {
   const linkAttempt = useStore((s) => s.linkAttempt)
   const loginRetry = useStore((s) => s.loginRetry)
   const settings = useStore((s) => s.settings)
-  const [autoLink] = useState(() => parseAutoConnect(window.location.search))
-  const [showSetup, setShowSetup] = useState(() => !isSetupDone() && !autoLink.auto)
+  const [showSetup, setShowSetup] = useState(() => !isSetupDone())
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
 
   useEffect(() => {
@@ -73,20 +71,6 @@ export default function App() {
     soundManager.init(loadAudioSettings())
     const music = loadMusicSettings()
     soundManager.setMusicVolume(music.musicEnabled ? music.musicVolume : 0)
-    if (!isSetupDone() && !autoLink.auto) return
-    if (autoLink.auto) markSetupDone()
-    if (GalleryScreen && isGalleryHash(window.location.hash)) return
-    const saved = loadConn()
-    if (saved && saved.username && phase === 'idle') {
-      void doConnect(
-        saved.wsHost,
-        saved.proxyPort,
-        saved.serverHost,
-        saved.port,
-        saved.username,
-        saved.password,
-      )
-    }
   }, [])
 
   useEffect(() => {

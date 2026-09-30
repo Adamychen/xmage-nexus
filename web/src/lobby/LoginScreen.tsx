@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
@@ -15,7 +15,7 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
-import { guestUsername, parseAutoConnect } from './autoConnect'
+import { parseAutoConnect } from './autoConnect'
 import type { ConnectionInfo } from '../state/persistence'
 import './LoginScreen.css'
 
@@ -31,8 +31,11 @@ import Button from '../ui/Button'
 // override it (otherwise the browser tries ws://localhost:8787 and fails).
 const BAKED_PROXY_HOST = (import.meta.env.VITE_DEFAULT_PROXY_HOST as string | undefined) ?? ''
 const BAKED_PROXY_PORT = Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787
+const BAKED_SERVER_HOST = (import.meta.env.VITE_DEFAULT_SERVER_HOST as string | undefined) ?? 'localhost'
 const isLoopbackHost = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '::1'
 const REMOTE_PROXY = !!BAKED_PROXY_HOST && !isLoopbackHost(BAKED_PROXY_HOST)
+const presetOf = (host: string): ServerPreset =>
+  host === 'beta.xmage.today' ? 'official' : isLoopbackHost(host) ? 'local' : 'custom'
 
 export default function LoginScreen() {
   const { t, tError, lang } = useTranslation()
@@ -40,7 +43,7 @@ export default function LoginScreen() {
   const error = useStore((s) => s.error)
   const [proxyHost, setProxyHost] = useState(import.meta.env.VITE_DEFAULT_PROXY_HOST ?? 'localhost')
   const [proxyPort, setProxyPort] = useState(Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787)
-  const [serverHost, setServerHost] = useState(import.meta.env.VITE_DEFAULT_SERVER_HOST ?? 'localhost')
+  const [serverHost, setServerHost] = useState(BAKED_SERVER_HOST)
   const [port, setPort] = useState(import.meta.env.VITE_DEFAULT_SERVER_PORT ?? '17171')
   const [username, setUsername] = useState(import.meta.env.DEV ? 'player1' : '')
   const [password, setPassword] = useState(import.meta.env.DEV ? 'password' : '')
@@ -50,9 +53,8 @@ export default function LoginScreen() {
   const [showSettings, setShowSettings] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
-  const [preset, setPreset] = useState<ServerPreset>(REMOTE_PROXY ? 'official' : 'local')
+  const [preset, setPreset] = useState<ServerPreset>(() => presetOf(BAKED_SERVER_HOST))
   const pendingDeepLink = useStore((s) => s.pendingDeepLink)
-  const autoRef = useRef(false)
 
   useEffect(() => {
     const url = parseAutoConnect(window.location.search)
@@ -109,25 +111,6 @@ export default function LoginScreen() {
     }
     window.addEventListener(SETUP_CONN_EVENT, applySetupConn)
     return () => window.removeEventListener(SETUP_CONN_EVENT, applySetupConn)
-  }, [])
-
-  useEffect(() => {
-    const url = parseAutoConnect(window.location.search)
-    if (!url.auto || autoRef.current) return
-    const saved = loadConn()
-    if (saved?.username) return
-    autoRef.current = true
-    const host = url.proxyHost || proxyHost.trim() || 'localhost'
-    const hostPort = url.proxyPort ?? proxyPort
-    const target = url.serverHost || serverHost.trim() || host
-    const targetPort = url.serverPort ?? (parseInt(port, 10) || 17171)
-    const user = url.username || guestUsername()
-    if (!isSameAccount(saved, target, targetPort, user)) {
-      clearActiveGame()
-      clearActiveDraft()
-    }
-    setUsername(user)
-    void doConnect(host, hostPort, target, targetPort, user, '')
   }, [])
 
   const handleSelectPreset = (nextPreset: ServerPreset) => {

@@ -4,11 +4,6 @@ export interface AutoConnectParams {
   serverHost?: string
   serverPort?: number
   username?: string
-  auto: boolean
-}
-
-function truthy(raw: string | null): boolean {
-  return raw === '1' || raw === 'true' || raw === 'yes'
 }
 
 function parsePort(raw: string | null | undefined): number | undefined {
@@ -26,7 +21,7 @@ function splitHostPort(value: string): { host: string; port?: number } {
 
 export function parseAutoConnect(search: string): AutoConnectParams {
   const params = new URLSearchParams(search)
-  const out: AutoConnectParams = { auto: truthy(params.get('auto')) }
+  const out: AutoConnectParams = {}
 
   const rawProxy = (params.get('proxy') ?? '').trim()
   const urlProxyPort = parsePort(params.get('proxyPort'))
@@ -58,8 +53,4 @@ export function parseAutoConnect(search: string): AutoConnectParams {
   if (rawUsername) out.username = rawUsername
 
   return out
-}
-
-export function guestUsername(rand: () => number = Math.random): string {
-  return `guest${Math.floor(rand() * 900000 + 100000)}`
 }
