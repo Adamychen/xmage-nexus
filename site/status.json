@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T09:06:37.196Z",
+  "generatedAt": "2026-09-30T11:28:00.269Z",
   "commit": null,
   "runUrl": null,
   "project": {
@@ -523,7 +523,7 @@
       "name": "Full Interaction",
       "status": "done",
       "date": "2026-09-12",
-      "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters. Live 2026-09-12: tokens (Dragon Fodder), auras (Rancor), counters (Ballista X=2), planeswalkers (Jace +2/Brainstorm), equipment + evasion (Serra flying/vigilance/haste/shroud), order dialogs, Bo3 sideboard via raw WS (UI submit pending)."
+      "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters. Live 2026-09-12: tokens (Dragon Fodder), auras (Rancor), counters (Ballista X=2), planeswalkers (Jace +2/Brainstorm), equipment + evasion (Serra flying/vigilance/haste/shroud), order dialogs, Bo3 sideboard via raw WS (UI submit validated live 2026-09-18; see COMPONENT_PARITY U4/U11)."
     },
     {
       "id": 2.5,
@@ -544,14 +544,14 @@
       "name": "Desktop Packaging (Tauri)",
       "status": "done",
       "date": "2026-09-19",
-      "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10) and v0.2.0 (2026-09-19). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7."
+      "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10), v0.2.0 (2026-09-19) and v0.3.0 (2026-09-27). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7."
     },
     {
       "id": 5,
       "name": "Advanced Formats & Tournaments",
       "status": "done",
       "date": "2026-09-13",
-      "desc": "Commander pod (PodBoard 2x2 render clamp 4 — server supports FFA 3-10 — + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay viewer. Live 2026-09-13: Sealed Elimination end-to-end (audit-sealed-2, joinTournament discovery, auto-submit, 40-card game to Finished) + tournament wizard with real data (19 types). Pending: draft picks and sealed ConstructScreen submit via web UI."
+      "desc": "Commander pod (PodBoard 2x2 render clamp 4 — server supports FFA 3-10 — + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay entry from the match history (view-only; transport controls pending). Live 2026-09-13: Sealed Elimination end-to-end (audit-sealed-2, joinTournament discovery, auto-submit, 40-card game to Finished) + tournament wizard with real data (19 types). Draft picks and sealed ConstructScreen submit via web UI validated live 2026-09-14."
     },
     {
       "id": 6,
@@ -767,9 +767,9 @@
     },
     {
       "category": "Advanced Formats",
-      "feature": "Swiss Tournament Brackets + Replay Viewer",
+      "feature": "Swiss Tournament Brackets + Replay Entry (view-only)",
       "official": "yes",
-      "nexus": "yes",
+      "nexus": "partial",
       "phase": "Completed"
     }
   ],

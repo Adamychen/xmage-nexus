@@ -708,6 +708,24 @@ export function buildGalleryEntries(): GalleryEntry[] {
       ),
     }
 
+    // Jace, the Mind Sculptor +2: la carta del top llega en `lookedAt` (visor
+    // "Miradas", que se engancha y queda abierto) y la decisión del motor es un
+    // GAME_ASK booleano: Sí = enviarla al fondo, No = dejarla arriba.
+    const jaceTopCard: CardView = {
+      id: 'jace-top-1',
+      parentId: 'jace-top-1',
+      name: 'Island',
+      displayName: 'Island',
+      expansionSetCode: 'iko',
+      cardNumber: '263',
+      manaValue: 0,
+      cardTypes: ['Land'],
+    }
+    const jaceTopGame: GameView = {
+      ...game,
+      lookedAt: [{ name: 'Jace, the Mind Sculptor', cards: { 'jace-top-1': jaceTopCard } }],
+    }
+
     const prompts: { id: string; label: string; description: string; prompt: FeedbackPrompt; playableIds?: string[]; game?: GameView }[] = [
       {
         id: 'prompt:target',
@@ -788,6 +806,26 @@ export function buildGalleryEntries(): GalleryEntry[] {
           max: 0,
           sourceName: 'Solemn Simulacrum',
         },
+      },
+      {
+        id: 'prompt:jace-top',
+        label: 'GAME_ASK (Jace, the Mind Sculptor +2)',
+        description: 'Carta del top en el visor "Miradas" + "Put that card on the bottom of its owner\'s library?" (Sí = al fondo, No = dejarla arriba).',
+        prompt: {
+          method: 'GAME_ASK',
+          gameId,
+          title: 'Jace, the Mind Sculptor',
+          message: "Put that card on the bottom of its owner's library?",
+          mode: 'boolean',
+          options: [
+            { id: 'yes', label: 'Sí', value: 'true' },
+            { id: 'no', label: 'No', value: 'false' },
+          ],
+          min: 0,
+          max: 0,
+          sourceName: 'Jace, the Mind Sculptor',
+        },
+        game: jaceTopGame,
       },
       {
         id: 'prompt:mulligan',
