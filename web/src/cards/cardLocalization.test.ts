@@ -4,6 +4,8 @@ import {
   getCachedCardName,
   setCachedCardName,
   fetchLocalizedCardName,
+  fetchLocalizedCardText,
+  getCachedCardText,
   isUuidLikeCardName,
   useLocalizedCardName,
   resetCardLocalizationCacheForTest,
@@ -121,6 +123,80 @@ describe('cardLocalization', () => {
     const { result } = renderHook(() => useLocalizedCardName(deckCard))
     expect(result.current.originalName).toBe('Lightning Bolt')
     expect(result.current.displayName).toBe('Relámpago')
+  })
+
+  it('fetchLocalizedCardText resuelve nombre, tipo y reglas de la impresión localizada', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        name: 'The One Ring',
+        printed_name: 'El Anillo Único',
+        printed_type_line: 'Artefacto legendario',
+        printed_text: 'Indestructible.\nCuando El Anillo Único entre al campo de batalla, obtienes protección.',
+      }),
+    } as Response)
+
+    const card = makeMockCard({ name: 'The One Ring', expansionSetCode: 'LTR', cardNumber: '246' })
+    const text = await fetchLocalizedCardText(card, 'es')
+
+    expect(text?.name).toBe('El Anillo Único')
+    expect(text?.typeLine).toBe('Artefacto legendario')
+    expect(text?.rules).toEqual([
+      'Indestructible.',
+      'Cuando El Anillo Único entre al campo de batalla, obtienes protección.',
+    ])
+    expect(getCachedCardText('The One Ring', 'es')?.name).toBe('El Anillo Único')
+  })
+
+  it('fetchLocalizedCardText cae a la búsqueda por nombre si la impresión no existe', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              name: 'Counterspell',
+              printed_name: 'Contromagia',
+              printed_type_line: 'Istantaneo',
+              printed_text: 'Annulla una magia bersaglio.',
+            },
+          ],
+        }),
+      } as Response)
+
+    const card = makeMockCard({ name: 'Counterspell', expansionSetCode: 'TST', cardNumber: '7' })
+    const text = await fetchLocalizedCardText(card, 'it')
+
+    expect(text?.name).toBe('Contromagia')
+    expect(text?.rules).toEqual(['Annulla una magia bersaglio.'])
+  })
+
+  it('fetchLocalizedCardText empareja la cara pedida de una carta de doble cara', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        name: 'Delver of Secrets // Insectile Aberration',
+        card_faces: [
+          { name: 'Delver of Secrets', printed_name: 'Delver de Secretos', printed_type_line: 'Criatura — Humano Hechicero', printed_text: 'Al comienzo...' },
+          { name: 'Insectile Aberration', printed_name: 'Aberración Insectil', printed_type_line: 'Criatura — Insecto', printed_text: 'Vuela.' },
+        ],
+      }),
+    } as Response)
+
+    const card = makeMockCard({ name: 'Insectile Aberration', expansionSetCode: 'ISD', cardNumber: '51' })
+    const text = await fetchLocalizedCardText(card, 'es')
+
+    expect(text?.name).toBe('Aberración Insectil')
+    expect(text?.typeLine).toBe('Criatura — Insecto')
+    expect(text?.rules).toEqual(['Vuela.'])
+  })
+
+  it('fetchLocalizedCardText no pide red en inglés', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    const card = makeMockCard({ name: 'Lightning Bolt' })
+    expect(await fetchLocalizedCardText(card, 'en')).toBeNull()
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
   it('no pide red para nombres-UUID del pool CONSTRUCT sin nombres', async () => {

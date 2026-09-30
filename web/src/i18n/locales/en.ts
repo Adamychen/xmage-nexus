@@ -1222,6 +1222,7 @@ export const en = {
     cardgrid_only_valid: 'Only valid ({count})',
     cardgrid_done: 'Done ({count})',
     card_printings_title: 'Select Edition & Art',
+    card_inspect_no_translation: 'No text in the selected card language — showing the original (English).',
     library_title_blocker: 'Order Blockers (Damage Assignment Order)',
     library_title_surveil: 'Surveil',
     library_title_scry: 'Scry / Order',

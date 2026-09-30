@@ -100,6 +100,10 @@ describe('isBlockingModal', () => {
     const f = base()
     f.construct = {} as never
     expect(isBlockingModal(f)).toBe(true)
+
+    const g = base()
+    g.inspectedCard = { id: 'c1', name: 'The One Ring' } as never
+    expect(isBlockingModal(g)).toBe(true)
   })
 
   it('is true for any general modal feedback prompts like mode and color', () => {

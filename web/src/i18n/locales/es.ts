@@ -1224,6 +1224,7 @@ export const es: TranslationSchema = {
     cardgrid_only_valid: 'Solo válidas ({count})',
     cardgrid_done: 'Hecho ({count})',
     card_printings_title: 'Seleccionar Edición & Arte',
+    card_inspect_no_translation: 'No hay texto en el idioma de carta seleccionado — se muestra el original (inglés).',
     library_title_blocker: 'Ordenar Bloqueadores (Orden de Asignación de Daño)',
     library_title_surveil: 'Vigilar (Surveil)',
     library_title_scry: 'Adivinar (Scry) / Ordenar',

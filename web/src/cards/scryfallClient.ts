@@ -19,7 +19,7 @@ const MAX_MEMORY_ENTRIES = 4000
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const DB_NAME = 'xmage-scryfall-cache'
 const DB_STORE = 'cards'
-const CACHE_VERSION = 'v1|'
+const CACHE_VERSION = 'v2|'
 
 interface Task {
   url: string
@@ -259,11 +259,11 @@ async function idbPut(url: string, value: unknown) {
 
 const CARD_FIELDS = [
   'id', 'object', 'name', 'printed_name', 'lang', 'set', 'collector_number', 'layout',
-  'mana_cost', 'cmc', 'type_line', 'printed_type_line', 'oracle_text', 'keywords',
+  'mana_cost', 'cmc', 'type_line', 'printed_type_line', 'oracle_text', 'printed_text', 'keywords',
   'colors', 'color_identity', 'rarity', 'legalities', 'power', 'toughness', 'loyalty',
 ] as const
 const FACE_FIELDS = [
-  'name', 'printed_name', 'mana_cost', 'type_line', 'printed_type_line', 'oracle_text',
+  'name', 'printed_name', 'mana_cost', 'type_line', 'printed_type_line', 'oracle_text', 'printed_text',
   'colors', 'power', 'toughness', 'loyalty',
 ] as const
 const IMAGE_FIELDS = ['small', 'normal', 'art_crop'] as const

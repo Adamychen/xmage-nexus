@@ -7,8 +7,18 @@ import { useState, useEffect } from 'react'
 
 const memoryCache = new Map<string, string>()
 const inflight = new Map<string, Promise<string | null>>()
+const textMemoryCache = new Map<string, LocalizedCardText>()
+const textInflight = new Map<string, Promise<LocalizedCardText | null>>()
 
 const STORAGE_PREFIX = 'nexus_loc_card_'
+const TEXT_STORAGE_PREFIX = 'nexus_loc_text_'
+
+/** Texto impreso localizado de una carta (nombre, tipo y reglas) para la inspección. */
+export interface LocalizedCardText {
+  name?: string
+  typeLine?: string
+  rules?: string[]
+}
 
 export function getEffectiveCardLang(): string {
   const cardLang = getCardLanguage()
@@ -188,7 +198,142 @@ export function useLocalizedCardName(card: LocalizableCard): { displayName: stri
   return { displayName, originalName }
 }
 
+export function getCachedCardText(englishName: string, lang: string = getEffectiveCardLang()): LocalizedCardText | null {
+  if (!englishName || lang === 'en') return null
+  const cacheKey = `${lang}:${englishName.trim().toLowerCase()}`
+  const hit = textMemoryCache.get(cacheKey)
+  if (hit) return hit
+  try {
+    const stored = localStorage.getItem(`${TEXT_STORAGE_PREFIX}${cacheKey}`)
+    if (stored) {
+      const parsed = JSON.parse(stored) as LocalizedCardText
+      textMemoryCache.set(cacheKey, parsed)
+      return parsed
+    }
+  } catch {}
+  return null
+}
+
+export function setCachedCardText(englishName: string, text: LocalizedCardText, lang: string = getEffectiveCardLang()): void {
+  if (!englishName || lang === 'en') return
+  if (!text.name && !text.typeLine && !text.rules?.length) return
+  const cacheKey = `${lang}:${englishName.trim().toLowerCase()}`
+  textMemoryCache.set(cacheKey, text)
+  try {
+    localStorage.setItem(`${TEXT_STORAGE_PREFIX}${cacheKey}`, JSON.stringify(text))
+  } catch {}
+}
+
+function localizedTextFromScryfall(data: any, faceName: string): LocalizedCardText | null {
+  if (!data) return null
+  const faces: any[] | undefined = data.card_faces
+  const match = faces?.find((f: any) => (f?.name ?? '').toLowerCase() === faceName.toLowerCase())
+  const src = match ?? (faces?.length ? null : data)
+  if (!src) return null
+  const name = typeof src.printed_name === 'string' ? src.printed_name : undefined
+  const typeLine = typeof src.printed_type_line === 'string' ? src.printed_type_line : undefined
+  const rawText = typeof src.printed_text === 'string' ? src.printed_text : typeof src.oracle_text === 'string' ? src.oracle_text : ''
+  const rules = rawText.split('\n').map((line: string) => line.trim()).filter(Boolean)
+  if (!name && !typeLine && rules.length === 0) return null
+  return { name, typeLine, rules: rules.length > 0 ? rules : undefined }
+}
+
+export async function fetchLocalizedCardText(
+  card: LocalizableCard,
+  lang: string = getEffectiveCardLang(),
+): Promise<LocalizedCardText | null> {
+  const baseName = extractCardName(card)
+  if (!baseName || lang === 'en') return null
+  if (/^(?:ability|habilidad)$/i.test(baseName.trim())) return null
+  if (isUuidLikeCardName(baseName)) return null
+
+  const cleanName = baseName.trim()
+  const cacheKey = `${lang}:${cleanName.toLowerCase()}`
+
+  const cached = getCachedCardText(cleanName, lang)
+  if (cached) return cached
+  if (textInflight.has(cacheKey)) {
+    return textInflight.get(cacheKey)!
+  }
+
+  const promise = (async () => {
+    try {
+      const isAb = typeof (card as any).mageObjectType === 'string' && isAbilityCard(card as CardView)
+      const src = isAb ? ((card as any).sourceCard || (card as any).ability) : card
+      const set = (src as any)?.setCode || (src as any)?.expansionSetCode
+      const num = (src as any)?.cardNumber
+
+      if (set && num && cleanName === `${set} ${num}`) return null
+
+      if (set && num && num !== '0' && set !== 'XMAGE') {
+        try {
+          const data = await scryfallJson<any>(localizedPrintingJsonUrl(set, num, lang), { persist: true })
+          const picked = localizedTextFromScryfall(data, cleanName)
+          if (picked) {
+            setCachedCardText(cleanName, picked, lang)
+            return picked
+          }
+        } catch {}
+      }
+
+      const escaped = cleanName.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&')
+      const q = encodeURIComponent(`name:/^${escaped}$/ lang:${lang}`)
+      const res = await scryfallFetch(`https://api.scryfall.com/cards/search?q=${q}`)
+      if (!res.ok) return null
+      const data = await res.json()
+      const first = data.data && data.data[0]
+      const picked = first ? localizedTextFromScryfall(first, cleanName) : null
+      if (picked) {
+        setCachedCardText(cleanName, picked, lang)
+        return picked
+      }
+      return null
+    } catch {
+      return null
+    }
+  })().finally(() => {
+    textInflight.delete(cacheKey)
+  })
+
+  textInflight.set(cacheKey, promise)
+  return promise
+}
+
+export function useLocalizedCardText(card: LocalizableCard | null | undefined): { text: LocalizedCardText | null; pending: boolean } {
+  const originalName = card ? extractCardName(card) : ''
+  const lang = getEffectiveCardLang()
+  const [state, setState] = useState<{ text: LocalizedCardText | null; pending: boolean }>(() => {
+    if (!card || !originalName || lang === 'en') return { text: null, pending: false }
+    const cached = getCachedCardText(originalName, lang)
+    return { text: cached, pending: !cached }
+  })
+
+  useEffect(() => {
+    if (!card || !originalName || lang === 'en') {
+      setState({ text: null, pending: false })
+      return
+    }
+    const cached = getCachedCardText(originalName, lang)
+    if (cached) {
+      setState({ text: cached, pending: false })
+      return
+    }
+    let cancelled = false
+    setState({ text: null, pending: true })
+    fetchLocalizedCardText(card, lang).then((text) => {
+      if (!cancelled) setState({ text, pending: false })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [card, originalName, lang])
+
+  return state
+}
+
 export function resetCardLocalizationCacheForTest(): void {
   memoryCache.clear()
   inflight.clear()
+  textMemoryCache.clear()
+  textInflight.clear()
 }

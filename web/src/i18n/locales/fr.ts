@@ -1224,6 +1224,7 @@ export const fr: TranslationSchema = {
     cardgrid_only_valid: 'Cartes valides ({count})',
     cardgrid_done: 'Terminé ({count})',
     card_printings_title: 'Choisir l’édition & l’illustration',
+    card_inspect_no_translation: 'Aucun texte dans la langue de carte choisie — affichage de l\'original (anglais).',
     library_title_blocker: 'Ordonner les bloqueurs (Ordre d’assignation des blessures)',
     library_title_surveil: 'Surveiller',
     library_title_scry: 'Regard / Ordonner',

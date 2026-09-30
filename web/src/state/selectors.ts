@@ -47,6 +47,7 @@ export function isBlockingModal(s: AppState): boolean {
   if (s.rollbackVote && !s.rollbackVote.hidden) return true
   if (s.sideboardScreen) return true
   if (s.viewer) return true
+  if (s.inspectedCard) return true
   if (s.draft) return true
   if (s.construct) return true
   const f = s.feedback as FeedbackPrompt | null

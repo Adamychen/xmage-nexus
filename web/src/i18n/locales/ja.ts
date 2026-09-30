@@ -1229,6 +1229,7 @@ export const ja: TranslationSchema = {
     cardgrid_only_valid: '有効なカードのみ（{count}）',
     cardgrid_done: '完了（{count}）',
     card_printings_title: 'エディションとアートを選択',
+    card_inspect_no_translation: '選択したカード言語のテキストがないため、原文（英語）を表示しています。',
     library_title_blocker: 'ブロッカーの順序（ダメージ割り振り順）',
     library_title_surveil: '諜報',
     library_title_scry: '占術／順序',

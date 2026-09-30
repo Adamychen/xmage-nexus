@@ -3,6 +3,7 @@ import { act, StrictMode } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
+import { getState, setState } from '../state/store'
 import { perfClear, perfEntries } from '../system/perfProbe'
 
 vi.mock('./cardPositionRegistry', () => ({
@@ -411,6 +412,33 @@ describe('CardSlot acuse optimista (plan4 §5.4)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('CardSlot right-click inspect', () => {
+  afterEach(() => {
+    act(() => setState({ inspectedCard: null }))
+  })
+
+  it('opens the inspector with the card on right click', () => {
+    const card = { id: 'ring1', name: 'The One Ring', cardTypes: ['Artifact'] } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    fireEvent.contextMenu(container.querySelector('.card-slot')!)
+    expect(getState().inspectedCard).toBe(card)
+  })
+
+  it('does not open the inspector for a face-down card with no known name', () => {
+    const card = { id: 'fd1', name: '', faceDown: true, cardTypes: ['Creature'] } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} faceDown />)
+    fireEvent.contextMenu(container.querySelector('.card-slot')!)
+    expect(getState().inspectedCard).toBeNull()
+  })
+
+  it('opens the inspector for an own face-down card the engine reveals', () => {
+    const card = { id: 'fd2', name: 'Morph: Den Protector', displayName: 'Morph: Den Protector', faceDown: true, cardTypes: ['Creature'] } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} faceDown />)
+    fireEvent.contextMenu(container.querySelector('.card-slot')!)
+    expect(getState().inspectedCard).toBe(card)
   })
 })
 

@@ -1229,6 +1229,7 @@ export const zhs: TranslationSchema = {
     cardgrid_only_valid: '仅有效牌（{count}）',
     cardgrid_done: '完成（{count}）',
     card_printings_title: '选择版本与插画',
+    card_inspect_no_translation: '所选卡牌语言暂无文本 — 显示原文（英文）。',
     library_title_blocker: '排列阻挡者（伤害分配顺序）',
     library_title_surveil: '探查',
     library_title_scry: '占卜／排序',

@@ -1,0 +1,149 @@
+.card-inspector-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4h);
+  background: rgb(var(--ink-rgb) / 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.card-inspector {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-4);
+  align-items: stretch;
+  max-width: min(1120px, 96vw);
+  max-height: 92vh;
+  padding: var(--sp-4);
+  border-radius: var(--r-mid);
+  background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-1) 100%);
+  border: 1px solid rgb(var(--gold-rgb) / 0.45);
+  box-shadow: 0 28px 70px var(--shade-5);
+  animation: cardInspectorIn 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardInspectorIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-inspector { animation: none; }
+}
+
+.card-inspector-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.card-inspector-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.card-inspector-img {
+  display: block;
+  max-height: min(84vh, 680px);
+  max-width: 46vw;
+  width: auto;
+  height: auto;
+  border-radius: var(--r-base);
+  border: 1px solid rgb(var(--gold-rgb) / 0.35);
+  box-shadow: 0 12px 34px var(--shade-4);
+}
+
+.card-inspector-noart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 320px;
+  height: 448px;
+  padding: var(--sp-4);
+  box-sizing: border-box;
+  border-radius: var(--r-base);
+  border: 1px dashed var(--veil-4);
+  color: var(--fg-2);
+  font-family: var(--font-display);
+  text-align: center;
+}
+
+.card-inspector-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2h);
+  width: min(360px, 32vw);
+  min-height: 0;
+  padding-right: var(--sp-4);
+  overflow-y: auto;
+  color: var(--fg-1);
+}
+
+.card-inspector-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2h);
+  padding-bottom: var(--sp-1h);
+  border-bottom: 1px solid var(--veil-4);
+}
+
+.card-inspector-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--fg-hi);
+}
+
+.card-inspector-type {
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+
+.card-inspector-rules {
+  flex: 1;
+  padding: var(--sp-2h);
+  border-radius: var(--r-sm);
+  background: var(--shade-1);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.card-inspector-note {
+  font-size: var(--fs-2xs);
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.card-inspector-flip {
+  margin-top: auto;
+  font-size: var(--fs-2xs);
+  color: var(--gold-300);
+  opacity: 0.85;
+}
+
+@media (max-width: 760px) {
+  .card-inspector {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .card-inspector-img {
+    max-height: 52vh;
+    max-width: 100%;
+  }
+
+  .card-inspector-text {
+    width: auto;
+    padding-right: 0;
+    overflow: visible;
+  }
+}

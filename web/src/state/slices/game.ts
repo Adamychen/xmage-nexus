@@ -1,4 +1,4 @@
-import type { DeckCardEntry, DeckJson, GameEndInfo, GameView } from '../../net/types'
+import type { CardView, DeckCardEntry, DeckJson, GameEndInfo, GameView, PermanentView } from '../../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
 import type { PhaseStops } from '../../net/commands'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
@@ -91,6 +91,7 @@ export interface GameSlice {
   rollbackVote: RollbackVote | null
   viewer: CardViewerState | null
   playerMenu: PlayerMenuState | null
+  inspectedCard: CardView | PermanentView | null
   phaseStops: PhaseStops
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
@@ -121,6 +122,7 @@ export const initialGame: GameSlice = {
   rollbackVote: null,
   viewer: null,
   playerMenu: null,
+  inspectedCard: null,
   dungeonProgress: {},
   turnRecap: null,
   enteredThisTurn: {},

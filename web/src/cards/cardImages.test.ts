@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName } from './cardImages'
+import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName, largeImageUrl } from './cardImages'
 import { resetCardArtPreferences, setCardArtPreference } from './artPreferences'
 import type { CardView } from '../net/types'
 import { setScryfallPacing } from './scryfallClient'
@@ -449,6 +449,18 @@ describe('hasVigilance', () => {
     expect(hasVigilance(null)).toBe(false)
     expect(hasVigilance(undefined)).toBe(false)
     expect(hasVigilance({} as CardView)).toBe(false)
+  })
+})
+
+describe('largeImageUrl', () => {
+  it('upgrades the normal and small CDN paths to large', () => {
+    expect(largeImageUrl('https://cards.scryfall.io/normal/front/a/b/c.jpg?1')).toBe('https://cards.scryfall.io/large/front/a/b/c.jpg?1')
+    expect(largeImageUrl('https://cards.scryfall.io/small/front/a/b/c.jpg')).toBe('https://cards.scryfall.io/large/front/a/b/c.jpg')
+  })
+
+  it('leaves other sizes and null untouched', () => {
+    expect(largeImageUrl('https://cards.scryfall.io/art_crop/front/a/b/c.jpg')).toBe('https://cards.scryfall.io/art_crop/front/a/b/c.jpg')
+    expect(largeImageUrl(null)).toBeNull()
   })
 })
 

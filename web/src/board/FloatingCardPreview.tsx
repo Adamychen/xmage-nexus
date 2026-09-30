@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { cardName, getSourceCardName, hiddenFaceDownName, isAbilityCard } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
+import { activeCardFace } from './cardFaces'
 import { extractKeywordsFromCard } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
@@ -98,45 +99,10 @@ export default function FloatingCardPreview({
 
   const hiddenName = card ? hiddenFaceDownName(card) : null
 
-  const activeCard: CardView | PermanentView | null = useMemo(() => {
-    if (!card) return null
-    if (hiddenName) {
-      return {
-        ...card,
-        name: hiddenName,
-        displayName: hiddenName,
-        faceDown: false,
-        isToken: false,
-        expansionSetCode: '',
-        cardNumber: '0',
-        imageFileName: '',
-        imageNumber: 0,
-      } as unknown as CardView | PermanentView
-    }
-    const isTransformedOnField = (card as PermanentView).transformed === true
-    const shouldShowBack = isTransformedOnField ? !showBackFace : showBackFace
-
-    if (!shouldShowBack) {
-      return { ...card, isFrontFace: true, isSecondCardFace: false } as unknown as CardView | PermanentView
-    }
-    if (card.secondCardFace) {
-      return {
-        ...card.secondCardFace,
-        isSecondCardFace: true,
-        expansionSetCode: card.secondCardFace.expansionSetCode || card.expansionSetCode,
-        cardNumber: card.secondCardFace.cardNumber || card.cardNumber,
-      } as unknown as CardView | PermanentView
-    }
-    if (card.alternateName) {
-      return {
-        ...card,
-        name: card.alternateName,
-        displayName: card.alternateName,
-        isSecondCardFace: true,
-      } as unknown as CardView | PermanentView
-    }
-    return { ...card, isSecondCardFace: true } as unknown as CardView | PermanentView
-  }, [card, showBackFace, hiddenName])
+  const activeCard: CardView | PermanentView | null = useMemo(
+    () => (card ? activeCardFace(card, showBackFace) : null),
+    [card, showBackFace]
+  )
 
   const imgUrl = useCardImageUrl(activeCard, !((!inModal && modalOpen) || !activeCard || activeCard.faceDown))
 

@@ -219,6 +219,12 @@ export function peekImageUrl(key: string | null): string | null {
   return memory.get(key) ?? null
 }
 
+/** Variante grande (672×936) de una URL CDN de Scryfall, para la inspección a tamaño completo. */
+export function largeImageUrl(url: string | null): string | null {
+  if (!url) return null
+  return url.replace(/\/(?:normal|small)\//, '/large/')
+}
+
 function scryfallKey(setCode: string, cardNumber: string): string | null {
   if (!setCode || !cardNumber || cardNumber === '0') return null
   return `${setCode}/${cardNumber}`

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
-import { cardName } from '../cards/cardImages'
+import { cardName, hiddenFaceDownName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
@@ -16,7 +16,7 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
-import { useSettings, useStore } from '../state/selectors'
+import { setState, useSettings, useStore } from '../state/store'
 import { getSleeveDef } from '../appearance/sleeves'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
@@ -272,6 +272,12 @@ export default function CardSlot({
     onClick()
   } : undefined
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (isFaceDownCard && !hiddenFaceDownName(card as CardView)) return
+    setState({ inspectedCard: card })
+  }
+
   const designationTexts = (d: Designation): { label: string; title: string } => {
     if (d === 'paired' && pairPartner) {
       return {
@@ -336,6 +342,7 @@ export default function CardSlot({
       aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}
       onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
+      onContextMenu={handleContextMenu}
       style={style}
     >
       {showBack ? (

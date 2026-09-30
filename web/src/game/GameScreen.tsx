@@ -14,6 +14,7 @@ import RollbackDialog from './RollbackDialog'
 import RollbackVoteDialog from './RollbackVoteDialog'
 import LimitedDeckDialog from './LimitedDeckDialog'
 import PlayerContextMenu from './PlayerContextMenu'
+import CardInspector from '../board/CardInspector'
 import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
@@ -482,6 +483,7 @@ export default function GameScreen() {
           <RollbackVoteDialog />
           <LimitedDeckDialog />
           <PlayerContextMenu />
+          <CardInspector />
           <InfoWindows
             playableIds={playableIdSet}
             onPlayCard={onPlayableClick}

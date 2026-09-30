@@ -1224,6 +1224,7 @@ export const de: TranslationSchema = {
     cardgrid_only_valid: 'Nur gültige ({count})',
     cardgrid_done: 'Fertig ({count})',
     card_printings_title: 'Edition & Artwork wählen',
+    card_inspect_no_translation: 'Kein Text in der gewählten Kartensprache — Original (Englisch) wird angezeigt.',
     library_title_blocker: 'Blocker anordnen (Schadenszuordnungsreihenfolge)',
     library_title_surveil: 'Überwachen',
     library_title_scry: 'Hellsicht / Anordnen',

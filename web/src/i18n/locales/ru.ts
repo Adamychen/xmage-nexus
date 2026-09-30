@@ -1224,6 +1224,7 @@ export const ru: TranslationSchema = {
     cardgrid_only_valid: 'Только допустимые ({count})',
     cardgrid_done: 'Готово ({count})',
     card_printings_title: 'Выберите издание и арт',
+    card_inspect_no_translation: 'Нет текста на выбранном языке карты — показан оригинал (английский).',
     library_title_blocker: 'Порядок блокирующих (Порядок назначения урона)',
     library_title_surveil: 'Слежка',
     library_title_scry: 'Предвидение / Порядок',
