@@ -49,20 +49,40 @@
         "demoTitle": "Así se juega",
         "demoSubtitle": "Sin descargas ni cuentas: abre la web y en segundos estás en una mesa. Clips de partidas reales sobre el motor de XMage.",
         "demoSteps": [
-          { "title": "Entra sin instalar nada", "desc": "Elige servidor, pon tu nombre y crea una mesa contra la IA o contra otros jugadores. Todo en el navegador.", "gif": "login-and-create-table", "alt": "Lobby de XMage Nexus creando una mesa" },
-          { "title": "Lanza hechizos con reglas completas", "desc": "Maná, targeting visual, X-costs y elecciones modales: el motor de XMage valida cada jugada.", "gif": "cast-spell", "alt": "Lanzamiento de un hechizo con pago de maná y targeting" },
-          { "title": "Combate con impacto", "desc": "Declara atacantes y bloqueadores: los golpes aterrizan en orden con VFX, sonido y vidas bajando.", "gif": "combat", "alt": "Combate con atacantes y bloqueadores" }
+          { "title": "Entra sin instalar nada", "desc": "Elige servidor, pon tu nombre y crea una mesa contra la IA o contra otros jugadores. Todo en el navegador.", "clip": "login-and-create-table", "alt": "Lobby de XMage Nexus creando una mesa" },
+          { "title": "Lanza hechizos con reglas completas", "desc": "Maná, targeting visual, X-costs y elecciones modales: el motor de XMage valida cada jugada.", "clip": "cast-spell", "alt": "Lanzamiento de un hechizo con pago de maná y targeting" },
+          { "title": "Combate con impacto", "desc": "Declara atacantes y bloqueadores: los golpes aterrizan en orden con VFX, sonido y vidas bajando.", "clip": "combat", "alt": "Combate con atacantes y bloqueadores" }
+        ],
+        "whatIsTitle": "¿Qué es XMage?",
+        "whatIsSubtitle": "XMage Nexus se apoya en XMage, el motor de reglas libre para Magic que la comunidad mantiene desde 2011.",
+        "whatIsCards": [
+          { "title": "Gratis y sin ánimo de lucro", "desc": "Código abierto, sin cuentas premium ni anuncios; lo mantiene la comunidad." },
+          { "title": "Reglas completas de verdad", "desc": "Más de 30.000 cartas con reglas aplicadas al detalle: multiplayer, Commander, Draft, Sealed y torneos." },
+          { "title": "Ahora también en tu navegador", "desc": "XMage Nexus es un cliente nuevo sobre ese motor: entras con un nombre y juegas en segundos." }
+        ],
+        "whatIsLinks": [
+          { "label": "Web oficial de XMage", "url": "https://xmage.today" },
+          { "label": "Discord", "url": "https://discord.gg/Pqf42yn" },
+          { "label": "r/XMage", "url": "https://www.reddit.com/r/XMage/" }
         ],
         "featuresTitle": "Todo lo que esperas de un cliente moderno",
         "featuresSubtitle": "Experiencia moderna y pulida sobre las reglas de XMage.",
         "features": [
-          { "icon": "users", "title": "Lobby en vivo", "desc": "Mesas, jugadores, filtros y chat de sala y partida en tiempo real." },
-          { "icon": "board", "title": "Tablero HD", "desc": "Mano, battlefield con arte en alta resolución, stack, cementerio y exilio." },
+          { "icon": "swords", "title": "Lobby en vivo", "desc": "Mesas, jugadores, filtros y chat de sala y partida en tiempo real." },
+          { "icon": "grid", "title": "Tablero HD", "desc": "Mano, battlefield con arte en alta resolución, stack, cementerio y exilio." },
           { "icon": "target", "title": "Interacción completa", "desc": "Prioridad, targeting visual animado, pago de maná, combate multibloqueo y hechizos complejos." },
-          { "icon": "deck", "title": "Deck Builder", "desc": "Constructor in-app con Scryfall e import/export en texto, Arena y .dck." },
+          { "icon": "layers", "title": "Deck Builder", "desc": "Constructor in-app con Scryfall e import/export en texto, Arena y .dck." },
           { "icon": "trophy", "title": "Todos los formatos", "desc": "Commander, Draft y Sealed de 8 jugadores, torneos Suizo/Eliminación y repeticiones." },
           { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido, VFX y deck tracker integrado." }
         ],
+        "desktopBridgeTitle": "¿Ya juegas en XMage de escritorio?",
+        "desktopBridgeDesc": "El mismo motor, las mismas mesas y tus decks, sin instalar nada: se abre en el navegador.",
+        "desktopBridgeBullets": [
+          "Sin Java ni descargas: entra con un nombre y juega",
+          "Las partidas sobreviven a desconexiones, reinicios del proxy y cortes del servidor",
+          "Targeting visual, VFX, audio, deck tracker y 9 idiomas"
+        ],
+        "desktopBridgeLink": "Ver paridad de funciones →",
         "formatsTitle": "Formatos y modos",
         "formats": ["Commander", "Draft & Sealed", "Torneos Suizo/SE", "Bo3 + Sideboard", "Replay viewer", "1v1 contra IA"],
         "downloadTitle": "Descarga XMage Nexus",
@@ -72,7 +92,17 @@
         "downloadPlay": "Jugar en el navegador →",
         "downloadPlaySub": "Probar sin instalar",
         "recommended": "Recomendado",
-        "roadmapTitle": "Roadmap",
+        "milestonesTitle": "Hitos recientes",
+        "milestonesSubtitle": "Lo último publicado; el detalle técnico vive en el dashboard de estado.",
+        "milestonesSeeAll": "Dashboard técnico →",
+        "milestones": [
+          { "date": "2026-09", "title": "Partidas a prueba de desconexiones", "desc": "Cae tu conexión, se reinicia el proxy o el servidor: la partida sigue esperándote y recupera los frames perdidos." },
+          { "date": "2026-09", "title": "Tablero compacto y combate con impacto", "desc": "Cartas estilo Arena con arte recortado, tap a 45° y golpes de combate que aterrizan en orden con VFX y sonido." },
+          { "date": "2026-09", "title": "Formatos avanzados", "desc": "Commander pod, Draft y Sealed de 8 jugadores, torneos Suizo y Eliminación, y visor de repeticiones." },
+          { "date": "2026-09", "title": "Escritorio para Windows, macOS y Linux", "desc": "Launcher Tauri con servidor y proxy incluidos y actualizaciones automáticas firmadas." },
+          { "date": "2026-08", "title": "Deck Builder completo", "desc": "Búsqueda Scryfall con sintaxis avanzada, import/export en texto, Arena y .dck, curva de maná y estadísticas." },
+          { "date": "2026-08", "title": "Interacción 1v1 completa", "desc": "Targeting visual, pago de maná, X-costs, modales, sideboard Bo3, relojes y paradas de fase." }
+        ],
         "statusTeaserTitle": "Estado del proyecto",
         "statusTeaserDesc": "Tests, cobertura, anti-drift y matriz de paridad actualizados automáticamente.",
         "seeStatus": "Ver dashboard técnico",
@@ -109,20 +139,40 @@
         "demoTitle": "See it in action",
         "demoSubtitle": "No downloads, no account: open the page and you're at a table in seconds. Real gameplay clips on the XMage engine.",
         "demoSteps": [
-          { "title": "Join without installing", "desc": "Pick a server, type a name and create a table against the AI or other players. All in your browser.", "gif": "login-and-create-table", "alt": "XMage Nexus lobby creating a table" },
-          { "title": "Cast spells with full rules", "desc": "Mana, visual targeting, X-costs and modal choices: the XMage engine validates every play.", "gif": "cast-spell", "alt": "Casting a spell with mana payment and targeting" },
-          { "title": "Combat with impact", "desc": "Declare attackers and blockers: strikes land in order with VFX, sound and lives ticking down.", "gif": "combat", "alt": "Combat with attackers and blockers" }
+          { "title": "Join without installing", "desc": "Pick a server, type a name and create a table against the AI or other players. All in your browser.", "clip": "login-and-create-table", "alt": "XMage Nexus lobby creating a table" },
+          { "title": "Cast spells with full rules", "desc": "Mana, visual targeting, X-costs and modal choices: the XMage engine validates every play.", "clip": "cast-spell", "alt": "Casting a spell with mana payment and targeting" },
+          { "title": "Combat with impact", "desc": "Declare attackers and blockers: strikes land in order with VFX, sound and lives ticking down.", "clip": "combat", "alt": "Combat with attackers and blockers" }
+        ],
+        "whatIsTitle": "What is XMage?",
+        "whatIsSubtitle": "XMage Nexus runs on XMage, the free rules engine for Magic that the community has maintained since 2011.",
+        "whatIsCards": [
+          { "title": "Free and non-profit", "desc": "Open source, no premium accounts and no ads; the community keeps it running." },
+          { "title": "Truly complete rules", "desc": "Over 30,000 cards with rules enforced in full: multiplayer, Commander, Draft, Sealed and tournaments." },
+          { "title": "Now in your browser too", "desc": "XMage Nexus is a new client on top of that engine: type a name and you are playing in seconds." }
+        ],
+        "whatIsLinks": [
+          { "label": "Official XMage site", "url": "https://xmage.today" },
+          { "label": "Discord", "url": "https://discord.gg/Pqf42yn" },
+          { "label": "r/XMage", "url": "https://www.reddit.com/r/XMage/" }
         ],
         "featuresTitle": "Everything you expect from a modern client",
         "featuresSubtitle": "A polished, modern experience on XMage's rules.",
         "features": [
-          { "icon": "users", "title": "Live lobby", "desc": "Tables, players, filters and room/match chat in real time." },
-          { "icon": "board", "title": "HD battlefield", "desc": "Hand, high-resolution battlefield art, stack, graveyard and exile." },
+          { "icon": "swords", "title": "Live lobby", "desc": "Tables, players, filters and room/match chat in real time." },
+          { "icon": "grid", "title": "HD battlefield", "desc": "Hand, high-resolution battlefield art, stack, graveyard and exile." },
           { "icon": "target", "title": "Full interaction", "desc": "Priority, animated visual targeting, mana payment, multi-block combat and complex spells." },
-          { "icon": "deck", "title": "Deck Builder", "desc": "In-app builder with Scryfall and text, Arena and .dck import/export." },
+          { "icon": "layers", "title": "Deck Builder", "desc": "In-app builder with Scryfall and text, Arena and .dck import/export." },
           { "icon": "trophy", "title": "All formats", "desc": "Commander, 8-player Draft & Sealed, Swiss/Single-Elim tournaments and replays." },
           { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine, VFX and an integrated deck tracker." }
         ],
+        "desktopBridgeTitle": "Already playing desktop XMage?",
+        "desktopBridgeDesc": "The same engine, the same tables and your decks, with nothing to install: it opens in the browser.",
+        "desktopBridgeBullets": [
+          "No Java, no downloads: type a name and play",
+          "Games survive dropped connections, proxy restarts and server outages",
+          "Visual targeting, VFX, audio, deck tracker and 9 languages"
+        ],
+        "desktopBridgeLink": "See feature parity →",
         "formatsTitle": "Formats & modes",
         "formats": ["Commander", "Draft & Sealed", "Swiss/SE Tournaments", "Bo3 + Sideboard", "Replay viewer", "1v1 vs AI"],
         "downloadTitle": "Download XMage Nexus",
@@ -132,7 +182,17 @@
         "downloadPlay": "Play in your browser →",
         "downloadPlaySub": "Try without installing",
         "recommended": "Recommended",
-        "roadmapTitle": "Roadmap",
+        "milestonesTitle": "Recent milestones",
+        "milestonesSubtitle": "The latest shipped work; technical detail lives on the status dashboard.",
+        "milestonesSeeAll": "Technical dashboard →",
+        "milestones": [
+          { "date": "2026-09", "title": "Disconnect-proof games", "desc": "Your connection drops, the proxy restarts or the server goes down: the game waits for you and replays the frames you missed." },
+          { "date": "2026-09", "title": "Compact board and striking combat", "desc": "Arena-style art-crop cards, 45° tap and combat strikes that land in order with VFX and sound." },
+          { "date": "2026-09", "title": "Advanced formats", "desc": "Commander pod, 8-player Draft & Sealed, Swiss and Single-Elim tournaments, and a replay viewer." },
+          { "date": "2026-09", "title": "Desktop for Windows, macOS and Linux", "desc": "Tauri launcher with server and proxy included, plus signed auto-updates." },
+          { "date": "2026-08", "title": "Full Deck Builder", "desc": "Scryfall search with advanced syntax, text/Arena/.dck import and export, mana curve and stats." },
+          { "date": "2026-08", "title": "Complete 1v1 interaction", "desc": "Visual targeting, mana payment, X-costs, modals, Bo3 sideboard, clocks and phase stops." }
+        ],
         "statusTeaserTitle": "Project status",
         "statusTeaserDesc": "Tests, coverage, anti-drift and the parity matrix, updated automatically.",
         "seeStatus": "View technical dashboard",

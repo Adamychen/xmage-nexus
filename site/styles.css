@@ -112,6 +112,7 @@ img { max-width: 100%; }
 }
 .btn-ghost:hover { border-color: var(--accent); }
 .btn-sm { padding: 9px 16px; font-size: 14px; }
+.btn-lg { padding: 15px 28px; font-size: 17px; border-radius: 14px; }
 .hero-play-note { margin: 14px 0 0; font-size: 13px; }
 
 /* ------------------------------ Hero ----------------------------- */
@@ -220,6 +221,51 @@ img { max-width: 100%; }
 .section { max-width: 1140px; margin: 0 auto; padding: 64px 26px; }
 .section-head { max-width: 720px; margin-bottom: 28px; }
 .section-head p { margin: 6px 0 0; font-size: 16px; }
+
+/* --------------------------- What is XMage ------------------------ */
+.whatis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.whatis-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.whatis-card h3 { margin: 0 0 6px; font-size: 17px; }
+.whatis-card p { margin: 0; font-size: 14px; }
+.links-row { align-items: center; }
+a.chip { color: var(--text); transition: border-color 0.15s ease, transform 0.15s ease; }
+a.chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+/* ------------------------- Desktop bridge band -------------------- */
+.bridge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: linear-gradient(180deg, rgba(108, 140, 255, 0.1), rgba(138, 92, 246, 0.06));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 8px;
+}
+.bridge-copy { max-width: 640px; }
+.bridge-copy h2 { margin: 0 0 8px; }
+.bridge-copy p { margin: 0; font-size: 15px; }
+.bridge-bullets {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.bridge-bullets li { display: flex; align-items: center; gap: 10px; }
+.bridge-bullets svg { width: 15px; height: 15px; color: var(--good); flex: none; }
 
 /* ------------------------------ Demo ----------------------------- */
 .demo-grid {
@@ -345,32 +391,36 @@ img { max-width: 100%; }
   padding: 3px 9px;
 }
 
-.timeline { list-style: none; margin: 0; padding: 0 0 0 8px; position: relative; }
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 12px;
-  top: 6px;
-  bottom: 6px;
-  width: 2px;
-  background: var(--border);
+.milestones {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
-.tl-item { position: relative; padding: 0 0 24px 40px; }
-.tl-marker {
-  position: absolute;
-  left: 5px;
-  top: 4px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--bg);
+.milestone {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
 }
-.tl-item.done .tl-marker { border-color: var(--good); background: var(--good); box-shadow: 0 0 12px rgba(70, 211, 154, 0.6); }
-.tl-item.pending .tl-marker { border-color: var(--warn); }
-.tl-title { font-weight: 600; }
-.tl-desc { margin: 4px 0; font-size: 14px; }
-.tl-date { font-size: 12px; }
+.milestone-date {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  background: rgba(255, 215, 0, 0.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-top: 2px;
+}
+.milestone-body h3 { margin: 0 0 4px; font-size: 16px; }
+.milestone-body p { margin: 0; font-size: 13.5px; }
 
 .status-teaser {
   display: flex;
@@ -492,10 +542,14 @@ td.center, th.center { text-align: center; }
 /* --------------------------- Responsive -------------------------- */
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-art { height: 300px; order: -1; }
+  .hero { padding: 26px 26px 60px; }
+  .hero-art { height: 190px; order: -1; }
+  .gcard { width: 122px; }
+  .hero-logo { width: 64px; height: 64px; border-radius: 16px; bottom: -10px; }
   .nav-links { display: none; }
   .footer { grid-template-columns: 1fr; }
   .status-teaser { flex-direction: column; align-items: flex-start; }
+  .bridge { align-items: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

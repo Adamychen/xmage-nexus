@@ -7,18 +7,20 @@
   var OFFICIAL_LABEL = { yes: "✅ Yes", no: "❌ No", partial: "🟡 Partial" };
 
   var ICONS = {
-    users:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    board:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
+    swords:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>',
+    grid:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
     target:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',
-    deck:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+    layers:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg>',
     trophy:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>',
     palette:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="8" r="1.2"/><circle cx="16" cy="10" r="1.2"/><circle cx="15" cy="15" r="1.2"/><path d="M12 21a9 9 0 0 0 0-18"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></svg>',
+    check:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
   };
 
   var DATA = null;
@@ -133,20 +135,14 @@
     (t.demoSteps || []).forEach(function (step, i) {
       var card = el("figure", "demo-card");
       var media = el("div", "demo-media");
-      var pic = el("picture");
-      if (step.gif) {
-        var source = el("source");
-        source.srcset = "./assets/demo/" + step.gif + ".webp";
-        source.type = "image/webp";
-        pic.appendChild(source);
+      if (step.clip) {
         var img = el("img");
-        img.src = "./assets/demo/" + step.gif + ".gif";
+        img.src = "./assets/demo/" + step.clip + ".webp";
         img.alt = step.alt || "";
         img.loading = "lazy";
         img.decoding = "async";
-        pic.appendChild(img);
+        media.appendChild(img);
       }
-      media.appendChild(pic);
       card.appendChild(media);
       var cap = el("figcaption");
       var head = el("h3");
@@ -161,6 +157,50 @@
     });
   }
 
+  function renderWhatIs(t) {
+    setText("whatis-title", t.whatIsTitle);
+    setText("whatis-sub", t.whatIsSubtitle);
+    var grid = document.getElementById("whatis-grid");
+    if (grid) {
+      grid.innerHTML = "";
+      (t.whatIsCards || []).forEach(function (c) {
+        var card = el("div", "whatis-card");
+        card.appendChild(el("h3", null, esc(c.title)));
+        card.appendChild(el("p", "muted", esc(c.desc)));
+        grid.appendChild(card);
+      });
+    }
+    var row = document.getElementById("whatis-links");
+    if (row) {
+      row.innerHTML = "";
+      (t.whatIsLinks || []).forEach(function (l) {
+        var a = el("a", "chip");
+        a.href = l.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = l.label;
+        row.appendChild(a);
+      });
+    }
+  }
+
+  function renderDesktopBridge(t) {
+    setText("bridge-title", t.desktopBridgeTitle);
+    setText("bridge-desc", t.desktopBridgeDesc);
+    var ul = document.getElementById("bridge-bullets");
+    if (ul) {
+      ul.innerHTML = "";
+      (t.desktopBridgeBullets || []).forEach(function (item) {
+        var li = el("li");
+        li.innerHTML = ICONS.check;
+        li.appendChild(document.createTextNode(item));
+        ul.appendChild(li);
+      });
+    }
+    var link = document.getElementById("bridge-link");
+    if (link && t.desktopBridgeLink) link.textContent = t.desktopBridgeLink;
+  }
+
   function renderFeaturesSection(t) {
     setText("features-title", t.featuresTitle);
     setText("features-sub", t.featuresSubtitle);
@@ -169,7 +209,7 @@
     grid.innerHTML = "";
     (t.features || []).forEach(function (f) {
       var card = el("div", "feature-card");
-      card.appendChild(el("div", "feature-icon", ICONS[f.icon] || ICONS.board));
+      card.appendChild(el("div", "feature-icon", ICONS[f.icon] || ICONS.grid));
       card.appendChild(el("h3", null, esc(f.title)));
       card.appendChild(el("p", "muted", esc(f.desc)));
       grid.appendChild(card);
@@ -227,18 +267,19 @@
     }
   }
 
-  function renderRoadmap(d, t) {
-    setText("roadmap-title", t.roadmapTitle);
-    var ol = document.getElementById("timeline");
+  function renderMilestones(t) {
+    setText("milestones-title", t.milestonesTitle);
+    setText("milestones-sub", t.milestonesSubtitle);
+    setText("milestones-link", t.milestonesSeeAll);
+    var ol = document.getElementById("milestones");
     if (!ol) return;
     ol.innerHTML = "";
-    (d.phases || []).forEach(function (ph) {
-      var li = el("li", "tl-item " + (ph.status === "done" ? "done" : "pending"));
-      li.appendChild(el("span", "tl-marker"));
-      var body = el("div", "tl-body");
-      body.appendChild(el("div", "tl-title", "Phase " + ph.id + ": " + esc(ph.name)));
-      if (ph.desc) body.appendChild(el("p", "muted tl-desc", esc(ph.desc)));
-      if (ph.date) body.appendChild(el("span", "tl-date muted", esc(ph.date)));
+    (t.milestones || []).forEach(function (m) {
+      var li = el("li", "milestone");
+      li.appendChild(el("span", "milestone-date", esc(m.date)));
+      var body = el("div", "milestone-body");
+      body.appendChild(el("h3", null, esc(m.title)));
+      if (m.desc) body.appendChild(el("p", "muted", esc(m.desc)));
       li.appendChild(body);
       ol.appendChild(li);
     });
@@ -250,7 +291,11 @@
     setText("status-teaser-link", t.seeStatus);
     var health = document.getElementById("health");
     if (!health) return;
-    var layers = d.layers || [];
+    // The nightly integration layer (real stack) is not a product signal on the
+    // landing; it stays visible on the status page.
+    var layers = (d.layers || []).filter(function (l) {
+      return l.name !== "integration";
+    });
     var failed = layers.filter(function (l) {
       return l.status === "fail";
     }).length;
@@ -283,11 +328,13 @@
     setText("lang-toggle", toggleLabel());
 
     renderHero(d, t);
+    renderWhatIs(t);
     renderDemoSection(t);
     renderFeaturesSection(t);
+    renderDesktopBridge(t);
     renderFormatsSection(t);
     renderDownloads(d, t);
-    renderRoadmap(d, t);
+    renderMilestones(t);
     renderStatusTeaser(d, t);
     setText("footer-note", t.footerNote);
     setText("footer-stack", (d.project || {}).stack);

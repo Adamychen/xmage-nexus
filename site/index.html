@@ -9,9 +9,16 @@
       content="XMage Nexus: cliente web moderno para XMage. Lobby en vivo, tablero HD, targeting visual, audio y 9 idiomas. Sin instalar Java."
     />
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
-    <meta property="og:title" content="XMage Nexus" />
-    <meta property="og:description" content="Cliente web moderno para XMage. Juega en el navegador." />
-    <meta property="og:image" content="./assets/logo.jpg" />
+    <link rel="canonical" href="https://adamychen.github.io/xmage-nexus/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://adamychen.github.io/xmage-nexus/" />
+    <meta property="og:title" content="XMage Nexus — XMage en el navegador" />
+    <meta property="og:description" content="Cliente web moderno para XMage. Lobby en vivo, tablero HD, targeting visual, audio y 9 idiomas. Sin instalar Java." />
+    <meta property="og:image" content="https://adamychen.github.io/xmage-nexus/assets/og-cover.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://adamychen.github.io/xmage-nexus/assets/og-cover.jpg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body class="landing">
@@ -45,7 +52,7 @@
               sobre el motor probado de XMage.
             </p>
             <div class="hero-cta">
-              <a class="btn btn-primary" id="hero-play" href="#" target="_blank" rel="noopener"
+              <a class="btn btn-primary btn-lg" id="hero-play" href="#" target="_blank" rel="noopener"
                 >Probar ahora</a
               >
               <a class="btn btn-ghost" id="hero-primary" href="#download">Descargar</a>
@@ -71,6 +78,15 @@
         </div>
       </section>
 
+      <section class="section" id="whatis">
+        <div class="section-head">
+          <h2 id="whatis-title">¿Qué es XMage?</h2>
+          <p id="whatis-sub" class="muted"></p>
+        </div>
+        <div class="whatis-grid" id="whatis-grid"></div>
+        <div class="chip-row links-row" id="whatis-links"></div>
+      </section>
+
       <section class="section" id="demo">
         <div class="section-head">
           <h2 id="demo-title">Así se juega</h2>
@@ -87,6 +103,15 @@
         <div class="feature-grid" id="feature-grid"></div>
       </section>
 
+      <section class="section bridge" id="desktop">
+        <div class="bridge-copy">
+          <h2 id="bridge-title">¿Ya juegas en XMage de escritorio?</h2>
+          <p class="muted" id="bridge-desc"></p>
+          <ul class="bridge-bullets" id="bridge-bullets"></ul>
+        </div>
+        <a class="btn btn-ghost" id="bridge-link" href="./status.html#features">Ver paridad de funciones →</a>
+      </section>
+
       <section class="section" id="formats">
         <div class="section-head"><h2 id="formats-title">Formatos y modos</h2></div>
         <div class="chip-row" id="format-chips"></div>
@@ -101,8 +126,12 @@
       </section>
 
       <section class="section" id="roadmap">
-        <div class="section-head"><h2 id="roadmap-title">Roadmap</h2></div>
-        <ol class="timeline" id="timeline"></ol>
+        <div class="section-head">
+          <h2 id="milestones-title">Hitos recientes</h2>
+          <p class="muted" id="milestones-sub"></p>
+        </div>
+        <ol class="milestones" id="milestones"></ol>
+        <a class="btn btn-ghost" id="milestones-link" href="./status.html">Dashboard técnico →</a>
       </section>
 
       <section class="section status-teaser">
@@ -128,8 +157,9 @@
         </div>
       </div>
       <div class="footer-links">
-        <a href="#roadmap">Roadmap</a>
+        <a href="#roadmap">Hitos</a>
         <a href="https://github.com/Adamychen/xmage-nexus" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://discord.gg/Pqf42yn" target="_blank" rel="noopener">Discord</a>
         <a href="./status.html">Status</a>
         <a href="https://github.com/Adamychen/xmage-nexus/releases" target="_blank" rel="noopener">Releases</a>
       </div>
