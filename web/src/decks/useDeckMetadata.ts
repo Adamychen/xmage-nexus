@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import { stripMetaFromJson } from './deckCardOps'
-import { fetchCardJson } from '../cards/scryfallCards'
+import { fetchCardJson, type CardRef } from '../cards/scryfallCards'
+import { cardArtPreference } from '../cards/artPreferences'
 
 /** Metadatos Scryfall de las cartas del mazo + mapa de CMCs para la curva. */
 export function useDeckMetadata() {
@@ -12,42 +13,41 @@ export function useDeckMetadata() {
   // (load, imports, drops) y el estado metaMap llega rancio entre llamadas.
   const knownRef = useRef<Set<string>>(new Set())
   const inFlightRef = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    for (const k of metaMap.keys()) knownRef.current.add(k)
-  }, [metaMap])
 
   const updateMetaForDeck = (cards: DeckCard[]) => {
-    const toFetch: Array<{ card: DeckCard; lookup: string }> = []
+    const toFetch: Array<{ ref: CardRef; lookup: string; keys: string[] }> = []
     const seen = new Set<string>()
     for (const c of cards) {
-      const k = `${c.setCode}/${c.cardNumber}`
-      const hasSetAndNum = !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
-      const lookup = hasSetAndNum ? k : c.cardName.toLowerCase()
+      const pref = cardArtPreference(c.cardName)
+      const setCode = pref?.setCode ?? c.setCode
+      const cardNumber = pref?.cardNumber ?? c.cardNumber
+      const hasSetAndNum = !!setCode && !!cardNumber && cardNumber !== '0'
+      const artKey = hasSetAndNum ? `${setCode}/${cardNumber}` : c.cardName.toLowerCase()
+      const lookup = `${c.setCode}/${c.cardNumber}|${artKey}`
       if (knownRef.current.has(lookup) || inFlightRef.current.has(lookup) || seen.has(lookup)) continue
       seen.add(lookup)
       inFlightRef.current.add(lookup)
-      toFetch.push({ card: c, lookup })
+      const keys = new Set<string>([c.cardName.toLowerCase(), artKey])
+      if (c.setCode && c.cardNumber && c.cardNumber !== '0') keys.add(`${c.setCode}/${c.cardNumber}`)
+      toFetch.push({ ref: { cardName: c.cardName, setCode, cardNumber }, lookup, keys: [...keys] })
     }
     if (toFetch.length === 0) return
 
     const cardLang = getEffectiveCardLang()
-    for (const { card: c, lookup } of toFetch) {
-      const hasSetAndNum = c.setCode && c.cardNumber && c.cardNumber !== '0'
-
-      fetchCardJson(c, { lang: cardLang })
+    for (const { ref, lookup, keys } of toFetch) {
+      fetchCardJson(ref, { lang: cardLang })
         .then((data) => {
           inFlightRef.current.delete(lookup)
           if (!data) return
           knownRef.current.add(lookup)
           const printedName = data.printed_name || data.card_faces?.[0]?.printed_name
           if (printedName && cardLang && cardLang !== 'en') {
-            setCachedCardName(data.name ?? c.cardName, printedName, cardLang)
+            setCachedCardName(data.name ?? ref.cardName, printedName, cardLang)
           }
           const meta = stripMetaFromJson(data)
           setMetaMap((prev) => {
             const nxt = new Map(prev)
-            if (hasSetAndNum) nxt.set(`${c.setCode}/${c.cardNumber}`, meta)
-            nxt.set(c.cardName.toLowerCase(), meta)
+            for (const k of keys) nxt.set(k, meta)
             return nxt
           })
         })

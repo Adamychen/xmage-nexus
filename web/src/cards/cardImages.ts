@@ -2,6 +2,7 @@ import type { CardView } from '../net/types'
 import { getCardLanguage } from '../i18n'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { scryfallJson } from './scryfallClient'
+import { cardArtPreference } from './artPreferences'
 import tokenImageData from '../data/tokenImages.generated.json'
 
 const memory = new Map<string, string | null>()
@@ -179,6 +180,11 @@ export function cardKey(card: CardView): string | null {
   if (isToken) {
     const exact = tokenTableKey(card, isBack)
     if (exact) return pinTokenKey(card, exact)
+  }
+
+  if (!isToken) {
+    const preferred = cardArtPreference(card.name)
+    if (preferred) return `${preferred.setCode}/${preferred.cardNumber}${backSuffix}`
   }
 
   // Cards with a real card number (including copy tokens that inherited the original's number)

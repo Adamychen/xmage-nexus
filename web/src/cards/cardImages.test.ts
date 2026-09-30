@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName } from './cardImages'
+import { resetCardArtPreferences, setCardArtPreference } from './artPreferences'
 import type { CardView } from '../net/types'
 import { setScryfallPacing } from './scryfallClient'
 
@@ -391,6 +392,29 @@ describe('double-faced and transform card resolution', () => {
     // Request back - should use back face image and avoid duplicate network calls
     const backUrl = await awaitImageUrl(back)
     expect(backUrl).toBe('https://img.test/delver_back.jpg')
+  })
+})
+
+describe('card art preference', () => {
+  beforeEach(() => {
+    resetCardImageCache()
+    resetCardArtPreferences()
+  })
+
+  it('la preferencia del jugador gana a la impresión de la vista, también en cartas del rival', () => {
+    setCardArtPreference('Lightning Bolt', 'LEA', '161')
+    const mine = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView
+    const rivals = { name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '130' } as CardView
+    expect(cardKey(mine)).toBe('LEA/161')
+    expect(cardKey(rivals)).toBe('LEA/161')
+  })
+
+  it('no aplica a tokens ni a cartas boca abajo', () => {
+    setCardArtPreference('Forest', 'ZEN', '246')
+    const token = { name: 'Forest', expansionSetCode: 'M10', cardNumber: '246', isToken: true, mageObjectType: 'TOKEN' } as CardView
+    expect(cardKey(token)).not.toBe('ZEN/246')
+    const morph = { name: 'Forest', faceDown: true } as CardView
+    expect(cardKey(morph)).not.toBe('ZEN/246')
   })
 })
 

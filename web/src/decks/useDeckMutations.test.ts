@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { useDeckMutations } from './useDeckMutations'
+import { cardArtPreference, resetCardArtPreferences } from '../cards/artPreferences'
 import type { DeckV2 } from './types'
 import type { DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
@@ -31,7 +32,7 @@ function makeDeck(over: Partial<DeckV2> = {}): DeckV2 {
   }
 }
 
-function renderMutations(deck: DeckV2) {
+function renderMutations(deck: DeckV2, printingTargetCard: DeckCard | null = null) {
   const schedulePersist = vi.fn()
   const metaMap = new Map<string, CardStripMeta>([
     ['PC2/1', partnerMeta],
@@ -52,7 +53,7 @@ function renderMutations(deck: DeckV2) {
     setMetaMap: vi.fn(),
     updateMetaForDeck: vi.fn(),
     serverFlaggedKeys: new Set<string>(),
-    printingTargetCard: null,
+    printingTargetCard,
     setPrintingTargetCard: vi.fn(),
   }))
   return { ...hook, schedulePersist }
@@ -106,6 +107,17 @@ describe('useDeckMutations commander drops', () => {
     const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar, bolt], commanderCard: sidar }))
     act(() => { result.current.handleSetPartner(bolt) })
     expect(schedulePersist).not.toHaveBeenCalled()
+  })
+})
+
+describe('useDeckMutations art preference', () => {
+  beforeEach(() => resetCardArtPreferences())
+
+  it('guardar arte no toca la impresión del mazo: solo la preferencia local', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [bolt] }), bolt)
+    act(() => { result.current.handleApplyPrinting('LEA', '161') })
+    expect(schedulePersist).not.toHaveBeenCalled()
+    expect(cardArtPreference('Lightning Bolt')).toEqual({ setCode: 'LEA', cardNumber: '161' })
   })
 })
 

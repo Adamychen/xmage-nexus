@@ -9,10 +9,12 @@ import { parseAnyDeck } from './parseDck'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import {
   deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
-  mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
+  mergeIntoList, insertOrIncrement, addSearchResult, replaceBasicLands,
   dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
 import { applyPrintingsByName, countUnresolved, resolveDeckPrintings } from './importResolve'
+import { normalizeDeckCard } from './deckNormalize'
+import { setCardArtPreference } from '../cards/artPreferences'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
@@ -315,12 +317,10 @@ export function useDeckMutations(deps: Deps) {
   }
 
   const handleApplyPrinting = (setCode: string, cardNumber: string) => {
-    if (!deck || !printingTargetCard) return
-    const { cards: nextCards, sideboard: nextSide, printing } = applyPrinting(
-      deck.cards, deck.sideboard, printingTargetCard, setCode, cardNumber,
-    )
-    schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
-    updateMetaForDeck([{ ...printingTargetCard, ...printing }])
+    if (!printingTargetCard) return
+    const printing = normalizeDeckCard({ cardName: printingTargetCard.cardName, setCode, cardNumber, amount: 1 })
+    setCardArtPreference(printingTargetCard.cardName, printing.setCode, printing.cardNumber)
+    updateMetaForDeck([printingTargetCard])
     setPrintingTargetCard(null)
   }
 

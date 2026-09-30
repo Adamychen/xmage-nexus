@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { cardArtPreference } from '../cards/artPreferences'
 import { fetchCardJson, hasPrinting, type CardRef, type ScryfallCardJson } from '../cards/scryfallCards'
 
 export function artUrlFromCardJson(data: ScryfallCardJson | null): string | null {
@@ -18,14 +19,16 @@ export function artUrlFromCardJson(data: ScryfallCardJson | null): string | null
  */
 export function useCardArtUrl(card: CardRef | null | undefined): string | null {
   const [url, setUrl] = useState<string | null>(null)
-  const key = card ? `${card.cardName}|${card.setCode ?? ''}|${card.cardNumber ?? ''}` : ''
+  const preferred = card ? cardArtPreference(card.cardName) : null
+  const ref = card && preferred ? { ...card, setCode: preferred.setCode, cardNumber: preferred.cardNumber } : card
+  const key = ref ? `${ref.cardName}|${ref.setCode ?? ''}|${ref.cardNumber ?? ''}` : ''
   useEffect(() => {
-    if (!card || (!card.cardName && !hasPrinting(card))) {
+    if (!ref || (!ref.cardName && !hasPrinting(ref))) {
       setUrl(null)
       return
     }
     let cancelled = false
-    void fetchCardJson(card, { fallbackToName: true }).then((data) => {
+    void fetchCardJson(ref, { fallbackToName: true }).then((data) => {
       if (!cancelled) setUrl(artUrlFromCardJson(data))
     })
     return () => {

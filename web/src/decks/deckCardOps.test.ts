@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
-  mergeIntoList, insertOrIncrement, addSearchResult, applyPrinting, replaceBasicLands,
+  mergeIntoList, insertOrIncrement, addSearchResult, replaceBasicLands,
   dropOnCommander, stripMetaFromSearch, stripMetaFromJson, aggregateCards,
 } from './deckCardOps'
 import type { DeckCard } from '../lobby/decks'
@@ -92,20 +92,6 @@ describe('addSearchResult', () => {
   })
   it('suma si ya existe', () => {
     expect(addSearchResult([bolt({ amount: 1 })], search).cards[0].amount).toBe(2)
-  })
-})
-
-describe('applyPrinting', () => {
-  it('cambia impresión en main y side conservando cantidades', () => {
-    const side = [bolt({ amount: 2 })]
-    const { cards, sideboard, printing } = applyPrinting([bolt()], side, bolt(), 'LEA', '161')
-    expect(printing).toEqual({ setCode: 'LEA', cardNumber: '161' })
-    expect(cards[0]).toMatchObject({ setCode: 'LEA', cardNumber: '161', amount: 4 })
-    expect(sideboard[0]).toMatchObject({ setCode: 'LEA', cardNumber: '161', amount: 2 })
-  })
-  it('preserva el case que devuelva normalizeDeckCard (igual que el original)', () => {
-    const { printing } = applyPrinting([bolt()], [], bolt(), 'lea', '161')
-    expect(printing).toEqual({ setCode: 'lea', cardNumber: '161' })
   })
 })
 

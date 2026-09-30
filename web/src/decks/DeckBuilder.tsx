@@ -15,6 +15,7 @@ import { ArenaDeckHeader } from './ArenaDeckHeader'
 import { BasicLandAdder } from './BasicLandAdder'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
+import { cardArtPreference } from '../cards/artPreferences'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
@@ -559,8 +560,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       {printingTargetCard && (
         <CardPrintingsModal
           cardName={printingTargetCard.cardName}
-          currentSet={printingTargetCard.setCode}
-          currentNumber={printingTargetCard.cardNumber}
+          currentSet={cardArtPreference(printingTargetCard.cardName)?.setCode ?? printingTargetCard.setCode}
+          currentNumber={cardArtPreference(printingTargetCard.cardName)?.cardNumber ?? printingTargetCard.cardNumber}
           onSelectPrinting={mutations.handleApplyPrinting}
           onClose={() => setPrintingTargetCard(null)}
         />

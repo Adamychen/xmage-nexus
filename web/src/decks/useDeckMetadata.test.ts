@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useDeckMetadata } from './useDeckMetadata'
+import { resetCardArtPreferences, setCardArtPreference } from '../cards/artPreferences'
 import { getCachedCardName } from '../cards/cardLocalization'
 import type { DeckCard } from '../lobby/decks'
 
@@ -18,6 +19,7 @@ function scryfallCard(imageUrl: string) {
 describe('useDeckMetadata printing changes', () => {
   beforeEach(() => {
     vi.unstubAllGlobals()
+    resetCardArtPreferences()
   })
 
   it('refetches when the same card name arrives with a new set/number', async () => {
@@ -113,6 +115,23 @@ describe('useDeckMetadata printing changes', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     await waitFor(() => expect(getCachedCardName('Armored Griffin', 'es')).toBe('Grifo acorazado'))
     expect(getCachedCardName('Sidar Kondo of Jamuraa', 'es')).toBeNull()
+  })
+
+  it('usa la impresión preferida del jugador y la deja también bajo la clave del mazo', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      const imageUrl = url.includes('/zen/246') ? 'https://img.test/pref.jpg' : 'https://img.test/default.jpg'
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(scryfallCard(imageUrl)) })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    setCardArtPreference('Lightning Bolt', 'ZEN', '246')
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }])
+    })
+    await waitFor(() => expect(result.current.metaMap.get('M10/146')?.imageUrl).toBe('https://img.test/pref.jpg'))
+    expect(result.current.metaMap.get('lightning bolt')?.imageUrl).toBe('https://img.test/pref.jpg')
+    expect(fetchMock.mock.calls[0][0]).toContain('/zen/246')
   })
 
   it('no comparte imagen entre cartas sin set/número (import de texto plano) (AUDIT)', async () => {

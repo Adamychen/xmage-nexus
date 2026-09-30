@@ -157,21 +157,6 @@ export function dropOnCommander(
   return { cards: list, sideboard, card: findIn(list) ?? { ...dropped, amount: 1 }, replacedOldKey }
 }
 
-/** Cambia la impresión de una carta en main y sideboard (conserva cantidades). */
-export function applyPrinting(
-  cards: DeckCard[],
-  sideboard: DeckCard[],
-  target: DeckCard,
-  setCode: string,
-  cardNumber: string,
-): { cards: DeckCard[]; sideboard: DeckCard[]; printing: { setCode: string; cardNumber: string } } {
-  const norm = normalizeDeckCard({ cardName: target.cardName, setCode, cardNumber, amount: 1 })
-  const printing = { setCode: norm.setCode, cardNumber: norm.cardNumber }
-  const oldKey = deckCardKey(target)
-  const update = (c: DeckCard) => (deckCardKey(c) === oldKey ? { ...c, ...printing } : c)
-  return { cards: cards.map(update), sideboard: sideboard.map(update), printing }
-}
-
 export interface SuggestedLand {
   name: string
   setCode: string

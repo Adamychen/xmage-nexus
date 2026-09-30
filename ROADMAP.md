@@ -95,7 +95,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
 
 | Idea | Impact / effort | State |
 |---|---|---|
