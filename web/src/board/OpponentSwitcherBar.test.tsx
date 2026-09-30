@@ -129,7 +129,7 @@ describe('OpponentSwitcherBar', () => {
     const players = [
       { playerId: 'p1', name: 'Me', life: 20, controlled: true },
       mockOpponents[0],
-      { ...mockOpponents[1], life: 0 },
+      { ...mockOpponents[1], hasLeft: true, life: 0 },
       mockOpponents[2],
     ] as unknown as PlayerView[]
     render(
@@ -143,5 +143,27 @@ describe('OpponentSwitcherBar', () => {
 
     fireEvent.click(screen.getByTitle('Ver oponente siguiente'))
     expect(onSelect).toHaveBeenCalledWith('p4')
+  })
+
+  it('un jugador con vida 0 que sigue en juego no se marca ni sale del ciclo', () => {
+    const onSelect = vi.fn()
+    const players = [
+      { playerId: 'p1', name: 'Me', life: 20, controlled: true },
+      mockOpponents[0],
+      { ...mockOpponents[1], life: -1 },
+      mockOpponents[2],
+    ] as unknown as PlayerView[]
+    const { container } = render(
+      <OpponentSwitcherBar
+        players={players}
+        controlledId="p1"
+        selectedOppId="p2"
+        onSelectOpponent={onSelect}
+      />
+    )
+
+    expect(container.querySelector('.opp-pill.is-defeated')).toBeNull()
+    fireEvent.click(screen.getByTitle('Ver oponente anterior'))
+    expect(onSelect).toHaveBeenCalledWith('p3')
   })
 })

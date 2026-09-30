@@ -1,6 +1,6 @@
 import type { PlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
-import { MAX_BOARD_PLAYERS } from './boardShared'
+import { isPlayerOut, MAX_BOARD_PLAYERS } from './boardShared'
 import Icon from '../ui/Icon'
 import './TurnOrderRing.css'
 
@@ -32,7 +32,7 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
         {ordered.map((p, idx) => {
           const isActive = p.playerId === activePlayerId
           const isPriority = !!p.hasPriority
-          const isDefeated = p.hasLeft === true || p.life <= 0
+          const isDefeated = isPlayerOut(p)
           const nextPlayer = ordered[(idx + 1) % count]
           const isActiveEdge = isActive
 
@@ -48,7 +48,7 @@ export default function TurnOrderRing({ players, activePlayerId }: TurnOrderRing
                   {isActive ? <Icon name="play" size={9} /> : <Icon name="circle" size={7} />}
                 </span>
                 <span className="tor-seat-name">{p.name}</span>
-                <span className="tor-seat-life">{p.life <= 0 || p.hasLeft ? <Icon name="skull" size={11} /> : p.life}</span>
+                <span className="tor-seat-life">{isDefeated ? <Icon name="skull" size={11} /> : p.life}</span>
                 {isActive && <span className="tor-active-badge">{t('board', 'turn_active_badge')}</span>}
               </div>
               {count > 1 && (

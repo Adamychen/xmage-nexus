@@ -4,7 +4,7 @@ import Chip from '../ui/Chip'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
 import { commanderTax } from '../board/commanders'
-import { MAX_BOARD_PLAYERS } from '../board/boardShared'
+import { isPlayerOut, MAX_BOARD_PLAYERS } from '../board/boardShared'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommanderDamageMatrix.css'
@@ -221,7 +221,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             const playerCommanders = commanders.filter((c) => c.ownerId === p.playerId)
             const opposingCommanders = commanders.filter((c) => c.ownerId !== p.playerId)
             const isActive = p.playerId === game?.activePlayerId
-            const isDefeated = p.hasLeft || p.life <= 0
+            const isDefeated = isPlayerOut(p)
 
             return (
               <div

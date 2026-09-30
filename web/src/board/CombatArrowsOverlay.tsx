@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './useBandFit'
+import { isPlayerOut } from './boardShared'
 import type { GameView } from '../net/types'
 import './CombatArrowsOverlay.css'
 
@@ -51,7 +52,7 @@ export default function CombatArrowsOverlay({
 
     const defeatedPlayerIds = new Set(
       (game.players ?? [])
-        .filter((p) => p.life <= 0 || p.hasLeft || (p as any).lost)
+        .filter((p) => isPlayerOut(p))
         .map((p) => p.playerId)
     )
 

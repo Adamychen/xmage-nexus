@@ -22,6 +22,7 @@ import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
 import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
+import { isPlayerDefeated, isPlayerOut } from './boardShared'
 import './BoardZone.css'
 import './targetZone.css'
 
@@ -258,7 +259,8 @@ export default function BoardZone({
     )
   }
 
-  const isDefeated = player.hasLeft === true || player.life <= 0
+  const isDefeated = isPlayerOut(player)
+  const wasDefeated = isPlayerDefeated(player)
 
   const battlefield = player.battlefield ?? {}
   // Phasing (G12-4): lo faseado se trata como si no existiera (desktop: BattlefieldPanel.java:149).
@@ -579,12 +581,12 @@ export default function BoardZone({
       {isDefeated && (
         <div className="zone-defeated-overlay">
           <div className="zone-defeated-card">
-            <span className="zone-defeated-icon">{player.hasLeft ? <Icon name="door" size={28} /> : <Icon name="skull" size={28} />}</span>
+            <span className="zone-defeated-icon">{wasDefeated ? <Icon name="skull" size={28} /> : <Icon name="door" size={28} />}</span>
             <span className="zone-defeated-title">
-              {player.name} {player.hasLeft ? t('game', 'player_left') : t('game', 'player_defeated')}
+              {player.name} {wasDefeated ? t('game', 'player_defeated') : t('game', 'player_left')}
             </span>
             <span className="zone-defeated-sub">
-              {player.hasLeft ? t('game', 'player_left_desc') : t('game', 'life_zero_desc')}
+              {wasDefeated ? t('game', 'life_zero_desc') : t('game', 'player_left_desc')}
             </span>
           </div>
         </div>

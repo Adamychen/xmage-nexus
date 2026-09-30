@@ -6,6 +6,7 @@ import CountryFlag from '../lobby/CountryFlag'
 import { useTweenNumber } from './useTweenNumber'
 import { dayNightStateOfPlayer } from '../board/dayNight'
 import { useCombatHeld } from '../board/useCombatHeld'
+import { isPlayerDefeated, isPlayerOut } from '../board/boardShared'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
@@ -255,7 +256,8 @@ export default function PlayerInfoBar({
   const life = useTweenNumber(shownLife)
 
   const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
-  const isDefeated = player.hasLeft === true || shownLife <= 0
+  const isDefeated = isPlayerOut(player)
+  const wasDefeated = isPlayerDefeated(player)
   const showTurn = isTurnActive && !isDefeated
 
   const ringInfo = getRingInfo(player)
@@ -314,11 +316,13 @@ export default function PlayerInfoBar({
           <span className="player-name" data-priority={player.hasPriority || undefined}>
             {player.name}
           </span>
-          {player.hasLeft ? (
-            <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
-          ) : shownLife <= 0 ? (
-            <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
-          ) : null}
+          {isDefeated && (
+            wasDefeated ? (
+              <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>
+            ) : (
+              <span className="player-status-badge status-left"><Icon name="door" size={12} /> {t('game', 'status_left')}</span>
+            )
+          )}
           {showMatchWins && (
             <span className="match-wins-dots" title={`${t('game', 'match_wins')}: ${wins}/${winsNeeded}`}>
               {Array.from({ length: Math.max(1, winsNeeded) }).map((_, i) => (

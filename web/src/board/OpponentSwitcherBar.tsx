@@ -2,6 +2,7 @@ import type { CombatGroupView, PlayerView } from '../net/types'
 import IconButton from '../ui/IconButton'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { isPlayerDefeated, isPlayerOut } from './boardShared'
 import './OpponentSwitcherBar.css'
 
 interface OpponentSwitcherBarProps {
@@ -15,10 +16,6 @@ interface OpponentSwitcherBarProps {
   targetIds?: Set<string>
   onTargetClick?: (id: string) => void
   combat?: CombatGroupView[]
-}
-
-function isOut(p: PlayerView): boolean {
-  return p.hasLeft === true || p.life <= 0
 }
 
 export default function OpponentSwitcherBar({
@@ -40,7 +37,7 @@ export default function OpponentSwitcherBar({
   const ordered = [...players].reverse()
   // Enfocables: rivales en juego. Yo y los derrotados/desconectados salen
   // como píldoras desactivadas y fuera del ciclo ‹ ›.
-  const focusable = ordered.filter((p) => p.playerId !== controlledId && !isOut(p))
+  const focusable = ordered.filter((p) => p.playerId !== controlledId && !isPlayerOut(p))
   if (focusable.length <= 1) return null
 
   const currentIndex = focusable.findIndex((p) => p.playerId === selectedOppId)
@@ -76,7 +73,8 @@ export default function OpponentSwitcherBar({
           const isTargetable = targetIds.has(opp.playerId)
           const isSelf = opp.playerId === controlledId || !!opp.controlled
 
-          const isDefeated = isOut(opp)
+          const isDefeated = isPlayerOut(opp)
+          const wasDefeated = isPlayerDefeated(opp)
 
           // Check if this opponent is being attacked or has blockers in combat
           const isInvolvedInCombat = (combat ?? []).some((g) => {
@@ -106,11 +104,11 @@ export default function OpponentSwitcherBar({
                 }
                 onSelectOpponent(opp.playerId)
               }}
-              title={`${t('board', 'opp_view', { name: opp.name })}${isDefeated ? (opp.hasLeft ? t('board', 'opp_left_suffix') : t('board', 'opp_defeated_suffix')) : ''}${isTargetable && !isSelf ? t('board', 'opp_target_suffix') : ''}`}
+              title={`${t('board', 'opp_view', { name: opp.name })}${isDefeated ? (wasDefeated ? t('board', 'opp_defeated_suffix') : t('board', 'opp_left_suffix')) : ''}${isTargetable && !isSelf ? t('board', 'opp_target_suffix') : ''}`}
             >
               <span>{opp.name}</span>
               <span className="opp-pill-life">
-                {isDefeated ? (opp.hasLeft ? t('board', 'opp_out') : t('board', 'opp_dead')) : (<>{opp.life} <Icon name="heart" size={11} /></>)}
+                {isDefeated ? (wasDefeated ? t('board', 'opp_dead') : t('board', 'opp_out')) : (<>{opp.life} <Icon name="heart" size={11} /></>)}
               </span>
               {isTurn && !isDefeated && <span className="opp-pill-tag turn-tag">{t('board', 'opp_turn_tag')}</span>}
               {isInvolvedInCombat && !isDefeated && (

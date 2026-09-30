@@ -291,10 +291,25 @@ describe('PlayerInfoBar', () => {
   })
 
   it('hides the turn mark on defeated players even if active', () => {
-    const deadActive: PlayerView = { ...basePlayer, isActive: true, life: 0 }
+    const deadActive: PlayerView = { ...basePlayer, isActive: true, life: 0, hasLeft: true }
     const { container } = render(<PlayerInfoBar player={deadActive} side="my" />)
     expect(container.querySelector('.player-info-bar.is-turn')).toBeNull()
     expect(container.querySelector('.player-status-badge.status-turn')).toBeNull()
     expect(container.querySelector('.player-status-badge.status-defeated')).not.toBeNull()
+  })
+
+  it('keeps turn mark and life on a player at 0 life who is still in the game', () => {
+    const cantLose: PlayerView = { ...basePlayer, isActive: true, life: -1 }
+    const { container } = render(<PlayerInfoBar player={cantLose} side="my" />)
+    expect(container.querySelector('.player-info-bar.is-turn')).not.toBeNull()
+    expect(container.querySelector('.player-status-badge.status-defeated')).toBeNull()
+    expect(container.querySelector('.player-status-badge.status-left')).toBeNull()
+  })
+
+  it('marks a player who left with life above 0 as left', () => {
+    const leaver: PlayerView = { ...basePlayer, hasLeft: true }
+    const { container } = render(<PlayerInfoBar player={leaver} side="my" />)
+    expect(container.querySelector('.player-status-badge.status-left')).not.toBeNull()
+    expect(container.querySelector('.player-status-badge.status-defeated')).toBeNull()
   })
 })

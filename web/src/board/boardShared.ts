@@ -9,7 +9,11 @@ import type { TargetZoneKind } from './targetZones'
 export const MAX_BOARD_PLAYERS = 4
 
 export function isPlayerOut(player: PlayerView | undefined | null): boolean {
-  return !!player && (player.hasLeft === true || player.life <= 0)
+  return !!player && player.hasLeft === true
+}
+
+export function isPlayerDefeated(player: PlayerView | undefined | null): boolean {
+  return isPlayerOut(player) && (player?.life ?? 1) <= 0
 }
 
 export type SeatState = 'alive' | 'collapsed' | 'open'
