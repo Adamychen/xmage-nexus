@@ -19,6 +19,10 @@ export interface FlightRecord {
   /** Timers de backstop/limpieza: se reprograman al encadenar un redirect. */
   timers?: Array<ReturnType<typeof setTimeout>>
   variant?: FlightVariant
+  /** The clone leaves a compact art-crop tile: it starts as that landscape art crop. */
+  fromCompact?: boolean
+  /** The clone lands on a compact art-crop tile: it ends as that landscape art crop. */
+  toCompact?: boolean
 }
 
 export type FlightVariant = 'destroy' | 'exile' | 'heavy'
@@ -60,7 +64,7 @@ export interface NormalizedRect {
  *  - Tiras extremas (aspect ≥ 2 o ≤ 0.45) ⇒ derivar carta del eje corto (con clamp).
  *  - Rects ya con forma de carta (aspect 0.45–1.05) ⇒ intactos (incluye thumbs pequeños).
  *  El rect resultante queda centrado en el centro del rect original. */
-export function normalizeFlightRect(rect: DOMRect, size?: CardSourceSize | null): NormalizedRect {
+export function normalizeFlightRect(rect: DOMRect, size?: CardSourceSize | null, compact = false): NormalizedRect {
   if (!rect || rect.width <= 0 || rect.height <= 0) return { rect, rotated90: false }
 
   const cx = rect.left + rect.width / 2
@@ -69,7 +73,14 @@ export function normalizeFlightRect(rect: DOMRect, size?: CardSourceSize | null)
   let h = size?.h ?? rect.height
   let rotated90 = false
 
-  if (!size) {
+  if (!size && compact) {
+    // A compact tile is landscape when untapped; its 90° AABB is the portrait one.
+    if (rect.width < rect.height) {
+      w = rect.height
+      h = rect.width
+      rotated90 = true
+    }
+  } else if (!size) {
     const aspect = rect.width / rect.height
     if (aspect > 1.05 && aspect < 2.0) {
       // AABB de una carta girada 90° (tapped)
@@ -110,6 +121,20 @@ export interface FlightOptions {
   /** Tamaño real de la carta de origen (sin transforms), si se conoce. */
   sourceSize?: CardSourceSize | null
   variant?: FlightVariant
+  /** The source is a compact art-crop tile. Defaults to `sourceSize.compact`. */
+  fromCompact?: boolean
+  /** The destination is a compact art-crop tile. Defaults to probing `toSelector` in the DOM. */
+  toCompact?: boolean
+}
+
+/** Whether the element a selector matches is (or sits inside) a compact art-crop tile. */
+export function isCompactTarget(selector: string | undefined): boolean {
+  if (!selector || typeof document === 'undefined') return false
+  try {
+    return document.querySelector(selector)?.closest('.card-slot.is-compact') != null
+  } catch {
+    return false
+  }
 }
 
 // ── Diagnóstico de vuelos (F0 animaciones): cada skip silencioso deja una
@@ -187,8 +212,10 @@ export function startCardFlight(
     return null
   }
 
-  const from = normalizeFlightRect(fromRect, options?.sourceSize)
-  const to = normalizeFlightRect(toRect)
+  const fromCompact = options?.fromCompact ?? options?.sourceSize?.compact === true
+  const toCompact = options?.toCompact ?? isCompactTarget(toSelector)
+  const from = normalizeFlightRect(fromRect, options?.sourceSize, fromCompact)
+  const to = normalizeFlightRect(toRect, null, toCompact)
   const scaledDuration = fxDuration(duration)
 
   // Distance check sobre los rects crudos (esquinas), igual que siempre: evita
@@ -222,6 +249,7 @@ export function startCardFlight(
         // que la curva se dobla suavemente al nuevo destino sin parpadeo.
         existing.toRect = to.rect
         existing.toSelector = toSelector ?? existing.toSelector
+        existing.toCompact = toCompact || undefined
         existing.card = card
         if (options?.variant) existing.variant = options.variant
         existing.duration = Math.min(age + Math.round(scaledDuration * 0.8), age + 1200)
@@ -254,6 +282,8 @@ export function startCardFlight(
     duration: scaledDuration,
     rotated90: from.rotated90 || undefined,
     variant: options?.variant,
+    fromCompact: fromCompact || undefined,
+    toCompact: toCompact || undefined,
   }
 
   activeFlights = [...activeFlights, record]

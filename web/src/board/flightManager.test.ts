@@ -283,6 +283,22 @@ describe('normalizeFlightRect', () => {
     expect(rect.height).toBe(42)
   })
 
+  it('keeps an untapped compact tile landscape instead of reading it as a tapped card', () => {
+    const tile = { ...baseRect, width: 120, height: 90, right: 220, bottom: 590 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(tile, null, true)
+    expect(rotated90).toBe(false)
+    expect(rect.width).toBe(120)
+    expect(rect.height).toBe(90)
+  })
+
+  it('restores a tapped compact tile from its portrait 90° AABB', () => {
+    const tapped = { ...baseRect, width: 90, height: 120, right: 190, bottom: 620 } as DOMRect
+    const { rect, rotated90 } = normalizeFlightRect(tapped, null, true)
+    expect(rotated90).toBe(true)
+    expect(rect.width).toBe(120)
+    expect(rect.height).toBe(90)
+  })
+
   it('marks flights as rotated90 when starting from a tapped card', () => {
     const tappedAabb = { ...baseRect, width: 140, height: 100, right: 240, bottom: 600 } as DOMRect
     startCardFlight(card, tappedAabb, destRect, 300)

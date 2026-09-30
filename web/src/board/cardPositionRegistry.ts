@@ -1,6 +1,8 @@
 export interface CardSourceSize {
   w: number
   h: number
+  /** The source was a compact art-crop tile (landscape), not a printed card. */
+  compact?: boolean
 }
 
 interface PositionRecord {

@@ -32,6 +32,12 @@
   display: block;
 }
 
+.flying-card-crop {
+  position: absolute;
+  inset: 0;
+  object-position: 50% 35%;
+}
+
 .flying-card-fallback {
   color: var(--fg-hi);
   font-size: var(--fs-2xs);

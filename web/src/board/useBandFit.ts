@@ -41,7 +41,10 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
         applied = cardW
         changed = true
       }
-      const attr = shrunk && lines > 1 ? String(lines) : ''
+      // Compact tiles are low enough that 2-3 lines can fit at full size:
+      // dropping the lines there left the band overflowing, and near that edge
+      // it flipped between "shrunk + wrapped" and "full size + overflow" every frame.
+      const attr = lines > 1 ? String(lines) : ''
       if ((el.getAttribute('data-band-lines') ?? '') !== attr) {
         if (attr) el.setAttribute('data-band-lines', attr)
         else el.removeAttribute('data-band-lines')

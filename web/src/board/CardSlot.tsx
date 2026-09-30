@@ -138,7 +138,7 @@ export default function CardSlot({
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
             const sourceSize = getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
-              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize })
+              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact })
               if (!flightId) return
               setFlightState('hidden')
               const land = () => {
@@ -188,7 +188,7 @@ export default function CardSlot({
           effectiveId,
           el.getBoundingClientRect(),
           zoneClass,
-          { w: el.offsetWidth, h: el.offsetHeight }
+          { w: el.offsetWidth, h: el.offsetHeight, compact: el.classList.contains('is-compact') }
         )
       }
     }

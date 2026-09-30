@@ -180,6 +180,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       // 1b. Check if source card is still visible on battlefield
       if (!sourceRect && srcId) {
         sourceRect = getRect(`[data-card-id="${srcId}"]`)
+        const tile = sourceRect ? document.querySelector<HTMLElement>(`[data-card-id="${srcId}"]`)?.closest<HTMLElement>('.card-slot.is-compact') : null
+        if (tile && tile.offsetWidth > 0 && tile.offsetHeight > 0) sourceSize = { w: tile.offsetWidth, h: tile.offsetHeight, compact: true }
       }
 
       // 1c. Fallback: player's hand zone

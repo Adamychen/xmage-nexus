@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { act } from 'react'
 import { fireEvent, render } from '@testing-library/react'
 import CardSlot from './CardSlot'
+import { recordCardPosition } from './cardPositionRegistry'
 import type { PermanentView } from '../net/types'
 import { t } from '../i18n'
 
@@ -95,5 +96,11 @@ describe('CardSlot compact tile', () => {
     expect(container.querySelector('img.card-image')?.getAttribute('src')).toBe(
       'https://cards.scryfall.io/normal/front/a/b/ab.jpg?1',
     )
+  })
+
+  it('records a compact tile as compact so a flight leaving it keeps the art crop', () => {
+    const { unmount } = render(<CardSlot card={perm()} compact />)
+    unmount()
+    expect(recordCardPosition).toHaveBeenLastCalledWith('p1', expect.anything(), '', expect.objectContaining({ compact: true }))
   })
 })

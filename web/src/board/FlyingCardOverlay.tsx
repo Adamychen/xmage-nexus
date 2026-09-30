@@ -1,14 +1,20 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useActiveFlights, markFlightLanded, normalizeFlightRect, type FlightRecord } from './flightManager'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
+import { artCropUrl } from './compactCard'
 import './FlyingCardOverlay.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   const elRef = useRef<HTMLDivElement>(null)
+  const cropRef = useRef<HTMLImageElement>(null)
   const resolvedUrl = useCardImageUrl(flight.card)
   const imgUrl = resolvedUrl ?? (flight.card.faceDown === true ? CARD_BACK_URL : null)
+  const [cropFailed, setCropFailed] = useState(false)
+  const cropUrl = (flight.fromCompact || flight.toCompact) && flight.card.faceDown !== true && !cropFailed
+    ? artCropUrl(resolvedUrl)
+    : null
 
   useLayoutEffect(() => {
     const el = elRef.current
@@ -30,7 +36,14 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     const keyframes = (): Keyframe[] => {
       const w = fromRect.width
       const h = fromRect.height
+      // Same shape at both ends: keep the source aspect and fit it in the target.
+      // A compact tile on only one end: morph between the landscape art crop and the card.
+      const morph = !flight.fromCompact !== !flight.toCompact
       const scale = Math.min(toRect.width / Math.max(1, w), toRect.height / Math.max(1, h))
+      const endW = morph ? toRect.width : w * scale
+      const endH = morph ? toRect.height : h * scale
+      const midW = (w + endW) / 2
+      const midH = (h + endH) / 2
 
       const fromCx = fromRect.left + w / 2
       const fromCy = fromRect.top + h / 2
@@ -46,9 +59,9 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       const midRot = (startRot + endRot) / 2
 
       return [
-        { transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(${startRot}deg) rotateY(0deg) scale(1)`, opacity: 0.9 },
-        { transform: `translate3d(${fromCx - w / 2 + dx * 0.5}px, ${fromCy - h / 2 + dy * 0.5 - arcLift}px, 0) rotate(${midRot}deg) rotateY(${tilt}deg) scale(${(1 + scale) / 2})`, opacity: 1 },
-        { transform: `translate3d(${toCx - w / 2}px, ${toCy - h / 2}px, 0) rotate(${endRot}deg) rotateY(0deg) scale(${scale})`, opacity: 0.95 },
+        { width: `${w}px`, height: `${h}px`, transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(${startRot}deg) rotateY(0deg)`, opacity: 0.9 },
+        { width: `${midW}px`, height: `${midH}px`, transform: `translate3d(${fromCx - midW / 2 + dx * 0.5}px, ${fromCy - midH / 2 + dy * 0.5 - arcLift}px, 0) rotate(${midRot}deg) rotateY(${tilt}deg)`, opacity: 1 },
+        { width: `${endW}px`, height: `${endH}px`, transform: `translate3d(${toCx - endW / 2}px, ${toCy - endH / 2}px, 0) rotate(${endRot}deg) rotateY(0deg)`, opacity: 0.95 },
       ]
     }
 
@@ -70,7 +83,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
         const target = document.querySelector(flight.toSelector)
         if (target) {
           const r = target.getBoundingClientRect()
-          const normalized = normalizeFlightRect(r)
+          const normalized = normalizeFlightRect(r, null, flight.toCompact)
           const moved =
             Math.abs(normalized.rect.left + normalized.rect.width / 2 - (toRect.left + toRect.width / 2)) > 2 ||
             Math.abs(normalized.rect.top + normalized.rect.height / 2 - (toRect.top + toRect.height / 2)) > 2
@@ -109,6 +122,19 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     }
   }, [flight])
 
+  useLayoutEffect(() => {
+    const crop = cropRef.current
+    const cropFrom = flight.fromCompact ? 1 : 0
+    const cropTo = flight.toCompact ? 1 : 0
+    if (!crop || cropFrom === cropTo || typeof crop.animate !== 'function') return
+    const anim = crop.animate(
+      [{ opacity: cropFrom }, { opacity: cropFrom, offset: 0.25 }, { opacity: cropTo, offset: 0.75 }, { opacity: cropTo }],
+      { duration: flight.duration, fill: 'forwards' },
+    )
+    anim.currentTime = Math.min(flight.duration, Math.max(0, performance.now() - flight.startTime))
+    return () => anim.cancel()
+  }, [flight, cropUrl])
+
   return (
     <div
       ref={elRef}
@@ -119,7 +145,20 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       {flight.card.faceDown === true ? (
         <img src={CARD_BACK_URL} alt="" className="flying-card-img" draggable={false} />
       ) : imgUrl ? (
-        <img src={imgUrl} alt={flight.card.name || 'Card'} className="flying-card-img" />
+        <>
+          <img src={imgUrl} alt={flight.card.name || 'Card'} className="flying-card-img" />
+          {cropUrl && (
+            <img
+              ref={cropRef}
+              src={cropUrl}
+              alt=""
+              className="flying-card-img flying-card-crop"
+              style={{ opacity: flight.fromCompact ? 1 : 0 }}
+              draggable={false}
+              onError={() => setCropFailed(true)}
+            />
+          )}
+        </>
       ) : (
         <div className="flying-card-fallback">{flight.card.name || 'Magic Card'}</div>
       )}
