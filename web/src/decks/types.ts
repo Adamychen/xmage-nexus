@@ -1,5 +1,4 @@
 import type { Deck, DeckCard } from '../lobby/decks'
-import { t } from '../i18n'
 
 export type DeckFormat = 'Standard' | 'Modern' | 'Commander' | 'Freeform' | 'Brawl' | 'Historic' | 'Pioneer' | 'Legacy' | 'Vintage' | 'Pauper' | 'Timeless' | 'Oathbreaker' | 'PennyDreadfulCommander' | 'EuropeanHighlander' | 'CanadianHighlander'
 
@@ -19,11 +18,8 @@ export interface DeckV2 extends Deck {
 export function deckTotalCards(d: Deck): number {
   return d.cards.reduce((s, c) => s + c.amount, 0)
 }
-export function deckSideboardCount(d: Deck): number {
-  return d.sideboard.reduce((s, c) => s + c.amount, 0)
-}
 export const deckMainCount = deckTotalCards
-export const deckSideCount = deckSideboardCount
+export const deckSideCount = (d: Deck): number => d.sideboard.reduce((s, c) => s + c.amount, 0)
 
 /**
  * Iniciales para el fallback visual cuando no hay portada. Toma las últimas
@@ -41,12 +37,8 @@ export function deckInitials(name: string): string {
     .join('')
     .toUpperCase()
 }
-export function deckColorIdentity(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
-  return colorIdentityFromCards(cards)
-}
 
 export const MAX_DECKS = 75
-export const MAX_SIDEBOARD = 15
 
 export function makeDeckId(): string {
   try {
@@ -54,26 +46,6 @@ export function makeDeckId(): string {
   } catch {
     return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   }
-}
-
-export function toDeckV2(deck: Deck, source: DeckV2['source'] = 'custom'): DeckV2 {
-  const now = Date.now()
-  return {
-    ...deck,
-    id: makeDeckId(),
-    format: inferFormat(deck),
-    colors: colorIdentityFromCards(deck.cards),
-    coverCard: deck.cards[0],
-    createdAt: now,
-    updatedAt: now,
-    source,
-  }
-}
-
-export function inferFormat(deck: Deck): DeckFormat {
-  const n = deckTotalCards(deck)
-  if (n >= 99) return 'Commander'
-  return 'Freeform'
 }
 
 export function colorIdentityFromCards(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
@@ -92,12 +64,4 @@ export function colorIdentityFromCards(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R
     }
   }
   return [...set].sort()
-}
-
-export function deckIsValidForPlay(d: Deck): { ok: boolean; reason?: string } {
-  const main = deckTotalCards(d)
-  const sb = deckSideboardCount(d)
-  if (main < 60) return { ok: false, reason: `${t('decks', 'total_cards')} ${main}/60` }
-  if (sb > 15) return { ok: false, reason: `${t('decks', 'sideboard')} ${sb}/15` }
-  return { ok: true }
 }

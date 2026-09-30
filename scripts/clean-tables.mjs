@@ -6,6 +6,8 @@
 // Uso: node scripts/clean-tables.mjs <username> [username...]
 // Salida: exit 0 siempre que la limpieza se completara sin errores de red.
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -16,51 +18,18 @@ if (users.length === 0) {
   process.exit(1)
 }
 
-const timeout = (ms, label) =>
-  new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout esperando ${label} (${ms}ms)`)), ms))
-
 async function cleanUser(username) {
-  const ws = new WebSocket(WS_URL)
-  const pending = new Map()
-  const opened = new Promise((resolve, reject) => {
-    ws.onopen = () => resolve()
-    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
-  })
-  ws.onmessage = (msg) => {
-    let m
-    try {
-      m = JSON.parse(String(msg.data))
-    } catch {
-      return
-    }
-    if (m.type === 'result') {
-      const list = pending.get(m.action) ?? []
-      const res = list.shift()
-      if (res) res(m)
-    }
-  }
-  const send = (action, args) => {
-    ws.send(JSON.stringify({ action, args }))
-    return new Promise((resolve) => {
-      const list = pending.get(action) ?? []
-      list.push(resolve)
-      pending.set(action, list)
-    })
-  }
-
+  let conn = null
   let cleaned = 0
   try {
-    await Promise.race([opened, timeout(10000, 'apertura del WebSocket')])
-    let res = await Promise.race([
-      send('connect', { host: SERVER_HOST, port: SERVER_PORT, username, password: 'x' }),
-      timeout(15000, 'resultado de connect'),
-    ])
+    conn = await wsConn(WS_URL, { name: username })
+    let res = await conn.call('connect', { host: SERVER_HOST, port: SERVER_PORT, username, password: 'x' })
     if (!res.ok) {
       console.log(`  [clean-tables] ${username}: connect falló (${res.error ?? ''})`)
       return 0
     }
 
-    res = await Promise.race([send('getTables', {}), timeout(15000, 'getTables')])
+    res = await conn.call('getTables', {})
     if (!res.ok || !Array.isArray(res.data)) {
       console.log(`  [clean-tables] ${username}: getTables falló (${res.error ?? ''})`)
       return 0
@@ -73,9 +42,9 @@ async function cleanUser(username) {
       if (!tableId) continue
       const games = Array.isArray(table.games) ? table.games : []
       for (const gameId of games) {
-        await Promise.race([send('quitMatch', { gameId }), timeout(10000, `quitMatch ${gameId}`)]).catch(() => {})
+        await conn.call('quitMatch', { gameId }, 10000).catch(() => {})
       }
-      await Promise.race([send('removeTable', { tableId }), timeout(10000, `removeTable ${tableId}`)]).catch(() => {})
+      await conn.call('removeTable', { tableId }, 10000).catch(() => {})
       cleaned++
     }
     if (cleaned > 0) console.log(`  [clean-tables] ${username}: ${cleaned} mesa(s) limpiada(s)`)
@@ -84,11 +53,7 @@ async function cleanUser(username) {
     console.log(`  [clean-tables] ${username}: ${e.message}`)
     return 0
   } finally {
-    try {
-      ws.close()
-    } catch {
-      /* noop */
-    }
+    conn?.close()
   }
 }
 

@@ -6,7 +6,6 @@ Duración: 90 min · Fecha: _ · Tester: _
 
 ## Setup
 - Build/versión: _ · Servidor: local / beta · Modo: real / fake
-- Fidelidad P2 activa (`localStorage mage-web-fidelity=1`): sí / no
 
 ## Notas (qué se probó, qué se observó)
 -

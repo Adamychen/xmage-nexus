@@ -44,6 +44,7 @@ export default function AvatarPickerModal({
         <CloseButton variant="solid" size="lg" className="avatar-picker-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         {/* Filter Chips */}
         <div className="avatar-picker-tabs">

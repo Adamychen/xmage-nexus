@@ -54,6 +54,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
         <CloseButton variant="plain" size="md" className="appearance-close" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <section className="appearance-section">
           <h3 className="appearance-section-title">{t('lobby', 'ui_scale_title')}</h3>

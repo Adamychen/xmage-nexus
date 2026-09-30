@@ -159,7 +159,7 @@ describe('FeedbackDialog (componente)', () => {
       },
     } as never)
     render(<FeedbackDialog />)
-    expect(screen.getAllByText('Elige una carta para que descarte').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Elige una carta para descartar').length).toBeGreaterThan(0)
     expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
   })
 
@@ -236,7 +236,8 @@ describe('FeedbackDialog (componente)', () => {
     render(<FeedbackDialog />)
     expect(document.querySelector('.targeting-bar')).toBeTruthy()
     expect(document.querySelector('.card-grid-dialog')).toBeNull()
-    expect(screen.getAllByText('Elige una carta para que descarte').length).toBeGreaterThan(0)
+    // Una sola línea: el mensaje del servidor ya repite el título.
+    expect(screen.getAllByText('Elige una carta para descartar')).toHaveLength(1)
 
     fireEvent.click(screen.getByTestId('hand-pick-expand'))
     expect(document.querySelector('.card-grid-dialog')).toBeTruthy()

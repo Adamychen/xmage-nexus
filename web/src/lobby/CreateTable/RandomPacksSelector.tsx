@@ -93,6 +93,7 @@ export default function RandomPacksSelector({ tournamentType, numPlayers, initia
       kickerLabel={tournamentType}
       title={t('lobby', reshuffled ? 'random_packs_title_reshuffled' : 'random_packs_title_random')}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
       {!sets && !failed && <p>{t('lobby', 'random_packs_loading')}</p>}
       {(failed || (sets && sets.length === 0)) && <p>{t('lobby', 'random_packs_empty')}</p>}

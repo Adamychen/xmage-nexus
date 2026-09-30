@@ -392,13 +392,12 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
     server (0 stacks tras el fix, recuperación automática,
     `verify-spectator-end` 17/17) y `self-test` 15/15: el WATCHGAME era además
     flaky por partidas IA-vs-IA que pueden terminar antes del watch.
-- **RESUELTO (2026-09-12): `known-broken.ts` vacío; `invite-link.spec` pasa**
-  (era coletazo del SetupWizard; histórico abajo). `web/e2e/known-broken.ts` es
-  una lista vacía desde esa fecha, `playwright.config.ts` deja `grepInvert`
-  no-op con lista vacía y los deep links de invitación (`invite-link.spec`)
-  volvieron a pasar al re-ejecutarlos (`web/COMPONENT_PARITY.md:27`).
-  `E2E_INCLUDE_KNOWN_BROKEN=1` sigue disponible para re-incluir títulos si se
-  añaden. **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
+- **RESUELTO (2026-09-12): `invite-link.spec` pasa** (era coletazo del
+  SetupWizard; histórico abajo). Los deep links de invitación volvieron a pasar
+  al re-ejecutarlos (`web/COMPONENT_PARITY.md:27`) y la lista known-broken quedó
+  vacía; el mecanismo se eliminó el 2026-09-30 (sin `grepInvert` ni
+  `E2E_INCLUDE_KNOWN_BROKEN`: un test fake que falle de forma estable se
+  investiga y arregla, no se excluye). **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
   desde la ventana 09-05→09-10 (firma "Sala de Espera de Espectador" + asientos
   `0/N` en lobby) tenían causa raíz en el SetupWizard (commit `03abd96354`):
   su `skip()` persistía una conexión por defecto (proxy 8787) y el evento

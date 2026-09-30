@@ -1,6 +1,4 @@
 import type { DeckCard } from '../lobby/decks'
-import type { DeckV2 } from './types'
-import type { ScryfallSearchCard } from './scryfallSearch'
 
 export const BASIC_LAND_NAMES: Record<string, Record<string, string>> = {
   Plains: { es: 'Llanura', en: 'Plains', fr: 'Plaine', de: 'Ebene', it: 'Pianura', pt: 'Planície', ru: 'Равнина', ja: '平地', zhs: '平原' },
@@ -285,50 +283,6 @@ export function colorsFromManaCost(manaCost?: string): ('W' | 'U' | 'B' | 'R' | 
     if (manaCost.includes(c)) set.add(c)
   }
   return [...set]
-}
-
-export function deckColorsFromSearch(cards: DeckCard[], cache: Map<string, ScryfallSearchCard>): ('W' | 'U' | 'B' | 'R' | 'G')[] {
-  const set = new Set<'W' | 'U' | 'B' | 'R' | 'G'>()
-  for (const c of cards) {
-    const key = `${c.setCode}/${c.cardNumber}`
-    const info = cache.get(key) ?? cache.get(c.cardName.toLowerCase())
-    if (info) {
-      for (const col of info.color_identity as ('W' | 'U' | 'B' | 'R' | 'G')[]) set.add(col)
-    }
-  }
-  return [...set].sort()
-}
-
-export function buildCurve(cards: DeckCard[], meta: Map<string, ScryfallSearchCard>): number[] {
-  const buckets = Array(8).fill(0) as number[]
-  for (const c of cards) {
-    const key = `${c.setCode}/${c.cardNumber}`
-    const info = meta.get(key) ?? meta.get(c.cardName.toLowerCase())
-    const cmc = info ? Math.min(info.cmc, 7) : 0
-    const idx = cmc >= 7 ? 7 : cmc
-    buckets[idx] += c.amount
-  }
-  return buckets
-}
-
-export function deckMainCount(d: DeckV2): number {
-  return d.cards.reduce((s, c) => s + c.amount, 0)
-}
-export function deckSideCount(d: DeckV2): number {
-  return d.sideboard.reduce((s, c) => s + c.amount, 0)
-}
-
-export function groupByCmc(cards: DeckCard[], meta: Map<string, ScryfallSearchCard>): Map<number, DeckCard[]> {
-  const map = new Map<number, DeckCard[]>()
-  for (let i = 0; i <= 7; i++) map.set(i, [])
-  for (const c of cards) {
-    const key = `${c.setCode}/${c.cardNumber}`
-    const info = meta.get(key) ?? meta.get(c.cardName.toLowerCase())
-    const cmc = info ? info.cmc : 0
-    const bucket = cmc >= 7 ? 7 : cmc
-    map.get(bucket)!.push(c)
-  }
-  return map
 }
 
 export function cardKey(c: DeckCard): string {

@@ -1,11 +1,7 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { WebSocketServer, WebSocket } from 'ws'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
+import { contentText, startTestClient } from './support/mcp.ts'
 
 interface ProxyRequest {
   requestId: string
@@ -27,22 +23,12 @@ const controlledPlayer = {
   manaPool: { red: 0, green: 0, blue: 0, white: 0, black: 0, colorless: 0 },
 }
 
-function contentText(result: unknown): string {
-  const items = Array.isArray((result as { content?: unknown }).content)
-    ? (result as { content: { type?: string; text?: string }[] }).content
-    : []
-  return items
-    .filter((item) => item.type === 'text')
-    .map((item) => item.text ?? '')
-    .join('\n')
-}
-
 describe('MCP game session flow', () => {
   let wss: WebSocketServer
   let url = ''
   const sockets = new Set<WebSocket>()
   const received: ProxyRequest[] = []
-  const client = new Client({ name: 'session-test', version: '0.0.0' })
+  let client: Client
 
   const text = async (name: string, args: Record<string, unknown> = {}) =>
     contentText(await client.callTool({ name, arguments: args }))
@@ -91,7 +77,7 @@ describe('MCP game session flow', () => {
         )
       })
     })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    client = await startTestClient('session-test')
   }, 30_000)
 
   afterAll(async () => {

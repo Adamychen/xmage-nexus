@@ -2,6 +2,7 @@ import { getState } from '../state/state'
 import { recentFrames } from '../net/frameBuffer'
 import { APP_VERSION } from './version'
 import { getLanguage } from '../i18n'
+import { downloadBlob } from '../utils/download'
 
 export interface DiagnosticBundle {
   exportedAt: number
@@ -82,20 +83,10 @@ export function buildDiagnosticBundle(): DiagnosticBundle {
 }
 
 export function downloadDiagnostics(): boolean {
-  try {
-    if (typeof document === 'undefined' || typeof URL === 'undefined') return false
-    const bundle = buildDiagnosticBundle()
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `nexus-diagnostico_${new Date(bundle.exportedAt).toISOString().replace(/[:.]/g, '-')}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-    return true
-  } catch {
-    return false
-  }
+  const bundle = buildDiagnosticBundle()
+  return downloadBlob(
+    new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' }),
+    `nexus-diagnostico_${new Date(bundle.exportedAt).toISOString().replace(/[:.]/g, '-')}.json`,
+    1000,
+  )
 }

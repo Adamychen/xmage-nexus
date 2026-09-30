@@ -94,6 +94,7 @@ export function CardPrintingsModal({
         <CloseButton variant="plain" size="md" className="printings-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="printings-body">
           {loading && (

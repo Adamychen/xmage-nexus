@@ -15,7 +15,6 @@ import mage.utils.MageVersion;
 import mage.view.RoomUsersView;
 import org.java_websocket.WebSocket;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -39,7 +38,7 @@ import java.util.logging.Logger;
  * Bridge between an XMage server (SessionImpl) and the WebSocket gateway.
  * <p>
  * - implements MageClient to receive server callbacks and forward them as JSON events
- * - routes JSON commands from the web client to domain handlers (CommandDispatch)
+ * - routes JSON commands from the web client to domain handlers (Info/Table/Tournament/Game/OnlineDeck)
  *   and maps them to Session calls
  * - polls the lobby (tables/users) periodically and publishes it
  * <p>
@@ -76,11 +75,7 @@ public class ProxyClient implements MageClient, CommandContext {
     private int failedKeepAlives = 0;
 
     // Out-of-order protection for reconnect/bad network (same logic as the original client).
-    // ConcurrentHashMap, not HashMap: connectStart() resets it wholesale from the command thread
-    // under this client's monitor, while the callback thread reads and writes it without one, and
-    // a plain HashMap mutated from two threads can lose entries or spin on a resize.
-    private final Map<ClientCallbackType, Integer> lastMessages = new java.util.concurrent.ConcurrentHashMap<>();
-    /** Highest message id seen for this session, so the guard does not scan the map on every callback. */
+    /** Highest message id seen for this session. */
     private volatile int highestMessageId = 0;
 
     /**
@@ -177,7 +172,6 @@ public class ProxyClient implements MageClient, CommandContext {
         this.gateway = gateway;
         this.session = new SessionImpl(this);
         this.simManager = new SimManager(config, this::broadcastError, gateway.simRoster());
-        Arrays.stream(ClientCallbackType.values()).forEach(t -> this.lastMessages.put(t, 0));
         gateway.clientCreated();
         lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 2, 2, TimeUnit.SECONDS);
         // keep the server session alive (the original client pings from its UI; we have no UI)
@@ -218,10 +212,6 @@ public class ProxyClient implements MageClient, CommandContext {
     /** Whether the server still answers a ping of this session (see {@link SessionProbe}). */
     boolean sessionAnswers(long timeoutMs) {
         return SessionProbe.answers(session, timeoutMs);
-    }
-
-    public SessionImpl getSession() {
-        return session;
     }
 
     @Override
@@ -391,11 +381,6 @@ public class ProxyClient implements MageClient, CommandContext {
 
     // ============================ websocket client callbacks ============================
 
-    public synchronized void onClientOpen(WebSocket conn) {
-        cancelGraceTimer();
-        sendInfo(conn, "Proxy ready. Send {\"action\":\"connect\",...} to log in.");
-    }
-
     /**
      * Runs on the WebSocket selector thread, so it must never wait for this client's monitor
      * (held by connect() through a whole login, up to a minute on a slow server): that would
@@ -495,14 +480,6 @@ public class ProxyClient implements MageClient, CommandContext {
         }
     }
 
-    private void authorize(WebSocket conn) {
-        if (conn != null) {
-            synchronized (authorized) {
-                authorized.add(conn);
-            }
-        }
-    }
-
     private void deauthorize(WebSocket conn) {
         synchronized (authorized) {
             if (conn == null) {
@@ -532,9 +509,8 @@ public class ProxyClient implements MageClient, CommandContext {
 
     /** New server session: nothing of the previous one may leak into it. */
     private void resetSessionState() {
-        // its message ids restart at 1, so the outdated-guard would silently drop every
-        // UPDATE event of the new session otherwise
-        lastMessages.replaceAll((t, v) -> 0);
+        // message ids restart at 1 on the new session, so the outdated-guard would silently
+        // drop every UPDATE event of the new one otherwise
         highestMessageId = 0;
         // events of the previous user's still-running games (re-sent by the server over the
         // same channel) must be dropped, not forwarded
@@ -971,7 +947,6 @@ public class ProxyClient implements MageClient, CommandContext {
                     }
                 }
                 if (!callback.getMethod().getType().canComeInAnyOrder()) {
-                    lastMessages.put(callback.getMethod().getType(), callback.getMessageId());
                     if (callback.getMessageId() > highestMessageId) {
                         highestMessageId = callback.getMessageId();
                     }
@@ -1236,7 +1211,12 @@ public class ProxyClient implements MageClient, CommandContext {
                     break;
                 }
                 default: {
-                    if (!CommandDispatch.dispatch(action, conn, requestId, args, this)) {
+                    boolean handled = InfoCommands.handle(action, conn, requestId, args, this)
+                            || TableCommands.handle(action, conn, requestId, args, this)
+                            || TournamentCommands.handle(action, conn, requestId, args, this)
+                            || GameCommands.handle(action, conn, requestId, args, this)
+                            || OnlineDeckCommands.handle(action, conn, requestId, args, this);
+                    if (!handled) {
                         gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_UNKNOWN_ACTION, "Unknown action: " + action));
                     }
                     break;
@@ -1425,10 +1405,6 @@ public class ProxyClient implements MageClient, CommandContext {
         }
     }
 
-    public void connect(String host, int port, String username, String password) {
-        connect(null, "", host, port, username, password, "world.png", 51, null, -1);
-    }
-
     public boolean isRelinking() {
         return relinking;
     }
@@ -1490,14 +1466,5 @@ public class ProxyClient implements MageClient, CommandContext {
     void rememberLiveSession(String host, String username) {
         lastSessionId = session.getSessionId();
         RestoreIds.put(host, username, lastSessionId);
-    }
-
-    // ============================ helpers ============================
-
-    private void sendInfo(WebSocket conn, String message) {
-        JsonObject ev = new JsonObject();
-        ev.addProperty("type", "info");
-        ev.addProperty("message", message);
-        gateway.send(conn, ev.toString());
     }
 }

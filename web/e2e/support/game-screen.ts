@@ -12,6 +12,7 @@ import {
   crossZoneIdInView,
   escapeRegExp,
   framesOf,
+  gameEndedIn,
   gameEndReason,
   gameEnded,
   gameViewOf,
@@ -142,7 +143,7 @@ async function payManaInner(page: Page, helper: HumanHelper, fromIndex?: number)
     if (!sourceId) throw new Error(`sin fuente de maná para "${String(mana.data?.message ?? '').slice(0, 40)}"`)
     expect(await helper.playCard(sourceId), `pago de maná por WS (intento ${i})`).toBeTruthy()
     // tras el pago, esperar el SIGUIENTE ask de maná; si no llega (5s), el pago
-    // está completo. OJO: no salir por hasMyPriority — un SELECT durante el pago
+    // está completo. OJO: no salir por la prioridad del humano — un SELECT durante el pago
     // incompleto (el helper lo aguanta con payingUntil) no significa el final.
     let nextIndex = -1
     try {
@@ -244,4 +245,38 @@ export async function waitCrossZonePlayable(
      }
   console.log(`[dbg] waitCrossZonePlayable(${name}) agotado — ${gameEndReason(page)}`)
   return null
+}
+
+/** Lanza un Bolt con reintento: los frames pueden ir detrás del estado real y
+ *  el cast caer en una ventana ya cerrada (el servidor lo ignora en silencio y
+ *  el ask de maná nunca llega). Devuelve false si no hay Bolt jugable. */
+export async function castBolt(page: Page, helper: HumanHelper): Promise<boolean> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1 })
+    if (!boltId) return false
+    const castAt = parsedLen(page)
+    expect(await helper.playCard(boltId), 'lanzar Bolt por WS').toBeTruthy()
+    await targetOpponent(page, undefined as never, 'Bolt', helper)
+    try {
+      await payMana(page, helper, castAt)
+      return true
+    } catch (e) {
+      if (attempt === 2) throw e
+      await page.waitForTimeout(800)
+    }
+  }
+  return false
+}
+
+/** Quema al Sim con Bolts hasta que muere (una partida del match). */
+export async function winGameWithBolts(page: Page, helper: HumanHelper, gameId: string): Promise<void> {
+  for (let i = 0; i < 9; i++) {
+    if (gameEndedIn(page, gameId)) return
+    if (!(await castBolt(page, helper))) break
+  }
+  const opp = opponentPlayer(lastGameView(parseFrames(framesOf(page))))
+  expect(
+    opp == null || (opp.life ?? 20) <= 0 || gameEndedIn(page, gameId),
+    `el Sim debería estar muerto (life=${opp?.life})`,
+  ).toBeTruthy()
 }

@@ -20,6 +20,74 @@ final class MatchOptionsParser {
         String gameType = JsonArgs.str(args, "gameType", "");
         boolean multiPlayer = JsonArgs.getBool(args, "multiPlayer", false);
         MatchOptions options = new MatchOptions(name, gameType, multiPlayer);
+        applyMatchOptions(args, options);
+        if (args.has("freeMulligans")) {
+            options.setFreeMulligans(JsonArgs.getInt(args, "freeMulligans", 0));
+        }
+        if (args.has("attackOption")) {
+            try {
+                options.setAttackOption(mage.constants.MultiplayerAttackOption.valueOf(JsonArgs.str(args, "attackOption", "LEFT").toUpperCase(Locale.ROOT)));
+            } catch (Exception ignored) {
+            }
+        }
+        if (args.has("range")) {
+            try {
+                options.setRange(mage.constants.RangeOfInfluence.valueOf(JsonArgs.str(args, "range", "ALL").toUpperCase(Locale.ROOT)));
+            } catch (Exception ignored) {
+            }
+        }
+        if (args.has("minimumRating")) {
+            options.setMinimumRating(JsonArgs.getInt(args, "minimumRating", 0));
+        }
+        if (args.has("edhPowerLevel")) {
+            options.setEdhPowerLevel(JsonArgs.getInt(args, "edhPowerLevel", 100));
+        }
+        if (args.has("mulliganType")) {
+            try {
+                options.setMullgianType(mage.game.mulligan.MulliganType.valueOf(JsonArgs.str(args, "mulliganType", "GAME_DEFAULT").toUpperCase(Locale.ROOT)));
+            } catch (Exception ignored) {
+            }
+        }
+        if (args.has("customStartLifeEnabled")) {
+            options.setCustomStartLifeEnabled(JsonArgs.getBool(args, "customStartLifeEnabled", false));
+            if (args.has("customStartLife")) options.setCustomStartLife(JsonArgs.getInt(args, "customStartLife", 20));
+        }
+        if (args.has("customStartHandSizeEnabled")) {
+            options.setCustomStartHandSizeEnabled(JsonArgs.getBool(args, "customStartHandSizeEnabled", false));
+            if (args.has("customStartHandSize")) options.setCustomStartHandSize(JsonArgs.getInt(args, "customStartHandSize", 7));
+        }
+        if (args.has("planeChase")) {
+            options.setPlaneChase(JsonArgs.getBool(args, "planeChase", false));
+        }
+        // modo test: no barajar el mazo inicial (la librería queda en el orden
+        // enviado); los servidores sin modificar ignoran el campo
+        options.setSkipInitShuffling(JsonArgs.getBool(args, "skipInitShuffling", false));
+        // modo test: sin sorteo aleatorio de starting player (el primer jugador de
+        // la mesa empieza); los servidores sin modificar ignoran el campo
+        options.setSkipStartingPlayerChoice(JsonArgs.getBool(args, "skipStartingPlayerChoice", false));
+        options.getPlayerTypes().add(PlayerType.HUMAN);
+        if (args.has("playerTypes")) {
+            JsonArray arr = args.getAsJsonArray("playerTypes");
+            List<PlayerType> types = new java.util.ArrayList<>();
+            for (JsonElement e : arr) {
+                String raw = e.getAsString();
+                if ("SIM".equalsIgnoreCase(raw)) {
+                    // asiento simulado: el servidor oficial ve un asiento humano normal
+                    types.add(PlayerType.HUMAN);
+                } else {
+                    types.add(PlayerType.valueOf(raw.toUpperCase(Locale.ROOT)));
+                }
+            }
+            if (!types.isEmpty()) {
+                options.getPlayerTypes().clear();
+                options.getPlayerTypes().addAll(types);
+            }
+        }
+        return options;
+    }
+
+    /** Campos de MatchOptions compartidos por mesa y torneo. */
+    static void applyMatchOptions(JsonObject args, MatchOptions options) {
         options.setDeckType(JsonArgs.str(args, "deckType", ""));
         options.setLimited(JsonArgs.getBool(args, "limited", false));
         options.setWinsNeeded(JsonArgs.getInt(args, "winsNeeded", 1));
@@ -51,77 +119,11 @@ final class MatchOptionsParser {
             } catch (Exception ignored) {
             }
         }
-        if (args.has("freeMulligans")) {
-            options.setFreeMulligans(JsonArgs.getInt(args, "freeMulligans", 0));
-        }
-        if (args.has("attackOption")) {
-            try {
-                options.setAttackOption(mage.constants.MultiplayerAttackOption.valueOf(JsonArgs.str(args, "attackOption", "LEFT").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("range")) {
-            try {
-                options.setRange(mage.constants.RangeOfInfluence.valueOf(JsonArgs.str(args, "range", "ALL").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("minimumRating")) {
-            options.setMinimumRating(JsonArgs.getInt(args, "minimumRating", 0));
-        }
-        if (args.has("quitRatio")) {
-            options.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
-        }
-        if (args.has("edhPowerLevel")) {
-            options.setEdhPowerLevel(JsonArgs.getInt(args, "edhPowerLevel", 100));
-        }
-        if (args.has("mulliganType")) {
-            try {
-                options.setMullgianType(mage.game.mulligan.MulliganType.valueOf(JsonArgs.str(args, "mulliganType", "GAME_DEFAULT").toUpperCase(Locale.ROOT)));
-            } catch (Exception ignored) {
-            }
-        }
-        if (args.has("customStartLifeEnabled")) {
-            options.setCustomStartLifeEnabled(JsonArgs.getBool(args, "customStartLifeEnabled", false));
-            if (args.has("customStartLife")) options.setCustomStartLife(JsonArgs.getInt(args, "customStartLife", 20));
-        }
-        if (args.has("customStartHandSizeEnabled")) {
-            options.setCustomStartHandSizeEnabled(JsonArgs.getBool(args, "customStartHandSizeEnabled", false));
-            if (args.has("customStartHandSize")) options.setCustomStartHandSize(JsonArgs.getInt(args, "customStartHandSize", 7));
-        }
-        if (args.has("planeChase")) {
-            options.setPlaneChase(JsonArgs.getBool(args, "planeChase", false));
-        }
         if (args.has("bannedUsers") && args.get("bannedUsers").isJsonArray()) {
             java.util.Set<String> banned = new java.util.HashSet<>();
             for (JsonElement e : args.getAsJsonArray("bannedUsers")) banned.add(e.getAsString());
             options.setBannedUsers(banned);
         }
-        // modo test: no barajar el mazo inicial (la librería queda en el orden
-        // enviado); los servidores sin modificar ignoran el campo
-        options.setSkipInitShuffling(JsonArgs.getBool(args, "skipInitShuffling", false));
-        // modo test: sin sorteo aleatorio de starting player (el primer jugador de
-        // la mesa empieza); los servidores sin modificar ignoran el campo
-        options.setSkipStartingPlayerChoice(JsonArgs.getBool(args, "skipStartingPlayerChoice", false));
-        options.getPlayerTypes().add(PlayerType.HUMAN);
-        if (args.has("playerTypes")) {
-            JsonArray arr = args.getAsJsonArray("playerTypes");
-            List<PlayerType> types = new java.util.ArrayList<>();
-            for (JsonElement e : arr) {
-                String raw = e.getAsString();
-                if ("SIM".equalsIgnoreCase(raw)) {
-                    // asiento simulado: el servidor oficial ve un asiento humano normal
-                    types.add(PlayerType.HUMAN);
-                } else {
-                    types.add(PlayerType.valueOf(raw.toUpperCase(Locale.ROOT)));
-                }
-            }
-            if (!types.isEmpty()) {
-                options.getPlayerTypes().clear();
-                options.getPlayerTypes().addAll(types);
-            }
-        }
-        return options;
     }
 
     static mage.game.tournament.TournamentOptions parseTournamentOptions(JsonObject args) {
@@ -151,32 +153,7 @@ final class MatchOptionsParser {
         }
         // matchOptions sub-fields
         MatchOptions mOpts = tOpts.getMatchOptions();
-        mOpts.setDeckType(JsonArgs.str(args, "deckType", ""));
-        mOpts.setLimited(JsonArgs.getBool(args, "limited", false));
-        mOpts.setWinsNeeded(JsonArgs.getInt(args, "winsNeeded", 1));
-        mOpts.setQuitRatio(JsonArgs.getInt(args, "quitRatio", 100));
-        mOpts.setPassword(JsonArgs.str(args, "password", ""));
-        mOpts.setSpectatorsAllowed(JsonArgs.getBool(args, "spectatorsAllowed", true));
-        if (args.has("rollbackTurnsAllowed")) {
-            mOpts.setRollbackTurnsAllowed(JsonArgs.getBool(args, "rollbackTurnsAllowed", true));
-        }
-        if (args.has("rated")) {
-            mOpts.setRated(JsonArgs.getBool(args, "rated", false));
-        }
-        if (args.has("skillLevel")) {
-            try { mOpts.setSkillLevel(mage.constants.SkillLevel.valueOf(JsonArgs.str(args, "skillLevel", "CASUAL").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        if (args.has("timeLimit")) {
-            try { mOpts.setMatchTimeLimit(mage.constants.MatchTimeLimit.valueOf(JsonArgs.str(args, "timeLimit", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        if (args.has("bufferTime")) {
-            try { mOpts.setMatchBufferTime(mage.constants.MatchBufferTime.valueOf(JsonArgs.str(args, "bufferTime", "NONE").toUpperCase(Locale.ROOT))); } catch (Exception ignored) {}
-        }
-        if (args.has("bannedUsers") && args.get("bannedUsers").isJsonArray()) {
-            java.util.Set<String> banned = new java.util.HashSet<>();
-            for (JsonElement e : args.getAsJsonArray("bannedUsers")) banned.add(e.getAsString());
-            mOpts.setBannedUsers(banned);
-        }
+        applyMatchOptions(args, mOpts);
         // limitedOptions
         // El engine exige DraftOptions (no el base LimitedOptions) para los tipos
         // draft: BoosterDraftEliminationTournament.draft() hace

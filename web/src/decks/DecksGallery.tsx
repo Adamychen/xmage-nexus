@@ -20,6 +20,7 @@ import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import { alertDialog, confirmDialog } from '../ui/confirmDialog'
+import { downloadBlob } from '../utils/download'
 import './DecksGallery.css'
 
 function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
@@ -269,14 +270,8 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     if (!selected) return
     const text = fmt === 'dck' ? exportDck(selected) : fmt === 'arena' ? exportArena(selected) : fmt === 'dek' ? exportDek(selected) : exportTxt(selected)
     try { await navigator.clipboard.writeText(text) } catch {}
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
     const ext = fmt === 'dck' ? 'dck' : fmt === 'arena' ? 'txt' : fmt === 'dek' ? 'dek' : 'plain.txt'
-    a.download = `${selected.name.replace(/[^a-z0-9\-_ ]/gi, '_')}.${ext}`
-    document.body.appendChild(a); a.click(); a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 2000)
+    downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), `${selected.name.replace(/[^a-z0-9\-_ ]/gi, '_')}.${ext}`)
   }
 
   const handleFavorite = async () => {
@@ -297,15 +292,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       decks: customDecks,
     }
     const text = JSON.stringify(payload, null, 2)
-    const blob = new Blob([text], { type: 'application/json;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `xmage-nexus-decks-backup-${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 2000)
+    downloadBlob(new Blob([text], { type: 'application/json;charset=utf-8' }), `xmage-nexus-decks-backup-${new Date().toISOString().slice(0, 10)}.json`)
   }
 
   const restoreBackupText = async (text: string): Promise<number> => {

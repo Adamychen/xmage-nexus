@@ -71,8 +71,7 @@ class JsonUtilTest {
     //
     // Consumidores reales corregidos con esto: web/src/board/boardShared.ts
     // y web/src/board/crossZone.ts (leían `exile.cards`/`exile.name` sobre
-    // GameView.exiles, que antes del fix jamás existían) y el punto ciego de
-    // web/src/system/fidelity.ts con cartas exiliadas. BoardZone.tsx y
+    // GameView.exiles, que antes del fix jamás existían). BoardZone.tsx y
     // deckTracker.ts leían `mutateView` como mapa plano (funcionaba por
     // coincidencia) y se actualizan a `mutateView.cards` en el mismo cambio.
 

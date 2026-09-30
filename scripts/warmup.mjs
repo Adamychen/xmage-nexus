@@ -8,6 +8,8 @@
 // Si el fallo del juego ocurre, se reintenta una vez.
 // Uso: node scripts/warmup.mjs
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -37,88 +39,23 @@ const DEFAULT_DECK = {
   sideboard: [],
 }
 
-const timeout = (ms, label) =>
-  new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout esperando ${label} (${ms}ms)`)), ms))
-
-function client() {
-  const ws = new WebSocket(WS_URL)
-  const pending = new Map()
-  const waiters = []
-  let gameInit = null
-
-  ws.onmessage = (msg) => {
-    let m
-    try {
-      m = JSON.parse(String(msg.data))
-    } catch {
-      return
-    }
-    if (m.type === 'result') {
-      const list = pending.get(m.action) ?? []
-      const res = list.shift()
-      if (res) res(m)
-    } else if (m.type === 'event') {
-      if (m.method === 'GAME_INIT') gameInit = m
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i](m)) waiters.splice(i, 1)
-      }
-    }
-  }
-
-  const opened = new Promise((resolve, reject) => {
-    ws.onopen = () => resolve()
-    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
-  })
-
-  const send = (action, args) => {
-    ws.send(JSON.stringify({ action, args }))
-    return new Promise((resolve) => {
-      const list = pending.get(action) ?? []
-      list.push(resolve)
-      pending.set(action, list)
-    })
-  }
-
-  const waitEvent = (pred, label, ms = 20000) =>
-    new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`timeout esperando ${label}`)), ms)
-      waiters.push((ev) => {
-        if (pred(ev)) {
-          clearTimeout(timer)
-          resolve(ev)
-          return true
-        }
-        return false
-      })
-    })
-
-  return { ws, opened, send, waitEvent, gameInit: () => gameInit }
-}
-
 async function cleanup(tableId, gameId) {
   if (!tableId && !gameId) return
-  const c = client()
+  const c = await wsConn(WS_URL).catch(() => null)
+  if (!c) return
   try {
-    await Promise.race([c.opened, timeout(10000, 'apertura del WebSocket de limpieza')])
-    let res = await Promise.race([
-      c.send('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' }),
-      timeout(15000, 'resultado de connect (limpieza)'),
-    ])
+    const res = await c.call('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' })
     if (!res.ok) return
     if (gameId) {
-      await Promise.race([c.send('quitMatch', { gameId }), timeout(10000, 'quitMatch (limpieza)')]).catch(() => {})
+      await c.call('quitMatch', { gameId }, 10000).catch(() => {})
     }
     if (tableId) {
-      await Promise.race([c.send('removeTable', { tableId }), timeout(10000, 'removeTable (limpieza)')]).catch(() => {})
+      await c.call('removeTable', { tableId }, 10000).catch(() => {})
     }
   } catch {
     /* la limpieza nunca debe romper el warmup */
   } finally {
-    try {
-      c.ws.close()
-    } catch {
-      /* noop */
-    }
+    c.close()
   }
 }
 
@@ -131,14 +68,11 @@ async function waitProxyReady() {
   const deadline = Date.now() + READY_TIMEOUT_MS
   const transientDeadline = Date.now() + TRANSIENT_WINDOW_MS
   for (;;) {
-    const c = client()
+    let c = null
     let reason
     try {
-      await Promise.race([c.opened, timeout(10000, 'apertura del WebSocket')])
-      const res = await Promise.race([
-        c.send('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' }),
-        timeout(15000, 'resultado de connect (readiness)'),
-      ])
+      c = await wsConn(WS_URL)
+      const res = await c.call('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' })
       if (res.ok) return
       if (/still loading card data/i.test(res.error ?? '')) {
         reason = 'warming'
@@ -148,11 +82,7 @@ async function waitProxyReady() {
     } catch (e) {
       reason = e instanceof Error ? e.message : String(e)
     } finally {
-      try {
-        c.ws.close()
-      } catch {
-        /* noop */
-      }
+      c?.close()
     }
     if (Date.now() > deadline) {
       throw new Error(`el proxy no terminó de cargar la BD de cartas en ${READY_TIMEOUT_MS / 1000}s`)
@@ -168,81 +98,66 @@ async function waitProxyReady() {
 }
 
 async function runOnce() {
-  const c = client()
+  const c = await wsConn(WS_URL)
   let tableId = null
   let gameId = null
   try {
-    await Promise.race([c.opened, timeout(10000, 'apertura del WebSocket')])
-
-    let res = await Promise.race([
-      c.send('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' }),
-      timeout(15000, 'resultado de connect'),
-    ])
+    let res = await c.call('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' })
     if (!res.ok) throw new Error(`connect falló: ${res.error ?? ''}`)
 
-    res = await Promise.race([
-      c.send('createTable', {
-        name: `Warmup ${USER}`,
-        gameType: 'Two Player Duel',
-        deckType: 'Constructed - Modern',
-        winsNeeded: 1,
-        playerTypes: ['COMPUTER_MAD', 'COMPUTER_MAD'],
-        skipInitShuffling: true,
-        skipStartingPlayerChoice: true,
-      }),
-      timeout(15000, 'createTable'),
-    ])
+    res = await c.call('createTable', {
+      name: `Warmup ${USER}`,
+      gameType: 'Two Player Duel',
+      deckType: 'Constructed - Modern',
+      winsNeeded: 1,
+      playerTypes: ['COMPUTER_MAD', 'COMPUTER_MAD'],
+      skipInitShuffling: true,
+      skipStartingPlayerChoice: true,
+    })
     tableId = res.ok ? res.data?.tableId ?? res.data?.table?.tableId : null
     if (!tableId) throw new Error(`createTable falló: ${res.error ?? ''}`)
 
     for (let i = 0; i < 2; i++) {
-      res = await Promise.race([
-        c.send('joinTable', {
-          tableId,
-          playerName: i === 0 ? 'Warmup CPU' : `Warmup CPU ${i + 1}`,
-          playerType: 'COMPUTER_MAD',
-          skill: 1,
-          deck: DEFAULT_DECK,
-        }),
-        timeout(15000, `joinTable IA ${i + 1}`),
-      ])
+      res = await c.call('joinTable', {
+        tableId,
+        playerName: i === 0 ? 'Warmup CPU' : `Warmup CPU ${i + 1}`,
+        playerType: 'COMPUTER_MAD',
+        skill: 1,
+        deck: DEFAULT_DECK,
+      })
       if (!res.ok) throw new Error(`joinTable IA ${i + 1} falló: ${res.error ?? ''}`)
     }
 
-    res = await Promise.race([c.send('startMatch', { tableId }), timeout(20000, 'startMatch')])
+    res = await c.call('startMatch', { tableId }, 20000)
     if (!res.ok) throw new Error(`startMatch falló: ${res.error ?? ''}`)
 
-    res = await Promise.race([c.send('watchTable', { tableId }), timeout(15000, 'watchTable')])
+    res = await c.call('watchTable', { tableId })
     if (!res.ok) throw new Error(`watchTable falló: ${res.error ?? ''}`)
 
     // watchTable before the table is DUELING is dropped by the server (and the
     // XMage client still reports true): re-send it until WATCHGAME arrives
     let watch = null
-    const watched = c.waitEvent((m) => m.method === 'WATCHGAME', 'WATCHGAME', 30000)
+    const watched = c.wait((m) => m.method === 'WATCHGAME', 30000, 'WATCHGAME')
     watched.then((e) => { watch = e }, () => {})
     const watchDeadline = Date.now() + 30000
     while (!watch && Date.now() < watchDeadline) {
       await new Promise((r) => setTimeout(r, 500))
       if (watch) break
-      await Promise.race([c.send('watchTable', { tableId }), timeout(15000, 'watchTable')]).catch(() => {})
+      await c.call('watchTable', { tableId }).catch(() => {})
     }
     watch = await watched
     gameId = watch.objectId
 
-    res = await Promise.race([c.send('watchGame', { gameId }), timeout(15000, 'watchGame')])
+    res = await c.call('watchGame', { gameId })
     if (!res.ok) throw new Error(`watchGame falló: ${res.error ?? ''}`)
 
-    await Promise.race([c.waitEvent((m) => m.method === 'GAME_INIT' && m.objectId === gameId, 'GAME_INIT'), timeout(30000, 'GAME_INIT')])
+    await c.wait((m) => m.method === 'GAME_INIT' && m.objectId === gameId, 30000, 'GAME_INIT')
 
-    await Promise.race([c.send('quitMatch', { gameId }), timeout(10000, 'quitMatch')]).catch(() => {})
-    await Promise.race([c.send('removeTable', { tableId }), timeout(10000, 'removeTable')]).catch(() => {})
+    await c.call('quitMatch', { gameId }, 10000).catch(() => {})
+    await c.call('removeTable', { tableId }, 10000).catch(() => {})
     return { ok: true, gameId }
   } catch (e) {
-    try {
-      c.ws.close()
-    } catch {
-      /* noop */
-    }
+    c.close()
     await cleanup(tableId, gameId)
     throw e
   }

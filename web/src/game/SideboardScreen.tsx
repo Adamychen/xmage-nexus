@@ -12,6 +12,7 @@ import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat } from '../decks/formatRules'
 import type { DeckFormat } from '../decks/types'
 import { fetchCardJson } from '../cards/scryfallCards'
+import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Modal from '../ui/Modal'
@@ -136,20 +137,7 @@ export default function SideboardScreen() {
       backImg = m?.backImageUrl ?? null
     }
     if (!img) return
-    const previewWidth = backImg ? 520 : 255
-    let x = 0
-    let y = 0
-    if (rect) {
-      if (rect.left > window.innerWidth / 2) {
-        x = Math.max(10, rect.left - previewWidth - 15)
-      } else {
-        x = Math.min(window.innerWidth - previewWidth - 15, rect.right + 15)
-      }
-      y = Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40))
-    } else {
-      x = window.innerWidth / 2 - previewWidth / 2
-      y = window.innerHeight / 2 - 180
-    }
+    const { x, y } = hoverPreviewPosition(rect, !!backImg)
     setHoverPreview({ url: img, backUrl: backImg, x, y, name: card.cardName })
   }, [metaMap])
 

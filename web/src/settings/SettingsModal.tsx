@@ -158,6 +158,7 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
         <CloseButton variant="plain" size="md" className="settings-close" onClick={onClose} data-testid="settings-close" />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="settings-body">
           <nav className="settings-nav" aria-label={t('common', 'settings')}>

@@ -154,6 +154,7 @@ export default function LeaderboardModal({
         <CloseButton variant="solid" size="lg" className="leaderboard-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         {/* Modal Tabs */}
         <Tabs

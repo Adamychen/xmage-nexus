@@ -24,6 +24,8 @@
 // Uso: node scripts/verify-player-leave.mjs
 // Requiere: servidor local (testMode) + proxy (node scripts/ctl.mjs status).
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -71,105 +73,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // Conexión WS con call() (action/args → result del proxy), wait() de eventos y
 // auto-respuesta de los prompts del humano (pasar / keep / descartar).
 function mkConn(name) {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(WS_URL)
-    const pending = new Map()
-    const waiters = []
-    const conn = { ws, name, view: null, gameId: null, maxTurn: 0, lastViewAt: 0, lastGameEventAt: 0, events: [], firstEventAt: 0 }
-    let rid = 0
+  const sendBool = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: v } }))
+  const sendUuid = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: v } }))
 
-    conn.call = (action, args, ms = 15000) =>
-      new Promise((res) => {
-        const id = `${name}-${++rid}`
-        const timer = setTimeout(() => {
-          pending.delete(id)
-          res({ ok: false, error: 'timeout' })
-        }, ms)
-        pending.set(id, (m) => {
-          clearTimeout(timer)
-          res(m)
-        })
-        try {
-          ws.send(JSON.stringify({ requestId: id, action, args }))
-        } catch {
-          clearTimeout(timer)
-          pending.delete(id)
-          res({ ok: false, error: 'send-fail' })
-        }
-      })
-
-    conn.wait = (pred, ms, label) =>
-      new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error(`timeout esperando ${label}`)), ms)
-        waiters.push((m) => {
-          if (pred(m)) {
-            clearTimeout(timer)
-            resolve(m)
-            return true
-          }
-          return false
-        })
-      })
-
-    conn.close = () => {
-      try {
-        ws.close()
-      } catch {
-        /* noop */
-      }
-    }
-
-    function autoAnswer(m) {
-      if (!conn.gameId) return
-      const d = m.data ?? {}
-      const q = String(d.message ?? d.question ?? '')
-      if (m.method === 'GAME_ASK') {
-        // mulligan: false = keep; resto de "may": false.
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_SELECT') {
-        // Prioridad: pasar (boolean false). Los humanos no castean.
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_TARGET') {
-        if (/discard/i.test(q)) {
-          // El descarte de limpieza NO se puede declinar: primera carta.
-          const pt = d.options?.possibleTargets ?? d.targets ?? []
-          const id = Array.isArray(pt) ? (typeof pt[0] === 'string' ? pt[0] : pt[0]?.id) : Object.keys(pt)[0]
-          if (id) {
-            ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: id } }))
-            return
-          }
-        }
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_PLAY_MANA' || m.method === 'GAME_PLAY_XMANA') {
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-    }
-
-    ws.onopen = () => resolve(conn)
-    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
-    ws.onmessage = (raw) => {
-      let m
-      try {
-        m = JSON.parse(String(raw.data ?? raw))
-      } catch {
-        return
-      }
-      if (m.requestId && pending.has(m.requestId)) {
-        pending.get(m.requestId)(m)
-        pending.delete(m.requestId)
-        return
-      }
-      if (m.requestId || m.type === 'lobby' || m.type === 'error') return
-      if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_')) && !conn.gameId) {
-        conn.gameId = String(m.objectId)
-      }
+  return wsConn(WS_URL, {
+    name,
+    init: { maxTurn: 0, lastViewAt: 0, lastGameEventAt: 0, events: [], firstEventAt: 0 },
+    onMessage(conn, m) {
       if (m.data?.gameView) {
         conn.view = m.data.gameView
         conn.maxTurn = Math.max(conn.maxTurn, Number(conn.view.turn ?? 0))
@@ -182,11 +92,39 @@ function mkConn(name) {
       if (conn.gameId && String(m.objectId ?? '') === conn.gameId) conn.lastGameEventAt = Date.now()
       if (!conn.firstEventAt) conn.firstEventAt = Date.now()
       if (conn.events.length < 400) conn.events.push({ method: m.method, at: Date.now() })
-      autoAnswer(m)
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i](m)) waiters.splice(i, 1)
+    },
+    autoAnswer(conn, m) {
+      if (!conn.gameId) return
+      const d = m.data ?? {}
+      const q = String(d.message ?? d.question ?? '')
+      if (m.method === 'GAME_ASK') {
+        // mulligan: false = keep; resto de "may": false.
+        sendBool(conn, false)
+        return
       }
-    }
+      if (m.method === 'GAME_SELECT') {
+        // Prioridad: pasar (boolean false). Los humanos no castean.
+        sendBool(conn, false)
+        return
+      }
+      if (m.method === 'GAME_TARGET') {
+        if (/discard/i.test(q)) {
+          // El descarte de limpieza NO se puede declinar: primera carta.
+          const pt = d.options?.possibleTargets ?? d.targets ?? []
+          const id = Array.isArray(pt) ? (typeof pt[0] === 'string' ? pt[0] : pt[0]?.id) : Object.keys(pt)[0]
+          if (id) {
+            sendUuid(conn, id)
+            return
+          }
+        }
+        sendBool(conn, false)
+        return
+      }
+      if (m.method === 'GAME_PLAY_MANA' || m.method === 'GAME_PLAY_XMANA') {
+        sendBool(conn, false)
+        return
+      }
+    },
   })
 }
 

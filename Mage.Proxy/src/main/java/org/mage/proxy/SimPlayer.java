@@ -94,10 +94,6 @@ public class SimPlayer implements MageClient {
     private final Set<UUID> triedBlockers = new HashSet<>();
     private String lastCastSignature = null;
 
-    public SimPlayer(String username, String password, DeckCardLists deck, String host, int port) {
-        this(username, password, deck, host, port, 0);
-    }
-
     public SimPlayer(String username, String password, DeckCardLists deck, String host, int port, int skill) {
         this.username = username;
         this.password = password;
@@ -190,10 +186,6 @@ public class SimPlayer implements MageClient {
         if (wasRunning && hook != null) {
             hook.run();
         }
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     // ============================ MageClient ============================
@@ -393,7 +385,7 @@ public class SimPlayer implements MageClient {
                 case GAME_CHOOSE_PILE:
                 case GAME_CHOOSE_CHOICE:
                     // el guion nunca las provoca; por seguridad, cancelar
-                    cancel();
+                    pass();
                     break;
                 case USER_REQUEST_DIALOG: {
                     if (data instanceof UserRequestMessage) {
@@ -553,7 +545,7 @@ public class SimPlayer implements MageClient {
             }
             // solo castear si las tierras sin girar pueden producir TODOS los colores
             // del coste (el servidor rechaza el cast si no: canPlay -> canPay FALSE)
-            Set<Character> required = colorsOf(card.getManaCostStr());
+            Set<Character> required = requiredColors(card.getManaCostStr());
             if (!canProduceColors(me, required)) {
                 logger.info("sim " + username + " tryCast " + card.getName() + " sin maná de color "
                         + required + " -> skip");
@@ -577,19 +569,6 @@ public class SimPlayer implements MageClient {
         return false;
     }
 
-    /** Colores (R/W/U/B/G) que aparecen en un coste de maná "{1}{R}{R}{W}". */
-    private static Set<Character> colorsOf(String manaCost) {
-        Set<Character> colors = new java.util.LinkedHashSet<>();
-        if (manaCost == null) {
-            return colors;
-        }
-        Matcher matcher = COLOR_PATTERN.matcher(manaCost);
-        while (matcher.find()) {
-            colors.add(matcher.group(1).charAt(0));
-        }
-        return colors;
-    }
-
     /** true si las tierras sin girar del jugador pueden producir cada color pedido. */
     private static boolean canProduceColors(PlayerView player, Set<Character> required) {
         if (required.isEmpty()) {
@@ -598,21 +577,34 @@ public class SimPlayer implements MageClient {
         Set<Character> available = new java.util.LinkedHashSet<>();
         for (PermanentView perm : player.getBattlefield().values()) {
             if (!perm.isTapped() && isLand(perm)) {
-                String name = perm.getName() == null ? "" : perm.getName();
-                if (name.contains("Mountain")) {
-                    available.add('R');
-                } else if (name.contains("Island")) {
-                    available.add('U');
-                } else if (name.contains("Plains")) {
-                    available.add('W');
-                } else if (name.contains("Swamp")) {
-                    available.add('B');
-                } else if (name.contains("Forest")) {
-                    available.add('G');
+                char color = basicLandColor(perm.getName());
+                if (color != 0) {
+                    available.add(color);
                 }
             }
         }
         return available.containsAll(required);
+    }
+
+    /** Color del básico por nombre (R/W/U/B/G), o 0 si el nombre no es de un básico. */
+    private static char basicLandColor(String name) {
+        String n = name == null ? "" : name;
+        if (n.contains("Mountain")) {
+            return 'R';
+        }
+        if (n.contains("Island")) {
+            return 'U';
+        }
+        if (n.contains("Plains")) {
+            return 'W';
+        }
+        if (n.contains("Swamp")) {
+            return 'B';
+        }
+        if (n.contains("Forest")) {
+            return 'G';
+        }
+        return 0;
     }
 
     private void onPlayMana(GameClientMessage gcm) {
@@ -622,7 +614,7 @@ public class SimPlayer implements MageClient {
         PlayerView me = view != null ? view.getMyPlayer() : null;
         if (me == null) {
             logger.info("sim " + username + " playMana sin jugador -> cancel ('" + msg + "')");
-            cancel();
+            pass();
             return;
         }
         UUID source = null;
@@ -642,7 +634,7 @@ public class SimPlayer implements MageClient {
             session.sendPlayerUUID(gameId, source);
         } else {
             logger.info("sim " + username + " playMana: sin fuente para '" + msg + "' (untapped=" + countUntappedLands(me) + ") -> cancel");
-            cancel();
+            pass();
         }
     }
 
@@ -666,7 +658,7 @@ public class SimPlayer implements MageClient {
                 session.sendPlayerUUID(gameId, pick);
                 return;
             }
-            cancel();
+            pass();
             return;
         }
         String msg = lower(gcm.getMessage());
@@ -727,12 +719,6 @@ public class SimPlayer implements MageClient {
     // ============================ helpers ============================
 
     private void pass() {
-        if (gameId != null) {
-            session.sendPlayerBoolean(gameId, false);
-        }
-    }
-
-    private void cancel() {
         if (gameId != null) {
             session.sendPlayerBoolean(gameId, false);
         }
@@ -803,19 +789,7 @@ public class SimPlayer implements MageClient {
     private static boolean landProduces(PermanentView perm, Set<Character> required) {
         // los básicos se detectan por nombre (el color del view es poco fiable
         // para tierras básicas en algunos contextos de simulación)
-        String name = perm.getName() == null ? "" : perm.getName();
-        char namedColor = 0;
-        if (name.contains("Mountain")) {
-            namedColor = 'R';
-        } else if (name.contains("Island")) {
-            namedColor = 'U';
-        } else if (name.contains("Plains")) {
-            namedColor = 'W';
-        } else if (name.contains("Swamp")) {
-            namedColor = 'B';
-        } else if (name.contains("Forest")) {
-            namedColor = 'G';
-        }
+        char namedColor = basicLandColor(perm.getName());
         if (namedColor != 0) {
             return required.isEmpty() || required.contains(namedColor);
         }

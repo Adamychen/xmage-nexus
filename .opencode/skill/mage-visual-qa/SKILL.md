@@ -34,9 +34,8 @@ description: QA visual y UX: MCP Playwright (snapshot para actuar + screenshot p
   `:spells|targeting|combat|fullflow` (tags).
 - Matriz: `E2E_VIEWPORT=1366x768|1920x1080|2560x1440`; default Chromium 1600x900. WebKit es
   motor real del launcher (WKWebView en macOS; WebView2 en Windows): probarlo es producción.
-- `web/e2e/known-broken.ts`: lista vacía (2026-09-12). Si un fake falla estable, añade su título
-  exacto `_grepTitleWithTags` + firma/evidencia en AGENTS.md; `E2E_INCLUDE_KNOWN_BROKEN=1` los
-  re-incluye para triage.
+- No hay lista de tests excluidos (el known-broken se eliminó el 2026-09-30): si un fake falla
+  estable, se investiga y arregla (o se documenta como bug abierto), no se excluye.
 - `locale: 'es-ES'` es obligatorio (los specs buscan texto en español); `workers: 1`,
   timeout 120 s.
 

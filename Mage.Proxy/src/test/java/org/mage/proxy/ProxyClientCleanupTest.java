@@ -7,10 +7,8 @@ import java.lang.reflect.Field;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -101,18 +99,10 @@ class ProxyClientCleanupTest {
     }
 
     @Test
-    void theOutdatedGuardDoesNotScanTheWholeMapOnEveryCallback() throws Exception {
-        // highestMessageId replaced a stream + boxed unboxing over every entry of the map, on
-        // every single callback, on the thread that must not fall behind
+    void theOutdatedGuardTracksTheHighestMessageId() throws Exception {
         client = newClient(gateway);
         Field highest = ProxyClient.class.getDeclaredField("highestMessageId");
         highest.setAccessible(true);
         assertEquals(0, highest.getInt(client));
-        Field lastMessages = ProxyClient.class.getDeclaredField("lastMessages");
-        lastMessages.setAccessible(true);
-        Object map = lastMessages.get(client);
-        assertTrue(map instanceof java.util.concurrent.ConcurrentMap,
-                "connectStart resets this map from the command thread while callbacks read it");
-        assertFalse(java.util.HashMap.class.isInstance(map));
     }
 }

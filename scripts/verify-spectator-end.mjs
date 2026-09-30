@@ -18,6 +18,8 @@
 //
 // Evidencia de docs/history/plan4.md §3.11 "Espectar partida y torneo" (2026-09-17).
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -58,101 +60,14 @@ const timeout = (ms, label) =>
 // Conexión WS con call()/wait() y auto-respuesta de prompts del humano (P:
 // keep mulligan, pasa prioridad, descarta la primera carta, declina maná).
 function mkConn(name, { autoAnswer = false } = {}) {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(WS_URL)
-    const pending = new Map()
-    const waiters = []
-    const conn = { ws, name, gameId: null, view: null, endGameInfo: null, watchGame: null, maxTurn: 0, lastViewAt: 0, events: [] }
-    let rid = 0
+  const sendBool = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: v } }))
+  const sendUuid = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: v } }))
 
-    conn.call = (action, args, ms = 15000) =>
-      new Promise((res) => {
-        const id = `${name}-${++rid}`
-        const timer = setTimeout(() => {
-          pending.delete(id)
-          res({ ok: false, error: 'timeout' })
-        }, ms)
-        pending.set(id, (m) => {
-          clearTimeout(timer)
-          res(m)
-        })
-        try {
-          ws.send(JSON.stringify({ requestId: id, action, args }))
-        } catch {
-          clearTimeout(timer)
-          pending.delete(id)
-          res({ ok: false, error: 'send-fail' })
-        }
-      })
-
-    conn.wait = (pred, ms, label) =>
-      new Promise((resolveWait, rejectWait) => {
-        const timer = setTimeout(() => rejectWait(new Error(`timeout esperando ${label}`)), ms)
-        waiters.push((m) => {
-          if (pred(m)) {
-            clearTimeout(timer)
-            resolveWait(m)
-            return true
-          }
-          return false
-        })
-      })
-
-    conn.close = () => {
-      try {
-        ws.close()
-      } catch {
-        /* noop */
-      }
-    }
-
-    function autoAnswerMsg(m) {
-      if (!conn.gameId) return
-      const d = m.data ?? {}
-      const q = String(d.message ?? d.question ?? '')
-      if (m.method === 'GAME_ASK') {
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_SELECT') {
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_TARGET') {
-        if (/discard/i.test(q)) {
-          const pt = d.options?.possibleTargets ?? d.targets ?? []
-          const id = Array.isArray(pt) ? (typeof pt[0] === 'string' ? pt[0] : pt[0]?.id) : Object.keys(pt)[0]
-          if (id) {
-            ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: id } }))
-            return
-          }
-        }
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-        return
-      }
-      if (m.method === 'GAME_PLAY_MANA' || m.method === 'GAME_PLAY_XMANA') {
-        ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-      }
-    }
-
-    ws.onopen = () => resolve(conn)
-    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
-    ws.onmessage = (raw) => {
-      let m
-      try {
-        m = JSON.parse(String(raw.data ?? raw))
-      } catch {
-        return
-      }
-      if (m.requestId && pending.has(m.requestId)) {
-        pending.get(m.requestId)(m)
-        pending.delete(m.requestId)
-        return
-      }
-      if (m.requestId || m.type === 'lobby' || m.type === 'error') return
-      if (m.objectId && (m.method === 'START_GAME' || m.method === 'WATCHGAME' || m.method?.startsWith('GAME_')) && !conn.gameId) {
-        conn.gameId = String(m.objectId)
-      }
+  return wsConn(WS_URL, {
+    name,
+    gameIdOn: (m) => !!m.objectId && (m.method === 'START_GAME' || m.method === 'WATCHGAME' || m.method?.startsWith('GAME_')),
+    init: { endGameInfo: null, watchGame: null, maxTurn: 0, lastViewAt: 0, events: [] },
+    onMessage(conn, m) {
       if (m.method === 'GAME_INIT') conn.initAt = Date.now()
       if (m.data?.gameView) {
         conn.view = m.data.gameView
@@ -162,11 +77,35 @@ function mkConn(name, { autoAnswer = false } = {}) {
       if (m.method === 'WATCHGAME') conn.watchGame = m
       if (m.method === 'END_GAME_INFO') conn.endGameInfo = m
       if (conn.events.length < 400) conn.events.push({ method: m.method, at: Date.now() })
-      if (autoAnswer) autoAnswerMsg(m)
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i](m)) waiters.splice(i, 1)
+    },
+    autoAnswer: autoAnswer ? (conn, m) => {
+      if (!conn.gameId) return
+      const d = m.data ?? {}
+      const q = String(d.message ?? d.question ?? '')
+      if (m.method === 'GAME_ASK') {
+        sendBool(conn, false)
+        return
       }
-    }
+      if (m.method === 'GAME_SELECT') {
+        sendBool(conn, false)
+        return
+      }
+      if (m.method === 'GAME_TARGET') {
+        if (/discard/i.test(q)) {
+          const pt = d.options?.possibleTargets ?? d.targets ?? []
+          const id = Array.isArray(pt) ? (typeof pt[0] === 'string' ? pt[0] : pt[0]?.id) : Object.keys(pt)[0]
+          if (id) {
+            sendUuid(conn, id)
+            return
+          }
+        }
+        sendBool(conn, false)
+        return
+      }
+      if (m.method === 'GAME_PLAY_MANA' || m.method === 'GAME_PLAY_XMANA') {
+        sendBool(conn, false)
+      }
+    } : null,
   })
 }
 

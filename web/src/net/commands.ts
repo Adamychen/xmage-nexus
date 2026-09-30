@@ -72,11 +72,6 @@ export async function getExpansionsWithBoosters(): Promise<BoosterSetInfo[]> {
   return res.ok ? (res.data ?? []) : []
 }
 
-export async function getTournamentGameTypes(): Promise<GameTypeInfo[]> {
-  const res = await getGateway().send<GameTypeInfo[]>('getTournamentGameTypes')
-  return res.ok ? (res.data ?? []) : []
-}
-
 export async function getRoomChatId(): Promise<string | undefined> {
   const res = await getGateway().send<string>('getRoomChatId')
   return res.ok ? res.data : undefined
@@ -376,20 +371,4 @@ export async function watchTournamentTable(tableId: string, roomId?: string) {
 export async function getTournament(tournamentId: string) {
   const res = await getGateway().send('getTournament', { tournamentId })
   return res.ok ? res.data : null
-}
-
-export async function replayNext(gameId: string) {
-  return getGateway().send('replayNext', { gameId })
-}
-
-export async function replayPrevious(gameId: string) {
-  return getGateway().send('replayPrevious', { gameId })
-}
-
-export async function replaySkipForward(gameId: string, moves: number) {
-  return getGateway().send('replaySkipForward', { gameId, moves })
-}
-
-export async function stopReplay(gameId: string) {
-  return getGateway().send('stopReplay', { gameId })
 }

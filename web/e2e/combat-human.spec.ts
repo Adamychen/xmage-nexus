@@ -21,7 +21,7 @@ import {
   parseSent,
   sentOf,
 } from './support/frames'
-import { sceneClick, waitSceneCombat, type SceneCombat } from './support/scene'
+import { sceneClick, waitScene, type SceneCombat } from './support/scene'
 import { dumpE2E, payMana, waitPlayable } from './support/game-screen'
 import type { HumanHelper } from './wshelper'
 
@@ -65,7 +65,7 @@ async function ensureCreature(page: Page, helper: HumanHelper, name: string): Pr
  *  (en real, el humano también abre ataque en sus turnos; en fake no). */
 async function confirmMyAttackWindows(page: Page): Promise<SceneCombat> {
   for (let i = 0; i < 4; i++) {
-    const combat = await waitSceneCombat(page, (c) => c.active, `ventana de combate (${i})`, 25_000)
+    const combat = await waitScene(page, 'combat', (c) => c.active, `ventana de combate (${i})`, 25_000)
     if (combat.mode !== 'attack') return combat
     await page.getByRole('button', { name: 'Confirmar atacantes', exact: true }).click()
   }
@@ -93,7 +93,7 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
     // ventana de declaración de atacantes: la criatura es clicable
     let combat: SceneCombat
     try {
-      combat = await waitSceneCombat(page, (c) => c.active && c.mode === 'attack', 'ventana de ataque', 25_000)
+      combat = await waitScene(page, 'combat', (c) => c.active && c.mode === 'attack', 'ventana de ataque', 25_000)
     } catch (e) {
       dumpE2E(page, 'combat-human-attack-window')
       throw e
@@ -107,7 +107,7 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
 
     // clic en la criatura → declarada como atacante (✓ en el canvas)
     expect(await sceneClick(page, goblinId), 'clic para declarar atacante').toBeTruthy()
-    await waitSceneCombat(page, (c) => c.chosen.includes(goblinId), 'atacante declarado')
+    await waitScene(page, 'combat', (c) => c.chosen.includes(goblinId), 'atacante declarado')
 
     // Captura 2: Atacante declarado (flecha roja / espada hacia el oponente)
     await page.waitForTimeout(200)

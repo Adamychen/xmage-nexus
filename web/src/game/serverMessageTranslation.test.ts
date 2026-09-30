@@ -71,10 +71,10 @@ describe('serverMessageTranslation', () => {
   })
 
   it('localizes discard messages', () => {
-    expect(localizeServerMessage('Choose a card for them to discard', t as any)).toBe('Elige una carta para que descarte')
-    expect(localizeServerMessage('Choose a card to discard', t as any)).toBe('Elige una carta para que descarte')
-    expect(localizeServerMessage('Select a card to discard', t as any)).toBe('Elige una carta para que descarte')
-    expect(localizeServerMessage('Discard down to 7 cards', t as any)).toBe('Elige una carta para que descarte (7)')
+    expect(localizeServerMessage('Choose a card for them to discard', t as any)).toBe('Elige una carta para descartar')
+    expect(localizeServerMessage('Choose a card to discard', t as any)).toBe('Elige una carta para descartar')
+    expect(localizeServerMessage('Select a card to discard', t as any)).toBe('Elige una carta para descartar')
+    expect(localizeServerMessage('Discard down to 7 cards', t as any)).toBe('Elige una carta para descartar (7)')
   })
 
   it('localizes mode, color, and player choices', () => {

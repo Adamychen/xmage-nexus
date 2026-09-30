@@ -1,38 +1,13 @@
 /**
  * Helpers de latencia percibida (plan4 §5.4) para los E2E:
- * - `withDelayedFakeServer`: FixtureServer con retardo de eco configurable.
  * - Marcas de `window.__magePerf` (click/ack/evento) del build dev.
  * - Sonda DOM para medir el primer cambio visual tras un clic con precisión
  *   sub-100 ms (MutationObserver + performance.now en la página).
  */
 
 import type { Page } from '@playwright/test'
-import { FakeServer, type FakeServerOptions, type Scenario } from '../../fixtures/fake'
-import { FAKE_MODE } from '../dual'
-import { getFakePort, setFakePort } from './fake-port'
 
 export const LATENCY_ECHO_MS = 1200
-
-/** Arranca un FixtureServer con eco diferido (no-op en modo real). */
-export async function withDelayedFakeServer<T>(
-  makeScenario: () => Scenario,
-  run: () => Promise<T>,
-  echoDelayMs = LATENCY_ECHO_MS,
-): Promise<T> {
-  if (!FAKE_MODE) return run()
-  const server = await FakeServer.start(0, makeScenario, { echoDelayMs } satisfies FakeServerOptions)
-  const previousPort = getFakePort()
-  setFakePort(server.port)
-  try {
-    return await run()
-  } finally {
-    try {
-      await server.stop()
-    } finally {
-      setFakePort(previousPort)
-    }
-  }
-}
 
 export interface PerfEntry {
   kind: 'click' | 'ack' | 'event'

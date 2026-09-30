@@ -69,68 +69,68 @@ function getStorage(): Storage {
   return memoryStorage
 }
 
-export function loadConn(): ConnectionInfo | null {
+function writeJson(key: string, value: unknown) {
   try {
-    const storage = getStorage()
-    const raw = storage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<ConnectionInfo> & { host?: string }
-      if (parsed && !parsed.wsHost) {
-        return {
-          wsHost: parsed.host ?? 'localhost',
-          proxyPort: (parsed as { proxyPort?: number }).proxyPort ?? 8787,
-          serverHost: parsed.host ?? parsed.serverHost ?? 'localhost',
-          port: parsed.port ?? 17171,
-          username: parsed.username ?? '',
-          password: parsed.password ?? '',
-        }
-      }
-      return { proxyPort: 8787, ...parsed } as ConnectionInfo
-    }
+    getStorage().setItem(key, JSON.stringify(value))
   } catch {}
+}
+
+function readJson<T>(key: string): T | undefined {
+  try {
+    const raw = getStorage().getItem(key)
+    if (raw == null) return undefined
+    return JSON.parse(raw) as T
+  } catch {
+    return undefined
+  }
+}
+
+export function loadConn(): ConnectionInfo | null {
+  const parsed = readJson<Partial<ConnectionInfo> & { host?: string }>(STORAGE_KEY)
+  if (parsed !== undefined) {
+    if (parsed && !parsed.wsHost) {
+      return {
+        wsHost: parsed.host ?? 'localhost',
+        proxyPort: (parsed as { proxyPort?: number }).proxyPort ?? 8787,
+        serverHost: parsed.host ?? parsed.serverHost ?? 'localhost',
+        port: parsed.port ?? 17171,
+        username: parsed.username ?? '',
+        password: parsed.password ?? '',
+      }
+    }
+    return { proxyPort: 8787, ...parsed } as ConnectionInfo
+  }
   return null
 }
 
 export function saveConn(conn: ConnectionInfo | null) {
-  try {
-    const storage = getStorage()
-    if (conn) storage.setItem(STORAGE_KEY, JSON.stringify(conn))
-    else storage.removeItem(STORAGE_KEY)
-  } catch {}
+  if (conn) writeJson(STORAGE_KEY, conn)
+  else try { getStorage().removeItem(STORAGE_KEY) } catch {}
 }
 
 export function loadActiveGame(): ActiveGamePersistence | null {
-  try {
-    const storage = getStorage()
-    const raw = storage.getItem(ACTIVE_GAME_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as ActiveGamePersistence
-      if (parsed && parsed.gameId && typeof parsed.savedAt === 'number') {
-        if (Date.now() - parsed.savedAt < ACTIVE_GAME_MAX_AGE_MS) {
-          return parsed
-        }
-        clearActiveGame()
-      }
+  const parsed = readJson<ActiveGamePersistence>(ACTIVE_GAME_KEY)
+  if (parsed && parsed.gameId && typeof parsed.savedAt === 'number') {
+    if (Date.now() - parsed.savedAt < ACTIVE_GAME_MAX_AGE_MS) {
+      return parsed
     }
-  } catch {}
+    clearActiveGame()
+  }
   return null
 }
 
 export function saveActiveGame(gameId: string | null, tableId?: string | null, role: 'player' | 'watcher' = 'player') {
-  try {
-    const storage = getStorage()
-    if (gameId) {
-      const data: ActiveGamePersistence = {
-        gameId,
-        tableId: tableId ?? null,
-        role,
-        savedAt: Date.now(),
-      }
-      storage.setItem(ACTIVE_GAME_KEY, JSON.stringify(data))
-    } else {
-      clearActiveGame()
+  if (gameId) {
+    const data: ActiveGamePersistence = {
+      gameId,
+      tableId: tableId ?? null,
+      role,
+      savedAt: Date.now(),
     }
-  } catch {}
+    writeJson(ACTIVE_GAME_KEY, data)
+  } else {
+    clearActiveGame()
+  }
 }
 
 /** Whether a login is the account of the saved connection (its active game
@@ -164,43 +164,35 @@ const ACTIVE_DRAFT_MAX_AGE_MS = 3 * 60 * 60 * 1000 // 3 horas
  *  no responde `DRAFT_INIT` a un `joinDraft` en draft ya empezado, así que la
  *  instantánea es lo único que permite pintar el draft hasta el siguiente pick. */
 export function loadActiveDraft(): ActiveDraftPersistence | null {
-  try {
-    const storage = getStorage()
-    const raw = storage.getItem(ACTIVE_DRAFT_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as ActiveDraftPersistence
-      const draft = parsed?.draft
-      if (
-        draft &&
-        typeof draft.draftId === 'string' &&
-        draft.draftId !== 'draft' &&
-        draft.message &&
-        typeof parsed.savedAt === 'number'
-      ) {
-        if (Date.now() - parsed.savedAt < ACTIVE_DRAFT_MAX_AGE_MS) {
-          return parsed
-        }
-        clearActiveDraft()
-      }
+  const parsed = readJson<ActiveDraftPersistence>(ACTIVE_DRAFT_KEY)
+  const draft = parsed?.draft
+  if (
+    parsed &&
+    draft &&
+    typeof draft.draftId === 'string' &&
+    draft.draftId !== 'draft' &&
+    draft.message &&
+    typeof parsed.savedAt === 'number'
+  ) {
+    if (Date.now() - parsed.savedAt < ACTIVE_DRAFT_MAX_AGE_MS) {
+      return parsed
     }
-  } catch {}
+    clearActiveDraft()
+  }
   return null
 }
 
 export function saveActiveDraft(draft: DraftState | null, tournamentId?: string | null) {
-  try {
-    const storage = getStorage()
-    if (draft && draft.draftId && draft.draftId !== 'draft' && draft.message) {
-      const data: ActiveDraftPersistence = {
-        draft,
-        tournamentId: tournamentId ?? null,
-        savedAt: Date.now(),
-      }
-      storage.setItem(ACTIVE_DRAFT_KEY, JSON.stringify(data))
-    } else {
-      clearActiveDraft()
+  if (draft && draft.draftId && draft.draftId !== 'draft' && draft.message) {
+    const data: ActiveDraftPersistence = {
+      draft,
+      tournamentId: tournamentId ?? null,
+      savedAt: Date.now(),
     }
-  } catch {}
+    writeJson(ACTIVE_DRAFT_KEY, data)
+  } else {
+    clearActiveDraft()
+  }
 }
 
 export function clearActiveDraft() {
@@ -231,25 +223,12 @@ export function equippedDeckId(): string | null {
 }
 
 export function saveActiveDeck(deck: DeckJson | null) {
-  try {
-    const storage = getStorage()
-    if (deck) {
-      storage.setItem(ACTIVE_DECK_KEY, JSON.stringify(deck))
-    } else {
-      clearActiveDeck()
-    }
-  } catch {}
+  if (deck) writeJson(ACTIVE_DECK_KEY, deck)
+  else clearActiveDeck()
 }
 
 export function loadActiveDeck(): DeckJson | null {
-  try {
-    const storage = getStorage()
-    const raw = storage.getItem(ACTIVE_DECK_KEY)
-    if (raw) {
-      return JSON.parse(raw) as DeckJson
-    }
-  } catch {}
-  return null
+  return readJson<DeckJson>(ACTIVE_DECK_KEY) ?? null
 }
 
 export function clearActiveDeck() {
@@ -268,25 +247,20 @@ const FX_SPEEDS = [0.5, 1, 1.5]
 export const DEFAULT_FX_SETTINGS: FxSettings = { effects: true, animationSpeed: 1 }
 
 export function loadFxSettings(): FxSettings {
-  try {
-    const raw = getStorage().getItem(FX_SETTINGS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<FxSettings>
-      return {
-        effects: parsed.effects !== false,
-        animationSpeed: FX_SPEEDS.includes(parsed.animationSpeed as number)
-          ? parsed.animationSpeed as number
-          : DEFAULT_FX_SETTINGS.animationSpeed,
-      }
+  const parsed = readJson<Partial<FxSettings>>(FX_SETTINGS_KEY)
+  if (parsed) {
+    return {
+      effects: parsed.effects !== false,
+      animationSpeed: FX_SPEEDS.includes(parsed.animationSpeed as number)
+        ? parsed.animationSpeed as number
+        : DEFAULT_FX_SETTINGS.animationSpeed,
     }
-  } catch {}
+  }
   return { ...DEFAULT_FX_SETTINGS }
 }
 
 export function saveFxSettings(fx: FxSettings) {
-  try {
-    getStorage().setItem(FX_SETTINGS_KEY, JSON.stringify(fx))
-  } catch {}
+  writeJson(FX_SETTINGS_KEY, fx)
 }
 
 export interface AutoAnswerStored {
@@ -297,27 +271,20 @@ export interface AutoAnswerStored {
 const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
 
 export function loadAutoAnswers(): AutoAnswerStored[] {
-  try {
-    const raw = getStorage().getItem(AUTO_ANSWERS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown
-      if (Array.isArray(parsed)) {
-        return parsed
-          .filter((entry): entry is AutoAnswerStored => {
-            const record = entry as Partial<AutoAnswerStored>
-            return typeof record?.pattern === 'string' && typeof record?.answer === 'boolean'
-          })
-          .map((entry) => ({ pattern: entry.pattern, answer: entry.answer }))
-      }
-    }
-  } catch {}
+  const parsed = readJson<unknown>(AUTO_ANSWERS_KEY)
+  if (Array.isArray(parsed)) {
+    return parsed
+      .filter((entry): entry is AutoAnswerStored => {
+        const record = entry as Partial<AutoAnswerStored>
+        return typeof record?.pattern === 'string' && typeof record?.answer === 'boolean'
+      })
+      .map((entry) => ({ pattern: entry.pattern, answer: entry.answer }))
+  }
   return []
 }
 
 export function saveAutoAnswers(rules: AutoAnswerStored[]) {
-  try {
-    getStorage().setItem(AUTO_ANSWERS_KEY, JSON.stringify(rules))
-  } catch {}
+  writeJson(AUTO_ANSWERS_KEY, rules)
 }
 
 export interface ChoiceMemoryStored {
@@ -328,27 +295,20 @@ export interface ChoiceMemoryStored {
 const CHOICE_MEMORY_KEY = 'mage-web-choice-memory'
 
 export function loadChoiceMemory(): ChoiceMemoryStored[] {
-  try {
-    const raw = getStorage().getItem(CHOICE_MEMORY_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown
-      if (Array.isArray(parsed)) {
-        return parsed
-          .filter((entry): entry is ChoiceMemoryStored => {
-            const record = entry as Partial<ChoiceMemoryStored>
-            return typeof record?.pattern === 'string' && typeof record?.value === 'string'
-          })
-          .map((entry) => ({ pattern: entry.pattern, value: entry.value }))
-      }
-    }
-  } catch {}
+  const parsed = readJson<unknown>(CHOICE_MEMORY_KEY)
+  if (Array.isArray(parsed)) {
+    return parsed
+      .filter((entry): entry is ChoiceMemoryStored => {
+        const record = entry as Partial<ChoiceMemoryStored>
+        return typeof record?.pattern === 'string' && typeof record?.value === 'string'
+      })
+      .map((entry) => ({ pattern: entry.pattern, value: entry.value }))
+  }
   return []
 }
 
 export function saveChoiceMemory(rules: ChoiceMemoryStored[]) {
-  try {
-    getStorage().setItem(CHOICE_MEMORY_KEY, JSON.stringify(rules))
-  } catch {}
+  writeJson(CHOICE_MEMORY_KEY, rules)
 }
 
 export interface ManaPaymentStored {
@@ -369,46 +329,37 @@ export const DEFAULT_MANA_PAYMENT: ManaPaymentStored = {
 }
 
 export function loadManaPayment(): ManaPaymentStored {
-  try {
-    const raw = getStorage().getItem(MANA_PAYMENT_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<ManaPaymentStored>
-      return {
-        auto: typeof parsed.auto === 'boolean' ? parsed.auto : DEFAULT_MANA_PAYMENT.auto,
-        restricted: typeof parsed.restricted === 'boolean' ? parsed.restricted : DEFAULT_MANA_PAYMENT.restricted,
-        useFirstAbility:
-          typeof parsed.useFirstAbility === 'boolean' ? parsed.useFirstAbility : DEFAULT_MANA_PAYMENT.useFirstAbility,
-        confirmEmptyPool:
-          typeof parsed.confirmEmptyPool === 'boolean'
-            ? parsed.confirmEmptyPool
-            : DEFAULT_MANA_PAYMENT.confirmEmptyPool,
-        smart: typeof parsed.smart === 'boolean' ? parsed.smart : DEFAULT_MANA_PAYMENT.smart,
-      }
+  const parsed = readJson<Partial<ManaPaymentStored>>(MANA_PAYMENT_KEY)
+  if (parsed) {
+    return {
+      auto: typeof parsed.auto === 'boolean' ? parsed.auto : DEFAULT_MANA_PAYMENT.auto,
+      restricted: typeof parsed.restricted === 'boolean' ? parsed.restricted : DEFAULT_MANA_PAYMENT.restricted,
+      useFirstAbility:
+        typeof parsed.useFirstAbility === 'boolean' ? parsed.useFirstAbility : DEFAULT_MANA_PAYMENT.useFirstAbility,
+      confirmEmptyPool:
+        typeof parsed.confirmEmptyPool === 'boolean'
+          ? parsed.confirmEmptyPool
+          : DEFAULT_MANA_PAYMENT.confirmEmptyPool,
+      smart: typeof parsed.smart === 'boolean' ? parsed.smart : DEFAULT_MANA_PAYMENT.smart,
     }
-  } catch {}
+  }
   return { ...DEFAULT_MANA_PAYMENT }
 }
 
 export function saveManaPayment(mana: ManaPaymentStored) {
-  try {
-    getStorage().setItem(MANA_PAYMENT_KEY, JSON.stringify(mana))
-  } catch {}
+  writeJson(MANA_PAYMENT_KEY, mana)
 }
 
 const HAND_REQUESTS_KEY = 'mage-web-hand-requests'
 
 export function loadHandRequestsAllowed(): boolean {
-  try {
-    const raw = getStorage().getItem(HAND_REQUESTS_KEY)
-    if (raw != null) return JSON.parse(raw) === true
-  } catch {}
-  return true
+  const parsed = readJson<unknown>(HAND_REQUESTS_KEY)
+  if (parsed === undefined) return true
+  return parsed === true
 }
 
 export function saveHandRequestsAllowed(allowed: boolean) {
-  try {
-    getStorage().setItem(HAND_REQUESTS_KEY, JSON.stringify(allowed))
-  } catch {}
+  writeJson(HAND_REQUESTS_KEY, allowed)
 }
 
 const SMART_STOPS_KEY = 'mage-web-smart-stops'
@@ -446,17 +397,13 @@ const BROWSER_NOTIFICATIONS_KEY = 'mage-web-browser-notifications'
 const NOTIFICATION_ASKED_KEY = 'mage-web-notification-asked'
 
 export function loadBrowserNotifications(): boolean {
-  try {
-    const raw = getStorage().getItem(BROWSER_NOTIFICATIONS_KEY)
-    if (raw != null) return JSON.parse(raw) === true
-  } catch {}
-  return true
+  const parsed = readJson<unknown>(BROWSER_NOTIFICATIONS_KEY)
+  if (parsed === undefined) return true
+  return parsed === true
 }
 
 export function saveBrowserNotifications(enabled: boolean) {
-  try {
-    getStorage().setItem(BROWSER_NOTIFICATIONS_KEY, JSON.stringify(enabled))
-  } catch {}
+  writeJson(BROWSER_NOTIFICATIONS_KEY, enabled)
 }
 
 export function loadNotificationAsked(): boolean {
@@ -474,33 +421,25 @@ export function saveNotificationAsked() {
 
 const PHASE_STOPS_KEY = 'mage-web-phase-stops'
 export function loadPhaseStops(): PhaseStops {
-  try {
-    const raw = getStorage().getItem(PHASE_STOPS_KEY)
-    if (raw) return mergePhaseStops(JSON.parse(raw))
-  } catch {}
+  const parsed = readJson<unknown>(PHASE_STOPS_KEY)
+  if (parsed) return mergePhaseStops(parsed)
   return mergePhaseStops(null)
 }
 
 export function savePhaseStops(stops: PhaseStops) {
-  try {
-    getStorage().setItem(PHASE_STOPS_KEY, JSON.stringify(stops))
-  } catch {}
+  writeJson(PHASE_STOPS_KEY, stops)
 }
 
 const GAME_LOG_AUTOSAVE_KEY = 'mage-web-game-log'
 
 export function loadGameLogAutoSave(): boolean {
-  try {
-    const raw = getStorage().getItem(GAME_LOG_AUTOSAVE_KEY)
-    if (raw != null) return JSON.parse(raw) === true
-  } catch {}
-  return true
+  const parsed = readJson<unknown>(GAME_LOG_AUTOSAVE_KEY)
+  if (parsed === undefined) return true
+  return parsed === true
 }
 
 export function saveGameLogAutoSave(enabled: boolean) {
-  try {
-    getStorage().setItem(GAME_LOG_AUTOSAVE_KEY, JSON.stringify(enabled))
-  } catch {}
+  writeJson(GAME_LOG_AUTOSAVE_KEY, enabled)
 }
 
 export interface AudioSettings {
@@ -519,25 +458,20 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
 }
 
 export function loadAudioSettings(): AudioSettings {
-  try {
-    const raw = getStorage().getItem(AUDIO_SETTINGS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<AudioSettings>
-      return {
-        soundEnabled: parsed.soundEnabled !== false,
-        masterVolume: typeof parsed.masterVolume === 'number' ? Math.max(0, Math.min(1, parsed.masterVolume)) : DEFAULT_AUDIO_SETTINGS.masterVolume,
-        sfxVolume: typeof parsed.sfxVolume === 'number' ? Math.max(0, Math.min(1, parsed.sfxVolume)) : DEFAULT_AUDIO_SETTINGS.sfxVolume,
-        uiVolume: typeof parsed.uiVolume === 'number' ? Math.max(0, Math.min(1, parsed.uiVolume)) : DEFAULT_AUDIO_SETTINGS.uiVolume,
-      }
+  const parsed = readJson<Partial<AudioSettings>>(AUDIO_SETTINGS_KEY)
+  if (parsed) {
+    return {
+      soundEnabled: parsed.soundEnabled !== false,
+      masterVolume: typeof parsed.masterVolume === 'number' ? Math.max(0, Math.min(1, parsed.masterVolume)) : DEFAULT_AUDIO_SETTINGS.masterVolume,
+      sfxVolume: typeof parsed.sfxVolume === 'number' ? Math.max(0, Math.min(1, parsed.sfxVolume)) : DEFAULT_AUDIO_SETTINGS.sfxVolume,
+      uiVolume: typeof parsed.uiVolume === 'number' ? Math.max(0, Math.min(1, parsed.uiVolume)) : DEFAULT_AUDIO_SETTINGS.uiVolume,
     }
-  } catch {}
+  }
   return { ...DEFAULT_AUDIO_SETTINGS }
 }
 
 export function saveAudioSettings(settings: AudioSettings) {
-  try {
-    getStorage().setItem(AUDIO_SETTINGS_KEY, JSON.stringify(settings))
-  } catch {}
+  writeJson(AUDIO_SETTINGS_KEY, settings)
 }
 
 export interface MusicSettings {
@@ -549,23 +483,18 @@ const MUSIC_SETTINGS_KEY = 'mage-web-music'
 export const DEFAULT_MUSIC_SETTINGS: MusicSettings = { musicEnabled: true, musicVolume: 0.35 }
 
 export function loadMusicSettings(): MusicSettings {
-  try {
-    const raw = getStorage().getItem(MUSIC_SETTINGS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<MusicSettings>
-      return {
-        musicEnabled: parsed.musicEnabled !== false,
-        musicVolume: typeof parsed.musicVolume === 'number' ? Math.max(0, Math.min(1, parsed.musicVolume)) : DEFAULT_MUSIC_SETTINGS.musicVolume,
-      }
+  const parsed = readJson<Partial<MusicSettings>>(MUSIC_SETTINGS_KEY)
+  if (parsed) {
+    return {
+      musicEnabled: parsed.musicEnabled !== false,
+      musicVolume: typeof parsed.musicVolume === 'number' ? Math.max(0, Math.min(1, parsed.musicVolume)) : DEFAULT_MUSIC_SETTINGS.musicVolume,
     }
-  } catch {}
+  }
   return { ...DEFAULT_MUSIC_SETTINGS }
 }
 
 export function saveMusicSettings(settings: MusicSettings) {
-  try {
-    getStorage().setItem(MUSIC_SETTINGS_KEY, JSON.stringify(settings))
-  } catch {}
+  writeJson(MUSIC_SETTINGS_KEY, settings)
 }
 
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
@@ -592,28 +521,23 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boa
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
 export function loadAppearanceSettings(): AppearanceSettings {
-  try {
-    const raw = getStorage().getItem(APPEARANCE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<AppearanceSettings>
-      const sid = typeof parsed.sleeveId === 'string' ? parsed.sleeveId : DEFAULT_APPEARANCE.sleeveId
-      const layout = VALID_LAYOUTS.includes(parsed.boardLayout as BoardLayoutPref)
-        ? (parsed.boardLayout as BoardLayoutPref)
-        : DEFAULT_APPEARANCE.boardLayout
-      const scale = normalizeZoom(parsed.uiScale)
-      const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
-      const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
-      const transparentDialogs = parsed.transparentDialogs === true
-      return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, ...(playmatId ? { playmatId } : null) }
-    }
-  } catch {}
+  const parsed = readJson<Partial<AppearanceSettings>>(APPEARANCE_KEY)
+  if (parsed) {
+    const sid = typeof parsed.sleeveId === 'string' ? parsed.sleeveId : DEFAULT_APPEARANCE.sleeveId
+    const layout = VALID_LAYOUTS.includes(parsed.boardLayout as BoardLayoutPref)
+      ? (parsed.boardLayout as BoardLayoutPref)
+      : DEFAULT_APPEARANCE.boardLayout
+    const scale = normalizeZoom(parsed.uiScale)
+    const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
+    const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
+    const transparentDialogs = parsed.transparentDialogs === true
+    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, ...(playmatId ? { playmatId } : null) }
+  }
   return { ...DEFAULT_APPEARANCE }
 }
 
 export function saveAppearanceSettings(s: AppearanceSettings) {
-  try {
-    getStorage().setItem(APPEARANCE_KEY, JSON.stringify(s))
-  } catch {}
+  writeJson(APPEARANCE_KEY, s)
 }
 
 export function applyAppearanceToDocument(s: AppearanceSettings, lang?: string) {

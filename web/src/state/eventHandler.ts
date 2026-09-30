@@ -26,7 +26,6 @@ import {
 import { handleReplayGame, handleReplayUpdate, handleReplayDone } from './events/replay'
 import { handleViewLimitedDeck, handleViewSideboard } from './events/views'
 import { notifyStagingRoster } from './stagingSounds'
-import { maybeRunFidelityCheck } from '../system/fidelity'
 import { perfMark } from '../system/perfProbe'
 import { isRollbackPending } from './actions'
 import { applyRollbackOutcome } from './rollbackVote'
@@ -176,8 +175,6 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
       }
       // La partida re-unida ya está adoptada: el guard de lobby vuelve a aplicar.
       if (objectId && getState().resumingGameId === objectId) setState({ resumingGameId: null })
-      // P2: comprobador de fidelidad de render (solo con mage-web-fidelity=1).
-      maybeRunFidelityCheck(objectId ?? s.gameId)
     }
   }
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {

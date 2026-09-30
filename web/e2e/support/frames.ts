@@ -101,15 +101,6 @@ export function myBattlefield(view: Record<string, unknown> | null): Record<stri
   return ((me as unknown as { battlefield?: unknown }).battlefield ?? {}) as Record<string, FieldPermanent>
 }
 
-export function hasMyPriority(frame: GameFrame): boolean {
-  const view = gameViewOf(frame)
-  if (!view) return false
-  const me = controlledPlayer(view)
-  if (!me) return false
-  // igual que el human-test: solo cuentan los GAME_SELECT con prioridad real del humano
-  return (me as { hasPriority?: boolean }).hasPriority === true
-}
-
 /** Id de una carta de la mano jugable según canPlayObjects del frame. */
 export function playableInView(view: Record<string, unknown> | null, name: string): string | null {
   if (!view) return null
@@ -171,7 +162,7 @@ function manaSourceId(view: Record<string, unknown> | null): string | null {
   return Object.keys(objects).find((id) => battlefield[id] && battlefield[id].tapped !== true) ?? null
 }
 
-export function battlefieldName(view: Record<string, unknown> | null, id: string): string | null {
+function battlefieldName(view: Record<string, unknown> | null, id: string): string | null {
   if (!view) return null
   const battlefield = myBattlefield(view)
   return battlefield[id]?.name ?? battlefield[id]?.displayName ?? null
@@ -223,11 +214,23 @@ export function targetIdsOf(frame: GameFrame): string[] {
 /** Id del juego actual (el último START_GAME/GAME_INIT del buffer). En un match
  *  best-of-N el buffer acumula partidas viejas: sus eventos de fin no deben
  *  contar como "la partida terminó". */
-export function lastGameId(frames: Array<Record<string, unknown> | null>): string | null {
+function lastGameId(frames: Array<Record<string, unknown> | null>): string | null {
   for (const frame of [...parseFrames(frames)].reverse()) {
     if ((frame.method === 'START_GAME' || frame.method === 'GAME_INIT') && frame.objectId) return frame.objectId
   }
   return null
+}
+
+/** gameId del juego actual del buffer. */
+export function currentGameId(page: Page): string | null {
+  return lastGameId(framesOf(page))
+}
+
+/** ¿La partida CON ESTE gameId ya terminó? (el buffer acumula partidas viejas). */
+export function gameEndedIn(page: Page, gameId: string): boolean {
+  return parseFrames(framesOf(page)).some(
+    (f) => (f.method === 'GAME_OVER' || f.method === 'END_GAME_INFO') && f.objectId === gameId,
+  )
 }
 
 /** ¿La partida ACTUAL terminó? (GAME_OVER/END_GAME_INFO del último juego). */

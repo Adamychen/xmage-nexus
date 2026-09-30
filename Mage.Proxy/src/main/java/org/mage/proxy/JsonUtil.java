@@ -104,8 +104,8 @@ public final class JsonUtil {
         stack.put(obj, Boolean.TRUE);
 
         if (obj instanceof Map) {
-            List<Field> ownFields = collectOwnFieldsAboveMapImpl(clazz);
-            if (ownFields.isEmpty()) {
+            Field[] ownFields = collectOwnFieldsAboveMapImpl(clazz);
+            if (ownFields.length == 0) {
                 writeMap(sb, (Map) obj, stack);
             } else {
                 // Real XMage view classes like ExileView/MutateView (Mage.Common)
@@ -159,7 +159,7 @@ public final class JsonUtil {
      * top of extending CardsView -> LinkedHashMap; a plain CardsView with no
      * such subclass returns an empty list, keeping the old flat behavior).
      */
-    private static List<Field> collectOwnFieldsAboveMapImpl(Class<?> clazz) {
+    private static Field[] collectOwnFieldsAboveMapImpl(Class<?> clazz) {
         List<Field> result = new ArrayList<>();
         for (Class<?> c = clazz; c != null && Map.class.isAssignableFrom(c); c = c.getSuperclass()) {
             Package pkg = c.getPackage();
@@ -167,34 +167,23 @@ public final class JsonUtil {
                 break;
             }
             for (Field field : c.getDeclaredFields()) {
-                if (isWritableField(field)) {
-                    result.add(field);
+                if (!isWritableField(field)) {
+                    continue;
                 }
+                try {
+                    field.setAccessible(true);
+                } catch (RuntimeException ex) {
+                    continue;
+                }
+                result.add(field);
             }
         }
-        return result;
+        return result.toArray(new Field[0]);
     }
 
-    private static void writeMapWithOwnFields(StringBuilder sb, Object obj, Map<?, ?> map, List<Field> ownFields, IdentityHashMap<Object, Boolean> stack) {
+    private static void writeMapWithOwnFields(StringBuilder sb, Object obj, Map<?, ?> map, Field[] ownFields, IdentityHashMap<Object, Boolean> stack) {
         sb.append('{');
-        boolean first = true;
-        for (Field field : ownFields) {
-            if (!first) {
-                sb.append(',');
-            }
-            first = false;
-            writeString(sb, field.getName());
-            sb.append(':');
-            try {
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
-                }
-                writeValue(sb, field.get(obj), stack);
-            } catch (Exception e) {
-                sb.append("null");
-            }
-        }
-        if (!first) {
+        if (writeFields(sb, obj, ownFields, stack)) {
             sb.append(',');
         }
         writeString(sb, "cards");
@@ -218,12 +207,18 @@ public final class JsonUtil {
 
     private static void writeObject(StringBuilder sb, Object obj, IdentityHashMap<Object, Boolean> stack) {
         sb.append('{');
-        boolean first = true;
-        for (Field field : writableFields(obj.getClass())) {
-            if (!first) {
+        writeFields(sb, obj, writableFields(obj.getClass()), stack);
+        sb.append('}');
+    }
+
+    /** Writes the given fields as a JSON object body; returns whether anything was written. */
+    private static boolean writeFields(StringBuilder sb, Object obj, Field[] fields, IdentityHashMap<Object, Boolean> stack) {
+        boolean wrote = false;
+        for (Field field : fields) {
+            if (wrote) {
                 sb.append(',');
             }
-            first = false;
+            wrote = true;
             writeString(sb, field.getName());
             sb.append(':');
             try {
@@ -232,7 +227,7 @@ public final class JsonUtil {
                 sb.append("null");
             }
         }
-        sb.append('}');
+        return wrote;
     }
 
     /**

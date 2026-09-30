@@ -1,5 +1,6 @@
 import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import type { DeckV2 } from './types'
+import { downloadBlob } from '../utils/download'
 
 export type DeckExportKind = 'dck' | 'arena' | 'txt' | 'dek'
 
@@ -18,15 +19,7 @@ export async function downloadDeckFile(deck: DeckV2, kind: DeckExportKind, copie
         : `${deck.name}-plain.txt`
   let copied = false
   try { await navigator.clipboard.writeText(text); copied = true } catch {}
-  const blob = new Blob([text], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 2000)
+  downloadBlob(new Blob([text], { type: 'text/plain' }), filename)
   if (copied) {
     const btn = document.activeElement as HTMLElement | null
     if (btn) { const prev = btn.textContent; btn.textContent = copiedText; setTimeout(() => { if (prev) btn.textContent = prev }, 1400) }

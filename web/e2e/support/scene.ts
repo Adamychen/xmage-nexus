@@ -7,28 +7,6 @@
 import type { Page } from '@playwright/test'
 import { framesOf, lastGameView, myHandEntries, parseFrames, playableInView } from './frames'
 
-export interface MageSceneState {
-  cards: Record<string, { x: number; y: number }>
-  playable: string[]
-  crossZone: string[]
-  click: (id: string) => boolean
-  hoveredCardId: string | null
-  targeting: {
-    active: boolean
-    source: string | null
-    ids: string[]
-    chosen: string[]
-    zone: string | null
-   }
-  combat: {
-    active: boolean
-    mode: 'attack' | 'block' | null
-    selectable: string[]
-    chosen: string[]
-   }
-  game: { turn: number; phase: string; step: string; priority: boolean } | null
-}
-
 export interface SceneCardPosition {
   x: number
   y: number
@@ -56,12 +34,6 @@ export interface SceneCombat {
   chosen: string[]
 }
 
-/** Escena cruda tipada (contrato React ↔ sceneBridge). */
-export async function rawScene(page: Page): Promise<MageSceneState | null> {
-  const s = await page.evaluate(() => (globalThis as Window & { __mageScene?: MageSceneState }).__mageScene ?? null)
-  return s ?? null
-}
-
 /** Estado del escenario expuesto por la app (posiciones + playables en vivo). */
 export async function sceneState(page: Page): Promise<SceneState | null> {
   const scene = await page.evaluate(() => (globalThis as unknown as { __mageScene?: SceneState }).__mageScene ?? null)
@@ -69,7 +41,7 @@ export async function sceneState(page: Page): Promise<SceneState | null> {
 }
 
 /** Devuelve true si el hook de escenario existe (build con soporte E2E). */
-export async function sceneHookAvailable(page: Page): Promise<boolean> {
+async function sceneHookAvailable(page: Page): Promise<boolean> {
   return (await page.evaluate(() => (globalThis as unknown as { __mageScene?: unknown }).__mageScene !== undefined)) === true
 }
 
@@ -86,14 +58,6 @@ export async function sceneClick(page: Page, id: string): Promise<boolean> {
     await page.waitForTimeout(200)
   }
   return false
-}
-
-/** Posición real en el escenario de la carta con `id`, o null si aún no está. */
-export async function liveSceneCard(page: Page, id: string): Promise<SceneCardPosition | null> {
-  const scene = await sceneState(page)
-  if (!scene) return null
-  const slot = scene.cards?.[id]
-  return slot && typeof slot.x === 'number' && typeof slot.y === 'number' ? slot : null
 }
 
 /** ¿La carta (por UUID) está jugable según el estado REAL de la app? */
@@ -147,59 +111,36 @@ export async function isPlayable(page: Page, name: string): Promise<string | nul
   return null
 }
 
-/** Estado del targeting EN VIVO de la escena (determinista; sustituye a los
- *  byte-diffs del canvas, que dependen del render por detrás de los frames). */
-export async function sceneTargeting(page: Page): Promise<SceneTargeting | null> {
-  try {
-    return (await page.evaluate(() => {
-      const s = (globalThis as unknown as { __mageScene?: { targeting?: SceneTargeting } }).__mageScene
-      return s?.targeting ?? null
-    })) as SceneTargeting | null
-  } catch {
-    return null
-  }
+interface SceneFields {
+  targeting: SceneTargeting
+  combat: SceneCombat
 }
 
-export async function waitSceneTargeting(
+/** Espera a que el estado EN VIVO de `field` ('targeting' | 'combat') cumpla
+ *  `predicate` (determinista; sustituye a los byte-diffs del canvas, que
+ *  dependen del render por detrás de los frames). */
+export async function waitScene<K extends keyof SceneFields>(
   page: Page,
-  predicate: (t: SceneTargeting) => boolean,
+  field: K,
+  predicate: (value: SceneFields[K]) => boolean,
   label: string,
   timeoutMs = 15_000,
-): Promise<SceneTargeting> {
+): Promise<SceneFields[K]> {
   const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const t = await sceneTargeting(page)
-    if (t && predicate(t)) return t
+  for (;;) {
+    let value: SceneTargeting | SceneCombat | null = null
+    try {
+      value = (await page.evaluate(
+        (f) => (globalThis as unknown as { __mageScene?: Partial<SceneFields> }).__mageScene?.[f] ?? null,
+        field,
+      )) as SceneTargeting | SceneCombat | null
+    } catch {
+      value = null
+    }
+    if (value && predicate(value as SceneFields[K])) return value as SceneFields[K]
+    if (Date.now() >= deadline) {
+      throw new Error(`timeout esperando ${label} (último ${field}: ${JSON.stringify(value)})`)
+    }
     await page.waitForTimeout(200)
   }
-  const last = await sceneTargeting(page)
-  throw new Error(`timeout esperando ${label} (último targeting: ${JSON.stringify(last)})`)
-}
-
-/** Estado de la declaración de atacantes/bloqueadores EN VIVO de la escena. */
-export async function sceneCombat(page: Page): Promise<SceneCombat | null> {
-  try {
-    return (await page.evaluate(() => {
-      const s = (globalThis as unknown as { __mageScene?: { combat?: SceneCombat } }).__mageScene
-      return s?.combat ?? null
-    })) as SceneCombat | null
-  } catch {
-    return null
-  }
-}
-
-export async function waitSceneCombat(
-  page: Page,
-  predicate: (c: SceneCombat) => boolean,
-  label: string,
-  timeoutMs = 15_000,
-): Promise<SceneCombat> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const c = await sceneCombat(page)
-    if (c && predicate(c)) return c
-    await page.waitForTimeout(200)
-  }
-  const last = await sceneCombat(page)
-  throw new Error(`timeout esperando ${label} (último combate: ${JSON.stringify(last)})`)
 }

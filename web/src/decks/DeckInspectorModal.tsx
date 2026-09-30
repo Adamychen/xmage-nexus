@@ -91,6 +91,7 @@ export function DeckInspectorModal({
         <CloseButton variant="solid" size="lg" className="inspector-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="deck-inspector-badges">
           <Chip tone="gold" size="md" pill>{deck.format}</Chip>

@@ -11,7 +11,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const REPO_ROOT = new URL('..', import.meta.url).pathname
 const OUT_DIR = new URL('../web/fixtures/recorded/', import.meta.url).pathname
 
 const WS_URL = 'ws://127.0.0.1:8787'
@@ -53,15 +52,6 @@ function cardInHand(gv, name) {
   for (const [id, c] of Object.entries(hand)) {
     const n = String(c?.name ?? c?.displayName ?? '').toLowerCase()
     if (n === lower || n.includes(lower)) return id
-  }
-  return null
-}
-
-function untappedLand(gv) {
-  const me = getMe(gv)
-  if (!me?.battlefield) return null
-  for (const [id, c] of Object.entries(me.battlefield)) {
-    if (!c.tapped && (c.cardTypes ?? []).includes('LAND')) return id
   }
   return null
 }

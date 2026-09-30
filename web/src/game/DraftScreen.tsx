@@ -14,6 +14,8 @@ import { confirmDialog } from '../ui/confirmDialog'
 import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
 import Modal from '../ui/Modal'
 import { fetchCardJson } from '../cards/scryfallCards'
+import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
+import { downloadBlob } from '../utils/download'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
@@ -233,17 +235,7 @@ export default function DraftScreen() {
     const back = meta?.backImageUrl ?? null
     const name = cardLabel(card, meta)
     if (!img) return
-    let x = 0
-    let y = 0
-    const previewW = back ? 520 : 255
-    if (rect) {
-      if (rect.left > window.innerWidth / 2) x = Math.max(10, rect.left - previewW - 15)
-      else x = Math.min(window.innerWidth - previewW - 15, rect.right + 15)
-      y = Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40))
-    } else {
-      x = window.innerWidth / 2 - previewW / 2
-      y = window.innerHeight / 2 - 180
-    }
+    const { x, y } = hoverPreviewPosition(rect, !!back)
     setHoverPreview({ url: img, backUrl: back, x, y, name })
   }, [metaMap])
 
@@ -348,15 +340,7 @@ export default function DraftScreen() {
     const log = logRef.current
     if (!log || log.entries.length === 0) return
     const text = buildDraftLog(log)
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Draft_${log.startedAt.toISOString().slice(0, 10)}_${log.draftId.slice(0, 8)}.draft`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), `Draft_${log.startedAt.toISOString().slice(0, 10)}_${log.draftId.slice(0, 8)}.draft`, 1000)
   }, [])
 
   useEffect(() => {

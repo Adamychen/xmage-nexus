@@ -27,7 +27,7 @@
     "colors": 0,
     "radii": 0,
     "fontSizes": 0,
-    "spacing": 29
+    "spacing": 28
   },
   "board/CardSlot.css": {
     "colors": 0,
@@ -155,12 +155,6 @@
     "fontSizes": 0,
     "spacing": 16
   },
-  "game/CardPreview.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 0,
-    "spacing": 13
-  },
   "game/CommanderDamageMatrix.css": {
     "colors": 0,
     "radii": 0,
@@ -189,7 +183,7 @@
     "colors": 0,
     "radii": 0,
     "fontSizes": 0,
-    "spacing": 35
+    "spacing": 31
   },
   "game/FormattedText.css": {
     "colors": 0,
@@ -267,7 +261,7 @@
     "colors": 0,
     "radii": 0,
     "fontSizes": 0,
-    "spacing": 11
+    "spacing": 9
   },
   "game/PassMenu.css": {
     "colors": 0,
@@ -377,12 +371,6 @@
     "fontSizes": 1,
     "spacing": 0
   },
-  "lobby/DeckManager.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 0
-  },
   "lobby/FinishedMatchesPanel.css": {
     "colors": 0,
     "radii": 0,
@@ -410,8 +398,8 @@
   "lobby/SpectatorStagingScreen.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 4,
-    "spacing": 3
+    "fontSizes": 0,
+    "spacing": 2
   },
   "lobby/TableFilterBar.css": {
     "colors": 0,

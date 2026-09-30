@@ -9,7 +9,7 @@ import { REANIMATE_GRIZZLY_ID, reanimateTargetScenario } from '../fixtures/scena
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { payMana } from './support/game-screen'
-import { waitSceneTargeting } from './support/scene'
+import { waitScene } from './support/scene'
 import { lastGameView, myBattlefield, parseFrames, playableInView, waitFrame } from './support/frames'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
@@ -49,8 +49,9 @@ test(
 
       // (c) target zone (targetZone GRAVEYARD): the pile is highlighted and
       //     auto-opens, so the player doesn't have to guess where the card is.
-      const targeting = await waitSceneTargeting(
+      const targeting = await waitScene(
         page,
+        'targeting',
         (t) => t.active && t.zone === 'graveyard',
         'targeting with GRAVEYARD zone',
       )

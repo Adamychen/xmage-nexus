@@ -31,7 +31,7 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 | `mage_build` | `target`(proxy/full), `timeoutSec` | `scripts/build.mjs` (proxy requiere reiniciarlo después). |
 | `mage_record_fixture` | `mechanic`, `timeoutSec` | `scripts/record.mjs` (requiere stack arriba). |
 | `mage_validate_generated` | — | Validadores `--validate` de gen-types/gen-zod/gen-server-state/gen-splash-i18n. |
-| `mage_e2e` | `spec?`, `grep?`, `backend`(fake/real), `includeKnownBroken?`, `timeoutSec?` | Playwright en `web/` (fake sin stack en 5175; real con stack en 5173). Ej: `spec=decks-gallery.spec.ts`, `grep=@decks`. |
+| `mage_e2e` | `spec?`, `grep?`, `backend`(fake/real), `timeoutSec?` | Playwright en `web/` (fake sin stack en 5175; real con stack en 5173). Ej: `spec=decks-gallery.spec.ts`, `grep=@decks`. |
 
 ## Tools — fase C1 (sesión / lobby / partida)
 

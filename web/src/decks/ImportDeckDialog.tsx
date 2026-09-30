@@ -283,6 +283,7 @@ export function ImportDeckDialog({
         <CloseButton variant="plain" size="md" className="deck-import-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
       sectionProps={{
         onDragOver: (e) => {
           e.preventDefault()

@@ -535,10 +535,6 @@ export class FakeServer {
     })
   }
 
-  get connectedConns(): number {
-    return this.conns.size
-  }
-
   /** Reenvía un frame a todas las conexiones excepto la emisora. */
   broadcast(obj: unknown, exceptId?: number): void {
     for (const c of this.conns) {

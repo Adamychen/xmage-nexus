@@ -1,3 +1,5 @@
+import { createStore, get, set, type UseStore } from 'idb-keyval'
+
 export interface ScryfallFetchOptions extends Omit<RequestInit, 'headers'> {
   headers?: Record<string, string>
   urgent?: boolean
@@ -220,52 +222,38 @@ function remember(url: string, value: unknown) {
   }
 }
 
-let dbPromise: Promise<IDBDatabase | null> | null = null
+let cacheStore: UseStore | null | undefined
 
-function openDb(): Promise<IDBDatabase | null> {
-  if (dbPromise) return dbPromise
-  dbPromise = new Promise<IDBDatabase | null>((resolve) => {
-    try {
-      if (typeof indexedDB === 'undefined' || !indexedDB) {
-        resolve(null)
-        return
-      }
-      const req = indexedDB.open(DB_NAME, 1)
-      req.onupgradeneeded = () => {
-        req.result.createObjectStore(DB_STORE)
-      }
-      req.onsuccess = () => resolve(req.result)
-      req.onerror = () => resolve(null)
-      req.onblocked = () => resolve(null)
-    } catch {
-      resolve(null)
+function getCacheStore(): UseStore | null {
+  if (cacheStore !== undefined) return cacheStore
+  try {
+    if (typeof indexedDB === 'undefined' || !indexedDB) {
+      cacheStore = null
+      return null
     }
-  })
-  return dbPromise
+    cacheStore = createStore(DB_NAME, DB_STORE)
+  } catch {
+    cacheStore = null
+  }
+  return cacheStore
 }
 
 async function idbGet(url: string): Promise<unknown | undefined> {
-  const db = await openDb()
-  if (!db) return undefined
-  return new Promise((resolve) => {
-    try {
-      const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(CACHE_VERSION + url)
-      req.onsuccess = () => {
-        const entry = req.result as { value: unknown; at: number } | undefined
-        resolve(entry && Date.now() - entry.at < CACHE_TTL_MS ? entry.value : undefined)
-      }
-      req.onerror = () => resolve(undefined)
-    } catch {
-      resolve(undefined)
-    }
-  })
+  const store = getCacheStore()
+  if (!store) return undefined
+  try {
+    const entry = await get<{ value: unknown; at: number }>(CACHE_VERSION + url, store)
+    return entry && Date.now() - entry.at < CACHE_TTL_MS ? entry.value : undefined
+  } catch {
+    return undefined
+  }
 }
 
 async function idbPut(url: string, value: unknown) {
-  const db = await openDb()
-  if (!db) return
+  const store = getCacheStore()
+  if (!store) return
   try {
-    db.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).put({ value, at: Date.now() }, CACHE_VERSION + url)
+    await set(CACHE_VERSION + url, { value, at: Date.now() }, store)
   } catch {}
 }
 

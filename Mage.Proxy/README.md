@@ -410,7 +410,7 @@ when Java view classes change, then regenerate.
 
 3. **If it's a proxy action** (client → server):
    - Add a `case` in the domain class (`InfoCommands` / `TableCommands` /
-     `TournamentCommands` / `GameCommands`), reachable via `CommandDispatch`
+     `TournamentCommands` / `GameCommands`), reachable from the
      from the `ProxyClient.handleCommand` router; add to `requiresGameId` in
      `ProxyClient.java` if the action is game-scoped
    - Add the TypeScript type in `types.ts` if needed

@@ -46,33 +46,6 @@ export interface PromptView {
   canPass?: boolean
 }
 
-export const PROMPT_METHODS = new Set([
-  'GAME_SELECT',
-  'GAME_ASK',
-  'GAME_TARGET',
-  'GAME_TARGET_PLAYER',
-  'GAME_TARGET_AMOUNT',
-  'GAME_SELECT_PLAYER',
-  'GAME_SELECT_CARDS',
-  'GAME_SELECT_TARGETS',
-  'GAME_CHOOSE_CARDS',
-  'GAME_CHOOSE_CARDS_ORDER',
-  'GAME_CHOOSE_ABILITY',
-  'GAME_CHOOSE_CHOICE',
-  'GAME_CHOOSE_PILE',
-  'GAME_CHOOSE_MODE',
-  'GAME_CHOOSE_ONE',
-  'GAME_CHOOSE_COLOR',
-  'GAME_CHOOSE_NUMBER',
-  'GAME_CHOOSE_STRING',
-  'GAME_CHOOSE_BETWEEN',
-  'GAME_PLAY_MANA',
-  'GAME_PLAY_XMANA',
-  'GAME_GET_AMOUNT',
-  'GAME_SELECT_AMOUNT',
-  'GAME_GET_MULTI_AMOUNT',
-])
-
 type Rec = Record<string, unknown>
 
 const METADATA_OPTION_KEYS = new Set([
@@ -292,7 +265,6 @@ function multiAmountItems(value: unknown): PromptItemView[] {
 }
 
 export function normalizePrompt(method: string, raw: unknown, gameId: string | null): PromptView | null {
-  if (!PROMPT_METHODS.has(method)) return null
   if (!gameId) return null
   const data = asRecord(raw)
   const message = stringValue(data.message) ?? stringValue(data.question) ?? method

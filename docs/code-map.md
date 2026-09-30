@@ -25,7 +25,7 @@ Line counts below are `wc -l` output. Section ranges for `ProxyClient.java` are 
 
 | Lines | File | Responsibility | Plan ref |
 |---|---|---|---|
-| 1484→739+10 files | `Mage.Proxy/.../ProxyClient.java` (2026-09-05, R7 done) | Lifecycle/callbacks/lobby/connect + command router; `ProxyProtocol/JsonArgs/ErrorClassifier/MatchOptionsParser/SimManager/CommandContext/Info|Table|Tournament|GameCommands/CommandDispatch` |
+| 1484→739+10 files | `Mage.Proxy/.../ProxyClient.java` (2026-09-05, R7 done) | Lifecycle/callbacks/lobby/connect + command router; `ProxyProtocol/JsonArgs/ErrorClassifier/MatchOptionsParser/SimManager/CommandContext/Info|Table|Tournament|GameCommands` |
 | 1400→~110+7 files | `web/src/lobby/CreateTableDialog.tsx` + `CreateTable/` (2026-09-05, R1 done) | Create-table wizard shell + `constants.ts` (was lines 12-261: options/defaults/builders), `useCreateTableForm.ts` (state/effects/submit), `General/Timing/Security/Seats/DevTab.tsx`, `SummaryStrip.tsx`. Shell keeps default export + `export *` re-exports; guard `serverStateCoverage` repointed to `CreateTable/constants.ts` |
 | 1160→~330+8 files | `web/src/lobby/LobbyScreen.tsx` (2026-09-05, R6 done) | Page shell; `lobbyUtils` (helpers+`LobbyTab`), `useTableActions`, `useTournamentBracket`, `LobbyHeader/Sidebar/TableCard/Aside/TournamentBracketModal` |
 | 1040→~480+8 files | `web/src/decks/DeckBuilder.tsx` (2026-09-05, R6 done) | Composer; `deckCardOps` (puro+test), `useDeckMetadata/useDeckMutations/useDeckValidation`, `exportDeckFile`, `DeckBuilderFooter/DeckServerIssues/DeckHoverPreview` |
@@ -39,16 +39,15 @@ Line counts below are `wc -l` output. Section ranges for `ProxyClient.java` are 
 
 Cross-cutting: 21 `*Dialog|*Modal` total 5657 lines — shared base `ui/Modal.tsx` exists since 2026-09-05 (R2 pilot: Mulligan both branches via `trailing` preview slot + Voting; backdrop/dialog roles + aria preserved verbatim). Migrate remaining dialogs opportunistically. `board/` ↔ `game/` imports form a logical cycle (zones import game widgets and vice versa) → do not fix by moving folders in the incremental track; keep `features/` restructuring out of scope.
 
-## `Mage.Proxy/src/main` — 18 files, 3556 lines
+## `Mage.Proxy/src/main` — 17 files, 3556 lines
 
 | Lines | File | Responsibility |
 |---|---|---|
-| 739 | `ProxyClient.java` | `MageClient` bridge: session lifecycle, callback forwarding (`{type:event,method,messageId,objectId,data}`), lobby timer, `connect/attach`, command router (`connect/disconnect/ping` + `CommandDispatch`), `requiresGameId` |
+| 739 | `ProxyClient.java` | `MageClient` bridge: session lifecycle, callback forwarding (`{type:event,method,messageId,objectId,data}`), lobby timer, `connect/attach`, command router (`connect/disconnect/ping` + domain handlers), `requiresGameId` |
 | 104 | `InfoCommands.java` | Info/chat/read commands (`getServerInfo/getTables/.../sendChatMessage`) |
 | 91 | `TableCommands.java` | Table/match commands (`createTable/joinTable/leave/remove/start/watch`) |
 | 108 | `TournamentCommands.java` | Tournament + draft commands |
 | 173 | `GameCommands.java` | Replay/deck/preferences/`sendPlayer*` commands |
-| 17 | `CommandDispatch.java` | `dispatch` → Info/Table/Tournament/Game (returns handled?) |
 | 23 | `CommandContext.java` | Interface: session/gateway/isConnected/sendFailure/startSims |
 | 64 | `ProxyProtocol.java` | `ERR_*` + `resultJson` envelope |
 | 54 | `JsonArgs.java` | Defensive JSON arg readers + `parseActionData` |

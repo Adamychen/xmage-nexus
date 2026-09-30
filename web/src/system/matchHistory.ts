@@ -1,3 +1,5 @@
+import { createKeyedIdbStore, createMemoryKeyedStore, type KeyedStore } from './keyedStore'
+
 export type MatchResult = 'win' | 'loss'
 
 export interface MatchRecord {
@@ -14,41 +16,10 @@ export interface MatchRecord {
 
 export const MAX_MATCH_RECORDS = 500
 
-export interface MatchHistoryBackend {
-  keys(): Promise<string[]>
-  get(key: string): Promise<MatchRecord | undefined>
-  set(key: string, record: MatchRecord): Promise<void>
-  del(key: string): Promise<void>
-}
+export type MatchHistoryBackend = KeyedStore<MatchRecord>
 
 export function createMemoryMatchHistoryBackend(): MatchHistoryBackend {
-  const map = new Map<string, MatchRecord>()
-  return {
-    keys: async () => [...map.keys()],
-    get: async (key) => map.get(key),
-    set: async (key, record) => {
-      map.set(key, record)
-    },
-    del: async (key) => {
-      map.delete(key)
-    },
-  }
-}
-
-async function loadIdbBackend(): Promise<MatchHistoryBackend> {
-  try {
-    if (typeof indexedDB === 'undefined') return createMemoryMatchHistoryBackend()
-    const { createStore, get, set, del, keys } = await import('idb-keyval')
-    const store = createStore('mage-nexus-match-history', 'matches')
-    return {
-      keys: () => keys<string>(store) as Promise<string[]>,
-      get: (key) => get<MatchRecord>(key, store),
-      set: (key, record) => set(key, record, store),
-      del: (key) => del(key, store),
-    }
-  } catch {
-    return createMemoryMatchHistoryBackend()
-  }
+  return createMemoryKeyedStore<MatchRecord>(MAX_MATCH_RECORDS)
 }
 
 export class MatchHistoryStore {
@@ -58,7 +29,7 @@ export class MatchHistoryStore {
 
   private getBackend(): Promise<MatchHistoryBackend> {
     if (this.backend) return Promise.resolve(this.backend)
-    this.backendPromise ??= loadIdbBackend()
+    this.backendPromise ??= createKeyedIdbStore<MatchRecord>('mage-nexus-match-history', 'matches', MAX_MATCH_RECORDS)
     return this.backendPromise
   }
 
@@ -75,8 +46,6 @@ export class MatchHistoryStore {
     if (gameKey && keys.some((k) => k.endsWith(`_${gameKey}`))) return null
     const record: MatchRecord = { ...input, id: `${input.endedAt}_${gameKey ?? 'nogame'}` }
     await backend.set(record.id, record)
-    const all = [...keys, record.id].sort()
-    for (const stale of all.slice(0, Math.max(0, all.length - MAX_MATCH_RECORDS))) await backend.del(stale)
     return record
   }
 

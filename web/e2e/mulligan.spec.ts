@@ -47,7 +47,19 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
     // el ask llegó al cliente (frame GAME_ASK)
     expect(parseFrames(framesOf(page)).some((f) => f.method === 'GAME_ASK' && /mulligan/i.test(String(f.data?.question ?? '')))).toBeTruthy()
 
-    // elegir "Keep hand" (boolean=false)
+    // Regresión (pasada 3 en vivo): con la última carta en hover, la carta
+    // crecida tapaba el botón Conservar mano y el clic quedaba interceptado.
+    // El prompt de mano debe apilarse por encima de la carta crecida (z 50).
+    await page.locator('[data-testid="hand-bar"] .hand-card').last().hover()
+    const zRanks = await page.evaluate(() => {
+      const prompt = document.querySelector('.hand-bar-prompt')
+      const grown = document.querySelector('.hand-bar .hand-card-slot:hover')
+      return {
+        prompt: Number(getComputedStyle(prompt as Element).zIndex),
+        grown: Number(getComputedStyle(grown as Element).zIndex || 0),
+      }
+    })
+    expect(zRanks.prompt, 'el prompt de mano debe ir por encima de la carta crecida').toBeGreaterThan(zRanks.grown)
     await dialog.getByRole('button', { name: /Conservar mano/ }).click()
 
     // el cliente envió sendPlayerBoolean(false) y la partida continúa (GAME_SELECT)

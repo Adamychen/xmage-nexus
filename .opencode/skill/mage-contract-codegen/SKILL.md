@@ -47,7 +47,7 @@ ClientCallbackMethod.java -> callbackCoverage + INTERACTION_COVERAGE.md
 
 ### Acción del proxy (cliente -> servidor)
 
-1. `Mage.Proxy/.../CommandDispatch.java` -> `case` en `Info|Table|Tournament|GameCommands.java`;
+1. Cadena de `ProxyClient.handleCommand` -> `case` en `Info|Table|Tournament|GameCommands.java`;
    parsear con `JsonArgs`; responder con el envelope de `ProxyProtocol.resultJson`; si es
    game-scoped, añadirla a `requiresGameId` de `ProxyClient.java`.
 2. Wrapper TS en `web/src/net/commands.ts` y llamada desde el cliente.

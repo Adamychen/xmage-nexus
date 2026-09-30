@@ -6,78 +6,21 @@ import {
 } from './mulliganEvaluator'
 import type { GameView, PlayerView, CardView } from '../net/types'
 import type { Deck } from '../lobby/decks'
+import { makeGameView, makePlayer as basePlayer } from '../__fixtures__/gameViews'
 
 function makePlayer(overrides: Partial<PlayerView> = {}): PlayerView {
-  return {
-    playerId: 'p1',
-    name: 'Alice',
-    controlled: true,
-    isHuman: true,
-    life: 20,
-    counters: [],
-    wins: 0,
-    winsNeeded: 2,
-    libraryCount: 33,
-    handCount: 7,
-    isActive: true,
-    hasPriority: true,
-    timerActive: false,
-    hasLeft: false,
-    manaPool: {} as any,
-    graveyard: {},
-    exile: {},
-    sideboard: {},
-    helperCards: {},
-    battlefield: {},
-    topCard: null,
-    commandList: [],
-    attachments: [],
-    statesSavedSize: 0,
-    priorityTimeSavedTimeMs: 0,
-    priorityTimeLeftSecs: 1200,
-    bufferTimeLeft: 0,
-    passedTurn: false,
-    passedUntilEndOfTurn: false,
-    passedUntilNextMain: false,
-    passedUntilStackResolved: false,
-    passedAllTurns: false,
-    passedUntilEndStepBeforeMyTurn: false,
-    monarch: false,
-    initiative: false,
-    designationNames: [],
-    ...overrides,
-  }
+  return basePlayer({ playerId: 'p1', name: 'Alice', controlled: true, ...overrides })
 }
 
 function makeGame(player: PlayerView, overrides: Partial<GameView> = {}): GameView {
-  return {
-    priorityTime: 1200,
-    bufferTime: 0,
+  return makeGameView({
     players: [player],
     myPlayerId: player.playerId,
-    myHand: {},
-    myHelperEmblems: {},
-    opponentHands: {},
-    watchedHands: {},
-    stack: {},
-    exiles: [],
-    revealed: [],
-    lookedAt: [],
-    companion: [],
-    combat: [],
-    phase: 'PRECOMBAT_MAIN',
-    step: 'PRECOMBAT_MAIN',
     activePlayerId: player.playerId,
     activePlayerName: player.name,
     priorityPlayerName: player.name,
-    turn: 1,
-    special: false,
-    rollbackTurnsAllowed: false,
-    totalErrorsCount: 0,
-    totalEffectsCount: 0,
-    gameCycle: 1,
     ...overrides,
-  }
+  })
 }
 
 const burnDeck: Deck = {

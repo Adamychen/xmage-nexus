@@ -34,10 +34,6 @@ final class SimManager {
     private volatile String serverHost = "";
     private volatile int serverPort = 0;
 
-    SimManager(Config config, Consumer<String> errorSink) {
-        this(config, errorSink, null);
-    }
-
     SimManager(Config config, Consumer<String> errorSink, SimRoster roster) {
         this.config = config;
         this.errorSink = errorSink;

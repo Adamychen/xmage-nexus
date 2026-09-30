@@ -24,6 +24,8 @@
 // Uso: node scripts/verify-range-attack.mjs
 // Requiere: servidor local (testMode) + proxy (node scripts/ctl.mjs status).
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -64,73 +66,36 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // Conexión WS + auto-respuesta de prompts. El estado de la fase
 // (tierra/cheat/ataque/defensor) vive en `conn.st`.
 function mkConn(name) {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(WS_URL)
-    const pending = new Map()
-    const waiters = []
-    const conn = {
-      ws,
-      name,
-      view: null,
-      gameId: null,
-      st: {
-        landPlayed: false,
-        cheatSent: false,
-        attackSent: false,
-        targetSeen: false,
-        candidates: [],
-        defenderId: null,
-        targetMsg: '',
-        selectGen: 0,
-      },
-    }
-    let rid = 0
+  const st = {
+    landPlayed: false,
+    cheatSent: false,
+    attackSent: false,
+    targetSeen: false,
+    candidates: [],
+    defenderId: null,
+    targetMsg: '',
+    selectGen: 0,
+  }
+  const sendBool = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: v } }))
+  const sendUuid = (conn, v) => conn.ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: v } }))
 
-    conn.call = (action, args, ms = 15000) =>
-      new Promise((res) => {
-        const id = `${name}-${++rid}`
-        const timer = setTimeout(() => {
-          pending.delete(id)
-          res({ ok: false, error: 'timeout' })
-        }, ms)
-        pending.set(id, (m) => {
-          clearTimeout(timer)
-          res(m)
-        })
-        try {
-          ws.send(JSON.stringify({ requestId: id, action, args }))
-        } catch {
-          clearTimeout(timer)
-          pending.delete(id)
-          res({ ok: false, error: 'send-fail' })
-        }
-      })
-
-    conn.wait = (pred, ms, label) =>
-      new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error(`timeout esperando ${label}`)), ms)
-        waiters.push((m) => {
-          if (pred(m)) {
-            clearTimeout(timer)
-            resolve(m)
-            return true
-          }
-          return false
-        })
-      })
-
-    conn.close = () => {
-      try {
-        ws.close()
-      } catch {
-        /* noop */
+  return wsConn(WS_URL, {
+    name,
+    init: { st },
+    onMessage(conn, m) {
+      if (m.data?.gameView) conn.view = m.data.gameView
+      // Defensor declarado: grupo de combate con nuestro Grizzly atacando.
+      const grizzlyId = Object.entries(
+        ((conn.view?.players ?? []).find((p) => p?.controlled)?.battlefield ?? {}),
+      ).find(([, c]) => /grizzly bears/i.test(c?.name ?? ''))?.[0]
+      if (grizzlyId) {
+        const group = (conn.view?.combat ?? []).find((g) =>
+          Object.keys(g?.attackers ?? {}).includes(grizzlyId),
+        )
+        if (group?.defenderId) conn.st.defenderId = String(group.defenderId)
       }
-    }
-
-    const sendBool = (v) => ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: v } }))
-    const sendUuid = (v) => ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: v } }))
-
-    function autoAnswer(m) {
+    },
+    autoAnswer(conn, m) {
       if (!conn.gameId) return
       const d = m.data ?? {}
       const q = String(d.message ?? d.question ?? '')
@@ -144,7 +109,7 @@ function mkConn(name) {
         )
       }
       if (m.method === 'GAME_ASK') {
-        sendBool(false)
+        sendBool(conn, false)
         return
       }
       if (m.method === 'GAME_TARGET') {
@@ -155,14 +120,14 @@ function mkConn(name) {
           conn.st.targetSeen = true
           conn.st.targetMsg = q
           conn.st.candidates = ids.slice()
-          if (ids[0]) sendUuid(ids[0])
+          if (ids[0]) sendUuid(conn, ids[0])
           return
         }
         if (/discard/i.test(q) && ids[0]) {
-          sendUuid(ids[0])
+          sendUuid(conn, ids[0])
           return
         }
-        sendBool(false)
+        sendBool(conn, false)
         return
       }
       if (m.method === 'GAME_SELECT') {
@@ -176,7 +141,7 @@ function mkConn(name) {
           )
           if (land) {
             conn.st.landPlayed = true
-            sendUuid(land[0])
+            sendUuid(conn, land[0])
             return
           }
         }
@@ -194,59 +159,24 @@ function mkConn(name) {
             )
             .then((r) => {
               if (DEBUG) console.log(`  debug cheatSetup → ${JSON.stringify(r).slice(0, 120)}`)
-              if (r?.ok && conn.st.selectGen === gen) sendBool(false)
+              if (r?.ok && conn.st.selectGen === gen) sendBool(conn, false)
             })
           return
         }
         const grizzly = Object.entries(me?.battlefield ?? {}).find(([, c]) => /grizzly bears/i.test(c?.name ?? ''))
         if (step === 'DECLARE_ATTACKERS' && me?.isActive === true && grizzly && !conn.st.attackSent) {
           conn.st.attackSent = true
-          sendUuid(grizzly[0])
+          sendUuid(conn, grizzly[0])
           return
         }
-        sendBool(false)
+        sendBool(conn, false)
         return
       }
       if (m.method === 'GAME_PLAY_MANA' || m.method === 'GAME_PLAY_XMANA') {
-        sendBool(false)
+        sendBool(conn, false)
         return
       }
-    }
-
-    ws.onopen = () => resolve(conn)
-    ws.onerror = () => reject(new Error('no se pudo conectar al proxy'))
-    ws.onmessage = (raw) => {
-      let m
-      try {
-        m = JSON.parse(String(raw.data ?? raw))
-      } catch {
-        return
-      }
-      if (m.requestId && pending.has(m.requestId)) {
-        pending.get(m.requestId)(m)
-        pending.delete(m.requestId)
-        return
-      }
-      if (m.requestId || m.type === 'lobby' || m.type === 'error') return
-      if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_')) && !conn.gameId) {
-        conn.gameId = String(m.objectId)
-      }
-      if (m.data?.gameView) conn.view = m.data.gameView
-      // Defensor declarado: grupo de combate con nuestro Grizzly atacando.
-      const grizzlyId = Object.entries(
-        ((conn.view?.players ?? []).find((p) => p?.controlled)?.battlefield ?? {}),
-      ).find(([, c]) => /grizzly bears/i.test(c?.name ?? ''))?.[0]
-      if (grizzlyId) {
-        const group = (conn.view?.combat ?? []).find((g) =>
-          Object.keys(g?.attackers ?? {}).includes(grizzlyId),
-        )
-        if (group?.defenderId) conn.st.defenderId = String(group.defenderId)
-      }
-      autoAnswer(m)
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i](m)) waiters.splice(i, 1)
-      }
-    }
+    },
   })
 }
 

@@ -20,6 +20,8 @@
 // Usage: node scripts/verify-rollback-vote.mjs
 // Requires: local server (testMode) + proxy (node scripts/ctl.mjs status).
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -55,68 +57,26 @@ function check(name, ok, detail = '') {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const stripTags = (s) => String(s ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
 
-function mkConn(name) {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(WS_URL)
-    const pending = new Map()
-    const waiters = []
-    const conn = {
-      ws, name, view: null, gameId: null, turn: 0, maxTurn: 0, lastViewAt: Date.now(),
+async function mkConn(name) {
+  const conn = await wsConn(WS_URL, {
+    name,
+    init: {
+      turn: 0, maxTurn: 0, lastViewAt: Date.now(),
       hold: false, heldSelect: null, chat: [], requests: [], turnsSeen: [],
-    }
-    let rid = 0
-
-    conn.call = (action, args, ms = 15000) =>
-      new Promise((res) => {
-        const id = `${name}-${++rid}`
-        const timer = setTimeout(() => {
-          pending.delete(id)
-          res({ ok: false, error: 'timeout' })
-        }, ms)
-        pending.set(id, (m) => {
-          clearTimeout(timer)
-          res(m)
-        })
-        try {
-          ws.send(JSON.stringify({ requestId: id, action, args }))
-        } catch {
-          clearTimeout(timer)
-          pending.delete(id)
-          res({ ok: false, error: 'send-fail' })
-        }
-      })
-
-    conn.wait = (pred, ms, label) =>
-      new Promise((res, rej) => {
-        const timer = setTimeout(() => rej(new Error(`timeout waiting for ${label} (${name})`)), ms)
-        waiters.push((m) => {
-          if (pred(m)) {
-            clearTimeout(timer)
-            res(m)
-            return true
-          }
-          return false
-        })
-      })
-
-    conn.pass = () => {
-      if (!conn.gameId) return
-      ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
-    }
-
-    conn.release = () => {
-      conn.hold = false
-      if (conn.heldSelect) {
-        conn.heldSelect = null
-        conn.pass()
+    },
+    onMessage(conn, m) {
+      const gv = m.data?.gameView ?? (m.method === 'GAME_UPDATE' ? m.data : null)
+      if (gv && typeof gv.turn === 'number') {
+        conn.view = gv
+        conn.turn = gv.turn
+        conn.maxTurn = Math.max(conn.maxTurn, gv.turn)
+        conn.lastViewAt = Date.now()
+        if (conn.turnsSeen.at(-1)?.turn !== gv.turn) conn.turnsSeen.push({ turn: gv.turn, at: Date.now() })
       }
-    }
-
-    conn.close = () => {
-      try { ws.close() } catch { /* noop */ }
-    }
-
-    function autoAnswer(m) {
+      if (m.method === 'CHATMESSAGE') conn.chat.push({ user: m.data?.username ?? '', text: stripTags(m.data?.message), at: Date.now() })
+      if (m.method === 'USER_REQUEST_DIALOG') conn.requests.push({ data: m.data ?? {}, at: Date.now() })
+    },
+    autoAnswer(conn, m) {
       if (!conn.gameId) return
       const d = m.data ?? {}
       const q = String(d.message ?? '')
@@ -137,48 +97,26 @@ function mkConn(name) {
           const pt = d.options?.possibleTargets ?? d.targets ?? []
           const id = Array.isArray(pt) ? (typeof pt[0] === 'string' ? pt[0] : pt[0]?.id) : Object.keys(pt)[0]
           if (id) {
-            ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: id } }))
+            conn.ws.send(JSON.stringify({ action: 'sendPlayerUUID', args: { gameId: conn.gameId, value: id } }))
             return
           }
         }
         conn.pass()
       }
-    }
-
-    ws.onopen = () => resolve(conn)
-    ws.onerror = () => reject(new Error('could not connect to the proxy'))
-    ws.onmessage = (raw) => {
-      let m
-      try {
-        m = JSON.parse(String(raw.data ?? raw))
-      } catch {
-        return
-      }
-      if (m.requestId && pending.has(m.requestId)) {
-        pending.get(m.requestId)(m)
-        pending.delete(m.requestId)
-        return
-      }
-      if (m.requestId || m.type === 'lobby' || m.type === 'error') return
-      if (m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_')) && !conn.gameId) {
-        conn.gameId = String(m.objectId)
-      }
-      const gv = m.data?.gameView ?? (m.method === 'GAME_UPDATE' ? m.data : null)
-      if (gv && typeof gv.turn === 'number') {
-        conn.view = gv
-        conn.turn = gv.turn
-        conn.maxTurn = Math.max(conn.maxTurn, gv.turn)
-        conn.lastViewAt = Date.now()
-        if (conn.turnsSeen.at(-1)?.turn !== gv.turn) conn.turnsSeen.push({ turn: gv.turn, at: Date.now() })
-      }
-      if (m.method === 'CHATMESSAGE') conn.chat.push({ user: m.data?.username ?? '', text: stripTags(m.data?.message), at: Date.now() })
-      if (m.method === 'USER_REQUEST_DIALOG') conn.requests.push({ data: m.data ?? {}, at: Date.now() })
-      autoAnswer(m)
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i](m)) waiters.splice(i, 1)
-      }
-    }
+    },
   })
+  conn.pass = () => {
+    if (!conn.gameId) return
+    conn.ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId: conn.gameId, value: false } }))
+  }
+  conn.release = () => {
+    conn.hold = false
+    if (conn.heldSelect) {
+      conn.heldSelect = null
+      conn.pass()
+    }
+  }
+  return conn
 }
 
 const isRollbackRequest = (m) => m.method === 'USER_REQUEST_DIALOG' && m.data?.button1Action === 'ADD_PERMISSION_TO_ROLLBACK_TURN'

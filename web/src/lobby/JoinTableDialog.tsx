@@ -247,6 +247,7 @@ export default function JoinTableDialog({
         <CloseButton variant="plain" size="md" className="close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
       <div className={`join-hero family-${profile.family}`}>
         <span className="join-hero-emblem" aria-hidden="true"><Icon name={profile.icon} size={26} /></span>

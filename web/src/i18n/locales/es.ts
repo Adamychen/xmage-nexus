@@ -790,7 +790,7 @@ export const es: TranslationSchema = {
     choose_target: 'Elige objetivo',
     library_order_title: 'Ordenando cartas',
     choose_cards: 'Selecciona cartas',
-    choose_discard: 'Elige una carta para que descarte',
+    choose_discard: 'Elige una carta para descartar',
     hand_pick_expand: 'Abrir cuadrícula de cartas',
     choose_ability: 'Elige habilidad',
     choose_pile: 'Elige una pila',

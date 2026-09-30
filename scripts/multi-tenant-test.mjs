@@ -4,6 +4,8 @@
 // MISMA cuenta (host|username), en cuyo caso se adjuntan a la sesión existente.
 // Uso: node scripts/multi-tenant-test.mjs
 
+import { wsConn } from './lib.mjs'
+
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
 const SERVER_PORT = 17171
@@ -21,57 +23,18 @@ function check(name, ok, detail = '') {
   return ok
 }
 
-function makeClient(username) {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(WS_URL)
-    const pending = new Map()
-    let connectedEvent = false
-    ws.onmessage = (msg) => {
-      let m
-      try {
-        m = JSON.parse(String(msg.data))
-      } catch {
-        return
-      }
-      if (m.type === 'connected') connectedEvent = true
-      if (m.type === 'result') {
-        const list = pending.get(m.action) || []
-        const r = list.shift()
-        if (r) r(m)
-      }
-    }
-    ws.onopen = () => resolve(client)
-    ws.onerror = () => reject(new Error(`ws error para ${username}`))
-    const send = (action, args) => {
-      ws.send(JSON.stringify({ action, args }))
-      return new Promise((res) => {
-        const list = pending.get(action) || []
-        list.push(res)
-        pending.set(action, list)
-      })
-    }
-    const waitConnected = (ms = 10000) =>
-      new Promise((res, rej) => {
-        const t = setTimeout(() => rej(new Error('no llegó connected')), ms)
-        const i = setInterval(() => {
-          if (connectedEvent) {
-            clearTimeout(t)
-            clearInterval(i)
-            res()
-          }
-        }, 50)
-      })
-    const getSessionId = async () => {
-      const r = await send('getServerInfo', {})
-      return r && r.ok ? r.data.sessionId : null
-    }
-    const close = () => ws.close()
-    const client = { ws, send, waitConnected, getSessionId, close, username, get connected() { return connectedEvent } }
-  })
+async function makeClient(username) {
+  const client = await wsConn(WS_URL, { name: username })
+  client.username = username
+  client.getSessionId = async () => {
+    const r = await client.call('getServerInfo', {})
+    return r && r.ok ? r.data.sessionId : null
+  }
+  return client
 }
 
 async function connect(client) {
-  const res = await client.send('connect', {
+  const res = await client.call('connect', {
     host: SERVER_HOST,
     port: SERVER_PORT,
     username: client.username,
@@ -101,8 +64,8 @@ async function main() {
   const sa2 = await A.getSessionId()
   check('A sigue viendo su propia sesión', sa2 === sa)
 
-  await A.send('disconnect', {})
-  await B.send('disconnect', {})
+  await A.call('disconnect', {})
+  await B.call('disconnect', {})
   A.close()
   B.close()
 
@@ -119,7 +82,7 @@ async function main() {
   check('C2 se adjunta a la sesión de C1 (mismo sessionId)', !!sc2 && sc1 === sc2, `${sc1} vs ${sc2}`)
 
   // the second connection of the same account is an attach, so one disconnect covers both
-  await C1.send('disconnect', {})
+  await C1.call('disconnect', {})
   C1.close()
   C2.close()
 

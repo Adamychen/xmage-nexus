@@ -2,10 +2,7 @@
 // i18n coverage guard — verifica que no haya claves faltantes y que el % de
 // valores idénticos a en (copias sin traducir) no supere umbrales.
 // Whitelist: términos Magic / marcas / falsos positivos donde en==es es correcto.
-// Uso: node scripts/i18n-coverage.mjs [--json] [--threshold-es=15] [--threshold-other=500]
-//   --json: emite JSON para dashboard
-//   --threshold-es: máximo de idénticas permitidas en es tras whitelist (default 15)
-//   --threshold-other: máximo en otros idiomas (default 500 — solo anti-regresión, no bloquea)
+// Uso: node scripts/i18n-coverage.mjs
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -113,12 +110,12 @@ function parseLocale(filePath) {
   return flat
 }
 
-function main() {
-  const args = process.argv.slice(2)
-  const jsonMode = args.includes('--json')
-  const thresholdEs = Number((args.find(a => a.startsWith('--threshold-es=')) || '').split('=')[1] || 15)
-  const thresholdOther = Number((args.find(a => a.startsWith('--threshold-other=')) || '').split('=')[1] || 500)
+// Thresholds after whitelist: es is translation work in progress; the other
+// locales only need an anti-regression ceiling.
+const THRESHOLD_ES = 15
+const THRESHOLD_OTHER = 500
 
+function main() {
   const files = fs.readdirSync(localesDir).filter(f => f.endsWith('.ts')).map(f => path.join(localesDir, f))
   const locales = {}
   for (const fp of files) {
@@ -157,7 +154,7 @@ function main() {
     const translatedReal = total - identicalAfterWhitelist
     const pctReal = ((translatedReal / total) * 100).toFixed(1)
 
-    const status = lang === 'en' ? 'base' : lang === 'es' ? (identicalAfterWhitelist <= thresholdEs ? 'pass' : 'fail') : (identicalAfterWhitelist <= thresholdOther ? 'pass' : 'fail')
+    const status = lang === 'en' ? 'base' : lang === 'es' ? (identicalAfterWhitelist <= THRESHOLD_ES ? 'pass' : 'fail') : (identicalAfterWhitelist <= THRESHOLD_OTHER ? 'pass' : 'fail')
     if (status === 'fail') hasError = true
 
     report.push({
@@ -176,35 +173,31 @@ function main() {
     })
   }
 
-  if (jsonMode) {
-    console.log(JSON.stringify({ total, whitelist: [...WHITELIST], report }, null, 2))
-  } else {
-    console.log(`\n i18n coverage — total claves base (en): ${total} — whitelist: ${WHITELIST.size} claves`)
-    console.log(' ' + '-'.repeat(110))
-    console.log(` ${'lang'.padEnd(6)} ${'total'.padEnd(6)} ${'missing'.padEnd(8)} ${'empty'.padEnd(6)} ${'identical'.padEnd(10)} ${'identical*'.padEnd(11)} ${'translated*'.padEnd(12)} ${'pct*'.padEnd(6)} ${'status'}`)
-    console.log(' ' + '-'.repeat(110))
-    for (const r of report.sort((a,b) => a.lang.localeCompare(b.lang))) {
-      const identicalStr = `${r.identical}`.padEnd(10)
-      const identicalW = `${r.identicalAfterWhitelist}`.padEnd(11)
-      const trans = `${r.translatedReal}`.padEnd(12)
-      const pct = `${r.pctReal}%`.padEnd(6)
-      console.log(` ${r.lang.padEnd(6)} ${String(r.total).padEnd(6)} ${String(r.missing).padEnd(8)} ${String(r.empty).padEnd(6)} ${identicalStr} ${identicalW} ${trans} ${pct} ${r.status}`)
-    }
-    console.log(' ' + '-'.repeat(110))
-    console.log(` *after whitelist (${WHITELIST.size} keys excluded). es threshold: ${thresholdEs}, other: ${thresholdOther}`)
-    for (const r of report) {
-      if (r.missing.length > 0) {
-        console.log(`\n  ${r.lang} missing (${r.missing.length}): ${r.missingKeys.slice(0,5).join(', ')}${r.missing.length>5?'…':''}`)
-      }
-      if (r.identicalAfterWhitelist > 0 && r.lang !== 'en') {
-        // mostrar sample de sospechosas
-        if (r.lang === 'es' || r.identicalAfterWhitelist < 50) {
-          console.log(`  ${r.lang} identical* sample (${r.identicalAfterWhitelist}): ${r.identicalKeys.slice(0,5).join(', ')}${r.identicalKeys.length>5?'…':''}`)
-        }
-      }
-    }
-    console.log('')
+  console.log(`\n i18n coverage — total claves base (en): ${total} — whitelist: ${WHITELIST.size} claves`)
+  console.log(' ' + '-'.repeat(110))
+  console.log(` ${'lang'.padEnd(6)} ${'total'.padEnd(6)} ${'missing'.padEnd(8)} ${'empty'.padEnd(6)} ${'identical'.padEnd(10)} ${'identical*'.padEnd(11)} ${'translated*'.padEnd(12)} ${'pct*'.padEnd(6)} ${'status'}`)
+  console.log(' ' + '-'.repeat(110))
+  for (const r of report.sort((a,b) => a.lang.localeCompare(b.lang))) {
+    const identicalStr = `${r.identical}`.padEnd(10)
+    const identicalW = `${r.identicalAfterWhitelist}`.padEnd(11)
+    const trans = `${r.translatedReal}`.padEnd(12)
+    const pct = `${r.pctReal}%`.padEnd(6)
+    console.log(` ${r.lang.padEnd(6)} ${String(r.total).padEnd(6)} ${String(r.missing).padEnd(8)} ${String(r.empty).padEnd(6)} ${identicalStr} ${identicalW} ${trans} ${pct} ${r.status}`)
   }
+  console.log(' ' + '-'.repeat(110))
+  console.log(` *after whitelist (${WHITELIST.size} keys excluded). es threshold: ${THRESHOLD_ES}, other: ${THRESHOLD_OTHER}`)
+  for (const r of report) {
+    if (r.missing.length > 0) {
+      console.log(`\n  ${r.lang} missing (${r.missing.length}): ${r.missingKeys.slice(0,5).join(', ')}${r.missing.length>5?'…':''}`)
+    }
+    if (r.identicalAfterWhitelist > 0 && r.lang !== 'en') {
+      // mostrar sample de sospechosas
+      if (r.lang === 'es' || r.identicalAfterWhitelist < 50) {
+        console.log(`  ${r.lang} identical* sample (${r.identicalAfterWhitelist}): ${r.identicalKeys.slice(0,5).join(', ')}${r.identicalKeys.length>5?'…':''}`)
+      }
+    }
+  }
+  console.log('')
 
   if (hasError) {
     console.error(`\n[FAIL] i18n coverage guard — alguna lengua supera el umbral. Revisa whitelist o traduce.`)

@@ -55,8 +55,6 @@ function check(name, ok, detail = '') {
 const timeout = (ms, label) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout esperando ${label} (${ms}ms)`)), ms))
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
 function makeConn(tag) {
   const ws = new WebSocket(WS_URL)
   const pending = new Map()

@@ -15,7 +15,7 @@ import {
   playableInView,
   waitFrame,
 } from './support/frames'
-import { playableInSceneByName, waitSceneTargeting } from './support/scene'
+import { playableInSceneByName, waitScene } from './support/scene'
 import { startGame } from './support/start-game'
 import { targetingScenario } from '../fixtures/scenarios/targeting'
 import { withFakeServer } from './support/fake-backend'
@@ -81,7 +81,7 @@ test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetiv
   // (f) evidencias visuales del targeting en el CANVAS por estado de escena
   //     (determinista): el targeting está activo, con fuente y objetivos reales.
   //     El pulso (animación) se cubre por unit test de drawTargetFx.
-  const tActive = await waitSceneTargeting(page, (t) => t.active, 'targeting activo en la escena')
+  const tActive = await waitScene(page, 'targeting', (t) => t.active, 'targeting activo en la escena')
   expect(tActive.ids.length, 'el targeting debería listar objetivos válidos').toBeGreaterThan(0)
   const opponent = opponentPlayer(lastGameView(parseFrames(frames)))
   expect(opponent?.playerId, 'debería haber un oponente').toBeTruthy()
@@ -124,7 +124,7 @@ test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetiv
 
   // (j) el tablero vuelve al estado no-targeting: el targeting se desactiva en la
   //     escena (determinista, sin byte-diff del canvas)
-  const tInactive = await waitSceneTargeting(page, (t) => !t.active, 'targeting desactivado tras resolver')
+  const tInactive = await waitScene(page, 'targeting', (t) => !t.active, 'targeting desactivado tras resolver')
   expect(tInactive.ids.length, 'sin objetivos activos tras resolver').toBe(0)
 
   // evidencia visual (no es aserción): captura del tablero post-resolución

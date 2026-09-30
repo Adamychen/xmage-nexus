@@ -21,7 +21,7 @@ test('descarte interactivo desde mano revelada (Thoughtseize) @reveal', async ({
       // El diálogo de selección (grilla HD) debe aparecer con la mano revelada
       const dialog = page.locator('.card-grid-dialog')
       await expect(dialog).toBeVisible({ timeout: 15_000 })
-      await expect(dialog).toContainText('Elige una carta para que descarte')
+      await expect(dialog).toContainText('Elige una carta para descartar')
       await expect(dialog).toContainText('Lightning Bolt')
       await expect(dialog).toContainText('Counterspell')
       await expect(dialog).toContainText('Serra Angel')

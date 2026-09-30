@@ -57,9 +57,4 @@ final class ProxyProtocol {
         }
         return res.toString();
     }
-
-    /** Compat: usado por el auto-connect de arranque (sin requestId). */
-    static String resultJson(String action, boolean ok, Object data) {
-        return resultJson(action, "", ok, ok ? null : ERR_FAILED, data);
-    }
 }

@@ -34,10 +34,6 @@ function indent(depth) {
   return '  '.repeat(depth)
 }
 
-function pascalCase(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
 function tsType(def, depth = 0) {
   if (!def) return 'unknown'
 

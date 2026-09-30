@@ -326,29 +326,6 @@ export function waitForPortDown(port, timeoutMs = 30000) {
   })
 }
 
-/** Espera a que un fichero de log contenga una expresión regular. */
-export function waitForLog(file, pattern, timeoutMs = 30000, since = Date.now()) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now()
-    const re = new RegExp(pattern)
-    const tick = () => {
-      try {
-        const content = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''
-        const tail = since > 0 ? content.slice(Math.max(0, content.indexOf('\n', Math.max(0, content.length - 200_000)))) : content
-        if (re.test(tail)) return resolve(true)
-      } catch {
-        /* log en rotación: reintentar */
-      }
-      if (Date.now() - start > timeoutMs) {
-        reject(new Error(`el log ${file} no contiene /${pattern}/ tras ${timeoutMs}ms`))
-      } else {
-        setTimeout(tick, 500)
-      }
-    }
-    tick()
-  })
-}
-
 /** Ejecuta un comando en primer plano y devuelve { code, stdout, stderr }. */
 export function run(cmd, args, { cwd = repoRoot, timeoutMs = 600_000, quiet = false, env } = {}) {
   const started = Date.now()
@@ -470,6 +447,88 @@ export function logFileFor(component) {
   return list.filter((f) => fs.existsSync(f))
 }
 
-export function removeRunDir() {
-  fs.rmSync(runDir, { recursive: true, force: true })
+/**
+ * Minimal WebSocket client for the proxy JSON protocol, shared by the verify
+ * scripts: `call(action, args, ms)` matches the `result` by its echoed
+ * requestId (resolving { ok: false, error: 'timeout' } on expiry),
+ * `wait(pred, ms, label)` resolves on the next dispatch that matches, and
+ * `close()` drops the socket. `onMessage(conn, m)` sees every event after
+ * conn.gameId is auto-filled; `autoAnswer(conn, m)` then answers prompts.
+ * Dispatch order (gameId → onMessage → autoAnswer → waiters) mirrors the
+ * per-script scaffolding these scripts used to duplicate.
+ */
+export function wsConn(url, { name = '', autoAnswer = null, onMessage = null, gameIdOn, callTimeoutMs = 15000, init = null } = {}) {
+  const isStartEvent = gameIdOn ?? ((m) => !!m.objectId && (m.method === 'START_GAME' || m.method?.startsWith('GAME_')))
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url)
+    const pending = new Map()
+    const waiters = []
+    const conn = { ws, name, view: null, gameId: null }
+    if (init) Object.assign(conn, init)
+    let rid = 0
+
+    conn.call = (action, args, ms = callTimeoutMs) =>
+      new Promise((res) => {
+        const id = `${name}-${++rid}`
+        const timer = setTimeout(() => {
+          pending.delete(id)
+          res({ ok: false, error: 'timeout' })
+        }, ms)
+        pending.set(id, (m) => {
+          clearTimeout(timer)
+          res(m)
+        })
+        try {
+          ws.send(JSON.stringify({ requestId: id, action, args }))
+        } catch {
+          clearTimeout(timer)
+          pending.delete(id)
+          res({ ok: false, error: 'send-fail' })
+        }
+      })
+
+    conn.wait = (pred, ms, label) =>
+      new Promise((resolveWait, rejectWait) => {
+        const timer = setTimeout(() => rejectWait(new Error(`timeout waiting for ${label}${name ? ` (${name})` : ''}`)), ms)
+        waiters.push((m) => {
+          if (pred(m)) {
+            clearTimeout(timer)
+            resolveWait(m)
+            return true
+          }
+          return false
+        })
+      })
+
+    conn.close = () => {
+      try {
+        ws.close()
+      } catch {
+        /* noop */
+      }
+    }
+
+    ws.onopen = () => resolve(conn)
+    ws.onerror = () => reject(new Error('could not connect to the proxy'))
+    ws.onmessage = (raw) => {
+      let m
+      try {
+        m = JSON.parse(String(raw.data ?? raw))
+      } catch {
+        return
+      }
+      if (m.requestId && pending.has(m.requestId)) {
+        pending.get(m.requestId)(m)
+        pending.delete(m.requestId)
+        return
+      }
+      if (m.requestId || m.type === 'lobby' || m.type === 'error') return
+      if (!conn.gameId && isStartEvent(m)) conn.gameId = String(m.objectId)
+      if (onMessage) onMessage(conn, m)
+      if (autoAnswer) autoAnswer(conn, m)
+      for (let i = waiters.length - 1; i >= 0; i--) {
+        if (waiters[i](m)) waiters.splice(i, 1)
+      }
+    }
+  })
 }

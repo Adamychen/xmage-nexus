@@ -35,6 +35,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
         <CloseButton variant="plain" size="md" className="create-dialog-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="wizard-progress-track" aria-hidden>
           <div className="wizard-progress-fill" style={{ width: `${((activeIndex + 1) / wizardSteps.length) * 100}%` }} />

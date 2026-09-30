@@ -14,7 +14,7 @@
  * (web/src/state/mechanicsCoverage.test.ts) diffs these against the fields the
  * web client actually models, surfacing any server state the client ignores.
  */
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { forkDir, forkPath } from './lib.mjs'
@@ -39,11 +39,8 @@ const classCache = new Map() // name -> { fields: string[], superclass: string|n
 
 function walk(dir, cb) {
   if (!existsSync(dir)) return
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry)
-    const st = statSync(full)
-    if (st.isDirectory()) walk(full, cb)
-    else if (entry.endsWith('.java')) cb(full)
+  for (const entry of readdirSync(dir, { recursive: true, withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.java')) cb(join(entry.parentPath, entry.name))
   }
 }
 

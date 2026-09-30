@@ -41,6 +41,7 @@ import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import { isAlive, readPid } from './lib.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(path.join(ROOT, 'web', 'package.json'))
@@ -160,22 +161,7 @@ function mkConn(label) {
   })
 }
 
-function proxyPid() {
-  try {
-    return fs.readFileSync(path.join(ROOT, '.run', 'proxy.pid'), 'utf8').trim()
-  } catch {
-    return ''
-  }
-}
-
-function isAlive(pid) {
-  try {
-    process.kill(Number(pid), 0)
-    return true
-  } catch {
-    return false
-  }
-}
+const proxyPid = () => readPid('proxy')
 
 function proxyLogSize() {
   try {

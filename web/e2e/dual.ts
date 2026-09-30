@@ -13,21 +13,10 @@ export const FAKE_MODE = (process.env.E2E_BACKEND || '').trim() !== 'real'
 
 import { getFakePort } from './support/fake-port'
 
-export const BACKEND_HOST = 'localhost'
-/** Puerto por defecto del FixtureServer fake cuando ningún test ha publicado
- *  todavía uno dinámico (fallback de getFakePort; los servidores reales del e2e
- *  usan FakeServer.start(0) + setFakePort). OJO: NO usar 8788 — es la página
- *  HTTP del proxy Java (Mage.Proxy), que la ocupa siempre que el stack está arriba. */
-export const BACKEND_PORT = 8789
-
 /** Puerto del proxy WS al que se conectan la página (?proxyPort=) y el
  *  HumanHelper. En fake es DINÁMICO (cada test elige un puerto libre vía
  *  setFakePort); en real es el proxy del stack (8787). Función (no const)
  *  para leer el puerto vigente en el momento del goto. */
 export function proxyPort(): number {
   return FAKE_MODE ? getFakePort() : 8787
-}
-
-export function backendUrl(): string {
-  return `ws://${BACKEND_HOST}:${proxyPort()}`
 }

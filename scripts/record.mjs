@@ -151,17 +151,6 @@ function makeCreatureDriver() {
   }
 }
 
-// Sonda de señal Monstruosidad (no es fixture de CI): Polukranos en cabeza +
-// Forests. Turnos: tierra, castear (2GG), activar Monstruosidad X=1 (1GG).
-const MONSTROSITY_DECK = {
-  name: 'Mage Web monstrosity probe',
-  cards: [
-    { cardName: 'Polukranos, World Eater', setCode: 'THS', cardNumber: '172', amount: 3 },
-    { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 57 },
-  ],
-  sideboard: [],
-}
-
 function makeCombatDriver() {
   return {
     name: 'combat',
@@ -231,66 +220,6 @@ function makeCombatDriver() {
           ? Object.keys(attackers)
           : []
         if (ids.length > 0) return true
-      }
-      return false
-    },
-  }
-}
-
-function makeMonstrosityDriver() {
-  return {
-    name: 'monstrosity',
-    outFile: 'monstrosity.probe.json',
-    deck: MONSTROSITY_DECK,
-    gameType: 'Constructed - Pioneer',
-    maxMs: 420_000,
-    _landTurn: -1,
-    _cast: false,
-    _activated: false,
-    onSelect(ctx) {
-      const gv = ctx.gv
-      const me = ctx.me
-      if (!me || me.hasPriority !== true) return
-      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
-      if (!isMyMain) {
-        ctx.pass()
-        return
-      }
-      const turn = gv.turn ?? 0
-      if (turn !== this._landTurn) {
-        const land = ctx.playLand()
-        if (land) {
-          this._landTurn = turn
-          return
-        }
-      }
-      const poloId = ctx.findOnBattlefield('Polukranos, World Eater')
-      if (!this._cast && !poloId && ctx.cardInHand('Polukranos') && ctx.untappedMana() >= 4) {
-        this._cast = true
-        ctx.playCardByName('Polukranos')
-        return
-      }
-      if (this._cast && poloId && !this._activated && ctx.untappedMana() >= 4) {
-        this._activated = true
-        ctx.sendAction('sendPlayerUUID', { gameId: ctx.gameId, value: poloId })
-        return
-      }
-      ctx.pass()
-    },
-    onChooseAbility(opts) {
-      return (opts.find((o) => /monstrosity/i.test(o.label)) ?? opts[0])?.value
-    },
-    onTarget(ctx) {
-      ctx.sendAction('sendPlayerBoolean', { gameId: ctx.gameId, value: false })
-      return undefined
-    },
-    onTargetAmount() {
-      return 1
-    },
-    captureWhen(gv) {
-      const me = getMe(gv)
-      for (const c of Object.values(me?.battlefield ?? {})) {
-        if ((c?.name ?? '') === 'Polukranos, World Eater' && (c?.counters ?? []).some((k) => (k?.count ?? 0) >= 1)) return true
       }
       return false
     },
@@ -1237,8 +1166,6 @@ const REGISTRY = {
   'may-trigger': makeMayTriggerDriver,
   convoke: makeConvokeDriver,
   flashback: makeFlashbackDriver,
-  monstrosity: makeMonstrosityDriver,
-  'combat-probe': makeCombatProbeDriver,
   delve: makeDelveDriver,
   scry: makeScryDriver,
   overload: makeOverloadDriver,
@@ -2931,77 +2858,6 @@ function makeOverloadDriver() {
     },
     captureWhen(gv) {
       return Object.values(gv?.stack ?? {}).some((s) => /cyclonic rift/i.test(s?.name ?? ''))
-    },
-  }
-}
-
-// P4 — sonda de combate (2026-09-16, §3.6): no captura nada (captureWhen
-// falso, maxMs corto); solo revela en el log con qué métodos llegan
-// DECLARE_ATTACKERS / DECLARE_BLOCKERS y si cheatSetup al rival funciona.
-// cheat: 2 Osos nuestros + 2 Grizzlies al rival; luego pasar siempre.
-function makeCombatProbeDriver() {
-  return {
-    name: 'combat-probe',
-    outFile: 'combat-probe.json',
-    deck: AURA_DECK,
-    // PROBE v2 (2026-09-16): el cheat al rival congela (SIM). PROBADO: el
-    // simDeck con Osos también congela (3 intentos) — desactivado hasta
-    // bisecar (¿mazo inválido? ¿SIM pensando?). Sin simDeck = tierras.
-    /*
-    simDeck: {
-      name: 'Mage Sim bears',
-      cards: [
-        { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 36 },
-        { cardName: 'Grizzly Bears', setCode: 'LEA', cardNumber: '195', amount: 24 },
-      ],
-      sideboard: [],
-    },
-    */
-    gameType: 'Constructed - Pioneer',
-    maxMs: 150_000,
-    _acted: false,
-    _cheated: false,
-    onSelect(ctx) {
-      const me = ctx.me
-      if (!me || me.hasPriority !== true) return
-      // REGLA P1 (2026-09-16): solo en turno propio; cheatear con prioridad
-      // en turno ajeno congela el loop de forma determinista.
-      if (me.isActive !== true) {
-        ctx.pass()
-        return
-      }
-      if (!this._acted) {
-        if (ctx.playLand()) {
-          this._acted = true
-          ctx.log('onSelect: sonda tierra inicial')
-        } else ctx.pass()
-        return
-      }
-      // REGLA P1 (2026-09-16): cheat en T1 congela (todos los éxitos fueron
-      // en T2+); se juega la tierra en T1 y se cheatea a partir de T2.
-      if ((ctx.gv.turn ?? 0) < 2) {
-        ctx.pass()
-        return
-      }
-      if (!this._cheated) {
-        this._cheated = true
-        const rival = (ctx.gv?.players ?? []).find((p) => !p?.controlled)
-        const rid = rival?.playerId ?? rival?.id
-        ctx.log('onSelect: cheat osos propios y luego al rival (secuencial: en paralelo congela)')
-        // Secuencial encadenado: dos cheats en el mismo tick congelan el loop.
-        // PROBE 2026-09-16: con PROBE_RIVAL=1 se incluye el cheat al rival.
-        void ctx.cheatSetup({ battlefield: ['Runeclaw Bear', 'Runeclaw Bear'] })
-          .then(() => {
-            if (process.env.PROBE_RIVAL === '1' && rid) return ctx.cheatSetup({ battlefield: ['Grizzly Bears', 'Grizzly Bears'] }, rid)
-            ctx.log('onSelect: sonda sin cheat rival')
-            return null
-          })
-        return
-      }
-      ctx.pass()
-    },
-    captureWhen() {
-      return false
     },
   }
 }

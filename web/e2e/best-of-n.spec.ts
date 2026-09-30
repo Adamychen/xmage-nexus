@@ -18,74 +18,14 @@ fakeOnly()
 import { bestOfNScenario } from '../fixtures/scenarios/bestOfN'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
-import { framesOf, lastGameView, opponentPlayer, parseFrames, parsedLen, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
-import { targetOpponent, waitPlayable, dumpE2E, payMana } from './support/game-screen'
-import type { HumanHelper } from './wshelper'
+import { currentGameId, framesOf, parseFrames, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
+import { dumpE2E, winGameWithBolts } from './support/game-screen'
 
 /** Marca el fin de una partida (GAME_OVER + END_GAME_INFO del match). */
 function endInfoOf(page: import('@playwright/test').Page): { matchInfo?: string; wins?: number; winsNeeded?: number } | null {
   const parsed = parseFrames(framesOf(page))
   const end = [...parsed].reverse().find((f) => f.method === 'END_GAME_INFO')
   return (end?.data ?? null) as { matchInfo?: string; wins?: number; winsNeeded?: number } | null
-}
-
-/** ¿La partida CON ESTE gameId ya terminó? (el buffer acumula partidas viejas). */
-function gameEndedIn(page: import('@playwright/test').Page, gameId: string): boolean {
-  return parseFrames(framesOf(page)).some(
-    (f) => (f.method === 'GAME_OVER' || f.method === 'END_GAME_INFO') && f.objectId === gameId,
-  )
-}
-
-/** Id del juego actual (el último START_GAME/GAME_INIT del buffer). */
-function currentGameId(page: import('@playwright/test').Page): string | null {
-  const parsed = parseFrames(framesOf(page))
-  for (const f of [...parsed].reverse()) {
-    if (f.method === 'START_GAME' && f.objectId) return f.objectId
-    if (f.method === 'GAME_INIT' && f.objectId) return f.objectId
-  }
-  return null
-}
-
-/** Quema al Sim con Bolts hasta que muere (una partida del match). */
-async function winGameWithBolts(page: import('@playwright/test').Page, helper: HumanHelper, gameId: string): Promise<void> {
-  for (let i = 0; i < 9; i++) {
-    if (gameEndedIn(page, gameId)) return
-    if (!(await castBolt(page, helper))) break
-  }
-  const opp = opponentPlayer(lastGameView(parseFrames(framesOf(page))))
-  expect(
-    opp == null || (opp.life ?? 20) <= 0 || gameEndedIn(page, gameId),
-    `el Sim debería estar muerto (life=${opp?.life})`,
-  ).toBeTruthy()
-}
-
-/** Lanza un Bolt con reintento: los frames pueden ir detrás del estado real y
- *  el cast caer en una ventana ya cerrada (el servidor lo ignora en silencio y
- *  el ask de maná nunca llega). Devuelve false si no hay Bolt jugable. */
-async function castBolt(page: import('@playwright/test').Page, helper: HumanHelper): Promise<boolean> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1 })
-    if (!boltId) return false
-    // cursor estricto: el ask de maná de ESTE cast llega después de lanzarlo
-    const castAt = parsedLen(page)
-    expect(await helper.playCard(boltId), 'lanzar Bolt por WS').toBeTruthy()
-    if (process.env.E2E_DEBUG === '1') {
-      const view = lastGameView(parseFrames(framesOf(page)))
-      const players = (view?.players ?? []).map((p) => [p.name, String(p.playerId).slice(0, 8), p.controlled])
-      const opp = players.find((p) => !p[2])
-      console.log('[spec] target debug players=', JSON.stringify(players), 'opp=', opp)
-    }
-    await targetOpponent(page, undefined as never, 'Bolt', helper)
-    try {
-      await payMana(page, helper, castAt)
-      return true
-    } catch (e) {
-      if (attempt === 2) throw e
-      // el cast se ignoró (ventana perdida): esperar a la siguiente
-      await page.waitForTimeout(800)
-    }
-  }
-  return false
 }
 
 test('match best-of-N: END_GAME_INFO + SIDEBOARD + submitDeck + siguiente partida, y fin del match', { tag: '@fullflow' }, async ({ page }) => {

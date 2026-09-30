@@ -1,27 +1,13 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { startFakeServer, loadFake, type FakeConn, type FakeServerHandle } from './support/fakeServer.ts'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
+import { contentText, startTestClient } from './support/mcp.ts'
 
 const GAME_ID = 'game-autopass-1'
 const TABLE_ID = 'table-autopass-1'
 const MAX_REPEATS = 5
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-function contentText(result: unknown): string {
-  const items = Array.isArray((result as { content?: unknown }).content)
-    ? (result as { content: { type?: string; text?: string }[] }).content
-    : []
-  return items
-    .filter((item) => item.type === 'text')
-    .map((item) => item.text ?? '')
-    .join('\n')
-}
 
 function gameView() {
   return {
@@ -66,8 +52,7 @@ describe('auto-pass anti-flood', () => {
         },
       }),
     )
-    client = new Client({ name: 'autopass-test', version: '0.0.0' })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    client = await startTestClient('autopass-test')
   }, 30_000)
 
   afterAll(async () => {

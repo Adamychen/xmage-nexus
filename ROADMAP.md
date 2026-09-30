@@ -33,7 +33,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Phase 1: Web Foundation** | React 19 + TS + Vite. Lobby, room chat, real-time tables/users, Scryfall HD card cache (IndexedDB), full 1v1 board rendering & spectator mode. | ✅ **Completed** | 100% typecheck clean, live AI vs AI spectator matches working end-to-end. |
 | **Phase 2: Interaction Engine** | London mulligan, priority loops (`GAME_SELECT`), visual targeting (animated dotted lines & pulsing glows), mana tapping & pool payment (`sendPlayerManaType`), floating non-blocking combat UI (attack/block & alpha strike), advanced spell interactions (X-costs, multi-target, modal choices, +1/+1 counters). | ✅ **Completed** | Validated via `human-test.mjs` (83 checks PASS) and Playwright E2E suites (*Blaze*, *Arc Trail*, *Boros Charm*, *Walking Ballista*). |
 | **Quality & QA Foundation** | 1,900+ unit tests (vitest, ~13 s), Java→TS JSON Schema codegen (`gen-types.mjs`), dual-mode Playwright E2E (deterministic FakeServer + Real XMage Stack with `SimPlayer` bots). | ✅ **Completed** | Zero-flake local iteration loop + continuous anti-drift contract testing (3 guards: `callbackCoverage`, `mechanicsCoverage` server→client, `engineViewCoverage` engine→view). |
-| **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`), **sideboard Bo3/Bo5** (`SIDEBOARD` → `SideboardScreen`) y **orden de asignación multi-bloqueador** (`GAME_GET_MULTI_AMOUNT`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `best-of-3.spec.ts`/`best-of-5.spec.ts`, `combat-multiblock.spec.ts`, `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
+| **Phase 2.5: 1v1 Competitive Parity** | Match Chess Clocks (+buffer `F4`/`F9`), DFC/MDFC back-face + Saga `lore`, HD `CardGrid` para selección de cartas (tutores, scry/surveil, reveal de mano), **descarte interactivo desde reveal de mano** (Thoughtseize: `GAME_CHOOSE_CARDS`/`GAME_SELECT_TARGETS` con la mano ajena como `cardsView1` → `CardGrid` → `sendPlayerUUID`), **sideboard Bo3/Bo5** (`SIDEBOARD` → `SideboardScreen`) y **orden de asignación multi-bloqueador** (`GAME_GET_MULTI_AMOUNT`). Phase stops F4/F9 (ya completados en F2). | ✅ **Completed** | `e2e/reveal.spec.ts` (`@reveal`), `best-of.spec.ts`, `combat-multiblock.spec.ts`, `FeedbackDialog.test.tsx`, `PlayerInfoBar.test.tsx`, `INTERACTION_COVERAGE.md` actualizado. |
 | **Phase 3: Visual Polish, Audio & Deck Builder** | Web Audio engine (15 sfx, 3 buses), VFX (floating damage, shake, mana donut), in-app deck builder (Scryfall full syntax, curve, sample hand, Arena/DCK/Plain import/export), card sleeves and avatars, design system (tokens, primitives, style ratchet). | ✅ **Completed** (selectable playmats delivered 2026-09-23) | Visual-regression gallery (`#/gallery`, 3 resolutions × chromium + webkit) and the gallery/recorded E2E specs. |
 | **Phase 4: Desktop Packaging (Tauri)** | Tauri launcher with embedded proxy + trimmed JRE, signed auto-updater. | ✅ **Published** (v0.1.0 2026-09-10, v0.2.0 2026-09-19, v0.2.1 2026-09-22, v0.2.2 2026-09-22, v0.2.3 2026-09-22, v0.2.4 2026-09-24, v0.2.6 2026-09-24, v0.2.7 2026-09-24) | `release.yml`, signed bundles + `latest.json`. Clean-machine validation still open (§4.1 V7). |
 | **Phase 5: Advanced Modes & Tournaments** | Commander / FFA pod board (2×2 clamp 4; server FFA 3-10), Booster Draft & Sealed (8P `DraftScreen`/`ConstructScreen`), Swiss and elimination brackets, spectating of tournament matches. | ✅ **Completed** | `verify-swiss.mjs`, `verify-spectator-end.mjs`, e2e `draft`/`tournament` specs. |
@@ -89,7 +89,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 | # | Source | What | Note |
 |---|---|---|---|
-| V5 | `docs/history/plan5.md` / `plan4.md` §5.2 | Third live heuristic evaluator (keyboard + opponent view) | 2 of 3 done |
+| V5 | `docs/history/plan5.md` / `plan4.md` §5.2 | Third live heuristic evaluator (keyboard + opponent view) | Live pass done 2026-09-29 (`docs/history/qa/p5-2-heuristic-findings-eval3.md`): keyboard covered (Escape bug found + fixed), opponent view still pending |
 | V6 | `plan5.md` / `plan4.md` §5.3, §5.5, §5.6 | 5-second test, rounds with real players, dogfooding | — |
 | V7 | `plan5.md` / `plan4.md` §6 | Install on clean Win / macOS / Ubuntu (SmartScreen / Gatekeeper) and end-to-end updater | The blockers noted earlier no longer apply: v0.2.0 ships `darwin-aarch64` and signed `.sig` bundles with `latest.json` |
 
@@ -140,6 +140,21 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 From the 2026-09-21 audit (see the Work Log): spacing literals still to tokenize in `game/` + `board/` (~770, in-game UI), `system/`, `i18n/` and `styles.css` (~45); ~102 inline `style={{}}`; ~91 loose `<button>`; no `Field`/`Input` primitive; lobby list density mode; Construct pool sorting; translated backup labels in Decks. The style ratchet (`ui/styleTokens.test.ts`) keeps the migrated folders from regressing.
 
 ### 4.4 Test-infrastructure risk
+
+RESOLVED 2026-09-30: the two real-mode failures flagged here earlier (`skips.spec.ts`,
+`priority-stop-real.spec.ts`) were a mis-targeting artifact, not a code bug. `E2E_BACKEND=real`
+without `E2E_SERVER_HOST` logs into **beta.xmage.today** (documented in `docs/lessons.md:98`), not
+the local stack, and the public server's engine did not honor the mid-game `UserSkipPrioritySteps`
+updates (correct `updatePreferences` payloads verified on the wire; the patched local 1.4.61-V1
+honors them). With `E2E_SERVER_HOST=127.0.0.1` (what `integration-report.mjs` uses) both specs pass
+against localhost. Hardened while investigating: the `mage_e2e` MCP tool forces
+`E2E_SERVER_HOST=127.0.0.1` for `backend=real` (it is documented as the local stack), and
+`e2e/support/start-game.ts` (`waitTableReady`/`startMatch`) now polls both staging and lobby paths
+instead of committing to one at 500 ms — under beta's latency the app's late `JOINED_TABLE` jump
+left the lobby row stale and the old wait hung.
+
+Also observed: `trigger-order.spec.ts` › "remembering always first" fails at 4 parallel workers
+(2 of 3 full-suite runs) and passes isolated 3/3 — load flake, not a code bug.
 
 Remote CI has `retries: 0` and two runs in a row failed on different `e2e-fake` draft tests and on `self-test` `WATCHGAME` (timing under load, cleared by re-running the failed jobs). Open decision: `retries: 1` for CI only in `web/playwright.config.ts`. There is also an occasional unit flake in `store.test.ts` (GAME_OVER autosave, `getLatest` picking another test's log).
 

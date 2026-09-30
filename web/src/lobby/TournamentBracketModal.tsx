@@ -43,6 +43,7 @@ export default function TournamentBracketModal({ table, view, loading, error, on
         </div>
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="tournament-modal-scroll">
           {loading && !view && <div className="tournament-modal-loading">{t('lobby','matches_loading')}</div>}

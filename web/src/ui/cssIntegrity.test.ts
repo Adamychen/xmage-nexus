@@ -1,20 +1,18 @@
 // @vitest-environment node
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const SRC = fileURLToPath(new URL('..', import.meta.url))
 
-function walk(dir: string, exts: string[]): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const full = join(dir, name)
-    if (statSync(full).isDirectory()) return walk(full, exts)
-    return exts.some((e) => name.endsWith(e)) ? [full] : []
-  })
+function walk(exts: string[]): string[] {
+  return readdirSync(SRC, { recursive: true, encoding: 'utf8' })
+    .map((rel) => join(SRC, rel))
+    .filter((name) => exts.some((e) => name.endsWith(e)))
 }
 
-const cssFiles = walk(SRC, ['.css'])
+const cssFiles = walk(['.css'])
 const strip = (css: string) =>
   css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/url\((['"])data:[\s\S]*?\1\)/g, 'url()')
 
@@ -44,7 +42,7 @@ describe('css integrity', () => {
   })
 
   it('every var() without fallback points to a defined custom property', () => {
-    const sources = walk(SRC, ['.css', '.ts', '.tsx']).map((f) => readFileSync(f, 'utf8')).join('\n')
+    const sources = walk(['.css', '.ts', '.tsx']).map((f) => readFileSync(f, 'utf8')).join('\n')
     const defined = new Set([
       ...[...sources.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]),
       ...[...sources.matchAll(/['"](--[\w-]+)['"]/g)].map((m) => m[1]),

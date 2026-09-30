@@ -208,42 +208,38 @@ export async function stagingStartReady(page: Page, timeoutMs = 1_000): Promise<
   }
 }
 
-/** Espera a que la mesa del usuario esté lista (asiento SIM unido, botón Empezar). */
+/** Espera a que la mesa del usuario esté lista (asiento SIM unido, botón Empezar).
+ *  El JOINED_TABLE del server real puede llegar tarde: cada vuelta considera los
+ *  dos caminos (sala de espera lista o fila del lobby con 2/2) en vez de fijar
+ *  uno a los 500 ms -- con la app en staging el listado del lobby queda rancio. */
 export async function waitTableReady(page: Page, tableName: string): Promise<void> {
-  await page.waitForTimeout(500)
-  // Vía rápida: en staging con arranque habilitado la mesa ya está llena y
-  // lista (el conteo de la lista del lobby puede ir rancio: 1/2 con SIM sentado).
-  if (await stagingStartReady(page)) return
   const row = page.locator('.table-row', { hasText: tableName }).first()
   await expect(async () => {
+    if (await stagingStartReady(page)) return
     await dismissStaging(page)
     await expect(row).toBeVisible({ timeout: 1_000 })
-  }).toPass({ timeout: 20_000 })
-  // el asiento SIM lo une el proxy inmediatamente: la mesa nace casi llena
-  await expect(row.locator('.table-seats')).toHaveText(/2\/2/, { timeout: 20_000 })
-  if (await stagingStartReady(page)) return
-  const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
-  await expect(startButton).toBeVisible({ timeout: 15_000 })
+    await expect(row.locator('.table-seats')).toHaveText(/2\/2/, { timeout: 1_000 })
+  }).toPass({ timeout: 30_000 })
 }
 
 /** Arranca la partida (botón Empezar/Iniciar) y espera la pantalla de partida. */
 export async function startMatch(page: Page, tableName: string): Promise<void> {
   // El lobby puede auto-saltar a staging al unirse: arrancar desde allí.
   const stagingStart = page.getByTestId('staging-start')
-  if (await stagingStart.isVisible().catch(() => false)) {
-    await stagingStart.click()
-    await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
-    return
-  }
   const row = page.locator('.table-row', { hasText: tableName }).first()
   const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
   await expect(async () => {
+    if (await stagingStartReady(page)) return
     await dismissStaging(page)
     await expect(startButton).toBeVisible({ timeout: 1_000 })
-  }).toPass({ timeout: 15_000 })
-  // Forzado: la lista viva del lobby se re-renderiza sin parar y el botón nunca
-  // se estabiliza para un click normal (cuelgue hasta el timeout del test).
-  await startButton.click({ force: true })
+  }).toPass({ timeout: 20_000 })
+  if (await stagingStart.isVisible().catch(() => false)) {
+    await stagingStart.click()
+  } else {
+    // Forzado: la lista viva del lobby se re-renderiza sin parar y el botón nunca
+    // se estabiliza para un click normal (cuelgue hasta el timeout del test).
+    await startButton.click({ force: true })
+  }
   await expect(page.getByTestId('game-status')).toBeVisible({ timeout: 20_000 })
 }
 

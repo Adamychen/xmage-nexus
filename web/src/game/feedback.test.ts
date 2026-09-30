@@ -576,7 +576,7 @@ describe('parseFeedback', () => {
       min: 1,
       max: 1,
     })
-    expect(prompt?.title).toBe('Elige una carta para que descarte')
+    expect(prompt?.title).toBe('Elige una carta para descartar')
   })
 
   it('maps GAME_CHOOSE_CARDS_ORDER to an order prompt (library reorder / scry)', () => {

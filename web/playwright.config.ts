@@ -1,17 +1,13 @@
 import { cpus } from 'node:os'
 import { defineConfig } from '@playwright/test'
-import { KNOWN_BROKEN_TITLES } from './e2e/known-broken'
 
 const FAKE_MODE = process.env.E2E_BACKEND !== 'real'
-const INCLUDE_KNOWN_BROKEN = process.env.E2E_INCLUDE_KNOWN_BROKEN === '1'
 
 // fake: cada FixtureServer arranca en puerto dinámico (ver e2e/fixtures.ts y
 // e2e/support/fake-backend.ts), así que los tests son independientes entre sí y
 // se pueden repartir entre workers. real: 1 worker serial (el stack es único).
 const E2E_WORKERS =
   Number(process.env.E2E_WORKERS) || Math.max(1, Math.min(4, cpus().length - 1))
-
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // Puerto DEDICADO del dev server del e2e fake (misma lección que el puerto
 // propio del FixtureServer):
@@ -40,13 +36,6 @@ export default defineConfig({
   fullyParallel: FAKE_MODE,
   workers: FAKE_MODE ? E2E_WORKERS : 1,
   retries: 0,
-  // fake: excluye el known-broken (triage pendiente, e2e/known-broken.ts) salvo
-  // inclusión explícita para triage/reparación. Lista vacía = sin exclusión
-  // (un RegExp '(?:)' matchearía TODO y excluiría la suite entera).
-  grepInvert:
-    FAKE_MODE && !INCLUDE_KNOWN_BROKEN && KNOWN_BROKEN_TITLES.length > 0
-      ? new RegExp(`(?:${KNOWN_BROKEN_TITLES.map(escapeRegExp).join('|')})`)
-      : undefined,
   // en modo fake (por defecto) el e2e no depende del stack: vite se levanta solo
   webServer: FAKE_MODE
     ? {

@@ -257,10 +257,6 @@ export function defaultTournamentType(known: string[]): string {
     : (known.find((n) => isDraftTournamentType(n)) ?? known[0] ?? DEFAULT_DRAFT_TOURNAMENT_TYPE)
 }
 
-export const LIMITED_TOURNAMENT_TYPES = DEFAULT_TOURNAMENT_TYPES.filter(
-  (t) => typeof t === 'string' && !t.startsWith('Constructed'),
-)
-
 export function isConstructedTournamentType(t: unknown): boolean {
   if (typeof t === 'string') return t.startsWith('Constructed')
   if (t && typeof t === 'object' && 'name' in t && typeof (t as { name: unknown }).name === 'string') {
@@ -268,17 +264,6 @@ export function isConstructedTournamentType(t: unknown): boolean {
   }
   return false
 }
-
-export const POPULAR_CONSTRUCTED_DECK_TYPES = [
-  'Constructed - Modern',
-  'Constructed - Standard',
-  'Constructed - Pioneer',
-  'Constructed - Pauper',
-  'Constructed - Legacy',
-  'Constructed - Vintage',
-  'Variant Magic - Commander',
-  'Variant Magic - Brawl',
-]
 
 export const DEFAULT_DRAFT_CUBES: string[] = [
   'Cube From Deck',
@@ -383,7 +368,6 @@ export interface LimitedDraftOptions {
   timing?: DraftTiming
 }
 
-export const LIMITED_BOOSTER_OPTIONS = [3, 6] as const
 export const CONSTRUCTION_TIME_OPTIONS = [
   { label: '5 minutos', value: 300 },
   { label: '10 minutos', value: 600 },
@@ -405,33 +389,6 @@ export function buildLimitedOptions(opts: LimitedDraftOptions): Record<string, u
     sets: opts.setCodes,
     ...(opts.draftCubeName ? { draftCubeName: opts.draftCubeName } : {}),
     ...(opts.timing ? { timing: opts.timing } : {}),
-  }
-}
-
-export function buildDraftTournamentArgs(args: {
-  name: string
-  tournamentType: string
-  gameType: string
-  deckType: string
-  limitedOptions: LimitedDraftOptions
-  playerTypes?: string[]
-  password?: string
-  watchingAllowed?: boolean
-  winsNeeded?: number
-}): Record<string, unknown> {
-  const limited = buildLimitedOptions(args.limitedOptions)
-  return {
-    name: args.name,
-    tournamentType: args.tournamentType,
-    gameType: args.gameType,
-    matchType: args.gameType,
-    deckType: args.deckType,
-    limited: true,
-    limitedOptions: limited,
-    playerTypes: args.playerTypes ?? ['HUMAN'],
-    password: args.password ?? '',
-    watchingAllowed: args.watchingAllowed ?? true,
-    winsNeeded: args.winsNeeded ?? 1,
   }
 }
 

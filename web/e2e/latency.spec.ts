@@ -15,6 +15,7 @@ import { FAKE_MODE } from './dual'
 import { DECK } from '../fixtures/deck-names'
 import { startGame, login } from './support/start-game'
 import { waitPlayable } from './support/game-screen'
+import { withFakeServer } from './support/fake-backend'
 import { makeDraftScenario } from '../fixtures/scenarios/draft'
 import {
   latencyCombatScenario,
@@ -29,7 +30,6 @@ import {
   perfEntries,
   readAckMs,
   waitEventsQuiet,
-  withDelayedFakeServer,
   type PerfEntry,
 } from './support/perf'
 import {
@@ -42,7 +42,7 @@ import {
   waitFrame,
   waitFrameAt,
 } from './support/frames'
-import { waitSceneCombat } from './support/scene'
+import { waitScene } from './support/scene'
 
 const ACK_BUDGET_MS = 100
 const WAIT_STATE_MS = 500
@@ -81,7 +81,7 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
 
   test('pasar prioridad: ack en el botón y espera explícita mientras el eco viaja', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyPassScenario, async () => {
+    await withFakeServer(latencyPassScenario, async () => {
       const { pageErrors } = await startGame(page, { prefix: 'lta', tableName: 'latency-pass', deck: DECK.lands })
       const button = page.locator('.big-action-btn')
       await expect(button).toBeEnabled({ timeout: 20_000 })
@@ -99,12 +99,12 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       expect(echoMs, 'eco del pass retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       await expect(button).toBeEnabled({ timeout: LATENCY_ECHO_MS + 5000 })
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('jugar tierra: is-pending inmediato y se limpia con el eco', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyLandScenario, async () => {
+    await withFakeServer(latencyLandScenario, async () => {
       const { pageErrors } = await startGame(page, { prefix: 'ltl', tableName: 'latency-land', deck: DECK.lands })
       // El helper juega una tierra por turno: reintenta la medición en el
       // siguiente turno si la ventana se cerró mientras el test armaba la sonda.
@@ -129,12 +129,12 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       expectAckUnder(ackMs, 'jugar tierra')
       expect(echoMs, 'eco de la tierra retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('lanzar carta: is-pending inmediato y eco retrasado', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyTargetScenario, async () => {
+    await withFakeServer(latencyTargetScenario, async () => {
       const { pageErrors } = await startGame(page, { prefix: 'ltc', tableName: 'latency-target', deck: DECK.lands })
       const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1, timeoutMs: 20_000 })
       expect(boltId, 'Lightning Bolt jugable').toBeTruthy()
@@ -153,12 +153,12 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const { echoMs } = await echoAfter(page, 'playable')
       expect(echoMs, 'eco del lanzamiento retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('elegir objetivo: is-chosen-pending inmediato y eco que lo confirma', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyTargetScenario, async () => {
+    await withFakeServer(latencyTargetScenario, async () => {
       const { pageErrors, helper } = await startGame(page, { prefix: 'ltt', tableName: 'latency-target', deck: DECK.lands })
       const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1, timeoutMs: 20_000 })
       expect(boltId, 'Bolt jugable').toBeTruthy()
@@ -180,12 +180,12 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const { echoMs } = await echoAfter(page, 'target')
       expect(echoMs, 'eco del objetivo retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('pagar maná: is-pending al clicar la fuente y eco retrasado', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyTargetScenario, async () => {
+    await withFakeServer(latencyTargetScenario, async () => {
       const { pageErrors, helper } = await startGame(page, { prefix: 'ltm', tableName: 'latency-target', deck: DECK.lands })
       const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1, timeoutMs: 20_000 })
       expect(boltId, 'Bolt jugable').toBeTruthy()
@@ -211,19 +211,19 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const { echoMs } = await echoAfter(page, 'mana')
       expect(echoMs, 'eco del pago retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('declarar atacantes: is-pending inmediato y eco posterior', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(latencyCombatScenario, async () => {
+    await withFakeServer(latencyCombatScenario, async () => {
       const { pageErrors } = await startGame(page, {
         prefix: 'ltk',
         tableName: 'latency-combat',
         deck: DECK.combatHuman,
         skipCombat: true,
       })
-      const combat = await waitSceneCombat(page, (c) => c.active && c.mode === 'attack', 'ventana de atacantes', 25_000)
+      const combat = await waitScene(page, 'combat', (c) => c.active && c.mode === 'attack', 'ventana de atacantes', 25_000)
       const attackerId = combat.selectable[0]
       expect(attackerId, 'criatura seleccionable como atacante').toBeTruthy()
       const selector = `.card-slot[data-card-id="${attackerId}"]`
@@ -241,12 +241,12 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const { echoMs } = await echoAfter(page, 'combat')
       expect(echoMs, 'eco del atacante retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
       expect(pageErrors).toEqual([])
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
   test('pick de draft: is-busy inmediato y eco DRAFT_UPDATE retrasado', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
-    await withDelayedFakeServer(() => makeDraftScenario({ nextPickDelayMs: 3000 }), async () => {
+    await withFakeServer(() => makeDraftScenario({ nextPickDelayMs: 3000 }), async () => {
       await login(page, `latd-${String(Date.now()).slice(-6)}`)
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 20_000 })
       const card = page.locator('.draft-card').first()
@@ -271,6 +271,6 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       }
       expect(echo, 'eco DRAFT_UPDATE en __magePerf').toBeTruthy()
       expect(echo!.wall - clickedAt, 'eco del draft retrasado').toBeGreaterThan(LATENCY_ECHO_MS * 0.6)
-    })
+    }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 })

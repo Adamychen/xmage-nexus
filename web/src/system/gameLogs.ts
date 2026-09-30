@@ -1,5 +1,7 @@
 import type { LogEntry } from '../state/slices/lobby'
 import { getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
+import { createKeyedIdbStore, createMemoryKeyedStore, type KeyedStore } from './keyedStore'
+import { downloadBlob } from '../utils/download'
 
 export interface SavedGameLogEntry {
   time: number
@@ -17,41 +19,10 @@ export interface SavedGameLog {
 
 export const MAX_SAVED_GAME_LOGS = 20
 
-export interface GameLogBackend {
-  keys(): Promise<string[]>
-  get(key: string): Promise<SavedGameLog | undefined>
-  set(key: string, log: SavedGameLog): Promise<void>
-  del(key: string): Promise<void>
-}
+export type GameLogBackend = KeyedStore<SavedGameLog>
 
 export function createMemoryGameLogBackend(): GameLogBackend {
-  const map = new Map<string, SavedGameLog>()
-  return {
-    keys: async () => [...map.keys()],
-    get: async (key) => map.get(key),
-    set: async (key, log) => {
-      map.set(key, log)
-    },
-    del: async (key) => {
-      map.delete(key)
-    },
-  }
-}
-
-async function loadIdbGameLogBackend(): Promise<GameLogBackend> {
-  try {
-    if (typeof indexedDB === 'undefined') return createMemoryGameLogBackend()
-    const { createStore, get, set, del, keys } = await import('idb-keyval')
-    const store = createStore('mage-nexus-game-logs', 'logs')
-    return {
-      keys: () => keys<string>(store) as Promise<string[]>,
-      get: (key) => get<SavedGameLog>(key, store),
-      set: (key, log) => set(key, log, store),
-      del: (key) => del(key, store),
-    }
-  } catch {
-    return createMemoryGameLogBackend()
-  }
+  return createMemoryKeyedStore<SavedGameLog>(MAX_SAVED_GAME_LOGS)
 }
 
 export class GameLogStore {
@@ -61,7 +32,9 @@ export class GameLogStore {
 
   private resolveBackend(): Promise<GameLogBackend> {
     if (this.backend) return Promise.resolve(this.backend)
-    if (!this.backendPromise) this.backendPromise = loadIdbGameLogBackend()
+    if (!this.backendPromise) {
+      this.backendPromise = createKeyedIdbStore<SavedGameLog>('mage-nexus-game-logs', 'logs', MAX_SAVED_GAME_LOGS)
+    }
     return this.backendPromise
   }
 
@@ -71,11 +44,6 @@ export class GameLogStore {
     const key = `${savedAt}_${(input.gameId ?? 'game').slice(0, 8)}`
     const log: SavedGameLog = { key, savedAt, gameId: input.gameId, title: input.title, entries: input.entries }
     await backend.set(key, log)
-    const keys = (await backend.keys()).sort()
-    const overflow = keys.length - MAX_SAVED_GAME_LOGS
-    for (let i = 0; i < overflow; i++) {
-      await backend.del(keys[i])
-    }
     return log
   }
 
@@ -118,18 +86,11 @@ export function toSavedEntries(entries: LogEntry[]): SavedGameLogEntry[] {
 }
 
 export function downloadGameLog(log: SavedGameLog): void {
-  try {
-    if (typeof document === 'undefined' || typeof URL === 'undefined') return
-    const blob = new Blob([buildGameLogHtml(log)], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `gamelog_${new Date(log.savedAt).toISOString().replace(/[:.]/g, '-')}.html`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  } catch {}
+  downloadBlob(
+    new Blob([buildGameLogHtml(log)], { type: 'text/html' }),
+    `gamelog_${new Date(log.savedAt).toISOString().replace(/[:.]/g, '-')}.html`,
+    1000,
+  )
 }
 
 export async function downloadLatestGameLog(fallback: {

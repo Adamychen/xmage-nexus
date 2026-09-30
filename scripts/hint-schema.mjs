@@ -46,16 +46,10 @@ function toRel(p) {
 }
 
 function walkJava(relRoot) {
-  const out = []
-  const visit = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const child = join(dir, entry.name)
-      if (entry.isDirectory()) visit(child)
-      else if (entry.name.endsWith('.java')) out.push(toRel(child))
-    }
-  }
-  visit(abs(relRoot))
-  return out.sort()
+  return readdirSync(abs(relRoot), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.java'))
+    .map((entry) => toRel(join(entry.parentPath, entry.name)))
+    .sort()
 }
 
 function readJava(rel) {

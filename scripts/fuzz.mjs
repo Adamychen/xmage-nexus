@@ -91,19 +91,15 @@ const KNOWN_METHODS = loadKnownMethods()
 // ---------------------------------------------------------------------------
 // Pool de mazos reales (.dck del fork, no generados)
 // ---------------------------------------------------------------------------
-function collectDckFiles(dir, out = []) {
-  let entries
+function collectDckFiles(dir) {
   try {
-    entries = fs.readdirSync(dir, { withFileTypes: true })
+    return fs
+      .readdirSync(dir, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.dck'))
+      .map((entry) => path.join(entry.parentPath, entry.name))
   } catch {
-    return out
+    return []
   }
-  for (const entry of entries) {
-    const p = path.join(dir, entry.name)
-    if (entry.isDirectory()) collectDckFiles(p, out)
-    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.dck')) out.push(p)
-  }
-  return out
 }
 
 function parseDck(filePath) {

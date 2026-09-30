@@ -1,25 +1,11 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { startFakeServer, loadFake, type FakeConn, type FakeServerHandle } from './support/fakeServer.ts'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
+import { contentText, rivalPlayer, startTestClient } from './support/mcp.ts'
 
 const GAME_ID = 'game-fake-1'
 const TABLE_ID = 'table-fake-1'
 const GOBLIN_ID = 'card-goblin'
-
-function contentText(result: unknown): string {
-  const items = Array.isArray((result as { content?: unknown }).content)
-    ? (result as { content: { type?: string; text?: string }[] }).content
-    : []
-  return items
-    .filter((item) => item.type === 'text')
-    .map((item) => item.text ?? '')
-    .join('\n')
-}
 
 function gameView(played: boolean) {
   return {
@@ -49,18 +35,7 @@ function gameView(played: boolean) {
         graveyard: {},
         manaPool: { red: 0, green: 0, blue: 0, white: 0, black: 0, colorless: 0 },
       },
-      {
-        playerId: 'p2',
-        name: 'rival',
-        controlled: false,
-        isActive: false,
-        hasPriority: false,
-        life: 20,
-        handCount: 7,
-        libraryCount: 53,
-        battlefield: {},
-        graveyard: {},
-      },
+      rivalPlayer,
     ],
   }
 }
@@ -95,8 +70,7 @@ describe('MCP against the web FixtureServer', () => {
         },
       }),
     )
-    client = new Client({ name: 'fake-game-test', version: '0.0.0' })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    client = await startTestClient('fake-game-test')
   }, 30_000)
 
   afterAll(async () => {

@@ -8,7 +8,7 @@ import { FAKE_MODE } from './dual'
 import { combatMultiBlockScenario } from '../fixtures/scenarios/combatMultiBlock'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
-import { sceneClick, waitSceneCombat } from './support/scene'
+import { sceneClick, waitScene } from './support/scene'
 fakeOnly()
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
@@ -24,7 +24,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
 
     // 1. Declaración de Atacante (Colossal Dreadmaw)
     const dreadmawId = 'my-dreadmaw'
-    await waitSceneCombat(page, (c) => c.active && c.mode === 'attack', 'ventana de ataque', 20_000)
+    await waitScene(page, 'combat', (c) => c.active && c.mode === 'attack', 'ventana de ataque', 20_000)
     expect(await sceneClick(page, dreadmawId), 'clic para declarar atacante').toBeTruthy()
 
     // Confirmar atacantes

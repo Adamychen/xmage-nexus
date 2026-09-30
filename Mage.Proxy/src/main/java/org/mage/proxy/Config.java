@@ -87,10 +87,6 @@ public class Config {
         return get("password", "");
     }
 
-    public boolean hasAutoConnect() {
-        return !getUsername().isEmpty();
-    }
-
     public int getWsPort() {
         return getInt("wsPort", DEFAULT_WS_PORT);
     }

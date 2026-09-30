@@ -193,6 +193,7 @@ export function SampleHandModal({
         <CloseButton variant="plain" size="md" className="sample-hand-close-btn" onClick={onClose} />
       )}
       onBackdropClick={onClose}
+      onEscape={onClose}
     >
         <div className="sample-hand-stats-chips">
           <Chip size="md" pill>{t('decks', 'total_cards')}: {hand.length}</Chip>

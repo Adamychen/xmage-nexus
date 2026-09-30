@@ -27,6 +27,9 @@ export interface DialogShellProps {
   sectionProps?: Omit<HTMLAttributes<HTMLElement>, 'className'>
   onBackdropClick?: (e: MouseEvent<HTMLDivElement>) => void
   onClose?: () => void
+  /** Escape close, for callers that render their own ✕ in `topRight` instead
+   *  of the shell's `onClose` button. Falls back to `onClose`. */
+  onEscape?: () => void
 }
 
 export default function DialogShell({
@@ -52,6 +55,7 @@ export default function DialogShell({
   sectionProps,
   onBackdropClick,
   onClose,
+  onEscape,
 }: DialogShellProps) {
   const closeButton = onClose ? (
     <CloseButton variant="solid" size="sm" className="dlg-close" onClick={onClose} data-testid={testId ? `${testId}-close` : undefined} />
@@ -66,7 +70,7 @@ export default function DialogShell({
       zIndex={zIndex}
       trailing={trailing}
       onBackdropClick={onBackdropClick}
-      onEscape={onClose}
+      onEscape={onEscape ?? onClose}
       sectionProps={sectionProps}
     >
       <div className="dlg-head">

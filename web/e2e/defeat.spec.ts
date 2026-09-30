@@ -15,24 +15,9 @@ import { humanLosesScenario } from '../fixtures/scenarios/humanLosesGame2'
 import { SIM_NAME } from '../fixtures/scenarios/humanGame'
 import { withFakeServer } from './support/fake-backend'
 import { startGame } from './support/start-game'
-import { framesOf, lastGameView, opponentPlayer, parseFrames, parsedLen, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
+import { currentGameId, framesOf, gameEndedIn, parseFrames, parsedLen, parseSent, sentOf, waitFrame, waitFrameAt } from './support/frames'
 import { targetOpponent, waitPlayable, payMana } from './support/game-screen'
 import type { HumanHelper } from './wshelper'
-
-function gameEndedIn(page: import('@playwright/test').Page, gameId: string): boolean {
-  return parseFrames(framesOf(page)).some(
-    (f) => (f.method === 'GAME_OVER' || f.method === 'END_GAME_INFO') && f.objectId === gameId,
-  )
-}
-
-function currentGameId(page: import('@playwright/test').Page): string | null {
-  const parsed = parseFrames(framesOf(page))
-  for (const f of [...parsed].reverse()) {
-    if (f.method === 'START_GAME' && f.objectId) return f.objectId
-    if (f.method === 'GAME_INIT' && f.objectId) return f.objectId
-  }
-  return null
-}
 
 async function waitGameToEnd(page: import('@playwright/test').Page, helper: HumanHelper, gameId: string): Promise<void> {
   for (let i = 0; i < 12; i++) {

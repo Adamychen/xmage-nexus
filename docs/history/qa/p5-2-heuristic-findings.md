@@ -129,5 +129,6 @@ Estado real de los 5 hallazgos tras el ciclo de correcciones:
 
 La heurística queda en **0 hallazgos de severidad 3–4**; la 2ª pasada
 (`docs/history/qa/p5-2-heuristic-findings-eval2.md`) añadió 7 hallazgos S1–S2, todos
-corregidos el 2026-09-18. Pendiente para cerrar §5.2: pasada 3 (idealmente
-humana/en vivo) y regenerar baselines al commitear.
+corregidos el 2026-09-18. Pasada 3 (en vivo, teclado + puntero) ejecutada el
+2026-09-29: `docs/history/qa/p5-2-heuristic-findings-eval3.md` (2 bugs S2
+encontrados y corregidos); la vista del rival sigue pendiente.

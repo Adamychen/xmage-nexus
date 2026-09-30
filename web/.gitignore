@@ -1,3 +1,4 @@
 node_modules
 dist
 *.local
+fixtures/engine-view-gap.json

@@ -1,55 +1,12 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { startFakeServer, loadFake, type FakeConn, type FakeServerHandle } from './support/fakeServer.ts'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
+import { baseGameView, contentText, startTestClient } from './support/mcp.ts'
 
 const GAME_ID = 'game-reconnect-1'
 const TABLE_ID = 'table-reconnect-1'
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-function contentText(result: unknown): string {
-  const items = Array.isArray((result as { content?: unknown }).content)
-    ? (result as { content: { type?: string; text?: string }[] }).content
-    : []
-  return items
-    .filter((item) => item.type === 'text')
-    .map((item) => item.text ?? '')
-    .join('\n')
-}
-
-function gameView() {
-  return {
-    turn: 1,
-    phase: 'PRECOMBAT_MAIN',
-    step: 'PRECOMBAT_MAIN',
-    activePlayerName: 'me',
-    priorityPlayerName: 'me',
-    myHand: {},
-    canPlayObjects: { objects: {} },
-    stack: {},
-    combat: [],
-    players: [
-      {
-        playerId: 'p1',
-        name: 'me',
-        controlled: true,
-        isActive: true,
-        hasPriority: true,
-        life: 20,
-        handCount: 0,
-        libraryCount: 53,
-        battlefield: {},
-        graveyard: {},
-      },
-      { playerId: 'p2', name: 'rival', controlled: false, isActive: false, hasPriority: false, life: 20, handCount: 7, libraryCount: 53, battlefield: {}, graveyard: {} },
-    ],
-  }
-}
 
 describe('MCP reconnect against the FixtureServer', () => {
   let fake: FakeServerHandle
@@ -69,13 +26,12 @@ describe('MCP reconnect against the FixtureServer', () => {
         tableId: TABLE_ID,
         tableName: 'reconnect table',
         gameId: GAME_ID,
-        gameView: gameView(),
+        gameView: baseGameView(1),
         onConnect: (conn: FakeConn) => conns.push(conn),
-        onJoinGame: (conn: FakeConn) => conn.broadcast('GAME_INIT', { gameView: gameView() }, GAME_ID),
+        onJoinGame: (conn: FakeConn) => conn.broadcast('GAME_INIT', { gameView: baseGameView(1) }, GAME_ID),
       }),
     )
-    client = new Client({ name: 'reconnect-test', version: '0.0.0' })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    client = await startTestClient('reconnect-test')
   }, 30_000)
 
   afterAll(async () => {

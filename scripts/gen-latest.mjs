@@ -15,13 +15,11 @@ function argValue(args, name) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined
 }
 
-function walk(dir, out = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) walk(full, out)
-    else out.push(full)
-  }
-  return out
+function walk(dir) {
+  return fs
+    .readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(entry.parentPath, entry.name))
 }
 
 function main() {

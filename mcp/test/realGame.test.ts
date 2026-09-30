@@ -1,10 +1,5 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { describe, expect, it } from 'vitest'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
+import { contentText, startTestClient } from './support/mcp.ts'
 
 const DECK = {
   name: 'MCP real game',
@@ -37,16 +32,11 @@ function parseJson(text: string): Record<string, unknown> {
 
 describe.skipIf(process.env.MCP_E2E !== '1')('real deterministic game vs Sim', () => {
   it('plays lands, casts a creature, attacks and finishes the game', async () => {
-    const client = new Client({ name: 'real-game', version: '0.0.0' })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    const client = await startTestClient('real-game')
     let tableId: string | null = null
     const call = async (name: string, args: Record<string, unknown> = {}) => {
       const result = await client.callTool({ name, arguments: args })
-      const content = (result as { content?: { type?: string; text?: string }[] }).content ?? []
-      const text = content
-        .filter((item) => item.type === 'text')
-        .map((item) => item.text ?? '')
-        .join('\n')
+      const text = contentText(result)
       if (result.isError) throw new Error(`${name}: ${text}`)
       return text
     }

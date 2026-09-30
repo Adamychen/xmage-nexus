@@ -9,13 +9,17 @@
  * por conexión).
  */
 
-import { FakeServer, type Scenario } from '../../fixtures/fake'
+import { FakeServer, type FakeServerOptions, type Scenario } from '../../fixtures/fake'
 import { FAKE_MODE } from '../dual'
 import { getFakePort, setFakePort } from './fake-port'
 
-export async function withFakeServer<T>(makeScenario: () => Scenario, run: () => Promise<T>): Promise<T> {
+export async function withFakeServer<T>(
+  makeScenario: () => Scenario,
+  run: () => Promise<T>,
+  options: FakeServerOptions = {},
+): Promise<T> {
   if (!FAKE_MODE) return run()
-  const server = await FakeServer.start(0, makeScenario)
+  const server = await FakeServer.start(0, makeScenario, options)
   const previousPort = getFakePort()
   setFakePort(server.port)
   try {
@@ -26,22 +30,5 @@ export async function withFakeServer<T>(makeScenario: () => Scenario, run: () =>
     } finally {
       setFakePort(previousPort)
     }
-  }
-}
-
-const _setSideboard: Array<() => void> = []
-
-export function setSideboard(_cards: import('../../src/net/types').DeckCardEntry[]): void {
-  // sideboard se carga en el store desde myDeck al unirse a la mesa;
-  // esta función es un placeholder para cuando haya un editor de mazos real.
-  // Por ahora el test verifica que el swap ocurre (sideboard no vacío tras él).
-  if (typeof window !== 'undefined') {
-    window.__mageSideboard = _cards
-  }
-}
-
-declare global {
-  interface Window {
-    __mageSideboard?: unknown[]
   }
 }

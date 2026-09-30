@@ -64,7 +64,7 @@ that every field the server can emit is modeled in the contract.
 
 When the client needs to send a new action to the server:
 
-1. Route it in `Mage.Proxy/src/main/java/org/mage/proxy/CommandDispatch.java`
+1. Route it in the `ProxyClient.handleCommand` chain
    → implement it in the matching `InfoCommands` / `TableCommands` /
    `TournamentCommands` / `GameCommands.java`. Parse args defensively with
    `JsonArgs`, answer with the `ProxyProtocol` envelope.
@@ -105,7 +105,7 @@ without depending on the public server:
 |---|---|
 | `ProxyClient.java` | `MageClient` bridge: session lifecycle, callback forwarding, command router |
 | `Gateway.java` | WS transport: `byConn`/`byAccount`, origin check, rate limit |
-| `CommandDispatch.java` + `Info/Table/Tournament/GameCommands.java` | Action routing + implementations |
+| `Info/Table/Tournament/GameCommands.java` | Action routing + implementations |
 | `CommandContext.java` / `JsonArgs.java` / `ProxyProtocol.java` / `ErrorClassifier.java` | Router context, defensive arg readers, envelopes, error codes |
 | `MatchOptionsParser.java` / `SimManager.java` / `SimPlayer.java` | Match/tournament options, SIM bot lifecycle, deterministic test bot |
 | `JsonUtil.java` | Reflection Java → JSON serializer (camelCase 1:1, see `Mage.Proxy/README.md`) |

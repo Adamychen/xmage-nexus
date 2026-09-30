@@ -90,25 +90,26 @@ export function registerTestTools(server: McpServer): void {
       description:
         'Ejecuta Playwright en web/ con spec/grep opcionales. backend=fake (default) no necesita stack ' +
         '(FixtureServer + vite propio en 5175); backend=real usa el stack (vite 5173 + proxy 8787). ' +
-        'includeKnownBroken re-incluye los tests excluidos por e2e/known-broken.ts. Devuelve el resumen ' +
+        'Devuelve el resumen ' +
         '(passed/failed/skipped) y la cola de salida. Ej: spec=decks-gallery.spec.ts grep=@decks.',
       inputSchema: {
         spec: z.string().optional(),
         grep: z.string().optional(),
         backend: z.enum(['fake', 'real']).default('fake'),
-        includeKnownBroken: z.boolean().default(false),
         timeoutSec: z.number().int().min(30).max(1_800).default(900),
       },
       annotations: { readOnlyHint: false },
     },
-    async ({ spec, grep, backend, includeKnownBroken, timeoutSec }) => {
+    async ({ spec, grep, backend, timeoutSec }) => {
       const cli = path.join(repoRoot, 'web', 'node_modules', 'playwright', 'cli.js')
       const args = ['test']
       if (spec) args.push(spec.startsWith('e2e/') ? spec : `e2e/${spec}`)
       if (grep) args.push('--grep', grep)
       const env: Record<string, string> = {}
-      if (backend === 'real') env.E2E_BACKEND = 'real'
-      if (includeKnownBroken) env.E2E_INCLUDE_KNOWN_BROKEN = '1'
+      if (backend === 'real') {
+        env.E2E_BACKEND = 'real'
+        env.E2E_SERVER_HOST = '127.0.0.1'
+      }
       const res = await runCommand(process.execPath, [cli, ...args], {
         cwd: path.join(repoRoot, 'web'),
         env,

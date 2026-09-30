@@ -1,3 +1,4 @@
+import { createStore, get, set, getMany } from 'idb-keyval'
 import { scryfallFetch } from '../cards/scryfallClient'
 import { fetchEdhrecPageViaProxy } from '../net/commands'
 import type { ScryfallSearchCard } from './scryfallSearch'
@@ -108,14 +109,17 @@ const inflight = new Map<string, Promise<EdhrecResult>>()
  *  Evita repetir los POST a /cards/collection cada vez que se monta el panel. */
 const cardMemory = new Map<string, ScryfallSearchCard | null>()
 
-let dbPromise: Promise<IDBDatabase | null> | null = null
+const pagesStore = createStore(DB_NAME, DB_STORE)
+const cardsStore = createStore(DB_NAME, DB_CARD_STORE)
 
-function openDb(): Promise<IDBDatabase | null> {
+let dbPromise: Promise<void> | null = null
+
+function ensureStores(): Promise<void> {
   if (dbPromise) return dbPromise
-  dbPromise = new Promise<IDBDatabase | null>((resolve) => {
+  dbPromise = new Promise<void>((resolve) => {
     try {
       if (typeof indexedDB === 'undefined' || !indexedDB) {
-        resolve(null)
+        resolve()
         return
       }
       const req = indexedDB.open(DB_NAME, DB_VERSION)
@@ -124,72 +128,54 @@ function openDb(): Promise<IDBDatabase | null> {
         if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE)
         if (!db.objectStoreNames.contains(DB_CARD_STORE)) db.createObjectStore(DB_CARD_STORE)
       }
-      req.onsuccess = () => resolve(req.result)
-      req.onerror = () => resolve(null)
-      req.onblocked = () => resolve(null)
+      req.onsuccess = () => {
+        req.result.close()
+        resolve()
+      }
+      req.onerror = () => resolve()
+      req.onblocked = () => resolve()
     } catch {
-      resolve(null)
+      resolve()
     }
   })
   return dbPromise
 }
 
 async function idbGet(slug: string): Promise<EdhrecResult | undefined> {
-  const db = await openDb()
-  if (!db) return undefined
-  return new Promise((resolve) => {
-    try {
-      const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(slug)
-      req.onsuccess = () => {
-        const entry = req.result as { value: EdhrecResult; at: number } | undefined
-        resolve(entry && Date.now() - entry.at < CACHE_TTL_MS ? entry.value : undefined)
-      }
-      req.onerror = () => resolve(undefined)
-    } catch {
-      resolve(undefined)
-    }
-  })
+  await ensureStores()
+  try {
+    const entry = await get<{ value: EdhrecResult; at: number }>(slug, pagesStore)
+    return entry && Date.now() - entry.at < CACHE_TTL_MS ? entry.value : undefined
+  } catch {
+    return undefined
+  }
 }
 
 async function idbPut(slug: string, value: EdhrecResult) {
-  const db = await openDb()
-  if (!db) return
+  await ensureStores()
   try {
-    db.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).put({ value, at: Date.now() }, slug)
+    await set(slug, { value, at: Date.now() }, pagesStore)
   } catch {}
 }
 
-function cardIdbGetMany(db: IDBDatabase, keys: string[]): Promise<Map<string, ScryfallSearchCard | null>> {
-  return new Promise((resolve) => {
-    const out = new Map<string, ScryfallSearchCard | null>()
-    try {
-      const store = db.transaction(DB_CARD_STORE, 'readonly').objectStore(DB_CARD_STORE)
-      let remaining = keys.length
-      const done = () => {
-        if (--remaining === 0) resolve(out)
-      }
-      for (const key of keys) {
-        const req = store.get(key)
-        req.onsuccess = () => {
-          const entry = req.result as { value: ScryfallSearchCard | null; at: number } | undefined
-          if (entry && Date.now() - entry.at < CARD_CACHE_TTL_MS) out.set(key, entry.value)
-          done()
-        }
-        req.onerror = done
-      }
-    } catch {
-      resolve(out)
-    }
-  })
+async function cardIdbGetMany(keys: string[]): Promise<Map<string, ScryfallSearchCard | null>> {
+  const out = new Map<string, ScryfallSearchCard | null>()
+  await ensureStores()
+  try {
+    const entries = await getMany<{ value: ScryfallSearchCard | null; at: number }>(keys, cardsStore)
+    keys.forEach((key, i) => {
+      const entry = entries[i]
+      if (entry && Date.now() - entry.at < CARD_CACHE_TTL_MS) out.set(key, entry.value)
+    })
+  } catch {}
+  return out
 }
 
-function cardIdbPut(key: string, value: ScryfallSearchCard | null) {
-  void openDb().then((db) => {
-    if (!db) return
-    try {
-      db.transaction(DB_CARD_STORE, 'readwrite').objectStore(DB_CARD_STORE).put({ value, at: Date.now() }, key)
-    } catch {}
-  })
+async function cardIdbPut(key: string, value: ScryfallSearchCard | null) {
+  await ensureStores()
+  try {
+    await set(key, { value, at: Date.now() }, cardsStore)
+  } catch {}
 }
 
 /** json.edhrec.com sends no CORS headers, so browsers can't fetch it directly;
@@ -327,17 +313,14 @@ export async function resolveCardsByNames(names: string[]): Promise<Map<string, 
 
   let missing = [...pending.keys()]
   if (missing.length > 0) {
-    const db = await openDb()
-    if (db) {
-      const stored = await cardIdbGetMany(db, missing)
-      missing = missing.filter((key) => {
-        if (!stored.has(key)) return true
-        const value = stored.get(key) ?? null
-        cardMemory.set(key, value)
-        if (value) out.set(key, value)
-        return false
-      })
-    }
+    const stored = await cardIdbGetMany(missing)
+    missing = missing.filter((key) => {
+      if (!stored.has(key)) return true
+      const value = stored.get(key) ?? null
+      cardMemory.set(key, value)
+      if (value) out.set(key, value)
+      return false
+    })
   }
 
   const index = (card: ScryfallSearchCard) => {

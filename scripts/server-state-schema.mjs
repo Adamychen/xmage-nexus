@@ -16,7 +16,7 @@
  *
  * No Java/server needed: purely file-based, deterministic.
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { dirname, resolve, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { forkDir, forkPath } from './lib.mjs'
@@ -41,11 +41,8 @@ function extractAttr(tag, attr) {
 
 function walk(dir, cb) {
   if (!existsSync(dir)) return
-  for (const e of readdirSync(dir)) {
-    const full = join(dir, e)
-    const st = statSync(full)
-    if (st.isDirectory()) walk(full, cb)
-    else if (e.endsWith('.java')) cb(full)
+  for (const e of readdirSync(dir, { recursive: true, withFileTypes: true })) {
+    if (e.isFile() && e.name.endsWith('.java')) cb(join(e.parentPath, e.name))
   }
 }
 

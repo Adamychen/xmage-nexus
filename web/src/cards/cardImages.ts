@@ -13,9 +13,6 @@ const RETRIES = 1
 let activeLoads = 0
 const loadQueue: (() => void)[] = []
 
-export const CARD_W = 120
-export const CARD_H = 168
-
 /** Card metadata resolved from Scryfall (name, type, mana cost, etc.). */
 export interface ScryfallCardInfo {
   name: string
@@ -47,10 +44,6 @@ export function hasVigilance(card: CardView | unknown): boolean {
   const icons = (card as { cardIcons?: Array<{ cardIconType?: string } | null> }).cardIcons
   if (Array.isArray(icons) && icons.some((i) => i?.cardIconType === 'ABILITY_VIGILANCE')) return true
   return extractOwnedKeywords(card as CardView).some((k) => k.id === 'vigilance')
-}
-
-export function getSourceCard(card: CardView): CardView | null {
-  return card.sourceCard || card.ability || null
 }
 
 export function getSourceCardName(card: CardView): string {
@@ -220,34 +213,9 @@ export function peekImageUrl(key: string | null): string | null {
   return memory.get(key) ?? null
 }
 
-export function cardFaceDown(card: CardView): boolean {
-  return card.faceDown === true
-}
-
-/**
- * URL de imagen de carta vía Scryfall (normal). null si la carta no es
- * representable (boca abajo, token sin número, etc.). Con caché en memoria
- * y deduplicación de peticiones concurrentes.
- */
-export function getCardImageUrl(card: CardView): string | null {
-  const key = cardKey(card)
-  if (!key) return null
-  if (memory.has(key)) return memory.get(key) ?? null
-  void awaitImageUrl(card)
-  return null
-}
-
 function scryfallKey(setCode: string, cardNumber: string): string | null {
   if (!setCode || !cardNumber || cardNumber === '0') return null
   return `${setCode}/${cardNumber}`
-}
-
-/** Build a Scryfall key for a token card. */
-export function tokenScryfallKey(setCode: string, name: string): string | null {
-  if (!setCode || !name) return null
-  const tokenSet = 't' + setCode.toLowerCase()
-  const slug = name.replace(/\s+/g, '-').toLowerCase()
-  return `${tokenSet}/${slug}`
 }
 
 async function load(key: string): Promise<string | null> {
@@ -418,26 +386,6 @@ export async function awaitImageUrl(card: CardView): Promise<string | null> {
 }
 
 /**
- * Resolve card metadata (name, type, etc.) from Scryfall by setCode+cardNumber.
- * Triggers an async fetch if not cached. Returns null if not yet loaded.
- */
-export function getCardMeta(setCode: string, cardNumber: string): ScryfallCardInfo | null {
-  const key = scryfallKey(setCode, cardNumber)
-  if (!key) return null
-  if (metaMemory.has(key)) return metaMemory.get(key) ?? null
-  if (!metaInflight.has(key)) {
-    const p = load(key)
-      .catch(() => null)
-      .then((info) => {
-        if (metaInflight.get(key) === p) metaInflight.delete(key)
-        return info ? metaMemory.get(key) ?? null : null
-      })
-    metaInflight.set(key, p as Promise<ScryfallCardInfo | null>)
-  }
-  return null
-}
-
-/**
  * Async version: waits for the metadata to be resolved.
  */
 export async function awaitCardMeta(setCode: string, cardNumber: string): Promise<ScryfallCardInfo | null> {
@@ -488,10 +436,6 @@ export function resetCardImageCache() {
   tokenPins.clear()
   loadQueue.length = 0
   activeLoads = 0
-}
-
-export function manaLand(card: CardView): string {
-  return (card.manaCostLeftStr ?? []).join('')
 }
 
 export function cardName(card: CardView): string {

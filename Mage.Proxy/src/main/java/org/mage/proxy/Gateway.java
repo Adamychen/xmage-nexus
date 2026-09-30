@@ -253,7 +253,7 @@ public class Gateway extends WebSocketServer {
             conn.close(1008, "message rate limit exceeded");
             return;
         }
-        if (utf8Length(message) > config.getMaxMessageBytes()) {
+        if (message.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > config.getMaxMessageBytes()) {
             conn.close(1009, "message too large");
             return;
         }
@@ -511,14 +511,5 @@ public class Gateway extends WebSocketServer {
             times.addLast(now);
             return true;
         }
-    }
-
-    private static int utf8Length(String s) {
-        int bytes = 0;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            bytes += c < 0x80 ? 1 : (c < 0x800 ? 2 : 3);
-        }
-        return bytes;
     }
 }

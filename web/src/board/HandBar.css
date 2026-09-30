@@ -179,10 +179,12 @@
   box-shadow: 0 2px 6px var(--shade-4);
 }
 
-/* Prompts about the hand (mulligan) float centred just above the raised fan. */
+/* Prompts about the hand (mulligan) float centred just above the raised fan.
+   Above the grown card on hover (z 50): the pointer reaching the keep button
+   must not be intercepted by the card that grew over it. */
 .hand-bar-prompt {
   position: absolute;
-  z-index: 30;
+  z-index: 60;
   left: 50%;
   bottom: calc(var(--card-w, 136px) * 1.4 * 0.9 + 20px);
   transform: translateX(-50%);

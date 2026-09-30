@@ -1,39 +1,7 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { startFakeServer, loadFake, type FakeConn, type FakeServerHandle } from './support/fakeServer.ts'
-
-const entry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'index.ts')
-
-function contentText(result: unknown): string {
-  const items = Array.isArray((result as { content?: unknown }).content)
-    ? (result as { content: { type?: string; text?: string }[] }).content
-    : []
-  return items
-    .filter((item) => item.type === 'text')
-    .map((item) => item.text ?? '')
-    .join('\n')
-}
-
-function view(turn: number) {
-  return {
-    turn,
-    phase: 'PRECOMBAT_MAIN',
-    step: 'PRECOMBAT_MAIN',
-    activePlayerName: 'me',
-    priorityPlayerName: 'me',
-    myHand: {},
-    canPlayObjects: { objects: {} },
-    stack: {},
-    combat: [],
-    players: [
-      { playerId: 'p1', name: 'me', controlled: true, isActive: true, hasPriority: true, life: 20, handCount: 0, libraryCount: 53, battlefield: {}, graveyard: {} },
-      { playerId: 'p2', name: 'rival', controlled: false, isActive: false, hasPriority: false, life: 20, handCount: 7, libraryCount: 53, battlefield: {}, graveyard: {} },
-    ],
-  }
-}
+import { baseGameView, contentText, startTestClient } from './support/mcp.ts'
 
 describe('multi-session MCP', () => {
   let fakeA: FakeServerHandle
@@ -69,11 +37,11 @@ describe('multi-session MCP', () => {
         tableId: 'table-a',
         tableName: 'A',
         gameId: 'game-a',
-        getGameView: () => view(turnA),
-        onStartMatch: (conn: FakeConn) => conn.broadcast('GAME_TARGET', { message: 'Choose target A', targets: ['ta'], gameView: view(turnA) }, 'game-a'),
+        getGameView: () => baseGameView(turnA),
+        onStartMatch: (conn: FakeConn) => conn.broadcast('GAME_TARGET', { message: 'Choose target A', targets: ['ta'], gameView: baseGameView(turnA) }, 'game-a'),
         onSendPlayerUUID: (conn: FakeConn) => {
           turnA = 2
-          conn.broadcast('GAME_UPDATE', { gameView: view(turnA) }, 'game-a')
+          conn.broadcast('GAME_UPDATE', { gameView: baseGameView(turnA) }, 'game-a')
         },
       }),
     )
@@ -82,16 +50,15 @@ describe('multi-session MCP', () => {
         tableId: 'table-b',
         tableName: 'B',
         gameId: 'game-b',
-        getGameView: () => view(turnB),
-        onStartMatch: (conn: FakeConn) => conn.broadcast('GAME_TARGET', { message: 'Choose target B', targets: ['tb'], gameView: view(turnB) }, 'game-b'),
+        getGameView: () => baseGameView(turnB),
+        onStartMatch: (conn: FakeConn) => conn.broadcast('GAME_TARGET', { message: 'Choose target B', targets: ['tb'], gameView: baseGameView(turnB) }, 'game-b'),
         onSendPlayerUUID: (conn: FakeConn) => {
           turnB = 3
-          conn.broadcast('GAME_UPDATE', { gameView: view(turnB) }, 'game-b')
+          conn.broadcast('GAME_UPDATE', { gameView: baseGameView(turnB) }, 'game-b')
         },
       }),
     )
-    client = new Client({ name: 'multi-session-test', version: '0.0.0' })
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: [entry] }))
+    client = await startTestClient('multi-session-test')
   }, 30_000)
 
   afterAll(async () => {

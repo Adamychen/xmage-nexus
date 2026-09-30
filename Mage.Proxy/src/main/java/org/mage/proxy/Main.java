@@ -54,8 +54,6 @@ public class Main {
         }));
     }
 
-    static HttpServer httpServer;
-
     private static void startHttpServer(Config config, Gateway gateway) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.getBindAddress(), config.getHttpPort()), 0);
         // Without an executor the JDK uses a single-threaded dispatcher, so one slow
@@ -73,7 +71,6 @@ public class Main {
             server.createContext("/admin/status", exchange -> serveAdmin(exchange, gateway, config.getAdminToken()));
         }
         server.start();
-        httpServer = server;
     }
 
     /**
