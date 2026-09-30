@@ -4,7 +4,10 @@
   bottom: var(--dock-bottom, 104px);
   width: 250px;
   max-width: calc(100% - 16px);
-  z-index: 30;
+  /* Debajo de la franja de control (.board-shell-divider.has-strip, z 30): su
+     menú de configuración y el cajón son popups que deben pintar sobre el botón
+     de acción; a igual z ganaba el dock por orden del DOM y lo tapaba. */
+  z-index: 29;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

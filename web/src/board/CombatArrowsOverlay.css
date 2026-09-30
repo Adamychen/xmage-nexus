@@ -12,6 +12,13 @@
   z-index: 45;
 }
 
+/* Con el menú de partida (⋯) abierto las flechas no lo cruzan: es un popup
+   opaco de la franja de control y manda sobre el tablero (la regla del cajón
+   de pila solo manda mientras el menú está cerrado). */
+.game:has(.game-drawer[data-tab='stack']):has(.game-menu-panel) .combat-arrows-overlay {
+  z-index: 28;
+}
+
 .arrow-group {
   opacity: 0.95;
   transition: opacity 0.2s ease;
