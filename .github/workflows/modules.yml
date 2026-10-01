@@ -194,7 +194,7 @@ jobs:
         run: |
           for p in patches/xdhs/*.patch; do
             echo "applying $p"
-            git -C xdhs-fork apply "$p"
+            git -C xdhs-fork apply "$GITHUB_WORKSPACE/$p"
           done
       - name: Build XMage artifacts (Mage.Common, Mage, Mage.Sets)
         run: mvn -q -f xdhs-fork/pom.xml -pl Mage.Common,Mage,Mage.Sets -am install -DskipTests
