@@ -21,6 +21,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <!-- XMage artifacts to compile against. Override to build a proxy for
+             another server release: -Dmage.version=1.5.8 -->
+        <mage.version>${project.version}</mage.version>
     </properties>
 
     <dependencies>
@@ -28,14 +31,14 @@
         <dependency>
             <groupId>org.mage</groupId>
             <artifactId>mage</artifactId>
-            <version>${project.version}</version>
+            <version>${mage.version}</version>
         </dependency>
 
         <!-- session/protocol implementation (SessionImpl, Connection, callbacks) -->
         <dependency>
             <groupId>org.mage</groupId>
             <artifactId>mage-common</artifactId>
-            <version>${project.version}</version>
+            <version>${mage.version}</version>
         </dependency>
 
         <!-- set/card classes of the same XMage release: lets the proxy build its own
@@ -44,7 +47,7 @@
         <dependency>
             <groupId>org.mage</groupId>
             <artifactId>mage-sets</artifactId>
-            <version>${project.version}</version>
+            <version>${mage.version}</version>
         </dependency>
 
         <dependency>
@@ -68,6 +71,7 @@
     </dependencies>
 
     <build>
+        <finalName>mage-proxy-${mage.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

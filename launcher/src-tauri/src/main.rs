@@ -61,6 +61,9 @@ struct ContractProxy {
 struct Contract {
     server: ContractServer,
     proxy: ContractProxy,
+    /// Second proxy flavor (XDHS): same web UI, different port and card DB.
+    #[serde(rename = "proxyXdhs", default)]
+    proxy_xdhs: Option<ContractProxy>,
 }
 
 fn default_ws() -> u16 {
@@ -74,6 +77,7 @@ fn default_http() -> u16 {
 struct Processes {
     server: Mutex<Option<Child>>,
     proxy: Mutex<Option<Child>>,
+    proxy_xdhs: Mutex<Option<Child>>,
 }
 
 struct Bootstrap {
@@ -202,8 +206,7 @@ fn wait_port_free(port: u16, secs: u64) {
     }
 }
 
-fn child_running(processes: &State<Processes>, is_proxy: bool) -> bool {
-    let slot = if is_proxy { &processes.proxy } else { &processes.server };
+fn child_running(slot: &Mutex<Option<Child>>) -> bool {
     if let Ok(mut guard) = slot.lock() {
         if let Some(child) = guard.as_mut() {
             return matches!(child.try_wait(), Ok(None));
@@ -212,13 +215,13 @@ fn child_running(processes: &State<Processes>, is_proxy: bool) -> bool {
     false
 }
 
-fn wait_port_or_exit(processes: &State<Processes>, is_proxy: bool, port: u16, secs: u64) -> bool {
+fn wait_port_or_exit(slot: &Mutex<Option<Child>>, port: u16, secs: u64) -> bool {
     let deadline = Instant::now() + Duration::from_secs(secs);
     while Instant::now() < deadline {
         if port_in_use(port) {
             return true;
         }
-        if !child_running(processes, is_proxy) {
+        if !child_running(slot) {
             return false;
         }
         std::thread::sleep(Duration::from_secs(2));
@@ -240,7 +243,7 @@ fn hide_console(cmd: &mut Command) {
 }
 
 fn kill_all(processes: &State<Processes>) {
-    for slot in [&processes.server, &processes.proxy] {
+    for slot in [&processes.server, &processes.proxy, &processes.proxy_xdhs] {
         if let Ok(mut guard) = slot.lock() {
             if let Some(mut child) = guard.take() {
                 let _ = child.kill();
@@ -289,6 +292,41 @@ fn java_bin(jre_dir: &Path) -> PathBuf {
     } else {
         jre_dir.join("bin").join("java")
     }
+}
+
+/// Spawns a proxy flavor from its release component (`proxy` or `proxy-xdhs`).
+/// Each instance gets its own workdir so their card databases never collide.
+fn start_proxy(
+    paths: &layout::Paths,
+    java: &Path,
+    release: &str,
+    component: &str,
+    proxy: &ContractProxy,
+    log_name: &str,
+    workdir: &Path,
+) -> Result<Child, String> {
+    let jar = layout::component_dir(paths, release, component).join(&proxy.jar);
+    if !jar.is_file() {
+        return Err(format!("missing {}", jar.display()));
+    }
+    std::fs::create_dir_all(workdir).map_err(|e| format!("proxy workdir: {e}"))?;
+    rotate_log(&paths.logs.join(log_name));
+    let mut cmd = Command::new(java);
+    for flag in &proxy.add_opens {
+        cmd.arg(flag);
+    }
+    cmd.arg("-cp")
+        .arg(&jar)
+        .arg(&proxy.main_class)
+        .arg("--wsPort")
+        .arg(proxy.ws_port.to_string())
+        .arg("--httpPort")
+        .arg(proxy.http_port.to_string())
+        .current_dir(workdir)
+        .stdout(append_log(&paths.logs.join(log_name)))
+        .stderr(append_log(&paths.logs.join(log_name)));
+    hide_console(&mut cmd);
+    cmd.spawn().map_err(|e| format!("proxy: {e}"))
 }
 
 fn run_bootstrap(app: AppHandle) {
@@ -515,41 +553,64 @@ fn bootstrap(app: &AppHandle) -> Result<(), String> {
     hide_console(&mut server_cmd);
     let server_child = server_cmd.spawn().map_err(|e| format!("server: {e}"))?;
     *processes.server.lock().unwrap() = Some(server_child);
-    if !wait_port_or_exit(&processes, false, contract.server.port, 240) {
+    if !wait_port_or_exit(&processes.server, contract.server.port, 240) {
         kill_all(&processes);
         wait_port_free(contract.server.port, 10);
         return Err(format!("ERR_SERVER_START|{}", paths.logs.display()));
     }
 
     emit_state(app, "starting-proxy", None, None);
-    rotate_log(&paths.logs.join("proxy.log"));
-    let proxy_jar = layout::component_dir(&paths, &release, "proxy").join(&contract.proxy.jar);
-    let mut proxy_cmd = Command::new(&java);
-    for flag in &contract.proxy.add_opens {
-        proxy_cmd.arg(flag);
-    }
-    proxy_cmd
-        .arg("-cp")
-        .arg(&proxy_jar)
-        .arg(&contract.proxy.main_class)
-        .arg("--wsPort")
-        .arg(contract.proxy.ws_port.to_string())
-        .arg("--httpPort")
-        .arg(contract.proxy.http_port.to_string())
-        .current_dir(&paths.root)
-        .stdout(append_log(&paths.logs.join("proxy.log")))
-        .stderr(append_log(&paths.logs.join("proxy.log")));
-    hide_console(&mut proxy_cmd);
-    let proxy_child = proxy_cmd.spawn().map_err(|e| format!("proxy: {e}"))?;
+    let proxy_child = start_proxy(
+        &paths,
+        &java,
+        &release,
+        "proxy",
+        &contract.proxy,
+        "proxy.log",
+        &paths.root,
+    )?;
     *processes.proxy.lock().unwrap() = Some(proxy_child);
-    if !wait_port_or_exit(&processes, true, contract.proxy.http_port, 120) {
+
+    // Second proxy flavor (XDHS server). Best-effort: a missing or broken
+    // component must not brick local/beta play.
+    let mut xdhs_http_port: Option<u16> = None;
+    if let Some(xdhs) = contract.proxy_xdhs.as_ref() {
+        match start_proxy(
+            &paths,
+            &java,
+            &release,
+            "proxy-xdhs",
+            xdhs,
+            "proxy-xdhs.log",
+            &paths.root.join("proxy-xdhs"),
+        ) {
+            Ok(child) => {
+                *processes.proxy_xdhs.lock().unwrap() = Some(child);
+                xdhs_http_port = Some(xdhs.http_port);
+            }
+            Err(e) => eprintln!("[bootstrap] proxy-xdhs unavailable: {e} (continuing)"),
+        }
+    }
+
+    if !wait_port_or_exit(&processes.proxy, contract.proxy.http_port, 120) {
         kill_all(&processes);
         return Err(format!("ERR_PROXY_START|{}", paths.logs.display()));
     }
+    let mut xdhs_started = xdhs_http_port.is_some();
+    if let Some(port) = xdhs_http_port {
+        if !wait_port_or_exit(&processes.proxy_xdhs, port, 120) {
+            eprintln!("[bootstrap] proxy-xdhs did not open its http port (continuing)");
+            xdhs_started = false;
+        }
+    }
+
     emit_state(app, "warming", None, None);
     if !wait_log(&paths.logs.join("proxy.log"), "card db READY", 600) {
         kill_all(&processes);
         return Err(format!("ERR_WARMING|{}", paths.logs.display()));
+    }
+    if xdhs_started && !wait_log(&paths.logs.join("proxy-xdhs.log"), "card db READY", 600) {
+        eprintln!("[bootstrap] proxy-xdhs card db did not finish warming (continuing)");
     }
 
     emit_state(app, "ready", None, None);
@@ -747,6 +808,7 @@ fn main() {
         .manage(Processes {
             server: Mutex::new(None),
             proxy: Mutex::new(None),
+            proxy_xdhs: Mutex::new(None),
         })
         .manage(Bootstrap::initial())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -796,7 +858,34 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{error_code, rotate_log, update_check_due_secs, wait_log, UPDATE_CHECK_INTERVAL_SECS};
+    use super::{error_code, rotate_log, update_check_due_secs, wait_log, Contract, UPDATE_CHECK_INTERVAL_SECS};
+
+    const CONTRACT_BASE: &str = r#"{
+        "server": {"mainClass": "mage.server.Main", "classpath": ["lib/*"], "port": 17171},
+        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.61.jar", "wsPort": 8787, "httpPort": 8788}
+    }"#;
+
+    const CONTRACT_XDHS: &str = r#"{
+        "server": {"mainClass": "mage.server.Main", "classpath": ["lib/*"], "port": 17171},
+        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.61.jar", "wsPort": 8787, "httpPort": 8788},
+        "proxyXdhs": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.5.8.jar", "wsPort": 8797, "httpPort": 8798}
+    }"#;
+
+    #[test]
+    fn contract_without_proxy_xdhs_is_supported() {
+        let c: Contract = serde_json::from_str(CONTRACT_BASE).unwrap();
+        assert_eq!(c.proxy.ws_port, 8787);
+        assert!(c.proxy_xdhs.is_none());
+    }
+
+    #[test]
+    fn contract_parses_proxy_xdhs() {
+        let c: Contract = serde_json::from_str(CONTRACT_XDHS).unwrap();
+        let xdhs = c.proxy_xdhs.unwrap();
+        assert_eq!(xdhs.jar, "mage-proxy-1.5.8.jar");
+        assert_eq!(xdhs.ws_port, 8797);
+        assert_eq!(xdhs.http_port, 8798);
+    }
 
     #[test]
     fn rotate_log_keeps_previous_content_out_of_the_fresh_file() {

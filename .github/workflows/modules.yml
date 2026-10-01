@@ -18,12 +18,32 @@ on:
         required: false
         default: nexus
         type: string
+      xdhs_ref:
+        description: 'Tag del fork XDHS (xenohedron/mage)'
+        required: false
+        default: 1.5.8-XDHS-r1
+        type: string
+      xdhs_version:
+        description: 'Versión Maven del fork XDHS (sin el sufijo de tag)'
+        required: false
+        default: '1.5.8'
+        type: string
   workflow_call:
     inputs:
       fork_ref:
         description: 'Rama/rev del fork XMage'
         required: false
         default: nexus
+        type: string
+      xdhs_ref:
+        description: 'Tag del fork XDHS (xenohedron/mage)'
+        required: false
+        default: 1.5.8-XDHS-r1
+        type: string
+      xdhs_version:
+        description: 'Versión Maven del fork XDHS (sin el sufijo de tag)'
+        required: false
+        default: '1.5.8'
         type: string
 
 jobs:
@@ -66,6 +86,8 @@ jobs:
         run: node scripts/build.mjs
       - name: Assemble staging
         run: node scripts/assemble-modules.mjs staging
+        env:
+          XDHS_PROXY: '1'
       - name: Build stripped JRE (jlink)
         run: |
           MODULES=$(jdeps --ignore-missing-deps --multi-release 17 --print-module-deps \
@@ -143,4 +165,70 @@ jobs:
             nexus-jre-${{ matrix.tag }}.tar.gz
             nexus-server-${{ matrix.tag }}.tar.gz
             nexus-proxy-${{ matrix.tag }}.tar.gz
+          retention-days: 30
+
+  # Segundo flavor del proxy: compilado contra el fork XDHS (mage.xdhs.net).
+  # El jar Java es independiente de la plataforma, así que se compila UNA vez
+  # y se publican tres tarballs idénticos (uno por target del manifest).
+  proxy-xdhs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: xenohedron/mage
+          ref: ${{ inputs.xdhs_ref }}
+          path: xdhs-fork
+          fetch-depth: 1
+      - name: Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Apply nexus patches to the XDHS fork
+        run: |
+          for p in patches/xdhs/*.patch; do
+            echo "applying $p"
+            git -C xdhs-fork apply "$p"
+          done
+      - name: Build XMage artifacts (Mage.Common, Mage, Mage.Sets)
+        run: mvn -q -f xdhs-fork/pom.xml -pl Mage.Common,Mage,Mage.Sets -am install -DskipTests
+      - name: Build XDHS proxy
+        run: mvn -q -f Mage.Proxy/pom.xml -Dmage.version=${{ inputs.xdhs_version }} clean package -DskipTests
+      - name: Smoke XDHS proxy
+        run: |
+          JAR="Mage.Proxy/target/mage-proxy-${{ inputs.xdhs_version }}.jar"
+          test -f "$JAR"
+          java --add-opens=java.base/java.io=ALL-UNNAMED \
+               --add-opens=java.base/java.util=ALL-UNNAMED \
+               --add-opens=java.base/java.lang=ALL-UNNAMED \
+               --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+               --add-opens=java.base/java.text=ALL-UNNAMED \
+               -cp "$JAR" org.mage.proxy.Main --wsPort 18897 --httpPort 18898 > /tmp/xdhs-proxy.log 2>&1 &
+          PID=$!
+          for _ in $(seq 1 24); do
+            if curl -sf --max-time 5 http://127.0.0.1:18898/index.html -o /dev/null; then break; fi
+            sleep 5
+          done
+          curl -sf --max-time 5 http://127.0.0.1:18898/index.html -o /dev/null || (tail -30 /tmp/xdhs-proxy.log; exit 1)
+          kill "$PID" 2>/dev/null || true
+          echo 'smoke OK: proxy XDHS responde en 18898'
+      - name: Pack component tarballs (platform independent jar)
+        run: |
+          export COPYFILE_DISABLE=1
+          mkdir -p staging-xdhs
+          cp "Mage.Proxy/target/mage-proxy-${{ inputs.xdhs_version }}.jar" staging-xdhs/
+          for t in linux-x64 win-x64 mac-arm64; do
+            tar -czf "nexus-proxy-xdhs-$t.tar.gz" -C staging-xdhs .
+          done
+          ls -la nexus-proxy-xdhs-*.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nexus-modules-xdhs
+          path: nexus-proxy-xdhs-*.tar.gz
           retention-days: 30

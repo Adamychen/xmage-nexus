@@ -40,6 +40,18 @@ ALLOWED_ORIGINS="http://<web-tunnel>" XMAGE_HOST=beta.xmage.today XMAGE_PORT=171
   sin él el proxy solo acepta orígenes localhost.
 - Autostart: unidad systemd de ejemplo en `docs/deploy-playit.md` (también Task Scheduler /
   launchd); en portátil, deshabilitar suspensión.
+- **Flavors del proxy (beta + XDHS)**: `Mage.Proxy/pom.xml` resuelve las deps `org.mage` con la
+  property `mage.version` (default = versión del proyecto) y `finalName mage-proxy-${mage.version}`,
+  así ambos jars conviven en `Mage.Proxy/target/`: `mage-proxy-1.4.61.jar` (beta) y
+  `mage-proxy-1.5.8.jar` (XDHS). `assemble-modules.mjs` escoge cada flavor por versión (no
+  alfabético) y emite `proxyXdhs` en `version.json` (jar + puertos 8797/8798) si existe el jar o si
+  `XDHS_PROXY=1` (jobs de CI, donde el jar se empaqueta en otro job). El shell Tauri descarga el
+  componente `proxy-xdhs` (el jar es platform-independent: `modules.yml` lo compila una vez en
+  ubuntu y publica 3 tarballs idénticos), arranca la segunda instancia con cwd
+  `proxy-xdhs/` (card DB propia) y el preset web "XDHS" usa `localhost:8797` +
+  `mage.xdhs.net:17171` (en despliegue remoto: `VITE_DEFAULT_XDHS_PROXY_HOST/PORT`).
+  El arranque del segundo proxy es best-effort: si el componente falta o falla, el launcher sigue
+  con local/beta.
 - Actualización "Model A": `scripts/host-deploy.sh` = `git pull --ff-only` +
   `node scripts/build.mjs` (full, requiere el fork) + `npm --prefix web install/build` +
   `ln -sfn` del jar nuevo a `~/xmage-proxy.jar` + `systemctl restart xmage-proxy`. Asume que
@@ -48,6 +60,13 @@ ALLOWED_ORIGINS="http://<web-tunnel>" XMAGE_HOST=beta.xmage.today XMAGE_PORT=171
   `VITE_DEFAULT_*`, `node scripts/build.mjs`, `npm --prefix web run build`, symlink del jar.
 - **TLS/WSS**: el web abre `ws://` fijo (`web/src/state/gateway.ts`). HTTPS requiere playit
   premium + Caddy y cambiar a `wss://` según `location.protocol`; hoy se sirve por `http://`.
+- **Segundo flavor XDHS** (`mage.xdhs.net`, fork xenohedron `1.5.8-XDHS-r1`): el proxy se compila
+  aparte contra ese fork con `patches/xdhs/*.patch` + `mvn -Dmage.version=1.5.8`
+  (ver `patches/xdhs/README.md`). En el host: `scripts/deploy/host-xdhs.sh [tag]` construye el
+  motor XDHS en `~/Escritorio/xmage-xdhs`, compila el proxy en una copia temporal (nunca toca el
+  jar beta de `Mage.Proxy/target`), lo enlaza a `~/xmage-proxy-xdhs.jar` y crea/reinicia
+  `xmage-proxy-xdhs.service` (puertos 8797/8798, `WorkingDirectory` propio para su card DB,
+  `--host mage.xdhs.net`, mismo `--allowedOrigins`). El proxy y el servicio beta no se tocan.
 - `VITE_DEFAULT_*` se hornean en el build (Vite) y se leen en `LoginScreen.tsx`/`SetupWizard.tsx`
   (defaults: `localhost`, `8787`, `localhost`, `17171`). Una conexión vieja "local" guardada en
   localStorage NO pisa un build remoto (si `REMOTE_PROXY`); `?proxyPort=` en la URL siempre gana.
@@ -114,10 +133,10 @@ Piezas:
 | Qué | Valor |
 | --- | --- |
 | Server XMage | 17171 (testMode en dev; launcher: 127.0.0.1) |
-| Proxy WS / HTTP | 8787 / 8788 |
+| Proxy WS / HTTP | 8787 / 8788 (beta) · 8797 / 8798 (XDHS) |
 | Vite dev / e2e fake | 5173 / 5175 |
 | FakeServer WS | 8789 |
-| Versión | XMage 1.4.61-V1; jar `mage-proxy-1.4.61.jar` |
+| Versión | XMage 1.4.61-V1 (beta) + 1.5.8-XDHS-r1; jars `mage-proxy-1.4.61.jar` / `mage-proxy-1.5.8.jar` |
 
 ## Trampas
 

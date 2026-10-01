@@ -46,6 +46,7 @@ export const ru: TranslationSchema = {
     server_target: 'Сервер XMage:',
     server_local: 'Локальный',
     server_official: 'Официальный',
+    server_xdhs: 'XDHS',
     server_custom: 'Свой сервер',
     connect_btn: 'Подключиться и Играть',
     connecting: 'Подключение...',

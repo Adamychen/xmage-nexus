@@ -46,6 +46,7 @@ export const ja: TranslationSchema = {
     server_target: 'XMageサーバー:',
     server_local: 'ローカル',
     server_official: '公式ベータ',
+    server_xdhs: 'XDHS',
     server_custom: 'カスタム',
     connect_btn: '接続してプレイ',
     connecting: '接続中...',

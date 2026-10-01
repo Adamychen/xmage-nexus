@@ -19,6 +19,11 @@
       "linux-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-linux-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
       "win-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-win-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
       "mac-arm64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-mac-arm64.tar.gz", "sha256": "<hex>", "bytes": 0 }
+    },
+    "proxy-xdhs": {
+      "linux-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-xdhs-linux-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "win-x64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-xdhs-win-x64.tar.gz", "sha256": "<hex>", "bytes": 0 },
+      "mac-arm64": { "url": "https://github.com/<org>/<repo>/releases/download/<release>/nexus-proxy-xdhs-mac-arm64.tar.gz", "sha256": "<hex>", "bytes": 0 }
     }
   }
 }

@@ -43,8 +43,11 @@ triage. See `web/INTERACTION_COVERAGE.md`.
 - Full build (server + plugins + proxy): `node scripts/build.mjs` (engine
   steps run inside the fork checkout; the proxy builds standalone in this repo)
 - XMage version: **1.4.61-V1** (upstream magefree/mage; merge of tag `xmage_1.4.61V1`).
-  Proxy jar: `Mage.Proxy/target/mage-proxy-1.4.61.jar`. The proxy's default
-  server is **`beta.xmage.today:17171`** (current official server; `beta.xmage.de` is obsolete).
+  Proxy jar: `Mage.Proxy/target/mage-proxy-1.4.61.jar`. A second proxy flavor is built against the
+  **XDHS fork** (xenohedron/mage, tag `1.5.8-XDHS-r1`) for `mage.xdhs.net`:
+  `mage-proxy-1.5.8.jar` + `patches/xdhs/*.patch` + `-Dmage.version=1.5.8`
+  (see `patches/xdhs/README.md`; launcher component `proxy-xdhs`, host script
+  `scripts/deploy/host-xdhs.sh`). The proxy's default server is **`beta.xmage.today:17171`** (current official server; `beta.xmage.de` is obsolete).
   If the remote server changes release (strict version check `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`),
   the proxy won't connect: the fork must be updated (fetch upstream + merge, in
   `../xmage-fork`) and everything rebuilt.

@@ -12,6 +12,9 @@ import { execFileSync } from 'node:child_process'
 import {
   MODULE_CLASSES,
   SERVER_ADD_OPENS,
+  XDHS_TAG,
+  XDHS_VERSION,
+  XMAGE_VERSION,
   buildServerClasspath,
   forkDir,
   forkPath,
@@ -125,13 +128,30 @@ function main() {
   const proxyJars = fs.existsSync(proxyTarget)
     ? fs.readdirSync(proxyTarget).filter((f) => /^mage-proxy-.*\.jar$/.test(f))
     : []
-  if (proxyJars.length === 0) {
-    logError('falta el jar del proxy — ejecuta: node scripts/build.mjs proxy')
+  // Dos flavors del proxy conviven en Mage.Proxy/target: elegir por versión,
+  // no por orden alfabético.
+  const proxyJar = `mage-proxy-${XMAGE_VERSION}.jar`
+  if (!proxyJars.includes(proxyJar)) {
+    logError(`falta ${proxyJar} — ejecuta: node scripts/build.mjs proxy`)
     process.exit(1)
   }
-  const proxyJar = proxyJars.sort().at(-1)
   fs.copyFileSync(path.join(proxyTarget, proxyJar), path.join(proxyDir, proxyJar))
   log(`  proxy OK (${proxyJar})`)
+
+  // Flavor XDHS: opcional en local (solo existe si se compiló contra su fork);
+  // en CI el job proxy-xdhs siempre lo produce y el contrato se incluye aunque
+  // el jar se empaquete en otro job (XDHS_PROXY=1).
+  const proxyXdhsJar = `mage-proxy-${XDHS_VERSION}.jar`
+  const hasXdhsJar = proxyJars.includes(proxyXdhsJar)
+  if (hasXdhsJar) {
+    const proxyXdhsDir = path.join(outDir, 'proxy-xdhs')
+    fs.mkdirSync(proxyXdhsDir, { recursive: true })
+    fs.copyFileSync(path.join(proxyTarget, proxyXdhsJar), path.join(proxyXdhsDir, proxyXdhsJar))
+    log(`  proxy-xdhs OK (${proxyXdhsJar})`)
+  } else {
+    log(`  proxy-xdhs ausente (${proxyXdhsJar}) — se omite; ver patches/xdhs/README.md`)
+  }
+  const contractXdhs = hasXdhsJar || process.env.XDHS_PROXY === '1'
 
   const version = {
     schema: 1,
@@ -160,6 +180,18 @@ function main() {
       wsPort: 8787,
       httpPort: 8788,
     },
+  }
+  if (contractXdhs) {
+    // Segunda instancia del proxy (mismo web/dist, otro puerto y otra card DB)
+    // compilada contra el fork XDHS para conectar a mage.xdhs.net.
+    version.xmageXdhs = XDHS_TAG
+    version.proxyXdhs = {
+      mainClass: 'org.mage.proxy.Main',
+      jar: proxyXdhsJar,
+      addOpens: SERVER_ADD_OPENS,
+      wsPort: 8797,
+      httpPort: 8798,
+    }
   }
   // version.json vive en la raíz del staging (referencia) y DENTRO del
   // componente server (es su contrato de arranque; cada tarball extrae plano

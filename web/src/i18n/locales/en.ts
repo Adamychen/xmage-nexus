@@ -44,6 +44,7 @@ export const en = {
     server_target: 'XMage Server:',
     server_local: 'Local',
     server_official: 'Official Beta',
+    server_xdhs: 'XDHS',
     server_custom: 'Custom',
     connect_btn: 'Connect & Play',
     connecting: 'Connecting...',

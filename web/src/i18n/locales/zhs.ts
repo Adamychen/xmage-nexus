@@ -46,6 +46,7 @@ export const zhs: TranslationSchema = {
     server_target: 'XMage 服务器：',
     server_local: '本地',
     server_official: '官方测试服',
+    server_xdhs: 'XDHS',
     server_custom: '自定义',
     connect_btn: '连接并开始游戏',
     connecting: '连接中...',

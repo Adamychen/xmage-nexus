@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 
-export type ServerPreset = 'local' | 'official' | 'custom'
+export type ServerPreset = 'local' | 'official' | 'xdhs' | 'custom'
 
 export const POPULAR_FLAGS = [
   { code: 'world', emoji: '🌐' },

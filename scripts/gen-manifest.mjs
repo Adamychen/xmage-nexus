@@ -11,7 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 
-const COMPONENTS = ['jre', 'server', 'proxy']
+const COMPONENTS = ['jre', 'server', 'proxy', 'proxy-xdhs']
 const TARGETS = ['linux-x64', 'win-x64', 'mac-arm64']
 
 function argValue(args, name) {

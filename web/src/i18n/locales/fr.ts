@@ -46,6 +46,7 @@ export const fr: TranslationSchema = {
     server_target: 'Serveur XMage :',
     server_local: 'Local',
     server_official: 'Officiel Bêta',
+    server_xdhs: 'XDHS',
     server_custom: 'Personnalisé',
     connect_btn: 'Connexion & Jouer',
     connecting: 'Connexion en cours...',

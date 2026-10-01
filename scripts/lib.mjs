@@ -16,6 +16,14 @@ export const runDir = path.join(repoRoot, '.run')
 export const XMAGE_VERSION = '1.4.61'
 
 /**
+ * Fork XDHS (xenohedron, servidor mage.xdhs.net): segunda versión soportada por
+ * el proxy. Los artefactos org.mage:1.5.8 se instalan aparte en ~/.m2 desde un
+ * checkout parcheado con patches/xdhs/ (ver patches/xdhs/README.md).
+ */
+export const XDHS_TAG = '1.5.8-XDHS-r1'
+export const XDHS_VERSION = '1.5.8'
+
+/**
  * Resuelve el checkout del fork XMage (motor + servidor + plugins).
  * Orden: NEXUS_FORK_DIR → ../xmage-fork → este mismo repo (mientras el fork
  * siga vendido aquí). Lanza error con instrucciones si no hay fork en ninguno.

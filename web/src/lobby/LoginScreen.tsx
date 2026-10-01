@@ -32,10 +32,15 @@ import Button from '../ui/Button'
 const BAKED_PROXY_HOST = (import.meta.env.VITE_DEFAULT_PROXY_HOST as string | undefined) ?? ''
 const BAKED_PROXY_PORT = Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787
 const BAKED_SERVER_HOST = (import.meta.env.VITE_DEFAULT_SERVER_HOST as string | undefined) ?? 'localhost'
+// XDHS flavor: hosted deployments expose the second proxy on its own tunnel
+// (or the same host with another port); launcher/local builds use localhost.
+const BAKED_XDHS_PROXY_HOST = (import.meta.env.VITE_DEFAULT_XDHS_PROXY_HOST as string | undefined) ?? ''
+const BAKED_XDHS_PROXY_PORT = Number(import.meta.env.VITE_DEFAULT_XDHS_PROXY_PORT) || 8797
+const XDHS_SERVER_HOST = 'mage.xdhs.net'
 const isLoopbackHost = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '::1'
 const REMOTE_PROXY = !!BAKED_PROXY_HOST && !isLoopbackHost(BAKED_PROXY_HOST)
 const presetOf = (host: string): ServerPreset =>
-  host === 'beta.xmage.today' ? 'official' : isLoopbackHost(host) ? 'local' : 'custom'
+  host === 'beta.xmage.today' ? 'official' : host === XDHS_SERVER_HOST ? 'xdhs' : isLoopbackHost(host) ? 'local' : 'custom'
 
 export default function LoginScreen() {
   const { t, tError, lang } = useTranslation()
@@ -74,6 +79,8 @@ export default function LoginScreen() {
       const target = url.serverHost ?? saved.serverHost
       if (target === 'beta.xmage.today') {
         setPreset('official')
+      } else if (target === XDHS_SERVER_HOST) {
+        setPreset('xdhs')
       } else if (target === 'localhost' || target === '127.0.0.1') {
         setPreset('local')
       } else {
@@ -86,6 +93,7 @@ export default function LoginScreen() {
       if (url.serverPort != null) setPort(String(url.serverPort))
       if (url.username) setUsername(url.username)
       if (url.serverHost === 'beta.xmage.today') setPreset('official')
+      else if (url.serverHost === XDHS_SERVER_HOST) setPreset('xdhs')
       else if (url.proxyHost || url.serverHost) setPreset('custom')
     }
     const applySetupConn = (e: Event) => {
@@ -103,6 +111,8 @@ export default function LoginScreen() {
       if (conn.avatarId) setAvatarId(conn.avatarId)
       if (conn.serverHost === 'beta.xmage.today') {
         setPreset('official')
+      } else if (conn.serverHost === XDHS_SERVER_HOST) {
+        setPreset('xdhs')
       } else if (conn.serverHost === 'localhost' || conn.serverHost === '127.0.0.1') {
         setPreset('local')
       } else {
@@ -124,6 +134,11 @@ export default function LoginScreen() {
       setProxyHost(REMOTE_PROXY ? BAKED_PROXY_HOST : 'localhost')
       setProxyPort(REMOTE_PROXY ? BAKED_PROXY_PORT : 8787)
       setServerHost('beta.xmage.today')
+      setPort('17171')
+    } else if (nextPreset === 'xdhs') {
+      setProxyHost(REMOTE_PROXY ? BAKED_XDHS_PROXY_HOST || BAKED_PROXY_HOST : 'localhost')
+      setProxyPort(REMOTE_PROXY ? BAKED_XDHS_PROXY_PORT : 8797)
+      setServerHost(XDHS_SERVER_HOST)
       setPort('17171')
     }
   }
@@ -204,6 +219,7 @@ export default function LoginScreen() {
             items={[
               { id: 'local', icon: 'home', label: t('login.server_local'), title: t('login.server_local') },
               { id: 'official', icon: 'globe', label: t('login.server_official'), title: t('login.server_official') },
+              { id: 'xdhs', icon: 'users', label: t('login.server_xdhs'), title: t('login.server_xdhs') },
               { id: 'custom', icon: 'settings', label: t('login.server_custom'), title: t('login.server_custom') },
             ]}
           />

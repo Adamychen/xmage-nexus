@@ -43,6 +43,7 @@ function initialServerDraft(): ServerDraft {
     port: String(saved.port),
   }
   if (saved.serverHost === 'beta.xmage.today') draft.preset = 'official'
+  else if (saved.serverHost === 'mage.xdhs.net') draft.preset = 'xdhs'
   else if (saved.serverHost === 'localhost' || saved.serverHost === '127.0.0.1') draft.preset = 'local'
   return draft
 }
@@ -50,6 +51,7 @@ function initialServerDraft(): ServerDraft {
 function applyPreset(p: ServerPreset, prev: ServerDraft): ServerDraft {
   if (p === 'local') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: '17171' }
   if (p === 'official') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8787, serverHost: 'beta.xmage.today', port: '17171' }
+  if (p === 'xdhs') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8797, serverHost: 'mage.xdhs.net', port: '17171' }
   return { ...prev, preset: p }
 }
 
@@ -118,7 +120,9 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
 
   const serverLabel = server.preset === 'official'
     ? t('login', 'server_official')
-    : server.preset === 'local' ? t('login', 'server_local') : `${server.serverHost}:${server.port}`
+    : server.preset === 'xdhs'
+      ? t('login', 'server_xdhs')
+      : server.preset === 'local' ? t('login', 'server_local') : `${server.serverHost}:${server.port}`
 
   return (
     <DialogShell
@@ -184,7 +188,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
           <>
             <p className="setup-lead">{t('setup', 'step_server_desc')}</p>
             <div className="setup-presets" role="group" aria-label={t('login', 'server_target')}>
-              {(['local', 'official', 'custom'] as ServerPreset[]).map((p) => (
+              {(['local', 'official', 'xdhs', 'custom'] as ServerPreset[]).map((p) => (
                 <button
                   key={p}
                   type="button"
@@ -193,8 +197,8 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                   onClick={() => setServer((s) => applyPreset(p, s))}
                   data-testid={`setup-preset-${p}`}
                 >
-                  <Icon name={p === 'local' ? 'home' : p === 'official' ? 'globe' : 'settings'} size={15} />
-                  <span>{t('login', p === 'local' ? 'server_local' : p === 'official' ? 'server_official' : 'server_custom')}</span>
+                  <Icon name={p === 'local' ? 'home' : p === 'official' ? 'globe' : p === 'xdhs' ? 'users' : 'settings'} size={15} />
+                  <span>{t('login', p === 'local' ? 'server_local' : p === 'official' ? 'server_official' : p === 'xdhs' ? 'server_xdhs' : 'server_custom')}</span>
                 </button>
               ))}
             </div>

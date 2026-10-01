@@ -19,6 +19,24 @@ XMage `17171` (testMode) · proxy WS `8787` · proxy HTTP page `8788/index.html`
 - Requirements: JDK 17 (Homebrew `openjdk@17`; `/usr/bin/java` stub breaks daemons — `scripts/lib.mjs` resolves the real binary), Maven 3.9, Node 20+. Server and proxy must run with `--add-opens=java.base/java.io=ALL-UNNAMED` (jboss-serialization on JDK 17).
 - XMage version `1.4.61-V1` (upstream tag `xmage_1.4.61V1`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
 
+## Second flavor: XDHS (`mage.xdhs.net`)
+
+The proxy is also built against the xenohedron fork (XDHS server, tag
+`1.5.8-XDHS-r1`) so both servers can be served side by side. One web build,
+two proxy processes:
+
+- Build: `patches/xdhs/*.patch` are applied to a `xenohedron/mage` checkout,
+  then `mvn -Dmage.version=1.5.8`. `Mage.Proxy/pom.xml` takes the XMage
+  dependency version from the `mage.version` property. See
+  `patches/xdhs/README.md`.
+- Launcher: the `proxy-xdhs` component (CI job `proxy-xdhs` in
+  `modules.yml`) is started by the Tauri shell as a second proxy instance on
+  ports 8797/8798 with its own card database (`proxy-xdhs/` under the data
+  dir). The web login has an "XDHS" preset; everything else is shared.
+- Host: `scripts/deploy/host-xdhs.sh` builds and restarts
+  `xmage-proxy-xdhs.service` (first run installs the unit). The beta jar,
+  symlink and service are untouched.
+
 ## Public multi-user deployment (playit.gg)
 
 See **`docs/deploy-playit.md`** for the full English guide: run one `Mage.Proxy`

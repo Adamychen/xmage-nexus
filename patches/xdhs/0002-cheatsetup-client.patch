@@ -1,0 +1,71 @@
+diff --git a/Mage.Common/src/main/java/mage/interfaces/MageServer.java b/Mage.Common/src/main/java/mage/interfaces/MageServer.java
+index 670cf9a823..db611deb07 100644
+--- a/Mage.Common/src/main/java/mage/interfaces/MageServer.java
++++ b/Mage.Common/src/main/java/mage/interfaces/MageServer.java
+@@ -13,6 +13,7 @@ import mage.utils.MageVersion;
+ import mage.view.*;
+ 
+ import java.util.List;
++import java.util.Map;
+ import java.util.Set;
+ import java.util.UUID;
+ 
+@@ -158,6 +159,8 @@ public interface MageServer {
+ 
+     void cheatShow(UUID gameId, String sessionId, UUID playerId) throws MageException;
+ 
++    boolean cheatSetup(UUID gameId, String sessionId, UUID playerId, Map<String, List<String>> cardsByZone) throws MageException;
++
+     List<UserView> adminGetUsers(String sessionId) throws MageException;
+ 
+     void adminDisconnectUser(String sessionId, String userSessionId) throws MageException;
+diff --git a/Mage.Common/src/main/java/mage/remote/SessionImpl.java b/Mage.Common/src/main/java/mage/remote/SessionImpl.java
+index 31d1eecff6..b0436b244b 100644
+--- a/Mage.Common/src/main/java/mage/remote/SessionImpl.java
++++ b/Mage.Common/src/main/java/mage/remote/SessionImpl.java
+@@ -1550,6 +1550,20 @@ public class SessionImpl implements Session {
+         return false;
+     }
+ 
++    @Override
++    public boolean cheatSetup(UUID gameId, UUID playerId, Map<String, List<String>> cardsByZone) {
++        try {
++            if (isConnected()) {
++                return server.cheatSetup(gameId, sessionId, playerId, cardsByZone);
++            }
++        } catch (MageException ex) {
++            handleMageException(ex);
++        } catch (Throwable t) {
++            handleThrowable(t);
++        }
++        return false;
++    }
++
+     @Override
+     public List<UserView> getUsers() {
+         try {
+diff --git a/Mage.Common/src/main/java/mage/remote/interfaces/Testable.java b/Mage.Common/src/main/java/mage/remote/interfaces/Testable.java
+index 96c362178c..e7aa4e5033 100644
+--- a/Mage.Common/src/main/java/mage/remote/interfaces/Testable.java
++++ b/Mage.Common/src/main/java/mage/remote/interfaces/Testable.java
+@@ -3,6 +3,8 @@ package mage.remote.interfaces;
+ 
+ import mage.cards.decks.DeckCardLists;
+ 
++import java.util.List;
++import java.util.Map;
+ import java.util.UUID;
+ 
+ /**
+@@ -13,4 +15,11 @@ public interface Testable {
+     boolean isTestMode();
+ 
+     boolean cheatShow(UUID gameId, UUID playerId);
++
++    /**
++     * Nexus P1: coloca cartas por nombre en las zonas del jugador (solo testMode,
++     * el servidor rechaza fuera de testMode). Zonas: hand, battlefield, library,
++     * graveyard, exile. Falla suave (false) si el servidor no lo soporta.
++     */
++    boolean cheatSetup(UUID gameId, UUID playerId, Map<String, List<String>> cardsByZone);
+ }
