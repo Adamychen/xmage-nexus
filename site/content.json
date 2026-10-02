@@ -2,22 +2,22 @@
   "project": {
     "name": "XMage Nexus",
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
     "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.4.1",
-    "date": "2026-10-01",
-    "tag": "v0.4.1",
+    "version": "0.4.2",
+    "date": "2026-10-02",
+    "tag": "v0.4.2",
     "status": "published",
-    "notes": "v0.4.1: dual-server support. The launcher and the shared host now serve beta.xmage.today and mage.xdhs.net side by side: a second proxy compiled against the XDHS fork (1.5.8) runs next to the classic one with its own ports and card database, and the login has an XDHS preset. Rebuilds all components.",
+    "notes": "v0.4.2: fixes the macOS installer (the .app now ships with a valid ad-hoc signature, so Gatekeeper no longer says it is damaged) and completes the dual-server support introduced in v0.4.1 (beta.xmage.today + mage.xdhs.net). Windows users should install the NSIS setup.exe: MSI installs are not auto-updated. Components are reused from v0.4.1.",
     "highlights": [
-      "Second proxy flavor for mage.xdhs.net: the launcher starts both proxies (beta/local on 8787, XDHS on 8797) and the login preset picks the server, no restart",
-      "The XDHS proxy is compiled from the xenohedron fork with the same small patch set (test-mode options, cheat channel, shared thread pool) via patches/xdhs",
-      "CI builds and publishes the platform-independent XDHS proxy component on every components release",
-      "Host update script and systemd unit for a second shared proxy (scripts/deploy/host-xdhs.sh)"
+      "macOS .app properly ad-hoc signed: no more \u201cis damaged and can\u2019t be opened\u201d after downloading the DMG",
+      "Windows: install the -setup.exe (NSIS); MSI installs do not receive auto-updates and need one reinstall with the setup.exe",
+      "Dual server flavors (beta + XDHS) from v0.4.1, with the login preset for mage.xdhs.net",
+      "Components are reused from v0.4.1: updating only downloads the app"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },
@@ -224,7 +224,7 @@
     { "id": 2, "name": "Full Interaction", "status": "done", "date": "2026-09-12", "desc": "London mulligan, priority loops, visual targeting, mana payment, combat UI, X-costs, modals, counters. Live 2026-09-12: tokens (Dragon Fodder), auras (Rancor), counters (Ballista X=2), planeswalkers (Jace +2/Brainstorm), equipment + evasion (Serra flying/vigilance/haste/shroud), order dialogs, Bo3 sideboard via raw WS (UI submit validated live 2026-09-18; see COMPONENT_PARITY U4/U11)." },
     { "id": 2.5, "name": "1v1 Competitive Parity", "status": "done", "date": "2026-09-12", "desc": "Card selection modals (HD CardGrid), phase stops/shortcuts (F4-F11; F1 does not exist by design), match clocks, DFCs/Sagas, interactive discard from revealed hand (Thoughtseize). Live 2026-09-12: no-clock timer hidden via isUnlimitedTime, singular pile viewer, spectator game chat, honest seat/password error paths." },
     { "id": 3, "name": "Visual Polish, Audio & Deck Builder", "status": "done", "date": "2026-09-03", "desc": "Web Audio engine (22 sfx, 4 buses incl. adaptive generative music), VFX (donut color pie, bars, shake, spell-weight slam, hit sparks, destroy/exile/token deaths, low-life vignette, foil + 3D-tilt preview, cinematic end screen with match stats), selectable playmats (7 static + 2 animated, one tinted by colour identity), in-app deck builder (Scryfall full syntax t:creature c:red cmc<=3 o:haste, help, 9-lang, curve+donut, vertical CMC sort, plain/dck/arena export+clipboard, file drag-drop, goldfish T1-3)." },
-    { "id": 4, "name": "Desktop Packaging (Tauri)", "status": "done", "date": "2026-09-19", "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10), v0.2.0 (2026-09-19), v0.3.0 (2026-09-27), v0.4.0 (2026-09-30) and v0.4.1 (2026-10-01, beta + XDHS flavors). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7." },
+    { "id": 4, "name": "Desktop Packaging (Tauri)", "status": "done", "date": "2026-09-19", "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10), v0.2.0 (2026-09-19), v0.3.0 (2026-09-27), v0.4.0 (2026-09-30), v0.4.1 (2026-10-01, beta + XDHS flavors) and v0.4.2 (2026-10-02, signed macOS bundle). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7." },
     { "id": 5, "name": "Advanced Formats & Tournaments", "status": "done", "date": "2026-09-13", "desc": "Commander pod (PodBoard 2x2 render clamp 4 — server supports FFA 3-10 — + TurnOrderRing + CommanderDamageMatrix), Booster Draft & Sealed (8-player, DraftScreen + ConstructScreen), Swiss/SE brackets (TournamentBracket/Panel) + Replay entry from the match history (view-only; transport controls pending). Live 2026-09-13: Sealed Elimination end-to-end (audit-sealed-2, joinTournament discovery, auto-submit, 40-card game to Finished) + tournament wizard with real data (19 types). Draft picks and sealed ConstructScreen submit via web UI validated live 2026-09-14." },
     { "id": 6, "name": "Wizard Crear Mesa — cierre de gaps vs desktop NewTableDialog", "status": "done", "date": "2026-09-06", "desc": "NumPlayers (min/max del oráculo, Commander/FFA 3-10), asientos por plaza SeatConfig[] (tipo+deck), validación deck↔game (port checkMatchOptions), limited fix F8 + limited:true, wins 1-5, mulligans 0-5, persistencia mage_createTable_v1, proxy contrato extendido (mulliganType/customLife/Hand/planeChase/bannedUsers), Custom Options UI (badge Custom(n)), draft exhaustive 21 tournamentTypes + 46 draftCubes (draftCubeName), simDecks por plaza. Delta 2026-09-06: skill por plaza 1-10 (seatSkills web→SimManager→SimPlayer) + skill propia, UI de vetados y de rondas (0=auto), range/attack por flags del servidor, validación por paso, hint vivo por plaza. F11: plazas HUMAN en espera (solo-humanos, tipos normalizados a enum canónico). F6 emblemas fuera de alcance. Docs history/lobby_roadmap §F, oráculo server-state-schema.json." }
   ],
