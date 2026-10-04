@@ -50,13 +50,23 @@ public class LoadTest {
     private static final String TEST_PROXY_TYPE = "None";
     private static final String TEST_USER_NAME_GLOBAL_PREFIX = "t_";
     private static final Boolean TEST_SHOW_GAME_LOGS_AS_HTML = false; // html is original format with full data, but can be too bloated
-    private static final String TEST_AI_GAME_MODE = "Freeform Commander Free For All";
-    private static final String TEST_AI_DECK_TYPE = "Variant Magic - Freeform Commander";
+    private static final String TEST_AI_GAME_MODE = "Freeform Unlimited Commander";
+    private static final String TEST_AI_DECK_TYPE = "Variant Magic - Freeform Unlimited Commander";
     private static final String TEST_AI_RANDOM_DECK_SETS = ""; // sets list for random generated decks (GRN,ACR for specific sets, empty for all sets, PELP for lands only - communication test)
     private static final String TEST_AI_RANDOM_DECK_COLORS_FOR_EMPTY_GAME = "GR";  // colors list for deck generation, empty for all colors
     private static final String TEST_AI_RANDOM_DECK_COLORS_FOR_AI_GAME = "WUBRG";
     private static String TEST_AI_CUSTOM_DECK_PATH_1 = ""; // custom deck file instead random for player 1 (empty for random)
     private static String TEST_AI_CUSTOM_DECK_PATH_2 = ""; // custom deck file instead random for player 2 (empty for random)
+
+    private static int maxGamesAmount = 10;
+    static {
+        // load tests settings:
+        // - max games amount, default 10: -Dxmage.loadTests.maxGamesAmount=10
+        if (System.getProperty("xmage.loadTests.maxGamesAmount") != null) {
+            maxGamesAmount = Integer.parseInt(System.getProperty("xmage.loadTests.maxGamesAmount"));
+        }
+    }
+    
 
     @BeforeClass
     public static void initDatabase() {
@@ -383,7 +393,7 @@ public class LoadTest {
 
         int singleGameSID = 0; // set sid for same deck games, set 0 for random decks
 
-        int runTotalGames = 10;
+        int runTotalGames = LoadTest.maxGamesAmount;
         int runMaxParallelGames = 5; // use 1 to run one by one (warning, it's limited by COMPUTER_MAX_THREADS_FOR_SIMULATIONS)
 
         ExecutorService executerService;

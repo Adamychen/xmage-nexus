@@ -45,7 +45,6 @@ import mage.filter.predicate.permanent.LegendRuleAppliesPredicate;
 import mage.game.combat.Combat;
 import mage.game.combat.CombatGroup;
 import mage.game.command.*;
-import mage.game.command.dungeons.UndercityDungeon;
 import mage.game.command.emblems.EmblemOfCard;
 import mage.game.command.emblems.RadiationEmblem;
 import mage.game.command.emblems.TheRingEmblem;
@@ -97,6 +96,7 @@ import java.util.stream.Collectors;
 public abstract class GameImpl implements Game {
 
     private final static AtomicInteger GLOBAL_INDEX = new AtomicInteger();
+    public final static AtomicInteger COPIED_COUNT = new AtomicInteger();
 
     private static final int ROLLBACK_TURNS_MAX = 4;
     private static final String UNIT_TESTS_ERROR_TEXT = "Error in unit tests";
@@ -189,6 +189,8 @@ public abstract class GameImpl implements Game {
     }
 
     protected GameImpl(final GameImpl game) {
+        COPIED_COUNT.incrementAndGet();
+
         //this.customData = game.customData; // temporary data, no need on game copy
         //this.losingPlayer = game.losingPlayer; // temporary data, no need on game copy
         this.aiGame = game.aiGame;
@@ -259,6 +261,16 @@ public abstract class GameImpl implements Game {
     @Override
     public Integer getGameIndex() {
         return this.gameIndex;
+    }
+
+    @Override
+    public Integer getCreatedCount() {
+        return GLOBAL_INDEX.get();
+    }
+
+    @Override
+    public Integer getCopiedCount() {
+        return COPIED_COUNT.get();
     }
 
     @Override
@@ -571,7 +583,7 @@ public abstract class GameImpl implements Game {
             return dungeon;
         }
         removeDungeon(dungeon);
-        return this.addDungeon(undercity ? new UndercityDungeon() : Dungeon.selectDungeon(playerId, this), playerId);
+        return this.addDungeon(undercity ? Dungeon.createDungeon("Undercity", true) : Dungeon.selectDungeon(playerId, this), playerId);
     }
 
     @Override
@@ -1215,7 +1227,7 @@ public abstract class GameImpl implements Game {
         boolean wasPaused = state.isPaused();
         state.resume();
         if (!checkIfGameIsOver()) {
-            fireInformEvent("Turn " + state.getTurnNum());
+            informPlayers("Turn " + state.getTurnNum());
             if (checkStopOnTurnOption()) {
                 return;
             }
@@ -1374,6 +1386,7 @@ public abstract class GameImpl implements Game {
         //20091005 - 103.3
         for (UUID playerId : state.getPlayerList(startingPlayerId)) {
             Player player = getPlayer(playerId);
+            player.initStartingDeckSize();
             if (!gameOptions.testMode || player.getLife() == 0) {
                 player.initLife(this.getStartingLife());
             }
@@ -1575,7 +1588,7 @@ public abstract class GameImpl implements Game {
             playerId = players[RandomUtil.nextInt(players.length)]; // test game
             Player player = getPlayer(playerId);
             if (player != null && player.canRespond()) {
-                fireInformEvent(state.getPlayer(playerId).getLogName() + " won the toss");
+                informPlayers(state.getPlayer(playerId).getLogName() + " won the toss");
                 return player.getId();
             }
         }
@@ -1595,6 +1608,7 @@ public abstract class GameImpl implements Game {
 
     @Override
     public void end() {
+        // it's real game end, do not use any game dialogs/rules/events here
         if (!state.isGameOver()) {
             logger.debug("END of gameId: " + this.getId());
             endTime = new Date();
@@ -1625,6 +1639,78 @@ public abstract class GameImpl implements Game {
                     .forEach(this::informPlayers);
 
             DataCollectorServices.getInstance().onGameEnd(this);
+        }
+    }
+
+    /**
+     * End game on critical error with the winner
+     * Despite mtg's paper rules (MTR), we need a real winner to continue match/tourney without infinite games loop
+     * Winner: highest life, then most priority time left, then random.
+     */
+    @Override
+    public void endWithTechnicalWinner(String reason) {
+        if (state.isGameOver()) {
+            return;
+        }
+
+        // find a winner
+        List<Player> candidates = state.getPlayers().values().stream()
+                .filter(Player::isInGame)
+                .collect(Collectors.toList());
+        String decidedBy;
+        if (candidates.isEmpty()) {
+            candidates = new ArrayList<>(state.getPlayers().values());
+            decidedBy = "random from all players, nobody is in game";
+        } else if (candidates.size() == 1) {
+            decidedBy = "last player in game";
+        } else {
+            // find by life
+            int maxLife = candidates.stream().mapToInt(Player::getLife).max().orElse(0);
+            candidates = candidates.stream()
+                    .filter(player -> player.getLife() == maxLife)
+                    .collect(Collectors.toList());
+            decidedBy = "life";
+
+            // find by time left
+            if (candidates.size() > 1 && getPriorityTime() > 0) {
+                int maxTimeLeft = candidates.stream().mapToInt(Player::getPriorityTimeLeft).max().orElse(0);
+                candidates = candidates.stream()
+                        .filter(player -> player.getPriorityTimeLeft() == maxTimeLeft)
+                        .collect(Collectors.toList());
+                decidedBy = "priority time left";
+            }
+
+            // find by random
+            if (candidates.size() > 1) {
+                decidedBy = "random";
+            }
+        }
+        Player winner = candidates.isEmpty() ? null : candidates.get(RandomUtil.nextInt(candidates.size()));
+
+        // skip game events, e.g. replacement effects
+        if (winner != null) {
+            for (Player player : state.getPlayers().values()) {
+                player.setTechnicalResult(player.getId().equals(winner.getId()));
+            }
+            winnerId = winner.getId();
+        }
+
+        // use try/catch to make sure it's really finish all the work
+
+        String message = String.format("Game stopped due critical error, technical winner: %s (decided by %s). Reason: %s",
+                (winner == null ? "none" : winner.getName()), decidedBy, reason);
+        logger.error(message + " - game " + getId());
+
+        try {
+            end();
+        } catch (Throwable e) {
+            logger.fatal("Can't finish game after critical error: " + getId(), e);
+        }
+
+        try {
+            informPlayers(message);
+        } catch (Throwable e) {
+            logger.error("Can't inform players about technical winner: " + getId(), e);
         }
     }
 
@@ -1673,7 +1759,7 @@ public abstract class GameImpl implements Game {
         Player player = state.getPlayer(playerId);
         if (player != null && !player.hasLost()) {
             logger.debug("Player " + player.getName() + " concedes game " + this.getId());
-            fireInformEvent(player.getLogName() + " has conceded.");
+            informPlayers(player.getLogName() + " has conceded.");
             player.concede(this);
         }
     }
@@ -1837,7 +1923,7 @@ public abstract class GameImpl implements Game {
                             continue;
                         } else {
                             // tests - try to fail fast
-                            throw new MageException(UNIT_TESTS_ERROR_TEXT);
+                            throw new MageException(UNIT_TESTS_ERROR_TEXT + ": " + e.getMessage(), e);
                         }
                     }
                     state.getPlayerList().getNext();
@@ -1847,12 +1933,16 @@ public abstract class GameImpl implements Game {
             // OUTER error - game must end (too many errors also come here)
             this.totalErrorsCount.incrementAndGet();
             logger.fatal("Game end on critical error: " + e, e);
-            this.fireErrorEvent("Game end on critical error: " + e, e);
-            this.end();
+            try {
+                this.fireErrorEvent("Game end on critical error: " + e, e);
+            } catch (Throwable ex) {
+                logger.error("Can't send critical error to players: " + getId(), ex);
+            }
+            this.endWithTechnicalWinner(String.valueOf(e));
 
             // re-raise error in unit tests, so framework can catch it (example: errors in AI simulations)
-            if (UNIT_TESTS_ERROR_TEXT.equals(e.getMessage())) {
-                throw new IllegalStateException(UNIT_TESTS_ERROR_TEXT);
+            if (e.getMessage() != null && e.getMessage().contains(UNIT_TESTS_ERROR_TEXT)) {
+                throw new IllegalStateException(e.getMessage(), e);
             }
         } finally {
             resetLKI();
@@ -1863,10 +1953,11 @@ public abstract class GameImpl implements Game {
     protected void resolve() {
         StackObject top = null;
         boolean wasError = false;
+        boolean applied = false;
         try {
             top = state.getStack().peek();
-            DataCollectorServices.getInstance().onTestsStackResolve(this);
-            top.resolve(this);
+            DataCollectorServices.getInstance().onTestsStackResolveStart(this, top);
+            applied = top.resolve(this);
             resetControlAfterSpellResolve(top.getId());
         } catch (Throwable e) {
             // workaround to show real error in tests instead checkInfiniteLoop
@@ -1884,6 +1975,7 @@ public abstract class GameImpl implements Game {
                     }
                 }
             }
+            DataCollectorServices.getInstance().onTestsStackResolveEnd(this, top, applied);
         }
     }
 
@@ -2402,17 +2494,16 @@ public abstract class GameImpl implements Game {
             if (!player.hasLost()) {
                 String lostReason = "";
                 if (player.getLife() <= 0 && player.canLoseByZeroOrLessLife()) {
-                    lostReason = "life is 0 or less";
+                    lostReason = "to having 0 or less life";
                 }
                 if (player.getLibrary().isEmptyDraw()) {
-                    lostReason = "draw from empty library";
+                    lostReason = "drawing from an empty library";
                 }
                 if (player.getCountersCount(CounterType.POISON) >= 10) {
-                    lostReason = "poison counter >= 10";
+                    lostReason = "to having 10 or more poison counters";
                 }
-                if (!lostReason.isEmpty()) {
+                if (!lostReason.isEmpty() && player.lost(this)) {
                     this.informPlayers(player.getLogName() + " lost the game due " + lostReason);
-                    player.lost(this);
                 }
             }
         }
@@ -2504,6 +2595,15 @@ public abstract class GameImpl implements Game {
         );
         Set<Card> copiedCardsToRemove = new HashSet<>();
         for (Card copiedCard : allCopiedCards) {
+            UUID copiedCardId = copiedCard.getMainCard().getId();
+            UUID persistentCopySource = state.getPersistentCardCopySource(copiedCardId);
+            if (persistentCopySource != null) {
+                // Persistent copies opt out of 704.5e only while their registered source remains.
+                if (getPermanent(persistentCopySource) != null) {
+                    continue;
+                }
+                state.stopKeepingCardCopy(copiedCardId);
+            }
             // 1. Zone must be checked from main card only cause mdf parts can have different zones
             //    (one side on battlefield, another side on outside)
             // 2. Copied card creates in OUTSIDE zone and put to stack manually in the same code,
@@ -3221,26 +3321,17 @@ public abstract class GameImpl implements Game {
     public void informPlayers(String message) {
         DataCollectorServices.getInstance().onGameLog(this, message);
 
-        // Uncomment to print game messages
-        // System.out.println(message.replaceAll("\\<.*?\\>", ""));
         if (simulation) {
             return;
         }
-        fireInformEvent(message);
+
+        makeSureCalledOutsideLayerEffects();
+        tableEventSource.fireTableEvent(EventType.INFO, message, this);
     }
 
     @Override
     public void debugMessage(String message) {
         logger.warn(message);
-    }
-
-    @Override
-    public void fireInformEvent(String message) {
-        if (simulation) {
-            return;
-        }
-        makeSureCalledOutsideLayerEffects();
-        tableEventSource.fireTableEvent(EventType.INFO, message, this);
     }
 
     @Override

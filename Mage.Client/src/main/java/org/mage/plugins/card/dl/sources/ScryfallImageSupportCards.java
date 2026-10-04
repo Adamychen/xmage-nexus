@@ -561,6 +561,7 @@ public class ScryfallImageSupportCards {
             add("WOE"); // Wilds of Eldraine
             add("WOT"); // Wilds of Eldraine: Enchanting Tales
             add("WOC"); // Wilds of Eldraine Commander
+            add("YWOE"); // Alchemy: Wilds of Eldraine
             add("LCI"); // The Lost Caverns of Ixalan
             add("LCC"); // The The Lost Caverns of Ixalan Commander
             add("REX"); // Jurassic World Collection
@@ -573,6 +574,7 @@ public class ScryfallImageSupportCards {
             add("MKM"); // Murders at Karlov Manor
             add("MKC"); // Murders at Karlov Manor Commander
             add("PSS4"); // MKM Standard Showdown
+            add("YMKM"); // Alchemy: Murders at Karlov Manor
             add("CLU"); // Ravnica: Clue Edition
             add("OTJ"); // Outlaws of Thunder Junction
             add("OTC"); // Outlaws of Thunder Junction Commander
@@ -638,6 +640,7 @@ public class ScryfallImageSupportCards {
             add("TRK"); // Star Trek
             add("TRC"); // Star Trek Commander
             add("SDS"); // Stardates
+            add("PF27"); // MagicFest 2027
 
             // Custom sets using Scryfall images - must provide a direct link for each card in directDownloadLinks
             add("CALC"); // Custom Alchemized versions of existing cards
