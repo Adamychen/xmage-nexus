@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mage</groupId>
+  <artifactId>rl-runner</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>8</maven.compiler.release>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage-sets</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage-game-twoplayerduel</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage-game-freeforall</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage-player-ai</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mage</groupId>
+      <artifactId>mage-player-ai-mad</artifactId>
+      <version>1.4.61</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>rl-runner</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.mage.rl.RlRunner</mainClass>
+                </transformer>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

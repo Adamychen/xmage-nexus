@@ -302,12 +302,18 @@ the source of flakes).
    `SessionImpl` per browser session **plus one per SIM seat**, so it leaked four threads per
    session forever - a single four-player game left 12 pools / 48 threads, ~100 sessions reached
    105 pools / 420 parked threads - until callbacks slowed down enough that games stopped producing
-   views. **Fix (one file, additive)**: `CustomThreadPool` delegates every instance to one shared
-   pool, so the threads are bounded by that pool's size instead of by the number of sessions that
-   ever lived. Measured 48 -> 0 leaked threads, proxy total 143 -> 61. Diagnose with
-   `jcmd <pid> Thread.print` grouped by thread name; a leaked pool shows as a family
-   (`ThreadPool(N)-N`) that does not shrink. Reverting it is a one-file revert; see the
-   `mage-fork-upgrade` skill for the fork patch inventory.
+    views. **Fix (one file, additive)**: `CustomThreadPool` delegates every instance to one shared
+    pool, so the threads are bounded by that pool's size instead of by the number of sessions that
+    ever lived. Measured 48 -> 0 leaked threads, proxy total 143 -> 61. Diagnose with
+    `jcmd <pid> Thread.print` grouped by thread name; a leaked pool shows as a family
+    (`ThreadPool(N)-N`) that does not shrink. Reverting it is a one-file revert; see the
+    `mage-fork-upgrade` skill for the fork patch inventory.
+    **Upstream (2026-10-02)**: proposed as PR [magefree/mage#16439](https://github.com/magefree/mage/pull/16439)
+    (issue #16438) in a different shape that survives the async world: `allowCoreThreadTimeOut(true)`
+    in the constructors + a deterministic regression test (fails on pristine master, passes with the
+    fix). Note the fix targets the `ServerInvoker` pools only; issue #16438 also documents the
+    jboss-internal `JBossRemoting Client Oneway` pools accumulating ~6 parked threads per session in
+    the server process with async messages enabled (measured live on master).
 
 9. **The proxy's watchdog is the only thing that would catch a leak like #7
    again (NEW 2026-09-28)**: one line per minute with `threads`,

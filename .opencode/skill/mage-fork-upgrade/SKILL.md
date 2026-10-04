@@ -40,6 +40,10 @@ mirarlo. Actualízala al añadir o quitar un parche.
 
 `CustomThreadPool` es **aditivo y de un solo fichero**: si upstream arregla la fuga por su cuenta, se
 revierte ese fichero y ya está; nada más del fork depende de él.
+Propuesto a upstream el 2026-10-02 como PR
+[magefree/mage#16439](https://github.com/magefree/mage/pull/16439) (issue #16438, variante
+idle-expiry compatible con el async world; si se mergea, al rebasear el fork se puede reemplazar
+la delegación por el fix upstream y borrar el parche).
 - Artefactos org.mage en `~/.m2` POR VERSIÓN: `scripts/lib.mjs` (`XMAGE_VERSION`) +
   `ensureMageArtifacts()` los instala desde el fork si faltan.
 - Versión replicada en: `scripts/lib.mjs` (`XMAGE_VERSION`), `Mage.Proxy/pom.xml`, nombre del jar
