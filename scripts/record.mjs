@@ -10,7 +10,7 @@
 //   E2E_SERVER_HOST=localhost node scripts/record.mjs all
 //
 // El oráculo "protocolo real" para CI es el servidor XMage LOCAL (mismo fork
-// 1.4.61-V1): arrancar con `node scripts/ctl.mjs restart all` y grabar.
+// 1.4.62-V1): arrancar con `node scripts/ctl.mjs restart all` y grabar.
 
 import { spawn } from 'node:child_process'
 import * as fs from 'node:fs'
@@ -97,9 +97,11 @@ function makeMutateDriver() {
       return ctx.findOnBattlefield('Elvish Mystic')
     },
     captureWhen(gv) {
+      // 1.4.62 manda antes un update con mutated:true y la pila a medias (solo
+      // la carta base en mutateView.cards): esperar a las DOS cartas fundidas.
       const me = getMe(gv)
       for (const c of Object.values(me?.battlefield ?? {})) {
-        if (c?.mutated && c?.mutateView && Object.keys(c.mutateView).length) return true
+        if (c?.mutated && c?.mutateView && Object.keys(c.mutateView.cards ?? {}).length >= 2) return true
       }
       return false
     },
@@ -2857,7 +2859,15 @@ function makeOverloadDriver() {
       return undefined
     },
     captureWhen(gv) {
-      return Object.values(gv?.stack ?? {}).some((s) => /cyclonic rift/i.test(s?.name ?? ''))
+      // La pila con el Rift puede verse ANTES de pagar (1.4.62 manda el update
+      // con las Islas aún sin girar): esperar a que el pago esté reflejado
+      // (>=6 Islas giradas), que es el estado del invariante hasOverload.
+      if (!Object.values(gv?.stack ?? {}).some((s) => /cyclonic rift/i.test(s?.name ?? ''))) return false
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const tappedIsles = Object.values(me?.battlefield ?? {}).filter(
+        (c) => /island/i.test(c?.name ?? '') && c?.tapped === true,
+      ).length
+      return tappedIsles >= 6
     },
   }
 }

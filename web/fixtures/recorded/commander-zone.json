@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-09-16T15:16:46.991Z",
-  "gameId": "9325aff0-2ac7-43b0-b63b-098dd4a4c3b2",
+  "recordedAt": "2026-10-04T18:35:56.322Z",
+  "gameId": "49c63f87-0e18-44bc-9a13-74eed94c8e1e",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "75688c25-1ad6-4c81-ae63-bda4048cd715",
-        "name": "sim-000001-658",
+        "playerId": "5fc6154e-fb2c-40f1-9163-c1b9be15415b",
+        "name": "sim-137367",
         "controlled": false,
         "isHuman": true,
         "life": 40,
@@ -17,8 +17,8 @@
         "libraryCount": 92,
         "handCount": 6,
         "isActive": false,
-        "hasPriority": true,
-        "timerActive": true,
+        "hasPriority": false,
+        "timerActive": false,
         "hasLeft": false,
         "manaPool": {
           "red": 0,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "3bcfb588-34a5-4cde-ba27-180809a55548": {
+          "96f24bdd-6d3f-4ab5-b1b9-4bd883a58bc2": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -43,7 +43,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-000001-658",
+            "nameController": "sim-137367",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -53,12 +53,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "96f24bdd-6d3f-4ab5-b1b9-4bd883a58bc2",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "75688c25-1ad6-4c81-ae63-bda4048cd715",
-            "controllerName": "sim-000001-658",
+            "controllerId": "5fc6154e-fb2c-40f1-9163-c1b9be15415b",
+            "controllerName": "sim-137367",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -122,6 +124,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "RETRO",
             "targets": null,
@@ -151,7 +154,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "3bcfb588-34a5-4cde-ba27-180809a55548",
+            "id": "96f24bdd-6d3f-4ab5-b1b9-4bd883a58bc2",
             "expansionSetCode": "LEA",
             "cardNumber": "292",
             "usesVariousArt": true,
@@ -294,6 +297,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -323,7 +327,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "ff7f0c85-51f1-4cf1-b73b-b73dd9e03bbb",
+            "id": "5f8c71dd-ce5f-470d-bafb-2987d7603c76",
             "expansionSetCode": "M13",
             "cardNumber": "138",
             "usesVariousArt": false,
@@ -340,7 +344,7 @@
         ],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1789571806987,
+        "priorityTimeSavedTimeMs": 1791138956313,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -354,8 +358,8 @@
         "designationNames": []
       },
       {
-        "playerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-        "name": "ucomma1scx9d3",
+        "playerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+        "name": "ucomma1v8ox7q",
         "controlled": true,
         "isHuman": true,
         "life": 40,
@@ -365,8 +369,8 @@
         "libraryCount": 91,
         "handCount": 7,
         "isActive": true,
-        "hasPriority": false,
-        "timerActive": false,
+        "hasPriority": true,
+        "timerActive": true,
         "hasLeft": false,
         "manaPool": {
           "red": 0,
@@ -377,7 +381,7 @@
           "colorless": 0
         },
         "graveyard": {
-          "36681513-d483-4e03-9239-35e3fcadf748": {
+          "3004d3fb-7152-4335-9862-1f7c0827f3d5": {
             "parentId": null,
             "controllerId": null,
             "controllerName": null,
@@ -442,6 +446,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -471,7 +476,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "36681513-d483-4e03-9239-35e3fcadf748",
+            "id": "3004d3fb-7152-4335-9862-1f7c0827f3d5",
             "expansionSetCode": "J21",
             "cardNumber": "787",
             "usesVariousArt": false,
@@ -485,7 +490,7 @@
               "other": []
             }
           },
-          "7ed10873-4208-4ab8-a317-aaac9ce263fb": {
+          "2bf75e76-0f10-4919-8154-9e90bb39dec2": {
             "parentId": null,
             "controllerId": null,
             "controllerName": null,
@@ -550,6 +555,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -579,7 +585,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "7ed10873-4208-4ab8-a317-aaac9ce263fb",
+            "id": "2bf75e76-0f10-4919-8154-9e90bb39dec2",
             "expansionSetCode": "J21",
             "cardNumber": "787",
             "usesVariousArt": false,
@@ -598,7 +604,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "4cd26f3e-e667-4318-a46e-fd247a2fd513": {
+          "e39f03a8-df58-4928-8167-345c449a4e0e": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -672,6 +678,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "RETRO",
               "targets": null,
@@ -701,7 +708,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "4cd26f3e-e667-4318-a46e-fd247a2fd513",
+              "id": "e39f03a8-df58-4928-8167-345c449a4e0e",
               "expansionSetCode": "LEA",
               "cardNumber": "292",
               "usesVariousArt": true,
@@ -717,7 +724,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -727,12 +734,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "e39f03a8-df58-4928-8167-345c449a4e0e",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -796,6 +805,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "RETRO",
             "targets": null,
@@ -825,7 +835,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "4cd26f3e-e667-4318-a46e-fd247a2fd513",
+            "id": "e39f03a8-df58-4928-8167-345c449a4e0e",
             "expansionSetCode": "LEA",
             "cardNumber": "292",
             "usesVariousArt": true,
@@ -839,7 +849,7 @@
               "other": []
             }
           },
-          "c3f28250-5531-4026-8689-958aa221799c": {
+          "93f67506-d7e9-414c-9f30-93dfd4252d4c": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -913,6 +923,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -942,7 +953,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "c3f28250-5531-4026-8689-958aa221799c",
+              "id": "93f67506-d7e9-414c-9f30-93dfd4252d4c",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -958,7 +969,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -968,12 +979,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "93f67506-d7e9-414c-9f30-93dfd4252d4c",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -1037,6 +1050,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -1066,7 +1080,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "c3f28250-5531-4026-8689-958aa221799c",
+            "id": "93f67506-d7e9-414c-9f30-93dfd4252d4c",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -1080,7 +1094,7 @@
               "other": []
             }
           },
-          "a2e43053-24fe-46e6-bcc0-855a5ae6abfa": {
+          "a9f6baf6-6998-46a2-8072-cca792c9f33d": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1154,6 +1168,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -1183,7 +1198,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "a2e43053-24fe-46e6-bcc0-855a5ae6abfa",
+              "id": "a9f6baf6-6998-46a2-8072-cca792c9f33d",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -1199,7 +1214,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1209,12 +1224,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "a9f6baf6-6998-46a2-8072-cca792c9f33d",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -1278,6 +1295,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -1307,7 +1325,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "a2e43053-24fe-46e6-bcc0-855a5ae6abfa",
+            "id": "a9f6baf6-6998-46a2-8072-cca792c9f33d",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -1321,7 +1339,7 @@
               "other": []
             }
           },
-          "ed637a74-7ccc-4e5a-a1c8-1e3cde7d5394": {
+          "06f9df28-250d-46a3-bef7-37304fb96bfd": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1395,6 +1413,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -1424,7 +1443,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "ed637a74-7ccc-4e5a-a1c8-1e3cde7d5394",
+              "id": "06f9df28-250d-46a3-bef7-37304fb96bfd",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -1440,7 +1459,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1450,12 +1469,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "06f9df28-250d-46a3-bef7-37304fb96bfd",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -1519,6 +1540,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -1548,7 +1570,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "ed637a74-7ccc-4e5a-a1c8-1e3cde7d5394",
+            "id": "06f9df28-250d-46a3-bef7-37304fb96bfd",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -1562,7 +1584,7 @@
               "other": []
             }
           },
-          "35f285a9-ad15-437f-9d96-413bb0c23cc5": {
+          "0ad5fb10-f77f-4f4e-a2fd-9a1a091e6450": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1636,6 +1658,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -1665,7 +1688,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "35f285a9-ad15-437f-9d96-413bb0c23cc5",
+              "id": "0ad5fb10-f77f-4f4e-a2fd-9a1a091e6450",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -1681,7 +1704,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1691,12 +1714,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "0ad5fb10-f77f-4f4e-a2fd-9a1a091e6450",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -1760,6 +1785,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -1789,7 +1815,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "35f285a9-ad15-437f-9d96-413bb0c23cc5",
+            "id": "0ad5fb10-f77f-4f4e-a2fd-9a1a091e6450",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -1803,7 +1829,7 @@
               "other": []
             }
           },
-          "2ba3c5ca-2661-4b01-81e3-50dd06670541": {
+          "62bd9855-211d-46cb-bd57-0b4589365b19": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1877,6 +1903,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -1906,7 +1933,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "2ba3c5ca-2661-4b01-81e3-50dd06670541",
+              "id": "62bd9855-211d-46cb-bd57-0b4589365b19",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -1922,7 +1949,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1932,12 +1959,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "62bd9855-211d-46cb-bd57-0b4589365b19",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -2001,6 +2030,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2030,7 +2060,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "2ba3c5ca-2661-4b01-81e3-50dd06670541",
+            "id": "62bd9855-211d-46cb-bd57-0b4589365b19",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -2044,7 +2074,7 @@
               "other": []
             }
           },
-          "7ea52965-b16f-43b2-b2aa-f09d4a5713b1": {
+          "28d4ac39-67ad-45a1-9ab6-0a7eea8504c0": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -2118,6 +2148,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -2147,7 +2178,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "7ea52965-b16f-43b2-b2aa-f09d4a5713b1",
+              "id": "28d4ac39-67ad-45a1-9ab6-0a7eea8504c0",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -2163,7 +2194,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -2173,12 +2204,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "28d4ac39-67ad-45a1-9ab6-0a7eea8504c0",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -2242,6 +2275,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2271,7 +2305,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "7ea52965-b16f-43b2-b2aa-f09d4a5713b1",
+            "id": "28d4ac39-67ad-45a1-9ab6-0a7eea8504c0",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -2285,7 +2319,7 @@
               "other": []
             }
           },
-          "738c484b-8415-4d9d-8635-15c564075980": {
+          "d0aa822d-aa64-4ace-aa8f-da96ce03921d": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -2359,6 +2393,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -2388,7 +2423,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "738c484b-8415-4d9d-8635-15c564075980",
+              "id": "d0aa822d-aa64-4ace-aa8f-da96ce03921d",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -2404,7 +2439,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -2414,12 +2449,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "d0aa822d-aa64-4ace-aa8f-da96ce03921d",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -2483,6 +2520,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2512,7 +2550,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "738c484b-8415-4d9d-8635-15c564075980",
+            "id": "d0aa822d-aa64-4ace-aa8f-da96ce03921d",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -2526,7 +2564,7 @@
               "other": []
             }
           },
-          "fe3fd305-91ae-421f-9bcd-427b115101ed": {
+          "a11698c4-910b-4c65-ba45-e3d39a77d8ce": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -2600,6 +2638,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -2629,7 +2668,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "fe3fd305-91ae-421f-9bcd-427b115101ed",
+              "id": "a11698c4-910b-4c65-ba45-e3d39a77d8ce",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -2645,7 +2684,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -2655,12 +2694,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "a11698c4-910b-4c65-ba45-e3d39a77d8ce",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -2724,6 +2765,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2753,7 +2795,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "fe3fd305-91ae-421f-9bcd-427b115101ed",
+            "id": "a11698c4-910b-4c65-ba45-e3d39a77d8ce",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -2767,7 +2809,7 @@
               "other": []
             }
           },
-          "33271b23-49ff-4246-8f4f-5b21fd267ac3": {
+          "cc6d541b-2b36-469d-8172-7f7f5031e2dd": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -2841,6 +2883,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -2870,7 +2913,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "33271b23-49ff-4246-8f4f-5b21fd267ac3",
+              "id": "cc6d541b-2b36-469d-8172-7f7f5031e2dd",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -2886,7 +2929,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -2896,12 +2939,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "cc6d541b-2b36-469d-8172-7f7f5031e2dd",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -2965,6 +3010,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2994,7 +3040,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "33271b23-49ff-4246-8f4f-5b21fd267ac3",
+            "id": "cc6d541b-2b36-469d-8172-7f7f5031e2dd",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -3008,7 +3054,7 @@
               "other": []
             }
           },
-          "8c27ab00-7b20-4841-9cff-d31d5da81041": {
+          "6c459532-46b3-4e7d-bd04-475f66b4b2e3": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -3082,6 +3128,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -3111,7 +3158,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "8c27ab00-7b20-4841-9cff-d31d5da81041",
+              "id": "6c459532-46b3-4e7d-bd04-475f66b4b2e3",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -3127,7 +3174,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -3137,12 +3184,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "6c459532-46b3-4e7d-bd04-475f66b4b2e3",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -3206,6 +3255,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -3235,7 +3285,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "8c27ab00-7b20-4841-9cff-d31d5da81041",
+            "id": "6c459532-46b3-4e7d-bd04-475f66b4b2e3",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -3249,7 +3299,7 @@
               "other": []
             }
           },
-          "c0bf1bc9-fde6-481e-9ca6-c9a571c60687": {
+          "4bd603f9-a7ba-4f1f-8f5c-2f99576a82a9": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -3323,6 +3373,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -3352,7 +3403,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "c0bf1bc9-fde6-481e-9ca6-c9a571c60687",
+              "id": "4bd603f9-a7ba-4f1f-8f5c-2f99576a82a9",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -3368,7 +3419,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -3378,12 +3429,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "4bd603f9-a7ba-4f1f-8f5c-2f99576a82a9",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -3447,6 +3500,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -3476,7 +3530,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "c0bf1bc9-fde6-481e-9ca6-c9a571c60687",
+            "id": "4bd603f9-a7ba-4f1f-8f5c-2f99576a82a9",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -3490,7 +3544,7 @@
               "other": []
             }
           },
-          "c10640a2-a6fc-4853-8486-09a102e7d3b8": {
+          "9878e308-7faa-4c60-878e-9a8b993a1aa0": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -3564,6 +3618,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -3593,7 +3648,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "c10640a2-a6fc-4853-8486-09a102e7d3b8",
+              "id": "9878e308-7faa-4c60-878e-9a8b993a1aa0",
               "expansionSetCode": "KTK",
               "cardNumber": "262",
               "usesVariousArt": true,
@@ -3609,7 +3664,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ucomma1scx9d3",
+            "nameController": "ucomma1v8ox7q",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -3619,12 +3674,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Mountain",
+              "id": "9878e308-7faa-4c60-878e-9a8b993a1aa0",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-            "controllerName": "ucomma1scx9d3",
+            "controllerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+            "controllerName": "ucomma1v8ox7q",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -3688,6 +3745,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -3717,7 +3775,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "c10640a2-a6fc-4853-8486-09a102e7d3b8",
+            "id": "9878e308-7faa-4c60-878e-9a8b993a1aa0",
             "expansionSetCode": "KTK",
             "cardNumber": "262",
             "usesVariousArt": true,
@@ -3860,6 +3918,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -3889,7 +3948,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "4ad0c60f-1588-4e5f-b1b1-c59c024995f4",
+            "id": "b3a6fd78-ed0d-4822-bb00-b03833822e44",
             "expansionSetCode": "M13",
             "cardNumber": "138",
             "usesVariousArt": false,
@@ -3906,7 +3965,7 @@
         ],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1789571806987,
+        "priorityTimeSavedTimeMs": 1791138956313,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -3920,9 +3979,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
+    "myPlayerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
     "myHand": {
-      "d7ca497f-3594-412b-b495-dbe9f324edcb": {
+      "dd544d1c-c073-4ced-9fe2-cd92421564ae": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -3989,6 +4048,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4018,7 +4078,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "d7ca497f-3594-412b-b495-dbe9f324edcb",
+        "id": "dd544d1c-c073-4ced-9fe2-cd92421564ae",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4032,7 +4092,7 @@
           "other": []
         }
       },
-      "f18da9c2-32be-46ce-8688-1f53a96f41b4": {
+      "a4d9b4c4-d8fd-4e37-bcee-c0f9d98381dd": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4099,6 +4159,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4128,7 +4189,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "f18da9c2-32be-46ce-8688-1f53a96f41b4",
+        "id": "a4d9b4c4-d8fd-4e37-bcee-c0f9d98381dd",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4142,7 +4203,7 @@
           "other": []
         }
       },
-      "edc7664e-6e6c-4286-a8f1-6ff1c41dfb35": {
+      "3c1deb58-33d0-4204-bbc1-03bf33bce534": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4209,6 +4270,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4238,7 +4300,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "edc7664e-6e6c-4286-a8f1-6ff1c41dfb35",
+        "id": "3c1deb58-33d0-4204-bbc1-03bf33bce534",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4252,7 +4314,7 @@
           "other": []
         }
       },
-      "89e8ae64-5f2a-4ca7-a0c9-845ac96e613f": {
+      "b3e8cf44-3296-45b6-9ec6-ad648a8ac6aa": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4319,6 +4381,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4348,7 +4411,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "89e8ae64-5f2a-4ca7-a0c9-845ac96e613f",
+        "id": "b3e8cf44-3296-45b6-9ec6-ad648a8ac6aa",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4362,7 +4425,7 @@
           "other": []
         }
       },
-      "ef1354c4-96bf-471e-9d07-e54febd3cbb2": {
+      "de019196-3ae3-4cea-b0be-7267b5f592db": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4429,6 +4492,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4458,7 +4522,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "ef1354c4-96bf-471e-9d07-e54febd3cbb2",
+        "id": "de019196-3ae3-4cea-b0be-7267b5f592db",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4472,7 +4536,7 @@
           "other": []
         }
       },
-      "4881f224-f36f-41ab-9588-293d707fd515": {
+      "a52a7a74-f950-4972-a2b2-2fe4ad2e3a5d": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4539,6 +4603,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4568,7 +4633,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "4881f224-f36f-41ab-9588-293d707fd515",
+        "id": "a52a7a74-f950-4972-a2b2-2fe4ad2e3a5d",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4582,7 +4647,7 @@
           "other": []
         }
       },
-      "9717d10c-d50b-42d1-9e5d-cb5415dd5cbd": {
+      "aad25d17-4a63-4673-96f8-5dd9ecd396a2": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4649,6 +4714,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "RETRO",
         "targets": null,
@@ -4678,7 +4744,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "9717d10c-d50b-42d1-9e5d-cb5415dd5cbd",
+        "id": "aad25d17-4a63-4673-96f8-5dd9ecd396a2",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -4694,7 +4760,7 @@
       }
     },
     "myHelperEmblems": {
-      "3ea5e1d4-29b5-4f56-a384-44a22ddccd22": {
+      "04b2de94-86de-4901-9a30-0f5776cdbccd": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4755,6 +4821,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -4774,7 +4841,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "3ea5e1d4-29b5-4f56-a384-44a22ddccd22",
+        "id": "04b2de94-86de-4901-9a30-0f5776cdbccd",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -4788,7 +4855,7 @@
           "other": []
         }
       },
-      "ff1cc292-28c7-46da-b468-8060bad59cb9": {
+      "5ab934af-9d37-45a5-beda-b0d5401a26de": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4851,6 +4918,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -4870,7 +4938,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "ff1cc292-28c7-46da-b468-8060bad59cb9",
+        "id": "5ab934af-9d37-45a5-beda-b0d5401a26de",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -4884,7 +4952,7 @@
           "other": []
         }
       },
-      "ddc68f95-00c6-4f29-8ae0-faf34356940d": {
+      "3530c1d7-ec98-4f68-b0b2-7cf59d389552": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -4947,6 +5015,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -4966,7 +5035,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "ddc68f95-00c6-4f29-8ae0-faf34356940d",
+        "id": "3530c1d7-ec98-4f68-b0b2-7cf59d389552",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -4981,12 +5050,28 @@
         }
       }
     },
-    "canPlayObjects": null,
+    "canPlayObjects": {
+      "objects": {
+        "9878e308-7faa-4c60-878e-9a8b993a1aa0": {
+          "basicManaAbilities": [
+            {
+              "id": "b1a98dc0-fe17-408c-b467-a83ac1bdb522",
+              "value": "{T}: Add {R}."
+            }
+          ],
+          "basicPlayAbilities": [],
+          "basicCastAbilities": [],
+          "other": []
+        }
+      }
+    },
     "opponentHands": {},
     "watchedHands": {},
     "stack": {},
     "exiles": [
       {
+        "name": "Permanent - Exile",
+        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
         "cards": {}
       }
     ],
@@ -4996,14 +5081,14 @@
     "combat": [],
     "phase": "POSTCOMBAT_MAIN",
     "step": "POSTCOMBAT_MAIN",
-    "activePlayerId": "912eb5a1-244b-4fef-950b-3a56a7b1839f",
-    "activePlayerName": "ucomma1scx9d3",
-    "priorityPlayerName": "sim-000001-658",
+    "activePlayerId": "fe47f058-4d7a-4bae-8ea5-c1500e2f9aab",
+    "activePlayerName": "ucomma1v8ox7q",
+    "priorityPlayerName": "ucomma1v8ox7q",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,
     "totalErrorsCount": 0,
     "totalEffectsCount": 7,
-    "gameCycle": 115
+    "gameCycle": 114
   }
 }

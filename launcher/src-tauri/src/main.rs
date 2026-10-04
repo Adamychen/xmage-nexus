@@ -862,12 +862,12 @@ mod tests {
 
     const CONTRACT_BASE: &str = r#"{
         "server": {"mainClass": "mage.server.Main", "classpath": ["lib/*"], "port": 17171},
-        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.61.jar", "wsPort": 8787, "httpPort": 8788}
+        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.62.jar", "wsPort": 8787, "httpPort": 8788}
     }"#;
 
     const CONTRACT_XDHS: &str = r#"{
         "server": {"mainClass": "mage.server.Main", "classpath": ["lib/*"], "port": 17171},
-        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.61.jar", "wsPort": 8787, "httpPort": 8788},
+        "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.62.jar", "wsPort": 8787, "httpPort": 8788},
         "proxyXdhs": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.5.8.jar", "wsPort": 8797, "httpPort": 8798}
     }"#;
 

@@ -5,13 +5,13 @@
 # Required:
 #   ALLOWED_ORIGINS  exact public origin of the web page, e.g. http://abc.playit.gg:12345
 # Optional (defaults shown):
-#   JAR=./mage-proxy-1.4.61.jar  WEB_DIR=./web-dist
+#   JAR=./mage-proxy-1.4.62.jar  WEB_DIR=./web-dist
 #   XMAGE_HOST=beta.xmage.today  XMAGE_PORT=17171
 #   WS_PORT=8787                 HTTP_PORT=8788
 #   BIND=127.0.0.1               (playit agent runs on this same machine)
 set -euo pipefail
 
-JAR="${JAR:-./mage-proxy-1.4.61.jar}"
+JAR="${JAR:-./mage-proxy-1.4.62.jar}"
 WEB_DIR="${WEB_DIR:-./web-dist}"
 XMAGE_HOST="${XMAGE_HOST:-beta.xmage.today}"
 XMAGE_PORT="${XMAGE_PORT:-17171}"

@@ -9,7 +9,7 @@ RUN npm run build
 FROM eclipse-temurin:17-jre
 RUN useradd -r -m -d /data nexus
 WORKDIR /data
-COPY Mage.Proxy/target/mage-proxy-1.4.61.jar /app/mage-proxy.jar
+COPY Mage.Proxy/target/mage-proxy-1.4.62.jar /app/mage-proxy.jar
 COPY --from=web /src/web/dist /app/web
 COPY docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh && chown nexus /data

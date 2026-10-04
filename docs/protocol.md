@@ -5,7 +5,7 @@ This page only states precedence and regeneration rules so the contract never dr
 
 ## Precedence
 
-1. Wire behavior: XMage server 1.4.61-V1 (`mage.view.*` serialized by `JsonUtil` reflection, camelCase 1:1).
+1. Wire behavior: XMage server 1.4.62-V1 (`mage.view.*` serialized by `JsonUtil` reflection, camelCase 1:1).
 2. Documented contract: `Mage.Proxy/README.md`.
 3. Typed contract: `web/schema/contract.schema.json` → generated `web/src/net/types.generated.ts` (views) and `web/fixtures/schema.generated.ts` (zod).
 4. Hand-written protocol surface: `web/src/net/types.ts` (envelopes `ProxyMessage/LobbyEnvelope/ResultEnvelope/EventEnvelope` + `EVENT_METHODS`).

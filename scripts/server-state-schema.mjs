@@ -162,7 +162,7 @@ function main() {
       generatedAt: new Date().toISOString(),
       note: 'Exhaustive ServerState enumerations for the current fork version. Derived from Mage.Server/config/config.xml (canonical for this release) + MatchType Java limits. Oracle for serverStateCoverage.test.ts.',
       configPath: relative(forkDir(), configPath),
-      version: '1.4.61-V1',
+      version: '1.4.62-V1',
     },
     gameTypes,
     deckTypes,

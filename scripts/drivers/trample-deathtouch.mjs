@@ -5,20 +5,22 @@ import { runRecorder } from '../rec-lib.mjs'
 // driver que falló en la 4ª tanda: la IA no bloquea VOLUNTARIAMENTE a un
 // atacante con deathtouch; Lure lo fuerza por regla, igual que must-block).
 //
-// Montaje: tierra → cheats RAW (ctx.send, sin auto-pass; patrón must-block) —
+// Montaje: tierra → cheat RAW (ctx.send, sin auto-pass; patrón must-block) —
 // Elvish Warrior 2/3 al campo + 8 Bosques + Lure/Rancor/Basilisk Collar en
-// mano; 800 ms después el Grizzly Bears 2/2 del SIM → casts Lure→Rancor→Collar
-// ({1}{G}{G}+{G}+{2}), equipo del Collar (equip {2}) → atacar en la primera
-// ventana con todo adjunto y el Grizzly fresco. HALLAZGO de timing (bisecado
-// 2026-09-16): el retardo de 800 ms entre cheats es de reloj real, pero el
-// juego avanza turnos de tierras a toda velocidad (ambos pasan al instante),
-// así que el segundo cheat aterriza varios turnos después del primero (en la
-// run capturada, el ataque fue en T11) y no en "la misma ventana" como en
-// must-block. Resultado: Elvish Warrior 4/3 con trample (Rancor +2/+0),
-// deathtouch y lifelink (Collar); el Grizzly bloquea obligado por Lure y el
-// reparto de daño (GAME_GET_MULTI_AMOUNT, default del servidor) asigna 1 letal
-// (deathtouch rebaja el letal de 2 a 1 contra un 2/2) + 3 de trample al
-// jugador: SIM 20→17, nosotros 20→24 (lifelink 4).
+// mano → casts Lure→Rancor→Collar ({1}{G}{G}+{G}+{2}), equipo del Collar
+// (equip {2}) y, ya con el combo montado, cheat del Grizzly Bears 2/2 al SIM
+// en la main previa al ataque → atacar en la primera ventana con todo adjunto
+// y el Grizzly fresco. HALLAZGO de timing (re-validado en 1.4.62): sembrar el
+// Grizzly al principio (800 ms tras el primer cheat) falla porque el juego
+// avanza turnos a ~2/s, el Grizzly muere o nos ataca antes de montar el combo
+// (la ventana de gracia por reloj de la versión .61 ya no llegaba) y la vida
+// dejaba de cuadrar; ahora solo se siembra en el turno del ataque (una vez,
+// gateado por las tres adjunciones) y no hay Grizzlies sueltos pegándonos.
+// Resultado: Elvish Warrior 4/3 con trample (Rancor +2/+0), deathtouch y
+// lifelink (Collar); el Grizzly bloquea obligado por Lure y el reparto de daño
+// (GAME_GET_MULTI_AMOUNT, default del servidor) asigna 1 letal (deathtouch
+// rebaja el letal de 2 a 1 contra un 2/2) + 3 de trample al jugador:
+// SIM 20→17, nosotros 20→24 (lifelink 4).
 //
 // HALLAZGO (corrige el plan original): con el Grizzly 2/2 + Rancor (4/2) del
 // plan, el bloqueador devuelve sus 2 de daño SIMULTÁNEAMENTE (deathtouch no
@@ -28,8 +30,8 @@ import { runRecorder } from '../rec-lib.mjs'
 //
 // El bloqueador debe montarse en el MISMO turno del ataque (regla bisecada en
 // first-strike: el SIM ataca con todo en su turno y un Grizzly cheateado antes
-// quedaría girado) y los cheats van encadenados con 800 ms (dos casi
-// simultáneos → ConcurrentModificationException en el servidor).
+// quedaría girado); por eso ya no se encadena un segundo cheat con retardo:
+// el fallback lo siembra cuando el combo está listo.
 function makeTrampleDeathtouchDriver() {
   return {
     name: 'trample-deathtouch',
@@ -44,7 +46,6 @@ function makeTrampleDeathtouchDriver() {
     _landTurn: -1,
     _chainStarted: false,
     _chain2Done: false,
-    _chain2At: 0,
     _cheat2Turn: -1,
     _castLure: false,
     _attackedTurn: -1,
@@ -123,13 +124,11 @@ function makeTrampleDeathtouchDriver() {
       // servidor resuelve el prompt aparcado tras el cheat (el juego pasa a
       // combate) y los casts caen en la main de ese turno o del siguiente. El
       // ataque se difiere hasta tener Lure+Rancor+Collar adjuntos y un Grizzly
-      // fresco (el cheat del bloqueador aterriza ~800 ms después).
+      // fresco (el bloqueador lo siembra el fallback ya con el combo montado).
       if (!this._chainStarted) {
         this._chainStarted = true
         const myId = gv.myPlayerId ?? me.playerId ?? me.id
-        const rival = (gv.players ?? []).find((p) => !p?.controlled)
-        const rid = rival?.playerId ?? rival?.id
-        ctx.log('onSelect: cheats raw (Warrior + 8 Bosques + Lure/Rancor/Collar en mano, luego Grizzly rival)')
+        ctx.log('onSelect: cheats raw (Warrior + 8 Bosques + Lure/Rancor/Collar en mano)')
         void ctx
           .send('cheatSetup', {
             gameId: ctx.gameId,
@@ -142,21 +141,9 @@ function makeTrampleDeathtouchDriver() {
               hand: ['Lure', 'Rancor', 'Basilisk Collar'],
             },
           })
-          .then((r1) =>
-            new Promise((r) => setTimeout(r, 800)).then(() =>
-              r1?.ok && rid
-                ? ctx.send('cheatSetup', {
-                    gameId: ctx.gameId,
-                    playerId: rid,
-                    zones: { battlefield: ['Grizzly Bears'] },
-                  })
-                : null,
-            ),
-          )
-          .then((r2) => {
+          .then((r1) => {
             this._chain2Done = true
-            this._chain2At = Date.now()
-            ctx.log('onSelect: cheats →', JSON.stringify({ r2: r2?.ok === true }))
+            ctx.log('onSelect: cheats →', JSON.stringify({ r1: r1?.ok === true }))
             if (!ctx.findOnBattlefield('Elvish Warrior')) {
               // Cheat propio falló (carrera conocida): reintentar la cadena.
               this._chainStarted = false
@@ -164,9 +151,11 @@ function makeTrampleDeathtouchDriver() {
               return
             }
             // Cast del Lure en cuanto la cadena termina (patrón must-block: el
-            // UUID responde al prompt pendiente). Si el cheat del Grizzly
-            // falló, no pasa nada: el fallback de refuerzo lo reintenta en la
-            // siguiente ventana de main.
+            // UUID responde al prompt pendiente). El Grizzly del rival NO se
+            // cheatea aquí: se siembra en el mismo turno del ataque (fallback
+            // de abajo, ya con el combo montado). Así no hay Grizzlies sueltos
+            // atacándonos en los turnos previos y la vida queda en 24 tras el
+            // primer lifelink (invariante del frame).
             setTimeout(() => {
               if (!this._castLure && ctx.cardInHand('Lure')) {
                 this._castLure = true
@@ -176,27 +165,6 @@ function makeTrampleDeathtouchDriver() {
             }, 250)
           })
         return
-      }
-      // Fallback (solo si el cheat del Grizzly falló o el bloqueador se giró en
-      // un turno anterior): cheatear un Grizzly fresco, uno por turno. OJO
-      // (bisecado 2026-09-16, 3ª run): tras el r2 de la cadena la vista tarda
-      // un instante en mostrar el Grizzly cheateado; un fallback inmediato crea
-      // DOS Grizzlies y con Lure ambos bloquean (el Warrior 4/3 muere por 4 de
-      // daño). Ventana de gracia de 3 s desde el r2 para que la vista llegue.
-      if (
-        this._chain2Done &&
-        !this.freshGrizzly(ctx) &&
-        this._cheat2Turn !== turn &&
-        Date.now() - this._chain2At > 3000
-      ) {
-        this._cheat2Turn = turn
-        const rival = (gv.players ?? []).find((p) => !p?.controlled)
-        const rid = rival?.playerId ?? rival?.id
-        if (rid) {
-          ctx.log('onSelect: cheatSetup de refuerzo (Grizzly fresco al rival)')
-          void ctx.cheatSetup({ battlefield: ['Grizzly Bears'] }, rid)
-          return
-        }
       }
       const warriorBf = ctx.findOnBattlefield('Elvish Warrior')
       // Casts en el orden del plan: Lure → Rancor → Collar → equipar.
@@ -220,6 +188,31 @@ function makeTrampleDeathtouchDriver() {
         ctx.log('onSelect: activo equipar (click en Basilisk Collar)')
         ctx.playAbility('Basilisk Collar', ['other', 'basicPlayAbilities'], /equip/i)
         return
+      }
+      // Fallback (solo si el cheat del Grizzly falló o el bloqueador murió en un
+      // turno anterior) y SOLO con el combo ya montado: cheatear un Grizzly
+      // fresco al rival, uno por turno, en el mismo turno del ataque (regla
+      // bisecada en first-strike). La ventana de gracia por reloj original
+      // resultó frágil en 1.4.62 (la IA cierra la partida antes de que venza,
+      // ~2 turnos/s) y un fallback sin armar provocaba cheats en cadena y el
+      // stall post-cheat; condicionarlo a las tres adjunciones lo limita a una
+      // sola llamada, en la main previa al ataque.
+      if (
+        this._chain2Done &&
+        this.attachedTo(ctx, 'Lure', /elvish warrior/i) &&
+        this.attachedTo(ctx, 'Rancor', /elvish warrior/i) &&
+        this.attachedTo(ctx, 'Basilisk Collar', /elvish warrior/i) &&
+        !this.freshGrizzly(ctx) &&
+        this._cheat2Turn !== turn
+      ) {
+        this._cheat2Turn = turn
+        const rival = (gv.players ?? []).find((p) => !p?.controlled)
+        const rid = rival?.playerId ?? rival?.id
+        if (rid) {
+          ctx.log('onSelect: cheatSetup de refuerzo (Grizzly fresco al rival)')
+          void ctx.cheatSetup({ battlefield: ['Grizzly Bears'] }, rid)
+          return
+        }
       }
       ctx.pass()
     },
@@ -286,12 +279,15 @@ function makeTrampleDeathtouchDriver() {
       const me = (gv.players ?? []).find((p) => p?.controlled)
       const sim = (gv.players ?? []).find((p) => !p?.controlled)
       if (!me || !sim) return false
-      const warrior = Object.values(me.battlefield ?? {}).find((c) => /elvish warrior/i.test(c?.name ?? ''))
       const simGy = Object.values(sim.graveyard ?? {})
       const sim17 = Number(sim.life) === 17
       const lifelink = Number(me.life) === 24 || Number(me.life) === 22
       const deadBlocker = simGy.some((c) => /grizzly bears/i.test(c?.name ?? ''))
-      const survived = Boolean(warrior) && Number(warrior?.damage ?? 0) === 2
+      // El reintento de la cadena de cheats puede dejar DOS Warriors (uno sin
+      // equipar): el que atacó es el que lleva 2 de daño, no el primero.
+      const survived = Object.values(me.battlefield ?? {}).some(
+        (c) => /elvish warrior/i.test(c?.name ?? '') && Number(c?.damage ?? 0) === 2,
+      )
       return sim17 && lifelink && deadBlocker && survived
     },
   }
@@ -303,7 +299,7 @@ export const meta = {
   mechanic: 'trample-deathtouch',
   kind: 'game',
   assert: 'hasTrampleDeathtouch',
-  note: 'Trample + deathtouch forzado con Lure real (el SIM no bloquea voluntariamente a un atacante con deathtouch; Lure lo obliga por regla, como must-block): tierra + cheats RAW (sin auto-pass) — Elvish Warrior 2/3 al campo + 8 Bosques + Lure/Rancor/Basilisk Collar en mano; 800 ms después Grizzly Bears 2/2 al campo rival — + casts Lure→Rancor→Collar ({1}{G}{G}+{G}+{2}, giro de Bosques) + equipar el Collar (equip {2}) + atacar con el Warrior 4/3 (Rancor +2/+0 da trample; Collar da deathtouch+lifelink) confirmando con el botón special. Hallazgo de timing: el retardo de 800 ms entre cheats es de reloj real y el juego avanza turnos de tierras al instante, así que el segundo cheat aterriza varios turnos después del primero (el ataque no cae en la misma ventana que en must-block; en la captura fue T11) — el driver ataca en cuanto Lure+Rancor+Collar están adjuntos y hay un Grizzly fresco, con fallback de refuerzo si el bloqueador se giró. Hallazgo que corrige el plan: un atacante 4/2 (Grizzly+Rancor) muere al daño de bloqueo, que es simultáneo (deathtouch no "pega antes"); con Elvish Warrior 2/3 el atacante es 4/3 y sobrevive con 2 daños. El reparto de daño llega como GAME_GET_MULTI_AMOUNT (items[min/max/defaultValue]; el defaultValue del servidor ya rebaja el letal a 1 por deathtouch) y se responde el default (1 al bloqueador): el motor calcula el exceso de trample (damage - asignado = 3) y lo manda al jugador. Captura: Grizzly del SIM en el cementerio (letal de deathtouch), vida del SIM 20→17 (1 letal + 3 de trample), nuestra vida 20→24 (lifelink 4 de los 4 daños; el driver también acepta 22 si el SIM llegó a pegar una vez antes) y Elvish Warrior 4/3 vivo en el campo con damage=2, rules ["Trample","Deathtouch","Lifelink"], Lure+Rancor+Collar adjuntos. Driver trample-deathtouch con cheatSetup + Lure real.',
+  note: 'Trample + deathtouch forzado con Lure real (el SIM no bloquea voluntariamente a un atacante con deathtouch; Lure lo obliga por regla, como must-block): tierra + cheat RAW (sin auto-pass) — Elvish Warrior 2/3 al campo + 8 Bosques + Lure/Rancor/Basilisk Collar en mano — + casts Lure→Rancor→Collar ({1}{G}{G}+{G}+{2}, giro de Bosques) + equipar el Collar (equip {2}) + atacar con el Warrior 4/3 (Rancor +2/+0 da trample; Collar da deathtouch+lifelink) confirmando con el botón special. Hallazgo de timing (re-validado en 1.4.62): sembrar el Grizzly al inicio (800 ms tras el primer cheat) ya no funciona (el juego avanza ~2 turnos/s, el Grizzly muere o nos pega antes de armar el combo y la vida no cuadra); el Grizzly se siembra una sola vez en el turno del ataque, gateado por Lure+Rancor+Collar adjuntos, y el driver ataca en cuanto hay Grizzly fresco. Hallazgo que corrige el plan: un atacante 4/2 (Grizzly+Rancor) muere al daño de bloqueo, que es simultáneo (deathtouch no "pega antes"); con Elvish Warrior 2/3 el atacante es 4/3 y sobrevive con 2 daños. El reparto de daño llega como GAME_GET_MULTI_AMOUNT (items[min/max/defaultValue]; el defaultValue del servidor ya rebaja el letal a 1 por deathtouch) y se responde el default (1 al bloqueador): el motor calcula el exceso de trample (damage - asignado = 3) y lo manda al jugador. Captura: Grizzly del SIM en el cementerio (letal de deathtouch), vida del SIM 20→17 (1 letal + 3 de trample), nuestra vida 20→24 (lifelink 4 de los 4 daños; ya no se acepta 22: sin Grizzlies sueltos el SIM no llega a pegar antes del ataque) y Elvish Warrior 4/3 vivo en el campo con damage=2, rules ["Trample","Deathtouch","Lifelink"], Lure+Rancor+Collar adjuntos. Driver trample-deathtouch con cheatSetup + Lure real.',
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -155,6 +155,7 @@ export interface CardView {
   rightSplitCostsStr?: string[]
   rightSplitName?: string
   rightSplitRules?: string[]
+  rightSplitSpellType?: string
   rightSplitTypeLine?: string
   usesVariousArt?: boolean
 }

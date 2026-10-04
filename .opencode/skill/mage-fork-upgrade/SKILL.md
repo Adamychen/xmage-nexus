@@ -1,6 +1,6 @@
 ---
 name: mage-fork-upgrade
-description: Subir la versión de XMage: merge del tag upstream en el fork ../xmage-fork (rama nexus) conservando los parches nexus (testMode/cheatSetup/vistas), bump de versión en poms/scripts/docs, rebuild total, re-validación de contrato (oráculos + frames) y verificación. Úsalo si el proxy falla con MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME o al integrar un release upstream nuevo. Keywords: fork, upstream, magefree, versión, merge, tag, xmage_1.4.61V1, release, rebuild, artefactos, ~/.m2, ensureMageArtifacts, XMAGE_VERSION.
+description: Subir la versión de XMage: merge del tag upstream en el fork ../xmage-fork (rama nexus) conservando los parches nexus (testMode/cheatSetup/vistas), bump de versión en poms/scripts/docs, rebuild total, re-validación de contrato (oráculos + frames) y verificación. Úsalo si el proxy falla con MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME o al integrar un release upstream nuevo. Keywords: fork, upstream, magefree, versión, merge, tag, xmage_1.4.62V1, release, rebuild, artefactos, ~/.m2, ensureMageArtifacts, XMAGE_VERSION.
 ---
 
 # Subir de versión de XMage (fork)
@@ -19,10 +19,10 @@ description: Subir la versión de XMage: merge del tag upstream en el fork ../xm
 - Fork en `../xmage-fork` (repo `Adamychen/xmage-nexus`, rama `nexus`); remotos `origin` (tu repo)
   y `upstream` (`magefree/mage`). `forkDir()` resuelve `NEXUS_FORK_DIR` -> `../xmage-fork`
   (`scripts/lib.mjs`).
-- Parches nexus = commits propios sobre el tag base: `nexus fork state on xmage_1.4.61V1`
+- Parches nexus = commits propios sobre el tag base: `nexus fork state on xmage_1.4.62V1`
   (test-mode options en GameOptions/MatchOptions/TableController, campos de vista/Deck,
   The Zeta Set) + `cheatSetup` para siembra determinista (testMode). El tag upstream usado fue
-  `xmage_1.4.61V1`.
+  `xmage_1.4.62V1`.
 
 ## Inventario de parches nexus (qué hay que conservar en cada merge)
 
@@ -81,10 +81,23 @@ revierte ese fichero y ya está; nada más del fork depende de él.
 - Frames re-grabados y guardas unit en verde.
 - Distribución actualizada: `node scripts/deploy-bundle.mjs` (jar renombrado), manifiestos del
   launcher y `staging/` regenerados si aplica.
-- Sin referencias a la versión vieja fuera de históricos: `grep -rn "1.4.61"` en el repo.
+- Sin referencias a la versión vieja fuera de históricos: `grep -rn "1.4.62"` en el repo.
 
 ## Trampas
 
+- **Compilación incremental de Maven tras el merge**: `build.mjs`/`ensureMageArtifacts` solo
+  recompilan los ficheros cuyo *source* cambió; los que dependen de una API que cambió en otro
+  módulo quedan con bytecode viejo (1.4.62: `FilterPermanent.add(ObjectSourcePlayerPredicate)`
+  pasó de `void` a `FilterPermanent`, y `FilterControlledPermanent`/`FilterArtifactPermanent`
+  seguían llamando a la firma `void`) → el server arranca con `NoSuchMethodError` al escanear
+  cartas. Tras cada merge: `mvn -q -pl Mage.Common,Mage,Mage.Sets,Mage.Server -am clean install
+  -DskipTests` + `mvn -q -f Mage.Server.Plugins/pom.xml clean install -DskipTests` (o borrar
+  `target/classes`) antes de `node scripts/build.mjs`.
+- **`local-server/config/config.xml` es runtime y fija los jar de plugins por versión**: al
+  limpiar `local-server/plugins/` de versiones viejas, las 143 referencias del config
+  (`jar="mage-game-...-1.4.6x.jar"`) apuntan a jars inexistentes y `createTable` falla con
+  `Match.setTableId ... match is null` / `GameFactory` NPE. Actualiza el config (o bórralo para
+  que `ensureLocalServerDirs` lo re-siembre) al cambiar de versión.
 - `~/.m2` cachea por versión: si el bump no llega al fork, `ensureMageArtifacts` no reinstala y el
   proxy queda mezclado (versión vieja del motor).
 - El proxy usa clases org.mage por reflexión/clase: cualquier API renombrada upstream rompe en

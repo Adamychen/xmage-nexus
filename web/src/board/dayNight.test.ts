@@ -23,7 +23,8 @@ function gameWith(partial: Partial<GameView>): GameView {
 describe('dayNightHintOf', () => {
   it('parses the night hint from the recorded day-night frame', () => {
     const gv = (dayNightFrame as unknown as { gameView: GameView }).gameView
-    const transformed = Object.values(gv.players?.[0]?.battlefield ?? {}).find((c) => c.transformed)
+    const me = (gv.players ?? []).find((p) => p.controlled) ?? gv.players?.[0]
+    const transformed = Object.values(me?.battlefield ?? {}).find((c) => c.transformed)
     expect(dayNightHintOf(transformed?.rules)).toEqual({ isNight: true, hint: NIGHT_HINT })
   })
 

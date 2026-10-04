@@ -30,7 +30,7 @@
         "Mage.Common/src/main/java"
       ]
     },
-    "forkVersion": "1.4.61"
+    "forkVersion": "1.4.62"
   },
   "restrictRequirementTexts": [
     {
@@ -381,6 +381,11 @@
         "path": "Mage/src/main/java/mage/abilities/common/ExpendTriggeredAbility.java",
         "expression": "hint",
         "class": "ValueHint"
+      },
+      {
+        "path": "Mage/src/main/java/mage/abilities/common/GainLifeControllerTriggeredAbility.java",
+        "expression": "new StaticHint(\"Life gained: \" + event.getAmount())",
+        "class": "StaticHint"
       },
       {
         "path": "Mage/src/main/java/mage/abilities/common/GainLifeFirstTimeTriggeredAbility.java",

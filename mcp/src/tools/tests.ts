@@ -133,7 +133,7 @@ export function registerTestTools(server: McpServer): void {
     {
       title: 'Build Mage artifacts',
       description:
-        'Compila artefactos. target=proxy reconstruye Mage.Proxy/target/mage-proxy-1.4.61.jar ' +
+        'Compila artefactos. target=proxy reconstruye Mage.Proxy/target/mage-proxy-1.4.62.jar ' +
         '(detiene el proxy; luego hay que reiniciarlo con mage_stack restart proxy). target=full ' +
         'compila el fork completo (requiere ../xmage-fork).',
       inputSchema: {

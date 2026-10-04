@@ -18,8 +18,8 @@ labels: bug
 ## Environment
 
 - Mode: <!-- web-only (fake) / full stack (real) / public server -->
-- Proxy jar: <!-- e.g. mage-proxy-1.4.61.jar -->
-- XMage server: <!-- local 1.4.61-V1 / beta.xmage.today -->
+- Proxy jar: <!-- e.g. mage-proxy-1.4.62.jar -->
+- XMage server: <!-- local 1.4.62-V1 / beta.xmage.today -->
 - Browser + OS:
 - Commit/branch:
 

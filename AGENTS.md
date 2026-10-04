@@ -42,8 +42,8 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   the proxy; `build.mjs` stops it on its own) — afterwards `node scripts/ctl.mjs restart proxy`
 - Full build (server + plugins + proxy): `node scripts/build.mjs` (engine
   steps run inside the fork checkout; the proxy builds standalone in this repo)
-- XMage version: **1.4.61-V1** (upstream magefree/mage; merge of tag `xmage_1.4.61V1`).
-  Proxy jar: `Mage.Proxy/target/mage-proxy-1.4.61.jar`. A second proxy flavor is built against the
+- XMage version: **1.4.62-V1** (upstream magefree/mage; merge of tag `xmage_1.4.62V1`).
+  Proxy jar: `Mage.Proxy/target/mage-proxy-1.4.62.jar`. A second proxy flavor is built against the
   **XDHS fork** (xenohedron/mage, tag `1.5.8-XDHS-r1`) for `mage.xdhs.net`:
   `mage-proxy-1.5.8.jar` + `patches/xdhs/*.patch` + `-Dmage.version=1.5.8`
   (see `patches/xdhs/README.md`; launcher component `proxy-xdhs`, host script
@@ -74,7 +74,7 @@ triage. See `web/INTERACTION_COVERAGE.md`.
 ### Real-protocol validation harness (anti-drift)
 The goal is a client that works against `beta.xmage.today`, but beta is flaky. So the **oracle for
 "real protocol" in CI is the local XMage server** (`node scripts/ctl.mjs restart all` →
-`localhost:17171`, same 1.4.61-V1 fork). The recorder captures real frames and the fake-mode tests
+`localhost:17171`, same 1.4.62-V1 fork). The recorder captures real frames and the fake-mode tests
 replay them, giving drift detection without depending on beta:
 
 - `scripts/rec-lib.mjs` + `scripts/record.mjs <mechanic|all>` — a single WS recorder that drives a
@@ -110,7 +110,7 @@ This repo has three independent concerns, each developable on its own:
   this repo. Resolution order (`scripts/lib.mjs` `forkDir()`):
   `NEXUS_FORK_DIR` env → `../xmage-fork` → error with instructions. Clone it
   once: `git clone https://github.com/Adamychen/xmage-nexus.git -b nexus ../xmage-fork`
-  (branch `nexus` = upstream tag `xmage_1.4.61V1` + our test-mode/view patches;
+  (branch `nexus` = upstream tag `xmage_1.4.62V1` + our test-mode/view patches;
   upstream releases merge cleanly there). Rebuild only when the XMage version
   changes or the test-mode patches change.
 

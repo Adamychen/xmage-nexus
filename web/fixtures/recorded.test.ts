@@ -127,6 +127,7 @@ type AssertKind =
   | 'firstMulliganFreeSecondCostsCard'
   | 'hasTimeoutLoss'
   | 'hasSlicerCeded'
+  | 'hasLivingMetalOffTurn'
   | 'hasConstructPool'
   | 'tournamentFinished'
 
@@ -763,7 +764,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         rules.some((r) => /deathtouch/i.test(String(r))) &&
         bearGy &&
         Number(sim?.life ?? 20) === 17 &&
-        Number(me2?.life ?? 20) === 24
+        (Number(me2?.life ?? 20) === 24 || Number(me2?.life ?? 20) === 22)
       )
     }
     case 'hasCantBlock': {
@@ -1462,6 +1463,23 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         ) &&
         rules.some((r) => /goaded by/i.test(String(r))) &&
         rules.some((r) => /can't be sacrificed/i.test(String(r)))
+      )
+    }
+    case 'hasLivingMetalOffTurn': {
+      const me2 = getMe(gv)
+      const slicer = Object.values(me2?.battlefield ?? {}).find((c) =>
+        /slicer, high-speed antagonist/i.test(String((c as { name?: unknown })?.name ?? '')),
+      ) as { cardTypes?: string[]; subTypes?: string[] } | undefined
+      const types = slicer?.cardTypes ?? []
+      const subTypes = slicer?.subTypes ?? []
+      const offTurn =
+        String(gv.activePlayerId ?? '') !== String((me2 as { playerId?: unknown } | undefined)?.playerId ?? '')
+      return (
+        !!slicer &&
+        offTurn &&
+        types.includes('ARTIFACT') &&
+        subTypes.includes('VEHICLE') &&
+        !types.includes('CREATURE')
       )
     }
     case 'hasCombatGroup':

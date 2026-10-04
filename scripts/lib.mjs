@@ -13,7 +13,7 @@ export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 export const runDir = path.join(repoRoot, '.run')
 
 /** Versión XMage del fork (coincide con los artefactos org.mage del ~/.m2). */
-export const XMAGE_VERSION = '1.4.61'
+export const XMAGE_VERSION = '1.4.62'
 
 /**
  * Fork XDHS (xenohedron, servidor mage.xdhs.net): segunda versión soportada por

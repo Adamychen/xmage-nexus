@@ -8,7 +8,7 @@
          ensureMageArtifacts), no via reactor del pom raíz. -->
     <groupId>org.mage</groupId>
     <artifactId>mage-proxy</artifactId>
-    <version>1.4.61</version>
+    <version>1.4.62</version>
     <packaging>jar</packaging>
     <name>Mage Proxy (alternative client gateway)</name>
     <description>

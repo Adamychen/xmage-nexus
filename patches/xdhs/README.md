@@ -6,14 +6,17 @@ proxy source depends on. When building a second proxy flavor against the
 xenohedron fork (XDHS server, tag `1.5.8-XDHS-r1`), those same patches must be
 applied to that checkout before `mvn install`.
 
-The files touched by these patches are byte-identical between
-`xmage_1.4.61V1` (nexus base) and `1.5.8-XDHS-r1`, so `git apply` is clean.
+The files touched by these patches are byte-identical between the tag they
+were generated from (`xmage_1.4.61V1`) and `1.5.8-XDHS-r1`, so `git apply`
+against the XDHS checkout is clean. (The nexus branch itself moved to
+`xmage_1.4.62V1`, where upstream carries its own thread-pool fix; only the
+XDHS build still needs patch 0003.)
 
 | Patch | Source commit (fork `nexus`) | Why the proxy needs it |
 | --- | --- | --- |
 | `0001-matchoptions-test-mode.patch` | `40a0cda712` | `MatchOptions.setSkipInitShuffling` / `setSkipStartingPlayerChoice` (deterministic test mode). Explicit `serialVersionUID` keeps the extra fields wire-compatible with unmodified servers. |
 | `0002-cheatsetup-client.patch` | `0e95f17bb9` | `SessionImpl.cheatSetup` + `MageServer`/`Testable` declarations. Against a stock XDHS server the call fails softly (the server has no such remote method). |
-| `0003-custom-threadpool-shared-pool.patch` | `f1179a096d` | jboss-remoting instantiates `CustomThreadPool` per connection and never releases it; the shared pool bounds the leak that degrades long-lived multi-tenant proxies. |
+| `0003-custom-threadpool-shared-pool.patch` | `f1179a096d` | jboss-remoting instantiates `CustomThreadPool` per connection and never releases it; the shared pool bounds the leak that degrades long-lived multi-tenant proxies. XDHS-only as of `xmage_1.4.62V1`: upstream fixed the leak (idle thread expiry) in nexus. |
 
 ## How to build the XDHS flavor
 
@@ -29,7 +32,7 @@ rm -rf /tmp/mage-proxy-xdhs && mkdir -p /tmp/mage-proxy-xdhs
 cp Mage.Proxy/pom.xml /tmp/mage-proxy-xdhs/ && cp -R Mage.Proxy/src /tmp/mage-proxy-xdhs/src
 mvn -q -f /tmp/mage-proxy-xdhs/pom.xml -Dmage.version=1.5.8 clean package -DskipTests
 cp /tmp/mage-proxy-xdhs/target/mage-proxy-1.5.8.jar Mage.Proxy/target/
-# -> Mage.Proxy/target/mage-proxy-1.5.8.jar (coexists with mage-proxy-1.4.61.jar)
+# -> Mage.Proxy/target/mage-proxy-1.5.8.jar (coexists with mage-proxy-1.4.62.jar)
 ```
 
 CI does the same in `.github/workflows/modules.yml` (`proxy-xdhs` job; fresh

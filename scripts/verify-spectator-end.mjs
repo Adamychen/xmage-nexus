@@ -3,7 +3,7 @@
 // (hueco histórico: GameController.endGameInfo() solo informaba a
 // getGameSessions(); el TODO "inform watchers about game end and who won" se
 // cerró el 2026-09-17 con GameSessionWatcher.endGameInfo(Table) — parche aditivo
-// en el fork, misma versión 1.4.61).
+// en el fork, misma versión 1.4.62).
 //
 // Flujo (sin navegador): P (HUMAN, dueño) crea mesa HUMAN+SIM -> joinTable ->
 // startMatch -> joinGame -> la partida corre (P pasa prioridad; el SIM juega

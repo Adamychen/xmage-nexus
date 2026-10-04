@@ -6,7 +6,7 @@ import { DECK } from '../fixtures/deck-names'
  * del servidor marca el skip activo (botón + menú) y F3 lo cancela.
  *
  * Dual fake/real. Fake (determinista): teclas F10/F3 + clics de menú + marcas
- * DOM. Real (contrato XMage 1.4.61, doctrina WS: acciones frágiles por helper,
+ * DOM. Real (contrato XMage 1.4.62, doctrina WS: acciones frágiles por helper,
  * UI solo verifica): ok del proxy a las 7 acciones, eco de passedAllTurns en
  * la vista y limpieza permanente con F3. Lecciones embebidas: turnos de ~0.5s
  * (polls a 100ms, ventanas largas, sin cursores — el buffer es un anillo de

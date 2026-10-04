@@ -226,6 +226,7 @@
         "rightSplitCostsStr": { "type": "array", "items": { "type": "string" } },
         "rightSplitName": { "type": "string" },
         "rightSplitRules": { "type": "array", "items": { "type": "string" } },
+        "rightSplitSpellType": { "type": "string" },
         "rightSplitTypeLine": { "type": "string" },
         "usesVariousArt": { "type": "boolean" }
       },

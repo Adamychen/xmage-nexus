@@ -7,7 +7,7 @@ description: Contrato del protocolo XMage y codegen: añadir callbacks/tipos vie
 
 ## Regla 0
 
-`docs/protocol.md`: la verdad es, por orden, (1) wire real XMage 1.4.61-V1, (2) `Mage.Proxy/README.md`,
+`docs/protocol.md`: la verdad es, por orden, (1) wire real XMage 1.4.62-V1, (2) `Mage.Proxy/README.md`,
 (3) `contract.schema.json` -> generados, (4) `web/src/net/types.ts`. NUNCA editar a mano:
 `web/src/net/types.generated.ts`, `web/fixtures/schema.generated.ts`, `web/public/splash-i18n.js`,
 el bloque `keywords` de los locales, los JSON oráculo (`server-view-schema.json`,

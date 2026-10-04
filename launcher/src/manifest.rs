@@ -42,8 +42,8 @@ mod tests {
 
     const SAMPLE: &str = r#"{
         "schema": 1,
-        "release": "1.4.61-1",
-        "xmage": "1.4.61-V1",
+        "release": "1.4.62-1",
+        "xmage": "1.4.62-V1",
         "git_sha": "abc123",
         "components": {
             "jre": {"mac-arm64": {"url": "https://x/jre.tar.gz", "sha256": "aa", "bytes": 42}},
@@ -55,7 +55,7 @@ mod tests {
     #[test]
     fn parses_and_resolves_targets() {
         let m = ComponentsManifest::parse(SAMPLE).unwrap();
-        assert_eq!(m.release, "1.4.61-1");
+        assert_eq!(m.release, "1.4.62-1");
         assert_eq!(m.get("server", "mac-arm64").unwrap().bytes, 7);
         assert!(m.get("server", "win-x64").is_none());
         assert!(m.get("nope", "mac-arm64").is_none());

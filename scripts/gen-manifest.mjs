@@ -37,7 +37,7 @@ function main() {
   const repo = argValue(args, '--repo') ?? 'Adamychen/xmage-nexus'
   const dir = path.resolve(argValue(args, '--dir') ?? '.')
   const out = path.resolve(argValue(args, '--out') ?? 'components-manifest.json')
-  const xmage = argValue(args, '--xmage') ?? '1.4.61-V1'
+  const xmage = argValue(args, '--xmage') ?? '1.4.62-V1'
   const baseUrl =
     argValue(args, '--base-url') ?? `https://github.com/${repo}/releases/download/${tag}`
   if (!tag) {

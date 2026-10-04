@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-09-16T11:17:21.731Z",
-  "gameId": "232e052c-0b73-4814-a82e-0d9f3453d7ac",
+  "recordedAt": "2026-10-04T18:37:33.228Z",
+  "gameId": "baf5a586-0934-4061-82ec-be4db079bf84",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "dac05abe-0e6e-41d6-90ee-07ff16cdfe24",
-        "name": "ujumpsf04d09",
+        "playerId": "2285d519-d88d-440e-a4cf-7c9e92bd91f0",
+        "name": "ujumps1ve54a",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -29,7 +29,7 @@
           "colorless": 0
         },
         "graveyard": {
-          "7c876dc0-c582-4684-8c13-2b4a52b27b8b": {
+          "4da86c2e-657c-4e4f-84fe-0466cd3bd0a7": {
             "parentId": null,
             "controllerId": null,
             "controllerName": null,
@@ -96,6 +96,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -125,7 +126,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "7c876dc0-c582-4684-8c13-2b4a52b27b8b",
+            "id": "4da86c2e-657c-4e4f-84fe-0466cd3bd0a7",
             "expansionSetCode": "IKO",
             "cardNumber": "265",
             "usesVariousArt": true,
@@ -141,7 +142,7 @@
           }
         },
         "exile": {
-          "6b771bcb-3fa9-4d95-b61d-24c14a59b2a0": {
+          "d8a89e71-c2f0-46df-8365-84d4ea2bde10": {
             "parentId": null,
             "controllerId": null,
             "controllerName": null,
@@ -209,6 +210,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -238,7 +240,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "6b771bcb-3fa9-4d95-b61d-24c14a59b2a0",
+            "id": "d8a89e71-c2f0-46df-8365-84d4ea2bde10",
             "expansionSetCode": "GRN",
             "cardNumber": "52",
             "usesVariousArt": false,
@@ -256,7 +258,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "eda2afc8-9ddc-42df-8e3b-f8b7107a5c6f": {
+          "82053280-806d-4c0f-80ff-763607cf5eaa": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -330,6 +332,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -359,7 +362,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "eda2afc8-9ddc-42df-8e3b-f8b7107a5c6f",
+              "id": "82053280-806d-4c0f-80ff-763607cf5eaa",
               "expansionSetCode": "IKO",
               "cardNumber": "265",
               "usesVariousArt": true,
@@ -375,7 +378,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ujumpsf04d09",
+            "nameController": "ujumps1ve54a",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -385,12 +388,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Island",
+              "id": "82053280-806d-4c0f-80ff-763607cf5eaa",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "dac05abe-0e6e-41d6-90ee-07ff16cdfe24",
-            "controllerName": "ujumpsf04d09",
+            "controllerId": "2285d519-d88d-440e-a4cf-7c9e92bd91f0",
+            "controllerName": "ujumps1ve54a",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -454,6 +459,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -483,7 +489,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "eda2afc8-9ddc-42df-8e3b-f8b7107a5c6f",
+            "id": "82053280-806d-4c0f-80ff-763607cf5eaa",
             "expansionSetCode": "IKO",
             "cardNumber": "265",
             "usesVariousArt": true,
@@ -497,7 +503,7 @@
               "other": []
             }
           },
-          "f44839d5-a1fa-416b-acf1-ea19f41723a1": {
+          "5c82fb63-eafe-44f4-bbf5-cd5de0aa9fae": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -571,6 +577,7 @@
               "rightSplitCostsStr": null,
               "rightSplitRules": null,
               "rightSplitTypeLine": null,
+              "rightSplitSpellType": null,
               "isDoubleFacedCard": false,
               "artRect": "NORMAL",
               "targets": null,
@@ -600,7 +607,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "f44839d5-a1fa-416b-acf1-ea19f41723a1",
+              "id": "5c82fb63-eafe-44f4-bbf5-cd5de0aa9fae",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -616,7 +623,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ujumpsf04d09",
+            "nameController": "ujumps1ve54a",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -626,12 +633,14 @@
             "attachedToPermanent": false,
             "attachedControllerDiffers": false,
             "mutateView": {
+              "name": "Island",
+              "id": "5c82fb63-eafe-44f4-bbf5-cd5de0aa9fae",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "dac05abe-0e6e-41d6-90ee-07ff16cdfe24",
-            "controllerName": "ujumpsf04d09",
+            "controllerId": "2285d519-d88d-440e-a4cf-7c9e92bd91f0",
+            "controllerName": "ujumps1ve54a",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -695,6 +704,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -724,7 +734,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "f44839d5-a1fa-416b-acf1-ea19f41723a1",
+            "id": "5c82fb63-eafe-44f4-bbf5-cd5de0aa9fae",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -794,7 +804,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1789557441728,
+        "priorityTimeSavedTimeMs": 1791139053224,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -808,8 +818,8 @@
         "designationNames": []
       },
       {
-        "playerId": "ae4d7a50-c65e-4c86-b65b-4d45dd11c2b7",
-        "name": "sim-000001-345",
+        "playerId": "93e95ca1-7a92-472b-927b-67a33207ddc2",
+        "name": "sim-137397",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -890,7 +900,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1789557441728,
+        "priorityTimeSavedTimeMs": 1791139053224,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -904,9 +914,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "dac05abe-0e6e-41d6-90ee-07ff16cdfe24",
+    "myPlayerId": "2285d519-d88d-440e-a4cf-7c9e92bd91f0",
     "myHand": {
-      "48267954-4bc0-4181-bc5b-8019b13dc124": {
+      "1de6a7b5-8a4b-47aa-91ed-73fa3e30d199": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -973,6 +983,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1002,7 +1013,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "48267954-4bc0-4181-bc5b-8019b13dc124",
+        "id": "1de6a7b5-8a4b-47aa-91ed-73fa3e30d199",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1016,7 +1027,7 @@
           "other": []
         }
       },
-      "30a00015-9d93-4816-acb5-80d2038ea4d5": {
+      "ed3e28d6-82b1-4509-ab1f-94e21875040b": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1083,6 +1094,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1112,7 +1124,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "30a00015-9d93-4816-acb5-80d2038ea4d5",
+        "id": "ed3e28d6-82b1-4509-ab1f-94e21875040b",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1126,7 +1138,7 @@
           "other": []
         }
       },
-      "49218936-d822-4026-b489-f08e1ad1c318": {
+      "e35c2439-a62d-4ae8-8cc4-13dafb42a21a": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1193,6 +1205,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1222,7 +1235,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "49218936-d822-4026-b489-f08e1ad1c318",
+        "id": "e35c2439-a62d-4ae8-8cc4-13dafb42a21a",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1236,7 +1249,7 @@
           "other": []
         }
       },
-      "cd34fd0a-ee49-46b1-be93-50b7c40c37a4": {
+      "57faa7c5-e1b1-4373-8450-e71db5dfe2d8": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1303,6 +1316,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1332,7 +1346,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "cd34fd0a-ee49-46b1-be93-50b7c40c37a4",
+        "id": "57faa7c5-e1b1-4373-8450-e71db5dfe2d8",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1346,7 +1360,7 @@
           "other": []
         }
       },
-      "aef6035a-9960-44cd-b08a-313e02247b9b": {
+      "7549def8-5d47-4a5c-b9fe-a426d8cef480": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1413,6 +1427,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1442,7 +1457,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "aef6035a-9960-44cd-b08a-313e02247b9b",
+        "id": "7549def8-5d47-4a5c-b9fe-a426d8cef480",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1456,7 +1471,7 @@
           "other": []
         }
       },
-      "da0fe8f1-d784-4d43-b8a8-61fedcf9dfe7": {
+      "85e7673d-13e9-40d3-ada6-63728e9839c1": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1523,6 +1538,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1552,7 +1568,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "da0fe8f1-d784-4d43-b8a8-61fedcf9dfe7",
+        "id": "85e7673d-13e9-40d3-ada6-63728e9839c1",
         "expansionSetCode": "KTK",
         "cardNumber": "254",
         "usesVariousArt": true,
@@ -1566,7 +1582,7 @@
           "other": []
         }
       },
-      "3902bea3-6ac5-4881-a418-4bc607b87086": {
+      "957155b6-5596-4649-bde1-f2e6e86a46de": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1633,6 +1649,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1662,7 +1679,7 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "3902bea3-6ac5-4881-a418-4bc607b87086",
+        "id": "957155b6-5596-4649-bde1-f2e6e86a46de",
         "expansionSetCode": "IKO",
         "cardNumber": "265",
         "usesVariousArt": true,
@@ -1678,7 +1695,7 @@
       }
     },
     "myHelperEmblems": {
-      "c4de840b-163b-46b1-8b2d-330de9aa2b3b": {
+      "2f49e0fb-fb80-43c8-9184-c22d9b3d9061": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1739,6 +1756,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1758,7 +1776,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "c4de840b-163b-46b1-8b2d-330de9aa2b3b",
+        "id": "2f49e0fb-fb80-43c8-9184-c22d9b3d9061",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1772,7 +1790,7 @@
           "other": []
         }
       },
-      "89c4a4e4-af73-4b1d-8023-47970e4b14ce": {
+      "7fe2048b-5437-411b-ac4e-d165c119013a": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1835,6 +1853,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1854,7 +1873,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "89c4a4e4-af73-4b1d-8023-47970e4b14ce",
+        "id": "7fe2048b-5437-411b-ac4e-d165c119013a",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1868,7 +1887,7 @@
           "other": []
         }
       },
-      "27192ec7-601a-45e0-bba7-bd02ddc9a262": {
+      "9614f017-e0b8-4502-b750-d28631e18003": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1931,6 +1950,7 @@
         "rightSplitCostsStr": null,
         "rightSplitRules": null,
         "rightSplitTypeLine": null,
+        "rightSplitSpellType": null,
         "isDoubleFacedCard": false,
         "artRect": "NORMAL",
         "targets": null,
@@ -1950,7 +1970,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "27192ec7-601a-45e0-bba7-bd02ddc9a262",
+        "id": "9614f017-e0b8-4502-b750-d28631e18003",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1971,8 +1991,10 @@
     "stack": {},
     "exiles": [
       {
+        "name": "Permanent - Exile",
+        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
         "cards": {
-          "6b771bcb-3fa9-4d95-b61d-24c14a59b2a0": {
+          "d8a89e71-c2f0-46df-8365-84d4ea2bde10": {
             "parentId": null,
             "controllerId": null,
             "controllerName": null,
@@ -2040,6 +2062,7 @@
             "rightSplitCostsStr": null,
             "rightSplitRules": null,
             "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
             "isDoubleFacedCard": false,
             "artRect": "NORMAL",
             "targets": null,
@@ -2069,7 +2092,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "6b771bcb-3fa9-4d95-b61d-24c14a59b2a0",
+            "id": "d8a89e71-c2f0-46df-8365-84d4ea2bde10",
             "expansionSetCode": "GRN",
             "cardNumber": "52",
             "usesVariousArt": false,
@@ -2092,14 +2115,14 @@
     "combat": [],
     "phase": "POSTCOMBAT_MAIN",
     "step": "POSTCOMBAT_MAIN",
-    "activePlayerId": "dac05abe-0e6e-41d6-90ee-07ff16cdfe24",
-    "activePlayerName": "ujumpsf04d09",
-    "priorityPlayerName": "sim-000001-345",
+    "activePlayerId": "2285d519-d88d-440e-a4cf-7c9e92bd91f0",
+    "activePlayerName": "ujumps1ve54a",
+    "priorityPlayerName": "sim-137397",
     "turn": 1,
     "special": false,
     "rollbackTurnsAllowed": false,
     "totalErrorsCount": 0,
     "totalEffectsCount": 3,
-    "gameCycle": 36
+    "gameCycle": 34
   }
 }

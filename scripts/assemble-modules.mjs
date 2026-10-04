@@ -76,7 +76,7 @@ function main() {
   const pluginsDir = path.join(serverDir, 'plugins')
   fs.mkdirSync(pluginsDir, { recursive: true })
   const pluginsRoot = forkPath('Mage.Server.Plugins')
-  // Los target/ acumulan jars de versiones viejas (1.4.60 junto a 1.4.61):
+  // Los target/ acumulan jars de versiones viejas (1.4.60 junto a 1.4.62):
   // quedarse con la versión mayor por artefacto.
   const newest = new Map()
   for (const moduleDir of fs.readdirSync(pluginsRoot)) {
@@ -155,7 +155,7 @@ function main() {
 
   const version = {
     schema: 1,
-    xmage: '1.4.61-V1',
+    xmage: '1.4.62-V1',
     proxyJar,
     gitSha: gitSha(),
     builtAt: new Date().toISOString(),

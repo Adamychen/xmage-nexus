@@ -3,7 +3,7 @@
 ## Three tiers
 
 ```
-Browser (React 19 + TS + Vite) ──WS JSON──▶ Mage.Proxy (Java 17) ──jboss-serialization──▶ XMage Server 1.4.61-V1
+Browser (React 19 + TS + Vite) ──WS JSON──▶ Mage.Proxy (Java 17) ──jboss-serialization──▶ XMage Server 1.4.62-V1
 ```
 
 - **XMage Server** (`Mage.Server` fork): authoritative rules engine, card DB, multiplayer backend. Untouched except 2-3 `isTestMode()` guards in `TableController.java`.

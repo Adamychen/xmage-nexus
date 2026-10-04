@@ -30,7 +30,7 @@ You do **not** run an XMage server on the host machine.
 - A [playit.gg](https://playit.gg) account with the **playit agent** installed on
   that machine. Custom **TCP** tunnels (what this guide needs) require the paid
   playit tier — the free tier only allows UDP + the Minecraft preset.
-- Two files built from this repo (see Part 1): `mage-proxy-1.4.61.jar` and the
+- Two files built from this repo (see Part 1): `mage-proxy-1.4.62.jar` and the
   `web/dist` folder.
 
 ## Part 1 — Build the artifacts (on your dev machine)
@@ -96,7 +96,7 @@ Then copy the `deploy/bundle/` folder to the host machine as `xmage-host/`. It c
 
 ```
 xmage-host/
-  mage-proxy-1.4.61.jar        # from Mage.Proxy/target/
+  mage-proxy-1.4.62.jar        # from Mage.Proxy/target/
   web-dist/                    # copy the CONTENTS of web/dist here
   start-proxy.sh               # included in the bundle (Linux/macOS)
   start-proxy.bat              # included in the bundle (Windows)
@@ -192,7 +192,7 @@ EOF
 
 node scripts/build.mjs                 # engine + plugins + proxy jar
 npm --prefix web install && npm --prefix web run build
-ln -sf "$PWD/Mage.Proxy/target/mage-proxy-1.4.61.jar" ~/xmage-proxy.jar
+ln -sf "$PWD/Mage.Proxy/target/mage-proxy-1.4.62.jar" ~/xmage-proxy.jar
 ```
 
 Create `/etc/systemd/system/xmage-proxy.service` pointing at the stable symlink:
@@ -284,7 +284,7 @@ processes on reboot.
   credentials compared to the official desktop client. If you want TLS, you need
   playit Premium + Caddy (HTTPS tunnel) **and** a small change in
   `web/src/state/gateway.ts` to use `wss://` on an HTTPS page.
-- **Version pinning** — the proxy is built for XMage `1.4.61-V1`. It only connects
+- **Version pinning** — the proxy is built for XMage `1.4.62-V1`. It only connects
   to a server on the same release. When the target server updates, rebuild.
 - **Resource usage** — one `Mage.Proxy` process serves many players (multi-tenant).
   It already limits message size/rate per connection; consider your machine's CPU

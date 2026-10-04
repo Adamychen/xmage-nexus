@@ -5,13 +5,13 @@ REM
 REM Required:
 REM   ALLOWED_ORIGINS  exact public origin of the web page, e.g. http://abc.playit.gg:12345
 REM Optional (defaults shown):
-REM   JAR=mage-proxy-1.4.61.jar  WEB_DIR=web-dist
+REM   JAR=mage-proxy-1.4.62.jar  WEB_DIR=web-dist
 REM   XMAGE_HOST=beta.xmage.today  XMAGE_PORT=17171
 REM   WS_PORT=8787                 HTTP_PORT=8788
 REM   BIND=127.0.0.1               (playit agent runs on this same machine)
 setlocal
 
-if "%JAR%"=="" set JAR=mage-proxy-1.4.61.jar
+if "%JAR%"=="" set JAR=mage-proxy-1.4.62.jar
 if "%WEB_DIR%"=="" set WEB_DIR=web-dist
 if "%XMAGE_HOST%"=="" set XMAGE_HOST=beta.xmage.today
 if "%XMAGE_PORT%"=="" set XMAGE_PORT=17171

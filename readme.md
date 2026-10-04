@@ -33,7 +33,7 @@
 ┌──────────────────────────┐   WS JSON    ┌────────────────────┐   XMage protocol    ┌───────────────────┐
 │  XMage Nexus Web Client  │ ──────────▶ │ Proxy Java (Mage   │ ─────────────────── │ Server XMage        │
 │  React 19 + TypeScript   │ ◀────────── │ .Proxy)            │ ◀────────────────── │ (Mage.Server)       │
-│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.61-V1           │
+│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.62-V1           │
 └──────────────────────────┘              └────────────────────┘                     └───────────────────┘
 ```
 
@@ -45,7 +45,7 @@
 
 | Layer | Technologies |
 |---|---|
-| XMage Server | Java 17, jboss-remoting (1.4.61-V1) |
+| XMage Server | Java 17, jboss-remoting (1.4.62-V1) |
 | WebSocket Proxy | Java 17, Java-WebSocket, Gson (`Mage.Proxy`) |
 | Web Client | React 19, TypeScript, Vite 8, CSS3 / SVG, Web Audio API, Vitest, Playwright |
 
@@ -145,7 +145,7 @@ node scripts/ctl.mjs restart proxy
 node scripts/build.mjs
 ```
 
-> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.61.jar` (`1.4.61-V1`, `pom.xml:5`). Changing the XMage version requires updating the parent pom + rebuilding everything.
+> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.62.jar` (`1.4.62-V1`, `Mage.Proxy/pom.xml:11`). Changing the XMage version requires updating the parent pom + rebuilding everything.
 
 ### Ports & URLs
 
@@ -187,7 +187,7 @@ After `ctl.mjs start all`, `node scripts/ctl.mjs status` should show `server`, `
 | `java -version` reports wrong version or `java` not found | Install Temurin 17 (`https://adoptium.net`), ensure `JAVA_HOME` points to JDK 17. On macOS the `/usr/bin/java` stub fails if no JDK is registered — `scripts/lib.mjs:130` auto-resolves Homebrew paths (`/opt/homebrew/opt/openjdk@17`, `/usr/local/opt`). |
 | `mvn: command not found` | Install Maven 3.9+ and add it to `PATH`. Web-only work does not require Maven. |
 | `vite` not found / `npm install` errors | Run `npm --prefix web install` from the repo root; Node 20+ required. |
-| Proxy fails with `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME` | Client/proxy/server version mismatch. Rebuild everything: `node scripts/build.mjs` + `node scripts/ctl.mjs restart all`. Fork version is `1.4.61` (`pom.xml:5`). |
+| Proxy fails with `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME` | Client/proxy/server version mismatch. Rebuild everything: `node scripts/build.mjs` + `node scripts/ctl.mjs restart all`. Fork version is `1.4.62` (`Mage.Common/pom.xml` parent). |
 | `Can't receive server state before other data` / login fails | **Not a handshake bug.** It is a symptom of *any* failed login: `connectStart()` only fetches the server state after a successful login, so the server's error callback arrives with `serverState == null`. The usual real cause is a username longer than `maxUserNameLength` (**14**); the server says `User name may not be longer than 14 characters`. Shorten the username (`LoginScreen` caps it at 14). |
 | `SESSION CALLBACK EXCEPTION - Unable to create socket` on first game after cold start | Known warm-up race. `scripts/test.mjs:107` runs `scripts/warmup.mjs` automatically; or restart `server+proxy` together (`node scripts/ctl.mjs restart all` — never restart only the proxy when the server is cold, `scripts/dev.mjs:23`). |
 | `ulimit -n` warnings / many open sockets | Raise the file descriptor limit before starting: `ulimit -n 65536` (see `scripts/lib.mjs:168`). |
