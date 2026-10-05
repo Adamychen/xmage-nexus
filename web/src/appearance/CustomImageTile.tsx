@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from '../i18n'
+import Button from '../ui/Button'
 import type { CustomImageStore } from './customImage'
 
 interface Props {
@@ -48,8 +49,8 @@ export default function CustomImageTile({ store, variant, label, selected, onSel
 
   return (
     <div className="sleeve-custom" data-testid={`${testIdPrefix}-custom-tile`}>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         className={`${variant === 'sleeve' ? 'sleeve-item' : 'playmat-item'} ${isSelected ? 'selected' : ''}`}
         onClick={image ? onSelect : pick}
         disabled={busy}
@@ -63,15 +64,15 @@ export default function CustomImageTile({ store, variant, label, selected, onSel
           <span className={`playmat-swatch playmat-custom-swatch ${image ? '' : 'sleeve-preview-empty'}`} aria-hidden="true">{content}{check}</span>
         )}
         <span className="sleeve-name">{image ? label : uploadLabel}</span>
-      </button>
+      </Button>
       {image && (
         <div className="sleeve-custom-actions">
-          <button type="button" className="sleeve-custom-action" onClick={pick} disabled={busy} data-testid={`${testIdPrefix}-custom-replace`}>
+          <Button variant="ghost" size="sm" className="sleeve-custom-action" onClick={pick} disabled={busy} data-testid={`${testIdPrefix}-custom-replace`}>
             {t('lobby', 'sleeve_custom_replace')}
-          </button>
-          <button type="button" className="sleeve-custom-action" onClick={remove} disabled={busy} data-testid={`${testIdPrefix}-custom-remove`}>
+          </Button>
+          <Button variant="ghost" size="sm" className="sleeve-custom-action" onClick={remove} disabled={busy} data-testid={`${testIdPrefix}-custom-remove`}>
             {t('lobby', 'sleeve_custom_remove')}
-          </button>
+          </Button>
         </div>
       )}
       {error && <span className="sleeve-custom-error" role="alert">{t('lobby', 'sleeve_custom_error')}</span>}

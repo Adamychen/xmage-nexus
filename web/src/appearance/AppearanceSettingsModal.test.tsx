@@ -2,22 +2,25 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import AppearanceSettingsModal from './AppearanceSettingsModal'
 import { getState, setSetting } from '../state/store'
-import { t } from '../i18n'
 
 afterEach(() => {
-  setSetting('visibleCommander', true)
+  setSetting('playmatId', 'classic')
+  setSetting('sleeveId', 'classic')
   cleanup()
 })
 
 describe('AppearanceSettingsModal', () => {
-  it('toggles the visible commander setting in the board section', () => {
-    setSetting('visibleCommander', true)
+  it('picks a built-in playmat from the picker', () => {
     render(<AppearanceSettingsModal onClose={() => {}} />)
-    const row = screen.getByText(t('lobby', 'visible_commander_label')).closest('.ui-toggle-row') as HTMLElement
-    const sw = row.querySelector('[role="switch"]') as HTMLElement
-    expect(sw.getAttribute('aria-checked')).toBe('true')
-    fireEvent.click(sw)
-    expect(getState().settings.visibleCommander).toBe(false)
-    expect(sw.getAttribute('aria-checked')).toBe('false')
+    const tile = screen.getByTestId('playmat-ember')
+    fireEvent.click(tile)
+    expect(getState().settings.playmatId).toBe('ember')
+    expect(tile.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('offers a custom tile for sleeves and playmats', () => {
+    render(<AppearanceSettingsModal onClose={() => {}} />)
+    expect(screen.getByTestId('sleeve-custom')).toBeTruthy()
+    expect(screen.getByTestId('playmat-custom')).toBeTruthy()
   })
 })
