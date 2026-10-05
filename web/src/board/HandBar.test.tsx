@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import HandBar from './HandBar'
 import type { CardView } from '../net/types'
@@ -10,6 +10,11 @@ vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardZone: vi.fn(() => undefined),
   recordCardPosition: vi.fn(),
 }))
+
+const pointerEvent = (type: string, x: number) =>
+  Object.assign(new MouseEvent(type, { bubbles: true, button: 0, clientX: x, clientY: 0 }), { pointerId: 1 })
+const pointer = (type: string, x: number) => window.dispatchEvent(pointerEvent(type, x))
+const pointerDown = (el: Element, x: number) => act(() => void el.dispatchEvent(pointerEvent('pointerdown', x)))
 
 describe('HandBar', () => {
   afterEach(() => cleanup())
@@ -91,6 +96,47 @@ describe('HandBar', () => {
     const cards = container.querySelectorAll('.hand-bar .card-slot')
     expect(cards[0].classList.contains('playable')).toBe(true)
     expect(cards[2].classList.contains('targetable')).toBe(true)
+  })
+
+  it('rearranges the hand by dragging, swallows the drop click and keeps the order across updates', () => {
+    const onCardClick = vi.fn()
+    const { container, rerender } = render(<HandBar cards={hand()} onCardClick={onCardClick} />)
+    const mockRects = () => {
+      container.querySelectorAll<HTMLElement>('.hand-card-slot').forEach((slot, i) => {
+        const card = slot.querySelector('.hand-card') as HTMLElement
+        card.getBoundingClientRect = () => ({ left: i * 100, width: 100, top: 0, height: 140 }) as DOMRect
+      })
+    }
+    const ids = () => Array.from(container.querySelectorAll<HTMLElement>('.hand-card-slot')).map((s) => s.dataset.handId)
+    mockRects()
+    pointerDown(container.querySelectorAll('.hand-card-slot')[0], 50)
+    act(() => pointer('pointermove', 280))
+    expect(ids()).toEqual(['h-2', 'h-3', 'h-1'])
+    expect(container.querySelector('.hand-bar')?.classList.contains('is-reordering')).toBe(true)
+    act(() => pointer('pointerup', 280))
+    fireEvent.click(container.querySelector('[data-hand-id="h-1"] .card-slot')!)
+    expect(onCardClick).not.toHaveBeenCalled()
+
+    rerender(
+      <HandBar
+        cards={{ ...hand(), 'h-4': makeCard({ id: 'h-4', name: 'Shock', parentId: 'h-4' }) }}
+        onCardClick={onCardClick}
+      />,
+    )
+    expect(ids()).toEqual(['h-2', 'h-3', 'h-1', 'h-4'])
+  })
+
+  it('treats a press without movement as a plain click', () => {
+    const onCardClick = vi.fn()
+    const { container } = render(<HandBar cards={hand()} onCardClick={onCardClick} />)
+    const slot = container.querySelectorAll('.hand-card-slot')[1]
+    pointerDown(slot, 10)
+    act(() => {
+      pointer('pointermove', 12)
+      pointer('pointerup', 12)
+    })
+    fireEvent.click(slot.querySelector('.card-slot')!)
+    expect(onCardClick).toHaveBeenCalledWith('h-2')
   })
 
   it('marks the strip as target zone only while a card in hand is the target', () => {

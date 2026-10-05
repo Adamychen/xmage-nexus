@@ -1,4 +1,6 @@
-export type SleeveId = 'classic' | 'midnight' | 'wood' | 'nebula' | 'jace' | 'bolas'
+export type SleeveId = 'classic' | 'midnight' | 'wood' | 'nebula' | 'jace' | 'bolas' | 'custom'
+
+export const CUSTOM_SLEEVE_ID = 'custom'
 
 export interface SleeveDef {
   id: SleeveId
@@ -57,10 +59,13 @@ export const SLEEVES: SleeveDef[] = [
 
 const SLEEVE_MAP = new Map<SleeveId, SleeveDef>(SLEEVES.map((s) => [s.id, s]))
 
-export function getSleeveDef(id: string): SleeveDef {
+export function getSleeveDef(id: string, customImageUrl?: string | null): SleeveDef {
+  if (id === CUSTOM_SLEEVE_ID && customImageUrl) {
+    return { id: CUSTOM_SLEEVE_ID, name: 'Custom', kind: 'image', imageUrl: customImageUrl }
+  }
   return SLEEVE_MAP.get(id as SleeveId) ?? SLEEVE_MAP.get('classic')!
 }
 
 export function isValidSleeveId(id: string): boolean {
-  return SLEEVE_MAP.has(id as SleeveId)
+  return id === CUSTOM_SLEEVE_ID || SLEEVE_MAP.has(id as SleeveId)
 }

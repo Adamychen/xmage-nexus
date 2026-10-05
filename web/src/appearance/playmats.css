@@ -88,6 +88,18 @@
     radial-gradient(circle at 50% 50%, var(--ink-2) 0%, var(--ink-0) 100%);
 }
 
+.playmat-layer[data-playmat='custom']::before {
+  inset: 0;
+  background: var(--mat-img, none) center / cover no-repeat;
+}
+
+.playmat-layer[data-playmat='custom']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--shade-1);
+}
+
 .playmat-layer[data-playmat='aurora']::before,
 .playmat-layer[data-playmat='identity']::before {
   animation: playmatDrift calc(38s / var(--fx-speed, 1)) ease-in-out infinite alternate;

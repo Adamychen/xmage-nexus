@@ -32,6 +32,8 @@ import LowLifeVignette from '../board/LowLifeVignette'
 import TurnRecapStrip from './TurnRecapStrip'
 import { useAttentionAlerts } from './attentionAlerts'
 import { identityColors, playmatVars } from '../appearance/playmatIdentity'
+import { CUSTOM_PLAYMAT_ID, effectivePlaymat } from '../appearance/playmats'
+import { useCustomPlaymat } from '../appearance/customPlaymat'
 import type { ManaColor } from '../board/impactFx'
 import '../appearance/playmats.css'
 import { musicEngine } from '../audio/musicEngine'
@@ -144,12 +146,13 @@ export default function GameScreen() {
     musicEngine.setIntensity(intensity)
   }, [intensity])
 
-  const playmatId = settings.playmatId ?? 'classic'
+  const customPlaymat = useCustomPlaymat()
+  const playmatId = effectivePlaymat(settings.playmatId, customPlaymat)
   const matKey = playmatId === 'identity' ? identityColors(game).join('') : ''
-  const matStyle = useMemo(
-    () => (matKey ? (playmatVars(matKey.split('') as ManaColor[]) as React.CSSProperties) : undefined),
-    [matKey],
-  )
+  const matStyle = useMemo(() => {
+    if (playmatId === CUSTOM_PLAYMAT_ID && customPlaymat) return { '--mat-img': `url("${customPlaymat}")` } as React.CSSProperties
+    return matKey ? (playmatVars(matKey.split('') as ManaColor[]) as React.CSSProperties) : undefined
+  }, [matKey, playmatId, customPlaymat])
 
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
