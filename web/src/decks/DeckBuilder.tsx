@@ -16,6 +16,7 @@ import { BasicLandAdder } from './BasicLandAdder'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
 import { cardArtPreference } from '../cards/artPreferences'
+import { peekCustomCardArt } from '../cards/customCardArt'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
@@ -250,8 +251,12 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     rect?: DOMRect
   ) => {
     if (isDraggingRef.current) return
-    let img: string | null = meta?.imageUrl ?? null
-    let backImg: string | null = meta?.backImageUrl ?? null
+    // Arte propio del usuario: si existe, sustituye al de Scryfall en el preview
+    // (las tiras ya cargaron el nombre en memoria, así que peek es síncrono).
+    const hoverName = 'name' in card ? card.name : (card as DeckCard).cardName
+    const customArt = peekCustomCardArt(hoverName)
+    let img: string | null = customArt ?? meta?.imageUrl ?? null
+    let backImg: string | null = customArt ? null : (meta?.backImageUrl ?? null)
 
     if (!img) {
       if ('image_uris' in card || 'card_faces' in card) {
@@ -261,8 +266,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       } else {
         const dc = card as DeckCard
         const m = metaMap.get(`${dc.setCode}/${dc.cardNumber}`) ?? metaMap.get(dc.cardName.toLowerCase())
-        img = m?.imageUrl ?? null
-        backImg = m?.backImageUrl ?? null
+        img = customArt ?? m?.imageUrl ?? null
+        backImg = customArt ? null : (m?.backImageUrl ?? null)
       }
     }
 
@@ -290,7 +295,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       backUrl: backImg,
       x,
       y,
-      name: 'name' in card ? card.name : (card as DeckCard).cardName,
+      name: hoverName,
     })
   }
 

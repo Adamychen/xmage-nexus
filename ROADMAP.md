@@ -95,7 +95,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state), custom card images (part of 5.2, 2026-10-05: "Mi imagen" in the printings modal and the in-game card inspector uploads a per-card image stored locally in IndexedDB that overrides Scryfall art for that player only) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
 
 | Idea | Impact / effort | State |
 |---|---|---|
@@ -104,7 +104,7 @@ Full spec and rationale per idea: `docs/enhancements.md`. Already built from tha
 | Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
 | PWA (manifest + service worker) | High / small | Not started |
 | Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature; see the combat-preview and life-history rows below) |
-| Streaming overlay, match-recap image, price estimator, extended goldfish, alt-art in game | Lower | Not started |
+| Streaming overlay, match-recap image, price estimator, extended goldfish | Lower | Not started (alt-art in game: done 2026-10-05 via the in-game inspector's printings/custom-image modal, see §4.2 above) |
 
 Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 

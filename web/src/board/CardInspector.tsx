@@ -4,12 +4,16 @@ import type { CardView } from '../net/types'
 import { cardName, getSourceCardName, isAbilityCard, largeImageUrl } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { getEffectiveCardLang, useLocalizedCardText } from '../cards/cardLocalization'
+import { customArtName } from '../cards/customCardArt'
+import { setCardArtPreference } from '../cards/artPreferences'
+import { CardPrintingsModal } from '../decks/CardPrintingsModal'
 import { activeCardFace } from './cardFaces'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import { setState, useStore } from '../state/store'
 import CloseButton from '../ui/CloseButton'
+import IconButton from '../ui/IconButton'
 import { useEscape } from '../ui/useEscape'
 import { overlayRoot } from './overlayRoot'
 import './CardInspector.css'
@@ -23,14 +27,20 @@ export default function CardInspector() {
   const card = useStore((s) => s.inspectedCard)
   const [showBackFace, setShowBackFace] = useState(false)
   const [imgFailed, setImgFailed] = useState(false)
+  const [showPrintings, setShowPrintings] = useState(false)
 
   useEffect(() => {
     setShowBackFace(false)
     setImgFailed(false)
   }, [card])
 
+  useEffect(() => {
+    if (!card) setShowPrintings(false)
+  }, [card])
+
   const active = useMemo(() => (card ? activeCardFace(card, showBackFace) : null), [card, showBackFace])
   const hasSecondFace = !card?.faceDown && (!!card?.secondCardFace || !!card?.transformable || !!card?.alternateName)
+  const canCustomize = !!card && !card.faceDown && !!customArtName(active as CardView)
 
   useEffect(() => {
     if (!card || !hasSecondFace) return
@@ -109,9 +119,32 @@ export default function CardInspector() {
             </div>
           )}
           {showEnglishNote && <div className="card-inspector-note">{t('dialogs', 'card_inspect_no_translation')}</div>}
+          {canCustomize && (
+            <IconButton
+              label={t('decks', 'custom_art_customize')}
+              icon="palette"
+              size="sm"
+              className="card-inspector-customize"
+              onClick={() => setShowPrintings(true)}
+            >
+              {t('decks', 'custom_art_customize')}
+            </IconButton>
+          )}
           {hasSecondFace && <div className="card-inspector-flip">{t('wiki', 'flip_hint')}</div>}
         </div>
       </div>
+      {canCustomize && showPrintings && card && (
+        <CardPrintingsModal
+          cardName={customArtName(active as CardView) ?? displayName}
+          currentSet={(active as CardView).expansionSetCode ?? ''}
+          currentNumber={(active as CardView).cardNumber ?? ''}
+          onSelectPrinting={(setCode, cardNumber) => {
+            const name = customArtName(active as CardView)
+            if (name) setCardArtPreference(name, setCode, cardNumber)
+          }}
+          onClose={() => setShowPrintings(false)}
+        />
+      )}
     </div>,
     overlayRoot()
   )

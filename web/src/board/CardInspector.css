@@ -130,6 +130,16 @@
   opacity: 0.85;
 }
 
+.card-inspector-customize {
+  align-self: flex-start;
+  margin-top: var(--sp-2);
+  color: var(--fg-2);
+}
+
+.card-inspector-customize:hover {
+  color: var(--fg-1);
+}
+
 @media (max-width: 760px) {
   .card-inspector {
     flex-direction: column;

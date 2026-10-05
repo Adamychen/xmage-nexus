@@ -5,6 +5,7 @@ import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { scryfallFetch } from '../cards/scryfallClient'
+import { CustomCardArtSection } from './CustomCardArtSection'
 import './CardPrintingsModal.css'
 
 export interface CardPrinting {
@@ -97,6 +98,8 @@ export function CardPrintingsModal({
       onEscape={onClose}
     >
         <div className="printings-body">
+          <CustomCardArtSection cardName={cardName} />
+
           {loading && (
             <div className="printings-status-box">
               <div className="printings-spinner" />

@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import type { DeckCard } from '../lobby/decks'
+import { setCustomCardArtDataUrl, resetCustomCardArtCache } from '../cards/customCardArt'
 
 const confirmMock = vi.fn(async (_msg: string) => true)
 vi.mock('../ui/confirmDialog', () => ({
@@ -18,6 +19,7 @@ describe('ArenaCardStrip UX (auditoría)', () => {
   afterEach(() => {
     cleanup()
     confirmMock.mockClear()
+    resetCustomCardArtCache()
   })
 
   it('las teclas sobre los botones de acción no burbujean a la tira (Enter en + no resta)', () => {
@@ -27,6 +29,20 @@ describe('ArenaCardStrip UX (auditoría)', () => {
     const plus = container.querySelector('.strip-btn[title="Añadir 1"]')!
     fireEvent.keyDown(plus, { key: 'Enter' })
     expect(onDec).not.toHaveBeenCalled()
+  })
+
+  it('el arte propio del usuario sustituye al art-crop de Scryfall en el fondo de la tira', () => {
+    setCustomCardArtDataUrl('Lightning Bolt', 'data:image/jpeg;base64,CUSTOM')
+    const { container, rerender } = render(
+      <ArenaCardStrip card={bolt} meta={{ name: 'Lightning Bolt', artCropUrl: 'https://cards.scryfall.io/art_crop/a.jpg' }} />,
+    )
+    const bg = container.querySelector<HTMLElement>('.strip-bg-art')
+    expect(bg?.style.backgroundImage).toContain('data:image/jpeg;base64,CUSTOM')
+
+    // Al quitar la imagen propia vuelve el art-crop de Scryfall.
+    setCustomCardArtDataUrl('Lightning Bolt', null)
+    rerender(<ArenaCardStrip card={bolt} meta={{ name: 'Lightning Bolt', artCropUrl: 'https://cards.scryfall.io/art_crop/a.jpg' }} />)
+    expect(container.querySelector<HTMLElement>('.strip-bg-art')?.style.backgroundImage).toContain('scryfall.io')
   })
 
   it('quitar todas las copias pide confirmación cuando hay más de una', async () => {

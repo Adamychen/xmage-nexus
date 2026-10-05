@@ -156,7 +156,9 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 * **Impacto**: ⭐⭐⭐⭐ (Aumenta exponencialmente el apego y la sensación de juego prémium).
 
 ### 5.2 Variantes Estéticas de Cartas (Showcase / Retro / Borderless)
-> ⚠️ **Parcial** — el editor de mazos permite cambiar la impresión de una carta (`ArenaCardStrip`, `e2e/printing-preview.spec.ts`); falta elegirla al inspeccionar una carta en partida y guardar la preferencia por jugador.
+> ✅ **Hecho (2026-10-05)** — el editor de mazos permite cambiar la impresión de una carta (`ArenaCardStrip`, `CardPrintingsModal`), la preferencia es local por jugador (`artPreferences.ts`) y el modal incluye la sección "Mi imagen" (`CustomCardArtSection`) para subir arte propio:
+> la imagen se recorta al ratio de carta y se guarda en IndexedDB (`customCardArt.ts`), gana sobre Scryfall en `useCardImageUrl`, y también se puede subir desde el inspector de cartas en partida (`CardInspector` → `Custom image…`). Solo la ve el jugador que la sube; no viaja por el protocolo.
+> Pendiente (opcional): buscador para personalizar cualquier carta del catálogo sin jugarla antes. El gestor de imágenes subidas está en Ajustes → Apariencia (`CustomCardArtManager`: miniaturas, borrado individual y masivo).
 * **Descripción**: Elección visual de versiones sin afectar al juego.
 * **Mecánica**:
   * Al hacer clic derecho o inspeccionar una carta en el mazo o en el campo, permitir elegir su arte alternativo de Scryfall (Marco Retro, Sin borde, Showcase temático).

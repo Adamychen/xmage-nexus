@@ -227,3 +227,94 @@
   right: var(--sp-1);
   z-index: 1;
 }
+
+/* Gestor de imágenes de carta propias (customCardArt) */
+.custom-card-art-manager {
+  margin-top: var(--sp-2);
+}
+
+.custom-card-art-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0;
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+}
+
+.custom-card-art-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* en paneles estrechos baja a su línea en vez de desbordar */
+  gap: var(--sp-1) var(--sp-3);
+  margin-bottom: var(--sp-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}
+
+.custom-card-art-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botón de texto "Quitar todas": antes era un IconButton (caja fija de 24px
+   pensada para iconos) y el texto desbordaba rompiendo la fila. */
+.custom-card-art-clear.ui-btn--ghost {
+  color: var(--fg-3);
+}
+
+.custom-card-art-clear.ui-btn--ghost:hover:not(:disabled),
+.custom-card-art-clear.ui-btn--ghost:focus-visible {
+  color: var(--err);
+  background: var(--err-surface);
+}
+
+.custom-card-art-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--sp-3);
+}
+
+.custom-card-art-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  background: var(--ink-3);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-mid);
+}
+
+.custom-card-art-thumb {
+  width: 100%;
+  aspect-ratio: 5 / 7; /* proporción de carta MTG: escalan con la celda */
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+
+.custom-card-art-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+}
+
+.custom-card-art-item-remove {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.custom-card-art-item:hover .custom-card-art-item-remove,
+.custom-card-art-item-remove:focus-visible {
+  opacity: 1;
+}

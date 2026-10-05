@@ -3,6 +3,7 @@ import IconButton from '../ui/IconButton'
 import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
 import CustomSleeveTile from '../appearance/CustomSleeveTile'
+import CustomCardArtManager from '../appearance/CustomCardArtManager'
 import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
@@ -170,6 +171,9 @@ export function BoardSection() {
       <h3 className="settings-section-title">{t('lobby', 'playmat_title')}</h3>
       <p className="settings-hint">{t('lobby', 'playmat_hint')}</p>
       <PlaymatPicker testIdPrefix="settings-playmat" />
+      <h3 className="settings-section-title">{t('lobby', 'custom_card_art_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'custom_card_art_hint')}</p>
+      <CustomCardArtManager />
       <h3 className="settings-section-title">{t('lobby', 'sleeve_pick_title')}</h3>
       <p className="settings-hint">{t('lobby', 'sleeve_pick_subtitle')}</p>
       <div className="appearance-sleeve-grid">

@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CardView } from '../net/types'
 import { resetCardImageCache } from './cardImages'
+import { resetCustomCardArtCache, setCustomCardArtDataUrl } from './customCardArt'
 import { useCardImageUrl } from './useCardImageUrl'
 
 const pending = new Map<string, Array<(url: string) => void>>()
@@ -20,6 +21,7 @@ const card = (name: string, extra: Partial<CardView> = {}): CardView =>
 describe('useCardImageUrl', () => {
   beforeEach(() => {
     resetCardImageCache()
+    resetCustomCardArtCache()
     pending.clear()
   })
 
@@ -62,5 +64,21 @@ describe('useCardImageUrl', () => {
     await act(async () => resolveAll('Bolt', 'https://cards.scryfall.io/normal/front/a/b/bolt.jpg'))
     expect(stack.result.current).toBe(board.result.current)
     expect(board.result.current).toContain('/normal/')
+  })
+
+  it('prefers the custom art uploaded by the user and falls back when it is removed', async () => {
+    setCustomCardArtDataUrl('Bolt', 'data:image/jpeg;base64,CUSTOM')
+    const { result } = renderHook(() => useCardImageUrl(card('Bolt')))
+    expect(result.current).toBe('data:image/jpeg;base64,CUSTOM')
+
+    setCustomCardArtDataUrl('Bolt', null)
+    await act(async () => resolveAll('Bolt', 'https://img.test/bolt.jpg'))
+    expect(result.current).toBe('https://img.test/bolt.jpg')
+  })
+
+  it('never uses the custom art of face-down cards', () => {
+    setCustomCardArtDataUrl('Bolt', 'data:image/jpeg;base64,CUSTOM')
+    const { result } = renderHook(() => useCardImageUrl(card('Bolt', { faceDown: true })))
+    expect(result.current).toBeNull()
   })
 })

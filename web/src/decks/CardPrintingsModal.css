@@ -17,6 +17,107 @@
   max-height: min(58vh, 560px);
 }
 
+/* Sección "Mi imagen" (arte personalizado) */
+.custom-art-section {
+  margin: 0 var(--sp-4h) var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--ink-3);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-mid);
+}
+
+.custom-art-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.custom-art-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg-1);
+}
+
+.custom-art-remove {
+  color: var(--fg-2);
+}
+
+.custom-art-remove:hover {
+  color: var(--err);
+}
+
+.custom-art-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 92px;
+  padding: var(--sp-3);
+  border: 2px dashed var(--veil-3);
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: all 140ms ease;
+  text-align: center;
+}
+
+.custom-art-drop:hover,
+.custom-art-drop:focus-visible {
+  border-color: var(--gold-300);
+  color: var(--fg-1);
+  outline: none;
+}
+
+.custom-art-drop.busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.custom-art-drop.has-image {
+  flex-direction: row;
+  border-style: solid;
+}
+
+.custom-art-thumb {
+  width: 88px;
+  height: 123px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  box-shadow: 0 2px 8px var(--shade-1);
+}
+
+.custom-art-action {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.custom-art-hint {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.custom-art-error {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  color: var(--err);
+  font-size: var(--fs-xs);
+}
+
+.custom-art-note {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.custom-art-input {
+  display: none;
+}
+
 .printings-status-box {
   display: flex;
   flex-direction: column;

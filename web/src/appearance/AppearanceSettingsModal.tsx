@@ -3,6 +3,7 @@ import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
 import { SLEEVES } from './sleeves'
 import CustomSleeveTile from './CustomSleeveTile'
+import CustomCardArtManager from './CustomCardArtManager'
 import PlaymatPicker from './PlaymatPicker'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
@@ -192,6 +193,12 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
           <h3 className="appearance-section-title">{t('lobby', 'playmat_title')}</h3>
           <p className="appearance-section-hint">{t('lobby', 'playmat_hint')}</p>
           <PlaymatPicker />
+        </section>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">{t('lobby', 'custom_card_art_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'custom_card_art_hint')}</p>
+          <CustomCardArtManager />
         </section>
 
         <section className="appearance-section">
