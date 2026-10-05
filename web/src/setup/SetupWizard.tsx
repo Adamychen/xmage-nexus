@@ -8,7 +8,7 @@ import AvatarImage from '../lobby/AvatarImage'
 import AvatarPickerModal from '../lobby/AvatarPickerModal'
 import CountryFlag from '../lobby/CountryFlag'
 import { guessDefaultFlag } from '../lobby/defaultFlag'
-import { POPULAR_FLAGS, countryName, type ServerPreset } from '../lobby/flags'
+import { sortedFlags, countryName, type ServerPreset } from '../lobby/flags'
 import { loadConn, saveConn, type ConnectionInfo } from '../state/persistence'
 import { markSetupDone, SETUP_CONN_EVENT } from './setupFlag'
 import './SetupWizard.css'
@@ -175,7 +175,7 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                 <label className="setup-field">
                   {t('login', 'flag')}
                   <select value={flagName} onChange={(e) => setFlagName(e.target.value)} data-testid="setup-flag">
-                    {POPULAR_FLAGS.map((f) => (
+                    {sortedFlags(lang).map((f) => (
                       <option key={f.code} value={f.code}>{f.emoji} {countryName(f.code, lang)}</option>
                     ))}
                   </select>

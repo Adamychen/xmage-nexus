@@ -16,8 +16,8 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
-import { setState, useSettings, useStore } from '../state/store'
-import { getSleeveDef } from '../appearance/sleeves'
+import { setState, useStore } from '../state/store'
+import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, manaSourceSymbols, primaryCardType } from './compactCard'
@@ -70,8 +70,7 @@ export default function CardSlot({
   compact = false,
 }: CardSlotProps) {
   const { t } = useTranslation()
-  const settings = useSettings()
-  const sleeve = getSleeveDef(settings.sleeveId)
+  const sleeve = useSleeveFor(card.controllerId)
   const imgUrl = useCardImageUrl(card, !faceDown)
   const isFaceDownCard = faceDown || card.faceDown === true
   const showBack = faceDown || (card.faceDown === true && !imgUrl)
