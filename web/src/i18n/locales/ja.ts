@@ -1535,6 +1535,7 @@ export const ja: TranslationSchema = {
     issues_accept_hint: 'この置き換えを了承して警告を隠す',
     issues_cancel: 'キャンセル',
     issues_banner_title: 'このデッキに問題のあるカードがあります',
+    issues_xmage_title: 'XMage（{validator}）がこのデッキを不正と判定しました',
     issues_banner_same_card: '同じカードの別版: {set} #{num}',
     avg_cmc: '平均CMC',
   },

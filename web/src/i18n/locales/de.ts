@@ -1528,6 +1528,7 @@ export const de: TranslationSchema = {
     issues_accept_hint: 'Diese Ersetzung akzeptieren und die Warnung ausblenden',
     issues_cancel: 'Abbrechen',
     issues_banner_title: 'Karten mit Problemen in diesem Deck',
+    issues_xmage_title: 'XMage ({validator}) meldet: Deck nicht regelkonform',
     issues_banner_same_card: 'Dieselbe Karte, andere Druckversion: {set} Nr. {num}',
     avg_cmc: 'Ø CMC',
   },

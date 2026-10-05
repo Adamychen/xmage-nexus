@@ -1528,6 +1528,7 @@ export const it: TranslationSchema = {
     issues_accept_hint: 'Accetta questa sostituzione e nascondi l\'avviso',
     issues_cancel: 'Annulla',
     issues_banner_title: 'Carte con problemi in questo mazzo',
+    issues_xmage_title: 'XMage ({validator}) segnala questo mazzo come illegale',
     issues_banner_same_card: 'Stessa carta, altra stampa: {set} n. {num}',
     avg_cmc: 'CMC Medio',
   },

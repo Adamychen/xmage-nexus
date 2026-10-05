@@ -50,6 +50,16 @@
             <version>${mage.version}</version>
         </dependency>
 
+        <!-- deck validators of the same XMage release (mage.deck.Commander & co):
+             lets the proxy run the FULL official deck validation (deck sizes,
+             banned lists, commander/partner rules, color identity) exactly like
+             the target server does, instead of client-side heuristics -->
+        <dependency>
+            <groupId>org.mage</groupId>
+            <artifactId>mage-deck-constructed</artifactId>
+            <version>${mage.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

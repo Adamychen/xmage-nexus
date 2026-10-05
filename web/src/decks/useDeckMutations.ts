@@ -16,6 +16,7 @@ import { applyPrintingsByName, countUnresolved, resolveDeckPrintings } from './i
 import { normalizeDeckCard } from './deckNormalize'
 import { setCardArtPreference } from '../cards/artPreferences'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
+import { commanderEligibilityKey } from './useCommanderEligibility'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
 
@@ -28,6 +29,7 @@ interface Deps {
   serverFlaggedKeys: Set<string>
   printingTargetCard: DeckCard | null
   setPrintingTargetCard: (c: DeckCard | null) => void
+  commanderEligibilityMap?: Map<string, boolean> | null
 }
 
 /** Todos los handlers de mutación del mazo (añadir/mover/inc/dec/borrar/importar/imprenta/tierras). */
@@ -35,6 +37,7 @@ export function useDeckMutations(deps: Deps) {
   const {
     deck, schedulePersist, metaMap, setMetaMap, updateMetaForDeck,
     serverFlaggedKeys, printingTargetCard, setPrintingTargetCard,
+    commanderEligibilityMap,
   } = deps
 
   const deckRef = useRef(deck)
@@ -137,7 +140,10 @@ export function useDeckMutations(deps: Deps) {
 
     if (target === 'commander') {
       const droppedMeta = metaOf(cardName, setCode, cardNumber, cardData)
-      const droppedEligible = !droppedMeta || isCommanderEligible(droppedMeta)
+      // Proxy primero (clases reales de xmage, p.ej. Grist); fallback: la
+      // heurística del oráculo, permitiendo soltar si no hay meta que validar.
+      const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(cardName))
+      const droppedEligible = fromProxy ?? (!droppedMeta || isCommanderEligible(droppedMeta))
       const commander = deck.commanderCard ?? null
       const partner = deck.partnerCard ?? null
 

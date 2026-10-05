@@ -1528,6 +1528,7 @@ export const fr: TranslationSchema = {
     issues_accept_hint: 'Accepter cette substitution et masquer l\'avertissement',
     issues_cancel: 'Annuler',
     issues_banner_title: 'Cartes posant problème dans ce deck',
+    issues_xmage_title: 'XMage ({validator}) signale ce deck comme illégal',
     issues_banner_same_card: 'Même carte, autre impression : {set} n° {num}',
     avg_cmc: 'CMC Moyen',
   },

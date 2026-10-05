@@ -188,13 +188,29 @@ describe('deckUtils basic calculations', () => {
   it('detects commander eligibility from the oracle (parity with proxy)', () => {
     expect(isCommanderEligible({ typeLine: 'Legendary Creature — Phyrexian Angel' })).toBe(true)
     expect(isCommanderEligible({ typeLine: 'Legendary Artifact — Vehicle' })).toBe(true)
-    expect(isCommanderEligible({ oracleText: 'The Royal Scions can be your commander.' })).toBe(true)
+    expect(isCommanderEligible({ oracleText: 'Commodore Guff can be your commander.' })).toBe(true)
     expect(isCommanderEligible({ typeLine: 'Legendary Enchantment — Background' })).toBe(true)
     expect(isCommanderEligible({ oracleText: 'This card can be your commander.' })).toBe(true)
     expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Jace', oracleText: 'Flying' })).toBe(false)
     expect(isCommanderEligible({ typeLine: 'Creature — Human' })).toBe(false)
     expect(isCommanderEligible({ typeLine: 'Basic Land — Mountain' })).toBe(false)
     expect(isCommanderEligible(undefined)).toBe(false)
+  })
+
+  it('detects Grist-style commanders (creature off the battlefield, CR 903.5a)', () => {
+    // Texto de oráculo actual (post nov. 2024): sin "can be your commander".
+    const grist = "As long as Grist isn’t on the battlefield, it’s a 1/1 Insect creature in addition to its other types."
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Grist', oracleText: grist })).toBe(true)
+    // Apóstrofo recto (por si la fuente lo normaliza).
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Grist', oracleText: "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature." })).toBe(true)
+    // Variante "in all zones except the battlefield".
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — X', oracleText: 'X is a 2/2 Zombie creature in all zones except the battlefield.' })).toBe(true)
+    // Criatura solo mientras está en juego: no vale.
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Y', oracleText: 'As long as Y is on the battlefield, it\'s a 5/5 creature.' })).toBe(false)
+    // Sin legendaria no hay comandante aunque el texto lo diga.
+    expect(isCommanderEligible({ typeLine: 'Planeswalker — Grist', oracleText: grist })).toBe(false)
+    // Texto con criatura fuera del campo pero sin patrón de zonas: no vale.
+    expect(isCommanderEligible({ typeLine: 'Legendary Planeswalker — Z', oracleText: 'Z becomes a creature until end of turn.' })).toBe(false)
   })
 
   it('moves the designated commander to the front for the server heuristic', () => {

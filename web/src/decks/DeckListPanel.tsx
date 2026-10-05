@@ -5,7 +5,8 @@ import type { CardStripMeta } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckFormat } from './types'
-import { commanderCardsFor, isCommanderEligible } from './deckUtils'
+import { commanderCardsFor } from './deckUtils'
+import { commanderEligibleFor } from './useCommanderEligibility'
 import { aggregateCards } from './deckCardOps'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
@@ -38,6 +39,7 @@ export default function DeckListPanel({
   isCommanderFormat,
   format = 'Freeform',
   metaMap,
+  commanderEligibilityMap,
   cardIssues,
   layout = 'vertical',
   onInc,
@@ -61,6 +63,7 @@ export default function DeckListPanel({
   isCommanderFormat?: boolean
   format?: DeckFormat
   metaMap: Map<string, CardStripMeta>
+  commanderEligibilityMap?: Map<string, boolean> | null
   cardIssues?: Map<string, ValidationIssue>
   layout?: 'vertical' | 'horizontal'
   onInc: (key: string) => void
@@ -362,7 +365,7 @@ export default function DeckListPanel({
                       onRemove={onRemove}
                       onSetCover={onSetCover}
                       onSetCommander={onSetCommander}
-                      commanderEligible={meta ? isCommanderEligible(meta) : undefined}
+                      commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
                       onHover={onHover}
                       onLeave={onLeave}
                       onChangePrinting={onChangePrinting}
@@ -421,7 +424,7 @@ export default function DeckListPanel({
                           onRemove={onRemove}
                           onSetCover={onSetCover}
                           onSetCommander={onSetCommander}
-                          commanderEligible={meta ? isCommanderEligible(meta) : undefined}
+                          commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
                           onHover={onHover}
                           onLeave={onLeave}
                           onChangePrinting={onChangePrinting}

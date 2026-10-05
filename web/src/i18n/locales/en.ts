@@ -1526,6 +1526,7 @@ export const en = {
     issues_accept_hint: 'Accept this substitution and hide the warning',
     issues_cancel: 'Cancel',
     issues_banner_title: 'Cards with problems in this deck',
+    issues_xmage_title: 'XMage ({validator}) reports this deck illegal',
     issues_banner_same_card: 'Same card, another printing: {set} #{num}',
     avg_cmc: 'Avg CMC',
   },

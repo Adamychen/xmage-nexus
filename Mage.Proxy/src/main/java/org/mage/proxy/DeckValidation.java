@@ -357,10 +357,243 @@ public final class DeckValidation {
         return CardRepository.instance.findCard(set, num);
     }
 
+    /**
+     * Nombres de deckType de config.xml del servidor -> clase validadora de la
+     * MISMA release. El cliente envía exactamente estos nombres (son los que la
+     * mesa declara al crearse), así que la resolución exacta es el camino
+     * normal; el fallback normalizado es solo por robustez. Excluidos los
+     * formatos de bloque (obsoletos) y Limited (vive en otro artefacto).
+     */
+    private static final Map<String, String> DECK_TYPE_VALIDATORS = buildDeckTypeValidators();
+
+    private static Map<String, String> buildDeckTypeValidators() {
+        Map<String, String> m = new LinkedHashMap<>();
+        m.put("Constructed - Standard", "mage.deck.Standard");
+        m.put("Constructed - Extended", "mage.deck.Extended");
+        m.put("Constructed - Frontier", "mage.deck.Frontier");
+        m.put("Constructed - Pioneer", "mage.deck.Pioneer");
+        m.put("Constructed - Modern", "mage.deck.Modern");
+        m.put("Constructed - Modern - No Banned List", "mage.deck.ModernNoBannedList");
+        m.put("Constructed - Eternal", "mage.deck.Eternal");
+        m.put("Constructed - Legacy", "mage.deck.Legacy");
+        m.put("Constructed - Vintage", "mage.deck.Vintage");
+        m.put("Constructed - Pauper", "mage.deck.Pauper");
+        m.put("Constructed - Historic", "mage.deck.Historic");
+        m.put("Constructed - Historical Type 2", "mage.deck.HistoricalType2");
+        m.put("Constructed - Super Type 2", "mage.deck.SuperType2");
+        m.put("Constructed - Australian Highlander", "mage.deck.AusHighlander");
+        m.put("Constructed - Canadian Highlander", "mage.deck.CanadianHighlander");
+        m.put("Constructed - European Highlander", "mage.deck.EuropeanHighlander");
+        m.put("Constructed - Old School 93/94", "mage.deck.OldSchool9394");
+        m.put("Constructed - Old School 93/94 - Italian Rules", "mage.deck.OldSchool9394Italian");
+        m.put("Constructed - Old School 93/94 - Channel Fireball Rules", "mage.deck.OldSchool9394CFB");
+        m.put("Constructed - Old School 93/94 - EudoGames Rules", "mage.deck.OldSchool9394EG");
+        m.put("Constructed - Freeform", "mage.deck.Freeform");
+        m.put("Constructed - Freeform Unlimited", "mage.deck.FreeformUnlimited");
+        m.put("Variant Magic - Commander", "mage.deck.Commander");
+        m.put("Variant Magic - Duel Commander", "mage.deck.DuelCommander");
+        m.put("Variant Magic - MTGO 1v1 Commander", "mage.deck.MTGO1v1Commander");
+        m.put("Variant Magic - Centurion Commander", "mage.deck.CenturionCommander");
+        m.put("Variant Magic - Tiny Leaders", "mage.deck.TinyLeaders");
+        m.put("Variant Magic - Momir Basic", "mage.deck.Momir");
+        m.put("Variant Magic - Penny Dreadful Commander", "mage.deck.PennyDreadfulCommander");
+        m.put("Variant Magic - Freeform Commander", "mage.deck.FreeformCommander");
+        m.put("Variant Magic - Freeform Unlimited Commander", "mage.deck.FreeformUnlimitedCommander");
+        m.put("Variant Magic - Brawl", "mage.deck.Brawl");
+        m.put("Variant Magic - Oathbreaker", "mage.deck.Oathbreaker");
+        return m;
+    }
+
+    private static String foldDeckType(String s) {
+        return s == null ? "" : s.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    /**
+     * Resuelve el DeckValidator oficial de XMage por deckType y, si no, por
+     * gameType (ambos son nombres de config.xml). Null si no hay validador
+     * para ese tipo: el cliente mantiene su validación local.
+     */
+    private static Class<?> resolveDeckValidator(String deckType, String gameType) {
+        for (String candidate : new String[]{deckType, gameType}) {
+            if (candidate == null || candidate.isBlank()) continue;
+            String className = DECK_TYPE_VALIDATORS.get(candidate);
+            if (className == null) {
+                String folded = foldDeckType(candidate);
+                for (Map.Entry<String, String> e : DECK_TYPE_VALIDATORS.entrySet()) {
+                    if (foldDeckType(e.getKey()).equals(folded)) {
+                        className = e.getValue();
+                        break;
+                    }
+                }
+            }
+            if (className == null) {
+                // "Commander" -> "Variant Magic - Commander", etc.
+                String folded = foldDeckType(candidate);
+                for (Map.Entry<String, String> e : DECK_TYPE_VALIDATORS.entrySet()) {
+                    String k = foldDeckType(e.getKey());
+                    if (k.contains(folded) || folded.contains(k)) {
+                        className = e.getValue();
+                        break;
+                    }
+                }
+            }
+            if (className != null) {
+                try {
+                    return Class.forName(className);
+                } catch (Throwable ignored) {
+                    // clase ausente en esta release: seguir con el siguiente candidato
+                }
+            }
+        }
+        return null;
+    }
+
+    private static JsonObject formatError(String type, String group, String message, String cardName) {
+        JsonObject err = new JsonObject();
+        err.addProperty("type", type);
+        if (group != null) err.addProperty("group", group);
+        if (message != null) err.addProperty("message", message);
+        if (cardName != null) err.addProperty("cardName", cardName);
+        return err;
+    }
+
+    /**
+     * Validación COMPLETA del mazo con el DeckValidator oficial de XMage de la
+     * misma release que el servidor objetivo (tamaños, bans, reglas de
+     * comandante y partner, identidad de color). Se aplica primero la misma
+     * normalización que en joinTable (comandantes al sideboard), así que lo que
+     * se valida es EXACTAMENTE lo que llegaría al servidor. Advisory: ready=false
+     * si la BD de cartas no está disponible, supported=false si no hay
+     * validador para el formato pedido.
+     */
+    public static JsonObject validateDeckFormat(DeckCardLists deck, String deckType, String gameType) {
+        JsonObject out = new JsonObject();
+        JsonArray errors = new JsonArray();
+        out.add("errors", errors);
+        boolean ready = isDatabasePopulated();
+        out.addProperty("ready", ready);
+        if (!ready || deck == null) {
+            out.addProperty("supported", false);
+            out.addProperty("valid", true);
+            out.addProperty("validator", "");
+            return out;
+        }
+        Class<?> validatorClass = resolveDeckValidator(deckType, gameType);
+        if (validatorClass == null) {
+            out.addProperty("supported", false);
+            out.addProperty("valid", true);
+            out.addProperty("validator", "");
+            return out;
+        }
+        out.addProperty("supported", true);
+        out.addProperty("validator", validatorClass.getSimpleName());
+        mage.cards.decks.DeckValidator validator;
+        try {
+            validator = (mage.cards.decks.DeckValidator) validatorClass.getDeclaredConstructor().newInstance();
+        } catch (Throwable ex) {
+            logger.log(Level.WARNING, "validateDeckFormat: cannot instantiate " + validatorClass.getName(), ex);
+            out.addProperty("valid", true);
+            return out;
+        }
+        // misma transformación que joinTable: sin esto el validador oficial vería
+        // el comandante en el main y rechazaría un mazo que el servidor acepta
+        mage.cards.decks.DeckCardLists normalized = normalizeForXMage(deck, deckType, gameType);
+        mage.cards.decks.Deck loaded;
+        try {
+            // mismos flags que el flujo real post-parse: sin re-chequeo de
+            // cartas (eso ya lo hizo checkCard); las reglas las pone el validador
+            loaded = mage.cards.decks.Deck.load(normalized, false, false);
+        } catch (mage.game.GameException ex) {
+            String msg = ex.getMessage() == null ? "Deck rejected" : ex.getMessage();
+            out.addProperty("valid", false);
+            errors.add(formatError("OTHER", msg, msg, null));
+            return out;
+        } catch (Throwable ex) {
+            logger.log(Level.WARNING, "validateDeckFormat: deck load failed", ex);
+            // advisory: un fallo técnico nunca bloquea el flujo
+            out.addProperty("valid", true);
+            return out;
+        }
+        boolean valid;
+        try {
+            valid = validator.validate(loaded);
+        } catch (Throwable ex) {
+            logger.log(Level.WARNING, "validateDeckFormat: validator threw", ex);
+            out.addProperty("valid", true);
+            return out;
+        }
+        out.addProperty("valid", valid);
+        for (mage.cards.decks.DeckValidatorError e : validator.getErrorsList()) {
+            errors.add(formatError(
+                    e.getErrorType() == null ? "OTHER" : e.getErrorType().name(),
+                    e.getGroup(), e.getMessage(), e.getCardName()));
+        }
+        return out;
+    }
+
     public static boolean isCommanderFormat(String deckType, String gameType) {
         String d = deckType == null ? "" : deckType.toLowerCase(java.util.Locale.ROOT);
         String g = gameType == null ? "" : gameType.toLowerCase(java.util.Locale.ROOT);
         return d.contains("commander") || g.contains("commander");
+    }
+
+    /**
+     * ¿Puede esta carta ser comandante según XMage? Espejo exacto de
+     * AbstractCommander.checkCommander (1.4.62): la habilidad
+     * CanBeYourCommander manda; para el resto se usa el tipo de deckbuilding
+     * real de la clase, que algunas cartas sobreescriben (Grist se reporta
+     * criatura fuera del campo de batalla, CR 903.5a, aunque su línea de tipo
+     * sea Planeswalker); las naves legendarias cuentan si tienen un nivel de
+     * estacionamiento con P/T (StationLevelAbility.hasPT). Los planeswalkers
+     * con "can be your commander" en el texto (p.ej. Commodore Guff) la
+     * implementan con CanBeYourCommanderAbility; un planeswalker legendario
+     * sin esa frase (p.ej. The Royal Scions) se rechaza, igual que en el juego
+     * real.
+     */
+    public static boolean canBeCommander(mage.cards.Card card) {
+        if (card == null) return false;
+        try {
+            if (card.getAbilities().contains(mage.abilities.common.CanBeYourCommanderAbility.getInstance())) return true;
+            if (!card.isLegendary()) return false;
+            if (card.hasCardTypeForDeckbuilding(mage.constants.CardType.CREATURE)) return true;
+            if (card.hasSubTypeForDeckbuilding(mage.constants.SubType.VEHICLE)) return true;
+            return card.hasSubTypeForDeckbuilding(mage.constants.SubType.SPACECRAFT)
+                    && mage.util.CardUtil.castStream(card.getAbilities(), mage.abilities.keyword.StationLevelAbility.class)
+                        .anyMatch(mage.abilities.keyword.StationLevelAbility::hasPT);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Elegibilidad de comandante por nombre, calculada con las clases reales de
+     * XMage de la MISMA release que el servidor objetivo (fuente de verdad; el
+     * cliente web la usa para habilitar el icono de comandante y cae a una
+     * heurística local cuando el proxy no responde). La elegibilidad es de la
+     * carta (su clase), no de la impresión, así que se resuelve por nombre.
+     * Advisory: ready=false si la BD de cartas no está disponible.
+     */
+    public static JsonObject commanderEligibility(List<String> names) {
+        JsonObject out = new JsonObject();
+        out.addProperty("ready", isDatabasePopulated());
+        JsonArray results = new JsonArray();
+        if (names != null) {
+            for (String name : names) {
+                if (name == null || name.isBlank()) continue;
+                boolean eligible = false;
+                try {
+                    CardInfo ci = CardRepository.instance.findCard(name, true);
+                    eligible = ci != null && canBeCommander(ci.createCard());
+                } catch (Throwable ignored) {
+                }
+                JsonObject entry = new JsonObject();
+                entry.addProperty("name", name);
+                entry.addProperty("eligible", eligible);
+                results.add(entry);
+            }
+        }
+        out.add("results", results);
+        return out;
     }
 
     public static DeckCardLists normalizeForXMage(DeckCardLists deck, String deckType, String gameType) {
@@ -380,15 +613,8 @@ public final class DeckValidation {
             try {
                 CardInfo ci = resolveForCommander(info);
                 if (ci == null) continue;
-                mage.cards.Card card = ci.createCard();
-                if (card == null) continue;
-                boolean canBe = false;
-                try {
-                    if (card.getAbilities().contains(mage.abilities.common.CanBeYourCommanderAbility.getInstance())) canBe = true;
-                    else if (card.isLegendary() && (card.hasCardTypeForDeckbuilding(mage.constants.CardType.CREATURE)
-                            || card.hasSubTypeForDeckbuilding(mage.constants.SubType.VEHICLE)
-                            || card.hasSubTypeForDeckbuilding(mage.constants.SubType.SPACECRAFT))) canBe = true;
-                } catch (Throwable ignored) {}
+                mage.cards.Card card = ci == null ? null : ci.createCard();
+                boolean canBe = canBeCommander(card);
                 if (canBe) { commanderIdx = i; break; }
             } catch (Throwable ignored) {}
         }

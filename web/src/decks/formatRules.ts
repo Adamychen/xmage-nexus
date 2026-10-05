@@ -1,6 +1,7 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { commanderCardsFor, isCommanderEligible, isBackgroundCard, canPairCommanders } from './deckUtils'
+import { commanderEligibilityKey } from './useCommanderEligibility'
 import { t } from '../i18n'
 
 export interface FormatRuleConfig {
@@ -377,7 +378,7 @@ export function getDefaultGameTypeForDeck(deckType: string, numPlayers = 2): str
 }
 
 export interface ValidationIssue {
-  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue'
+  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue' | 'xmage'
   message: string
   cardName?: string
   severity: 'error' | 'warning'
@@ -391,7 +392,8 @@ export interface DeckValidationReport {
 
 export function validateDeckForFormat(
   deck: DeckV2,
-  metaMap: Map<string, CardStripMeta> = new Map()
+  metaMap: Map<string, CardStripMeta> = new Map(),
+  commanderEligibilityMap?: Map<string, boolean> | null,
 ): DeckValidationReport {
   const config = FORMAT_CONFIGS[deck.format] ?? FORMAT_CONFIGS.Freeform
   const issues: ValidationIssue[] = []
@@ -463,9 +465,17 @@ export function validateDeckForFormat(
       const metas = commanders.map((commander) =>
         metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase()),
       )
-      for (const meta of metas) {
+      for (let ci = 0; ci < commanders.length; ci++) {
+        const meta = metas[ci]
         for (const c of meta?.colors ?? []) commanderColors.add(c.toUpperCase())
-        if (meta?.typeLine && !isCommanderEligible(meta)) {
+        // Proxy primero (clases reales de xmage, p.ej. Grist); fallback a la
+        // heurística del oráculo con el comportamiento original (sin typeLine
+        // no se valida).
+        const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(commanders[ci].cardName))
+        const notEligible = fromProxy !== undefined
+          ? !fromProxy
+          : !!meta?.typeLine && !isCommanderEligible(meta)
+        if (notEligible) {
           issues.push({
             type: 'commander',
             message: `${t('decks', 'commander')}: ${t('decks', 'commander_not_eligible')}`,

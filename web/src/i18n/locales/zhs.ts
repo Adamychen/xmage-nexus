@@ -1535,6 +1535,7 @@ export const zhs: TranslationSchema = {
     issues_accept_hint: '接受此替换并隐藏警告',
     issues_cancel: '取消',
     issues_banner_title: '此套牌中有问题的牌',
+    issues_xmage_title: 'XMage（{validator}）判定此套牌不合法',
     issues_banner_same_card: '同一张牌，其他版本：{set} #{num}',
     avg_cmc: '平均CMC',
   },

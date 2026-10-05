@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import type { DeckValidationResult } from '../net/types'
+import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
 import { validateDeckForFormat, type ValidationIssue } from './formatRules'
 import { deckIssueKey, fixesForIssue, issueKeysFromReport, issuePrintings, type DeckFix } from './deckIssues'
 import { useTranslation } from '../i18n'
@@ -23,16 +23,43 @@ export function useDeckValidation(
   metaMap: Map<string, CardStripMeta>,
   serverIssues: DeckValidationResult | null,
   format: DeckV2['format'],
+  commanderEligibilityMap?: Map<string, boolean> | null,
+  formatIssues?: DeckFormatValidationResult | null,
 ) {
   const { t } = useTranslation()
 
   const validationReport = useMemo(() => {
     if (!deck) return { isValid: true, issues: [], cardIssues: new Map() }
-    return validateDeckForFormat(deck, metaMap)
-  }, [deck, metaMap, format])
+    return validateDeckForFormat(deck, metaMap, commanderEligibilityMap)
+  }, [deck, metaMap, format, commanderEligibilityMap])
+
+  // Errores del DeckValidator OFICIAL de XMage (validateDeckFormat): texto
+  // crudo del servidor. Errores con carta => badge en la carta; resto => banner.
+  const xmageReport = useMemo(() => {
+    const deckLevel: ValidationIssue[] = []
+    const byCard = new Map<string, ValidationIssue>()
+    if (formatIssues && !formatIssues.valid) {
+      for (const e of formatIssues.errors) {
+        const text = e.group || e.message || e.type
+        const issue: ValidationIssue = {
+          type: 'xmage',
+          message: `${formatIssues.validator}: ${text}`,
+          cardName: e.cardName,
+          severity: 'error',
+        }
+        deckLevel.push(issue)
+        if (e.cardName) byCard.set(e.cardName, issue)
+      }
+    }
+    return { deckLevel, byCard }
+  }, [formatIssues])
 
   const mergedCardIssues = useMemo(() => {
     const merged = new Map(validationReport.cardIssues)
+    // badges de carta por errores del validador oficial de XMage
+    for (const issue of xmageReport.byCard.values()) {
+      if (issue.cardName && !merged.has(issue.cardName)) merged.set(issue.cardName, issue)
+    }
     if (!serverIssues || !deck) return merged
     const missByKey = new Map<string, (typeof serverIssues.missing)[number]>()
     const misByKey = new Map<string, (typeof serverIssues.mismatches)[number]>()
@@ -57,7 +84,7 @@ export function useDeckValidation(
       }
     }
     return merged
-  }, [validationReport, serverIssues, deck, t])
+  }, [validationReport, xmageReport, serverIssues, deck, t])
 
   const serverFlaggedKeys = useMemo(
     () => (serverIssues ? issueKeysFromReport(serverIssues) : new Set<string>()),
@@ -96,5 +123,5 @@ export function useDeckValidation(
     return out
   }, [serverIssues, t])
 
-  return { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList }
+  return { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList, xmageDeckIssues: xmageReport.deckLevel }
 }

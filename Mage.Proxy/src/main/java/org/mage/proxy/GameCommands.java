@@ -162,6 +162,31 @@ final class GameCommands {
                         DeckValidation.validate(deck, DeckJson.sourcePrintings(deckJson))));
                 return true;
             }
+            case "validateDeckFormat": {
+                JsonObject deckJson = args.has("deck") && args.get("deck").isJsonObject()
+                        ? args.getAsJsonObject("deck") : null;
+                DeckCardLists deck = deckJson != null ? DeckJson.parse(deckJson) : null;
+                if (deck == null) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_INVALID_ARGUMENT, "deck required"));
+                    return true;
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        DeckValidation.validateDeckFormat(deck,
+                                JsonArgs.str(args, "deckType", null),
+                                JsonArgs.str(args, "gameType", null))));
+                return true;
+            }
+            case "commanderEligibility": {
+                java.util.List<String> names = new java.util.ArrayList<>();
+                if (args.has("names") && args.get("names").isJsonArray()) {
+                    for (com.google.gson.JsonElement el : args.getAsJsonArray("names")) {
+                        if (el.isJsonPrimitive()) names.add(el.getAsString());
+                    }
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        DeckValidation.commanderEligibility(names)));
+                return true;
+            }
             case "updatePreferences": {
                 UserData userData = userDataFromPreferences(args);
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().updatePreferencesForServer(userData), null, null));

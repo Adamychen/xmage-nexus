@@ -1528,6 +1528,7 @@ export const ru: TranslationSchema = {
     issues_accept_hint: 'Принять замену и скрыть предупреждение',
     issues_cancel: 'Отмена',
     issues_banner_title: 'Проблемные карты в этой колоде',
+    issues_xmage_title: 'XMage ({validator}): колода нелегальна',
     issues_banner_same_card: 'Та же карта, другой тираж: {set} №{num}',
     avg_cmc: 'Средн. CMC',
   },
