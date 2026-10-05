@@ -142,7 +142,22 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
     // El flag se arma con la acción propia (pedir/aceptar) o el anuncio del servidor.
     const rollbackRestored = positionRegressed && sameGame && !!currentGame && order !== 'older'
       && isRollbackPending(s, s.gameId)
-    if (!stale || rollbackRestored) {
+    // Un espectador que se une a mitad de partida recibe como GAME_INIT la vista
+    // cacheada del arranque (turn 0, sin manos ni battlefield): el servidor siembra
+    // GameSessionWatcher con la vista por defecto generada en startGame y, como el
+    // watch se sirve desde un hilo que no es el del juego, la caché se devuelve tal
+    // cual (GameSessionWatcher.getGameView). Aplicarla pintaría un tablero vacío
+    // falso de una partida en curso; se descarta y se espera al primer update real
+    // (turn >= 1), que trae el estado completo actual. La firma es exacta: la vista
+    // genuina de una partida sin arrancar también es turn 0, pero entonces el
+    // siguiente update (mulligans/prioridad, turn >= 1) llega en segundos.
+    const spectatorCachedInit = s.phase === 'spectating_pending'
+      && method === 'GAME_INIT'
+      && embeddedGame.turn < 1
+      && !embeddedGame.players?.some((p) => p.controlled)
+    if (spectatorCachedInit) {
+      addLog('partida', 'Espectador: el servidor envió la vista en caché del inicio de la partida; sincronizando con el estado en vivo…')
+    } else if (!stale || rollbackRestored) {
       if (objectId) noteGameEvent(objectId, messageId, method === 'GAME_INIT')
       dispatchGameSounds(currentGame, embeddedGame, method)
       recordMatchStats(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
