@@ -28,6 +28,7 @@ DATA = ROOT / "data"
 CKPT = DATA / "model.pt"
 RNG = random.Random(1234)
 DECK_POOL = sorted((ROOT / "decks").glob("*.dck"))
+DECK_NAMES = [p.stem for p in DECK_POOL]  # archetype-label vocabulary (aux head)
 # No artificial game length cap: games end by life loss or decking (a player
 # drawing from an empty library loses). 300 is a safety net only.
 TURNS = 300
@@ -132,7 +133,7 @@ def collect(net: Net, workers: list[Runner], n_games: int,
     lock = threading.Lock()
     counter = {"next": 0}
     out: list[list[dict]] = []
-    opp_nets = [Net(net.table) for _ in workers]  # one per thread: snapshot seat B
+    opp_nets = [Net(net.table, net.deck_names) for _ in workers]  # one per thread: snapshot seat B
 
     def job(worker: Runner, opp_net: Net):
         local = []
@@ -221,12 +222,12 @@ def main():
         device = "cpu"
     else:
         device = args.device
-    net = Net(table).to(device)
+    net = Net(table, DECK_NAMES).to(device)
     if args.init:
         net.load_state_dict(torch.load(args.init, map_location=device))
     # collect_net runs inference on CPU (2.5x faster per decision than MPS at
     # batch=1); refreshed from net after every update.
-    collect_net = Net(table)
+    collect_net = Net(table, DECK_NAMES)
     collect_net.load_state_dict(net.state_dict())
     collect_net.eval()
     n_params = sum(p.numel() for p in net.parameters())
@@ -264,7 +265,8 @@ def main():
                 dt = time.time() - t0
                 print(f"upd {updates} games={games} gps={games / dt:.2f} "
                       f"steps={len(transitions)} pg={stats['pg']:.3f} v={stats['v']:.3f} "
-                      f"ent={stats['ent']:.2f} meanR={rew:.3f}", flush=True)
+                      f"ent={stats['ent']:.2f} hand={stats['hand']:.3f} arch={stats['arch']:.3f} "
+                      f"meanR={rew:.3f}", flush=True)
             if updates % args.eval_every == 0:
                 h = eval_vs(collect_net, workers, "heuristic", args.eval_games)
                 r = eval_vs(collect_net, workers, "random", args.eval_games)

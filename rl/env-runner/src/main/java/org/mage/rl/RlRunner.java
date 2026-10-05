@@ -70,6 +70,8 @@ public final class RlRunner {
     private final Map<String, List<ActivatedAbility>> lastPlayable = new HashMap<>();
     private final Map<String, List<Permanent>> lastCands = new HashMap<>();
     private final Map<String, List<UUID>> lastAttackerIds = new HashMap<>();
+    // deck label per seat (training label for the opponent-archetype aux head)
+    private final Map<String, String> seatDeck = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         java.util.logging.LogManager.getLogManager().reset();
@@ -176,6 +178,8 @@ public final class RlRunner {
                 players[seatIdx.get(opp)] = createAiOpponent(oppType, opp);
             }
             String[] deckPaths = {deckA != null ? deckA : deckPath, deckB != null ? deckB : deckPath};
+            seatDeck.put("A", deckName(deckPaths[0]));
+            seatDeck.put("B", deckName(deckPaths[1]));
             mage.game.match.MatchOptions matchOptions = new mage.game.match.MatchOptions("rl match", "Two Player Duel", false);
             mage.game.match.Match match = new mage.game.FreeForAllMatch(matchOptions);
             for (int i = 0; i < 2; i++) {
@@ -271,6 +275,10 @@ public final class RlRunner {
         o.addProperty("stack", game.getStack().size());
         o.add("me", playerJson(seat, game, true));
         o.add("op", playerJson(other(seat), game, false));
+        // --- training labels (never used as policy input; consumed by aux heads) ---
+        o.addProperty("deck", seatDeck.getOrDefault(seat, "?"));
+        o.addProperty("opDeck", seatDeck.getOrDefault(other(seat), "?"));
+        o.add("opHand", handNames(other(seat), game));
         List<Permanent> meBf = bfList(seat, game);
         List<Permanent> opBf = bfList(other(seat), game);
 
@@ -426,14 +434,7 @@ public final class RlRunner {
         j.addProperty("life", p.getLife());
         j.addProperty("lib", p.getLibrary().size());
         if (view) {
-            JsonArray hand = new JsonArray();
-            for (UUID cardId : p.getHand()) {
-                Card card = game.getCard(cardId);
-                if (card != null) {
-                    hand.add(card.getName());
-                }
-            }
-            j.add("hand", hand);
+            j.add("hand", handNames(seat, game));
         } else {
             j.addProperty("handCount", p.getHand().size());
         }
@@ -447,6 +448,30 @@ public final class RlRunner {
         j.add("gy", gy);
         j.add("bf", bfJson(seat, game));
         return j;
+    }
+
+    private JsonArray handNames(String seat, Game game) {
+        JsonArray hand = new JsonArray();
+        for (UUID cardId : players[seatIdx.get(seat)].getHand()) {
+            Card card = game.getCard(cardId);
+            if (card != null) {
+                hand.add(card.getName());
+            }
+        }
+        return hand;
+    }
+
+    /** Deck label = file name without directory/extension ("MonoRedBurn"). */
+    private static String deckName(String path) {
+        String base = path;
+        int slash = Math.max(base.lastIndexOf('/'), base.lastIndexOf('\\'));
+        if (slash >= 0) {
+            base = base.substring(slash + 1);
+        }
+        if (base.toLowerCase().endsWith(".dck")) {
+            base = base.substring(0, base.length() - 4);
+        }
+        return base;
     }
 
     UUID opponentIdOf(String seat) {

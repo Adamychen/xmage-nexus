@@ -3,6 +3,11 @@
 Throwaway research spike: can a small model learn to play Magic locally,
 against the real XMage engine, and beat the built-in baselines?
 
+> **Next steps / pending work live in [`rl/PLAN.md`](PLAN.md)** — session
+> handoff doc: current state, design decisions taken, priority-ordered
+> backlog (decision surface, deckbuilding, league, scale, deployment) and
+> environment notes.
+
 ## Phase 1: mono-red mirror (specialized)
 
 A 70k-param Set Transformer (card-name embeddings) trained with PPO for ~2.5 h
@@ -64,6 +69,36 @@ Everything here is throwaway spike code: it only *consumes* the engine through
 the public `Player`/`ComputerPlayer` plugin API. It does not touch the fork,
 the proxy, `web/`, or any CI guard.
 
+## Phase 1b: rival belief (v3 model, incompatible checkpoints)
+
+The v2 policy was Markov on the public state: it could not infer anything about
+the opponent's hidden information (hand, deck). v3 adds a belief layer trained
+on free engine labels — no change to the RL reward:
+
+- **Belief conditioning**: every obs already carries the opponent's public
+  record (battlefield + graveyard names). `belief_from_obs` folds it into a
+  fixed vector (mean frozen text embedding of revealed cards + 10 type counts)
+  that conditions the trunk. The policy now sees *what kind of deck it is
+  facing*, derived from observation only (works against unseen opponents).
+- **Hand aux head**: the worker now sends the opponent's real hand (`opHand`)
+  as a training label — never a policy input. The model regresses the mean
+  frozen embedding of that hand, forcing the trunk to encode "what does the
+  opponent probably hold" from public evidence.
+- **Archetype aux head**: the worker sends each seat's deck name (`deck` /
+  `opDeck`); the model classifies the opponent's archetype over the deck-pool
+  vocabulary (`train.py` `DECK_NAMES`). A small-init + clamp guard keeps the CE
+  from running away early (trunk z can be large-magnitude at init).
+- Aux weights: `HAND_COEF=0.3`, `ARCH_COEF=0.2` (in `model.py`, shared by
+  `ppo.py`). Both losses are logged per update (`hand=`, `arch=` in the train
+  line).
+- `test_belief.py` is an offline regression check (fake obs, no Java): forward
+  on all 3 heads, belief-vector sanity, PPO step with aux losses, and an
+  overfit proof that both aux heads learn (arch accuracy, hand MSE).
+
+Note: state_dicts from v2 checkpoints do **not** load into v3 (new modules:
+`belief_proj`, `hand_head`, `arch_head`, wider trunk input). Retrain or delete
+`data/model.pt`.
+
 ## Layout
 
 - `env-runner/` — Java worker. Runs a headless `TwoPlayerDuel` in-process
@@ -74,9 +109,11 @@ the proxy, `web/`, or any CI guard.
 - `rl_bot/runner.py` — Python subprocess driver for one worker.
 - `rl_bot/card_features.py` — frozen card table lookup (`data/card_emb.npz`).
 - `rl_bot/model.py` — Set Transformer actor-critic: text-embedding projection
-  + structured/runtime features + hash fallback; one action head per prompt
-  (priority categorical over playable abilities + pass; attackers Bernoulli;
-  blockers one categorical per creature over blockable attackers).
+  + structured/runtime features + hash fallback + rival-belief conditioning;
+  one action head per prompt (priority categorical over playable abilities +
+  pass; attackers Bernoulli; blockers one categorical per creature over
+  blockable attackers); aux heads for opponent hand (regression) and archetype
+  (classification).
 - `rl_bot/ppo.py` — minimal PPO (sparse terminal reward ±1, γ=0.997, MC returns).
 - `rl_bot/policies.py` — baselines: `random`, `heuristic` (deck-agnostic greedy).
 - `train.py` — self-play + fixed-opponent mixed PPO loop over the deck pool.

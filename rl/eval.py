@@ -103,7 +103,8 @@ def main():
 
     torch.set_num_threads(1)
     table = CardTable(DATA / "card_emb.npz")
-    net = Net(table)
+    deck_names = [p.stem for p in sorted((ROOT / "decks").glob("*.dck"))]
+    net = Net(table, deck_names)
     net.load_state_dict(torch.load(args.ckpt, map_location="cpu"))
     net.eval()
     workers = start_workers(args.workers, str(JAR), str(DECK), str(DATA), prefix="eval")

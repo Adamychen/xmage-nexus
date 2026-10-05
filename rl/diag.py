@@ -76,9 +76,10 @@ def diag(net, workers, opponent, n_games=12, sample=True, label=""):
 def main():
     workers = start_workers(4, str(JAR), str(DECK), str(DATA), prefix="diag")
     table = CardTable(DATA / "card_emb.npz")
+    deck_names = [p.stem for p in sorted((ROOT / "decks").glob("*.dck"))]
     try:
         for ckpt, label in [("", "untrained"), ("data/model.pt", "trained")]:
-            net = Net(table)
+            net = Net(table, deck_names)
             if ckpt:
                 net.load_state_dict(torch.load(ROOT / ckpt, map_location="cpu"))
             net.eval()

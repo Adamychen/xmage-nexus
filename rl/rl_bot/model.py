@@ -43,6 +43,55 @@ TOKEN_D = TEXT_PROJ_D + CardTable.STRUCT_D + RT_D + HASH_D  # 68
 HEAD_EXTRA = 1  # kind bit for acts, can bit for combat cands, 1.0 for attackers
 SCALARS_D = 11 + N_STEP + 3
 
+# --- rival belief (v3) -------------------------------------------------------
+# Every obs already carries the opponent's public record (battlefield + graveyard
+# names); we fold it into a fixed-size belief vector that conditions the trunk:
+#   - mean FROZEN text embedding of all revealed opponent cards (384)
+#   - 10 count stats (lands/creatures/spells seen, unique cards, avg mv, ...)
+# plus two AUX HEADS trained on free engine labels (never policy inputs):
+#   - hand head: predict the mean text embedding of the opponent's actual hand
+#   - arch head: classify which pool deck the opponent is playing
+# Counters by TYPE_BITS order: 0=artifact 1=creature 2=enchantment 3=instant
+#                              4=land 5=planeswalker 6=sorcery 7=battle
+# struct layout: [0]=mv/10, [1..5]=colors, [6..13]=type bits
+BELIEF_STAT_D = 10
+BELIEF_D = CardTable.TEXT_D + BELIEF_STAT_D  # 394
+HAND_COEF = 0.3   # aux loss weights live here so train/eval stay in sync
+ARCH_COEF = 0.2
+
+
+def belief_from_obs(obs: dict, table: CardTable) -> torch.Tensor:
+    """[394] = mean frozen text emb of revealed opponent cards + 10 stats."""
+    names = [p["n"] for p in obs["op"].get("bf", [])]
+    names.extend(obs["op"].get("gy", []))
+    if not names:
+        return torch.zeros(BELIEF_D)
+    text, struct, _ = table.lookup(names)
+    t_bit = (struct[:, 6:] > 0).float()  # [n, 8] type bits
+    stats = torch.tensor([
+        min(len(names), 40) / 40.0,
+        len(set(names)) / 20.0,
+        t_bit[:, 4].sum().item() / 25.0,   # lands
+        t_bit[:, 1].sum().item() / 20.0,   # creatures
+        t_bit[:, 3].sum().item() / 10.0,   # instants
+        t_bit[:, 6].sum().item() / 10.0,   # sorceries
+        struct[:, 0].mean().item(),        # avg mana value (already /10)
+        t_bit[:, 0].sum().item() / 10.0,   # artifacts
+        t_bit[:, 2].sum().item() / 10.0,   # enchantments
+        1.0,                               # has-seen flag
+    ])
+    return torch.cat([text.mean(0), stats])
+
+
+def hand_target(obs: dict, table: CardTable) -> torch.Tensor | None:
+    """Aux regression target: mean frozen embedding of the opponent's real hand.
+    None when the label is missing (native/old workers) or the hand is empty."""
+    names = obs.get("opHand") or []
+    if not names:
+        return None
+    text, _, _ = table.lookup(names)
+    return text.mean(0)
+
 
 def struct_from_obs(obj: dict) -> list[float]:
     """Same 14-dim layout as CardTable: [mv/10, 5 color bits, 8 type bits]."""
@@ -138,6 +187,7 @@ def stack_enc_group(es: list[dict]) -> dict:
         "hand": _stack4([e["hand"] for e in es]),
         "my": _stack4([e["my"] for e in es]),
         "op": _stack4([e["op"] for e in es]),
+        "belief": torch.stack([e["belief"] for e in es]),
         "scalars": torch.stack([e["scalars"] for e in es]),
     }
     if e0["head"] == "priority":
@@ -169,15 +219,18 @@ def stack_actions(actions: list, head: str) -> torch.Tensor:
 
 
 class Net(nn.Module):
-    def __init__(self, table: CardTable):
+    def __init__(self, table: CardTable, deck_names: list[str] | None = None):
         super().__init__()
         self.table = table
+        self.deck_names = list(deck_names or [])
+        self.deck_index = {n: i for i, n in enumerate(self.deck_names)}
         self.text_proj = nn.Linear(CardTable.TEXT_D, TEXT_PROJ_D)
         self.hash_emb = nn.Embedding(HASH_BUCKETS, HASH_D)
         self.hand_enc = SetEncoder(TOKEN_D)
         self.bf_enc = SetEncoder(TOKEN_D)
+        self.belief_proj = nn.Linear(CardTable.TEXT_D, D)
         self.trunk = nn.Sequential(
-            nn.Linear(3 * D + SCALARS_D, 128), nn.ReLU(),
+            nn.Linear(3 * D + D + BELIEF_STAT_D + SCALARS_D, 128), nn.ReLU(),
             nn.Linear(128, 128), nn.ReLU(),
         )
         self.value = nn.Linear(128, 1)
@@ -185,6 +238,17 @@ class Net(nn.Module):
         self.cand_proj = nn.Sequential(nn.Linear(TOKEN_D + HEAD_EXTRA, 64), nn.ReLU())
         self.combat_proj = nn.Sequential(nn.Linear(TOKEN_D + HEAD_EXTRA, 64), nn.ReLU())
         self.pass_emb = nn.Parameter(torch.randn(1, TOKEN_D + HEAD_EXTRA) * 0.1)
+        # aux heads (dense belief learning; never read at action time).
+        # Small-init: trunk z can be large-magnitude, and default kaiming init
+        # would make arch CE start in the hundreds (runaway gradient via the
+        # trunk). std=0.01 keeps the initial CE at ~ln(n_classes).
+        self.hand_head = nn.Linear(128, CardTable.TEXT_D)
+        self.arch_head = nn.Linear(128, len(self.deck_names)) if self.deck_names else None
+        nn.init.normal_(self.hand_head.weight, std=0.01)
+        nn.init.zeros_(self.hand_head.bias)
+        if self.arch_head is not None:
+            nn.init.normal_(self.arch_head.weight, std=0.01)
+            nn.init.zeros_(self.arch_head.bias)
 
     # ---------- preencode: raw tensors, cacheable, no parameters ----------
 
@@ -202,6 +266,9 @@ class Net(nn.Module):
 
     def preencode(self, obs: dict) -> dict:
         e = {"head": obs["prompt"], "scalars": enc_scalars(obs)}
+        e["belief"] = belief_from_obs(obs, self.table)
+        e["hand_tgt"] = hand_target(obs, self.table)
+        e["arch_tgt"] = self.deck_index.get(obs.get("opDeck", ""), -1)
         e["hand"] = self._name_group(obs["me"].get("hand", []))
         e["my"] = self._perm_group(obs["me"]["bf"])
         e["op"] = self._perm_group(obs["op"]["bf"])
@@ -235,8 +302,15 @@ class Net(nn.Module):
         hand = self.hand_enc(self._tokens_b(be["hand"]))
         my_bf = self.bf_enc(self._tokens_b(be["my"]))
         op_bf = self.bf_enc(self._tokens_b(be["op"]))
-        z = self.trunk(torch.cat([hand, my_bf, op_bf, be["scalars"]], dim=1))
+        belief = be["belief"]
+        b_feat = torch.cat([self.belief_proj(belief[:, :CardTable.TEXT_D]),
+                            belief[:, CardTable.TEXT_D:]], dim=1)
+        z = self.trunk(torch.cat([hand, my_bf, op_bf, b_feat, be["scalars"]], dim=1))
         v = self.value(z).squeeze(1)
+        out = {"head": be["head"], "v": v}
+        out["hand_pred"] = self.hand_head(z)
+        if self.arch_head is not None:
+            out["arch_logits"] = self.arch_head(z)
         zq = self.action_proj(z)  # [B,64]
         head = be["head"]
         if head == "priority":
@@ -245,20 +319,20 @@ class Net(nn.Module):
             pass_row = self.pass_emb.expand(feats.size(0), -1, -1)
             feats = torch.cat([feats, pass_row], dim=1)   # [B,nc+1,69]
             logits = (self.cand_proj(feats) @ zq.unsqueeze(2)).squeeze(2) / math.sqrt(64)
-            return {"head": head, "logits": logits, "v": v}
+            return {**out, "logits": logits}
         if head == "attackers":
             cand = self._tokens_b(be["cand"])
             if cand.size(1) == 0:
-                return {"head": head, "logits": torch.zeros(cand.size(0), 0, device=cand.device), "v": v}
+                return {**out, "logits": torch.zeros(cand.size(0), 0, device=cand.device)}
             feats = torch.cat([cand, be["can"]], dim=2)
             logits = (self.combat_proj(feats) @ zq.unsqueeze(2)).squeeze(2) / math.sqrt(64)
             logits = logits.masked_fill(be["can"].squeeze(2) == 0, -1e9)
-            return {"head": head, "logits": logits, "v": v}
+            return {**out, "logits": logits}
         # blockers
         b, nc = be["cand"][0].size(0), be["cand"][0].size(1)
         n_opts = be["n_opts"]
         if nc == 0:
-            return {"head": head, "logits": torch.zeros(b, 0, n_opts, device=zq.device), "v": v}
+            return {**out, "logits": torch.zeros(b, 0, n_opts, device=zq.device)}
         cand = self._tokens_b(be["cand"])
         zeros_extra = torch.zeros(b, nc, 1, device=cand.device)
         prod_c = self.combat_proj(torch.cat([cand, zeros_extra], dim=2))  # [B,nc,64]
@@ -277,7 +351,7 @@ class Net(nn.Module):
             block = (gathered * prod_c.unsqueeze(2)).sum(dim=3) / math.sqrt(64)  # [B,nc,ncb]
             block = block.masked_fill(be["cb"] < 0, -1e9)
             logits[:, :, 1:] = block
-        return {"head": head, "logits": logits, "v": v}
+        return {**out, "logits": logits}
 
     # ---------- single-obs compatibility (collection, B=1) ----------
 
@@ -290,9 +364,12 @@ class Net(nn.Module):
                 be = move_batch(be, device)
             out = self.forward_batch(be)
             for j, i in enumerate(idxs):
-                outs[i] = {"head": out["head"],
-                           "logits": out["logits"][j],
-                           "v": out["v"][j]}
+                o = {"head": out["head"], "logits": out["logits"][j], "v": out["v"][j]}
+                if "hand_pred" in out:
+                    o["hand_pred"] = out["hand_pred"][j]
+                if "arch_logits" in out:
+                    o["arch_logits"] = out["arch_logits"][j]
+                outs[i] = o
         return outs
 
     def apply_encoded(self, e: dict) -> dict:
