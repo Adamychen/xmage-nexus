@@ -308,15 +308,22 @@ describe('StackZone', () => {
   it('renders storm copy badges and allows toggling view mode', () => {
     const stack: Record<string, CardView> = {
       'storm-1': {
-        name: 'Grapeshot [Copia 1]',
+        name: 'Grapeshot',
         cardTypes: ['SORCERY'],
         manaValue: 2,
+        originalIsCopy: true,
+      },
+      'storm-orig': {
+        name: 'Grapeshot',
+        cardTypes: ['SORCERY'],
+        manaValue: 2,
+        originalIsCopy: false,
       },
     }
 
     const { container } = render(<StackZone stack={stack} />)
-    expect(container.querySelector('.stack-tl-copy-badge')).toBeTruthy()
-    expect(container.textContent).toContain('Copia')
+    expect(container.querySelectorAll('.stack-tl-copy-badge')).toHaveLength(1)
+    expect(container.querySelector('.stack-tl-entry.is-copy')?.getAttribute('data-card-id')).toBe('storm-1')
 
     const expandedBtn = container.querySelectorAll('.stack-zone [role="tab"]')[1] as HTMLButtonElement
     expect(expandedBtn).toBeTruthy()

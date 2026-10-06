@@ -38,10 +38,8 @@ function isStackAbility(card: CardView): boolean {
 }
 
 function isCopyCard(card: CardView): boolean {
-  const name = card.name ?? ''
-  const disp = card.displayName ?? ''
-  // the view has no `isCopy`: a copy on the stack is only told apart by its name
-  return name.includes('[Copia') || name.includes('[Copy') || disp.includes('[Copia')
+  // the server marks a copied spell with `originalIsCopy` (Spell.isCopy()); its name is the card's own
+  return card.originalIsCopy === true
 }
 
 function stackTypeLabel(card: CardView, t: CategoryT<'game'>): string {

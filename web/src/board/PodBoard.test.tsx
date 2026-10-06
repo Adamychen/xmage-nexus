@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
-import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import { commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
 
 declare const process: { cwd(): string }
@@ -21,7 +21,7 @@ describe('PodBoard', () => {
       expansionSetCode: 'TEST',
       cardNumber: '1',
       mageObjectType: 'COMMANDER',
-      castCount,
+      rules: [commanderInfoRule(castCount)],
     } as unknown as CardView
   }
 

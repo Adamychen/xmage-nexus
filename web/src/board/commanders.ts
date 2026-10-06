@@ -31,6 +31,20 @@ export function hasCommanders(game: GameView | null): boolean {
   return (game?.players ?? []).some((p) => commandersOf(p).length > 0)
 }
 
+const PLAYS_FROM_COMMAND_ZONE = /(\d+)\s+times?\s+played from the command zone/i
+
+/** Times a commander was cast from the command zone. The server sends no count
+ *  field: the engine's CommanderInfoWatcher writes it into the card's rules
+ *  ("<b>Commander</b> 2 times played from the command zone."), and omits the
+ *  sentence while the count is zero. */
+export function commanderPlaysCount(card: Pick<CardView, 'rules'>): number {
+  for (const rule of card.rules ?? []) {
+    const m = PLAYS_FROM_COMMAND_ZONE.exec(String(rule))
+    if (m) return Number(m[1])
+  }
+  return 0
+}
+
 /** Impuesto de lanzamiento de comandante: +{2 por cada vez lanzado}. */
 export function commanderTax(castCount: number): number {
   return castCount > 0 ? castCount * 2 : 0
