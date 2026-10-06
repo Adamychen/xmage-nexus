@@ -28,6 +28,17 @@ export interface CardStripMeta {
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
 }
 
+/**
+ * A card dragged onto the deck list (`application/json` in the drag data): its printing, the zone
+ * it comes from and, from the search results, its metadata. Parsed JSON, so every field may be missing.
+ */
+export type DroppedCardData = CardStripMeta & {
+  cardName?: string
+  setCode?: string
+  cardNumber?: string
+  source?: string
+}
+
 function getColorClass(colors?: string[]): string {
   if (!colors || colors.length === 0) return 'color-colorless'
   if (colors.length > 1) return 'color-multi'

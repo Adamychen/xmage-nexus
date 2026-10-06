@@ -244,7 +244,7 @@ export default function CombatArrowsOverlay({
         const cardObj = stackCard as unknown as Record<string, unknown>
         const targets = cardObj.targets ?? cardObj.targetIds ?? cardObj.chosenTargets ?? []
         const targetList: string[] = Array.isArray(targets)
-          ? targets.map((t: any) => typeof t === 'string' ? t : t?.id).filter(Boolean)
+          ? targets.map((t: unknown) => typeof t === 'string' ? t : (t as { id?: string } | null)?.id).filter((id): id is string => !!id)
           : typeof targets === 'object' && targets !== null
           ? Object.keys(targets)
           : []

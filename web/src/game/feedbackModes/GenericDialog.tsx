@@ -6,7 +6,7 @@ import type { FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
 import DialogShell from '../../ui/DialogShell'
 import { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from '../../i18n'
+import { useTranslation, dynamicT } from '../../i18n'
 import { setSetting, useStore } from '../../state/store'
 import { getState } from '../../state/state'
 import { addAutoAnswer } from '../autoAnswers'
@@ -170,8 +170,8 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       chooseActive()
     }
   }
-  const kicker = getFeedbackKicker(prompt, t as any)
-  const title = getLocalizedTitle(prompt, t as any)
+  const kicker = getFeedbackKicker(prompt, dynamicT(t))
+  const title = getLocalizedTitle(prompt, dynamicT(t))
   const autoAnswerable = isPlainBooleanAsk(prompt)
   const chooseBoolean = (option: { value: string }) => {
     if (rememberAnswer && autoAnswerable) {
@@ -208,7 +208,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       sourceName={prompt.sourceName && prompt.sourceName !== title
         ? <FormattedText text={prompt.sourceName} />
         : undefined}
-      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
       search={isGridBranch && prompt.options.length > GRID_SEARCH_THRESHOLD ? (
         <div className="feedback-input-box">
           <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
@@ -277,7 +277,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                     onClick={() => sendChoice(option.value)}
                   >
                     <span className="choice-number">{idx + 1}</span>
-                    <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
+                    <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
                   </button>
                 ))}
               </div>
@@ -415,7 +415,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                   }}
                 >
                   <span className="choice-number">{idx + 1}</span>
-                  <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as any)} /></span>
+                  <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
                   {prompt.mode === 'uuid' && prompt.max > 1 && (
                     <span className="choice-checkbox">{isSel ? '✓' : ''}</span>
                   )}

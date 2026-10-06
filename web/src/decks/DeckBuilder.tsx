@@ -432,7 +432,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               onAdd={mutations.handleAddFromSearch}
               countMap={countMap}
               format={format}
-              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onHover={(c, r) => handleHoverCard(c, undefined, r)}
               onLeave={handleLeaveCard}
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
@@ -443,7 +443,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               isCommanderFormat={isCommanderFormat}
               countMap={countMap}
               onAdd={mutations.handleAddFromSearch}
-              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onHover={(c, r) => handleHoverCard(c, undefined, r)}
               onLeave={handleLeaveCard}
               gridSize={gridSize}
               onGridSizeChange={setGridSize}

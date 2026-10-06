@@ -34,7 +34,7 @@ export interface BoardZoneProps {
   revealedCards?: Record<string, CardView>
   onCardClick?: (id: string) => void
   onHandCardClick?: (id: string, e?: React.MouseEvent) => void
-  onCardHover?: (card: any, rect?: DOMRect) => void
+  onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
   targetIds?: Set<string>
   targetZone?: TargetZoneKind | null
   targetZones?: ReadonlySet<TargetZoneKind>
@@ -343,7 +343,7 @@ export default function BoardZone({
           <div className="mutate-parts">
             {mutateParts.map((part, mi) => (
               <CardSlot
-                key={(part as any).id ?? `mp-${mi}`}
+                key={part.id ?? `mp-${mi}`}
                 card={part}
                 className="mutate-part"
                 compact={compactCards}

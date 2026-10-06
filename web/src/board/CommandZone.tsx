@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { CardView, PlayerView } from '../net/types'
+import type { CardView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import { commanderTax } from './commanders'
 import Icon from '../ui/Icon'
@@ -10,8 +10,8 @@ interface CommandZoneProps {
   player: PlayerView | undefined
   side: 'my' | 'opp'
   onCardClick?: (id: string) => void
-  onHover?: (card: any, rect?: DOMRect) => void
-  onCardHover?: (card: any, rect?: DOMRect) => void
+  onHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
+  onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
   playableIds?: Set<string>
   targetIds?: Set<string>
   helperEmblems?: Record<string, CardView>
@@ -19,6 +19,9 @@ interface CommandZoneProps {
   /** Card style "compact": commanders and emblems render as art-crop tiles like the battlefield. */
   compactCards?: boolean
 }
+
+/** A command-zone entry as it arrives: a card view, plus flags only some objects carry. */
+type CommandCard = CardView & { isHelperCard?: boolean; isCompanion?: boolean; isCommander?: boolean; castCount?: number }
 
 interface CommandObject {
   id: string
@@ -63,8 +66,9 @@ export function parseCommandList(
   const items: CommandObject[] = []
   const seenIds = new Set<string>()
 
-  const processCard = (card: any, defaultId?: string) => {
-    if (!card || typeof card !== 'object') return
+  const processCard = (raw: unknown, defaultId?: string) => {
+    if (!raw || typeof raw !== 'object') return
+    const card = raw as CommandCard
     const id = card.id || defaultId || `cmd-${Math.random().toString(36).slice(2, 7)}`
     if (seenIds.has(id)) return
     seenIds.add(id)
@@ -80,7 +84,7 @@ export function parseCommandList(
       card.mageObjectType === 'HELPER' ||
       card.mageObjectType === 'HELPER_EMBLEM' ||
       card.isHelperCard === true ||
-      (Array.isArray(card.rules) && card.rules.some((r: string) => r.toLowerCase().includes('day or night') && r.toLowerCase().includes('neither day nor night')))
+      (Array.isArray(card.rules) && card.rules.some((r) => r.toLowerCase().includes('day or night') && r.toLowerCase().includes('neither day nor night')))
     ) {
       return
     }
@@ -90,18 +94,18 @@ export function parseCommandList(
       nameLower.startsWith('emblem -') ||
       nameLower.startsWith('emblem:') ||
       nameLower.startsWith('emblem ') ||
-      (Array.isArray(card.cardTypes) && card.cardTypes.some((t: string) => String(t).toLowerCase() === 'emblem'))
+      (Array.isArray(card.cardTypes) && card.cardTypes.some((t) => String(t).toLowerCase() === 'emblem'))
 
     const isCompanion =
       card.mageObjectType === 'COMPANION' ||
       card.isCompanion === true ||
-      (Array.isArray(card.rules) && card.rules.some((r: string) => String(r).toLowerCase().includes('companion')))
+      (Array.isArray(card.rules) && card.rules.some((r) => String(r).toLowerCase().includes('companion')))
 
     const isExplicitCommander = card.mageObjectType === 'COMMANDER' || card.isCommander === true
     const isAuthenticCard =
-      (card.expansionSetCode && card.cardNumber) ||
-      (Array.isArray(card.cardTypes) && card.cardTypes.some((t: string) => ['creature', 'planeswalker'].includes(String(t).toLowerCase()))) ||
-      (Array.isArray(card.superTypes) && card.superTypes.some((t: string) => String(t).toLowerCase() === 'legendary'))
+      !!(card.expansionSetCode && card.cardNumber) ||
+      (Array.isArray(card.cardTypes) && card.cardTypes.some((t) => ['creature', 'planeswalker'].includes(String(t).toLowerCase()))) ||
+      (Array.isArray(card.superTypes) && card.superTypes.some((t) => String(t).toLowerCase() === 'legendary'))
 
     const isCommander = !isEmblem && !isCompanion && (isExplicitCommander || isAuthenticCard)
 
@@ -113,7 +117,7 @@ export function parseCommandList(
 
     items.push({
       id,
-      card: card as CardView,
+      card,
       isEmblem,
       isCommander,
       isCompanion,

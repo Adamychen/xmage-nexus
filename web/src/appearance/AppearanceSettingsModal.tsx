@@ -1,3 +1,4 @@
+import type { TranslationSchema } from '../i18n/types'
 import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
@@ -19,7 +20,7 @@ interface Props {
   onClose: () => void
 }
 
-const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descKey: string; icon: string }> = [
+const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: keyof TranslationSchema['lobby']; descKey: keyof TranslationSchema['lobby']; icon: string }> = [
   { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc', icon: '▭' },
   { id: 'pod', labelKey: 'board_pod', descKey: 'board_pod_desc', icon: '⊞' },
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc', icon: '⬒' },
@@ -124,8 +125,8 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                   data-testid={`board-layout-${l.id}`}
                 >
                   <span className="board-layout-icon">{l.icon}</span>
-                  <span className="board-layout-label">{t('lobby', l.labelKey as any)}</span>
-                  <span className="board-layout-desc">{t('lobby', l.descKey as any)}</span>
+                  <span className="board-layout-label">{t('lobby', l.labelKey)}</span>
+                  <span className="board-layout-desc">{t('lobby', l.descKey)}</span>
                   {isSelected && <span className="board-layout-check">✓</span>}
                 </button>
               )

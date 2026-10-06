@@ -228,7 +228,8 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     crossZonePlayables,
   })
 
-  useGameTransitions(game)
+  const gameId = useStore((s) => s.gameId)
+  useGameTransitions(game, gameId)
 
   return {
     boardRef,

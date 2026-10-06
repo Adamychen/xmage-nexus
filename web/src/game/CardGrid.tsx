@@ -7,7 +7,7 @@ import CardSlot from '../board/CardSlot'
 import Icon, { type IconName } from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { stripTargetProgress, targetProgressLabel, type FeedbackPrompt } from './feedback'
-import { useTranslation } from '../i18n'
+import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './CardGrid.css'
 import Button from '../ui/Button'
@@ -71,7 +71,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
     }, t('errors','send_failed_choice'))
   }
 
-  const progressText = serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, t as never) : null
+  const progressText = serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
   const message = serverDriven ? stripTargetProgress(prompt.message) : prompt.message
   const isDiscard = /descart|discard/i.test(prompt.message)
   const cardGridTitle = prompt.isLibraryOrderPick
@@ -95,7 +95,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
           ? t('dialogs','cardgrid_count', { count: cards.length })
           : `${filtered.length} / ${cards.length}`}
       </Chip></>}
-      message={message ? localizeServerMessage(message, t as any) : undefined}
+      message={message ? localizeServerMessage(message, dynamicT(t)) : undefined}
       search={(
         <div className="card-grid-search">
           <div className="card-grid-search-wrap">

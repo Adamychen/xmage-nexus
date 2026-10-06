@@ -143,7 +143,7 @@ export function setLanguage(lang: SupportedLanguage): void {
  * immediately after. `setLanguage` alone paints English for the few ms the chunk takes, which is
  * what a player sees; a test has no such grace period and would assert the fallback.
  */
-export async function useLanguage(lang: SupportedLanguage): Promise<void> {
+export async function switchLanguage(lang: SupportedLanguage): Promise<void> {
   setLanguage(lang)
   await ensureLocaleLoaded(lang)
 }
@@ -200,17 +200,17 @@ export function t(
   const parts = path.split('.')
   // until a language's chunk has arrived this is English, and the notifyListeners() in
   // ensureLocaleLoaded re-renders everything with the real strings
-  let current: any = localeOf(currentLanguage)
+  let current: unknown = localeOf(currentLanguage)
 
   for (const part of parts) {
     if (current && typeof current === 'object' && part in current) {
-      current = current[part]
+      current = (current as Record<string, unknown>)[part]
     } else {
       // Fallback to English or key if missing
-      let fallback: any = en
+      let fallback: unknown = en
       for (const p of parts) {
         if (fallback && typeof fallback === 'object' && p in fallback) {
-          fallback = fallback[p]
+          fallback = (fallback as Record<string, unknown>)[p]
         } else {
           return path
         }
@@ -342,6 +342,17 @@ export function translateError(error: string | null | undefined, action?: string
   return str
 }
 
+/** `t` called with a key built at runtime (from server text, a prompt kind...). */
+export type DynamicT = (category: keyof TranslationSchema, key: string, params?: Record<string, string | number>) => string
+
+/**
+ * The same `t`, typed for keys the compiler cannot check. Safe at runtime: an unknown key
+ * answers its own path, like any missing translation.
+ */
+export function dynamicT(fn: typeof t): DynamicT {
+  return fn as unknown as DynamicT
+}
+
 export function useTranslation() {
   useSyncExternalStore(subscribe, getStoreSnapshot, getStoreSnapshot)
 
@@ -353,9 +364,8 @@ export function useTranslation() {
     setCardLanguage(newCardLang)
   }, [])
 
-  const translate: typeof t = useCallback((pathOrCat: any, keyOrParams?: any, params?: any) => {
-    return t(pathOrCat, keyOrParams, params)
-  }, [])
+  // `t` is module-level and stable; the subscription above is what re-renders on a language change
+  const translate = t
 
   const errorTranslator = useCallback((err: string | null | undefined, action?: string, errorCode?: string) => {
     return translateError(err, action, errorCode)

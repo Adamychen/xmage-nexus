@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { DeckV2 } from './types'
 import type { DeckCard } from '../lobby/decks'
-import type { CardStripMeta } from './ArenaCardStrip'
+import type { CardStripMeta, DroppedCardData } from './ArenaCardStrip'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import type { BasicLandPreset } from './deckUtils'
 import type { ImportResult } from './DeckImportModal'
@@ -83,7 +83,7 @@ export function useDeckMutations(deps: Deps) {
     }
   }
 
-  const cacheMetaFromPayload = (cardData: any, setCode: string, cardNumber: string, cardName: string) => {
+  const cacheMetaFromPayload = (cardData: DroppedCardData, setCode: string, cardNumber: string, cardName: string) => {
     if (cardData.manaCost === undefined && !cardData.typeLine) return
     setMetaMap((prev) => {
       const nxt = new Map(prev)
@@ -105,7 +105,7 @@ export function useDeckMutations(deps: Deps) {
     })
   }
 
-  const metaOf = (cardName: string, setCode: string, cardNumber: string, payload?: any) => {
+  const metaOf = (cardName: string, setCode: string, cardNumber: string, payload?: DroppedCardData) => {
     if (payload?.typeLine) {
       return { typeLine: payload.typeLine, oracleText: payload.oracleText ?? '', keywords: payload.keywords }
     }
@@ -131,7 +131,7 @@ export function useDeckMutations(deps: Deps) {
     && a.setCode.toUpperCase() === setCode.toUpperCase()
     && a.cardNumber === cardNumber
 
-  const handleDropCardOnDeck = (cardData: any, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
+  const handleDropCardOnDeck = (cardData: DroppedCardData, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
     if (!deck || !cardData?.cardName) return
     const setCode = (cardData.setCode || '').toUpperCase()
     const cardNumber = cardData.cardNumber || '0'

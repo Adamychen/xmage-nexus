@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import TournamentBracket from './TournamentBracket'
 import ConfirmHost from '../ui/ConfirmHost'
-import { setLanguage, useLanguage } from '../i18n'
+import { setLanguage, switchLanguage } from '../i18n'
 import type { TournamentView, TournamentPlayerView, RoundView, TournamentGameView } from '../net/types'
 
 function sampleTournamentView(overrides: Partial<TournamentView> = {}): TournamentView {
@@ -87,7 +87,7 @@ describe('TournamentBracket', () => {
 
   it('no duplica los encabezados de la clasificación en en y ru (sin .replace)', async () => {
     const headersFor = async (lang: 'en' | 'ru') => {
-      await useLanguage(lang)
+      await switchLanguage(lang)
       const { container, unmount } = render(<TournamentBracket view={sampleTournamentView()} />)
       const texts = Array.from(container.querySelectorAll('thead th')).map((el) => el.textContent ?? '')
       unmount()

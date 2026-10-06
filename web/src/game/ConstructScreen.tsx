@@ -14,8 +14,8 @@ import Icon from '../ui/Icon'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
-import { validateDeckForFormat } from '../decks/formatRules'
-import type { DeckFormat } from '../decks/types'
+import { validateDeckForFormat, type DeckValidationReport } from '../decks/formatRules'
+import type { DeckFormat, DeckV2 } from '../decks/types'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import { isUuidLikeCardName } from '../cards/cardLocalization'
@@ -46,7 +46,7 @@ export function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
     // El engine no manda `name` en el pool (SimpleCardsView): antes caía el
     // UUID de instancia como nombre (90 filas + 404s Scryfall). Sin nombre se
     // agrupa por impresión ("SET número"), honesto y sin red inútil.
-    const cardName = poolCardDisplayName((sc as any).name ?? (sc as any).cardName, set, num)
+    const cardName = poolCardDisplayName(sc.name ?? sc.cardName, set, num)
     if (!cardName) continue
     const key = `${cardName}|${set}|${num}`
     const existing = map.get(key)
@@ -311,9 +311,9 @@ export default function ConstructScreen() {
     return 'Freeform' as DeckFormat
   }, [])
 
-  const validation = useMemo(() => {
-    if (main.length === 0 && pool.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
-    const fakeDeck: any = {
+  const validation = useMemo((): DeckValidationReport => {
+    if (main.length === 0 && pool.length === 0) return { isValid: true, issues: [], cardIssues: new Map() }
+    const fakeDeck: DeckV2 = {
       name: construct?.deckName ?? t('game', 'construct_title'),
       cards: main,
       sideboard: pool,
@@ -517,7 +517,7 @@ export default function ConstructScreen() {
 
         {validation.issues.length > 0 && (
           <div className="construct-validation">
-            {validation.issues.slice(0, 3).map((iss: any, i: number) => (
+            {validation.issues.slice(0, 3).map((iss, i) => (
               <span key={i} className={`validation-issue ${iss.severity}`}>{iss.message}</span>
             ))}
           </div>

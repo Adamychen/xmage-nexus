@@ -1,38 +1,56 @@
 import { useState, useEffect } from 'react'
 
+/** The vendor-prefixed Fullscreen API of older Safari, Firefox and IE/Edge. */
+interface PrefixedDocument extends Document {
+  webkitFullscreenElement?: Element | null
+  mozFullScreenElement?: Element | null
+  msFullscreenElement?: Element | null
+  webkitExitFullscreen?: () => Promise<void> | void
+  mozCancelFullScreen?: () => Promise<void> | void
+  msExitFullscreen?: () => Promise<void> | void
+}
+
+interface PrefixedElement extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void> | void
+  mozRequestFullScreen?: () => Promise<void> | void
+  msRequestFullscreen?: () => Promise<void> | void
+}
+
 export function isFullscreen(): boolean {
   if (typeof document === 'undefined') return false
+  const doc = document as PrefixedDocument
   return !!(
-    document.fullscreenElement ||
-    (document as any).webkitFullscreenElement ||
-    (document as any).mozFullScreenElement ||
-    (document as any).msFullscreenElement
+    doc.fullscreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.msFullscreenElement
   )
 }
 
 export async function toggleFullscreen(): Promise<void> {
   if (typeof document === 'undefined') return
+  const doc = document as PrefixedDocument
   try {
     if (!isFullscreen()) {
-      const el = document.documentElement
+      const el = doc.documentElement as PrefixedElement
       if (el.requestFullscreen) {
         await el.requestFullscreen()
-      } else if ((el as any).webkitRequestFullscreen) {
-        await (el as any).webkitRequestFullscreen()
-      } else if ((el as any).mozRequestFullScreen) {
-        await (el as any).mozRequestFullScreen()
-      } else if ((el as any).msRequestFullscreen) {
-        await (el as any).msRequestFullscreen()
+      } else if (el.webkitRequestFullscreen) {
+        await el.webkitRequestFullscreen()
+      } else if (el.mozRequestFullScreen) {
+        await el.mozRequestFullScreen()
+      } else if (el.msRequestFullscreen) {
+        await el.msRequestFullscreen()
       }
     } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen()
-      } else if ((document as any).webkitExitFullscreen) {
-        await (document as any).webkitExitFullscreen()
-      } else if ((document as any).mozCancelFullScreen) {
-        await (document as any).mozCancelFullScreen()
-      } else if ((document as any).msExitFullscreen) {
-        await (document as any).msExitFullscreen()
+      if (doc.exitFullscreen) {
+        await doc.exitFullscreen()
+      } else if (doc.webkitExitFullscreen) {
+        await doc.webkitExitFullscreen()
+      } else if (doc.mozCancelFullScreen) {
+        await doc.mozCancelFullScreen()
+      } else if (doc.msExitFullscreen) {
+        await doc.msExitFullscreen()
       }
     }
   } catch (err) {

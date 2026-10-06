@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { keywordDisplayName, keywordSummary, keywordRuleRef } from './keywordI18n'
-import { setLanguage, useLanguage, t } from '../i18n'
+import { setLanguage, switchLanguage, t } from '../i18n'
 
 const stub = (entries: Record<string, string>) => (key: string) => entries[key] ?? `keywords.${key}`
 
@@ -39,15 +39,15 @@ describe('keywordI18n', () => {
 
   it('reads real locales through t() per active language', async () => {
     const kw = (k: string) => t('keywords', k)
-    await useLanguage('de')
+    await switchLanguage('de')
     expect(keywordDisplayName('flying', 'Flying', kw)).toBe('Fliegend')
     expect(keywordDisplayName('ward', 'Ward', kw, '{2}')).toBe('Abwehr {2}')
     setLanguage('es')
     expect(keywordDisplayName('flying', 'Flying', kw)).toBe('Volar')
     expect(keywordDisplayName('ward', 'Ward', kw, '{2}')).toBe('Rebatir {2}')
-    await useLanguage('en')
+    await switchLanguage('en')
     expect(keywordDisplayName('flying', 'Flying', kw)).toBe('Flying')
-    await useLanguage('ja')
+    await switchLanguage('ja')
     expect(keywordSummary('toxic', kw, '1')).toContain('毒カウンター')
   })
 })

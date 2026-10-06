@@ -5,8 +5,10 @@ import type { CardView, PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
+import type { CategoryT } from '../i18n/types'
 import Icon, { type IconName } from '../ui/Icon'
 import DungeonMap from './DungeonMap'
+import { commandItems } from './commandItems'
 import {
   dungeonProgressKey,
   dungeonRoot,
@@ -34,7 +36,7 @@ interface DungeonState {
   visited: string[]
 }
 
-function getRingLevels(t: (c: any, k: any) => string) {
+function getRingLevels(t: CategoryT<'game'>) {
   return [
     { level: 1, title: t('game', 'ring_level_1_title'), rule: t('game', 'ring_level_1_rule') },
     { level: 2, title: t('game', 'ring_level_2_title'), rule: t('game', 'ring_level_2_rule') },
@@ -45,7 +47,7 @@ function getRingLevels(t: (c: any, k: any) => string) {
 
 type DungeonRoomDef = { keys: string[]; label: string }
 
-function getFallbackRooms(t: (c: any, k: any) => string): DungeonRoomDef[] {
+function getFallbackRooms(t: CategoryT<'game'>): DungeonRoomDef[] {
   return [
     { keys: [], label: t('game', 'dungeon_fallback_1') },
     { keys: [], label: t('game', 'dungeon_fallback_2') },
@@ -76,15 +78,11 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     if (!game?.players) return []
     const list: RingState[] = []
     for (const p of game.players) {
-      const items = Array.isArray(p.commandList)
-        ? p.commandList
-        : typeof p.commandList === 'object'
-          ? Object.values(p.commandList ?? {})
-          : []
-      const ringItem = items.find((c: any) => {
+      const items = commandItems(p)
+      const ringItem = items.find((c) => {
         const n = String(c?.name ?? '').toLowerCase()
         return n === 'the ring' || n.startsWith('the ring')
-      }) as { rules?: string[] } | undefined
+      })
 
       if (ringItem) {
         const rules = ringItem.rules ?? []
@@ -103,16 +101,12 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
     if (!game?.players) return []
     const list: DungeonState[] = []
     for (const p of game.players) {
-      const items = Array.isArray(p.commandList)
-        ? p.commandList
-        : typeof p.commandList === 'object'
-          ? Object.values(p.commandList ?? {})
-          : []
-      const dungeonItem = items.find((c: any) => {
+      const items = commandItems(p)
+      const dungeonItem = items.find((c) => {
         const n = String(c?.name ?? '').toLowerCase()
-        const types = Array.isArray(c?.cardTypes) ? c.cardTypes.map((t: string) => String(t).toLowerCase()) : []
+        const types = Array.isArray(c?.cardTypes) ? c.cardTypes.map((t) => String(t).toLowerCase()) : []
         return types.includes('dungeon') || ['undercity', 'dungeon of the mad mage', 'lost mine of phandelver', 'tomb of annihilation'].some((k) => n.includes(k))
-      }) as { name?: string; currentRoom?: string } | undefined
+      })
 
       if (dungeonItem?.name) {
         const graph = findDungeonGraph(dungeonItem.name)

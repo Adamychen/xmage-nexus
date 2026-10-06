@@ -4,7 +4,7 @@ import Checkbox from '../../ui/Checkbox'
 import FormattedText from '../FormattedText'
 import Icon from '../../ui/Icon'
 import { DockPrompt } from '../GameDock'
-import { useTranslation } from '../../i18n'
+import { useTranslation, dynamicT } from '../../i18n'
 import { getState } from '../../state/state'
 import { setSetting } from '../../state/store'
 import { addAutoAnswer } from '../autoAnswers'
@@ -31,7 +31,7 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
   if (!prompt) return null
 
   const rememberable = isPlainBooleanAsk(prompt)
-  const message = localizeServerMessage(prompt.message, t as never)
+  const message = localizeServerMessage(prompt.message, dynamicT(t))
 
   const choose = (option: { id: string; label: string; value: string }) => {
     if (busy) return
@@ -88,7 +88,7 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
                 onClick={() => choose(option)}
               >
                 <span className="choice-number">{idx + 1}</span>
-                <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, t as never)} /></span>
+                <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
               </Button>
             ))}
           </div>

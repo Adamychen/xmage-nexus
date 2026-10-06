@@ -2,7 +2,7 @@ import FormattedText from '../FormattedText'
 import Button from '../../ui/Button'
 import IconButton from '../../ui/IconButton'
 import Icon, { type IconName } from '../../ui/Icon'
-import { useTranslation } from '../../i18n'
+import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { stripTargetProgress, targetProgressLabel } from '../feedback'
@@ -21,7 +21,7 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
       : prompt.isLibraryOrderPick
         ? t('game', 'library_order_title')
         : (prompt.sourceName ?? t('game', 'choose_target'))
-  const localizedMessage = localizeServerMessage(stripTargetProgress(prompt.message), t as any)
+  const localizedMessage = localizeServerMessage(stripTargetProgress(prompt.message), dynamicT(t))
   // El servidor suele repetir el título ya localizado ("Select a card to
   // discard"): una sola línea, no dos veces lo mismo.
   const hintText = prompt.isStartingPlayer
@@ -31,7 +31,7 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
       : localizedMessage === titleText
         ? null
         : <FormattedText text={localizedMessage} />
-  const progressText = !prompt.isStartingPlayer && prompt.progress ? targetProgressLabel(prompt.progress, t as never) : null
+  const progressText = !prompt.isStartingPlayer && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
   const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
 
   return (

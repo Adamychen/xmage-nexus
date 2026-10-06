@@ -88,7 +88,7 @@ export default function CardSlot({
   const [held, setHeld] = useState(false)
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const effectiveId = cardId || (card as any).id
+  const effectiveId = cardId || card.id
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
   const enteredThisTurn = useStore((s) => (effectiveId ? s.enteredThisTurn[effectiveId] === true : false))
   const shownDamage = useCombatHeld(effectiveId ? String(effectiveId) : null, (card as PermanentView).damage ?? 0)

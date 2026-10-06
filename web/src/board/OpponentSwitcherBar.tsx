@@ -79,7 +79,7 @@ export default function OpponentSwitcherBar({
           // Check if this opponent is being attacked or has blockers in combat
           const isInvolvedInCombat = (combat ?? []).some((g) => {
             const defs = (g.defenders as unknown[]) ?? []
-            return defs.includes(opp.playerId) || (g as any).defenderId === opp.playerId
+            return defs.includes(opp.playerId)
           })
 
           const next = ordered[idx + 1]
