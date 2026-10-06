@@ -64,16 +64,22 @@ class ProxyClientFailedLoginTest {
 
     /**
      * A client that fails to log in, with the login itself stubbed out. The server's error detail
-     * is pre-seeded so {@code pollDetailedMessage} returns on its first read instead of sleeping
+     * is pre-seeded so {@code ServerMessageMailbox.await} returns on its first read instead of sleeping
      * through the 4.5 s it allows a delayed {@code SHOW_USERMESSAGE}.
      */
     private ProxyClient failingClient() throws Exception {
         ProxyClient pc = new ProxyClient(gateway.getConfig(), gateway);
         set(pc, "session", new FailingSession());
-        set(pc, "lastDetailedMessage", "User name may not be longer than 14 characters");
-        set(pc, "lastDetailedMessageAt", Long.MAX_VALUE);
+        seedServerMessage(pc, "User name may not be longer than 14 characters");
         client = pc;
         return pc;
+    }
+
+    /** A message that never goes stale, so the wait for the server's detail returns at once. */
+    private static void seedServerMessage(ProxyClient pc, String message) throws Exception {
+        Field f = ProxyClient.class.getDeclaredField("serverMessages");
+        f.setAccessible(true);
+        ((ServerMessageMailbox) f.get(pc)).capture(message, Long.MAX_VALUE);
     }
 
     private static void set(ProxyClient pc, String field, Object value) throws Exception {
@@ -149,8 +155,7 @@ class ProxyClientFailedLoginTest {
         for (int i = 0; i < 25; i++) {
             ProxyClient pc = new ProxyClient(gateway.getConfig(), gateway);
             set(pc, "session", new FailingSession());
-            set(pc, "lastDetailedMessage", "User name may not be longer than 14 characters");
-            set(pc, "lastDetailedMessageAt", Long.MAX_VALUE);
+            seedServerMessage(pc, "User name may not be longer than 14 characters");
             awaitConnectResult(sendConnect(pc, "too-long-username-" + i));
         }
         // a shut-down pool lets its thread out asynchronously, so let the count settle first
