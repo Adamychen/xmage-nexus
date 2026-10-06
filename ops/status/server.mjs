@@ -689,6 +689,14 @@ function statsPayload(rangeName) {
   const failReasons = [...reasons.entries()].map(([label, v]) => ({ label, v })).sort((a, b) => b.v - a.v).slice(0, 8);
   const endReasons = all(`SELECT COALESCE(json_extract(kv, '$.reason'), '?') AS label, COUNT(*) AS v FROM events WHERE type = 'session_end' AND ts >= ? AND ts < ? GROUP BY label ORDER BY v DESC`, r.from, r.to);
   const actions = all(`SELECT action AS label, COUNT(*) AS v FROM events WHERE type = 'action' AND action NOT LIKE 'get%' AND ts >= ? AND ts < ? GROUP BY action ORDER BY v DESC LIMIT 12`, r.from, r.to);
+  const gameOutcomes = all(`SELECT CASE WHEN json_extract(kv, '$.result') = 'unfinished'
+        THEN 'unfinished:' || COALESCE(json_extract(kv, '$.reason'), '?')
+        ELSE COALESCE(json_extract(kv, '$.result'), '?') END AS label, COUNT(*) AS v
+    FROM events WHERE type = 'game_end' AND json_extract(kv, '$.role') = 'player' AND ts >= ? AND ts < ?
+    GROUP BY label ORDER BY v DESC`, r.from, r.to);
+  const ended = gameOutcomes.reduce((a, o) => a + o.v, 0);
+  const finished = gameOutcomes.filter(o => ['won', 'lost', 'draw'].includes(o.label)).reduce((a, o) => a + o.v, 0);
+  const finishRate = ended ? Math.round(1000 * finished / ended) / 10 : null;
   return {
     range: { name: r.name, from: r.from, to: r.to, hourly: b.hourly },
     kpis: cur,
@@ -708,6 +716,8 @@ function statsPayload(rangeName) {
     failReasons,
     endReasons,
     actions,
+    gameOutcomes,
+    finishRate,
   };
 }
 

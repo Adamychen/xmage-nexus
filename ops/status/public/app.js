@@ -189,6 +189,16 @@ const DICT = {
     'act.updatePreferences': 'updated preferences',
     'reason.grace_expired': 'Did not come back (grace expired)',
     'reason.disconnect': 'Signed out',
+    'chart.outcomes': 'How games end',
+    'chart.outcomesSub': 'Seated players · {rate} finished',
+    'outcome.won': 'Won',
+    'outcome.lost': 'Lost',
+    'outcome.draw': 'Draw',
+    'outcome.quit': 'Left the match',
+    'outcome.conceded': 'Conceded, game went on',
+    'outcome.unfinished:grace_expired': 'Unfinished: did not come back',
+    'outcome.unfinished:disconnect': 'Unfinished: signed out',
+    'outcome.unfinished:user_switch': 'Unfinished: switched account',
     after: 'after {d}',
   },
   es: {
@@ -381,6 +391,16 @@ const DICT = {
     'act.updatePreferences': 'cambió sus preferencias',
     'reason.grace_expired': 'No volvió (expiró la gracia)',
     'reason.disconnect': 'Cerró sesión',
+    'chart.outcomes': 'Cómo terminan las partidas',
+    'chart.outcomesSub': 'Jugadores sentados · {rate} terminadas',
+    'outcome.won': 'Ganó',
+    'outcome.lost': 'Perdió',
+    'outcome.draw': 'Empate',
+    'outcome.quit': 'Abandonó el match',
+    'outcome.conceded': 'Concedió, la partida siguió',
+    'outcome.unfinished:grace_expired': 'Sin terminar: no volvió',
+    'outcome.unfinished:disconnect': 'Sin terminar: cerró sesión',
+    'outcome.unfinished:user_switch': 'Sin terminar: cambió de cuenta',
     after: 'tras {d}',
   },
 };
@@ -1072,6 +1092,10 @@ function renderStats() {
       listCard(t('chart.fails'), t('chart.failsSub'), S.failReasons),
       listCard(t('chart.ends'), t('chart.endsSub'), S.endReasons, r => {
         const key = `reason.${r.label}`;
+        return t(key) === key ? r.label : t(key);
+      }),
+      listCard(t('chart.outcomes'), t('chart.outcomesSub', { rate: fmt.pct(S.finishRate) }), S.gameOutcomes || [], r => {
+        const key = `outcome.${r.label}`;
         return t(key) === key ? r.label : t(key);
       })));
 }
