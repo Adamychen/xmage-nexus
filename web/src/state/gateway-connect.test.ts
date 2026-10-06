@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ALREADY_CONNECTED_RETRIES, doConnect, reset } from './gateway'
+import { ALREADY_CONNECTED_RETRIES, doConnect, getGateway, reset } from './gateway'
+import { loadResumeToken, saveResumeToken, type ConnectionInfo } from './persistence'
 import { getState } from './state'
 import * as cmds from '../net/commands'
 import { gameEventOrder, noteGameEvent } from './gameUtils'
@@ -197,5 +198,46 @@ describe('doConnect — intentos concurrentes', () => {
     await vi.advanceTimersByTimeAsync(100)
     expect(cmds.connect).toHaveBeenCalledTimes(2)
     expect(gameEventOrder('g-1', 5)).toBe('unknown')
+  })
+
+  describe('resume token across a page reload', () => {
+    const conn: ConnectionInfo = { wsHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: 17171, username: 'u', password: 'p' }
+
+    beforeEach(() => window.sessionStorage.clear())
+
+    const login = async (username = 'u') => {
+      const done = doConnect('localhost', 8787, 'localhost', 17171, username, 'p')
+      FakeWebSocket.instances[FakeWebSocket.instances.length - 1].triggerOpen()
+      await vi.advanceTimersByTimeAsync(100)
+      await done
+    }
+
+    it('the page going away saves the stream position', async () => {
+      await login()
+      getGateway()!.seedResume({ streamId: 's1', seq: 42 })
+      window.dispatchEvent(new Event('pagehide'))
+      expect(loadResumeToken(conn)).toEqual({ streamId: 's1', seq: 42 })
+    })
+
+    it('the login after a reload presents the saved token once', async () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: true, resumed: true, streamId: 's1' } } as never)
+      await login()
+      expect(vi.mocked(cmds.connect).mock.calls[0][6]).toEqual({ streamId: 's1', seq: 42 })
+      expect(getGateway()!.resumeToken()).toEqual({ streamId: 's1', seq: 42 })
+      expect(loadResumeToken(conn)).toBeNull()
+    })
+
+    it('another account does not present the saved token', async () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      await login('someone-else')
+      expect(vi.mocked(cmds.connect).mock.calls[0][6]).toBeNull()
+    })
+
+    it('logging out forgets the token', () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      reset()
+      expect(loadResumeToken(conn)).toBeNull()
+    })
   })
 })

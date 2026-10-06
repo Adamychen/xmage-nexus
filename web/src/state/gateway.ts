@@ -3,7 +3,7 @@ import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
 import { clonePhaseStops } from '../game/phaseStops'
-import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, type ConnectionInfo } from './persistence'
+import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
 import type { ProxyMessage, ServerLinkEnvelope } from '../net/types'
@@ -188,6 +188,12 @@ export function attachGateway(g: Gateway) {
       await relogin(g, s.conn, 0)
     }
   }
+  g.events.onPageHide = () => {
+    const s = getState()
+    const token = g.resumeToken()
+    if (gateway !== g || !token || !s.conn || s.phase === 'idle' || s.phase === 'connecting') return
+    saveResumeToken(token, s.conn)
+  }
   g.events.onClose = (reason) => {
     const s = getState()
     const inSession = !!s.conn && s.phase !== 'idle' && s.phase !== 'connecting'
@@ -266,7 +272,11 @@ async function runConnect(
     return
   }
   if (stale()) return
-  const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId)
+  // a reload continues the stream of the page it replaced: the proxy replays the gap
+  const resume = loadResumeToken(conn)
+  clearResumeToken()
+  if (resume) g.seedResume(resume)
+  const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId, resume)
   if (stale()) return
   if (!res.ok && /already connected|already logged in/i.test(res.error ?? '') && alreadyConnectedRetries < ALREADY_CONNECTED_RETRIES) {
     const waitMs = ALREADY_CONNECTED_BASE_DELAY_MS * 2 ** alreadyConnectedRetries
@@ -281,6 +291,8 @@ async function runConnect(
     if (!isAttached(res.data)) resetGameEventOrder()
     setState({ phase: 'lobby', connecting: false, error: null, conn })
     saveConn(conn)
+    if (isResumed(res.data)) addLog('conexión', 'recarga: eventos perdidos reproducidos desde el proxy')
+    // the replay carries what happened meanwhile, but this page has no board: rejoin for the state + prompt
     restoreLimited()
     resumeActiveGame()
     const chatId = await cmds.getRoomChatId()
@@ -305,6 +317,7 @@ export function reset() {
   inFlight = null
   gateway?.close()
   saveConn(null)
+  clearResumeToken()
   clearActiveGame()
   clearActiveDraft()
   resetGameEventOrder()

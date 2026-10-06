@@ -276,9 +276,32 @@ describe('Gateway', () => {
       ws.triggerMessage(connectResult('1', { streamId: 's1', attached: true, resumed: false }))
       expect(g.resumeToken()).toEqual({ streamId: 's1', seq: 7 })
     })
+
+    it('a seeded token continues the stream of the page before a reload', async () => {
+      const seen: string[] = []
+      const g = new Gateway({ onMessage: (m) => { if (m.type === 'event') seen.push(m.method) } })
+      g.seedResume({ streamId: 's1', seq: 5 })
+      expect(g.resumeToken()).toEqual({ streamId: 's1', seq: 5 })
+      await connectOpen(g)
+      const ws = currentWs(g)
+      void g.send('connect', {})
+      ws.triggerMessage(connectResult('0', { streamId: 's1', attached: true, resumed: true }))
+      ws.triggerMessage(event(5, 'SEEN_BEFORE_RELOAD'))
+      ws.triggerMessage(event(6, 'GAP'))
+      expect(seen).toEqual(['GAP'])
+      expect(g.resumeToken()).toEqual({ streamId: 's1', seq: 6 })
+    })
   })
 
   describe('leaving', () => {
+    it('gives the app a chance to save state when the page goes away', async () => {
+      const onPageHide = vi.fn()
+      const g = new Gateway({ onPageHide })
+      await connectOpen(g)
+      window.dispatchEvent(new Event('pagehide'))
+      expect(onPageHide).toHaveBeenCalledTimes(1)
+    })
+
     it('tells the proxy when the page is being closed', async () => {
       const g = new Gateway()
       await connectOpen(g)

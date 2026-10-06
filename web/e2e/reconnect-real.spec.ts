@@ -110,3 +110,29 @@ test('a half-open socket is detected by the heartbeat and the game recovers with
   expect(await phasesSeen(page)).toEqual(['game'])
   expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
 })
+
+test('a reload mid-game resumes the proxy stream and rejoins the board', { tag: '@reconnect' }, async ({ page }) => {
+  const { pageErrors } = await startGame(page, { prefix: 'rcr', deck: DECK.lands, simDeck: DECK.aiLands })
+  await inGame(page)
+
+  const sentConnects: Array<{ resume?: { streamId: string; seq: number } }> = []
+  const connectResults: Array<{ resumed?: boolean }> = []
+  page.on('websocket', (ws) => {
+    ws.on('framesent', (f) => {
+      const msg = JSON.parse(String(f.payload)) as { action?: string; args?: { resume?: { streamId: string; seq: number } } }
+      if (msg.action === 'connect') sentConnects.push({ resume: msg.args?.resume })
+    })
+    ws.on('framereceived', (f) => {
+      const msg = JSON.parse(String(f.payload)) as { type?: string; action?: string; data?: { resumed?: boolean } }
+      if (msg.type === 'result' && msg.action === 'connect') connectResults.push({ resumed: msg.data?.resumed })
+    })
+  })
+
+  await page.reload()
+  await inGame(page)
+  expect(sentConnects).toHaveLength(1)
+  expect(sentConnects[0].resume?.streamId).toBeTruthy()
+  expect(sentConnects[0].resume!.seq).toBeGreaterThan(0)
+  expect(connectResults).toEqual([{ resumed: true }])
+  expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+})
