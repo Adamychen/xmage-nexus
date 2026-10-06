@@ -179,10 +179,10 @@ class ProxyClientStreamTest {
     @Test
     void theLobbyIsPolledRarelyDuringAGame() {
         long now = 1_000_000;
-        assertTrue(ProxyClient.lobbyDue(0, 0, now - 2000, now), "no game: every tick");
-        assertFalse(ProxyClient.lobbyDue(1, now - 1000, now - 2000, now), "in a game: skipped");
-        assertTrue(ProxyClient.lobbyDue(1, now - 1000, now - ProxyClient.LOBBY_IN_GAME_INTERVAL_MS, now));
-        assertTrue(ProxyClient.lobbyDue(1, now - ProxyClient.GAME_IDLE_MS, now - 2000, now), "a silent game no longer counts");
+        assertTrue(LobbyPublisher.lobbyDue(0, 0, now - 2000, now), "no game: every tick");
+        assertFalse(LobbyPublisher.lobbyDue(1, now - 1000, now - 2000, now), "in a game: skipped");
+        assertTrue(LobbyPublisher.lobbyDue(1, now - 1000, now - LobbyPublisher.LOBBY_IN_GAME_INTERVAL_MS, now));
+        assertTrue(LobbyPublisher.lobbyDue(1, now - LobbyPublisher.GAME_IDLE_MS, now - 2000, now), "a silent game no longer counts");
     }
 
     private long graceAfterClose(boolean left) throws Exception {

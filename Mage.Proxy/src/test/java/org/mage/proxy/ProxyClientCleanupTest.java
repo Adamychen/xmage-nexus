@@ -31,30 +31,29 @@ class ProxyClientCleanupTest {
         return new ProxyClient(gateway.getConfig(), gateway);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Set<UUID> gameIds(ProxyClient pc, String field) throws Exception {
-        Field f = ProxyClient.class.getDeclaredField(field);
+    private static SessionGames games(ProxyClient pc) throws Exception {
+        Field f = ProxyClient.class.getDeclaredField("games");
         f.setAccessible(true);
-        return (Set<UUID>) f.get(pc);
+        return (SessionGames) f.get(pc);
     }
 
     @Test
     void finishedGamesAreTrimmedFromTheSessionAllowlist() throws Exception {
         client = newClient(gateway);
-        Set<UUID> ids = gameIds(client, "sessionGameIds");
+        SessionGames games = games(client);
         for (int i = 0; i < 300; i++) {
-            client.markGameActive(UUID.randomUUID());
+            UUID game = UUID.randomUUID();
+            client.markGameActive(game);
             // each one finishes right away, the way a quick game does
-            client.markGameInactive(ids.iterator().next());
+            client.markGameInactive(game);
         }
-        int limit = 256;
-        assertTrue(ids.size() <= limit, "the allowlist grew to " + ids.size());
+        assertTrue(games.ownedCount() <= SessionGames.ALLOWLIST_LIMIT, "the allowlist grew to " + games.ownedCount());
     }
 
     @Test
     void theTrimNeverDropsAGameThatIsStillBeingPlayed() throws Exception {
         client = newClient(gateway);
-        Set<UUID> ids = gameIds(client, "sessionGameIds");
+        SessionGames games = games(client);
         Set<UUID> live = ConcurrentHashMap.newKeySet();
         for (int i = 0; i < 300; i++) {
             UUID finished = UUID.randomUUID();
@@ -68,7 +67,8 @@ class ProxyClientCleanupTest {
         }
         // the next insert triggers the bound again, with 40 live games in the set
         client.markGameActive(UUID.randomUUID());
-        assertTrue(ids.containsAll(live), "trimming the finished ids dropped " + (40 - ids.size()) + " live ones");
+        long dropped = live.stream().filter(id -> !games.owns(id)).count();
+        assertEquals(0, dropped, "trimming the finished ids dropped " + dropped + " live ones");
     }
 
     @Test

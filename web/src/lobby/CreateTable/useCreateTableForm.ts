@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as cmds from '../../net/commands'
 import type { GameTypeInfo } from '../../net/commands'
-import { setMyDeck, useStore } from '../../state/store'
-import { getAllAvailableDecks, deckRef, sameDeck, DEFAULT_DECK, type Deck } from '../decks'
-import { requestDeckValidation } from '../DeckIssuesDialog'
+import { useStore } from '../../state/store'
+import { deckRef } from '../decks'
 import { useTranslation } from '../../i18n'
-import { prepareDeckForXMage } from '../../decks/deckNormalize'
 import {
   isLimitedDeckType,
   validateDeckGameCompatibility,
@@ -23,15 +21,10 @@ import {
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
   SIM_SEAT,
   aiSeatTypes,
-  buildLimitedOptions,
   defaultTournamentType,
   isDraftTournamentType,
   isConstructedTournamentType,
-  isHumanSeatType,
-  isNativeAiSeatType,
-  isSimSeatType,
   normalizeSeatType,
-  parseLimitedSetCodes,
   recommendedFreeMulligans,
   type CreateTab,
   type DraftTiming,
@@ -45,150 +38,33 @@ import {
   resolveTableKind,
   clampNumPlayers,
   defaultSeatTypeFor,
-  computeTournamentSeats,
-  computeMatchSeats,
-  buildTournamentLimitedOptions,
-  buildCreateTournamentArgs,
-  buildCreateMatchArgs,
   healTournamentBranch,
   tournamentTypeForCategory,
-  validateDraftSets,
   uniformDraftSet,
-  limitedTourneyHasAiSeats,
 } from './tableKind'
-import { isRandomPacksType } from './RandomPacksSelector'
+import type { CreateTableForm } from './types'
+import { useDeckChoices } from './useDeckChoices'
+import { submitCreateTable, runDemoTable as runDemoTableCommand } from './submitTable'
 
-export interface CreateTableForm {
-  wizardSteps: WizardStep[]
-  activeTab: CreateTab
-  setActiveTab: (t: CreateTab) => void
-  activeIndex: number
-  goNext: () => void
-  goPrev: () => void
-  goToStep: (t: CreateTab) => void
-  isLastStep: boolean
-  isFirstStep: boolean
-  tableCategory: TableCategory
-  setTableCategory: (v: TableCategory) => void
-  tournamentCategory: TournamentCategory
-  setTournamentCategory: (v: TournamentCategory) => void
-  applyMode: (cat: TableCategory) => void
-  applyPreset: (key: string) => void
-  gameTypes: GameTypeInfo[]
-  deckTypes: string[]
-  playerTypes: string[]
-  tournamentTypes: string[]
-  draftCubes: string[]
-  name: string
-  setName: (v: string) => void
-  gameType: string
-  setGameType: (v: string) => void
-  deckType: string
-  setDeckType: (v: string) => void
-  wins: number
-  setWins: (v: number) => void
-  skillLevel: 'BEGINNER' | 'CASUAL' | 'SERIOUS'
-  setSkillLevel: (v: 'BEGINNER' | 'CASUAL' | 'SERIOUS') => void
-  rated: boolean
-  setRated: (v: boolean) => void
-  useDraftTournament: boolean
-  setUseDraftTournament: (v: boolean) => void
-  draftSetsRaw: string
-  setDraftSetsRaw: (v: string) => void
-  draftBoosters: 3 | 6
-  setDraftBoosters: (v: 3 | 6) => void
-  draftConstructionTime: number
-  setDraftConstructionTime: (v: number) => void
-  tournamentType: string
-  setTournamentType: (v: string) => void
-  numberRounds: number
-  setNumberRounds: (v: number) => void
-  draftCubeName: string
-  setDraftCubeName: (v: string) => void
-  draftTiming: DraftTiming
-  setDraftTiming: (v: DraftTiming) => void
-  singleGame: boolean
-  setSingleGame: (v: boolean) => void
-  timeLimit: string
-  setTimeLimit: (v: string) => void
-  bufferTime: string
-  setBufferTime: (v: string) => void
-  freeMulligans: number
-  setFreeMulligans: (v: number) => void
-  recommendedMulligans: number
-  mulliganType: string
-  setMulliganType: (v: string) => void
-  customStartLifeEnabled: boolean
-  setCustomStartLifeEnabled: (v: boolean) => void
-  customStartLife: number
-  setCustomStartLife: (v: number) => void
-  customStartHandSizeEnabled: boolean
-  setCustomStartHandSizeEnabled: (v: boolean) => void
-  customStartHandSize: number
-  setCustomStartHandSize: (v: number) => void
-  planeChase: boolean
-  setPlaneChase: (v: boolean) => void
-  attackOption: string
-  setAttackOption: (v: string) => void
-  range: string
-  setRange: (v: string) => void
-  password: string
-  setPassword: (v: string) => void
-  showPassword: boolean
-  setShowPassword: (v: boolean) => void
-  bannedUsersRaw: string
-  setBannedUsersRaw: (v: string) => void
-  spectatorsAllowed: boolean
-  setSpectatorsAllowed: (v: boolean) => void
-  rollbackTurnsAllowed: boolean
-  setRollbackTurnsAllowed: (v: boolean) => void
-  minimumRating: number
-  setMinimumRating: (v: number) => void
-  quitRatio: number
-  setQuitRatio: (v: number) => void
-  edhPowerLevel: number
-  setEdhPowerLevel: (v: number) => void
-  numPlayers: number
-  setNumPlayers: (v: number) => void
-  seatConfigs: SeatConfig[]
-  setSeatConfigs: React.Dispatch<React.SetStateAction<SeatConfig[]>>
-  humanSeat: boolean
-  setHumanSeat: (v: boolean) => void
-  availableDecks: Deck[]
-  myDeck: Deck | null
-  selectMyDeck: (name: string) => void
-  simDeck: Deck | null
-  selectGlobalSimDeck: (name: string) => void
-  playerTypesSel: string[]
-  toggleAi: (pt: string) => void
-  applySeatTypeToAll: (pt: string) => void
-  setSeatType: (idx: number, type: string) => void
-  setSeatDeck: (idx: number, deckName: string) => void
-  setSeatSkill: (idx: number, skill: number) => void
-  mySkill: number
-  setMySkill: (v: number) => void
-  skipInitShuffling: boolean
-  setSkipInitShuffling: (v: boolean) => void
-  skipStartingPlayerChoice: boolean
-  setSkipStartingPlayerChoice: (v: boolean) => void
-  busy: boolean
-  error: string | null
-  effectiveGameTypes: GameTypeInfo[]
-  effectiveDeckTypes: string[]
-  selectedGameTypeInfo: GameTypeInfo | undefined
-  isMultiplayerGame: boolean
-  showRangeAttack: boolean
-  isLimited: boolean
-  isDraftLimited: boolean
-  isTournament: boolean
-  isConstructedTournament: boolean
-  compatibilityError: string | null
-  validateStep: (tab: CreateTab) => string | null
-  submit: () => Promise<void>
-  runDemoTable: () => Promise<void>
+export type { CreateTableForm } from './types'
+
+/** The form as last persisted (parsed JSON: every field is checked where it is read). */
+interface SavedForm {
+  tableCategory?: string
+  tournamentCategory?: string
+  name?: string
+  gameType?: string
+  deckType?: string
+  wins?: number
+  skillLevel?: 'BEGINNER' | 'CASUAL' | 'SERIOUS'
+  rated?: boolean
+  useDraftTournament?: boolean
+  numPlayers?: number
+  seatConfigs?: unknown
+  mySkill?: number
 }
 
-function readSaved(): Record<string, any> {
+function readSaved(): SavedForm {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') ?? {}
   } catch {
@@ -438,46 +314,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)
-  const [availableDecks, setAvailableDecks] = useState<Deck[]>(() => getAllAvailableDecks())
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const mod = await import('../../decks/storage')
-        const st = mod.getDeckStorage()
-        const v2 = await st.list()
-        if (cancelled) return
-        const maps = new Map<string, Deck>()
-        for (const d of v2) {
-          const deck: Deck = { ...d, id: d.id || `v2:${d.name}` }
-          maps.set(deckRef(deck), deck)
-        }
-        for (const d of getAllAvailableDecks()) {
-          if (!maps.has(deckRef(d))) maps.set(deckRef(d), d)
-        }
-        setAvailableDecks([...maps.values()])
-      } catch {}
-    })()
-    return () => { cancelled = true }
-  }, [])
-  const [myDeck, setMyDeckState] = useState<Deck | null>(() => {
-    const avail = getAllAvailableDecks()
-    if (storeDeck) {
-      const match = avail.find((d) => sameDeck(d, storeDeck))
-      if (match) return match
-      return storeDeck
-    }
-    return avail[0] ?? null
-  })
-  const [simDeck, setSimDeck] = useState<Deck | null>(() => getAllAvailableDecks()[0] ?? null)
+  const { availableDecks, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck } = useDeckChoices(storeDeck, setSeatConfigs)
   const [playerTypesSel, setPlayerTypesSel] = useState<string[]>(['SIM'])
-
-  // Si la lista de mazos llega tarde (storage async) y no hay selección, coger el primero.
-  useEffect(() => {
-    if (availableDecks.length === 0) return
-    if (!myDeck) setMyDeckState(availableDecks[0])
-    if (!simDeck) setSimDeck(availableDecks[0])
-  }, [availableDecks])
 
   // Dev / Test tab
   const [skipInitShuffling, setSkipInitShuffling] = useState(false)
@@ -581,7 +419,6 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     knownTournamentTypes: tournamentTypes,
   })
   const { isDraftLimited, isConstructedTournament, isTournament } = tableResolution
-  const normalizedTournamentType = tableResolution.normalizedTournamentType
 
   const compatibilityError = useMemo(() => {
     if (isDraftLimited) return null
@@ -660,396 +497,27 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     const n = normalizeSeatType(type)
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type: n } : s)))
   }
-  /** Resuelve un mazo por referencia estable (id) con fallback por nombre (form persistido antiguo). */
-  const findDeck = (ref?: string): Deck | undefined => {
-    if (!ref) return undefined
-    return availableDecks.find((d) => deckRef(d) === ref) ?? availableDecks.find((d) => d.name === ref)
-  }
   const setSeatDeck = (idx: number, deckRefValue: string) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName: deckRefValue } : s)))
   }
   const setSeatSkill = (idx: number, skill: number) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, skill: Math.min(10, Math.max(1, skill)) } : s)))
   }
-  const selectMyDeck = (ref: string) => {
-    setMyDeckState(findDeck(ref) ?? null)
-  }
-  const selectGlobalSimDeck = (ref: string) => {
-    const d = findDeck(ref) ?? null
-    setSimDeck(d)
-    if (d) setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) ? { ...s, deckName: deckRef(d) } : s))
-  }
 
-  const runDemoTable = async () => {
-    setBusy(true)
-    try {
-      const res = await cmds.createTable({
-        name: 'Demo IA vs IA',
-        gameType: 'Two Player Duel',
-        deckType: 'Constructed - Modern',
-        winsNeeded: 1,
-        playerTypes: ['SIM', 'SIM'],
-        simDecks: [DEFAULT_DECK, DEFAULT_DECK],
-        skipInitShuffling,
-        skipStartingPlayerChoice,
-      })
-      if (res.ok) {
-        const data = res.data as { tableId?: string; TableId?: string } | undefined
-        const tableId = data?.tableId ?? data?.TableId
-        if (tableId) {
-          const started = await cmds.startMatch(tableId)
-          if (started.ok) {
-            await cmds.watchTable(tableId)
-          }
-        }
-        onClose()
-      }
-    } finally {
-      setBusy(false)
-    }
-  }
+  const runDemoTable = () => runDemoTableCommand({ skipInitShuffling, skipStartingPlayerChoice }, { setBusy, onClose })
 
-  const discardTable = (tableId: string) => {
-    void cmds.removeTable(tableId)
-  }
-
-  const submit = async () => {
-    if (!name.trim()) {
-      setError(t('errors','create_table_name_required'))
-      return
-    }
-    if (compatibilityError && !isDraftLimited) {
-      setError(compatibilityError)
-      return
-    }
-    if (humanSeat && !myDeck && !isDraftLimited) {
-      setError(t('lobby', 'create_err_no_deck'))
-      setBusy(false)
-      return
-    }
-    setBusy(true)
-    setError(null)
-    const resolveSimDeck = (deckRefValue?: string): Deck | null => {
-      if (deckRefValue) {
-        const found = findDeck(deckRefValue)
-        if (found) return found
-      }
-      return simDeck ?? myDeck ?? DEFAULT_DECK
-    }
-    if (isTournament) {
-      if (tableResolution.kind === 'invalid') {
-        setError(t('lobby', 'create_err_bad_tournament_type', { type: tableResolution.errorParam }))
-        setBusy(false)
-        return
-      }
-      const { playerTypesFinal, effectiveSeatTypes } = computeTournamentSeats({
-        seatConfigs,
-        playerTypesSel,
-        numPlayers,
-        humanSeat,
-        draft: isDraftLimited,
-      })
-      if (isDraftLimited && limitedTourneyHasAiSeats(playerTypesFinal)) {
-        setError(t('errors', 'draft_bots_no_submit'))
-        setBusy(false)
-        return
-      }
-
-      let limitedOptions: ReturnType<typeof buildLimitedOptions> | undefined
-      if (isDraftLimited) {
-        const setsError = validateDraftSets(draftSetsRaw, draftBoosters, {
-          cube: draftCubeName.trim().length > 0,
-          random: isRandomPacksType(normalizedTournamentType),
-        })
-        if (setsError) {
-          setError(t('errors', setsError, {
-            need: draftBoosters,
-            have: parseLimitedSetCodes(draftSetsRaw).length,
-          }))
-          setBusy(false)
-          return
-        }
-        limitedOptions = buildTournamentLimitedOptions({
-          draftSetsRaw,
-          draftBoosters,
-          draftConstructionTime,
-          draftCubeName,
-          draftTiming,
-          tournamentType: normalizedTournamentType,
-        })
-      }
-
-      let finalMyDeck = null as null | Awaited<ReturnType<typeof requestDeckValidation>>
-      if (!isDraftLimited && humanSeat && myDeck) {
-        const fixed = await requestDeckValidation(prepareDeckForXMage(myDeck, deckType, gameType))
-        if (!fixed) {
-          setBusy(false)
-          return
-        }
-        finalMyDeck = fixed
-      }
-
-      const tArgs = buildCreateTournamentArgs({
-        name,
-        username,
-        tournamentType: normalizedTournamentType,
-        gameType,
-        deckType,
-        draft: isDraftLimited,
-        limitedOptions,
-        playerTypesFinal,
-        password: password,
-        spectatorsAllowed,
-        wins,
-        numberRounds,
-        skillLevel,
-        rated,
-        rollbackTurnsAllowed,
-        timeLimit,
-        bufferTime,
-        minimumRating,
-        quitRatio,
-        bannedUsersRaw,
-        singleGame,
-      })
-      const res = await cmds.createTournamentTable(tArgs as Record<string, unknown>)
-      setBusy(false)
-      if (!res.ok) {
-        const code = (res as { errorCode?: string }).errorCode
-        const raw = res.error || code || t('errors','draft_create_failed')
-        setError(tError(raw, 'createTournamentTable', code) ?? raw)
-        return
-      }
-      const tableId = (res.data as { tableId?: string } | null)?.tableId
-      if (tableId) {
-        const tournamentBotSeats = effectiveSeatTypes
-          .map((type, idx) => ({ type, idx, cfg: seatConfigs[idx] }))
-          .filter((s) => isNativeAiSeatType(s.type))
-        let botCounter = 1
-        for (const bot of tournamentBotSeats) {
-          const botName = botCounter === 1 && tournamentBotSeats.length === 1 ? 'Computer' : `Computer ${botCounter}`
-          botCounter++
-          let botDeck: unknown = undefined
-          if (!isDraftLimited) {
-            const base = resolveSimDeck(bot.cfg?.deckName)
-            if (base) {
-              const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
-              botDeck = fixed ?? undefined
-            }
-            if (!botDeck) {
-              setError(t('lobby', 'create_err_no_deck'))
-              discardTable(tableId)
-              return
-            }
-          }
-          const joinBot = await cmds.joinTournamentTable({
-            tableId,
-            playerName: botName,
-            playerType: normalizeSeatType(bot.type),
-            skill: bot.cfg?.skill ?? 2,
-            ...(botDeck ? { deck: botDeck as any, deckType, gameType } : {}),
-            password: password.trim() || undefined,
-          })
-          if (!joinBot.ok) {
-            const code = (joinBot as { errorCode?: string }).errorCode
-            const raw = joinBot.error || code || t('errors', 'join_table_failed')
-            setError(tError(raw, 'joinTournamentTable', code) ?? raw)
-            discardTable(tableId)
-            return
-          }
-        }
-        if (humanSeat) {
-          const join = await cmds.joinTournamentTable({
-            tableId,
-            playerName: username,
-            playerType: 'HUMAN',
-            skill: mySkill,
-            ...(finalMyDeck ? { deck: finalMyDeck, deckType, gameType } : {}),
-            password: password.trim() || undefined,
-          })
-          if (finalMyDeck && myDeck) {
-            setMyDeck(myDeck)
-          }
-          if (!join.ok) {
-            const code = (join as { errorCode?: string }).errorCode
-            const raw = join.error || code || t('errors','join_table_failed')
-            setError(tError(raw, 'joinTournamentTable', code) ?? raw)
-            discardTable(tableId)
-            return
-          }
-        }
-      }
-      onClose()
-      return
-    }
-    const { playerTypesFinal, effectiveSeatTypes } = computeMatchSeats({
-      seatConfigs,
-      playerTypesSel,
-      numPlayers,
-      humanSeat,
-    })
-    const simSeats = effectiveSeatTypes.filter(isSimSeatType).length
-    const nativeBotSeats = effectiveSeatTypes
-      .map((type, idx) => ({ type, idx, cfg: seatConfigs[idx] }))
-      .filter((s) => isNativeAiSeatType(s.type))
-
-    // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
-    // Transformación invisible para Commander: XMage espera comandante en banquillo
-    let finalMyDeck = null as null | Awaited<ReturnType<typeof requestDeckValidation>>
-    if (humanSeat && myDeck) {
-      const fixed = await requestDeckValidation(prepareDeckForXMage(myDeck, deckType, gameType))
-      if (!fixed) {
-        setBusy(false)
-        return
-      }
-      finalMyDeck = fixed
-    }
-
-    let finalSimDeck = null as null | Awaited<ReturnType<typeof requestDeckValidation>>
-    if (simSeats > 0) {
-      const base = resolveSimDeck()
-      if (!base) {
-        setError(t('lobby', 'create_err_no_deck'))
-        setBusy(false)
-        return
-      }
-      const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
-      if (!fixed) {
-        setBusy(false)
-        return
-      }
-      finalSimDeck = fixed
-    }
-
-    const simDecksBySeat: NonNullable<typeof finalSimDeck>[] = []
-    if (simSeats > 0 && finalSimDeck) {
-      for (let i = 0; i < effectiveSeatTypes.length; i++) {
-        if (isSimSeatType(effectiveSeatTypes[i])) {
-          const cfg = seatConfigs[i]
-          const deckForSeat = resolveSimDeck(cfg?.deckName)
-          if (!deckForSeat) {
-            setError(t('lobby', 'create_err_no_deck'))
-            setBusy(false)
-            return
-          }
-          const xmageDeckForSeat = prepareDeckForXMage(deckForSeat as Deck, deckType, gameType)
-          simDecksBySeat.push(xmageDeckForSeat as unknown as NonNullable<typeof finalSimDeck>)
-        }
-      }
-      while (simDecksBySeat.length < simSeats) simDecksBySeat.push(finalSimDeck)
-    }
-
-    const nativeBotDecks: Record<number, NonNullable<typeof finalSimDeck>> = {}
-    if (nativeBotSeats.length > 0 && !isLimitedDeckType(deckType)) {
-      for (const bot of nativeBotSeats) {
-        const base = resolveSimDeck(bot.cfg?.deckName)
-        if (!base) {
-          setError(t('lobby', 'create_err_no_deck'))
-          setBusy(false)
-          return
-        }
-        const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
-        if (!fixed) {
-          setBusy(false)
-          return
-        }
-        nativeBotDecks[bot.idx] = fixed
-      }
-    }
-
-    const seatSkills = effectiveSeatTypes.map((_, i) => seatConfigs[i]?.skill ?? 2)
-    const res = await cmds.createTable(buildCreateMatchArgs({
-      name,
-      username,
-      gameType,
-      deckType,
-      wins,
-      playerTypesFinal,
-      seatSkills,
-      password: password,
-      skillLevel,
-      rated,
-      spectatorsAllowed,
-      rollbackTurnsAllowed,
-      timeLimit,
-      bufferTime,
-      freeMulligans,
-      showRangeAttack,
-      attackOption,
-      range,
-      minimumRating,
-      quitRatio,
-      edhPowerLevel,
-      bannedUsersRaw,
-      mulliganType,
-      customStartLifeEnabled,
-      customStartLife,
-      customStartHandSizeEnabled,
-      customStartHandSize,
-      planeChase,
-      simDecks: simDecksBySeat,
-      skipInitShuffling,
-      skipStartingPlayerChoice,
-      dev: import.meta.env.DEV,
-    }) as any)
-
-    setBusy(false)
-    if (!res.ok) {
-      const code = (res as { errorCode?: string }).errorCode
-      const raw = res.error || code || t('errors','create_table_failed')
-      setError(tError(raw, 'createTable', code) ?? raw)
-      return
-    }
-
-    const tableId = (res.data as { tableId?: string } | null)?.tableId
-    if (tableId) {
-      let botCounter = 1
-      for (const bot of nativeBotSeats) {
-        const botName = botCounter === 1 && nativeBotSeats.length === 1 ? 'Computer' : `Computer ${botCounter}`
-        botCounter++
-        const botDeck = nativeBotDecks[bot.idx] ?? finalSimDeck ?? finalMyDeck ?? DEFAULT_DECK
-        const joinBot = await cmds.joinTable({
-          tableId,
-          playerName: botName,
-          playerType: normalizeSeatType(bot.type),
-          skill: bot.cfg?.skill ?? 2,
-          deck: botDeck as any,
-          deckType,
-          gameType,
-          password: password.trim() || undefined,
-        })
-        if (!joinBot.ok) {
-          const code = (joinBot as { errorCode?: string }).errorCode
-          const raw = joinBot.error || code || t('errors', 'join_table_failed')
-          setError(tError(raw, 'joinTable', code) ?? raw)
-          discardTable(tableId)
-          return
-        }
-      }
-
-      if (humanSeat && finalMyDeck) {
-        const join = await cmds.joinTable({
-          tableId,
-          playerName: username,
-          playerType: 'HUMAN',
-          skill: mySkill,
-          deck: finalMyDeck,
-          deckType,
-          gameType,
-          password: password.trim() || undefined,
-        })
-        setMyDeck(myDeck)
-        if (!join.ok) {
-          const code = (join as { errorCode?: string }).errorCode
-          const raw = join.error || code || t('errors','join_table_failed')
-          setError(tError(raw, 'joinTable', code) ?? raw)
-          discardTable(tableId)
-          return
-        }
-      }
-    }
-    onClose()
-  }
+  const submit = () => submitCreateTable({
+    name, gameType, deckType, wins, skillLevel, rated,
+    draftSetsRaw, draftBoosters, draftConstructionTime, draftCubeName, draftTiming,
+    numberRounds, singleGame, timeLimit, bufferTime, freeMulligans, mulliganType,
+    customStartLifeEnabled, customStartLife, customStartHandSizeEnabled, customStartHandSize,
+    planeChase, attackOption, range, password, bannedUsersRaw, spectatorsAllowed,
+    rollbackTurnsAllowed, minimumRating, quitRatio, edhPowerLevel, numPlayers,
+    seatConfigs, humanSeat, myDeck, simDeck, playerTypesSel, mySkill,
+    skipInitShuffling, skipStartingPlayerChoice, showRangeAttack, isDraftLimited,
+    isTournament, compatibilityError,
+    username, tableResolution, findDeck,
+  }, { t, tError, setBusy, setError, onClose })
 
   return {
     wizardSteps,
