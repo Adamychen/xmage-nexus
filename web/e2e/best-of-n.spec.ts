@@ -13,7 +13,6 @@ import { DECK } from '../fixtures/deck-names'
  */
 
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { bestOfNScenario } from '../fixtures/scenarios/bestOfN'
 import { withFakeServer } from './support/fake-backend'

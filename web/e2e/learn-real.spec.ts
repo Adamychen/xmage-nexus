@@ -20,7 +20,6 @@ import { FAKE_MODE } from './dual'
 import { startGame } from './support/start-game'
 import { parseFrames, parseSent, sentOf } from './support/frames'
 import { payMana } from './support/game-screen'
-import type { HumanHelper } from './wshelper'
 
 const LESSON = 'Environmental Sciences'
 const WITCH = 'Eyetwitch'
@@ -43,7 +42,7 @@ test('LEARN real: Eyetwitch muere → learn → elegir Lesson del sideboard en e
     localStorage.setItem('mage_decks_v2', JSON.stringify([deck]))
   }, LEARN_DECK)
 
-  const { helper, frames, sent, username } = await startGame(page, {
+  const { helper, frames, username } = await startGame(page, {
     prefix: 'lrn',
     tableName: `learn-real-${Date.now().toString().slice(-6)}`,
     deck: LEARN_DECK.name,

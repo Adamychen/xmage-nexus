@@ -14,7 +14,6 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { mulliganScenario, MULLIGAN_BOTTOM_COUNT, MULLIGAN_HAND_IDS } from '../fixtures/scenarios/mulligan'
 import { withFakeServer } from './support/fake-backend'

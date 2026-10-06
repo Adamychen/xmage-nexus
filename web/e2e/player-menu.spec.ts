@@ -9,7 +9,6 @@ import { DECK } from '../fixtures/deck-names'
 
 import { test, expect } from './fixtures'
 import type { Page } from '@playwright/test'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { playerMenuScenario } from '../fixtures/scenarios/playerMenu'
 import { withFakeServer } from './support/fake-backend'

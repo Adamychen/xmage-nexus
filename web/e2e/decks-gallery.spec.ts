@@ -3,9 +3,7 @@ import { blockLocalizedEnrich } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
-import { dismissSetupWizard, startGame } from './support/start-game'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
+import { dismissSetupWizard } from './support/start-game'
 
 test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {

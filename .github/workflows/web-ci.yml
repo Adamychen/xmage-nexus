@@ -50,6 +50,10 @@ jobs:
       - name: Validate server-state schema is in sync with config.xml
         working-directory: web
         run: npm run gen-server-state:validate
+      # fails on errors (rules of hooks, correctness, `any` in shipped code); the effect-deps warning debt is ratcheted by src/lintRatchet.test.ts
+      - name: Lint (oxlint)
+        working-directory: web
+        run: npm run lint
       - name: Unit tests (vitest)
         working-directory: web
         run: npm run test

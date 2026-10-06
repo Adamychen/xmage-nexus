@@ -10,7 +10,6 @@ import type { Scenario } from '../fixtures/fake'
  */
 
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { bestOf3Scenario } from '../fixtures/scenarios/bestOf3'
 import { bestOf5Scenario } from '../fixtures/scenarios/bestOf5'

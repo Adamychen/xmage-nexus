@@ -1,6 +1,5 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
