@@ -14,6 +14,7 @@ import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
+import { cloneDeckForEdit } from './cloneDeck'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import { ImportDeckDialog } from './ImportDeckDialog'
 import type { MetaDeckItem } from './metaDeckCatalog'
@@ -39,18 +40,6 @@ function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
     }
   }
   return [...set].sort()
-}
-
-export function cloneDeckForEdit(d: MetaDeckItem | DeckV2): DeckV2 {
-  const now = Date.now()
-  return {
-    ...d,
-    id: makeDeckId(),
-    coverCard: d.coverCard ?? d.cards[0],
-    createdAt: now,
-    updatedAt: now,
-    source: 'custom',
-  }
 }
 
 function preconToV2(): DeckV2[] {

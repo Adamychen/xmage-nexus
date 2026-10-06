@@ -314,7 +314,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)
-  const { availableDecks, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck } = useDeckChoices(storeDeck, setSeatConfigs)
+  const { availableDecks, decksLoaded, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck, adoptStarterDecks } = useDeckChoices(storeDeck, setSeatConfigs)
   const [playerTypesSel, setPlayerTypesSel] = useState<string[]>(['SIM'])
 
   // Dev / Test tab
@@ -610,6 +610,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     humanSeat,
     setHumanSeat,
     availableDecks,
+    decksLoaded,
+    adoptStarterDecks,
     myDeck,
     selectMyDeck,
     simDeck,

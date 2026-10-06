@@ -1301,6 +1301,10 @@ export const es: TranslationSchema = {
     viewer_card_plural: 'cartas',
   },
   decks: {
+    starter_title: "Todavía no tienes mazos",
+    starter_desc: "Añade dos mazos listos para jugar ({names}) y siéntate ya; luego puedes cambiarlos o sustituirlos en Mazos.",
+    starter_add: "Añadir mazos de inicio",
+    starter_failed: "No se pudieron guardar los mazos en este navegador. Inténtalo de nuevo o importa uno en Mazos.",
     deck_builder: 'Constructor de Mazos',
     my_decks: 'Mis Mazos',
     popular_meta: 'Meta & Decks Populares',

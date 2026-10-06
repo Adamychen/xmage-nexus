@@ -1301,6 +1301,10 @@ export const de: TranslationSchema = {
     viewer_card_plural: 'Karten',
   },
   decks: {
+    starter_title: "Du hast noch keine Decks",
+    starter_desc: "Füge zwei spielfertige Decks hinzu ({names}) und setz dich sofort an einen Tisch; unter Decks kannst du sie später ändern oder ersetzen.",
+    starter_add: "Starterdecks hinzufügen",
+    starter_failed: "Die Decks konnten in diesem Browser nicht gespeichert werden. Versuche es erneut oder importiere eines unter Decks.",
     deck_builder: 'Deckbauer',
     my_decks: 'Meine Decks',
     popular_meta: 'Meta & beliebte Decks',

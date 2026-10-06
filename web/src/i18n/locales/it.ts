@@ -1301,6 +1301,10 @@ export const it: TranslationSchema = {
     viewer_card_plural: 'carte',
   },
   decks: {
+    starter_title: "Non hai ancora mazzi",
+    starter_desc: "Aggiungi due mazzi pronti da giocare ({names}) e siediti subito; potrai modificarli o sostituirli più tardi in Mazzi.",
+    starter_add: "Aggiungi mazzi iniziali",
+    starter_failed: "Impossibile salvare i mazzi in questo browser. Riprova o importane uno in Mazzi.",
     deck_builder: 'Costruttore Mazzo',
     my_decks: 'I Miei Mazzi',
     popular_meta: 'Meta & Mazzi Popolari',

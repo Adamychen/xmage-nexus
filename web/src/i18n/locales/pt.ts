@@ -1301,6 +1301,10 @@ export const pt: TranslationSchema = {
     viewer_card_plural: 'cartas',
   },
   decks: {
+    starter_title: "Ainda não tens baralhos",
+    starter_desc: "Adiciona dois baralhos prontos a jogar ({names}) e senta-te já; depois podes alterá-los ou substituí-los em Baralhos.",
+    starter_add: "Adicionar baralhos iniciais",
+    starter_failed: "Não foi possível guardar os baralhos neste navegador. Tenta de novo ou importa um em Baralhos.",
     deck_builder: 'Construtor de Decks',
     my_decks: 'Meus Decks',
     popular_meta: 'Meta & Decks Populares',

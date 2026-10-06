@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import DecksGallery, { cloneDeckForEdit, mergeEnrichedColors, pruneSelectedId } from './DecksGallery'
+import DecksGallery, { mergeEnrichedColors, pruneSelectedId } from './DecksGallery'
+import { cloneDeckForEdit } from './cloneDeck'
 import type { DeckV2 } from './types'
 
 const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[] }))
