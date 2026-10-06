@@ -33,7 +33,7 @@
 .draft-title {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--sp-2h);
   flex-wrap: wrap;
 }
 
@@ -67,7 +67,7 @@
 .draft-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .draft-timer {
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .draft-timer-bar {
@@ -131,7 +131,7 @@
 }
 
 .draft-timer.waiting {
-  gap: 8px;
+  gap: var(--sp-2);
   color: var(--warn);
 }
 
@@ -158,9 +158,9 @@
 .draft-picked-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 8px 20px 0;
-  padding: 8px 12px;
+  gap: var(--sp-2);
+  margin: var(--sp-2) var(--sp-4h) 0;
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid rgb(var(--ok-rgb) / 0.35);
   border-radius: var(--r-base);
   background: rgb(var(--ok-rgb) / 0.18);
@@ -196,25 +196,25 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-dim, var(--fg-2));
-  margin-right: 6px;
+  margin-right: var(--sp-1h);
 }
 
 .draft-table {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
-  padding: 4px 12px 8px;
+  padding: var(--sp-1) var(--sp-3) var(--sp-2);
 }
 
 .draft-table-dir {
   font-weight: 800;
   color: var(--accent, var(--brand));
-  margin-right: 4px;
+  margin-right: var(--sp-1);
 }
 
 .draft-seat {
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-md);
   background: var(--veil-2);
   font-size: var(--fs-2xs);
@@ -228,7 +228,7 @@
   opacity: 1;
 }
 
-.draft-hidden-link { margin: 0 12px 6px; }
+.draft-hidden-link { margin: 0 var(--sp-3) var(--sp-1h); }
 
 .arena-floating-preview {
   position: fixed;
@@ -245,10 +245,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: var(--sp-2h) var(--sp-4h);
   border-bottom: 1px solid var(--veil-2);
   background: var(--veil-1);
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .draft-status-picking {
@@ -270,7 +270,7 @@
 
 .draft-booster-area,
 .draft-picks-area {
-  padding: 12px 16px;
+  padding: var(--sp-3) var(--sp-4);
 }
 
 .draft-booster-area {
@@ -287,7 +287,7 @@
 }
 
 .draft-section-title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-2);
   font-size: var(--fs-2xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -297,7 +297,7 @@
 .draft-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .draft-card {
@@ -359,10 +359,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-2) 100%);
   color: var(--text-dim, var(--fg-2));
-  padding: 8px;
+  padding: var(--sp-2);
   text-align: center;
 }
 
@@ -413,7 +413,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 4px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   background: linear-gradient(transparent, var(--shade-4));
   color: var(--fg-hi);
   font-size: var(--fs-3xs);
@@ -426,7 +426,7 @@
 .draft-picks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .draft-pick-card {

@@ -43,7 +43,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
       sectionProps={{ 'aria-describedby': 'voting-hint' }}
     >        {hasTwo ? (
           <div className="voting-options">
-            <button
+            <button type="button"
               className="voting-btn voting-left"
               disabled={busy}
               onClick={() => choose(left.value)}
@@ -52,7 +52,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
               <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(left.label, t as any)} /></span>
             </button>
             <span className="voting-vs">VS</span>
-            <button
+            <button type="button"
               className="voting-btn voting-right"
               disabled={busy}
               onClick={() => choose(right.value)}
@@ -64,7 +64,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
         ) : (
           <div className="voting-options voting-many">
             {prompt.options.map((opt) => (
-              <button key={opt.id} className="voting-btn" disabled={busy} onClick={() => choose(opt.value)}>
+              <button type="button" key={opt.id} className="voting-btn" disabled={busy} onClick={() => choose(opt.value)}>
                 <FormattedText text={localizeOptionLabel(opt.label, t as any)} />
               </button>
             ))}

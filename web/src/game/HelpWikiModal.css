@@ -2,9 +2,9 @@
 
 /* Nav Tabs */
 .wiki-nav-tabs {
-  gap: 8px;
+  gap: var(--sp-2);
   border-bottom: 1px solid var(--veil-2);
-  padding-bottom: 8px;
+  padding-bottom: var(--sp-2);
 }
 
 /* Content Area */
@@ -13,8 +13,8 @@
   min-height: 200px;
   max-height: 56vh;
   overflow-y: auto;
-  margin-top: 14px;
-  padding-right: 6px;
+  margin-top: var(--sp-3h);
+  padding-right: var(--sp-1h);
 }
 
 .wiki-content::-webkit-scrollbar {
@@ -42,7 +42,7 @@
 
 .wiki-search-input {
   width: 100%;
-  padding: 10px 38px 10px 36px;
+  padding: var(--sp-2h) 38px var(--sp-2h) 36px;
   font-size: var(--fs-sm);
 }
 
@@ -52,25 +52,25 @@
 .wiki-category-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 16px;
+  gap: var(--sp-1h);
+  margin: var(--sp-3) 0 var(--sp-4);
 }
 
 /* Keywords Grid */
 .wiki-keywords-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .wiki-kw-card {
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-md);
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-3h);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
   transition: transform 0.15s, border-color 0.15s;
 }
 
@@ -93,13 +93,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .wiki-kw-card-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .wiki-kw-icon {
@@ -128,8 +128,8 @@
   font-size: var(--fs-xs);
   color: var(--fg-3);
   font-family: monospace;
-  margin-top: 4px;
-  padding-top: 4px;
+  margin-top: var(--sp-1);
+  padding-top: var(--sp-1);
   border-top: 1px dashed var(--veil-2);
 }
 
@@ -139,11 +139,11 @@
 .wiki-phases-tab {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--sp-4h);
 }
 
 .wiki-section h3 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
   font-size: 1.05rem;
   color: var(--gold-300);
   font-family: var(--font-display, serif);
@@ -152,12 +152,12 @@
 .wiki-phases-timeline {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .phase-block {
   border-radius: var(--r-base);
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-3h);
   background: rgb(var(--ink-2-rgb) / 0.6);
   border: 1px solid var(--veil-2);
 }
@@ -171,13 +171,13 @@
   font-size: var(--fs-base);
   font-weight: 700;
   color: var(--fg-1);
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-1h);
 }
 
 .phase-steps {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .phase-step {
@@ -194,14 +194,14 @@
   background: rgb(var(--ink-2-rgb) / 0.6);
   border: 1px solid rgb(var(--purple-rgb) / 0.3);
   border-radius: var(--r-base);
-  padding: 14px;
+  padding: var(--sp-3h);
   font-size: var(--fs-md);
   color: var(--fg-2);
   line-height: 1.4;
 }
 
 .wiki-stack-card p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-2);
 }
 
 .wiki-stack-card p:last-child {
@@ -212,17 +212,17 @@
 .wiki-shortcuts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .shortcut-card {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--sp-3);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-md);
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-3h);
 }
 
 .shortcut-key {
@@ -231,7 +231,7 @@
   color: var(--gold-300);
   font-weight: 800;
   font-size: var(--fs-sm);
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
   white-space: nowrap;
 }
@@ -240,7 +240,7 @@
   display: block;
   font-size: var(--fs-md);
   color: var(--fg-1);
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 
 .shortcut-info p {
@@ -252,8 +252,8 @@
 
 /* Footer */
 .wiki-footer {
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
   border-top: 1px solid var(--veil-2);
   display: flex;
   justify-content: flex-end;

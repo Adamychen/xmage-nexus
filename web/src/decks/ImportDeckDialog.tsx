@@ -1,5 +1,5 @@
 import CloseButton from '../ui/CloseButton'
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { parseAnyDeck } from './parseDck'
 import { loadDeckFromOnlineSource } from './onlineDeckService'
 import type { DeckFormat, DeckV2 } from './types'
@@ -19,6 +19,8 @@ import { useTranslation } from '../i18n'
 import './DeckImportModal.css'
 import './ImportDeckDialog.css'
 import Button from '../ui/Button'
+import Field from '../ui/Field'
+import Input from '../ui/Input'
 
 const ONLINE_URL_PATTERN = /(moxfield\.com\/decks\/|archidekt\.com\/decks\/)/i
 
@@ -70,6 +72,7 @@ export function ImportDeckDialog({
   initialName?: string
 }) {
   const { t } = useTranslation()
+  const textareaId = useId()
   const [name, setName] = useState(initialName)
   const [text, setText] = useState(initialText)
   const [step, setStep] = useState<Step>('source')
@@ -311,19 +314,19 @@ export function ImportDeckDialog({
 
       {step === 'source' && (
         <div className="deck-import-body">
-        <label className="import-name-row">
-          <span className="import-name-label">{t('decks', 'import_deck_name_label')}</span>
-          <input
-            className="import-name-input"
+        <Field label={t('decks', 'import_deck_name_label')}>
+          <Input
+            size="lg"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('decks', 'import_placeholder')}
           />
-        </label>
+        </Field>
 
-        <span className="import-textarea-label">{t('decks', 'import_textarea_label')}</span>
+        <label className="ui-field-label" htmlFor={textareaId}>{t('decks', 'import_textarea_label')}</label>
         <div className="deck-import-textarea-wrap">
           <textarea
+            id={textareaId}
             className="deck-import-textarea"
             placeholder={t('decks', 'import_textarea_placeholder')}
             rows={10}
@@ -399,15 +402,13 @@ export function ImportDeckDialog({
 
       {step === 'setup' && draft && (
         <div className="deck-import-body import-setup" data-testid="import-step-setup">
-          <label className="import-name-row">
-            <span className="import-name-label">{t('decks', 'import_deck_name_label')}</span>
-            <input className="import-name-input" value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
+          <Field label={t('decks', 'import_deck_name_label')}>
+            <Input size="lg" value={name} onChange={(e) => setName(e.target.value)} />
+          </Field>
 
-          <label className="import-name-row">
-            <span className="import-name-label">{t('decks', 'import_setup_format')}</span>
+          <Field label={t('decks', 'import_setup_format')} hint={t('decks', 'import_setup_format_detected', { format: suggested })}>
             <select
-              className="import-name-input"
+              className="import-format-select"
               data-testid="import-format-select"
               value={format}
               onChange={(e) => setFormat(e.target.value as DeckFormat)}
@@ -416,11 +417,10 @@ export function ImportDeckDialog({
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>
-            <span className="import-hint-text">{t('decks', 'import_setup_format_detected', { format: suggested })}</span>
-          </label>
+          </Field>
 
           <fieldset className="import-printing-group">
-            <legend className="import-name-label">{t('decks', 'import_setup_printing')}</legend>
+            <legend className="ui-field-label">{t('decks', 'import_setup_printing')}</legend>
             {missingPrintings === 0 && (
               <span className="import-hint-text">{t('decks', 'import_setup_all_printed')}</span>
             )}
@@ -440,8 +440,9 @@ export function ImportDeckDialog({
               </label>
             ))}
             {strategy === 'set' && (
-              <input
-                className="import-name-input import-set-input"
+              <Input
+                size="lg"
+                className="import-set-input"
                 data-testid="import-set-input"
                 value={setCode}
                 maxLength={6}

@@ -300,9 +300,8 @@ export default function FinishedMatchesPanel({
                         {/* Player 1 (Left) */}
                         <div className={`player-slot ${scores[0].isWinner ? 'winner' : ''}`}>
                           <div
-                            className="player-info-wrap"
+                            className={`player-info-wrap${onInspectUser ? ' is-clickable' : ''}`}
                             onClick={() => onInspectUser?.(scores[0].name)}
-                            style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
                           >
                             <AvatarImage
                               avatarId={userMap.get(scores[0].name.toLowerCase())?.avatarId ?? 10}
@@ -334,9 +333,8 @@ export default function FinishedMatchesPanel({
                         <div className={`player-slot right ${scores[1].isWinner ? 'winner' : ''}`}>
                           <div className="player-score-box">{scores[1].wins}</div>
                           <div
-                            className="player-info-wrap"
+                            className={`player-info-wrap${onInspectUser ? ' is-clickable' : ''}`}
                             onClick={() => onInspectUser?.(scores[1].name)}
-                            style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
                           >
                             <div className="player-name-col right-align">
                               <div className="player-name-line">
@@ -368,9 +366,8 @@ export default function FinishedMatchesPanel({
                             className={`player-slot ${score.isWinner ? 'winner' : ''}`}
                           >
                             <div
-                              className="player-info-wrap"
+                              className={`player-info-wrap${onInspectUser ? ' is-clickable' : ''}`}
                               onClick={() => onInspectUser?.(score.name)}
-                              style={{ cursor: onInspectUser ? 'pointer' : 'default' }}
                             >
                               <AvatarImage
                                 avatarId={player?.avatarId ?? 10}

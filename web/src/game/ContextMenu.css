@@ -14,7 +14,7 @@
   border: 1px solid var(--ink-4);
   border-radius: var(--r-base);
   box-shadow: 0 10px 30px var(--shade-2);
-  padding: 4px 0;
+  padding: var(--sp-1) 0;
 }
 
 .context-menu-icon {

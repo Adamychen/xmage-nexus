@@ -7,27 +7,27 @@
   background: rgb(var(--warn-rgb) / 0.15);
   border: 1px solid rgb(var(--warn-rgb) / 0.4);
   color: var(--warn);
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   font-size: var(--fs-sm);
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-3);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .rollback-turn-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
 }
 
 .rollback-turn-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-2h) var(--sp-3h);
   background: var(--veil-1);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-base);
@@ -58,18 +58,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: var(--sp-2h) var(--sp-3h);
   background: var(--veil-1);
   border: 1px dashed var(--veil-4);
   border-radius: var(--r-base);
-  margin-bottom: 16px;
-  gap: 12px;
+  margin-bottom: var(--sp-4);
+  gap: var(--sp-3);
 }
 
 .rollback-undo-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .rollback-undo-title {

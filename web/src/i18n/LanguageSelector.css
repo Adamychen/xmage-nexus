@@ -7,12 +7,12 @@
 .language-selector-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   background: var(--veil-1);
   border: 1px solid rgb(var(--brand-rgb) / 0.22);
   border-radius: var(--r-base);
   color: var(--fg-2);
-  padding: 4px 10px;
+  padding: var(--sp-1) var(--sp-2h);
   font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
@@ -27,7 +27,7 @@
 }
 
 .language-selector-btn.compact {
-  padding: 4px 7px;
+  padding: var(--sp-1) var(--sp-2);
 }
 
 .lang-flag {
@@ -60,10 +60,10 @@
   box-shadow: 0 10px 30px var(--shade-3), 0 0 16px rgb(var(--brand-rgb) / 0.18);
   min-width: 170px;
   z-index: 10000;
-  padding: 6px;
+  padding: var(--sp-1h);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   animation: langFadeIn 0.15s ease-out;
 }
 
@@ -73,7 +73,7 @@
 }
 
 .dropdown-section-header {
-  padding: 4px 8px 2px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-0h);
   font-size: var(--fs-3xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -84,7 +84,7 @@
 .dropdown-options-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
   max-height: 220px;
   overflow-y: auto;
 }
@@ -105,5 +105,5 @@
 .dropdown-divider {
   height: 1px;
   background: rgb(var(--brand-rgb) / 0.18);
-  margin: 4px 0;
+  margin: var(--sp-1) 0;
 }

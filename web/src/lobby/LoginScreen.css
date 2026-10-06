@@ -284,19 +284,6 @@
   align-items: end;
 }
 
-.login-card label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--fg-3);
-  letter-spacing: 0.08em;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
 .login-card input,
 .login-card select {
   width: 100%;
@@ -513,12 +500,6 @@ details.login-network-box .login-network-fields {
 }
 
 /* U4-2: contraseña deshabilitada en el servidor público (beta) */
-.login-password-beta-note {
-  margin-top: var(--sp-1);
-  font-size: var(--fs-2xs);
-  font-weight: 500;
-  color: var(--warn);
-}
 
 /* Movimiento reducido (plan4 §5.7): glows del fondo, logo y spinners infinitos
    quedan estáticos. Al final del fichero para ganar en orden a sus reglas. */

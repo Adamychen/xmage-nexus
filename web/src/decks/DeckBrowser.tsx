@@ -115,7 +115,7 @@ export function DeckBrowser({
           <option value="Precon">{t('decks', 'browser_filter_precon')}</option>
         </select>
 
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <div className="deck-browser-colors">
           {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (
             <button
               key={c}

@@ -268,7 +268,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 }}
               >
                 {filteredStringOptions.map((option, idx) => (
-                  <button
+                  <button type="button"
                     key={option.id}
                     className="feedback-choice-card"
                     disabled={busy}
@@ -398,7 +398,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             {gridOptions.map((option, idx) => {
               const isSel = selected.includes(option.value)
               return (
-                <button
+                <button type="button"
                   key={option.id}
                   tabIndex={idx === activeIdx ? 0 : -1}
                   aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}

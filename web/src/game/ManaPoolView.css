@@ -5,8 +5,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 4px 10px;
-  padding: 6px 12px;
+  gap: var(--sp-1) var(--sp-2h);
+  padding: var(--sp-1h) var(--sp-3);
   border: 1px solid var(--veil-3);
   border-radius: var(--r-base);
   background: rgb(var(--ink-2-rgb) / 0.9);
@@ -27,7 +27,7 @@
 .mana-inline-pip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
   font-size: var(--fs-sm);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -48,7 +48,7 @@
 button.mana-inline-pip {
   background: none;
   border: none;
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   font: inherit;
   color: inherit;
   cursor: pointer;

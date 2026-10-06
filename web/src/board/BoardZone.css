@@ -6,7 +6,7 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  gap: 4px;
+  gap: var(--sp-1);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -27,7 +27,7 @@
 .board-zone.zone-top,
 .opponent-zone:not(.mirrored) {
   grid-template-rows: auto 1fr 1fr;
-  padding: 0 14px 2px 14px;
+  padding: 0 var(--sp-3h) var(--sp-0h) var(--sp-3h);
 }
 
 /* Bottom player:
@@ -39,14 +39,14 @@
 .player-zone,
 .opponent-zone.mirrored {
   grid-template-rows: 1fr 1fr auto;
-  padding: 2px 14px 0 14px;
+  padding: var(--sp-0h) var(--sp-3h) 0 var(--sp-3h);
 }
 
 /* ── Rows ───────────────────────────────────────────────────────── */
 .bz-row,
 .oz-row {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   min-height: 0;
   min-width: 0;
   width: 100%;
@@ -144,8 +144,8 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2);
   font-size: var(--fs-2xs);
   border-radius: var(--r-md);
   border: 1px solid var(--gold-dim, var(--warn));
@@ -219,8 +219,8 @@
   height: 100%;
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
-  padding: 2px 8px;
+  gap: var(--sp-2h);
+  padding: var(--sp-0h) var(--sp-2);
   overflow-x: auto;
   overflow-y: hidden;
   border-radius: var(--r-md);
@@ -299,8 +299,8 @@
   max-width: 45%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 2px 8px 2px 12px;
+  gap: var(--sp-2h);
+  padding: var(--sp-0h) var(--sp-2) var(--sp-0h) var(--sp-3);
   overflow-x: auto;
   overflow-y: hidden;
   border-radius: var(--r-md);
@@ -390,8 +390,8 @@
 .board-zone.compact-pod,
 .opponent-zone.compact-pod,
 .player-zone.compact-pod {
-  padding: 0 4px;
-  gap: 2px;
+  padding: 0 var(--sp-1);
+  gap: var(--sp-0h);
 }
 
 .board-zone.compact-pod .bz-status-row,
@@ -401,7 +401,7 @@
   max-height: 92px;
   flex-shrink: 0;
   flex-wrap: wrap;
-  row-gap: 2px;
+  row-gap: var(--sp-0h);
 }
 
 /* Row proportions in compact-pod: equal 1fr for lands and creatures for opponents */
@@ -477,8 +477,8 @@
 .board-zone.compact-pod .bz-band,
 .opponent-zone.compact-pod .oz-band,
 .player-zone.compact-pod .pz-band {
-  gap: 4px;
-  padding: 1px 2px;
+  gap: var(--sp-1);
+  padding: 1px var(--sp-0h);
 }
 
 .board-zone.compact-pod .bz-commander,
@@ -511,8 +511,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 24px;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-5);
   background: rgb(var(--ink-2-rgb) / 0.92);
   border: 1.5px solid rgb(var(--err-rgb) / 0.45);
   border-radius: var(--r-mid);

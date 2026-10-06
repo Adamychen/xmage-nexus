@@ -305,3 +305,5 @@
   box-shadow: 0 2px 6px var(--shade-2);
   pointer-events: none;
 }
+
+.arena-grid-sentinel { grid-column: 1 / -1; height: 1px; }

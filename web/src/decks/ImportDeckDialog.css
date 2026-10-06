@@ -1,17 +1,4 @@
-.import-name-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1h);
-}
-
-.import-name-label,
-.import-textarea-label {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--fg-2);
-}
-
-.import-name-input {
+.import-format-select {
   width: 100%;
   padding: var(--sp-2h) var(--sp-3);
   font-size: var(--fs-md);

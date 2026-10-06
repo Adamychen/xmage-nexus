@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { t as tStatic } from '../i18n'
+import './ArenaManaSymbols.css'
 
 export function symbolToSvgPath(rawSymbol: string): string {
   let clean = rawSymbol.replace(/^\{|\}$/g, '').toUpperCase().trim()
@@ -62,21 +63,14 @@ export function ManaPip({
 
   return (
     <span
-      className={`mana-symbol ${className}`.trim()}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', verticalAlign: 'middle', position: 'relative' }}
+      className={`mana-symbol mana-symbol--img ${className}`.trim()}
       title={`{${s}}`}
     >
       <img
         src={svgUrl}
         alt={`{${s}}`}
         className="mana-symbol-svg"
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          display: 'block',
-          flexShrink: 0,
-        }}
+        style={{ width: size, height: size }}
         onError={() => setFailed(true)}
         loading="lazy"
         draggable={false}
@@ -100,7 +94,6 @@ export function ManaCost({
   return (
     <span
       className={`mana-cost-display ${className}`.trim()}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}
     >
       {symbols.map((sym, idx) => (
         <ManaPip key={`${sym}-${idx}`} symbol={sym} size={size} />

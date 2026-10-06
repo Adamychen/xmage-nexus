@@ -87,7 +87,7 @@ describe('ImportDeckDialog wizard', () => {
     render(<ImportDeckDialog initialText={ARENA} initialName="Burn" onImport={vi.fn()} onClose={vi.fn()} />)
     fireEvent.click(screen.getByTestId('import-next-btn'))
     await screen.findByTestId('import-step-setup')
-    expect((document.querySelector('.import-name-input') as HTMLInputElement).value).toBe('Burn')
+    expect(screen.getByDisplayValue('Burn').tagName).toBe('INPUT')
     fireEvent.click(screen.getByText(/Atrás|Back/))
     expect(screen.getByTestId('import-next-btn')).toBeDefined()
   })

@@ -5,8 +5,8 @@
   z-index: var(--game-header-z);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
   background: rgb(var(--ink-2-rgb) / 0.88);
   border: 1.5px solid var(--veil-3);
   border-radius: var(--r-mid);
@@ -39,8 +39,8 @@
 .player-info-bar.compact {
   min-width: auto;
   height: 100%;
-  padding: 4px 10px;
-  gap: 8px;
+  padding: var(--sp-1) var(--sp-2h);
+  gap: var(--sp-2);
 }
 
 .player-info-bar.opp {
@@ -100,7 +100,7 @@
 }
 
 .player-info-bar.compact .player-counters {
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: nowrap;
 }
 
@@ -110,7 +110,7 @@
   right: -4px;
   background: var(--ink-1);
   border-radius: var(--r-xs);
-  padding: 1px 2px;
+  padding: 1px var(--sp-0h);
   box-shadow: 0 2px 4px var(--shade-2);
 }
 
@@ -149,13 +149,13 @@
 .player-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .player-name-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .player-name {
@@ -167,7 +167,7 @@
 
 .match-wins-dots {
   display: flex;
-  gap: 2px;
+  gap: var(--sp-0h);
   font-size: var(--fs-2xs);
 }
 
@@ -183,14 +183,14 @@
 .player-counters {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
 .life-counter {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
   font-size: var(--fs-2xl);
   line-height: 1;
   font-weight: 900;
@@ -232,10 +232,10 @@ html.fx-off .life-value {
 .player-counter-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   background: var(--ink-4);
   border: 1px solid var(--veil-4);
@@ -270,10 +270,10 @@ html.fx-off .life-value {
 .player-timer-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   background: rgb(var(--ink-2-rgb) / 0.9);
   border: 1px solid var(--veil-5);
@@ -301,7 +301,7 @@ html.fx-off .life-value {
 .player-badges {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   flex-wrap: wrap;
 }
 
@@ -335,7 +335,7 @@ html.fx-off .life-value {
   background: rgb(var(--ink-2-rgb) / 0.9);
   border: 1px solid rgb(var(--gold-rgb) / 0.6);
   border-radius: var(--r-sm);
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   margin-left: -2px;
   line-height: 1.1;
   text-shadow: 0 0 4px var(--shade-4);
@@ -401,8 +401,8 @@ html.fx-off .life-value {
 .player-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 1px 5px;
+  gap: var(--sp-1);
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-4xs);
   font-weight: 800;

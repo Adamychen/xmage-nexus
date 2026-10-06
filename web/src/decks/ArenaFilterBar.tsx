@@ -165,7 +165,7 @@ export function ArenaFilterBar({
             placeholder={t('decks', 'filter_search_placeholder')}
             title={t('decks', 'filter_search_placeholder')}
           />
-          {loading && <div className="arena-grid-spinner small" style={{ marginRight: 6 }} />}
+          {loading && <div className="arena-grid-spinner small arena-search-spinner" />}
           {query && !loading && (
             <CloseButton variant="plain" size="sm" className="arena-search-clear" label={t('common', 'clear')} onClick={() => onQueryChange('')} />
           )}
@@ -226,7 +226,7 @@ export function ArenaFilterBar({
                   >
                     <span>{l.flag}</span>
                     <span>{l.name}</span>
-                    {l.code === searchLang && <span style={{ marginLeft: 'auto' }}>✓</span>}
+                    {l.code === searchLang && <span className="arena-lang-check">✓</span>}
                   </MenuItem>
                 ))}
               </div>

@@ -5,8 +5,8 @@
 .arena-opp-row {
   flex: 0 0 40%;
   display: flex;
-  gap: 8px;
-  padding: 4px 12px 2px 12px;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3) var(--sp-0h) var(--sp-3);
   min-height: 0;
   min-width: 0;
   overflow: hidden;

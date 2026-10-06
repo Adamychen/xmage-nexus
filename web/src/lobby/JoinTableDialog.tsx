@@ -36,6 +36,7 @@ import {
 } from './joinDeckFit'
 import './JoinTableDialog.css'
 import Button from '../ui/Button'
+import Input from '../ui/Input'
 
 const SEARCH_THRESHOLD = 6
 
@@ -323,12 +324,11 @@ export default function JoinTableDialog({
 
         {showImport && (
           <div className="join-inline-importer">
-            <input
-              type="text"
+            <Input
               value={importName}
               onChange={(e) => setImportName(e.target.value)}
               placeholder={t('decks', 'import_placeholder')}
-              className="import-name-input"
+              aria-label={t('decks', 'import_deck_name_label')}
             />
             <textarea
               value={importText}

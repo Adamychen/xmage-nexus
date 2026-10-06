@@ -11,26 +11,26 @@
 
 /* ── Header ────────────────────────────────────────── */
 .tracker-header {
-  padding: 8px 10px 6px;
+  padding: var(--sp-2) var(--sp-2h) var(--sp-1h);
   background: var(--ink-1);
   border-bottom: 1px solid var(--ink-3);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .tracker-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .tracker-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   min-width: 0;
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -46,8 +46,8 @@
 .tracker-counts-pill {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: var(--sp-1);
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-md);
   background: rgb(var(--gold-rgb) / 0.1);
   border: 1px solid rgb(var(--gold-rgb) / 0.28);
@@ -100,14 +100,14 @@
 .tracker-odds-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .tracker-odd-cell {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-3xs);
   transition: background 0.15s ease, border-color 0.15s ease;
@@ -136,7 +136,7 @@
 .odd-cell-header {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   color: var(--fg-2);
   font-weight: 600;
   font-size: var(--fs-4xs);
@@ -164,7 +164,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 4px;
+  gap: var(--sp-1);
   margin-top: 1px;
 }
 
@@ -202,7 +202,7 @@
 .tracker-controls {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .tracker-search-wrap {
@@ -222,7 +222,7 @@
 .tracker-search-input {
   width: 100%;
   height: 24px;
-  padding: 2px 20px 2px 22px;
+  padding: var(--sp-0h) var(--sp-4h) var(--sp-0h) var(--sp-5);
   font-size: var(--fs-2xs);
 }
 
@@ -231,7 +231,7 @@
 .tracker-actions-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .tracker-sort-wrap {
@@ -243,7 +243,7 @@
   width: 100%;
   height: 24px;
   padding-block: 1px;
-  padding-inline-start: 6px;
+  padding-inline-start: var(--sp-1h);
   font-size: var(--fs-3xs);
 }
 
@@ -252,10 +252,10 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 3px 4px 6px;
+  padding: var(--sp-1) var(--sp-1) var(--sp-1h);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .tracker-card-list::-webkit-scrollbar {
@@ -274,7 +274,7 @@
   align-items: center;
   height: 32px;
   min-height: 32px;
-  padding-right: 6px;
+  padding-right: var(--sp-1h);
   border-radius: var(--r-xs);
   background: var(--ink-2);
   border: 1px solid var(--veil-1);
@@ -363,8 +363,8 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-left: 2px;
+  gap: var(--sp-1);
+  padding-left: var(--sp-0h);
   z-index: 1;
 }
 
@@ -380,13 +380,13 @@
 .tracker-top-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-4xs);
   font-weight: 800;
   background: rgb(var(--warn-rgb) / 0.2);
   border: 1px solid var(--warn);
   color: var(--warn);
-  padding: 1px 4px;
+  padding: 1px var(--sp-1);
   border-radius: var(--r-xs);
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -409,9 +409,9 @@
 .tracker-data-col {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
   flex-shrink: 0;
-  margin-left: 4px;
+  margin-left: var(--sp-1);
   z-index: 1;
 }
 
@@ -435,7 +435,7 @@
   color: var(--brand-fg);
   background: rgb(var(--brand-rgb) / 0.08);
   border: 1px solid rgb(var(--brand-rgb) / 0.2);
-  padding: 1px 4px;
+  padding: 1px var(--sp-1);
   border-radius: var(--r-xs);
   min-width: 38px;
   text-align: right;

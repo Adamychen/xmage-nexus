@@ -248,7 +248,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
       await page.locator('[data-testid="decks-import-cta"]').click()
       await expect(page.locator('.deck-import-modal')).toBeVisible()
-      await page.locator('.import-name-input').fill('Mi Test DCK')
+      await page.getByLabel(/Nombre del mazo|Deck name/i).fill('Mi Test DCK')
       await page.locator('.deck-import-textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
       await page.locator('[data-testid="import-submit-btn"]').click()
       // the name also shows in the footer once the new deck is selected

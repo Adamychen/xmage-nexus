@@ -3,6 +3,7 @@ import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
+import Field from '../../ui/Field'
 
 export default function SecurityTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
@@ -12,8 +13,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         <h3><Icon name="shield" size={15} /> {t('lobby','create_tab_restrictions')}</h3>
         <p>{t('lobby','create_step_desc_security')}</p>
       </div>
-      <label>
-        {t('lobby','create_field_password')}
+      <Field label={t('lobby','create_field_password')}>
         <div className="password-field-wrap">
           <input
             type={form.showPassword ? 'text' : 'password'}
@@ -25,13 +25,12 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             {form.showPassword ? <Icon name="eyeOff" size={14} /> : <Icon name="eye" size={14} />}
           </IconButton>
         </div>
-      </label>
+      </Field>
 
       <div className="create-restrictions-box">
         <span className="restrictions-box-title"><Icon name="shield" size={13} /> {t('lobby','create_tab_restrictions')}</span>
         <div className="create-grid-2col">
-          <label>
-            {t('lobby','create_field_min_rating')}
+          <Field label={t('lobby','create_field_min_rating')} hint={form.minimumRating > 0 ? `${t('lobby','create_field_min_rating')}: ≥ ${form.minimumRating}` : t('common','all')}>
             <input
               type="number"
               min={0}
@@ -41,13 +40,9 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
               onChange={(e) => form.setMinimumRating(Math.max(0, parseInt(e.target.value, 10) || 0))}
               placeholder={t('common','all')}
             />
-            <span className="create-field-hint">
-              {form.minimumRating > 0 ? `${t('lobby','create_field_min_rating')}: ≥ ${form.minimumRating}` : t('common','all')}
-            </span>
-          </label>
+          </Field>
 
-          <label>
-            {t('lobby','create_field_quit_ratio')}
+          <Field label={t('lobby','create_field_quit_ratio')} hint={form.quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')}: ${form.quitRatio}%` : t('common','all')}>
             <input
               type="number"
               min={0}
@@ -57,16 +52,12 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
               onChange={(e) => form.setQuitRatio(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
               placeholder={t('common','all')}
             />
-            <span className="create-field-hint">
-              {form.quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')}: ${form.quitRatio}%` : t('common','all')}
-            </span>
-          </label>
+          </Field>
         </div>
 
         {form.isMultiplayerGame && (
-          <div style={{ marginTop: 10 }}>
-            <label>
-              {t('lobby','create_field_edh_power')}
+          <div className="create-edh-power">
+            <Field label={t('lobby','create_field_edh_power')} hint={form.edhPowerLevel < 100 ? `EDH Power: ${form.edhPowerLevel}` : `${t('common','all')} ${t('lobby','create_edh_no_limit')}`}>
               <input
                 type="number"
                 min={0}
@@ -76,22 +67,18 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
                 onChange={(e) => form.setEdhPowerLevel(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
                 placeholder={t('common','all')}
               />
-              <span className="create-field-hint">
-                {form.edhPowerLevel < 100 ? `EDH Power: ${form.edhPowerLevel}` : `${t('common','all')} ${t('lobby','create_edh_no_limit')}`}
-              </span>
-            </label>
+            </Field>
           </div>
         )}
       </div>
 
-      <label>
-        {t('lobby','create_field_banned_users')}
+      <Field label={t('lobby','create_field_banned_users')}>
         <input
           value={form.bannedUsersRaw}
           onChange={(e) => form.setBannedUsersRaw(e.target.value)}
           placeholder={t('lobby','placeholder_banned_users')}
         />
-      </label>
+      </Field>
 
       <Checkbox
         card
