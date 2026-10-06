@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "typescript/no-explicit-any": "error",
+
+    "react/set-state-in-effect": "off",
+    "react/refs": "off",
+    "react/immutability": "off",
+    "react/purity": "off",
+    "react/globals": "off",
+    "react/use-memo": "off",
+    "react/void-use-memo": "off",
+    "react/preserve-manual-memoization": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "e2e/**", "src/test/**", "src/dev/**"],
+      "rules": {
+        "typescript/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["e2e/**"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off",
+        "no-empty-pattern": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist/**", "coverage/**", "playwright-report/**", "test-results/**"]
+}

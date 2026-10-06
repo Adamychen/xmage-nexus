@@ -990,7 +990,7 @@ export const fr: TranslationSchema = {
     commander_view_cards_hint: 'Vue cartes verticale',
     commander_view_table_hint: 'Vue table classique',
     commander_no_rivals: 'Aucun commandant adverse',
-    commander_table_corner: 'Cible \ Commandant',
+    commander_table_corner: 'Cible \\ Commandant',
     commander_self_hint: 'Votre propre commandant (aucun dégât)',
     commander_damage_hint: '21 blessures ou plus d’un même commandant éliminent le joueur.',
     commander_damage_dealt: '{name} a infligé {damage} blessures à {target}',

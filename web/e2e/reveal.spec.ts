@@ -1,7 +1,6 @@
 import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { startGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'

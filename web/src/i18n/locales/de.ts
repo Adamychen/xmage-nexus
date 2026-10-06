@@ -990,7 +990,7 @@ export const de: TranslationSchema = {
     commander_view_cards_hint: 'Vertikale Kartenansicht',
     commander_view_table_hint: 'Klassische Tabellenansicht',
     commander_no_rivals: 'Keine gegnerischen Commander',
-    commander_table_corner: 'Ziel \ Commander',
+    commander_table_corner: 'Ziel \\ Commander',
     commander_self_hint: 'Eigener Commander (kein Schaden)',
     commander_damage_hint: '21 oder mehr Schaden eines einzelnen Commanders schaltet den Spieler aus.',
     commander_damage_dealt: '{name} hat {damage} Schaden an {target} verursacht',

@@ -2,7 +2,6 @@ import { fakeOnly } from './support/fake-mode'
 import { TABLE } from '../fixtures/table-names'
 import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -15,7 +14,6 @@ import { spellsScenario } from '../fixtures/scenarios/spells'
 import { withFakeServer } from './support/fake-backend'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
-const TARGETING_SHOT = path.join(SHOTS_DIR, 'spells-targeting.png')
 
 function controlledOf(view: Record<string, unknown> | null) {
   const players = (view?.players ?? []) as { playerId?: string; controlled?: boolean }[]
@@ -27,10 +25,8 @@ test.describe('Blaze', { tag: '@spells' }, () => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => spellsScenario('blaze'), async () => {
   const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sp', tableName: TABLE.spellsBlaze, deck: DECK.advanced })
-  const board = page.locator('.game-board')
   const blazeId = await waitPlayable(page, 'Blaze', { timeoutMs: 30_000, minUntapped: 3 })
   if (!blazeId) throw new Error('Blaze no fue jugable en 30s (robo adverso)')
-  const beforeShot = await board.screenshot()
   const cursor = parsedLen(page)
   // el lanzamiento va por WS (determinista); los diálogos se verifican por UI
   expect(await helper.playCard(blazeId), 'el Blaze debería lanzarse por WS').toBeTruthy()

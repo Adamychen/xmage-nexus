@@ -148,7 +148,7 @@ describe('TournamentPanel — refresco del bracket en vivo', () => {
         await vi.advanceTimersByTimeAsync(8000)
       })
       expect(vi.mocked(getTournament)).toHaveBeenCalledWith('t1')
-      expect((getState().tournament?.view as { rounds: unknown[] }).rounds).toHaveLength(1)
+      expect((getState().tournament?.view as { rounds: unknown[] } | undefined)?.rounds).toHaveLength(1)
     } finally {
       vi.useRealTimers()
     }

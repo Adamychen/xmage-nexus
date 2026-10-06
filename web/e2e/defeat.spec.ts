@@ -9,7 +9,6 @@ import { DECK } from '../fixtures/deck-names'
  */
 
 import { test, expect } from './fixtures'
-import { FAKE_MODE } from './dual'
 fakeOnly()
 import { humanLosesScenario } from '../fixtures/scenarios/humanLosesGame2'
 import { SIM_NAME } from '../fixtures/scenarios/humanGame'

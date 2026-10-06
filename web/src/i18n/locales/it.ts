@@ -990,7 +990,7 @@ export const it: TranslationSchema = {
     commander_view_cards_hint: 'Vista carte verticale',
     commander_view_table_hint: 'Vista tavolo classica',
     commander_no_rivals: 'Nessun comandante avversario',
-    commander_table_corner: 'Bersaglio \ Comandante',
+    commander_table_corner: 'Bersaglio \\ Comandante',
     commander_self_hint: 'Comandante proprio (nessun danno)',
     commander_damage_hint: '21 o più danni da un singolo comandante eliminano il giocatore.',
     commander_damage_dealt: '{name} ha inflitto {damage} danni a {target}',

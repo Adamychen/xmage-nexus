@@ -1,0 +1,113 @@
+{
+  "src/App.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/board/BoardZone.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/board/CardSlot.tsx": {
+    "react-hooks(exhaustive-deps)": 3
+  },
+  "src/board/GameBoard.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/board/useCombatHeld.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/DeckBox.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/DeckBuilder.tsx": {
+    "react-hooks(exhaustive-deps)": 4
+  },
+  "src/decks/DeckInspectorModal.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/DecksGallery.tsx": {
+    "react-hooks(exhaustive-deps)": 2
+  },
+  "src/decks/ImportDeckDialog.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/SampleHandModal.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/useCardArtUrl.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/decks/useDeckValidation.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/attentionAlerts.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/CommanderDamageMatrix.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/ConstructScreen.tsx": {
+    "react-hooks(exhaustive-deps)": 5
+  },
+  "src/game/DraftScreen.tsx": {
+    "react-hooks(exhaustive-deps)": 3
+  },
+  "src/game/feedbackModes/ManaBar.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/GameDock.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/GameScreen.tsx": {
+    "react-hooks(exhaustive-deps)": 3
+  },
+  "src/game/GameStrip.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/HelpWikiModal.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/MechanicsTray.tsx": {
+    "react-hooks(exhaustive-deps)": 2
+  },
+  "src/game/MulliganDialog.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/PlayerContextMenu.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/ResourceBar.tsx": {
+    "react-hooks(exhaustive-deps)": 4
+  },
+  "src/game/SideboardScreen.tsx": {
+    "react-hooks(exhaustive-deps)": 4
+  },
+  "src/game/TournamentPanel.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/game/TriggerOrderDialog.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/lobby/ChatBox.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/lobby/CreateTable/useCreateTableForm.ts": {
+    "react-hooks(exhaustive-deps)": 3
+  },
+  "src/lobby/CreateTable/useDeckChoices.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/lobby/JoinTableDialog.tsx": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/lobby/LobbyScreen.tsx": {
+    "react-hooks(exhaustive-deps)": 5
+  },
+  "src/lobby/useTournamentBracket.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  },
+  "src/ui/useDraggablePos.ts": {
+    "react-hooks(exhaustive-deps)": 2
+  },
+  "src/utils/timer.ts": {
+    "react-hooks(exhaustive-deps)": 1
+  }
+}
