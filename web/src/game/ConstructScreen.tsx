@@ -22,10 +22,13 @@ import { isUuidLikeCardName } from '../cards/cardLocalization'
 import Modal from '../ui/Modal'
 import './ConstructScreen.css'
 import Button from '../ui/Button'
+import { POOL_SORTS, sortPool, type PoolSort } from './poolSort'
 
 function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
 }
+
+const POOL_SORT_LABEL = { color: 'sort_color', cmc: 'sort_cmc', type: 'filter_type', name: 'sort_name' } as const
 
 export function poolCardDisplayName(rawName: unknown, set: string, num: string): string | null {
   const name = rawName == null ? '' : String(rawName)
@@ -86,6 +89,7 @@ export default function ConstructScreen() {
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [poolFilter, setPoolFilter] = useState('')
+  const [poolSort, setPoolSort] = useState<PoolSort>('color')
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isPoolDragOver, setIsPoolDragOver] = useState(false)
   const submitRef = useRef<() => Promise<void>>(async () => {})
@@ -354,9 +358,13 @@ export default function ConstructScreen() {
     list.push(card)
   }
 
-  const filteredPool = poolFilter.trim()
-    ? pool.filter((c) => c.cardName.toLowerCase().includes(poolFilter.toLowerCase()) || c.setCode.toLowerCase().includes(poolFilter.toLowerCase()))
-    : pool
+  const filteredPool = sortPool(
+    poolFilter.trim()
+      ? pool.filter((c) => c.cardName.toLowerCase().includes(poolFilter.toLowerCase()) || c.setCode.toLowerCase().includes(poolFilter.toLowerCase()))
+      : pool,
+    poolSort,
+    (c) => metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase()),
+  )
 
   return (
     <Modal backdropClassName="construct-backdrop" dialogClassName="construct-screen" label={t('game', 'construct_limited_label')}>
@@ -383,14 +391,30 @@ export default function ConstructScreen() {
               <h3>{t('game', 'construct_pool')}</h3>
               <span className="construct-col-count">{poolTotal}</span>
             </div>
-            {pool.length > 10 && (
-              <input
-                className="construct-filter"
-                type="text"
-                placeholder={t('game', 'sideboard_filter')}
-                value={poolFilter}
-                onChange={(e) => setPoolFilter(e.target.value)}
-              />
+            {pool.length > 0 && (
+              <div className="construct-pool-tools">
+                {pool.length > 10 && (
+                  <input
+                    className="construct-filter"
+                    type="text"
+                    placeholder={t('game', 'sideboard_filter')}
+                    aria-label={t('game', 'sideboard_filter')}
+                    value={poolFilter}
+                    onChange={(e) => setPoolFilter(e.target.value)}
+                  />
+                )}
+                <select
+                  className="construct-sort"
+                  value={poolSort}
+                  onChange={(e) => setPoolSort(e.target.value as PoolSort)}
+                  aria-label={t('decks', 'sort_by')}
+                  data-testid="construct-pool-sort"
+                >
+                  {POOL_SORTS.map((s) => (
+                    <option key={s} value={s}>{t('decks', POOL_SORT_LABEL[s])}</option>
+                  ))}
+                </select>
+              </div>
             )}
             <div className="construct-card-list construct-arena-list">
               {isPoolDragOver && (

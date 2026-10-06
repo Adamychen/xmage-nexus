@@ -223,7 +223,6 @@ export default function FloatingChat({
               key={u.userName}
               className="user-list-item interactive"
               onClick={() => onSelectUser(u)}
-              style={{ cursor: 'pointer' }}
               title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
             >
               <span className={`dot ${isUserInGame(u.infoGames) ? 'playing' : 'online'}`} />

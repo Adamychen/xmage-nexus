@@ -150,22 +150,22 @@ describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
   it('deshabilita el backup sin customs y lo habilita con customs', async () => {
     const { unmount } = render(<DecksGallery onEdit={() => {}} />)
     await openMoreMenu()
-    const backupEmpty = await screen.findByText('Exportar Mazo (0)')
+    const backupEmpty = await screen.findByText('Copia de seguridad de todos los mazos (0)')
     expect((backupEmpty.closest('button') as HTMLButtonElement).disabled).toBe(true)
     unmount()
 
     storeState.decks = [customDeck()]
     render(<DecksGallery onEdit={() => {}} />)
     await openMoreMenu()
-    const backupOne = await screen.findByText('Exportar Mazo (1)')
+    const backupOne = await screen.findByText('Copia de seguridad de todos los mazos (1)')
     expect((backupOne.closest('button') as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('etiqueta restore como importar y favorito con ★ visible', async () => {
+  it('etiqueta restore como restaurar copia y favorito con ★ visible', async () => {
     storeState.decks = [customDeck({ favorite: true })]
     render(<DecksGallery onEdit={() => {}} />)
     await openMoreMenu()
-    expect(await screen.findByText('Importar Mazo (JSON)')).not.toBeNull()
+    expect(await screen.findByText('Restaurar copia de seguridad (.json)')).not.toBeNull()
     const stars = await screen.findAllByText('★')
     const favBtn = stars.map((s) => s.closest('button')).find(Boolean)
     expect(favBtn?.getAttribute('aria-pressed')).toBe('true')
