@@ -118,7 +118,7 @@ export default function LobbyHeader({
         >
           <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
           <div className="lobby-user-col">
-            <div className="lobby-user-name-line" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="lobby-user-name-line">
               <span className="lobby-username">{conn?.username}</span>
               {myUser?.infoPing && <PingBadge infoPing={myUser.infoPing} compact />}
             </div>
@@ -140,13 +140,13 @@ export default function LobbyHeader({
         </IconButton>
 
         {confirmDisconnect ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 11, color: '#ff9999', fontWeight: 700 }}>{t('lobby', 'disconnect_confirm')}</span>
-            <button className="lobby-disconnect-btn" onClick={reset} style={{ padding: '4px 8px', fontSize: 11 }}>{t('common', 'yes')}</button>
-            <Button onClick={() => onConfirmDisconnect(false)} style={{ padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#c4cae8', cursor: 'pointer' }}>{t('common', 'no')}</Button>
+          <div className="lobby-disconnect-confirm">
+            <span className="lobby-disconnect-confirm-label">{t('lobby', 'disconnect_confirm')}</span>
+            <Button variant="soft-danger" size="sm" onClick={reset}>{t('common', 'yes')}</Button>
+            <Button variant="subtle" size="sm" onClick={() => onConfirmDisconnect(false)}>{t('common', 'no')}</Button>
           </div>
         ) : (
-          <button className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
+          <button type="button" className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
             <Icon name="logout" size={15} />
           </button>
         )}

@@ -35,6 +35,7 @@ import { useNewsBadge } from '../system/useNewsBadge'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
 import Button from '../ui/Button'
+import IconButton from '../ui/IconButton'
 
 export default function LobbyScreen() {
   const { t } = useTranslation()
@@ -71,6 +72,9 @@ export default function LobbyScreen() {
     try { localStorage.setItem('floating_chat_open', mobileChatOpen ? '1' : '0') } catch {}
   }, [mobileChatOpen])
   const [showSettings, setShowSettings] = useState(false)
+  const [compactTables, setCompactTables] = useState(() => {
+    try { return localStorage.getItem('tables_density') === 'compact' } catch { return false }
+  })
   const [showFilters, setShowFilters] = useState(() => {
     try {
       const savedOpen = localStorage.getItem('tables_filters_open')
@@ -197,6 +201,18 @@ export default function LobbyScreen() {
                       <span className="hero-deck-label">{t('lobby.active_deck')}</span>
                       <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
                     </div>
+                    <IconButton
+                      label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
+                      icon={compactTables ? 'layoutGrid' : 'list'}
+                      aria-pressed={compactTables}
+                      data-testid="tables-density-toggle"
+                      onClick={() => {
+                        setCompactTables((v) => {
+                          try { localStorage.setItem('tables_density', v ? 'cards' : 'compact') } catch {}
+                          return !v
+                        })
+                      }}
+                    />
                     <button
                       type="button"
                       className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
@@ -243,7 +259,7 @@ export default function LobbyScreen() {
                   />
                 )}
 
-                <div className="tables-list">
+                <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
                   {filteredTables.map((tTable) => (
                     <TableCard
                       key={tTable.tableId}
