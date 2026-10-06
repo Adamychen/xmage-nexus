@@ -1,11 +1,11 @@
 .about-tabs {
-  padding: 4px 4px 0;
+  padding: var(--sp-1) var(--sp-1) 0;
 }.about-close-btn {
   margin-left: auto;
 }
 
 .about-pane {
-  padding: 16px 4px 4px;
+  padding: var(--sp-4) var(--sp-1) var(--sp-1);
   overflow-y: auto;
   max-height: min(56vh, 520px);
 }
@@ -13,13 +13,13 @@
 .about-links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .about-links a {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   color: inherit;
 }
 
@@ -29,23 +29,23 @@
 }
 
 .about-feed h3 {
-  margin: 14px 0 8px;
+  margin: var(--sp-3h) 0 var(--sp-2);
   font-size: var(--fs-base);
 }
 
 .about-release {
   border: 1px solid var(--border);
   border-radius: var(--r-base);
-  padding: 10px 12px;
-  margin-bottom: 10px;
+  padding: var(--sp-2h) var(--sp-3);
+  margin-bottom: var(--sp-2h);
 }
 
 .about-release header {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-1h);
 }
 
 .about-release-tag {
@@ -70,17 +70,17 @@
 .about-release-body h2,
 .about-release-body h3,
 .about-release-body h4 {
-  margin: 8px 0 4px;
+  margin: var(--sp-2) 0 var(--sp-1);
   font-size: var(--fs-md);
 }
 
 .about-release-body p {
-  margin: 4px 0;
+  margin: var(--sp-1) 0;
 }
 
 .about-release-body ul {
-  margin: 4px 0;
-  padding-left: 20px;
+  margin: var(--sp-1) 0;
+  padding-left: var(--sp-4h);
 }
 
 .about-release-body code {
@@ -90,7 +90,7 @@
 
 .about-release-link {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: var(--sp-2);
   font-size: var(--fs-sm);
 }
 

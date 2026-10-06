@@ -1,8 +1,8 @@
 .phase-stop-selector {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1) var(--sp-2);
 }
 
 .phase-stop-label {
@@ -11,13 +11,13 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 600;
-  margin-right: 4px;
+  margin-right: var(--sp-1);
 }
 
 .phase-stop-row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .phase-stop-turn-label {
@@ -25,7 +25,7 @@
   color: var(--text-dim);
   width: 22px;
   text-align: right;
-  margin-right: 2px;
+  margin-right: var(--sp-0h);
 }
 
 .phase-stop-btn {

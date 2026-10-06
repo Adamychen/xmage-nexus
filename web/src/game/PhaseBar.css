@@ -1,9 +1,9 @@
 .phase-bar {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   background: rgb(var(--ink-2-rgb) / 0.75);
-  padding: 3px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-base);
   border: 1px solid var(--veil-2);
   backdrop-filter: blur(8px);
@@ -12,13 +12,13 @@
 .phase-group {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .phase-sep {
   color: var(--veil-4);
   font-size: var(--fs-2xs);
-  margin: 0 4px;
+  margin: 0 var(--sp-1);
   user-select: none;
 }
 
@@ -28,7 +28,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   min-width: 24px;
   height: 24px;
   border-radius: var(--r-sm);

@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: var(--sp-3h);
   flex-wrap: wrap;
 }
 
@@ -12,7 +12,7 @@
 
 .voting-btn {
   min-width: 180px;
-  padding: 14px 20px;
+  padding: var(--sp-3h) var(--sp-4h);
   border-radius: var(--r-mid);
   font-size: var(--fs-base);
   font-weight: 700;
@@ -21,7 +21,7 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   justify-content: center;
   transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
 }
@@ -60,7 +60,7 @@
 }
 
 .voting-hint {
-  margin-top: 14px;
+  margin-top: var(--sp-3h);
   font-size: var(--fs-2xs);
   color: var(--fg-3);
   text-align: center;

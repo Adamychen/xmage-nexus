@@ -59,7 +59,7 @@
   font-weight: 800;
   font-family: var(--font-display, sans-serif);
   line-height: 1;
-  margin: 0 2px;
+  margin: 0 var(--sp-0h);
   vertical-align: -2.5px;
   box-shadow: 0 1px 3px var(--shade-2);
   user-select: none;

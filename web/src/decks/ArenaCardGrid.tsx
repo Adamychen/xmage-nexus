@@ -218,7 +218,7 @@ export function ArenaCardGrid({
         })}
 
         {/* Bottom Sentinel for IntersectionObserver */}
-        <div ref={sentinelRef} style={{ gridColumn: '1 / -1', height: 1 }} />
+        <div ref={sentinelRef} className="arena-grid-sentinel" />
 
         {loadingMore && (
           <div className="arena-grid-loading-more">

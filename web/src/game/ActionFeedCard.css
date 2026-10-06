@@ -2,8 +2,8 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 10px 0 6px 0;
+  gap: var(--sp-2);
+  margin: var(--sp-2h) 0 var(--sp-1h) 0;
   width: 100%;
 }
 
@@ -14,7 +14,7 @@
 }
 
 .turn-badge {
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-md);
   background: var(--ink-1);
   border: 1px solid rgb(var(--gold-rgb) / 0.5);
@@ -31,7 +31,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   border-radius: var(--r-base);
   background: rgb(var(--ink-2-rgb) / 0.9);
   border: 1px solid var(--veil-4);
@@ -83,7 +83,7 @@
 
 .action-feed-card.no-art {
   min-height: 0;
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
 }
 
 .action-card-content {
@@ -91,13 +91,13 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .action-card-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .action-icon {
@@ -107,7 +107,7 @@
 .action-player-tag {
   font-size: var(--fs-2xs);
   font-weight: 700;
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
 }
 
@@ -125,7 +125,7 @@
 
 .action-damage-badge {
   margin-left: auto;
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   background: rgb(var(--err-rgb) / 0.9);
   color: var(--fg-hi);
@@ -135,7 +135,7 @@
 
 .action-life-badge {
   margin-left: auto;
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -155,7 +155,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .action-card-name {
@@ -170,7 +170,7 @@
   color: var(--fg-1);
   background: var(--shade-3);
   border-radius: var(--r-xs);
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   text-shadow: 0 1px 2px var(--shade-5);
 }
 

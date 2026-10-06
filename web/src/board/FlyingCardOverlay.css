@@ -43,7 +43,7 @@
   font-size: var(--fs-2xs);
   font-weight: 700;
   text-align: center;
-  padding: 6px;
+  padding: var(--sp-1h);
   text-shadow: 0 2px 4px var(--shade-5);
 }
 

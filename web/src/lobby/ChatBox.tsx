@@ -230,7 +230,6 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
               <span
                 className="chat-from"
                 onClick={() => onUserClick?.(m.username)}
-                style={{ cursor: 'pointer' }}
                 title={`${t('lobby', 'view_profile_hint')} ${m.username}`}
               >
                 {m.username}:

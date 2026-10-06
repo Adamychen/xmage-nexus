@@ -10,6 +10,8 @@ import Chip from './Chip'
 import EmptyState from './EmptyState'
 import Toggle, { Switch } from './Toggle'
 import { useEscape } from './useEscape'
+import Field from './Field'
+import Input from './Input'
 
 afterEach(cleanup)
 
@@ -180,5 +182,33 @@ describe('DropdownMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: /X/ }))
     expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--up')
     expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--end')
+  })
+})
+
+describe('Field', () => {
+  it('labels its control and shows hint and error', () => {
+    render(<Field label="Name" hint="max 14" error="required"><Input value="" onChange={() => {}} aria-invalid /></Field>)
+    const input = screen.getByLabelText('Name')
+    expect(input.tagName).toBe('INPUT')
+    const described = (input.getAttribute('aria-describedby') ?? '').split(' ').map((id) => document.getElementById(id)?.textContent)
+    expect(described).toEqual(['max 14', 'required'])
+    expect(screen.getByRole('alert').textContent).toBe('required')
+  })
+
+  it('as a group labels a set of controls', () => {
+    render(<Field group label="Wins"><button type="button">1</button><button type="button">2</button></Field>)
+    expect(screen.getByRole('group', { name: 'Wins' }).tagName).toBe('DIV')
+  })
+})
+
+describe('Input', () => {
+  it('applies size and inline modifiers, defaults to text and forwards the ref', () => {
+    const ref = { current: null as HTMLInputElement | null }
+    render(<Input ref={ref} size="sm" inline data-testid="i" />)
+    const el = screen.getByTestId('i') as HTMLInputElement
+    expect(el.type).toBe('text')
+    expect(el.className).toContain('ui-input--sm')
+    expect(el.className).toContain('ui-input--inline')
+    expect(ref.current).toBe(el)
   })
 })

@@ -282,4 +282,33 @@
   .ui-dropdown-menu--up { bottom: calc(100% + 6px); }
   .ui-dropdown-menu--start { left: 0; }
   .ui-dropdown-menu--end { right: 0; }
+
+  .ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    min-width: 0;
+  }
+  /* the label only groups name + control for a11y; layout is the field's */
+  .ui-field-main { display: contents; }
+  .ui-field-label {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-3);
+  }
+  .ui-field-hint { font-size: var(--fs-xs); color: var(--fg-3); }
+  .ui-field-hint--warn { color: var(--warn); }
+  .ui-field-error { font-size: var(--fs-xs); font-weight: 600; color: var(--err); }
+
+  .ui-input { width: 100%; min-width: 0; box-sizing: border-box; }
+  .ui-input--sm { padding: var(--sp-1h) var(--sp-2); font-size: var(--fs-sm); }
+  .ui-input--md { padding: var(--sp-2) var(--sp-2h); font-size: var(--fs-md); }
+  .ui-input--lg { padding: var(--sp-2h) var(--sp-3); font-size: var(--fs-md); }
+  .ui-input--inline { width: auto; }
+  .ui-input[aria-invalid="true"] { border-color: var(--err); }
 }

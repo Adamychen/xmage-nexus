@@ -132,9 +132,9 @@ html.fx-off .card-slot.attacking {
 @keyframes shakeHit {
   0%, 100% { margin-left: 0; }
   20% { margin-left: -4px; }
-  40% { margin-left: 4px; }
+  40% { margin-left: var(--sp-1); }
   60% { margin-left: -3px; }
-  80% { margin-left: 3px; }
+  80% { margin-left: var(--sp-1); }
 }
 
 .card-slot.took-damage,
@@ -296,7 +296,7 @@ html.fx-off .card-slot.stack-source-pulse {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: var(--sp-2);
   background: linear-gradient(135deg, var(--ink-4) 0%, var(--ink-2) 100%);
   border-radius: var(--r-base);
 }
@@ -319,7 +319,7 @@ html.fx-off .card-slot.stack-source-pulse {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  padding: 2px 7px;
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-sm);
   font-size: var(--fs-sm);
   font-weight: 800;
@@ -344,7 +344,7 @@ html.fx-off .card-slot.stack-source-pulse {
   box-shadow: 0 2px 6px var(--shade-3);
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .defense-badge {
@@ -354,7 +354,7 @@ html.fx-off .card-slot.stack-source-pulse {
   box-shadow: 0 2px 6px var(--shade-3);
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .card-counters-wrap {
@@ -363,7 +363,7 @@ html.fx-off .card-slot.stack-source-pulse {
   left: 4px;
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: var(--sp-0h);
   z-index: 5;
   pointer-events: none;
   max-width: 60%;
@@ -374,7 +374,7 @@ html.fx-off .card-slot.stack-source-pulse {
   bottom: auto;
   left: auto;
   right: auto;
-  padding: 2px 5px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -386,7 +386,7 @@ html.fx-off .card-slot.stack-source-pulse {
   box-shadow: 0 2px 4px var(--shade-3);
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--sp-0h);
   animation: badgePop calc(0.28s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -443,7 +443,7 @@ html.fx-off .counter-badge {
   bottom: 26px;
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: var(--sp-0h);
   max-width: 70%;
   z-index: 6;
   pointer-events: none;
@@ -455,7 +455,7 @@ html.fx-off .counter-badge {
   justify-content: center;
   min-width: 14px;
   height: 14px;
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -500,7 +500,7 @@ html.fx-off .counter-badge {
   z-index: 5;
   background: rgb(var(--ink-2-rgb) / 0.7);
   border-radius: 50%;
-  padding: 1px 3px;
+  padding: 1px var(--sp-1);
   border: 1px solid var(--line-3);
 }
 
@@ -515,13 +515,13 @@ html.fx-off .counter-badge {
   top: 4px;
   left: 4px;
   display: flex;
-  gap: 3px;
+  gap: var(--sp-1);
   z-index: 5;
   pointer-events: none;
 }
 
 .facedown-type-badge {
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -545,14 +545,14 @@ html.fx-off .counter-badge {
   right: 4px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--sp-1);
   align-items: flex-end;
   z-index: 5;
   pointer-events: none;
 }
 
 .designation-badge {
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
   font-weight: 800;
@@ -663,7 +663,7 @@ html.fx-off .counter-badge {
   top: 4px;
   right: 4px;
   left: auto;
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   line-height: 1.2;
@@ -737,7 +737,7 @@ html.fx-off .counter-badge {
   top: 22px;
   right: 4px;
   display: flex;
-  gap: 2px;
+  gap: var(--sp-0h);
   z-index: 6;
   pointer-events: none;
 }

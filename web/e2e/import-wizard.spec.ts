@@ -35,7 +35,7 @@ test.describe('Import wizard', () => {
       await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('[data-testid="decks-import-cta"]').click()
-      await page.locator('.import-name-input').fill('Wizard Burn')
+      await page.getByLabel(/Nombre del mazo|Deck name/i).fill('Wizard Burn')
       await page.locator('.deck-import-textarea').fill(ARENA)
       const shots = process.env.SHOTS_DIR
       if (shots) await page.screenshot({ path: `${shots}/1-source.png` })

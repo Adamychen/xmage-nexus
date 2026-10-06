@@ -132,7 +132,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
         <div className="card-grid-scroll-area">
           <div className="card-grid">
             {filtered.map((card) => (
-              <button
+              <button type="button"
                 key={card.id}
                 className={`card-grid-cell ${chosen.includes(card.id) ? 'selected' : ''}`}
                 disabled={busy || (serverDriven && selectable.size > 0 && !selectable.has(card.id) && !chosen.includes(card.id))}

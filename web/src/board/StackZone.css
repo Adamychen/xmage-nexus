@@ -8,7 +8,7 @@
   flex-direction: column;
   gap: 0;
   overflow-y: auto;
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   background: transparent;
   box-sizing: border-box;
 }
@@ -20,9 +20,9 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 4px 6px;
-  padding-bottom: 8px;
-  margin-bottom: 6px;
+  gap: var(--sp-1) var(--sp-1h);
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1h);
   border-bottom: 1px solid var(--veil-2);
   flex-shrink: 0;
 }
@@ -30,7 +30,7 @@
 .stack-header-left {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .stack-header-title {
@@ -47,19 +47,19 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   margin-left: auto;
 }
 
 .stack-header-title { white-space: nowrap; }
-.stack-header-actions .ui-btn { padding: 4px 8px; font-size: var(--fs-2xs); }
+.stack-header-actions .ui-btn { padding: var(--sp-1) var(--sp-2); font-size: var(--fs-2xs); }
 
 /* ── Timeline ── */
 .stack-timeline {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding-bottom: 16px;
+  padding-bottom: var(--sp-4);
   flex: 1;
   min-height: 0;
 }
@@ -70,7 +70,7 @@
   position: relative;
   transition: background 0.15s ease;
   border-radius: var(--r-base);
-  padding: 2px 0;
+  padding: var(--sp-0h) 0;
 }
 
 @keyframes stackEntryIn {
@@ -127,7 +127,7 @@ html.fx-off .stack-tl-entry .stack-tl-card {
   align-items: center;
   flex-shrink: 0;
   position: relative;
-  padding-top: 12px;
+  padding-top: var(--sp-3);
 }
 
 .stack-tl-node {
@@ -171,7 +171,7 @@ html.fx-off .stack-tl-node.node-top {
   flex: 1;
   min-height: 8px;
   background: var(--ink-4);
-  margin-top: 2px;
+  margin-top: var(--sp-0h);
 }
 
 .stack-tl-line.line-top {
@@ -182,7 +182,7 @@ html.fx-off .stack-tl-node.node-top {
 .stack-tl-body {
   flex: 1;
   min-width: 0;
-  padding: 2px 6px 4px 2px;
+  padding: var(--sp-0h) var(--sp-1h) var(--sp-1) var(--sp-0h);
 }
 
 .stack-tl-pos {
@@ -203,10 +203,10 @@ html.fx-off .stack-tl-node.node-top {
 .stack-controller-pill {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   white-space: nowrap;
   letter-spacing: 0.02em;
@@ -237,11 +237,11 @@ html.fx-off .stack-tl-node.node-top {
 
 .stack-tl-card {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 5px 8px;
+  padding: var(--sp-1h) var(--sp-2);
   transition: all 0.15s ease;
   position: relative;
   align-items: center;
@@ -307,13 +307,13 @@ html.fx-off .stack-tl-node.node-top {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .stack-tl-name-row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
 }
 
 .stack-tl-name {
@@ -353,14 +353,14 @@ html.fx-off .stack-tl-node.node-top {
 .stack-tl-type-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
 }
 
 .stack-tl-type-badge {
   font-size: var(--fs-2xs);
   font-weight: 600;
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   white-space: nowrap;
 }
@@ -387,7 +387,7 @@ html.fx-off .stack-tl-node.node-top {
   font-size: var(--fs-3xs);
   font-weight: 700;
   color: var(--warn);
-  padding: 0 3px;
+  padding: 0 var(--sp-1);
   background: rgb(var(--warn-rgb) / 0.1);
   border-radius: var(--r-xs);
 }
@@ -395,7 +395,7 @@ html.fx-off .stack-tl-node.node-top {
 .stack-tl-copy-badge {
   font-size: var(--fs-2xs);
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1px var(--sp-1);
   border-radius: var(--r-xs);
   background: linear-gradient(135deg, rgb(var(--purple-rgb) / 0.2), rgb(var(--err-rgb) / 0.2));
   color: var(--purple-fg);
@@ -405,7 +405,7 @@ html.fx-off .stack-tl-node.node-top {
 .stack-tl-targets {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--sp-1);
   font-size: var(--fs-3xs);
   font-weight: 600;
   color: var(--gold-300);
@@ -429,8 +429,8 @@ html.fx-off .stack-tl-node.node-top {
   color: var(--fg-1);
   white-space: pre-wrap;
   word-break: break-word;
-  margin-top: 2px;
-  padding-top: 3px;
+  margin-top: var(--sp-0h);
+  padding-top: var(--sp-1);
   border-top: 1px solid var(--veil-2);
 }
 
@@ -444,7 +444,7 @@ html.fx-off .stack-tl-node.node-top {
 
 /* ── Expanded mode: show more space ── */
 .view-mode-expanded .stack-tl-card {
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
 }
 
 .view-mode-expanded .stack-tl-name {

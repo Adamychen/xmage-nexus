@@ -3,8 +3,8 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  padding: 8px 4px 12px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-1) var(--sp-3);
 }
 
 .mulligan-card-wrap {
@@ -205,8 +205,8 @@ html.fx-off .mulligan-bar {
 /* ── Actions ─────────────────────────────────────────────────── */
 .mulligan-actions {
   display: flex;
-  margin-top: 16px;
-  gap: 14px;
+  margin-top: var(--sp-4);
+  gap: var(--sp-3h);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -214,7 +214,7 @@ html.fx-off .mulligan-bar {
 .mulligan-actions button {
   font-size: var(--fs-lg);
   font-weight: 700;
-  padding: 13px 28px;
+  padding: var(--sp-3) var(--sp-6);
   border-radius: var(--r-mid);
   cursor: pointer;
   transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
@@ -236,7 +236,7 @@ html.fx-off .mulligan-bar {
 .mulligan-actions .mulligan-concede {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   background: transparent;
   border-color: var(--err);
   color: var(--err);

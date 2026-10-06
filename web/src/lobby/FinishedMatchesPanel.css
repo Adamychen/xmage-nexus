@@ -230,7 +230,10 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2h);
+  cursor: default;
 }
+
+.player-info-wrap.is-clickable { cursor: pointer; }
 
 .player-name-col {
   display: flex;

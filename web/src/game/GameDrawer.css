@@ -1,7 +1,7 @@
 .drawer-toggles {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .drawer-toggle {
@@ -25,7 +25,7 @@
   justify-content: center;
   min-width: 16px;
   height: 16px;
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
   border-radius: var(--r-base);
   font-size: var(--fs-3xs);
   font-weight: 800;
@@ -73,7 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px 6px 12px;
+  padding: var(--sp-1h) var(--sp-2) var(--sp-1h) var(--sp-3);
   border-bottom: 1px solid var(--ink-3);
   flex-shrink: 0;
 }

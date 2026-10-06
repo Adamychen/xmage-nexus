@@ -1,0 +1,21 @@
+/* Standalone: the symbols render in the board, dialogs and the deck builder,
+   so they carry their own layout instead of relying on a host stylesheet. */
+.mana-symbol--img {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  position: relative;
+}
+
+.mana-symbol--img > .mana-symbol-svg {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.mana-cost-display {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+}

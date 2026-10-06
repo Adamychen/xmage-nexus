@@ -106,21 +106,6 @@
   padding-top: var(--sp-2);
 }
 
-.draft-sets-manual-label-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-}
-
-.draft-sets-manual-label {
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  font-weight: 600;
-}
-
 .draft-sets-manual-input-el {
   width: 100%;
   padding: var(--sp-1h) var(--sp-2h);
