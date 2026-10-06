@@ -15,15 +15,20 @@ export default defineConfig({
       // the 8 000-line `src/board/` and the whole state layer out: 721 instrumented lines out of
       // ~80 000, reported as "87% lines" on the dashboard. The scope is now the directories that
       // hold the protocol and the state machine, which is what a regression in a callback or in
-      // a store action would show up in.
+      // a store action would show up in, plus the deck builder/storage, the lobby and the game
+      // screen logic, where most of the client-side behaviour lives.
       include: [
         'src/net/**/*.ts',
         'src/state/**/*.ts',
         'src/board/**/*.ts',
         'src/board/**/*.tsx',
         'src/cards/cardImages.ts',
-        'src/game/feedback/*.ts',
-        'src/game/infoWindowState.ts',
+        'src/decks/**/*.ts',
+        'src/decks/**/*.tsx',
+        'src/lobby/**/*.ts',
+        'src/lobby/**/*.tsx',
+        'src/game/**/*.ts',
+        'src/game/**/*.tsx',
       ],
       exclude: [
         'src/**/*.test.ts',
@@ -37,11 +42,13 @@ export default defineConfig({
         'src/dev/**',
         'src/i18n/locales/**',
       ],
+      // A few points under the measured totals (79 / 72 / 68 / 76 when the scope was widened),
+      // so a real regression fails the gate instead of hiding in a 20-point margin.
       thresholds: {
-        lines: 60,
-        functions: 60,
-        branches: 45,
-        statements: 60,
+        lines: 75,
+        functions: 68,
+        branches: 64,
+        statements: 72,
       },
     },
   },
