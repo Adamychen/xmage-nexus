@@ -13,6 +13,7 @@ export interface ScryfallCardFaceJson {
   type_line?: string
   printed_type_line?: string
   oracle_text?: string
+  printed_text?: string
   colors?: string[]
   image_uris?: ScryfallImageUris
 }
@@ -30,6 +31,7 @@ export interface ScryfallCardJson {
   type_line?: string
   printed_type_line?: string
   oracle_text?: string
+  printed_text?: string
   keywords?: string[]
   colors?: string[]
   color_identity?: string[]

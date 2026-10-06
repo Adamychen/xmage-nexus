@@ -1,4 +1,4 @@
-import type { CardView, CardsView, PlayerView } from '../net/types'
+import type { CardView, PermanentView, CardsView, PlayerView } from '../net/types'
 import type { CrossZonePlayable } from './crossZone'
 import type { TargetZoneKind } from './targetZones'
 import BoardZone from './BoardZone'
@@ -9,7 +9,7 @@ export interface PlayerZoneProps {
   hand?: CardsView
   onCardClick?: (id: string) => void
   onHandCardClick?: (id: string) => void
-  onCardHover?: (card: any, rect?: DOMRect) => void
+  onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
   targetIds?: Set<string>
   targetZone?: TargetZoneKind | null
   targetZones?: ReadonlySet<TargetZoneKind>

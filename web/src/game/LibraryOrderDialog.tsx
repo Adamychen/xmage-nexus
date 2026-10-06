@@ -1,7 +1,7 @@
-import { useTranslation } from '../i18n'
+import { useTranslation, dynamicT } from '../i18n'
 import { useState, useMemo, useEffect } from 'react'
 import * as cmds from '../net/commands'
-import type { FeedbackOption, FeedbackPrompt } from './feedback'
+import type { FeedbackCard, FeedbackOption, FeedbackPrompt } from './feedback'
 import CardSlot from '../board/CardSlot'
 import FormattedText from './FormattedText'
 import Icon from '../ui/Icon'
@@ -20,7 +20,7 @@ interface LibraryOrderDialogProps {
 interface OrderableCard {
   id: string
   option: FeedbackOption
-  card: any
+  card: FeedbackCard
 }
 
 export default function LibraryOrderDialog({ prompt, send, cancel, busy }: LibraryOrderDialogProps) {
@@ -125,7 +125,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
       kickerIcon={isBlockerOrder ? 'shield' : 'sparkles'}
       kickerLabel={t('game', 'choose_order')}
       title={dialogTitle}
-      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
     >
         <div className="library-order-body">
           <div className="order-zone top-zone">
@@ -150,7 +150,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                 topCards.map((item, idx) => (
                   <div key={item.id} className="order-card-card">
                     <div className="order-position-tag">#{idx + 1}</div>
-                    <CardSlot card={item.card} className="order-card-slot" />
+                    <CardSlot card={item.card as never} className="order-card-slot" />
                     <div className="order-card-name">{item.card.displayName || item.card.name || item.option.label}</div>
                     <div className="order-card-controls">
                       <div className="order-arrows">
@@ -212,7 +212,7 @@ export default function LibraryOrderDialog({ prompt, send, cancel, busy }: Libra
                   bottomCards.map((item, idx) => (
                     <div key={item.id} className="order-card-card">
                       <div className="order-position-tag">#{idx + 1}</div>
-                      <CardSlot card={item.card} className="order-card-slot" />
+                      <CardSlot card={item.card as never} className="order-card-slot" />
                       <div className="order-card-controls">
                         <div className="order-arrows">
                           <button

@@ -236,6 +236,16 @@ The 2026-09-26 freeze/reconnect work is done: short drops, proxy restarts, out-o
 | RESOLVED 2026-10-06 — persist the resume token (`streamId`, `seq`) across a page reload | `pagehide` saves it per tab in `sessionStorage` (same proxy + account, 10 min max), the re-login after the reload presents it once and the proxy replays the frames of the gap; the page still rejoins for the board + prompt it lost. Logout forgets it. Guarded by `persistence.test.ts`, `gateway-connect.test.ts`, `Gateway.test.ts` and `e2e/reconnect-real.spec.ts` (reload mid-game → `resumed: true`) |
 | RESOLVED 2026-09-28 — the restore id survives a proxy restart only for the same address (in memory) | `RestoreIds` now persists the per-account session id (`--restoreIds`, default `<tmpdir>/mage-proxy-restore-<wsPort>.json`, ignored after 10 min); a re-login after an IP change **and** a restart presents it and the server hands the old session over |
 
+### 4.8 View fields the UI reads but the server never sends (2026-10-06)
+
+Found while removing `any` from the web client: the contract schema (`web/schema/contract.schema.json`) is the authority on what a view carries, and these reads went through casts.
+
+| What | Why |
+|---|---|
+| OPEN — commander tax is always +0 in a real game | `CommandZone` / `CommanderDamageMatrix` read `castCount` from the command-zone card, which is not in any view (only the tests and fixtures set it). The engine tracks it (`CommanderPlaysCountWatcher`); exposing it needs a view field or a proxy-side computation, then `parseCommandList` can read it |
+| OPEN — copies on the stack are only recognised by name | `StackZone.isCopyCard` also read `CardView.isCopy`, which does not exist (removed: always false). `CardView.originalIsCopy` and `PermanentView.copy` are on the wire; check in the fork what `originalIsCopy` marks before using it |
+| RESOLVED — two views of different games were diffed into animations | `useGameTransitions` compared `GameView.gameId`/`matchId`, which a `GameView` does not carry, so the guard never fired; it now takes the store's `gameId`, recorded with the view it came with (`START_GAME` switches the id before the new game's first view) |
+
 ---
 
 ## 5. Phase Plan (archived)

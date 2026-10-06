@@ -13,6 +13,7 @@ import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
 import { useTranslation } from '../i18n'
+import type { CategoryT } from '../i18n/types'
 import Icon, { type IconName } from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { groupAdjacent } from './groupAdjacent'
@@ -39,10 +40,11 @@ function isStackAbility(card: CardView): boolean {
 function isCopyCard(card: CardView): boolean {
   const name = card.name ?? ''
   const disp = card.displayName ?? ''
-  return name.includes('[Copia') || name.includes('[Copy') || disp.includes('[Copia') || (card as any).isCopy === true
+  // the view has no `isCopy`: a copy on the stack is only told apart by its name
+  return name.includes('[Copia') || name.includes('[Copy') || disp.includes('[Copia')
 }
 
-function stackTypeLabel(card: CardView, t: (cat: any, key: any) => string): string {
+function stackTypeLabel(card: CardView, t: CategoryT<'game'>): string {
   if (isStackAbility(card)) {
     const at = card.abilityType ?? ''
     if (at === 'Triggered' || at === 'Triggered Mana') return t('game', 'ability_triggered')
@@ -143,7 +145,7 @@ function getControllerInfo(
   id: string,
   players?: PlayerView[],
   myPlayerId?: string | null,
-  t?: (cat: any, key: any) => string,
+  t?: ReturnType<typeof useTranslation>['t'],
 ): ControllerInfo {
   const youLabel = t ? t('game', 'you') : 'Tú'
   const ctrlId = card.controllerId ?? card.sourceCard?.controllerId

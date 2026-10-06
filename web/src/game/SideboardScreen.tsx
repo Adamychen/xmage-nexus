@@ -9,8 +9,8 @@ import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import Icon from '../ui/Icon'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
-import { validateDeckForFormat } from '../decks/formatRules'
-import type { DeckFormat } from '../decks/types'
+import { validateDeckForFormat, type DeckValidationReport } from '../decks/formatRules'
+import type { DeckFormat, DeckV2 } from '../decks/types'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import { useTranslation } from '../i18n'
@@ -294,8 +294,8 @@ export default function SideboardScreen() {
     const tableId = screen?.tableId
     if (tableId && lobby) {
       const tables = Array.isArray(lobby.tables) ? lobby.tables : []
-      const found = (tables as any[]).find((t: any) => t.tableId === tableId || t.id === tableId)
-      const deckType = found?.deckType ?? found?.options?.deckType ?? ''
+      const found = tables.find((t) => t.tableId === tableId)
+      const deckType = found?.deckType ?? ''
       const norm = String(deckType).toLowerCase()
       if (norm.includes('commander') || norm.includes('brawl')) return 'Commander'
       if (norm.includes('standard')) return 'Standard'
@@ -310,9 +310,9 @@ export default function SideboardScreen() {
     return 'Standard'
   }, [screen?.limited, screen?.tableId, lobby])
 
-  const validation = useMemo(() => {
-    if (main.length === 0 && side.length === 0) return { isValid: true, issues: [] as any[], cardIssues: new Map() }
-    const fakeDeck: any = {
+  const validation = useMemo((): DeckValidationReport => {
+    if (main.length === 0 && side.length === 0) return { isValid: true, issues: [], cardIssues: new Map() }
+    const fakeDeck: DeckV2 = {
       name: screen?.deckName ?? t('game', 'sideboard_main'),
       cards: main,
       sideboard: side,
@@ -346,7 +346,7 @@ export default function SideboardScreen() {
   const sideTotal = side.reduce((s, c) => s + c.amount, 0)
   const minMain = screen.limited ? 40 : 60
   const mainValid = mainTotal >= minMain
-  const sideValid = validation.issues.filter((i: any) => i.type === 'sideboard_size').length === 0
+  const sideValid = validation.issues.filter((i) => i.type === 'sideboard_size').length === 0
   const timerPct = Math.max(0, (timeLeft / (screen.timeLeft || 1)) * 100)
   const timerUrgent = timeLeft <= 30
 
@@ -525,7 +525,7 @@ export default function SideboardScreen() {
 
         {validation.issues.length > 0 && (
           <div className="sideboard-validation">
-            {validation.issues.slice(0, 3).map((iss: any, i: number) => (
+            {validation.issues.slice(0, 3).map((iss, i) => (
               <span key={i} className={`validation-issue ${iss.severity}`}>{iss.message}</span>
             ))}
           </div>

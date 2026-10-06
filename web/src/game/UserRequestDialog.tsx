@@ -4,7 +4,7 @@ import * as cmds from '../net/commands'
 import FormattedText from './FormattedText'
 import Button from '../ui/Button'
 import DialogShell from '../ui/DialogShell'
-import { useTranslation } from '../i18n'
+import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 
 export default function UserRequestDialog() {
@@ -37,8 +37,8 @@ export default function UserRequestDialog() {
       legacyPanelClass="feedback-dialog user-request-dialog"
       kickerIcon="info"
       kickerLabel={t('dialogs', 'userrequest_title')}
-      title={<FormattedText text={localizeServerMessage(request.title, t as any)} />}
-      message={request.message ? <FormattedText text={localizeServerMessage(request.message, t as any)} /> : undefined}
+      title={<FormattedText text={localizeServerMessage(request.title, dynamicT(t))} />}
+      message={request.message ? <FormattedText text={localizeServerMessage(request.message, dynamicT(t))} /> : undefined}
     >
         <div className="feedback-dialog-actions user-request-actions">
           {request.buttons.map((button, index) => (

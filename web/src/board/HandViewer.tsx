@@ -3,7 +3,7 @@ import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { CardView } from '../net/types'
+import type { CardView, PermanentView } from '../net/types'
 import CardSlot from './CardSlot'
 import FloatingCardPreview from './FloatingCardPreview'
 import { overlayRoot } from './overlayRoot'
@@ -37,7 +37,7 @@ export default function HandViewer({
 
   useEscape(onClose)
 
-  const handleCardHover = (card: any, rect?: DOMRect) => {
+  const handleCardHover = (card: CardView | PermanentView | null, rect?: DOMRect) => {
     setHoverCard(card ?? null)
     setHoverRect(rect ?? null)
   }

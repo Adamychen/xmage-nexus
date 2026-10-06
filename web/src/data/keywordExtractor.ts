@@ -17,10 +17,13 @@ function cardTextLines(card: CardView | PermanentView): string[] {
     textLines.push(...card.rules)
   }
 
-  if (Array.isArray((card as any).abilities)) {
-    for (const ab of (card as any).abilities) {
+  // Not in the views the server sends (`abilities` is engine-only, see
+  // fixtures/engine-view-gap.baseline.json); kept for callers that build card-like objects.
+  const abilities = (card as { abilities?: unknown }).abilities
+  if (Array.isArray(abilities)) {
+    for (const ab of abilities as unknown[]) {
       if (typeof ab === 'string') textLines.push(ab)
-      else if (ab && typeof ab.rule === 'string') textLines.push(ab.rule)
+      else if (ab && typeof (ab as { rule?: unknown }).rule === 'string') textLines.push((ab as { rule: string }).rule)
     }
   }
 

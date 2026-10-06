@@ -5,7 +5,7 @@ import { findAutoAnswer } from '../../game/autoAnswers'
 import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { localizeServerMessage } from '../../game/serverMessageTranslation'
-import { t as tStatic } from '../../i18n'
+import { t as tStatic, dynamicT } from '../../i18n'
 import { setState, addLog } from '../state'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
@@ -63,14 +63,14 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
+    addLog('partida', questionLogLine(localizeServerMessage(question, dynamicT(tStatic))))
   } else {
     const feedback = parseFeedback(method, currentGameId, data)
     if (feedback) {
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
+    addLog('partida', questionLogLine(localizeServerMessage(question, dynamicT(tStatic))))
   }
 }
 

@@ -246,14 +246,15 @@ interface MtgjsonBoardEntry {
  * `{name,setCode,count}`. Commander → principal en cabeza (U7-6).
  */
 export function parseMtgjson(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
-  let json: any
+  let json: unknown
   try {
     json = JSON.parse(text)
   } catch {
     return null
   }
-  const data = json?.data
-  if (!data || typeof data !== 'object') return null
+  const raw = (json as { data?: unknown } | null)?.data
+  if (!raw || typeof raw !== 'object') return null
+  const data = raw as Record<string, unknown>
   const defaultSet = typeof data.code === 'string' ? data.code : ''
   const readBoard = (board: unknown): DeckCard[] => {
     if (!Array.isArray(board)) return []

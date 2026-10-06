@@ -132,9 +132,6 @@ function pulseStackSource(cardId: string): void {
 
 export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView) {
   if (!prevGame || !nextGame) return
-  const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId
-  const nextId = (nextGame as any).gameId ?? (nextGame as any).matchId
-  if (prevId && nextId && prevId !== nextId) return
   const combatants = new Set(combatantIds(prevGame))
   const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
   const later = (ms: number, fn: () => void) => (ms > 0 ? void setTimeout(fn, ms) : fn())
@@ -487,22 +484,30 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   snapshotCombatants(nextGame)
 }
 
-export function useGameTransitions(game: GameView | null) {
+/**
+ * {@code gameId} is the store's: a `GameView` carries no id of its own. Two views of different
+ * games (a spectator following the next game, the next game of a match) are never diffed into
+ * animations; the id is recorded with the view it arrived with, because the store switches it
+ * on `START_GAME`, before the new game's first view.
+ */
+export function useGameTransitions(game: GameView | null, gameId: string | null) {
   const prevGameRef = useRef<GameView | null>(null)
+  const prevGameIdRef = useRef<string | null>(null)
   useMemo(() => primeCombatHolds(prevGameRef.current, game), [game])
 
   useEffect(() => {
     if (!game) {
       prevGameRef.current = null
+      prevGameIdRef.current = null
       clearPendingSlams()
       clearCombatSnapshots()
       return
     }
 
-    const gameId = (game as any).gameId ?? (game as any).matchId ?? null
     const prevGame = prevGameRef.current
+    if (prevGame === game) return
     if (prevGame) {
-      const prevId = (prevGame as any).gameId ?? (prevGame as any).matchId ?? null
+      const prevId = prevGameIdRef.current
       if (gameId && prevId && gameId !== prevId) {
         clearCardPositionRegistry()
         clearPendingSlams()
@@ -513,5 +518,6 @@ export function useGameTransitions(game: GameView | null) {
     }
 
     prevGameRef.current = game
-  }, [game])
+    prevGameIdRef.current = gameId
+  }, [game, gameId])
 }

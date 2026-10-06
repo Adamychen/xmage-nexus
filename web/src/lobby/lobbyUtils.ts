@@ -136,11 +136,12 @@ export function extractLobbyUsers(rawUsers: unknown): UsersView[] {
   if (!rawUsers) return []
   if (Array.isArray(rawUsers)) {
     const list: UsersView[] = []
-    for (const item of rawUsers) {
+    for (const item of rawUsers as unknown[]) {
       if (item && typeof item === 'object') {
-        if (Array.isArray((item as any).usersView)) {
-          list.push(...(item as any).usersView)
-        } else if (typeof (item as any).userName === 'string') {
+        const entry = item as { usersView?: unknown; userName?: unknown }
+        if (Array.isArray(entry.usersView)) {
+          list.push(...(entry.usersView as UsersView[]))
+        } else if (typeof entry.userName === 'string') {
           list.push(item as UsersView)
         }
       }
@@ -148,8 +149,9 @@ export function extractLobbyUsers(rawUsers: unknown): UsersView[] {
     return list
   }
   if (typeof rawUsers === 'object') {
-    if (Array.isArray((rawUsers as any).usersView)) {
-      return (rawUsers as any).usersView
+    const room = rawUsers as { usersView?: unknown }
+    if (Array.isArray(room.usersView)) {
+      return room.usersView as UsersView[]
     }
   }
   return []

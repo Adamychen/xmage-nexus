@@ -1,4 +1,5 @@
 import type { PhaseStops } from '../net/commands'
+import type { TranslationSchema } from '../i18n/types'
 
 export type PhaseTurn = 'yourTurn' | 'opponentTurn'
 
@@ -6,7 +7,7 @@ export const PHASE_TURNS: PhaseTurn[] = ['yourTurn', 'opponentTurn']
 
 export interface PhaseDef {
   key: string
-  labelKey: string
+  labelKey: keyof TranslationSchema['game']
   short: string
 }
 

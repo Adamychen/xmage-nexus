@@ -318,7 +318,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                 pill
                 active={form.skillLevel === opt.value}
                 key={opt.value}
-                onClick={() => form.setSkillLevel(opt.value as any)}
+                onClick={() => form.setSkillLevel(opt.value)}
               >
                 {Array.from({ length: opt.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {label}
               </ChipButton>

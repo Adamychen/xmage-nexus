@@ -1,4 +1,7 @@
 import type { GameTypeInfo } from '../../net/commands'
+import type { CategoryT, TranslationSchema } from '../../i18n/types'
+
+type LobbyT = CategoryT<'lobby'>
 
 export const STORAGE_KEY = 'mage_createTable_v1'
 
@@ -24,7 +27,7 @@ export const BUFFER_TIME_OPTIONS = [
   { label: '30 Segundos', value: 'SEC__30' },
 ]
 
-export function getTimeLimitLabel(opt: { value: string; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+export function getTimeLimitLabel(opt: { value: string; label: string }, t?: LobbyT): string {
   if (!t) return opt.label
   if (opt.value === 'NONE') return t('lobby', 'create_time_none')
   const min = opt.value.replace('MIN__', '')
@@ -33,7 +36,7 @@ export function getTimeLimitLabel(opt: { value: string; label: string }, t?: (ca
   return t('lobby', 'create_time_minutes', { min })
 }
 
-export function getBufferTimeLabel(opt: { value: string; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+export function getBufferTimeLabel(opt: { value: string; label: string }, t?: LobbyT): string {
   if (!t) return opt.label
   if (opt.value === 'NONE') return t('lobby', 'create_buffer_none')
   const sec = opt.value.replace('SEC__', '')
@@ -179,7 +182,7 @@ const SEAT_TYPE_LABELS: Record<string, string> = {
   COMPUTER_DRAFT_BOT: 'IA Draftbot',
 }
 
-export function seatTypeLabel(tName: string, t?: (cat: any, key: any) => string): string {
+export function seatTypeLabel(tName: string, t?: LobbyT): string {
   const n = normalizeSeatType(tName)
   if (t) {
     if (n === HUMAN_SEAT) return t('lobby', 'create_seat_human_waiting_label')
@@ -191,7 +194,7 @@ export function seatTypeLabel(tName: string, t?: (cat: any, key: any) => string)
   return SEAT_TYPE_LABELS[n] ?? tName
 }
 
-export const SKILL_LEVEL_OPTIONS: Array<{ label: string; value: string; stars: number }> = [
+export const SKILL_LEVEL_OPTIONS: Array<{ label: string; value: 'BEGINNER' | 'CASUAL' | 'SERIOUS'; stars: number }> = [
   { label: 'Novato', value: 'BEGINNER', stars: 1 },
   { label: 'Casual', value: 'CASUAL', stars: 2 },
   { label: 'Competitivo', value: 'SERIOUS', stars: 3 },
@@ -375,7 +378,7 @@ export const CONSTRUCTION_TIME_OPTIONS = [
   { label: '25 minutos', value: 1500 },
 ] as const
 
-export function getConstructionTimeLabel(opt: { value: number; label: string }, t?: (cat: any, key: any, params?: any) => string): string {
+export function getConstructionTimeLabel(opt: { value: number; label: string }, t?: LobbyT): string {
   if (!t) return opt.label
   const min = String(Math.round(opt.value / 60))
   return t('lobby', 'create_construction_minutes', { min })
@@ -431,7 +434,7 @@ export interface SeatConfig {
   skill: number
 }
 
-export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName; labelKey: string; titleFallback: string }
+export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName; labelKey: keyof TranslationSchema['lobby'] | ''; titleFallback: string }
 
 export const WIZARD_STEPS_BASE: WizardStep[] = [
   { id: 'general', icon: 'settings', labelKey: 'create_tab_general', titleFallback: 'General' },

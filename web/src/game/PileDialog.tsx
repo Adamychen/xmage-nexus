@@ -7,7 +7,7 @@ import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
-import { useTranslation } from '../i18n'
+import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import './PileDialog.css'
 
@@ -73,7 +73,7 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
       sourceName={prompt.sourceName && prompt.sourceName !== t('game', 'choose_pile')
         ? <FormattedText text={prompt.sourceName} />
         : undefined}
-      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
       trailing={<FloatingCardPreview card={hoveredCard as never} anchorRect={anchorRect} boardRect={null} inModal />}
     >
       <div className="pile-columns">

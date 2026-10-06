@@ -1,6 +1,6 @@
 import CloseButton from '../ui/CloseButton'
 import { useState, useEffect } from 'react'
-import { scryfallCardImage } from './scryfallSearch'
+import { scryfallCardImage, type ScryfallSearchCard } from './scryfallSearch'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -16,13 +16,17 @@ export interface CardPrinting {
   collectorNumber: string
   releasedAt: string
   rarity: string
-  imageUrl: string
+  imageUrl: string | null
   artCropUrl?: string
 }
 
-export function parseScryfallPrints(data: any): CardPrinting[] {
+/** A `/cards/search?unique=prints` answer: a page of printings. */
+type ScryfallPrintsJson = { data?: (ScryfallSearchCard & { set_name?: string })[] } | null | undefined
+
+export function parseScryfallPrints(json: unknown): CardPrinting[] {
+  const data = json as ScryfallPrintsJson
   if (!data || !Array.isArray(data.data)) return []
-  return data.data.map((item: any) => ({
+  return data.data.map((item) => ({
     id: item.id,
     set: (item.set || '').toUpperCase(),
     setName: item.set_name || item.set || '',
@@ -156,7 +160,7 @@ export function CardPrintingsModal({
                     }}
                   >
                     <div className="printing-img-wrap">
-                      <img src={p.imageUrl} alt={`${cardName} (${p.set})`} loading="lazy" />
+                      <img src={p.imageUrl ?? undefined} alt={`${cardName} (${p.set})`} loading="lazy" />
                       {isSelected && <div className="printing-selected-badge">✓ {t('common', 'done')}</div>}
                       {unavailable && <div className="printing-unavailable-badge">{t('decks', 'printing_not_on_server_short')}</div>}
                     </div>
