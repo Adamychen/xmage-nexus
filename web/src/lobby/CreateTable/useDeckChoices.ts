@@ -8,6 +8,7 @@ import { isHumanSeatType, type SeatConfig } from './constants'
  */
 export function useDeckChoices(storeDeck: Deck | null, setSeatConfigs: Dispatch<SetStateAction<SeatConfig[]>>) {
   const [availableDecks, setAvailableDecks] = useState<Deck[]>(() => getAllAvailableDecks())
+  const [decksLoaded, setDecksLoaded] = useState(false)
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -26,6 +27,7 @@ export function useDeckChoices(storeDeck: Deck | null, setSeatConfigs: Dispatch<
         }
         setAvailableDecks([...maps.values()])
       } catch {}
+      if (!cancelled) setDecksLoaded(true)
     })()
     return () => { cancelled = true }
   }, [])
@@ -61,5 +63,14 @@ export function useDeckChoices(storeDeck: Deck | null, setSeatConfigs: Dispatch<
     if (d) setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) ? { ...s, deckName: deckRef(d) } : s))
   }
 
-  return { availableDecks, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck }
+  const adoptStarterDecks = (decks: Deck[]) => {
+    if (decks.length === 0) return
+    const botDeck = decks[1] ?? decks[0]
+    setAvailableDecks((prev) => [...prev, ...decks])
+    setMyDeckState(decks[0])
+    setSimDeck((current) => current ?? botDeck)
+    setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) && !s.deckName ? { ...s, deckName: deckRef(botDeck) } : s))
+  }
+
+  return { availableDecks, decksLoaded, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck, adoptStarterDecks }
 }

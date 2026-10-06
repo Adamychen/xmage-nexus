@@ -1306,6 +1306,10 @@ export const zhs: TranslationSchema = {
     viewer_card_plural: '张',
   },
   decks: {
+    starter_title: "你还没有套牌",
+    starter_desc: "添加两副可直接使用的套牌（{names}），马上入座；之后可在“套牌”中修改或替换。",
+    starter_add: "添加入门套牌",
+    starter_failed: "无法在此浏览器中保存套牌。请重试，或在“套牌”中导入一副。",
     deck_builder: '套牌构筑器',
     my_decks: '我的套牌',
     popular_meta: '主流热门套牌',

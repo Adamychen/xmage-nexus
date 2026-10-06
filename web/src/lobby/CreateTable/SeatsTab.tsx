@@ -6,6 +6,7 @@ import { deckRef } from '../decks'
 import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import StarterDecksOffer from '../../decks/StarterDecksOffer'
 
 export default function SeatsTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
@@ -48,6 +49,9 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   </Field>
                   {!form.myDeck && (
                     <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>
+                  )}
+                  {form.decksLoaded && form.availableDecks.length === 0 && (
+                    <StarterDecksOffer onAdded={form.adoptStarterDecks} />
                   )}
                 </>
               )}

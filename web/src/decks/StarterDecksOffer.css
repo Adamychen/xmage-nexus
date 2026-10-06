@@ -1,0 +1,25 @@
+.starter-decks-offer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-3);
+  background: var(--veil-1);
+  border: 1px dashed var(--brand-line);
+  border-radius: var(--r-base);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.starter-decks-offer-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  color: var(--brand-fg);
+  font-weight: 600;
+}
+
+.starter-decks-offer-error {
+  color: var(--err);
+}

@@ -101,6 +101,8 @@ export interface CreateTableForm {
   humanSeat: boolean
   setHumanSeat: (v: boolean) => void
   availableDecks: Deck[]
+  decksLoaded: boolean
+  adoptStarterDecks: (decks: Deck[]) => void
   myDeck: Deck | null
   selectMyDeck: (name: string) => void
   simDeck: Deck | null
