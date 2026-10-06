@@ -1548,6 +1548,7 @@ export const en = {
     proxy_connection_failed: 'Could not connect to WebSocket proxy',
     login_failed: 'Login failed: invalid credentials or server unavailable',
     session_in_use: 'That account is still connected on the server — usually another tab, device or client has it open. The server frees it by itself within a minute: wait a moment and try again.',
+    server_version_mismatch: "The XMage server now runs {server} and this proxy still speaks {proxy}, so the server refuses every login through it. Nobody can play through this proxy until it is updated to the new release: try again later, or point the Proxy field at another proxy.",
     table_full: 'This table is already full',
     table_not_found: 'Table does not exist or has been closed',
     invalid_password: 'Table password is incorrect',

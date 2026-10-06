@@ -6,6 +6,7 @@ import { clonePhaseStops } from '../game/phaseStops'
 import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
+import { versionMismatchOf, type VersionMismatch } from '../net/versionMismatch'
 import type { ProxyMessage, ServerLinkEnvelope } from '../net/types'
 
 let gateway: Gateway | null = null
@@ -46,6 +47,10 @@ function isResumed(data: unknown): boolean {
   return typeof data === 'object' && data !== null && (data as { resumed?: unknown }).resumed === true
 }
 
+function versionMismatchMessage(m: VersionMismatch): string {
+  return t('errors', 'server_version_mismatch', { server: m.server ?? '?', proxy: m.proxy ?? '?' })
+}
+
 /** Automatic re-login attempts after the socket to the proxy came back. */
 export const RELOGIN_RETRIES = 6
 const RELOGIN_BASE_DELAY_MS = 1500
@@ -79,6 +84,11 @@ async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promi
   }
   // the socket dropped again: its next onOpen starts over
   if (!g.isOpen) return
+  const mismatch = versionMismatchOf(res)
+  if (mismatch) {
+    setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, error: versionMismatchMessage(mismatch) })
+    return
+  }
   if (attempt + 1 >= RELOGIN_RETRIES) {
     setState({
       link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false,
@@ -304,10 +314,11 @@ async function runConnect(
     // no amount of waiting-here fixes — the user needs to know what to do (wait it out, close
     // the other tab/device). The raw server detail stays in the log for bug reports.
     const sessionInUse = /already connected|already logged in/i.test(res.error ?? '')
-    if (sessionInUse && res.error) addLog('conexión', `login rechazado: ${res.error}`)
+    const mismatch = versionMismatchOf(res)
+    if ((sessionInUse || mismatch) && res.error) addLog('conexión', `login rechazado: ${res.error}`)
     setState({
       phase: 'idle', connecting: false, loginRetry: null,
-      error: sessionInUse ? t('errors', 'session_in_use') : (res.error ?? 'login fallido'),
+      error: mismatch ? versionMismatchMessage(mismatch) : sessionInUse ? t('errors', 'session_in_use') : (res.error ?? 'login fallido'),
     })
   }
 }

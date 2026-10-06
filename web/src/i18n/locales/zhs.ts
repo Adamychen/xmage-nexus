@@ -1555,6 +1555,7 @@ export const zhs: TranslationSchema = {
     proxy_connection_failed: '无法连接到 WebSocket 代理',
     login_failed: '登录失败：账号信息无效或服务器不可用',
     session_in_use: '该账号仍与服务器保持连接——通常是另一个标签页、设备或客户端还开着。服务器一般会在一分钟内自动释放：请稍等片刻再试。',
+    server_version_mismatch: "XMage 服务器已更新到 {server}，而此代理仍是 {proxy}，因此服务器会拒绝所有经由它的登录。在代理更新到新版本之前，无法通过它进行游戏：请稍后再试，或在 Proxy 栏中填写其他代理。",
     table_full: '该桌已满员',
     table_not_found: '该桌不存在或已关闭',
     invalid_password: '房间密码错误',

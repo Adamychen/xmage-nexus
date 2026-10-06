@@ -11,6 +11,7 @@ final class ErrorClassifier {
     static String classifyErrorCode(String detail) {
         if (detail == null) return ProxyProtocol.ERR_FAILED;
         String lower = detail.toLowerCase(Locale.ROOT);
+        if (lower.contains("wrong client version") || lower.contains("mageversionexception")) return ProxyProtocol.ERR_VERSION_MISMATCH;
         if (lower.contains("card not found")) return ProxyProtocol.ERR_CARD_NOT_FOUND;
         if (lower.contains("quit ratio")) return ProxyProtocol.ERR_QUIT_RATIO;
         if (lower.contains("minimum rating") || lower.contains("rating") && lower.contains("lower")) return ProxyProtocol.ERR_RATING;

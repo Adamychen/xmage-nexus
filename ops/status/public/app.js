@@ -64,6 +64,8 @@ const DICT = {
     'svc.xmage': 'XMage server',
     'svc.web': 'Local web client',
     'svc.down': 'no response',
+    'svc.mismatch': 'server {server} ≠ proxy {proxy}',
+    'versionMismatch': 'The XMage server moved to {server} and the proxy still runs {proxy}: every login fails since {since}. Merge the new release into the fork and rebuild the proxy.',
     'svc.restarts': '{n} restarts',
     cpu: 'CPU',
     memory: 'Memory',
@@ -266,6 +268,8 @@ const DICT = {
     'svc.xmage': 'Servidor XMage',
     'svc.web': 'Cliente web local',
     'svc.down': 'sin respuesta',
+    'svc.mismatch': 'servidor {server} ≠ proxy {proxy}',
+    'versionMismatch': 'El servidor XMage pasó a {server} y el proxy sigue en {proxy}: todos los logins fallan desde el {since}. Hay que fusionar la nueva versión en el fork y recompilar el proxy.',
     'svc.restarts': '{n} reinicios',
     cpu: 'CPU',
     memory: 'Memoria',
@@ -878,6 +882,16 @@ function applyStaticI18n() {
   document.getElementById('lang-btn').textContent = lang === 'es' ? 'EN' : 'ES';
 }
 
+function xmageLevel(x) {
+  if (x.ms == null || x.mismatch) return 'critical';
+  return x.ms > 400 ? 'warning' : 'good';
+}
+
+function xmageText(x) {
+  if (x.mismatch) return t('svc.mismatch', { server: x.mismatch.server || '?', proxy: x.mismatch.proxy || '?' });
+  return x.ms == null ? t('svc.down') : fmt.ms(x.ms);
+}
+
 function renderPills() {
   const L = state.live;
   const box = document.getElementById('pills');
@@ -887,7 +901,7 @@ function renderPills() {
   const pills = [
     { label: t('pill.proxy'), level: proxyUp ? 'good' : svcLevel(L.proxy?.state), val: proxyUp ? fmt.dur((Date.now() - (L.proxy.since || L.proxy.bootTs)) / 1000) : L.proxy?.state },
     { label: t('pill.tunnel'), level: svcLevel(L.playit?.state), val: L.playit?.state === 'active' ? '' : L.playit?.state },
-    { label: t('pill.xmage'), level: L.xmage.ms == null ? 'critical' : L.xmage.ms > 400 ? 'warning' : 'good', val: L.xmage.ms == null ? t('svc.down') : fmt.ms(L.xmage.ms) },
+    { label: t('pill.xmage'), level: xmageLevel(L.xmage), val: xmageText(L.xmage) },
     { label: t('pill.web'), level: L.web.ms == null ? 'critical' : 'good', val: L.web.ms == null ? t('svc.down') : fmt.ms(L.web.ms) },
   ];
   box.replaceChildren(...pills.map(p => h('span', { class: 'pill' },
@@ -901,9 +915,13 @@ function renderUpdated() {
 
 function renderBanner() {
   const b = document.getElementById('banner');
-  b.classList.toggle('info', !state.liveError);
+  const mismatch = state.live?.xmage?.mismatch;
+  b.classList.toggle('info', !state.liveError && !mismatch);
   if (state.liveError) {
     b.textContent = t('offline');
+    b.hidden = false;
+  } else if (mismatch) {
+    b.textContent = t('versionMismatch', { server: mismatch.server || '?', proxy: mismatch.proxy || '?', since: fmt.dayLong(mismatch.since) });
     b.hidden = false;
   } else if (state.live?.ingest?.catchingUp) {
     b.textContent = t('catchingUp');
@@ -970,7 +988,7 @@ function renderNow() {
     h('div', { class: 'svc' },
       svcRow(proxyUp ? 'good' : 'critical', t('svc.proxy'), t('svc.proxySub'), h('span', null, proxyUp ? fmt.dur((L.now - upSince) / 1000) : L.proxy.state, h('br'), h('span', { class: 'muted' }, t('svc.restarts', { n: fmt.int(L.proxy.restarts || 0) })))),
       svcRow(L.playit?.state === 'active' ? 'good' : 'critical', t('svc.playit'), t('svc.playitSub'), L.playit?.since ? fmt.dur((L.now - L.playit.since) / 1000) : L.playit?.state || '–'),
-      svcRow(L.xmage.ms == null ? 'critical' : 'good', t('svc.xmage'), `${L.xmage.host}:${L.xmage.port}`, L.xmage.ms == null ? t('svc.down') : fmt.ms(L.xmage.ms)),
+      svcRow(xmageLevel(L.xmage), t('svc.xmage'), `${L.xmage.host}:${L.xmage.port}`, xmageText(L.xmage)),
       svcRow(L.web.ms == null ? 'critical' : 'good', t('svc.web'), L.web.url.replace(/^https?:\/\//, '').replace(/\/$/, ''), L.web.ms == null ? t('svc.down') : fmt.ms(L.web.ms))),
     h('header', { class: 'card-head', style: 'margin-top:14px' }, h('h3', null, t('host'))),
     meter(t('cpu'), H.cpu, 100, fmt.pct(H.cpu)),
