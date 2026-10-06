@@ -1,0 +1,33 @@
+name: Upstream XMage release
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: scripts
+      - uses: actions/checkout@v6
+        with:
+          ref: nexus
+          path: xmage-fork
+          fetch-depth: 1
+          sparse-checkout: |
+            Mage/pom.xml
+            Mage.Common/src/main/java/mage/utils/MageVersion.java
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+      - name: Fork release vs newest magefree/mage release
+        run: node scripts/check-upstream-release.mjs

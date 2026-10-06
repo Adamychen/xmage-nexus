@@ -164,7 +164,7 @@ per-connection lock (`Gateway.send`).
 
 | Action | Args | Description |
 |---|---|---|
-| `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
+| `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. A server running another XMage release refuses the login with `errorCode:"VERSION_MISMATCH"` (the detail keeps the server's `Your version` / `Server version` text): the proxy has to be rebuilt against that release, no retry helps. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
 | `disconnect` | `{}` | Disconnect from server |
 | `leaving` | `{}` | The page is closing; no answer. The session then gets the short grace period (`--leaveGraceSecs`) when this was its last connection |
 | `ping` | `{}` | Keepalive and web heartbeat; answered at once on the WebSocket thread (before or after `connect`), never queued behind the session's commands |

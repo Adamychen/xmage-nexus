@@ -144,6 +144,18 @@ describe('doConnect — intentos concurrentes', () => {
     expect(getState().error).toBe(t('errors', 'session_in_use'))
   })
 
+  it('explains a server on another release once, without retrying', async () => {
+    const detail = 'mage.remote.MageVersionException: Wrong client version.<br/>Your version: 1.4.61-V1<br/>Server version: 1.4.62-V1'
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: false, error: detail, errorCode: 'VERSION_MISMATCH' } as never)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await done
+    expect(cmds.connect).toHaveBeenCalledTimes(1)
+    expect(getState().phase).toBe('idle')
+    expect(getState().error).toBe(t('errors', 'server_version_mismatch', { server: '1.4.62-V1', proxy: '1.4.61-V1' }))
+  })
+
   it('announces the wait before retrying a login the server refused as already connected', async () => {
     vi.mocked(cmds.connect)
       .mockResolvedValueOnce({ ok: false, error: 'User u already connected or your IP address changed' } as never)

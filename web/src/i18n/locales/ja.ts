@@ -1555,6 +1555,7 @@ export const ja: TranslationSchema = {
     proxy_connection_failed: 'WebSocketプロキシに接続できませんでした',
     login_failed: 'ログイン失敗: 認証情報が無効か、サーバーが利用できません',
     session_in_use: 'このアカウントはまだサーバーに接続されています（別のタブ・端末・クライアントで開かれていることが多いです）。通常は1分以内にサーバー側で解放されます。少し待ってからもう一度お試しください。',
+    server_version_mismatch: "XMage サーバーは {server} に更新されましたが、このプロキシはまだ {proxy} のため、サーバーはこのプロキシ経由のログインをすべて拒否します。新しいバージョンに更新されるまで、このプロキシではプレイできません。しばらくしてから再試行するか、Proxy 欄に別のプロキシを指定してください。",
     table_full: 'テーブルは満員です',
     table_not_found: 'テーブルが存在しないか終了しました',
     invalid_password: 'パスワードが正しくありません',

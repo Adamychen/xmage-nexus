@@ -1550,6 +1550,7 @@ export const de: TranslationSchema = {
     proxy_connection_failed: 'Verbindung zum WebSocket-Proxy fehlgeschlagen',
     login_failed: 'Anmeldung fehlgeschlagen: Ungültige Anmeldedaten oder Server nicht erreichbar',
     session_in_use: 'Dieses Konto ist noch mit dem Server verbunden – meist ist es in einem anderen Tab, auf einem anderen Gerät oder in einem anderen Client geöffnet. Der Server gibt es meist innerhalb einer Minute frei: kurz warten und erneut versuchen.',
+    server_version_mismatch: "Der XMage-Server läuft jetzt mit {server}, dieser Proxy noch mit {proxy}, daher lehnt der Server jede Anmeldung über ihn ab. Über diesen Proxy kann niemand spielen, bis er auf die neue Version aktualisiert ist: Versuche es später erneut oder trage im Feld Proxy einen anderen Proxy ein.",
     table_full: 'Der Tisch ist bereits voll',
     table_not_found: 'Tisch existiert nicht oder wurde geschlossen',
     invalid_password: 'Tischpasswort ist falsch',

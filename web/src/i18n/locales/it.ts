@@ -1550,6 +1550,7 @@ export const it: TranslationSchema = {
     proxy_connection_failed: 'Impossibile connettersi al proxy WebSocket',
     login_failed: 'Accesso non riuscito: credenziali errate',
     session_in_use: "Questo account è ancora connesso al server — di solito lo tiene aperto un'altra scheda, dispositivo o client. Il server lo libera da solo entro un minuto: aspetta un momento e riprova.",
+    server_version_mismatch: "Il server XMage ora usa {server} e questo proxy è ancora alla {proxy}, quindi il server rifiuta ogni accesso tramite esso. Nessuno può giocare tramite questo proxy finché non viene aggiornato alla nuova versione: riprova più tardi o indica un altro proxy nel campo Proxy.",
     table_full: 'Il tavolo è già al completo',
     table_not_found: 'Il tavolo non esiste o è stato chiuso',
     invalid_password: 'Password del tavolo errata',

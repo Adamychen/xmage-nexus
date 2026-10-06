@@ -50,7 +50,9 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   `scripts/deploy/host-xdhs.sh`). The proxy's default server is **`beta.xmage.today:17171`** (current official server; `beta.xmage.de` is obsolete).
   If the remote server changes release (strict version check `MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`),
   the proxy won't connect: the fork must be updated (fetch upstream + merge, in
-  `../xmage-fork`) and everything rebuilt.
+  `../xmage-fork`) and everything rebuilt. The `Upstream XMage release` workflow
+  (`scripts/check-upstream-release.mjs`, every 6 h) fails as soon as magefree/mage tags a newer
+  release than the fork's `MageVersion`; that failure email is the signal to do it.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
   **Anonymous login to `beta.xmage.today` is stable** (measured 2026-09-20: 17/17 logins, ~1.6 s each).
   The former "intermittent beta handshake bug" was a **misdiagnosis**: the server rejects any username
