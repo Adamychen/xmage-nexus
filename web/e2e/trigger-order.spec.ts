@@ -72,6 +72,7 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
       await expect(dialog).toBeVisible()
       const row = dialog.locator(`[data-testid="trigger-row-${WARDEN}"]`)
       await row.locator('.trigger-actions button').nth(1).click()
+      await expect(row.locator('.trigger-saved')).toBeVisible()
       await expect(dialog).toBeVisible()
       expect(TRIGGER_PICKS).toEqual([])
       expect(TRIGGER_ACTIONS).toContain('TRIGGER_AUTO_ORDER_ABILITY_FIRST')
