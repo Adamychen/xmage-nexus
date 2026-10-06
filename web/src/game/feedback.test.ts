@@ -14,6 +14,16 @@ describe('parseFeedback', () => {
     ])
   })
 
+  it('keeps the server auto-answer key of a yes/no ask (HumanPlayer.chooseUse)', () => {
+    const prompt = parseFeedback('GAME_ASK', 'game-1', {
+      message: 'Use Llanowar Elves ability?',
+      options: { autoAnswerMessage: 'Use {this} ability?' },
+    })
+    expect(prompt?.mode).toBe('boolean')
+    expect(prompt?.autoAnswerKey).toBe('Use {this} ability?')
+    expect(prompt?.options.map((o) => o.value)).toEqual(['true', 'false'])
+  })
+
   it('maps target UUIDs and labels them from cardsView1', () => {
     const prompt = parseFeedback('GAME_TARGET', 'game-2', {
       message: 'Choose a target',

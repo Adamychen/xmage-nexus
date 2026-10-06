@@ -176,7 +176,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   const chooseBoolean = (option: { value: string }) => {
     if (rememberAnswer && autoAnswerable) {
       const rules = getState().settings.autoAnswers ?? []
-      setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true'))
+      setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true', prompt.autoAnswerKey))
     }
   }
   const sendChoice = (value: string) => {

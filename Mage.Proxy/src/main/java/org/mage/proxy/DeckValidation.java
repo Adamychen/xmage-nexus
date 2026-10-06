@@ -114,7 +114,10 @@ public final class DeckValidation {
      * diagnosticar/sugerir (ver {@link #resolveForCommander}), pero se marca
      * igualmente como {@code missing}: ese fallback-por-nombre no existe en un
      * servidor sin el parche del fork nexus, así que un "ready" aquí sería un
-     * falso negativo (el join real fallaría con "Card not found").
+     * falso negativo (el join real fallaría con "Card not found"). Las entradas
+     * que llegan por el protocolo ya traen impresión: {@link DeckJson#resolvePrinting}
+     * les asigna la del importador de XMage en el borde; aquí solo llegan sin
+     * ella si la carta no existe en la release o la BD no estaba lista.
      */
     private static CardStatus checkCard(DeckCardInfo info) {
         String set = info.getSetCode() == null ? "" : info.getSetCode().trim();

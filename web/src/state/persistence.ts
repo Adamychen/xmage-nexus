@@ -266,6 +266,8 @@ export function saveFxSettings(fx: FxSettings) {
 export interface AutoAnswerStored {
   pattern: string
   answer: boolean
+  /** clave exacta del servidor (REQUEST_AUTO_ANSWER_TEXT_*), si se conoce */
+  key?: string
 }
 
 const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
@@ -278,7 +280,11 @@ export function loadAutoAnswers(): AutoAnswerStored[] {
         const record = entry as Partial<AutoAnswerStored>
         return typeof record?.pattern === 'string' && typeof record?.answer === 'boolean'
       })
-      .map((entry) => ({ pattern: entry.pattern, answer: entry.answer }))
+      .map((entry) => ({
+        pattern: entry.pattern,
+        answer: entry.answer,
+        ...(typeof entry.key === 'string' && entry.key ? { key: entry.key } : null),
+      }))
   }
   return []
 }

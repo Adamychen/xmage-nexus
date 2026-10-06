@@ -3,9 +3,9 @@ import type { CardStripMeta } from './ArenaCardStrip'
 import { fetchCardJson, hasPrinting, type ScryfallCardJson } from '../cards/scryfallCards'
 import { scryfallJson } from '../cards/scryfallClient'
 import { stripMetaFromJson } from './deckCardOps'
-import { normalizeDeckCard } from './deckNormalize'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckFormat } from './types'
+import { xmagePrintingsFor, type XmagePrinting } from './xmageCatalog'
 
 export type PrintingStrategy = 'default' | 'oldest' | 'set' | 'keep'
 
@@ -135,6 +135,16 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
   const fellBack: string[] = []
   const unresolved: string[] = []
 
+  // La impresión la decide XMage (mismas funciones que sus importadores), así
+  // el mazo importado solo lleva impresiones que el servidor conoce. Scryfall
+  // queda para la meta (imagen, tipos, legalidades) y como respaldo sin proxy
+  // o para cartas que XMage no tiene (validateDeck las marcará UNIMPLEMENTED).
+  const toResolve = [...reps.values()].filter((c) => needsPrinting(c)).map((c) => c.cardName)
+  const fromXmage: Map<string, XmagePrinting> | null =
+    opts.strategy === 'keep' || toResolve.length === 0 || opts.signal?.aborted
+      ? null
+      : await xmagePrintingsFor(toResolve, opts.strategy, opts.setCode)
+
   await Promise.all(
     [...reps].map(async ([key, rep]) => {
       const name = rep.cardName
@@ -145,15 +155,17 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
           if (json) metaByName.set(key, stripMetaFromJson(json))
           return
         }
+        const xm = fromXmage?.get(key)
+        if (xm) {
+          printings.set(key, { setCode: xm.setCode, cardNumber: xm.cardNumber })
+          const json = await fetchCardJson({ cardName: name, setCode: xm.setCode, cardNumber: xm.cardNumber }, { fallbackToName: true })
+          if (json) metaByName.set(key, stripMetaFromJson(json))
+          if (opts.strategy === 'set' && opts.setCode && xm.setCode.toUpperCase() !== opts.setCode.toUpperCase()) fellBack.push(name)
+          return
+        }
         const { json, fellBack: fb } = await lookupPrinting(name, opts.strategy, opts.setCode)
         if (json?.set && json.collector_number) {
-          const norm = normalizeDeckCard({
-            cardName: name,
-            setCode: json.set.toUpperCase(),
-            cardNumber: json.collector_number,
-            amount: 1,
-          })
-          printings.set(key, { setCode: norm.setCode, cardNumber: norm.cardNumber })
+          printings.set(key, { setCode: json.set.toUpperCase(), cardNumber: json.collector_number })
           metaByName.set(key, stripMetaFromJson(json))
           if (fb) fellBack.push(name)
         } else {

@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const scryfallJson = vi.hoisted(() => vi.fn())
 vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
+const xmagePrintingsFor = vi.hoisted(() => vi.fn())
+vi.mock('./xmageCatalog', () => ({ xmagePrintingsFor }))
 
 import { countUnresolved, isCommanderDeckFormat, resolveDeckPrintings, suggestFormat } from './importResolve'
 import type { DeckCard } from '../lobby/decks'
@@ -33,6 +35,34 @@ describe('suggestFormat', () => {
 describe('resolveDeckPrintings', () => {
   beforeEach(() => {
     scryfallJson.mockReset()
+    xmagePrintingsFor.mockReset()
+    xmagePrintingsFor.mockResolvedValue(null) // sin proxy: camino Scryfall
+  })
+
+  it('takes the printing from XMage when the proxy answers, Scryfall only for metadata', async () => {
+    xmagePrintingsFor.mockResolvedValue(new Map([['lightning bolt', { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146' }]]))
+    scryfallJson.mockImplementation(async (url: string) =>
+      url.includes('/cards/m10/146') ? scry('Lightning Bolt', 'm10', '146', { modern: 'legal' }) : null)
+    const res = await resolveDeckPrintings({ cards: [card('Lightning Bolt', 4)], sideboard: [] }, { strategy: 'default' })
+    expect(xmagePrintingsFor).toHaveBeenCalledWith(['Lightning Bolt'], 'default', undefined)
+    expect(res.cards[0]).toMatchObject({ setCode: 'M10', cardNumber: '146', amount: 4 })
+    expect(res.metaByName.get('lightning bolt')?.legalities?.modern).toBe('legal')
+    expect(scryfallJson.mock.calls.every(([url]) => !String(url).includes('/cards/search'))).toBe(true)
+  })
+
+  it('falls back to Scryfall for a card XMage does not implement', async () => {
+    xmagePrintingsFor.mockResolvedValue(new Map())
+    scryfallJson.mockImplementation(async (url: string) =>
+      url.includes('Brand%20New%20Card') ? scry('Brand New Card', 'xyz', '7') : null)
+    const res = await resolveDeckPrintings({ cards: [card('Brand New Card', 1)], sideboard: [] }, { strategy: 'default' })
+    expect(res.cards[0]).toMatchObject({ setCode: 'XYZ', cardNumber: '7' })
+  })
+
+  it('reports a fallback when XMage has no printing in the chosen set', async () => {
+    xmagePrintingsFor.mockResolvedValue(new Map([['shock', { cardName: 'Shock', setCode: 'M21', cardNumber: '159' }]]))
+    scryfallJson.mockResolvedValue(scry('Shock', 'm21', '159'))
+    const res = await resolveDeckPrintings({ cards: [card('Shock', 4)], sideboard: [] }, { strategy: 'set', setCode: 'LEA' })
+    expect(res.fellBack).toEqual(['Shock'])
   })
 
   it('assigns the default printing to every card without one, across zones', async () => {

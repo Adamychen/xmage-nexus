@@ -204,6 +204,24 @@
   box-shadow: 0 2px 6px var(--shade-2);
 }
 
+.printing-unavailable-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  background: var(--warn-strong);
+  color: white;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  box-shadow: 0 2px 6px var(--shade-2);
+}
+
+.printing-card-item.is-unavailable .printing-img-wrap img {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
 .printing-info {
   padding: var(--sp-2) var(--sp-2h);
   background: rgb(var(--ink-2-rgb) / 0.95);

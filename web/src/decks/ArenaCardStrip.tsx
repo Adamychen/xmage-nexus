@@ -20,6 +20,8 @@ export interface CardStripMeta {
   cmc?: number
   typeLine?: string
   colors?: string[]
+  /** Identidad de color (Scryfall `color_identity`); la usa la validación local de Commander. */
+  colorIdentity?: string[]
   oracleText?: string
   keywords?: string[]
   rarity?: string

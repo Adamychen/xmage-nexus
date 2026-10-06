@@ -246,6 +246,29 @@ export async function validateDeckFormat(deck: DeckJson, deckType?: string | nul
 }
 
 /**
+ * Impresión que elegirían los importadores de XMage para cada nombre
+ * (`default`: findPreferredCoreExpansionCard; `oldest`: la más antigua no promo;
+ * `set`: la de ese set si existe). Advisory: null sin conexión.
+ */
+export async function resolvePrintings(
+  names: string[],
+  strategy: 'default' | 'oldest' | 'set' = 'default',
+  setCode?: string,
+): Promise<import('./types').ResolvePrintingsResult | null> {
+  const res = await getGateway().send<import('./types').ResolvePrintingsResult>('resolvePrintings', { names, strategy, setCode })
+  return res.ok ? (res.data ?? null) : null
+}
+
+/**
+ * Impresiones implementadas en la release de XMage del proxy (lista vacía =
+ * carta no implementada). `limit` 1 basta para saber si existe. Advisory.
+ */
+export async function cardPrintings(names: string[], limit = 0): Promise<import('./types').CardPrintingsResult | null> {
+  const res = await getGateway().send<import('./types').CardPrintingsResult>('cardPrintings', { names, limit })
+  return res.ok ? (res.data ?? null) : null
+}
+
+/**
  * Fetch de un mazo en Moxfield/Archidekt vía el proxy (Java, sin CORS) en vez
  * de `fetch()` en el navegador: esas APIs no envían cabeceras CORS que
  * permitan llamarlas desde el origen del cliente web, así que un fetch

@@ -85,11 +85,30 @@ public final class DeckJson {
             String cardNumber = card.has("cardNumber") ? card.get("cardNumber").getAsString() : "";
             int amount = card.has("amount") ? card.get("amount").getAsInt() : 1;
             if (!cardName.isEmpty()) {
-                String[] printing = normalizePrinting(setCode, cardNumber);
+                String[] printing = resolvePrinting(cardName, setCode, cardNumber);
                 result.add(new DeckCardInfo(cardName, printing[1], printing[0], amount));
             }
         }
         return result;
+    }
+
+    /**
+     * The printing actually sent to the server: {@link #normalizePrinting} and,
+     * for an entry with no printing at all (plain-text lists: "4 Lightning Bolt"),
+     * the one XMage's own importers pick by name
+     * ({@link CardCatalog#preferredPrinting}). The target server resolves strictly
+     * by (set, number), so a blank printing would be "Card not found" at join.
+     * Left blank while the card DB is not ready (validation then reports it).
+     */
+    static String[] resolvePrinting(String cardName, String setCode, String cardNumber) {
+        String[] printing = normalizePrinting(setCode, cardNumber);
+        if (printing[0].isEmpty() && printing[1].isEmpty()) {
+            String[] byName = CardCatalog.preferredPrinting(cardName);
+            if (byName != null) {
+                return byName;
+            }
+        }
+        return printing;
     }
 
     /** Normalizes a client printing the way it is sent to the server: {set, number}. */
@@ -158,7 +177,7 @@ public final class DeckJson {
                 if (cardName.isEmpty()) {
                     continue;
                 }
-                String[] printing = normalizePrinting(setCode, cardNumber);
+                String[] printing = resolvePrinting(cardName, setCode, cardNumber);
                 if (printing[0].equals(setCode) && printing[1].equals(cardNumber)) {
                     continue;
                 }

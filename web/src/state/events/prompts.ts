@@ -34,8 +34,10 @@ export function handleGameTarget(method: string, data: unknown, objectId: string
 }
 
 export function handleGameAsk(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
-  const d = data as { question?: string; message?: string; options?: unknown[]; gameId?: string } | null
+  const d = data as { question?: string; message?: string; options?: unknown; gameId?: string } | null
   const question = d?.question ?? d?.message ?? ''
+  const opts = d?.options && typeof d.options === 'object' && !Array.isArray(d.options) ? d.options as Record<string, unknown> : null
+  const autoAnswerKey = typeof opts?.autoAnswerMessage === 'string' ? opts.autoAnswerMessage : undefined
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
   if ((s.settings.autoKeepMulligan || isSpectator) && /mulligan|keep your hand|keep hand/i.test(question)) {
@@ -49,7 +51,7 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
     !isVotingAsk(question) &&
     !isStartingPlayerMessage(question)
   ) {
-    const rule = findAutoAnswer(s.settings.autoAnswers ?? [], question)
+    const rule = findAutoAnswer(s.settings.autoAnswers ?? [], question, autoAnswerKey)
     if (rule) {
       void cmds.sendPlayerBoolean(rule.answer, currentGameId)
       setState({ feedback: null })

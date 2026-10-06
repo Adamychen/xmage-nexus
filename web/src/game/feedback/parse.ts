@@ -118,7 +118,7 @@ export function parseFeedback(
               ]
       }
 
-      return prompt(
+      const ask = prompt(
         method,
         gameId,
         isVoting ? t('dialogs', 'voting_title') : isMulligan ? t('dialogs', 'mulligan_title') : isStartingPlayer ? t('game', 'who_starts') : t('game', 'confirmation'),
@@ -138,6 +138,11 @@ export function parseFeedback(
         isStartingPlayer,
         isVoting,
       )
+      // Clave con la que HumanPlayer.chooseUse recuerda la respuesta (nombre de
+      // la fuente sustituido por "{this}"): REQUEST_AUTO_ANSWER_TEXT_YES/NO.
+      const autoAnswerKey = stringValue(rawOpts.autoAnswerMessage)
+      if (autoAnswerKey) ask.autoAnswerKey = autoAnswerKey
+      return ask
     }
     case 'GAME_TARGET': {
       const cards = feedbackCards(data)

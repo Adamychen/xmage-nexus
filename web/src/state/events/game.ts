@@ -2,6 +2,7 @@ import * as cmds from '../../net/commands'
 import type { GameEndInfo, GameView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
+import { serverAutoAnswerActions } from '../../game/autoAnswers'
 import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending } from '../actions'
@@ -125,6 +126,10 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
           void cmds.sendManaPaymentMode(action, objectId)
         }
         void cmds.updateManaConfirmPreference(getState().settings.manaPayment.confirmEmptyPool)
+        // respuestas Sí/No recordadas: las aplica el HumanPlayer de XMage
+        for (const { action, data } of serverAutoAnswerActions(getState().settings.autoAnswers ?? [])) {
+          void cmds.sendPlayerAction(action, objectId, data)
+        }
         const sessionStops = clonePhaseStops(getState().settings.phaseStops)
         patch.phaseStops = sessionStops
         void cmds.updatePreferences(sessionStops)

@@ -50,6 +50,17 @@ final class GameCommands {
         return userData;
     }
 
+    /** {@code args.names} como lista de strings (vacía si falta o no es un array). */
+    private static java.util.List<String> names(JsonObject args) {
+        java.util.List<String> names = new java.util.ArrayList<>();
+        if (args.has("names") && args.get("names").isJsonArray()) {
+            for (com.google.gson.JsonElement el : args.getAsJsonArray("names")) {
+                if (el.isJsonPrimitive()) names.add(el.getAsString());
+            }
+        }
+        return names;
+    }
+
     interface Answer {
         boolean send() throws Exception;
     }
@@ -177,14 +188,21 @@ final class GameCommands {
                 return true;
             }
             case "commanderEligibility": {
-                java.util.List<String> names = new java.util.ArrayList<>();
-                if (args.has("names") && args.get("names").isJsonArray()) {
-                    for (com.google.gson.JsonElement el : args.getAsJsonArray("names")) {
-                        if (el.isJsonPrimitive()) names.add(el.getAsString());
-                    }
-                }
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
-                        DeckValidation.commanderEligibility(names)));
+                        DeckValidation.commanderEligibility(names(args))));
+                return true;
+            }
+            case "resolvePrintings": {
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        CardCatalog.resolvePrintings(names(args),
+                                JsonArgs.str(args, "strategy", "default"),
+                                JsonArgs.str(args, "setCode", null))));
+                return true;
+            }
+            case "cardPrintings": {
+                int limit = args.has("limit") && args.get("limit").isJsonPrimitive() ? args.get("limit").getAsInt() : 0;
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        CardCatalog.cardPrintings(names(args), limit)));
                 return true;
             }
             case "updatePreferences": {

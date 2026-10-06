@@ -37,7 +37,7 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
     if (busy) return
     if (rememberAnswer && rememberable) {
       const rules = getState().settings.autoAnswers ?? []
-      setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true'))
+      setSetting('autoAnswers', addAutoAnswer(rules, prompt.message, option.value === 'true', prompt.autoAnswerKey))
     }
     selectOption(option)
   }

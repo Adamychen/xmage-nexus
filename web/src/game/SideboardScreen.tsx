@@ -110,6 +110,7 @@ export default function SideboardScreen() {
             cmc: data.cmc ?? 0,
             typeLine: data.type_line ?? data.card_faces?.[0]?.type_line ?? '',
             colors: data.colors ?? data.color_identity ?? [],
+            colorIdentity: data.color_identity,
             legalities: data.legalities,
           }
           setMetaMap((prev) => {

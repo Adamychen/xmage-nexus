@@ -4,6 +4,7 @@ import {
   FORMAT_CONFIGS,
   validateDeckForFormat,
   isBasicOrUnlimited,
+  maxCopiesFor,
 } from './formatRules'
 import type { DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
@@ -366,5 +367,46 @@ describe('formatRules', () => {
     const report = validateDeckForFormat(deck, metaMap)
     expect(report.isValid).toBe(false)
     expect(report.issues.some((i) => i.type === 'not_legal' && i.cardName === 'Black Lotus')).toBe(true)
+  })
+
+  it('copy limits mirror XMage DeckValidator.maxCopiesMap (offline fallback)', () => {
+    expect(maxCopiesFor('Nazgûl', 4)).toBe(9)
+    expect(maxCopiesFor('Seven Dwarves', 4)).toBe(7)
+    expect(maxCopiesFor('Once More with Feeling', 4)).toBe(1)
+    expect(maxCopiesFor('Tempest Hawk', 4)).toBe(Infinity)
+    expect(maxCopiesFor("Sphinx's Approach", 4)).toBe(Infinity)
+    expect(maxCopiesFor('Cid, Timeless Artificer', 4)).toBe(Infinity)
+    expect(maxCopiesFor('Lightning Bolt', 4)).toBe(4)
+
+    const deck = (cards: DeckV2['cards']): DeckV2 => ({
+      id: 'copies', name: 'Copies', format: 'Modern', cards, sideboard: [], colors: [],
+      createdAt: 0, updatedAt: 0, source: 'custom',
+    })
+    const nine = validateDeckForFormat(deck([
+      { cardName: 'Nazgûl', setCode: 'LTR', cardNumber: '100', amount: 9 },
+      { cardName: 'Tempest Hawk', setCode: 'DSK', cardNumber: '31', amount: 51 },
+    ]))
+    expect(nine.issues.filter((i) => i.type === 'copy_limit')).toEqual([])
+    const ten = validateDeckForFormat(deck([{ cardName: 'Nazgûl', setCode: 'LTR', cardNumber: '100', amount: 10 }]))
+    expect(ten.issues.some((i) => i.type === 'copy_limit' && i.cardName === 'Nazgûl')).toBe(true)
+  })
+
+  it('checks color identity, not card colors (colorless Golgari Signet in mono-white)', () => {
+    const deck: DeckV2 = {
+      id: 'identity', name: 'Mono W', format: 'Commander',
+      cards: [
+        { cardName: 'Giada, Font of Hope', setCode: 'SNC', cardNumber: '14', amount: 1 },
+        { cardName: 'Golgari Signet', setCode: 'C21', cardNumber: '242', amount: 1 },
+        { cardName: 'Plains', setCode: 'LEA', cardNumber: '280', amount: 98 },
+      ],
+      sideboard: [], colors: ['W'],
+      commanderCard: { cardName: 'Giada, Font of Hope', setCode: 'SNC', cardNumber: '14', amount: 1 },
+      createdAt: 0, updatedAt: 0, source: 'custom',
+    }
+    const metaMap = new Map<string, CardStripMeta>()
+    metaMap.set('SNC/14', { typeLine: 'Legendary Creature — Angel', colors: ['W'], colorIdentity: ['W'] })
+    metaMap.set('C21/242', { typeLine: 'Artifact', colors: [], colorIdentity: ['B', 'G'] })
+    const report = validateDeckForFormat(deck, metaMap)
+    expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Golgari Signet')).toBe(true)
   })
 })

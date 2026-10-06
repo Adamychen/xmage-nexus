@@ -103,6 +103,7 @@ function SuggestionTile({
       cmc: card.cmc,
       typeLine: card.type_line || card.printed_type_line,
       colors: card.colors || card.color_identity || [],
+      colorIdentity: card.color_identity,
       oracleText: card.oracle_text ?? '',
       source: 'search',
     }))

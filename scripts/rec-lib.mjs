@@ -625,7 +625,7 @@ export async function runRecorder(driver) {
       // para una pregunta que no le compete (p.ej. mulligan), se aplica el
       // default en vez de callar (callar en el mulligan deja la partida sin
       // arrancar).
-      let ans = driver.onAsk ? driver.onAsk(q, ctx) : undefined
+      let ans = driver.onAsk ? driver.onAsk(q, ctx, m.data ?? {}) : undefined
       if (ans === undefined) ans = defaultOnAsk(q)
       if (ans !== undefined) {
         ws.send(JSON.stringify({ action: 'sendPlayerBoolean', args: { gameId, value: ans } }))
