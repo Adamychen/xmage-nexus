@@ -1,0 +1,139 @@
+{
+ "_comment": "Frame REAL del wire (proxy → cliente) del GAME_TARGET del learn (WishEffect). Capturado 2026-10-06 contra el motor 1.4.62 local (driver scripts/drivers/learn.mjs, Eyetwitch muerta con Lightning Bolt, Environmental Sciences en el sideboard). gameView recortado: el parser del prompt no lo necesita y el gameView íntegro está en los fixtures recorded estándar. Forma EXACTA del overload Cards de fireSelectTargetEvent: targets null, los ids legales en options.possibleTargets, cardsView1 con el CardView completo de la Lesson (zone OUTSIDE). Alimenta feedback.learnReal.test.ts.",
+ "seq": 48,
+ "type": "event",
+ "method": "GAME_TARGET",
+ "messageId": 47,
+ "objectId": "dbbc5b26-057f-48a3-99b6-4c2547824384",
+ "data": {
+  "cardsView1": {
+   "1335846f-ea96-407a-bbeb-6bd78427d4a7": {
+    "parentId": null,
+    "controllerId": null,
+    "controllerName": null,
+    "name": "Environmental Sciences",
+    "displayName": "Environmental Sciences",
+    "displayFullName": "Environmental Sciences",
+    "rules": [
+     "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You gain 2 life."
+    ],
+    "power": "0",
+    "toughness": "0",
+    "loyalty": "",
+    "defense": "",
+    "startingLoyalty": "",
+    "startingDefense": "",
+    "cardTypes": [
+     "SORCERY"
+    ],
+    "subTypes": [
+     "LESSON"
+    ],
+    "superTypes": [],
+    "color": {
+     "white": false,
+     "blue": false,
+     "black": false,
+     "red": false,
+     "green": false
+    },
+    "frameColor": {
+     "white": false,
+     "blue": false,
+     "black": false,
+     "red": false,
+     "green": false
+    },
+    "frameStyle": "M15_NORMAL",
+    "manaCostLeftStr": [
+     "{2}"
+    ],
+    "manaCostRightStr": [],
+    "manaValue": 2,
+    "rarity": "COMMON",
+    "mageObjectType": "CARD",
+    "isAbility": false,
+    "abilityType": null,
+    "isToken": false,
+    "ability": null,
+    "imageFileName": "",
+    "imageNumber": 0,
+    "extraDeckCard": false,
+    "transformable": false,
+    "secondCardFace": null,
+    "transformed": false,
+    "flipCard": false,
+    "faceDown": false,
+    "alternateName": null,
+    "isSplitCard": false,
+    "leftSplitName": null,
+    "leftSplitCostsStr": null,
+    "leftSplitRules": null,
+    "leftSplitTypeLine": null,
+    "rightSplitName": null,
+    "rightSplitCostsStr": null,
+    "rightSplitRules": null,
+    "rightSplitTypeLine": null,
+    "rightSplitSpellType": null,
+    "isDoubleFacedCard": false,
+    "artRect": "NORMAL",
+    "targets": null,
+    "pairedCard": null,
+    "bandedCards": null,
+    "paid": false,
+    "counters": null,
+    "controlledByOwner": true,
+    "zone": "OUTSIDE",
+    "rotate": false,
+    "hideInfo": false,
+    "canAttack": false,
+    "canBlock": false,
+    "inViewerOnly": false,
+    "cardIcons": [],
+    "originalPower": {
+     "baseValue": 0,
+     "modifiedBaseValue": 0,
+     "boostedValue": 0,
+     "cardValue": "0"
+    },
+    "originalToughness": {
+     "baseValue": 0,
+     "modifiedBaseValue": 0,
+     "boostedValue": 0,
+     "cardValue": "0"
+    },
+    "originalColorIdentity": "{C}",
+    "originalIsCopy": false,
+    "id": "1335846f-ea96-407a-bbeb-6bd78427d4a7",
+    "expansionSetCode": "STX",
+    "cardNumber": "1",
+    "usesVariousArt": false,
+    "gameObject": true,
+    "isChoosable": false,
+    "isSelected": false,
+    "playableStats": {
+     "basicManaAbilities": [],
+     "basicPlayAbilities": [],
+     "basicCastAbilities": [],
+     "other": []
+    }
+   }
+  },
+  "cardsView2": null,
+  "message": "Select a Lesson card",
+  "flag": true,
+  "targets": null,
+  "min": 0,
+  "max": 0,
+  "options": {
+   "chosenTargets": [],
+   "possibleTargets": [
+    "1335846f-ea96-407a-bbeb-6bd78427d4a7"
+   ],
+   "targetZone": "ALL",
+   "queryType": "PICK_TARGET"
+  },
+  "choice": null,
+  "messages": null
+ }
+}
