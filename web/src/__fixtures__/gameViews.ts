@@ -5,6 +5,14 @@ export function makeCard(partial: Partial<CardView> & { name: string }): CardVie
   return { name, manaValue: 0, expansionSetCode: 'TEST', cardNumber: '0', ...rest }
 }
 
+/** The rule the engine's CommanderInfoWatcher adds to a commander, the only place the
+ *  server reports how many times it was cast from the command zone. */
+export function commanderInfoRule(plays: number): string {
+  return plays > 0
+    ? `<b>Commander</b> ${plays} ${plays === 1 ? 'time' : 'times'} played from the command zone.`
+    : '<b>Commander</b>'
+}
+
 export function makePermanent(partial: Partial<PermanentView> & { name: string }): PermanentView {
   const { name, ...rest } = partial
   return { name, cardTypes: ['Creature'], manaValue: 0, expansionSetCode: 'TEST', cardNumber: '0', ...rest }

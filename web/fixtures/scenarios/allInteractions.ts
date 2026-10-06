@@ -9,7 +9,7 @@ import { TABLE } from '../table-names'
  */
 
 import { makeBaseScenario } from '../fake'
-import { makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
+import { commanderInfoRule, makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
   GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID,
@@ -53,7 +53,7 @@ export function allInteractionsScenario(): Scenario {
           id: 'cmd-atraxa',
           parentId: 'cmd-atraxa',
           isCommander: true,
-          castCount: 1,
+          rules: [...(commanderCard.rules ?? []), commanderInfoRule(1)],
         },
       ],
       battlefield: {

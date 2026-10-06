@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
-import { commanderTax } from './commanders'
+import { commanderPlaysCount, commanderTax } from './commanders'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommandZone.css'
@@ -21,7 +21,7 @@ interface CommandZoneProps {
 }
 
 /** A command-zone entry as it arrives: a card view, plus flags only some objects carry. */
-type CommandCard = CardView & { isHelperCard?: boolean; isCompanion?: boolean; isCommander?: boolean; castCount?: number }
+type CommandCard = CardView & { isHelperCard?: boolean; isCompanion?: boolean; isCommander?: boolean }
 
 interface CommandObject {
   id: string
@@ -113,7 +113,7 @@ export function parseCommandList(
       return
     }
 
-    const castCount = typeof card.castCount === 'number' ? card.castCount : 0
+    const castCount = commanderPlaysCount(card)
 
     items.push({
       id,

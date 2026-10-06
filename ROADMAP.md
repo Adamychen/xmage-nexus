@@ -242,8 +242,8 @@ Found while removing `any` from the web client: the contract schema (`web/schema
 
 | What | Why |
 |---|---|
-| OPEN — commander tax is always +0 in a real game | `CommandZone` / `CommanderDamageMatrix` read `castCount` from the command-zone card, which is not in any view (only the tests and fixtures set it). The engine tracks it (`CommanderPlaysCountWatcher`); exposing it needs a view field or a proxy-side computation, then `parseCommandList` can read it |
-| OPEN — copies on the stack are only recognised by name | `StackZone.isCopyCard` also read `CardView.isCopy`, which does not exist (removed: always false). `CardView.originalIsCopy` and `PermanentView.copy` are on the wire; check in the fork what `originalIsCopy` marks before using it |
+| RESOLVED 2026-10-06 — commander tax was always +0 in a real game | `CommandZone` / `CommanderDamageMatrix` read `castCount`, which is in no view. No view field or proxy change was needed: the engine's `CommanderInfoWatcher` already writes the count into the commander's `rules` (`<b>Commander</b> 2 times played from the command zone.`, omitted at zero), upstream code, so beta sends it too. `commanderPlaysCount` parses it; fixtures and tests now carry that rule (`commanderInfoRule`) instead of the invented field, and `commanders.test.ts` checks the recorded `commander-zone` / `commander-4` frames (2 and 1 plays) |
+| RESOLVED 2026-10-06 — copies on the stack were only recognised by name | The `[Copia N]` / `[Copy` names only ever existed in fixtures; the server sends the card's own name. For a spell, `CardView.originalIsCopy` is `Spell.isCopy()` (`setOriginalValues` runs on `SpellAbility.getCharacteristics`, which returns the stack `Spell` itself; upstream code, not a fork patch), so `isCopyCard` reads it and the storm fixture marks its copies that way |
 | RESOLVED — two views of different games were diffed into animations | `useGameTransitions` compared `GameView.gameId`/`matchId`, which a `GameView` does not carry, so the guard never fired; it now takes the store's `gameId`, recorded with the view it came with (`START_GAME` switches the id before the new game's first view) |
 
 ---

@@ -2,6 +2,7 @@ import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import OpponentZone from './OpponentZone'
 import type { CardView, PlayerView } from '../net/types'
+import { commanderInfoRule } from '../__fixtures__/gameViews'
 
 describe('OpponentZone', () => {
   afterEach(() => {
@@ -202,7 +203,6 @@ describe('OpponentZone', () => {
           id: 'cmd-urza',
           name: 'Urza, Lord High Artificer',
           manaValue: 4,
-          castCount: 0,
           mageObjectType: 'COMMANDER',
         } as any,
       ],
@@ -359,14 +359,13 @@ describe('OpponentZone', () => {
           id: 'cmd-ellie',
           name: 'Ellie',
           manaValue: 3,
-          castCount: 0,
           mageObjectType: 'COMMANDER',
         } as any,
         {
           id: 'cmd-joel',
           name: 'Joel, Resolute Survivor',
           manaValue: 6,
-          castCount: 1,
+          rules: [commanderInfoRule(1)],
           mageObjectType: 'COMMANDER',
         } as any,
       ],

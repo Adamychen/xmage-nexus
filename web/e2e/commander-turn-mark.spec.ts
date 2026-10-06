@@ -6,7 +6,7 @@ import type { Page } from '@playwright/test'
 fakeOnly()
 
 function commander(id: string, name: string) {
-  return { id, name, manaValue: 3, expansionSetCode: 'TEST', cardNumber: '1', mageObjectType: 'COMMANDER', castCount: 0 }
+  return { id, name, manaValue: 3, expansionSetCode: 'TEST', cardNumber: '1', mageObjectType: 'COMMANDER' }
 }
 
 function commanderDuel(activePlayerId: string) {
