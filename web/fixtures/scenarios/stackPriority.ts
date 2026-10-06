@@ -84,7 +84,7 @@ export function stackPriorityScenario(): Scenario {
     } else if (stage === 'storm_cast' || stage === 'storm_copies') {
       stackCards['stack-grapeshot-orig'] = makeCard({
         id: 'stack-grapeshot-orig',
-        name: 'Grapeshot [Original]',
+        name: 'Grapeshot',
         manaValue: 2,
         cardNumber: '160',
         expansionSetCode: 'tsp',
@@ -93,7 +93,8 @@ export function stackPriorityScenario(): Scenario {
       })
       stackCards['stack-grapeshot-copy1'] = makeCard({
         id: 'stack-grapeshot-copy1',
-        name: 'Grapeshot [Copia 1]',
+        name: 'Grapeshot',
+        originalIsCopy: true,
         manaValue: 2,
         cardNumber: '160',
         expansionSetCode: 'tsp',
@@ -102,7 +103,8 @@ export function stackPriorityScenario(): Scenario {
       })
       stackCards['stack-grapeshot-copy2'] = makeCard({
         id: 'stack-grapeshot-copy2',
-        name: 'Grapeshot [Copia 2]',
+        name: 'Grapeshot',
+        originalIsCopy: true,
         manaValue: 2,
         cardNumber: '160',
         expansionSetCode: 'tsp',
@@ -300,6 +302,35 @@ export function stackPriorityScenario(): Scenario {
         stage = 'hold_priority_idle'
       }
     },
+    onSendPlayerBoolean: (conn) => {
+      // Stage 2: APNAP trigger stacking, once priority passes with both spells on the stack
+      if (stage !== 'led_in_response') {
+        conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+        return
+      }
+      stage = 'triggers_order'
+      conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
+      conn.broadcast(
+        'GAME_CHOOSE_ABILITY',
+        {
+          message: 'Elige el orden de colocación en la pila para las habilidades disparadas simultáneas (APNAP):',
+          choices: [
+            {
+              id: 'choice-warden-first',
+              label: 'Poner Soul Warden primero (Impact Tremors resolverá antes)',
+              value: 'choice-warden-first',
+            },
+            {
+              id: 'choice-tremors-first',
+              label: 'Poner Impact Tremors primero (Soul Warden resolverá antes)',
+              value: 'choice-tremors-first',
+            },
+          ],
+          gameView: getGameView(),
+        },
+        GAME_ID,
+      )
+    },
     onSendPlayerUUID: (conn, uuid) => {
       // STAGE 1: Hold priority & cast Tutor
       if (uuid === 'card-tutor') {
@@ -320,32 +351,6 @@ export function stackPriorityScenario(): Scenario {
       if (uuid === 'card-led') {
         stage = 'led_in_response'
         conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-
-        // Stage 2: APNAP trigger stacking
-        setTimeout(() => {
-          stage = 'triggers_order'
-          conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
-          conn.broadcast(
-            'GAME_CHOOSE_ABILITY',
-            {
-              message: 'Elige el orden de colocación en la pila para las habilidades disparadas simultáneas (APNAP):',
-              choices: [
-                {
-                  id: 'choice-warden-first',
-                  label: 'Poner Soul Warden primero (Impact Tremors resolverá antes)',
-                  value: 'choice-warden-first',
-                },
-                {
-                  id: 'choice-tremors-first',
-                  label: 'Poner Impact Tremors primero (Soul Warden resolverá antes)',
-                  value: 'choice-tremors-first',
-                },
-              ],
-              gameView: getGameView(),
-            },
-            GAME_ID,
-          )
-        }, 250)
         return
       }
 
