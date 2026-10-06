@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/react'
 import TriggerOrderDialog from './TriggerOrderDialog'
 import type { FeedbackPrompt } from './feedback'
 import { clearTriggerOrderPlan } from './triggerOrderPlan'
-import { setState } from '../state/store'
+import { getState, setState } from '../state/store'
 
 const sendPlayerUUID = vi.fn().mockResolvedValue({ ok: true })
 const sendTriggerAutoOrder = vi.fn().mockResolvedValue({ ok: true })
@@ -142,7 +142,7 @@ describe('TriggerOrderDialog', () => {
   })
 
   it('pin buttons remember a rule without placing the trigger', async () => {
-    const { container } = renderDialog(prompt())
+    const { container, send, sendNow } = renderDialog(prompt())
     const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
     const btns = firstRow.querySelectorAll('.trigger-actions button')
     fireEvent.click(btns[1] as Element)
@@ -155,6 +155,8 @@ describe('TriggerOrderDialog', () => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_ABILITY_LAST', 'g1', T1)
     })
     expect(sendPlayerUUID).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    expect(sendNow).not.toHaveBeenCalled()
   })
 
   it('name scope sends the rule text instead of the uuid', async () => {
@@ -173,11 +175,21 @@ describe('TriggerOrderDialog', () => {
   })
 
   it('reset sends RESET_ALL without answering', async () => {
-    const { container } = renderDialog(prompt())
+    const { container, send, sendNow } = renderDialog(prompt())
     fireEvent.click(container.querySelector('.trigger-footer button') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_RESET_ALL', 'g1')
     })
+    expect(send).not.toHaveBeenCalled()
+    expect(sendNow).not.toHaveBeenCalled()
+  })
+
+  it('a rejected rule is reported and leaves the pin unset', async () => {
+    sendTriggerAutoOrder.mockResolvedValueOnce({ ok: false, error: 'rejected' })
+    const { container } = renderDialog(prompt())
+    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
+    fireEvent.click(firstRow.querySelectorAll('.trigger-actions button')[1] as Element)
+    await vi.waitFor(() => expect(getState().error).toBe('rejected'))
   })
 
   it('hides the rule line when it is just the card name', () => {

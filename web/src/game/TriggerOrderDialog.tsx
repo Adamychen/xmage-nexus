@@ -24,6 +24,7 @@ import {
   takeNextTriggerPick,
 } from './triggerOrderPlan'
 import { useStore } from '../state/store'
+import { setStoreError } from '../state/actions'
 import './TriggerOrderDialog.css'
 import Button from '../ui/Button'
 
@@ -99,11 +100,20 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
     const realRule = rule.trim().toLowerCase() !== name.trim().toLowerCase()
     const effectiveScope = scope === 'name' && realRule ? 'name' : 'card'
     const data = effectiveScope === 'card' ? cardId : rule
-    void sendNow(async () => {
-      const result = await cmds.sendTriggerAutoOrder(kind, prompt.gameId, data)
-      if (result.ok) setSaved((current) => ({ ...current, [cardId]: first ? 'first' : 'last' }))
-      return result
-    }, t('errors', 'send_failed'))
+    void remember(() => cmds.sendTriggerAutoOrder(kind, prompt.gameId, data)).then((ok) => {
+      if (ok) setSaved((current) => ({ ...current, [cardId]: first ? 'first' : 'last' }))
+    })
+  }
+
+  const remember = async (action: () => Promise<{ ok: boolean; error?: string }>) => {
+    try {
+      const result = await action()
+      if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed'))
+      return result.ok
+    } catch (error) {
+      setStoreError(error instanceof Error ? error.message : t('errors', 'send_failed'))
+      return false
+    }
   }
 
   const move = (cardId: string, delta: number) => {
@@ -143,7 +153,7 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
   }
 
   const reset = () => {
-    void send(() => cmds.sendTriggerAutoOrder('TRIGGER_AUTO_ORDER_RESET_ALL', prompt.gameId), t('errors', 'send_failed'))
+    void remember(() => cmds.sendTriggerAutoOrder('TRIGGER_AUTO_ORDER_RESET_ALL', prompt.gameId))
   }
 
   const sentCount = planActive && plan ? plan.sent.length : 0
