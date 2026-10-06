@@ -131,10 +131,6 @@ function normalizeStoredCard(c: { setCode: string; cardNumber: string }): { setC
     const stripped = n.replace(/[p★]$/i, '')
     if (stripped !== n && /^\d/.test(stripped)) n = stripped
   }
-  if (s.length >= 3 && s.charAt(0) === 'P' && s !== 'PLST') {
-    const base = s.substring(1)
-    if (/^[A-Z0-9]{2,4}$/.test(base)) s = base
-  }
   return { setCode: s, cardNumber: n }
 }
 
