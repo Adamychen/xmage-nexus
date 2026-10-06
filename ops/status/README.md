@@ -9,6 +9,7 @@ It never touches the proxy: everything comes from what the host already records.
 | Source | What it gives |
 | --- | --- |
 | `journalctl -u xmage-proxy` | `[activity]` events (logins, sessions, tables, games), JUL/log4j warnings and errors, systemd start/stop/crash lines |
+| `game_start` / `game_end` activity lines | the "How games end" card: per seated player, `won`/`lost`/`draw`, `quit` (left the match), `conceded` (conceded a multiplayer game that went on), or `unfinished` with the reason the session ended while the game was open; its subtitle is the share that reached a result |
 | `/var/log/playit/playit.log` (+ rotated `.gz`) | one line per public TCP connection with the visitor's real IP; playit errors |
 | `systemctl show`, `/proc`, `statfs` | service state, restarts, CPU, memory, disk, load, proxy RSS/CPU |
 | TCP/HTTP probes | connect time to the XMage server and to the local web client |

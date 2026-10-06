@@ -120,6 +120,10 @@ public final class Activity {
         emit("action", user, ip, d.toString());
     }
 
+    static void game(String event, String user, String detail) {
+        emit(event, user, null, detail);
+    }
+
     public static void sessionEnd(String user, String reason) {
         UserStats s = user == null ? null : users.remove(user);
         String extra = "reason=" + reason;

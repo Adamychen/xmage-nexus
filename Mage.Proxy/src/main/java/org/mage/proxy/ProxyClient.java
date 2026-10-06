@@ -12,6 +12,7 @@ import mage.players.net.UserData;
 import mage.remote.Connection;
 import mage.remote.SessionImpl;
 import mage.utils.MageVersion;
+import mage.view.GameEndView;
 import org.java_websocket.WebSocket;
 
 import java.util.List;
@@ -76,6 +77,7 @@ public class ProxyClient implements MageClient, CommandContext {
     private volatile int highestMessageId = 0;
 
     private final SessionGames games = new SessionGames();
+    private final GameActivity gameActivity = new GameActivity();
     /** Latest state and open prompt per game (replayed when a connection joins the game). */
     private final ReplayCache replay = new ReplayCache();
     private final LobbyPublisher lobby;
@@ -326,6 +328,7 @@ public class ProxyClient implements MageClient, CommandContext {
     /** Everything {@link #expireGrace()} releases apart from the server round trip. */
     private void releaseLocalOnly() {
         released = true;
+        gameActivity.closeAll("grace_expired");
         Activity.sessionEnd(activityUser, "grace_expired");
         if (accountKey != null) {
             gateway.unregisterSession(accountKey, this);
@@ -742,6 +745,7 @@ public class ProxyClient implements MageClient, CommandContext {
                     return;
                 }
                 games.touch();
+                trackGame(m, callbackObjectId, callback.getData());
                 if (CallbackEvents.endsGame(m)) {
                     games.markInactive(callbackObjectId);
                 }
@@ -780,6 +784,33 @@ public class ProxyClient implements MageClient, CommandContext {
             ev.addProperty("message", "Callback error: " + callback.getMethod() + " - " + ex);
             ev.addProperty("fatal", false);
             broadcastAuthorized(ev.toString());
+        }
+    }
+
+    private void trackGame(ClientCallbackMethod m, UUID gameId, Object data) {
+        if (m == ClientCallbackMethod.START_GAME || m == ClientCallbackMethod.WATCHGAME) {
+            gameActivity.opened(gameId, activityUser, m == ClientCallbackMethod.WATCHGAME);
+        }
+        int turn = GameActivity.turnOf(data);
+        if (turn > 0) {
+            gameActivity.turn(gameId, turn);
+        }
+        if (m == ClientCallbackMethod.END_GAME_INFO && data instanceof GameEndView) {
+            GameEndView end = (GameEndView) data;
+            gameActivity.ended(gameId, GameActivity.outcome(end.getClientPlayer() != null, end.hasWon(),
+                    end.getGameInfo(), end.getAdditionalInfo()), end.getPlayers().size());
+        }
+    }
+
+    private void trackGameCommand(String action, JsonObject args) {
+        UUID gameId = JsonArgs.uuid(args, "gameId", null);
+        if (gameId == null) {
+            return;
+        }
+        if ("quitMatch".equals(action) || "stopWatching".equals(action)) {
+            gameActivity.left(gameId);
+        } else if ("sendPlayerAction".equals(action) && "CONCEDE".equals(JsonArgs.str(args, "action", ""))) {
+            gameActivity.conceded(gameId);
         }
     }
 
@@ -833,6 +864,7 @@ public class ProxyClient implements MageClient, CommandContext {
 
         if (!"connect".equals(action) && activityUser != null) {
             Activity.action(activityUser, gateway.ipOf(conn), action, args);
+            trackGameCommand(action, args);
         }
 
         // gameId obligatorio para todas las acciones de partida
@@ -864,6 +896,7 @@ public class ProxyClient implements MageClient, CommandContext {
                     }
                     stopSession(false);
                     connected = false;
+                    gameActivity.closeAll("disconnect");
                     Activity.sessionEnd(activityUser, "disconnect");
                     if (accountKey != null) {
                         gateway.unregisterSession(accountKey, this);
@@ -1038,6 +1071,9 @@ public class ProxyClient implements MageClient, CommandContext {
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
             accountKey = host + "|" + username;
             gateway.registerSession(accountKey, this);
+            if (activityUser != null && !activityUser.equals(username)) {
+                gameActivity.closeAll("user_switch");
+            }
             activityUser = username;
             lastConnection = connection;
             rememberLiveSession(host, username);
