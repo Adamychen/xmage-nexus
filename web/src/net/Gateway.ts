@@ -5,6 +5,8 @@ export interface GatewayEvents {
   onMessage?: (msg: ProxyMessage) => void
   onOpen?: () => void
   onClose?: (reason: string) => void
+  /** The page is going away (reload, close, navigation): last chance to save state. */
+  onPageHide?: () => void
 }
 
 /** Idle time before the client probes the connection with a `ping`. */
@@ -38,7 +40,10 @@ export class Gateway {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private probeCheckTimer: ReturnType<typeof setTimeout> | null = null
   private readonly onWake = () => this.probe()
-  private readonly onLeave = () => this.announceLeaving()
+  private readonly onLeave = () => {
+    this.events.onPageHide?.()
+    this.announceLeaving()
+  }
   private streamId: string | null = null
   private lastSeq = 0
 
@@ -54,6 +59,13 @@ export class Gateway {
    *  this back so the proxy replays exactly the frames missed while away. */
   resumeToken(): { streamId: string; seq: number } | null {
     return this.streamId ? { streamId: this.streamId, seq: this.lastSeq } : null
+  }
+
+  /** Continues a stream from before a page reload: the next login presents it,
+   *  and replayed frames above `seq` pass the duplicate filter. */
+  seedResume(token: { streamId: string; seq: number }) {
+    this.streamId = token.streamId
+    this.lastSeq = token.seq
   }
 
   get elapsedSecs() {
