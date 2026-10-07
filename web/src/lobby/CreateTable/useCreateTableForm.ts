@@ -3,7 +3,7 @@ import * as cmds from '../../net/commands'
 import type { GameTypeInfo } from '../../net/commands'
 import { useStore } from '../../state/store'
 import { deckRef, type Deck } from '../decks'
-import { isGoodFit, rankDecksForTable, tableFormatProfile } from '../joinDeckFit'
+import { deckFitForTable, isGoodFit, tableFormatProfile } from '../joinDeckFit'
 import { useTranslation } from '../../i18n'
 import {
   isLimitedDeckType,
@@ -318,9 +318,9 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const { availableDecks, decksLoaded, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck, adoptStarterDecks: adoptDecks } = useDeckChoices(storeDeck, setSeatConfigs)
   const adoptStarterDecks = (decks: Deck[]) => {
     if (decks.length === 0) return
-    const fitting = rankDecksForTable(decks, tableFormatProfile(deckType, gameType))
-      .filter(({ fit }) => isGoodFit(fit))
-      .map(({ deck }) => deck)
+    const profile = tableFormatProfile(deckType, gameType)
+    const fits = decks.map((deck) => ({ deck, fit: deckFitForTable(deck, profile) })).filter(({ fit }) => isGoodFit(fit))
+    const fitting = [...fits.filter(({ fit }) => fit.level === 'match'), ...fits.filter(({ fit }) => fit.level !== 'match')].map(({ deck }) => deck)
     const mine = fitting[0] ?? decks[0]
     adoptDecks(decks, mine, fitting[1] ?? mine)
   }
