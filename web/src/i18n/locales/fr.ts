@@ -1563,6 +1563,7 @@ export const fr: TranslationSchema = {
     zone_battlefield: 'Champ de bataille',
     zone_library: 'Bibliothèque',
     zone_command: 'Commandement',
+    commander_tax: 'Taxe de commandant : +{tax} mana générique (lancé {count}× depuis la zone de commandement)',
     zone_revealed: 'Révélées',
     zone_sideboard: 'Réserve',
     pile_graveyard: 'Cimetière',

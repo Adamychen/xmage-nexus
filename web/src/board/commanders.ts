@@ -31,7 +31,25 @@ export function hasCommanders(game: GameView | null): boolean {
   return (game?.players ?? []).some((p) => commandersOf(p).length > 0)
 }
 
-/** Impuesto de lanzamiento de comandante: +{2 por cada vez lanzado}. */
+const CAST_FROM_COMMAND_ZONE = /(\d+)\s+times?\s+played from the command zone/i
+
+/** Times a commander was cast from the command zone. The server has no field for it:
+ *  CommanderInfoWatcher writes "<b>Commander</b> N time(s) played from the command zone."
+ *  into the card's rules, so that line is the source of truth; an explicit numeric
+ *  `castCount` (fixtures) wins when present. */
+export function commanderCastCount(card: unknown): number {
+  const c = card as { castCount?: unknown; rules?: unknown } | null | undefined
+  if (!c || typeof c !== 'object') return 0
+  if (typeof c.castCount === 'number') return c.castCount
+  if (!Array.isArray(c.rules)) return 0
+  for (const line of c.rules) {
+    const m = CAST_FROM_COMMAND_ZONE.exec(String(line).replace(/<[^>]*>/g, ''))
+    if (m) return Number(m[1])
+  }
+  return 0
+}
+
+/** Commander cast tax: +{2} for each previous cast from the command zone. */
 export function commanderTax(castCount: number): number {
   return castCount > 0 ? castCount * 2 : 0
 }

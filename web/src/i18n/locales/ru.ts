@@ -1563,6 +1563,7 @@ export const ru: TranslationSchema = {
     zone_battlefield: 'Поле битвы',
     zone_library: 'Библиотека',
     zone_command: 'Командная зона',
+    commander_tax: 'Налог командира: +{tax} бесцветной маны (сыгран {count}× из командной зоны)',
     zone_revealed: 'Раскрытые',
     zone_sideboard: 'Сайдборд',
     pile_graveyard: 'Кладбище',

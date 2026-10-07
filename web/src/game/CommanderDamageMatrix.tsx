@@ -3,7 +3,7 @@ import Tabs from '../ui/Tabs'
 import Chip from '../ui/Chip'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { parseCommandList } from '../board/CommandZone'
-import { commanderTax } from '../board/commanders'
+import { commanderCastCount, commanderTax } from '../board/commanders'
 import { isPlayerOut, MAX_BOARD_PLAYERS } from '../board/boardShared'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -246,12 +246,12 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                 {playerCommanders.length > 0 && (
                   <div className="cdm-player-commanders">
                     {playerCommanders.map((cmd) => {
-                      const castCount = Number((cmd.card as any).castCount ?? 0)
+                      const castCount = commanderCastCount(cmd.card)
                       return (
                         <Chip key={cmd.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
                           {cmd.name}
                           {castCount > 0 && (
-                            <Chip tone="err" size="xs" title={`Tax: +{${commanderTax(castCount)}}`}>
+                            <Chip tone="err" size="xs" title={t('board', 'commander_tax', { tax: commanderTax(castCount), count: castCount })}>
                               +{commanderTax(castCount)}
                             </Chip>
                           )}

@@ -32,7 +32,7 @@ describe('CommandZone', () => {
       ],
     }
 
-    const { container, getByText } = render(
+    const { container } = render(
       <CommandZone
         player={fakePlayer as PlayerView}
         side="my"
@@ -43,7 +43,7 @@ describe('CommandZone', () => {
 
     expect(container.querySelector('.command-zone')).not.toBeNull()
     expect(container.querySelector('.commander-badge')).not.toBeNull()
-    expect(getByText('+4')).not.toBeNull() // 2 casts * 2 tax = +4
+    expect(container.querySelector('[data-testid="commander-tax"]')?.getAttribute('data-tax')).toBe('4') // 2 casts * 2 tax = +4
 
     const slot = container.querySelector('[data-card-id="cmd-atrata"]')
     expect(slot).not.toBeNull()
@@ -94,7 +94,7 @@ describe('CommandZone', () => {
       ],
     }
 
-    const { container, getByText } = render(
+    const { container } = render(
       <CommandZone
         player={fakePlayer as PlayerView}
         side="my"
@@ -106,8 +106,8 @@ describe('CommandZone', () => {
     const commanderBadges = container.querySelectorAll('.commander-badge')
     expect(commanderBadges.length).toBe(2) // 2 crowns
 
-    expect(getByText('+2')).not.toBeNull() // Kraum tax
-    expect(getByText('+6')).not.toBeNull() // Tymna tax
+    const taxes = [...container.querySelectorAll('[data-testid="commander-tax"]')].map((b) => b.getAttribute('data-tax'))
+    expect(taxes).toEqual(['2', '6'])
 
     const kraumSlot = container.querySelector('[data-card-id="cmd-kraum"]')
     const tymnaSlot = container.querySelector('[data-card-id="cmd-tymna"]')
@@ -238,5 +238,39 @@ describe('CommandZone', () => {
     )
 
     expect(container.firstChild).toBeNull() // Correctly ignored
+  })
+})
+
+describe('CommandZone commander tax pip (real server shape)', () => {
+  it('shows the tax pip from the rules line when the view has no castCount field', () => {
+    const player = {
+      name: 'Player1',
+      commandList: [
+        {
+          id: 'cmd-krenko',
+          name: 'Krenko, Mob Boss',
+          mageObjectType: 'COMMANDER',
+          expansionSetCode: 'M13',
+          cardNumber: '138',
+          rules: ['{T}: Create X 1/1 red Goblin creature tokens.', '<b>Commander</b> 2 times played from the command zone.'],
+        },
+      ],
+      helperCards: {},
+    } as unknown as PlayerView
+    const { container } = render(<CommandZone player={player} side="opp" />)
+    const badge = container.querySelector('[data-testid="commander-tax"]')
+    expect(badge?.getAttribute('data-tax')).toBe('4')
+    expect(badge?.querySelector('.commander-tax-pip img')?.getAttribute('alt')).toBe('{4}')
+  })
+
+  it('shows no pip before the first cast', () => {
+    const player = {
+      name: 'Player1',
+      commandList: [{ id: 'cmd-krenko', name: 'Krenko, Mob Boss', mageObjectType: 'COMMANDER', rules: ['<b>Commander</b>'] }],
+      helperCards: {},
+    } as unknown as PlayerView
+    const { container } = render(<CommandZone player={player} side="opp" />)
+    expect(container.querySelector('.commander-badge')).not.toBeNull()
+    expect(container.querySelector('[data-testid="commander-tax"]')).toBeNull()
   })
 })

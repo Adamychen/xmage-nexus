@@ -1561,6 +1561,7 @@ export const en = {
     zone_battlefield: 'Battlefield',
     zone_library: 'Library',
     zone_command: 'Command',
+    commander_tax: 'Commander tax: +{tax} generic mana (cast {count}× from the command zone)',
     zone_revealed: 'Revealed',
     zone_sideboard: 'Sideboard',
     pile_graveyard: 'Graveyard',

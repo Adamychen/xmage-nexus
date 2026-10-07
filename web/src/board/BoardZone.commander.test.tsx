@@ -49,7 +49,7 @@ describe('BoardZone commander placement and the visible commander setting', () =
       const col = container.querySelector('.bz-command-col')
       expect(col?.querySelector('.command-zone.my:not(.mini):not(.command-crowns) .commander-slot[data-card-id="cmd-atraxa"]')).not.toBeNull()
       expect(col?.querySelector('.commander-badge')).not.toBeNull()
-      expect(col?.querySelector('.commander-tax-badge')?.textContent).toBe('+2')
+      expect(col?.querySelector('.commander-tax-badge')?.getAttribute('data-tax')).toBe('2')
       expect(container.querySelector('.bz-creatures-row .command-zone')).toBeNull()
       expect(container.querySelector('[data-testid="commander-crowns"]')).toBeNull()
     })
@@ -89,7 +89,7 @@ describe('BoardZone commander placement and the visible commander setting', () =
       const crowns = container.querySelector('.bz-status-row > .bz-commander-crowns')
       expect(crowns?.previousElementSibling?.classList.contains('player-info-bar')).toBe(true)
       expect(getAllByTestId('commander-crown-btn')).toHaveLength(1)
-      expect(crowns?.querySelector('.commander-tax-badge')?.textContent).toBe('+2')
+      expect(crowns?.querySelector('.commander-tax-badge')?.getAttribute('data-tax')).toBe('2')
     })
 
     it('casts the commander from the crown button through onCardClick', () => {
