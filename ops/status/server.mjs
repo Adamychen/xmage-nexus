@@ -444,6 +444,7 @@ function ingestPlayit() {
     for (let i = 9; i >= 1; i--) files.unshift(`${cfg.playitLog}.${i}.gz`);
   }
   let max = since;
+  txCommit();
   db.exec('BEGIN');
   try {
     for (const f of files) {
