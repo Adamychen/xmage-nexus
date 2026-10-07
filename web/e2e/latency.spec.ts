@@ -26,10 +26,10 @@ import {
 import {
   LATENCY_ECHO_MS,
   armAckProbe,
+  freezeAndDrain,
   perfClear,
   perfEntries,
   readAckMs,
-  waitEventsQuiet,
   type PerfEntry,
 } from './support/perf'
 import {
@@ -37,9 +37,7 @@ import {
   lastGameView,
   nextManaSource,
   parseFrames,
-  parsedLen,
   targetIdsOf,
-  waitFrame,
   waitFrameAt,
 } from './support/frames'
 import { waitScene } from './support/scene'
@@ -73,20 +71,22 @@ async function echoAfter(page: Page, clickName: string, timeoutMs = LATENCY_ECHO
 }
 
 test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@latency' }, () => {
-  // El eco artificial retrasa TODOS los eventos del FixtureServer: en paralelo
-  // con otros workers el escenario se ralentiza. Serial dentro del fichero y
-  // margen holgado; el presupuesto que se asserta es el del ACUSE (<100 ms),
-  // no el del eco (que es artificial).
+  // The artificial echo delays EVERY FixtureServer event, so the scenario slows
+  // down when other workers share the runner: serial inside the file and
+  // generous margins. The budget asserted is the ACK's (<100 ms); the echo check
+  // only asks that the round trip be real (> 0.6 x the delay), which is why each
+  // measurement starts with `freezeAndDrain` (one actor per window, drained
+  // channel) and why this file keeps CI retries off again.
   test.describe.configure({ mode: 'serial', timeout: 240_000 })
 
   test('pasar prioridad: ack en el botón y espera explícita mientras el eco viaja', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
     await withFakeServer(latencyPassScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'lta', tableName: 'latency-pass', deck: DECK.lands })
+      const { pageErrors, helper } = await startGame(page, { prefix: 'lta', tableName: 'latency-pass', deck: DECK.lands })
       const button = page.locator('.big-action-btn')
       await expect(button).toBeEnabled({ timeout: 20_000 })
 
-      await waitEventsQuiet(page)
+      await freezeAndDrain(page, helper)
 
       await perfClear(page)
       await armAckProbe(page, '.big-action-btn', { disabled: true })
@@ -105,15 +105,23 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
   test('jugar tierra: is-pending inmediato y se limpia con el eco', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
     await withFakeServer(latencyLandScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'ltl', tableName: 'latency-land', deck: DECK.lands })
-      // El helper juega una tierra por turno: reintenta la medición en el
-      // siguiente turno si la ventana se cerró mientras el test armaba la sonda.
+      const { pageErrors, helper } = await startGame(page, { prefix: 'ltl', tableName: 'latency-land', deck: DECK.lands })
+      // The helper plays one land per turn and passes priority by itself: it is
+      // frozen for every measurement so the test is the only actor inside the
+      // window. If an attempt still comes out contaminated (an event was in
+      // flight before the click) the autopilot is released so the game moves on
+      // and the next attempt measures a fresh window.
       let ackMs = -1
       let echoMs = -1
       for (let attempt = 0; attempt < 4 && ackMs < 0; attempt++) {
         const landId = await waitPlayable(page, 'Mountain', { minUntapped: 0, timeoutMs: 20_000 })
         const selector = `[data-testid="hand-bar"] [data-card-id="${landId ?? ''}"]`
         if (!landId || (await page.locator(selector).count()) === 0) continue
+        await freezeAndDrain(page, helper)
+        if ((await page.locator(selector).count()) === 0) {
+          helper.paused = false
+          continue
+        }
         await perfClear(page)
         await armAckProbe(page, '[data-testid="hand-bar"] .card-slot.is-pending', {})
         await page.locator(selector).click({ force: true })
@@ -121,9 +129,13 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
         if (ackMs >= 0) {
           await page.waitForTimeout(WAIT_STATE_MS)
           echoMs = (await echoAfter(page, 'playable')).echoMs
-          // Un eco más rápido que el retardo es un evento del helper enviado
-          // antes del clic (juega su tierra en paralelo): intento contaminado.
-          if (echoMs <= LATENCY_ECHO_MS * 0.6 && attempt < 3) ackMs = -1
+          // Faster than the fake delay means an event sent before the click, so
+          // the window was never quiet: release the helper and retry later.
+          if (echoMs <= LATENCY_ECHO_MS * 0.6 && attempt < 3) {
+            ackMs = -1
+            helper.paused = false
+            await page.waitForTimeout(3000)
+          }
         }
       }
       expectAckUnder(ackMs, 'jugar tierra')
@@ -135,13 +147,13 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
   test('lanzar carta: is-pending inmediato y eco retrasado', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
     await withFakeServer(latencyTargetScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'ltc', tableName: 'latency-target', deck: DECK.lands })
+      const { pageErrors, helper } = await startGame(page, { prefix: 'ltc', tableName: 'latency-target', deck: DECK.lands })
       const boltId = await waitPlayable(page, 'Lightning Bolt', { minUntapped: 1, timeoutMs: 20_000 })
       expect(boltId, 'Lightning Bolt jugable').toBeTruthy()
       const selector = `[data-testid="hand-bar"] [data-card-id="${boltId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
 
-      await waitEventsQuiet(page)
+      await freezeAndDrain(page, helper)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })
@@ -168,7 +180,7 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const selector = `.card-slot[data-card-id="${targetId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
 
-      await waitEventsQuiet(page)
+      await freezeAndDrain(page, helper)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-chosen-pending' })
@@ -199,7 +211,7 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       const selector = `.card-slot[data-card-id="${sourceId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
 
-      await waitEventsQuiet(page)
+      await freezeAndDrain(page, helper)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })
@@ -217,19 +229,14 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
   test('declarar atacantes: is-pending inmediato y eco posterior', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
     await withFakeServer(latencyCombatScenario, async () => {
-      const { pageErrors } = await startGame(page, {
-        prefix: 'ltk',
-        tableName: 'latency-combat',
-        deck: DECK.combatHuman,
-        skipCombat: true,
-      })
+      const { pageErrors, helper } = await startGame(page, { prefix: 'ltk', tableName: 'latency-combat', deck: DECK.combatHuman, skipCombat: true })
       const combat = await waitScene(page, 'combat', (c) => c.active && c.mode === 'attack', 'ventana de atacantes', 25_000)
       const attackerId = combat.selectable[0]
       expect(attackerId, 'criatura seleccionable como atacante').toBeTruthy()
       const selector = `.card-slot[data-card-id="${attackerId}"]`
       await expect(page.locator(selector)).toBeVisible({ timeout: 10_000 })
 
-      await waitEventsQuiet(page)
+      await freezeAndDrain(page, helper)
 
       await perfClear(page)
       await armAckProbe(page, selector, { className: 'is-pending' })

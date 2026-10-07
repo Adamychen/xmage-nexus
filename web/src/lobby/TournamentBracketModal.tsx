@@ -35,7 +35,7 @@ export default function TournamentBracketModal({ table, view, loading, error, on
       kickerLabel={t('lobby', 'view_bracket')}
       title={table.tableName}
       topRight={(
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="tournament-modal-actions">
           <Button variant="soft" size="sm" onClick={onRefresh} disabled={loading}>
             {loading ? t('lobby', 'matches_loading') : (<><Icon name="refresh" size={12} /> {t('lobby', 'matches_refresh')}</>)}
           </Button>

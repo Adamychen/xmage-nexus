@@ -1,11 +1,13 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { CardPrintingsModal, parseScryfallPrints } from './CardPrintingsModal'
+import { setCustomCardArtDataUrl, resetCustomCardArtCache } from '../cards/customCardArt'
 
 describe('CardPrintingsModal', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    resetCustomCardArtCache()
   })
 
   const mockPrintsData = {
@@ -71,5 +73,38 @@ describe('CardPrintingsModal', () => {
 
     expect(onSelect).toHaveBeenCalledWith('DMU', '137')
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('shows the uploaded custom image and removes it from the custom art section', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockPrintsData,
+    }) as any
+
+    render(
+      <CardPrintingsModal
+        cardName="Lightning Bolt"
+        currentSet="M10"
+        currentNumber="146"
+        onSelectPrinting={vi.fn()}
+        onClose={vi.fn()}
+      />
+    )
+
+    const section = screen.getByTestId('custom-art-section')
+    expect(section).toBeDefined()
+    expect(screen.getByText('Subir imagen')).toBeDefined()
+
+    setCustomCardArtDataUrl('Lightning Bolt', 'data:image/jpeg;base64,CUSTOM')
+    await waitFor(() => {
+      expect(section.querySelector('img.custom-art-thumb')).not.toBeNull()
+    })
+    expect(section.querySelector('img.custom-art-thumb')!.getAttribute('src')).toBe('data:image/jpeg;base64,CUSTOM')
+
+    fireEvent.click(screen.getByLabelText('Quitar imagen'))
+    await waitFor(() => {
+      expect(section.querySelector('img.custom-art-thumb')).toBeNull()
+    })
+    expect(screen.getByText('Subir imagen')).toBeDefined()
   })
 })

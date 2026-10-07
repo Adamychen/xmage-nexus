@@ -30,7 +30,7 @@ export function PhaseStopGrid({ value, onToggle, idPrefix }: GridProps) {
               key={`${row.turn}-${phase.key}`}
               type="button"
               className={`phase-stop-btn ${value[row.turn][phase.key] ? 'active' : ''}`}
-              title={`${t('game', phase.labelKey as any)} (${t('game', row.titleKey)})`}
+              title={`${t('game', phase.labelKey)} (${t('game', row.titleKey)})`}
               data-testid={`${idPrefix}-stop-${row.turn === 'yourTurn' ? 'your' : 'opp'}-${phase.key}`}
               onClick={() => onToggle(row.turn, phase.key)}
             >

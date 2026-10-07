@@ -7,6 +7,8 @@
 
 > **Estado (verificado contra el código el 2026-09-22)**: ya construido → 1.1 Deck Tracker, 1.4 Evaluador de London Mulligan, 2.1 Deep Linking, el simulador de mano de muestra (parte de 4.3) y el selector de impresión del editor de mazos (parte de 5.2). Todo lo demás sigue sin empezar; la lista viva de pendientes está en `ROADMAP.md` §4.2, y este documento conserva la especificación de cada idea.
 
+> **Added 2026-10-06**: new module §6 (state-reading assistants), nothing built yet — the live pending list stays in `ROADMAP.md` §4.2.
+
 ---
 
 ## Índice de Módulos de Mejora
@@ -16,7 +18,8 @@
 3. [Ergonomía Táctil y Soporte para iPad / Tablets](#3-ergonomía-táctil-y-soporte-para-ipad--tablets)
 4. [Inteligencia en el Editor de Mazos (Scryfall + EDHREC)](#4-inteligencia-en-el-editor-de-mazos-scryfall--edhrec)
 5. [Inmersión Estética, Tapetes y "Bling" Digital](#5-inmersión-estética-tapetes-y-bling-digital)
-6. [Matriz de Priorización (Impacto vs. Esfuerzo)](#6-matriz-de-priorización-impacto-vs-esfuerzo)
+6. [State-Reading Assistants (Public Information Only)](#6-state-reading-assistants-public-information-only)
+7. [Matriz de Priorización (Impacto vs. Esfuerzo)](#7-matriz-de-priorización-impacto-vs-esfuerzo)
 
 ---
 
@@ -156,7 +159,9 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 * **Impacto**: ⭐⭐⭐⭐ (Aumenta exponencialmente el apego y la sensación de juego prémium).
 
 ### 5.2 Variantes Estéticas de Cartas (Showcase / Retro / Borderless)
-> ⚠️ **Parcial** — el editor de mazos permite cambiar la impresión de una carta (`ArenaCardStrip`, `e2e/printing-preview.spec.ts`); falta elegirla al inspeccionar una carta en partida y guardar la preferencia por jugador.
+> ✅ **Hecho (2026-10-05)** — el editor de mazos permite cambiar la impresión de una carta (`ArenaCardStrip`, `CardPrintingsModal`), la preferencia es local por jugador (`artPreferences.ts`) y el modal incluye la sección "Mi imagen" (`CustomCardArtSection`) para subir arte propio:
+> la imagen se recorta al ratio de carta y se guarda en IndexedDB (`customCardArt.ts`), gana sobre Scryfall en `useCardImageUrl`, y también se puede subir desde el inspector de cartas en partida (`CardInspector` → `Custom image…`). Solo la ve el jugador que la sube; no viaja por el protocolo.
+> Pendiente (opcional): buscador para personalizar cualquier carta del catálogo sin jugarla antes. El gestor de imágenes subidas está en Ajustes → Apariencia (`CustomCardArtManager`: miniaturas, borrado individual y masivo).
 * **Descripción**: Elección visual de versiones sin afectar al juego.
 * **Mecánica**:
   * Al hacer clic derecho o inspeccionar una carta en el mazo o en el campo, permitir elegir su arte alternativo de Scryfall (Marco Retro, Sin borde, Showcase temático).
@@ -165,7 +170,84 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 
 ---
 
-## 6. Matriz de Priorización (Impacto vs. Esfuerzo)
+## 6. State-Reading Assistants (Public Information Only)
+
+> Added 2026-10-06, **nothing built**. Four ideas that came out of reviewing what a web client can show
+> and the Swing client cannot: read the game state the server already sent and explain it. All four are
+> client-only — no fork view patch, no new server round trip, no optimistic state. Data sources verified
+> against `web/schema/contract.schema.json` on 2026-10-06.
+
+**Two constraints that apply to every idea in this module**
+
+1. **Public information only, and visibly on.** Each of these can be read as an edge over a human
+   opponent, so: only data the client legitimately receives, each one behind an opt-in setting, and any
+   *decision automation* (a suggested play, an auto-answer built on top of 6.1/6.2) stays out of play
+   against humans. Where the client cannot resolve something it must say "unknown", never guess (same
+   rule that killed the `SessionProbe` "answers no when it cannot ask" bug).
+2. **No optimistic state** (`ROADMAP.md` §6 rule 1). 6.4 in particular is a read mode over *recorded*
+   views, never a mutated live store: entering rewind must not leave an action sendable against a past state.
+
+### 6.1 "Who can answer?" (response window)
+* **What**: hovering a stack object shows who can respond right now — which of my cards could legally go
+  on top, which answers are visible on the other side, and what closes when this resolves.
+* **Data**: `GameView.stack`, `canPlayObjects`, `totalEffectsCount`, `gameCycle`, `priorityPlayerName`,
+  `priorityTime`, plus `CardView.playableStats` (`basicCastAbilities` / `basicManaAbilities` /
+  `basicPlayAbilities` / `other`), which reaches the client today and is **used nowhere** in `web/src`.
+* **Shape**: read-only annotation next to the existing stack row (`board/StackZone.tsx`), never a hint
+  about the best play. Complements smart stops (`game/smartStops.ts`), which decides *whether to stop*
+  and currently ignores mana-only `canPlayObjects`.
+* **Impact**: ⭐⭐⭐⭐⭐ — passing priority without answering is the most common mistake at every
+  skill level, and no client in this space shows the response window.
+* **Verify**: fake scenario with an instant-speed answer in hand + one `@targeting` spec asserting the
+  marker; gallery entry `prompt:response-window`.
+
+### 6.2 "Why can't I?" (blocked-action explainer)
+* **What**: clicking a card that looks playable but is locked says why: not enough mana (and which
+  colour is missing), no legal target, restriction from a rule, the activated ability already used this
+  turn, loyalty limit, or "you do not have priority".
+* **Data**: `CardView.playableStats`, `targets`, `canAttack` / `canBlock`, `manaCostLeftStr`,
+  `loyalty` / `startingLoyalty`, `PlayerView.manaPool`, `cardIcons` (the server already marks restrictions
+  there — goad and "must attack" arrive as `OTHER_HAS_RESTRICTIONS`), and the keyword dictionary in
+  `data/mtgKeywords.ts`.
+* **Shape**: one line of prose in the card inspector and in the tooltip, with the reason *kind* kept
+  separate from the wording so the 9 locales can translate it. Must not contradict the smart-mana
+  solver (`game/smartManaPayment.ts`): that one taps mana, this one explains a lock.
+* **Impact**: ⭐⭐⭐⭐⭐ — this is the question that makes people quit a new client.
+* **Verify**: unit tests over recorded frames (a locked and an unlocked copy of the same card), then a
+  gallery entry per reason kind.
+
+### 6.3 Layer / derived P-T inspector
+* **What**: "why is this 2/2 a 5/5 right now" — the chain of what is applying to it: which aura,
+  which equipment, which +1/+1 counters, which copy effect, which mutate layer, and the timestamps
+  (attachment order matters when two effects are removed together).
+* **Data**: `PermanentView.attachedTo` / `attachedToPermanent` / `attachments` / `copy` / `mutateView` /
+  `mutated` / `damage` / `counters`, `CardView.rules` and `CardView.originalPower` / `originalToughness`.
+  `board/ptTrend.ts` and `CardSlot` already show *that* P/T differs from the printed value; this adds
+  *what* makes it differ. Note `web/ENGINE_VIEW_TRIAGE.md`: the engine's `abilities` / `info` objects do
+  not travel in the DTO, so the chain is assembled from the attachment graph + rules text, and anything
+  unresolvable is shown as unknown.
+* **Impact**: ⭐⭐⭐⭐ — the deepest usability gap in modern card sets (Attachments, Mutate, Class
+  levels, Day/Night, Room).
+* **Verify**: reuse the `mechanics` / `pod` fixtures, which already publish mutated, copied and attached
+  groups.
+
+### 6.4 Board rewind (scrub the match by turn)
+* **What**: an opt-in ring that keeps the views it received, so you can scrub back to any earlier turn
+  and read the board as it was — for reviewing a line, for a screenshot of a moment, and as the substrate
+  for a future replay file (see `docs/enhancements.md` §2.4 and the replay note in `ROADMAP.md` §4.2).
+* **Data**: everything already in `GAME_UPDATE`; `web/src/net/frameBuffer.ts` is the hook, but it is bounded
+  for a different purpose (60 frames, whole frames only up to 8 KB in a shipped build, 64 KB in dev) and a
+  `GAME_UPDATE` is 200-800 KB, so this needs its own capture: store a per-turn snapshot per game, or a
+  delta against the previous one, and keep it out of the diagnostics bundle.
+* **Shape**: a separate read mode (own store slice), disabled against a live opponent by default; the
+  live game keeps streaming behind it and any input exits rewind first (constraint 2).
+* **Impact**: ⭐⭐⭐⭐ — post-game analysis is the thing players currently do in a spreadsheet.
+* **Verify**: unit tests on the capture/derivation (no browser), then replay two recorded frames as
+  turns 5 and 12 of one game and assert the rewind paints both.
+
+---
+
+## 7. Matriz de Priorización (Impacto vs. Esfuerzo)
 
 | # | Funcionalidad | Impacto | Complejidad técnica | Dependencias | Recomendación |
 |---|---|---|---|---|---|
@@ -178,6 +260,10 @@ El editor actual ya supera al de XMage gracias a Scryfall y los importadores. Po
 | **7** | **Gestos y Adaptación Táctil (iPad)** | 🟢 Muy Alto | 🔴 Alta (~4-5 días) | Pointer events / touch events en zonas | 📱 **Evolutivo estratégico** |
 | **8** | **Calculadora de Letal en Combate** | 🟡 Medio | 🟡 Media (~2 días) | Heurística en `CombatBar.tsx` | 💡 **QoL Competitivo** |
 | **9** | **Historial Gráfico de Vidas** | 🟡 Medio | 🟢 Baja (~1 día) | SVG timeline en `GameMenu` / fin partida | 📊 **Visual** |
+| **10** | **"Who can answer?" (6.1)** | 🟢 Muy Alto | 🟡 Media (~1-2 días) | Sólo cliente: `stack` + `canPlayObjects` + `playableStats` | 🏆 **Top de este módulo** |
+| **11** | **"Why can't I?" (6.2)** | 🟢 Muy Alto | 🟡 Media (~1 día) | Sólo cliente: `playableStats`, `cardIcons`, `mtgKeywords` | 🏆 **Top de este módulo** |
+| **12** | **Layer / derived P-T inspector (6.3)** | 🟢 Alto | 🔴 Alta (~2 días) | Grafo de adjuntos + texto `rules`; sin canal para `abilities` | 🔍 **Profundidad de reglas** |
+| **13** | **Board rewind (6.4)** | 🟢 Alto | 🔴 Alta (~2-3 días) | Captura propia de vistas; modo de lectura, no estado optimista | 📼 **Base del replay** |
 
 ---
 

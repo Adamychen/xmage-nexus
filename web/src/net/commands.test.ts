@@ -79,4 +79,63 @@ describe('commands', () => {
     expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'VIEW_SIDEBOARD', gameId: 'game-1', data: 'player-1' })
     expect(send).toHaveBeenCalledWith('sendPlayerAction', { action: 'VIEW_LIMITED_DECK', gameId: 'game-1', data: 'player-1' })
   })
+
+  describe('advisory proxy queries (XMage card DB)', () => {
+    const deck = { name: 'deck', cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }], sideboard: [] }
+
+    it('send the payload the proxy expects and return data', async () => {
+      const report = { ready: true }
+      send.mockResolvedValue({ ok: true, data: report })
+
+      expect(await commands.validateDeck(deck)).toBe(report)
+      expect(await commands.commanderEligibility(['Grist, the Hunger Tide'])).toBe(report)
+      expect(await commands.validateDeckFormat(deck, 'Variant Magic - Commander')).toBe(report)
+      expect(await commands.resolvePrintings(['Lightning Bolt'])).toBe(report)
+      expect(await commands.cardPrintings(['Lightning Bolt'])).toBe(report)
+
+      expect(send).toHaveBeenCalledWith('validateDeck', { deck })
+      expect(send).toHaveBeenCalledWith('commanderEligibility', { names: ['Grist, the Hunger Tide'] })
+      expect(send).toHaveBeenCalledWith('validateDeckFormat', { deck, deckType: 'Variant Magic - Commander', gameType: undefined })
+      expect(send).toHaveBeenCalledWith('resolvePrintings', { names: ['Lightning Bolt'], strategy: 'default', setCode: undefined })
+      expect(send).toHaveBeenCalledWith('cardPrintings', { names: ['Lightning Bolt'], limit: 0 })
+    })
+
+    it('return null when the proxy rejects the command or there is no data', async () => {
+      send.mockResolvedValue({ ok: false, error: 'unknown action' })
+      expect(await commands.validateDeck(deck)).toBeNull()
+      expect(await commands.commanderEligibility(['X'])).toBeNull()
+      expect(await commands.validateDeckFormat(deck)).toBeNull()
+      expect(await commands.resolvePrintings(['X'], 'oldest')).toBeNull()
+      expect(await commands.cardPrintings(['X'], 1)).toBeNull()
+      expect(await commands.fetchOnlineDeckJson('moxfield', 'abc')).toBeNull()
+
+      send.mockResolvedValue({ ok: true })
+      expect(await commands.validateDeck(deck)).toBeNull()
+      expect(await commands.cardPrintings(['X'])).toBeNull()
+    })
+  })
+
+  it('server lists fall back to [] when the command fails', async () => {
+    send.mockResolvedValue({ ok: false })
+    expect(await commands.getGameTypes()).toEqual([])
+    expect(await commands.getPlayerTypes()).toEqual([])
+    expect(await commands.getDeckTypes()).toEqual([])
+    expect(await commands.getTournamentTypes()).toEqual([])
+    expect(await commands.getDraftCubes()).toEqual([])
+    expect(await commands.getExpansionsWithBoosters()).toEqual([])
+    expect(await commands.getFinishedMatches()).toEqual([])
+    expect(await commands.getRoomChatId()).toBeUndefined()
+    expect(await commands.getTournament('t-1')).toBeNull()
+  })
+
+  it('getTournamentTypes accepts plain names or objects and drops empty ones', async () => {
+    send.mockResolvedValue({ ok: true, data: ['Booster Draft Elimination', { name: 'Sealed Elimination' }, { name: '' }, {}, null] })
+    expect(await commands.getTournamentTypes()).toEqual(['Booster Draft Elimination', 'Sealed Elimination'])
+  })
+
+  it('without a gateway it fails with an explicit error', async () => {
+    commands.setGateway(null)
+    expect(() => commands.getGateway()).toThrow('gateway no inicializado')
+    await expect(commands.validateDeck({ name: 'd', cards: [], sideboard: [] })).rejects.toThrow('gateway no inicializado')
+  })
 })

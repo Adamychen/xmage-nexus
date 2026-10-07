@@ -35,7 +35,10 @@ import {
   type TableFormatProfile,
 } from './joinDeckFit'
 import './JoinTableDialog.css'
+import StarterDecksOffer from '../decks/StarterDecksOffer'
+import { starterDeckItems } from '../decks/starterDecks'
 import Button from '../ui/Button'
+import Input from '../ui/Input'
 
 const SEARCH_THRESHOLD = 6
 
@@ -166,6 +169,18 @@ export default function JoinTableDialog({
   const [importName, setImportName] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
+
+  const startersFit = useMemo(
+    () => rankDecksForTable(starterDeckItems() as JoinDeck[], profile).some(({ fit }) => isGoodFit(fit)),
+    [profile],
+  )
+
+  const adoptStarterDecks = (decks: JoinDeck[]) => {
+    const merged = [...allDecks, ...decks]
+    setAllDecks(merged)
+    setSelectedDeck(pickInitialDeck(rankDecksForTable(merged, profile), profile, null))
+    setShowImport(false)
+  }
 
   const pick = (deck: JoinDeck) => {
     userPicked.current = true
@@ -323,12 +338,11 @@ export default function JoinTableDialog({
 
         {showImport && (
           <div className="join-inline-importer">
-            <input
-              type="text"
+            <Input
               value={importName}
               onChange={(e) => setImportName(e.target.value)}
               placeholder={t('decks', 'import_placeholder')}
-              className="import-name-input"
+              aria-label={t('decks', 'import_deck_name_label')}
             />
             <textarea
               value={importText}
@@ -353,6 +367,7 @@ export default function JoinTableDialog({
         )}
 
         <div className="join-deck-scroll" role="radiogroup" aria-label={t('lobby', 'join_pick_deck')}>
+          {allDecks.length === 0 && startersFit && <StarterDecksOffer onAdded={adoptStarterDecks} />}
           {allDecks.length === 0 && !showImport && (
             <div className="join-deck-empty">
               <Icon name="layers" size={28} />

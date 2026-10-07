@@ -1,28 +1,35 @@
 import { describe, expect, it } from 'vitest'
-import recorded from '../../fixtures/recorded/commander-4.json'
-import { commanderCastCount, commanderTax, commandersOf } from './commanders'
-import type { PlayerView } from '../net/types'
+import { commanderPlaysCount, commanderTax, commandersOf } from './commanders'
+import { commanderInfoRule } from '../__fixtures__/gameViews'
+import type { GameView } from '../net/types'
+import commanderZoneFrame from '../../fixtures/recorded/commander-zone.json'
+import commanderPodFrame from '../../fixtures/recorded/commander-4.json'
 
-describe('commanderCastCount', () => {
-  it('reads the CommanderInfoWatcher line the real server writes into rules', () => {
-    expect(commanderCastCount({ rules: ['<b>Commander</b> 1 time played from the command zone.'] })).toBe(1)
-    expect(commanderCastCount({ rules: ['Flying', '<b>Commander</b> 3 times played from the command zone.'] })).toBe(3)
+function playsPerPlayer(frame: unknown): number[] {
+  const gv = (frame as { gameView: GameView }).gameView
+  return (gv.players ?? []).map((p) => commandersOf(p)[0]?.castCount ?? -1)
+}
+
+describe('commanderPlaysCount', () => {
+  it('reads the count the server writes into the commander rules', () => {
+    expect(playsPerPlayer(commanderZoneFrame)).toEqual([0, 2])
+    expect(playsPerPlayer(commanderPodFrame)).toEqual([0, 0, 0, 1])
   })
 
-  it('is zero for a commander never cast', () => {
-    expect(commanderCastCount({ rules: ['<b>Commander</b>'] })).toBe(0)
-    expect(commanderCastCount({})).toBe(0)
-    expect(commanderCastCount(null)).toBe(0)
+  it('turns the recorded counts into the commander tax', () => {
+    const gv = (commanderZoneFrame as unknown as { gameView: GameView }).gameView
+    expect(commanderTax(commandersOf(gv.players?.[1])[0].castCount)).toBe(4)
   })
 
-  it('prefers an explicit numeric castCount', () => {
-    expect(commanderCastCount({ castCount: 2, rules: ['<b>Commander</b> 5 times played from the command zone.'] })).toBe(2)
+  it('ignores the commander damage lines that share the same prefix', () => {
+    const rules = ["<b>Commander</b> did 3 combat damage to player <font color='#20B2AA'>sim</font>."]
+    expect(commanderPlaysCount({ rules })).toBe(0)
   })
 
-  it('derives the tax from a recorded real frame', () => {
-    const players = (recorded as unknown as { gameView: { players: PlayerView[] } }).gameView.players
-    const counts = players.flatMap((p) => commandersOf(p).map((c) => c.castCount))
-    expect(counts).toContain(1)
-    expect(commanderTax(Math.max(...counts))).toBe(2)
+  it('matches the singular and plural sentences of the engine', () => {
+    expect(commanderPlaysCount({ rules: [commanderInfoRule(1)] })).toBe(1)
+    expect(commanderPlaysCount({ rules: [commanderInfoRule(5)] })).toBe(5)
+    expect(commanderPlaysCount({ rules: [commanderInfoRule(0)] })).toBe(0)
+    expect(commanderPlaysCount({})).toBe(0)
   })
 })

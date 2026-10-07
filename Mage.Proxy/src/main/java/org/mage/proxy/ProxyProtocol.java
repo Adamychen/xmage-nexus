@@ -25,6 +25,7 @@ final class ProxyProtocol {
     static final String ERR_PASSWORD = "PASSWORD";
     static final String ERR_SEAT = "SEAT";
     static final String ERR_WARMING_UP = "WARMING_UP";
+    static final String ERR_VERSION_MISMATCH = "VERSION_MISMATCH";
 
     private ProxyProtocol() {
     }

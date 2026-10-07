@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import type { DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import type { DeckValidationResult } from '../net/types'
-import { validateDeckForFormat, type ValidationIssue } from './formatRules'
+import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
+import { validateDeckForFormat, type DeckValidationReport, type ValidationIssue } from './formatRules'
 import { deckIssueKey, fixesForIssue, issueKeysFromReport, issuePrintings, type DeckFix } from './deckIssues'
 import { useTranslation } from '../i18n'
 
@@ -17,19 +17,48 @@ export interface ServerIssueItem {
   fixes: DeckFix[]
 }
 
-/** Validación de formato local + fusión con los issues del servidor. */
+/** Validación de formato (XMage si responde; local como respaldo) + fusión con los issues del servidor. */
 export function useDeckValidation(
   deck: DeckV2 | null,
   metaMap: Map<string, CardStripMeta>,
   serverIssues: DeckValidationResult | null,
   format: DeckV2['format'],
+  commanderEligibilityMap?: Map<string, boolean> | null,
+  formatIssues?: DeckFormatValidationResult | null,
 ) {
   const { t } = useTranslation()
 
-  const validationReport = useMemo(() => {
+  // Errores del DeckValidator OFICIAL de XMage (validateDeckFormat): texto
+  // crudo del servidor. Errores con carta => badge en la carta; resto => banner.
+  const xmageReport = useMemo(() => {
+    const deckLevel: ValidationIssue[] = []
+    const byCard = new Map<string, ValidationIssue>()
+    if (formatIssues && !formatIssues.valid) {
+      for (const e of formatIssues.errors) {
+        const text = e.group || e.message || e.type
+        const issue: ValidationIssue = {
+          type: 'xmage',
+          message: `${formatIssues.validator}: ${text}`,
+          cardName: e.cardName,
+          severity: 'error',
+        }
+        deckLevel.push(issue)
+        if (e.cardName) byCard.set(e.cardName, issue)
+      }
+    }
+    return { deckLevel, byCard }
+  }, [formatIssues])
+
+  // Con informe de XMage (proxy conectado y formato con validador) manda ese:
+  // es exactamente lo que decidirá el servidor. La validación local es solo
+  // el respaldo sin proxy (o para formatos sin validador en XMage, p.ej. Timeless).
+  const validationReport: DeckValidationReport = useMemo(() => {
     if (!deck) return { isValid: true, issues: [], cardIssues: new Map() }
-    return validateDeckForFormat(deck, metaMap)
-  }, [deck, metaMap, format])
+    if (formatIssues) {
+      return { isValid: formatIssues.valid, issues: xmageReport.deckLevel, cardIssues: new Map(xmageReport.byCard) }
+    }
+    return validateDeckForFormat(deck, metaMap, commanderEligibilityMap)
+  }, [deck, metaMap, format, commanderEligibilityMap, formatIssues, xmageReport])
 
   const mergedCardIssues = useMemo(() => {
     const merged = new Map(validationReport.cardIssues)
@@ -96,5 +125,5 @@ export function useDeckValidation(
     return out
   }, [serverIssues, t])
 
-  return { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList }
+  return { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList, xmageDeckIssues: xmageReport.deckLevel }
 }

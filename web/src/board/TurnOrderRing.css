@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 8px;
+  padding: var(--sp-1) var(--sp-2);
   background: rgb(var(--ink-rgb) / 0.94);
   border: 1px solid rgb(var(--brand-rgb) / 0.28);
   border-radius: var(--r-pill);
@@ -22,14 +22,14 @@
 .tor-seat-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .tor-seat {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1) var(--sp-2h);
   border-radius: var(--r-pill);
   background: var(--veil-1);
   border: 1.5px solid transparent;
@@ -112,7 +112,7 @@
   font-weight: 700;
   color: var(--fg-2);
   background: var(--shade-1);
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-sm);
 }
 
@@ -128,7 +128,7 @@
   text-transform: uppercase;
   color: var(--ink-0);
   background: var(--gold-300);
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
 }
 

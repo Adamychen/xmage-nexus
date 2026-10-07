@@ -1,5 +1,6 @@
-import { validateDeck } from '../net/commands'
-import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
+import { validateDeck, validateDeckFormat } from '../net/commands'
+import type { DeckFormatValidationResult, DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
+import type { DeckFormat } from './types'
 
 /** Cualquier mazo {name, cards, sideboard} con entradas DeckCard. */
 export interface DeckLike {
@@ -26,6 +27,45 @@ export async function fetchDeckIssues(deck: DeckLike): Promise<DeckValidationRes
 /** Clave estable de una entrada de mazo (cardName|setCode|cardNumber). */
 export function deckIssueKey(cardName: string, setCode: string, cardNumber: string): string {
   return `${cardName}|${setCode}|${cardNumber}`
+}
+
+/** Formato web -> deckType de config.xml del servidor (null: sin validador en XMage). */
+export function xmageDeckTypeFor(format: DeckFormat): string | null {
+  switch (format) {
+    case 'Standard': return 'Constructed - Standard'
+    case 'Modern': return 'Constructed - Modern'
+    case 'Pioneer': return 'Constructed - Pioneer'
+    case 'Legacy': return 'Constructed - Legacy'
+    case 'Vintage': return 'Constructed - Vintage'
+    case 'Pauper': return 'Constructed - Pauper'
+    case 'Historic': return 'Constructed - Historic'
+    case 'Freeform': return 'Constructed - Freeform'
+    case 'Commander': return 'Variant Magic - Commander'
+    case 'Brawl': return 'Variant Magic - Brawl'
+    case 'Oathbreaker': return 'Variant Magic - Oathbreaker'
+    case 'PennyDreadfulCommander': return 'Variant Magic - Penny Dreadful Commander'
+    case 'EuropeanHighlander': return 'Constructed - European Highlander'
+    case 'CanadianHighlander': return 'Constructed - Canadian Highlander'
+    default: return null // Timeless y demás sin equivalente en XMage
+  }
+}
+
+/**
+ * Valida el mazo con el DeckValidator OFICIAL de XMage (misma release que el
+ * servidor objetivo): tamaños, bans, comandante/partner, identidad de color.
+ * Devuelve null si el proxy no pudo validar (sin conexión, BD no disponible o
+ * formato sin validador) — advisory, nunca bloqueante.
+ */
+export async function fetchFormatIssues(deck: DeckLike, format: DeckFormat): Promise<DeckFormatValidationResult | null> {
+  try {
+    const deckType = xmageDeckTypeFor(format)
+    if (!deckType) return null
+    const report = await validateDeckFormat(deck as never, deckType)
+    return report && report.ready && report.supported ? report : null
+  } catch (e) {
+    console.warn('[deckIssues] validateDeckFormat no disponible:', e instanceof Error ? e.message : e)
+    return null
+  }
 }
 
 /** Set de claves con problemas (rechazadas o cargadas como otra carta). */

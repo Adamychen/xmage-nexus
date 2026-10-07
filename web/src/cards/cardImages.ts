@@ -30,7 +30,7 @@ const tokenPins = new Map<string, string>()
 const metaMemory = new Map<string, ScryfallCardInfo>()
 const metaInflight = new Map<string, Promise<ScryfallCardInfo | null>>()
 
-export function isAbilityCard(card: CardView): boolean {
+export function isAbilityCard(card: Pick<CardView, 'mageObjectType'>): boolean {
   const t = card.mageObjectType ?? ''
   return t.includes('Ability') || t.includes('ABILITY')
 }
@@ -77,9 +77,12 @@ export function getSourceCardName(card: CardView): string {
   return 'Habilidad'
 }
 
-export function isCardBackFace(card: CardView): boolean {
-  if ((card as any).isSecondCardFace === true || (card as any).isBackFace === true) return true
-  if ((card as any).transformed === true && !(card as any).isFrontFace) return true
+/** Face flags set on the client (split/flip renders, the inspector); the server view has none of them. */
+type FaceFlags = { isSecondCardFace?: boolean; isBackFace?: boolean; isFrontFace?: boolean }
+
+export function isCardBackFace(card: CardView & FaceFlags): boolean {
+  if (card.isSecondCardFace === true || card.isBackFace === true) return true
+  if (card.transformed === true && !card.isFrontFace) return true
   return false
 }
 

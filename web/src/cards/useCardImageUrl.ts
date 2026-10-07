@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CardView } from '../net/types'
 import { awaitImageUrl, cardKey, peekImageUrl } from './cardImages'
+import { customArtName, useCustomCardArt } from './customCardArt'
 
 interface Resolved {
   key: string | null
@@ -13,8 +14,13 @@ interface Resolved {
  * devuelve una imagen que corresponda a la clave actual: nunca la de la carta
  * anterior mientras carga la nueva. Tablero, pila, previsualizaciones y vuelos
  * comparten así resolución, caché y token/variante elegidos.
+ *
+ * Prioridad: si el usuario subió su propia imagen para esta carta
+ * (`customCardArt`) gana sobre Scryfall; en cuanto el arte está en memoria el
+ * override es síncrono y no se pide nada a la red.
  */
 export function useCardImageUrl(card: CardView | null | undefined, enabled = true): string | null {
+  const customArt = useCustomCardArt(enabled && card ? customArtName(card) : null)
   const key = enabled && card ? cardKey(card) : null
   const [resolved, setResolved] = useState<Resolved>(() => ({ key, url: peekImageUrl(key) }))
 
@@ -35,6 +41,7 @@ export function useCardImageUrl(card: CardView | null | undefined, enabled = tru
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
+  if (customArt) return customArt
   if (!key) return null
   if (resolved.key === key) return resolved.url
   return peekImageUrl(key)

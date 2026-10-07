@@ -1,8 +1,8 @@
 .command-zone {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 5px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1) var(--sp-1h);
   background: rgb(var(--ink-2-rgb) / 0.6);
   border-radius: var(--r-base);
   border: 1px dashed rgb(var(--gold-rgb) / 0.4);
@@ -16,13 +16,13 @@
 }
 
 .command-zone.multi-commander {
-  gap: 4px;
-  padding: 2px 4px;
+  gap: var(--sp-1);
+  padding: var(--sp-0h) var(--sp-1);
 }
 
 .command-zone.compact.multi-commander {
-  gap: 3px;
-  padding: 2px 3px;
+  gap: var(--sp-1);
+  padding: var(--sp-0h) var(--sp-1);
 }
 
 .command-zone.compact.multi-commander .commander-slot {
@@ -78,13 +78,9 @@
 .commander-tax-badge {
   position: absolute;
   bottom: 2px;
-  left: 2px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-0h);
-  padding: var(--sp-0h) var(--sp-0h) var(--sp-0h) var(--sp-1);
-  border-radius: var(--r-pill);
-  line-height: 1;
+  right: 2px;
+  padding: 1px var(--sp-1h);
+  border-radius: var(--r-xs);
   background: rgb(var(--err-rgb) / 0.9);
   border: 1px solid var(--veil-6);
   color: var(--fg-hi);
@@ -125,7 +121,7 @@
   right: 2px;
   min-width: 18px;
   height: 18px;
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
   border-radius: var(--r-base);
   background: var(--purple);
   color: var(--fg-hi);

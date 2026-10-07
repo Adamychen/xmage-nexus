@@ -8,6 +8,7 @@ import { ManaCost } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
+import { peekCustomCardArt } from '../cards/customCardArt'
 import './SampleHandModal.css'
 import Button from '../ui/Button'
 
@@ -50,6 +51,8 @@ export function buildDeckInstances(
   for (const c of cards) {
     const key = `${c.setCode}/${c.cardNumber}`
     const meta = metaMap.get(key) ?? metaMap.get(c.cardName.toLowerCase())
+    // Arte propio del usuario primero (las tiras ya lo cargaron en memoria).
+    const customArt = peekCustomCardArt(c.cardName)
     const isLand = (meta?.typeLine?.toLowerCase() ?? '').includes('land') ||
       ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes'].includes(c.cardName.toLowerCase())
 
@@ -59,8 +62,8 @@ export function buildDeckInstances(
         cardName: c.cardName,
         setCode: c.setCode,
         cardNumber: c.cardNumber,
-        artCropUrl: meta?.artCropUrl,
-        imageUrl: meta?.imageUrl,
+        artCropUrl: customArt ?? meta?.artCropUrl,
+        imageUrl: customArt ?? meta?.imageUrl,
         manaCost: meta?.manaCost,
         typeLine: meta?.typeLine,
         cmc: meta?.cmc,

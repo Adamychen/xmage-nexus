@@ -2,6 +2,7 @@ import * as cmds from '../../net/commands'
 import type { GameEndInfo, GameView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
+import { serverAutoAnswerActions } from '../../game/autoAnswers'
 import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending } from '../actions'
@@ -95,12 +96,13 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
 export function handleGameUpdate(method: string, objectId: string | null, data: unknown, embeddedGame: EmbeddedGame | null, s: Snapshot): void {
   if (method === 'GAME_INIT') clearFlights()
   if (objectId) saveActiveGame(objectId)
-  if (method === 'GAME_UPDATE_AND_INFORM' && (data as any)?.message) {
-    const waitingFor = waitingForName(String((data as any).message))
+  const informMessage = method === 'GAME_UPDATE_AND_INFORM' ? (data as { message?: string } | null)?.message : undefined
+  if (informMessage) {
+    const waitingFor = waitingForName(String(informMessage))
     if (waitingFor) setState({ waitingFor })
-    addLog('partida', (data as any).message, objectId ?? undefined)
-    sniffDungeonEntry((data as any).message, objectId ?? s.gameId)
-    sniffRollbackAnnounce((data as any).message, objectId ?? s.gameId)
+    addLog('partida', informMessage, objectId ?? undefined)
+    sniffDungeonEntry(informMessage, objectId ?? s.gameId)
+    sniffRollbackAnnounce(informMessage, objectId ?? s.gameId)
   }
   if (embeddedGame) {
     if (embeddedGame.players?.some((p) => p.controlled)) lastSeenGame = embeddedGame
@@ -125,6 +127,10 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
           void cmds.sendManaPaymentMode(action, objectId)
         }
         void cmds.updateManaConfirmPreference(getState().settings.manaPayment.confirmEmptyPool)
+        // respuestas Sí/No recordadas: las aplica el HumanPlayer de XMage
+        for (const { action, data } of serverAutoAnswerActions(getState().settings.autoAnswers ?? [])) {
+          void cmds.sendPlayerAction(action, objectId, data)
+        }
         const sessionStops = clonePhaseStops(getState().settings.phaseStops)
         patch.phaseStops = sessionStops
         void cmds.updatePreferences(sessionStops)

@@ -4,7 +4,7 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px;
+  padding: var(--sp-2);
   box-sizing: border-box;
 }
 
@@ -18,8 +18,8 @@
 .commander-damage-matrix {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 8px;
+  gap: var(--sp-2h);
+  padding: var(--sp-2);
   background: rgb(var(--ink-2-rgb) / 0.96);
   border: 1px solid rgb(var(--brand-rgb) / 0.22);
   border-radius: var(--r-md);
@@ -36,15 +36,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding-bottom: 6px;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-1h);
   border-bottom: 1px solid rgb(var(--brand-rgb) / 0.18);
 }
 
 .cdm-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .cdm-title {
@@ -63,21 +63,21 @@
   background: rgb(var(--err-rgb) / 0.12);
   border: 1px solid rgb(var(--err-rgb) / 0.28);
   border-radius: var(--r-xs);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
 }
 
 /* Alert banner */
 .cdm-alert-box {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .cdm-alert-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
   font-size: var(--fs-2xs);
   line-height: 1.2;
@@ -107,17 +107,17 @@
 .cdm-cards-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .cdm-player-card {
   background: var(--veil-1);
   border: 1px solid rgb(var(--brand-rgb) / 0.15);
   border-radius: var(--r-base);
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
   transition: all 0.15s;
 }
 
@@ -140,13 +140,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .cdm-player-identity {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   min-width: 0;
 }
 
@@ -171,26 +171,26 @@
 .cdm-player-life-pill {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
   font-weight: 700;
   color: var(--fg-2);
   background: var(--shade-1);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-sm);
 }
 
 .cdm-player-commanders {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .cdm-damage-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 2px;
+  gap: var(--sp-1h);
+  margin-top: var(--sp-0h);
 }
 
 .cdm-no-opponents {
@@ -202,10 +202,10 @@
 .cdm-damage-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
   background: var(--shade-1);
   border-radius: var(--r-sm);
-  padding: 4px 6px;
+  padding: var(--sp-1) var(--sp-1h);
   border: 1px solid var(--veil-1);
 }
 
@@ -213,13 +213,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .cdm-damage-source {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--sp-1);
   min-width: 0;
   overflow: hidden;
 }
@@ -309,7 +309,7 @@
 
 .cdm-table th,
 .cdm-table td {
-  padding: 5px 6px;
+  padding: var(--sp-1h) var(--sp-1h);
   text-align: center;
   border: 1px solid rgb(var(--brand-rgb) / 0.14);
   white-space: nowrap;
@@ -356,7 +356,7 @@
   color: var(--fg-2);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1h);
   min-width: 90px;
 }
 
@@ -404,7 +404,7 @@
 }
 
 .cdm-footer {
-  padding: 4px 2px 0;
+  padding: var(--sp-1) var(--sp-0h) 0;
   border-top: 1px dashed rgb(var(--brand-rgb) / 0.12);
 }
 

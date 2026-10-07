@@ -51,6 +51,10 @@ export class HumanHelper {
    *  combate sin declarar nada. */
   private skipCombat: boolean
   private skipAsks: boolean
+  /** Congela TODO el auto-pilot del helper (pases de prioridad, tierra, asks):
+   *  el test toma el control ventana a ventana. Los `send` explícitos (raw/
+   *  playCard/passPriority) siguen funcionando. */
+  private pausedPassing = false
 
   constructor(
     private readonly username: string,
@@ -59,6 +63,11 @@ export class HumanHelper {
   ) {
     this.skipCombat = opts.skipCombat ?? false
     this.skipAsks = opts.skipAsks ?? false
+  }
+
+  /** Suspende/reanuda el auto-pilot (ver pausedPassing). */
+  set paused(value: boolean) {
+    this.pausedPassing = value
   }
 
   get isStarted(): boolean {
@@ -133,6 +142,12 @@ export class HumanHelper {
     return this.send('sendPlayerAction', { gameId: this.gameId, action })
   }
 
+  /** Acción de gateway arbitraria del proxy (p. ej. cheatSetup en servidores
+   *  test-mode): mismo camino WS que la página, sin pasar por la UI. */
+  async raw(action: string, args: Record<string, unknown>): Promise<boolean> {
+    return this.send(action, args)
+  }
+
   // ============================ protocolo ============================
 
   private send(action: string, args: Record<string, unknown>): Promise<boolean> {
@@ -199,8 +214,13 @@ export class HumanHelper {
       method === 'GAME_GET_AMOUNT' ||
       method === 'GAME_SELECT_AMOUNT' ||
       method === 'GAME_CHOOSE_ABILITY' ||
+      method === 'GAME_ASK' ||
       (method === 'GAME_TARGET' && !/discard/i.test(String(data.message ?? '')))
     ) {
+      // GAME_ASK incluido: un fallback armado que dispare con un ask pendiente
+      // NO se pierde — el servidor lo consume como respuesta al ask (p.ej. el
+      // SÍ/NO del learn quedaba en "No" por el pase retardado de la ventana
+      // main; visto en tmp-learn-real 2026-10-06).
       this.mainWindow = null
       this.payingUntil = Date.now() + 3000
     }
@@ -216,6 +236,7 @@ export class HumanHelper {
   // ============================ bot del desarrollo ============================
 
   private handleSelect(data: EventDataLike) {
+    if (this.pausedPassing) return
     const gv = data.gameView
     if (!gv || !this.gameId) return
     // Fase de combate (ataque/bloqueo): invalidar SIEMPRE el fallback de la
@@ -282,14 +303,17 @@ export class HumanHelper {
     void this.send('sendPlayerBoolean', { gameId: this.gameId, value: false })
   }
 
-  /** Pasa la ventana main actual si sigue abierta ~1.5s después de abrirse.
-   *  NUNCA durante un pago de maná en curso: si el fallback coincide con un
-   *  pago (payingUntil activo), REINTENTA en bucle hasta que el pago termina y
-   *  la ventana se pasa (un fallback single-shot moría tras el pago y dejaba la
-   *  ventana main abierta para siempre, colgando la partida). */
+  /** Passes the current main window if it is still open ~1.5s after it opened.
+   *  NEVER during a mana payment: when the fallback lands on an ongoing payment
+   *  (payingUntil active) it RETRIES in a loop until the payment ends and the
+   *  window is passed (a single-shot fallback died after the payment and left
+   *  the main window open forever, hanging the game). The loop also honours
+   *  `pausedPassing`: a fallback armed before the pause would still fire at 1.5s,
+   *  and the test would then time the helper's round trip, not its own click. */
   private armFallback() {
     const winKey = this.mainWindow
     const check = () => {
+      if (this.pausedPassing) return
       if (this.mainWindow !== winKey || !this.gameId) return
       if (Date.now() > this.payingUntil) {
         void this.send('sendPlayerBoolean', { gameId: this.gameId, value: false })
@@ -324,7 +348,7 @@ export class HumanHelper {
   }
 
   private handleAsk(data: EventDataLike) {
-    if (!this.gameId || this.skipAsks) return
+    if (!this.gameId || this.skipAsks || this.pausedPassing) return
     const question = String(data.question ?? data.message ?? '')
     // XMage: false = mantener la mano en el mulligan; true = aceptar el resto.
     // El auto-keep del web ya responde el mulligan: responderlo aquí también

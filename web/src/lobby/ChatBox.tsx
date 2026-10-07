@@ -8,6 +8,7 @@ import { handleIgnoreCommand, isUserIgnored } from './ignoreList'
 import Icon, { type IconName } from '../ui/Icon'
 import type { CardView, ChatMessageEvent } from '../net/types'
 import { useTranslation, getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
+import type { CategoryT } from '../i18n/types'
 import './ChatBox.css'
 import Button from '../ui/Button'
 
@@ -36,7 +37,7 @@ function readyMarkerOf(m: ChatMessageEvent): ReadyMarker | null {
   return marker
 }
 
-function parseSystemEvent(text: string, t: (cat: any, key: any) => string): { icon: IconName; text: string } {
+function parseSystemEvent(text: string, t: CategoryT<'lobby'>): { icon: IconName; text: string } {
   const marker = parseReadyMarker(text)
   if (marker) {
     return {
@@ -230,7 +231,6 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
               <span
                 className="chat-from"
                 onClick={() => onUserClick?.(m.username)}
-                style={{ cursor: 'pointer' }}
                 title={`${t('lobby', 'view_profile_hint')} ${m.username}`}
               >
                 {m.username}:

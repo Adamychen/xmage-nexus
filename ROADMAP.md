@@ -1,7 +1,7 @@
 # Project Roadmap: XMage Nexus
 
 > **A Modern, Web-Based Digital Card Game Client for XMage**  
-> *Last updated: 2026-09-23*
+> *Last updated: 2026-10-06*
 
 ---
 
@@ -85,26 +85,13 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 > Everything that is not done, in one place. Supersedes the open-items table of `docs/history/plan7.md` §4 and the per-idea status of `docs/enhancements.md`. Verified against the code on 2026-09-21.
 
-### 4.1 Needs people or clean machines (not automatable)
-
-| # | Source | What | Note |
-|---|---|---|---|
-| V5 | `docs/history/plan5.md` / `plan4.md` §5.2 | Third live heuristic evaluator (keyboard + opponent view) | Live pass done 2026-09-29 (`docs/history/qa/p5-2-heuristic-findings-eval3.md`): keyboard covered (Escape bug found + fixed), opponent view still pending |
-| V6 | `plan5.md` / `plan4.md` §5.3, §5.5, §5.6 | 5-second test, rounds with real players, dogfooding | — |
-| V7 | `plan5.md` / `plan4.md` §6 | Install on clean Win / macOS / Ubuntu (SmartScreen / Gatekeeper) and end-to-end updater | The blockers noted earlier no longer apply: v0.2.0 ships `darwin-aarch64` and signed `.sig` bundles with `latest.json` |
-
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state), custom card images (part of 5.2, 2026-10-05: "Mi imagen" in the printings modal and the in-game card inspector uploads a per-card image stored locally in IndexedDB that overrides Scryfall art for that player only) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
 
 | Idea | Impact / effort | State |
 |---|---|---|
-| Tactical pings on the board (Commander / 4P) | Very high / ~2 d | Not started |
 | EDHREC suggestions in the deck builder | High / ~1-2 d | Done 2026-09-24 ("Suggestions" tab next to Search in the deck editor; EDHREC public JSON for the designated commander, cached, cards resolved via Scryfall collection, synergy badges, click/drag to add). 2026-09-29: DFC commanders use the front-face slug (Slicer), the panel consumes the whole EDHREC page (~277 cards for Slicer, parallel 75-name batches, per-name cache in memory + IndexedDB), and got the Arena filter bar (client-side matching of chips + Scryfall-syntax text), per-section sort and the shared card size |
-| Touch gestures / iPad ergonomics | Very high / ~4-5 d | Not started (only an audio unlock on `touchstart`) |
-| PWA (manifest + service worker) | High / small | Not started |
-| Lethal calculator and life-history graph | Medium / 1-2 d each | Not started (`CommanderDamageMatrix` is a different feature; see the combat-preview and life-history rows below) |
-| Streaming overlay, match-recap image, price estimator, extended goldfish, alt-art in game | Lower | Not started |
 
 Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 
@@ -112,9 +99,7 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 |---|---|---|---|
 | Game UI | Opponent-turn recap: highlight new/changed/died permanents when priority returns + one-line summary ("played X, attacked with Y, you lost 4") | Very high / ~1-2 d | Done 2026-09-23 (non-blocking strip at my turn start: summary + departed-card chips by destination; NEW/CHANGED marks on the board) |
 | Game UI | Smart stops (Arena-style): only stop when the server reports something playable | High / ~1 d | Done 2026-09-23 (opt-in toggle, off by default; ignores mana-only `canPlayObjects`; answers each `GAME_SELECT` once; validated against the local server by `e2e/smart-stops-real.spec.ts`) |
-| Game UI | Combat preview / lethal warning while declaring attackers (subsumes the lethal calculator above) | High / ~1-2 d | Not started |
 | Game UI | P/T tinted vs base (green up / red down), summoning-sickness marker, "entered this turn" glow | Medium / ~1 d | Done 2026-09-23 (per-component tint vs printed value with base in the tooltip; client-tracked entered-this-turn glow; sickness badge already existed) |
-| Game UI | Life-history graph inside `ActionFeed`; hovering an entry highlights the card on the board | Medium / ~1-2 d | Not started |
 | Game FX | Spell weight impact: high-CMC / mythic spells darken the board, shake and flash in the card's colours | High / ~1 d | Done 2026-09-23 (2026-09-25: fires when the spell resolves, not when it is cast; countered permanents and cancelled casts never slam) |
 | Game FX | Sequential combat strikes: when combat damage resolves, attackers lunge one after another at their blocker or at the player/planeswalker/battle they attack, each landing with the hit sound, sparks and a shake; dying combatants stay on screen until the sequence ends and damage/life numbers pop on each impact | High / small | Done 2026-09-25 (first-strike and regular damage steps animate separately; declaring attackers only shows the existing nudge) |
 | Game FX | Physical combat: impact particles on damage, distinct deaths (destroy = burn, exile = beam of light, token = pop/puff); the attacker lunge already existed | High / ~2 d | Done 2026-09-23 |
@@ -125,19 +110,35 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 | Game FX | Dynamic music: ambient layer that intensifies near lethal | Medium / ~1 d | Done 2026-09-23 |
 | Game FX | Cinematic victory/defeat screen with match stats (key card, turns, life taken/lost, spells cast, creatures destroyed) | Medium / ~1 d | Done 2026-09-23 |
 | Ease of use | "Your turn / response needed" browser notification + title/favicon badge when the tab is hidden | Very high / ~0.5 d | Done 2026-09-23 (toggle in Settings → Gameplay; permission asked on the first in-game click) |
-| Ease of use | Highlight lobby tables joinable with one of your legal decks | Medium / ~1 d | Not started |
-| Ease of use | First-game onboarding overlay (4-5 steps) + `?` shortcut cheat-sheet | Medium / ~1 d | Not started |
 | Ease of use | Explicit waiting state ("Waiting for X — thinking 0:23") | Medium / small | Done 2026-09-23 (action button names the actual priority holder, thinking clock + priority timer countdown, warn tint after 60 s) |
 | Ease of use | Smart mana payment: opt-in exact solver taps the sources for the cost being paid and keeps colours open for instants in hand (public information only) | High / ~1 d | Done 2026-09-23 (toggle in Settings → Gameplay and the game menu, off by default; skips Treasure-style sacrifice, restricted mana and convoke; a multi-spell turn scheduler is not built; validated against the local server by `e2e/smart-mana-real.spec.ts`) |
 | Game UI | Non-modal decision prompts: plain yes/no asks (pay life, optional costs, ward/cascade) answer from a dock bar; picks from your own hand (discards) resolve by clicking the highlighted hand with the grid as explicit fallback; any remaining dialog can be made transparent (Appearance) or peeked with Alt | High / ~1 d | Done 2026-09-29 (`feedbackModes/AskBar.tsx`, `game/handPick.ts`, `TargetBar` expand + `DialogShell`/`Modal` peek; `AskBar.test.tsx`, `handPick.test.ts`, `FeedbackDialog.test.tsx`, `selectors.test.ts`, `Modal.test.tsx`; fake e2e 281 passed, gallery entries `prompt:ask` / `prompt:discard-hand`) |
 | Game UI | Trigger order, second pass: pick in resolution order with drag & drop, auto-chain the remaining one-at-a-time prompts, show the accumulated stack and the targets/related objects that distinguish duplicate triggers, decouple "pick" from "remember first/last" and manage saved rules per row | High / ~1-2 d | Done 2026-09-29 (`TriggerOrderDialog` + `triggerOrderPlan.ts`: drag/▲▼ resolution order, "Apply order" chains the bottom-up prompts, sent/next rows + "Sending n/N", manual pick kept, pins only remember, target/related labels, hover preview; `TriggerOrderDialog.test.tsx` 13, `trigger-order.spec.ts` 3 fake). Consciously out: non-modal dock and 1..9 shortcuts (Alt-peek already exists); per-row rule management is impossible server-side (only RESET_ALL and add) |
 | Attract | Personal match history + per-deck stats (win rate by deck/format/opponent, IndexedDB) | Very high / ~2 d | Done 2026-09-23 ("My stats" sub-tab in the History tab; one record per finished game recorded on `GAME_OVER`, only when the player was seated and a winner is reported; deck name comes from the last equipped deck and format from the lobby table, so both can be missing; capped at 500 records) |
 | Attract | Draft pick helper using public 17lands ratings | High / ~2 d | Not started |
-| Attract | Featured live games in the lobby (top-ELO games on beta, one-click watch) | Medium / ~1 d | Not started |
+
+Ideas added 2026-10-06 — **state-reading assistants**, full spec in `docs/enhancements.md` §6. All four are client-only (they read views the server already sends). Two constraints gate the whole set, spelled out in that section: **public information only and visibly on** (opt-in setting, no decision automation against a human, "unknown" instead of a guess), and **no optimistic state** (§6 rule 1).
+
+| Area | Idea | Impact / effort | State |
+|---|---|---|---|
+| Game UI | Response window: hovering a stack object shows who can answer right now — which of my cards could legally go on top, which answers are visible on the other side, what closes when this resolves | Very high / ~1-2 d | Not started. Sources already on the wire: `stack`, `canPlayObjects`, `totalEffectsCount`, `gameCycle`, `priorityPlayerName` and `CardView.playableStats`, which reaches the client and is used nowhere in `web/src`. Read-only annotation, no best-play hint; complements `game/smartStops.ts` (which decides whether to stop, not what responds) |
+| Game UI | Blocked-action explainer ("why can't I?"): one line naming why a card that looks playable is locked — missing colour, no legal target, rule restriction, ability already used this turn, loyalty limit, no priority | Very high / ~1 d | Not started. Sources: `CardView.playableStats`, `targets`, `canAttack`/`canBlock`, `PlayerView.manaPool`, `cardIcons` (restriction markers such as goad already arrive as `OTHER_HAS_RESTRICTIONS`), `data/mtgKeywords.ts`. Reason *kind* kept separate from wording so all 9 locales translate it; must not contradict the smart-mana solver |
+| Game UI | Layer / derived P-T inspector: "why is this 2/2 a 5/5 right now" — the chain of aura / equipment / counters / copy / mutate layers applying to it, in attachment order | High / ~2 d | Not started. Sources: `attachedTo`/`attachedToPermanent`/`attachments`/`copy`/`mutateView`/`damage`/`counters`, `rules`, `originalPower`/`originalToughness`. `board/ptTrend.ts` already shows that P/T differs from printed; this adds what makes it differ. `web/ENGINE_VIEW_TRIAGE.md` records that the engine's `abilities`/`info` do not travel in the DTO, so an unresolvable link stays "unknown" |
+| Game UI | Board rewind: opt-in capture of the views a game sent + scrub to any earlier turn to read the board as it was (review a line, screenshot a moment), also the substrate for a future replay file | High / ~2-3 d | Not started. `net/frameBuffer.ts` is the hook but is bounded for diagnostics (60 frames, whole frames up to 8 KB shipped / 64 KB dev) while a `GAME_UPDATE` is 200-800 KB, so it needs its own capture (per-turn snapshot or delta). Must be a read mode over recorded views with its own slice, never a mutated live store; the server's own replay stays off (`saveGameActivated="false"`, "not working correctly yet" upstream), which is why a client-side recording is the only replay that can actually be tested |
 
 ### 4.3 UI polish debt
 
-From the 2026-09-21 audit (see the Work Log): spacing literals still to tokenize in `game/` + `board/` (~770, in-game UI), `system/`, `i18n/` and `styles.css` (~45); ~102 inline `style={{}}`; ~91 loose `<button>`; no `Field`/`Input` primitive; lobby list density mode; Construct pool sorting; translated backup labels in Decks. The style ratchet (`ui/styleTokens.test.ts`) keeps the migrated folders from regressing.
+RESOLVED 2026-10-06 (the list from the 2026-09-21 audit):
+
+- **Spacing literals**: 815 → 19 in `padding`/`margin`/`gap`. Exact scale values became `--sp-*` with no pixel change (712), the off-scale ones snapped to the nearest step (84; ties up, as in `921a9e4`) and the scale gained `--sp-3h: 14px`, which saves 40 sites from moving. The 19 left are layout measures on purpose (icon insets of 34–42 px, `--card-w` fallbacks, hero paddings). Gallery visual suite regenerated at 1920 after checking every diff (1-px shifts in badges, pills and the phase bar).
+- **Inline `style={{}}`**: 102 → 65, all of them data-driven (positions, widths, per-player colours, CSS variables). The static ones (cursors, flex rows, wizard hint boxes with literal colours, deck inspector titles) are classes on tokens.
+- **Raw `<button>`**: the ~90 left are bespoke controls (cards, piles, phase pills, mana orbs, nav items) that no primitive fits without overriding all of it; the 8 without `type` got `type="button"`; `ui/rawButtons.test.ts` now checks that every raw button declares its type, besides its count ratchet (91 → 90).
+- **`Field` / `Input` primitives** (`ui/Field.tsx`, `ui/Input.tsx`): label above, optional hint (muted or warn) and announced error outside the `<label>` and linked with `aria-describedby`, `group` mode for chip/radio sets. Create Table (all tabs), Login, Setup wizard and Import deck use them; their per-form label rules are gone, and the duplicated global `.import-name-input` (two sheets, last one won) is resolved.
+- **Lobby list density**: compact rows toggle next to the filters (`tables_density` in localStorage), one line per table at desktop widths, wraps on narrow screens (`e2e/lobby-density.spec.ts`).
+- **Construct pool sorting**: colour (WUBRG, gold, colourless, lands) / mana value (lands last) / type / name, `game/poolSort.ts` + tests.
+- **Backup labels in Decks**: they said "Export deck (N)" / "Import deck (JSON)" for backing up all decks and restoring a backup (and were English in ja/zhs); now they say what they do in the 9 languages, with tooltips and a restore count message.
+
+The style ratchet (`ui/styleTokens.test.ts`) keeps the counts from regressing.
 
 ### 4.4 Test-infrastructure risk
 
@@ -153,10 +154,6 @@ against localhost. Hardened while investigating: the `mage_e2e` MCP tool forces
 instead of committing to one at 500 ms — under beta's latency the app's late `JOINED_TABLE` jump
 left the lobby row stale and the old wait hung.
 
-Also observed: `trigger-order.spec.ts` › "remembering always first" fails at 4 parallel workers
-(2 of 3 full-suite runs) and passes isolated 3/3 — load flake, not a code bug.
-
-Remote CI has `retries: 0` and two runs in a row failed on different `e2e-fake` draft tests and on `self-test` `WATCHGAME` (timing under load, cleared by re-running the failed jobs). Open decision: `retries: 1` for CI only in `web/playwright.config.ts`. There is also an occasional unit flake in `store.test.ts` (GAME_OVER autosave, `getLatest` picking another test's log).
 
 RESOLVED 2026-09-28: `verify-player-leave.mjs` failed **deterministically** when it ran right after `multi-tenant-test.mjs` (all three retries, "partida congelada tras el CONCEDE (sin vistas)"), while passing 13/13 alone — reproduced with the pre-`RestoreIds` proxy build, so it was a pre-existing ordering sensitivity, not a regression. It now runs **first** in the layer, before any other script touches the proxy, and the layer is 9/9 (it still needs its own retry every so often: 82 s / attempt 2). What `multi-tenant-test` leaves behind is still unknown; the script remains the most sensitive one.
 
@@ -176,15 +173,17 @@ Emblem cards in Create Table (experimental `.dck` feature of the desktop client;
 
 ### 4.6 Public proxy operations
 
-Since 2026-09-26 a proxy restart no longer ends the games in progress: the proxy does not disconnect its sessions on shutdown, the server sees a lost connection and keeps the tables for 3 minutes, and a re-login through the new proxy restores the game with its pending prompt; the SIM seats of that account are logged in again from the on-disk roster (`--simRoster`) and keep playing (`scripts/verify-reconnect.mjs`, restart and SIM phases). Limit: the players must log in again within those 3 minutes (the web reconnects on its own while the tab is open). Not built: a drain mode (stop accepting new tables, restart when no game is running) or an in-app notice before a restart.
+Since 2026-09-26 a proxy restart no longer ends the games in progress: the proxy does not disconnect its sessions on shutdown, the server sees a lost connection and keeps the tables for 3 minutes, and a re-login through the new proxy restores the game with its pending prompt; the SIM seats of that account are logged in again from the on-disk roster (`--simRoster`) and keep playing (`scripts/verify-reconnect.mjs`, restart and SIM phases). Limit: the players must log in again within those 3 minutes (the web reconnects on its own while the tab is open).
 
-Since 2026-09-27 the host runs `xmage-status` (`ops/status/`, LAN-only on `:8790`, no tunnel): players online, history, statistics, proxy/playit logs, host metrics and restarts, built from the journal and the playit log without touching the proxy. Findings from its first run, still open:
+Since 2026-09-27 the host runs `xmage-status` (`ops/status/`, LAN-only on `:8790`, no tunnel): players online, history, statistics, proxy/playit logs, host metrics and restarts, built from the journal and the playit log without touching the proxy. Findings from its first run:
 
 | What | Why |
 |---|---|
 | RESOLVED 2026-09-28 — every failed login leaked 2-5 non-daemon threads. `Gateway.handleConnect` builds a `ProxyClient` per `connect` and its constructor schedules `lobbyTimer` (2 s) and `keepAliveTimer` (20 s) immediately, but the failed-login branch only did `unregisterSession`; the grace timer is never armed for a client that is not connected, and the process shutdown hook walks `byAccount`, where the client had already been removed — so nothing could ever release it. With the 172-retry login loop above that is ~1000-3000 threads per user, and non-daemon ones also keep the JVM from exiting | Fixed by `ProxyClient.dispose()` (the 6 `shutdownNow()` that `shutdown()` and `expireGrace()` duplicated), called from the failed-login branch and from `Gateway.onClose` when `isDisposable()` (no session, no relink, **no pending grace timer**, which runs on the timer we would be killing). Guarded by `ProxyClientFailedLoginTest`; the thread-count test reported 75 extra threads over 25 failed logins before the fix and 0 after |
-| `ProxyClient.expireGrace()` never emits `session_end` when the XMage link was already down (`!connected && !relinking` returns early) | The session is never released in `Activity`, so `/admin/status` lists that user forever (the dashboard hides users with no window for 15 min) and the session objects may leak until the proxy restarts. Same early-return that kept the threads alive: `dispose()` is a second way to reach the cleanup, and the `Activity.sessionEnd` call has to move before it |
-| 48 `Server error` / `Card not found - <card> - <set> - <number>` on join in three days | Imported decks with printings the server does not know still reach `joinTable`; `DeckValidation` could flag them before the join |
+| RESOLVED 2026-10-07 — 48 `Server error` / `Card not found - <card> - <set> - <number>` on join in three days | Imported decks with printings the server does not know still reached `joinTable`. Now an entry without a printing gets the XMage importer's printing at the proxy edge (`DeckJson.resolvePrinting`), imports take their printings from XMage (`resolvePrintings`), and the printings modal and the card search mark what the server's release lacks (`cardPrintings`). Confirmed on the host's journal (2026-09-23 → 2026-10-06): 2 `Card not found` in the whole window, none after 2026-09-27 |
+| NEW 2026-10-07 — how a game ended was not recorded | The journal had `joinGame` and `quitMatch` but no game end, so finished games could not be told from games left behind by a disconnect or an expired session. `GameActivity` now writes `game_start` (`role=player\|watcher`) and `game_end` (`result=won\|lost\|draw\|quit\|conceded\|watched\|unfinished`, `reason`, `turns`, `duration_s`, `players`, `cause` from `GameEndView`: timeout / idle / quit, own or an opponent's); `xmage-status` shows it as "How games end". A game still open when the proxy process restarts has a `game_start` and no `game_end`. Guarded by `GameActivityTest` |
+| NEW 2026-10-07 — a new upstream release silently stopped every login | Beta moved to 1.4.62-V1 on 2026-10-03 and the proxy (1.4.61) was refused for a day (59 `Wrong client version` logins, 0 games on 10-04) before anyone looked. Now: the proxy classifies it as `VERSION_MISMATCH`, the web explains it ("the server runs X, this proxy still runs Y") and stops retrying, `xmage-status` shows a red banner and pill from the first refused login, and `.github/workflows/upstream-release.yml` (`scripts/check-upstream-release.mjs`) fails every 6 h while magefree/mage has a newer `xmage_*` tag than the fork. Guarded by `ErrorClassifierTest`, `versionMismatch.test.ts`, `gateway-connect.test.ts` |
+| NEW 2026-10-07 — 60 % of the players who logged in never sat down | 105 of 174 never created or joined a table; 28 opened Create Table and left. Outside DEV a new player has no deck at all (`bundledDecks()` is empty), so the seat step and Join Table had nothing to offer. Create Table and Join Table now offer three starter decks with one click: Mono Red Burn and Mono White Humans (both validated as Modern by XMage) and Krenko goblins for Commander; each seat gets one that fits the table. Measure it in the journal: share of users with `getGameTypes` that reach `createTable`, and of logged-in users that reach `joinGame`. The catalog's three Commander lists were illegal (53, 75 and 84 cards, and Edgar ran a green land): completed to 100 and all three validated by XMage on 2026-10-07 |
 | RESOLVED 2026-09-28 — login success is ~34 %: most failures are `User already connected or your IP address changed` retry loops (one user: 172). The server hands a session to any login that presents its id as `restoreSessionId` (even from another address), but the proxy only kept that id inside the live `ProxyClient`: after a dispose or a restart it sent nothing and every retry was refused until the server expired the old session. The proxy now keeps the id per `host\|username` in memory and on disk (`RestoreIds`, `--restoreIds`, 10-min TTL like the SIM roster) and presents it on the next login; a `disconnect` (logout) drops it. Verified live: after a proxy restart the re-login logs `connected to server with restored session`. The web also counts the wait down on the connecting splash and, when it still fails (the account is open elsewhere), replaces the raw server text with an actionable message instead of looping silently |
 
 ### 4.6b Proxy hardening (2026-09-28, same pass as the thread leak)
@@ -240,18 +239,24 @@ for games to stop producing views.
 | RESOLVED — `dev.mjs restart` started the new proxy while the old still held the port | A fixed 1.5 s sleep instead of waiting: the new WebSocket server failed to bind (`BindException`) but the process stayed up answering HTTP and reporting `/ready`, so every script failed differently. It now waits for the ports to go down, and a bind failure is fatal in `Gateway.onError` instead of a half-alive proxy |
 | RESOLVED — `verify-player-leave` was flaky (still is a *sensitive* script, but no longer red) | Two separate causes: it logged no `disconnect` (fixed: every verify script logs out, `created=21 disposed=0` -> `created=47 disposed=46`), and its "no views in 20 s" watchdog called a healthy game frozen in a four-player lands-only FFA where the engine legitimately pushes nothing when the board does not change (the server itself only warns at 30 s). The pre-concede liveness precondition is gone and the script now runs **second** in the `verify` layer, before the scripts that hammer the server |
 
-The fork change is in `Mage.Common` (`SessionImpl`, `CustomThreadPool`) and **needs publishing to
-`origin/nexus`** before CI or a release build picks it up.
-
 ### 4.7 Connection resilience follow-ups
 
 The 2026-09-26 freeze/reconnect work is done: short drops, proxy restarts, out-of-order callbacks, the login race, the WebSocket deadlock, the proxy re-logging in by itself after losing the XMage server (`serverLink` banner instead of the login screen), a visible retry of the automatic re-login, the restore id on re-login, the resumable `seq` stream, the prompt cache kept until the answer, SIM seats across restarts, the short grace period for a closed tab (`leaving`, 45 s), the slower lobby poll during a game and the cheaper `recordFrame` (guarded by `scripts/verify-reconnect.mjs`, `OutboundLogTest`, `ReplayCacheTest`, `SimRosterTest`, `ProxyClientStreamTest`, `CallbackSequencerTest`, `GatewayCompressionTest`, `gateway-resilience.test.ts`). What is left:
 
 | What | Why |
 |---|---|
-| Persist the resume token (`streamId`, `seq`) across a page reload | A reload loses the in-memory board anyway, so it still rejoins with the latest state + prompt; events of the gap other than those are not shown after a reload |
+| RESOLVED 2026-10-06 — persist the resume token (`streamId`, `seq`) across a page reload | `pagehide` saves it per tab in `sessionStorage` (same proxy + account, 10 min max), the re-login after the reload presents it once and the proxy replays the frames of the gap; the page still rejoins for the board + prompt it lost. Logout forgets it. Guarded by `persistence.test.ts`, `gateway-connect.test.ts`, `Gateway.test.ts` and `e2e/reconnect-real.spec.ts` (reload mid-game → `resumed: true`) |
 | RESOLVED 2026-09-28 — the restore id survives a proxy restart only for the same address (in memory) | `RestoreIds` now persists the per-account session id (`--restoreIds`, default `<tmpdir>/mage-proxy-restore-<wsPort>.json`, ignored after 10 min); a re-login after an IP change **and** a restart presents it and the server hands the old session over |
-| After a proxy restart the first re-logins can take one to several minutes | Every session the old proxy left behind costs the server ~40 s per callback (`SESSION CALLBACK EXCEPTION - Unable to create socket`, fork `Session.fireCallback`), and a login broadcasts to the lobby, so it waits on all of them until their owners are back; measured 2 min with four stale sessions. The web shows the restore banner meanwhile. Fixable only in the server (upstream) |
+
+### 4.8 View fields the UI reads but the server never sends (2026-10-06)
+
+Found while removing `any` from the web client: the contract schema (`web/schema/contract.schema.json`) is the authority on what a view carries, and these reads went through casts.
+
+| What | Why |
+|---|---|
+| RESOLVED 2026-10-06 — commander tax was always +0 in a real game | `CommandZone` / `CommanderDamageMatrix` read `castCount`, which is in no view. No view field or proxy change was needed: the engine's `CommanderInfoWatcher` already writes the count into the commander's `rules` (`<b>Commander</b> 2 times played from the command zone.`, omitted at zero), upstream code, so beta sends it too. `commanderPlaysCount` parses it; fixtures and tests now carry that rule (`commanderInfoRule`) instead of the invented field, and `commanders.test.ts` checks the recorded `commander-zone` / `commander-4` frames (2 and 1 plays) |
+| RESOLVED 2026-10-06 — copies on the stack were only recognised by name | The `[Copia N]` / `[Copy` names only ever existed in fixtures; the server sends the card's own name. For a spell, `CardView.originalIsCopy` is `Spell.isCopy()` (`setOriginalValues` runs on `SpellAbility.getCharacteristics`, which returns the stack `Spell` itself; upstream code, not a fork patch), so `isCopyCard` reads it and the storm fixture marks its copies that way |
+| RESOLVED — two views of different games were diffed into animations | `useGameTransitions` compared `GameView.gameId`/`matchId`, which a `GameView` does not carry, so the guard never fired; it now takes the store's `gameId`, recorded with the view it came with (`START_GAME` switches the id before the new game's first view) |
 
 ---
 

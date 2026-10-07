@@ -8,6 +8,7 @@ import { FORMAT_CONFIGS } from './formatRules'
 import { useTranslation } from '../i18n'
 import { buildScryfallQuery } from './filterQuery'
 import { useArenaFilters } from './useArenaFilters'
+import { useXmageUnimplemented } from './useXmageImplemented'
 import './SearchPanel.css'
 
 export default function SearchPanel({
@@ -68,6 +69,8 @@ export default function SearchPanel({
   )
 
   const { cards, loading, loadingMore, hasMore, totalCards, error, throttled, loadMore, retry } = useScryfallSearch(scryfallQuery, searchLang, 350, sortOrder, sortDir)
+  const cardNames = useMemo(() => cards.map((c) => c.name), [cards])
+  const unimplemented = useXmageUnimplemented(cardNames)
 
   const handleSearchLangChange = (nextLang: string) => {
     setSearchLang(nextLang)
@@ -116,6 +119,7 @@ export default function SearchPanel({
       />
       <ArenaCardGrid
         cards={cards}
+        unimplemented={unimplemented}
         loading={loading}
         loadingMore={loadingMore}
         hasMore={hasMore}

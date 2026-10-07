@@ -55,6 +55,9 @@ export interface FeedbackPrompt {
   progress?: TargetProgress
   special?: boolean
   cards?: FeedbackCard[]
+  /** `options.autoAnswerMessage` de un GAME_ASK: la clave de las respuestas
+   *  automáticas del servidor (REQUEST_AUTO_ANSWER_TEXT_YES/NO). */
+  autoAnswerKey?: string
   isMulligan?: boolean
   isMulliganLondon?: boolean
   isStartingPlayer?: boolean

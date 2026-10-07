@@ -16,16 +16,17 @@ import { BasicLandAdder } from './BasicLandAdder'
 import { SampleHandModal } from './SampleHandModal'
 import { CardPrintingsModal } from './CardPrintingsModal'
 import { cardArtPreference } from '../cards/artPreferences'
+import { peekCustomCardArt } from '../cards/customCardArt'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
 import { exportTxt } from './parseDck'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { applySuggestions, fetchDeckIssues, type DeckFix } from './deckIssues'
+import { applySuggestions, fetchDeckIssues, fetchFormatIssues, type DeckFix } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
 import { withCommanderFirst, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
-import type { DeckValidationResult } from '../net/types'
+import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
 import { equippedDeckId } from '../state/persistence'
 import type { DeckCard } from '../lobby/decks'
@@ -34,8 +35,10 @@ import LanguageSelector from '../i18n/LanguageSelector'
 import { useDeckMetadata } from './useDeckMetadata'
 import { useDeckMutations } from './useDeckMutations'
 import { useDeckValidation } from './useDeckValidation'
+import { useCommanderEligibility } from './useCommanderEligibility'
 import DeckBuilderFooter from './DeckBuilderFooter'
 import DeckServerIssues from './DeckServerIssues'
+import DeckFormatIssues from './DeckFormatIssues'
 import DeckHoverPreview, { type HoverPreview } from './DeckHoverPreview'
 import './DeckBuilder.css'
 
@@ -56,6 +59,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [showImportModal, setShowImportModal] = useState(false)
   const [printingTargetCard, setPrintingTargetCard] = useState<DeckCard | null>(null)
   const [serverIssues, setServerIssues] = useState<DeckValidationResult | null>(null)
+  const [formatIssues, setFormatIssues] = useState<DeckFormatValidationResult | null>(null)
   const [leftTab, setLeftTab] = useState<'search' | 'suggestions'>('search')
   const [gridSize, setGridSize] = useState(50)
   const [showCurve, setShowCurve] = useState(() => {
@@ -97,8 +101,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   }, [])
 
   const { metaMap, setMetaMap, updateMetaForDeck, cmcNumberMap } = useDeckMetadata()
-  const { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList } = useDeckValidation(
-    deck, metaMap, serverIssues, format,
+  const commanderEligibilityMap = useCommanderEligibility(deck, wsAlive)
+  const { validationReport, mergedCardIssues, serverFlaggedKeys, serverIssueList, xmageDeckIssues } = useDeckValidation(
+    deck, metaMap, serverIssues, format, commanderEligibilityMap, formatIssues,
   )
 
   useEffect(() => {
@@ -164,12 +169,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const lastValidatedRef = useRef<DeckV2 | null>(null)
   useEffect(() => {
     setServerIssues(null)
+    setFormatIssues(null)
     void (async () => {
       const d = await storage.get(deckId)
       if (!d) return
       lastValidatedRef.current = d
       const report = await fetchDeckIssues(d)
       setServerIssues(report)
+      setFormatIssues(await fetchFormatIssues(d, d.format))
     })()
   }, [deckId, wsAlive])
 
@@ -178,6 +185,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     const timer = window.setTimeout(() => {
       lastValidatedRef.current = deck
       void fetchDeckIssues(deck).then((report) => setServerIssues(report))
+      void fetchFormatIssues(deck, deck.format).then(setFormatIssues)
     }, 1200)
     return () => window.clearTimeout(timer)
   }, [deck])
@@ -228,6 +236,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const mutations = useDeckMutations({
     deck, schedulePersist, metaMap, setMetaMap, updateMetaForDeck,
     serverFlaggedKeys, printingTargetCard, setPrintingTargetCard,
+    commanderEligibilityMap,
   })
 
   // Count map for Diamond indicators in collection grid
@@ -250,8 +259,12 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     rect?: DOMRect
   ) => {
     if (isDraggingRef.current) return
-    let img: string | null = meta?.imageUrl ?? null
-    let backImg: string | null = meta?.backImageUrl ?? null
+    // Arte propio del usuario: si existe, sustituye al de Scryfall en el preview
+    // (las tiras ya cargaron el nombre en memoria, así que peek es síncrono).
+    const hoverName = 'name' in card ? card.name : (card as DeckCard).cardName
+    const customArt = peekCustomCardArt(hoverName)
+    let img: string | null = customArt ?? meta?.imageUrl ?? null
+    let backImg: string | null = customArt ? null : (meta?.backImageUrl ?? null)
 
     if (!img) {
       if ('image_uris' in card || 'card_faces' in card) {
@@ -261,8 +274,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       } else {
         const dc = card as DeckCard
         const m = metaMap.get(`${dc.setCode}/${dc.cardNumber}`) ?? metaMap.get(dc.cardName.toLowerCase())
-        img = m?.imageUrl ?? null
-        backImg = m?.backImageUrl ?? null
+        img = customArt ?? m?.imageUrl ?? null
+        backImg = customArt ? null : (m?.backImageUrl ?? null)
       }
     }
 
@@ -290,7 +303,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       backUrl: backImg,
       x,
       y,
-      name: 'name' in card ? card.name : (card as DeckCard).cardName,
+      name: hoverName,
     })
   }
 
@@ -364,6 +377,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       </header>
 
       <DeckServerIssues issues={serverIssueList} onRepair={handleRepairIssue} />
+      <DeckFormatIssues issues={xmageDeckIssues} validator={formatIssues?.validator} />
 
       {/* Main Builder Body Split View */}
       <div className="deck-builder-body">
@@ -418,7 +432,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               onAdd={mutations.handleAddFromSearch}
               countMap={countMap}
               format={format}
-              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onHover={(c, r) => handleHoverCard(c, undefined, r)}
               onLeave={handleLeaveCard}
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
@@ -429,7 +443,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
               isCommanderFormat={isCommanderFormat}
               countMap={countMap}
               onAdd={mutations.handleAddFromSearch}
-              onHover={(c, r) => handleHoverCard(c as any, undefined, r)}
+              onHover={(c, r) => handleHoverCard(c, undefined, r)}
               onLeave={handleLeaveCard}
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
@@ -507,6 +521,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             isCommanderFormat={isCommanderFormat}
             format={format}
             metaMap={metaMap}
+            commanderEligibilityMap={commanderEligibilityMap}
             cardIssues={mergedCardIssues}
             layout={layout}
             onInc={mutations.handleInc}

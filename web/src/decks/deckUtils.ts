@@ -149,6 +149,10 @@ export function isPartnerCard(meta: PartnerMeta | undefined | null): boolean {
  * proxy en DeckValidation.normalizeForXMage): "can be your commander", o
  * legendaria criatura/vehículo/nave, o un trasfondo (Background).
  * Con meta ausente devuelve false: el llamante decide si puede validar.
+ *
+ * Nota de paridad: el proxy usa hasCardTypeForDeckbuilding de xmage (Grist lo
+ * sobreescribe para reportarse criatura); aquí espejamos ese resultado con el
+ * texto de oráculo (isCreatureOffBattlefield).
  */
 export function isCommanderEligible(meta: PartnerMeta | undefined | null): boolean {
   if (!meta) return false
@@ -157,6 +161,22 @@ export function isCommanderEligible(meta: PartnerMeta | undefined | null): boole
   if (typeLine.includes('background')) return true
   if (!typeLine.includes('legendary')) return false
   return typeLine.includes('creature') || typeLine.includes('vehicle') || typeLine.includes('spacecraft')
+    || isCreatureOffBattlefield(meta.oracleText)
+}
+
+/**
+ * CR 903.5a (actualización de reglas de nov. 2024): una carta que es criatura
+ * en zonas distintas del campo de batalla por una habilidad estática cuenta
+ * como carta de criatura para ser comandante. Wizards dejó de escribir "can be
+ * your commander" en esos textos (Grist, the Hunger Tide): ahora el texto dice
+ * "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature...".
+ */
+export function isCreatureOffBattlefield(oracleText: string | undefined | null): boolean {
+  if (!oracleText) return false
+  const t = oracleText.toLowerCase().replace(/[’']/g, "'")
+  if (!t.includes('creature')) return false
+  if (t.includes('in all zones except the battlefield')) return true
+  return /as long as [^.]*isn't on the battlefield/.test(t)
 }
 
 function metaKey(c: DeckCard): string {

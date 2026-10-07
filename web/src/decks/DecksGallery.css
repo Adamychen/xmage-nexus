@@ -186,3 +186,4 @@
   }
 }
 
+.decks-browser-pane { padding: var(--sp-4) var(--sp-4h); flex: 1; min-height: 0; overflow-y: auto; }

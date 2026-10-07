@@ -17,6 +17,7 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
 - `npm run dev` — Vite dev server (port 5173)
 - `npm run test` / `test:coverage` — vitest (pure logic)
 - `npm run typecheck` — `tsc -b --noEmit`
+- `npm run lint` — oxlint (`.oxlintrc.json`): fails on the rules of hooks, the correctness set and `any` in shipped code; missing effect dependencies are warnings ratcheted per file by `src/lintRatchet.test.ts` (lower the baseline with `UPDATE_LINT_BASELINE=1 npx vitest run src/lintRatchet.test.ts`)
 - `npm run build` — `tsc -b && vite build`
 - `npm run test:e2e` (alias `test:e2e:fake`) — Playwright against the
   **FakeServer** (`web/fixtures/fake.ts`): a Node WS server that speaks the real

@@ -101,7 +101,7 @@ export function DeckInspectorModal({
 
         <div className="deck-inspector-body">
           <div className="inspector-cards-column">
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div className="inspector-section-title">
               {t('game', 'sideboard_main')} ({mainTotal} {t('decks', 'total_cards')})
             </div>
             {displayCards.map((c) => {
@@ -117,7 +117,7 @@ export function DeckInspectorModal({
 
             {deck.sideboard.length > 0 && (
               <>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#a0aec0', textTransform: 'uppercase', marginTop: 12, marginBottom: 4 }}>
+                <div className="inspector-section-title inspector-section-title--sideboard">
                   {t('decks', 'sideboard')} (Sideboard: {sideTotal} {t('decks', 'total_cards')})
                 </div>
                 {displaySideboard.map((c) => {
@@ -138,7 +138,7 @@ export function DeckInspectorModal({
           <div className="inspector-info-column">
             {metaDesc && (
               <div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#718096' }}>
+                <span className="inspector-info-label">
                   {t('common', 'status')}
                 </span>
                 <p className="inspector-desc">{metaDesc}</p>
@@ -146,7 +146,7 @@ export function DeckInspectorModal({
             )}
 
             <div>
-              <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#718096' }}>
+              <span className="inspector-info-label">
                 {t('decks', 'mana_curve')}
               </span>
               <CurveChart cards={deck.cards} meta={metaMap} />

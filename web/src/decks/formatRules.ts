@@ -1,6 +1,7 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { commanderCardsFor, isCommanderEligible, isBackgroundCard, canPairCommanders } from './deckUtils'
+import { commanderEligibilityKey } from './useCommanderEligibility'
 import { t } from '../i18n'
 
 export interface FormatRuleConfig {
@@ -223,20 +224,42 @@ const BASIC_LANDS = new Set([
   'snow-covered wastes',
 ])
 
-const ANY_NUMBER_CARDS = new Set([
-  'relentless rats',
-  'shadowborn apostle',
-  'persistent petitioners',
-  'dragon\'s approach',
-  'rat colony',
-  'slime against humanity',
-  'templar knight',
-  'hare apparent',
-])
+/**
+ * Copia de `DeckValidator.maxCopiesMap` (XMage 1.4.62). Solo la usa la
+ * validación local, que es el respaldo sin proxy: con proxy manda el
+ * DeckValidator oficial (`validateDeckFormat`).
+ */
+const MAX_COPIES_OVERRIDES: Record<string, number> = {
+  'once more with feeling': 1,
+  'seven dwarves': 7,
+  nazgul: 9,
+  'cid, timeless artificer': Infinity,
+  "dragon's approach": Infinity,
+  'hare apparent': Infinity,
+  'persistent petitioners': Infinity,
+  'rat colony': Infinity,
+  'relentless rats': Infinity,
+  'shadowborn apostle': Infinity,
+  'slime against humanity': Infinity,
+  "sphinx's approach": Infinity,
+  'tempest hawk': Infinity,
+  'templar knight': Infinity,
+}
+
+/** Minúsculas y sin diacríticos ("Nazgûl" de Scryfall = "Nazgul" de XMage). */
+function foldCardName(name: string): string {
+  return name.trim().normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase()
+}
+
+/** Máximo de copias de una carta en un formato con `defaultMax` por carta. */
+export function maxCopiesFor(name: string, defaultMax: number): number {
+  const n = foldCardName(name)
+  if (BASIC_LANDS.has(n)) return Infinity
+  return MAX_COPIES_OVERRIDES[n] ?? defaultMax
+}
 
 export function isBasicOrUnlimited(name: string): boolean {
-  const n = name.trim().toLowerCase()
-  return BASIC_LANDS.has(n) || ANY_NUMBER_CARDS.has(n)
+  return maxCopiesFor(name, 0) === Infinity
 }
 
 export function isLimitedDeckType(deckType?: string): boolean {
@@ -377,7 +400,7 @@ export function getDefaultGameTypeForDeck(deckType: string, numPlayers = 2): str
 }
 
 export interface ValidationIssue {
-  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue'
+  type: 'deck_size' | 'sideboard_size' | 'copy_limit' | 'banned' | 'not_legal' | 'restricted' | 'color_identity' | 'commander' | 'server_issue' | 'xmage'
   message: string
   cardName?: string
   severity: 'error' | 'warning'
@@ -389,9 +412,20 @@ export interface DeckValidationReport {
   cardIssues: Map<string, ValidationIssue> // key: cardName or cardKey -> issue
 }
 
+/** Identidad de color (CR 903.4); metas antiguas en caché sin ella caen a los colores. */
+function identityOf(meta: CardStripMeta | undefined): string[] {
+  return meta?.colorIdentity ?? meta?.colors ?? []
+}
+
+/**
+ * Validación local de formato. Es el RESPALDO sin proxy: cuando el proxy
+ * responde `validateDeckFormat` (DeckValidator oficial de XMage),
+ * `useDeckValidation` usa ese informe en su lugar.
+ */
 export function validateDeckForFormat(
   deck: DeckV2,
-  metaMap: Map<string, CardStripMeta> = new Map()
+  metaMap: Map<string, CardStripMeta> = new Map(),
+  commanderEligibilityMap?: Map<string, boolean> | null,
 ): DeckValidationReport {
   const config = FORMAT_CONFIGS[deck.format] ?? FORMAT_CONFIGS.Freeform
   const issues: ValidationIssue[] = []
@@ -463,9 +497,17 @@ export function validateDeckForFormat(
       const metas = commanders.map((commander) =>
         metaMap.get(`${commander.setCode}/${commander.cardNumber}`) ?? metaMap.get(commander.cardName.toLowerCase()),
       )
-      for (const meta of metas) {
-        for (const c of meta?.colors ?? []) commanderColors.add(c.toUpperCase())
-        if (meta?.typeLine && !isCommanderEligible(meta)) {
+      for (let ci = 0; ci < commanders.length; ci++) {
+        const meta = metas[ci]
+        for (const c of identityOf(meta)) commanderColors.add(c.toUpperCase())
+        // Proxy primero (clases reales de xmage, p.ej. Grist); fallback a la
+        // heurística del oráculo con el comportamiento original (sin typeLine
+        // no se valida).
+        const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(commanders[ci].cardName))
+        const notEligible = fromProxy !== undefined
+          ? !fromProxy
+          : !!meta?.typeLine && !isCommanderEligible(meta)
+        if (notEligible) {
           issues.push({
             type: 'commander',
             message: `${t('decks', 'commander')}: ${t('decks', 'commander_not_eligible')}`,
@@ -509,28 +551,17 @@ export function validateDeckForFormat(
     const cardKey = `${c.setCode}:${c.cardNumber}:${name}`
 
     // Copy limit check
-    if (!isBasicOrUnlimited(name)) {
-      if (name.toLowerCase() === 'seven dwarves' && count > 7) {
-        const issue: ValidationIssue = {
-          type: 'copy_limit',
-          message: `${name}: ${t('decks', 'format_illegal')} (7/${count})`,
-          cardName: name,
-          severity: 'error',
-        }
-        issues.push(issue)
-        cardIssues.set(cardKey, issue)
-        cardIssues.set(name, issue)
-      } else if (name.toLowerCase() !== 'seven dwarves' && count > config.maxCopies) {
-        const issue: ValidationIssue = {
-          type: 'copy_limit',
-          message: `${name}: ${t('decks', 'format_illegal')} (${config.maxCopies}/${count})`,
-          cardName: name,
-          severity: 'error',
-        }
-        issues.push(issue)
-        cardIssues.set(cardKey, issue)
-        cardIssues.set(name, issue)
+    const maxCopies = maxCopiesFor(name, config.maxCopies)
+    if (count > maxCopies) {
+      const issue: ValidationIssue = {
+        type: 'copy_limit',
+        message: `${name}: ${t('decks', 'format_illegal')} (${maxCopies}/${count})`,
+        cardName: name,
+        severity: 'error',
       }
+      issues.push(issue)
+      cardIssues.set(cardKey, issue)
+      cardIssues.set(name, issue)
     }
 
     // Scryfall legality check
@@ -570,8 +601,8 @@ export function validateDeckForFormat(
     }
 
     // Color identity check for Commander / Brawl
-    if (config.hasCommander && commanderColors && meta?.colors) {
-      const cardColors = meta.colors.map((col) => col.toUpperCase())
+    if (config.hasCommander && commanderColors && meta) {
+      const cardColors = identityOf(meta).map((col) => col.toUpperCase())
       const invalidColors = cardColors.filter((col) => !commanderColors!.has(col))
       if (invalidColors.length > 0) {
         const issue: ValidationIssue = {

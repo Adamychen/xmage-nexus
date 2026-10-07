@@ -407,3 +407,4 @@ button.bracket-watch-btn:disabled {
   font-size: var(--fs-sm);
 }
 
+.tournament-modal-actions { display: flex; gap: var(--sp-2); }

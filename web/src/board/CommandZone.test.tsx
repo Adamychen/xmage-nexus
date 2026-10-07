@@ -2,6 +2,7 @@ import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import CommandZone from './CommandZone'
 import type { PlayerView } from '../net/types'
+import { commanderInfoRule } from '../__fixtures__/gameViews'
 
 describe('CommandZone', () => {
   it('renders nothing when there are no commanders or emblems', () => {
@@ -26,7 +27,7 @@ describe('CommandZone', () => {
           id: 'cmd-atrata',
           name: 'Etrata, Deadly Fugitive',
           manaValue: 3,
-          castCount: 2,
+          rules: [commanderInfoRule(2)],
           mageObjectType: 'COMMANDER',
         } as any,
       ],
@@ -81,14 +82,14 @@ describe('CommandZone', () => {
           id: 'cmd-kraum',
           name: "Kraum, Ludevic's Opus",
           manaValue: 5,
-          castCount: 1, // Tax +2
+          rules: [commanderInfoRule(1)],
           mageObjectType: 'COMMANDER',
         } as any,
         {
           id: 'cmd-tymna',
           name: 'Tymna the Weaver',
           manaValue: 3,
-          castCount: 3, // Tax +6
+          rules: [commanderInfoRule(3)],
           mageObjectType: 'COMMANDER',
         } as any,
       ],
@@ -132,21 +133,18 @@ describe('CommandZone', () => {
           id: 'cmd-thrasios',
           name: 'Thrasios, Triton Hero',
           manaValue: 2,
-          castCount: 0,
           mageObjectType: 'COMMANDER',
         } as any,
         {
           id: 'cmd-vialsmasher',
           name: 'Vial Smasher the Fierce',
           manaValue: 3,
-          castCount: 0,
           mageObjectType: 'COMMANDER',
         } as any,
         {
           id: 'companion-lurrus',
           name: 'Lurrus of the Dream-Den',
           manaValue: 3,
-          castCount: 0,
           mageObjectType: 'COMPANION',
           rules: ['Companion — Each permanent card in your starting deck has mana value 2 or less.'],
         } as any,

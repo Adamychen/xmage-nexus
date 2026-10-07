@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cardArtPreference } from '../cards/artPreferences'
+import { useCustomCardArt } from '../cards/customCardArt'
 import { fetchCardJson, hasPrinting, type CardRef, type ScryfallCardJson } from '../cards/scryfallCards'
 
 export function artUrlFromCardJson(data: ScryfallCardJson | null): string | null {
@@ -18,6 +19,8 @@ export function artUrlFromCardJson(data: ScryfallCardJson | null): string | null
  * límite de la API.
  */
 export function useCardArtUrl(card: CardRef | null | undefined): string | null {
+  // Arte propio del usuario primero (misma prioridad que en partida).
+  const customArt = useCustomCardArt(card?.cardName ?? null)
   const [url, setUrl] = useState<string | null>(null)
   const preferred = card ? cardArtPreference(card.cardName) : null
   const ref = card && preferred ? { ...card, setCode: preferred.setCode, cardNumber: preferred.cardNumber } : card
@@ -35,5 +38,6 @@ export function useCardArtUrl(card: CardRef | null | undefined): string | null {
       cancelled = true
     }
   }, [key])
+  if (customArt) return customArt
   return url
 }

@@ -5,6 +5,7 @@ import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntr
 import { clonePhaseStops } from '../game/phaseStops'
 import { meaningfulPlayables } from '../game/smartStops'
 import { manaPaymentActions } from '../game/manaPayment'
+import { serverAutoAnswerActions } from '../game/autoAnswers'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
 import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
 import { getLanguage } from '../i18n'
@@ -341,7 +342,7 @@ function persistClientSettings(settings: AppState['settings']) {
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   saveMusicSettings({ musicEnabled, musicVolume })
   saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle })
-  saveAutoAnswers(autoAnswers.map(({ pattern, answer }) => ({ pattern, answer })))
+  saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })
   savePhaseStops({ ...phaseStops })
@@ -360,6 +361,19 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   }
   setState({ settings: next })
   persistClientSettings(next)
+  if (key === 'autoAnswers') syncAutoAnswersToServer()
+}
+
+/**
+ * Deja las respuestas automáticas del servidor (HumanPlayer de XMage) igual que
+ * las reglas locales. Solo jugando: un espectador no tiene HumanPlayer.
+ */
+export function syncAutoAnswersToServer(gameId = getState().gameId) {
+  const s = getState()
+  if (!gameId || !(s.game?.players ?? []).some((p) => p.controlled)) return
+  for (const { action, data } of serverAutoAnswerActions(s.settings.autoAnswers ?? [])) {
+    void cmds.sendPlayerAction(action, gameId, data)
+  }
 }
 
 /** Aplica un preset de automatización completo (maná, auto-pass, paradas) y lo empuja al servidor si hay partida. */

@@ -8,6 +8,7 @@ import Icon from '../ui/Icon'
 import { confirmDialog } from '../ui/confirmDialog'
 import { useTranslation } from '../i18n'
 import './BasicLandAdder.css'
+import type { CardStripMeta } from './ArenaCardStrip'
 
 export function BasicLandAdder({
   cards,
@@ -18,7 +19,7 @@ export function BasicLandAdder({
   onApplySuggestedLands,
 }: {
   cards: DeckCard[]
-  metaMap: Map<string, any>
+  metaMap: Map<string, CardStripMeta>
   format: string
   onAddLand: (preset: BasicLandPreset) => void
   onRemoveLand: (preset: BasicLandPreset) => void

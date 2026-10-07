@@ -147,6 +147,10 @@
   color: var(--fg-2);
   line-height: 1.4;
 }
+.wizard-hint-box--spaced { margin-bottom: var(--sp-2); }
+.wizard-hint-box--info { border-color: var(--brand-line); color: var(--brand-fg); }
+.wizard-hint-box--warn { border-color: var(--warn-line); color: var(--warn); }
+.wizard-hint-box--err { border-color: var(--err-line); color: var(--err); }
 
 .password-field-wrap {
   display: flex;
@@ -175,17 +179,6 @@
   gap: var(--sp-4);
 }
 
-.create-table-dialog label:not(.ui-check) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1h);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--fg-3);
-  letter-spacing: 0.04em;
-}
-
 .create-table-dialog input[type="text"],
 .create-table-dialog input[type="password"],
 .create-table-dialog input[type="number"] {
@@ -211,17 +204,6 @@
   gap: var(--sp-3);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1h);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--fg-3);
-  letter-spacing: 0.04em;
-}
-
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -240,6 +222,10 @@
   border: 1px solid rgb(var(--brand-rgb) / 0.3);
   border-radius: var(--r-md);
 }
+.create-restrictions-box--brand { background: rgb(var(--brand-rgb) / 0.08); border-color: rgb(var(--brand-rgb) / 0.25); }
+.create-field-note { text-transform: none; font-weight: 400; color: var(--fg-3); }
+.create-table-dialog .create-number-input { width: 72px; }
+.create-edh-power { margin-top: var(--sp-2h); }
 
 .multiplayer-box-title {
   font-size: var(--fs-2xs);
@@ -268,13 +254,6 @@
   text-transform: uppercase;
 }
 
-.create-field-hint {
-  font-size: var(--fs-3xs);
-  font-weight: 500;
-  color: var(--fg-2);
-  text-transform: none;
-  letter-spacing: normal;
-}
 
 /* Seats Section */
 .create-seats-section {
@@ -292,6 +271,12 @@
   border: 1px solid var(--veil-2);
   border-radius: var(--r-md);
 }
+.create-seat-box--seat { background: rgb(var(--ink-2-rgb) / 0.5); }
+.create-table-dialog .create-seat-select { width: auto; }
+.create-seat-select--type { min-width: 140px; }
+.create-seat-select--skill { min-width: 80px; }
+.create-seats-shortcuts { margin-top: var(--sp-2h); border-top: 1px dashed var(--veil-2); padding-top: var(--sp-2h); }
+.create-seats-sim-deck { margin-top: var(--sp-2); }
 
 .seat-box-header {
   display: flex;

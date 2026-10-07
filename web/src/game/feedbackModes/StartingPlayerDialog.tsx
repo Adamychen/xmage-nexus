@@ -22,7 +22,7 @@ export default function StartingPlayerDialog({ form }: { form: UseFeedbackForm }
     >
       <div className="starting-player-options">
         {prompt.options.map((option) => (
-          <button
+          <button type="button"
             key={option.id}
             className="starting-player-btn"
             disabled={busy}

@@ -135,3 +135,4 @@
   flex: 1;
 }
 
+.deck-browser-colors { display: flex; gap: var(--sp-1); align-items: center; }

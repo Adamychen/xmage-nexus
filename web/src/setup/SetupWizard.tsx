@@ -12,6 +12,7 @@ import { sortedFlags, countryName, type ServerPreset } from '../lobby/flags'
 import { loadConn, saveConn, type ConnectionInfo } from '../state/persistence'
 import { markSetupDone, SETUP_CONN_EVENT } from './setupFlag'
 import './SetupWizard.css'
+import Field from '../ui/Field'
 
 type StepId = 'language' | 'identity' | 'server' | 'board' | 'soundplay' | 'done'
 
@@ -160,26 +161,28 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                 <span className="setup-avatar-flag"><CountryFlag flagName={flagName} /></span>
               </button>
               <div className="setup-identity-fields">
-                <label className="setup-field">
-                  {t('login', 'username')}
-                  <input value={username} onChange={(e) => { setUsername(e.target.value); setIdentityError(false) }} maxLength={14} required data-testid="setup-username" autoComplete="username" />
-                  {identityError && <span className="setup-field-error" data-testid="setup-username-error">{t('setup', 'username_required')}</span>}
-                </label>
-                <label className="setup-field">
-                  {t('login', 'password')}
+                <Field
+                  className="setup-field"
+                  label={t('login', 'username')}
+                  error={identityError && <span data-testid="setup-username-error">{t('setup', 'username_required')}</span>}
+                >
+                  <input value={username} onChange={(e) => { setUsername(e.target.value); setIdentityError(false) }} maxLength={14} required aria-invalid={identityError || undefined} data-testid="setup-username" autoComplete="username" />
+                </Field>
+                <Field
+                  className="setup-field"
+                  label={t('login', 'password')}
+                  hint={passwordDisabledOnBeta && t('login', 'password_disabled_beta')}
+                  hintTone="warn"
+                >
                   <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" disabled={passwordDisabledOnBeta} data-testid="setup-password" />
-                  {passwordDisabledOnBeta && (
-                    <span className="setup-field-hint">{t('login', 'password_disabled_beta')}</span>
-                  )}
-                </label>
-                <label className="setup-field">
-                  {t('login', 'flag')}
+                </Field>
+                <Field className="setup-field" label={t('login', 'flag')}>
                   <select value={flagName} onChange={(e) => setFlagName(e.target.value)} data-testid="setup-flag">
                     {sortedFlags(lang).map((f) => (
                       <option key={f.code} value={f.code}>{f.emoji} {countryName(f.code, lang)}</option>
                     ))}
                   </select>
-                </label>
+                </Field>
               </div>
             </div>
           </>
@@ -204,19 +207,16 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
             </div>
             {server.preset === 'custom' && (
               <div className="setup-network">
-                <label className="setup-field">
-                  {t('login', 'proxy')}
+                <Field className="setup-field" label={t('login', 'proxy')}>
                   <input value={server.proxyHost} onChange={(e) => setServer((s) => ({ ...s, proxyHost: e.target.value }))} data-testid="setup-proxy-host" />
-                </label>
+                </Field>
                 <div className="setup-network-row">
-                  <label className="setup-field">
-                    {t('login', 'xmage_server')}
+                  <Field className="setup-field" label={t('login', 'xmage_server')}>
                     <input value={server.serverHost} onChange={(e) => setServer((s) => ({ ...s, serverHost: e.target.value }))} data-testid="setup-server-host" />
-                  </label>
-                  <label className="setup-field setup-field-port">
-                    {t('login', 'port')}
+                  </Field>
+                  <Field className="setup-field setup-field-port" label={t('login', 'port')}>
                     <input value={server.port} onChange={(e) => setServer((s) => ({ ...s, port: e.target.value }))} type="number" data-testid="setup-port" />
-                  </label>
+                  </Field>
                 </div>
               </div>
             )}

@@ -3,7 +3,7 @@ import { sendValue } from './useFeedbackForm'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { useTranslation, dynamicT } from '../i18n'
 import { localizeOptionLabel, localizeServerMessage } from './serverMessageTranslation'
 import './VotingDialog.css'
 
@@ -39,33 +39,33 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
       kickerIcon="check"
       kickerLabel={<>{t('dialogs', 'voting_title').toUpperCase()} {stepLabel}</>}
       title={<FormattedText text={prompt.title} />}
-      message={<FormattedText text={localizeServerMessage(prompt.message, t as any)} />}
+      message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
       sectionProps={{ 'aria-describedby': 'voting-hint' }}
     >        {hasTwo ? (
           <div className="voting-options">
-            <button
+            <button type="button"
               className="voting-btn voting-left"
               disabled={busy}
               onClick={() => choose(left.value)}
             >
               <span className="voting-btn-icon"><Icon name="check" size={16} /></span>
-              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(left.label, t as any)} /></span>
+              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(left.label, dynamicT(t))} /></span>
             </button>
             <span className="voting-vs">VS</span>
-            <button
+            <button type="button"
               className="voting-btn voting-right"
               disabled={busy}
               onClick={() => choose(right.value)}
             >
               <span className="voting-btn-icon"><Icon name="circle" size={15} /></span>
-              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(right.label, t as any)} /></span>
+              <span className="voting-btn-label"><FormattedText text={localizeOptionLabel(right.label, dynamicT(t))} /></span>
             </button>
           </div>
         ) : (
           <div className="voting-options voting-many">
             {prompt.options.map((opt) => (
-              <button key={opt.id} className="voting-btn" disabled={busy} onClick={() => choose(opt.value)}>
-                <FormattedText text={localizeOptionLabel(opt.label, t as any)} />
+              <button type="button" key={opt.id} className="voting-btn" disabled={busy} onClick={() => choose(opt.value)}>
+                <FormattedText text={localizeOptionLabel(opt.label, dynamicT(t))} />
               </button>
             ))}
           </div>

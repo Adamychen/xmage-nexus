@@ -1,5 +1,5 @@
 type TranslationFn = (
-  ns: 'game' | 'dialogs' | 'common' | 'errors' | 'mana',
+  ns: 'game' | 'dialogs' | 'common' | 'errors',
   key: string,
   params?: Record<string, string | number>
 ) => string

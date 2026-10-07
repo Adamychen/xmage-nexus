@@ -3,9 +3,7 @@ import { blockLocalizedEnrich } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
-import { dismissSetupWizard, startGame } from './support/start-game'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
+import { dismissSetupWizard } from './support/start-game'
 
 test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
@@ -248,7 +246,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
       await page.locator('[data-testid="decks-import-cta"]').click()
       await expect(page.locator('.deck-import-modal')).toBeVisible()
-      await page.locator('.import-name-input').fill('Mi Test DCK')
+      await page.getByLabel(/Nombre del mazo|Deck name/i).fill('Mi Test DCK')
       await page.locator('.deck-import-textarea').fill('NAME:Mi Test DCK\n4 [M10:146] Lightning Bolt\n20 [LEA:292] Mountain\nSB: 2 [4ED:218] Red Elemental Blast')
       await page.locator('[data-testid="import-submit-btn"]').click()
       // the name also shows in the footer once the new deck is selected

@@ -6,6 +6,7 @@ import { DEFAULT_BOOSTER_SETS, parseLimitedSetCodes, type BoosterSetItem } from 
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
 import './DraftSetsSelector.css'
+import Field from '../../ui/Field'
 
 interface DraftSetsSelectorProps {
   draftSetsRaw: string
@@ -197,17 +198,14 @@ export default function DraftSetsSelector({
 
       {/* Code input field */}
       <div className="draft-sets-manual-wrap">
-        <label className="draft-sets-manual-label-row">
-          <span className="draft-sets-manual-label">
-            <Icon name="tag" size={12} /> {t('lobby', 'draft_sets_manual_toggle')}:
-          </span>
+        <Field label={<><Icon name="tag" size={12} /> {t('lobby', 'draft_sets_manual_toggle')}</>}>
           <input
             value={draftSetsRaw}
             onChange={(e) => onChange(e.target.value)}
             placeholder={t('lobby', 'placeholder_draft_sets')}
             className="draft-sets-manual-input-el"
           />
-        </label>
+        </Field>
       </div>
     </div>
   )

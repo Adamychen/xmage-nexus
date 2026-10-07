@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Chip from '../ui/Chip'
+import type { CardView, PermanentView } from '../net/types'
 import type { ActionFeedItem } from './gameEventParser'
 import { awaitImageUrl } from '../cards/cardImages'
 import Icon, { type IconName } from '../ui/Icon'
@@ -9,7 +10,7 @@ import './ActionFeedCard.css'
 
 interface ActionFeedCardProps {
   item: ActionFeedItem
-  onHover?: (card: any, rect?: DOMRect) => void
+  onHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
 }
 
 const TYPE_ICONS: Record<string, IconName> = {
@@ -36,7 +37,8 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
   useEffect(() => {
     if (!item.cardName) return
     let cancelled = false
-    void awaitImageUrl({ name: item.cardName } as any).then((url) => {
+    // a feed line only knows the card's name, which is all the image lookup needs
+    void awaitImageUrl({ name: item.cardName } as CardView).then((url) => {
       if (!cancelled && url) setImgUrl(url)
     })
     return () => {

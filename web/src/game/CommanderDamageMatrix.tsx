@@ -17,6 +17,7 @@ interface CommanderInfo {
   ownerId: string
   ownerName: string
   card: CardView
+  castCount: number
 }
 
 function extractDamage(target: PlayerView, commander: CommanderInfo, game?: GameView | null): number {
@@ -143,6 +144,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             ownerId: p.playerId,
             ownerName: p.name,
             card: i.card,
+            castCount: i.castCount,
           })
         })
     })
@@ -246,7 +248,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                 {playerCommanders.length > 0 && (
                   <div className="cdm-player-commanders">
                     {playerCommanders.map((cmd) => {
-                      const castCount = commanderCastCount(cmd.card)
+                      const castCount = cmd.castCount
                       return (
                         <Chip key={cmd.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
                           {cmd.name}

@@ -3,9 +3,10 @@ import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
 import { clonePhaseStops } from '../game/phaseStops'
-import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, type ConnectionInfo } from './persistence'
+import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
+import { versionMismatchOf, type VersionMismatch } from '../net/versionMismatch'
 import type { ProxyMessage, ServerLinkEnvelope } from '../net/types'
 
 let gateway: Gateway | null = null
@@ -46,6 +47,10 @@ function isResumed(data: unknown): boolean {
   return typeof data === 'object' && data !== null && (data as { resumed?: unknown }).resumed === true
 }
 
+function versionMismatchMessage(m: VersionMismatch): string {
+  return t('errors', 'server_version_mismatch', { server: m.server ?? '?', proxy: m.proxy ?? '?' })
+}
+
 /** Automatic re-login attempts after the socket to the proxy came back. */
 export const RELOGIN_RETRIES = 6
 const RELOGIN_BASE_DELAY_MS = 1500
@@ -79,6 +84,11 @@ async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promi
   }
   // the socket dropped again: its next onOpen starts over
   if (!g.isOpen) return
+  const mismatch = versionMismatchOf(res)
+  if (mismatch) {
+    setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, error: versionMismatchMessage(mismatch) })
+    return
+  }
   if (attempt + 1 >= RELOGIN_RETRIES) {
     setState({
       link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false,
@@ -188,6 +198,12 @@ export function attachGateway(g: Gateway) {
       await relogin(g, s.conn, 0)
     }
   }
+  g.events.onPageHide = () => {
+    const s = getState()
+    const token = g.resumeToken()
+    if (gateway !== g || !token || !s.conn || s.phase === 'idle' || s.phase === 'connecting') return
+    saveResumeToken(token, s.conn)
+  }
   g.events.onClose = (reason) => {
     const s = getState()
     const inSession = !!s.conn && s.phase !== 'idle' && s.phase !== 'connecting'
@@ -266,7 +282,11 @@ async function runConnect(
     return
   }
   if (stale()) return
-  const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId)
+  // a reload continues the stream of the page it replaced: the proxy replays the gap
+  const resume = loadResumeToken(conn)
+  clearResumeToken()
+  if (resume) g.seedResume(resume)
+  const res = await cmds.connect(serverHost, port, username, password, flagName, avatarId, resume)
   if (stale()) return
   if (!res.ok && /already connected|already logged in/i.test(res.error ?? '') && alreadyConnectedRetries < ALREADY_CONNECTED_RETRIES) {
     const waitMs = ALREADY_CONNECTED_BASE_DELAY_MS * 2 ** alreadyConnectedRetries
@@ -281,6 +301,8 @@ async function runConnect(
     if (!isAttached(res.data)) resetGameEventOrder()
     setState({ phase: 'lobby', connecting: false, error: null, conn })
     saveConn(conn)
+    if (isResumed(res.data)) addLog('conexión', 'recarga: eventos perdidos reproducidos desde el proxy')
+    // the replay carries what happened meanwhile, but this page has no board: rejoin for the state + prompt
     restoreLimited()
     resumeActiveGame()
     const chatId = await cmds.getRoomChatId()
@@ -292,10 +314,11 @@ async function runConnect(
     // no amount of waiting-here fixes — the user needs to know what to do (wait it out, close
     // the other tab/device). The raw server detail stays in the log for bug reports.
     const sessionInUse = /already connected|already logged in/i.test(res.error ?? '')
-    if (sessionInUse && res.error) addLog('conexión', `login rechazado: ${res.error}`)
+    const mismatch = versionMismatchOf(res)
+    if ((sessionInUse || mismatch) && res.error) addLog('conexión', `login rechazado: ${res.error}`)
     setState({
       phase: 'idle', connecting: false, loginRetry: null,
-      error: sessionInUse ? t('errors', 'session_in_use') : (res.error ?? 'login fallido'),
+      error: mismatch ? versionMismatchMessage(mismatch) : sessionInUse ? t('errors', 'session_in_use') : (res.error ?? 'login fallido'),
     })
   }
 }
@@ -305,6 +328,7 @@ export function reset() {
   inFlight = null
   gateway?.close()
   saveConn(null)
+  clearResumeToken()
   clearActiveGame()
   clearActiveDraft()
   resetGameEventOrder()

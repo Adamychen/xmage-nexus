@@ -12,6 +12,7 @@ import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import './PlayerInfoBar.css'
+import type { CommandEntry } from './commandItems'
 
 interface PlayerInfoBarProps {
   player: PlayerView
@@ -63,8 +64,9 @@ interface RingInfo {
 }
 
 function getRingInfo(player: PlayerView): RingInfo | null {
-  const checkCard = (c: any): RingInfo | null => {
-    if (!c || typeof c !== 'object') return null
+  const checkCard = (raw: unknown): RingInfo | null => {
+    if (!raw || typeof raw !== 'object') return null
+    const c = raw as CommandEntry
     const name = String(c.name ?? '').trim().toLowerCase()
     const disp = String(c.displayName ?? '').trim().toLowerCase()
     if (name === 'the ring' || disp === 'the ring' || name.startsWith('the ring') || disp.startsWith('the ring')) {
@@ -111,10 +113,11 @@ interface DungeonInfo {
 }
 
 function getDungeonInfo(player: PlayerView): DungeonInfo | null {
-  const checkCard = (c: any): DungeonInfo | null => {
-    if (!c || typeof c !== 'object') return null
+  const checkCard = (raw: unknown): DungeonInfo | null => {
+    if (!raw || typeof raw !== 'object') return null
+    const c = raw as CommandEntry
     const name = String(c.name ?? '').trim()
-    const types = Array.isArray(c.cardTypes) ? c.cardTypes.map((t: string) => String(t).toLowerCase()) : []
+    const types = Array.isArray(c.cardTypes) ? c.cardTypes.map((t) => String(t).toLowerCase()) : []
     const isDungeon =
       types.includes('dungeon') ||
       ['dungeon of the mad mage', 'lost mine of phandelver', 'tomb of annihilation', 'undercity'].includes(name.toLowerCase())

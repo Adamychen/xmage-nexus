@@ -45,7 +45,7 @@ test(
   { tag: '@mutate-real' },
   async ({ page }) => {
     fs.mkdirSync(SHOTS_DIR, { recursive: true })
-    const { frames, pageErrors, helper } = await startGame(page, {
+    const { pageErrors, helper } = await startGame(page, {
       prefix: 'mut',
       tableName: 'mutate-real',
       deck: DECK.mutate,

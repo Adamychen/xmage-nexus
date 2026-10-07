@@ -4,7 +4,7 @@ import { setStoreError, useSettings, useStore } from '../../state/store'
 import FormattedText from '../FormattedText'
 import Icon from '../../ui/Icon'
 import ManaPoolView, { type ManaPoolKey } from '../ManaPoolView'
-import { useTranslation } from '../../i18n'
+import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import type { FeedbackPrompt } from '../feedback'
@@ -81,7 +81,7 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
   }, [prompt, game, busy, smart, autoTick])
 
   if (!prompt) return null
-  const localizedManaMsg = localizeServerMessage(prompt.message, t as any)
+  const localizedManaMsg = localizeServerMessage(prompt.message, dynamicT(t))
   return (
     <DockPrompt>
       <div className="action-prompt-bar mana-prompt-bar">

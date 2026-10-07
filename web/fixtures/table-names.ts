@@ -57,4 +57,5 @@ export const TABLE = {
   playerMenu: 'player-menu-test',
   infoWindows: 'info-windows-test',
   cardInspector: 'card-inspector-test',
+  learn: 'learn-test',
 } as const

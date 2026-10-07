@@ -64,8 +64,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 24px;
+  gap: var(--sp-0h);
+  padding: var(--sp-2h) var(--sp-5);
   background: linear-gradient(
     90deg,
     transparent 0%,

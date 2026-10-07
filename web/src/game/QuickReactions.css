@@ -1,8 +1,8 @@
 .quick-reactions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: var(--sp-1);
+  padding: var(--sp-1h) var(--sp-2h);
   border-top: 1px solid var(--ink-3);
   background: var(--ink-1);
   flex-shrink: 0;

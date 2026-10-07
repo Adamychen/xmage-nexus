@@ -1,3 +1,5 @@
+import type { CreateTableArgs } from '../../net/commands'
+import type { DeckJson } from '../../net/types'
 import {
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
   DEFAULT_TOURNAMENT_TYPES,
@@ -275,13 +277,13 @@ export interface MatchArgsInput {
   customStartHandSizeEnabled: boolean
   customStartHandSize: number
   planeChase: boolean
-  simDecks?: unknown[]
+  simDecks?: DeckJson[]
   skipInitShuffling?: boolean
   skipStartingPlayerChoice?: boolean
   dev: boolean
 }
 
-export function buildCreateMatchArgs(a: MatchArgsInput): Record<string, unknown> {
+export function buildCreateMatchArgs(a: MatchArgsInput): CreateTableArgs {
   const bannedUsers = a.bannedUsersRaw
     .split(',')
     .map((s) => s.trim())

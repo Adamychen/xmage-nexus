@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { usePhase, useStore } from './state/store'
+import { usePhase, useStore, loadConn, doConnect } from './state/store'
 import { linkBanner } from './system/linkBanner'
 import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
@@ -71,6 +71,14 @@ export default function App() {
     soundManager.init(loadAudioSettings())
     const music = loadMusicSettings()
     soundManager.setMusicVolume(music.musicEnabled ? music.musicVolume : 0)
+    // Reload: re-login with the saved session (logout clears it via reset()). The
+    // login result resumes the active game/draft from storage.
+    if (!isSetupDone()) return
+    if (GalleryScreen && isGalleryHash(window.location.hash)) return
+    const saved = loadConn()
+    if (saved?.username && phase === 'idle') {
+      void doConnect(saved.wsHost, saved.proxyPort, saved.serverHost, saved.port, saved.username, saved.password, saved.flagName, saved.avatarId)
+    }
   }, [])
 
   useEffect(() => {

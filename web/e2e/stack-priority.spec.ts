@@ -51,6 +51,8 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
 
       await page.screenshot({ path: 'e2e/shots/stack-priority-03-stacked-spells-in-response.png' })
 
+      expect(await helper.passPriority()).toBeTruthy()
+
       // ─────────────────────────────────────────────────────────────
       // ETAPA 2: Ordenación de Disparos Múltiples Simultáneos (APNAP)
       // ─────────────────────────────────────────────────────────────

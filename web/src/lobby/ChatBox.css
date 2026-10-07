@@ -78,6 +78,7 @@
 }
 
 .chat-from {
+  cursor: pointer;
   color: var(--gold-300);
   font-weight: 700;
   transition: color 0.15s ease;

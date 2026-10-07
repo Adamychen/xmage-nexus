@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, renderHook } from '@testing-library/react'
+import { act, cleanup, renderHook } from '@testing-library/react'
 import { useFeedbackForm } from './useFeedbackForm'
 import { getState, setState } from '../state/state'
 import type { FeedbackPrompt } from './feedback'
@@ -16,6 +16,7 @@ const prompt = (message: string): FeedbackPrompt =>
 
 describe('useFeedbackForm', () => {
   afterEach(() => {
+    cleanup()
     setState({ feedback: null })
     resolveSend = null
   })

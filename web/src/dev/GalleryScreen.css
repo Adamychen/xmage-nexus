@@ -23,8 +23,8 @@
 .gallery-head {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 14px;
+  gap: var(--sp-0h);
+  padding: var(--sp-3) var(--sp-3h);
   border-bottom: 1px solid var(--ink-4);
 }
 
@@ -42,12 +42,12 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px;
+  padding: var(--sp-2);
   scrollbar-gutter: stable;
 }
 
 .gallery-group h3 {
-  margin: 10px 6px 6px;
+  margin: var(--sp-2h) var(--sp-1h) var(--sp-1h);
   font-size: var(--fs-2xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -58,8 +58,8 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 6px 8px;
-  margin-bottom: 2px;
+  padding: var(--sp-1h) var(--sp-2);
+  margin-bottom: var(--sp-0h);
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   background: transparent;
@@ -79,7 +79,7 @@
 }
 
 .gallery-hint {
-  padding: 10px 14px;
+  padding: var(--sp-2h) var(--sp-3h);
   margin: 0;
   border-top: 1px solid var(--ink-4);
   font-size: var(--fs-3xs);

@@ -579,7 +579,7 @@ html:lang(zh) .hero-deck-label {
   background: rgb(var(--ink-rgb) / 0.96);
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--veil-2);
-  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  padding: var(--sp-1) var(--sp-1) calc(var(--sp-1) + env(safe-area-inset-bottom));
   gap: var(--sp-0h);
 }
 
@@ -687,6 +687,10 @@ html:lang(zh) .hero-deck-label {
   border-color: var(--err);
   color: var(--fg-hi);
 }
+
+.lobby-user-name-line { display: flex; align-items: center; gap: var(--sp-1h); }
+.lobby-disconnect-confirm { display: flex; align-items: center; gap: var(--sp-1h); }
+.lobby-disconnect-confirm-label { font-size: var(--fs-2xs); font-weight: 700; color: var(--err); }
 
 .lobby-tables-view {
   display: flex;
@@ -909,6 +913,63 @@ html:lang(zh) .tables-list {
   }
   .table-card { padding: var(--sp-3); }
   .table-name-text { font-size: var(--fs-base); }
+}
+
+/* Compact density: one line per table, no info strip or seat roster (the
+   seats chip still shows the count). Same order as the cards. */
+.tables-list.is-compact {
+  /* minmax(0, …): a 1fr track would grow to the nowrap row's min-content */
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: var(--sp-1h);
+}
+.tables-list.is-compact .table-card {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  height: auto;
+}
+.tables-list.is-compact .table-card-main {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+/* the chips that do not fit fade out instead of wrapping to a second line */
+.tables-list.is-compact .table-meta-row {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, black calc(100% - var(--sp-6)), transparent);
+}
+.tables-list.is-compact .table-meta-row > * { flex-shrink: 0; }
+.tables-list.is-compact .table-badges-left { flex-wrap: nowrap; }
+.tables-list.is-compact .table-actions { flex: none; }
+.tables-list.is-compact .table-title-area { order: -1; flex: 0 0 clamp(8rem, 24%, 16rem); min-width: 0; }
+.tables-list.is-compact .table-name-text {
+  font-size: var(--fs-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tables-list.is-compact .table-card-top-bar { order: 2; flex: none; }
+.tables-list.is-compact .table-info-strip,
+.tables-list.is-compact .table-seats-roster { display: none; }
+.tables-list.is-compact .table-actions {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+  flex-wrap: nowrap;
+}
+@media (max-width: 780px) {
+  .tables-list.is-compact .table-card { flex-direction: column; align-items: stretch; }
+  .tables-list.is-compact .table-card-main { flex-wrap: wrap; }
+  .tables-list.is-compact .table-meta-row,
+  .tables-list.is-compact .table-card-top-bar { flex: 1 1 100%; }
+  .tables-list.is-compact .table-card-top-bar,
+  .tables-list.is-compact .table-badges-left { flex-wrap: wrap; }
 }
 
 /* Table Cards */
@@ -1262,6 +1323,8 @@ html:lang(zh) .tables-list {
   box-sizing: border-box;
   overflow: hidden;
 }
+
+.user-list-item.interactive { cursor: pointer; }
 
 .user-list-item.interactive:hover {
   background: var(--ink-4);

@@ -24,15 +24,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
+  padding: var(--sp-3h) var(--sp-4h);
   border-bottom: 1px solid var(--ink-4);
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .pile-header-titles {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sp-0h);
 }
 
 .pile-header-subtitle {
@@ -56,14 +56,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-shrink: 0;
 }
 
 .pile-position-badge {
   font-size: var(--fs-xs);
   font-weight: 800;
-  padding: 3px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
   background: var(--veil-2);
   color: var(--fg-3);
@@ -72,7 +72,7 @@
   border: 1px solid var(--veil-3);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .pile-position-badge.top-badge {
@@ -94,8 +94,8 @@
 
 .pile-overlay-scroll {
   display: flex;
-  gap: 16px;
-  padding: 20px 22px;
+  gap: var(--sp-4);
+  padding: var(--sp-4h) var(--sp-5);
   overflow-x: auto;
   overflow-y: hidden;
   flex: 1;
@@ -134,7 +134,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .cross-zone-source {

@@ -14,6 +14,7 @@ import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
+import { cloneDeckForEdit } from './cloneDeck'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import { ImportDeckDialog } from './ImportDeckDialog'
 import type { MetaDeckItem } from './metaDeckCatalog'
@@ -39,18 +40,6 @@ function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
     }
   }
   return [...set].sort()
-}
-
-export function cloneDeckForEdit(d: MetaDeckItem | DeckV2): DeckV2 {
-  const now = Date.now()
-  return {
-    ...d,
-    id: makeDeckId(),
-    coverCard: d.coverCard ?? d.cards[0],
-    createdAt: now,
-    updatedAt: now,
-    source: 'custom',
-  }
 }
 
 function preconToV2(): DeckV2[] {
@@ -323,7 +312,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         return
       }
       await load()
-      await alertDialog(`${t('common', 'done')}: ${count}`)
+      await alertDialog(t('decks', 'restore_backup_done', { count }))
     } catch {
       await alertDialog(t('errors', 'deck_read_failed'))
     }
@@ -445,10 +434,10 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             </div>
             <div className="decks-footer-actions">
               <DropdownMenu label={t('decks', 'filter_more')} direction="up" align="end" data-testid="decks-more-menu">
-                <MenuItem role="menuitem" icon="package" disabled={customCount === 0} title={t('decks', 'export_deck')} onClick={handleBackupAll}>
+                <MenuItem role="menuitem" icon="package" disabled={customCount === 0} title={t('decks', 'backup_all_hint')} onClick={handleBackupAll}>
                   {t('decks', 'export_backup_count', { count: customCount })}
                 </MenuItem>
-                <MenuItem role="menuitem" icon="download" title={t('decks', 'import_hint')} onClick={() => restoreInputRef.current?.click()}>
+                <MenuItem role="menuitem" icon="download" title={t('decks', 'restore_backup_hint')} onClick={() => restoreInputRef.current?.click()}>
                   {t('decks', 'import_backup_json')}
                 </MenuItem>
               </DropdownMenu>
@@ -471,7 +460,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           </footer>
         </>
       ) : (
-        <div style={{ padding: '16px 20px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <div className="decks-browser-pane">
           <DeckBrowser
             onCloneDeck={handleCloneFromBrowser}
             onOpenBuilder={(deckId) => onEdit(deckId)}

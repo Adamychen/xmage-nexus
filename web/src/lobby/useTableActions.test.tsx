@@ -18,6 +18,7 @@ vi.mock('../net/commands', async (importOriginal) => {
     startTournament: vi.fn(),
     watchTable: vi.fn(),
     removeTable: vi.fn(),
+    joinGame: vi.fn(),
   }
 })
 
@@ -242,5 +243,195 @@ describe('useTableActions.removeTable', () => {
       await result.current.removeTable(matchTable())
     })
     expect(getState().error).toBe(t('errors.remove_table_not_owner'))
+  })
+})
+
+describe('useTableActions.joinHuman', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.joinTournamentTable).mockReset().mockResolvedValue({ ok: true } as any)
+  })
+
+  it('full table: error and no dialog', () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    act(() => result.current.joinHuman(matchTable({ seats: [{ playerName: 'a', playerType: 'HUMAN' }] })))
+    expect(getState().error).toBeTruthy()
+    expect(result.current.joiningTable).toBeNull()
+  })
+
+  it('regular match: opens the deck dialog with the remembered password', () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    act(() => result.current.joinHuman(matchTable(), 'secret'))
+    expect(result.current.joiningTable?.tableId).toBe('t-match')
+    expect(result.current.joinPassword).toBe('secret')
+    expect(cmds.joinTournamentTable).not.toHaveBeenCalled()
+  })
+
+  it('limited tournament without password: joins directly, without a deck', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    expect(cmds.joinTournamentTable).toHaveBeenCalledWith({ tableId: 't-draft', playerName: 'me', playerType: 'HUMAN', skill: 1 })
+    expect(result.current.joiningTable).toBeNull()
+    expect(result.current.notice).toBe(t('lobby.waiting_players'))
+    expect(result.current.busyTable).toBeNull()
+  })
+
+  it('limited tournament with password: goes through the dialog', () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    act(() => result.current.joinHuman(draftTourTable({ passworded: true })))
+    expect(result.current.joiningTable?.tableId).toBe('t-draft')
+    expect(cmds.joinTournamentTable).not.toHaveBeenCalled()
+  })
+
+  it('direct tournament join rejected or failed: shows the error and frees the table', async () => {
+    vi.mocked(cmds.joinTournamentTable).mockResolvedValueOnce({ ok: false, error: 'table full' } as any)
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    expect(getState().error).toBe('La mesa ya está completa')
+    expect(result.current.busyTable).toBeNull()
+
+    vi.mocked(cmds.joinTournamentTable).mockRejectedValueOnce(new Error('ws closed'))
+    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    expect(getState().error).toBeTruthy()
+    expect(result.current.busyTable).toBeNull()
+  })
+})
+
+describe('useTableActions.handleJoinWithDeck (sending)', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.joinTable).mockReset().mockResolvedValue({ ok: true } as any)
+  })
+
+  it('sends the XMage-prepared deck and closes the dialog', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    act(() => result.current.joinHuman(matchTable(), 'pw'))
+    const deck = { name: 'd', cards: [{ cardName: 'Forest', setCode: '', cardNumber: '', amount: 60 }], sideboard: [] } as any
+    await act(async () => { await result.current.handleJoinWithDeck(matchTable(), deck, 'pw') })
+
+    const sent = vi.mocked(cmds.joinTable).mock.calls[0][0]
+    expect(sent).toMatchObject({ tableId: 't-match', playerName: 'me', playerType: 'HUMAN', password: 'pw', deckType: 'Constructed - Modern' })
+    // Basic land without a printing: prepareDeckForXMage assigns a real one.
+    expect(sent.deck!.cards[0].setCode).not.toBe('')
+    expect(result.current.joiningTable).toBeNull()
+    expect(result.current.joinPassword).toBeUndefined()
+    expect(result.current.notice).toBe(t('lobby.waiting_players'))
+  })
+
+  it('a proxy exception also rejects with the translated message', async () => {
+    vi.mocked(cmds.joinTable).mockRejectedValueOnce(new Error('ws closed'))
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => {
+      await expect(result.current.handleJoinWithDeck(matchTable(), { name: 'd', cards: [], sideboard: [] } as any)).rejects.toThrow()
+    })
+    expect(result.current.busyTable).toBeNull()
+  })
+})
+
+describe('useTableActions.joinAi (seats)', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.joinTable).mockReset().mockResolvedValue({ ok: true } as any)
+  })
+
+  it('names the second AI "Computer 2"', async () => {
+    const table = matchTable({
+      seats: [
+        { playerName: 'me', playerType: 'HUMAN' },
+        { playerName: 'Computer', playerType: 'COMPUTER_MAD' },
+        { playerName: '', playerType: 'COMPUTER_MAD' },
+      ],
+    })
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.joinAi(table) })
+    expect(cmds.joinTable).toHaveBeenCalledWith(expect.objectContaining({ playerName: 'Computer 2' }))
+  })
+
+  it('no free AI seat: error and nothing sent', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.joinAi(matchTable({ seats: [{ playerName: '', playerType: 'HUMAN' }] })) })
+    expect(cmds.joinTable).not.toHaveBeenCalled()
+    expect(getState().error).toBeTruthy()
+    expect(result.current.busyTable).toBeNull()
+  })
+
+  it('server rejection: shows the error', async () => {
+    vi.mocked(cmds.joinTable).mockResolvedValueOnce({ ok: false, error: 'table full' } as any)
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.joinAi(matchTable()) })
+    expect(getState().error).toBe('La mesa ya está completa')
+    expect(result.current.busyTable).toBeNull()
+  })
+})
+
+describe('useTableActions: start/watch/remove errors', () => {
+  beforeEach(() => reset())
+
+  it('startTable rejected or failed shows the error', async () => {
+    vi.mocked(cmds.startMatch).mockReset().mockResolvedValueOnce({ ok: false } as any).mockRejectedValueOnce(new Error('ws closed'))
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.startTable(matchTable()) })
+    expect(getState().error).toBeTruthy()
+    setState({ error: null })
+    await act(async () => { await result.current.startTable(matchTable()) })
+    expect(getState().error).toBeTruthy()
+    expect(result.current.busyTable).toBeNull()
+  })
+
+  it('watchTable rejected or failed does not enter staging', async () => {
+    vi.mocked(cmds.watchTable).mockReset().mockResolvedValueOnce({ ok: false } as any).mockRejectedValueOnce(new Error('ws closed'))
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.watchTable(matchTable()) })
+    expect(getState().error).toBeTruthy()
+    expect(getState().watchingTable).toBeNull()
+    setState({ error: null })
+    await act(async () => { await result.current.watchTable(matchTable()) })
+    expect(getState().error).toBeTruthy()
+  })
+
+  it('removeTable failure shows the error and leaves another table staging alone', async () => {
+    vi.mocked(confirmDialog).mockReset().mockResolvedValue(true)
+    vi.mocked(cmds.removeTable).mockReset().mockRejectedValueOnce(new Error('ws closed')).mockResolvedValueOnce({ ok: true } as any)
+    setState({ stagingTableId: 'other' })
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.removeTable(matchTable()) })
+    expect(getState().error).toBeTruthy()
+
+    await act(async () => { await result.current.removeTable(matchTable()) })
+    expect(getState().stagingTableId).toBe('other')
+  })
+})
+
+describe('useTableActions.resumeGame', () => {
+  beforeEach(() => {
+    reset()
+    vi.mocked(cmds.joinGame).mockReset().mockResolvedValue({ ok: true } as any)
+  })
+
+  it('rejoins the first game of the table', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.resumeGame(matchTable({ games: ['g-1', 'g-2'] })) })
+    expect(cmds.joinGame).toHaveBeenCalledWith('g-1')
+    expect(getState().resumingGameId).toBe('g-1')
+    expect(result.current.notice).toBe(t('lobby.active_table_resume'))
+  })
+
+  it('no game in progress: error without calling the server', async () => {
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.resumeGame(matchTable({ games: [] })) })
+    expect(cmds.joinGame).not.toHaveBeenCalled()
+    expect(getState().error).toBeTruthy()
+  })
+
+  it('on failure it stops marking the game as resuming', async () => {
+    vi.mocked(cmds.joinGame).mockResolvedValueOnce({ ok: false, error: 'game not found' } as any).mockRejectedValueOnce(new Error('ws closed'))
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    await act(async () => { await result.current.resumeGame(matchTable({ games: ['g-1'] })) })
+    expect(getState().resumingGameId).toBeNull()
+    expect(getState().error).toBeTruthy()
+
+    await act(async () => { await result.current.resumeGame(matchTable({ games: ['g-1'] })) })
+    expect(getState().resumingGameId).toBeNull()
+    expect(result.current.busyTable).toBeNull()
   })
 })

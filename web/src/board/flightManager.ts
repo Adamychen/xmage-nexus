@@ -193,8 +193,8 @@ export function startCardFlight(
   toSelector?: string,
   options?: FlightOptions
 ): string | null {
-  const cardId = (card as any)?.id || (card as any)?.parentId || ''
-  const cardName = (card as any)?.name ?? ''
+  const cardId = card.id || card.parentId || ''
+  const cardName = card.name ?? ''
   if (!fromRect || !toRect) {
     noteFlightEvent({ kind: 'skip', reason: 'zero-rect', cardId, detail: `missing-${!fromRect ? 'from' : 'to'}:${cardName}` })
     return null
@@ -290,7 +290,7 @@ export function startCardFlight(
   notify()
   noteFlightEvent({
     kind: 'start', cardId: record.cardId,
-    detail: `${Math.round(Math.hypot(to.rect.left - from.rect.left, to.rect.top - from.rect.top))}px:${(card as any)?.name ?? ''}${options?.static ? ':static' : ''}`,
+    detail: `${Math.round(Math.hypot(to.rect.left - from.rect.left, to.rect.top - from.rect.top))}px:${card.name ?? ''}${options?.static ? ':static' : ''}`,
   })
 
   if (toSelector?.includes('hand') || toSelector?.includes('hand-bar') || toSelector?.includes('hand-zone')) {

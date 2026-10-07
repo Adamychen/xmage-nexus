@@ -137,12 +137,6 @@
   flex-shrink: 0;
 }
 
-.mana-cost-display {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-0h);
-}
-
 .mana-symbol {
   display: inline-flex;
   align-items: center;

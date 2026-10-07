@@ -444,6 +444,7 @@ function ingestPlayit() {
     for (let i = 9; i >= 1; i--) files.unshift(`${cfg.playitLog}.${i}.gz`);
   }
   let max = since;
+  txCommit();
   db.exec('BEGIN');
   try {
     for (const f of files) {
@@ -689,6 +690,14 @@ function statsPayload(rangeName) {
   const failReasons = [...reasons.entries()].map(([label, v]) => ({ label, v })).sort((a, b) => b.v - a.v).slice(0, 8);
   const endReasons = all(`SELECT COALESCE(json_extract(kv, '$.reason'), '?') AS label, COUNT(*) AS v FROM events WHERE type = 'session_end' AND ts >= ? AND ts < ? GROUP BY label ORDER BY v DESC`, r.from, r.to);
   const actions = all(`SELECT action AS label, COUNT(*) AS v FROM events WHERE type = 'action' AND action NOT LIKE 'get%' AND ts >= ? AND ts < ? GROUP BY action ORDER BY v DESC LIMIT 12`, r.from, r.to);
+  const gameOutcomes = all(`SELECT CASE WHEN json_extract(kv, '$.result') = 'unfinished'
+        THEN 'unfinished:' || COALESCE(json_extract(kv, '$.reason'), '?')
+        ELSE COALESCE(json_extract(kv, '$.result'), '?') END AS label, COUNT(*) AS v
+    FROM events WHERE type = 'game_end' AND json_extract(kv, '$.role') = 'player' AND ts >= ? AND ts < ?
+    GROUP BY label ORDER BY v DESC`, r.from, r.to);
+  const ended = gameOutcomes.reduce((a, o) => a + o.v, 0);
+  const finished = gameOutcomes.filter(o => ['won', 'lost', 'draw'].includes(o.label)).reduce((a, o) => a + o.v, 0);
+  const finishRate = ended ? Math.round(1000 * finished / ended) / 10 : null;
   return {
     range: { name: r.name, from: r.from, to: r.to, hourly: b.hourly },
     kpis: cur,
@@ -708,6 +717,8 @@ function statsPayload(rangeName) {
     failReasons,
     endReasons,
     actions,
+    gameOutcomes,
+    finishRate,
   };
 }
 
@@ -736,6 +747,16 @@ function playersPayload(rangeName) {
   return { range: { name: r.name, from: r.from, to: r.to }, players: rows.map(p => ({ ...p, online: onlineNow.has(p.user) })) };
 }
 
+function versionMismatch(target) {
+  const ok = one("SELECT MAX(ts) AS ts FROM events WHERE type = 'login_ok' AND json_extract(kv, '$.server') = ?", target)?.ts ?? 0;
+  const fail = one(`SELECT ts, json_extract(kv, '$.reason') AS reason FROM events
+    WHERE type = 'login_fail' AND ts > ? AND json_extract(kv, '$.server') = ? AND json_extract(kv, '$.reason') LIKE '%Wrong client version%'
+    ORDER BY ts ASC LIMIT 1`, ok, target);
+  if (!fail) return null;
+  const pick = re => re.exec(fail.reason || '')?.[1] ?? null;
+  return { since: fail.ts, server: pick(/Server version:\s*([^\s<(]+)/i), proxy: pick(/Your version:\s*([^\s<(]+)/i) };
+}
+
 function livePayload() {
   const now = Date.now();
   const c = live.counts();
@@ -761,7 +782,7 @@ function livePayload() {
     playit: host.playit,
     host: host.latest,
     cpus: host.cpus,
-    xmage: { host: cfg.xmageHost, port: cfg.xmagePort, ms: host.latest?.xmageMs ?? null },
+    xmage: { host: cfg.xmageHost, port: cfg.xmagePort, ms: host.latest?.xmageMs ?? null, mismatch: versionMismatch(`${cfg.xmageHost}:${cfg.xmagePort}`) },
     web: { url: cfg.proxyHttp, ms: host.latest?.webMs ?? null },
     counts: c,
     users,

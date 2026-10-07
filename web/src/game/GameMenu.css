@@ -17,7 +17,7 @@
   border-radius: var(--r-sm);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  padding: 0 0 4px 1px;
+  padding: 0 0 var(--sp-1) 1px;
 }
 
 .game-menu-btn:hover {
@@ -47,8 +47,8 @@
   max-width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 6px;
+  gap: var(--sp-0h);
+  padding: var(--sp-1h);
   background: var(--ink-2);
   border: 1px solid var(--ink-4);
   border-radius: var(--r-base);
@@ -58,7 +58,7 @@
 .game-menu-divider {
   height: 1px;
   background: var(--ink-4);
-  margin: 4px 6px;
+  margin: var(--sp-1) var(--sp-1h);
 }
 
 .game-menu-section-label {
@@ -67,20 +67,20 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-3);
-  padding: 6px 12px 2px;
+  padding: var(--sp-1h) var(--sp-3) var(--sp-0h);
 }
 
 .game-menu-auto-empty {
   font-size: var(--fs-xs);
   color: var(--fg-3);
-  padding: 2px 12px 6px;
+  padding: var(--sp-0h) var(--sp-3) var(--sp-1h);
 }
 
 .game-menu-auto-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
   font-size: var(--fs-xs);
 }
 
@@ -98,7 +98,7 @@
   font-size: var(--fs-2xs);
   font-weight: 700;
   border-radius: var(--r-pill);
-  padding: 1px 8px;
+  padding: 1px var(--sp-2);
   border: 1px solid var(--ink-4);
 }
 
@@ -112,7 +112,7 @@
   border-color: var(--err);
 }
 
-.game-menu-check { padding: 4px 12px; color: var(--fg-1); }
+.game-menu-check { padding: var(--sp-1) var(--sp-3); color: var(--fg-1); }
 
 @media (prefers-reduced-motion: reduce) {
   .game-menu-btn {

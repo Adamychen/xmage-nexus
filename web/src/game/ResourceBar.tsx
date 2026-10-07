@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { CardView, PlayerView } from '../net/types'
+import type { CardView, PermanentView, PlayerView } from '../net/types'
 import PileOverlay from '../board/PileOverlay'
 import CrossZoneOverlay from '../board/CrossZoneOverlay'
 import { crossZoneCounts } from '../board/crossZone'
@@ -25,7 +25,7 @@ interface ResourceBarProps {
   micro?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
-  onCardHover?: (card: any, rect?: DOMRect) => void
+  onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
   targetIds?: Set<string>
   targetZone?: TargetZoneKind | null
   targetZones?: ReadonlySet<TargetZoneKind>
@@ -86,7 +86,7 @@ export default function ResourceBar({
   }, [crossZone])
 
   const libraryCards = useMemo(() => {
-    const res: Record<string, any> = {}
+    const res: Record<string, CardView> = {}
     const count = player.libraryCount ?? 0
     if (count <= 0) return res
 

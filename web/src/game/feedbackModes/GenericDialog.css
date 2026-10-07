@@ -4,23 +4,23 @@
 .feedback-options-wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .feedback-options-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   max-height: min(420px, 50vh);
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: var(--sp-1);
 }
 
 .feedback-choice-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
+  gap: var(--sp-3h);
+  padding: var(--sp-3) var(--sp-4);
   background: var(--veil-1);
   border: 1.5px solid var(--veil-3);
   border-radius: var(--r-mid);
@@ -85,16 +85,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin-top: 10px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-2h);
 }
 
 .feedback-amount-stepper {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--sp-4h);
   background: var(--shade-1);
-  padding: 12px 24px;
+  padding: var(--sp-3) var(--sp-5);
   border-radius: var(--r-xl);
   border: 1.5px solid var(--veil-3);
 }
@@ -129,26 +129,26 @@
 .stepper-range {
   font-size: var(--fs-2xs);
   color: var(--fg-2);
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 
 .stepper-quick-row {
   display: flex;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 /* ── Multi-Amount List ──────────────────────────────────────── */
 .feedback-multi-amount-wrap {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-2);
 }
 
 .feedback-multi-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   max-height: 320px;
   overflow-y: auto;
 }
@@ -157,8 +157,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 10px 14px;
+  gap: var(--sp-3h);
+  padding: var(--sp-2h) var(--sp-3h);
   background: var(--veil-1);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-md);
@@ -172,7 +172,7 @@
 .multi-stepper {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2h);
 }
 
 .multi-stepper-val {
@@ -187,8 +187,8 @@
 .feedback-string-wrap {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
+  gap: var(--sp-4);
+  margin-top: var(--sp-2);
 }
 
 .feedback-input-box {
@@ -206,9 +206,9 @@
 
 .feedback-input-box input {
   width: 100%;
-  padding: 12px 16px 12px 42px;
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) 42px;
   font-size: var(--fs-lg);
 }
 
-.feedback-remember-answer { margin-top: 14px; font-size: var(--fs-sm); }
+.feedback-remember-answer { margin-top: var(--sp-3h); font-size: var(--fs-sm); }
 

@@ -6,12 +6,12 @@ import { parseGameEvent, toFeedItem, type ActionFeedItem } from './gameEventPars
 import ActionFeedCard from './ActionFeedCard'
 import FormattedText, { cleanMageHtml } from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
-import type { CardView } from '../net/types'
+import type { CardView, PermanentView } from '../net/types'
 import { useTranslation } from '../i18n'
 import './ActionFeed.css'
 
 interface ActionFeedProps {
-  onHover?: (card: any, rect?: DOMRect) => void
+  onHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
 }
 
 export default function ActionFeed({ onHover }: ActionFeedProps) {
@@ -36,7 +36,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   const myPlayerName = myPlayer?.name
 
   const handleCardHover = useCallback(
-    (card: any, rect?: DOMRect) => {
+    (card: CardView | PermanentView | null, rect?: DOMRect) => {
       if (modalOpen) {
         setHoverCard(null)
         setHoverRect(null)

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ALREADY_CONNECTED_RETRIES, doConnect, reset } from './gateway'
+import { ALREADY_CONNECTED_RETRIES, doConnect, getGateway, reset } from './gateway'
+import { loadResumeToken, saveResumeToken, type ConnectionInfo } from './persistence'
 import { getState } from './state'
 import * as cmds from '../net/commands'
 import { gameEventOrder, noteGameEvent } from './gameUtils'
@@ -143,6 +144,18 @@ describe('doConnect — intentos concurrentes', () => {
     expect(getState().error).toBe(t('errors', 'session_in_use'))
   })
 
+  it('explains a server on another release once, without retrying', async () => {
+    const detail = 'mage.remote.MageVersionException: Wrong client version.<br/>Your version: 1.4.61-V1<br/>Server version: 1.4.62-V1'
+    vi.mocked(cmds.connect).mockResolvedValue({ ok: false, error: detail, errorCode: 'VERSION_MISMATCH' } as never)
+    const done = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    await done
+    expect(cmds.connect).toHaveBeenCalledTimes(1)
+    expect(getState().phase).toBe('idle')
+    expect(getState().error).toBe(t('errors', 'server_version_mismatch', { server: '1.4.62-V1', proxy: '1.4.61-V1' }))
+  })
+
   it('announces the wait before retrying a login the server refused as already connected', async () => {
     vi.mocked(cmds.connect)
       .mockResolvedValueOnce({ ok: false, error: 'User u already connected or your IP address changed' } as never)
@@ -197,5 +210,46 @@ describe('doConnect — intentos concurrentes', () => {
     await vi.advanceTimersByTimeAsync(100)
     expect(cmds.connect).toHaveBeenCalledTimes(2)
     expect(gameEventOrder('g-1', 5)).toBe('unknown')
+  })
+
+  describe('resume token across a page reload', () => {
+    const conn: ConnectionInfo = { wsHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: 17171, username: 'u', password: 'p' }
+
+    beforeEach(() => window.sessionStorage.clear())
+
+    const login = async (username = 'u') => {
+      const done = doConnect('localhost', 8787, 'localhost', 17171, username, 'p')
+      FakeWebSocket.instances[FakeWebSocket.instances.length - 1].triggerOpen()
+      await vi.advanceTimersByTimeAsync(100)
+      await done
+    }
+
+    it('the page going away saves the stream position', async () => {
+      await login()
+      getGateway()!.seedResume({ streamId: 's1', seq: 42 })
+      window.dispatchEvent(new Event('pagehide'))
+      expect(loadResumeToken(conn)).toEqual({ streamId: 's1', seq: 42 })
+    })
+
+    it('the login after a reload presents the saved token once', async () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      vi.mocked(cmds.connect).mockResolvedValue({ ok: true, data: { attached: true, resumed: true, streamId: 's1' } } as never)
+      await login()
+      expect(vi.mocked(cmds.connect).mock.calls[0][6]).toEqual({ streamId: 's1', seq: 42 })
+      expect(getGateway()!.resumeToken()).toEqual({ streamId: 's1', seq: 42 })
+      expect(loadResumeToken(conn)).toBeNull()
+    })
+
+    it('another account does not present the saved token', async () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      await login('someone-else')
+      expect(vi.mocked(cmds.connect).mock.calls[0][6]).toBeNull()
+    })
+
+    it('logging out forgets the token', () => {
+      saveResumeToken({ streamId: 's1', seq: 42 }, conn)
+      reset()
+      expect(loadResumeToken(conn)).toBeNull()
+    })
   })
 })

@@ -11,27 +11,15 @@ const c = (cardName: string, setCode: string, cardNumber: string): DeckCard => (
 })
 
 describe('deckNormalize', () => {
-  it('no mutila sets reales con prefijo P (PCY, PRO, PC2)', () => {
+  it('conserva la impresión de Scryfall tal cual (la normalización para el servidor es del proxy)', () => {
     expect(normalizeDeckCard(c('Rhystic Tutor', 'PCY', '77'))).toMatchObject({ setCode: 'PCY', cardNumber: '77' })
-    expect(normalizeDeckCard(c('Rhystic Tutor', 'PRO', '77'))).toMatchObject({ setCode: 'PRO', cardNumber: '77' })
-    expect(normalizeDeckCard(c('Bear', 'PC2', '1'))).toMatchObject({ setCode: 'PC2', cardNumber: '1' })
+    expect(normalizeDeckCard(c('Bear', 'PLST', 'ORI-123'))).toMatchObject({ setCode: 'PLST', cardNumber: 'ORI-123' })
+    expect(normalizeDeckCard(c('Bear', 'M21', '123p')).cardNumber).toBe('123p')
+    expect(normalizeDeckCard(c('Bear', 'M21', '123★')).cardNumber).toBe('123★')
   })
 
-  it('mantiene códigos P desconocidos tal cual (el proxy decide en el borde)', () => {
-    expect(normalizeDeckCard(c('Foo', 'PZZZ', '1')).setCode).toBe('PZZZ')
-  })
-
-  it('PLST con número compuesto se reduce al set original', () => {
-    expect(normalizeDeckCard(c('Bear', 'PLST', 'ORI-123'))).toMatchObject({ setCode: 'ORI', cardNumber: '123' })
-  })
-
-  it('número con prefijo de set se reduce al último tramo', () => {
-    expect(normalizeDeckCard(c('Bear', 'SLD', 'SLD-456')).cardNumber).toBe('456')
-  })
-
-  it('sufijos promo del número se limpian', () => {
-    expect(normalizeDeckCard(c('Bear', 'M21', '123p')).cardNumber).toBe('123')
-    expect(normalizeDeckCard(c('Bear', 'M21', '123★')).cardNumber).toBe('123')
+  it('no toca una básica que ya trae impresión', () => {
+    expect(normalizeDeckCard(c('Forest', 'LEA', '294'))).toMatchObject({ setCode: 'LEA', cardNumber: '294' })
   })
 
   it('rellena la impresión de una básica importada sin set/número (mazo de texto plano)', () => {

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import EmptyState from '../ui/EmptyState'
 import type { DeckCard } from '../lobby/decks'
-import type { CardStripMeta } from './ArenaCardStrip'
+import type { CardStripMeta, DroppedCardData } from './ArenaCardStrip'
 import type { ValidationIssue } from './formatRules'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckFormat } from './types'
-import { commanderCardsFor, isCommanderEligible } from './deckUtils'
+import { commanderCardsFor } from './deckUtils'
+import { commanderEligibleFor } from './useCommanderEligibility'
 import { aggregateCards } from './deckCardOps'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
@@ -38,6 +39,7 @@ export default function DeckListPanel({
   isCommanderFormat,
   format = 'Freeform',
   metaMap,
+  commanderEligibilityMap,
   cardIssues,
   layout = 'vertical',
   onInc,
@@ -61,6 +63,7 @@ export default function DeckListPanel({
   isCommanderFormat?: boolean
   format?: DeckFormat
   metaMap: Map<string, CardStripMeta>
+  commanderEligibilityMap?: Map<string, boolean> | null
   cardIssues?: Map<string, ValidationIssue>
   layout?: 'vertical' | 'horizontal'
   onInc: (key: string) => void
@@ -72,7 +75,7 @@ export default function DeckListPanel({
   onHover?: (card: DeckCard, meta?: CardStripMeta, rect?: DOMRect) => void
   onLeave?: () => void
   onChangePrinting?: (c: DeckCard) => void
-  onDropCard?: (cardData: any, target: 'main' | 'sideboard' | 'commander') => boolean | void
+  onDropCard?: (cardData: DroppedCardData, target: 'main' | 'sideboard' | 'commander') => boolean | void
   onSwap?: (key: string) => void
   onDropFile?: (f: File) => void
 }) {
@@ -117,7 +120,7 @@ export default function DeckListPanel({
     const rawData = e.dataTransfer.getData('application/json')
     if (rawData && onDropCard) {
       try {
-        const cardData = JSON.parse(rawData)
+        const cardData = JSON.parse(rawData) as DroppedCardData
         onDropCard(cardData, 'main')
       } catch {}
     }
@@ -148,7 +151,7 @@ export default function DeckListPanel({
     const rawData = e.dataTransfer.getData('application/json')
     if (rawData && onDropCard) {
       try {
-        const cardData = JSON.parse(rawData)
+        const cardData = JSON.parse(rawData) as DroppedCardData
         if (cardData?.source !== 'sideboard') onDropCard(cardData, 'sideboard')
       } catch {}
     }
@@ -175,7 +178,7 @@ export default function DeckListPanel({
     const rawData = e.dataTransfer.getData('application/json')
     if (!rawData) return
     try {
-      const cardData = JSON.parse(rawData)
+      const cardData = JSON.parse(rawData) as DroppedCardData
       const accepted = onDropCard(cardData, 'commander')
       if (accepted === false) {
         setCommanderDropInvalid(true)
@@ -362,7 +365,7 @@ export default function DeckListPanel({
                       onRemove={onRemove}
                       onSetCover={onSetCover}
                       onSetCommander={onSetCommander}
-                      commanderEligible={meta ? isCommanderEligible(meta) : undefined}
+                      commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
                       onHover={onHover}
                       onLeave={onLeave}
                       onChangePrinting={onChangePrinting}
@@ -421,7 +424,7 @@ export default function DeckListPanel({
                           onRemove={onRemove}
                           onSetCover={onSetCover}
                           onSetCommander={onSetCommander}
-                          commanderEligible={meta ? isCommanderEligible(meta) : undefined}
+                          commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
                           onHover={onHover}
                           onLeave={onLeave}
                           onChangePrinting={onChangePrinting}

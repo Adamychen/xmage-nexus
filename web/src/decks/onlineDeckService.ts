@@ -12,14 +12,61 @@ import { fetchOnlineDeckJson } from '../net/commands'
  * fetch". Si el proxy no está conectado (`getGateway` lanza), se trata igual
  * que un fallo de red: se devuelve `null` y el caller cae al parser de texto.
  */
-async function fetchOnlineDeckData(source: 'moxfield' | 'archidekt', urlOrId: string): Promise<any | null> {
+async function fetchOnlineDeckData<T>(source: 'moxfield' | 'archidekt', urlOrId: string): Promise<T | null> {
   try {
     const data = await fetchOnlineDeckJson(source, urlOrId)
-    return data ?? null
+    // the proxy relays the site's JSON untouched: its shape is the site's, read defensively below
+    return (data ?? null) as T | null
   } catch (e) {
     console.warn(`[onlineDeckService] fetch ${source} vía proxy no disponible:`, e instanceof Error ? e.message : e)
     return null
   }
+}
+
+/** The parts of a Moxfield deck answer read here (an entry is either `{ card, quantity }` or the card itself). */
+interface MoxfieldCard {
+  name: string
+  set?: string
+  cn?: string
+  collector_number?: string
+}
+type MoxfieldEntry = MoxfieldCard & { card?: MoxfieldCard; quantity?: number }
+type MoxfieldBoard = Record<string, MoxfieldEntry>
+interface MoxfieldDeckJson {
+  name?: string
+  format?: string
+  commanders?: MoxfieldBoard
+  mainboard?: MoxfieldBoard
+  sideboard?: MoxfieldBoard
+}
+
+function moxfieldRow(entry: MoxfieldEntry): DeckCard {
+  const card = entry.card || entry
+  return {
+    cardName: card.name,
+    setCode: card.set?.toUpperCase() || 'M10',
+    cardNumber: card.cn || card.collector_number || '1',
+    amount: entry.quantity || 1,
+  }
+}
+
+/** The parts of an Archidekt deck answer read here. */
+interface ArchidektEntry {
+  deletedAt?: string | null
+  categories?: string[] | null
+  quantity?: number
+  card?: {
+    name?: string
+    oracleCard?: { name?: string }
+    edition?: { editioncode?: string }
+    collectorNumber?: string
+  }
+}
+interface ArchidektDeckJson {
+  name?: string
+  deckFormat?: unknown
+  categories?: unknown
+  cards?: ArchidektEntry[]
 }
 
 export interface OnlineDeckSummary {
@@ -46,7 +93,7 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
   if (!deckId) return null
 
   try {
-    const data = await fetchOnlineDeckData('moxfield', deckId)
+    const data = await fetchOnlineDeckData<MoxfieldDeckJson>('moxfield', deckId)
     if (!data) return null
 
     const name = data.name || 'Moxfield Deck'
@@ -70,45 +117,13 @@ export async function fetchMoxfieldDeck(urlOrId: string): Promise<DeckV2 | null>
     // Commanders / Companions: van al main (convención de la app: el
     // comandante también figura en el main) y además se designan.
     const commanderList: DeckCard[] = []
-    if (data.commanders) {
-      for (const [, entry] of Object.entries(data.commanders as Record<string, any>)) {
-        const card = entry.card || entry
-        const commander = {
-          cardName: card.name,
-          setCode: card.set?.toUpperCase() || 'M10',
-          cardNumber: card.cn || card.collector_number || '1',
-          amount: entry.quantity || 1,
-        }
-        commanderList.push(commander)
-        mainCards.push(commander)
-      }
+    for (const entry of Object.values(data.commanders ?? {})) {
+      const commander = moxfieldRow(entry)
+      commanderList.push(commander)
+      mainCards.push(commander)
     }
-
-    // Mainboard
-    if (data.mainboard) {
-      for (const [, entry] of Object.entries(data.mainboard as Record<string, any>)) {
-        const card = entry.card || entry
-        mainCards.push({
-          cardName: card.name,
-          setCode: card.set?.toUpperCase() || 'M10',
-          cardNumber: card.cn || card.collector_number || '1',
-          amount: entry.quantity || 1,
-        })
-      }
-    }
-
-    // Sideboard
-    if (data.sideboard) {
-      for (const [, entry] of Object.entries(data.sideboard as Record<string, any>)) {
-        const card = entry.card || entry
-        sideCards.push({
-          cardName: card.name,
-          setCode: card.set?.toUpperCase() || 'M10',
-          cardNumber: card.cn || card.collector_number || '1',
-          amount: entry.quantity || 1,
-        })
-      }
-    }
+    for (const entry of Object.values(data.mainboard ?? {})) mainCards.push(moxfieldRow(entry))
+    for (const entry of Object.values(data.sideboard ?? {})) sideCards.push(moxfieldRow(entry))
 
     const coverCard = mainCards[0]
     return {
@@ -148,8 +163,8 @@ export function archidektExcludedCategories(categories: unknown): Set<string> {
   if (!Array.isArray(categories)) return new Set(ARCHIDEKT_DEFAULT_EXCLUDED)
   return new Set(
     categories
-      .filter((c: any) => c && typeof c.name === 'string' && c.includedInDeck === false)
-      .map((c: any) => c.name as string),
+      .filter((c): c is { name: string; includedInDeck: false } => !!c && typeof c.name === 'string' && c.includedInDeck === false)
+      .map((c) => c.name),
   )
 }
 
@@ -168,7 +183,7 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
   if (!deckId) return null
 
   try {
-    const data = await fetchOnlineDeckData('archidekt', deckId)
+    const data = await fetchOnlineDeckData<ArchidektDeckJson>('archidekt', deckId)
     if (!data) return null
 
     const name = data.name || 'Archidekt Deck'
@@ -180,7 +195,7 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
     if (Array.isArray(data.cards)) {
       for (const entry of data.cards) {
         if (entry.deletedAt) continue
-        if ((entry.categories || []).some((c: string) => excluded.has(c))) continue
+        if ((entry.categories || []).some((c) => excluded.has(c))) continue
         const cardName = entry.card?.oracleCard?.name || entry.card?.name
         if (!cardName) continue
         const setCode = entry.card?.edition?.editioncode?.toUpperCase() || 'M10'

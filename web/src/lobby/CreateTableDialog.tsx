@@ -28,7 +28,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       legacyBackdropClass="overlay"
       legacyPanelClass="dialog create-table-dialog"
       kickerIcon={wizardSteps[activeIndex]?.icon ?? 'settings'}
-      kickerLabel={<>{t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })} · {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey as any) : wizardSteps[activeIndex]?.titleFallback}</>}
+      kickerLabel={<>{t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })} · {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey) : wizardSteps[activeIndex]?.titleFallback}</>}
       title={t('lobby.create_table_btn')}
       message={t('lobby', 'create_header_subtitle')}
       topRight={(
@@ -45,7 +45,7 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {wizardSteps.map((step, idx) => {
             const isActive = idx === activeIndex
             const isCompleted = idx < activeIndex
-            const label = step.labelKey ? t('lobby', step.labelKey as any) : step.titleFallback
+            const label = step.labelKey ? t('lobby', step.labelKey) : step.titleFallback
             return (
               <button
                 key={step.id}

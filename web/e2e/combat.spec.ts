@@ -6,6 +6,9 @@ import { controlledPlayer, framesOf, lastGameView, opponentBattlefield, parseFra
 import { startGame } from './support/start-game'
 import { combatScenario } from '../fixtures/scenarios/combat'
 import { withFakeServer } from './support/fake-backend'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 /** Verifica el combate del Sim (el HumanHelper mantiene los turnos del humano):
  *  criatura en el campo, ataque declarado y daño aplicado. Además comprueba que

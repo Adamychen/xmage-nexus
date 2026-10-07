@@ -2,15 +2,15 @@
   display: flex;
   align-items: stretch;
   justify-content: center;
-  gap: 14px;
+  gap: var(--sp-3h);
 }
 
 .pile-column {
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: var(--sp-2h);
+  padding: var(--sp-3h);
   border-radius: var(--r-lg);
   background: var(--veil-1);
   border: 1.5px solid var(--veil-3);
@@ -31,7 +31,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .pile-card-wrap {

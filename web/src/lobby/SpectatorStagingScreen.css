@@ -60,7 +60,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: var(--sp-4h);
-  padding: var(--sp-5) clamp(16px, 2.5vw, 44px);
+  padding: var(--sp-5) clamp(var(--sp-4), 2.5vw, 44px);
   min-height: 0;
   width: 100%;
   align-items: stretch;

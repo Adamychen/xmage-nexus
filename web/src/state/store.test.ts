@@ -929,6 +929,39 @@ describe('active game persistence in store', () => {
     expect(getState().gameId).toBe('g-b10-2')
   })
 
+  it('espectador que se une a mitad de partida: el GAME_INIT cacheado del arranque (turn 0) se descarta hasta el primer update real', () => {
+    handleWatchGame('g-spec-cache')
+    expect(getState().phase).toBe('spectating_pending')
+
+    // Vista cacheada del servidor: turn 0, tablero vacío (la firma de la vista
+    // por defecto generada en startGame y devuelta por la caché del watcher).
+    handleMessage({
+      type: 'event',
+      method: 'GAME_INIT',
+      messageId: 1,
+      objectId: 'g-spec-cache',
+      data: makeGameView({ turn: 0, phase: null, step: null }),
+    })
+    expect(getState().phase).toBe('spectating_pending')
+    expect(getState().game).toBeNull()
+
+    // Primer update real del motor: estado completo actual.
+    const live = makeGameView({ turn: 4, step: 'DECLARE_ATTACKERS' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 2, objectId: 'g-spec-cache', data: live })
+    expect(getState().phase).toBe('game')
+    expect(getState().game).toBe(live)
+  })
+
+  it('espectador desde el arranque: los updates de mulligan (turn 0, no GAME_INIT) sí se aplican', () => {
+    handleWatchGame('g-spec-fresh')
+    expect(getState().phase).toBe('spectating_pending')
+
+    const mulliganState = makeGameView({ turn: 0, phase: null, step: null })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE_AND_INFORM', messageId: 1, objectId: 'g-spec-fresh', data: { gameView: mulliganState, message: 'Waiting for Alice' } })
+    expect(getState().phase).toBe('game')
+    expect(getState().game).toBe(mulliganState)
+  })
+
   it('al entrar al juego espectado limpia la resolución de torneo (no reabre el cuadro al volver al lobby)', () => {
     setState({ spectateTournament: { tournamentId: 't-9', tableId: 'table-9' } })
     handleWatchGame('g-tt-1')

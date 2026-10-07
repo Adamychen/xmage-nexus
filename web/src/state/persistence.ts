@@ -149,6 +149,71 @@ export function clearActiveGame() {
   } catch {}
 }
 
+/** Position in the proxy's frame stream, kept across a page reload so the
+ *  re-login replays the frames of the gap (log, chat, plays) instead of only
+ *  the latest state. Per tab (sessionStorage): another tab is another stream. */
+export interface ResumeTokenPersistence {
+  streamId: string
+  seq: number
+  wsHost: string
+  proxyPort: number
+  serverHost: string
+  port: number
+  username: string
+  savedAt: number
+}
+
+const RESUME_TOKEN_KEY = 'mage-web-resume'
+// past the proxy's grace period the session (and its stream) is gone anyway
+const RESUME_TOKEN_MAX_AGE_MS = 10 * 60 * 1000
+
+function getSessionStorage(): Storage {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.getItem('__mage_probe__')
+      return window.sessionStorage
+    }
+  } catch {}
+  return memoryStorage
+}
+
+export function saveResumeToken(token: { streamId: string; seq: number }, conn: ConnectionInfo) {
+  const stored: ResumeTokenPersistence = {
+    streamId: token.streamId,
+    seq: token.seq,
+    wsHost: conn.wsHost,
+    proxyPort: conn.proxyPort,
+    serverHost: conn.serverHost,
+    port: conn.port,
+    username: conn.username,
+    savedAt: Date.now(),
+  }
+  try {
+    getSessionStorage().setItem(RESUME_TOKEN_KEY, JSON.stringify(stored))
+  } catch {}
+}
+
+/** The saved token, only for the same proxy and account and while it can still be live. */
+export function loadResumeToken(conn: ConnectionInfo): { streamId: string; seq: number } | null {
+  let parsed: Partial<ResumeTokenPersistence> | null = null
+  try {
+    const raw = getSessionStorage().getItem(RESUME_TOKEN_KEY)
+    parsed = raw ? (JSON.parse(raw) as Partial<ResumeTokenPersistence>) : null
+  } catch {}
+  if (!parsed || typeof parsed.streamId !== 'string' || typeof parsed.seq !== 'number') return null
+  if (typeof parsed.savedAt !== 'number' || Date.now() - parsed.savedAt > RESUME_TOKEN_MAX_AGE_MS) return null
+  const sameProxy = parsed.wsHost === conn.wsHost && parsed.proxyPort === conn.proxyPort
+  const sameAccount = isSameAccount(conn, parsed.serverHost ?? '', parsed.port ?? -1, parsed.username ?? '')
+  if (!sameProxy || !sameAccount) return null
+  return { streamId: parsed.streamId, seq: parsed.seq }
+}
+
+export function clearResumeToken() {
+  try {
+    getSessionStorage().removeItem(RESUME_TOKEN_KEY)
+  } catch {}
+}
+
 export interface ActiveDraftPersistence {
   /** Última instantánea del draft (el server no reenvía el estado al re-unirse). */
   draft: DraftState
@@ -266,6 +331,8 @@ export function saveFxSettings(fx: FxSettings) {
 export interface AutoAnswerStored {
   pattern: string
   answer: boolean
+  /** clave exacta del servidor (REQUEST_AUTO_ANSWER_TEXT_*), si se conoce */
+  key?: string
 }
 
 const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
@@ -278,7 +345,11 @@ export function loadAutoAnswers(): AutoAnswerStored[] {
         const record = entry as Partial<AutoAnswerStored>
         return typeof record?.pattern === 'string' && typeof record?.answer === 'boolean'
       })
-      .map((entry) => ({ pattern: entry.pattern, answer: entry.answer }))
+      .map((entry) => ({
+        pattern: entry.pattern,
+        answer: entry.answer,
+        ...(typeof entry.key === 'string' && entry.key ? { key: entry.key } : null),
+      }))
   }
   return []
 }

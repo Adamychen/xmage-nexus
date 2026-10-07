@@ -56,6 +56,7 @@ import { isControllingPriority } from '../state/control'
 import { perfMark } from '../system/perfProbe'
 import './GameScreen.css'
 import './TournamentPanel.css'
+import { commandItems } from './commandItems'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
@@ -343,12 +344,10 @@ export default function GameScreen() {
     if (dayNightStateOf(game)) return true
     if (!game.players) return false
     return game.players.some((p) => {
-      const items = Array.isArray(p.commandList)
-        ? p.commandList
-        : Object.values(p.commandList ?? {})
-      const hasRing = items.some((c: any) => String(c?.name ?? '').toLowerCase().includes('the ring'))
+      const items = commandItems(p)
+      const hasRing = items.some((c) => String(c?.name ?? '').toLowerCase().includes('the ring'))
       const hasDungeon = items.some(
-        (c: any) => Array.isArray(c?.cardTypes) && c.cardTypes.map((t: string) => String(t).toLowerCase()).includes('dungeon')
+        (c) => Array.isArray(c?.cardTypes) && c.cardTypes.map((t) => String(t).toLowerCase()).includes('dungeon')
       )
       const hasMonarch = !!p.monarch
       const hasInitiative = !!p.initiative

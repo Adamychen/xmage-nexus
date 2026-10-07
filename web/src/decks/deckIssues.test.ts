@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { setGateway } from '../net/commands'
+import type { Gateway } from '../net/Gateway'
+import { fetchFormatIssues, xmageDeckTypeFor, applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
 import type { DeckValidationResult } from '../net/types'
 
 const report: DeckValidationResult = {
@@ -122,5 +124,49 @@ describe('deckIssues helpers', () => {
     expect(findFlaggedSameName(cards, flagged, 'Island')).toBe(-1)
     const okCards = [{ cardName: 'Rhystic Tutor', setCode: 'PCY', cardNumber: '77' }]
     expect(findFlaggedSameName(okCards, flagged, 'Rhystic Tutor')).toBe(-1)
+  })
+})
+
+describe('fetchFormatIssues (official XMage DeckValidator)', () => {
+  const send = vi.fn()
+  const deck = { name: 'Test', cards: [], sideboard: [] }
+  const formatReport = { ready: true, supported: true, valid: false, validator: 'Commander', errors: [{ type: 'DECK_SIZE', message: 'Must contain 100 cards' }] }
+
+  beforeEach(() => {
+    send.mockReset()
+    setGateway({ send } as unknown as Gateway)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    setGateway(null)
+    vi.restoreAllMocks()
+  })
+
+  it('validates with the config.xml deck type matching the format', async () => {
+    send.mockResolvedValue({ ok: true, data: formatReport })
+    expect(await fetchFormatIssues(deck, 'Commander')).toBe(formatReport)
+    expect(send).toHaveBeenCalledWith('validateDeckFormat', { deck, deckType: 'Variant Magic - Commander', gameType: undefined })
+  })
+
+  it('formats without an XMage validator keep the local validation', async () => {
+    expect(xmageDeckTypeFor('Timeless')).toBeNull()
+    expect(await fetchFormatIssues(deck, 'Timeless')).toBeNull()
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['card DB not ready', { ...formatReport, ready: false }],
+    ['format without a validator in this release', { ...formatReport, supported: false }],
+  ])('drops the report when: %s', async (_label, data) => {
+    // Such a report says valid=false with no errors: using it would flag the deck as illegal for no reason.
+    send.mockResolvedValue({ ok: true, data })
+    expect(await fetchFormatIssues(deck, 'Modern')).toBeNull()
+  })
+
+  it('a proxy failure does not break the builder', async () => {
+    send.mockRejectedValue(new Error('ws closed'))
+    expect(await fetchFormatIssues(deck, 'Modern')).toBeNull()
+    expect(console.warn).toHaveBeenCalled()
   })
 })

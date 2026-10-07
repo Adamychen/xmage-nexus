@@ -257,4 +257,68 @@ class DeckValidationTest {
         c.addProperty("amount", 1);
         return c;
     }
+
+    @Test
+    void commanderEligibilityUsesRealXMageCardClasses() {
+        JsonObject report = DeckValidation.commanderEligibility(java.util.List.of(
+                "Grist, the Hunger Tide",   // CR 903.5a: criatura fuera del campo (clase la marca)
+                "The Royal Scions",         // "can be your commander" (CanBeYourCommanderAbility)
+                "Atraxa, Praetors' Voice",  // legendaria criatura clásica
+                "Jace, the Mind Sculptor",  // planeswalker sin excepción: NO elegible
+                "Sol Ring"));               // ni legendaria ni criatura: NO elegible
+        assertTrue(report.get("ready").getAsBoolean(), "card db should be ready in this test suite");
+        java.util.Map<String, Boolean> byName = new java.util.HashMap<>();
+        for (int i = 0; i < report.getAsJsonArray("results").size(); i++) {
+            JsonObject e = report.getAsJsonArray("results").get(i).getAsJsonObject();
+            byName.put(e.get("name").getAsString(), e.get("eligible").getAsBoolean());
+        }
+        assertTrue(byName.get("Grist, the Hunger Tide"), "Grist must be commander-eligible (CR 903.5a)");
+        assertTrue(byName.get("Atraxa, Praetors' Voice"));
+        assertEquals(false, byName.get("Jace, the Mind Sculptor"));
+        assertEquals(false, byName.get("Sol Ring"));
+        // Paridad con el servidor en esta release: The Royal Scions NO dice
+        // "can be your commander" en su texto (es un planeswalker legendario
+        // normal) y no es criatura, así que ni xmage ni aquí la aceptan como
+        // comandante. Un planeswalker con la frase (p.ej. Commodore Guff) sí
+        // la implementa con CanBeYourCommanderAbility.
+        assertEquals(false, byName.get("The Royal Scions"));
+    }
+
+    @Test
+    void validateDeckFormatRunsOfficialXMageValidator() {
+        DeckCardLists atraxaDeck = deck(
+                card("Atraxa, Praetors' Voice", "C16", "28", 1),
+                card("Sol Ring", "C16", "264", 1),
+                card("Forest", "LEA", "294", 98));
+        JsonObject ok = DeckValidation.validateDeckFormat(atraxaDeck, "Variant Magic - Commander", null);
+        assertTrue(ok.get("ready").getAsBoolean());
+        assertTrue(ok.get("supported").getAsBoolean());
+        assertEquals("Commander", ok.get("validator").getAsString());
+        assertTrue(ok.get("valid").getAsBoolean(), "legal commander deck should pass the official validator");
+        assertEquals(0, ok.getAsJsonArray("errors").size());
+
+        // carta baneada en Commander => error BANNED del validador oficial
+        DeckCardLists bannedDeck = deck(
+                card("Atraxa, Praetors' Voice", "C16", "28", 1),
+                card("Ancestral Recall", "LEA", "46", 1),
+                card("Island", "LEA", "75", 98));
+        JsonObject banned = DeckValidation.validateDeckFormat(bannedDeck, "Variant Magic - Commander", null);
+        assertTrue(banned.get("supported").getAsBoolean());
+        assertEquals(false, banned.get("valid").getAsBoolean());
+        boolean sawBanned = false;
+        for (int i = 0; i < banned.getAsJsonArray("errors").size(); i++) {
+            JsonObject e = banned.getAsJsonArray("errors").get(i).getAsJsonObject();
+            if ("BANNED".equals(e.get("type").getAsString())) {
+                sawBanned = true;
+                assertEquals("Ancestral Recall", e.get("cardName").getAsString());
+            }
+        }
+        assertTrue(sawBanned, "official validator must report the banned card");
+
+        // formato sin equivalente => supported=false, sin errores (advisory)
+        JsonObject unsupported = DeckValidation.validateDeckFormat(atraxaDeck, "Timeless", null);
+        assertTrue(unsupported.get("ready").getAsBoolean());
+        assertEquals(false, unsupported.get("supported").getAsBoolean());
+        assertTrue(unsupported.get("valid").getAsBoolean());
+    }
 }

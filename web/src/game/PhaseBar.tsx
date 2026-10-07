@@ -1,3 +1,4 @@
+import type { TranslationSchema } from '../i18n/types'
 import { useCallback } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
@@ -8,7 +9,7 @@ import './PhaseBar.css'
 interface StepDef {
   key: string
   label: string
-  nameKey: any
+  nameKey: keyof TranslationSchema['game']
   group: string
   stopKey?: string
 }

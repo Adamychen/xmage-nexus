@@ -164,7 +164,7 @@ per-connection lock (`Gateway.send`).
 
 | Action | Args | Description |
 |---|---|---|
-| `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
+| `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. A server running another XMage release refuses the login with `errorCode:"VERSION_MISMATCH"` (the detail keeps the server's `Your version` / `Server version` text): the proxy has to be rebuilt against that release, no retry helps. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
 | `disconnect` | `{}` | Disconnect from server |
 | `leaving` | `{}` | The page is closing; no answer. The session then gets the short grace period (`--leaveGraceSecs`) when this was its last connection |
 | `ping` | `{}` | Keepalive and web heartbeat; answered at once on the WebSocket thread (before or after `connect`), never queued behind the session's commands |
@@ -205,6 +205,10 @@ per-connection lock (`Gateway.send`).
 | `submitDeck` | `{tableId, deck}` | Submit deck for the match |
 | `updateDeck` | `{tableId, deck}` | Update deck |
 | `validateDeck` | `{deck}` | Pre-validate a deck against the proxy's card DB (see below) |
+| `validateDeckFormat` | `{deck, deckType?, gameType?}` | Run the official XMage `DeckValidator` of that format (sizes, bans, copies, commander/partner, color identity): `{ready, supported, valid, validator, errors:[{type, group?, message?, cardName?}]}`. `supported:false` when the format has no validator |
+| `commanderEligibility` | `{names}` | Can each card be a commander, computed with the real card classes: `{ready, results:[{name, eligible}]}` |
+| `resolvePrintings` | `{names, strategy?, setCode?}` | The printing XMage's own importers pick for each name (see below) |
+| `cardPrintings` | `{names, limit?}` | Printings of each card implemented in this release (`[]` = not implemented; `limit:1` is enough to know) |
 
 Deck format:
 ```json
@@ -257,6 +261,15 @@ client must not block):
 }
 ```
 
+**Entries without a printing** (`"4 Lightning Bolt"` from a plain-text list)
+never reach the server blank: `DeckJson.resolvePrinting` gives them, at the
+protocol edge, the printing XMage's text importers pick
+(`CardRepository.findPreferredCoreExpansionCard`), for every deck the proxy
+forwards (`joinTable`, `submitDeck`, `updateDeck`, SIM seats, validation).
+`sources` maps the resolved entry back to the blank one the client stored. They
+stay blank only while the card DB is still building (validation then reports
+them as `missing`).
+
 - `missing`: the server will throw `Card not found` at join. `reason` is
   `OUTDATED_PRINTING` (the card name exists in other printings — repairable by
   swapping set/number) or `UNIMPLEMENTED` (no printing exists). `fixedDeck` is
@@ -264,6 +277,30 @@ client must not block):
 - `mismatches`: the server ACCEPTS the entry but loads a **different card**
   (set/number of another card — the name is ignored upstream). Surfaced so the
   player can swap to a correct printing instead of silently playing the wrong card.
+
+#### Card catalog (`resolvePrintings`, `cardPrintings`)
+
+Read-only lookups on the same card DB (`CardCatalog.java`), so the client never
+has to guess from Scryfall what the server has. Both answer `ready:false` while
+the DB is building; the client then keeps its Scryfall-only path.
+
+```json
+// resolvePrintings {names:["Lightning Bolt","Fire // Ice","Fake"], strategy:"default"}
+{"ready": true, "results": [
+  {"name": "Lightning Bolt", "found": true, "cardName": "Lightning Bolt", "setCode": "M11", "cardNumber": "149"},
+  {"name": "Fire // Ice", "found": true, "cardName": "Fire // Ice", "setCode": "APC", "cardNumber": "128"},
+  {"name": "Fake", "found": false}]}
+// cardPrintings {names:["Lightning Bolt","Fake"], limit:1}
+{"ready": true, "results": [
+  {"name": "Lightning Bolt", "printings": [{"setCode": "J21", "cardNumber": "787"}]},
+  {"name": "Fake", "printings": []}]}
+```
+
+`strategy`: `default` (`findPreferredCoreExpansionCard`, what the importers
+use), `oldest` (`findOldestNonPromoVersionCard`) or `set` with `setCode`
+(`findCardWithPreferredSetAndNumber`, falls back to the default). Names are
+deduplicated and capped at 500 per request; split/MDFC/adventure names resolve
+by full name or by front face, like `CardRepository.findCards`.
 
 Related hardening: join/submit/update failures now classify
 `Card not found` as `errorCode: "CARD_NOT_FOUND"` and always carry the server's
@@ -281,7 +318,7 @@ empty.
 | `sendPlayerInteger` | `{gameId, value}` | Choose a number (X cost, amount) |
 | `sendPlayerString` | `{gameId, value}` | Choose a string option |
 | `sendPlayerManaType` | `{gameId, value}` | Choose mana type |
-| `sendPlayerAction` | `{gameId, action, data}` | Advanced actions (e.g., `PASS_PRIORITY_UNTIL_STACK_RESOLVED`) |
+| `sendPlayerAction` | `{gameId, action, data}` | Advanced actions (e.g., `PASS_PRIORITY_UNTIL_STACK_RESOLVED`). `REQUEST_AUTO_ANSWER_TEXT_YES/NO` with `data` = the ask's `options.autoAnswerMessage` makes `HumanPlayer.chooseUse` answer that question itself from then on (`REQUEST_AUTO_ANSWER_RESET_ALL` forgets them all) |
 | `updatePreferences` | `{phases?, confirmEmptyManaPool?}` | Sync user prefs to server (`UserData`, applied live via in-place `update()`): phase-stop matrix and/or empty-mana-pool pass confirm (`HumanPlayer.passWithManaPoolCheck`) |
 | `cheatSetup` | `{gameId, playerId, zones:{hand?, battlefield?, library?, graveyard?, exile?}}` | **Test only**: place named cards into zones (P1; requires fork server with `testMode=true`, else `ok:false`; unknown card/zone/player → `ok:false`). Call once the game has processed ≥1 normal action (e.g. after the first land drop) — on the very first priority of turn 1 it freezes the game loop (runs off the game thread while still starting up) |
 

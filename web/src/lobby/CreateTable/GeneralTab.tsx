@@ -19,6 +19,7 @@ import {
   tournamentTypeNameOf,
 } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
+import Field from '../../ui/Field'
 
 export default function GeneralTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
@@ -100,18 +101,16 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
         </div>
       </div>
 
-      <label>
-        {t('lobby','create_field_table_name')}
+      <Field label={t('lobby','create_field_table_name')}>
         <input
           value={form.name}
           onChange={(e) => form.setName(e.target.value)}
           placeholder={t('lobby','placeholder_table_name')}
         />
-      </label>
+      </Field>
 
       <div className="create-grid-2col">
-        <label>
-          {t('lobby','create_field_game_type')}
+        <Field label={t('lobby','create_field_game_type')}>
           <select value={form.gameType} onChange={(e) => form.setGameType(e.target.value)}>
             {form.effectiveGameTypes.map((g) => (
               <option key={g.name} value={g.name}>
@@ -119,9 +118,8 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
               </option>
             ))}
           </select>
-        </label>
-        <label>
-          {t('lobby','create_field_format')}
+        </Field>
+        <Field label={t('lobby','create_field_format')}>
           <select value={form.deckType} onChange={(e) => form.setDeckType(e.target.value)}>
             {form.effectiveDeckTypes.map((d) => (
               <option key={d} value={d}>
@@ -129,7 +127,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
               </option>
             ))}
           </select>
-        </label>
+        </Field>
       </div>
 
       {(isTourney || form.deckType === 'Limited') && (
@@ -154,14 +152,13 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
             description={t('lobby','create_desc_as_draft_tourney')}
           />
           {form.tableCategory !== 'tourney' && form.isLimited && !form.isDraftLimited && (
-            <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,193,7,0.4)', color: '#ffd54f', marginBottom: 8 }}>
+            <div className="wizard-hint-box wizard-hint-box--warn wizard-hint-box--spaced">
               <Icon name="alert" size={13} /> {t('lobby', 'create_limited_match_hint')}
             </div>
           )}
 
           <div className="create-grid-2col">
-            <label>
-              {t('lobby','create_field_draft_type')}
+            <Field label={t('lobby','create_field_draft_type')}>
               <select value={tournamentTypeName} onChange={(e) => form.setTournamentType(e.target.value)}>
                 {draftTypeOptions.map((tt) => {
                   const name = typeof tt === 'string' ? tt : (tt as { name?: string })?.name ?? ''
@@ -169,10 +166,9 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   return <option key={name} value={name}>{name}</option>
                 })}
               </select>
-            </label>
+            </Field>
             {tournamentTypeName.includes('Swiss') && (
-              <label>
-                {t('lobby','create_field_number_rounds')}
+              <Field label={t('lobby','create_field_number_rounds')}>
                 <input
                   type="number"
                   min={0}
@@ -180,12 +176,11 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                   value={form.numberRounds}
                   onChange={(e) => form.setNumberRounds(Math.min(10, Math.max(0, parseInt(e.target.value, 10) || 0)))}
                 />
-              </label>
+              </Field>
             )}
           </div>
 
-          <div className="field">
-            <span>{t('lobby', 'create_tourney_players')}</span>
+          <Field group label={t('lobby', 'create_tourney_players')}>
             <div className="chip-row">
               {[2, 4, 8, 16, 32].map((n) => (
                 <ChipButton
@@ -198,38 +193,35 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                 </ChipButton>
               ))}
             </div>
-          </div>
+          </Field>
 
           {form.isDraftLimited && (
             <>
               <div className="create-grid-2col">
-                <label>
-                  {t('lobby', 'create_field_boosters')}
+                <Field label={t('lobby', 'create_field_boosters')}>
                   <select value={form.draftBoosters} onChange={(e) => form.setDraftBoosters(Number(e.target.value) as 3 | 6)}>
                     <option value={3}>{t('lobby', 'create_option_boosters_3')}</option>
                     <option value={6}>{t('lobby', 'create_option_boosters_6')}</option>
                   </select>
-                </label>
-                <label>
-                  {t('lobby','create_field_construction_time')}
+                </Field>
+                <Field label={t('lobby','create_field_construction_time')}>
                   <select value={form.draftConstructionTime} onChange={(e) => form.setDraftConstructionTime(Number(e.target.value))}>
                     {CONSTRUCTION_TIME_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{getConstructionTimeLabel(o, t)}</option>
                     ))}
                   </select>
-                </label>
+                </Field>
               </div>
 
               {tournamentTypeName.includes('Cube') && (
-                <label>
-                  {t('lobby','create_field_cube')}
+                <Field label={t('lobby','create_field_cube')}>
                   <select value={form.draftCubeName} onChange={(e) => form.setDraftCubeName(e.target.value)}>
                     <option value="">{t('lobby','create_cube_random', { all: t('common','all') })}</option>
                     {(form.draftCubes.length ? form.draftCubes : DEFAULT_DRAFT_CUBES).map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-                </label>
+                </Field>
               )}
 
               <DraftSetsSelector
@@ -260,14 +252,13 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
               )}
 
               {tournamentTypeName.includes('Draft') && (
-                <label>
-                  {t('lobby','create_field_draft_timing')}
+                <Field label={t('lobby','create_field_draft_timing')}>
                   <select value={form.draftTiming} onChange={(e) => form.setDraftTiming(e.target.value as 'BEGINNER' | 'REGULAR' | 'PROFESSIONAL')}>
                     {DRAFT_TIMING_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.value === 'BEGINNER' ? t('lobby','create_draft_timing_beginner') : o.value === 'REGULAR' ? t('lobby','create_draft_timing_regular') : t('lobby','create_draft_timing_professional')}</option>
                     ))}
                   </select>
-                </label>
+                </Field>
               )}
 
               <Checkbox
@@ -282,8 +273,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
         </div>
       )}
 
-      <div className="field">
-        <span>{t('lobby','create_field_wins_needed')}</span>
+      <Field group label={t('lobby','create_field_wins_needed')}>
         <div className="chip-row">
           {[
             { label: t('lobby','create_option_wins_bo1'), val: 1 },
@@ -302,27 +292,24 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
             </ChipButton>
           ))}
         </div>
-      </div>
+      </Field>
 
       {!isTourney && form.selectedGameTypeInfo && form.selectedGameTypeInfo.minPlayers !== form.selectedGameTypeInfo.maxPlayers && (
-        <label>
-          {t('lobby','create_field_num_players')}
+        <Field label={t('lobby','create_field_num_players')} hint={<>Min {form.selectedGameTypeInfo.minPlayers} — Max {form.selectedGameTypeInfo.maxPlayers}</>}>
           <select value={form.numPlayers} onChange={(e) => form.setNumPlayers(Number(e.target.value))}>
             {Array.from({ length: form.selectedGameTypeInfo.maxPlayers - form.selectedGameTypeInfo.minPlayers + 1 }, (_, i) => {
               const n = form.selectedGameTypeInfo!.minPlayers + i
               return <option key={n} value={n}>{t('lobby','staging_seats_count',{count:n})}</option>
             })}
           </select>
-          <span className="create-field-hint">Min {form.selectedGameTypeInfo.minPlayers} — Max {form.selectedGameTypeInfo.maxPlayers}</span>
-        </label>
+        </Field>
       )}
 
       {form.compatibilityError && (
-        <div className="wizard-hint-box" style={{ borderColor: 'rgba(255,80,80,0.4)', color: '#ff9a9a' }}><Icon name="alert" size={13} /> {form.compatibilityError}</div>
+        <div className="wizard-hint-box wizard-hint-box--err"><Icon name="alert" size={13} /> {form.compatibilityError}</div>
       )}
 
-      <div className="field">
-        <span>{t('lobby','create_field_skill')}</span>
+      <Field group label={t('lobby','create_field_skill')}>
         <div className="chip-row">
           {SKILL_LEVEL_OPTIONS.map((opt) => {
             const label = opt.value === 'BEGINNER' ? t('lobby','create_skill_beginner') : opt.value === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')
@@ -331,14 +318,14 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
                 pill
                 active={form.skillLevel === opt.value}
                 key={opt.value}
-                onClick={() => form.setSkillLevel(opt.value as any)}
+                onClick={() => form.setSkillLevel(opt.value)}
               >
                 {Array.from({ length: opt.stars }, (_, i) => <Icon key={i} name="star" size={11} />)} {label}
               </ChipButton>
             )
           })}
         </div>
-      </div>
+      </Field>
 
       <Checkbox
         card

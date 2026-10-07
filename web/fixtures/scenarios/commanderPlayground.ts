@@ -9,7 +9,7 @@
  */
 
 import { makeBaseScenario, makeTable, type FakeConn, type Scenario } from '../fake'
-import { makeCard, makeGameView, makePermanent, makePlayer } from '../../src/__fixtures__/gameViews'
+import { commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PermanentView, TableView } from '../../src/net/types'
 
 export const PLAYGROUND_TABLE_ID = 'table-commander-playground'
@@ -29,9 +29,9 @@ function commander(id: string, name: string, castCount: number, extra: Partial<C
     cardTypes: ['Creature'],
     superTypes: ['Legendary'],
     mageObjectType: 'COMMANDER',
-    castCount,
     ...extra,
-  } as Partial<CardView> & { name: string })
+    rules: extra.mageObjectType === 'COMPANION' ? extra.rules : [...(extra.rules ?? []), commanderInfoRule(castCount)],
+  })
 }
 
 function land(id: string, name: string, tapped = false): PermanentView {
@@ -130,7 +130,7 @@ export function commanderPlaygroundScenario(): Scenario {
           manaValue: 3,
           mageObjectType: 'COMPANION',
           rules: ['Companion — Each permanent card in your starting deck has mana value 2 or less.'],
-        } as Partial<CardView>),
+        }),
       ],
       battlefield: { 'pg-o3-swamp': land('pg-o3-swamp', 'Swamp') },
     })

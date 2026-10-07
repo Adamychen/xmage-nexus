@@ -359,3 +359,5 @@
   font-size: var(--fs-xs);
 }
 
+.arena-search-spinner { margin-right: var(--sp-1h); }
+.arena-lang-check { margin-left: auto; }

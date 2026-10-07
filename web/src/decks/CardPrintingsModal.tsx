@@ -1,10 +1,12 @@
 import CloseButton from '../ui/CloseButton'
 import { useState, useEffect } from 'react'
-import { scryfallCardImage } from './scryfallSearch'
+import { scryfallCardImage, type ScryfallSearchCard } from './scryfallSearch'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
 import { scryfallFetch } from '../cards/scryfallClient'
+import { CustomCardArtSection } from './CustomCardArtSection'
+import { xmagePrintingsOf } from './xmageCatalog'
 import './CardPrintingsModal.css'
 
 export interface CardPrinting {
@@ -14,13 +16,17 @@ export interface CardPrinting {
   collectorNumber: string
   releasedAt: string
   rarity: string
-  imageUrl: string
+  imageUrl: string | null
   artCropUrl?: string
 }
 
-export function parseScryfallPrints(data: any): CardPrinting[] {
+/** A `/cards/search?unique=prints` answer: a page of printings. */
+type ScryfallPrintsJson = { data?: (ScryfallSearchCard & { set_name?: string })[] } | null | undefined
+
+export function parseScryfallPrints(json: unknown): CardPrinting[] {
+  const data = json as ScryfallPrintsJson
   if (!data || !Array.isArray(data.data)) return []
-  return data.data.map((item: any) => ({
+  return data.data.map((item) => ({
     id: item.id,
     set: (item.set || '').toUpperCase(),
     setName: item.set_name || item.set || '',
@@ -49,6 +55,20 @@ export function CardPrintingsModal({
   const [printings, setPrintings] = useState<CardPrinting[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Impresiones que tiene la release de XMage del servidor (null: sin proxy, no se marca nada)
+  const [onServer, setOnServer] = useState<Set<string> | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setOnServer(null)
+    void xmagePrintingsOf(cardName).then((list) => {
+      if (cancelled || !list) return
+      setOnServer(new Set(list.map((p) => `${p.setCode.toUpperCase()}|${p.cardNumber}`)))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [cardName])
 
   useEffect(() => {
     let cancelled = false
@@ -97,6 +117,8 @@ export function CardPrintingsModal({
       onEscape={onClose}
     >
         <div className="printings-body">
+          <CustomCardArtSection cardName={cardName} />
+
           {loading && (
             <div className="printings-status-box">
               <div className="printings-spinner" />
@@ -122,29 +144,25 @@ export function CardPrintingsModal({
                 const isSelected =
                   p.set.toLowerCase() === currentSet.toLowerCase() &&
                   p.collectorNumber === currentNumber
+                const unavailable = !!onServer && !onServer.has(`${p.set}|${p.collectorNumber}`)
 
                 return (
                   <div
                     key={p.id}
-                    className={`printing-card-item ${isSelected ? 'selected' : ''}`}
+                    className={`printing-card-item ${isSelected ? 'selected' : ''}${unavailable ? ' is-unavailable' : ''}`}
+                    data-unavailable={unavailable || undefined}
+                    title={unavailable ? t('decks', 'printing_not_on_server') : undefined}
                     onClick={() => {
-                      let s = p.set
-                      let n = p.collectorNumber
-                      if (s.toUpperCase() === 'PLST' && n.includes('-')) {
-                        const parts = n.split('-')
-                        n = parts.pop()!.trim()
-                        s = parts[0]?.trim() || s
-                      } else if (n.includes('-')) {
-                        const last = n.split('-').pop()!.trim()
-                        if (last) n = last
-                      }
-                      onSelectPrinting(s.toUpperCase(), n)
+                      // Impresión de Scryfall tal cual: la traducción a la que
+                      // carga el servidor (PLST, promos) la hace el proxy.
+                      onSelectPrinting(p.set, p.collectorNumber)
                       onClose()
                     }}
                   >
                     <div className="printing-img-wrap">
-                      <img src={p.imageUrl} alt={`${cardName} (${p.set})`} loading="lazy" />
+                      <img src={p.imageUrl ?? undefined} alt={`${cardName} (${p.set})`} loading="lazy" />
                       {isSelected && <div className="printing-selected-badge">✓ {t('common', 'done')}</div>}
+                      {unavailable && <div className="printing-unavailable-badge">{t('decks', 'printing_not_on_server_short')}</div>}
                     </div>
 
                     <div className="printing-info">

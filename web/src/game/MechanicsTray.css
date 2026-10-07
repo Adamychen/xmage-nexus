@@ -12,15 +12,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--sp-4);
 }
 
 .mechanics-glossary-hint {
-  margin-top: 8px;
+  margin-top: var(--sp-2);
   text-align: left;
   font-size: var(--fs-3xs);
   background: var(--shade-1);
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
   border-radius: var(--r-sm);
   border: 1px solid var(--veil-1);
 }
@@ -29,22 +29,22 @@
   font-weight: 700;
   color: var(--gold-300);
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 
 .mechanics-glossary-hint ul {
   margin: 0;
-  padding-left: 12px;
+  padding-left: var(--sp-3);
   color: var(--fg-2);
 }
 
 .mechanics-glossary-hint li {
-  margin-bottom: 3px;
+  margin-bottom: var(--sp-1);
 }
 
 /* Nav bar / category pills */
 .mechanics-nav-bar {
-  padding: 6px 8px;
+  padding: var(--sp-1h) var(--sp-2);
   background: rgb(var(--ink-rgb) / 0.9);
   border-bottom: 1px solid var(--ink-3);
   overflow-x: auto;
@@ -52,7 +52,7 @@
 }
 
 .mechanic-tab-btn {
-  padding: 3px 8px;
+  padding: var(--sp-1) var(--sp-2);
   font-size: var(--fs-3xs);
   border-radius: var(--r-mid);
 }
@@ -66,10 +66,10 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 10px;
+  padding: var(--sp-2h);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2h);
   scrollbar-width: thin;
 }
 
@@ -77,21 +77,21 @@
 .mechanic-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .mechanic-header-card {
   background: rgb(var(--ink-2-rgb) / 0.85);
   border: 1px solid rgb(var(--gold-rgb) / 0.3);
   border-radius: var(--r-base);
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
 }
 
 .mechanic-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .mechanic-title-row h3 {
@@ -105,7 +105,7 @@
 .ring-level-badge {
   font-size: var(--fs-3xs);
   font-weight: 800;
-  padding: 2px 6px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-sm);
   background: var(--gold-300);
   color: var(--ink-0);
@@ -116,9 +116,9 @@
 .ring-bearer-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   font-size: var(--fs-2xs);
-  margin-top: 4px;
+  margin-top: var(--sp-1);
   flex-wrap: wrap;
 }
 
@@ -140,14 +140,14 @@
 .ring-levels-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .ring-level-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-2h);
   border-radius: var(--r-base);
   background: rgb(var(--ink-rgb) / 0.7);
   border: 1px solid var(--veil-2);
@@ -173,13 +173,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .level-num-title {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-1h);
 }
 
 .level-num {
@@ -204,7 +204,7 @@
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.03em;
-  padding: 1px 5px;
+  padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   background: var(--veil-1);
   color: var(--fg-2);
@@ -226,7 +226,7 @@
 .mechanic-token-preview {
   display: flex;
   justify-content: center;
-  padding: 6px;
+  padding: var(--sp-1h);
 }
 
 .token-art-img {
@@ -244,7 +244,7 @@
 
 /* Dungeon Panel */
 .panel-dungeon .dungeon-sub {
-  margin: 4px 0 0 0;
+  margin: var(--sp-1) 0 0 0;
   font-size: var(--fs-3xs);
   color: var(--fg-3);
 }
@@ -252,14 +252,14 @@
 .dungeon-rooms-flow {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--sp-1h);
 }
 
 .dungeon-room-node {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: var(--sp-1h);
+  padding: var(--sp-1h) var(--sp-2);
   border-radius: var(--r-sm);
   background: rgb(var(--ink-2-rgb) / 0.7);
   border: 1px solid rgb(var(--ok-rgb) / 0.2);
@@ -308,7 +308,7 @@
 .dungeon-depth-row {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--sp-1h);
 }
 
 .dungeon-depth-row.is-fork {
@@ -353,8 +353,8 @@
 .daynight-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--sp-2h);
+  padding: var(--sp-3);
   border-radius: var(--r-base);
 }
 
@@ -391,17 +391,17 @@
   background: rgb(var(--ink-rgb) / 0.8);
   border: 1px solid var(--veil-2);
   border-radius: var(--r-base);
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-2h);
 }
 
 .daynight-rules-box h4 {
-  margin: 0 0 6px 0;
+  margin: 0 0 var(--sp-1h) 0;
   font-size: var(--fs-2xs);
   color: var(--gold-300);
 }
 
 .rule-card {
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-1h);
   font-size: var(--fs-3xs);
   color: var(--fg-2);
 }
@@ -410,7 +410,7 @@
   display: inline-block;
   font-weight: 700;
   color: var(--fg-1);
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-0h);
 }
 
 /* Monarch & Initiative */
@@ -420,16 +420,16 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 12px;
+  padding: var(--sp-3);
 }
 
 .crown-large {
   font-size: 1.75rem;
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 
 .holder-row {
-  margin: 4px 0 0 0;
+  margin: var(--sp-1) 0 0 0;
   font-size: var(--fs-2xs);
   color: var(--fg-1);
 }
@@ -437,13 +437,13 @@
 .mechanic-rules-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-1h);
 }
 
 .rule-item {
   display: flex;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: var(--sp-2);
+  padding: var(--sp-1h) var(--sp-2);
   background: rgb(var(--ink-rgb) / 0.7);
   border-radius: var(--r-sm);
   font-size: var(--fs-3xs);
@@ -456,7 +456,7 @@
 }
 
 .rule-item p {
-  margin: 2px 0 0 0;
+  margin: var(--sp-0h) 0 0 0;
 }
 
 .rule-icon {
@@ -468,7 +468,7 @@
 .speed-players-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .blessing-player-row,
@@ -476,7 +476,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
+  padding: var(--sp-1h) var(--sp-2);
   background: rgb(var(--ink-rgb) / 0.7);
   border-radius: var(--r-sm);
   font-size: var(--fs-2xs);
@@ -486,7 +486,7 @@
 .badge-ascended {
   font-size: var(--fs-4xs);
   font-weight: 800;
-  padding: 2px 5px;
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-xs);
   background: rgb(var(--gold-rgb) / 0.2);
   color: var(--gold-300);

@@ -1,8 +1,8 @@
 .resource-bar {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
-  padding: 0 8px;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-2);
   pointer-events: auto;
   flex-shrink: 0;
   align-self: flex-end;
@@ -17,8 +17,8 @@
 
 /* Compact mode — card-sized stacks in bottom/top bar */
 .resource-bar.compact {
-  padding: 0 6px;
-  gap: 8px;
+  padding: 0 var(--sp-1h);
+  gap: var(--sp-2);
   align-items: flex-end;
   align-self: flex-end;
   overflow: visible;
@@ -51,7 +51,7 @@
 /* Piles container */
 .resource-piles {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   align-items: flex-end;
 }
 
@@ -212,7 +212,7 @@
   width: auto;
   height: 18px;
   min-width: 18px;
-  padding: 0 5px;
+  padding: 0 var(--sp-1h);
   border-radius: var(--r-base);
   background: rgb(var(--ink-rgb) / 0.88);
   border: 1px solid var(--veil-6);
@@ -230,7 +230,7 @@
   right: 3px;
   min-width: 18px;
   height: 18px;
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
   border-radius: var(--r-base);
   background: var(--ok);
   color: var(--ink-0);
@@ -308,8 +308,8 @@
 
 /* ── Micro Mode (Commander / Pod & small screens) ─────────────────── */
 .resource-bar.micro {
-  padding: 0 2px;
-  gap: 5px;
+  padding: 0 var(--sp-0h);
+  gap: var(--sp-1h);
   min-height: 28px;
   height: auto;
   align-items: center;
@@ -325,7 +325,7 @@
 .resource-piles.micro {
   display: grid;
   grid-template-columns: repeat(2, auto);
-  gap: 4px;
+  gap: var(--sp-1);
   justify-content: start;
   align-content: start;
 }
@@ -333,9 +333,9 @@
 .resource-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   height: 26px;
-  padding: 0 7px;
+  padding: 0 var(--sp-2);
   border-radius: var(--r-sm);
   background: rgb(var(--ink-2-rgb) / 0.92);
   border: 1.5px solid var(--veil-4);

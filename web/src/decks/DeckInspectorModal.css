@@ -64,3 +64,19 @@
   border-top: 1px solid var(--veil-2);
 }
 
+.inspector-section-title {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--fg-2);
+  text-transform: uppercase;
+  margin-bottom: var(--sp-1);
+}
+
+.inspector-section-title--sideboard { margin-top: var(--sp-3); }
+
+.inspector-info-label {
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}

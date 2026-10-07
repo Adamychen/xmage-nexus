@@ -59,20 +59,6 @@
   min-width: 0;
 }
 
-.setup-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-}
-
-.setup-field-error {
-  color: var(--err);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-}
-
 .setup-field input,
 .setup-field select {
   font-size: var(--fs-md);
@@ -160,8 +146,4 @@
 }
 
 /* U4-2: contraseña deshabilitada en el servidor público (beta) */
-.setup-field-hint {
-  font-size: var(--fs-xs);
-  color: var(--warn);
-}
 

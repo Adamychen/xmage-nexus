@@ -19,6 +19,9 @@ import {
   savePhaseStops,
   loadGameplayPreset,
   saveGameplayPreset,
+  saveResumeToken,
+  loadResumeToken,
+  clearResumeToken,
   DEFAULT_AUDIO_SETTINGS,
   type ConnectionInfo,
   type FxSettings,
@@ -328,5 +331,36 @@ describe('persistence', () => {
       expect(loadGameplayPreset()).toBeNull()
       expect(mockStorage['mage-web-gameplay-preset']).toBeUndefined()
     })
+  })
+})
+
+describe('resume token', () => {
+  const conn: ConnectionInfo = { wsHost: 'localhost', proxyPort: 8787, serverHost: 'Example.org', port: 17171, username: 'Ana', password: '' }
+
+  beforeEach(() => window.sessionStorage.clear())
+  afterEach(() => vi.useRealTimers())
+
+  it('round-trips for the same proxy and account (case-insensitive)', () => {
+    saveResumeToken({ streamId: 's1', seq: 9 }, conn)
+    expect(loadResumeToken({ ...conn, serverHost: 'example.org', username: 'ana' })).toEqual({ streamId: 's1', seq: 9 })
+  })
+
+  it('ignores it for another proxy or account', () => {
+    saveResumeToken({ streamId: 's1', seq: 9 }, conn)
+    expect(loadResumeToken({ ...conn, proxyPort: 8789 })).toBeNull()
+    expect(loadResumeToken({ ...conn, username: 'bob' })).toBeNull()
+  })
+
+  it('expires once the proxy session cannot be alive any more', () => {
+    vi.useFakeTimers()
+    saveResumeToken({ streamId: 's1', seq: 9 }, conn)
+    vi.advanceTimersByTime(11 * 60 * 1000)
+    expect(loadResumeToken(conn)).toBeNull()
+  })
+
+  it('clearResumeToken forgets it', () => {
+    saveResumeToken({ streamId: 's1', seq: 9 }, conn)
+    clearResumeToken()
+    expect(loadResumeToken(conn)).toBeNull()
   })
 })

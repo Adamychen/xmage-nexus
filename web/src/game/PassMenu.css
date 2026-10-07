@@ -6,8 +6,8 @@
   z-index: 150;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 8px;
+  gap: var(--sp-0h);
+  padding: var(--sp-2);
   background: var(--ink-2);
   border: 1px solid var(--ink-4);
   border-radius: var(--r-md);
@@ -22,10 +22,10 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-3);
-  padding: 4px 8px 2px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-0h);
 }
 
-.pass-menu-item { justify-content: space-between; padding: 7px 10px; }
+.pass-menu-item { justify-content: space-between; padding: var(--sp-2) var(--sp-2h); }
 
 .pass-menu-key {
   font-family: inherit;
@@ -34,17 +34,17 @@
   background: var(--ink-1);
   border: 1px solid var(--ink-4);
   border-radius: var(--r-xs);
-  padding: 1px 6px;
+  padding: 1px var(--sp-1h);
 }
 
 .pass-menu-divider {
   height: 1px;
   background: var(--ink-4);
-  margin: 6px 4px;
+  margin: var(--sp-1h) var(--sp-1);
 }
 
 .pass-menu-check {
-  padding: 6px 10px;
+  padding: var(--sp-1h) var(--sp-2h);
   border-radius: var(--r-sm);
 }
 

@@ -232,12 +232,6 @@
   flex: none;
 }
 
-.import-name-input {
-  width: 100%;
-  padding: var(--sp-2) var(--sp-3);
-  font-size: var(--fs-sm);
-}
-
 .import-textarea {
   font-family: var(--font-mono, monospace);
   width: 100%;

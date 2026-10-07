@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { DeckV2 } from './types'
 import type { DeckCard } from '../lobby/decks'
-import type { CardStripMeta } from './ArenaCardStrip'
+import type { CardStripMeta, DroppedCardData } from './ArenaCardStrip'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import type { BasicLandPreset } from './deckUtils'
 import type { ImportResult } from './DeckImportModal'
@@ -16,6 +16,7 @@ import { applyPrintingsByName, countUnresolved, resolveDeckPrintings } from './i
 import { normalizeDeckCard } from './deckNormalize'
 import { setCardArtPreference } from '../cards/artPreferences'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
+import { commanderEligibilityKey } from './useCommanderEligibility'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
 
@@ -28,6 +29,7 @@ interface Deps {
   serverFlaggedKeys: Set<string>
   printingTargetCard: DeckCard | null
   setPrintingTargetCard: (c: DeckCard | null) => void
+  commanderEligibilityMap?: Map<string, boolean> | null
 }
 
 /** Todos los handlers de mutación del mazo (añadir/mover/inc/dec/borrar/importar/imprenta/tierras). */
@@ -35,6 +37,7 @@ export function useDeckMutations(deps: Deps) {
   const {
     deck, schedulePersist, metaMap, setMetaMap, updateMetaForDeck,
     serverFlaggedKeys, printingTargetCard, setPrintingTargetCard,
+    commanderEligibilityMap,
   } = deps
 
   const deckRef = useRef(deck)
@@ -80,7 +83,7 @@ export function useDeckMutations(deps: Deps) {
     }
   }
 
-  const cacheMetaFromPayload = (cardData: any, setCode: string, cardNumber: string, cardName: string) => {
+  const cacheMetaFromPayload = (cardData: DroppedCardData, setCode: string, cardNumber: string, cardName: string) => {
     if (cardData.manaCost === undefined && !cardData.typeLine) return
     setMetaMap((prev) => {
       const nxt = new Map(prev)
@@ -92,6 +95,7 @@ export function useDeckMutations(deps: Deps) {
         cmc: cardData.cmc ?? 0,
         typeLine: cardData.typeLine ?? '',
         colors: cardData.colors ?? [],
+        colorIdentity: cardData.colorIdentity,
         oracleText: cardData.oracleText ?? '',
         legalities: cardData.legalities,
       }
@@ -101,7 +105,7 @@ export function useDeckMutations(deps: Deps) {
     })
   }
 
-  const metaOf = (cardName: string, setCode: string, cardNumber: string, payload?: any) => {
+  const metaOf = (cardName: string, setCode: string, cardNumber: string, payload?: DroppedCardData) => {
     if (payload?.typeLine) {
       return { typeLine: payload.typeLine, oracleText: payload.oracleText ?? '', keywords: payload.keywords }
     }
@@ -127,7 +131,7 @@ export function useDeckMutations(deps: Deps) {
     && a.setCode.toUpperCase() === setCode.toUpperCase()
     && a.cardNumber === cardNumber
 
-  const handleDropCardOnDeck = (cardData: any, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
+  const handleDropCardOnDeck = (cardData: DroppedCardData, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
     if (!deck || !cardData?.cardName) return
     const setCode = (cardData.setCode || '').toUpperCase()
     const cardNumber = cardData.cardNumber || '0'
@@ -137,7 +141,10 @@ export function useDeckMutations(deps: Deps) {
 
     if (target === 'commander') {
       const droppedMeta = metaOf(cardName, setCode, cardNumber, cardData)
-      const droppedEligible = !droppedMeta || isCommanderEligible(droppedMeta)
+      // Proxy primero (clases reales de xmage, p.ej. Grist); fallback: la
+      // heurística del oráculo, permitiendo soltar si no hay meta que validar.
+      const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(cardName))
+      const droppedEligible = fromProxy ?? (!droppedMeta || isCommanderEligible(droppedMeta))
       const commander = deck.commanderCard ?? null
       const partner = deck.partnerCard ?? null
 

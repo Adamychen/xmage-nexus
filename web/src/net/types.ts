@@ -114,6 +114,55 @@ export interface DeckCardEntry {
 
 // ─── Validación de mazos (validateDeck del proxy) ────────────────────────────
 
+/** Informe de commanderEligibility (clases reales de XMage del proxy). ready=false => BD no disponible. */
+export interface CommanderEligibilityResult {
+  ready: boolean
+  results: { name: string; eligible: boolean }[]
+}
+
+/** Error crudo del DeckValidator oficial de XMage (texto oficial, en inglés). */
+export interface XmageFormatError {
+  type: 'PRIMARY' | 'DECK_SIZE' | 'BANNED' | 'WRONG_SET' | 'OTHER' | string
+  group?: string
+  message?: string
+  cardName?: string
+}
+
+/**
+ * Informe de validateDeckFormat (DeckValidator oficial de XMage del proxy).
+ * ready=false => BD de cartas no disponible; supported=false => sin validador
+ * para ese formato (el cliente mantiene su validación local).
+ */
+export interface DeckFormatValidationResult {
+  ready: boolean
+  supported: boolean
+  valid: boolean
+  validator: string
+  errors: XmageFormatError[]
+}
+
+/** Impresión que elige XMage para un nombre (resolvePrintings del proxy). */
+export interface XmagePrintingResolution {
+  name: string
+  found: boolean
+  /** Nombre canónico en XMage (p.ej. "Fire // Ice") */
+  cardName?: string
+  setCode?: string
+  cardNumber?: string
+}
+
+/** Informe de resolvePrintings. ready=false => BD de cartas del proxy no disponible. */
+export interface ResolvePrintingsResult {
+  ready: boolean
+  results: XmagePrintingResolution[]
+}
+
+/** Informe de cardPrintings: impresiones implementadas en XMage (vacía => no implementada). */
+export interface CardPrintingsResult {
+  ready: boolean
+  results: { name: string; printings: { setCode: string; cardNumber: string }[] }[]
+}
+
 /** Motivo por el que el servidor rechazaría una carta ("Card not found"). */
 export type DeckIssueReason = 'UNIMPLEMENTED' | 'OUTDATED_PRINTING'
 

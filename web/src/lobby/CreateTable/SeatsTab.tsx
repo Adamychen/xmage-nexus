@@ -5,6 +5,8 @@ import Icon from '../../ui/Icon'
 import { deckRef } from '../decks'
 import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
+import Field from '../../ui/Field'
+import StarterDecksOffer from '../../decks/StarterDecksOffer'
 
 export default function SeatsTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
@@ -27,13 +29,12 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
           {form.humanSeat && (
             <>
               {form.isDraftLimited ? (
-                <div className="wizard-hint-box" style={{ borderColor: 'rgba(92,160,255,0.4)', color: '#90caf9', marginBottom: 8 }}>
+                <div className="wizard-hint-box wizard-hint-box--info wizard-hint-box--spaced">
                   <Icon name="layers" size={13} /> {t('lobby', 'create_tourney_draft_timing_desc')}
                 </div>
               ) : (
                 <>
-                  <label>
-                    {t('lobby','active_deck')}
+                  <Field label={t('lobby','active_deck')}>
                     <select
                       value={form.myDeck ? deckRef(form.myDeck) : ''}
                       onChange={(e) => form.selectMyDeck(e.target.value)}
@@ -45,20 +46,22 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                         </option>
                       ))}
                     </select>
-                  </label>
+                  </Field>
                   {!form.myDeck && (
                     <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>
                   )}
+                  {form.decksLoaded && form.availableDecks.length === 0 && (
+                    <StarterDecksOffer onAdded={form.adoptStarterDecks} />
+                  )}
                 </>
               )}
-              <label>
-                {t('lobby','create_field_my_skill')}
+              <Field label={t('lobby','create_field_my_skill')}>
                 <select data-testid="my-skill" value={form.mySkill} onChange={(e) => form.setMySkill(Number(e.target.value))}>
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
                     <option key={v} value={v}>{v}</option>
                   ))}
                 </select>
-              </label>
+              </Field>
             </>
           )}
           {!form.humanSeat && <span className="wizard-hint-box">{t('lobby','create_enter_as_spectator')}</span>}
@@ -72,7 +75,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
             )}
           </div>
           {form.numPlayers > 2 && (
-            <div className="wizard-hint-box" style={{ marginBottom: 8 }}>
+            <div className="wizard-hint-box wizard-hint-box--spaced">
               {form.isTournament ? t('lobby','create_seats_hint_tourney') : form.isMultiplayerGame ? t('lobby','create_seats_hint_multi') : t('lobby','create_seats_hint_duel')}
             </div>
           )}
@@ -81,10 +84,10 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
           ) : (
             <div className="create-seats-section">
               {form.seatConfigs.map((cfg, idx) => (
-                <div key={idx} className="create-seat-box" style={{ background: 'rgba(22,28,56,0.5)' }}>
+                <div key={idx} className="create-seat-box create-seat-box--seat">
                   <div className="seat-box-header">
                     <span className="seat-title">{t('lobby','create_seat_number',{num:idx+2})} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
-                    <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} style={{ width: 'auto', minWidth: 140 }}>
+                    <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} className="create-seat-select create-seat-select--type">
                       <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT, t)}</option>
                       <option value={SIM_SEAT}>{seatTypeLabel(SIM_SEAT, t)}</option>
                       {form.playerTypes.map((pt) => (
@@ -93,14 +96,13 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                     </select>
                   </div>
                   {!isHumanSeatType(cfg.type) && (
-                  <label>
-                    {t('lobby','create_field_seat_skill')}
-                    <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} style={{ width: 'auto', minWidth: 80 }}>
+                  <Field label={t('lobby','create_field_seat_skill')}>
+                    <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} className="create-seat-select create-seat-select--skill">
                       {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
                         <option key={v} value={v}>{v}</option>
                       ))}
                     </select>
-                  </label>
+                  </Field>
                   )}
                   {isHumanSeatType(cfg.type) && <span className="wizard-hint-box"><Icon name="user" size={11} /> {t('lobby','create_seat_human_waiting')}</span>}
                   {!isHumanSeatType(cfg.type) && !form.isDraftLimited && (() => {
@@ -109,8 +111,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                     const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
                     return (
                       <>
-                        <label>
-                          {t('lobby','create_seat_deck_label',{num:idx+2})}
+                        <Field label={t('lobby','create_seat_deck_label',{num:idx+2})}>
                           <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)} disabled={form.availableDecks.length === 0}>
                             {form.availableDecks.map((d) => (
                               <option key={deckRef(d)} value={deckRef(d)}>
@@ -118,7 +119,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                               </option>
                             ))}
                           </select>
-                        </label>
+                        </Field>
                         {(!deck || total === 0) ? (
                           <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_warn_seat_deck_empty')}</Chip>
                         ) : (
@@ -132,9 +133,8 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
               ))}
             </div>
           )}
-          <div style={{ marginTop: 10, borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: 10 }}>
-            <div className="field">
-              <span>{t('lobby','create_seats_apply_all_shortcut')}</span>
+          <div className="create-seats-shortcuts">
+            <Field group label={t('lobby','create_seats_apply_all_shortcut')}>
               <div className="chip-row">
                 <ChipButton
                   pill
@@ -156,9 +156,8 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   >{seatTypeLabel(pt, t)}</ChipButton>
                 ))}
               </div>
-            </div>
-            <label style={{ marginTop: 8 }}>
-              {t('lobby','create_sim_deck_global_shortcut')}
+            </Field>
+            <Field className="create-seats-sim-deck" label={t('lobby','create_sim_deck_global_shortcut')}>
               <select value={form.simDeck ? deckRef(form.simDeck) : ''} onChange={(e) => form.selectGlobalSimDeck(e.target.value)} disabled={form.availableDecks.length === 0}>
                 {form.availableDecks.map((d) => (
                   <option key={deckRef(d)} value={deckRef(d)}>
@@ -166,7 +165,7 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
                   </option>
                 ))}
               </select>
-            </label>
+            </Field>
           </div>
         </div>
       </div>

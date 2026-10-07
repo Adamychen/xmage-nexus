@@ -1,12 +1,13 @@
 {
   "name": "xmage-nexus",
   "private": true,
-  "version": "0.4.3",
+  "version": "0.4.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "npm run gen-splash-i18n && tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
+    "lint": "oxlint src e2e",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -46,6 +47,7 @@
     "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^26.1.0",
+    "oxlint": "^1.87.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.1",
     "vitest": "^4.1.10",

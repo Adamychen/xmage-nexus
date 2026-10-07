@@ -3,7 +3,7 @@ import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { CardView } from '../net/types'
+import type { CardView, PermanentView } from '../net/types'
 import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
 import FloatingCardPreview from './FloatingCardPreview'
@@ -41,7 +41,7 @@ export default function PileOverlay({
 
   useEscape(onClose)
 
-  const handleCardHover = (card: any, rect?: DOMRect) => {
+  const handleCardHover = (card: CardView | PermanentView | null, rect?: DOMRect) => {
     if (card?.faceDown) {
       setHoverCard(null)
       setHoverRect(null)

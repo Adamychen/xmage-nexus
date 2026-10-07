@@ -9,6 +9,7 @@ import './ArenaCardGrid.css'
 
 export function ArenaCardGrid({
   cards,
+  unimplemented,
   loading,
   loadingMore = false,
   hasMore = false,
@@ -26,6 +27,8 @@ export function ArenaCardGrid({
   cardMinPx,
 }: {
   cards: ScryfallSearchCard[]
+  /** Nombres (minúsculas) que la release de XMage del servidor no implementa */
+  unimplemented?: Set<string>
   loading: boolean
   loadingMore?: boolean
   hasMore?: boolean
@@ -78,6 +81,7 @@ export function ArenaCardGrid({
       cmc: card.cmc,
       typeLine: card.type_line || card.printed_type_line,
       colors: card.colors || card.color_identity || [],
+      colorIdentity: card.color_identity,
       oracleText: card.oracle_text ?? '',
       source: 'search',
     }))
@@ -148,11 +152,13 @@ export function ArenaCardGrid({
           const displayName = card.printed_name || card.name
           const displayType = card.printed_type_line || card.type_line
           const hoverTitle = displayName !== card.name ? `${displayName} (${card.name})` : card.name
+          const notOnServer = !!unimplemented?.has(card.name.toLowerCase())
 
           return (
             <div
               key={card.id}
-              className="arena-grid-card search-card"
+              className={`arena-grid-card search-card${notOnServer ? ' is-unimplemented' : ''}`}
+              data-unimplemented={notOnServer || undefined}
               draggable
               role="button"
               tabIndex={0}
@@ -167,7 +173,9 @@ export function ArenaCardGrid({
               }}
               onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={onLeave}
-              title={`${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
+              title={notOnServer
+                ? `${hoverTitle} — ${t('decks', 'card_not_implemented')}`
+                : `${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
             >
               {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
               <div className="arena-card-pips">
@@ -198,6 +206,9 @@ export function ArenaCardGrid({
                     <div>{displayType}</div>
                   </div>
                 )}
+                {notOnServer && (
+                  <span className="arena-unimplemented-badge">{t('decks', 'card_not_implemented_short')}</span>
+                )}
                 <div className="arena-grid-card-overlay">
                   <span className="arena-add-badge search-card-add">+ {t('decks', 'builder_grid_add')}</span>
                 </div>
@@ -207,7 +218,7 @@ export function ArenaCardGrid({
         })}
 
         {/* Bottom Sentinel for IntersectionObserver */}
-        <div ref={sentinelRef} style={{ gridColumn: '1 / -1', height: 1 }} />
+        <div ref={sentinelRef} className="arena-grid-sentinel" />
 
         {loadingMore && (
           <div className="arena-grid-loading-more">

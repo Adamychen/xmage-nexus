@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
-import { t, translateError, setLanguage, useLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage, toBcp47Locale } from './index'
+import { t, translateError, setLanguage, switchLanguage, getLanguage, LANGUAGES, CARD_LANGUAGES, setCardLanguage, getCardLanguage, toBcp47Locale } from './index'
 import { ja } from './locales/ja'
 
 describe('i18n system', () => {
@@ -20,35 +20,35 @@ describe('i18n system', () => {
   })
 
   it('switches to all 9 supported languages dynamically', async () => {
-    await useLanguage('en')
+    await switchLanguage('en')
     expect(getLanguage()).toBe('en')
     expect(t('common.save')).toBe('Save')
 
-    await useLanguage('de')
+    await switchLanguage('de')
     expect(getLanguage()).toBe('de')
     expect(t('common.save')).toBe('Speichern')
 
-    await useLanguage('fr')
+    await switchLanguage('fr')
     expect(getLanguage()).toBe('fr')
     expect(t('common.save')).toBe('Enregistrer')
 
-    await useLanguage('it')
+    await switchLanguage('it')
     expect(getLanguage()).toBe('it')
     expect(t('common.save')).toBe('Salva')
 
-    await useLanguage('pt')
+    await switchLanguage('pt')
     expect(getLanguage()).toBe('pt')
     expect(t('common.save')).toBe('Salvar')
 
-    await useLanguage('ru')
+    await switchLanguage('ru')
     expect(getLanguage()).toBe('ru')
     expect(t('common.save')).toBe('Сохранить')
 
-    await useLanguage('ja')
+    await switchLanguage('ja')
     expect(getLanguage()).toBe('ja')
     expect(t('common.save')).toBe('保存')
 
-    await useLanguage('zhs')
+    await switchLanguage('zhs')
     expect(getLanguage()).toBe('zhs')
     expect(t('common.save')).toBe('保存')
   })
@@ -62,21 +62,21 @@ describe('i18n system', () => {
       'No se pudo unir a la mesa seleccionada: You can join a table only one time.',
     )
 
-    await useLanguage('en')
+    await switchLanguage('en')
     expect(translateError('login failed')).toBe('Login failed: invalid credentials or server unavailable')
     expect(translateError('table full')).toBe('This table is already full')
 
-    await useLanguage('de')
+    await switchLanguage('de')
     expect(translateError('login failed')).toBe('Anmeldung fehlgeschlagen: Ungültige Anmeldedaten oder Server nicht erreichbar')
 
-    await useLanguage('ja')
+    await switchLanguage('ja')
     expect(translateError('login failed')).toBe('ログイン失敗: 認証情報が無効か、サーバーが利用できません')
   })
 
   it('falls back to English (not Spanish) for keys missing in the active language', async () => {
     const backup = ja.game.concede
     try {
-      await useLanguage('ja')
+      await switchLanguage('ja')
       delete (ja.game as unknown as Record<string, unknown>).concede
       expect(t('game.concede')).toBe('Concede')
       expect(t('game', 'concede')).toBe('Concede')
@@ -124,7 +124,7 @@ describe('i18n system', () => {
       'decks.import_backup_json',
     ]
     for (const lang of LANGUAGES) {
-      await useLanguage(lang.code)
+      await switchLanguage(lang.code)
       for (const key of keys) {
         const value = t(key)
         expect(value, `${lang.code}:${key}`).not.toBe('')
@@ -138,13 +138,13 @@ describe('i18n system', () => {
   })
 
   it('traduce las pestañas Log/Chat en ru/ja/zhs (préstamo aceptado en los latinos)', async () => {
-    await useLanguage('ru')
+    await switchLanguage('ru')
     expect(t('game.tab_log')).toBe('Лог')
     expect(t('game.tab_chat')).toBe('Чат')
-    await useLanguage('ja')
+    await switchLanguage('ja')
     expect(t('game.tab_log')).toBe('ログ')
     expect(t('game.tab_chat')).toBe('チャット')
-    await useLanguage('zhs')
+    await switchLanguage('zhs')
     expect(t('game.tab_log')).toBe('日志')
     expect(t('game.tab_chat')).toBe('聊天')
   })
@@ -156,14 +156,14 @@ describe('i18n system', () => {
     expect(t('game.end_won_game_you')).toBe('Has ganado la partida')
     expect(t('game.end_lost_game_you')).toBe('Has perdido la partida')
     expect(t('game.summoning_sickness')).toContain('{T}')
-    await useLanguage('en')
+    await switchLanguage('en')
     expect(t('game.summoning_sickness')).toContain('{T}')
   })
 
   it('falls back to English for the new keys when missing in the active language', async () => {
     const backup = ja.game.follow_game
     try {
-      await useLanguage('ja')
+      await switchLanguage('ja')
       delete (ja.game as unknown as Record<string, unknown>).follow_game
       expect(t('game.follow_game')).toBe('Follow game')
       expect(t('game', 'follow_game')).toBe('Follow game')

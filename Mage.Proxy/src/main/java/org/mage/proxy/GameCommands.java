@@ -50,6 +50,17 @@ final class GameCommands {
         return userData;
     }
 
+    /** {@code args.names} como lista de strings (vacía si falta o no es un array). */
+    private static java.util.List<String> names(JsonObject args) {
+        java.util.List<String> names = new java.util.ArrayList<>();
+        if (args.has("names") && args.get("names").isJsonArray()) {
+            for (com.google.gson.JsonElement el : args.getAsJsonArray("names")) {
+                if (el.isJsonPrimitive()) names.add(el.getAsString());
+            }
+        }
+        return names;
+    }
+
     interface Answer {
         boolean send() throws Exception;
     }
@@ -160,6 +171,38 @@ final class GameCommands {
                 DeckCardLists deck = deckJson != null ? DeckJson.parse(deckJson) : null;
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
                         DeckValidation.validate(deck, DeckJson.sourcePrintings(deckJson))));
+                return true;
+            }
+            case "validateDeckFormat": {
+                JsonObject deckJson = args.has("deck") && args.get("deck").isJsonObject()
+                        ? args.getAsJsonObject("deck") : null;
+                DeckCardLists deck = deckJson != null ? DeckJson.parse(deckJson) : null;
+                if (deck == null) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_INVALID_ARGUMENT, "deck required"));
+                    return true;
+                }
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        DeckValidation.validateDeckFormat(deck,
+                                JsonArgs.str(args, "deckType", null),
+                                JsonArgs.str(args, "gameType", null))));
+                return true;
+            }
+            case "commanderEligibility": {
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        DeckValidation.commanderEligibility(names(args))));
+                return true;
+            }
+            case "resolvePrintings": {
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        CardCatalog.resolvePrintings(names(args),
+                                JsonArgs.str(args, "strategy", "default"),
+                                JsonArgs.str(args, "setCode", null))));
+                return true;
+            }
+            case "cardPrintings": {
+                int limit = args.has("limit") && args.get("limit").isJsonPrimitive() ? args.get("limit").getAsInt() : 0;
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null,
+                        CardCatalog.cardPrintings(names(args), limit)));
                 return true;
             }
             case "updatePreferences": {

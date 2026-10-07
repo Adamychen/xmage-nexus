@@ -11,8 +11,8 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: var(--sp-2);
+  padding: var(--sp-2h) var(--sp-3);
   background: rgb(var(--ink-2-rgb) / 0.98);
   border: 1.5px solid rgb(var(--brand-rgb) / 0.35);
   border-radius: var(--dlg-bar-radius);
@@ -39,18 +39,18 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  gap: var(--sp-1);
 }
 
 .action-prompt-title {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   color: var(--dlg-kicker-fg);
   background: var(--dlg-kicker-bg);
   border: 1px solid var(--dlg-kicker-border);
   border-radius: var(--r-pill);
-  padding: 2px 8px;
+  padding: var(--sp-0h) var(--sp-2);
   font-weight: 700;
   font-size: var(--fs-2xs);
   letter-spacing: 0.12em;
@@ -61,7 +61,7 @@
 .action-prompt-icon {
   display: inline-flex;
   align-items: center;
-  margin-right: 3px;
+  margin-right: var(--sp-1);
   font-size: var(--fs-sm);
 }
 
@@ -82,13 +82,13 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+  gap: var(--sp-1h);
+  margin-top: var(--sp-0h);
 }
 
 .action-prompt-actions button {
   flex: 1 1 auto;
-  padding: 6px 12px;
+  padding: var(--sp-1h) var(--sp-3);
   font-size: var(--fs-2xs);
   white-space: nowrap;
 }

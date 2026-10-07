@@ -8,6 +8,7 @@ import { useLocalizedCardName } from '../cards/cardLocalization'
 import Icon from '../ui/Icon'
 import { confirmDialog } from '../ui/confirmDialog'
 import { useTranslation } from '../i18n'
+import { useCustomCardArt } from '../cards/customCardArt'
 import './ArenaCardStrip.css'
 
 export interface CardStripMeta {
@@ -19,10 +20,23 @@ export interface CardStripMeta {
   cmc?: number
   typeLine?: string
   colors?: string[]
+  /** Identidad de color (Scryfall `color_identity`); la usa la validación local de Commander. */
+  colorIdentity?: string[]
   oracleText?: string
   keywords?: string[]
   rarity?: string
   legalities?: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>
+}
+
+/**
+ * A card dragged onto the deck list (`application/json` in the drag data): its printing, the zone
+ * it comes from and, from the search results, its metadata. Parsed JSON, so every field may be missing.
+ */
+export type DroppedCardData = CardStripMeta & {
+  cardName?: string
+  setCode?: string
+  cardNumber?: string
+  source?: string
 }
 
 function getColorClass(colors?: string[]): string {
@@ -84,6 +98,11 @@ export function ArenaCardStrip({
 
   const colorClass = getColorClass(meta?.colors)
 
+  // Arte propio del usuario: gana sobre el art-crop de Scryfall en el fondo de
+  // la tira, en la imagen de arrastre y (via DeckBuilder) en el hover preview.
+  const customArt = useCustomCardArt(card.cardName)
+  const stripArtUrl = customArt ?? meta?.artCropUrl ?? null
+
   const handleMouseEnter = () => {
     if (ref.current && onHover) {
       onHover(card, meta, ref.current.getBoundingClientRect())
@@ -102,7 +121,7 @@ export function ArenaCardStrip({
       key: actionKey,
     }))
     e.dataTransfer.effectAllowed = 'move'
-    setFloatingStripDragImage(e, displayName || card.cardName, meta?.artCropUrl)
+    setFloatingStripDragImage(e, displayName || card.cardName, stripArtUrl)
   }
 
   const handleDragEnd = () => {
@@ -195,10 +214,10 @@ export function ArenaCardStrip({
       title={issue ? `${hoverTitle} — ! ${issue}` : (onSwap ? `${hoverTitle} — ${swapLabel ?? '⇄'}` : `${hoverTitle} — ${t('decks', 'strip_click_hint')}`)}
     >
       {/* Background card art crop */}
-      {meta?.artCropUrl && (
+      {stripArtUrl && (
         <div
           className="strip-bg-art"
-          style={{ backgroundImage: `url(${meta.artCropUrl})` }}
+          style={{ backgroundImage: `url(${stripArtUrl})` }}
         />
       )}
       <div className="strip-gradient-overlay" />

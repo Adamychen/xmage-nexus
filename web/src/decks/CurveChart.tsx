@@ -111,7 +111,7 @@ export default function CurveChart({
     }
   }, [cards, meta])
 
-  const activePips = Object.entries(pips).filter(([_, count]) => count > 0)
+  const activePips = Object.entries(pips).filter(([, count]) => count > 0)
   const totalPips = activePips.reduce((s, [, c]) => s + c, 0)
   const COLOR_META: Record<string, { label: string; color: string }> = {
     W: { label: 'W', color: '#f0e6c8' },

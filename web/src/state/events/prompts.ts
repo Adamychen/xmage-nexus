@@ -5,7 +5,7 @@ import { findAutoAnswer } from '../../game/autoAnswers'
 import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { localizeServerMessage } from '../../game/serverMessageTranslation'
-import { t as tStatic } from '../../i18n'
+import { t as tStatic, dynamicT } from '../../i18n'
 import { setState, addLog } from '../state'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
@@ -34,8 +34,10 @@ export function handleGameTarget(method: string, data: unknown, objectId: string
 }
 
 export function handleGameAsk(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
-  const d = data as { question?: string; message?: string; options?: unknown[]; gameId?: string } | null
+  const d = data as { question?: string; message?: string; options?: unknown; gameId?: string } | null
   const question = d?.question ?? d?.message ?? ''
+  const opts = d?.options && typeof d.options === 'object' && !Array.isArray(d.options) ? d.options as Record<string, unknown> : null
+  const autoAnswerKey = typeof opts?.autoAnswerMessage === 'string' ? opts.autoAnswerMessage : undefined
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
   if ((s.settings.autoKeepMulligan || isSpectator) && /mulligan|keep your hand|keep hand/i.test(question)) {
@@ -49,7 +51,7 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
     !isVotingAsk(question) &&
     !isStartingPlayerMessage(question)
   ) {
-    const rule = findAutoAnswer(s.settings.autoAnswers ?? [], question)
+    const rule = findAutoAnswer(s.settings.autoAnswers ?? [], question, autoAnswerKey)
     if (rule) {
       void cmds.sendPlayerBoolean(rule.answer, currentGameId)
       setState({ feedback: null })
@@ -61,14 +63,14 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
+    addLog('partida', questionLogLine(localizeServerMessage(question, dynamicT(tStatic))))
   } else {
     const feedback = parseFeedback(method, currentGameId, data)
     if (feedback) {
       notifyFeedbackOpened(feedback)
       setState({ feedback })
     }
-    addLog('partida', questionLogLine(localizeServerMessage(question, tStatic as never)))
+    addLog('partida', questionLogLine(localizeServerMessage(question, dynamicT(tStatic))))
   }
 }
 

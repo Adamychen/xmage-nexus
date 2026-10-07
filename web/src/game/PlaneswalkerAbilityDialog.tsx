@@ -62,7 +62,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
             const d = deltas[idx] ?? null
             const after = pwLoyalty != null && d != null ? pwLoyalty + d : null
             return (
-              <button
+              <button type="button"
                 key={opt.id}
                 className={`pw-ability-btn ${deltaClass(d)}`}
                 disabled={busy}

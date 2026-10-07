@@ -25,6 +25,7 @@ function urlProxyPort(): number | null {
 
 import { sortedFlags, countryName, type ServerPreset } from './flags'
 import Button from '../ui/Button'
+import Field from '../ui/Field'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
 // remote proxy host, a stale "local" connection saved in localStorage must not
@@ -231,7 +232,6 @@ export default function LoginScreen() {
             className="user-avatar-preview"
             onClick={() => setShowAvatarPicker(true)}
             title={t('lobby', 'avatar_pick_title')}
-            style={{ cursor: 'pointer' }}
             {...clickableProps(() => setShowAvatarPicker(true))}
           >
             <AvatarImage avatarId={avatarId} username={username} size="large" />
@@ -242,8 +242,7 @@ export default function LoginScreen() {
           </div>
           <div className="user-inputs-col">
             <div className="user-name-and-flag-grid">
-              <label className="login-field-username">
-                {t('login.username')}
+              <Field className="login-field-username" label={t('login.username')}>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -252,9 +251,8 @@ export default function LoginScreen() {
                   autoComplete="username"
                   required
                 />
-              </label>
-              <label className="login-field-flag">
-                {t('login.flag')}
+              </Field>
+              <Field className="login-field-flag" label={t('login.flag')}>
                 <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
                   {sortedFlags(lang).map((f) => (
                     <option key={f.code} value={f.code}>
@@ -262,10 +260,9 @@ export default function LoginScreen() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </Field>
             </div>
-            <label>
-              {t('login.password')}
+            <Field label={t('login.password')} hint={passwordDisabledOnBeta && t('login', 'password_disabled_beta')} hintTone="warn">
               <input
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -275,10 +272,7 @@ export default function LoginScreen() {
                 disabled={passwordDisabledOnBeta}
                 data-testid="login-password"
               />
-              {passwordDisabledOnBeta && (
-                <span className="login-password-beta-note">{t('login', 'password_disabled_beta')}</span>
-              )}
-            </label>
+            </Field>
           </div>
         </div>
 
@@ -290,8 +284,7 @@ export default function LoginScreen() {
           </summary>
           <div className="login-network-fields">
             <div className="network-field-row">
-              <label className="network-field-proxy">
-                {t('login.proxy')}
+              <Field className="network-field-proxy" label={t('login.proxy')}>
                 <input
                   value={proxyHost}
                   onChange={(e) => {
@@ -299,9 +292,8 @@ export default function LoginScreen() {
                     setPreset('custom')
                   }}
                 />
-              </label>
-              <label className="network-field-port">
-                {t('login.proxy_port')}
+              </Field>
+              <Field className="network-field-port" label={t('login.proxy_port')}>
                 <input
                   value={proxyPort}
                   onChange={(e) => {
@@ -310,11 +302,10 @@ export default function LoginScreen() {
                   }}
                   type="number"
                 />
-              </label>
+              </Field>
             </div>
             <div className="network-field-row">
-              <label className="network-field-host">
-                {t('login.xmage_server')}
+              <Field className="network-field-host" label={t('login.xmage_server')}>
                 <input
                   value={serverHost}
                   onChange={(e) => {
@@ -322,9 +313,8 @@ export default function LoginScreen() {
                     setPreset('custom')
                   }}
                 />
-              </label>
-              <label className="network-field-port">
-                {t('login.port')}
+              </Field>
+              <Field className="network-field-port" label={t('login.port')}>
                 <input
                   value={port}
                   onChange={(e) => {
@@ -333,7 +323,7 @@ export default function LoginScreen() {
                   }}
                   type="number"
                 />
-              </label>
+              </Field>
             </div>
           </div>
         </details>

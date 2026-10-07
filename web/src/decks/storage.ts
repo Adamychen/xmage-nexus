@@ -131,10 +131,6 @@ function normalizeStoredCard(c: { setCode: string; cardNumber: string }): { setC
     const stripped = n.replace(/[p★]$/i, '')
     if (stripped !== n && /^\d/.test(stripped)) n = stripped
   }
-  if (s.length >= 3 && s.charAt(0) === 'P' && s !== 'PLST') {
-    const base = s.substring(1)
-    if (/^[A-Z0-9]{2,4}$/.test(base)) s = base
-  }
   return { setCode: s, cardNumber: n }
 }
 
@@ -150,9 +146,9 @@ function normalizeDeckV2(deck: DeckV2): DeckV2 {
   }
   const cards = deck.cards.map(norm)
   const sideboard = deck.sideboard.map(norm)
-  const coverCard = deck.coverCard ? norm(deck.coverCard as any) as any : deck.coverCard
-  const commanderCard = deck.commanderCard ? norm(deck.commanderCard as any) as any : deck.commanderCard
-  const partnerCard = deck.partnerCard ? norm(deck.partnerCard as any) as any : deck.partnerCard
+  const coverCard = deck.coverCard ? norm(deck.coverCard) : deck.coverCard
+  const commanderCard = deck.commanderCard ? norm(deck.commanderCard) : deck.commanderCard
+  const partnerCard = deck.partnerCard ? norm(deck.partnerCard) : deck.partnerCard
   return changed ? { ...deck, cards, sideboard, coverCard, commanderCard, partnerCard } : deck
 }
 
