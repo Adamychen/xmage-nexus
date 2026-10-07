@@ -26,6 +26,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Sin esto un runner zombi (p. ej. 'Install Playwright browsers' colgado)
+    # bloquea la cola pages-* para siempre: cancel-in-progress es false.
+    timeout-minutes: 90
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
