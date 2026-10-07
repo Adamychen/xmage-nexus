@@ -168,24 +168,13 @@
 
 .hand-card-cost-pips {
   position: absolute;
-  right: var(--cost-rest-right, var(--sp-1));
+  right: var(--sp-1);
   top: 0;
   display: flex;
   transform: translateY(-55%);
-  transition: right 0.2s ease-out;
-}
-
-/* The grown card shows whole: its cost goes back to the printed corner. */
-.hand-bar .hand-card-slot:hover .hand-card-cost-pips {
-  right: var(--sp-1);
 }
 
 .hand-card-cost-pips > .mana-symbol + .mana-symbol {
-  margin-left: var(--pip-overlap, var(--sp-0h));
-  transition: margin-left 0.2s ease-out;
-}
-
-.hand-bar .hand-card-slot:hover .hand-card-cost-pips > .mana-symbol + .mana-symbol {
   margin-left: var(--sp-0h);
 }
 

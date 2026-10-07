@@ -58,6 +58,14 @@ describe('HandBar', () => {
     expect(sizes.size, 'one bubble size for the whole hand').toBe(1)
   })
 
+  it('splits a cost entry that packs several symbols into one bubble each', () => {
+    const { container } = render(
+      <HandBar cards={{ cultivate: makeCard({ id: 'cultivate', name: 'Cultivate', manaCostLeftStr: ['{2}{G}'] }) }} />,
+    )
+    const alts = Array.from(container.querySelectorAll('.hand-card-cost img')).map((img) => img.getAttribute('alt'))
+    expect(alts).toEqual(['{2}', '{G}'])
+  })
+
   it('exposes sizing CSS variables, sink and the visible band height', () => {
     const { getByTestId } = render(<HandBar cards={hand()} />)
     const bar = getByTestId('hand-bar') as HTMLElement
