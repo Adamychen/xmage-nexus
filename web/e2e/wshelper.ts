@@ -303,14 +303,17 @@ export class HumanHelper {
     void this.send('sendPlayerBoolean', { gameId: this.gameId, value: false })
   }
 
-  /** Pasa la ventana main actual si sigue abierta ~1.5s después de abrirse.
-   *  NUNCA durante un pago de maná en curso: si el fallback coincide con un
-   *  pago (payingUntil activo), REINTENTA en bucle hasta que el pago termina y
-   *  la ventana se pasa (un fallback single-shot moría tras el pago y dejaba la
-   *  ventana main abierta para siempre, colgando la partida). */
+  /** Passes the current main window if it is still open ~1.5s after it opened.
+   *  NEVER during a mana payment: when the fallback lands on an ongoing payment
+   *  (payingUntil active) it RETRIES in a loop until the payment ends and the
+   *  window is passed (a single-shot fallback died after the payment and left
+   *  the main window open forever, hanging the game). The loop also honours
+   *  `pausedPassing`: a fallback armed before the pause would still fire at 1.5s,
+   *  and the test would then time the helper's round trip, not its own click. */
   private armFallback() {
     const winKey = this.mainWindow
     const check = () => {
+      if (this.pausedPassing) return
       if (this.mainWindow !== winKey || !this.gameId) return
       if (Date.now() > this.payingUntil) {
         void this.send('sendPlayerBoolean', { gameId: this.gameId, value: false })

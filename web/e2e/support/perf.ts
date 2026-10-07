@@ -6,6 +6,7 @@
  */
 
 import type { Page } from '@playwright/test'
+import type { HumanHelper } from '../wshelper'
 
 export const LATENCY_ECHO_MS = 1200
 
@@ -31,9 +32,14 @@ export async function perfEntries(page: Page): Promise<PerfEntry[]> {
 }
 
 /**
- * Espera a que no llegue ningún evento del servidor durante `quietMs`: con eco
- * diferido, los eventos de acciones previas (helper/escenario) siguen en vuelo
- * y el primero que aterriza tras el clic se confundiría con su eco.
+ * Waits for `quietMs` with no server event arriving: with a delayed echo, events
+ * from earlier actions (helper/scenario) are still in flight and the first one
+ * landing after the click would be mistaken for its echo.
+ *
+ * NOTE: silence between arrivals does NOT mean an empty channel. With
+ * `echoDelayMs` an event can be scheduled in the middle of that silence and
+ * arrive 1200 ms later, so arrival-gap alone still allows an impossible "echo"
+ * (faster than the delay). Hence the settling floor in `freezeAndDrain`.
  */
 export async function waitEventsQuiet(page: Page, quietMs = LATENCY_ECHO_MS + 300, timeoutMs = 15_000): Promise<void> {
   const deadline = Date.now() + timeoutMs
@@ -48,6 +54,41 @@ export async function waitEventsQuiet(page: Page, quietMs = LATENCY_ECHO_MS + 30
     if (Date.now() > deadline) throw new Error(`eventos del servidor sin pausa de ${quietMs}ms`)
     await page.waitForTimeout(Math.min(200, quietMs - idle + 20))
   }
+}
+
+/**
+ * Settling floor for a measurement window: 1500 ms (helper auto-pass timer) +
+ * 300 ms (its retry step) + 1200 ms (the fake echo delay) is how long an event
+ * scheduled before the freeze can still take to land.
+ */
+export const SETTLE_MS = 3_000
+
+/**
+ * Opens a measurement window: freezes the HumanHelper autopilot and drains the
+ * channel before the click. Two waits are needed and neither is enough alone:
+ *
+ * - `SETTLE_MS`: the settling floor. The helper fires its auto-pass 1500 ms after
+ *   a priority window opens (retrying every 300 ms) and the FixtureServer
+ *   delays every event by 1200 ms, so anything sent before the pause can still
+ *   land after the click. Without this floor the pause arrived too late and the
+ *   spec measured "echoes" of 43/59/486/637/689 ms - a round trip the fake
+ *   server cannot produce, which is the signature of timing someone else's
+ *   request.
+ * - `quietMs`: silence between arrivals, which is what cuts the Sim turn's emit
+ *   chain (it emits every 400 ms, so 1500 ms without arrivals means it ended).
+ *
+ * With the emitter frozen, the floor satisfied and the channel silent, any event
+ * arriving after the click really is the answer to the measured click.
+ */
+export async function freezeAndDrain(
+  page: Page,
+  helper: HumanHelper,
+  quietMs = LATENCY_ECHO_MS + 300,
+  timeoutMs = 15_000,
+): Promise<void> {
+  helper.paused = true
+  await page.waitForTimeout(SETTLE_MS)
+  await waitEventsQuiet(page, quietMs, timeoutMs)
 }
 
 export interface AckProbeExpect {
