@@ -43,14 +43,22 @@ describe('JoinTableDialog for a player with no decks', () => {
     render(<JoinTableDialog table={TABLE} onClose={() => {}} onJoin={vi.fn()} />)
     fireEvent.click(await screen.findByTestId('starter-decks-add'))
     await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
-    expect(stored.decks).toHaveLength(2)
+    expect(stored.decks).toHaveLength(3)
     const checked = screen.getAllByRole('radio').filter((r) => r.getAttribute('aria-checked') === 'true')
     expect(checked).toHaveLength(1)
     expect(checked[0].textContent).toMatch(/Mono Red Burn|Mono White Humans/)
   })
 
-  it('does not offer them for a table they cannot join', async () => {
+  it('picks the Commander starter at a Commander table', async () => {
     render(<JoinTableDialog table={{ ...TABLE, deckType: 'Variant Magic - Commander', gameType: 'Commander Two Player Duel' }} onClose={() => {}} onJoin={vi.fn()} />)
+    fireEvent.click(await screen.findByTestId('starter-decks-add'))
+    await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
+    const checked = screen.getAllByRole('radio').filter((r) => r.getAttribute('aria-checked') === 'true')
+    expect(checked[0].textContent).toMatch(/Krenko/)
+  })
+
+  it('does not offer them for a table they cannot join', async () => {
+    render(<JoinTableDialog table={{ ...TABLE, deckType: 'Constructed - Pauper' }} onClose={() => {}} onJoin={vi.fn()} />)
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByTestId('starter-decks-offer')).toBeNull()
   })

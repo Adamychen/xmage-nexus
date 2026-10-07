@@ -1300,7 +1300,7 @@ export const en = {
   },
   decks: {
     starter_title: "You have no decks yet",
-    starter_desc: "Add two ready-to-play decks ({names}) and sit down now; you can change or replace them later in Decks.",
+    starter_desc: "Add ready-to-play decks ({names}) and sit down now; you can change or replace them later in Decks.",
     starter_add: "Add starter decks",
     starter_failed: "Could not save the decks in this browser. Try again, or import one in Decks.",
     deck_builder: 'Deck Builder',

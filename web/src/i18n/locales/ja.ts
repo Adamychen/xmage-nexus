@@ -1307,7 +1307,7 @@ export const ja: TranslationSchema = {
   },
   decks: {
     starter_title: "まだデッキがありません",
-    starter_desc: "すぐに遊べるデッキを 2 つ（{names}）追加して、今すぐ席に着きましょう。あとでデッキ画面から変更・差し替えできます。",
+    starter_desc: "すぐに遊べるデッキ（{names}）を追加して、今すぐ席に着きましょう。あとでデッキ画面から変更・差し替えできます。",
     starter_add: "スターターデッキを追加",
     starter_failed: "このブラウザーにデッキを保存できませんでした。もう一度試すか、デッキ画面からインポートしてください。",
     deck_builder: 'デッキビルダー',

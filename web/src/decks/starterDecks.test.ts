@@ -11,10 +11,17 @@ vi.mock('./storage', () => ({
 describe('starter decks', () => {
   beforeEach(() => { stored.decks = [] })
 
-  it('are 60-card decks from the catalog with no sideboard to submit by mistake', () => {
+  it('are complete catalog decks: 60 cards for constructed, 100 for Commander', () => {
     const items = starterDeckItems()
     expect(items.map((d) => d.id)).toEqual([...STARTER_DECK_IDS])
-    for (const d of items) expect(d.cards.reduce((n, c) => n + c.amount, 0)).toBe(60)
+    for (const d of items) expect(d.cards.reduce((n, c) => n + c.amount, 0)).toBe(d.format === 'Commander' ? 100 : 60)
+  })
+
+  it('designate the commander of the Commander one', async () => {
+    const added = await addStarterDecks()
+    const edh = added.find((d) => d.format === 'Commander')!
+    expect(edh.commanderCard?.cardName).toBe('Krenko, Mob Boss')
+    expect(added.filter((d) => d.format !== 'Commander').every((d) => !d.commanderCard)).toBe(true)
   })
 
   it('are stored as editable copies of their own, not as the catalog entries', async () => {
