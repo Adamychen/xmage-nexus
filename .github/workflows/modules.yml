@@ -196,8 +196,10 @@ jobs:
             echo "applying $p"
             git -C xdhs-fork apply "$GITHUB_WORKSPACE/$p"
           done
-      - name: Build XMage artifacts (Mage.Common, Mage, Mage.Sets)
-        run: mvn -q -f xdhs-fork/pom.xml -pl Mage.Common,Mage,Mage.Sets -am install -DskipTests
+      - name: Build XMage artifacts (Mage.Common, Mage, Mage.Sets, deck validators)
+        # Mage.Server.Plugins/Mage.Deck.Constructed produce org.mage:mage-deck-constructed,
+        # que Mage.Proxy necesita en v0.4.5+ para la validación completa de mazos.
+        run: mvn -q -f xdhs-fork/pom.xml -pl Mage.Common,Mage,Mage.Sets,Mage.Server.Plugins/Mage.Deck.Constructed -am install -DskipTests
       - name: Build XDHS proxy
         run: mvn -q -f Mage.Proxy/pom.xml -Dmage.version=${{ inputs.xdhs_version }} clean package -DskipTests
       - name: Smoke XDHS proxy
