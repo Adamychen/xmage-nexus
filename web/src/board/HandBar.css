@@ -83,6 +83,20 @@
   z-index: 50;
 }
 
+/* Dragging a card to rearrange the hand: it stays on top and the rest of the
+   fan slides around it. */
+.hand-bar .hand-card-slot .hand-card {
+  touch-action: none;
+}
+
+.hand-bar.is-reordering .hand-card-slot .hand-card {
+  cursor: grabbing;
+}
+
+.hand-bar .hand-card-slot.is-dragging {
+  z-index: 55;
+}
+
 /* The hovered card itself grows in place until legible (no floating
    preview): upright, scaled around the fan pivot and pushed back down so its
    bottom edge stays anchored to the band — the pointer never leaves it. Same

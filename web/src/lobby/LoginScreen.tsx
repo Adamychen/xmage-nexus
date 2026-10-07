@@ -23,7 +23,7 @@ function urlProxyPort(): number | null {
   return parseAutoConnect(window.location.search).proxyPort ?? null
 }
 
-import { POPULAR_FLAGS, countryName, type ServerPreset } from './flags'
+import { sortedFlags, countryName, type ServerPreset } from './flags'
 import Button from '../ui/Button'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
@@ -256,7 +256,7 @@ export default function LoginScreen() {
               <label className="login-field-flag">
                 {t('login.flag')}
                 <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
-                  {POPULAR_FLAGS.map((f) => (
+                  {sortedFlags(lang).map((f) => (
                     <option key={f.code} value={f.code}>
                       {f.emoji} {countryName(f.code, lang)}
                     </option>

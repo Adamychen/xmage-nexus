@@ -12,10 +12,9 @@ import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
 import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
 import { manaTypeOf } from './manaPayment'
+import { useSleeveFor } from '../appearance/useSleeve'
 import './ResourceBar.css'
 import '../board/targetZone.css'
-
-const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 type PileKind = 'graveyard' | 'exile' | 'library'
 
@@ -55,6 +54,7 @@ export default function ResourceBar({
   const { t } = useTranslation()
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const gameId = useStore((s) => s.gameId)
+  const librarySleeve = useSleeveFor(side === 'my' ? player.playerId : null)
   const pool = player.manaPool ?? {}
   const canPayMana = side === 'my' && !!gameId
   const manaPromptOpen = useStore((s) => s.feedback?.mode === 'mana')
@@ -109,6 +109,7 @@ export default function ResourceBar({
         expansionSetCode: '',
         cardNumber: '0',
         faceDown: true,
+        controllerId: player.playerId,
       }
     }
     return res
@@ -270,7 +271,13 @@ export default function ResourceBar({
               {player.topCard ? (
                 <CardSlot card={player.topCard} className="library-top-card" />
               ) : (
-                <img className="stack-back-img" src={CARD_BACK_URL} alt="" draggable={false} />
+                librarySleeve.kind === 'css' ? (
+                  <div className="stack-back-img sleeve-css-back" style={{ background: librarySleeve.css }} data-sleeve-id={librarySleeve.id}>
+                    <span className="sleeve-emblem" style={{ color: librarySleeve.accent }}>{librarySleeve.emblem}</span>
+                  </div>
+                ) : (
+                  <img className="stack-back-img" src={librarySleeve.imageUrl} alt="" draggable={false} data-sleeve-id={librarySleeve.id} />
+                )
               )}
               <span className="stack-count">{player.libraryCount}</span>
               {player.topCard && (

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { countryName, POPULAR_FLAGS } from './flags'
+import { countryName, POPULAR_FLAGS, sortedFlags } from './flags'
 
 describe('countryName (localized flag labels)', () => {
   it('translates country codes via Intl.DisplayNames', () => {
@@ -36,5 +36,18 @@ describe('countryName (localized flag labels)', () => {
         expect(countryName(f.code, lang).trim()).not.toBe('')
       }
     }
+  })
+
+  it('sorts flags alphabetically by localized name, keeping world first', () => {
+    for (const lang of ['en', 'es', 'de']) {
+      const flags = sortedFlags(lang)
+      expect(flags).toHaveLength(POPULAR_FLAGS.length)
+      expect(flags[0].code).toBe('world')
+      const names = flags.slice(1).map((f) => countryName(f.code, lang))
+      const collator = new Intl.Collator([lang, 'en'])
+      expect(names).toEqual([...names].sort(collator.compare))
+    }
+    const en = sortedFlags('en').map((f) => f.code)
+    expect(en.slice(1, 4)).toEqual(['ar', 'au', 'at'])
   })
 })

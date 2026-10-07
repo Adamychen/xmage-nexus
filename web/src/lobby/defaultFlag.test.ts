@@ -28,8 +28,17 @@ describe('guessDefaultFlag', () => {
     expect(guessDefaultFlag('en')).toBe('gb')
     expect(guessDefaultFlag('pt')).toBe('br')
     expect(guessDefaultFlag('ja')).toBe('jp')
-    expect(guessDefaultFlag('en-IE')).toBe('gb')
-    expect(guessDefaultFlag('de-AT')).toBe('de')
+    expect(guessDefaultFlag('en-IN')).toBe('in')
+    expect(guessDefaultFlag('en-XK')).toBe('gb')
+    expect(guessDefaultFlag('de-LI')).toBe('de')
+  })
+
+  it('picks the newer regions from the extended flag list', () => {
+    expect(guessDefaultFlag('en-IE')).toBe('ie')
+    expect(guessDefaultFlag('de-AT')).toBe('at')
+    expect(guessDefaultFlag('ru-RU')).toBe('ru')
+    expect(guessDefaultFlag('zh-CN')).toBe('cn')
+    expect(guessDefaultFlag('nl-NL')).toBe('nl')
   })
 
   it('handles underscore separators and casing', () => {
@@ -42,8 +51,6 @@ describe('guessDefaultFlag', () => {
   it('returns world for unmapped languages, empty or missing locales', () => {
     expect(guessDefaultFlag('xx-YY')).toBe('world')
     expect(guessDefaultFlag('ru')).toBe('world')
-    expect(guessDefaultFlag('ru-RU')).toBe('world')
-    expect(guessDefaultFlag('zh-CN')).toBe('world')
     expect(guessDefaultFlag('zh')).toBe('world')
     expect(guessDefaultFlag('nl')).toBe('world')
     expect(guessDefaultFlag('')).toBe('world')
