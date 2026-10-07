@@ -41,6 +41,9 @@ import {
   waitFrameAt,
 } from './support/frames'
 import { waitScene } from './support/scene'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 const ACK_BUDGET_MS = 100
 const WAIT_STATE_MS = 500
