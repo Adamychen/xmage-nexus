@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import { commanderPlaysCount, commanderTax } from './commanders'
+import { ManaPip } from '../decks/ArenaManaSymbols'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommandZone.css'
@@ -210,8 +211,14 @@ export default function CommandZone({
               </div>
             )}
             {tax > 0 && (
-              <div className="commander-tax-badge" title={`${t('board', 'zone_command')}: +{${tax}}`}>
-                +{tax}
+              <div
+                className="commander-tax-badge"
+                data-testid="commander-tax"
+                data-tax={tax}
+                aria-label={t('board', 'commander_tax', { tax, count: item.castCount })}
+              >
+                <span className="commander-tax-plus">+</span>
+                <ManaPip symbol={String(tax)} size={14} className="commander-tax-pip" />
               </div>
             )}
           </div>

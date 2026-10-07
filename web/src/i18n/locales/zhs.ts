@@ -1598,6 +1598,7 @@ export const zhs: TranslationSchema = {
     zone_battlefield: '战场',
     zone_library: '牌库',
     zone_command: '统帅区',
+    commander_tax: '指挥官税：+{tax} 点非特定法术力（已从统帅区施放 {count} 次）',
     zone_revealed: '展示区',
     zone_sideboard: '备牌',
     pile_graveyard: '坟墓场',

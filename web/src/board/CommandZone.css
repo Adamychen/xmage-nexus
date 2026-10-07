@@ -78,9 +78,13 @@
 .commander-tax-badge {
   position: absolute;
   bottom: 2px;
-  right: 2px;
-  padding: 1px var(--sp-1h);
-  border-radius: var(--r-xs);
+  left: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-0h) var(--sp-0h) var(--sp-1);
+  border-radius: var(--r-pill);
+  line-height: 1;
   background: rgb(var(--err-rgb) / 0.9);
   border: 1px solid var(--veil-6);
   color: var(--fg-hi);
@@ -132,4 +136,8 @@
   justify-content: center;
   box-shadow: 0 2px 6px var(--shade-4);
   z-index: 20;
+}
+
+.commander-tax-badge .commander-tax-pip {
+  filter: drop-shadow(0 0 1px var(--shade-4));
 }

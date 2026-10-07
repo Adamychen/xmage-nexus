@@ -253,7 +253,7 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                         <Chip key={cmd.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
                           {cmd.name}
                           {castCount > 0 && (
-                            <Chip tone="err" size="xs" title={`Tax: +{${commanderTax(castCount)}}`}>
+                            <Chip tone="err" size="xs" title={t('board', 'commander_tax', { tax: commanderTax(castCount), count: castCount })}>
                               +{commanderTax(castCount)}
                             </Chip>
                           )}

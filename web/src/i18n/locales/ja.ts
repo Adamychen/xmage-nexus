@@ -1598,6 +1598,7 @@ export const ja: TranslationSchema = {
     zone_battlefield: '戦場',
     zone_library: 'ライブラリー',
     zone_command: '統率領域',
+    commander_tax: '統率者税: 不特定マナ+{tax}（統率領域から{count}回唱えた）',
     zone_revealed: '公開',
     zone_sideboard: 'サイドボード',
     pile_graveyard: '墓地',

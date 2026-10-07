@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
-import { ManaPip } from '../decks/ArenaManaSymbols'
+import { ManaPip, parseManaSymbols } from '../decks/ArenaManaSymbols'
 import {
   computeHandArc,
   computeHandBarSizing,
   computeHandHoverScale,
-  computeCostPipLayout,
   computeCostPipSize,
   handRestStripWidth,
-  HAND_COST_INSET_PX,
   HAND_ARC_PLAYABLE_RISE_PX,
   HAND_BAR_MAX_CARD_W,
   HAND_BAR_PEEK_RATIO,
@@ -25,21 +23,15 @@ import './targetZone.css'
 
 /** Printed mana cost as bubbles over the card's top edge (split cards show
  *  both halves). The server never sends the reduced cost of a card in hand.
- *  At rest the group ends inside the strip this card shows (the next card
- *  covers the rest), stacking its bubbles when the cost is long; the last card
- *  and the hovered one show them spread at the printed corner. */
-function HandCardCost({ card, cardW, pipSize, stripW }: { card: CardView; cardW: number; pipSize: number; stripW: number | null }) {
+ *  They sit at the printed corner, so on a card the next one overlaps they show
+ *  when the card is hovered. */
+function HandCardCost({ card, pipSize }: { card: CardView; pipSize: number }) {
   if (card.faceDown) return null
-  const symbols = [...(card.manaCostLeftStr ?? []), ...(card.manaCostRightStr ?? [])]
+  const symbols = [...(card.manaCostLeftStr ?? []), ...(card.manaCostRightStr ?? [])].flatMap((s) => (s.includes('{') ? parseManaSymbols(s) : [s]))
   if (symbols.length === 0) return null
-  const { step } = computeCostPipLayout(stripW ?? Number.POSITIVE_INFINITY, pipSize, symbols.length)
-  const style = {
-    '--pip-overlap': `${step - pipSize}px`,
-    ...(stripW === null ? {} : { '--cost-rest-right': `${Math.max(HAND_COST_INSET_PX, cardW - stripW + HAND_COST_INSET_PX)}px` }),
-  } as React.CSSProperties
   return (
     <div className="hand-card-cost" aria-hidden="true">
-      <div className="hand-card-cost-pips" style={style}>
+      <div className="hand-card-cost-pips">
         {symbols.map((sym, i) => (
           <ManaPip key={`${sym}-${i}`} symbol={sym} size={pipSize} />
         ))}
@@ -211,7 +203,7 @@ export default function HandBar({
               isTarget={targetIds.has(id)}
               className="hand-card"
             />
-            <HandCardCost card={card} cardW={cardW} pipSize={pipSize} stripW={i < entries.length - 1 ? stripW : null} />
+            <HandCardCost card={card} pipSize={pipSize} />
           </div>
         )
       })}

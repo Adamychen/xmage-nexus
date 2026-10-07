@@ -1593,6 +1593,7 @@ export const es: TranslationSchema = {
     zone_battlefield: 'Campo de Batalla',
     zone_library: 'Biblioteca',
     zone_command: 'Mando',
+    commander_tax: 'Impuesto de comandante: +{tax} de maná genérico (lanzado {count}× desde la zona de mando)',
     zone_revealed: 'Revelado',
     zone_sideboard: 'Banquillo',
     pile_graveyard: 'Cementerio',

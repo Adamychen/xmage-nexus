@@ -1593,6 +1593,7 @@ export const it: TranslationSchema = {
     zone_battlefield: 'Campo di Battaglia',
     zone_library: 'Grimorio',
     zone_command: 'Comando',
+    commander_tax: 'Tassa del comandante: +{tax} mana generico (lanciato {count}× dalla zona di comando)',
     zone_revealed: 'Rivelate',
     zone_sideboard: 'Sideboard',
     pile_graveyard: 'Cimitero',
