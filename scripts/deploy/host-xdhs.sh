@@ -26,7 +26,7 @@ RUN_DIR="${RUN_DIR:-$HOME/Escritorio/xmage-xdhs-run}"
 WS_PORT="${WS_PORT:-8797}"
 HTTP_PORT="${HTTP_PORT:-8798}"
 BIND="${BIND:-127.0.0.1}"
-ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-http://practicing-scooby.tun.ply.gg:61100}"
+ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-https://velvet-acm-headed-arrested.trycloudflare.com}"
 RUN_USER="$(id -un)"
 
 if [[ -z "${JAVA_HOME:-}" ]]; then
