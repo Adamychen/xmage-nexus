@@ -63,11 +63,9 @@ export function useDeckChoices(storeDeck: Deck | null, setSeatConfigs: Dispatch<
     if (d) setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) ? { ...s, deckName: deckRef(d) } : s))
   }
 
-  const adoptStarterDecks = (decks: Deck[]) => {
-    if (decks.length === 0) return
-    const botDeck = decks[1] ?? decks[0]
+  const adoptStarterDecks = (decks: Deck[], mine: Deck, botDeck: Deck) => {
     setAvailableDecks((prev) => [...prev, ...decks])
-    setMyDeckState(decks[0])
+    setMyDeckState(mine)
     setSimDeck((current) => current ?? botDeck)
     setSeatConfigs((prev) => prev.map((s) => !isHumanSeatType(s.type) && !s.deckName ? { ...s, deckName: deckRef(botDeck) } : s))
   }

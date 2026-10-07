@@ -19,8 +19,11 @@ vi.mock('../../decks/storage', async (importOriginal) => {
 })
 
 vi.mock('../../net/commands', () => ({
-  getGameTypes: vi.fn().mockResolvedValue([{ name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 }]),
-  getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern']),
+  getGameTypes: vi.fn().mockResolvedValue([
+    { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
+    { name: 'Commander Two Player Duel', minPlayers: 2, maxPlayers: 2 },
+  ]),
+  getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern', 'Variant Magic - Commander']),
   getPlayerTypes: vi.fn().mockResolvedValue(['COMPUTER_MAD']),
   getTournamentTypes: vi.fn().mockResolvedValue([]),
   getDraftCubes: vi.fn().mockResolvedValue([]),
@@ -50,12 +53,28 @@ describe('Create Table for a player with no decks', () => {
     fireEvent.click(add)
 
     await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
-    expect(stored.decks.map((d) => d.name)).toEqual(['Mono Red Burn', 'Mono White Humans'])
+    expect(stored.decks.map((d) => d.name)).toEqual(['Mono Red Burn', 'Mono White Humans', 'Krenko: Goblin Mob Army'])
     const deckSelect = screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement
     expect(deckSelect.selectedOptions[0].textContent).toMatch(/^Mono Red Burn/)
     const botDeck = screen.getByLabelText(/Mazo plaza 2|Seat 2 deck/i) as HTMLSelectElement
     expect(botDeck.selectedOptions[0].textContent).toMatch(/^Mono White Humans/)
     expect(screen.queryByText(/Necesitas un mazo|You need a deck/i)).toBeNull()
+  })
+
+  it('seats me with the Commander starter at a Commander table', async () => {
+    render(<CreateTableDialog onClose={() => {}} />)
+    await waitFor(() => expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBe(2))
+    fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'Commander Two Player Duel' } })
+    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: 'Variant Magic - Commander' } })
+    expect((screen.getAllByRole('combobox')[1] as HTMLSelectElement).value).toBe('Variant Magic - Commander')
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /Multijugador|Multiplayer/ })
+        .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
+    )
+    fireEvent.click(await screen.findByTestId('starter-decks-add'))
+    await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
+    const deckSelect = screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement
+    expect(deckSelect.selectedOptions[0].textContent).toMatch(/^Krenko/)
   })
 
   it('stays out of the way once the player has decks', async () => {

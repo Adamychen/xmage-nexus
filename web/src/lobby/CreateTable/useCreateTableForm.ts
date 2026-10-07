@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as cmds from '../../net/commands'
 import type { GameTypeInfo } from '../../net/commands'
 import { useStore } from '../../state/store'
-import { deckRef } from '../decks'
+import { deckRef, type Deck } from '../decks'
+import { isGoodFit, rankDecksForTable, tableFormatProfile } from '../joinDeckFit'
 import { useTranslation } from '../../i18n'
 import {
   isLimitedDeckType,
@@ -314,7 +315,15 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   // Seats & Decks tab
   const [humanSeat, setHumanSeat] = useState(true)
-  const { availableDecks, decksLoaded, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck, adoptStarterDecks } = useDeckChoices(storeDeck, setSeatConfigs)
+  const { availableDecks, decksLoaded, myDeck, simDeck, findDeck, selectMyDeck, selectGlobalSimDeck, adoptStarterDecks: adoptDecks } = useDeckChoices(storeDeck, setSeatConfigs)
+  const adoptStarterDecks = (decks: Deck[]) => {
+    if (decks.length === 0) return
+    const fitting = rankDecksForTable(decks, tableFormatProfile(deckType, gameType))
+      .filter(({ fit }) => isGoodFit(fit))
+      .map(({ deck }) => deck)
+    const mine = fitting[0] ?? decks[0]
+    adoptDecks(decks, mine, fitting[1] ?? mine)
+  }
   const [playerTypesSel, setPlayerTypesSel] = useState<string[]>(['SIM'])
 
   // Dev / Test tab
