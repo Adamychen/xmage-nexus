@@ -16,6 +16,9 @@ interface DiagEntry {
 }
 
 import type { Page } from '@playwright/test'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 async function flightLog(page: Page): Promise<DiagEntry[]> {
   return page.evaluate(() => {

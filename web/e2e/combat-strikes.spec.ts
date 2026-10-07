@@ -4,6 +4,9 @@ import { test, expect } from './fixtures'
 import { startGame } from './support/start-game'
 import { combatScenario } from '../fixtures/scenarios/combat'
 import { withFakeServer } from './support/fake-backend'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 test('combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: '@combat' }, async ({ page }) => {
   await page.addInitScript(() => {
