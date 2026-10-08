@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
+import type { DeckFormatValidationResult, DeckValidationResult, XmageFormatError } from '../net/types'
 import { validateDeckForFormat, type DeckValidationReport, type ValidationIssue } from './formatRules'
 import { deckIssueKey, fixesForIssue, issueKeysFromReport, issuePrintings, type DeckFix } from './deckIssues'
 import { useTranslation } from '../i18n'
@@ -15,6 +15,20 @@ export interface ServerIssueItem {
   message: string
   to?: { cardName: string; setCode: string; cardNumber: string }
   fixes: DeckFix[]
+}
+
+/**
+ * XMage packs the explanation into `message`; `group` is only a category or
+ * the card name (desktop shows both columns, see LegalityLabel). Render both
+ * so the detail survives, dropping a group that repeats the validator name,
+ * the card name, or the message itself (GameException errors send both).
+ */
+function xmageErrorText(e: XmageFormatError, validator: string): string {
+  const group = e.group?.trim()
+  const message = e.message?.trim()
+  if (!message) return group || e.type
+  if (!group || group === message || group === validator || group === e.cardName) return message
+  return `${group}: ${message}`
 }
 
 /** Validación de formato (XMage si responde; local como respaldo) + fusión con los issues del servidor. */
@@ -35,10 +49,9 @@ export function useDeckValidation(
     const byCard = new Map<string, ValidationIssue>()
     if (formatIssues && !formatIssues.valid) {
       for (const e of formatIssues.errors) {
-        const text = e.group || e.message || e.type
         const issue: ValidationIssue = {
           type: 'xmage',
-          message: `${formatIssues.validator}: ${text}`,
+          message: `${formatIssues.validator}: ${xmageErrorText(e, formatIssues.validator)}`,
           cardName: e.cardName,
           severity: 'error',
         }

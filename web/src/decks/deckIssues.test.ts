@@ -149,6 +149,24 @@ describe('fetchFormatIssues (official XMage DeckValidator)', () => {
     expect(send).toHaveBeenCalledWith('validateDeckFormat', { deck, deckType: 'Variant Magic - Commander', gameType: undefined })
   })
 
+  it('sends a commander deck the way a table would receive it (commander in commanders)', async () => {
+    send.mockResolvedValue({ ok: true, data: formatReport })
+    const commander = { cardName: 'Thrasios, Triton Hero', setCode: 'THB', cardNumber: '199', amount: 1 }
+    await fetchFormatIssues({
+      name: 'CMD',
+      cards: [commander, { cardName: 'Island', setCode: 'M21', cardNumber: '265', amount: 38 }],
+      sideboard: [{ cardName: 'Negate', setCode: 'M21', cardNumber: '57', amount: 2 }],
+      commanderCard: commander,
+    }, 'Commander')
+    const [action, args] = send.mock.calls[0]
+    expect(action).toBe('validateDeckFormat')
+    // The proxy strips the commander from cards and moves it to the sideboard
+    // (DeckJson.parse); it must arrive in `commanders` exactly like in joinTable.
+    expect(args.deck.commanders).toEqual([commander])
+    expect(args.deck.cards[0]).toEqual(commander)
+    expect(args.deck.sideboard).toEqual([{ cardName: 'Negate', setCode: 'M21', cardNumber: '57', amount: 2 }])
+  })
+
   it('formats without an XMage validator keep the local validation', async () => {
     expect(xmageDeckTypeFor('Timeless')).toBeNull()
     expect(await fetchFormatIssues(deck, 'Timeless')).toBeNull()

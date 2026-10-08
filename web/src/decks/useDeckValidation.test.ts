@@ -83,8 +83,13 @@ describe('useDeckValidation', () => {
       })
 
       expect(r.validationReport.isValid).toBe(false)
-      // group > message > type
-      expect(r.xmageDeckIssues.map((i) => i.message)).toEqual(['Modern: Deck', 'Modern: Banned', 'Modern: OTHER'])
+      // group + message (desktop shows both columns); a group equal to the
+      // validator, the card name or the message is dropped as redundant.
+      expect(r.xmageDeckIssues.map((i) => i.message)).toEqual([
+        'Modern: Deck: Must contain at least 60 cards',
+        'Modern: Banned',
+        'Modern: OTHER',
+      ])
       expect(r.xmageDeckIssues.every((i) => i.type === 'xmage' && i.severity === 'error')).toBe(true)
       expect(r.validationReport.issues).toEqual(r.xmageDeckIssues)
       // Only errors naming a card get a badge.
@@ -95,6 +100,30 @@ describe('useDeckValidation', () => {
     it('a valid report ignores stray errors', () => {
       const r = run(fiveBolts, { format: xmageReport({ valid: true, errors: [{ type: 'OTHER', message: 'noise' }] }) })
       expect(r.xmageDeckIssues).toEqual([])
+    })
+
+    it('keeps the detailed message when group is only a category (commander sideboard)', () => {
+      // Real AbstractCommander errors: group is "Commander"/"Deck"/the card name,
+      // the explanation lives in message. None may be dropped on render.
+      const r = renderHook(() =>
+        useDeckValidation(fiveBolts, noMeta, null, 'Commander', null, xmageReport({
+          validator: 'Commander',
+          valid: false,
+          errors: [
+            { type: 'PRIMARY', group: 'Commander', message: 'Sideboard must contain only the commander(s) and up to 1 companion' },
+            { type: 'DECK_SIZE', group: 'Deck', message: 'Must contain 101 cards: has 104 cards' },
+            { type: 'OTHER', group: 'Shock', message: 'Invalid color identity (includes R, but your commander(s) allow only U)', cardName: 'Shock' },
+            { type: 'OTHER', group: 'Deck rejected', message: 'Deck rejected' },
+          ],
+        })),
+      ).result.current
+      expect(r.xmageDeckIssues.map((i) => i.message)).toEqual([
+        'Commander: Sideboard must contain only the commander(s) and up to 1 companion',
+        'Commander: Deck: Must contain 101 cards: has 104 cards',
+        'Commander: Invalid color identity (includes R, but your commander(s) allow only U)',
+        'Commander: Deck rejected',
+      ])
+      expect(r.mergedCardIssues.get('Shock')!.message).toBe('Commander: Invalid color identity (includes R, but your commander(s) allow only U)')
     })
   })
 

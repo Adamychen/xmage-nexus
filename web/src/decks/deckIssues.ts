@@ -1,4 +1,5 @@
 import { validateDeck, validateDeckFormat } from '../net/commands'
+import { prepareDeckForXMage } from './deckNormalize'
 import type { DeckFormatValidationResult, DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
 import type { DeckFormat } from './types'
 
@@ -7,6 +8,8 @@ export interface DeckLike {
   name: string
   cards: { cardName: string; setCode: string; cardNumber: string; amount: number }[]
   sideboard: { cardName: string; setCode: string; cardNumber: string; amount: number }[]
+  commanderCard?: { cardName: string; setCode: string; cardNumber: string; amount: number }
+  partnerCard?: { cardName: string; setCode: string; cardNumber: string; amount: number }
 }
 
 /**
@@ -53,14 +56,16 @@ export function xmageDeckTypeFor(format: DeckFormat): string | null {
 /**
  * Valida el mazo con el DeckValidator OFICIAL de XMage (misma release que el
  * servidor objetivo): tamaños, bans, comandante/partner, identidad de color.
- * Devuelve null si el proxy no pudo validar (sin conexión, BD no disponible o
- * formato sin validador) — advisory, nunca bloqueante.
+ * El payload pasa por prepareDeckForXMage, así que el validador ve EXACTAMENTE
+ * lo que se enviaría al crear/unirse a una mesa (comandantes en `commanders`,
+ * no en el main). Devuelve null si el proxy no pudo validar (sin conexión, BD
+ * no disponible o formato sin validador) — advisory, nunca bloqueante.
  */
 export async function fetchFormatIssues(deck: DeckLike, format: DeckFormat): Promise<DeckFormatValidationResult | null> {
   try {
     const deckType = xmageDeckTypeFor(format)
     if (!deckType) return null
-    const report = await validateDeckFormat(deck as never, deckType)
+    const report = await validateDeckFormat(prepareDeckForXMage(deck, deckType), deckType)
     return report && report.ready && report.supported ? report : null
   } catch (e) {
     console.warn('[deckIssues] validateDeckFormat no disponible:', e instanceof Error ? e.message : e)
