@@ -174,6 +174,20 @@ Reparto actual: `accepted` 27 · `parser-artifact` 8 · `bookkeeping` 54 · `dup
   designación Speed sí llega vía `designationNames` y se pinta en `PlayerInfoBar.tsx:201`. Aceptado sin parche de vista.
 - **Rooms (Duskmourn)**: `leftHalfUnlocked` / `rightHalfUnlocked` / `roomWasUnlockedOnCast` solo se comunican por
   chat (`PermanentImpl.java:2336-2364`); el cliente desktop tampoco los lee. Aceptado.
+- **Commander damage (the 21 rule)**: the per `(commander, player)` total lives in
+  `CommanderInfoWatcher.damageToPlayer` and **does** reach the client, but only as tooltip text:
+  `addInfo("Commander<targetId>", "<b>Commander</b> did N combat damage to player <font …>NAME</font>.")`
+  on the commander object, and `CardUtil.getCardRulesWithAdditionalInfo` dumps
+  `cardState.getInfo().values()` into `rules` (contract probe 2026-09-17; real wire format re-verified
+  2026-10-08 against `fixtures/recorded/commander-4.json`). The web parses it in
+  `web/src/board/commanders.ts` (`commanderStateCarriers` + `commanderDamageDealt`). What does **not**
+  travel is whether the rule exists at all: `GameImpl.checkCommanderDamage` is `false` in Commander Duel
+  (since Nov 16), Brawl and Oathbreaker, and it is copied into no `mage.view.*`, so the client cannot
+  know whether the 21 threshold applies and the tab always labels it «21 lethal». Paths without a fork
+  patch: derive the format from the table (`lobby/joinDeckFit.ts` already classifies
+  Commander/Brawl/Oathbreaker on join) or present the threshold as informational. Under control theft the
+  damage comes from *another* player's commander (the controller changes, the object does not), which is
+  why attribution is done by object id.
 - **Parser-artifacts**: `PermanentImpl.addCounters` / `counter` / `sourceObject` son campos de la inner class
   `MarkedDamageInfo`; `PlayerImpl.approvingObject` / `status` de `ApprovingObjectResult`; `modifier` /
   `naturalResult` / `planarResult` de `RollDieResult`. No son estado de la instancia de `PermanentImpl`/`PlayerImpl`.
