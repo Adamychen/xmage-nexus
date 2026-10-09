@@ -85,6 +85,7 @@ export function ImportDeckDialog({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [result, setResult] = useState<ResolveResult | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -323,6 +324,36 @@ export function ImportDeckDialog({
           />
         </Field>
 
+        <label
+          className="ui-btn ui-btn--md ui-btn--primary ui-btn--block import-file-primary"
+          data-testid="import-file-btn"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              fileInputRef.current?.click()
+            }
+          }}
+        >
+          <Icon name="folder" size={12} /> {t('decks', 'import_choose_file')}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="visually-hidden"
+            accept=".dck,.txt,.dec,.cod,.o8d,.dek,.mtga,.mwdeck,.draft,.json"
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              if (f) await handleFile(f)
+              e.currentTarget.value = ''
+            }}
+          />
+        </label>
+
+        <div className="import-paste-divider" aria-hidden>
+          <span>{t('decks', 'import_or_paste')}</span>
+        </div>
+
         <label className="ui-field-label" htmlFor={textareaId}>{t('decks', 'import_textarea_label')}</label>
         <div className="deck-import-textarea-wrap">
           <textarea
@@ -347,20 +378,6 @@ export function ImportDeckDialog({
 
         <div className="deck-import-status-bar">
           <div className="import-status-left">
-            <label className="import-file-btn">
-              <Icon name="folder" size={12} /> {t('decks', 'import_choose_file')}
-              <input
-                type="file"
-                accept=".dck,.txt,.dec,.cod,.o8d,.dek,.mtga,.mwdeck,.draft,.json"
-                hidden
-                onChange={async (e) => {
-                  const f = e.target.files?.[0]
-                  if (f) await handleFile(f)
-                  e.currentTarget.value = ''
-                }}
-              />
-            </label>
-
             {text.trim() && (
               <Button variant="link" size="sm"
                 onClick={() => {
@@ -414,7 +431,7 @@ export function ImportDeckDialog({
               onChange={(e) => setFormat(e.target.value as DeckFormat)}
             >
               {ALL_FORMATS.map((f) => (
-                <option key={f} value={f}>{f}</option>
+                <option key={f} value={f}>{f}{f === suggested ? ' ✓' : ''}</option>
               ))}
             </select>
           </Field>

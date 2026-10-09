@@ -43,7 +43,7 @@
   --dlg-width-sm: min(440px, 94vw);
   --dlg-width-md: min(600px, 94vw);
   --dlg-width-lg: min(1100px, 96vw);
-  --dlg-max-h: min(780px, 90vh);
+  --dlg-max-h: 70vh;
   --dlg-kicker-fg: var(--gold-300);
   --dlg-kicker-bg: var(--gold-soft);
   --dlg-kicker-border: var(--gold-line);
@@ -152,6 +152,8 @@ select:not([multiple]) {
   -webkit-appearance: none;
   padding-right: var(--sp-6);
   cursor: pointer;
+  max-width: 100%;
+  text-overflow: ellipsis;
   background-image: linear-gradient(45deg, transparent 50%, var(--fg-2) 50%), linear-gradient(135deg, var(--fg-2) 50%, transparent 50%);
   background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
   background-size: 5px 5px;

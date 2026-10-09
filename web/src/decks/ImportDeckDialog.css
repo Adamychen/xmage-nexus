@@ -13,6 +13,32 @@
   padding: 0;
 }
 
+.import-file-primary {
+  cursor: pointer;
+}
+
+.import-file-primary:hover {
+  filter: brightness(1.08);
+}
+
+.import-paste-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.import-paste-divider::before,
+.import-paste-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--veil-2);
+}
+
 .import-step {
   display: flex;
   align-items: center;

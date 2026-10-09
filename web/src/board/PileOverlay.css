@@ -10,7 +10,7 @@
 
 .pile-overlay {
   width: min(1200px, 95vw);
-  max-height: 84vh;
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
   background: var(--ink-3);
@@ -96,9 +96,9 @@
   display: flex;
   gap: var(--sp-4);
   padding: var(--sp-4h) var(--sp-5);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
   flex: 1;
+  min-height: 0;
   align-items: flex-start;
 }
 

@@ -46,7 +46,7 @@
 
 .dlg-sm { width: var(--dlg-width-sm); max-height: var(--dlg-max-h); }
 .dlg-md { width: var(--dlg-width-md); max-height: var(--dlg-max-h); }
-.dlg-lg { width: var(--dlg-width-lg); max-height: 90vh; }
+.dlg-lg { width: var(--dlg-width-lg); max-height: var(--dlg-max-h); }
 
 @keyframes dialogIn {
   from {

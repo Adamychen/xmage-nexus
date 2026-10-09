@@ -13,6 +13,13 @@ export function commanderInfoRule(plays: number): string {
     : '<b>Commander</b>'
 }
 
+/** How the same watcher reports commander damage on the wire: one rules entry per damaged
+ *  player, naming them inside a `<font>` tag (`PlayerImpl.getLogName`). Verified against
+ *  `fixtures/recorded/commander-4.json`. */
+export function commanderDamageRule(dmg: number, playerName: string): string {
+  return `<b>Commander</b> did ${dmg} combat damage to player <font color='#20B2AA'>${playerName}</font>.`
+}
+
 export function makePermanent(partial: Partial<PermanentView> & { name: string }): PermanentView {
   const { name, ...rest } = partial
   return { name, cardTypes: ['Creature'], manaValue: 0, expansionSetCode: 'TEST', cardNumber: '0', ...rest }

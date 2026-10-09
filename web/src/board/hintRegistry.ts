@@ -91,7 +91,7 @@ export const hintRegistry: HintRegistryRow[] = [
   { id: 'icon:HINT_ICON_REQUIRE', kind: 'icon', status: 'rendered', ref: 'web/src/board/CardIcons.tsx:27' },
   { id: 'icon:HINT_ICON_RESTRICT', kind: 'icon', status: 'rendered', ref: 'web/src/board/CardIcons.tsx:27' },
   { id: 'mark:hintstart', kind: 'rules', status: 'rendered', ref: 'web/src/game/FormattedText.tsx:180' },
-  { id: 'info:Commander', kind: 'info', status: 'rendered', ref: 'web/src/game/CommanderDamageMatrix.tsx:91' },
+  { id: 'info:Commander', kind: 'info', status: 'rendered', ref: 'web/src/board/commanders.ts:29', causa: 'commanderPlaysCount (tax) + commanderStateCarriers/commanderDamageDealt (21-damage table) + syncCommanderMemory (roster persistente para comandantes en zona invisible) parse the lines this key emits' },
   { id: 'info:_modeChoice', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (modo elegido; línea de reglas)' },
   { id: 'info:attachedTo', kind: 'info', status: 'known-unrendered', causa: 'libro mayor interno (el valor se borra con null; sin texto)' },
   { id: 'info:chosen color', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (elección de color; línea de reglas)' },
@@ -108,6 +108,6 @@ export const hintRegistry: HintRegistryRow[] = [
   { id: 'info:IS_SUSPECTED', kind: 'info', status: 'rendered', ref: 'web/src/board/designations.ts:33' },
   { id: 'info:NAMED_CARD', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (nombre elegido; línea de reglas)' },
   { id: 'info:_secOpp', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (oponente secreto; línea de reglas)' },
-  { id: 'info:"Commander" + entry.getKey()', kind: 'info', status: 'rendered', ref: 'web/src/game/CommanderDamageMatrix.tsx:91' },
+  { id: 'info:"Commander" + entry.getKey()', kind: 'info', status: 'rendered', ref: 'web/src/game/CommanderDamageMatrix.tsx:35' },
   { id: 'info:"detain" + getId()', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (estado Detained; línea de reglas)' },
 ]

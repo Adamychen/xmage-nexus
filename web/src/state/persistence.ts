@@ -1,4 +1,5 @@
 import type { PhaseStops } from '../net/commands'
+import { normalizePrioritySound, type PrioritySoundMode } from '../audio/prioritySound'
 import type { DeckJson } from '../net/types'
 import type { DraftState } from './slices/limited'
 import { mergePhaseStops } from '../game/phaseStops'
@@ -518,6 +519,7 @@ export interface AudioSettings {
   masterVolume: number
   sfxVolume: number
   uiVolume: number
+  prioritySound: PrioritySoundMode
 }
 
 const AUDIO_SETTINGS_KEY = 'mage-web-audio'
@@ -526,6 +528,7 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   masterVolume: 0.8,
   sfxVolume: 0.8,
   uiVolume: 0.7,
+  prioritySound: 'every-prompt',
 }
 
 export function loadAudioSettings(): AudioSettings {
@@ -536,6 +539,7 @@ export function loadAudioSettings(): AudioSettings {
       masterVolume: typeof parsed.masterVolume === 'number' ? Math.max(0, Math.min(1, parsed.masterVolume)) : DEFAULT_AUDIO_SETTINGS.masterVolume,
       sfxVolume: typeof parsed.sfxVolume === 'number' ? Math.max(0, Math.min(1, parsed.sfxVolume)) : DEFAULT_AUDIO_SETTINGS.sfxVolume,
       uiVolume: typeof parsed.uiVolume === 'number' ? Math.max(0, Math.min(1, parsed.uiVolume)) : DEFAULT_AUDIO_SETTINGS.uiVolume,
+      prioritySound: normalizePrioritySound(parsed.prioritySound),
     }
   }
   return { ...DEFAULT_AUDIO_SETTINGS }
@@ -570,6 +574,7 @@ export function saveMusicSettings(settings: MusicSettings) {
 
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
+import { normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
 export type ZoomLevel = number
@@ -584,10 +589,13 @@ export interface AppearanceSettings {
   cardStyle?: CardStyle
   tapStyle?: TapStyle
   transparentDialogs?: boolean
+  showHandCost?: boolean
+  ptBadgeMode?: PtBadgeMode
+  sicknessStyle?: SicknessStyle
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, ptBadgeMode: 'always', sicknessStyle: 'badge' }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
@@ -602,7 +610,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
     const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
     const transparentDialogs = parsed.transparentDialogs === true
-    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, ...(playmatId ? { playmatId } : null) }
+    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), ...(playmatId ? { playmatId } : null) }
   }
   return { ...DEFAULT_APPEARANCE }
 }

@@ -180,11 +180,7 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
   // selector específico del submit del diálogo: el empty-state del lobby también
   // tiene un botón "Crear Mesa" cuando el server no tiene ninguna
   const submit = page.locator('.create-submit-btn')
-  // Forzado: con zoom fraccional (p.ej. 150%) + viewport estrecho, el scroll
-  // interno del wizard sufre un jitter de sub-píxel y el botón nunca se
-  // "estabiliza" para un click normal (mismo problema que en startMatch()).
-  await submit.scrollIntoViewIfNeeded()
-  await submit.click({ force: true })
+  await submit.click()
 }
 
 /** Si el salto automático a la sala de espera (JOINED_TABLE) está activo, vuelve al lobby. */

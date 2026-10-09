@@ -1,7 +1,7 @@
 .setup-wizard {
   max-width: 640px;
   width: min(640px, 94vw);
-  max-height: 92vh;
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
 }

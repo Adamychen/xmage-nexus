@@ -17,7 +17,7 @@
   gap: var(--sp-4);
   align-items: stretch;
   max-width: min(1120px, 96vw);
-  max-height: 92vh;
+  max-height: 70vh;
   padding: var(--sp-4);
   border-radius: var(--r-mid);
   background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-1) 100%);
@@ -47,11 +47,13 @@
   align-items: center;
   justify-content: center;
   min-width: 0;
+  /* lets the art shrink with the panel instead of overflowing it */
+  min-height: 0;
 }
 
 .card-inspector-img {
   display: block;
-  max-height: min(84vh, 680px);
+  max-height: min(100%, 680px);
   max-width: 46vw;
   width: auto;
   height: auto;

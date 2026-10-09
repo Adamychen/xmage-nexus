@@ -337,11 +337,11 @@ export function dismissTurnRecap(key?: string) {
 }
 
 function persistClientSettings(settings: AppState['settings']) {
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
   saveFxSettings({ effects, animationSpeed })
-  saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
+  saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
   saveMusicSettings({ musicEnabled, musicVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle })
+  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle })
   saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })

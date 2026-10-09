@@ -557,6 +557,50 @@ describe('CreateTableDialog', () => {
     expect(screen.getByText(/Sobre 3/i)).toBeDefined()
   })
 
+  // Issue #12: "I selected a default starter deck and then could not change my
+  // deck from that same screen". The deck <select> does re-enable once
+  // `adoptStarterDecks` populates the list, so what was missing was a way to
+  // EDIT the deck's contents without creating the table.
+  it('opens the deck builder for the selected deck and leaves the wizard', async () => {
+    const onEditDeck = vi.fn()
+    render(<CreateTableDialog onClose={onClose} onEditDeck={onEditDeck} />)
+    await waitFor(() => {
+      expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBeLessThan(10)
+    }, { timeout: 5000, interval: 20 })
+
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    fireEvent.click(stepper.querySelectorAll('button')[3])
+
+    const editBtn = await screen.findByTestId('create-edit-deck')
+    await waitFor(() => expect((editBtn as HTMLButtonElement).disabled).toBe(false))
+
+    fireEvent.click(editBtn)
+
+    expect(onEditDeck).toHaveBeenCalledTimes(1)
+    expect(typeof onEditDeck.mock.calls[0][0]).toBe('string')
+    expect(onEditDeck.mock.calls[0][0]).not.toBe('')
+    // The wizard closes instead of staying mounted behind: `Modal` traps Tab on
+    // `document` in the capture phase and only defers to another Modal with a
+    // higher z, and `DeckBuilder` is not a Modal — a hidden wizard would keep
+    // the focus. Losing the form is the cost of not fighting focus.
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('disables the edit action when the host cannot open the builder', async () => {
+    // Without `onEditDeck` (the gallery mounts the dialog that way) the button
+    // must not be enabled: it used to be clickable and did nothing.
+    render(<CreateTableDialog onClose={onClose} />)
+    await waitFor(() => {
+      expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBeLessThan(10)
+    }, { timeout: 5000, interval: 20 })
+
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    fireEvent.click(stepper.querySelectorAll('button')[3])
+
+    const editBtn = await screen.findByTestId('create-edit-deck')
+    await waitFor(() => expect((editBtn as HTMLButtonElement).disabled).toBe(true))
+  })
+
   it('T13: creates table with COMPUTER_MAD and joins both the bot and human player', async () => {
     await renderDialog()
 

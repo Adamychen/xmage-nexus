@@ -1,25 +1,29 @@
 import type { GameView } from '../net/types.generated'
+import type { PrioritySoundMode } from './prioritySound'
 import { soundManager } from './soundManager'
 
 export function dispatchGameSounds(
   prevGame: GameView | null,
   nextGame: GameView | null,
-  method?: string,
+  method: string | undefined,
+  prioritySound: PrioritySoundMode,
 ) {
   if (!nextGame) return
 
-  if (method === 'GAME_SELECT') {
+  const prevMe = prevGame?.players?.find((p) => p.controlled)
+  const nextMe = nextGame.players?.find((p) => p.controlled)
+  // A priority window opens with the prompt frame itself: the server sets the
+  // priority player before it sends the ask (HumanPlayer.prepareForResponse), so
+  // a GAME_SELECT carries the view where my `hasPriority` already flipped.
+  const gainedPriority = !!prevGame && !prevMe?.hasPriority && nextMe?.hasPriority === true
+
+  if (prioritySound === 'every-prompt') {
+    if (method === 'GAME_SELECT' || gainedPriority) soundManager.play('priority', 'game')
+  } else if (prioritySound === 'on-gain' && gainedPriority) {
     soundManager.play('priority', 'game')
   }
 
   if (!prevGame) return
-
-  const prevMe = prevGame.players?.find((p) => p.controlled)
-  const nextMe = nextGame.players?.find((p) => p.controlled)
-
-  if (method !== 'GAME_SELECT' && !prevMe?.hasPriority && nextMe?.hasPriority) {
-    soundManager.play('priority', 'game')
-  }
 
   const prevStack = Object.keys(prevGame.stack ?? {}).length
   const nextStack = Object.keys(nextGame.stack ?? {}).length

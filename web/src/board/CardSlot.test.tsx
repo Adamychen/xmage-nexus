@@ -3,7 +3,7 @@ import { act, StrictMode } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
-import { getState, setState } from '../state/store'
+import { getState, setState, setSetting } from '../state/store'
 import { perfClear, perfEntries } from '../system/perfProbe'
 
 vi.mock('./cardPositionRegistry', () => ({
@@ -460,5 +460,162 @@ describe('CardSlot hidden name (art branch)', () => {
     const card = { id: 'fd1', name: 'Secret Plans' } as unknown as PermanentView
     const { container } = render(<CardSlot card={card} faceDown />)
     expect(container.querySelector('.visually-hidden')).toBeNull()
+  })
+})
+
+describe('CardSlot ptBadgeMode (issue #12)', () => {
+  const creature = (over: Record<string, unknown> = {}) =>
+    ({
+      id: 'pt1',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+      originalPower: '2',
+      originalToughness: '2',
+      ...over,
+    }) as unknown as PermanentView
+
+  const withMode = (mode: 'always' | 'changed' | 'hidden', card: PermanentView) => {
+    setSetting('ptBadgeMode', mode)
+    try {
+      return render(<CardSlot card={card} showPt />)
+    } finally {
+      setSetting('ptBadgeMode', 'always')
+    }
+  }
+
+  const buffed = creature({ power: '4', toughness: '4' })
+
+  it('always: shows the badge for base and buffed P/T', () => {
+    expect(withMode('always', creature()).container.querySelector('.pt-badge')).not.toBeNull()
+    expect(withMode('always', buffed).container.querySelector('.pt-badge')).not.toBeNull()
+  })
+
+  it('changed: hides the badge at base P/T and shows it when buffed', () => {
+    expect(withMode('changed', creature()).container.querySelector('.pt-badge')).toBeNull()
+    const buffedBadge = withMode('changed', buffed).container.querySelector('.pt-badge')
+    expect(buffedBadge).not.toBeNull()
+    expect(buffedBadge?.getAttribute('data-trend')).toBe('changed')
+  })
+
+  it('hidden: never shows the badge', () => {
+    expect(withMode('hidden', creature()).container.querySelector('.pt-badge')).toBeNull()
+    expect(withMode('hidden', buffed).container.querySelector('.pt-badge')).toBeNull()
+  })
+
+  // Review focus: el modo "changed" no debe dejar un badge con data-trend
+  // pegado cuando la criatura vuelve a sus valores impresos.
+  it('changed: drops the badge again once the creature returns to base P/T', () => {
+    const { container, rerender } = withMode('changed', buffed)
+    expect(container.querySelector('.pt-badge')).not.toBeNull()
+
+    setSetting('ptBadgeMode', 'changed')
+    try {
+      rerender(<CardSlot card={creature()} showPt />)
+      expect(container.querySelector('.pt-badge')).toBeNull()
+      expect(container.querySelector('[data-trend="changed"]')).toBeNull()
+    } finally {
+      setSetting('ptBadgeMode', 'always')
+    }
+  })
+
+  it('changed: reads a base P/T sent as a mage object', () => {
+    const objBase = creature({ originalPower: { cardValue: '2' }, originalToughness: { baseValue: 2 } })
+    expect(withMode('changed', objBase).container.querySelector('.pt-badge')).toBeNull()
+    expect(withMode('changed', buffed).container.querySelector('.pt-badge')).not.toBeNull()
+  })
+})
+
+describe('CardSlot sicknessStyle (issue #12)', () => {
+  const sick = (over: Record<string, unknown> = {}) =>
+    ({
+      id: 'sk1',
+      name: 'Elvish Mystic',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      summoningSickness: true,
+      ...over,
+    }) as unknown as PermanentView
+
+  const withStyle = (style: 'badge' | 'veil', card: PermanentView, tapped = false) => {
+    setSetting('sicknessStyle', style)
+    try {
+      return render(<CardSlot card={card} showPt tapped={tapped} />)
+    } finally {
+      setSetting('sicknessStyle', 'badge')
+    }
+  }
+
+  it('badge (default): keeps the corner clock and no veil', () => {
+    const { container } = withStyle('badge', sick())
+    expect(container.querySelector('.sickness-badge')).not.toBeNull()
+    expect(container.querySelector('.sickness-veil')).toBeNull()
+  })
+
+  // The reporter asked for the clock over the whole card, like the classic
+  // XMage hourglass.
+  it('veil: covers the whole card instead of the corner', () => {
+    const { container } = withStyle('veil', sick())
+    const veil = container.querySelector('.sickness-veil') as HTMLElement
+    expect(veil).not.toBeNull()
+    expect(container.querySelector('.sickness-badge')).toBeNull()
+    // Geometry is not measured here: jsdom returns zero rects. The "covers the
+    // whole card" contract lives in `cardOverlayCss.test.ts` (`inset: 0`) and was
+    // checked in a real browser (elementFromPoint returns the card).
+    expect(veil.getAttribute('aria-hidden')).toBe('true')
+    expect(veil.querySelector('svg')).not.toBeNull()
+  })
+
+  // Review focus: el velo no puede saltarse el `!tapped` del disparador.
+  it('veil: stays hidden on a tapped sick creature', () => {
+    const { container } = withStyle('veil', sick(), true)
+    expect(container.querySelector('.sickness-veil')).toBeNull()
+    expect(container.querySelector('.sickness-badge')).toBeNull()
+  })
+
+  it('veil: does not hide the P/T badge underneath it', () => {
+    const { container } = withStyle('veil', sick())
+    expect(container.querySelector('.pt-badge')?.textContent).toBe('1/1')
+  })
+})
+
+describe('CardSlot ptBadgeMode con base desconocida', () => {
+  // Tokens, cloaked and disguised cards arrive without `originalPower`: there is
+  // no way to prove their P/T has not changed, so "only when changed" must not
+  // hide the numbers.
+  it('changed: muestra el badge cuando no se conoce el P/T impreso', () => {
+    setSetting('ptBadgeMode', 'changed')
+    try {
+      const unknownBase = {
+        id: 'tok1',
+        name: 'Soldier Token',
+        cardTypes: ['Creature'],
+        power: '1',
+        toughness: '1',
+      } as unknown as PermanentView
+      expect(render(<CardSlot card={unknownBase} showPt />).container.querySelector('.pt-badge')).not.toBeNull()
+    } finally {
+      setSetting('ptBadgeMode', 'always')
+    }
+  })
+
+  it('changed: sigue mostrando el badge cuando el P/T impreso sí coincide', () => {
+    setSetting('ptBadgeMode', 'changed')
+    try {
+      const known = {
+        id: 'k1',
+        name: 'Grizzly Bears',
+        cardTypes: ['Creature'],
+        power: '2',
+        toughness: '2',
+        originalPower: '2',
+        originalToughness: '2',
+      } as unknown as PermanentView
+      expect(render(<CardSlot card={known} showPt />).container.querySelector('.pt-badge')).toBeNull()
+    } finally {
+      setSetting('ptBadgeMode', 'always')
+    }
   })
 })

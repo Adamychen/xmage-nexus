@@ -6,9 +6,10 @@ import { deckRef } from '../decks'
 import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import Button from '../../ui/Button'
 import StarterDecksOffer from '../../decks/StarterDecksOffer'
 
-export default function SeatsTab({ form }: { form: CreateTableForm }) {
+export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; onEditDeck?: (deckId: string) => void }) {
   const { t } = useTranslation()
   const humansWaiting = form.seatConfigs.filter((s) => isHumanSeatType(s.type)).length
   const bots = form.seatConfigs.length - humansWaiting
@@ -35,17 +36,30 @@ export default function SeatsTab({ form }: { form: CreateTableForm }) {
               ) : (
                 <>
                   <Field label={t('lobby','active_deck')}>
-                    <select
-                      value={form.myDeck ? deckRef(form.myDeck) : ''}
-                      onChange={(e) => form.selectMyDeck(e.target.value)}
-                      disabled={form.availableDecks.length === 0}
-                    >
-                      {form.availableDecks.map((d) => (
-                        <option key={deckRef(d)} value={deckRef(d)}>
-                          {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="create-deck-picker">
+                      <select
+                        value={form.myDeck ? deckRef(form.myDeck) : ''}
+                        onChange={(e) => form.selectMyDeck(e.target.value)}
+                        disabled={form.availableDecks.length === 0}
+                      >
+                        {form.availableDecks.map((d) => (
+                          <option key={deckRef(d)} value={deckRef(d)}>
+                            {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon="package"
+                        data-testid="create-edit-deck"
+                        disabled={!form.myDeck || !onEditDeck}
+                        title={t('lobby','create_edit_deck')}
+                        onClick={() => { if (form.myDeck) onEditDeck?.(deckRef(form.myDeck)) }}
+                      >
+                        {t('lobby','create_edit_deck')}
+                      </Button>
+                    </div>
                   </Field>
                   {!form.myDeck && (
                     <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>

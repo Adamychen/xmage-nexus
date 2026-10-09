@@ -166,6 +166,69 @@ test.describe('galería de estados (P3)', () => {
     expect(topmost).toBe(true)
   })
 
+  test('el wizard de crear mesa no se recorta (el panel cabe en el viewport)', async ({ page }) => {
+    await openGallery(page)
+
+    // Regresión de issue #12: con la clase legacy `.overlay` ganándole por orden
+    // de import a `.dlg-backdrop`, el `align-items: center` anulaba el
+    // `place-items: safe center` y el panel se recortaba sin scroll posible;
+    // además `.create-table-body` era un segundo scroller con `max-height: 52vh`.
+    // Ahora el panel es el único eje de scroll y el fondo es el respaldo.
+    for (const viewport of [
+      { width: 1280, height: 800 },
+      { width: 900, height: 700 },
+      { width: 1366, height: 768 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await showEntry(page, 'screen:wizard')
+
+      const metrics = await page.evaluate(() => {
+        const panel = document.querySelector('.dlg-panel') as HTMLElement | null
+        const backdrop = document.querySelector('.dlg-backdrop') as HTMLElement | null
+        const body = document.querySelector('.create-table-body') as HTMLElement | null
+        if (!panel || !backdrop || !body) return null
+        const rect = panel.getBoundingClientRect()
+        const steps = [...document.querySelectorAll('.wizard-step')] as HTMLElement[]
+        return {
+          top: rect.top,
+          bottom: rect.bottom,
+          viewportHeight: window.innerHeight,
+          backdropAlign: getComputedStyle(backdrop).alignItems,
+          bodyOverflowY: getComputedStyle(body).overflowY,
+          submitBottom: (() => {
+            const btn = document.querySelector('.create-submit-btn') as HTMLElement | null
+            if (!btn) return null
+            return Math.round(btn.getBoundingClientRect().bottom)
+          })(),
+          stepperTop: (() => {
+            const nav = document.querySelector('[aria-label*="Pasos"], [aria-label*="steps"], [aria-label*="Creation"]') as HTMLElement | null
+            return nav ? Math.round(nav.getBoundingClientRect().top) : null
+          })(),
+          stepWidths: steps.map((s) => Math.round(s.getBoundingClientRect().width)),
+        }
+      })
+
+      expect(metrics, `el wizard no montó el panel`).not.toBeNull()
+      const m = metrics!
+      // El panel completo dentro del viewport: el complaint era "no puedo ver
+      // todo el menú a la vez".
+      expect(m.top).toBeGreaterThanOrEqual(0)
+      expect(m.bottom).toBeLessThanOrEqual(m.viewportHeight + 1)
+      // El fondo conserva el `safe center` (si `.overlay` vuelve, esto falla).
+      expect(m.backdropAlign).toBe('safe center')
+      // El scroll vive en el cuerpo del paso, para que el stepper y el botón
+      // Crear Mesa sigan a mano sin desplazar el panel entero.
+      expect(m.bodyOverflowY).toBe('auto')
+      // Pasos del wizard de igual anchura: si una etiqueta larga ensancha un
+      // paso, el conector (positionado en %) se desalinea.
+      expect(new Set(m.stepWidths).size).toBe(1)
+      // El botón Crear Mesa queda dentro del viewport sin desplazar el panel.
+      if (m.submitBottom !== null) {
+        expect(m.submitBottom).toBeLessThanOrEqual(m.viewportHeight + 1)
+      }
+    }
+  })
+
   test('regresión visual de la selección representativa', async ({ page }) => {
     test.skip(!VISUAL, 'E2E_VISUAL=1 requerido (baselines por plataforma)')
     await openGallery(page)

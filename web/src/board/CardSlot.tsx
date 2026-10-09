@@ -16,7 +16,7 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
-import { setState, useStore } from '../state/store'
+import { setState, useSettings, useStore } from '../state/store'
 import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
@@ -70,6 +70,7 @@ export default function CardSlot({
   compact = false,
 }: CardSlotProps) {
   const { t } = useTranslation()
+  const { ptBadgeMode, sicknessStyle } = useSettings()
   const sleeve = useSleeveFor(card.controllerId)
   const imgUrl = useCardImageUrl(card, !faceDown)
   const isFaceDownCard = faceDown || card.faceDown === true
@@ -243,7 +244,16 @@ export default function CardSlot({
   const protector = useMemo(() => protectorName(card.rules), [card.rules])
   const manaSymbols = useMemo(() => (compact ? manaSourceSymbols(card) : []), [compact, card.rules, card.subTypes])
   const tileType = compact ? primaryCardType(card) : null
-  const showPtBadge = showPt && isRealCreature && perm.power != null && perm.toughness != null
+  // In 'changed' mode the badge only appears when we can PROVE the P/T moved: an
+// unknown printed value (token, cloak, disguise — the server sends no
+// originalPower) reads as 'same' from ptTrend and would hide the numbers
+// forever, so a missing base counts as "show".
+const ptBaseKnown = basePower != null || baseToughness != null
+const showPtBadge =
+    showPt
+    && ptBadgeMode !== 'hidden'
+    && isRealCreature && perm.power != null && perm.toughness != null
+    && (ptBadgeMode === 'always' || !ptBaseKnown || pt.power !== 'same' || pt.toughness !== 'same')
   const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
   const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
   const visibleCounters = compact
@@ -490,9 +500,15 @@ export default function CardSlot({
         </div>
       )}
 
-      {hasSummoningSickness && (
+      {hasSummoningSickness && sicknessStyle === 'badge' && (
         <div className="sickness-badge" title={t('game', 'summoning_sickness')} aria-label={t('game', 'summoning_sickness')}>
           <Icon name="timer" size={11} />
+        </div>
+      )}
+
+      {hasSummoningSickness && sicknessStyle === 'veil' && (
+        <div className="sickness-veil" aria-hidden="true">
+          <Icon name="timer" size={28} />
         </div>
       )}
 

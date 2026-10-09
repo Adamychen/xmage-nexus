@@ -4,6 +4,7 @@ import HandBar from './HandBar'
 import type { CardView } from '../net/types'
 import { makeCard } from '../__fixtures__/gameViews'
 import { HAND_BAR_MAX_CARD_W, HAND_BAR_PEEK_RATIO, HAND_CARD_ASPECT, HAND_BAR_PADDING_Y } from './handSizing'
+import { setSetting } from '../state/store'
 
 vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardPosition: vi.fn(() => undefined),
@@ -64,6 +65,21 @@ describe('HandBar', () => {
     )
     const alts = Array.from(container.querySelectorAll('.hand-card-cost img')).map((img) => img.getAttribute('alt'))
     expect(alts).toEqual(['{2}', '{G}'])
+  })
+
+  // Issue #12: "I don't want the mana cost symbols floating above the cards in
+  // my hand". The image already shows them; the pips are an extra layer.
+  it('drops the printed cost bubbles when showHandCost is off', () => {
+    setSetting('showHandCost', false)
+    try {
+      const { container } = render(
+        <HandBar cards={{ bolt: makeCard({ id: 'bolt', name: 'Lightning Bolt', manaCostLeftStr: ['{R}'] }) }} />,
+      )
+      expect(container.querySelector('.hand-card-cost')).toBeNull()
+      expect(container.querySelector('.hand-bar .hand-card')).not.toBeNull()
+    } finally {
+      setSetting('showHandCost', true)
+    }
   })
 
   it('exposes sizing CSS variables, sink and the visible band height', () => {

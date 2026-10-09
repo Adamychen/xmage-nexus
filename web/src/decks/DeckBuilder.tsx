@@ -29,7 +29,7 @@ import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
 import { useStore, setMyDeck } from '../state/store'
 import { equippedDeckId } from '../state/persistence'
-import type { DeckCard } from '../lobby/decks'
+import { deckRef as deckKeyOf, getAllAvailableDecks, type DeckCard } from '../lobby/decks'
 import { useTranslation } from '../i18n'
 import LanguageSelector from '../i18n/LanguageSelector'
 import { useDeckMetadata } from './useDeckMetadata'
@@ -139,7 +139,14 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   useEffect(() => {
     partnerMigratedRef.current = false
     void (async () => {
-      const d = await storage.get(deckId)
+      const stored = await storage.get(deckId)
+      // The lobby offers decks the storage does not know: the bundled ones
+      // (`precon:<name>`) and the starter decks, which are saved without an id
+      // and referenced by name. Without this fallback, editing one from the
+      // create-table wizard landed on "deck not found" (issue #12).
+      const d = stored
+        ?? (await storage.list()).find((c) => c.id === deckId || (!c.id && c.name === deckId))
+        ?? (getAllAvailableDecks().find((c) => deckKeyOf(c) === deckId) as DeckV2 | undefined)
       if (d) {
         // Migración: mazos de Commander guardados antes de la designación
         // explícita usaban la portada como comandante. Si la portada sigue en

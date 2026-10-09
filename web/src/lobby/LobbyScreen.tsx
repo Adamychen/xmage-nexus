@@ -387,7 +387,15 @@ export default function LobbyScreen() {
         </div>
       )}
 
-      {showCreate && <CreateTableDialog onClose={() => setShowCreate(false)} />}
+      {showCreate && (
+        <CreateTableDialog
+          onClose={() => setShowCreate(false)}
+          onEditDeck={(id) => {
+            setDeckBuilderId(id)
+            setActiveTab('decks')
+          }}
+        />
+      )}
       {showLeaderboard && (
         <LeaderboardModal
           users={users}

@@ -200,7 +200,8 @@ html.fx-off .card-slot.stack-source-pulse {
 /* Pulso infinito de objetivo: la fase no es reproducible en capturas (WebKit). */
 @media (prefers-reduced-motion: reduce) {
   .card-slot.targetable,
-  .sickness-badge {
+  .sickness-badge,
+  .sickness-veil {
     animation: none;
   }
 }
@@ -507,6 +508,33 @@ html.fx-off .counter-badge {
 @keyframes sicknessFloat {
   from { transform: translateY(0) rotate(0deg); opacity: 0.8; }
   to { transform: translateY(-3px) rotate(15deg); opacity: 1; }
+}
+
+/* "Veil" style: the clock covers the whole card, like the classic XMage
+   hourglass. aria-hidden and pointer-events:none so it never steals the click
+   from the card (which stays draggable, playable and a valid target). */
+.sickness-veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(circle at center, rgb(var(--ink-rgb) / 0.34) 0%, rgb(var(--ink-rgb) / 0.62) 100%);
+  color: var(--fg-hi);
+  border-radius: inherit;
+  animation: sicknessVeil 2.4s ease-in-out infinite alternate;
+}
+
+.sickness-veil svg {
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 6px var(--shade-5));
+}
+
+@keyframes sicknessVeil {
+  from { opacity: 0.72; }
+  to { opacity: 1; }
 }
 
 /* Face-down Special Type Badges */
@@ -1004,6 +1032,11 @@ html.fx-off .entered-glow {
   top: 4px;
   left: 50%;
   margin-left: -10px;
+}
+
+.card-slot.is-compact .sickness-veil svg {
+  width: 18px;
+  height: 18px;
 }
 
 .card-slot.is-compact .keyword-badges {

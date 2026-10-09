@@ -91,4 +91,45 @@ describe('ImportDeckDialog wizard', () => {
     fireEvent.click(screen.getByText(/Atrás|Back/))
     expect(screen.getByTestId('import-next-btn')).toBeDefined()
   })
+
+  // Issue #12: "it wasn't immediately clear what export format to use… Selecting
+  // the deck file worked much better". The file picker was a tertiary label
+  // next to the textarea; it is now the step's primary action.
+  it('offers the file picker as the primary source action', () => {
+    render(<ImportDeckDialog onImport={vi.fn()} onClose={vi.fn()} />)
+    const fileBtn = screen.getByTestId('import-file-btn')
+    expect(fileBtn.className).toContain('ui-btn--primary')
+    expect(fileBtn.querySelector('input[type="file"]')).not.toBeNull()
+  })
+
+  // A hidden <input type="file"> is not focusable and neither is the label, so
+  // once the file picker became the primary action there was no keyboard route
+  // to it at all.
+  it('exposes the file picker to keyboard users', () => {
+    render(<ImportDeckDialog onImport={vi.fn()} onClose={vi.fn()} />)
+    const fileBtn = screen.getByTestId('import-file-btn')
+    expect(fileBtn.getAttribute('role')).toBe('button')
+    expect(fileBtn.getAttribute('tabindex')).toBe('0')
+    const input = fileBtn.querySelector('input[type="file"]') as HTMLInputElement
+    expect(input.className).toContain('visually-hidden')
+  })
+
+  it('keeps the file picker above the paste alternative', () => {
+    render(<ImportDeckDialog onImport={vi.fn()} onClose={vi.fn()} />)
+    const nodes = [...document.querySelectorAll('[data-testid]')]
+    const order = (id: string) => nodes.findIndex((n) => n.getAttribute('data-testid') === id)
+    expect(order('import-file-btn')).toBeGreaterThanOrEqual(0)
+    expect(order('import-file-btn')).toBeLessThan(order('import-paste-btn'))
+  })
+
+  it('marks the detected format inside the format select itself', async () => {
+    render(<ImportDeckDialog onImport={vi.fn()} onClose={vi.fn()} />)
+    paste(ARENA)
+    fireEvent.click(screen.getByTestId('import-next-btn'))
+    await screen.findByTestId('import-step-setup')
+    const select = screen.getByTestId('import-format-select') as HTMLSelectElement
+    const detected = select.value
+    const option = [...select.options].find((o) => o.value === detected)
+    expect(option?.textContent).toContain('✓')
+  })
 })

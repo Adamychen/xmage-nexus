@@ -2,11 +2,13 @@ import type { TranslationSchema } from '../i18n/types'
 import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
+import Toggle from '../ui/Toggle'
 import { SLEEVES } from './sleeves'
 import CustomSleeveTile from './CustomSleeveTile'
 import CustomCardArtManager from './CustomCardArtManager'
 import PlaymatPicker from './PlaymatPicker'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
+import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
@@ -140,6 +142,49 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
             label={t('lobby', 'dialog_backdrop_label')}
           />
           <p className="ui-scale-hint">{t('lobby', 'dialog_backdrop_hint')}</p>
+        </section>
+
+        <section className="appearance-section">
+          <h3 className="appearance-section-title">{t('lobby', 'card_overlays_title')}</h3>
+          <p className="appearance-section-hint">{t('lobby', 'card_overlays_hint')}</p>
+          <Toggle
+            checked={settings.showHandCost}
+            onChange={(v) => setSetting('showHandCost', v)}
+            label={t('lobby', 'hand_cost_show')}
+            title={t('lobby', 'hand_cost_show_hint')}
+          />
+          <div className="board-layout-grid">
+            {PT_BADGE_MODES.map((mode) => (
+              <Button
+                key={mode}
+                variant="ghost"
+                className={`board-layout-item ${settings.ptBadgeMode === mode ? 'selected' : ''}`}
+                onClick={() => setSetting('ptBadgeMode', mode)}
+                aria-pressed={settings.ptBadgeMode === mode}
+                data-testid={`appearance-pt-badge-${mode}`}
+              >
+                <span className="board-layout-label">{t('lobby', `pt_badge_${mode}`)}</span>
+                <span className="board-layout-desc">{t('lobby', `pt_badge_${mode}_desc`)}</span>
+                {settings.ptBadgeMode === mode && <span className="board-layout-check">✓</span>}
+              </Button>
+            ))}
+          </div>
+          <div className="board-layout-grid">
+            {SICKNESS_STYLES.map((style) => (
+              <Button
+                key={style}
+                variant="ghost"
+                className={`board-layout-item ${settings.sicknessStyle === style ? 'selected' : ''}`}
+                onClick={() => setSetting('sicknessStyle', style)}
+                aria-pressed={settings.sicknessStyle === style}
+                data-testid={`appearance-sickness-style-${style}`}
+              >
+                <span className="board-layout-label">{t('lobby', `sickness_style_${style}`)}</span>
+                <span className="board-layout-desc">{t('lobby', `sickness_style_${style}_desc`)}</span>
+                {settings.sicknessStyle === style && <span className="board-layout-check">✓</span>}
+              </Button>
+            ))}
+          </div>
         </section>
 
         <section className="appearance-section">

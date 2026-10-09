@@ -22,7 +22,9 @@ export function identityColors(game: GameView | null | undefined): ManaColor[] {
   if (!player) return []
   const commanderColors = new Set<ManaColor>()
   for (const c of commandersOf(player)) {
-    if (!c.isCompanion) cardManaColors(c.card).forEach((col) => commanderColors.add(col))
+    if ((!c.isCompanion || c.isCommander) && c.card) {
+      cardManaColors(c.card).forEach((col) => commanderColors.add(col))
+    }
   }
   if (commanderColors.size > 0) return ORDER.filter((c) => commanderColors.has(c))
 

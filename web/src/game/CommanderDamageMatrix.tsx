@@ -1,125 +1,48 @@
 import { useState, useMemo } from 'react'
 import Tabs from '../ui/Tabs'
 import Chip from '../ui/Chip'
-import type { CardView, GameView, PlayerView } from '../net/types'
-import { parseCommandList } from '../board/CommandZone'
-import { commanderTax } from '../board/commanders'
-import { isPlayerOut, MAX_BOARD_PLAYERS } from '../board/boardShared'
+import type { GameView, PlayerView } from '../net/types'
+import { commanderDamageDealt, commanderTax, syncCommanderMemory, type MatrixCommander } from '../board/commanders'
+import { isPlayerOut } from '../board/boardShared'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommanderDamageMatrix.css'
 
 export const COMMANDER_LETHAL = 21
 
-interface CommanderInfo {
-  id: string
-  name: string
-  ownerId: string
-  ownerName: string
-  card: CardView
-  castCount: number
+/** Start flagging before lethal so a player can react (UI choice, not a rule). */
+export const COMMANDER_WARNING = 15
+
+interface DamageCell {
+  commander: MatrixCommander
+  dmg: number
+  isSelf: boolean
 }
 
-function extractDamage(target: PlayerView, commander: CommanderInfo, game?: GameView | null): number {
-  const anyTarget = target as unknown as Record<string, unknown>
-  const anyCard = commander.card as unknown as Record<string, unknown>
+interface DamageRow {
+  player: PlayerView
+  cells: DamageCell[]
+}
 
-  const targetKeys = ['commanderDamage', 'commanderDamages', 'commanderDamageMap', 'damageByCommander', 'receivedCommanderDamage', 'commanderDamageMatrix', 'commander_damage']
-  for (const key of targetKeys) {
-    const val = anyTarget[key]
-    if (val && typeof val === 'object') {
-      const map = val as Record<string, unknown>
-      if (typeof map[commander.id] === 'number') return map[commander.id] as number
-      if (typeof map[String(commander.id)] === 'number') return map[String(commander.id)] as number
-      if (typeof map[commander.name] === 'number') return map[commander.name] as number
-      for (const [k, v] of Object.entries(map)) {
-        if (k.includes(commander.id) && typeof v === 'number') return v as number
-      }
-    }
-    if (typeof val === 'number' && key === 'commanderDamage') {
-      return val as number
-    }
-  }
-
-  const counters = (target.counters ?? []) as Array<{ name: string; count: number }>
-  for (const c of counters) {
-    const nl = String(c.name ?? '').toLowerCase()
-    if (nl.includes('commander') && nl.includes(commander.name.toLowerCase())) {
-      return c.count
-    }
-    if (nl === `commander-${commander.id}` || nl === `commander ${commander.name}`.toLowerCase()) {
-      return c.count
-    }
-  }
-
-  const cardKeys = ['damageToPlayer', 'damageMap', 'commanderDamage', 'dealtDamageMap', 'damageToPlayers']
-  for (const key of cardKeys) {
-    const val = anyCard[key]
-    if (val && typeof val === 'object') {
-      const map = val as Record<string, unknown>
-      if (typeof map[target.playerId] === 'number') return map[target.playerId] as number
-      if (typeof map[String(target.playerId)] === 'number') return map[String(target.playerId)] as number
-      if (typeof map[target.name] === 'number') return map[target.name] as number
-    }
-  }
-
-  const cardsToInspect: Array<Record<string, unknown>> = [anyCard]
-
-  if (game?.players) {
-    for (const p of game.players) {
-      if (p.battlefield) {
-        const perms = Array.isArray(p.battlefield) ? p.battlefield : Object.values(p.battlefield)
-        for (const perm of perms as Array<Record<string, unknown>>) {
-          if (perm.id === commander.id || perm.name === commander.name || perm.mainCardId === commander.id) {
-            cardsToInspect.push(perm)
-          }
-        }
-      }
-      if (p.graveyard) {
-        const graves = Array.isArray(p.graveyard) ? p.graveyard : Object.values(p.graveyard)
-        for (const c of graves as Array<Record<string, unknown>>) {
-          if (c.id === commander.id || c.name === commander.name) {
-            cardsToInspect.push(c)
-          }
-        }
-      }
-    }
-  }
-
-  let maxDmgFromRules = 0
-  for (const card of cardsToInspect) {
-    const rules: string[] = Array.isArray(card['rules']) ? (card['rules'] as string[]) : []
-    for (const raw of rules) {
-      const sanitized = raw.replace(/<[^>]*>/g, ' ')
-      let m = sanitized.match(/did\s+(\d+)\s+combat damage to player\s+([^.<]+)/i)
-      if (!m) m = sanitized.match(/did\s+(\d+)\s+combat damage to\s+([^.<]+)/i)
-      if (m) {
-        const dmg = parseInt(m[1], 10)
-        const damagedName = m[2].trim()
-        if (damagedName === target.name || damagedName.toLowerCase() === target.name.toLowerCase()) {
-          maxDmgFromRules = Math.max(maxDmgFromRules, dmg)
-        }
-      }
-    }
-
-    if (Array.isArray(card['cardIcons'])) {
-      for (const icon of card['cardIcons'] as Array<Record<string, unknown>>) {
-        const text = String(icon['hint'] ?? icon['text'] ?? '')
-        const sanitized = text.replace(/<[^>]*>/g, ' ')
-        let m = sanitized.match(/did\s+(\d+)\s+combat damage to player\s+([^.<]+)/i)
-        if (!m) m = sanitized.match(/did\s+(\d+)\s+combat damage to\s+([^.<]+)/i)
-        if (m) {
-          const dmg = parseInt(m[1], 10)
-          const damagedName = m[2].trim()
-          if (damagedName === target.name || damagedName.toLowerCase() === target.name.toLowerCase()) {
-            maxDmgFromRules = Math.max(maxDmgFromRules, dmg)
-          }
-        }
-      }
-    }
-  }
-
-  return maxDmgFromRules
+/** Commanders shown as columns, each player as a row: one column per commander object, so
+ *  two players running the same card get one column each (they deal separate damage). No
+ *  board clamp here — the 2x2 layout paints 4 seats, the table must still list everyone.
+ *  El roster viene con memoria de partida (`syncCommanderMemory`): un comandante en zona
+ *  invisible (mano/biblioteca) mantiene su columna y sus totales de la última vista. */
+function useDamageMatrix(game: GameView | null) {
+  return useMemo(() => {
+    const players = game?.players ?? []
+    const commanders = syncCommanderMemory(game).filter((c) => !c.isCompanion || c.isCommander)
+    const rows: DamageRow[] = players.map((p) => ({
+      player: p,
+      cells: commanders.map((c) => ({
+        commander: c,
+        dmg: commanderDamageDealt(game, c, p),
+        isSelf: p.playerId === c.ownerId,
+      })),
+    }))
+    return { players, commanders, rows }
+  }, [game])
 }
 
 export interface CommanderDamageMatrixProps {
@@ -129,48 +52,22 @@ export interface CommanderDamageMatrixProps {
 export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixProps) {
   const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
-  const players = useMemo(() => (game?.players ?? []).slice(0, MAX_BOARD_PLAYERS), [game?.players])
+  const { players, commanders, rows } = useDamageMatrix(game)
 
-  const commanders: CommanderInfo[] = useMemo(() => {
-    const res: CommanderInfo[] = []
-    players.forEach((p) => {
-      const items = parseCommandList(p.commandList as unknown[], (p.helperCards ?? {}) as Record<string, CardView>)
-      items
-        .filter((i) => i.isCommander)
-        .forEach((i) => {
-          res.push({
-            id: i.id,
-            name: i.card.name,
-            ownerId: p.playerId,
-            ownerName: p.name,
-            card: i.card,
-            castCount: i.castCount,
-          })
-        })
-    })
-    return res.slice(0, 8)
-  }, [players])
-
-  const lethalAlerts = useMemo(() => {
-    const alerts: Array<{ targetName: string; commanderName: string; ownerName: string; dmg: number; isLethal: boolean }> = []
-    players.forEach((p) => {
-      commanders.forEach((c) => {
-        if (p.playerId !== c.ownerId) {
-          const dmg = extractDamage(p, c, game)
-          if (dmg >= 15) {
-            alerts.push({
-              targetName: p.name,
-              commanderName: c.name,
-              ownerName: c.ownerName,
-              dmg,
-              isLethal: dmg >= COMMANDER_LETHAL,
-            })
-          }
-        }
-      })
-    })
-    return alerts
-  }, [players, commanders])
+  const alerts = useMemo(
+    () =>
+      rows
+        .flatMap((row) => row.cells.map((cell) => ({ row, cell })))
+        .filter(({ cell }) => !cell.isSelf && cell.dmg >= COMMANDER_WARNING)
+        .map(({ row, cell }) => ({
+          targetName: row.player.name,
+          commanderName: cell.commander.name,
+          ownerName: cell.commander.ownerName,
+          dmg: cell.dmg,
+          isLethal: cell.dmg >= COMMANDER_LETHAL,
+        })),
+    [rows],
+  )
 
   if (players.length === 0) return null
   if (commanders.length === 0) {
@@ -204,9 +101,9 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
         />
       </div>
 
-      {lethalAlerts.length > 0 && (
+      {alerts.length > 0 && (
         <div className="cdm-alert-box">
-          {lethalAlerts.map((a, i) => (
+          {alerts.map((a, i) => (
             <div key={i} className={`cdm-alert-pill ${a.isLethal ? 'lethal' : 'warning'}`}>
               <span className="cdm-alert-icon"><Icon name={a.isLethal ? 'skull' : 'alert'} size={13} /></span>
               <span className="cdm-alert-text">
@@ -219,11 +116,12 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
 
       {viewMode === 'cards' ? (
         <div className="cdm-cards-list" data-testid="cdm-cards-list">
-          {players.map((p) => {
-            const playerCommanders = commanders.filter((c) => c.ownerId === p.playerId)
-            const opposingCommanders = commanders.filter((c) => c.ownerId !== p.playerId)
+          {rows.map((row) => {
+            const p = row.player
             const isActive = p.playerId === game?.activePlayerId
             const isDefeated = isPlayerOut(p)
+            const own = row.cells.filter((c) => c.isSelf)
+            const rivals = row.cells.filter((c) => !c.isSelf)
 
             return (
               <div
@@ -245,48 +143,45 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                   </div>
                 </div>
 
-                {playerCommanders.length > 0 && (
+                {own.length > 0 && (
                   <div className="cdm-player-commanders">
-                    {playerCommanders.map((cmd) => {
-                      const castCount = cmd.castCount
-                      return (
-                        <Chip key={cmd.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
-                          {cmd.name}
-                          {castCount > 0 && (
-                            <Chip tone="err" size="xs" title={t('board', 'commander_tax', { tax: commanderTax(castCount), count: castCount })}>
-                              +{commanderTax(castCount)}
-                            </Chip>
-                          )}
-                        </Chip>
-                      )
-                    })}
+                    {own.map((c) => (
+                      <Chip key={c.commander.id} tone="gold" size="xs" icon="crown" title={t('game', 'commander_source_label', { name: p.name })}>
+                        {c.commander.name}
+                        {c.commander.castCount > 0 && (
+                          <Chip tone="err" size="xs" title={t('board', 'commander_tax', { tax: commanderTax(c.commander.castCount), count: c.commander.castCount })}>
+                            +{commanderTax(c.commander.castCount)}
+                          </Chip>
+                        )}
+                      </Chip>
+                    ))}
                   </div>
                 )}
 
                 <div className="cdm-damage-list">
-                  {opposingCommanders.length === 0 ? (
+                  {rivals.length === 0 ? (
                     <div className="cdm-no-opponents">{t('game', 'commander_no_rivals')}</div>
                   ) : (
-                    opposingCommanders.map((c) => {
-                      const dmg = extractDamage(p, c, game)
+                    rivals.map((cell) => {
+                      const dmg = cell.dmg
                       const isLethal = dmg >= COMMANDER_LETHAL
-                      const isWarning = dmg >= 15 && !isLethal
+                      const isWarning = dmg >= COMMANDER_WARNING && !isLethal
                       const pct = Math.min(100, Math.round((dmg / COMMANDER_LETHAL) * 100))
                       const severity = isLethal ? 'lethal' : isWarning ? 'warning' : dmg >= 8 ? 'mid' : 'low'
 
                       return (
-                        <div key={c.id} className={`cdm-damage-item ${severity}`} data-testid={`cdm-item-${p.playerId}-${c.id}`}>
+                        <div key={cell.commander.id} className={`cdm-damage-item ${severity}`} data-testid={`cdm-item-${p.playerId}-${cell.commander.id}`}>
                           <div className="cdm-damage-row">
-                            <div className="cdm-damage-source" title={t('game', 'commander_owner_label', { name: c.name, owner: c.ownerName })}>
-                              <span className="cdm-source-name">{c.name}</span>
-                              <span className="cdm-source-owner">{t('game', 'commander_of', { owner: c.ownerName })}</span>
+                            <div className="cdm-damage-source" title={t('game', 'commander_owner_label', { name: cell.commander.name, owner: cell.commander.ownerName })}>
+                              <span className="cdm-source-name">{cell.commander.name}</span>
+                              <span className="cdm-source-owner">{t('game', 'commander_of', { owner: cell.commander.ownerName })}</span>
                             </div>
                             <div className="cdm-damage-metric">
                               {isLethal ? (
                                 <Chip tone="err" size="xs" icon="skull">{t('game', 'commander_lethal_short')}</Chip>
                               ) : (
                                 <span className="cdm-count-text">
-                                  <strong>{dmg}</strong> <span className="cdm-denom">/ 21</span>
+                                  <strong>{dmg}</strong> <span className="cdm-denom">/ {COMMANDER_LETHAL}</span>
                                 </span>
                               )}
                             </div>
@@ -322,7 +217,8 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
             </tr>
           </thead>
           <tbody>
-            {players.map((p) => {
+            {rows.map((row) => {
+              const p = row.player
               const isActivePlayer = p.playerId === game?.activePlayerId
               return (
                 <tr key={p.playerId} className={isActivePlayer ? 'cdm-active-row' : ''} data-testid={`cdm-row-${p.playerId}`}>
@@ -331,21 +227,19 @@ export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixPro
                     {p.controlled && <span className="cdm-you-badge">{t('game', 'you').toUpperCase()}</span>}
                     {isActivePlayer && <span className="cdm-active-badge">{t('game', 'commander_active')}</span>}
                   </td>
-                  {commanders.map((c) => {
-                    const dmg = extractDamage(p, c, game)
-                    const isLethal = dmg >= COMMANDER_LETHAL
-                    const isWarning = dmg >= 15 && dmg < COMMANDER_LETHAL
-                    const isSelf = p.playerId === c.ownerId
+                  {row.cells.map((cell) => {
+                    const isLethal = cell.dmg >= COMMANDER_LETHAL
+                    const isWarning = cell.dmg >= COMMANDER_WARNING && !isLethal
                     return (
                       <td
-                        key={c.id}
-                        className={`cdm-damage-cell ${isLethal ? 'is-lethal' : ''} ${isWarning ? 'is-warning' : ''} ${isSelf ? 'is-self' : ''}`}
-                        data-testid={`cdm-cell-${p.playerId}-${c.id}`}
-                        data-damage={dmg}
+                        key={cell.commander.id}
+                        className={`cdm-damage-cell ${isLethal ? 'is-lethal' : ''} ${isWarning ? 'is-warning' : ''} ${cell.isSelf ? 'is-self' : ''}`}
+                        data-testid={`cdm-cell-${p.playerId}-${cell.commander.id}`}
+                        data-damage={cell.dmg}
                         data-lethal={isLethal ? 'true' : undefined}
-                        title={isSelf ? t('game', 'commander_self_hint') : `${t('game', 'commander_damage_dealt', { name: c.name, damage: String(dmg), target: p.name })}${isLethal ? ' — ' + t('game', 'lethal') + ' (21+)' : ''}`}
+                        title={cell.isSelf ? t('game', 'commander_self_hint') : `${t('game', 'commander_damage_dealt', { name: cell.commander.name, damage: String(cell.dmg), target: p.name })}${isLethal ? ' — ' + t('game', 'lethal') + ` (${COMMANDER_LETHAL}+)` : ''}`}
                       >
-                        {isSelf ? '—' : dmg}
+                        {cell.isSelf ? '—' : cell.dmg}
                       </td>
                     )
                   })}

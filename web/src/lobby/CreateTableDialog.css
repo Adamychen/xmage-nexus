@@ -43,6 +43,7 @@
   align-items: center;
   gap: var(--sp-1h);
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -105,6 +106,9 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wizard-connector {
@@ -161,13 +165,25 @@
   flex: 1;
 }
 
+/* The wizard keeps its own single scroll axis inside the panel: the panel is a
+   flex column, so the progress track, stepper, summary strip and footer stay
+   put while only the step body scrolls. Without this the whole panel scrolled
+   and the "Create table" button went below the fold (issue #12). */
+.create-table-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-table-dialog > * {
+  flex: 0 0 auto;
+}
+
 /* Tab Body */
 .create-table-body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  min-height: 260px;
-  max-height: 52vh;
   padding-right: var(--sp-1);
   display: flex;
   flex-direction: column;
@@ -192,6 +208,7 @@
   padding-inline-start: var(--sp-3);
   font-size: var(--fs-sm);
   width: 100%;
+  min-width: 0;
 }
 
 .create-table-dialog select option {
@@ -275,6 +292,17 @@
 .create-table-dialog .create-seat-select { width: auto; }
 .create-seat-select--type { min-width: 140px; }
 .create-seat-select--skill { min-width: 80px; }
+
+.create-deck-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.create-deck-picker select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .create-seats-shortcuts { margin-top: var(--sp-2h); border-top: 1px dashed var(--veil-2); padding-top: var(--sp-2h); }
 .create-seats-sim-deck { margin-top: var(--sp-2); }
 

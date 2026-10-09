@@ -191,6 +191,31 @@ test.describe('Wizard crear mesa (U3)', () => {
       expect(pageErrorsOf(buffers)).toEqual([])
     })
   })
+
+  // Issue #12: sin esta vía, elegir un mazo inicial obligaba a crear la mesa
+  // para luego ir al editor. Cubre el cableado real de `LobbyScreen`
+  // (deckBuilderId + activeTab 'decks'), que la galería no ejercita porque
+  // monta `CreateTableDialog` sin `onEditDeck`.
+  test('Editar mazo abre el editor y cierra el wizard', async ({ page }) => {
+    await withFakeServer(wizardScenario, async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
+      await login(page, 'wiz')
+      await openWizard(page)
+
+      await page.getByRole('button', { name: /4 Multijugador|Multiplayer/i }).click()
+      const edit = page.getByTestId('create-edit-deck')
+      await expect(edit).toBeVisible()
+      await expect(edit).toBeEnabled()
+      await edit.click()
+
+      // El wizard se cierra (el `DeckBuilder` no es un Modal: dejarlo montado
+      // detrás haría que su trampa de Tab de `Modal` robara el foco).
+      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeHidden()
+      await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 10_000 })
+      expect(pageErrorsOf(buffers)).toEqual([])
+    })
+  })
 })
 
 function pageErrorsOf(buffers: CaptureBuffers): Error[] {

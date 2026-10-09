@@ -5,15 +5,21 @@ import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
-import { commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import { commanderDamageRule, commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import { resetCommanderMemory } from './commanders'
 import type { CardView, GameView } from '../net/types'
 
 declare const process: { cwd(): string }
 
 describe('PodBoard', () => {
-  afterEach(() => cleanup())
+  // La memoria de comandantes por partida (roster persistente) contaminaría entre tests
+  // que reutilizan las mismas playerIds: se reinicia con cada test.
+  afterEach(() => {
+    cleanup()
+    resetCommanderMemory()
+  })
 
-  function makeCommander(id: string, name: string, castCount = 0): CardView {
+  function makeCommander(id: string, name: string, castCount = 0, extraRules: string[] = []): CardView {
     return {
       id,
       name,
@@ -21,7 +27,7 @@ describe('PodBoard', () => {
       expansionSetCode: 'TEST',
       cardNumber: '1',
       mageObjectType: 'COMMANDER',
-      rules: [commanderInfoRule(castCount)],
+      rules: [commanderInfoRule(castCount), ...extraRules],
     } as unknown as CardView
   }
 
@@ -173,7 +179,10 @@ describe('PodBoard', () => {
     expect(rows.length).toBe(4)
   })
 
-  it('CommanderDamageMatrix parses injected commanderDamage and highlights lethal 21', () => {
+  it('shows a commander that is out of the command zone, with the damage it dealt', () => {
+    // The state that actually happens in a game: Alice cast her commander, so it sits on
+    // the battlefield and commandList is empty for her. Reading the roster from commandList
+    // alone dropped the column (and the 7 damage with it) for the rest of the game.
     const game = makeGameView({
       activePlayerId: 'p1',
       players: [
@@ -181,30 +190,53 @@ describe('PodBoard', () => {
           playerId: 'p1',
           name: 'Alice',
           controlled: true,
-          commandList: [makeCommander('cmd-alice', 'Atraxa')],
+          commandList: [],
+          battlefield: {
+            'perm-atraxa': makePermanent({
+              id: 'perm-atraxa',
+              name: 'Atraxa, Grand Unifier',
+              rules: [commanderInfoRule(1), commanderDamageRule(7, 'Bob')],
+            }),
+          },
         }),
+        makePlayer({ playerId: 'p2', name: 'Bob', life: 33, commandList: [makeCommander('cmd-bob', 'Urza')] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', commandList: [makeCommander('cmd-carol', 'Edgar')] }),
+      ],
+    })
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
+    // Two columns: Alice's cast Atraxa and Carol's Edgar (the commander Bob controls).
+    expect(getByTestId('cdm-table').querySelectorAll('.cdm-commander-head').length).toBe(3)
+    const cell = getByTestId('cdm-cell-p2-perm-atraxa')
+    expect(cell.textContent?.trim()).toBe('7')
+    expect(getByTestId('cdm-cell-p1-perm-atraxa').textContent?.trim()).toBe('—')
+  })
+
+  it('reads commander damage from the rules lines the server sends', () => {
+    // Bob has taken 21 from Alice's Atraxa (lethal), 14 from Carol's Edgar and nothing from
+    // Dave's Krenko, whose player counter must not be read as damage.
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
         makePlayer({
-          playerId: 'p2',
-          name: 'Bob',
-          commandList: [makeCommander('cmd-bob', 'Urza')],
-        } as any),
+          playerId: 'p1',
+          name: 'Alice',
+          controlled: true,
+          commandList: [makeCommander('cmd-alice', 'Atraxa', 0, [commanderDamageRule(21, 'Bob')])],
+        }),
+        makePlayer({ playerId: 'p2', name: 'Bob', life: 5, commandList: [makeCommander('cmd-bob', 'Urza')] }),
         makePlayer({
           playerId: 'p3',
           name: 'Carol',
-          commandList: [makeCommander('cmd-carol', 'Edgar')],
-        } as any),
+          commandList: [makeCommander('cmd-carol', 'Edgar', 0, [commanderDamageRule(14, 'Bob')])],
+        }),
         makePlayer({
           playerId: 'p4',
           name: 'Dave',
           commandList: [makeCommander('cmd-dave', 'Krenko')],
-        } as any),
+          counters: [{ name: 'Commander damage', count: 9 }],
+        }),
       ],
     })
-    // Inject synthetic commanderDamage on Bob: damage from Alice's commander = 21 lethal, from Carol = 14
-    const bob = game.players![1] as unknown as Record<string, unknown>
-    bob['commanderDamage'] = { 'cmd-alice': 21, 'cmd-carol': 14, 'cmd-dave': 5 }
-    const alice = game.players![0] as unknown as Record<string, unknown>
-    alice['commanderDamage'] = { 'cmd-bob': 3 }
     const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
     const lethalCell = getByTestId('cdm-cell-p2-cmd-alice')
     expect(lethalCell.textContent?.trim()).toBe('21')
@@ -213,13 +245,95 @@ describe('PodBoard', () => {
     const warningCell = getByTestId('cdm-cell-p2-cmd-carol')
     expect(warningCell.textContent?.trim()).toBe('14')
     expect(warningCell.classList.contains('is-warning')).toBe(false)
-    const highWarning = 16
-    bob['commanderDamage'] = { 'cmd-carol': highWarning }
-    cleanup()
-    const { getByTestId: get2 } = render(<CommanderDamageMatrix game={game} />)
-    const warnCell = get2('cdm-cell-p2-cmd-carol')
+    expect(getByTestId('cdm-cell-p2-cmd-dave').textContent?.trim()).toBe('0')
+  })
+
+  it('highlights a commander that reaches the warning band', () => {
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [makeCommander('cmd-alice', 'Atraxa')] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [makeCommander('cmd-bob', 'Urza')] }),
+        makePlayer({
+          playerId: 'p3',
+          name: 'Carol',
+          commandList: [makeCommander('cmd-carol', 'Edgar', 0, [commanderDamageRule(16, 'Bob')])],
+        }),
+      ],
+    })
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
+    const warnCell = getByTestId('cdm-cell-p2-cmd-carol')
+    expect(warnCell.textContent?.trim()).toBe('16')
     expect(warnCell.classList.contains('is-warning')).toBe(true)
     expect(COMMANDER_LETHAL).toBe(21)
+  })
+
+  it('gives one column per commander object, even when two players share the name', () => {
+    // Legal in Commander: two decks may run Krenko. Alice's dealt 10 to Carol, Dave's dealt
+    // 15. Reading by name instead of by object showed 15 in both columns.
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({
+          playerId: 'p1',
+          name: 'Alice',
+          controlled: true,
+          commandList: [makeCommander('cmd-alice-krenko', 'Krenko, Mob Boss', 0, [commanderDamageRule(10, 'Carol')])],
+          battlefield: {
+            'cmd-alice-krenko': makePermanent({ id: 'cmd-alice-krenko', name: 'Krenko, Mob Boss', rules: [commanderDamageRule(10, 'Carol')] }),
+          },
+        }),
+        makePlayer({ playerId: 'p2', name: 'Carol', commandList: [makeCommander('cmd-carol', 'Edgar Markov')] }),
+        makePlayer({
+          playerId: 'p3',
+          name: 'Dave',
+          commandList: [makeCommander('cmd-dave-krenko', 'Krenko, Mob Boss', 0, [commanderDamageRule(15, 'Carol')])],
+          battlefield: {
+            'cmd-dave-krenko': makePermanent({ id: 'cmd-dave-krenko', name: 'Krenko, Mob Boss', rules: [commanderDamageRule(15, 'Carol')] }),
+          },
+        }),
+      ],
+    })
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
+    const table = getByTestId('cdm-table')
+    expect(table.querySelectorAll('.cdm-commander-head').length).toBe(3)
+    const carol = table.querySelector('[data-testid="cdm-row-p2"]')!
+    const cells = Array.from(carol.querySelectorAll('td[data-damage]')).map((td) => td.getAttribute('data-damage'))
+    expect(cells).toEqual(['10', '0', '15'])
+  })
+
+  it('lists every seat of a six player FFA, not just the four the board paints', () => {
+    const names = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank']
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: names.map((name, i) =>
+        makePlayer({
+          playerId: `p${i + 1}`,
+          name,
+          controlled: i === 0,
+          commandList: [makeCommander(`cmd-${i + 1}`, `Commander ${name}`)],
+        }),
+      ),
+    })
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
+    const table = getByTestId('cdm-table')
+    expect(table.querySelectorAll('tbody tr').length).toBe(6)
+    expect(table.querySelectorAll('.cdm-commander-head').length).toBe(6)
+    const cards = getByTestId('cdm-cards-list')
+    expect(cards.querySelectorAll('.cdm-player-card').length).toBe(6)
+  })
+
+  it('shows partner commanders as separate columns (no eight column cap)', () => {
+    const players = ['Alice', 'Bob'].map((name, i) =>
+      makePlayer({
+        playerId: `p${i + 1}`,
+        name,
+        controlled: i === 0,
+        commandList: Array.from({ length: 5 }, (_, n) => makeCommander(`cmd-${i + 1}-${n}`, `${name} ${n}`)),
+      }),
+    )
+    const { getByTestId } = render(<CommanderDamageMatrix game={makeGameView({ activePlayerId: 'p1', players })} />)
+    expect(getByTestId('cdm-table').querySelectorAll('.cdm-commander-head').length).toBe(10)
   })
 
   it('parses commander damage from card rules string fallback', () => {
@@ -244,6 +358,53 @@ describe('PodBoard', () => {
     const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
     const cell = getByTestId('cdm-cell-p2-cmd-alice')
     expect(cell.textContent?.trim()).toBe('7')
+  })
+
+  it('keeps the commander column and its damage while the commander is nowhere visible', () => {
+    // Mano rival o biblioteca: el objeto del comandante desaparece del view entero. La
+    // matriz no puede borrar la columna ni poner el daño a 0 — los totales congelados de
+    // la última vista siguen siendo los vigentes (el daño solo se acumula en campo).
+    const gv1 = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [makeCommander('cmd-a', 'Krenko, Mob Boss', 0, [commanderDamageRule(7, 'Bob')])] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const gv2 = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const { getByTestId, rerender } = render(<CommanderDamageMatrix game={gv1} />)
+    expect(getByTestId('cdm-cell-p2-cmd-a').textContent?.trim()).toBe('7')
+    rerender(<CommanderDamageMatrix game={gv2} />)
+    expect(getByTestId('cdm-cell-p2-cmd-a').textContent?.trim()).toBe('7')
+    expect(document.querySelectorAll('.cdm-commander-head').length).toBe(1)
+  })
+
+  it('keeps a companion that is also the commander as a damage column (Lurrus)', () => {
+    const lurrus = {
+      id: 'cmd-l',
+      name: 'Lurrus of the Dream-Den',
+      manaValue: 3,
+      expansionSetCode: 'TEST',
+      cardNumber: '1',
+      mageObjectType: 'COMMANDER',
+      rules: ['Companion — Your starting deck contains only cards with mana value 2 or less.', '<b>Commander</b> did 4 combat damage to player Bob.'],
+    } as unknown as CardView
+    const game = makeGameView({
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [lurrus] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', commandList: [] }),
+      ],
+    })
+    const { getByTestId } = render(<CommanderDamageMatrix game={game} />)
+    expect(getByTestId('cdm-table').querySelectorAll('.cdm-commander-head').length).toBe(1)
+    expect(getByTestId('cdm-cell-p2-cmd-l').textContent?.trim()).toBe('4')
   })
 
   it('shows — for own commander (self damage not counted)', () => {

@@ -16,6 +16,7 @@ import {
   HAND_BAR_PADDING_Y,
 } from './handSizing'
 import { handDropIndex, moveHandCard, reconcileHandOrder } from './handOrder'
+import { useSettings } from '../state/store'
 import './HandBar.css'
 
 const HAND_DRAG_THRESHOLD_PX = 8
@@ -61,6 +62,7 @@ export default function HandBar({
   raised = false,
   promptSlotRef,
 }: HandBarProps) {
+  const { showHandCost } = useSettings()
   const serverIds = Object.keys(cards)
   const [order, setOrder] = useState<string[]>(serverIds)
   const orderedIds = reconcileHandOrder(order, serverIds)
@@ -203,7 +205,7 @@ export default function HandBar({
               isTarget={targetIds.has(id)}
               className="hand-card"
             />
-            <HandCardCost card={card} pipSize={pipSize} />
+            {showHandCost && <HandCardCost card={card} pipSize={pipSize} />}
           </div>
         )
       })}

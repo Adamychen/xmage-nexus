@@ -9,6 +9,7 @@ import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
+import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './SettingsModal.css'
@@ -165,6 +166,50 @@ export function BoardSection() {
             <span className="settings-card-label">{t('lobby', `tap_style_${style}`)}</span>
             <span className="settings-card-desc">{t('lobby', `tap_style_${style}_desc`)}</span>
             {settings.tapStyle === style && <span className="settings-card-check">✓</span>}
+          </Button>
+        ))}
+      </div>
+      <h3 className="settings-section-title">{t('lobby', 'card_overlays_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'card_overlays_hint')}</p>
+      <Toggle
+        checked={settings.showHandCost}
+        onChange={(v) => setSetting('showHandCost', v)}
+        label={t('lobby', 'hand_cost_show')}
+        title={t('lobby', 'hand_cost_show_hint')}
+      />
+      <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'pt_badge_hint')}</p>
+      <div className="settings-cards">
+        {PT_BADGE_MODES.map((mode) => (
+          <Button
+            key={mode}
+            variant="ghost"
+            className={`settings-card ${settings.ptBadgeMode === mode ? 'selected' : ''}`}
+            onClick={() => setSetting('ptBadgeMode', mode)}
+            aria-pressed={settings.ptBadgeMode === mode}
+            data-testid={`settings-pt-badge-${mode}`}
+          >
+            <span className="settings-card-label">{t('lobby', `pt_badge_${mode}`)}</span>
+            <span className="settings-card-desc">{t('lobby', `pt_badge_${mode}_desc`)}</span>
+            {settings.ptBadgeMode === mode && <span className="settings-card-check">✓</span>}
+          </Button>
+        ))}
+      </div>
+      <h3 className="settings-section-title">{t('lobby', 'sickness_style_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'sickness_style_hint')}</p>
+      <div className="settings-cards">
+        {SICKNESS_STYLES.map((style) => (
+          <Button
+            key={style}
+            variant="ghost"
+            className={`settings-card ${settings.sicknessStyle === style ? 'selected' : ''}`}
+            onClick={() => setSetting('sicknessStyle', style)}
+            aria-pressed={settings.sicknessStyle === style}
+            data-testid={`settings-sickness-style-${style}`}
+          >
+            <span className="settings-card-label">{t('lobby', `sickness_style_${style}`)}</span>
+            <span className="settings-card-desc">{t('lobby', `sickness_style_${style}_desc`)}</span>
+            {settings.sicknessStyle === style && <span className="settings-card-check">✓</span>}
           </Button>
         ))}
       </div>

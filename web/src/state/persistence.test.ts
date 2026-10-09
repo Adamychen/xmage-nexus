@@ -5,6 +5,7 @@ import {
   loadActiveDraft,
   loadActiveGame,
   loadConn,
+  loadAppearanceSettings,
   loadFxSettings,
   saveActiveDraft,
   saveActiveGame,
@@ -230,6 +231,43 @@ describe('persistence', () => {
     })
   })
 
+  describe('appearance settings: card overlay flags', () => {
+    // The link that breaks silently: a mistyped key in
+    // `loadAppearanceSettings` would make a saved setting be ignored with no
+    // error. These cases pin that it is read and that it is normalized.
+    it('reads the three overlay flags a player turned off', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({
+        sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
+        showHandCost: false, ptBadgeMode: 'changed', sicknessStyle: 'veil',
+      })
+      const loaded = loadAppearanceSettings()
+      expect(loaded.showHandCost).toBe(false)
+      expect(loaded.ptBadgeMode).toBe('changed')
+      expect(loaded.sicknessStyle).toBe('veil')
+    })
+
+    it('falls back to today\'s behaviour for a blob written before the flags existed', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({
+        sleeveId: 'classic', boardLayout: 'pod', uiScale: 1.2, cjkBoost: false,
+      })
+      const loaded = loadAppearanceSettings()
+      expect(loaded.showHandCost).toBe(true)
+      expect(loaded.ptBadgeMode).toBe('always')
+      expect(loaded.sicknessStyle).toBe('badge')
+    })
+
+    it('normalizes a hand-edited or corrupt value instead of leaking it into the UI', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({
+        sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
+        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass',
+      })
+      const loaded = loadAppearanceSettings()
+      expect(loaded.showHandCost).toBe(true)
+      expect(loaded.ptBadgeMode).toBe('always')
+      expect(loaded.sicknessStyle).toBe('badge')
+    })
+  })
+
   describe('audio settings persistence', () => {
     it('returns defaults when nothing is stored', () => {
       expect(loadAudioSettings()).toEqual(DEFAULT_AUDIO_SETTINGS)
@@ -241,6 +279,7 @@ describe('persistence', () => {
         masterVolume: 0.5,
         sfxVolume: 0.6,
         uiVolume: 0.4,
+        prioritySound: 'on-gain',
       }
       saveAudioSettings(audio)
       expect(loadAudioSettings()).toEqual(audio)
@@ -258,6 +297,7 @@ describe('persistence', () => {
         masterVolume: 1,
         sfxVolume: 0,
         uiVolume: 0.8,
+        prioritySound: 'every-prompt',
       })
     })
 

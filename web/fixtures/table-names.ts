@@ -58,4 +58,5 @@ export const TABLE = {
   infoWindows: 'info-windows-test',
   cardInspector: 'card-inspector-test',
   learn: 'learn-test',
+  cardOverlays: 'card-overlays-test',
 } as const

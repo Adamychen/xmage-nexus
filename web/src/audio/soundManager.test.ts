@@ -125,7 +125,7 @@ describe('gameSoundDispatcher', () => {
     const game = {
       players: [{ controlled: true, hasPriority: true, name: 'Alice' }],
     } as unknown as GameView
-    dispatchGameSounds(null, game, 'GAME_SELECT')
+    dispatchGameSounds(null, game, 'GAME_SELECT', 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('priority', 'game')
   })
 
@@ -136,7 +136,7 @@ describe('gameSoundDispatcher', () => {
     const next = {
       players: [{ controlled: true, hasPriority: true, name: 'Alice' }],
     } as unknown as GameView
-    dispatchGameSounds(prev, next, 'GAME_UPDATE')
+    dispatchGameSounds(prev, next, 'GAME_UPDATE', 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('priority', 'game')
   })
 
@@ -147,7 +147,7 @@ describe('gameSoundDispatcher', () => {
     const next = {
       stack: { s1: { id: 's1' } },
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('stack_cast', 'game')
   })
 
@@ -168,7 +168,7 @@ describe('gameSoundDispatcher', () => {
         },
       ],
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('tap', 'game')
   })
 
@@ -189,7 +189,7 @@ describe('gameSoundDispatcher', () => {
         },
       ],
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('play_card', 'game')
   })
 
@@ -200,7 +200,7 @@ describe('gameSoundDispatcher', () => {
     const next = {
       myHand: { c1: { id: 'c1' }, c2: { id: 'c2' } },
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('draw', 'game')
   })
 
@@ -215,7 +215,7 @@ describe('gameSoundDispatcher', () => {
       step: 'COMBAT_DAMAGE',
       players: [{ controlled: true, life: 17, name: 'Alice' }],
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).not.toHaveBeenCalledWith('combat_hit', 'game')
     expect(soundManager.play).not.toHaveBeenCalledWith('life_loss', 'game')
 
@@ -229,7 +229,7 @@ describe('gameSoundDispatcher', () => {
       step: 'PRECOMBAT_MAIN',
       players: [{ controlled: true, life: 18, name: 'Alice' }],
     } as unknown as GameView
-    dispatchGameSounds(prev2, next2)
+    dispatchGameSounds(prev2, next2, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('life_loss', 'game')
   })
 
@@ -240,7 +240,7 @@ describe('gameSoundDispatcher', () => {
     const next = {
       players: [{ controlled: true, life: 19, name: 'Alice' }],
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('life_gain', 'game')
   })
 
@@ -251,7 +251,7 @@ describe('gameSoundDispatcher', () => {
     const next = {
       players: [{ controlled: true, graveyard: { c1: { id: 'c1' }, c2: { id: 'c2' } } }],
     } as unknown as GameView
-    dispatchGameSounds(prev, next)
+    dispatchGameSounds(prev, next, undefined, 'every-prompt')
     expect(soundManager.play).toHaveBeenCalledWith('destroy', 'game')
   })
 })

@@ -4,6 +4,13 @@ import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { Switch } from '../ui/Toggle'
+import { PRIORITY_SOUND_MODES, type PrioritySoundMode } from '../audio/prioritySound'
+
+const PRIORITY_LABEL = {
+  'every-prompt': 'sound_priority_every_prompt',
+  'on-gain': 'sound_priority_on_gain',
+  off: 'sound_priority_off',
+} as const
 
 export default function SoundFxControls() {
   const { t } = useTranslation()
@@ -59,6 +66,23 @@ export default function SoundFxControls() {
           disabled={!settings.soundEnabled}
           aria-label={t('game', 'sound_volume_master')}
           onChange={(e) => setSetting('masterVolume', parseFloat(e.target.value))}
+        />
+      </div>
+      <div className="fx-popover-row">
+        <div className="fx-popover-text">
+          <span className="fx-popover-label">{t('game', 'sound_priority_mode')}</span>
+          <span className="fx-popover-hint">{t('game', 'sound_priority_mode_hint')}</span>
+        </div>
+        <Tabs
+          variant="segmented"
+          size="sm"
+          value={settings.prioritySound}
+          onChange={(next) => setSetting('prioritySound', next as PrioritySoundMode)}
+          items={PRIORITY_SOUND_MODES.map((m) => ({
+            id: m,
+            label: t('game', PRIORITY_LABEL[m]),
+            disabled: !settings.soundEnabled,
+          }))}
         />
       </div>
       <div className="fx-popover-row">

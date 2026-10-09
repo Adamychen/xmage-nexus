@@ -15,7 +15,7 @@ import Button from '../ui/Button'
 export * from './CreateTable/constants'
 export type { CreateTableForm } from './CreateTable/useCreateTableForm'
 
-export default function CreateTableDialog({ onClose }: { onClose: () => void }) {
+export default function CreateTableDialog({ onClose, onEditDeck }: { onClose: () => void; onEditDeck?: (deckId: string) => void }) {
   const { t, tError } = useTranslation()
   const form = useCreateTableForm(onClose)
   const { wizardSteps, activeTab, activeIndex, goNext, goPrev, goToStep, isLastStep, isFirstStep } = form
@@ -25,7 +25,6 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
       labelledBy="create-table-title"
       titleId="create-table-title"
       size="lg"
-      legacyBackdropClass="overlay"
       legacyPanelClass="dialog create-table-dialog"
       kickerIcon={wizardSteps[activeIndex]?.icon ?? 'settings'}
       kickerLabel={<>{t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })} · {wizardSteps[activeIndex]?.labelKey ? t('lobby', wizardSteps[activeIndex].labelKey) : wizardSteps[activeIndex]?.titleFallback}</>}
@@ -72,7 +71,17 @@ export default function CreateTableDialog({ onClose }: { onClose: () => void }) 
           {activeTab === 'general' && <GeneralTab form={form} />}
           {activeTab === 'timing' && <TimingTab form={form} />}
           {activeTab === 'security' && <SecurityTab form={form} />}
-          {activeTab === 'seats' && <SeatsTab form={form} />}
+          {activeTab === 'seats' && (
+            <SeatsTab
+              form={form}
+              // Editing a deck navigates out of the wizard: `DeckBuilder` is not
+              // a Modal, so a wizard left mounted (hidden or underneath) would
+              // keep `Modal`'s Tab trap, which only defers to another Modal
+              // with a higher z. Closing is simpler than fighting focus; the
+              // form is lost, the deck is not.
+              onEditDeck={onEditDeck ? (id) => { onEditDeck(id); onClose() } : undefined}
+            />
+          )}
           {activeTab === 'dev' && <DevTab form={form} />}
         </div>
 
