@@ -1,14 +1,25 @@
 package org.mage.proxy;
 
+import mage.view.CardView;
+import mage.view.CardsView;
+import mage.view.CommandObjectView;
 import mage.view.GameClientMessage;
 import mage.view.GameView;
+import mage.view.MutateView;
+import mage.view.PermanentView;
+import mage.view.PlayerView;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class GameActivity {
 
@@ -43,6 +54,171 @@ final class GameActivity {
     private final Map<UUID, Track> open = new LinkedHashMap<>();
     private final Emitter emitter;
     private final LongSupplier clock;
+
+    // ── Sonda: daño de comandante ────────────────────────────────────────────────────
+    // El daño de comandante no tiene campo en el view: viaja solo en las rules del objeto
+    // del comandante (CommanderInfoWatcher → cardState info, una entrada por jugador con el
+    // TOTAL acumulado). El cliente web lo parsea para su matriz de daño
+    // (web/src/board/commanders.ts) y borraba la columna cuando el objeto caía en una zona
+    // invisible (mano rival, biblioteca). Esta sonda vuelca al journal los mismos totales
+    // vistos desde el proxy — solo cuando cambian — y marca la desaparición, para poder
+    // comparar en producción lo que el wire dice con lo que la web mostró.
+
+    /** Objetos (id, nombre, rules) de un frame: extraídos del GameView por `commanderDamage`.
+     *  Clase anidada inmutable, no record: el proxy compila a Java 8. */
+    static final class FrameCommander {
+        final UUID id;
+        final String name;
+        final List<String> rules;
+
+        FrameCommander(UUID id, String name, List<String> rules) {
+            this.id = id;
+            this.name = name;
+            this.rules = rules;
+        }
+
+        UUID id() { return id; }
+        String name() { return name; }
+        List<String> rules() { return rules; }
+    }
+
+    /** Estado de la sonda por partida abierta. */
+    private static final class CommanderState {
+        final Map<UUID, String> names = new LinkedHashMap<>();
+        /** Último total visto por (comandante, objetivo): el valor del wire es autoritativo
+         *  (se reemplaza, no se acumula) — un rollback del motor baja los totales y aquí se ve. */
+        final Map<UUID, Map<String, Integer>> totals = new LinkedHashMap<>();
+        final Set<UUID> hidden = new LinkedHashSet<>();
+        String lastDump = "";
+    }
+
+    private final Map<UUID, CommanderState> commanderStates = new LinkedHashMap<>();
+
+    /** true si las rules marcan el objeto como comandante (línea del watcher al principio). */
+    static boolean isCommanderRules(List<String> rules) {
+        if (rules == null) return false;
+        for (String r : rules) {
+            if (r != null && r.startsWith("<b>Commander</b>")) return true;
+        }
+        return false;
+    }
+
+    /** Totales de daño de UN comandante desde sus rules: objetivo (en minúsculas) -> total.
+     *  Cada frase del watcher empieza con <b>; se parte por ahí para que el casado anclado a
+     *  fin de frase sea correcto frase a frase aunque lleguen concatenadas. */
+    static Map<String, Integer> parseDamageTotals(List<String> rules) {
+        Map<String, Integer> totals = new LinkedHashMap<>();
+        if (rules == null) return totals;
+        for (String rule : rules) {
+            if (rule == null || !rule.contains("combat damage to")) continue;
+            for (String sentence : rule.split("(?=<b>)")) {
+                String line = TAGS.matcher(sentence).replaceAll(" ");
+                Matcher m = DAMAGE_LINE.matcher(line);
+                while (m.find()) {
+                    String target = unescape(m.group(2)).trim().replaceAll("\\.+$", "").toLowerCase(Locale.ROOT);
+                    if (target.isEmpty()) continue;
+                    int total = Integer.parseInt(m.group(1));
+                    totals.merge(target, total, Math::max);
+                }
+            }
+        }
+        return totals;
+    }
+
+    private static final Pattern TAGS = Pattern.compile("<[^>]*>");
+    private static final Pattern DAMAGE_LINE =
+            Pattern.compile("did\\s+(\\d+)\\s+combat damage to(?:\\s+player)?\\s+(.+?)\\s*\\.?\\s*$", Pattern.CASE_INSENSITIVE);
+
+    private static String unescape(String s) {
+        return s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+                .replace("&quot;", "\"").replace("&#39;", "'").replace("&apos;", "'");
+    }
+
+    /** Punto de entrada desde `trackGame`: extrae los objetos comandante visibles del frame. */
+    void commanderDamage(UUID gameId, GameView view) {
+        if (gameId == null || view == null || view.getPlayers() == null) return;
+        List<FrameCommander> visible = new ArrayList<>();
+        for (PlayerView p : view.getPlayers()) {
+            if (p.getCommandObjectList() != null) {
+                for (CommandObjectView c : p.getCommandObjectList()) {
+                    visible.add(new FrameCommander(c.getId(), c.getName(), c.getRules()));
+                }
+            }
+            if (p.getBattlefield() != null) {
+                for (PermanentView perm : p.getBattlefield().values()) {
+                    visible.add(new FrameCommander(perm.getId(), perm.getName(), perm.getRules()));
+                    MutateView mutate = perm.getMutateView();
+                    if (mutate != null) {
+                        for (CardView hiddenCard : mutate.values()) {
+                            visible.add(new FrameCommander(hiddenCard.getId(), hiddenCard.getName(), hiddenCard.getRules()));
+                        }
+                    }
+                }
+            }
+            for (CardsView zone : new CardsView[]{p.getGraveyard(), p.getExile()}) {
+                if (zone == null) continue;
+                for (CardView card : zone.values()) {
+                    visible.add(new FrameCommander(card.getId(), card.getName(), card.getRules()));
+                }
+            }
+        }
+        Track t = open.get(gameId);
+        commanderFrame(gameId, t == null ? null : t.user, view.getTurn(), visible);
+    }
+
+    /** Máquina de estados de la sonda (pura salvo el emit; testeable sin GameView real). */
+    synchronized void commanderFrame(UUID gameId, String user, int turn, List<FrameCommander> visible) {
+        CommanderState st = commanderStates.computeIfAbsent(gameId, k -> new CommanderState());
+        // sin sesión abierta y sin nada que contar: no retener estado (anti-fuga)
+        if (!open.containsKey(gameId) && st.totals.isEmpty() && st.lastDump.isEmpty()) {
+            commanderStates.remove(gameId);
+            return;
+        }
+        Set<UUID> visibleIds = new LinkedHashSet<>();
+        if (visible != null) {
+            for (FrameCommander fc : visible) {
+                if (fc.id() == null || !isCommanderRules(fc.rules())) continue;
+                visibleIds.add(fc.id());
+                if (fc.name() != null) st.names.put(fc.id(), fc.name());
+                Map<String, Integer> parsed = parseDamageTotals(fc.rules());
+                if (!parsed.isEmpty()) {
+                    st.totals.put(fc.id(), parsed);
+                } else if (st.totals.containsKey(fc.id())) {
+                    // El objeto visible ya no reporta daño (p. ej. tras un rollback): el wire manda.
+                    st.totals.remove(fc.id());
+                }
+            }
+        }
+        // transición a invisible: comandante con daño que ya no está en ninguna zona visible
+        for (Map.Entry<UUID, Map<String, Integer>> e : st.totals.entrySet()) {
+            boolean isVisible = visibleIds.contains(e.getKey());
+            if (!isVisible && !e.getValue().isEmpty() && st.hidden.add(e.getKey())) {
+                emitter.emit("commander_hidden", user, "gameId=" + gameId + " turn=" + turn
+                        + " commander=" + st.names.get(e.getKey()) + " totals=" + e.getValue());
+            } else if (isVisible) {
+                st.hidden.remove(e.getKey());
+            }
+        }
+        String dump = dumpOf(st);
+        if (!dump.isEmpty() && !dump.equals(st.lastDump)) {
+            st.lastDump = dump;
+            emitter.emit("commander_damage", user, "gameId=" + gameId + " turn=" + turn + " " + dump);
+        }
+    }
+
+    private static String dumpOf(CommanderState st) {
+        List<String> parts = new ArrayList<>();
+        for (Map.Entry<UUID, Map<String, Integer>> e : st.totals.entrySet()) {
+            if (e.getValue().isEmpty()) continue;
+            parts.add(st.names.getOrDefault(e.getKey(), e.getKey().toString()) + e.getValue());
+        }
+        parts.sort(String.CASE_INSENSITIVE_ORDER);
+        return String.join("; ", parts);
+    }
+
+    private void forgetCommanderState(UUID gameId) {
+        commanderStates.remove(gameId);
+    }
 
     GameActivity() {
         this(Activity::game, System::currentTimeMillis);
@@ -113,16 +289,22 @@ final class GameActivity {
         if (t.conceded) d.append(" conceded=true");
         if (cause != null) d.append(" cause=").append(cause);
         emitter.emit("game_end", t.user, d.toString());
+        forgetCommanderState(gameId);
     }
 
     static int turnOf(Object data) {
-        GameView view = null;
-        if (data instanceof GameView) {
-            view = (GameView) data;
-        } else if (data instanceof GameClientMessage) {
-            view = ((GameClientMessage) data).getGameView();
-        }
+        GameView view = viewOf(data);
         return view == null ? 0 : view.getTurn();
+    }
+
+    static GameView viewOf(Object data) {
+        if (data instanceof GameView) {
+            return (GameView) data;
+        }
+        if (data instanceof GameClientMessage) {
+            return ((GameClientMessage) data).getGameView();
+        }
+        return null;
     }
 
     static Outcome outcome(boolean seated, boolean won, String gameInfo, String additionalInfo) {

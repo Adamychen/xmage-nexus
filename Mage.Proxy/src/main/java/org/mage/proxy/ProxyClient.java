@@ -13,6 +13,7 @@ import mage.remote.Connection;
 import mage.remote.SessionImpl;
 import mage.utils.MageVersion;
 import mage.view.GameEndView;
+import mage.view.GameView;
 import org.java_websocket.WebSocket;
 
 import java.util.List;
@@ -794,6 +795,10 @@ public class ProxyClient implements MageClient, CommandContext {
         int turn = GameActivity.turnOf(data);
         if (turn > 0) {
             gameActivity.turn(gameId, turn);
+        }
+        GameView view = GameActivity.viewOf(data);
+        if (view != null) {
+            gameActivity.commanderDamage(gameId, view);
         }
         if (m == ClientCallbackMethod.END_GAME_INFO && data instanceof GameEndView) {
             GameEndView end = (GameEndView) data;
