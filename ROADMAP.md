@@ -147,7 +147,7 @@ The style ratchet (`ui/styleTokens.test.ts`) keeps the counts from regressing.
 
 ### 4.3b Board legibility (from issue #12, opened 2026-10-08)
 
-Wave A+B of issue #12 shipped 2026-10-08 (spec `docs/superpowers/specs/2026-10-08-issue-12-ux-fixes-design.md`): the create-table wizard no longer clips at 100% zoom, the import wizard leads with the file picker, the deck can be edited from the wizard's Seats step, and three card overlays plus the per-phase priority cue became settings (`showHandCost`, `ptBadgeMode`, `sicknessStyle`, `prioritySound`). Still open, each needing a **design decision, not a bug fix**:
+Wave A+B of issue #12 shipped 2026-10-08 (spec and task plan lived in `docs/superpowers/`, deleted once the wave shipped — read the commit messages of `39f397d6f1b` and `ebfa8772213`, and issue #12): the create-table wizard no longer clips at 100% zoom, the import wizard leads with the file picker, the deck can be edited from the wizard's Seats step, and three card overlays plus the per-phase priority cue became settings (`showHandCost`, `ptBadgeMode`, `sicknessStyle`, `prioritySound`). Still open, each needing a **design decision, not a bug fix**:
 
 | Open item | Why it is not a toggle |
 |---|---|
