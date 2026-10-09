@@ -35,7 +35,7 @@ on the XMage fork (`mage` + `mage-common`) via the parent pom.
 - Full build (server + plugins + proxy): `node scripts/build.mjs`
 - Proxy only (after the fork is in `.m2`): `node scripts/build.mjs proxy`
 - Run: `node scripts/ctl.mjs start proxy` (or `node scripts/dev.mjs`)
-- Java tests: `mvn -pl Mage.Proxy -am test`
+- Java tests: `mvn -f Mage.Proxy/pom.xml test` (the standalone pom; `node scripts/test.mjs java` runs the same thing and needs the fork artifacts in `~/.m2`)
 - After editing Java: rebuild the jar (`build.mjs proxy`) and restart the proxy.
 
 ## Rules

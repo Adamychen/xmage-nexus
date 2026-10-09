@@ -15,7 +15,7 @@ interface SceneState {
   cards: Record<string, { x: number; y: number }>
 }
 
-/** Estado del escenario en vivo (BoardScene lo publica en __mageScene). */
+/** Live scenario state, published on __mageScene by web/src/board/sceneBridge.ts. */
 async function sceneOf(page: Page): Promise<SceneState | null> {
   try {
     return (await page.evaluate(() => {

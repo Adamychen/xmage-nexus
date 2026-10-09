@@ -8,15 +8,15 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 1. `readme.md` (repo root) — what the project is, stack versions.
 2. `AGENTS.md` (repo root) — daily operations: stack control, ports, fake vs real E2E, Sim + WS helper.
 3. `docs/architecture.md` — how the three tiers fit together.
-4. `docs/code-map.md` — where everything lives, biggest files, what to split first.
+4. `docs/code-map.md` — where everything lives, with the current file counts and the biggest files (a locator, not a refactor queue).
 5. `CONTRIBUTING.md` (repo root) — how to add an event, action, or type.
 6. `Mage.Proxy/README.md` — full protocol reference (actions, events, serialization).
 7. `docs/testing.md` — how to run and interpret the suite.
 8. `docs/user-manual.md` — how to play (for users, also useful for testers).
 9. `docs/deployment.md` — running the stack and publishing the dashboard.
-10. `docs/enhancements.md` — high-value feature proposals beyond desktop parity (Deck Tracker, Deep Linking, Commander pings, Touch/iPad, EDHREC).
+10. `docs/enhancements.md` — spec catalog of client-only feature ideas. Most of it is already built (deck tracker, mulligan evaluator, deep links, sample hand, printing selector, custom card images, playmats, EDHREC); the two that stay open are the draft pick helper and board rewind, listed in `ROADMAP.md` §4.2.
 11. `docs/lessons.md` — durable cross-cutting lessons worth re-reading before debugging.
-12. `docs/mcp-overview.md` — MCP server architecture, 26 tools catalog, and autonomous LLM gameplay guide.
+12. `docs/mcp-overview.md` — MCP server architecture, the 38 `mage_*` tools, and autonomous LLM gameplay guide.
 
 ## Status docs (what is authoritative for what)
 
@@ -37,8 +37,9 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | Proxy WS | `ws://127.0.0.1:8787` |
 | Proxy HTTP test page | `http://127.0.0.1:8788/index.html` |
 | Vite dev | `http://localhost:5173` |
-| FakeServer (fake-mode E2E) | port `8789` |
+| FakeServer (fake-mode E2E) | port `8789` (per-test dynamic port in practice: `FakeServer.start(0)`) |
 | Fake-mode E2E Vite | port `5175` (`strictPort`, `reuseExistingServer:false`) |
+| `xmage-status` (ops dashboard, LAN-only, no tunnel) | `http://<host>:8790` — `ops/status/`, see `ROADMAP.md` §4.6 |
 
 ## Quick commands
 

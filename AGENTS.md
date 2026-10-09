@@ -74,7 +74,8 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   the **XMage Server** field at the target server → zero-install, server-side play.
 
 ### Real-protocol validation harness (anti-drift)
-The goal is a client that works against `beta.xmage.today`, but beta is flaky. So the **oracle for
+The goal is a client that works against `beta.xmage.today`, but the public server is shared, latency-prone
+and not reproducible. So the **oracle for
 "real protocol" in CI is the local XMage server** (`node scripts/ctl.mjs restart all` →
 `localhost:17171`, same 1.4.62-V1 fork). The recorder captures real frames and the fake-mode tests
 replay them, giving drift detection without depending on beta:
@@ -142,7 +143,7 @@ Real-mode E2E (against a live proxy + server) reuses a prebuilt
 Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
 
 `unit` (vitest) · `coverage` (vitest --coverage) · `typecheck` (tsc -b --noEmit) ·
-`build` (tsc -b && vite build) · `java` (mvn -pl Mage.Proxy -am test) ·
+`build` (tsc -b && vite build) · `java` (mvn -f Mage.Proxy/pom.xml test) ·
 `self-test` (headless E2E against the proxy; requires stack) ·
 `human-test` (E2E human player vs AI; requires stack) ·
 `verify` (9 anti-drift scripts: multi-tenant isolation, hand permissions, player leave,
@@ -169,25 +170,11 @@ Success criteria and details in the `mage-test-suite` skill.
 
 ## MCP server (`mcp/`)
 
-`mcp/` is a standalone MCP (stdio) server, registered in `opencode.json` as
-`mage`. Fase A (done) exposes DevOps tools wrapping the existing scripts:
-`mage_stack`, `mage_logs`, `mage_run_tests`, `mage_build`,
-`mage_record_fixture`, `mage_validate_generated`, `mage_e2e` (Playwright con
-`spec`/`grep` y backend fake/real), plus resources
-(`mage://status/project`, `mage://coverage/interactions`, …). Fase C1 (done)
-exposes the WS session/lobby: `mage_connect`, `mage_lobby`,
-`mage_create_table`, `mage_join_table`, `mage_start_match`, `mage_leave_table`,
-`mage_session`. Fase C2 (done) makes it play: `mage_game_state` (compact view),
-`mage_wait_for_prompt`, `mage_action`/`mage_choose`/`mage_play_card`/
-`mage_pay_mana`/`mage_combat`/`mage_pass_priority`, `mage_auto_pass`,
-`mage_concede`, `mage_chat`, `mage_watch_tournament_match` (espectar un match de
-torneo en vivo). Verified with a full real game vs Sim
-(`MCP_E2E=1 npm test` in `mcp/`). Fase C3 (done): arnés con el FixtureServer de
-`web/` en los tests (sin Java) + capa `mcp` en CI, maná/interacciones complejas
-(auto-pago/botón especial, X, orden, multi-amount, trigger order) con auto-pass
-anti-flood, reconexión/resync (`mage_reconnect`; el proxy cachea y reenvía el
-último estado+prompt en el re-attach, y `connect` devuelve `data.attached`) y
-multi-sesión (`mage_connect {session}`, `mage_use_session`, `mage_sessions`).
+`mcp/` is a standalone MCP (stdio) server registered in `opencode.json` as `mage`: **38 `mage_*` tools**
+that wrap the repo's scripts (stack, logs, tests, build, fixtures, e2e) and drive a real XMage session over
+the proxy's WebSocket (login, lobby, tables, watching, and playing: compact game state, prompts, mana,
+combat, auto-pass, reconnect/resync, multi-session). `mcp/README.md` is the canonical per-tool reference with
+its argument tables — read it instead of this file when you need a tool's signature.
 
 - No build: Node ≥24 runs the TypeScript directly (`node mcp/src/index.ts`).
   Strip-only mode: no `enum`/`namespace`/parameter properties.
@@ -205,7 +192,7 @@ or any URL); artifacts land in `.run/playwright-mcp/`. Complementary to `mage`:
 **Default browser workflow (2026-09-12, user-mandated)**: snapshot to act +
 **screenshot to verify** — after every meaningful browser step take a
 screenshot and actually look at it (read the image file), so visual regressions
-(overlap, clipping, empty states, canvas) are caught without being asked.
+(overlap, clipping, empty states, mis-scaled or clipped cards) are caught without being asked.
 
 ## E2E with dual backends: deterministic fake and real
 
@@ -225,101 +212,31 @@ The FakeServer is typed against `types.ts` (typecheck guards consistency) and
 the frames it emits are validated with `fixtures/schema.ts` (zod) — if the real
 proxy adds/changes fields, the schema test fails and is regenerated with the recorder.
 
-**Deterministic UI assertions**: `BoardScene` publishes `window.__mageScene`
+**Deterministic UI assertions**: the board renders in DOM/CSS (no canvas engine), and
+`web/src/board/sceneBridge.ts` publishes `window.__mageScene`
 (cards, playable, targeting{active,source,ids,chosen}, game). Tests assert
-against that state (and the DOM), NOT against canvas pixels (byte-diffs were
+against that state and the DOM, never against screenshots or pixel diffs (byte-diffs were
 the source of flakes).
 
-**Resolved issues (historical context — all RESOLVED, kept for reference)**:
-1. **The AI-vs-AI demo NO LONGER FREEZES (RESOLVED)**: `SimPlayer.tryCast` was sending
-   the Bolt UUID even when its untapped lands were ISLANDs; the server correctly
-   rejected the cast (`canPay` doesn't cover {R}) and the game re-granted
-   priority with the same view → infinite GAME_SELECT (flood ~48/s to the watcher).
-   **Fix**: `tryCast` is now color-aware (`colorsOf` + `canProduceColors`, only
-   casts if there are lands that produce ALL the colors of the cost) + dedup by
-   signature `(turn, step, hand, untapped lands)` as defense. Verified in real
-   ×6+ (the demo casts and resolves Bolts).
-2. **`spells.spec.ts` and `targeting.spec.ts` in real mode: GREEN** (2026-08-16).
-    The cause of their failures ("Sim win after the mana ask") was the
-    **degraded server state caused by orphan sessions** — restarting
-    server+proxy TOGETHER fixes it (`ctl.mjs restart all`); restarting ONLY the
-   proxy leaves the first login hanging. Combined with test fixes (`nextManaSource`
-    retry, strict cursor in the mana loop).
-3. **The fake-mode demo (`fixtures/scenarios/fullFlow.ts`) suffers neither the
-    freeze nor the flood**: the timeline is deterministic.
-4. **Port conflict resolved (2026-08-20)**: fake mode now uses port **8789** (dedicated; the earlier 8788 collided with the proxy's HTTP test page),
-   real proxy stays on **8787**. No more stop/start race conditions — both modes
-   can run simultaneously.
-5. **SIM sessions used to die after ~4 minutes (RESOLVED 2026-09-11)**: `ProxyClient`
-   keeps its session alive with a periodic `session.ping()` (`PING_SERVER_SECS`),
-   but `SimPlayer` had none, so `UserManagerImpl` expired the bot's connection
-   (`sim-... disconnected due connection problems`) and the game declared it
-   lost/quit — any human-vs-SIM game longer than the lease broke. **Fix**:
-   `SimPlayer` schedules the same ping after `connect()` and cancels it in
-   `stop()`. Lesson: every `SessionImpl` in the proxy (web client, SIM, future
-   bots) needs its own keep-alive; the server never pings first.
-6. **Proxy jar had no `Build-Time` manifest entry (RESOLVED 2026-09-11)**:
-   `MageVersion`/`JarVersion` parsed a null attribute and logged an NPE
-   (`Can't read build time in jar manifest`) for `ProxyClient` and every
-   `SimPlayer`. **Fix**: the shaded jar's `ManifestResourceTransformer` now
-   writes `${maven.build.timestamp}` (the ISO format `JarVersion` expects).
-7. **Every failed login leaked 2-5 non-daemon threads (RESOLVED 2026-09-28)**:
-   `Gateway.handleConnect` builds a `ProxyClient` per `connect` and its
-   constructor schedules `lobbyTimer` (2 s) and `keepAliveTimer` (20 s) on the
-   spot, but the failed-login branch only called `unregisterSession`. Nothing
-   else could reach the client: the grace timer is only armed for a *connected*
-   or *relinking* one, and the process shutdown hook walks `byAccount`, where
-   the client had already been unregistered. The web re-sends `connect` on a
-   fresh WebSocket after every failure (`gateway.ts:265`), so a wrong password,
-   a username over the server's 14-char limit or the `already connected` retry
-   loop leaked the whole set per attempt — and being non-daemon, they also kept
-   the JVM from exiting. **Fix**: `ProxyClient.dispose()` (the six
-   `shutdownNow()` that `shutdown()` and `expireGrace()` had duplicated), called
-   from the failed-login branch and from `Gateway.onClose` behind
-   `isDisposable()`. **Lesson**: `isDisposable()` must also require **no
-   pending grace timer** — it is scheduled on `pingTimer`, the very executor
-   being shut down, so disposing there cancels the server-side cleanup it
-   exists to perform and leaves a zombie session on the server. Guarded by
-   `ProxyClientFailedLoginTest` (75 extra threads over 25 failed logins before
-   the fix, 0 after).
-8. **Single-thread executors need `catch (Throwable)`, and a probe that cannot
-   ask must never answer "no" (RESOLVED 2026-09-28)**: `processCallback` and
-   `handleCommand` run on `callbackExecutor`/`commandExecutor`, and both caught
-   `Exception`, so any `Error` killed the thread for good —
-   `ThreadPoolExecutor` never replaces a dead one — leaving a session deaf
-   with no log line. The lobby timer already had a healing path for exactly
-   this (`:1231`); the two that matter most did not. Symmetrically,
-   `SessionProbe` reflected `SessionImpl.server` on every call and swallowed
-   the failure into `return false`, and `false` means "the link is down", so
-   a field renamed in the fork would have put every session in a permanent
-   relink loop — a self-inflicted outage with nothing logged. **Lesson**: on
-   the path in front of a destructive action (login again, dispose), an
-   unknown result must not act; resolve reflection once, log loudly if it
-   breaks, and treat unaskable as "leave it alone".
-10. **One thread pool per session, never released (RESOLVED 2026-09-28)**: jboss-remoting
-   2.5.4 instantiates the fork's `CustomThreadPool` from the `onewayThreadPool` locator parameter,
-   once per connection, and never stops that pool (`Client.disconnect()`, `ServerInvoker.stop()`
-   and `ServerInvoker.destroy()` do not touch it - checked against the 2.5.4.SP5 bytecode). The
-   desktop client logs in once per run and leaks four parked threads; the proxy creates one
-   `SessionImpl` per browser session **plus one per SIM seat**, so it leaked four threads per
-   session forever - a single four-player game left 12 pools / 48 threads, ~100 sessions reached
-   105 pools / 420 parked threads - until callbacks slowed down enough that games stopped producing
-   views. **Fix (one file, additive)**: `CustomThreadPool` delegates every instance to one shared
-   pool, so the threads are bounded by that pool's size instead of by the number of sessions that
-   ever lived. Measured 48 -> 0 leaked threads, proxy total 143 -> 61. Diagnose with
-   `jcmd <pid> Thread.print` grouped by thread name; a leaked pool shows as a family
-   (`ThreadPool(N)-N`) that does not shrink. Reverting it is a one-file revert; see the
-   `mage-fork-upgrade` skill for the fork patch inventory.
+**Resolved defects (a pointer, not a log)**: the AI-vs-AI demo freeze
+(`SimPlayer.tryCast` sent the Bolt UUID whatever its untapped lands produced; the server rejected the cast
+and re-granted priority with the same view, flooding the watcher with ~48 `GAME_SELECT`/s — it is color-aware
+now and dedups by `(turn, step, hand, untapped lands)`), the `spells`/`targeting` real-mode failures
+(orphan sessions degrading the server: restart server **and** proxy together), the fake-mode demo being
+immune (its timeline is deterministic), the 8787/8788/8789 port conflict (fake E2E has its own dedicated
+port), the missing SIM keep-alive, the missing `Build-Time` manifest entry, the per-failed-login thread
+leak, `catch (Exception)` in front of the single-thread executors plus a probe that answered "no" when it
+could not ask, and the one-thread-pool-per-session leak. **All of them are fixed.** The durable version of
+each one, with the measurement that proved it, is in `docs/lessons.md`; the narrative is in the commit that
+fixed it. This file used to restate them, which only duplicated those two sources (and drifted: they were
+numbered 1-8, then 10, then 9).
 
-9. **The proxy's watchdog is the only thing that would catch a leak like #7
-   again (NEW 2026-09-28)**: one line per minute with `threads`,
-   `clientsAlive` (`clientsCreated - clientsDisposed`), `openConns`, `accounts`,
-   `wsErrors` and the card-DB state, plus the same under `/admin/status`
-   (`runtime`, and per-connection detail under `sessions`). Read `clientsAlive`
-   across ticks: one live session accounts for one, a client released after a
-   rejected login for none, so a climb with flat `openConns`/`accounts` is a
-   client nothing can reach. The fork routes JUL through log4j, so these lines
-   are on **stderr** (`.run/proxy.err.log`), not `proxy.out.log`.
+- The proxy's **watchdog** is what would catch a leak like those again: one line per minute with `threads`,
+  `clientsAlive` (`clientsCreated - clientsDisposed`), `openConns`, `accounts`, `wsErrors` and the card-DB
+  state, plus the same under `/admin/status` (`runtime`, with per-connection detail under `sessions`). It is
+  on **stderr** (`.run/proxy.err.log`), because the fork routes JUL through log4j. Read `clientsAlive`
+  across ticks: one live session accounts for one, a client released after a rejected login for none, so a
+  climb with flat `openConns`/`accounts` is a client nothing can reach.
 
 ## E2E with simulated opponents (Sim) and WS helper
 
@@ -364,57 +281,30 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
 - **After touching `web`**: run `unit` and `typecheck` (and `build` if
   the build changed). After touching proxy Java: `java` + rebuild jar
   (`build.mjs proxy`) + restart proxy.
-- **Before declaring a task "done"**: full suite
-  (`node scripts/test.mjs`) with the stack up.
-  - **Y CI remoto en verde** (plan7, 2026-09-19): tras el push, `gh run list -R
-    Adamychen/xmage-nexus -L 5` — `Web client CI` estuvo una semana en rojo en
-    `master` con la suite local 9/9 (caché de Maven con artefactos `org.mage`
-    viejos). Si se toca el fork, publicar `origin/nexus` antes: CI y
-    `release.yml` construyen desde ahí.
-  - **Reiniciar el stack justo antes** (`node scripts/ctl.mjs restart all`): un
-    server con muchas sesiones/partidas huérfanas acumuladas degrada el canal de
-    callbacks y hace flaky `warmup`/`self-test`/`human-test` (WATCHGAME que no
-    llega, `GAME_PLAY_MANA` que expira); con el stack recién reiniciado y
-    caliente, self-test 15/15 y human-test 80/80 (medido 2026-09-18). Los fallos
-    e2e de la suite en paralelo (hover/clic bajo carga: `printing-preview`,
-    `auto-pod`) también son flakes: reintentar el spec aislado antes de tocar nada.
-- **Known failure**: `self-test` may fail in `WATCHGAME` only on the first
-  game after a cold server start (the server loses the callback
-  return socket: `SESSION CALLBACK EXCEPTION - Unable to create socket`
-  in `server.out.log`). Retry once with a warm server; if it fails
-  repeatedly, it's a real bug, not a flake.
-  - **Resuelto 2026-09-18 (bug real del proxy + flake del test)**: los fallos
-    repetidos con `Lobby publish failed: NoClassDefFoundError
-    org/jboss/mx/util/ObjectNameFactory` (log de 648 MB) eran un bug del proxy:
-    `TransporterClient.findAlternativeTarget()` (solo tras
-    `CannotConnectException`) inicializa `InternalTransporterServices`, cuyo
-    `<clinit>` usa `ObjectNameFactory` de jboss-mx; el jar sombreado no lo
-    incluía y el artefacto ya no se publica en ningún repo. Fix: shim
-    `Mage.Proxy/src/main/java/org/jboss/mx/util/ObjectNameFactory.java` (el
-    proxy no usa clustering: `NetworkRegistry` nulo ⇒ el failover devuelve false
-    y se propaga el `CannotConnectException` real) + throttle de `publishLobby`
-    (1 stack + 1 línea/min por sesión). Verificado con caída controlada del
-    server (0 stacks tras el fix, recuperación automática,
-    `verify-spectator-end` 17/17) y `self-test` 15/15: el WATCHGAME era además
-    flaky por partidas IA-vs-IA que pueden terminar antes del watch.
-- **RESUELTO (2026-09-12): `invite-link.spec` pasa** (era coletazo del
-  SetupWizard; histórico abajo). Los deep links de invitación volvieron a pasar
-  al re-ejecutarlos (`web/COMPONENT_PARITY.md:27`) y la lista known-broken quedó
-  vacía; el mecanismo se eliminó el 2026-09-30 (sin `grepInvert` ni
-  `E2E_INCLUDE_KNOWN_BROKEN`: un test fake que falle de forma estable se
-  investiga y arregla, no se excluye). **Histórico resuelto (2026-09-11)**: los 77 tests fake que fallaban
-  desde la ventana 09-05→09-10 (firma "Sala de Espera de Espectador" + asientos
-  `0/N` en lobby) tenían causa raíz en el SetupWizard (commit `03abd96354`):
-  su `skip()` persistía una conexión por defecto (proxy 8787) y el evento
-  `setup-conn` pisaba el `?proxyPort=8789` del FixtureServer, así que los e2e
-  jugaban contra el proxy real (beta.xmage.today en CI; evidencia: snapshot
-  con "Mesas (21)" reales y seats `0/2` = formato real `TableView.seatsInfo`).
-  Fix: `skip()` no persiste nada (la bandera ya la re-adivina
-  `guessDefaultFlag`) + `LoginScreen` da prioridad al `?proxyPort=` explícito
-  en `applySetupConn` + helper e2e apunta a `localhost` en fake. Also beware:
-  the desktop launcher (`today.xmage.nexus` JRE) can squat ports 17171/8787
-  while dev processes fail to bind with a stale `.run/*.pid` — kill those
-  processes before self-tests.
+- **Before declaring a task "done"**: the full suite (`node scripts/test.mjs`) with the stack up, **and the
+  remote CI green afterwards** (`gh run list -R Adamychen/xmage-nexus -L 5`). `Web client CI` once sat red on
+  `master` for a week while the local suite was 9/9, because CI's Maven cache held old `org.mage` artifacts.
+  If the fork is touched, publish `origin/nexus` first: CI and `release.yml` build from there.
+- **Restart the stack right before** (`node scripts/ctl.mjs restart all`): a server that accumulated orphan
+  sessions and matches degrades the callback channel and makes `warmup`/`self-test`/`human-test` flaky
+  (`WATCHGAME` never arrives, `GAME_PLAY_MANA` expires). On a freshly restarted, warm stack: self-test
+  15/15 and human-test 80/80 (measured 2026-09-18). Parallel-run e2e failures (hover/click under load:
+  `printing-preview`, `auto-pod`) are flakes: rerun the spec alone before touching anything.
+- **Known failure**: `self-test` may fail in `WATCHGAME` only on the first game after a cold server start
+  (the server loses the callback return socket: `SESSION CALLBACK EXCEPTION - Unable to create socket` in
+  `server.out.log`). Retry once with a warm server; if it fails repeatedly it is a real bug, not a flake —
+  the last time it repeated for a whole day it was a proxy bug (a missing `ObjectNameFactory` in the shaded
+  jar, fixed by a shim + a `publishLobby` throttle, see `docs/lessons.md`), and some AI-vs-AI games simply
+  end before the watch lands.
+- **No known-broken list and no way to exclude specs** (the `grepInvert` / `E2E_INCLUDE_KNOWN_BROKEN`
+  mechanism was removed 2026-09-30): a fake test that fails stably is investigated and fixed. Watch for
+  environment causes that read like product bugs — the desktop launcher (`today.xmage.nexus` JRE) can squat
+  ports 17171/8787 while dev processes fail to bind with a stale `.run/*.pid`, and the 09-05→09-10 window
+  of 77 fake failures had the same shape: `SetupWizard.skip()` persisted a default connection (proxy 8787)
+  whose `setup-conn` event overwrote the FixtureServer's `?proxyPort=8789`, so those e2e runs played against
+  the real proxy and beta. `skip()` persists nothing now (the flag is re-guessed by `guessDefaultFlag`),
+  `LoginScreen` lets an explicit `?proxyPort=` win in `applySetupConn`, and the e2e helper points at
+  `localhost` in fake mode.
 - **Do not touch** generated files: `dist/`, `.run/`, `local-server/`,
   `node_modules/`, `target/`.
 - No comments in code unless requested.

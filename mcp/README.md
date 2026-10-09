@@ -5,8 +5,8 @@ desarrollo y —fase 2— un jugador XMage headless como tools para agentes
 (opencode, Claude Desktop, Cursor…).
 
 - **Sin build**: Node ≥24 ejecuta TypeScript nativo (type stripping). `node src/index.ts`.
-- **Sin Java**: la fase A solo invoca los scripts del repo (`scripts/*.mjs`); la
-  fase C hablará el protocolo WS del proxy (`Mage.Proxy/README.md`).
+- **Sin Java**: las tools de DevOps invocan los scripts del repo (`scripts/*.mjs`) y las de partida hablan el
+  protocolo WS del proxy (`Mage.Proxy/README.md`) directamente desde `src/xmage/`.
 - **stdout reservado** para el protocolo MCP: los diagnósticos van a stderr.
 
 ## Uso

@@ -17,7 +17,8 @@ Leyenda: ✅ = paridad evidenciada (guard/E2E/doc) · ⚠️ = gap conocido ·
 
 Inventario base (2026-09-05): desktop 292 `.java` (~65 componentes comparables;
 resto MDI/Swing/DnD/RMI/descargador — ver § Exclusiones) · web 179 `.tsx`
-(9 pantallas + 27 `*Dialog|*Modal`).
+(9 pantallas + 27 `*Dialog|*Modal`). Recuento de hoy (2026-10-09): 293 `.tsx` en
+`web/src`; el detalle por pantalla sigue siendo válido, el número de ficheros no.
 
 ## Tabla madre
 

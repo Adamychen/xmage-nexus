@@ -27,6 +27,9 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 
 ## Proxy & sessions
 
+- A bot that guesses costs freezes the game. `SimPlayer.tryCast` used to send the Bolt UUID even when its untapped lands were Islands; the server rejected the cast (`canPay` does not cover `{R}`) and re-granted priority with the same view, so the watcher took ~48 `GAME_SELECT`/s forever. It is color-aware now (`colorsOf` + `canProduceColors`, casts only if lands produce every color of the cost) and dedups by `(turn, step, hand, untapped lands)` as a second guard.
+- The shaded proxy jar must carry `Build-Time` in its manifest (`${maven.build.timestamp}`): `MageVersion`/`JarVersion` parse it and log an NPE (`Can't read build time in jar manifest`) for `ProxyClient` and for every `SimPlayer` when it is missing.
+- The proxy ships its own `org/jboss/mx/util/ObjectNameFactory.java`: jboss-remoting's `InternalTransporterServices` needs it (and only initializes it after a `CannotConnectException`, so the gap only showed up as repeated `Lobby publish failed: NoClassDefFoundError` + a 648 MB log), the artifact is no longer published anywhere, and the proxy does not cluster — with a null `NetworkRegistry` the shim's failover returns false and the real `CannotConnectException` propagates.
 - `connect` must be idempotent per `host|username` (browser reloads): restarting the session clears WS registries and triggers reconnect loops; test mode kicks duplicate connections from the same host.
 - Every `SessionImpl` (web client, SIM, future bots) needs its own keep-alive ping or `UserManagerImpl` expires it (~4 min lease) and the game declares the seat lost/quit.
 - Archidekt's `/api/decks/{id}/small/` now returns `cards: []`: import from the full `/api/decks/{id}/` (~350 KB) and drop cards in any category with `includedInDeck: false` (Maybeboard); `deckFormat` is numeric (3 = Commander). Fixture: `web/src/decks/__fixtures__/archidekt-deck-15000794.json`.

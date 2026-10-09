@@ -18,7 +18,7 @@ Java/Maven to work on the client alone:
 ```bash
 node scripts/ctl.mjs start|stop|restart|status [server|proxy|vite|all]
 node scripts/tail.mjs [server|proxy|vite|all] [lines]   # logs in .run/*.log
-node scripts/test.mjs [layer...]                        # unit coverage typecheck build java self-test human-test e2e i18n
+node scripts/test.mjs [layer...]                        # unit coverage typecheck build java self-test human-test verify verify-restart fuzz e2e i18n
 ```
 
 After touching `web/`: run `unit` + `typecheck` (`build` if the build changed).
@@ -123,7 +123,7 @@ without depending on the public server:
 | `state/eventHandler.ts` + `state/events/` | Server event router + per-domain bodies |
 | `state/state.ts` + `state/slices/` + `store.ts` | `AppState` composed of slices; store facade |
 | `game/feedback/` (`parse/detect/record/text`) + `feedbackModes/` | Prompt parsing + per-mode UI, routed by `FeedbackDialog.tsx` |
-| `board/` | Battlefield rendering (`BoardScene` publishes `window.__mageScene` for E2E) |
+| `board/` | Battlefield rendering in DOM/CSS (`ArenaBoard`, `BoardZone`, `CardSlot`); `board/sceneBridge.ts` publishes `window.__mageScene` for E2E |
 | `lobby/` / `decks/` / `i18n/` / `audio/` / `cards/` | Login/lobby/wizard, DeckBuilder + Scryfall, 9 locales, sounds, card art |
 
 ### Schema, codegen & E2E
@@ -155,8 +155,12 @@ without depending on the public server:
    reconnect and events for games the session never joined. Check `proxy.err.log`.
 3. **E2E fails only in real mode**: fake is deterministic, so a real-only
    failure is timing or protocol drift — never "fix" it by weakening the test.
-4. **First game after a cold start**: `self-test` WATCHGAME may flake once
-   (`SESSION CALLBACK EXCEPTION`). Retry warm; persistent failure is a real bug.
+4. **First game after a cold start**: `self-test` WATCHGAME may fail once
+   (`SESSION CALLBACK EXCEPTION - Unable to create socket` in
+   `server.out.log`). Retry warm; persistent failure is a real bug, not a flake
+   (the last time it repeated for a whole day it was a missing `ObjectNameFactory`
+   in the shaded jar — see `docs/lessons.md`).
 5. **Restart server + proxy together** (`ctl.mjs restart all`); restarting only
    the proxy leaves the first login hanging. Anonymous login to
-   `beta.xmage.today` is intermittent — the local server is the reliable oracle.
+   `beta.xmage.today` works — the local server is the CI oracle because it is
+   **deterministic**, not because beta is broken.

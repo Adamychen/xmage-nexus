@@ -9,7 +9,7 @@ The login screen has two independent sections:
 - **Proxy** (host/port, default `127.0.0.1:8787`): the WebSocket bridge. For zero-install play, point this at a shared proxy.
 - **XMage Server** (host/port, default `localhost:17171` or `beta.xmage.today:17171`): the target game server.
 
-Note: anonymous login to the public server is intermittent (server-side handshake flake). If login hangs there, retry or use the local server; see `docs/testing.md`.
+Note: anonymous login to the public server (`beta.xmage.today`) **works** — it was measured at 17/17 logins (~1.6 s each). If a login is refused there, it is not a handshake flake: the server rejects any username longer than `maxUserNameLength` (**14**), and the `Can't receive server state before other data` line in the logs is only the symptom of a refused login. The login form caps the name at 14 characters for that reason.
 
 ## Lobby
 
@@ -22,10 +22,10 @@ Note: anonymous login to the public server is intermittent (server-side handshak
 
 - **Board**: your hand fans at the bottom (hover lifts it), battlefield bands (lands / creatures / other), stack, graveyard/exile/library piles with top-card preview, command zone, turn-order ring in multiplayer.
 - **Priority**: when you have priority the action button lights up (orb on the board edge). `Space`/`Enter` passes, `F4` passes until something happens, `F9` passes to end of turn, holding `Ctrl` holds priority. Auto-pass settings are in the game screen; E2E never enables them.
-- **Mana**: no color hints are sent — tap your lands on the board first, then pay from the pool. X-costs use the stepper.
+- **Mana**: the server sends no color hints. By default the client taps your sources for you (`Settings → Gameplay → Mana payment`, auto-payment is on by default); turn on **Smart mana payment** to have it pick the exact sources for the cost being paid while keeping colors open for instants in your hand. Click any source yourself at any time to take over — the manual path (tap your lands on the board first, then pay from the pool) always works. X-costs use the stepper.
 - **Targeting**: valid targets glow; dotted animated arrows show the source. Arrows to players aim at the avatar.
 - **Combat**: floating declare-attackers / declare-blockers UI; attackers tap and nudge toward the defender. Multi-blocker damage order is auto-assigned.
-- **Mulligan**: London rules. Keep (`Mantener`) or mulligan down to N, then bottom N cards via the targeting prompt.
+- **Mulligan**: London rules. Keep or mulligan down to N, then bottom N cards via the targeting prompt.
 - **Card selection** (tutors, scry/surveil, hand reveal): HD grid modal; click to pick, multi-select where allowed. Thoughtseize-style discard: click the revealed card to discard it.
 - **Sideboard** (Bo3/Bo5): two-column editor between games with drag/click swap and a submit timer.
 - **Chat tabs**: game log (rules events) vs table talk are separate channels; the action feed shows match events only.
@@ -41,11 +41,11 @@ Note: anonymous login to the public server is intermittent (server-side handshak
 ## Formats
 
 - 1v1 Constructed (Standard/Modern/Pioneer/Legacy/Vintage/Pauper) at full parity: clocks, DFC/MDFC back-face, Sagas, sideboarding.
-- Commander (up to 4, pod 2x2 or Arena view), Two-Headed Giant, Booster Draft/Sealed (8→4, 40-card build), Swiss/bracket tournaments, replay viewer.
+- Commander, Two-Headed Giant, Booster Draft/Sealed (8→4, 40-card build), Swiss/bracket tournaments, replay viewer. Free-for-all tables go up to **10 players** (Commander FFA and Plain FFA both accept 3-10 seats): with 4 or fewer you get the pod (2x2) or Arena view, with 5+ the board switches to the standard layout with an opponent switcher bar, because a pod only paints four seats.
 
 ## Troubleshooting for players
 
-- Stuck login: check proxy address first, then server address; public server flakes — retry or go local.
+- Stuck login: check proxy address first, then server address. A refusal on the public server is a real rejection, not a flake — check the username length (≤ 14) and whether the server moved to a newer XMage release than the proxy (the client says so explicitly when that happens).
 - "Card not found" on join: use the suggested printing or remove the card; the server matches by (set, number), not by name.
 - Table disappeared after create: re-enter from the table card ("go to table"); if the owner left before start, the server deletes it.
 - No sound: browsers require a first click before audio unlocks; check Master/SFX sliders.
