@@ -14,7 +14,8 @@ import LobbyScreen from './lobby/LobbyScreen'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
 import DeckIssuesDialog from './lobby/DeckIssuesDialog'
 import SetupWizard from './setup/SetupWizard'
-import { isSetupDone, OPEN_SETUP_EVENT } from './setup/setupFlag'
+import { OPEN_SETUP_EVENT } from './setup/setupFlag'
+import { bootPlanFromStorage } from './setup/bootRestore'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
 import ConfirmHost from './ui/ConfirmHost'
@@ -36,7 +37,7 @@ export default function App() {
   const linkAttempt = useStore((s) => s.linkAttempt)
   const loginRetry = useStore((s) => s.loginRetry)
   const settings = useStore((s) => s.settings)
-  const [showSetup, setShowSetup] = useState(() => !isSetupDone())
+  const [showSetup, setShowSetup] = useState(() => bootPlanFromStorage().showWizard)
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
 
   useEffect(() => {
@@ -72,8 +73,9 @@ export default function App() {
     const music = loadMusicSettings()
     soundManager.setMusicVolume(music.musicEnabled ? music.musicVolume : 0)
     // Reload: re-login with the saved session (logout clears it via reset()). The
-    // login result resumes the active game/draft from storage.
-    if (!isSetupDone()) return
+    // login result resumes the active game/draft from storage. Whether the wizard has
+    // been completed is not part of this decision: see setup/bootRestore.ts.
+    if (!bootPlanFromStorage().restore) return
     if (GalleryScreen && isGalleryHash(window.location.hash)) return
     const saved = loadConn()
     if (saved?.username && phase === 'idle') {

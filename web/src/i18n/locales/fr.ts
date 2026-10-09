@@ -34,6 +34,8 @@ export const fr: TranslationSchema = {
     server_link_lost: 'Connexion au serveur XMage perdue — reconnexion ({n})…',
     server_link_failed: 'Impossible de se reconnecter au serveur XMage. Reconnecte-toi pour reprendre ta partie.',
     session_taken_over: 'Ce compte s\'est connecté ailleurs. Reconnecte-toi pour le récupérer.',
+    resume_game_gone: 'Cette partie est terminée (ou le serveur a libéré votre place) pendant votre absence.',
+    resume_watch_gone: 'Cette partie n’est plus en cours.',
     connecting_server: 'Connexion au serveur XMage…',
     attribution_scryfall: 'Images de cartes avec l’aimable autorisation de Scryfall · Non affilié à Wizards of the Coast',
     reload: 'Recharger',

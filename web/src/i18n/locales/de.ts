@@ -34,6 +34,8 @@ export const de: TranslationSchema = {
     server_link_lost: 'Verbindung zum XMage-Server verloren — verbinde erneut ({n})…',
     server_link_failed: 'Keine erneute Verbindung zum XMage-Server möglich. Melde dich erneut an, um deine Partie fortzusetzen.',
     session_taken_over: 'Dieses Konto wurde woanders angemeldet. Melde dich erneut an, um es zurückzuholen.',
+    resume_game_gone: 'Dieses Spiel endete (oder der Server hat deinen Platz freigegeben), während du weg warst.',
+    resume_watch_gone: 'Dieses Spiel wird nicht mehr gespielt.',
     connecting_server: 'Verbinde mit XMage-Server…',
     attribution_scryfall: 'Kartenbilder mit freundlicher Genehmigung von Scryfall · Nicht verbunden mit Wizards of the Coast',
     reload: 'Neu laden',

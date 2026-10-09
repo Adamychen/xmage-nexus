@@ -22,17 +22,22 @@ export const ALREADY_CONNECTED_RETRIES = 4
 const ALREADY_CONNECTED_BASE_DELAY_MS = 2000
 
 /** The game we tried to rejoin is gone (ended while we were away): leave its
- *  board instead of showing a frozen table. */
-function abandonResume(gameId: string): void {
+ *  board instead of showing a frozen table, and say so. A restore that gives up in
+ *  silence reads to the player as "the client broke": the board they reloaded into
+ *  is gone and there is nothing to read, which is how a working tunnel and a working
+ *  proxy get blamed. The same text goes to the connection log for bug reports. */
+function abandonResume(gameId: string, watching: boolean): void {
   clearActiveGame()
+  const why = t('common', watching ? 'resume_watch_gone' : 'resume_game_gone')
+  addLog('conexión', why)
   const s = getState()
   if (s.gameId === gameId && s.phase === 'game') {
     setState({
       phase: 'lobby', game: null, gameId: null, gameChatId: null, playableIds: [], playableWindow: null,
-      combat: null, feedback: null, turnRecap: null, enteredThisTurn: {}, resumingGameId: null,
+      combat: null, feedback: null, turnRecap: null, enteredThisTurn: {}, resumingGameId: null, error: why,
     })
   } else {
-    setState({ resumingGameId: null })
+    setState({ resumingGameId: null, error: why })
   }
 }
 
@@ -142,13 +147,13 @@ function resumeActiveGame(): void {
   if (active.role === 'watcher') {
     addLog('conexión', 'Restaurando modo espectador…')
     void cmds.watchGame(gameId).then((r) => {
-      if (!r?.ok) abandonResume(gameId)
+      if (!r?.ok) abandonResume(gameId, true)
     })
   } else {
     addLog('conexión', 'Restaurando partida en curso…')
     setState({ resumingGameId: gameId })
     void cmds.joinGame(gameId).then((r) => {
-      if (!r?.ok) abandonResume(gameId)
+      if (!r?.ok) abandonResume(gameId, false)
     })
   }
   void cmds.getGameChatId(gameId).then((cid) => setState({ gameChatId: cid ?? null }))

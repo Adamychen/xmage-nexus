@@ -34,6 +34,8 @@ export const ja: TranslationSchema = {
     server_link_lost: 'XMage サーバーとの接続が失われました — 再接続中 ({n})…',
     server_link_failed: 'XMage サーバーに再接続できませんでした。もう一度ログインするとゲームを再開できます。',
     session_taken_over: 'このアカウントは別の場所でログインされました。取り戻すにはもう一度ログインしてください。',
+    resume_game_gone: '離れている間に、そのゲームは終了したか、席が解放されました。',
+    resume_watch_gone: 'そのゲームはもう行われていません。',
     connecting_server: 'XMageサーバーに接続中…',
     attribution_scryfall: 'カード画像はScryfall提供 · Wizards of the Coastとは無関係です',
     reload: '再読み込み',

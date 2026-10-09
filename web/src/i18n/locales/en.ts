@@ -32,6 +32,8 @@ export const en = {
     server_link_lost: 'Connection to the XMage server lost — reconnecting ({n})…',
     server_link_failed: 'Could not reconnect to the XMage server. Log in again to resume your game.',
     session_taken_over: 'This account was logged in somewhere else. Log in again to take it back.',
+    resume_game_gone: 'That game ended (or the server freed your seat) while you were away.',
+    resume_watch_gone: 'That game is no longer being played.',
     connecting_server: 'Connecting to XMage server…',
     attribution_scryfall: 'Card images courtesy of Scryfall · Not affiliated with Wizards of the Coast',
     reload: 'Reload',

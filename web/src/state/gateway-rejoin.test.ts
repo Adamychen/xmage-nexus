@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { attachGateway } from './gateway'
 import { getState, setState } from './state'
 import { reset } from './store'
-import { clearActiveDraft, loadActiveDraft, saveActiveDraft } from './persistence'
+import { clearActiveDraft, loadActiveDraft, saveActiveDraft, saveActiveGame, loadActiveGame, clearActiveGame } from './persistence'
 import * as cmds from '../net/commands'
 
 vi.mock('../net/commands', async (importOriginal) => {
@@ -12,6 +12,9 @@ vi.mock('../net/commands', async (importOriginal) => {
     connect: vi.fn(),
     joinDraft: vi.fn(),
     joinTournament: vi.fn(),
+    joinGame: vi.fn(),
+    watchGame: vi.fn(),
+    getGameChatId: vi.fn(),
   }
 })
 
@@ -21,6 +24,9 @@ describe('attachGateway — re-unión al reconectar', () => {
     vi.mocked(cmds.connect).mockReset().mockResolvedValue({ ok: true } as never)
     vi.mocked(cmds.joinDraft).mockReset().mockResolvedValue({ ok: true } as never)
     vi.mocked(cmds.joinTournament).mockReset().mockResolvedValue({ ok: true } as never)
+    vi.mocked(cmds.joinGame).mockReset().mockResolvedValue({ ok: true } as never)
+    vi.mocked(cmds.watchGame).mockReset().mockResolvedValue({ ok: true } as never)
+    vi.mocked(cmds.getGameChatId).mockReset().mockResolvedValue(null as never)
   })
 
   async function attachStub() {
@@ -120,5 +126,46 @@ describe('attachGateway — re-unión al reconectar', () => {
     reset()
     expect(loadActiveDraft()).toBeNull()
     clearActiveDraft()
+  })
+
+  // A restore that quietly gives up reads to the player as "the client broke": the board
+  // disappears and nothing says why. Both of these used to land silently.
+  it('si la partida ya no está, baja al lobby y dice por qué', async () => {
+    vi.mocked(cmds.joinGame).mockResolvedValue({ ok: false, error: 'game not found' } as never)
+    const events = await attachStub()
+    saveActiveGame('g-cerrada')
+    setState({
+      conn: { serverHost: 'h', port: 1, username: 'u', password: 'x' },
+      phase: 'game',
+      gameId: 'g-cerrada',
+      game: { turn: 3 },
+      resumingGameId: 'g-cerrada',
+    } as never)
+
+    await events.onOpen?.()
+
+    await vi.waitFor(() => expect(getState().phase).toBe('lobby'))
+    expect(getState().error).toBeTruthy()
+    expect(getState().game).toBeNull()
+    expect(loadActiveGame()).toBeNull()
+  })
+
+  it('si el partido que veías acabó, también lo dice', async () => {
+    vi.mocked(cmds.watchGame).mockResolvedValue({ ok: false } as never)
+    const events = await attachStub()
+    saveActiveGame('g-vista', null, 'watcher')
+    setState({
+      conn: { serverHost: 'h', port: 1, username: 'u', password: 'x' },
+      phase: 'game',
+      gameId: 'g-vista',
+      game: { turn: 2 },
+    } as never)
+
+    await events.onOpen?.()
+
+    await vi.waitFor(() => expect(getState().error).toBeTruthy())
+    expect(getState().phase).toBe('lobby')
+    expect(loadActiveGame()).toBeNull()
+    clearActiveGame()
   })
 })

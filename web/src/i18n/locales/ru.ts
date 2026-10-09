@@ -34,6 +34,8 @@ export const ru: TranslationSchema = {
     server_link_lost: 'Соединение с сервером XMage потеряно — переподключение ({n})…',
     server_link_failed: 'Не удалось переподключиться к серверу XMage. Войдите снова, чтобы продолжить партию.',
     session_taken_over: 'В эту учётную запись вошли в другом месте. Войдите снова, чтобы вернуть её.',
+    resume_game_gone: 'Эта партия завершилась (или сервер освободил ваше место), пока вы не было.',
+    resume_watch_gone: 'Эта партия больше не играется.',
     connecting_server: 'Подключение к серверу XMage…',
     attribution_scryfall: 'Изображения карт предоставлены Scryfall · Не связано с Wizards of the Coast',
     reload: 'Перезагрузить',

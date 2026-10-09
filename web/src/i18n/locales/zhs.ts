@@ -34,6 +34,8 @@ export const zhs: TranslationSchema = {
     server_link_lost: '与 XMage 服务器的连接已断开 — 正在重连 ({n})…',
     server_link_failed: '无法重新连接到 XMage 服务器。请重新登录以继续对局。',
     session_taken_over: '此账号已在其他地方登录。请重新登录以找回。',
+    resume_game_gone: '您离开期间这局牌已结束（或服务器已释放您的座位）。',
+    resume_watch_gone: '这局牌已不再进行。',
     connecting_server: '正在连接至 XMage 服务器…',
     attribution_scryfall: '卡图由 Scryfall 提供 · 与威世智无关',
     reload: '重新加载',

@@ -34,6 +34,8 @@ export const pt: TranslationSchema = {
     server_link_lost: 'Conexão com o servidor XMage perdida — reconectando ({n})…',
     server_link_failed: 'Não foi possível reconectar ao servidor XMage. Entre novamente para retomar sua partida.',
     session_taken_over: 'Esta conta foi conectada em outro lugar. Entre novamente para recuperá-la.',
+    resume_game_gone: 'Essa partida terminou (ou o servidor liberou o seu lugar) enquanto você estava ausente.',
+    resume_watch_gone: 'Essa partida não está mais em andamento.',
     connecting_server: 'Conectando ao servidor XMage…',
     attribution_scryfall: 'Imagens dos cards cortesia de Scryfall · Não afiliado a Wizards of the Coast',
     reload: 'Recarregar',
