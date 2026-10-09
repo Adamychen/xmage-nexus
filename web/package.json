@@ -21,6 +21,7 @@
     "test:e2e:combat": "playwright test --grep \"@combat\"",
     "test:e2e:fullflow": "playwright test --grep \"@fullflow\"",
     "test:e2e:board": "playwright test --grep \"@board\"",
+    "test:e2e:site": "playwright test e2e/site-downloads.spec.ts",
     "test:e2e:visual": "E2E_VISUAL=1 E2E_VIEWPORT=1920x1080 playwright test e2e/gallery.spec.ts",
     "test:e2e:visual:update": "E2E_VISUAL=1 E2E_VIEWPORT=1920x1080 playwright test e2e/gallery.spec.ts --update-snapshots",
     "gen-types": "node ../scripts/gen-types.mjs",

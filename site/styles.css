@@ -379,6 +379,27 @@ a.chip:hover { border-color: var(--accent); transform: translateY(-1px); }
 .download-card.play .dl-os { color: var(--gold); }
 .dl-os { font-size: 16px; font-weight: 600; }
 .dl-arch { font-size: 13px; }
+/* The real file name, so the button says what it downloads. */
+.dl-file { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.download-extra {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 4px;
+  font-size: 13px;
+}
+.dl-extra-link {
+  color: var(--text);
+  text-decoration: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.dl-extra-link:hover { border-color: var(--accent); color: var(--accent); }
 .dl-badge {
   position: absolute;
   top: 14px;

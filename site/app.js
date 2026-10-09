@@ -226,45 +226,170 @@
     });
   }
 
+  /* A release ships 27 files and 24 of them only exist to feed the launcher:
+     the JRE / server / proxy tarballs, the updater signatures, latest.json. A
+     visitor needs ONE, and the old panel sent every button to the page listing
+     all 27. These are the files a human on each OS would click, first choice
+     first; everything else stays out of the panel. */
+  var OS_FILES = {
+    Windows: [".exe", ".msi"],
+    macOS: [".dmg"],
+    Linux: [".AppImage", ".deb", ".rpm"],
+  };
+
+  function assetsForOs(assets, os) {
+    var want = OS_FILES[os] || [];
+    var out = [];
+    for (var i = 0; i < want.length; i++) {
+      for (var j = 0; j < assets.length; j++) {
+        var name = assets[j].name;
+        var isType = name.slice(-want[i].length) === want[i];
+        if (isType && name.indexOf("nexus-") !== 0 && !/\.sig$/.test(name)) out.push(assets[j]);
+      }
+    }
+    return out;
+  }
+
+  function mb(bytes) {
+    var m = (bytes || 0) / 1048576;
+    return (m >= 10 ? Math.round(m) : Math.round(m * 10) / 10) + " MB";
+  }
+
+  /* Asset names carry the version (XMage.Nexus_0.4.5_x64-setup.exe), so the
+     links are resolved at load time: a URL hand-written into content.json is
+     wrong on the next release. One call per tab per 30 min (the anonymous API
+     allows 60/h per IP); on any failure the static cards stay up. */
+  function loadReleaseAssets(releasesUrl, cb) {
+    var m = /github\.com\/([\w.-]+\/[\w.-]+)\/releases/.exec(releasesUrl || "");
+    if (!m) return;
+    var url = "https://api.github.com/repos/" + m[1] + "/releases/latest";
+    var KEY = "mage_site_release";
+    var stale = null;
+    try {
+      var cached = JSON.parse(sessionStorage.getItem(KEY) || "null");
+      if (cached && cached.url === url && cached.assets) {
+        if (Date.now() - cached.at < 30 * 60 * 1000) return cb(cached.assets);
+        stale = cached.assets;
+      }
+    } catch (e) {
+      stale = null;
+    }
+    function done(assets) {
+      if (assets) {
+        try {
+          sessionStorage.setItem(KEY, JSON.stringify({ url: url, at: Date.now(), assets: assets }));
+        } catch (e) {}
+      }
+      cb(assets || stale);
+    }
+    var opts = { headers: { Accept: "application/vnd.github+json" } };
+    var timer = null;
+    if (typeof AbortController !== "undefined") {
+      var ctrl = new AbortController();
+      opts.signal = ctrl.signal;
+      timer = setTimeout(function () {
+        ctrl.abort();
+      }, 5000);
+    }
+    fetch(url, opts)
+      .then(function (r) {
+        if (timer) clearTimeout(timer);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        var list = (j && j.assets ? j.assets : []).map(function (a) {
+          return { name: a.name, url: a.browser_download_url, size: a.size };
+        });
+        done(list.length ? list : null);
+      })
+      .catch(function () {
+        if (timer) clearTimeout(timer);
+        done(null);
+      });
+  }
+
+  function downloadCard(cls, title, sub, href, current, badge) {
+    var a = el("a", "download-card" + (cls ? " " + cls : ""));
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.appendChild(el("span", "dl-os", esc(title)));
+    a.appendChild(el("span", "dl-arch muted dl-file", esc(sub)));
+    if (current) a.className += " is-current";
+    if (badge) a.appendChild(el("span", "dl-badge", esc(badge)));
+    return a;
+  }
+
   function renderDownloads(d, t) {
     setText("download-title", t.downloadTitle);
     setText("download-sub", t.downloadSubtitle);
     var grid = document.getElementById("download-grid");
     if (!grid) return;
-    grid.innerHTML = "";
     var rel = d.release || {};
     var os = detectOS();
-    var playUrl = playHref(d);
-    if (playUrl) {
-      var play = el("a", "download-card play");
-      play.href = playUrl;
-      play.target = "_blank";
-      play.rel = "noopener";
-      play.appendChild(el("span", "dl-os", esc(t.downloadPlay || "Play in your browser →")));
-      play.appendChild(el("span", "dl-arch muted", esc(t.downloadPlaySub || "Try without installing")));
-      grid.appendChild(play);
+
+    function paint(assets) {
+      grid.innerHTML = "";
+      var playUrl = playHref(d);
+      if (playUrl) {
+        var play = downloadCard("play", t.downloadPlay || "Play in your browser \u2192", t.downloadPlaySub || "Try without installing", playUrl);
+        grid.appendChild(play);
+      }
+      if (assets && assets.length) {
+        var osList = os && OS_FILES[os] ? [os] : ["Windows", "macOS", "Linux"];
+        var others = [];
+        osList.forEach(function (o) {
+          var files = assetsForOs(assets, o);
+          if (!files.length) return;
+          var meta =
+            (rel.downloads || []).filter(function (x) {
+              return x.os === o;
+            })[0] || {};
+          var current = os === o;
+          var first = files[0];
+          grid.appendChild(
+            downloadCard(
+              "",
+              meta.label || o,
+              first.name + " \u00b7 " + mb(first.size),
+              first.url,
+              current,
+              current ? t.recommended || "Recommended" : "",
+            ),
+          );
+          if (current) others = files.slice(1);
+        });
+        if (others.length) {
+          var more = el("div", "download-extra");
+          more.appendChild(el("span", "", esc((t.downloadOthers || "Other formats") + ":")));
+          others.forEach(function (f) {
+            var b = el("a", "dl-extra-link", esc(f.name + " \u00b7 " + mb(f.size)));
+            b.href = f.url;
+            b.target = "_blank";
+            b.rel = "noopener";
+            more.appendChild(b);
+          });
+          grid.appendChild(more);
+        }
+      } else {
+        (rel.downloads || []).forEach(function (dl) {
+          var current = os && dl.os === os;
+          grid.appendChild(
+            downloadCard("", dl.label || dl.os || "Download", dl.arch || "", dl.url || rel.releasesUrl || "#", current, current ? t.recommended || "Recommended" : ""),
+          );
+        });
+      }
+      if (rel.releasesUrl) {
+        grid.appendChild(downloadCard("secondary", t.downloadAll || "All versions \u2192", t.downloadAllSub || "GitHub Releases", rel.releasesUrl));
+      }
+      if (t.downloadFileHint) grid.appendChild(el("div", "download-extra muted", esc(t.downloadFileHint)));
     }
-    (rel.downloads || []).forEach(function (dl) {
-      var a = el("a", "download-card");
-      a.href = dl.url || rel.releasesUrl || "#";
-      a.target = "_blank";
-      a.rel = "noopener";
-      var current = os && dl.os === os;
-      if (current) a.className += " is-current";
-      a.appendChild(el("span", "dl-os", esc(dl.label || dl.os || "Download")));
-      a.appendChild(el("span", "dl-arch muted", esc(dl.arch || "")));
-      if (current) a.appendChild(el("span", "dl-badge", esc(t.recommended || "Recommended")));
-      grid.appendChild(a);
+
+    paint(null);
+    loadReleaseAssets(rel.releasesUrl, function (assets) {
+      if (assets && assets.length) paint(assets);
     });
-    if (rel.releasesUrl) {
-      var all = el("a", "download-card secondary");
-      all.href = rel.releasesUrl;
-      all.target = "_blank";
-      all.rel = "noopener";
-      all.appendChild(el("span", "dl-os", esc(t.downloadAll || "All versions →")));
-      all.appendChild(el("span", "dl-arch muted", esc(t.downloadAllSub || "GitHub Releases")));
-      grid.appendChild(all);
-    }
   }
 
   function renderMilestones(t) {

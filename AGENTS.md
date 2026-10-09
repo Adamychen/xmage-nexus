@@ -335,11 +335,11 @@ game per test. Common libraries in `web/e2e/support/`
 (`frames.ts`, `start-game.ts`, `game-screen.ts`, `scene.ts`, `canvas.ts`,
 `fake-backend.ts`) and declarative scenarios for the FixtureServer in
 `web/fixtures/scenarios/` (mini-engine `humanGame.ts`). Tags by
-domain: `@spells`, `@targeting`, `@combat`, `@fullflow` (scripts
-`test:e2e:spells|targeting|combat|fullflow`). Every spec runs in fake
-(no stack, ~10 min for all 281) and can run in real; the nightly real-mode job
+domain: `@spells`, `@targeting`, `@combat`, `@fullflow`, `@board`, `@site` (scripts
+`test:e2e:spells|targeting|combat|fullflow|board|site`). Every spec runs in fake
+(no stack, ~9 min for all 312) and can run in real; the nightly real-mode job
 covers the five protocol-sensitive specs (`deckvalidation`, `multi-user`,
-`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all 281.
+`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all 312.
 When touching `e2e/support/` or the scenarios, run the full fake + real suite.
 **The helper does NOT answer the mulligan** (the web's auto-keep already does it;
 a second false breaks the test window).
