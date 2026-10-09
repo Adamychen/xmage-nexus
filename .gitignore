@@ -100,3 +100,7 @@ node_modules/.vite
 
 # player-submitted reports (Mage.Proxy/ReportSink): local data, never commit
 **/reports/
+
+# local RL bot experiment (python venv, model weights, card embeddings — 1.3 GB
+# of regenerable/local binaries, and nothing in it is part of the product)
+/rl/
