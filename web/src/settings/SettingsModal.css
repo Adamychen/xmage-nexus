@@ -1,7 +1,15 @@
 
 
 .dlg-panel.settings-modal {
-  width: min(760px, 94vw);
+  /* Ancho proporcional, igual que el alto ya es una parte de la pantalla
+     (`--dlg-max-h: 70vh`): 66 % del viewport, con suelo en los 760 px de siempre
+     (para que una ventana pequeña no reciba menos de lo que ya tenía) y techo en
+     1060 px (para que en un monitor grande las líneas de texto no estiren sin
+     límite). Medido con Chromium: 900 px de ventana → 760, 1280 → 845, 1600 →
+     1056, 2560 → 1060. Ojo: `vw` no descuenta el `zoom` que `uiScale` pone en la
+     raíz, así que esto no arregla el «a zoom 130 % en ventana de 900 el panel mide
+     988 px y desborda la ventana»; sigue abierto en ROADMAP §4.3. */
+  width: min(94vw, clamp(760px, 66vw, 1060px));
 }
 
 .settings-body {
@@ -242,13 +250,23 @@
 
 .settings-sound-card .fx-popover-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2h);
+  gap: var(--sp-2) var(--sp-2h);
+}
+
+/* El control segmentado conserva su ancho natural (`flex: none`): si no cabe
+   junto al texto baja a su propia línea. Sin esto el `flex-shrink` lo
+   aplastaba a 158 px, los tres botones (`white-space: nowrap`) seguían
+   midiendo 299 px y salían volando fuera de la tarjeta y del panel. */
+.settings-sound-card .fx-popover-row > .ui-tabs {
+  flex: none;
 }
 
 .settings-sound-card .fx-popover-text {
   display: flex;
+  flex: 1 1 200px;
   flex-direction: column;
   gap: var(--sp-0h);
   min-width: 0;
