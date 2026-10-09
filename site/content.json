@@ -4,7 +4,7 @@
     "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
     "version": "0.4.3",
     "repo": "Adamychen/xmage-nexus",
-    "playUrl": "http://practicing-scooby.tun.ply.gg:61100",
+    "playUrl": "https://velvet-acm-headed-arrested.trycloudflare.com",
     "stack": "XMage Server 1.4.62-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
