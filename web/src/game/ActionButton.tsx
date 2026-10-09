@@ -110,7 +110,10 @@ export default function ActionButton({
     modeIcon = 'swords'
   } else if (me?.hasPriority) {
     label = passLabel
-    sublabel = me.isActive ? t('game', 'turn') : t('game', 'priority')
+    // The sublabel is the only place that says whose turn it is. "Priority" on
+    // its own does not separate "I am playing" from "I am answering", which is
+    // exactly what the reporter could not tell apart (issue #12).
+    sublabel = me.isActive ? t('game', 'your_turn') : t('game', 'opponent_turn')
     modeClass = 'action-priority'
     modeIcon = 'play'
   } else if (control.priorityIsControlled) {

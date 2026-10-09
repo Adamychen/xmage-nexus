@@ -28,11 +28,30 @@
   box-shadow: 0 0 20px rgb(var(--warn-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 
-/* Turno activo (quién juega ahora): glow dorado estático, distinto del
-   anillo de prioridad (verde/naranja). Puede coexistir con has-priority. */
+/* Active turn (who is playing) and priority (who can act) are two channels and
+   have to be paintable at the same time. Turn used to claim the same two
+   properties as priority (`border-color` + `box-shadow`), so only one ever
+   reached the screen — and on the top bar `.opp.has-priority` (three classes)
+   also beat `.is-turn` (two) on specificity, so during the rival's turn the
+   border stayed the priority orange `rgba(245,165,36,.7)` (measured in real
+   Chromium). Fill and accent bar are a different property family, so both
+   channels show at once. */
 .player-info-bar.is-turn {
-  border-color: rgb(var(--gold-rgb) / 0.85);
-  box-shadow: 0 0 22px rgb(var(--gold-rgb) / 0.45), 0 8px 24px var(--shade-3);
+  background: linear-gradient(90deg, rgb(var(--gold-rgb) / 0.26) 0%, rgb(var(--gold-rgb) / 0.07) 58%, rgb(var(--ink-2-rgb) / 0.88) 100%);
+}
+
+/* What the eye catches without reading: a vertical bar on the left edge of the
+   info bar. `outline`/`box-shadow` are unusable here, they belong to the
+   priority channel. */
+.player-info-bar.is-turn::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  bottom: 5px;
+  width: 4px;
+  border-radius: var(--r-xs);
+  background: rgb(var(--gold-rgb) / 0.9);
 }
 
 /* Compact mode (half-card height) */

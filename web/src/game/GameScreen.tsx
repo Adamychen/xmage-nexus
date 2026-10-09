@@ -383,19 +383,19 @@ export default function GameScreen() {
       center={
         isPodLayout ? (
           <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
+        ) : topOpps.length > 1 ? (
+          <OpponentSwitcherBar
+            players={game?.players ?? []}
+            controlledId={me?.playerId}
+            selectedOppId={currentOpp?.playerId || ''}
+            onSelectOpponent={(id) => setSelectedOppId(id)}
+            activePlayerId={game?.activePlayerId ?? undefined}
+            targetIds={new Set(targetIds)}
+            onTargetClick={onTargetClick}
+            combat={game?.combat ?? []}
+          />
         ) : (
-          topOpps.length > 1 && (
-            <OpponentSwitcherBar
-              players={game?.players ?? []}
-              controlledId={me?.playerId}
-              selectedOppId={currentOpp?.playerId || ''}
-              onSelectOpponent={(id) => setSelectedOppId(id)}
-              activePlayerId={game?.activePlayerId ?? undefined}
-              targetIds={new Set(targetIds)}
-              onTargetClick={onTargetClick}
-              combat={game?.combat ?? []}
-            />
-          )
+          <TurnOrderRing lane players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
         )
       }
       right={

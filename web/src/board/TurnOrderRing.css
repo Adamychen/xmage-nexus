@@ -142,3 +142,36 @@
   color: var(--gold-300);
   text-shadow: 0 0 6px rgb(var(--gold-rgb) / 0.6);
 }
+
+/* The 1v1 walkway sits inside the 36px strip band, next to the phase badges:
+   one line, no life counter (both player bars already show it), and it gives
+   up width before it overflows the band. */
+.turn-order-ring.lane {
+  padding: var(--sp-0h) var(--sp-1h);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.turn-order-ring.lane .tor-seat {
+  min-width: 0;
+}
+
+.turn-order-ring.lane .tor-seat-name {
+  /* the server caps names at 14 chars, and the walkway is where you read who
+     is playing: a truncated name is the whole point lost */
+  max-width: 96px;
+}
+
+/* Narrow windows (or uiScale > 100%): the band gives the walkway less room
+   than it needs, so it degrades to the one thing that answers "who is
+   playing" — the active seat alone. Clipping the active chip is not an
+   option, it is the only chip carrying information. */
+@container strip (max-width: 320px) {
+  .turn-order-ring.lane .tor-seat:not(.is-active) {
+    display: none;
+  }
+
+  .turn-order-ring.lane .tor-arrow {
+    display: none;
+  }
+}

@@ -17,6 +17,9 @@
 .game-strip-center {
   flex: 1;
   min-width: 0;
+  /* size container: the walkway degrades with the room the band actually has,
+     not with the window width (uiScale zoom included) */
+  container: strip / inline-size;
   display: flex;
   align-items: center;
   justify-content: center;
