@@ -63,12 +63,16 @@ export function prepareDeckForXMage(
   if (deck.partnerCard && !sameCommanderKey(deck.partnerCard, deck.commanderCard)) {
     commanders.push(deck.partnerCard)
   }
-  if (commanders.length === 0 || !isCommanderFormat(deckType, gameType)) {
+  if (!isCommanderFormat(deckType, gameType)) {
     return normalized
+  }
+  if (commanders.length === 0) {
+    return normalized.sideboard.length > 2 ? { ...normalized, sideboard: [] } : normalized
   }
   return {
     ...normalized,
     cards: withCommanderFirst(normalized.cards, deck.commanderCard, deck.partnerCard),
+    sideboard: [],
     commanders,
   }
 }

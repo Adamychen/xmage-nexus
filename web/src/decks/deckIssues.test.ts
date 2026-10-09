@@ -164,7 +164,7 @@ describe('fetchFormatIssues (official XMage DeckValidator)', () => {
     // (DeckJson.parse); it must arrive in `commanders` exactly like in joinTable.
     expect(args.deck.commanders).toEqual([commander])
     expect(args.deck.cards[0]).toEqual(commander)
-    expect(args.deck.sideboard).toEqual([{ cardName: 'Negate', setCode: 'M21', cardNumber: '57', amount: 2 }])
+    expect(args.deck.sideboard).toEqual([])
   })
 
   it('formats without an XMage validator keep the local validation', async () => {

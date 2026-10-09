@@ -40,7 +40,11 @@ public final class DeckJson {
         deck.setAuthor(deckJson.has("author") ? deckJson.get("author").getAsString() : "");
         deck.setCards(parseCards(deckJson.getAsJsonArray("cards")));
         deck.setSideboard(parseCards(deckJson.getAsJsonArray("sideboard")));
-        for (DeckCardInfo commander : parseCards(deckJson.getAsJsonArray("commanders"))) {
+        List<DeckCardInfo> commanders = parseCards(deckJson.getAsJsonArray("commanders"));
+        if (!commanders.isEmpty()) {
+            deck.getSideboard().clear();
+        }
+        for (DeckCardInfo commander : commanders) {
             removeOne(deck.getCards(), commander);
             deck.getSideboard().add(new DeckCardInfo(
                     commander.getCardName(), commander.getCardNumber(), commander.getSetCode(), 1));

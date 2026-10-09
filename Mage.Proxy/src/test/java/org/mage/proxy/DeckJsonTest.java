@@ -77,4 +77,17 @@ class DeckJsonTest {
         assertEquals(1, deck.getSideboard().size());
         assertTrue(deck.getSideboard().stream().noneMatch(c -> c.getCardName().contains("Sidar")));
     }
+
+    @Test
+    void dropsSavedSideboardWhenCommandersAreDesignated() {
+        JsonObject json = new JsonObject();
+        json.add("cards", array(card("Forest", "LEA", "294", 98)));
+        json.add("sideboard", array(card("Baleful Strix", "ARB", "117", 1), card("Orcish Bowmasters", "LTR", "103", 1)));
+        json.add("commanders", array(card("Forest", "LEA", "294", 1)));
+
+        DeckCardLists deck = DeckJson.parse(json);
+
+        assertEquals(1, deck.getSideboard().size());
+        assertEquals("Forest", deck.getSideboard().get(0).getCardName());
+    }
 }

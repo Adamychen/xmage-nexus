@@ -61,4 +61,24 @@ describe('deckNormalize', () => {
     const freeform = prepareDeckForXMage({ name: 'D', cards: [forest, atraxa], sideboard: [], commanderCard: atraxa }, 'Variant Magic - Freeform', 'Two Player Duel')
     expect(freeform.commanders).toBeUndefined()
   })
+
+  it('prepareDeckForXMage no envía el sideboard guardado junto a los comandantes', () => {
+    const cmd = { cardName: 'Tana', setCode: 'C16', cardNumber: '56', amount: 1 }
+    const maybe = { cardName: 'Baleful Strix', setCode: 'ARB', cardNumber: '117', amount: 1 }
+    const out = prepareDeckForXMage({ name: 'D', cards: [cmd], sideboard: [maybe], commanderCard: cmd }, 'Variant Magic - Commander')
+    expect(out.sideboard).toEqual([])
+    expect(out.commanders).toEqual([cmd])
+  })
+
+  it('prepareDeckForXMage descarta un maybeboard grande en Commander sin comandante designado', () => {
+    const maybe = Array.from({ length: 15 }, (_, n) => ({ cardName: `Card ${n}`, setCode: 'ARB', cardNumber: String(n), amount: 1 }))
+    const out = prepareDeckForXMage({ name: 'D', cards: [], sideboard: maybe }, 'Variant Magic - Commander')
+    expect(out.sideboard).toEqual([])
+  })
+
+  it('prepareDeckForXMage conserva 1-2 cartas de sideboard (formato antiguo con comandante en el banquillo)', () => {
+    const cmd = { cardName: 'Tana', setCode: 'C16', cardNumber: '56', amount: 1 }
+    const out = prepareDeckForXMage({ name: 'D', cards: [], sideboard: [cmd] }, 'Variant Magic - Commander')
+    expect(out.sideboard).toEqual([cmd])
+  })
 })
