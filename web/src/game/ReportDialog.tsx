@@ -87,7 +87,7 @@ export default function ReportDialog({ initialText = '', kind = 'bug', onClose }
       testId="report-dialog"
       legacyBackdropClass="feedback-backdrop report-backdrop"
       legacyPanelClass="report-dialog"
-      kickerIcon="clipboard"
+      kickerIcon="bug"
       kickerLabel={t('system', 'report_kicker')}
       title={t('system', 'report_title')}
       topRight={<CloseButton variant="plain" size="md" onClick={onClose} />}

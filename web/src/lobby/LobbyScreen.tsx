@@ -31,6 +31,7 @@ import { extractLobbyUsers, getMyActiveTables, withTimeout, type LobbyTab } from
 import { getIgnoredUsers } from './ignoreList'
 import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
+import ReportDialog from '../game/ReportDialog'
 import { useNewsBadge } from '../system/useNewsBadge'
 import './LobbyScreen.css'
 import './TournamentBracket.css'
@@ -52,6 +53,7 @@ export default function LobbyScreen() {
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
@@ -151,6 +153,7 @@ export default function LobbyScreen() {
         confirmDisconnect={confirmDisconnect}
         onConfirmDisconnect={setConfirmDisconnect}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenReport={() => setShowReport(true)}
         onOpenLeaderboard={openLeaderboard}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -460,6 +463,9 @@ export default function LobbyScreen() {
       )}
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+      {showReport && (
+        <ReportDialog kind="feedback" onClose={() => setShowReport(false)} />
       )}
       {showAbout && (
         <AboutModal

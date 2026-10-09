@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-  ArrowLeftRight, Armchair, AtSign, Award, Ban, Bell, BookOpen, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
+  ArrowLeftRight, Armchair, AtSign, Award, Ban, Bell, BookOpen, Bug, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
   Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
   Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
   Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
@@ -93,6 +93,7 @@ export type IconName =
   | 'chair'
   | 'key'
   | 'clipboard'
+  | 'bug'
   | 'map'
   | 'save'
   | 'square'
@@ -182,6 +183,7 @@ const LUCIDE_ICONS: Record<string, LucideIcon> = {
   chair: Armchair,
   key: Key,
   clipboard: Clipboard,
+  bug: Bug,
   map: Map,
   save: Save,
   square: Square,

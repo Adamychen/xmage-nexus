@@ -19,6 +19,7 @@ interface Props {
   confirmDisconnect: boolean
   onConfirmDisconnect: (v: boolean) => void
   onOpenSettings: () => void
+  onOpenReport: () => void
   onOpenLeaderboard: (target?: string, tab?: LeaderboardTab) => void
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
@@ -32,7 +33,7 @@ interface Props {
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
-  onOpenSettings, onOpenLeaderboard, activeTab, onTabChange,
+  onOpenSettings, onOpenReport, onOpenLeaderboard, activeTab, onTabChange,
   tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onOpenAbout, hasNews,
 }: Props) {
   const { t } = useTranslation()
@@ -125,6 +126,10 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
+        <IconButton label={t('system', 'report_title')} icon="bug" size="lg"
+          className="lobby-appearance-btn"
+          onClick={onOpenReport}
+          data-testid="open-report" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}

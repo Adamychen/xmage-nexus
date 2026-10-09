@@ -269,7 +269,7 @@ export default function GameMenu() {
                 close()
               }}
             >
-              <Icon name="clipboard" size={13} /> {t('system', 'report_title')}
+              <Icon name="bug" size={13} /> {t('system', 'report_title')}
             </MenuItem>
             <MenuItem
               data-testid="game-menu-fullscreen"
