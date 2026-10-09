@@ -27,6 +27,13 @@ test.describe('Report dialog from the lobby', () => {
 
       await page.getByTestId('open-report').click()
       await expect(page.getByTestId('report-dialog')).toBeVisible()
+      // dialogIn scales 0.96->1 over 0.18s: measuring before it settles
+      // measures the animation, not the dialog (900px read 864 mid-scale)
+      await page.waitForTimeout(400)
+      const panel = await page.getByTestId('report-dialog').boundingBox()
+      // 1.5x the 600px md default at zoom 1 (the test clears localStorage);
+      // the md default measures 600, so this fails on any shrink back
+      expect(panel?.width).toBeGreaterThanOrEqual(870)
       await expect(page.getByTestId('report-tab-feedback')).toHaveAttribute('aria-selected', 'true')
 
       await page.getByTestId('report-text').fill('the deck list is hard to read at 100% zoom')

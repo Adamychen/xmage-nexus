@@ -1,7 +1,22 @@
+/* 1.5x the md default (600px) and capped by vw like every other dialog
+   size; the textarea is the point of this dialog, so the body grows with
+   the panel instead of leaving dead space. */
+.dlg-panel.report-dialog {
+  width: min(900px, 94vw);
+}
+
 .report-body {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2h);
+}
+
+.report-textarea {
+  min-height: 150px;
+}
+
+.report-dump {
+  min-height: 176px;
 }
 
 .report-field {
