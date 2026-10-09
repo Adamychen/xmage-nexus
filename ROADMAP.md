@@ -274,6 +274,17 @@ Found while removing `any` from the web client: the contract schema (`web/schema
 | RESOLVED 2026-10-06 — copies on the stack were only recognised by name | The `[Copia N]` / `[Copy` names only ever existed in fixtures; the server sends the card's own name. For a spell, `CardView.originalIsCopy` is `Spell.isCopy()` (`setOriginalValues` runs on `SpellAbility.getCharacteristics`, which returns the stack `Spell` itself; upstream code, not a fork patch), so `isCopyCard` reads it and the storm fixture marks its copies that way |
 | RESOLVED — two views of different games were diffed into animations | `useGameTransitions` compared `GameView.gameId`/`matchId`, which a `GameView` does not carry, so the guard never fired; it now takes the store's `gameId`, recorded with the view it came with (`START_GAME` switches the id before the new game's first view) |
 
+### 4.9 Report pipeline (built 2026-10-09) — what is still open
+
+Design and rejected alternatives in `docs/plans/2026-10-09-report-pipeline-design.md`. Built: capture (`web/src/system/report.ts` + `errorLog.ts`) → `report_issue` over the WebSocket that is already open → journal line + `reports/<date>/<id>.json` on the machine running the proxy → `scripts/issue-from-report.mjs` (dry-run unless `--yes`) → GitHub issue. Guarded by `ReportSinkTest`, `report.test.ts`, `ReportDialog.test.tsx` and `scripts/verify-report.mjs` (in the `verify` layer). Nothing publishes by itself and no report leaves a device without a click.
+
+| What | Why |
+|---|---|
+| Desktop cannot deliver a report | Desktop dials its **own** local proxy (`launcher/src-tauri/src/main.rs` starts it; `web/src/state/gateway.ts` sends the target server *inside* `connect`), so a desktop report lands in `%LOCALAPPDATA%\today.xmage.nexus` and stops — even when playing on `beta.xmage.today`. The crash case that started all of this (issue #12) has no proxy at all. Open: package it well (bundle + log tails) and hand it to the player, or upload it from the launcher itself (Rust is not bound by the webview CSP), which needs a receiver and abuse limits |
+| No reader for what lands | `xmage-status` has no Reports panel yet; today you read them with `node scripts/issue-from-report.mjs --list --host <user@host>`. Grouping by fingerprint is the whole point: 40 reports of one bug must look like one row |
+| The tunnels on the host are not what the docs describe | Measured 2026-10-09: `playit.service` is still `active` and took three real connections that morning, while the public path is three **hand-started** `cloudflared tunnel --url` quick tunnels (8788 web, 8787 ws, 8797 xdhs) with rotating `trycloudflare.com` hostnames, no systemd unit and no script. Those hostnames are baked in `web/.env.production.local` and in `--allowedOrigins` of both proxy services, so a reboot or a dead tunnel takes the client down with it. Choosing quick-vs-named is the decision that decides how much of `docs/deploy-playit.md` and `ops/status` has to be rewritten |
+| `xmage-status` counts visitors from the playit log | 29 places in `ops/status/server.mjs` parse `/var/log/playit/playit.log` because tunnelled players look like localhost. Cloudflare passes the real client IP in `CF-Connecting-IP`/`X-Forwarded-For` (the proxy already reads `X-Forwarded-For` in `Gateway.ipOf`, and today's journal lines carry real IPs), so retiring playit means retargeting that data source, not just deleting its lines |
+
 ---
 
 ## 5. Phase Plan (archived)

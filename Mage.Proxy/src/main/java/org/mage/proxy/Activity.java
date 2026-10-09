@@ -16,7 +16,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Operational activity log: one greppable line per event on stdout (docker logs)
  * plus an in-memory ring buffer and per-user stats for the /admin/status endpoint.
- * Never records passwords, chat text or deck contents.
+ * Never records passwords, chat text or deck contents. The one free-text field it does carry is
+ * a truncated excerpt of a player's own report, because "the board looked wrong" is not
+ * triageable; the payload itself goes to a file, not to the log.
  */
 public final class Activity {
 
@@ -25,7 +27,9 @@ public final class Activity {
             "ping", "sendPlayerAction", "sendPlayerUUID", "sendPlayerBoolean", "sendPlayerInteger",
             "sendPlayerString", "sendPlayerManaType", "getTables", "getRoomUsers", "getRoomChatId",
             "getFinishedMatches", "getServerMessages", "joinChat", "leaveChat", "getGameChatId",
-            "getTableChatId", "sendCardMark", "setBoosterLoaded", "replayNext", "replayPrevious"));
+            "getTableChatId", "sendCardMark", "setBoosterLoaded", "replayNext", "replayPrevious",
+            // a report gets its own line from report(), with the reference and the excerpt in it
+            "report_issue"));
     private static final Set<String> SAFE_ARGS = new HashSet<>(Arrays.asList(
             "gameType", "tableId", "gameId", "tournamentId", "playerType", "deckName", "format", "host", "port"));
 
@@ -122,6 +126,11 @@ public final class Activity {
 
     static void game(String event, String user, String detail) {
         emit(event, user, null, detail);
+    }
+
+    /** One line per player-submitted report, stored or refused. See {@link ReportSink}. */
+    public static void report(String user, String ip, String detail) {
+        emit("report", user, ip, detail);
     }
 
     public static void sessionEnd(String user, String reason) {

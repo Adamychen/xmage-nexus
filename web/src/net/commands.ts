@@ -1,5 +1,6 @@
 import { Gateway } from './Gateway'
 import type { DeckJson } from './types'
+import type { DraftReport } from '../system/report'
 
 /** Tipo de juego y tipo de jugador reales del servidor (getGameTypes/getPlayerTypes). */
 export interface GameTypeInfo {
@@ -417,4 +418,21 @@ export async function watchTournamentTable(tableId: string, roomId?: string) {
 export async function getTournament(tournamentId: string) {
   const res = await getGateway().send('getTournament', { tournamentId })
   return res.ok ? res.data : null
+}
+
+/** The proxy's answer to a report: whether it was stored, and the reference if it was. */
+export interface ReportAck {
+  stored?: boolean
+  id?: string
+  reason?: string
+}
+
+/**
+ * A player-submitted report. It rides the same WebSocket as the game because that is the one
+ * channel both front ends have (the desktop CSP allows ws:, not an extra https host), and the
+ * payload is already shrunk to what the proxy accepts.
+ */
+export async function sendReport(draft: DraftReport): Promise<{ ok: boolean; ack: ReportAck; error?: string }> {
+  const res = await getGateway().send<ReportAck>('report_issue', { ...draft.wire })
+  return { ok: res.ok, ack: res.data ?? {}, error: res.error }
 }

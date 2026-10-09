@@ -322,6 +322,12 @@ empty.
 | `updatePreferences` | `{phases?, confirmEmptyManaPool?}` | Sync user prefs to server (`UserData`, applied live via in-place `update()`): phase-stop matrix and/or empty-mana-pool pass confirm (`HumanPlayer.passWithManaPoolCheck`) |
 | `cheatSetup` | `{gameId, playerId, zones:{hand?, battlefield?, library?, graveyard?, exile?}}` | **Test only**: place named cards into zones (P1; requires fork server with `testMode=true`, else `ok:false`; unknown card/zone/player → `ok:false`). Call once the game has processed ≥1 normal action (e.g. after the first land drop) — on the very first priority of turn 1 it freezes the game loop (runs off the game thread while still starting up) |
 
+### Reports
+
+| Action | Args | Description |
+|---|---|---|
+| `report_issue` | `{kind, fingerprint, text, viewport, errors, bundle}` | Player-submitted report. Needs an authorized session (like every non-`connect` action). The payload is stored verbatim under `--reportsDir` (`reports/<date>/<id>.json`) and one line goes to the activity log (`report ref=… kind=… bytes=… turn=… step=… fp="…" text="…"`); the `text` in the log is squeezed to 120 single-line characters. Caps: 96 KB per report, 5 reports per session, one per 30 s, and a repeated `fingerprint` inside a session counts as a duplicate. A refused report still answers `ok:true` with `stored:false` and the `reason`, except `too large`, which answers an error (that one is a client bug). Nothing is forwarded to GitHub: `scripts/issue-from-report.mjs` is how a report becomes an issue, run by a person. Verified end to end by `scripts/verify-report.mjs` (the `verify` layer). See `docs/plans/2026-10-09-report-pipeline-design.md`. |
+
 ### Chat
 
 | Action | Args | Description |

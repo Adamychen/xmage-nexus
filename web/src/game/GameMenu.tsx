@@ -23,6 +23,7 @@ import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
 import { clearChoiceMemory, removeChoiceMemory } from './choiceMemory'
 import SettingsModal from '../settings/SettingsModal'
 import HelpWikiModal from './HelpWikiModal'
+import ReportDialog from './ReportDialog'
 import { confirmDialog } from '../ui/confirmDialog'
 import './GameMenu.css'
 
@@ -34,6 +35,7 @@ export default function GameMenu() {
   const [open, setOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   const me = game?.players?.find((p) => p.controlled)
@@ -260,6 +262,16 @@ export default function GameMenu() {
               <Icon name="bookOpen" size={13} /> {t('game', 'help_wiki')}
             </MenuItem>
             <MenuItem
+              data-testid="game-menu-report"
+              title={t('system', 'report_title')}
+              onClick={() => {
+                setShowReport(true)
+                close()
+              }}
+            >
+              <Icon name="clipboard" size={13} /> {t('system', 'report_title')}
+            </MenuItem>
+            <MenuItem
               data-testid="game-menu-fullscreen"
               title={isFullscreenActive ? t('game', 'exit_fullscreen') : t('game', 'enter_fullscreen')}
               onClick={() => void toggleFullscreen()}
@@ -271,6 +283,7 @@ export default function GameMenu() {
       )}
       {showSettings && <SettingsModal initialSection="gameplay" onClose={() => setShowSettings(false)} />}
       {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
+      {showReport && <ReportDialog kind="bug" onClose={() => setShowReport(false)} />}
     </div>
   )
 }

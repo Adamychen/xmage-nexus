@@ -97,3 +97,6 @@ node_modules/.vite
 /web/fixtures/recorded/*.events.jsonl
 .aider*
 /web/.run
+
+# player-submitted reports (Mage.Proxy/ReportSink): local data, never commit
+**/reports/

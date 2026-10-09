@@ -16,6 +16,7 @@ import mage.view.GameEndView;
 import mage.view.GameView;
 import org.java_websocket.WebSocket;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -79,6 +80,8 @@ public class ProxyClient implements MageClient, CommandContext {
 
     private final SessionGames games = new SessionGames();
     private final GameActivity gameActivity = new GameActivity();
+    /** Per-session limits of the report channel, so one player cannot fill the sink. */
+    private final ReportSink.Quota reports;
     /** Latest state and open prompt per game (replayed when a connection joins the game). */
     private final ReplayCache replay = new ReplayCache();
     private final LobbyPublisher lobby;
@@ -137,6 +140,7 @@ public class ProxyClient implements MageClient, CommandContext {
     public ProxyClient(Config config, Gateway gateway) {
         this.config = config;
         this.gateway = gateway;
+        this.reports = new ReportSink.Quota(config);
         this.session = new SessionImpl(this);
         this.connections = new AuthorizedConnections(gateway);
         this.lobby = new LobbyPublisher(connections::broadcastUnnumbered);
@@ -915,6 +919,10 @@ public class ProxyClient implements MageClient, CommandContext {
                     gateway.send(conn, ProxyProtocol.resultJson(action, requestId, true, null, "pong"));
                     break;
                 }
+                case "report_issue": {
+                    handleReport(conn, requestId, args);
+                    break;
+                }
                 default: {
                     boolean handled = InfoCommands.handle(action, conn, requestId, args, this)
                             || TableCommands.handle(action, conn, requestId, args, this)
@@ -954,6 +962,86 @@ public class ProxyClient implements MageClient, CommandContext {
             }
             gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, code, msg));
         }
+    }
+
+    /**
+     * A player-submitted report: the only channel from a client to the host that is not about
+     * playing. Capped and rate limited, because any logged-in player can reach it and an
+     * unbounded one is a spam relay. A report that cannot be stored still answers ok - the
+     * alternative is that telling us about a problem costs the player an error message - except
+     * when the payload is oversized, which is a client bug and has to stay visible.
+     */
+    private void handleReport(WebSocket conn, String requestId, JsonObject args) throws IOException {
+        String kind = JsonArgs.str(args, "kind", "feedback");
+        if (!"bug".equals(kind) && !"feedback".equals(kind)) {
+            kind = "feedback";
+        }
+        String text = JsonArgs.str(args, "text", "");
+        if (text.length() > ReportSink.MAX_TEXT_CHARS) {
+            text = text.substring(0, ReportSink.MAX_TEXT_CHARS);
+        }
+        String fingerprint = ReportSink.excerpt(JsonArgs.str(args, "fingerprint", ""), 80);
+        JsonElement bundle = args.get("bundle");
+        // The whole command goes to the file, not just the bundle: the errors and the viewport sit
+        // next to it on the wire, and they are the half a maintainer reads first.
+        String payload = args.toString();
+        String ip = gateway.ipOf(conn);
+
+        ReportSink.Result result = ReportSink.store(config, reports, System.currentTimeMillis(),
+                activityUser, ip, kind, text, fingerprint, payload);
+
+        StringBuilder detail = new StringBuilder();
+        if (result.stored) {
+            detail.append("ref=").append(result.id).append(' ');
+        } else {
+            detail.append("refused=").append(result.reason).append(' ');
+        }
+        detail.append("kind=").append(kind).append(" bytes=").append(result.bytes);
+        String turn = bundleField(bundle, "game", "turn");
+        String step = bundleField(bundle, "game", "step");
+        if (!turn.isEmpty() || !step.isEmpty()) {
+            detail.append(" turn=").append(turn).append(" step=").append(step);
+        }
+        if (!fingerprint.isEmpty()) {
+            detail.append(" fp=\"").append(fingerprint).append('"');
+        }
+        String excerpt = ReportSink.excerpt(text, ReportSink.EXCERPT_CHARS);
+        if (!excerpt.isEmpty()) {
+            detail.append(" text=\"").append(excerpt).append('"');
+        }
+        if (result.stored) {
+            detail.append(" file=").append(result.path);
+        }
+        Activity.report(activityUser, ip, detail.toString());
+
+        if ("too-large".equals(result.reason)) {
+            gateway.send(conn, ProxyProtocol.resultJson("report_issue", requestId, false,
+                    ProxyProtocol.ERR_INVALID_ARGUMENT,
+                    "report too large (" + result.bytes + " bytes, limit " + config.getReportMaxFileBytes() + ")"));
+            return;
+        }
+        JsonObject data = new JsonObject();
+        data.addProperty("stored", result.stored);
+        if (result.id != null) {
+            data.addProperty("id", result.id);
+        }
+        if (result.reason != null) {
+            data.addProperty("reason", result.reason);
+        }
+        gateway.send(conn, ProxyProtocol.resultJson("report_issue", requestId, true, null, data));
+    }
+
+    /** A scalar field of the submitted bundle, for the journal line. Never throws on shapes. */
+    private static String bundleField(JsonElement bundle, String object, String field) {
+        if (bundle == null || !bundle.isJsonObject()) {
+            return "";
+        }
+        JsonElement holder = bundle.getAsJsonObject().get(object);
+        if (holder == null || !holder.isJsonObject()) {
+            return "";
+        }
+        JsonElement value = holder.getAsJsonObject().get(field);
+        return value == null || !value.isJsonPrimitive() ? "" : value.getAsString();
     }
 
     static boolean requiresGameId(String action) {

@@ -192,6 +192,18 @@ select option { background: var(--ink-2); color: var(--fg-1); }
   padding: var(--sp-2h);
   color: var(--bad);
 }
+.crash-actions {
+  display: flex;
+  gap: var(--sp-1h);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.crash-hint {
+  max-width: 520px;
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
 
 .reconnect-banner {
   position: fixed;

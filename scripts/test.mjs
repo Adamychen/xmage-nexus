@@ -32,6 +32,9 @@ const VERIFY_SCRIPTS = [
   'verify-rollback-vote.mjs',
   'verify-swiss.mjs',
   'verify-tournament-watch.mjs',
+  // last: it only logs in and sends reports, but it writes into Mage.Proxy/reports, so keep it
+  // after the scripts that need a clean session state
+  'verify-report.mjs',
 ]
 
 const LAYERS = [

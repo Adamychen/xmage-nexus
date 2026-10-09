@@ -143,6 +143,48 @@ public class Config {
     }
 
     /**
+     * Player-submitted reports (see {@link ReportSink}). On by default: a sink nobody has to
+     * remember to switch on is the only kind that collects anything. Bound by count, total bytes
+     * and age so an unattended proxy cannot fill the disk it plays the games from.
+     */
+    public static final String DEFAULT_REPORTS_DIR = "reports";
+    public static final int DEFAULT_REPORT_MAX_BYTES = 64 * 1024 * 1024;
+    /** Per-report cap. A GAME_UPDATE is 200-800 KB, which is why the client trims before sending. */
+    public static final int DEFAULT_REPORT_MAX_FILE_BYTES = 96 * 1024;
+    public static final int DEFAULT_REPORT_MAX_FILES = 500;
+    public static final int DEFAULT_REPORT_MAX_AGE_DAYS = 14;
+    public static final int DEFAULT_REPORT_QUOTA_COUNT = 5;
+    public static final int DEFAULT_REPORT_QUOTA_INTERVAL_SECS = 30;
+
+    public String getReportsDir() {
+        return get("reportsDir", DEFAULT_REPORTS_DIR);
+    }
+
+    public int getReportMaxBytes() {
+        return getInt("reportMaxBytes", DEFAULT_REPORT_MAX_BYTES);
+    }
+
+    public int getReportMaxFileBytes() {
+        return getInt("reportMaxFileBytes", DEFAULT_REPORT_MAX_FILE_BYTES);
+    }
+
+    public int getReportMaxFiles() {
+        return getInt("reportMaxFiles", DEFAULT_REPORT_MAX_FILES);
+    }
+
+    public int getReportMaxAgeDays() {
+        return Math.max(1, getInt("reportMaxAgeDays", DEFAULT_REPORT_MAX_AGE_DAYS));
+    }
+
+    public int getReportQuotaCount() {
+        return Math.max(1, getInt("reportQuotaCount", DEFAULT_REPORT_QUOTA_COUNT));
+    }
+
+    public long getReportQuotaIntervalMillis() {
+        return Math.max(1000L, getInt("reportQuotaIntervalSecs", DEFAULT_REPORT_QUOTA_INTERVAL_SECS) * 1000L);
+    }
+
+    /**
      * Grace period when the last page announced it was closing (tab closed, navigated away):
      * a reload comes back within seconds, a player who left keeps the opponent waiting only this
      * long. A dropped connection (no announcement) keeps the full {@link #getGraceSecs()}.

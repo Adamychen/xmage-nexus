@@ -60,6 +60,8 @@ export interface FakeConn {
 }
 
 export interface Scenario {
+  /** Informes `report_issue` recibidos durante el escenario. */
+  receivedReports?: { kind: string; args: Record<string, unknown> }[]
   /** Handler por acción recibida del cliente. Si no llama a ok/fail, el core
    *  responde ok con el default (ver DEFAULT_RESULTS). */
   onAction?(
@@ -192,8 +194,11 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
   const getGv = opts.getGameView ?? (() => opts.gameView as GameView)
   const selectMessage = opts.selectMessage ?? 'Main 1: Cast spells or activate abilities'
   let activeConn: FakeConn | null = null
+  /** Informes recibidos, para que un test pueda afirmar sobre lo que el cliente mandó. */
+  const receivedReports: { kind: string; args: Record<string, unknown> }[] = []
 
   return {
+    receivedReports,
     onConnect: (conn) => {
       activeConn = conn
       conn.raw({ type: 'connected', message: 'Proxy ready.' })
@@ -345,6 +350,12 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           if (text && scopeChatId) {
             conn.broadcast('CHATMESSAGE', { chatId: scopeChatId, username: conn.username ?? 'mesa-rival', message: text, time: Date.now() }, scopeChatId)
           }
+          return
+        }
+        case 'report_issue': {
+          // El proxy falso no guarda nada: la respuesta es lo que prueba el diálogo de informes.
+          receivedReports.push({ kind: String((args as Record<string, unknown>).kind ?? ''), args })
+          conn.ok(requestId, action, { stored: true, id: `fake-report-${receivedReports.length}` })
           return
         }
         default:
