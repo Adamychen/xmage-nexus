@@ -79,9 +79,7 @@ function entries(views: InfoWindowViews): InfoWindow[] {
  *  the Mind Sculptor's "Put that card on the bottom?") arrives with them empty:
  *  like the desktop `CardInfoWindowDialog`, those windows open when an entry
  *  appears or changes and stay until the user closes them. Companion windows
- *  mirror the view (the desktop closes them once the companion leaves). The
- *  any-time top-card peek never opens one: it lives next to the library
- *  (`topCardPeek`), since it re-appears on every effect pass.
+ *  mirror the view (the desktop closes them once the companion leaves).
  *
  *  `becamePlayable` carries the ids that just entered `canPlayObjects`: a
  *  companion the user dismissed at game start must resurface when its {3}
