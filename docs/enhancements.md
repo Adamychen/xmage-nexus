@@ -25,7 +25,7 @@
 
 ## 1. Asistentes de Partida y Calidad de Vida (In-Game Companions)
 
-Inspirado en herramientas como *17Lands*, *Untap Companion* o *MTG Arena Tool*. El cliente oficial de XMage requiere memorizar la lista o consultar ventanas externas; Nexus puede ofrecer asistentes transparentes en tiempo real.
+Inspirado en herramientas como *Untap Companion* o *MTG Arena Tool*. El cliente oficial de XMage requiere memorizar la lista o consultar ventanas externas; Nexus puede ofrecer asistentes transparentes en tiempo real.
 
 ### 1.1 In-Game Deck Tracker (Visor de Biblioteca Restante)
 > ✅ **Implementado** — `game/DeckTrackerPanel.tsx` + `game/deckTracker.ts` (biblioteca restante, orden por CMC/nombre/copias/probabilidad de robo y barra de distribución tierras/criaturas).
