@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { getState, listeners } from '../state/state'
 import type { CardView, RevealedView } from '../net/types'
+import { TOP_CARD_PEEK_NAME } from './topCardPeek'
 
 /** The `t(category, key, params)` overload, so this module needs no runtime import of i18n. */
 type Translate = (category: string, key: string, params?: Record<string, string | number>) => string
@@ -62,6 +63,7 @@ function entries(views: InfoWindowViews): InfoWindow[] {
     (list ?? []).flatMap((v) => {
       const cards = (v.cards ?? {}) as Record<string, CardView>
       if (Object.keys(cards).length === 0) return []
+      if (kind === 'lookedAt' && v.name === TOP_CARD_PEEK_NAME) return []
       return [{ key: `${kind}:${v.name}`, kind, name: v.name, cards }]
     })
   return [
@@ -77,7 +79,9 @@ function entries(views: InfoWindowViews): InfoWindow[] {
  *  the Mind Sculptor's "Put that card on the bottom?") arrives with them empty:
  *  like the desktop `CardInfoWindowDialog`, those windows open when an entry
  *  appears or changes and stay until the user closes them. Companion windows
- *  mirror the view (the desktop closes them once the companion leaves).
+ *  mirror the view (the desktop closes them once the companion leaves). The
+ *  any-time top-card peek never opens one: it lives next to the library
+ *  (`topCardPeek`), since it re-appears on every effect pass.
  *
  *  `becamePlayable` carries the ids that just entered `canPlayObjects`: a
  *  companion the user dismissed at game start must resurface when its {3}
