@@ -20,6 +20,10 @@ final class TableCommands {
         switch (action) {
             case "createTable": {
                 long start = System.currentTimeMillis();
+                if (!ctx.simEnabled() && MatchOptionsParser.hasSimSeat(args)) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_INVALID_ARGUMENT, "SIM seats are disabled on this proxy (dev only, start it with --sim on)"));
+                    return true;
+                }
                 MatchOptions options = MatchOptionsParser.parseMatchOptions(args);
                 UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
                 Object result = ctx.session().createTable(roomId, options);

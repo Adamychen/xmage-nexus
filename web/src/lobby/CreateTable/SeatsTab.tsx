@@ -3,7 +3,7 @@ import ChipButton from '../../ui/ChipButton'
 import Chip from '../../ui/Chip'
 import Icon from '../../ui/Icon'
 import { deckRef } from '../decks'
-import { HUMAN_SEAT, SIM_SEAT, isHumanSeatType, isSimSeatType, seatTypeLabel } from './constants'
+import { HUMAN_SEAT, isHumanSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
 import Button from '../../ui/Button'
@@ -103,7 +103,6 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
                     <span className="seat-title">{t('lobby','create_seat_number',{num:idx+2})} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
                     <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} className="create-seat-select create-seat-select--type">
                       <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT, t)}</option>
-                      <option value={SIM_SEAT}>{seatTypeLabel(SIM_SEAT, t)}</option>
                       {form.playerTypes.map((pt) => (
                         <option key={pt} value={pt}>{seatTypeLabel(pt, t)}</option>
                       ))}
@@ -142,7 +141,7 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
                       </>
                     )
                   })()}
-                  {!isSimSeatType(cfg.type) && !isHumanSeatType(cfg.type) && <span className="wizard-hint-box">{t('lobby','create_seat_bot_internal',{type:seatTypeLabel(cfg.type, t)})}</span>}
+                  {!isHumanSeatType(cfg.type) && <span className="wizard-hint-box">{t('lobby','create_seat_bot_internal',{type:seatTypeLabel(cfg.type, t)})}</span>}
                 </div>
               ))}
             </div>
@@ -158,7 +157,6 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
                   form.applySeatTypeToAll(HUMAN_SEAT)
                 }}
                 ><Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}</ChipButton>
-                <ChipButton pill active={form.playerTypesSel.includes(SIM_SEAT)} onClick={() => form.toggleAi(SIM_SEAT)}><Icon name="bot" size={12} /> SIM</ChipButton>
                 {form.playerTypes.map((pt) => (
                   <ChipButton
                     pill
@@ -170,15 +168,6 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
                   >{seatTypeLabel(pt, t)}</ChipButton>
                 ))}
               </div>
-            </Field>
-            <Field className="create-seats-sim-deck" label={t('lobby','create_sim_deck_global_shortcut')}>
-              <select value={form.simDeck ? deckRef(form.simDeck) : ''} onChange={(e) => form.selectGlobalSimDeck(e.target.value)} disabled={form.availableDecks.length === 0}>
-                {form.availableDecks.map((d) => (
-                  <option key={deckRef(d)} value={deckRef(d)}>
-                    {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)} {t('decks','total_cards')})
-                  </option>
-                ))}
-              </select>
             </Field>
           </div>
         </div>

@@ -86,6 +86,19 @@ final class MatchOptionsParser {
         return options;
     }
 
+    /** True when the requested seat list contains the dev-only "SIM" bot seat. */
+    static boolean hasSimSeat(JsonObject args) {
+        if (!args.has("playerTypes") || !args.get("playerTypes").isJsonArray()) {
+            return false;
+        }
+        for (JsonElement e : args.getAsJsonArray("playerTypes")) {
+            if (e.isJsonPrimitive() && "SIM".equalsIgnoreCase(e.getAsString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Campos de MatchOptions compartidos por mesa y torneo. */
     static void applyMatchOptions(JsonObject args, MatchOptions options) {
         options.setDeckType(JsonArgs.str(args, "deckType", ""));

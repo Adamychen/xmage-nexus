@@ -9,10 +9,16 @@ description: Contexto completo de los E2E del Mage con oponentes simulados (Sim)
 
 1. **Bot Sim en el proxy** (`Mage.Proxy/src/main/java/org/mage/proxy/SimPlayer.java`):
    Oponente determinista con su PROPIA sesión de servidor (el servidor oficial ve un asiento
-   humano normal). El web pide asientos `SIM` en `createTable` (`playerTypes: ['HUMAN','SIM']`),
-   el proxy los convierte a `HUMAN` para el servidor y une un `SimPlayer` por asiento con su
-   propia conexión. Mazos por asiento vía `simDecks` (array de decks en createTable); por defecto
-   solo tierras. Reglas del bot: jugar 1 tierra/turno en su main phase; lanzar el primer
+   humano normal). **Dev-only (2026-10-10)**: the proxy runs it only with `--sim on` (passed by
+   `scripts/dev.mjs`; Docker/bundle/launcher ship it OFF and also reject tables containing
+   `"SIM"`). The client no longer requests SIM seats: client-side bot seats use the server's
+   native AI (`COMPUTER_MAD`/`COMPUTER_MONTE_CARLO`/`COMPUTER_DRAFT_BOT`), and in real-backend
+   E2E the helper (`support/start-game.ts`) opts the bot seat into the Mad AI. The `SIM` seat
+   survives ONLY through dev channels: FakeServer (fixtures), `wshelper`, `verify/*`,
+   `record.mjs`, `fuzz.mjs` (they send `playerTypes: ['HUMAN','SIM']` + `simDecks` over raw WS).
+   When SIM runs, the proxy converts the seat to `HUMAN` for the server and joins a
+   `SimPlayer` per seat with its own connection. Mazos por asiento vía `simDecks` (array
+   de decks en createTable); por defecto solo tierras. Reglas del bot: jugar 1 tierra/turno en su main phase; lanzar el primer
    criatura/instantáneo/conjuro **pagable en COLOR** apuntando al oponente; atacar siempre
    ("All attack" = `sendPlayerString(gameId,"special")` en DECLARE_ATTACKERS con opción
    `specialButton`); bloquear siempre (1 bloqueador por select de DECLARE_BLOCKERS); mulligan =

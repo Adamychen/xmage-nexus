@@ -205,6 +205,16 @@ public class Config {
 
     public static final int DEFAULT_RELINK_SECS = 600;
 
+    /**
+     * Proxy-side SIM bots (the "SIM" seat type and the roster restore). Development and test
+     * harness only: release deployments ship with it OFF, the dev stack (scripts/dev.mjs)
+     * opts in with "--sim on". Server-native AI seats (COMPUTER_*) run inside the XMage
+     * server and are not affected by this flag.
+     */
+    public boolean isSimEnabled() {
+        return "on".equalsIgnoreCase(get("sim", "off"));
+    }
+
     /** File that keeps the playing SIM seats across proxy restarts ("none" disables it). */
     public String getSimRosterPath() {
         String raw = get("simRoster", "");

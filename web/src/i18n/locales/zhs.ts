@@ -315,7 +315,6 @@ export const zhs: TranslationSchema = {
     create_seat_bot_internal: '机器人 {type} — 使用服务器内置套牌',
     create_seats_apply_all_shortcut: '快捷操作：应用至所有席位',
     create_seat_human_short: '玩家',
-    create_sim_deck_global_shortcut: 'SIM 通用套牌（快捷配置）',
     create_seat_human_waiting_label: '玩家 — 等待对手',
     create_seat_sim: 'SIM',
     create_seat_ai_mad: 'Mad AI',

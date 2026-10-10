@@ -315,7 +315,6 @@ export const ja: TranslationSchema = {
     create_seat_bot_internal: 'Bot {type} — サーバー内蔵デッキを使用',
     create_seats_apply_all_shortcut: 'ショートカット：すべての席に適用',
     create_seat_human_short: 'プレイヤー',
-    create_sim_deck_global_shortcut: 'SIM用共通デッキ（ショートカット）',
     create_seat_human_waiting_label: 'プレイヤー — 対戦相手待機',
     create_seat_sim: 'SIM',
     create_seat_ai_mad: 'Mad AI',

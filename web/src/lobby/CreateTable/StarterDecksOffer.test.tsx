@@ -56,8 +56,13 @@ describe('Create Table for a player with no decks', () => {
     expect(stored.decks.map((d) => d.name)).toEqual(['Mono Red Burn', 'Mono White Humans', 'Krenko: Goblin Mob Army'])
     const deckSelect = screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement
     expect(deckSelect.selectedOptions[0].textContent).toMatch(/^Mono Red Burn/)
-    const botDeck = screen.getByLabelText(/Mazo plaza 2|Seat 2 deck/i) as HTMLSelectElement
-    expect(botDeck.selectedOptions[0].textContent).toMatch(/^Mono White Humans/)
+    // the default extra seat waits for a human rival: no bot, no bot-deck picker
+    expect(screen.queryByLabelText(/Mazo plaza 2|Seat 2 deck/i)).toBeNull()
+    // opting into the Mad AI gives the seat a valid (non-empty) deck without a "need a deck" warning
+    const seatType = screen.getByTestId('seat-type-0') as HTMLSelectElement
+    fireEvent.change(seatType, { target: { value: 'COMPUTER_MAD' } })
+    const botDeck = await screen.findByLabelText(/Mazo plaza 2|Seat 2 deck/i) as HTMLSelectElement
+    expect(botDeck.value).toBeTruthy()
     expect(screen.queryByText(/Necesitas un mazo|You need a deck/i)).toBeNull()
   })
 

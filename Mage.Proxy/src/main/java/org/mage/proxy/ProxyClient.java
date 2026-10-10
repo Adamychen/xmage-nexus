@@ -671,6 +671,11 @@ public class ProxyClient implements MageClient, CommandContext {
         simManager.startSims(args, roomId, tableId);
     }
 
+    @Override
+    public boolean simEnabled() {
+        return config.isSimEnabled();
+    }
+
     /** Aviso no fatal a la web (p.ej. un asiento SIM no pudo unirse). */
     private void broadcastError(String message) {
         JsonObject ev = new JsonObject();

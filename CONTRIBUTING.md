@@ -107,7 +107,7 @@ without depending on the public server:
 | `Gateway.java` | WS transport: `byConn`/`byAccount`, origin check, rate limit |
 | `Info/Table/Tournament/GameCommands.java` | Action routing + implementations |
 | `CommandContext.java` / `JsonArgs.java` / `ProxyProtocol.java` / `ErrorClassifier.java` | Router context, defensive arg readers, envelopes, error codes |
-| `MatchOptionsParser.java` / `SimManager.java` / `SimPlayer.java` | Match/tournament options, SIM bot lifecycle, deterministic test bot |
+| `MatchOptionsParser.java` / `SimManager.java` / `SimPlayer.java` | Match/tournament options, SIM bot lifecycle, deterministic test bot (dev-only: SIM is OFF unless the proxy starts with `--sim on`; SIM seats are rejected otherwise) |
 | `JsonUtil.java` | Reflection Java → JSON serializer (camelCase 1:1, see `Mage.Proxy/README.md`) |
 | `DeckJson.java` / `DeckValidation.java` | Deck JSON parsing (printing normalization + by-name resolution at the edge) + advisory validation (`validateDeck`, `validateDeckFormat`, `commanderEligibility`) |
 | `CardCatalog.java` | Card DB lookups for the client: `resolvePrintings` (importer's printing) and `cardPrintings` (implemented printings) |

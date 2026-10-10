@@ -251,6 +251,9 @@ describe('CreateTableDialog', () => {
       { target: { value: 'griefer, troll' } },
     )
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    // default extra seats wait for a human rival; opt into the Mad AI to get a bot seat with skill
+    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
+    fireEvent.change(seatType, { target: { value: 'COMPUTER_MAD' } })
     const seatSkill = await screen.findByTestId('seat-skill-0') as HTMLSelectElement
     fireEvent.change(seatSkill, { target: { value: '7' } })
 
@@ -686,14 +689,25 @@ describe('CreateTableDialog', () => {
     expect(setsInput.value).toBe('M21, MH3, DSK')
   })
 
-  it('T15: draft con bots se bloquea con aviso (no llegan a rondas)', async () => {
+  it('T15: draft con bots elegidos a mano se bloquea con aviso (no llegan a rondas)', async () => {
     render(<CreateTableDialog onClose={onClose} />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft con bots' } })
     const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
     fireEvent.change(formatSelect, { target: { value: 'Limited' } })
     fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
 
+    // walk to the seats step (the wizard is linear and draft adds timing options)
     for (let i = 0; i < 6; i++) {
+      if (screen.queryByTestId('seat-type-0')) break
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    // default draft seats wait for humans (valid); pick the draftbot by hand to hit the guard
+    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
+    fireEvent.change(seatType, { target: { value: 'COMPUTER_DRAFT_BOT' } })
+    for (let i = 0; i < 3; i++) {
+      if (screen.queryByRole('button', { name: /Crear torneo|Create Draft/i })) break
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
       if (!nextBtn) break
       fireEvent.click(nextBtn)

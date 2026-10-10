@@ -105,7 +105,7 @@ The fake E2E mode (`FakeServer` in `web/fixtures/fake.ts`) speaks the real WebSo
 
 ### Variant B — Full stack (real XMage server + proxy + web client)
 
-For real games (human vs AI, Sim bots), protocol work, or anti-drift validation against the live server.
+For real games (human vs the server's own AI), protocol work, or anti-drift validation against the live server. The proxy's deterministic `SIM` bot is a dev/test-harness feature: it runs only when the proxy is started with `--sim on` (the dev stack passes it), and no client offers a SIM seat — bot seats use the XMage server's native AI (`COMPUTER_*` player types).
 
 ```bash
 # 1. One-command setup: builds the fork into ~/.m2, copies plugins, installs web deps

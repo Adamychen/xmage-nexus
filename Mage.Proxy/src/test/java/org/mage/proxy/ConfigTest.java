@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,6 +21,15 @@ class ConfigTest {
         assertEquals(Config.DEFAULT_MAX_MESSAGE_BYTES, config.getMaxMessageBytes());
         assertEquals(Config.DEFAULT_MAX_MESSAGES_PER_SECOND, config.getMaxMessagesPerSecond());
         assertTrue(config.getAllowedOrigins().isEmpty());
+    }
+
+    @Test
+    void simBotsAreOffUnlessExplicitlyEnabled() {
+        // release deployments start the proxy without the flag: no bots, ever
+        assertFalse(Config.parse(new String[0]).isSimEnabled());
+        assertFalse(Config.parse(new String[]{"--sim", "off"}).isSimEnabled());
+        // the dev stack (scripts/dev.mjs) opts in
+        assertTrue(Config.parse(new String[]{"--sim", "on"}).isSimEnabled());
     }
 
     @Test

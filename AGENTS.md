@@ -138,6 +138,20 @@ at once (see `Mage.Proxy/README.md` "Connection & Session").
 Real-mode E2E (against a live proxy + server) reuses a prebuilt
 `mage-proxy-*.jar` (`build.mjs proxy` once); web developers never run Maven.
 
+### SIM is dev-only
+
+The proxy's `SIM` seat (`SimPlayer`/`SimManager`/`SimRoster`) is a test-harness
+feature, not a product one. Release artifacts (Docker image, `deploy/bundle`,
+launcher) run the proxy with the `--sim` kill switch OFF by default: with no
+`--sim on`, `createTable`/`createTournamentTable` reject `playerTypes` containing
+`"SIM"` and the roster never restores bots. `scripts/dev.mjs` passes `--sim on`,
+so the dev stack and the test layers (FakeServer fixtures, `wshelper`, `verify/*`,
+`record.mjs`, `fuzz.mjs`) keep driving SIM through the WS dev channel. The web
+client never offers a SIM seat: bot seats use the XMage server's native AI
+(`COMPUTER_MAD`/`COMPUTER_MONTE_CARLO`/`COMPUTER_DRAFT_BOT`, enabled in stock
+`config.xml` including beta.xmage.today), and the create-table defaults fill open
+human seats. Design: `docs/plans/2026-10-10-sim-dev-only-design.md`.
+
 ## Test suite
 
 Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
@@ -240,8 +254,7 @@ numbered 1-8, then 10, then 9).
 
 ## E2E with simulated opponents (Sim) and WS helper
 
-UI E2E uses `SIM` seats (the proxy joins a deterministic bot with its own
-session) and a `HumanHelper` over WS (`web/e2e/wshelper.ts`) that
+UI E2E uses scripted opponents (fake) and a `HumanHelper` over WS (`web/e2e/wshelper.ts`) that
 plays lands, passes priorities, discards and answers asks — fragile actions go
 over WS and the UI only verifies (dialogs, render, pageerrors). Tests do NOT
 enable the web's auto-pass (it competes with the launch windows). Load `mage-e2e-sim`

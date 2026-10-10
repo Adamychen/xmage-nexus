@@ -83,6 +83,11 @@ class ExpansionsCommandTest {
         @Override
         public void startSims(JsonObject args, java.util.UUID roomId, java.util.UUID tableId) {
         }
+
+        @Override
+        public boolean simEnabled() {
+            return true;
+        }
     }
 
     @Test

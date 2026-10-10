@@ -6,7 +6,6 @@ import {
   MAX_DRAFT_PLAYERS,
   MAX_TOURNAMENT_PLAYERS,
   HUMAN_SEAT,
-  SIM_SEAT,
   isConstructedTournamentType,
   isDraftTournamentType,
   isHumanSeatType,
@@ -95,8 +94,10 @@ export function clampNumPlayers(
   return numPlayers
 }
 
-export function defaultSeatTypeFor(draft: boolean): string {
-  return draft ? 'COMPUTER_DRAFT_BOT' : SIM_SEAT
+export function defaultSeatTypeFor(_draft: boolean): string {
+  // Extra seats wait for a human rival by default; bots (including the draftbot,
+  // which cannot play a limited round anyway) are opt-in via the seat controls.
+  return HUMAN_SEAT
 }
 
 export interface SeatConfigInput {
@@ -120,7 +121,7 @@ export function computeTournamentSeats(args: {
       : fallbackTypes.slice(0, Math.max(0, args.numPlayers - (args.humanSeat ? 1 : 0)))
   const playerTypesFinal = args.humanSeat ? [HUMAN_SEAT, ...effectiveSeatTypes] : effectiveSeatTypes
   while (playerTypesFinal.length < args.numPlayers) {
-    playerTypesFinal.push(args.draft ? HUMAN_SEAT : SIM_SEAT)
+    playerTypesFinal.push(HUMAN_SEAT)
   }
   while (playerTypesFinal.length > args.numPlayers) playerTypesFinal.pop()
   return { playerTypesFinal, effectiveSeatTypes }
@@ -133,13 +134,13 @@ export function computeMatchSeats(args: {
   humanSeat: boolean
 }): { playerTypesFinal: string[]; effectiveSeatTypes: string[] } {
   const seatTypes = args.seatConfigs.map((s) => normalizeSeatType(s.type))
-  const fallbackTypes = (args.playerTypesSel.length ? args.playerTypesSel : [SIM_SEAT]).map(normalizeSeatType)
+  const fallbackTypes = (args.playerTypesSel.length ? args.playerTypesSel : [HUMAN_SEAT]).map(normalizeSeatType)
   const effectiveSeatTypes =
     seatTypes.length > 0
       ? seatTypes
       : fallbackTypes.slice(0, Math.max(0, args.numPlayers - (args.humanSeat ? 1 : 0)))
   const playerTypesFinal = args.humanSeat ? [HUMAN_SEAT, ...effectiveSeatTypes] : effectiveSeatTypes
-  while (playerTypesFinal.length < args.numPlayers) playerTypesFinal.push(SIM_SEAT)
+  while (playerTypesFinal.length < args.numPlayers) playerTypesFinal.push(HUMAN_SEAT)
   while (playerTypesFinal.length > args.numPlayers) playerTypesFinal.pop()
   return { playerTypesFinal, effectiveSeatTypes }
 }

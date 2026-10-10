@@ -20,6 +20,7 @@ import {
   DEFAULT_TOURNAMENT_TYPES,
   DEFAULT_DRAFT_CUBES,
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
+  HUMAN_SEAT,
   SIM_SEAT,
   aiSeatTypes,
   defaultTournamentType,
@@ -300,7 +301,12 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [edhPowerLevel, setEdhPowerLevel] = useState(100)
 
   const [numPlayers, setNumPlayers] = useState<number>(() => typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2)
-  const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => Array.isArray(saved.seatConfigs) ? (saved.seatConfigs as SeatConfig[]).map((s) => ({ type: normalizeSeatType(String(s.type ?? SIM_SEAT)), deckName: s.deckName, skill: typeof s.skill === 'number' ? s.skill : 2 })) : [])
+  // the proxy-side SIM bot is dev-only: a form persisted by an older client loses its SIM seats,
+  // which become open human seats (bots are now opt-in native AI)
+  const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => Array.isArray(saved.seatConfigs) ? (saved.seatConfigs as SeatConfig[]).map((s) => {
+    const t = normalizeSeatType(String(s.type ?? ''))
+    return { type: t === SIM_SEAT ? HUMAN_SEAT : t, deckName: s.deckName, skill: typeof s.skill === 'number' ? s.skill : 2 }
+  }) : [])
   const recommendedMulligans = useMemo(
     () => recommendedFreeMulligans(gameType, numPlayers),
     [gameType, numPlayers],
@@ -324,7 +330,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     const mine = fitting[0] ?? decks[0]
     adoptDecks(decks, mine, fitting[1] ?? mine)
   }
-  const [playerTypesSel, setPlayerTypesSel] = useState<string[]>(['SIM'])
+  const [playerTypesSel, setPlayerTypesSel] = useState<string[]>([])
 
   // Dev / Test tab
   const [skipInitShuffling, setSkipInitShuffling] = useState(false)

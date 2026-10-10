@@ -69,7 +69,9 @@ function startProxy() {
     return false
   }
   log('arrancando proxy…')
-  daemon('proxy', 'java', [...SERVER_ADD_OPENS, '-cp', jar, 'org.mage.proxy.Main'], {
+  // SIM bots are dev/test-harness only: the release artifacts (Docker, bundle, launcher)
+  // start the proxy without --sim, so no deployment ever runs a bot.
+  daemon('proxy', 'java', [...SERVER_ADD_OPENS, '-cp', jar, 'org.mage.proxy.Main', '--sim', 'on'], {
     cwd: `${import.meta.dirname}/../Mage.Proxy`,
   })
   return true

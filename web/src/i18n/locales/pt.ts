@@ -315,7 +315,6 @@ export const pt: TranslationSchema = {
     create_seat_bot_internal: 'Bot {type} — usa deck interno do servidor',
     create_seats_apply_all_shortcut: 'Atalho: aplicar a todas as vagas',
     create_seat_human_short: 'Humano',
-    create_sim_deck_global_shortcut: 'Deck global para SIM (atalho)',
     create_seat_human_waiting_label: 'Humano — aguardando oponente',
     create_seat_sim: 'SIM',
     create_seat_ai_mad: 'IA Mad',

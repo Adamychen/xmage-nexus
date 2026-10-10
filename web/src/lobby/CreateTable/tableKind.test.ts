@@ -167,9 +167,9 @@ describe('clampNumPlayers', () => {
     expect(clampNumPlayers(n, opts, min, max)).toBe(expected)
   })
 
-  it('defaultSeatTypeFor: draft → draftbot, resto → SIM', () => {
-    expect(defaultSeatTypeFor(true)).toBe('COMPUTER_DRAFT_BOT')
-    expect(defaultSeatTypeFor(false)).toBe('SIM')
+  it('defaultSeatTypeFor: extra seats wait for humans (bots are opt-in)', () => {
+    expect(defaultSeatTypeFor(true)).toBe('HUMAN')
+    expect(defaultSeatTypeFor(false)).toBe('HUMAN')
   })
 })
 

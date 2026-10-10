@@ -46,6 +46,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByPlaceholder(/separados por comas|comma-separated/i).fill('griefer')
       await page.getByRole('button', { name: /Siguiente/ }).click()
+      // default seats now wait for humans: opt the seat into the Mad AI to get a bot seat with skill
+      await page.getByTestId('seat-type-0').selectOption('COMPUTER_MAD')
       await page.getByTestId('seat-skill-0').selectOption('7')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()

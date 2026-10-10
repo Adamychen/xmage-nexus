@@ -111,13 +111,16 @@ export interface CreateTableOptions {
   tableName?: string
   /** Mazo del humano ('Mage Web advanced', 'Mage Web lands', ...). */
   deck?: string
-  /** Mazo del asiento SIM ('Mage Web combat sim', ...). */
+  /** Mazo del asiento bot. En real rellena la plaza con la IA nativa del
+   *  servidor (Mad); en fake lo ignora el FixtureServer (el oponente va
+   *  guionizado por el escenario). */
   simDeck?: string
   /** Formato (Deck Type) p.ej. 'Constructed - Pioneer'. Por defecto el del diálogo. */
   deckType?: string
   skipShuffle?: boolean
   skipStartingPlayer?: boolean
-  /** Rellenar el asiento SIM (el proxy une un bot con su propia sesión). */
+  /** Rellenar la plaza del bot: en real, IA Mad nativa del servidor (el bot
+   *  SIM del proxy es dev-only y ya no se puede elegir desde el cliente). */
   sim?: boolean
   /** Match best-of-N: victorias necesarias (1 = un solo game). */
   winsNeeded?: number
@@ -152,15 +155,24 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
     if (opts.deckType) {
       await page.getByLabel(/Formato/i).selectOption({ value: opts.deckType })
     }
-    if (opts.deck || opts.simDeck) {
+    if (opts.deck || opts.simDeck || !FAKE_MODE) {
       // paso del wizard (rediseño 2026-09): "🤖 Multijugador" (scope al
       // wizard-step: la tarjeta de modo "Commander / Multijugador" también matchea)
       await page.locator('button.wizard-step', { hasText: /Multijugador/i }).click()
       if (opts.deck) {
         await selectDeckOption(page.getByLabel(/Mazo activo/i), opts.deck)
       }
-      if (opts.simDeck) {
-        await selectDeckOption(page.getByLabel(/Mazo global para SIM/i), opts.simDeck)
+      if (!FAKE_MODE) {
+        // El bot SIM del proxy es dev-only y el cliente ya no lo ofrece: los
+        // specs de backend real optan por la IA Mad nativa del servidor (la
+        // misma fuente que self-test/human-test usan por WS directo).
+        const seatType = page.getByTestId('seat-type-0')
+        if (await seatType.isVisible().catch(() => false)) {
+          await seatType.selectOption({ value: 'COMPUTER_MAD' })
+          if (opts.simDeck) {
+            await selectDeckOption(page.getByLabel(/Mazo plaza 2|Seat 2 deck/i), opts.simDeck)
+          }
+        }
       }
     }
 

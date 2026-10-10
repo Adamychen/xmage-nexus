@@ -315,7 +315,6 @@ export const ru: TranslationSchema = {
     create_seat_bot_internal: 'Бот {type} — использует встроенную колоду сервера',
     create_seats_apply_all_shortcut: 'Применить ко всем местам',
     create_seat_human_short: 'Игрок',
-    create_sim_deck_global_shortcut: 'Общая колода для SIM (ярлык)',
     create_seat_human_waiting_label: 'Игрок — ожидание соперника',
     create_seat_sim: 'SIM',
     create_seat_ai_mad: 'ИИ Mad',

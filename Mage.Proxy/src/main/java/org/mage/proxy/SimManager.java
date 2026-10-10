@@ -72,7 +72,7 @@ final class SimManager {
      */
     void restoreSims() {
         String who = owner;
-        if (roster == null || who == null) {
+        if (!config.isSimEnabled() || roster == null || who == null) {
             return;
         }
         java.util.List<SimRoster.Seat> seats = roster.takeFor(who, serverHost, serverPort);
@@ -115,6 +115,9 @@ final class SimManager {
 
     /** Crea y une un SimPlayer por cada asiento "SIM" de la mesa recién creada. */
     void startSims(JsonObject args, UUID roomId, UUID tableId) {
+        if (!config.isSimEnabled()) {
+            return;
+        }
         if (!args.has("playerTypes")) {
             return;
         }

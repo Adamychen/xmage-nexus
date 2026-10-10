@@ -140,13 +140,17 @@ IP change is refused with "User ... already connected or your IP address changed
 until the server's own timeout. An explicit `disconnect` (logout) drops the
 account's entry, so the next login is a fresh session.
 
-**SIM seats across restarts:** the playing SIM seats are kept on disk
+**SIM seats across restarts (dev only, `--sim on`):** the playing SIM seats are kept on disk
 (`--simRoster`, default `<tmpdir>/mage-proxy-sims-<wsPort>.json`, `none` disables
 it; ignored when older than 10 minutes). When their owner logs in again through a
 restarted proxy the bots log in with the same name, the server takes it as a
 reconnection and hands them their games; a restored bot with no game stops after
 60 s. SIM names start from the clock so a new bot never reuses the name of one of
 a previous process. A bot whose own link to the server drops logs in again too.
+SIM as a whole is a dev/test-harness feature: with the default `--sim off` (Docker,
+`deploy/bundle`, launcher) `createTable`/`createTournamentTable` reject `playerTypes`
+containing `"SIM"` and no bot ever runs. The product client offers only the server's
+native AI (`COMPUTER_MAD`/`COMPUTER_MONTE_CARLO`/`COMPUTER_DRAFT_BOT`).
 
 **Lobby while playing:** with a game in progress (played or watched, with events
 in the last 2 minutes) the lobby is published every 20 s instead of every 2 s,
@@ -171,7 +175,7 @@ per-connection lock (`Gateway.send`).
 | `getServerInfo` | `{}` | Server version, protocol version |
 | `getGameTypes` | `{}` | Available game types |
 | `getDeckTypes` | `{}` | Available deck types |
-| `getPlayerTypes` | `{}` | Available player types (HUMAN, SIM, etc.) |
+| `getPlayerTypes` | `{}` | Available player types (HUMAN, COMPUTER_*) |
 | `getExpansionsWithBoosters` | `{}` | Sets with boosters (`{code, name, releaseDate}`), release-date order; `[]` while the card DB is still building |
 | `getRoomUsers` | `{}` | Users in the room |
 | `getRoomChatId` | `{}` | Chat room ID |

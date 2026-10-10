@@ -35,4 +35,7 @@ interface CommandContext {
     void restorePrompt(UUID gameId, ReplayCache.Prompt prompt);
 
     void startSims(JsonObject args, UUID roomId, UUID tableId);
+
+    /** Whether the dev-only proxy SIM bots are enabled ({@code --sim on}). */
+    boolean simEnabled();
 }

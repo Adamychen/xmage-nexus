@@ -206,6 +206,11 @@ class TableStagingCommandsTest {
         @Override
         public void startSims(JsonObject args, UUID roomId, UUID tableId) {
         }
+
+        @Override
+        public boolean simEnabled() {
+            return true;
+        }
     }
 
     private static JsonObject args(String json) {

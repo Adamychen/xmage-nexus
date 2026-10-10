@@ -118,8 +118,10 @@ export const DEFAULT_DECK_TYPES: string[] = [
   'Limited',
 ]
 
+// Selectable bot seats in the wizard (fallback when the server reports no list; the real
+// list comes from `getPlayerTypes`, already AI-only). Server-native AI only: the proxy-side
+// 'SIM' bot is dev/test-harness-only (FakeServer fixtures, e2e helpers) and never offered.
 export const DEFAULT_PLAYER_TYPES: string[] = [
-  'SIM',
   'COMPUTER_MAD',
   'COMPUTER_MONTE_CARLO',
   'COMPUTER_DRAFT_BOT',

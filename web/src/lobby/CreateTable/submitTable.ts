@@ -8,7 +8,6 @@ import { isLimitedDeckType } from '../../decks/formatRules'
 import {
   buildLimitedOptions,
   isNativeAiSeatType,
-  isSimSeatType,
   normalizeSeatType,
   parseLimitedSetCodes,
 } from './constants'
@@ -24,7 +23,6 @@ import {
 } from './tableKind'
 import { isRandomPacksType } from './RandomPacksSelector'
 import type { CreateTableForm } from './types'
-import type { DeckJson } from '../../net/types'
 
 type Translation = ReturnType<typeof useTranslation>
 
@@ -59,7 +57,7 @@ function discardTable(tableId: string) {
   void cmds.removeTable(tableId)
 }
 
-/** The deck of a bot seat: its own choice, else the global sim deck, else mine, else the bundled one. */
+/** The deck of a bot seat: its own choice, else the default bot deck, else mine, else the bundled one. */
 function resolveSimDeck(f: SubmitTableForm, deckRefValue?: string): Deck | null {
   if (deckRefValue) {
     const found = f.findDeck(deckRefValue)
@@ -255,12 +253,11 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
     numPlayers: f.numPlayers,
     humanSeat,
   })
-  const simSeats = effectiveSeatTypes.filter(isSimSeatType).length
   const nativeBotSeats = effectiveSeatTypes
     .map((type, idx) => ({ type, idx, cfg: seatConfigs[idx] }))
     .filter((s) => isNativeAiSeatType(s.type))
 
-  // pre-validación contra la BD de cartas del servidor (humano y asientos SIM)
+  // pre-validation against the server card database (human and bot seats)
   // Transformación invisible para Commander: XMage espera comandante en banquillo
   let finalMyDeck: Deck | null = null
   if (humanSeat && myDeck) {
@@ -270,39 +267,6 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
       return
     }
     finalMyDeck = fixed
-  }
-
-  let finalSimDeck: Deck | null = null
-  if (simSeats > 0) {
-    const base = resolveSimDeck(f)
-    if (!base) {
-      setError(t('lobby', 'create_err_no_deck'))
-      setBusy(false)
-      return
-    }
-    const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
-    if (!fixed) {
-      setBusy(false)
-      return
-    }
-    finalSimDeck = fixed
-  }
-
-  const simDecksBySeat: DeckJson[] = []
-  if (simSeats > 0 && finalSimDeck) {
-    for (let i = 0; i < effectiveSeatTypes.length; i++) {
-      if (isSimSeatType(effectiveSeatTypes[i])) {
-        const cfg = seatConfigs[i]
-        const deckForSeat = resolveSimDeck(f, cfg?.deckName)
-        if (!deckForSeat) {
-          setError(t('lobby', 'create_err_no_deck'))
-          setBusy(false)
-          return
-        }
-        simDecksBySeat.push(prepareDeckForXMage(deckForSeat, deckType, gameType))
-      }
-    }
-    while (simDecksBySeat.length < simSeats) simDecksBySeat.push(finalSimDeck)
   }
 
   const nativeBotDecks: Record<number, Deck> = {}
@@ -353,7 +317,6 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
     customStartHandSizeEnabled: f.customStartHandSizeEnabled,
     customStartHandSize: f.customStartHandSize,
     planeChase: f.planeChase,
-    simDecks: simDecksBySeat,
     skipInitShuffling: f.skipInitShuffling,
     skipStartingPlayerChoice: f.skipStartingPlayerChoice,
     dev: import.meta.env.DEV,
@@ -373,7 +336,7 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
     for (const bot of nativeBotSeats) {
       const name = botName(botCounter, nativeBotSeats.length)
       botCounter++
-      const botDeck = nativeBotDecks[bot.idx] ?? finalSimDeck ?? finalMyDeck ?? DEFAULT_DECK
+      const botDeck = nativeBotDecks[bot.idx] ?? finalMyDeck ?? DEFAULT_DECK
       const joinBot = await cmds.joinTable({
         tableId,
         playerName: name,

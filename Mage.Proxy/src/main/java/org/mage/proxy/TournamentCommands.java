@@ -19,6 +19,10 @@ final class TournamentCommands {
         switch (action) {
             case "createTournamentTable": {
                 long start = System.currentTimeMillis();
+                if (!ctx.simEnabled() && MatchOptionsParser.hasSimSeat(args)) {
+                    ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_INVALID_ARGUMENT, "SIM seats are disabled on this proxy (dev only, start it with --sim on)"));
+                    return true;
+                }
                 UUID roomId = JsonArgs.uuid(args, "roomId", ctx.session().getMainRoomId());
                 mage.game.tournament.TournamentOptions tOpts = MatchOptionsParser.parseTournamentOptions(args);
                 Object result = ctx.session().createTournamentTable(roomId, tOpts);
