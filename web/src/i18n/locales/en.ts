@@ -1187,6 +1187,7 @@ export const en = {
     revealed_window: 'Revealed ({name})',
     companion_window: 'Companion ({name})',
     looked_at_window_plain: 'Looked at',
+    top_card_peek: 'Top card of your library: {name} (only you can see it)',
     revealed_window_plain: 'Revealed',
     companion_window_plain: 'Companion',
     spectator_game_changed: 'The game changed: the table has started a new game.',

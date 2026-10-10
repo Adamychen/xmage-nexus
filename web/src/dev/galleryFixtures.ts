@@ -1,4 +1,5 @@
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
+import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
 import type {
   CardView,
   GameView,
@@ -525,6 +526,14 @@ const CROWDED_POD_GAME = FOUR_PLAYER_GAME ? withCrowdedBattlefields(FOUR_PLAYER_
 const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
 const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
+const TOP_CARD_PEEK_GAME = GANG_BLOCK_FRAME ? withTopCardPeek(GANG_BLOCK_FRAME.gameView) : null
+
+function withTopCardPeek(gv: GameView): GameView {
+  const top = Object.values(gv.myHand ?? {})[0]
+  if (!top?.id) return gv
+  const peeked = { ...top, id: 'gallery-peek-top' }
+  return { ...gv, lookedAt: [{ name: TOP_CARD_PEEK_NAME, cards: { [peeked.id]: peeked } }] }
+}
 
 const STAGING_TABLE = makeLobbyTable(0, {
   tableId: 'gallery-staging-table',
@@ -1426,6 +1435,15 @@ export function buildGalleryEntries(): GalleryEntry[] {
     description: 'Mano desbordada (15 cartas) sobre el frame gang-block.',
     phase: 'game',
     game: HAND_15_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:top-card-peek',
+    group: 'Tablero',
+    label: 'Top card peek',
+    description: '"Look at the top card of your library any time" (Future Sight…): the card sits small left of the library, no blocking viewer.',
+    phase: 'game',
+    game: TOP_CARD_PEEK_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
   })
   entries.push({

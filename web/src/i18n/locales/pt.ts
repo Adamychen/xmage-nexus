@@ -1189,6 +1189,7 @@ export const pt: TranslationSchema = {
     revealed_window: 'Reveladas ({name})',
     companion_window: 'Companheiro ({name})',
     looked_at_window_plain: 'Olhadas',
+    top_card_peek: 'Carta do topo do seu grimório: {name} (só você a vê)',
     revealed_window_plain: 'Reveladas',
     companion_window_plain: 'Companheiro',
     spectator_game_changed: 'O jogo mudou: a mesa começou uma nova partida.',
