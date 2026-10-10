@@ -161,7 +161,7 @@ export const zhs: TranslationSchema = {
     leaderboard_col_winrate: '胜率',
     leaderboard_col_status: '状态',
     ping_tooltip: '延迟: {label}',
-    ping_tooltip_conn: '延迟: {label}（已连接 {duration}）',
+    ping_tooltip_avg: '延迟: {label}（平均 {avg}）',
     ping_disconnected: '已断开',
     view_profile_hint: '点击查看个人资料：',
     time_now: '现在',

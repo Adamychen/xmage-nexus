@@ -232,6 +232,16 @@ function makeLobbyTable(i: number, overrides: Partial<TableView> = {}): TableVie
   }
 }
 
+// Real `User.getPingInfo()` shapes, captured through the proxy: the last one is
+// what our own connections carry (nobody measures a browser's latency), and the
+// badge stays hidden for it.
+const GALLERY_PINGS = [
+  '22ms (avg: 24ms)  (online: 4:11; seen: 1 sec ago)',
+  '112ms (avg: 120ms)  (online: 1:02; seen: 3 sec ago)',
+  '240ms (avg: 205ms)  (online: 0:40; seen: 8 sec ago)',
+  '  (online: 0:00; seen: 2 sec ago)',
+]
+
 function makeLobbyUser(i: number): UsersView {
   return {
     flagName: 'es',
@@ -241,7 +251,7 @@ function makeLobbyUser(i: number): UsersView {
     tourneyHistory: '',
     tourneyQuitRatio: 0,
     infoGames: '0',
-    infoPing: '20',
+    infoPing: GALLERY_PINGS[i % GALLERY_PINGS.length],
     generalRating: 1500 + i,
     constructedRating: 1500 + i,
     limitedRating: 1500 + i,

@@ -159,7 +159,7 @@ export const en = {
     leaderboard_col_winrate: 'Win Rate',
     leaderboard_col_status: 'Status',
     ping_tooltip: 'Latency: {label}',
-    ping_tooltip_conn: 'Latency: {label} (connected {duration})',
+    ping_tooltip_avg: 'Latency: {label} (avg {avg})',
     ping_disconnected: 'Disconnected',
     view_profile_hint: 'Click to view profile of',
     time_now: 'now',

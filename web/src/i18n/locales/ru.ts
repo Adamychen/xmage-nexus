@@ -161,7 +161,7 @@ export const ru: TranslationSchema = {
     leaderboard_col_winrate: 'Винрейт',
     leaderboard_col_status: 'Статус',
     ping_tooltip: 'Задержка: {label}',
-    ping_tooltip_conn: 'Задержка: {label} (на связи {duration})',
+    ping_tooltip_avg: 'Задержка: {label} (сред. {avg})',
     ping_disconnected: 'Отключён',
     view_profile_hint: 'Нажмите для просмотра профиля',
     time_now: 'сейчас',

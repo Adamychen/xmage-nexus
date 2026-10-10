@@ -161,7 +161,7 @@ export const ja: TranslationSchema = {
     leaderboard_col_winrate: '勝率',
     leaderboard_col_status: '状態',
     ping_tooltip: '遅延: {label}',
-    ping_tooltip_conn: '遅延: {label}（接続 {duration}）',
+    ping_tooltip_avg: '遅延: {label}（平均 {avg}）',
     ping_disconnected: '切断',
     view_profile_hint: 'クリックしてプロフィールを表示:',
     time_now: '今',

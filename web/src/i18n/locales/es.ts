@@ -161,7 +161,7 @@ export const es: TranslationSchema = {
     leaderboard_col_winrate: 'Win Rate',
     leaderboard_col_status: 'Estado',
     ping_tooltip: 'Latencia: {label}',
-    ping_tooltip_conn: 'Latencia: {label} (conectado {duration})',
+    ping_tooltip_avg: 'Latencia: {label} (media {avg})',
     ping_disconnected: 'Desconectado',
     view_profile_hint: 'Haz clic para ver el perfil de',
     time_now: 'ahora',
