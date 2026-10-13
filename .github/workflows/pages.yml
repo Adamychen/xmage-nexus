@@ -137,3 +137,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # After the deploy, on purpose: the status page must publish the truth (red layers and all)
+      # and the run must be red with it. See scripts/check-status.mjs.
+      - name: Fail the run on red layers
+        run: node scripts/check-status.mjs
