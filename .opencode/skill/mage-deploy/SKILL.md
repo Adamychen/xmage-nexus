@@ -5,7 +5,7 @@ description: Despliegue y distribución: host multi-usuario con playit.gg (bundl
 
 # Despliegue
 
-Arquitectura (modelo playit, `docs/deploy-playit.md`):
+Arquitectura (modelo playit, `docs/deploy-tunnels.md`):
 
 ```
 Browser -> playit (túnel TCP) -> Mage.Proxy (1 proceso multi-tenant)
@@ -38,7 +38,7 @@ ALLOWED_ORIGINS="http://<web-tunnel>" XMAGE_HOST=beta.xmage.today XMAGE_PORT=171
   `--add-opens` y avisa si `ALLOWED_ORIGINS` está vacío.
 - `ALLOWED_ORIGINS` debe ser el origen EXACTO (esquema incluido, p.ej. `http://abc.playit.gg:12345`);
   sin él el proxy solo acepta orígenes localhost.
-- Autostart: unidad systemd de ejemplo en `docs/deploy-playit.md` (también Task Scheduler /
+- Autostart: unidad systemd de ejemplo en `docs/deploy-tunnels.md` (también Task Scheduler /
   launchd); en portátil, deshabilitar suspensión.
 - **Flavors del proxy (beta + XDHS)**: `Mage.Proxy/pom.xml` resuelve las deps `org.mage` con la
   property `mage.version` (default = versión del proyecto) y `finalName mage-proxy-${mage.version}`,
@@ -143,7 +143,7 @@ Piezas:
 - Versión ESTRICTA (`MageVersion.MAGE_VERSION_RELEASE_INFO_MUST_BE_SAME`): un server de otra
   release rechaza el proxy -> skill `mage-fork-upgrade`.
 - `deploy/bundle/` es gitignored y puede quedar DESACTUALIZADO (jar viejo, README copia antigua de
-  `docs/deploy-playit.md`): re-ejecuta `deploy-bundle.mjs` antes de distribuir.
+  `docs/deploy-tunnels.md`): re-ejecuta `deploy-bundle.mjs` antes de distribuir.
 - El bundle NO incluye JRE, servidor, playit ni systemd: el host pone el JRE 17.
 - El proxy crea su card DB en `./db` (cwd) y responde `WARMING_UP` mientras escanea; espera con
   `scripts/warmup.mjs` (`NEXUS_PROXY_WARMUP_MS`); el launcher espera `card db READY`.

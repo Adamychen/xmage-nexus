@@ -39,7 +39,7 @@ function main() {
   for (const f of ["start-proxy.sh", "start-proxy.bat"]) {
     fs.copyFileSync(path.join(repoRoot, "scripts", "deploy", f), path.join(outDir, f));
   }
-  fs.copyFileSync(path.join(repoRoot, "docs", "deploy-playit.md"), path.join(outDir, "README.md"));
+  fs.copyFileSync(path.join(repoRoot, "docs", "deploy-tunnels.md"), path.join(outDir, "README.md"));
   fs.chmodSync(path.join(outDir, "start-proxy.sh"), 0o755);
 
   console.log(`[deploy-bundle] wrote ${outDir}`);

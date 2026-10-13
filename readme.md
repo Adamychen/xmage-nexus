@@ -24,7 +24,7 @@
 | Way | How |
 |---|---|
 | **Desktop app** (Windows / macOS / Linux) | Download the launcher from [Releases](https://github.com/Adamychen/xmage-nexus/releases): Windows `.msi`/`.exe`, macOS `.dmg` (Apple Silicon), Linux `.AppImage`/`.deb`/`.rpm`. It bundles the JRE + XMage server + proxy and boots everything with one click (~15 MB, auto-updates). |
-| **Browser** (zero install) | Join a hosted instance — see the [project page](https://adamychen.github.io/xmage-nexus/) — or self-host with [docs/deploy-playit.md](docs/deploy-playit.md). |
+| **Browser** (zero install) | Join a hosted instance — see the [project page](https://adamychen.github.io/xmage-nexus/) — or self-host with [docs/deploy-tunnels.md](docs/deploy-tunnels.md). |
 | **Local dev** | Pick a variant below: [web-only](#variant-a--web-only-no-java-no-maven-fastest-loop) (no Java/Maven) or [full stack](#variant-b--full-stack-real-xmage-server--proxy--web-client). |
 
 ## Architecture

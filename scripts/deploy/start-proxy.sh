@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # XMage Nexus — start the multi-tenant proxy that serves the web client and
-# bridges players to the target XMage server. See docs/deploy-playit.md.
+# bridges players to the target XMage server. See docs/deploy-tunnels.md.
 #
 # Required:
 #   ALLOWED_ORIGINS  exact public origin of the web page, e.g. http://abc.playit.gg:12345

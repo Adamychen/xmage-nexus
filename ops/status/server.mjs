@@ -2,7 +2,6 @@ import http from 'node:http';
 import net from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
-import zlib from 'node:zlib';
 import readline from 'node:readline';
 import { spawn, execFile } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
@@ -17,8 +16,7 @@ const cfg = {
   allow: parseCidrs(env.STATUS_ALLOW || '192.168.0.0/16,10.0.0.0/8,172.16.0.0/12'),
   db: env.STATUS_DB || path.join(here, 'data', 'status.db'),
   proxyUnit: env.PROXY_UNIT || 'xmage-proxy',
-  playitUnit: env.PLAYIT_UNIT || 'playit',
-  playitLog: env.PLAYIT_LOG || '/var/log/playit/playit.log',
+  tunnelsUser: env.TUNNELS_USER || 'adam',
   xmageHost: env.XMAGE_HOST || 'beta.xmage.today',
   xmagePort: Number(env.XMAGE_PORT || 17171),
   proxyHttp: env.PROXY_HTTP || 'http://127.0.0.1:8788/',
@@ -285,6 +283,9 @@ function handleEntry(e) {
       delete kv.ip;
       if (action) delete kv.action;
       q.insEvent.run(evTs, c.event, user, ip, action, Object.keys(kv).length ? JSON.stringify(kv) : null);
+      // Public-visitor counting: every tunnelled client opens the gateway with a
+      // real IP (Cloudflare forwards CF-Connecting-IP/XFF and the proxy logs it).
+      if (c.event === 'ws_open' && ip) q.insVisit.run(evTs, 0, ip);
       live.apply({ ts: evTs, type: c.event, user, ip, action, kv });
       recordConcurrency(evTs);
       break;
@@ -411,58 +412,6 @@ function startJournal() {
 }
 
 const ANSI = /\x1b\[[0-9;]*m/g;
-const PLAYIT_LINE = /^(\d{4}-\d{2}-\d{2}T\S+Z)\s+(\w+)\s+([\w:]+):\s?(.*)$/;
-const PLAYIT_NOISE = /failed to (?:read|write) data error=Os \{ code: \d+, kind: (?:ConnectionReset|TimedOut|BrokenPipe|ConnectionAborted|UnexpectedEof)/;
-const PLAYIT_CLIENT = /connect_addr: (?:\[[^\]]+\]|[\d.]+):(\d+), peer_addr: (\[[^\]]+\]|[\d.]+):\d+/;
-
-function readPlayitFile(file) {
-  try {
-    const buf = fs.readFileSync(file);
-    return (file.endsWith('.gz') ? zlib.gunzipSync(buf) : buf).toString('utf8');
-  } catch {
-    return '';
-  }
-}
-
-function parsePlayit(text) {
-  const out = [];
-  for (const raw of text.split('\n')) {
-    const line = raw.replace(ANSI, '');
-    const m = PLAYIT_LINE.exec(line);
-    if (!m) continue;
-    const ts = isoMs(m[1]);
-    if (ts == null) continue;
-    out.push({ ts, level: levelOf(m[2]), module: m[3].replace(/^playit_agent_core::/, ''), text: m[4] });
-  }
-  return out;
-}
-
-function ingestPlayit() {
-  const since = Number(meta.get('playit_ts') || 0);
-  const files = [cfg.playitLog];
-  if (!since) {
-    for (let i = 9; i >= 1; i--) files.unshift(`${cfg.playitLog}.${i}.gz`);
-  }
-  let max = since;
-  txCommit();
-  db.exec('BEGIN');
-  try {
-    for (const f of files) {
-      for (const r of parsePlayit(readPlayitFile(f))) {
-        if (r.ts <= since) continue;
-        max = Math.max(max, r.ts);
-        const m = PLAYIT_CLIENT.exec(r.text);
-        if (m) q.insVisit.run(r.ts, Number(m[1]), m[2].replace(/^\[|\]$/g, ''));
-        else if ((r.level === 'error' || r.level === 'warn') && !PLAYIT_NOISE.test(r.text)) q.insProblem.run(r.ts, 'playit', r.level, r.module, r.text.slice(0, 2000), null);
-      }
-    }
-    if (max > since) meta.set('playit_ts', max);
-    db.exec('COMMIT');
-  } catch (err) {
-    db.exec('ROLLBACK');
-    log('playit ingest error', err.message);
-  }
-}
 
 function run(cmd, args) {
   return new Promise(resolve => {
@@ -525,7 +474,7 @@ function readText(file) {
 
 let prevCpu = null;
 let prevProc = null;
-const host = { latest: null, proxy: null, playit: null, cpus: 1 };
+const host = { latest: null, proxy: null, tunnels: null, cpus: 1 };
 
 async function sample() {
   const now = Date.now();
@@ -555,9 +504,14 @@ async function sample() {
   }
   const load = readText('/proc/loadavg').split(' ').map(Number);
   const uptime = Number(readText('/proc/uptime').split(' ')[0]) || null;
-  const [proxy, playit, xmageMs, webMs] = await Promise.all([
-    unitInfo(cfg.proxyUnit), unitInfo(cfg.playitUnit), tcpLatency(cfg.xmageHost, cfg.xmagePort), httpLatency(cfg.proxyHttp),
+  const [proxy, xmageMs, webMs] = await Promise.all([
+    unitInfo(cfg.proxyUnit), tcpLatency(cfg.xmageHost, cfg.xmagePort), httpLatency(cfg.proxyHttp),
   ]);
+  // Quick tunnels run as user units of `tunnelsUser` (linger) — a plain pgrep
+  // is the honest liveness signal from a system service; expect 3 (web/ws/xdhs).
+  const tunnels = await run('pgrep', ['-c', '-u', cfg.tunnelsUser, '-f', 'cloudflared tunnel'])
+    .then(s => ({ up: Number(s.trim()) || 0, total: 3 }))
+    .catch(() => ({ up: 0, total: 3 }));
   let proxyRss = null;
   let proxyCpu = null;
   if (proxy.pid) {
@@ -572,7 +526,7 @@ async function sample() {
   }
   const c = live.counts();
   host.proxy = proxy;
-  host.playit = playit;
+  host.tunnels = tunnels;
   host.latest = {
     ts: now, cpu, memUsed, memTotal, diskUsed, diskTotal, load1: load[0] ?? null, load5: load[1] ?? null, load15: load[2] ?? null,
     uptime, proxyRss, proxyCpu, xmageMs, webMs,
@@ -779,7 +733,7 @@ function livePayload() {
   return {
     now,
     proxy: { ...(host.proxy || {}), bootTs: live.bootTs, running: live.running },
-    playit: host.playit,
+    tunnels: host.tunnels,
     host: host.latest,
     cpus: host.cpus,
     xmage: { host: cfg.xmageHost, port: cfg.xmagePort, ms: host.latest?.xmageMs ?? null, mismatch: versionMismatch(`${cfg.xmageHost}:${cfg.xmagePort}`) },
@@ -920,17 +874,11 @@ function filterView(recs, view) {
 }
 
 async function logsPayload(params) {
-  const source = params.get('source') === 'playit' ? 'playit' : 'proxy';
+  const source = 'proxy';
   const view = ['all', 'clean', 'activity', 'problems'].includes(params.get('view')) ? params.get('view') : 'clean';
   const search = (params.get('q') || '').slice(0, 200);
   const after = params.get('after') || '';
   const limit = 500;
-  if (source === 'playit') {
-    let recs = parsePlayit(readPlayitFile(cfg.playitLog)).map(r => ({ ts: r.ts, level: r.level, kind: 'playit', origin: r.module, text: r.text }));
-    if (view === 'problems') recs = recs.filter(r => r.level === 'error' || r.level === 'warn');
-    if (search) recs = recs.filter(r => (r.text + ' ' + r.origin).toLowerCase().includes(search.toLowerCase()));
-    return { source, view, records: recs.slice(-limit), cursor: null };
-  }
   if (cfg.journalFile) return { source, view, records: [], cursor: null };
   const args = [];
   if (after) args.push(`--after-cursor=${after}`, '-n', '3000');
@@ -1007,13 +955,11 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (cfg.allow.some(c => c.from <= ipv4ToInt('127.0.0.1') && ipv4ToInt('127.0.0.1') < c.from + c.size)) {
-  log('WARNING: STATUS_ALLOW includes loopback. playit tunnel clients arrive as 127.x addresses; never do this on the host.');
+  log('WARNING: STATUS_ALLOW includes loopback. Tunnelled clients now arrive with their real Cloudflare-forwarded IP, but keep loopback out of STATUS_ALLOW anyway.');
 }
 
 rebuildLive();
 startJournal();
-ingestPlayit();
-setInterval(ingestPlayit, 60000);
 sample().catch(err => log('sample error', err.message));
 setInterval(() => sample().catch(err => log('sample error', err.message)), cfg.sampleSecs * 1000);
 prune();

@@ -39,7 +39,7 @@ two proxy processes:
 
 ## Public multi-user deployment (playit.gg)
 
-See **`docs/deploy-playit.md`** for the full English guide: run one `Mage.Proxy`
+See **`docs/deploy-tunnels.md`** for the full English guide: run one `Mage.Proxy`
 (multi-tenant) on an always-on machine, expose its two ports through playit.gg
 TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
 `node scripts/deploy-bundle.mjs`; start scripts live in `scripts/deploy/`

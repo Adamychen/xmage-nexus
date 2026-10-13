@@ -19,7 +19,7 @@ const DICT = {
     'tile.users24': 'Players in the last 24 h',
     'tile.games24': 'Games in the last 24 h',
     'tile.visitors24': 'Public visitors (24 h)',
-    'tile.visitorsSub': 'Unique IPs through the playit tunnel',
+    'tile.visitorsSub': 'Unique IPs through the public tunnels',
     'tile.problems24': 'Problems (24 h)',
     'tile.problemsSub': '{e} errors · {w} warnings',
     'tile.uptime': 'Proxy uptime',
@@ -59,8 +59,8 @@ const DICT = {
     'place.away': 'Reconnecting',
     'svc.proxy': 'Nexus proxy',
     'svc.proxySub': 'Web client + WebSocket gateway',
-    'svc.playit': 'playit tunnel',
-    'svc.playitSub': 'Public access for players',
+    'svc.tunnels': 'Cloudflare tunnels',
+    'svc.tunnelsSub': 'Public access for players (web · ws · xdhs)',
     'svc.xmage': 'XMage server',
     'svc.web': 'Local web client',
     'svc.down': 'no response',
@@ -99,7 +99,7 @@ const DICT = {
     'chart.newUsers': 'New players',
     'chart.newUsersSub': 'First successful login',
     'chart.visitors': 'Public visitors',
-    'chart.visitorsSub': 'Unique IPs reaching the playit tunnel',
+    'chart.visitorsSub': 'Unique IPs reaching the public tunnels',
     'chart.heat': 'When people play',
     'chart.heatSub': 'Players active per weekday and hour (local time)',
     'chart.gameTypes': 'Game types',
@@ -122,7 +122,6 @@ const DICT = {
     playersCount: '{n} players',
     onlineBadge: 'online',
     'logs.proxy': 'Proxy',
-    'logs.playit': 'playit',
     'logs.clean': 'Clean',
     'logs.all': 'Everything',
     'logs.activity': 'Activity',
@@ -164,7 +163,7 @@ const DICT = {
     'life.failed': 'Failed',
     'life.restart': 'Automatic restart',
     'life.consumed': 'Resources used',
-    privacy: 'Local network only · not published through playit · data since {since}',
+    privacy: 'Local network only · not published through the tunnels · data since {since}',
     'ev.login_ok': 'signed in',
     'ev.login_fail': 'failed to sign in',
     'ev.session_end': 'left',
@@ -223,7 +222,7 @@ const DICT = {
     'tile.users24': 'Jugadores en las últimas 24 h',
     'tile.games24': 'Partidas en las últimas 24 h',
     'tile.visitors24': 'Visitantes públicos (24 h)',
-    'tile.visitorsSub': 'IPs únicas por el túnel de playit',
+    'tile.visitorsSub': 'IPs únicas por los túneles públicos',
     'tile.problems24': 'Problemas (24 h)',
     'tile.problemsSub': '{e} errores · {w} avisos',
     'tile.uptime': 'Proxy en marcha',
@@ -263,8 +262,8 @@ const DICT = {
     'place.away': 'Reconectando',
     'svc.proxy': 'Proxy Nexus',
     'svc.proxySub': 'Cliente web + pasarela WebSocket',
-    'svc.playit': 'Túnel playit',
-    'svc.playitSub': 'Acceso público de los jugadores',
+    'svc.tunnels': 'Túneles Cloudflare',
+    'svc.tunnelsSub': 'Acceso público de los jugadores (web · ws · xdhs)',
     'svc.xmage': 'Servidor XMage',
     'svc.web': 'Cliente web local',
     'svc.down': 'sin respuesta',
@@ -303,7 +302,7 @@ const DICT = {
     'chart.newUsers': 'Jugadores nuevos',
     'chart.newUsersSub': 'Primer login correcto',
     'chart.visitors': 'Visitantes públicos',
-    'chart.visitorsSub': 'IPs únicas que llegan por el túnel de playit',
+    'chart.visitorsSub': 'IPs únicas que llegan por los túneles públicos',
     'chart.heat': 'Cuándo se juega',
     'chart.heatSub': 'Jugadores activos por día de la semana y hora (hora local)',
     'chart.gameTypes': 'Tipos de partida',
@@ -326,7 +325,6 @@ const DICT = {
     playersCount: '{n} jugadores',
     onlineBadge: 'conectado',
     'logs.proxy': 'Proxy',
-    'logs.playit': 'playit',
     'logs.clean': 'Limpio',
     'logs.all': 'Todo',
     'logs.activity': 'Actividad',
@@ -368,7 +366,7 @@ const DICT = {
     'life.failed': 'Fallo',
     'life.restart': 'Reinicio automático',
     'life.consumed': 'Recursos usados',
-    privacy: 'Solo red local · no publicado por playit · datos desde {since}',
+    privacy: 'Solo red local · no publicado por los túneles · datos desde {since}',
     'ev.login_ok': 'entró',
     'ev.login_fail': 'no pudo entrar',
     'ev.session_end': 'salió',
@@ -900,7 +898,7 @@ function renderPills() {
   const proxyUp = L.proxy?.state === 'active' || (L.proxy?.state === 'unknown' && L.proxy?.running);
   const pills = [
     { label: t('pill.proxy'), level: proxyUp ? 'good' : svcLevel(L.proxy?.state), val: proxyUp ? fmt.dur((Date.now() - (L.proxy.since || L.proxy.bootTs)) / 1000) : L.proxy?.state },
-    { label: t('pill.tunnel'), level: svcLevel(L.playit?.state), val: L.playit?.state === 'active' ? '' : L.playit?.state },
+    { label: t('pill.tunnel'), level: (L.tunnels?.up || 0) === L.tunnels?.total ? 'good' : 'critical', val: `${L.tunnels?.up ?? 0}/${L.tunnels?.total ?? 3}` },
     { label: t('pill.xmage'), level: xmageLevel(L.xmage), val: xmageText(L.xmage) },
     { label: t('pill.web'), level: L.web.ms == null ? 'critical' : 'good', val: L.web.ms == null ? t('svc.down') : fmt.ms(L.web.ms) },
   ];
@@ -987,7 +985,7 @@ function renderNow() {
     h('header', { class: 'card-head' }, h('h3', null, t('services'))),
     h('div', { class: 'svc' },
       svcRow(proxyUp ? 'good' : 'critical', t('svc.proxy'), t('svc.proxySub'), h('span', null, proxyUp ? fmt.dur((L.now - upSince) / 1000) : L.proxy.state, h('br'), h('span', { class: 'muted' }, t('svc.restarts', { n: fmt.int(L.proxy.restarts || 0) })))),
-      svcRow(L.playit?.state === 'active' ? 'good' : 'critical', t('svc.playit'), t('svc.playitSub'), L.playit?.since ? fmt.dur((L.now - L.playit.since) / 1000) : L.playit?.state || '–'),
+      svcRow((L.tunnels?.up || 0) === L.tunnels?.total ? 'good' : 'critical', t('svc.tunnels'), t('svc.tunnelsSub'), `${L.tunnels?.up ?? 0}/${L.tunnels?.total ?? 3}`),
       svcRow(xmageLevel(L.xmage), t('svc.xmage'), `${L.xmage.host}:${L.xmage.port}`, xmageText(L.xmage)),
       svcRow(L.web.ms == null ? 'critical' : 'good', t('svc.web'), L.web.url.replace(/^https?:\/\//, '').replace(/\/$/, ''), L.web.ms == null ? t('svc.down') : fmt.ms(L.web.ms))),
     h('header', { class: 'card-head', style: 'margin-top:14px' }, h('h3', null, t('host'))),
@@ -1200,13 +1198,7 @@ function buildLogs() {
   });
   const views = [['clean', t('logs.clean')], ['activity', t('logs.activity')], ['problems', t('logs.problems')], ['all', t('logs.all')]];
   const toolbar = h('div', { class: 'logs-toolbar' },
-    seg([['proxy', t('logs.proxy')], ['playit', t('logs.playit')]], L.source, v => {
-      L.source = v;
-      if (v === 'playit' && (L.view === 'activity' || L.view === 'clean')) L.view = 'all';
-      buildLogs();
-      reloadLogs();
-    }),
-    seg(L.source === 'playit' ? [['all', t('logs.all')], ['problems', t('logs.problems')]] : views, L.view, v => {
+    seg(views, L.view, v => {
       L.view = v;
       buildLogs();
       reloadLogs();
@@ -1281,7 +1273,6 @@ async function reloadLogs() {
 async function pollLogs() {
   const L = state.logs;
   if (state.tab !== 'logs' || !L.follow || L.busy) return;
-  if (L.source === 'playit') return reloadLogs();
   if (!L.cursor) return;
   L.busy = true;
   const seq = logsSeq;
@@ -1390,7 +1381,7 @@ let nowSig = '';
 let nowAt = 0;
 
 function liveSignature(L) {
-  return JSON.stringify([L.counts, L.users, L.recent[0]?.ts, L.problems[0]?.id, L.day, L.host?.ts, L.proxy?.state, L.playit?.state, lang]);
+  return JSON.stringify([L.counts, L.users, L.recent[0]?.ts, L.problems[0]?.id, L.day, L.host?.ts, L.proxy?.state, L.tunnels?.up, lang]);
 }
 
 async function loadLive() {
