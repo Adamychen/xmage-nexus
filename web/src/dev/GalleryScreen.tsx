@@ -19,6 +19,7 @@ import SettingsModal from '../settings/SettingsModal'
 import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import AboutModal from '../system/AboutModal'
 import SetupWizard from '../setup/SetupWizard'
+import RenderedCardsGallery from './RenderedCardsGallery'
 import './GalleryScreen.css'
 
 // Layout reproducible: la escala de las zonas del tablero se mide contra la
@@ -43,6 +44,7 @@ function stageOf(entry: GalleryEntry | undefined) {
   if (entry.screen === 'settings') return <SettingsModal onClose={() => {}} />
   if (entry.screen === 'appearance') return <AppearanceSettingsModal onClose={() => {}} />
   if (entry.screen === 'about') return <AboutModal onClose={() => {}} />
+  if (entry.screen === 'cards') return <RenderedCardsGallery />
   if (entry.screen === 'help') return <HelpWikiModal onClose={() => {}} />
   if (entry.screen === 'gameend') {
     return (

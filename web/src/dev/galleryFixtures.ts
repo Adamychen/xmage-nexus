@@ -75,6 +75,7 @@ export type GalleryScreenName =
   | 'about'
   | 'help'
   | 'gameend'
+  | 'cards'
 
 export interface GalleryEntry {
   id: string
@@ -1048,6 +1049,15 @@ export function buildGalleryEntries(): GalleryEntry[] {
       feedback: slicerAsk,
     })
   }
+
+  entries.push({
+    id: 'screen:rendered-cards',
+    group: 'Pantallas',
+    label: 'Rendered cards',
+    description: 'Every distinct card layout in the recorded frames, drawn from data.',
+    screen: 'cards',
+    phase: 'game',
+  })
 
   entries.push({
     id: 'screen:login',
