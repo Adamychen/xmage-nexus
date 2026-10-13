@@ -91,6 +91,33 @@ describe('ownManaSources', () => {
     expect(sources.map((s) => s.id)).toEqual(['plain'])
   })
 
+  it('flags pain lands whose mana rules cost life or damage', () => {
+    const sources = sourcesOf({
+      wastes: land('Llanowar Wastes', '{T}: Add {C}.'),
+    })
+    expect(sources.find((s) => s.id === 'wastes')?.painful).toBe(false)
+    const painful = sourcesOf({
+      wastes: makePermanent({
+        name: 'Llanowar Wastes',
+        cardTypes: ['LAND'],
+        rules: ['{T}: Add {C}.', '{T}: Add {B}. Llanowar Wastes deals 1 damage to you.', '{T}: Add {G}. Llanowar Wastes deals 1 damage to you.'],
+      }),
+      city: makePermanent({
+        name: 'City of Brass',
+        cardTypes: ['LAND'],
+        rules: ['{T}: Add one mana of any color.', 'Whenever City of Brass becomes tapped, it deals 1 damage to you.'],
+      }),
+      shock: makePermanent({
+        name: 'Overgrown Tomb',
+        cardTypes: ['LAND'],
+        rules: ['{T}: Add {B} or {G}.', 'As Overgrown Tomb enters the battlefield, you may pay 2 life. If you don\'t, it enters tapped.'],
+      }),
+    })
+    expect(painful.find((s) => s.id === 'wastes')?.painful).toBe(true)
+    expect(painful.find((s) => s.id === 'city')?.painful).toBe(true)
+    expect(painful.find((s) => s.id === 'shock')?.painful).toBe(false)
+  })
+
   it('adds one source per floating mana in the pool', () => {
     const sources = sourcesOf({}, { red: 2, colorless: 1 })
     expect(sources.map((s) => [s.kind, s.poolColor])).toEqual([
@@ -150,6 +177,30 @@ describe('computeNextManaAction', () => {
   it('returns null when the cost cannot be paid', () => {
     expect(computeNextManaAction(cost('Pay {R}'), sourcesOf({ f1: forest() }))).toBeNull()
     expect(computeNextManaAction(cost('Pay {3}'), sourcesOf({ f1: forest(), f2: forest() }))).toBeNull()
+  })
+
+  it('never spends a pain land on generic while a painless source is open', () => {
+    const wastes = makePermanent({
+      name: 'Llanowar Wastes',
+      cardTypes: ['LAND'],
+      rules: ['{T}: Add {C}.', '{T}: Add {B}. Llanowar Wastes deals 1 damage to you.', '{T}: Add {G}. Llanowar Wastes deals 1 damage to you.'],
+    })
+    expect(computeNextManaAction(cost('Pay {2}'), sourcesOf({ f1: forest(), w: wastes }))).toEqual({
+      kind: 'tapPermanent',
+      id: 'f1',
+    })
+  })
+
+  it('still taps the pain land for generic when it is the only source left', () => {
+    const wastes = makePermanent({
+      name: 'Llanowar Wastes',
+      cardTypes: ['LAND'],
+      rules: ['{T}: Add {C}.', '{T}: Add {B}. Llanowar Wastes deals 1 damage to you.', '{T}: Add {G}. Llanowar Wastes deals 1 damage to you.'],
+    })
+    expect(computeNextManaAction(cost('Pay {1}'), sourcesOf({ w: wastes }))).toEqual({
+      kind: 'tapPermanent',
+      id: 'w',
+    })
   })
 
   it('bails on unresolved tokens and empty costs', () => {

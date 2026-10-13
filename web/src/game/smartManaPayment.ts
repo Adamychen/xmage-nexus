@@ -19,6 +19,7 @@ export interface ManaSource {
   poolColor?: PoolKey
   id?: string
   produces: ManaColor[]
+  painful: boolean
 }
 
 export type ManaAction =
@@ -80,6 +81,14 @@ function tapColorsOf(perm: PermanentView): ManaColor[] {
   return [...out]
 }
 
+const PAIN_TO_YOU_RE = /deals?\s+\d*\s*damage to you|lose[sd]?\s+(\d+\s+)?life/i
+
+function tapPainOf(perm: PermanentView): boolean {
+  const rules = perm.rules ?? []
+  if (!rules.some((r) => TAP_ADD_RE.test(r.trim()))) return false
+  return rules.some((r) => PAIN_TO_YOU_RE.test(r))
+}
+
 function battlefieldEntries(player: PlayerView): [string, PermanentView][] {
   const bf = player.battlefield as unknown
   if (Array.isArray(bf)) {
@@ -95,12 +104,12 @@ export function ownManaSources(me: PlayerView, pool: Record<PoolKey, number>): M
   const sources: ManaSource[] = []
   for (const color of Object.keys(POOL_LETTER) as PoolKey[]) {
     for (let i = 0; i < (pool[color] ?? 0); i++) {
-      sources.push({ key: `pool:${color}:${i}`, kind: 'pool', poolColor: color, produces: [POOL_LETTER[color]] })
+      sources.push({ key: `pool:${color}:${i}`, kind: 'pool', poolColor: color, produces: [POOL_LETTER[color]], painful: false })
     }
   }
   for (const [id, perm] of battlefieldEntries(me)) {
     const produces = tapColorsOf(perm)
-    if (produces.length > 0) sources.push({ key: `tap:${id}`, kind: 'tap', id, produces })
+    if (produces.length > 0) sources.push({ key: `tap:${id}`, kind: 'tap', id, produces, painful: tapPainOf(perm) })
   }
   return sources
 }
@@ -190,7 +199,8 @@ export function computeNextManaAction(
 
   const sourceByKey = new Map(sources.map((s) => [s.key, s]))
   const assigned = ranked.filter((s) => owner.has(s.key))
-  const first = assigned.length > 0 ? assigned[0] : ranked.find((s) => !owner.has(s.key))
+  const unassigned = ranked.filter((s) => !owner.has(s.key))
+  const first = assigned.length > 0 ? assigned[0] : (unassigned.find((s) => !s.painful) ?? unassigned[0])
   const chosen = first ? sourceByKey.get(first.key)! : null
   if (!chosen) return null
   return chosen.kind === 'pool'
