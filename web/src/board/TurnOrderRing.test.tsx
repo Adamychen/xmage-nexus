@@ -29,12 +29,32 @@ describe('TurnOrderRing', () => {
 
   it('the walkway drops the life counter and the trailing arrow', () => {
     const { container, getByTestId } = render(<TurnOrderRing lane players={[me, rival]} activePlayerId="rival" />)
-    const lane = getByTestId('turn-lane')
-    expect(lane.classList.contains('lane')).toBe(true)
-    expect(lane.querySelectorAll('.tor-seat').length).toBe(2)
-    expect(lane.querySelectorAll('.tor-seat-life').length).toBe(0)
-    expect(lane.querySelectorAll('.tor-arrow').length).toBe(1)
+    const walkway = getByTestId('turn-lane')
+    const row = walkway.querySelector<HTMLElement>('.tor-seats-flow')
+    expect(walkway.classList.contains('lane')).toBe(true)
+    // The measured clones under .tor-measure-layer repeat the seats on purpose
+    // (they are how the walkway learns its natural width): count the real row.
+    expect(row?.querySelectorAll('.tor-seat').length).toBe(2)
+    expect(row?.querySelectorAll('.tor-seat-life').length).toBe(0)
+    expect(row?.querySelectorAll('.tor-arrow').length).toBe(1)
     expect(container.querySelectorAll('.turn-order-ring').length).toBe(1)
+  })
+
+  it('the measurement clones carry no test id and never take part in the layout', () => {
+    const { container, getByTestId, getAllByTestId } = render(<TurnOrderRing lane players={[me, rival, third]} activePlayerId="rival" />)
+    const walkway = getByTestId('turn-lane')
+    const layer = walkway.querySelector<HTMLElement>('[data-measure]')
+    expect(layer).not.toBeNull()
+    expect(layer?.getAttribute('aria-hidden')).toBe('true')
+    expect(layer?.querySelectorAll('[data-testid]')).toHaveLength(0)
+    // one badge for the real active seat, nothing from the clones
+    expect(getAllByTestId('tor-active-badge')).toHaveLength(1)
+    // The full-width clone mirrors the row (seats *and* the arrows between
+    // them): measure less than the row needs and the walkway clips anyway.
+    const rulers = Array.from(container.querySelectorAll<HTMLElement>('[data-lane-measure]'))
+    expect(rulers.map((r) => r.dataset.laneMeasure)).toEqual(['full', 'solo', 'solo-dots'])
+    expect(rulers[0].querySelectorAll('.tor-seat').length).toBe(3)
+    expect(rulers[0].querySelectorAll('.tor-arrow').length).toBe(2)
   })
 
   it('turn and priority are separate markers and can be on the same seat', () => {
@@ -61,5 +81,11 @@ describe('TurnOrderRing', () => {
     const myBadge = mineActive.getByTestId('tor-active-badge').textContent
     expect(myBadge).toBeTruthy()
     expect(myBadge).not.toBe(rivalBadge)
+  })
+
+  it('has no ruler outside the walkway: the ring and the FFA switcher are position-coded', () => {
+    const { container } = render(<TurnOrderRing players={[rival, me]} activePlayerId="rival" />)
+    expect(container.querySelector('[data-lane-measure]')).toBeNull()
+    expect(container.querySelector<HTMLElement>('.turn-order-ring')?.dataset.laneFit).toBeUndefined()
   })
 })

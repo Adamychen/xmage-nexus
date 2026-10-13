@@ -83,62 +83,133 @@ async function boot(page: Page) {
   await page.waitForTimeout(400)
 }
 
-test('the 1v1 walkway fills the middle gap without overflowing the band @board', async ({ page }) => {
-  await boot(page)
-  await pushGame(page, duel('p2', 'p2'))
-  await expect(page.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 10_000 })
+/**
+ * What the walkway shows and whether it fits, read from the live layout.
+ * Seats are counted inside `.tor-seats-flow` only: the hidden clones under
+ * `[data-measure]` repeat the names to measure them and are not the row.
+ */
+function laneState(page: Page) {
+  return page.evaluate(() => {
+    const lane = document.querySelector<HTMLElement>('[data-testid="turn-lane"]')
+    const band = document.querySelector<HTMLElement>('.board-shell-divider')
+    const center = document.querySelector<HTMLElement>('.game-strip-center')
+    const strip = document.querySelector<HTMLElement>('.game-strip')
+    if (!lane || !band || !center || !strip) return { missing: true as const }
+    const l = lane.getBoundingClientRect()
+    const c = center.getBoundingClientRect()
+    const b = band.getBoundingClientRect()
+    const row = lane.querySelector<HTMLElement>('.tor-seats-flow')
+    const seats = Array.from(row?.querySelectorAll<HTMLElement>('.tor-seat') ?? [])
+    return {
+      missing: false as const,
+      fit: lane.dataset.laneFit ?? null,
+      laneW: Math.round(l.width),
+      centerW: Math.round(c.width),
+      fitsWidth: l.right <= c.right + 1,
+      fitsBand: l.bottom <= b.bottom + 1,
+      stripOverflows: strip.scrollWidth > strip.clientWidth,
+      // the row, not the pill: the hidden ruler inside the walkway is allowed to
+      // be wider than the pill, and counting it would read as an overflow
+      rowOverflows: !!row && row.scrollWidth > row.clientWidth + 1,
+      // the three rulers, logged every pass: when a platform resolves a wider
+      // --font-ui these numbers move, and the fit must move with them
+      clones: Object.fromEntries(Array.from(lane.querySelectorAll<HTMLElement>('[data-lane-measure]')).map((c) => [c.dataset.laneMeasure ?? '?', Math.round(c.scrollWidth * 10) / 10])),
+      seats: seats.map((s) => {
+        const name = s.querySelector<HTMLElement>('.tor-seat-name')
+        return {
+          name: name?.textContent ?? null,
+          shown: name !== null && s.offsetParent !== null,
+          clipped: !!name && name.scrollWidth > name.clientWidth + 1,
+          active: s.classList.contains('is-active'),
+        }
+      }),
+    }
+  })
+}
 
-  const lane = page.locator('[data-testid="turn-lane"]')
-  await expect(lane).toBeVisible()
-
+// The contract, at every width and under either font: the walkway either shows
+// the names whole or gives up the seat that carries no information. A truncated
+// name is not a state it can be in, and neither is a row wider than its band.
+async function expectNoTruncation(page: Page, label: string) {
   for (const width of [1600, 1280, 900]) {
     await page.setViewportSize({ width, height: 800 })
-    await page.waitForTimeout(250)
-    const fit = await page.evaluate(() => {
-      const lane = document.querySelector<HTMLElement>('[data-testid="turn-lane"]')
-      const band = document.querySelector<HTMLElement>('.board-shell-divider')
-      const center = document.querySelector<HTMLElement>('.game-strip-center')
-      const strip = document.querySelector<HTMLElement>('.game-strip')
-      if (!lane || !band || !center || !strip) return { missing: true }
-      const l = lane.getBoundingClientRect()
-      const c = center.getBoundingClientRect()
-      const b = band.getBoundingClientRect()
-      return {
-        lane: { w: Math.round(l.width), h: Math.round(l.height) },
-        band: { h: Math.round(b.height) },
-        center: { w: Math.round(c.width), right: Math.round(c.right) },
-        laneRight: Math.round(l.right),
-        fitsWidth: l.right <= c.right + 1,
-        fitsBand: l.bottom <= b.bottom + 1,
-        stripOverflows: (strip as HTMLElement).scrollWidth > (strip as HTMLElement).clientWidth,
-      }
-    })
-    const clipped = await page.evaluate(() => {
-      const lane = document.querySelector<HTMLElement>('[data-testid="turn-lane"]')
-      if (!lane) return { missing: true }
-      const seats = Array.from(lane.querySelectorAll<HTMLElement>('.tor-seat'))
-      return {
-        scrollOver: lane.scrollWidth > lane.clientWidth,
-        visibleSeats: Array.from(lane.querySelectorAll<HTMLElement>('.tor-seat')).filter((s) => s.offsetParent !== null).length,
-        seats: seats.map((s) => ({
-          name: s.querySelector('.tor-seat-name')?.textContent,
-          nameClipped: (() => {
-            const n = s.querySelector<HTMLElement>('.tor-seat-name')
-            return !!n && n.scrollWidth > n.clientWidth + 1
-          })(),
-          hasBadge: !!s.querySelector('[data-testid="tor-active-badge"]'),
-        })),
-      }
-    })
-    console.log(`LANE-FIT@${width} ` + JSON.stringify({ ...fit, ...clipped }))
-    await page.screenshot({ path: `/tmp/turn-lane-${width}.png` })
-    expect(fit).toMatchObject({ fitsWidth: true, fitsBand: true, stripOverflows: false })
-    // no clipping at any width: the 14-char name is shown whole at 1600/1280
-    expect(clipped.scrollOver).toBe(false)
-    // at 900 the band is too narrow for two slots: it keeps the active seat
-    expect(clipped.visibleSeats).toBe(width === 900 ? 1 : 2)
-    expect(clipped.seats.filter((s: { nameClipped: boolean }) => s.nameClipped).length).toBe(0)
+    await page.waitForTimeout(300)
+    const state = await laneState(page)
+    console.log(`LANE-${label}@${width} ` + JSON.stringify(state))
+    expect(state.missing).toBe(false)
+    expect(state.fitsWidth).toBe(true)
+    expect(state.fitsBand).toBe(true)
+    expect(state.stripOverflows).toBe(false)
+    expect(state.rowOverflows).toBe(false)
+    const shown = state.seats.filter((s) => s.shown)
+    expect(shown.length).toBeGreaterThan(0)
+    // either the whole row, or the active seat alone: never a cut name
+    expect(shown.length === state.seats.length || shown.length === 1).toBe(true)
+    for (const s of shown) expect(s.clipped).toBe(false)
+    expect(shown.some((s) => s.active)).toBe(true)
   }
+}
+
+// Starve the band: the walkway's container is the middle strip, so clamping it
+// is how the narrow-window and uiScale>1 cases look from the inside. 240px is
+// below the natural row width (~283px measured), which is the region where a
+// fixed budget used to truncate the name instead of degrading.
+async function starveBand(page: Page, px: number | null) {
+  await page.evaluate((width) => {
+    document.getElementById('lane-starve')?.remove()
+    if (width === null) return
+    const style = document.createElement('style')
+    style.id = 'lane-starve'
+    style.textContent = `.game-strip-center { max-width: ${width}px !important }`
+    document.head.append(style)
+  }, px)
+  await page.waitForTimeout(300)
+}
+
+test('the 1v1 walkway never truncates a name, narrow or wide font @board', async ({ page }) => {
+  await boot(page)
+  await pushGame(page, duel('p2', 'p2'))
+  await expect(page.locator('[data-testid="turn-lane"]')).toBeVisible({ timeout: 10_000 })
+
+  await page.setViewportSize({ width: 1600, height: 800 })
+  await page.waitForTimeout(300)
+  await expectNoTruncation(page, 'DEFAULT')
+
+  // A face wider than anything the app ships against: CI's Ubuntu resolves
+  // system-ui to something in this class (100.8px for the 14-char name against
+  // this machine's 94.9px), and the guard has to catch that from a Mac.
+  await page.addStyleTag({ content: ':root { --font-ui: monospace !important; }' })
+  await page.waitForTimeout(300)
+  await expectNoTruncation(page, 'WIDE')
+
+  // Where it used to break: not enough band for the row. Under both fonts the
+  // walkway must give up the quiet seat rather than cut a name, and the fit
+  // must actually move off 'full' — otherwise this pass proves nothing.
+  for (const font of ['DEFAULT', 'WIDE'] as const) {
+    if (font === 'DEFAULT') {
+      // back to the narrow face for the second half of the matrix: the style tag
+      // is appended after the monospace one, and the later !important wins
+      await page.addStyleTag({ content: ':root { --font-ui: "Segoe UI", system-ui, sans-serif !important; }' })
+    }
+    await starveBand(page, 240)
+    for (const width of [1600, 1280, 900]) {
+      await page.setViewportSize({ width, height: 800 })
+      await page.waitForTimeout(300)
+      const state = await laneState(page)
+      console.log(`LANE-STARVED-${font}@${width} ` + JSON.stringify(state))
+      expect(state.missing).toBe(false)
+      expect(state.rowOverflows).toBe(false)
+      // the walkway noticed: 240px of band is under the row's natural width
+      expect(state.fit).not.toBe('full')
+      const shown = state.seats.filter((s) => s.shown)
+      expect(shown.length).toBeGreaterThan(0)
+      expect(shown.length === state.seats.length || shown.length === 1).toBe(true)
+      for (const s of shown) expect(s.clipped).toBe(false)
+      expect(shown.some((s) => s.active)).toBe(true)
+    }
+    await starveBand(page, null)
+  }
+  await page.screenshot({ path: '/tmp/turn-lane-wide.png' })
 })
 
 test('turn and priority paint at the same time @board', async ({ page }) => {
@@ -189,7 +260,7 @@ test('the marker changes side with the turn and keeps slot positions @board', as
   await expect(page.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 10_000 })
 
   const rivalPlaying = await page.evaluate(() => {
-    const seats = Array.from(document.querySelectorAll<HTMLElement>('.turn-order-ring.lane .tor-seat'))
+    const seats = Array.from(document.querySelectorAll<HTMLElement>('.turn-order-ring.lane .tor-seats-flow .tor-seat'))
     return seats.map((s) => ({ name: s.querySelector('.tor-seat-name')?.textContent, active: s.dataset.active === 'true' }))
   })
   console.log('LANE-RIVAL ' + JSON.stringify(rivalPlaying))
@@ -199,7 +270,7 @@ test('the marker changes side with the turn and keeps slot positions @board', as
   await pushGame(page, duel('p1', 'p1'))
   await page.waitForTimeout(250)
   const minePlaying = await page.evaluate(() => {
-    const seats = Array.from(document.querySelectorAll<HTMLElement>('.turn-order-ring.lane .tor-seat'))
+    const seats = Array.from(document.querySelectorAll<HTMLElement>('.turn-order-ring.lane .tor-seats-flow .tor-seat'))
     return seats.map((s) => ({ name: s.querySelector('.tor-seat-name')?.textContent, active: s.dataset.active === 'true' }))
   })
   console.log('LANE-MINE ' + JSON.stringify(minePlaying))

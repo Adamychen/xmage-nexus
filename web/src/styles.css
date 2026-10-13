@@ -52,16 +52,18 @@
   --dlg-msg-fg: var(--fg-2);
   --dlg-bar-radius: var(--r-mid);
 
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-ui);
 }
 
 html { font-size: calc(16px * var(--cjk-boost)); }
 
 :root:lang(ja) {
-  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 :root:lang(zh) {
-  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 
 html:lang(ja) body, html:lang(zh) body {

@@ -97,6 +97,12 @@
   --warn-surface: color-mix(in srgb, var(--warn) 22%, var(--ink-2));
   --brand-surface: color-mix(in srgb, var(--brand) 22%, var(--ink-2));
 
+  /* The UI font is a token so the geometry guards can run it against a wider
+     face than the one this machine happens to resolve. `system-ui` on Linux
+     resolves to a face ~7 % wider than macOS's, and a layout that only fits
+     the narrow one is a layout bug, not a test bug. */
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
   --fs-4xs: 0.562rem;
   --fs-3xs: 0.625rem;
   --fs-2xs: 0.688rem;
