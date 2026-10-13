@@ -2,7 +2,9 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::Path;
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -50,7 +52,94 @@ pub fn download(
     if !url.starts_with("https://") && !url.starts_with("http://") {
         return Err(FetchError::Scheme(url.to_string()));
     }
-    let response = ureq::get(url)
+    let mut last = FetchError::Http("no attempt".to_string());
+    for attempt in 1..=DOWNLOAD_ATTEMPTS {
+        match download_http(url, dest, progress) {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                last = e;
+                if attempt < DOWNLOAD_ATTEMPTS {
+                    std::thread::sleep(Duration::from_secs(2 * attempt as u64));
+                }
+            }
+        }
+    }
+    Err(last)
+}
+
+const DOWNLOAD_ATTEMPTS: u32 = 3;
+const STALL_LIMIT: Duration = Duration::from_secs(30);
+
+struct Shared {
+    done: AtomicU64,
+    total: AtomicU64,
+    abort: AtomicBool,
+    result: Mutex<Option<Result<(), FetchError>>>,
+}
+
+fn download_http(
+    url: &str,
+    dest: &Path,
+    progress: &mut dyn FnMut(u64, Option<u64>),
+) -> Result<(), FetchError> {
+    let shared = Arc::new(Shared {
+        done: AtomicU64::new(0),
+        total: AtomicU64::new(0),
+        abort: AtomicBool::new(false),
+        result: Mutex::new(None),
+    });
+    let worker = shared.clone();
+    let url = url.to_string();
+    let dest_owned = dest.to_path_buf();
+    std::thread::spawn(move || {
+        let outcome = stream_http(&url, &dest_owned, &worker);
+        if let Ok(mut slot) = worker.result.lock() {
+            *slot = Some(outcome);
+        }
+    });
+    progress(0, None);
+    let mut last_done = 0u64;
+    let mut last_move = Instant::now();
+    let mut announced_total = false;
+    loop {
+        std::thread::sleep(Duration::from_millis(200));
+        let done = shared.done.load(Ordering::Relaxed);
+        let total = shared.total.load(Ordering::Relaxed);
+        if total > 0 && !announced_total {
+            announced_total = true;
+            progress(done, Some(total));
+        } else if done != last_done {
+            progress(done, if total > 0 { Some(total) } else { None });
+        }
+        if done != last_done {
+            last_done = done;
+            last_move = Instant::now();
+        }
+        if let Ok(mut slot) = shared.result.lock() {
+            if let Some(outcome) = slot.take() {
+                return outcome;
+            }
+        }
+        if last_move.elapsed() > STALL_LIMIT {
+            shared.abort.store(true, Ordering::Relaxed);
+            let _ = std::fs::remove_file(dest.with_extension("part"));
+            return Err(FetchError::Http(format!(
+                "download stalled: no data for {}s",
+                STALL_LIMIT.as_secs()
+            )));
+        }
+    }
+}
+
+fn stream_http(url: &str, dest: &Path, shared: &Shared) -> Result<(), FetchError> {
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .timeout_resolve(Some(Duration::from_secs(15)))
+        .timeout_connect(Some(Duration::from_secs(15)))
+        .timeout_recv_response(Some(Duration::from_secs(30)))
+        .build()
+        .into();
+    let response = agent
+        .get(url)
         .call()
         .map_err(|e| FetchError::Http(e.to_string()))?;
     let total = response
@@ -58,9 +147,36 @@ pub fn download(
         .get("content-length")
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.parse::<u64>().ok());
-    progress(0, total);
+    shared.total.store(total.unwrap_or(0), Ordering::Relaxed);
     let mut reader = response.into_body().into_reader();
-    write_stream(&mut reader, dest, progress)?;
+    if let Some(parent) = dest.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let tmp = dest.with_extension("part");
+    {
+        let mut out = File::create(&tmp)?;
+        let mut buf = [0u8; 65536];
+        let mut downloaded = 0u64;
+        loop {
+            let n = reader.read(&mut buf)?;
+            if shared.abort.load(Ordering::Relaxed) {
+                let _ = std::fs::remove_file(&tmp);
+                return Err(FetchError::Http("aborted".to_string()));
+            }
+            if n == 0 {
+                break;
+            }
+            out.write_all(&buf[..n])?;
+            downloaded += n as u64;
+            shared.done.store(downloaded, Ordering::Relaxed);
+        }
+        out.flush()?;
+    }
+    if shared.abort.load(Ordering::Relaxed) {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(FetchError::Http("aborted".to_string()));
+    }
+    std::fs::rename(&tmp, dest)?;
     Ok(())
 }
 
