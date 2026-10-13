@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
+import { setSetting } from '../state/store'
 import { render, fireEvent } from '@testing-library/react'
 import PlayerInfoBar from './PlayerInfoBar'
 import type { PlayerView } from '../net/types'
@@ -17,6 +18,8 @@ const basePlayer: PlayerView = makePlayer({
 })
 
 describe('PlayerInfoBar', () => {
+  beforeEach(() => setSetting('gameUi', 'v1'))
+
   it('renders basic player info (avatar, name, life)', () => {
     const { container } = render(<PlayerInfoBar player={basePlayer} side="my" />)
     expect(container.querySelector('.player-name')?.textContent).toBe('Alice')

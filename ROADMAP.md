@@ -107,6 +107,7 @@ Ideas added 2026-09-23 (client review focused on `beta.xmage.today`):
 | Game FX | Foil shimmer + 3D tilt on the enlarged card preview | Medium / small | Done 2026-09-23 |
 | Game FX | Selectable playmats, including animated mats tinted by colour identity (Phase 3 leftover; 7 static + 2 animated mats) | Medium / ~1 d | Done 2026-09-23 |
 | Game UI | Compact (Arena-style) battlefield cards: art-crop tiles with name, type and mana-source pips; Settings → Board → Card style (Classic / Compact) and Tapped cards (Sideways 90° / Tilted 45°) | High / ~1 d | Done 2026-09-25 (battlefield only; hand, stack and dialogs keep full cards; tapped cards are scaled so the rotated box fits the row) |
+| Game UI | New table interface (`gameUi` setting, `v2`): top bar with turn and day/night, six-pip phase dial around the pass button (blue pass, gold resolve, grey wait), the stack as a card deck (top card + one tab per object), seat-coloured player portraits (hand count on the avatar, Lib/GY/Exile chips, mechanic chips, commander-damage chips, your own portrait with mana pool at the bottom left), a docked side panel (log, chat, commander matrix, mechanics, tracker), a four-line "Last actions" box (newest first, names in bold, seat-coloured dots) and a combat damage ledger above your portrait (attacker, seat dots, commander total before → after, life before → after); arrows take the seat colour of their source (thin dashed arc, edge to edge); short mechanic chips (Ring N, Monarch, Initiative, Speed N, current dungeon room n/m, Blessing) and a one-scroll Mechanics panel (Ring levels, dungeon map, table state) | High / ~3 d | Done 2026-10-13, **on by default** (`Settings → Appearance → New table interface` goes back to `v1`; the name is still pending). Guards: `e2e/game-ui-v2.spec.ts`, `board/StackDeck.test.tsx`, `board/CombatArrowsOverlay.test.tsx`, `game/MechanicsOverview.test.tsx`, `game/PhaseDial.test.tsx`, `game/PlayerInfoBar.portrait.test.tsx`, `game/LogTicker.test.tsx`, `game/combatLedgerModel.test.ts`, `game/commanderChips.test.ts` |
 | Game FX | Dynamic music: ambient layer that intensifies near lethal | Medium / ~1 d | Done 2026-09-23 |
 | Game FX | Cinematic victory/defeat screen with match stats (key card, turns, life taken/lost, spells cast, creatures destroyed) | Medium / ~1 d | Done 2026-09-23 |
 | Ease of use | "Your turn / response needed" browser notification + title/favicon badge when the tab is hidden | Very high / ~0.5 d | Done 2026-09-23 (toggle in Settings → Gameplay; permission asked on the first in-game click) |
@@ -160,6 +161,23 @@ Still open, each needing a **design decision, not a bug fix**:
 | See the rules text of every card in hand without hovering | The hand is an absolutely positioned bottom bar (`board/HandBar.css:1-22`); the reporter's "hand on the left, board on the right" is a fourth layout in `board/boardLayout.ts:4`, not a setting |
 | See the rules text of every permanent in play without hovering | Legible text for 8+ permanents does not fit one screen. Options: bigger cards with band panning (the bands already scroll), a one-line rules strip under compact tiles, or a persistent inspector |
 | ~~Clearer "whose turn is it"~~ | Resolved 2026-10-09, see above. What is left of it is a taste call, not a bug: opponent priority (`--warn` orange) is close in hue to the turn gold, so on the top bar the two channels still read alike at a glance — separating them means moving one hue, not adding a sixth indicator |
+
+### 4.3c New table interface (v2): what is left
+
+Shipped 2026-10-13 behind `settings.gameUi` (`v1` = the interface as it was; `v2` is the default, `e2e/fixtures.ts` pins `v1` for the older specs and the v2 specs choose it explicitly). Board layouts (Standard, Pod, Arena) are untouched: v2 only changes the chrome around them and the `PlayerInfoBar` skin. The two things that make it cheap to keep: `GameScreen` renders either set from the same state (`v2` flag), and every `data-testid` the e2e suite relies on (`phase-bar-step-*`, `stack-count`, `game-status`, `phase-name`) exists in both.
+
+| Open item | Why |
+|---|---|
+| Name for v2 | Product decision; the setting is still called `gameUi` / "New table interface" |
+| Real-mode run of `game-ui-v2.spec.ts` and a gallery entry per v2 state | The spec injects a `GameView` into the store (fake mode only); nothing yet proves v2 against the recorded frames or the visual-regression gallery |
+| Opponent `HandZone` fan next to the hand badge | The portrait shows the hand count on the avatar but the old face-down fan (`×N`) is kept because it carries the hand viewer and the hand targeting; showing both is redundant, dropping the fan is not free |
+| Hand column with the side panel open | The column hides while the panel is open and the fan returns (`BoardShell`); a slim thumbnail strip would keep the hand in place but needs its own card render |
+| Stack tabs past the 7th and the arrow filter | Tabs beyond `STACK_DECK_MAX_TABS` are only reachable through the expanded view, and the target arrows are drawn only for the top object and the hovered one (`CombatArrowsOverlay` `stackFocusIds`); a long chain therefore hides arrows by design |
+| Combat ledger source | Built from the parsed feed (`useFeedItems`): it only knows the damage the log reports, with no "dies" line and no first-strike split, because the parser has no such events |
+| Target and attacker highlight on battlefield cards | The design rings a targeted card in red and drops an attacker 14 px with a red outline; both live on the battlefield card render, which v2 deliberately leaves alone |
+| Stack tab hover preview | The deck reuses `FloatingCardPreview`, so the preview follows the global preview size instead of the design's 214x300 card and can cover the target arrow it is explaining |
+| Dungeon map as a floating window | The mechanics tab shows it; the old info window on room change is not wired to v2 |
+| Narrow windows | The top bar, dial and stack deck were only checked at 1600x900; below ~1200 px the stack deck reserves 284 px of board width |
 
 ### 4.4 Test-infrastructure risk
 

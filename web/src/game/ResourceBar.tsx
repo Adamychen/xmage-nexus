@@ -24,6 +24,8 @@ interface ResourceBarProps {
   side: 'opp' | 'my'
   compact?: boolean
   micro?: boolean
+  stats?: boolean
+  poolOnly?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
@@ -43,7 +45,9 @@ export default function ResourceBar({
   player,
   side,
   compact = false,
-  micro = false,
+  micro: microProp = false,
+  stats = false,
+  poolOnly = false,
   crossZonePlayables,
   onPlayCrossZone,
   onCardHover,
@@ -53,6 +57,7 @@ export default function ResourceBar({
   onTargetClick,
 }: ResourceBarProps) {
   const { t } = useTranslation()
+  const micro = microProp || stats
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const gameId = useStore((s) => s.gameId)
   const librarySleeve = useSleeveFor(side === 'my' ? player.playerId : null)
@@ -181,11 +186,22 @@ export default function ResourceBar({
     }
   }, [autoOpenPile])
 
-  return (
-    <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
-      <div className="resource-mana-wrap">
-        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} />
+  if (poolOnly) {
+    return (
+      <div className="resource-bar-pool" data-testid="resource-pool">
+        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={14} />
+        {Object.values(pool).every((n) => !n) && !manaPromptOpen && <em className="resource-pool-label">{t('game', 'mana_pool_label')}</em>}
       </div>
+    )
+  }
+
+  return (
+    <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''} ${stats ? 'stats' : ''}`}>
+      {!stats && (
+        <div className="resource-mana-wrap">
+          <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} />
+        </div>
+      )}
 
       <div className={`resource-piles ${micro ? 'micro' : ''}`}>
         {micro ? (
@@ -207,7 +223,7 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
+              {stats ? <em className="chip-label">{t('game', 'pile_library_short')}</em> : <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>}
               <span className="chip-count">{player.libraryCount}</span>
               {player.topCard && (
                 <span className="chip-indicator" title={t('board', 'zone_revealed')}>
@@ -231,9 +247,11 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              <span className="chip-icon">
-                <Icon name="skull" size={12} />
-              </span>
+              {stats ? <em className="chip-label">{t('game', 'pile_graveyard_short')}</em> : (
+                <span className="chip-icon">
+                  <Icon name="skull" size={12} />
+                </span>
+              )}
               <span className="chip-count">{graveyardCount}</span>
               {counts.graveyard > 0 && <span className="chip-playable-dot" />}
             </button>
@@ -253,14 +271,16 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              <span className="chip-icon">
-                <Icon name="portal" size={12} />
-              </span>
+              {stats ? <em className="chip-label">{t('game', 'pile_exile_short')}</em> : (
+                <span className="chip-icon">
+                  <Icon name="portal" size={12} />
+                </span>
+              )}
               <span className="chip-count">{exileCount}</span>
               {counts.exile > 0 && <span className="chip-playable-dot" />}
             </button>
 
-            {side === 'my' && (
+            {side === 'my' && (!stats || crossZone.length > 0) && (
               <button
                 type="button"
                 className={`resource-chip ray-chip clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''}`}

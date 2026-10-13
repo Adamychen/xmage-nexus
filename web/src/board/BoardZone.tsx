@@ -25,7 +25,9 @@ import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
+import { useSeatColor } from './seatColor'
 import './BoardZone.css'
+import './PortraitBoard.css'
 import './targetZone.css'
 
 export interface BoardZoneProps {
@@ -87,6 +89,9 @@ export default function BoardZone({
   const isTop = effectivePosition === 'top'
 
   const rendered = useStore((s) => s.settings.cardRender) === 'rendered'
+  const portrait = useStore((s) => s.settings.gameUi) === 'v2'
+  const seatColor = useSeatColor(player?.playerId)
+  const isTurnZone = useStore((s) => (s.game?.activePlayerId ? s.game.activePlayerId === player?.playerId : !!player?.isActive))
   const cardStyle = useStore((s) => s.settings.cardStyle)
   const compactCards = cardStyle === 'compact' && !rendered
   const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
@@ -472,8 +477,27 @@ export default function BoardZone({
           e.preventDefault()
           setState({ playerMenu: { playerId: player.playerId, x: e.clientX, y: e.clientY } })
         }}
+        stats={portrait ? (
+          <>
+          <ResourceBar
+            player={player}
+            side={statusSide}
+            compact
+            stats
+            crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
+            onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
+            onCardHover={onCardHover}
+            targetIds={targetIds}
+            targetZone={targetZone}
+            targetZones={targetZones}
+            onTargetClick={onCardClick}
+          />
+          {effectiveControlled && compactPod && <ResourceBar player={player} side="my" poolOnly />}
+          </>
+        ) : undefined}
+        pool={portrait && effectiveControlled && !compactPod ? <ResourceBar player={player} side="my" poolOnly /> : undefined}
       />
-      {showHand && (
+      {showHand && (!portrait || handViewable || handTargeted || effectiveControlled) && (
         <HandZone
           cards={finalHand}
           onCardClick={onHandCardClick ?? onCardClick}
@@ -492,7 +516,7 @@ export default function BoardZone({
         (shellEl
           ? createPortal(handSwitchButton, shellEl)
           : handSwitchButton)}
-      <ResourceBar
+      {!portrait && <ResourceBar
         player={player}
         side={statusSide}
         compact
@@ -504,7 +528,7 @@ export default function BoardZone({
         targetZone={targetZone}
         targetZones={targetZones}
         onTargetClick={onCardClick}
-      />
+      />}
     </div>
   )
 
@@ -580,8 +604,10 @@ export default function BoardZone({
       data-player-id={player.playerId}
       data-player-name={player.name}
       data-role={isTop ? 'opponent' : 'player'}
+      data-turn={isTurnZone || undefined}
       style={{
         '--card-w': `${cardW}px`,
+        '--seat': seatColor,
         ...(shares.uneven
           ? { gridTemplateRows: isTop ? `auto ${shares.permanentsFr}fr ${shares.creaturesFr}fr` : `${shares.creaturesFr}fr ${shares.permanentsFr}fr auto` }
           : null),

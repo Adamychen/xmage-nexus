@@ -180,3 +180,13 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   (`getPlayerTypes` over the proxy returns `HUMAN, COMPUTER_DRAFT_BOT, COMPUTER_MAD`). Run real-mode
   specs against the local stack with `E2E_BACKEND=real E2E_SERVER_HOST=localhost`; dump the select's
   options before suspecting the product.
+
+- **Two files whose names differ only by case are one file on macOS and Windows.** `game/combatLedger.ts`
+  (the model) next to `game/CombatLedger.tsx` (the component) made `tsc` fail with TS1261 ("already
+  included file name … differs only in casing") and the import resolve to the wrong one on this Mac, while
+  Linux CI would have built both. Give the model a different stem (`combatLedgerModel.ts`).
+- **`@testing-library/react` does not clean up between tests in this repo.** `getByTestId` is bound to
+  `document.body`, so a test that renders the same component after another one finds two matches
+  (`Found multiple elements by: [data-testid="stack-deck-toggle"]`) and passes alone but fails in the file.
+  Call `afterEach(cleanup)` in any spec that queries through the returned `getBy*`.
+

@@ -52,3 +52,17 @@
 .game-log-text {
   color: var(--fg-2);
 }
+
+.board-wrap[data-ui='v2'] {
+  box-sizing: border-box;
+  padding-left: var(--chrome-l, 0px);
+  padding-right: var(--chrome-r, 0px);
+  transition: padding 0.3s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-wrap[data-ui='v2'] {
+    transition: none;
+  }
+}
+

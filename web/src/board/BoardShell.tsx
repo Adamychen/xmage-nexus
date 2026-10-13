@@ -7,6 +7,7 @@ import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import type { BoardPresenter } from './useBoardPresenter'
 import { useStore, useSettings, isMulliganDecision } from '../state/store'
+import { useChromeActions } from '../game/chromeActions'
 import './BoardShell.css'
 
 export interface BoardShellProps {
@@ -56,7 +57,8 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
   const setHandPromptSlot = useContext(HandPromptSlotContext)
   const raised = useStore((s) => isMulliganDecision(s.feedback))
   const { handRail, handRailWidth } = useSettings()
-  const railed = handRail && !!handBar && !raised
+  const sidePanelOpen = useChromeActions()?.sidePanelOpen ?? false
+  const railed = handRail && !!handBar && !raised && !sidePanelOpen
   return (
     <div className={`board-shell ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ '--hand-rail-w': `${handRailWidth}px` } as React.CSSProperties) : undefined}>
       {children}

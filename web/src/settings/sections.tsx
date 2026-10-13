@@ -12,6 +12,7 @@ import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
 import RenderedCardsSettings from './RenderedCardsSettings'
+import GameUiSettings from './GameUiSettings'
 import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
@@ -185,6 +186,7 @@ export function BoardSection() {
         title={t('lobby', 'hand_cost_show_hint')}
       />
       <RenderedCardsSettings />
+      <GameUiSettings />
       <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>
       <p className="settings-hint">{t('lobby', 'pt_badge_hint')}</p>
       <div className="settings-cards">
