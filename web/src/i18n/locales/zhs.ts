@@ -99,6 +99,8 @@ export const zhs: TranslationSchema = {
     waiting_players: '等待玩家中...',
     create_table_btn: '创建对战桌',
     join_human_btn: '加入（人类）',
+    notify_opponent_joined: 'Opponent joined',
+    notify_opponent_joined_body: '{name} joined your table',
     join_ai_btn: '添加电脑',
     start_match_btn: '开始比赛',
     watch_btn: '观战',

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNotificationPermissionAsk } from '../game/attentionAlerts'
 import EmptyState from '../ui/EmptyState'
 import { useLobby, useStore, openStagingTable, clearError } from '../state/store'
 import * as cmds from '../net/commands'
@@ -43,6 +44,8 @@ export default function LobbyScreen() {
   const lobby = useLobby()
   const conn = useStore((s) => s.conn)
   const stagingTableId = useStore((s) => s.stagingTableId)
+  const browserNotifications = useStore((s) => s.settings.browserNotifications)
+  useNotificationPermissionAsk(browserNotifications && !!stagingTableId)
   const spectateTournament = useStore((s) => s.spectateTournament)
   const myDeck = useStore((s) => s.myDeck)
   const error = useStore((s) => s.error)

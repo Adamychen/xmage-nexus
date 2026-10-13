@@ -97,6 +97,8 @@ export const en = {
     waiting_players: 'Waiting for players...',
     create_table_btn: 'Create Table',
     join_human_btn: 'Join (Human)',
+    notify_opponent_joined: 'Opponent joined',
+    notify_opponent_joined_body: '{name} joined your table',
     join_ai_btn: 'Add AI Bot',
     start_match_btn: 'Start Match',
     watch_btn: 'Spectate',

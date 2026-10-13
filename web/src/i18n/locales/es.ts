@@ -99,6 +99,8 @@ export const es: TranslationSchema = {
     waiting_players: 'Esperando jugadores...',
     create_table_btn: 'Crear Mesa',
     join_human_btn: 'Unirse (Humano)',
+    notify_opponent_joined: 'Se unió un rival',
+    notify_opponent_joined_body: '{name} se sentó en tu mesa',
     join_ai_btn: 'Añadir Bot IA',
     start_match_btn: 'Iniciar Partida',
     watch_btn: 'Espectar',

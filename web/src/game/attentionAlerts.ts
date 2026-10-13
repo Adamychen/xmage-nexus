@@ -103,7 +103,20 @@ export function clearAttention(): void {
   lastNotification = null
 }
 
+let clearListenersInstalled = false
+
+function installClearListeners(): void {
+  if (clearListenersInstalled || typeof document === 'undefined') return
+  clearListenersInstalled = true
+  const onVisible = () => {
+    if (!document.hidden) clearAttention()
+  }
+  document.addEventListener('visibilitychange', onVisible)
+  window.addEventListener('focus', onVisible)
+}
+
 export function raiseAttention(opts: { label: string; title: string; body: string; tag: string; notify: boolean }): void {
+  installClearListeners()
   pending += 1
   if (baseTitle == null) baseTitle = document.title
   document.title = `(${pending}) ${opts.label} · ${baseTitle}`
@@ -159,6 +172,10 @@ export function useAttentionAlerts(
     }
   }, [])
 
+  useNotificationPermissionAsk(enabled)
+}
+
+export function useNotificationPermissionAsk(enabled: boolean): void {
   useEffect(() => {
     if (!enabled || !notificationsSupported() || Notification.permission !== 'default' || loadNotificationAsked()) return
     const ask = () => {

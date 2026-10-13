@@ -263,16 +263,25 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
     }
 
     case 'player_join': {
-      const duration = 0.16
+      const duration = 0.75
       const buf = makeBuffer(ctx, duration)
       const data = buf.getChannelData(0)
       const sr = ctx.sampleRate
+      const notes = [
+        { freq: 523.25, start: 0 },
+        { freq: 659.25, start: 0.14 },
+        { freq: 783.99, start: 0.28 },
+        { freq: 1046.5, start: 0.42 },
+      ]
       for (let i = 0; i < data.length; i++) {
         const t = i / sr
-        const env = Math.exp(-t * 16)
-        const f1 = Math.sin(2 * Math.PI * 523.25 * t) * (t < 0.07 ? 0.55 : 0.1)
-        const f2 = t >= 0.06 ? Math.sin(2 * Math.PI * 783.99 * (t - 0.06)) * 0.65 : 0
-        data[i] = (f1 + f2) * env * 0.5
+        let v = 0
+        for (const n of notes) {
+          if (t < n.start) continue
+          const nt = t - n.start
+          v += Math.sin(2 * Math.PI * n.freq * nt) * Math.min(1, nt / 0.008) * Math.exp(-nt * 6)
+        }
+        data[i] = Math.max(-1, Math.min(1, v * 0.4))
       }
       return buf
     }

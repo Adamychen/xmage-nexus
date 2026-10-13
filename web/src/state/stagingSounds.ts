@@ -1,4 +1,7 @@
 import { soundManager } from '../audio/soundManager'
+import { raiseAttention } from '../game/attentionAlerts'
+import { getState } from './state'
+import { t } from '../i18n'
 import type { SeatView, TableView } from '../net/types'
 
 export function stagingRosterNames(seats?: SeatView[] | null): string[] {
@@ -30,6 +33,18 @@ export function notifyStagingRoster(
 ): void {
   if (!prevTable || !nextTable) return
   const { joined, left } = diffStagingRoster(prevTable.seats, nextTable.seats, ownName)
-  if (joined.length > 0) soundManager.play('player_join', 'ui')
+  if (joined.length > 0) {
+    soundManager.play('player_join', 'ui')
+    if (typeof document !== 'undefined' && document.hidden) {
+      const title = t('lobby', 'notify_opponent_joined')
+      raiseAttention({
+        label: title,
+        title,
+        body: t('lobby', 'notify_opponent_joined_body', { name: joined.join(', ') }),
+        tag: `mage-seat-${nextTable.tableId}`,
+        notify: getState().settings.browserNotifications,
+      })
+    }
+  }
   if (left.length > 0) soundManager.play('player_leave', 'ui')
 }

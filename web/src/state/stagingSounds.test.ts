@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { diffStagingRoster, notifyStagingRoster, stagingRosterNames } from './stagingSounds'
 import { soundManager } from '../audio/soundManager'
+import { clearAttention } from '../game/attentionAlerts'
 import type { SeatView, TableView } from '../net/types'
 
 function seats(names: (string | null)[]): SeatView[] {
@@ -45,5 +46,20 @@ describe('stagingSounds (U4-12)', () => {
     expect(soundManager.play).not.toHaveBeenCalled()
     notifyStagingRoster(undefined, table(seats(['Alice'])))
     expect(soundManager.play).not.toHaveBeenCalled()
+  })
+
+  it('badges the tab title when an opponent sits while the tab is hidden', () => {
+    const hidden = vi.spyOn(document, 'hidden', 'get')
+    const base = document.title
+    hidden.mockReturnValue(false)
+    notifyStagingRoster(table(seats(['Alice'])), table(seats(['Alice', 'Bob'])))
+    expect(document.title).toBe(base)
+    hidden.mockReturnValue(true)
+    notifyStagingRoster(table(seats(['Alice'])), table(seats(['Alice', 'Bob'])))
+    expect(document.title).toMatch(/^\(1\) .*Bob|^\(1\) /)
+    expect(document.title).not.toBe(base)
+    hidden.mockRestore()
+    clearAttention()
+    expect(document.title).toBe(base)
   })
 })

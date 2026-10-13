@@ -99,6 +99,8 @@ export const ja: TranslationSchema = {
     waiting_players: '対戦相手を待っています...',
     create_table_btn: 'テーブル作成',
     join_human_btn: '参加 (人間)',
+    notify_opponent_joined: 'Opponent joined',
+    notify_opponent_joined_body: '{name} joined your table',
     join_ai_btn: 'AIボット追加',
     start_match_btn: '対戦開始',
     watch_btn: '観戦',

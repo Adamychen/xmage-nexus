@@ -99,6 +99,8 @@ export const ru: TranslationSchema = {
     waiting_players: 'Ожидание игроков...',
     create_table_btn: 'Создать Стол',
     join_human_btn: 'Войти (Человек)',
+    notify_opponent_joined: 'Opponent joined',
+    notify_opponent_joined_body: '{name} joined your table',
     join_ai_btn: 'Добавить ИИ-Бота',
     start_match_btn: 'Начать Матч',
     watch_btn: 'Наблюдать',
