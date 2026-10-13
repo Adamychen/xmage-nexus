@@ -172,3 +172,11 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   any red layer into a red run; `scripts/integration-report.mjs` now waits for `/ready` and warms the
   server up before blaming the code, because a 0.3 s "integration failure" against a proxy that is
   still building its card database is an environment failure wearing a product costume.
+
+- **A real-mode e2e that cannot find the AI seat is talking to beta, not to your stack.**
+  `e2e/support/start-game.ts` logs in against `beta.xmage.today` unless `E2E_SERVER_HOST` is set, and
+  the public server offers only `HUMAN` + `COMPUTER_DRAFT_BOT`, so `seat-type-0.selectOption('COMPUTER_MAD')`
+  waits until the 240 s timeout with "did not find some options". The local server reports all three
+  (`getPlayerTypes` over the proxy returns `HUMAN, COMPUTER_DRAFT_BOT, COMPUTER_MAD`). Run real-mode
+  specs against the local stack with `E2E_BACKEND=real E2E_SERVER_HOST=localhost`; dump the select's
+  options before suspecting the product.
