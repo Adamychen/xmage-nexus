@@ -140,6 +140,15 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
           </div>
         </>
       )}
+      {card.counters && card.counters.length > 0 && (
+        <div className="rc-counters">
+          {card.counters.map((c) => (
+            <span key={c.name} className="rc-counter">
+              {c.name} ×{c.count}
+            </span>
+          ))}
+        </div>
+      )}
       {layout.showStats && (
         <div className="rc-stats">
           <span className={`rc-power${statTone(layout.power, card.originalPower)}`}>{layout.power}</span>

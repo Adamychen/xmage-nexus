@@ -246,3 +246,22 @@
   color: inherit;
   font-weight: 700;
 }
+
+.rc-counters {
+  position: absolute;
+  left: 4cqw;
+  bottom: 4cqw;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1cqw;
+  max-width: 60%;
+}
+
+.rc-counter {
+  padding: 0.6cqw 2cqw;
+  border-radius: 2cqw;
+  background: var(--ink-0);
+  color: var(--fg-1);
+  font-size: 4cqw;
+  font-weight: 700;
+}

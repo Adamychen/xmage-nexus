@@ -8,7 +8,8 @@ import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { useTranslation } from '../i18n'
-import { useStore, isBlockingModal } from '../state/store'
+import { useStore, useSettings, isBlockingModal } from '../state/store'
+import RenderedCard from '../cards/rendered/RenderedCard'
 import Icon from '../ui/Icon'
 import { fxEnabled } from './fx'
 import './FloatingCardPreview.css'
@@ -54,6 +55,7 @@ export default function FloatingCardPreview({
   leaving = false,
 }: FloatingCardPreviewProps) {
   const modalOpen = useStore(isBlockingModal)
+  const { cardRender } = useSettings()
   const { t, lang } = useTranslation()
   const [showBackFace, setShowBackFace] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -201,7 +203,9 @@ export default function FloatingCardPreview({
             </div>
           )}
 
-          {imgUrl ? (
+          {cardRender === 'rendered' && !activeCard.faceDown ? (
+            <RenderedCard card={activeCard} />
+          ) : imgUrl ? (
             <>
               <img src={imgUrl} alt={name} className="floating-card-img" draggable={false} />
               <div className="floating-card-foil" aria-hidden="true" />
@@ -228,19 +232,19 @@ export default function FloatingCardPreview({
             </div>
           )}
 
-          {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'creature') && perm.power && perm.toughness && (
+          {cardRender !== 'rendered' && activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'creature') && perm.power && perm.toughness && (
             <div className="floating-card-pt">
               {perm.power}/{perm.toughness}
             </div>
           )}
 
-          {activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
+          {cardRender !== 'rendered' && activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
             <div className="floating-card-loyalty" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
               <Icon name="shield" size={12} /> {perm.loyalty}
             </div>
           )}
 
-          {activeCard.counters && activeCard.counters.length > 0 && (
+          {cardRender !== 'rendered' && activeCard.counters && activeCard.counters.length > 0 && (
             <div className="floating-card-counters">
               +{activeCard.counters.reduce((sum, c) => sum + c.count, 0)} {t('wiki', 'cat_counters').toLowerCase()}
             </div>

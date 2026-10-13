@@ -1,5 +1,5 @@
 import type { CardView } from '../../net/types'
-import { isAbilityCard } from '../cardImages'
+import { getSourceCardName, isAbilityCard } from '../cardImages'
 
 export type CardLayoutKind =
   | 'hidden'
@@ -78,6 +78,11 @@ export function cardTypeLine(card: CardView): string {
   const left = head.join(' ')
   if (subs.length === 0) return left
   return left ? `${left} — ${subs.join(' ')}` : subs.join(' ')
+}
+
+export function abilityLine(card: CardView): string {
+  const type = typeof card.abilityType === 'string' ? titleCase(card.abilityType) : ''
+  return type ? `${type} ability` : 'Ability'
 }
 
 export function frameColors(card: CardView): FrameColor[] {
@@ -179,9 +184,9 @@ export function cardLayout(card: CardView): CardLayout {
     kind,
     frame: frameFor(card, colors),
     colors,
-    name: card.displayName || card.name,
+    name: kind === 'ability' ? getSourceCardName(card) : card.displayName || card.name,
     cost: costSymbols(card),
-    typeLine: cardTypeLine(card),
+    typeLine: kind === 'ability' ? abilityLine(card) : cardTypeLine(card),
     rules,
     rows,
     power: card.power ?? '',

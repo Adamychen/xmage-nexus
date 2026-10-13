@@ -45,3 +45,14 @@
   padding-left: var(--hand-rail-w);
   box-sizing: border-box;
 }
+
+.hand-rail-card--rendered {
+  position: relative;
+}
+
+.hand-rail-flip {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  z-index: 2;
+}
