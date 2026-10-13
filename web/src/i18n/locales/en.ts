@@ -787,6 +787,8 @@ export const en = {
     end_lost_game_you: 'You lost the game',
     text_feed: 'Text',
     chat_empty: 'No chat messages yet. Type or send a reaction below!',
+    chat_show_lobby: 'Show lobby chat',
+    chat_show_lobby_hint: 'Messages from the main lobby chat while you play',
     chat_placeholder: 'Type a message in chat...',
     chat_send: 'Send message',
     insert_emoji: 'Insert emoji',

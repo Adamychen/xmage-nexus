@@ -91,3 +91,10 @@
   background: var(--ink-4);
 }
 
+
+.game-chat-filter {
+  flex: 0 0 auto;
+  padding: var(--sp-1h) var(--sp-3);
+  border-bottom: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  font-size: var(--fs-xs);
+}

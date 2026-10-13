@@ -10,6 +10,7 @@ export interface LogEntry {
   text: string
   gameId?: string
   channel?: LogChannel
+  fromRoom?: boolean
 }
 
 export interface LobbySlice {

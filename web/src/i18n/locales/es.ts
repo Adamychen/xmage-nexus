@@ -789,6 +789,8 @@ export const es: TranslationSchema = {
     end_won_game_you: 'Has ganado la partida',
     end_lost_game_you: 'Has perdido la partida',
     chat_empty: 'No hay mensajes en el chat aún. ¡Escribe o envía una reacción abajo!',
+    chat_show_lobby: 'Mostrar chat del lobby',
+    chat_show_lobby_hint: 'Mensajes del chat general del lobby mientras juegas',
     chat_placeholder: 'Escribe un mensaje en el chat...',
     chat_send: 'Enviar mensaje',
     insert_emoji: 'Insertar emoji',

@@ -792,6 +792,8 @@ export const ja: TranslationSchema = {
     end_lost_game_you: 'あなたはゲームに敗北した',
     text_feed: 'テキスト',
     chat_empty: 'チャットメッセージはまだありません。',
+    chat_show_lobby: 'Show lobby chat',
+    chat_show_lobby_hint: 'Messages from the main lobby chat while you play',
     chat_placeholder: 'メッセージを入力...',
     chat_send: 'メッセージを送信',
     insert_emoji: '絵文字を挿入',

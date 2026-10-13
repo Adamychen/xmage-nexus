@@ -789,6 +789,8 @@ export const ru: TranslationSchema = {
     end_lost_game_you: 'Вы проиграли партию',
     text_feed: 'Текст',
     chat_empty: 'В чате пока нет сообщений.',
+    chat_show_lobby: 'Show lobby chat',
+    chat_show_lobby_hint: 'Messages from the main lobby chat while you play',
     chat_placeholder: 'Введите сообщение...',
     chat_send: 'Отправить сообщение',
     insert_emoji: 'Вставить эмодзи',

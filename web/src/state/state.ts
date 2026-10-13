@@ -41,9 +41,9 @@ export function getState(): AppState {
   return _state
 }
 
-export function addLog(from: string, text: string, gameId?: string, channel?: LogChannel) {
+export function addLog(from: string, text: string, gameId?: string, channel?: LogChannel, fromRoom?: boolean) {
   const ch: LogChannel = channel ?? (from === 'partida' ? 'game' : 'system')
-  setState({ log: [..._state.log, { id: ++logSeq, time: Date.now(), from, text, gameId, channel: ch }].slice(-300) })
+  setState({ log: [..._state.log, { id: ++logSeq, time: Date.now(), from, text, gameId, channel: ch, ...(fromRoom ? { fromRoom } : {}) }].slice(-300) })
 }
 
 export { listeners }

@@ -3,6 +3,7 @@ import IconButton from '../ui/IconButton'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
+import Toggle from '../ui/Toggle'
 import QuickReactions from './QuickReactions'
 import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
@@ -28,12 +29,19 @@ export function isGameChatEntry(e: { channel?: string | null; from?: string | nu
   return !!e.from && !SYSTEM_SENDERS.has(e.from.toLowerCase())
 }
 
+const LOBBY_PREF_KEY = 'nexus.gameChat.showLobby'
+
+function loadShowLobby(): boolean {
+  try { return localStorage.getItem(LOBBY_PREF_KEY) === '1' } catch { return false }
+}
+
 export default function GameChat() {
   const { t } = useTranslation()
   const myName = useStore((s) => s.conn?.username)
   const gameChatId = useStore((s) => s.gameChatId)
   const roomChatId = useStore((s) => s.roomChatId)
   const log = useStore((s) => s.log)
+  const [showLobby, setShowLobby] = useState(loadShowLobby)
   const [input, setInput] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
@@ -51,8 +59,13 @@ export default function GameChat() {
   // Only show real player/user chat messages in the Chat tab (not engine inform
   // lines, lobby join/leave, or game-log lines — those are routed to other channels).
   const chatEntries = useMemo(() => {
-    return log.filter((e) => isGameChatEntry(e))
-  }, [log])
+    return log.filter((e) => isGameChatEntry(e) && (showLobby || !e.fromRoom))
+  }, [log, showLobby])
+
+  const toggleLobby = (next: boolean) => {
+    setShowLobby(next)
+    try { localStorage.setItem(LOBBY_PREF_KEY, next ? '1' : '0') } catch {}
+  }
 
   useEffect(() => {
     const box = endRef.current?.parentElement
@@ -75,6 +88,10 @@ export default function GameChat() {
 
   return (
     <div className="game-chat">
+      <div className="game-chat-filter">
+        <Toggle label={t('game', 'chat_show_lobby')} title={t('game', 'chat_show_lobby_hint')}
+          checked={showLobby} onChange={toggleLobby} />
+      </div>
       <div className="game-chat-messages">
         {chatEntries.length === 0 ? (
           <EmptyState fill italic icon="chat" iconSize={16}>{t('game', 'chat_empty')}</EmptyState>

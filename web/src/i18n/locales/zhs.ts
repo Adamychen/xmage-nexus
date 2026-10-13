@@ -792,6 +792,8 @@ export const zhs: TranslationSchema = {
     end_lost_game_you: '你输掉游戏',
     text_feed: '纯文本',
     chat_empty: '聊天室暂无消息。在下方发送消息或表情互动吧！',
+    chat_show_lobby: 'Show lobby chat',
+    chat_show_lobby_hint: 'Messages from the main lobby chat while you play',
     chat_placeholder: '输入聊天消息...',
     chat_send: '发送消息',
     insert_emoji: '插入表情',
