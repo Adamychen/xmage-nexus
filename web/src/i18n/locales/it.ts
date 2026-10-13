@@ -1189,6 +1189,7 @@ export const it: TranslationSchema = {
     revealed_window: 'Rivelate ({name})',
     companion_window: 'Compagno ({name})',
     looked_at_window_plain: 'Guardate',
+    top_card_peek: 'Prima carta del tuo grimorio: {name} (la vedi solo tu)',
     revealed_window_plain: 'Rivelate',
     companion_window_plain: 'Compagno',
     spectator_game_changed: 'La partita è cambiata: il tavolo ha iniziato una nuova partita.',

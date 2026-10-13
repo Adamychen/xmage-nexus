@@ -13,6 +13,7 @@ import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
 import { manaTypeOf } from './manaPayment'
 import { useSleeveFor } from '../appearance/useSleeve'
+import { useTopCardPeek, visibleTopCardPeek } from './topCardPeek'
 import './ResourceBar.css'
 import '../board/targetZone.css'
 
@@ -58,6 +59,31 @@ export default function ResourceBar({
   const pool = player.manaPool ?? {}
   const canPayMana = side === 'my' && !!gameId
   const manaPromptOpen = useStore((s) => s.feedback?.mode === 'mana')
+  const playableIds = useStore((s) => s.playableIds)
+  const topCardPeek = useTopCardPeek()
+  const peekedCard = side === 'my' ? visibleTopCardPeek(topCardPeek, player) : null
+  const peekId = peekedCard?.id && peekedCard.id !== player.topCard?.id ? peekedCard.id : null
+  const peekCard = peekId ? peekedCard : null
+  const peekPlayable = !!peekId && !!onPlayCrossZone && (playableIds ?? []).includes(peekId)
+  const peekSlot = peekCard ? (
+    <div
+      className="library-peek"
+      data-testid="library-peek"
+      title={t('game', 'top_card_peek', { name: peekCard.displayName || peekCard.name })}
+    >
+      <CardSlot
+        cardId={peekId ?? undefined}
+        card={peekCard}
+        className="library-peek-card"
+        isPlayable={peekPlayable}
+        onClick={peekPlayable && peekId ? () => onPlayCrossZone?.(peekId) : undefined}
+        onHover={onCardHover}
+      />
+      <span className="top-card-badge">
+        <Icon name="eye" size={micro ? 10 : 12} />
+      </span>
+    </div>
+  ) : null
   const payMana = (key: ManaPoolKey) => {
     const manaType = manaTypeOf(key)
     if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
@@ -164,6 +190,8 @@ export default function ResourceBar({
       <div className={`resource-piles ${micro ? 'micro' : ''}`}>
         {micro ? (
           <>
+            {peekSlot}
+
             <button
               type="button"
               data-library-count={player.libraryCount}
@@ -253,6 +281,8 @@ export default function ResourceBar({
           </>
         ) : (
           <>
+            {peekSlot}
+
             <button
               type="button"
               data-library-count={player.libraryCount}

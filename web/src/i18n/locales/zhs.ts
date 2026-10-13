@@ -1192,6 +1192,7 @@ export const zhs: TranslationSchema = {
     revealed_window: '已展示 ({name})',
     companion_window: '伙伴 ({name})',
     looked_at_window_plain: '已查看',
+    top_card_peek: '你牌库顶的牌：{name}（只有你能看到）',
     revealed_window_plain: '已展示',
     companion_window_plain: '伙伴',
     // TODO bulk: interim English until proper zhs translation lands

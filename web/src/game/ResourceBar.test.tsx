@@ -1,8 +1,10 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import ResourceBar from './ResourceBar'
 import type { PlayerView } from '../net/types'
-import { makePlayer } from '../__fixtures__/gameViews'
+import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
+import { setState } from '../state/store'
+import { TOP_CARD_PEEK_NAME } from './topCardPeek'
 
 describe('ResourceBar', () => {
   afterEach(() => {
@@ -305,5 +307,58 @@ describe('ResourceBar', () => {
       />,
     )
     expect(container.querySelector('.graveyard-stack')?.classList.contains('target-zone')).toBe(false)
+  })
+})
+
+describe('ResourceBar top-card peek', () => {
+  const peeked = makeCard({ id: 'top-1', name: 'Island', parentId: 'top-1' })
+  const me = (libraryCount: number) => makePlayer({ playerId: 'me', name: 'Alice', controlled: true, libraryCount })
+  const showPeek = (libraryCount: number, playableIds: string[] = []) =>
+    act(() =>
+      setState({
+        gameId: 'g-peek',
+        playableIds,
+        game: makeGameView({
+          myPlayerId: 'me',
+          players: [me(libraryCount)],
+          lookedAt: [{ name: TOP_CARD_PEEK_NAME, cards: { 'top-1': peeked } }],
+        }) as never,
+      }),
+    )
+
+  afterEach(() => {
+    act(() => setState({ game: null, gameId: null, playableIds: [] }))
+    cleanup()
+  })
+
+  it('shows the peeked card next to my library and keeps it when the next view omits it', () => {
+    showPeek(40)
+    act(() => setState({ game: makeGameView({ myPlayerId: 'me', players: [me(40)], lookedAt: [] }) as never }))
+    const { container } = render(<ResourceBar player={me(40)} side="my" />)
+    const slot = container.querySelector('[data-testid="library-peek"]')
+    expect(slot?.querySelector('[data-card-id="top-1"]')).not.toBeNull()
+    expect(slot?.nextElementSibling?.classList.contains('library-stack')).toBe(true)
+  })
+
+  it('never shows it on an opponent bar', () => {
+    showPeek(40)
+    const { container } = render(<ResourceBar player={makePlayer({ playerId: 'opp', name: 'Bob', libraryCount: 40 })} side="opp" />)
+    expect(container.querySelector('[data-testid="library-peek"]')).toBeNull()
+  })
+
+  it('hides it once the library size changes', () => {
+    showPeek(40)
+    const { container } = render(<ResourceBar player={me(39)} side="my" />)
+    expect(container.querySelector('[data-testid="library-peek"]')).toBeNull()
+  })
+
+  it('plays the card from the slot when it is playable', () => {
+    showPeek(40, ['top-1'])
+    const onPlay = vi.fn()
+    const { container } = render(<ResourceBar player={me(40)} side="my" onPlayCrossZone={onPlay} />)
+    const card = container.querySelector<HTMLElement>('[data-testid="library-peek"] .card-slot')!
+    expect(card.className).toMatch(/playable/)
+    fireEvent.click(card)
+    expect(onPlay).toHaveBeenCalledWith('top-1')
   })
 })

@@ -174,6 +174,15 @@ describe('foldInfoWindows', () => {
     expect(Object.keys(s.open[0].cards)).toEqual(['top-2'])
   })
 
+  it('never opens a viewer for the any-time top-card peek, which lives next to the library', () => {
+    const peek = { name: 'Top card of your library', cards: { 'top-9': makeCard({ name: 'Mountain', parentId: 'top-9' }) } }
+    let s = foldInfoWindows(EMPTY_INFO_WINDOWS, { lookedAt: [peek, jace] })
+    expect(s.open.map((w) => w.key)).toEqual(['lookedAt:Jace, the Mind Sculptor'])
+    s = foldInfoWindows(s, { lookedAt: [] })
+    s = foldInfoWindows(s, { lookedAt: [peek] })
+    expect(s.open.map((w) => w.key)).toEqual(['lookedAt:Jace, the Mind Sculptor'])
+  })
+
   it('closes companion windows once the companion leaves the view', () => {
     let s = foldInfoWindows(EMPTY_INFO_WINDOWS, { companion: [comp] })
     expect(s.open).toHaveLength(1)

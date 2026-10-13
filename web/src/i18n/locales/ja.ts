@@ -1192,6 +1192,7 @@ export const ja: TranslationSchema = {
     revealed_window: '公開されたカード ({name})',
     companion_window: '相棒 ({name})',
     looked_at_window_plain: '見たカード',
+    top_card_peek: 'あなたのライブラリーの一番上のカード: {name}（あなただけが見られます）',
     revealed_window_plain: '公開されたカード',
     companion_window_plain: '相棒',
     // TODO bulk: interim English until proper ja translation lands

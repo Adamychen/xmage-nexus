@@ -306,6 +306,37 @@
   z-index: 5;
 }
 
+.library-peek {
+  position: relative;
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  border-radius: var(--r-sm);
+  border: 1.5px solid rgb(var(--gold-rgb) / 0.55);
+  box-shadow: 0 4px 10px var(--shade-3);
+  overflow: hidden;
+}
+
+.library-peek-card {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  border-radius: var(--r-sm);
+}
+
+.resource-piles.micro .library-peek {
+  width: 22px;
+  height: 31px;
+  align-self: center;
+  border-radius: var(--r-xs);
+}
+
+.resource-piles.micro .library-peek .top-card-badge {
+  top: 1px;
+  left: 1px;
+}
+
 /* ── Micro Mode (Commander / Pod & small screens) ─────────────────── */
 .resource-bar.micro {
   padding: 0 var(--sp-0h);

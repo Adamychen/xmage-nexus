@@ -161,6 +161,11 @@ Still open, each needing a **design decision, not a bug fix**:
 
 ### 4.4 Test-infrastructure risk
 
+OPEN 2026-10-10: no recorded frame carries the any-time top-card peek (`lookedAt` "Top card of
+your library", `LookAtTopCardOfLibraryAnyTimeEffect`: Future Sight, Bolas's Citadel). The slot
+beside the library (`topCardPeek.ts`) is covered by unit tests and the `game:top-card-peek` gallery
+entry only; a `record.mjs` driver that casts Future Sight would pin the real alternation of views.
+
 RESOLVED 2026-09-30: the two real-mode failures flagged here earlier (`skips.spec.ts`,
 `priority-stop-real.spec.ts`) were a mis-targeting artifact, not a code bug. `E2E_BACKEND=real`
 without `E2E_SERVER_HOST` logs into **beta.xmage.today** (documented in `docs/lessons.md:98`), not
