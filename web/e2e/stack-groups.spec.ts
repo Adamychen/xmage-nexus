@@ -73,14 +73,14 @@ test.describe('Apilado visual de tokens (×3)', () => {
       const samples = await page.evaluate(async (s) => {
         const g = document.querySelector(s) as HTMLElement
         const band = g.parentElement!
-        const out: { spread: boolean; hover: boolean; width: number; layout: string }[] = []
+        const out: { spread: boolean; hover: boolean; width: number; layout: number[] }[] = []
         for (let i = 0; i < 30; i++) {
           await new Promise((r) => setTimeout(r, 33))
           out.push({
             spread: g.hasAttribute('data-spread'),
             hover: g.matches(':hover'),
             width: g.offsetWidth,
-            layout: Array.from(band.children).map((c) => (c as HTMLElement).offsetLeft).join(','),
+            layout: Array.from(band.children).map((c) => (c as HTMLElement).offsetLeft - (parseFloat(getComputedStyle(c).left) || 0)),
           })
         }
         return out
@@ -88,7 +88,11 @@ test.describe('Apilado visual de tokens (×3)', () => {
 
       expect(samples.every((x) => x.spread && x.hover), 'the pile stays spread under a still pointer').toBe(true)
       expect(new Set(samples.map((x) => x.width)).size, 'the pile keeps its collapsed footprint').toBe(1)
-      expect(new Set(samples.map((x) => x.layout)).size, 'nothing else in the band moves').toBe(1)
+      const drift = samples[0].layout.map((_, i) => {
+        const xs = samples.map((x) => x.layout[i])
+        return Math.max(...xs) - Math.min(...xs)
+      })
+      expect(Math.max(...drift), 'nothing else in the band reflows (a visual push is not layout)').toBeLessThanOrEqual(1)
       expect(Math.round(samples[0].width)).toBe(Math.round(box.width))
 
       const lefts = await group.locator('.card-slot').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().left))

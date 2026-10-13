@@ -10,6 +10,7 @@ import CommandZone, { hasCommandObjects } from './CommandZone'
 import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
 import { useBandFit } from './useBandFit'
+import { useTapFlip } from './useTapFlip'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
 import { switchedHandCards, switchableHandKeys } from './handSwitch'
@@ -111,6 +112,7 @@ export default function BoardZone({
   }, [permanentsBandRef])
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
+  useTapFlip(permanentsBandEl)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.

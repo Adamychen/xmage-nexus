@@ -7,17 +7,22 @@ const FAKE_PORT = Number(process.env.FAKE_PORT || 8789)
 
 const vite = await createServer({ server: { port: 5173, strictPort: true } })
 const { FakeServer } = await vite.ssrLoadModule('/fixtures/fake.ts')
-const { commanderPlaygroundScenario } = await vite.ssrLoadModule('/fixtures/scenarios/commanderPlayground.ts')
+const SCENARIOS = {
+  commander: ['/fixtures/scenarios/commanderPlayground.ts', 'commanderPlaygroundScenario', 'Commander playground'],
+  manaStack: ['/fixtures/scenarios/manaStack.ts', 'manaStackScenario', 'mana-stack-test'],
+}
+const [scenarioFile, scenarioExport, scenarioTable] = SCENARIOS[process.env.SCENARIO || 'commander']
+const scenario = (await vite.ssrLoadModule(scenarioFile))[scenarioExport]
 
-const fake = await FakeServer.start(FAKE_PORT, commanderPlaygroundScenario)
+const fake = await FakeServer.start(FAKE_PORT, scenario)
 await vite.listen()
 
 const url = `http://localhost:5173/?proxyPort=${fake.port}`
 console.log('')
-console.log('  Commander playground (fake server, no XMage needed)')
+console.log(`  ${scenarioTable} (fake server, no XMage needed)`)
 console.log(`  Open:   ${url}`)
 console.log('  Login:  any username (3-14 chars), Proxy WS = localhost, then Connect')
-console.log('  Lobby:  press Start on "Commander playground"')
+console.log(`  Lobby:  press Start on "${scenarioTable}"`)
 console.log('  Stop:   Ctrl+C')
 console.log('')
 

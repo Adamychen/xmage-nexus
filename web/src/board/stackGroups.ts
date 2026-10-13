@@ -42,7 +42,7 @@ export function stackGroupKeyOf(
 ): { key: string; name: string; groupKind: StackGroupKind } | null {
   const name = perm.name || 'Card'
   if (kind === 'lands') {
-    return { key: `land:${name}`, name, groupKind: 'land' }
+    return { key: `land:${name}:${tappedFlag(perm)}`, name, groupKind: 'land' }
   }
   if (!isTokenCard(perm)) return null
   if (hasAlteredFace(perm)) return null
@@ -55,12 +55,6 @@ export function stackGroupKeyOf(
   if (perm.mutated === true) return null
   const pt = `${perm.power ?? ''}/${perm.toughness ?? ''}`
   return { key: `ctoken:${name}:${tappedFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
-}
-
-/** Tapped first, untapped last: the last card of a pile is drawn on top, so
- *  the permanents still available stay fully visible at its right end. */
-function untappedOnTop(items: [string, PermanentView][]): [string, PermanentView][] {
-  return [...items.filter(([, p]) => p.tapped === true), ...items.filter(([, p]) => p.tapped !== true)]
 }
 
 export function groupStackables(
@@ -82,7 +76,6 @@ export function groupStackables(
     group.items.push([id, perm])
   }
   const groups = order.filter((g) => g.items.length >= STACK_GROUP_MIN)
-  for (const g of groups) g.items = untappedOnTop(g.items)
   const groupedIds = new Set<string>()
   for (const g of groups) for (const [id] of g.items) groupedIds.add(id)
   return { groups, solos: entries.filter(([id]) => !groupedIds.has(id)) }

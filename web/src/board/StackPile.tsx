@@ -22,15 +22,40 @@ function spread(pile: HTMLElement): void {
   })
   const bandRect = band.getBoundingClientRect()
   const edge = BAND_EDGE * scale
-  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, bandRect.left + edge, bandRect.right - edge)
+  const after = followers(pile)
+  const restRight = after.reduce(
+    (right, el) => Math.max(right, el.getBoundingClientRect().right - (parseFloat(getComputedStyle(el).left) || 0) * scale),
+    pileRect.right,
+  )
+  const room = Math.max(0, bandRect.right - edge - restRight)
+  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, bandRect.left + edge, pileRect.right + room)
   items.forEach((el, i) => el.style.setProperty('--spread-x', `${layout.dx[i] / scale}px`))
   pile.style.setProperty('--spread-l', `${(layout.stripLeft - pileRect.left) / scale}px`)
   pile.style.setProperty('--spread-w', `${layout.stripWidth / scale}px`)
+  const push = Math.max(0, layout.stripLeft + layout.stripWidth - pileRect.right) / scale
+  for (const el of after) {
+    el.dataset.spreadPushed = ''
+    el.style.setProperty('--spread-push', `${push}px`)
+  }
   pile.dataset.spread = ''
+}
+
+function followers(pile: HTMLElement): HTMLElement[] {
+  const out: HTMLElement[] = []
+  for (let el = pile.nextElementSibling; el; el = el.nextElementSibling) out.push(el as HTMLElement)
+  return out
+}
+
+function unpush(pile: HTMLElement): void {
+  for (const el of followers(pile)) {
+    delete el.dataset.spreadPushed
+    el.style.removeProperty('--spread-push')
+  }
 }
 
 function collapse(pile: HTMLElement): void {
   delete pile.dataset.spread
+  unpush(pile)
 }
 
 interface StackPileProps {
@@ -45,7 +70,10 @@ interface StackPileProps {
  * Pile of identical permanents that fans out on hover as an overlay: the pile
  * keeps its collapsed footprint (nothing else in the band moves or re-fits) and
  * an invisible strip covers the fanned cards, so the hover area only grows
- * while spread and cannot flip back and forth under a still pointer.
+ * while spread and cannot flip back and forth under a still pointer. The
+ * permanents after the pile are shifted aside (visually only) by however far
+ * the fan reaches past the pile, so a mana rock beside a land pile is never
+ * covered.
  */
 export default function StackPile({ className, name, count, landName, children }: StackPileProps) {
   const ref = useRef<HTMLDivElement>(null)

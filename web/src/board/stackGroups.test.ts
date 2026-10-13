@@ -37,10 +37,12 @@ function entries(perms: PermanentView[]): [string, PermanentView][] {
 }
 
 describe('stackGroupKeyOf', () => {
-  it('lands group by name regardless of tapped state', () => {
+  it('lands group by name and tapped state', () => {
     const a = stackGroupKeyOf('x', land('Island'), 'lands')
-    const b = stackGroupKeyOf('y', land('Island', { tapped: true }), 'lands')
+    const b = stackGroupKeyOf('y', land('Island'), 'lands')
+    const c = stackGroupKeyOf('z', land('Island', { tapped: true }), 'lands')
     expect(a?.key).toBe(b?.key)
+    expect(a?.key).not.toBe(c?.key)
     expect(a?.groupKind).toBe('land')
   })
 
@@ -78,17 +80,24 @@ describe('stackGroupKeyOf', () => {
 })
 
 describe('groupStackables', () => {
-  it('puts untapped cards at the right end of a pile (drawn on top), keeping order within each state', () => {
-    const { groups } = groupStackables(
+  it('splits lands into a tapped pile and an untapped pile, keeping order within each', () => {
+    const { groups, solos } = groupStackables(
       entries([
         land('Swamp'),
         land('Swamp', { tapped: true }),
         land('Swamp'),
         land('Swamp', { tapped: true }),
+        land('Swamp'),
+        land('Swamp', { tapped: true }),
+        land('Swamp', { tapped: true }),
       ]),
       'lands',
     )
-    expect(groups[0].items.map(([id]) => id)).toEqual(['c1', 'c3', 'c0', 'c2'])
+    expect(groups.map((g) => g.items.map(([id]) => id))).toEqual([
+      ['c0', 'c2', 'c4'],
+      ['c1', 'c3', 'c5', 'c6'],
+    ])
+    expect(solos).toHaveLength(0)
   })
 
   it(`stacks from ${STACK_GROUP_MIN} but leaves pairs solo`, () => {
