@@ -1,3 +1,4 @@
+import { DemoSocket } from '../demo/DemoSocket'
 import type { EventEnvelope, LobbyEnvelope, ProxyMessage, ResultEnvelope } from './types'
 import { recordFrame } from './frameBuffer'
 
@@ -82,7 +83,7 @@ export class Gateway {
 
   private open() {
     this.cleanup()
-    const ws = new WebSocket(this.url)
+    const ws = __DEMO__ ? (new DemoSocket() as unknown as WebSocket) : new WebSocket(this.url)
     this.ws = ws
     ws.onopen = () => {
       this.reconnectAttempts = 0

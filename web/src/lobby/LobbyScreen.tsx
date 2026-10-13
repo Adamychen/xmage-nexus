@@ -38,6 +38,8 @@ import './LobbyScreen.css'
 import './TournamentBracket.css'
 import Button from '../ui/Button'
 import IconButton from '../ui/IconButton'
+import { DEMO_GO_EVENT, type DemoTarget } from '../demo/tourBus'
+import { getDeckStorage } from '../decks/storage'
 
 export default function LobbyScreen() {
   const { t } = useTranslation()
@@ -99,6 +101,45 @@ export default function LobbyScreen() {
     setLeaderboardTab(tab)
     setShowLeaderboard(true)
   }
+
+  useEffect(() => {
+    if (!__DEMO__) return
+    const onGo = (ev: Event) => {
+      const target = (ev as CustomEvent<DemoTarget>).detail
+      switch (target.kind) {
+        case 'tables':
+          setDeckBuilderId(null)
+          setActiveTab('tables')
+          break
+        case 'decks':
+          setDeckBuilderId(null)
+          setActiveTab('decks')
+          break
+        case 'history':
+          setActiveTab('matches')
+          break
+        case 'leaderboard':
+          openLeaderboard(conn?.username, target.tab)
+          break
+        case 'settings':
+          setShowSettings(true)
+          break
+        case 'create':
+          setShowCreate(true)
+          break
+        case 'builder':
+          void getDeckStorage().list().then((decks) => {
+            const deck = decks.find((d) => d.commanderCard) ?? decks[0]
+            if (!deck) return
+            setActiveTab('decks')
+            setDeckBuilderId(deck.id)
+          })
+          break
+      }
+    }
+    window.addEventListener(DEMO_GO_EVENT, onGo)
+    return () => window.removeEventListener(DEMO_GO_EVENT, onGo)
+  }, [conn?.username])
 
   const tables = lobby?.tables ?? []
   const users = useMemo(() => extractLobbyUsers(lobby?.users), [lobby?.users])

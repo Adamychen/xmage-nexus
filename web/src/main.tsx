@@ -12,10 +12,18 @@ installErrorCapture()
 // render below starts immediately in English if it has not arrived yet.
 preloadInitialLocale()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-)
+async function start() {
+  if (__DEMO__) {
+    const { seedDemoSession } = await import('./demo/boot')
+    await seedDemoSession()
+  }
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  )
+}
+
+void start()

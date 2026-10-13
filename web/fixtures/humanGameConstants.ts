@@ -1,8 +1,5 @@
 /** Shared types and constants for the humanGame scenario engine. */
 
-import type { FakeConn, Scenario } from '../fake'
-import { makeCard, makeGameView, makePlayer, makePermanent } from '../../src/__fixtures__/gameViews'
-import type { CardView, GameView, PermanentView, SeatView, TableView } from '../../src/net/types'
 
 export const GAME_ID = 'game-human-1'
 export const TABLE_ID = 'table-human-1'

@@ -129,6 +129,21 @@ jobs:
           GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: node scripts/gen-dashboard.mjs
 
+      - name: Build the interactive demo
+        working-directory: web
+        run: npm run build:demo
+
+      - name: Verify the demo (tour + every scenario)
+        id: verify-demo
+        continue-on-error: true
+        run: node scripts/verify-demo.mjs web/dist-demo
+
+      # A broken demo is never published, but it must not block the status page either:
+      # the run is failed at the very end, after the deploy.
+      - name: Publish the demo under site/demo
+        if: steps.verify-demo.outcome == 'success'
+        run: cp -R web/dist-demo site/demo
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -142,3 +157,9 @@ jobs:
       # and the run must be red with it. See scripts/check-status.mjs.
       - name: Fail the run on red layers
         run: node scripts/check-status.mjs
+
+      - name: Fail the run if the demo is broken
+        if: always() && steps.verify-demo.outcome == 'failure'
+        run: |
+          echo "::error::The interactive demo failed verification and was not published"
+          exit 1

@@ -76,6 +76,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ✅ Yes (Web Audio 22 sfx, 4 buses incl. adaptive music, JIT unlock) | Completed (Surpasses Swing) |
 | | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | ✅ Yes (donut color pie, bars, shake, floating damage, spell-weight slam, hit sparks, destroy/exile/token deaths, low-life vignette, foil + tilt preview, playmats, cinematic end screen) | Completed (Surpasses Swing) |
 | **Distribution** | Desktop & Web Deployment | ❌ Heavy JRE required | ✅ Web + Tauri launcher (v0.2.3, updater firmado y componentes desacoplados) | Completed |
+| **Distribution** | Interactive Web Demo (GitHub Pages, no install) | ❌ None | ✅ `site/demo/`: the real client on scripted scenarios, ELO ranking, deck builder + EDHREC, 12 playable scenes (§4.10) | Completed |
 | **Advanced Formats** | 4-Player Commander / EDH (Command zone, tax, damage) | ✅ Yes | ✅ Yes (PodBoard 2×2 clamp 4; server FFA 3-10) | Completed |
 | | Booster Draft & Sealed Tournaments (Pick timer, packs) | ✅ Yes | ✅ Yes (8P DraftScreen/ConstructScreen) | Completed |
 
@@ -339,6 +340,19 @@ Design and rejected alternatives in `docs/plans/2026-10-09-report-pipeline-desig
 | No reader for what lands | `xmage-status` has no Reports panel yet; today you read them with `node scripts/issue-from-report.mjs --list --host <user@host>`. Grouping by fingerprint is the whole point: 40 reports of one bug must look like one row |
 | ~~Tunnels~~ — RESOLVED 2026-10-13 | playit retired (subscription lapsed). The public path is three cloudflared quick tunnels as user units with `Restart=always` + linger; `scripts/tunnel-sync.mjs` rewrites the hostnames everywhere after a rotation and `docs/deploy-tunnels.md` documents the setup. Known trade-off: quick-tunnel hostnames rotate on every tunnel restart — the GitHub Pages link is re-pointed automatically by the script, but a named tunnel (needs a domain) remains the upgrade path if a permanent hostname is ever wanted |
 | ~~Visitor counting~~ — RESOLVED 2026-10-13 | `ops/status` no longer reads the playit log: public visitors are counted from the proxy's `ws_open` activity lines (real IP via Cloudflare's `CF-Connecting-IP`/XFF). Tunnel liveness is a `pgrep` count (n/3 units up). History accumulated before the switch came from the playit log format and is kept as-is |
+
+### 4.10 Interactive demo on GitHub Pages (built 2026-10-13) — what is still open
+
+`site/demo/` is the real web client built with `vite build --mode demo` (`npm --prefix web run build:demo`), running entirely in the browser: `src/demo/DemoSocket.ts` replaces the WebSocket with the e2e `FakeServerCore`, `src/demo/boot.ts` seeds a session (wizard skipped, auto-login as `Planeswalker`, three starter decks), and `src/demo/DemoTour.tsx` is the floating menu (lobby, ELO ranking and tier ladder, deck gallery, deck builder with EDHREC suggestions, history, settings, plus 12 scripted scenarios chosen with `?scenario=<id>`). Games follow a fixed script — it is not the XMage rules engine, and the landing says so. Guarded by `src/demo/*.test.ts` and `scripts/verify-demo.mjs`, wired into `pages.yml`.
+
+| What | Why |
+|---|---|
+| Tour copy is English only | `DemoTour.tsx` hard-codes its strings; the rest of the client is translated in 9 locales. Move them into `game`/`lobby`-style namespaces if the landing's language switch should carry into the demo |
+| EDHREC is frozen for one commander | `demoEdhrecPage` only answers `krenko-mob-boss` (the starter Commander deck); any other commander shows "not found". Deck builder search and EDHREC card resolution still call Scryfall live, so the demo needs internet and honours its rate limit |
+| Roster, ratings and tables are invented | `src/demo/data.ts`. Match counts only (no fabricated win/loss), as the real server sends. Ratings are labelled nowhere in the UI as sample data; a visible "sample data" hint on the leaderboard would be more honest |
+| Not a layer on the status dashboard | `verify-demo.mjs` fails the Pages run but `status.json` has no row for it, so a skipped demo is only visible in the run |
+| Not covered: replay viewer, spectate, chat bots | Spectating a table and the replay viewer need a scenario that streams frames; the chat is the fixture echo only |
+| Mobile layout unchecked | Verified at 1440×900; the tour panel has a narrow-width rule but no screenshot below 520 px |
 
 ---
 

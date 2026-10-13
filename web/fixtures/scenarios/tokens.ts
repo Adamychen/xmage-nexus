@@ -13,7 +13,7 @@ import { TABLE } from '../table-names'
  * repite el uuid, para probar que el click atraviesa la pila por carta.
  */
 
-import { makeBaseScenario } from '../fake'
+import { makeBaseScenario, type Scenario } from '../fake'
 import { makePermanent } from '../../src/__fixtures__/gameViews'
 import type { GameView, PlayerView } from '../../src/net/types'
 import {
@@ -48,7 +48,7 @@ export function tokensScenario(): Scenario {
     })
 
   const getGameView = (): GameView => {
-    const humanPlayer: PlayerView = {
+    const humanPlayer = {
       playerId: HUMAN_PLAYER_ID,
       name: HUMAN_NAME,
       life: 20,
@@ -95,9 +95,9 @@ export function tokensScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
-    const simPlayer: PlayerView = {
+    const simPlayer = {
       playerId: SIM_PLAYER_ID,
       name: SIM_NAME,
       life: 20,
@@ -123,7 +123,7 @@ export function tokensScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
     return {
       gameCycle: 1,

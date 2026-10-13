@@ -42,7 +42,7 @@ export class HumanGame {
   private combat: unknown[] = []
   private stage: 'lobby' | 'main' | 'cast' | 'attack' | 'block' | 'sim' | 'end' | 'discard' = 'lobby'
   private cast: CastRuntime | null = null
-  private playedLandTurn = -1
+  private discarding = false
   private started = false
   private simPaused = false
   private blockingId: string | null = null
@@ -249,7 +249,7 @@ export class HumanGame {
       priorityPlayerName: this.priority === 'human' ? HUMAN_NAME : this.simName,
       turn: this.turn,
       stack: this.stack,
-      combat: this.combat,
+      combat: this.combat as GameView['combat'],
       canPlayObjects: Object.keys(objects).length > 0 ? { objects } : undefined,
     })
   }
@@ -539,7 +539,6 @@ export class HumanGame {
     this.combat = []
     this.cast = null
     this.stage = 'main'
-    this.playedLandTurn = -1
     this.emit('START_GAME', { gameId: this.gameId, tableName: this.tableName })
     this.emit('GAME_INIT', { gameView: this.view() })
     this.emitSelect()
@@ -647,7 +646,7 @@ export class HumanGame {
     this.assignBlocker(value)
   }
 
-  private assignBlocker(attackerId: string): void {
+  private assignBlocker(_attackerId: string): void {
     if (!this.blockingId) return
     const group = this.combat[0] as Record<string, Record<string, unknown>>
     if (group) group.blockers = { [this.blockingId]: {} }
@@ -658,10 +657,10 @@ export class HumanGame {
 
   private finishHumanBlock(): void {
     for (const c of this.myBattle) {
-      this.crossZone.push({ id: c.id, name: c.name, zone: 'graveyard' })
+      this.crossZone.push({ id: c.id ?? c.parentId ?? c.name, name: c.name, zone: 'graveyard' })
     }
     for (const c of this.simBattle) {
-      this.simGraveyard.push({ id: c.id, name: c.name })
+      this.simGraveyard.push({ id: c.id ?? c.parentId ?? c.name, name: c.name })
     }
     this.myBattle = []
     this.simBattle = []

@@ -136,7 +136,7 @@ export function commanderPlaygroundScenario(): Scenario {
     })
 
     return makeGameView({
-      gameId: PLAYGROUND_GAME_ID,
+      ...({ gameId: PLAYGROUND_GAME_ID } as unknown as Partial<GameView>),
       turn,
       phase: 'PRECOMBAT_MAIN',
       step: 'PRECOMBAT_MAIN',

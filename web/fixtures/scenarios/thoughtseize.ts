@@ -1,5 +1,6 @@
 import type { Scenario } from '../fake'
 import { makeBaseScenario } from '../fake'
+import type { GameView } from '../../src/net/types'
 import { makeGameView, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
 
@@ -24,12 +25,11 @@ export function thoughtseizeScenario(): Scenario {
   }
 
   const gameView = makeGameView({
-    gameId: GAME_ID,
+    ...({ gameId: GAME_ID, priorityPlayerId: HUMAN_PLAYER_ID } as unknown as Partial<GameView>),
     turn: 3,
     phase: 'PRECOMBAT_MAIN',
     step: 'PRECOMBAT_MAIN',
     activePlayerId: HUMAN_PLAYER_ID,
-    priorityPlayerId: HUMAN_PLAYER_ID,
     players: [
       makePlayer({
         playerId: HUMAN_PLAYER_ID,
@@ -51,7 +51,7 @@ export function thoughtseizeScenario(): Scenario {
       }),
     ],
     myHand: {},
-    opponentHands: { [SIM_PLAYER_ID]: simHand },
+    opponentHands: { [SIM_PLAYER_ID]: simHand as unknown as GameView['opponentHands'][string] },
     revealed: [{ name: SIM_NAME, cards: simHand }],
     canPlayObjects: { objects: {} },
   })

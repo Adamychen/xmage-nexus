@@ -578,3 +578,7 @@ td.center, th.center { text-align: center; }
   .gcard { animation: none; }
   .btn, .feature-card, .download-card { transition: none; }
 }
+
+.demo-open-row {
+  margin: 16px 0 6px;
+}
