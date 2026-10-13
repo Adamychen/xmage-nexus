@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import path from 'node:path'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { login } from './support/start-game'
@@ -41,14 +42,17 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
         await expect(page.getByTestId(`preset-demo-${id}`)).toBeVisible()
       }
       await expectAllImagesLoaded(page, '[data-testid^="preset-demo-"] .preset-tile-art', 13)
-      await page.screenshot({ path: '/tmp/picker-presets.png' })
+      await page.screenshot({ path: shot('picker-presets.png') })
       await page.getByTestId('settings-nav-board').click()
       await expectAllImagesLoaded(page, '.settings-content .playmat-item img.playmat-table-card', 20)
-      await page.screenshot({ path: '/tmp/picker-playmats.png' })
+      await page.screenshot({ path: shot('picker-playmats.png') })
     })
   })
 
-  test('board option pickers show a live miniature of each option', async ({ page }) => {
+  test('board option pickers show a live miniature of each option', async ({ page }, testInfo) => {
+    // Screenshots are diagnostics: keep them in Playwright's output dir (CI-safe),
+    // never in a machine-specific absolute path.
+    const shot = (name: string) => path.join(testInfo.outputPath(), name)
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
@@ -88,9 +92,9 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       await expect(demo('sickness', 'veil').locator('.sickness-veil')).toHaveCount(1)
       await expect(demo('sickness', 'veil').locator('.sickness-badge')).toHaveCount(0)
 
-      await page.locator('.settings-content').screenshot({ path: '/private/tmp/claude-501/-Users-adam-Desktop-proyectos-git-mage-alt-client/d75a3599-62c2-41ac-b119-957bfafd2dbf/scratchpad/board-demos-top.png' })
+      await page.locator('.settings-content').screenshot({ path: shot('board-demos-top.png') })
       await demo('sickness', 'veil').scrollIntoViewIfNeeded()
-      await page.locator('.settings-content').screenshot({ path: '/private/tmp/claude-501/-Users-adam-Desktop-proyectos-git-mage-alt-client/d75a3599-62c2-41ac-b119-957bfafd2dbf/scratchpad/board-demos-bottom.png' })
+      await page.locator('.settings-content').screenshot({ path: shot('board-demos-bottom.png') })
     })
   })
 })
