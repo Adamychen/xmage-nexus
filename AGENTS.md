@@ -318,6 +318,17 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   the real proxy and beta. `skip()` persists nothing now (the flag is re-guessed by `guessDefaultFlag`),
   `LoginScreen` lets an explicit `?proxyPort=` win in `applySetupConn`, and the e2e helper points at
   `localhost` in fake mode.
+- **A pixel budget is a platform assertion wearing layout's clothes.** A fixed `max-width`, a
+  hard-coded gap, or an e2e expectation built on one machine's font metrics only tests that
+  machine (`turn-lane.spec.ts` was green on macOS and red on Linux CI: the walkway's
+  `max-width: 96px` fitted this Mac's font by 1.1 px and truncated the same 14-char name under
+  Linux's system-ui fallback). Drive the layout from a runtime measurement of content vs available
+  width (`web/src/board/laneFit.ts` + `useLaneFit.ts`, precedent `boardFit.ts` / `useBandFit.ts`)
+  and assert the *contract* in the spec ("no visible name is clipped", "the row never overflows
+  its band"), never a number. Then **verify the guard can fail**: put the old constant back and
+  watch the spec go red. `--font-ui` (`web/src/ui/tokens.css`) exists so a test can inject a wider
+  face (`:root { --font-ui: monospace !important }`) and catch metric drift on the machine that
+  wrote the guard.
 - **Do not touch** generated files: `dist/`, `.run/`, `local-server/`,
   `node_modules/`, `target/`.
 - No comments in code unless requested.
@@ -330,7 +341,15 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
 
 - Generator: `scripts/gen-dashboard.mjs` (merges `site/content.json` + test artefacts).
 - CI orchestrator: `scripts/dashboard-ci.mjs` (unit+coverage, typecheck, build, fake-e2e, proxy java).
-- Nightly real-stack: `scripts/integration-report.mjs` (self-test/human-test/e2e-real → `reports/integration-result.json`).
+- Red gate: `scripts/check-status.mjs` runs as the **last** Pages step and exits non-zero when any
+  layer of `status.json` is `fail`. It runs after the deploy on purpose: the page publishes the
+  truth and the run is red with it. Before 2026-10-10 every nightly step carried
+  `continue-on-error: true` and nothing read the result, so the nightly ran green for days while
+  the published `status.json` said fake-e2e FAIL + integration FAIL.
+- Nightly real-stack: `scripts/integration-report.mjs` (self-test/human-test/e2e-real →
+  `reports/integration-result.json`). It waits for the proxy's `/ready` and runs one warm-up game
+  first, like `test.mjs` does: without those gates it reported 0.3 s failures against a cold proxy
+  ("Proxy is still loading card data") as an integration red.
 - Published by `.github/workflows/pages.yml` (push = lightweight layers; nightly cron = also integration).
   Pages **source must be "GitHub Actions"** (Settings → Pages).
 - `site/content.json` is the dashboard's canonical roadmap/feature/guard source — keep it in sync

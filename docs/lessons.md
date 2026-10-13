@@ -142,3 +142,33 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - Specs that measure real time (`flights`, `combat`, `combat-strikes`: ack budgets, echo delays, mid-animation transforms) failed one run in five on the CI runner, a different one each time, and passed on rerun and locally. They retry up to 2 times in CI only (`retryTimingSpecInCi()`, `e2e/support/timing.ts`) and show as `flaky`. Every other fake spec keeps `retries: 0`: the real bugs on 2026-10-06/07 (`trigger-order`, `stack-priority`, `draft` reload) failed both runs of the same commit, which is the signature to look for before adding a spec to that list.
 - `latency › pasar prioridad` was NOT on that list and is not CI noise: it went red twice on the same commit with the same shape (echo 637 ms, then 689 ms, budget > 720 ms). Any event the FixtureServer sends is delayed `echoDelayMs` (1200 ms), so a 689 ms "echo" cannot be the answer to the click that was measured. It was the HumanHelper's own auto-pass: `armFallback` passes the priority window 1.5 s after it opens (retrying every 300 ms) and the test clicks that same `.big-action-btn` seconds later, so two actors race in one window — the helper had already passed, the human no longer had priority, and the measured interval was the helper's round trip. Reproduced locally by shifting the pre-click phase 600 ms ("echo" 486 ms); the loaded runner shifted it on its own, which is why local runs were green and CI was red ~1 in 5, and why a retry only bought a different phase.
 - Measurement windows need one actor and an empty channel. `freezeAndDrain()` (`web/e2e/support/perf.ts`) pauses the helper autopilot (that is what `helper.paused` is for, and `armFallback` now honours it mid-flight) and then waits a settling floor (`SETTLE_MS` = 3 s: 1.5 s fallback + 0.3 s retry + 1.2 s echo) plus `quietMs` of silence. Silence between arrivals alone is not enough — with a delayed echo an event can be scheduled *during* the quiet gap and land after the click, so quiet-time must exceed the echo delay and the emitter must be stopped. With that, the measured echo is ~1206 ms for every pre-click phase (0/600/2500/5000 ms), and `latency` runs with `retries: 0` again.
+- **A fixed pixel budget is a platform assertion wearing layout's clothes.** `.tor-seat-name` in the
+  1v1 walkway carried `max-width: 96px`, which fitted this machine's font by 1.1 px (the 14-char
+  fixture name measures 94.9 px under the face macOS resolves for `system-ui`) and truncated the same
+  name under Linux's system-ui fallback (100.8 px for the same string in a monospace fallback, and
+  CI's Ubuntu is in that class). So `turn-lane.spec.ts` was green on every Mac and red on every CI
+  runner, and the *symptom* was the CI-only "nameClipped: true". The fix is not a bigger constant:
+  measure the content against the room (`web/src/board/laneFit.ts` + `useLaneFit.ts`) and degrade —
+  whole row → active seat alone → dots — instead of cutting the one name that answers "who is
+  playing". Two rules come out of it: assert the *contract* (nothing visible is clipped, nothing
+  overflows its band) rather than a number, and prove the guard can fail before trusting it (the new
+  spec went red the moment `max-width: 96px` was put back).
+- Three traps when you replace a pixel assertion with a *measurement* in the DOM, all found in the
+  same change and all silent (each one made the ruler report "it fits"): (1) a hidden measuring clone
+  is still a DOM subtree — the degradation rule `.tor-seat:not(.is-active) { display: none }` also
+  matched the clones' seats, so the ruler measured 189 px instead of 283 px; scope display rules to
+  the real row (`.tor-seats-flow`) and keep the ruler outside it. (2) `min-width: 0` on a flex chip
+  makes a capped row report the cap rather than its content: the same two-chip row measures
+  179 px → 197 px across two fonts when the chips keep their content width, and 150 px → 156 px when
+  they may shrink — the difference between a guard that can fail and one that cannot. Rulers need
+  `min-width: max-content; flex: 0 0 auto` *and* enough specificity to outrank the lane's own
+  `min-width: 0`. (3) `scrollWidth` of a container counts its overflowing hidden children: read
+  overflow on the element that can actually clip (the row), not on the decorated pill that contains
+  the ruler.
+- **A CI that prints failures without exiting non-zero is a CI that reports success.** The Pages
+  nightly had `continue-on-error: true` on every stack step and no step read `status.json`, so for
+  days the workflow was green while the published page said fake-e2e FAIL + integration FAIL — the
+  two failures above, invisible. `scripts/check-status.mjs` (last Pages step, after the deploy) turns
+  any red layer into a red run; `scripts/integration-report.mjs` now waits for `/ready` and warms the
+  server up before blaming the code, because a 0.3 s "integration failure" against a proxy that is
+  still building its card database is an environment failure wearing a product costume.

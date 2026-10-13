@@ -87,7 +87,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 ### 4.2 Product ideas not built yet
 
-Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state), custom card images (part of 5.2, 2026-10-05: "Mi imagen" in the printings modal and the in-game card inspector uploads a per-card image stored locally in IndexedDB that overrides Scryfall art for that player only) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24).
+Full spec and rationale per idea: `docs/enhancements.md`. Already built from that catalog: deck tracker (1.1), invite links (2.1), London-mulligan evaluator (1.4), sample-hand simulator (part of 4.3), the printing selector in the deck editor (part of 5.2; since 2026-09-30 the choice is a local per-player preference — each side sees their own art and it no longer travels in the game state), custom card images (part of 5.2, 2026-10-05: "Mi imagen" in the printings modal and the in-game card inspector uploads a per-card image stored locally in IndexedDB that overrides Scryfall art for that player only) and selectable playmats (5.1, 2026-09-23) and EDHREC suggestions (4.1, 2026-09-24). Since 2026-10-10 the pickers are **visual**: each gameplay preset shows a live miniature table (tapped lands, auto-cast spells, phase-stop dots — `settings/PresetDemo.tsx`), playmat tiles stage real card art, and the artwork is a committed local set — `scripts/gen-showcase-art.mjs` fetches 13 `art_crop` images from Scryfall to `web/public/showcase/` + `src/data/showcaseArt.generated.json` (762 KiB today; `showcaseArt.test.ts` fails past 1.5 MiB or on a missing file, so the pickers paint identically offline and in e2e, where external requests are aborted). Same wave: a compact `RankBadge` now sits in every in-game player bar, fed by the ratings that travel in `PlayerView.userData` (guard `e2e/rank-hud.spec.ts` replays real recorded frames; no badge without a real rating).
 
 | Idea | Impact / effort | State |
 |---|---|---|
@@ -165,6 +165,24 @@ OPEN 2026-10-10: no recorded frame carries the any-time top-card peek (`lookedAt
 your library", `LookAtTopCardOfLibraryAnyTimeEffect`: Future Sight, Bolas's Citadel). The slot
 beside the library (`topCardPeek.ts`) is covered by unit tests and the `game:top-card-peek` gallery
 entry only; a `record.mjs` driver that casts Future Sight would pin the real alternation of views.
+=======
+RESOLVED 2026-10-10 (two failures that were invisible at the same time):
+
+1. `turn-lane.spec.ts` encoded this machine's font metrics — the walkway's `max-width: 96px` name
+   cap fitted macOS by 1.1 px and truncated the same 14-char name under Linux's system-ui fallback,
+   so every CI run was red and every local run green. The cap is gone: the walkway now measures its
+   own content against the room the band gives it (`board/laneFit.ts` + `useLaneFit.ts`) and degrades
+   (whole row → active seat alone → dots) instead of clipping. The spec asserts the contract (no
+   visible name clipped, row never wider than its band) under two fonts and at a starved band, and it
+   was verified to fail once the constant came back. `--font-ui` is a token for exactly this.
+2. The Pages nightly printed red layers into a green run: every stack step had
+   `continue-on-error: true`, nothing read `status.json`, and `integration-report.mjs` skipped the
+   `/ready` + warm-up gates `test.mjs` has had for a week, so self-test/human-test "failed" in 0.3 s
+   against a proxy still building its card database. Both fixed: the nightly path now waits for
+   `/ready`, warms the server up, dumps the failing command's output, and `scripts/check-status.mjs`
+   (last Pages step, after the deploy) exits non-zero on any red layer — the page publishes the truth
+   and the run is red with it.
+>>>>>>> bb15ea24084 (docs: record the walkway, nightly-gate, and preset-demo changes)
 
 RESOLVED 2026-09-30: the two real-mode failures flagged here earlier (`skips.spec.ts`,
 `priority-stop-real.spec.ts`) were a mis-targeting artifact, not a code bug. `E2E_BACKEND=real`
