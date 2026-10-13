@@ -122,12 +122,13 @@
   overflow: hidden;
 }
 
-/* Picker tiles stage two or three real card arts on the mat so the tile
- * reads as a table at a glance (see PLAYMAT_DEMO_CARDS). */
+/* Picker tiles stage two or three real card arts along the bottom edge, small
+ * enough that the mat's colours stay the main thing the tile shows (see
+ * PLAYMAT_DEMO_CARDS). */
 .playmat-table-card {
   position: absolute;
-  bottom: 12%;
-  width: 21%;
+  bottom: 8%;
+  width: 15%;
   aspect-ratio: 5 / 7;
   object-fit: cover;
   border-radius: var(--r-2xs);
@@ -135,19 +136,17 @@
 }
 
 .playmat-table-card.pos-0 {
-  left: 14%;
-  rotate: -7deg;
+  left: 18%;
+  rotate: -5deg;
 }
 
 .playmat-table-card.pos-1 {
-  left: 44%;
-  bottom: 24%;
-  rotate: 4deg;
+  left: 43%;
+  rotate: 3deg;
 }
 
 .playmat-table-card.pos-2 {
-  right: 12%;
-  bottom: 10%;
+  right: 18%;
   rotate: -3deg;
 }
 
