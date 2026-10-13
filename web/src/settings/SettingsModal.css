@@ -1,15 +1,18 @@
 
 
 .dlg-panel.settings-modal {
-  /* Ancho proporcional, igual que el alto ya es una parte de la pantalla
-     (`--dlg-max-h: 70vh`): 66 % del viewport, con suelo en los 760 px de siempre
-     (para que una ventana pequeña no reciba menos de lo que ya tenía) y techo en
-     1060 px (para que en un monitor grande las líneas de texto no estiren sin
-     límite). Medido con Chromium: 900 px de ventana → 760, 1280 → 845, 1600 →
-     1056, 2560 → 1060. Ojo: `vw` no descuenta el `zoom` que `uiScale` pone en la
-     raíz, así que esto no arregla el «a zoom 130 % en ventana de 900 el panel mide
-     988 px y desborda la ventana»; sigue abierto en ROADMAP §4.3. */
-  width: min(94vw, clamp(760px, 66vw, 1060px));
+  /* Proportional to the screen: 80 % of the viewport height and 78 % of its
+     width. The width keeps the 760 px floor the modal always had (a small window
+     never gets less) and a 1500 px ceiling so the text lines do not stretch on
+     an ultrawide. The panel is a column so the body takes whatever height the
+     header and the footer leave. `vh`/`vw` do not discount the `zoom` that
+     `uiScale` puts on the root, so at a high UI zoom the panel can still outgrow
+     a small window (ROADMAP §4.3). */
+  width: min(94vw, clamp(760px, 78vw, 1500px));
+  height: 80vh;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .settings-body {
@@ -17,8 +20,7 @@
   gap: var(--sp-4);
   margin-top: var(--sp-3);
   min-height: 0;
-  height: min(460px, 56vh);
-  flex: none;
+  flex: 1;
 }
 
 .settings-nav {
