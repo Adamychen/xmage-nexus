@@ -1,0 +1,47 @@
+.hand-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: var(--hand-rail-w);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  overflow-y: auto;
+  background: linear-gradient(90deg, var(--shade-4), var(--shade-2));
+  border-right: 1px solid var(--line-2);
+}
+
+.hand-rail-card {
+  flex: none;
+  width: 100%;
+  border-radius: var(--r-md);
+}
+
+.hand-rail-card .hand-card {
+  width: 100%;
+}
+
+.hand-rail-card--rendered {
+  cursor: default;
+}
+
+.hand-rail-card--rendered.playable,
+.hand-rail-card--rendered.targetable {
+  cursor: pointer;
+  outline: 2px solid var(--ok, var(--brand));
+  outline-offset: 2px;
+}
+
+.hand-rail-card--rendered.targetable {
+  outline-color: var(--brand);
+}
+
+.board-shell.has-hand-rail {
+  padding-left: var(--hand-rail-w);
+  box-sizing: border-box;
+}

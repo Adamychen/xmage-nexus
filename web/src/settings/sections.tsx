@@ -11,6 +11,7 @@ import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
+import RenderedCardsSettings from './RenderedCardsSettings'
 import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
@@ -182,6 +183,7 @@ export function BoardSection() {
         label={t('lobby', 'hand_cost_show')}
         title={t('lobby', 'hand_cost_show_hint')}
       />
+      <RenderedCardsSettings />
       <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>
       <p className="settings-hint">{t('lobby', 'pt_badge_hint')}</p>
       <div className="settings-cards">

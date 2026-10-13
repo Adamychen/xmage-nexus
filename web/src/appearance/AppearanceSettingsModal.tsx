@@ -1,4 +1,5 @@
 import type { TranslationSchema } from '../i18n/types'
+import RenderedCardsSettings from '../settings/RenderedCardsSettings'
 import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
@@ -153,6 +154,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
             label={t('lobby', 'hand_cost_show')}
             title={t('lobby', 'hand_cost_show_hint')}
           />
+          <RenderedCardsSettings />
           <div className="board-layout-grid">
             {PT_BADGE_MODES.map((mode) => (
               <Button

@@ -345,3 +345,11 @@
     transition: none;
   }
 }
+
+.hand-rail-width-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}

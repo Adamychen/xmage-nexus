@@ -2,10 +2,11 @@ import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView } from '../net/types'
 import HandBar from './HandBar'
+import HandRail from './HandRail'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import type { BoardPresenter } from './useBoardPresenter'
-import { useStore, isMulliganDecision } from '../state/store'
+import { useStore, useSettings, isMulliganDecision } from '../state/store'
 import './BoardShell.css'
 
 export interface BoardShellProps {
@@ -54,10 +55,20 @@ export function BoardColDivider() {
 export default function BoardShell({ className, testId, presenter, handBar = null, children }: BoardShellProps) {
   const setHandPromptSlot = useContext(HandPromptSlotContext)
   const raised = useStore((s) => isMulliganDecision(s.feedback))
+  const { handRail, handRailWidth } = useSettings()
+  const railed = handRail && !!handBar && !raised
   return (
-    <div className={`board-shell ${className}`} data-testid={testId} ref={presenter.boardRef}>
+    <div className={`board-shell ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ '--hand-rail-w': `${handRailWidth}px` } as React.CSSProperties) : undefined}>
       {children}
-      {handBar && (
+      {railed && handBar && (
+        <HandRail
+          cards={handBar.cards}
+          onCardClick={handBar.onCardClick}
+          playableIds={handBar.playableIds}
+          targetIds={handBar.targetIds}
+        />
+      )}
+      {handBar && !railed && (
         <HandBar
           cards={handBar.cards}
           onCardClick={handBar.onCardClick}

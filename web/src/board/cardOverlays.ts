@@ -23,3 +23,24 @@ export const SICKNESS_STYLES: readonly SicknessStyle[] = ['badge', 'veil']
 export function normalizeSicknessStyle(value: unknown): SicknessStyle {
   return SICKNESS_STYLES.includes(value as SicknessStyle) ? (value as SicknessStyle) : 'badge'
 }
+export type CardRender = 'image' | 'rendered'
+
+export const CARD_RENDERS: readonly CardRender[] = ['image', 'rendered']
+
+export function normalizeCardRender(value: unknown): CardRender {
+  return CARD_RENDERS.includes(value as CardRender) ? (value as CardRender) : 'image'
+}
+
+export function normalizeHandRail(value: unknown): boolean {
+  return value === true
+}
+
+export const HAND_RAIL_MIN_W = 160
+export const HAND_RAIL_MAX_W = 460
+export const HAND_RAIL_DEFAULT_W = 260
+
+export function normalizeHandRailWidth(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return HAND_RAIL_DEFAULT_W
+  return Math.min(HAND_RAIL_MAX_W, Math.max(HAND_RAIL_MIN_W, Math.round(n)))
+}
