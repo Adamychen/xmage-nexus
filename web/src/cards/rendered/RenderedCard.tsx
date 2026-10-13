@@ -4,7 +4,8 @@ import FormattedText from '../../game/FormattedText'
 import { symbolToSvgPath } from '../../decks/ArenaManaSymbols'
 import { artCropUrl } from '../../board/compactCard'
 import { useCardImageUrl } from '../useCardImageUrl'
-import { cardLayout, type CardFace, type CardLayout, type RuleRow } from './cardLayout'
+import { useLocalizedCardText } from '../cardLocalization'
+import { localizedLayout, type CardFace, type CardLayout, type RuleRow } from './cardLayout'
 import { useTextFit } from './useTextFit'
 import './RenderedCard.css'
 
@@ -87,7 +88,8 @@ export interface RenderedCardProps {
 }
 
 export default function RenderedCard({ card, className = '' }: RenderedCardProps) {
-  const layout = useMemo(() => cardLayout(card), [card])
+  const { text: localized } = useLocalizedCardText(card)
+  const layout = useMemo(() => localizedLayout(card, localized), [card, localized])
   const imageUrl = useCardImageUrl(layout.kind === 'hidden' ? null : card)
   const art = artCropUrl(imageUrl)
   const textRef = useRef<HTMLDivElement>(null)
@@ -103,12 +105,13 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
 
   const showArt = layout.kind !== 'split' && layout.kind !== 'adventure' && layout.kind !== 'ability'
   const label = `${layout.name}${layout.typeLine ? `, ${layout.typeLine}` : ''}`
+  const counters = (card.counters ?? []).filter((c) => !/^(loyalty|defense)$/i.test(c.name))
   const loyalty = layout.kind === 'planeswalker' ? layout.loyalty : ''
   const defense = layout.kind === 'battle' ? layout.defense : ''
 
   return (
     <article
-      className={`rc rc--${layout.kind} rc-frame--${layout.frame}${layout.legendary ? ' is-legendary' : ''} ${className}`.trim()}
+      className={`rc rc--${layout.kind} rc-frame--${layout.frame}${layout.legendary ? ' is-legendary' : ''}${layout.showStats || loyalty || defense ? ' has-badge' : ''} ${className}`.trim()}
       aria-label={label}
       data-rarity={layout.rarity || undefined}
     >
@@ -131,6 +134,15 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
             <span className="rc-type-text">{layout.typeLine}</span>
             {layout.rarity && <span className="rc-rarity" aria-hidden="true" />}
           </div>
+          {counters.length > 0 && (
+            <div className="rc-counters">
+              {counters.map((c) => (
+                <span key={c.name} className="rc-counter">
+                  {c.name} \u00d7{c.count}
+                </span>
+              ))}
+            </div>
+          )}
           <div ref={textRef} className="rc-text">
             {layout.rows ? (
               <Rows rows={layout.rows} cardName={layout.name} kind={layout.kind} />
@@ -139,15 +151,6 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
             )}
           </div>
         </>
-      )}
-      {card.counters && card.counters.length > 0 && (
-        <div className="rc-counters">
-          {card.counters.map((c) => (
-            <span key={c.name} className="rc-counter">
-              {c.name} ×{c.count}
-            </span>
-          ))}
-        </div>
       )}
       {layout.showStats && (
         <div className="rc-stats">

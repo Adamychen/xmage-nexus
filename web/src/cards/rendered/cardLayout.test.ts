@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CardView } from '../../net/types'
-import { cardLayout, cardTypeLine, frameColors, frameFor, parseRows } from './cardLayout'
+import { cardLayout, cardTypeLine, frameColors, frameFor, localizedLayout, parseRows } from './cardLayout'
 import { fitScale, FIT_MIN } from './useTextFit'
 
 function card(over: Partial<CardView>): CardView {
@@ -64,6 +64,19 @@ describe('cardLayout', () => {
     expect(frameFor(card({ color: { ...RED, blue: true } }))).toBe('gold')
     expect(frameFor(card({ cardTypes: ['LAND'] }))).toBe('land')
     expect(frameFor(card({ cardTypes: ['ARTIFACT'] }))).toBe('colorless')
+  })
+})
+
+describe('localizedLayout', () => {
+  it('swaps in the localized name, type line and rules for ordinary layouts only', () => {
+    const base = card({ name: 'Opt', cardTypes: ['INSTANT'], rules: ['Scry 1.'] })
+    const out = localizedLayout(base, { name: 'Optar', typeLine: 'Instantáneo', rules: ['Adivina 1.'] })
+    expect([out.name, out.typeLine, out.rules]).toEqual(['Optar', 'Instantáneo', ['Adivina 1.']])
+    const walker = card({ cardTypes: ['PLANESWALKER'], rules: ['+1: Draw.'] })
+    expect(localizedLayout(walker, { rules: ['+1: Roba.'] }).rows?.[0].text).toBe('Roba.')
+    const emblem = card({ mageObjectType: 'EMBLEM', name: 'E' })
+    expect(localizedLayout(emblem, { name: 'Otro' }).name).toBe('E')
+    expect(localizedLayout(base, null)).toEqual(cardLayout(base))
   })
 })
 

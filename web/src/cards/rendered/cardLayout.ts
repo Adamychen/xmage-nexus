@@ -186,7 +186,7 @@ export function cardLayout(card: CardView): CardLayout {
     colors,
     name: kind === 'ability' ? getSourceCardName(card) : card.displayName || card.name,
     cost: costSymbols(card),
-    typeLine: kind === 'ability' ? abilityLine(card) : cardTypeLine(card),
+    typeLine: kind === 'ability' ? abilityLine(card) : kind === 'token' ? `Token ${cardTypeLine(card)}`.trim() : cardTypeLine(card),
     rules,
     rows,
     power: card.power ?? '',
@@ -198,5 +198,19 @@ export function cardLayout(card: CardView): CardLayout {
     halves,
     fusion,
     showStats: (types.includes('CREATURE') || subs.includes('VEHICLE')) && (card.power ?? '') !== '' && kind !== 'planeswalker',
+  }
+}
+
+const LOCALIZABLE: readonly CardLayoutKind[] = ['standard', 'planeswalker', 'battle', 'saga', 'class', 'room', 'token']
+
+export function localizedLayout(card: CardView, text: { name?: string; typeLine?: string; rules?: string[] } | null | undefined): CardLayout {
+  const base = cardLayout(card)
+  if (!text || !LOCALIZABLE.includes(base.kind)) return base
+  const rules = text.rules && text.rules.length > 0 ? text.rules : null
+  const patched = rules ? cardLayout({ ...card, rules }) : base
+  return {
+    ...patched,
+    name: text.name || base.name,
+    typeLine: text.typeLine || base.typeLine,
   }
 }
