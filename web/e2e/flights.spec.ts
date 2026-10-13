@@ -198,45 +198,47 @@ test('animaciones de movimiento: diagnóstico de vuelos por transición @flights
       })
       if (burstId) {
         const b0 = (await flightLog(page)).length
-        const burstPush = (fn: string) =>
-          page.evaluate(
-            ({ gameId, fn: code }) => {
-              const w = window as unknown as {
-                __mageStore?: { getState: () => any; handleMessage: (m: any) => void }
-              }
-              const st = w.__mageStore
-              if (!st) throw new Error('sin __mageStore')
+        const burstSteps = [
+          `view => {
+            const me = view.players.find(p => p.controlled);
+            const card = view.myHand['${burstId}'];
+            delete view.myHand['${burstId}'];
+            view.stack = { ...(view.stack ?? {}), ['${burstId}']: { ...card, controllerId: me.playerId, controllerName: me.name } };
+          }`,
+          `view => {
+            const me = view.players.find(p => p.controlled);
+            const spell = (view.stack ?? {})['${burstId}'];
+            if (spell) {
+              delete view.stack['${burstId}'];
+              me.battlefield['${burstId}'] = { ...spell, tapped: false };
+            }
+          }`,
+          `view => {
+            const me = view.players.find(p => p.controlled);
+            const perm = (me.battlefield ?? {})['${burstId}'];
+            if (perm) {
+              delete me.battlefield['${burstId}'];
+              me.graveyard = { ...(me.graveyard ?? {}), ['${burstId}']: perm };
+            }
+          }`,
+        ]
+        await page.evaluate(
+          async ({ gameId, steps, gapMs }) => {
+            const w = window as unknown as {
+              __mageStore?: { getState: () => any; handleMessage: (m: any) => void }
+            }
+            const st = w.__mageStore
+            if (!st) throw new Error('sin __mageStore')
+            for (let i = 0; i < steps.length; i++) {
               const next = structuredClone(st.getState().game)
-              const apply = new Function('view', `return (${code})(view)`) as (v: any) => void
+              const apply = new Function('view', `return (${steps[i]})(view)`) as (v: any) => void
               apply(next)
               st.handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: Date.now(), objectId: gameId, data: { gameView: next } })
-            },
-            { gameId: setup.gameId, fn },
-          )
-        await burstPush(`view => {
-          const me = view.players.find(p => p.controlled);
-          const card = view.myHand['${burstId}'];
-          delete view.myHand['${burstId}'];
-          view.stack = { ...(view.stack ?? {}), ['${burstId}']: { ...card, controllerId: me.playerId, controllerName: me.name } };
-        }`)
-        await page.waitForTimeout(50)
-        await burstPush(`view => {
-          const me = view.players.find(p => p.controlled);
-          const spell = (view.stack ?? {})['${burstId}'];
-          if (spell) {
-            delete view.stack['${burstId}'];
-            me.battlefield['${burstId}'] = { ...spell, tapped: false };
-          }
-        }`)
-        await page.waitForTimeout(50)
-        await burstPush(`view => {
-          const me = view.players.find(p => p.controlled);
-          const perm = (me.battlefield ?? {})['${burstId}'];
-          if (perm) {
-            delete me.battlefield['${burstId}'];
-            me.graveyard = { ...(me.graveyard ?? {}), ['${burstId}']: perm };
-          }
-        }`)
+              if (i < steps.length - 1) await new Promise((resolve) => setTimeout(resolve, gapMs))
+            }
+          },
+          { gameId: setup.gameId, steps: burstSteps, gapMs: 50 },
+        )
         await page.waitForTimeout(900)
         const burstEntries = (await flightLog(page)).slice(b0)
         const burstForCard = burstEntries.filter((e) => e.cardId === burstId)
