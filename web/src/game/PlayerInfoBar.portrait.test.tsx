@@ -81,6 +81,17 @@ describe('PlayerInfoBar portrait (new table interface)', () => {
     expect(chips[0].getAttribute('title')).toContain('Edgar Markov')
   })
 
+  it('shows only the rank icon, on the avatar corner opposite the hand count', () => {
+    const ranked = makePlayer({ playerId: 'r', name: 'Rina', isHuman: true, userData: { generalRating: 1850 } as never })
+    setState({ game: makeGameView({ players: [me, ranked] }) })
+    const { container } = render(<PlayerInfoBar player={ranked} side="opp" />)
+    const badge = container.querySelector('.player-avatar .rank-badge.pp-rank-icon')
+    expect(badge).not.toBeNull()
+    expect(badge?.querySelector('.rank-badge-name')).toBeNull()
+    expect(container.querySelector('.player-name-row .rank-badge')).toBeNull()
+    expect(container.querySelectorAll('.rank-badge')).toHaveLength(1)
+  })
+
   it('opens the mechanics panel from a mechanic chip', () => {
     const openPanel = vi.fn()
     const { container } = render(

@@ -11,6 +11,7 @@ import DeckTrackerPanel from './DeckTrackerPanel'
 import MechanicsTray from './MechanicsTray'
 import MechanicsOverview from './MechanicsOverview'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
+import CommanderSeatMatrix from './CommanderSeatMatrix'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
@@ -115,7 +116,7 @@ export function DrawerBody({ tab, stack = null }: { tab: DrawerTab; stack?: Reac
         <DeckTrackerPanel />
       ) : tab === 'commander' ? (
         <div className="sidebar-commander-tab">
-          <CommanderDamageMatrix game={game} defaultView={v2 ? 'table' : 'cards'} />
+          {v2 ? <CommanderSeatMatrix game={game} /> : <CommanderDamageMatrix game={game} defaultView="cards" />}
         </div>
       ) : v2 ? (
         <MechanicsOverview />

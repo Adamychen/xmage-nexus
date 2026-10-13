@@ -6,6 +6,7 @@ import { crossZoneCounts } from '../board/crossZone'
 import type { CrossZonePlayable } from '../board/crossZone'
 import { cardsContainTarget, EMPTY_TARGET_IDS, EMPTY_TARGET_ZONES, type TargetZoneKind } from '../board/targetZones'
 import CardSlot from '../board/CardSlot'
+import { CountFlash, useCountFlash } from './useCountFlash'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
@@ -101,6 +102,10 @@ export default function ResourceBar({
   const exileCards = useMemo(() => extractCards(player.exile), [player.exile])
   const exileCount = exileCards.length
   const topExileCard = useMemo(() => (exileCards.length > 0 ? exileCards[exileCards.length - 1] : null), [exileCards])
+
+  const libraryFlash = useCountFlash(player.libraryCount ?? 0)
+  const graveyardFlash = useCountFlash(graveyardCount)
+  const exileFlash = useCountFlash(exileCount)
 
   const crossZone = crossZonePlayables ?? []
   const counts = useMemo(() => crossZoneCounts(crossZone), [crossZone])
@@ -223,8 +228,9 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              {stats ? <em className="chip-label">{t('game', 'pile_library_short')}</em> : <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>}
+              <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
               <span className="chip-count">{player.libraryCount}</span>
+              {stats && <CountFlash flash={libraryFlash} />}
               {player.topCard && (
                 <span className="chip-indicator" title={t('board', 'zone_revealed')}>
                   <Icon name="target" size={10} />
@@ -247,12 +253,11 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              {stats ? <em className="chip-label">{t('game', 'pile_graveyard_short')}</em> : (
-                <span className="chip-icon">
-                  <Icon name="skull" size={12} />
-                </span>
-              )}
+              <span className="chip-icon">
+                <Icon name="skull" size={12} />
+              </span>
               <span className="chip-count">{graveyardCount}</span>
+              {stats && <CountFlash flash={graveyardFlash} />}
               {counts.graveyard > 0 && <span className="chip-playable-dot" />}
             </button>
 
@@ -271,12 +276,11 @@ export default function ResourceBar({
               }
               onMouseLeave={() => onCardHover?.(null)}
             >
-              {stats ? <em className="chip-label">{t('game', 'pile_exile_short')}</em> : (
-                <span className="chip-icon">
-                  <Icon name="portal" size={12} />
-                </span>
-              )}
+              <span className="chip-icon">
+                <Icon name="portal" size={12} />
+              </span>
               <span className="chip-count">{exileCount}</span>
+              {stats && <CountFlash flash={exileFlash} />}
               {counts.exile > 0 && <span className="chip-playable-dot" />}
             </button>
 

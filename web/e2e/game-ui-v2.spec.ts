@@ -31,7 +31,7 @@ test('v2 renders the top bar, phase dial and dial action button @gameui', async 
   await expect(page.getByTestId('phase-dial')).toBeVisible()
   await expect(page.locator('.phase-dial-pip')).toHaveText(['UPK', 'DRW', 'M1', 'CMB', 'M2', 'END'])
   await expect(page.getByTestId('phase-bar-step-PRECOMBAT_MAIN')).toHaveAttribute('data-active', 'true')
-  await expect(page.locator('.pz-bottom-row .pp-stats .chip-label')).toHaveCount(3)
+  await expect(page.locator('.pz-bottom-row .pp-stats .resource-chip .chip-icon')).toHaveCount(3)
   await expect(page.getByTestId('pp-pool')).toBeVisible()
   await expect(page.locator('.action-button-container--dial .big-action-btn')).toBeVisible()
   await page.waitForTimeout(500)
@@ -101,6 +101,29 @@ test('v2 portraits show the hand count, mechanic chips and commander damage @gam
   await expect(page.locator('.player-info-bar[data-player-id="p-ilse"] .badge-initiative .badge-label')).toBeVisible()
   await page.waitForTimeout(500)
   await page.screenshot({ path: testInfo.outputPath('v2-portraits.png') })
+})
+
+test('v2 hand badge opens a visible hand and announces card count changes @gameui', async ({ page }, testInfo) => {
+  const game = richCommanderGame() as { players: Array<Record<string, unknown>>; opponentHands: Record<string, unknown> }
+  const mira = game.players.find((p) => p.playerId === 'p-mira') as Record<string, unknown>
+  mira.handCount = 5
+  game.opponentHands = { Mira: { k1: { id: 'k1', name: 'Counterspell', manaValue: 2, expansionSetCode: 'lea', cardNumber: '1' } } }
+  await showGame(page, game, V2)
+  const portrait = page.locator('.player-info-bar[data-player-id="p-mira"]')
+  const badge = portrait.getByTestId('pp-hand-count')
+  await expect(badge).toBeVisible({ timeout: 10_000 })
+  await expect(badge).toHaveClass(/is-viewable/)
+  await expect(badge).toContainText('1/5')
+  await expect(page.getByTestId('opp-hand-stack')).toHaveCount(0)
+  await badge.click()
+  await expect(page.getByTestId('hand-viewer')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  mira.handCount = 4
+  await showGame(page, game, V2)
+  await expect(portrait.getByTestId('count-flash').first()).toHaveText('-1')
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: testInfo.outputPath('v2-hand-badge.png'), clip: { x: 0, y: 40, width: 700, height: 140 } })
 })
 
 test('v2 log ticker shows the latest actions and opens the log panel @gameui', async ({ page }) => {
@@ -200,19 +223,105 @@ test.describe('narrow window', () => {
   })
 })
 
-test('v2 pod layout keeps the bottom players fully inside the window @gameui', async ({ page }, testInfo) => {
+test('v2 always uses the arena layout, whatever the board layout setting says @gameui', async ({ page }, testInfo) => {
   await showGame(page, richCommanderGame(), { gameUi: 'v2', boardLayout: 'pod', boardLayoutManual: true })
-  await expect(page.getByTestId('pod-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('pod-board')).toHaveCount(0)
   await page.waitForTimeout(500)
   const vh = page.viewportSize()!.height
-  const bars = page.locator('.pod-board .pz-bottom-row .player-info-bar')
+  const bars = page.locator('.arena-board .player-info-bar')
   expect(await bars.count()).toBeGreaterThan(0)
   for (let i = 0; i < (await bars.count()); i++) {
     const box = await bars.nth(i).boundingBox()
     expect(box!.y + box!.height).toBeLessThanOrEqual(vh + 1)
   }
-  await page.screenshot({ path: testInfo.outputPath('v2-pod.png') })
+  await page.screenshot({ path: testInfo.outputPath('v2-forced-arena.png') })
 })
+
+async function boardCardsUnderOverlays(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const visible = (el: Element): DOMRect | null => {
+      const box = el.getBoundingClientRect()
+      let l = box.left
+      let t = box.top
+      let r = box.right
+      let b = box.bottom
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        const o = getComputedStyle(p)
+        if (o.overflowX === 'visible' && o.overflowY === 'visible') continue
+        const pb = p.getBoundingClientRect()
+        l = Math.max(l, pb.left)
+        t = Math.max(t, pb.top)
+        r = Math.min(r, pb.right)
+        b = Math.min(b, pb.bottom)
+      }
+      return r > l && b > t ? new DOMRect(l, t, r - l, b - t) : null
+    }
+    const cards = [...document.querySelectorAll('.arena-board .bz-band .card-slot, .arena-board .bz-commander .card-slot, .arena-board .bz-marquee .card-slot')]
+    const overlays = [
+      ...document.querySelectorAll('.arena-board .player-info-bar, [data-testid="log-ticker"], [data-testid="combat-ledger"], [data-testid="stack-deck"], [data-testid="game-dock"]'),
+    ]
+    const label = (el: Element) => el.getAttribute('data-testid') ?? el.className.toString().split(' ')[0]
+    const hit: string[] = []
+    for (const o of overlays) {
+      const r = o.getBoundingClientRect()
+      if (r.width === 0) continue
+      for (const c of cards) {
+        const b = visible(c)
+        if (!b) continue
+        if (b.left < r.right - 1 && b.right > r.left + 1 && b.top < r.bottom - 1 && b.bottom > r.top + 1) hit.push(`${label(o)} <- ${c.textContent?.slice(0, 20)}`)
+      }
+    }
+    return { hit, cards: cards.length, overlays: overlays.length }
+  })
+}
+
+const STACK = [
+  { id: 's-cs', name: 'Counterspell', controllerId: 'p-mira', targets: ['s-bolt'] },
+  { id: 's-bolt', name: 'Lightning Bolt', controllerId: 'p-adam', targets: ['tobias-edgar'] },
+  { id: 's-rs', name: 'Rhystic Study', controllerId: 'p-mira', ability: true, targets: ['p-adam'], rules: ['Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.'] },
+]
+const LOG = ['Turn 7 Adam', 'Tobias attacks Adam with Edgar Markov', 'Edgar Markov deals 4 damage to Adam', 'Korvold, Fae-Cursed King deals 7 damage to Cathar Commando']
+
+for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
+  test.describe(`no overlap ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: vp })
+
+    for (const scenario of ['quiet', 'combat', 'stack', 'stack-open', 'spectator-quiet', 'spectator-combat']) {
+      test(`v2 no battlefield card touches a portrait, the log, the ledger, the stack or the dial: ${scenario} @gameui`, async ({ page }, testInfo) => {
+        const base = scenario.replace('spectator-', '')
+        const game =
+          base === 'combat'
+            ? richCommanderGame({ step: 'COMBAT_DAMAGE' })
+            : base.startsWith('stack')
+              ? richCommanderGame({ stack: STACK })
+              : richCommanderGame()
+        if (scenario.startsWith('spectator-')) {
+          for (const p of (game as { players: Array<Record<string, unknown>> }).players) p.controlled = false
+        }
+        await showGame(page, game, V2, LOG)
+        if (base === 'combat') await expect(page.getByTestId('combat-ledger')).toBeVisible({ timeout: 10_000 })
+        else if (base === 'quiet') await expect(page.getByTestId('log-ticker')).toBeVisible({ timeout: 10_000 })
+        else await expect(page.getByTestId('stack-deck')).toBeVisible({ timeout: 10_000 })
+        if (scenario === 'stack-open') await page.getByTestId('stack-deck-toggle').click()
+        await page.mouse.move(2, 400)
+        await page.waitForTimeout(900)
+        const result = await boardCardsUnderOverlays(page)
+        expect(result.cards).toBeGreaterThan(0)
+        expect(result.hit).toEqual([])
+        const crossing = await page.evaluate(() => {
+          const floor = document.querySelector('.arena-board > .board-shell-divider')!.getBoundingClientRect().bottom
+          return ['log-ticker', 'combat-ledger']
+            .map((id) => ({ id, rect: document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect() }))
+            .filter((o) => o.rect && o.rect.width > 0 && o.rect.top < floor - 1)
+            .map((o) => ({ id: o.id, top: o.rect!.top }))
+        })
+        expect(crossing, 'floating windows stay below the divider').toEqual([])
+        await page.screenshot({ path: testInfo.outputPath(`v2-${scenario}-${vp.width}.png`) })
+      })
+    }
+  })
+}
 
 test('v2 mana pool keeps every mana type and its label readable @gameui', async ({ page }, testInfo) => {
   const game = richCommanderGame() as { players: Array<Record<string, unknown>> }
@@ -236,7 +345,7 @@ test('v2 mana pool keeps every mana type and its label readable @gameui', async 
 })
 
 for (const layout of ['pod', 'arena']) {
-  test(`v2 ${layout}: last actions and the combat ledger stay inside the board and off the player boxes @gameui`, async ({ page }, testInfo) => {
+  test(`v2 with board layout ${layout}: last actions and the combat ledger stay inside the board and off the player boxes @gameui`, async ({ page }, testInfo) => {
     const log = [
       'Turn 7 Adam',
       'Tobias attacks Adam with Edgar Markov',

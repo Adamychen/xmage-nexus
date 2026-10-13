@@ -532,6 +532,105 @@ html.fx-off .life-value {
   pointer-events: none;
 }
 
+.rank-badge.pp-rank-icon {
+  position: absolute;
+  left: -8px;
+  top: -4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  border-width: 1.5px;
+  background: var(--ink-gap);
+  box-shadow: 0 2px 8px var(--shade-2);
+  pointer-events: auto;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .rank-badge.pp-rank-icon {
+  width: 26px;
+  height: 26px;
+  left: -10px;
+}
+
+.pp-hand-badge.is-viewable {
+  cursor: pointer;
+  pointer-events: auto;
+  font-family: var(--font-ui);
+  animation: pp-hand-reveal 1.8s ease-in-out infinite;
+}
+
+.pp-hand-badge.is-viewable:hover {
+  background: var(--gold-soft);
+}
+
+@keyframes pp-hand-reveal {
+  50% {
+    box-shadow: 0 0 0 4px rgb(var(--gold-rgb) / 0.35), 0 2px 8px var(--shade-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-hand-badge.is-viewable {
+    animation: none;
+  }
+}
+
+.count-flash {
+  position: absolute;
+  right: 0;
+  top: -16px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 3px var(--shade-3);
+  animation: count-flash-rise 2.2s ease-out both;
+}
+
+.count-flash.count-flash--hand {
+  right: -8px;
+  top: auto;
+  bottom: 20px;
+}
+
+.count-flash.is-up {
+  color: var(--ok);
+}
+
+.count-flash.is-down {
+  color: var(--err);
+}
+
+@keyframes count-flash-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  12% {
+    opacity: 1;
+    transform: none;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-flash {
+    animation: none;
+  }
+}
+
+.pp-stats .resource-chip {
+  position: relative;
+}
+
 .pp-stats {
   display: flex;
   min-width: 0;
@@ -548,8 +647,8 @@ html.fx-off .life-value {
 }
 
 .pp-stats .resource-piles {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
   align-items: center;
   gap: var(--sp-1);
 }
@@ -571,12 +670,8 @@ html.fx-off .life-value {
   font-variant-numeric: tabular-nums;
 }
 
-.pp-stats .resource-chip .chip-label {
-  font-style: normal;
-  font-size: var(--fs-4xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.pp-stats .resource-chip .chip-icon {
+  display: inline-flex;
   color: var(--fg-3);
 }
 
@@ -713,12 +808,12 @@ html.fx-off .life-value {
   max-width: 100%;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .player-avatar .avatar-image {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-avatar .avatar-image {
   width: 76px;
   height: 76px;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait {
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:
     'chips chips'
@@ -730,16 +825,16 @@ html.fx-off .life-value {
   width: 100%;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .player-details {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-details {
   display: contents;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .player-name-row {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-name-row {
   grid-area: name;
   align-self: end;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .player-name {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-name {
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -747,16 +842,16 @@ html.fx-off .life-value {
   color: var(--fg-3);
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .pp-stats {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-stats {
   grid-area: stats;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .pp-life {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-life {
   font-size: var(--fs-life-lg);
   align-self: start;
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .pp-hand-badge {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-hand-badge {
   height: 26px;
   font-size: var(--fs-md);
   right: -10px;
@@ -818,7 +913,7 @@ html.fx-off .life-value {
   box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 4px var(--gold-300), 0 0 22px rgb(var(--gold-rgb) / 0.6);
 }
 
-.arena-board > .player-zone .pz-bottom-row > .player-info-bar.is-portrait .pp-av {
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-av {
   width: 76px;
   height: 76px;
   font-size: var(--fs-2xl);

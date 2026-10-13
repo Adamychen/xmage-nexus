@@ -11,9 +11,12 @@ import { useCombatHeld } from '../board/useCombatHeld'
 import { isPlayerDefeated, isPlayerOut } from '../board/boardShared'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
+import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
+import { CountFlash, useCountFlash } from './useCountFlash'
 import { commanderDamageChips } from './commanderChips'
+import { formatSeatDamage } from './commanderSeats'
 import { COMMANDER_LETHAL } from './CommanderDamageMatrix'
 import { useChromeActions } from './chromeActions'
 import { dungeonStateOf, hasCityBlessing, speedOf } from './mechanicsState'
@@ -32,6 +35,8 @@ interface PlayerInfoBarProps {
   onContextMenu?: (e: React.MouseEvent) => void
   stats?: ReactNode
   pool?: ReactNode
+  /** Cards of this player's hand the viewer can see, and how to open them. */
+  handView?: { known: number; onOpen: () => void }
 }
 
 function renderCounterIcon(name: string): React.ReactNode {
@@ -240,6 +245,7 @@ export default function PlayerInfoBar({
   onContextMenu,
   stats,
   pool,
+  handView,
 }: PlayerInfoBarProps) {
   const myConn = useStore((s) => s.conn)
   const game = useStore((s) => s.game)
@@ -247,6 +253,7 @@ export default function PlayerInfoBar({
   const dungeonProgress = useStore((s) => s.dungeonProgress)
   const { t } = useTranslation()
   const portrait = useSettings().gameUi === 'v2'
+  const handFlash = useCountFlash(player.handCount ?? 0)
   const seatColor = useSeatColor(player.playerId)
   const chrome = useChromeActions()
   const cmdChips = portrait ? commanderDamageChips(game, player) : []
@@ -510,10 +517,32 @@ export default function PlayerInfoBar({
         {flagName && <CountryFlag flagName={flagName} className="player-avatar-flag" />}
         {hasPriority && <span className="avatar-priority-ring" />}
         {portrait && (
-          <span className="pp-hand-badge" data-testid="pp-hand-count" title={t('game', 'opp_hand_view')}>
-            <Icon name="hand" size={11} />
-            {player.handCount ?? 0}
-          </span>
+          handView ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="pp-hand-badge is-viewable"
+              data-testid="pp-hand-count"
+              title={t('game', 'opp_hand_view', { known: handView.known, count: player.handCount ?? 0 })}
+              aria-label={t('game', 'opp_hand_view', { known: handView.known, count: player.handCount ?? 0 })}
+              onClick={(e) => {
+                e.stopPropagation()
+                handView.onOpen()
+              }}
+            >
+              <Icon name="eye" size={11} />
+              {handView.known}/{player.handCount ?? 0}
+            </Button>
+          ) : (
+            <span className="pp-hand-badge" data-testid="pp-hand-count" title={t('game', 'hand')}>
+              <Icon name="hand" size={11} />
+              {player.handCount ?? 0}
+            </span>
+          )
+        )}
+        {portrait && <CountFlash flash={handFlash} className="count-flash--hand" />}
+        {portrait && rankElo != null && (
+          <RankBadge elo={rankElo} iconOnly className="pp-rank-icon" />
         )}
       </div>
 
@@ -522,7 +551,7 @@ export default function PlayerInfoBar({
           <span className="player-name" data-priority={player.hasPriority || undefined}>
             {player.name}
           </span>
-          {rankElo != null && (
+          {!portrait && rankElo != null && (
             <RankBadge elo={rankElo} compact={compact} showElo={!compact} className="player-rank-badge" />
           )}
           {isDefeated && (
@@ -567,16 +596,18 @@ export default function PlayerInfoBar({
           {!player.controlled && badgesEl}
           {cmdChips.map((chip) => (
             <span
-              key={chip.commander.id}
+              key={chip.commander.ownerId}
               className={`commander-chip tone-${chip.tone} interactive-badge`}
               data-testid="commander-chip"
               style={{ '--chip-seat': seatColorVar(seatIndexOf(game?.players, chip.commander.ownerId)) } as React.CSSProperties}
-              title={`${chip.commander.name} (${chip.commander.ownerName}): ${chip.dmg}/${COMMANDER_LETHAL}`}
+              title={chip.commanders.map((c, i) => `${c.name} (${c.ownerName}): ${chip.dmgs[i]}/${COMMANDER_LETHAL}`).join(' · ')}
               onMouseEnter={chip.commander.card ? (e) => handleMouseEnter(chip.commander.card as CardView, e) : undefined}
               onMouseLeave={handleMouseLeave}
             >
               <span className="commander-chip-dot" aria-hidden="true" />
-              <span className="commander-chip-val">{chip.dmg}/{COMMANDER_LETHAL}</span>
+              <span className="commander-chip-val">
+                {chip.dmgs.length > 1 ? formatSeatDamage(chip.dmgs) : `${chip.dmg}/${COMMANDER_LETHAL}`}
+              </span>
             </span>
           ))}
           {player.controlled && badgesEl}

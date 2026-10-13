@@ -20,14 +20,14 @@
   --me-gutter-r: 250px;
 }
 
-.board-wrap[data-ui='v2'] .arena-board > .player-zone {
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom {
   position: relative;
   padding-left: var(--me-gutter-l);
   padding-right: var(--me-gutter-r);
   overflow: visible;
 }
 
-.board-wrap[data-ui='v2'] .arena-board > .player-zone .pz-bottom-row {
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {
   position: absolute;
   left: 18px;
   bottom: 18px;

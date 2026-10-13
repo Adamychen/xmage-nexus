@@ -54,6 +54,8 @@ import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
+import { MAX_BOARD_PLAYERS } from '../board/boardShared'
+import { useOverlayGutters } from './useOverlayGutters'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
@@ -361,7 +363,10 @@ export default function GameScreen() {
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
-  const effectiveLayout = effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
+  const effectiveLayout =
+    v2 && totalPlayers <= MAX_BOARD_PLAYERS
+      ? 'arena'
+      : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'
   const isPodLayout = effectiveLayout === 'pod'
 
@@ -376,6 +381,7 @@ export default function GameScreen() {
   const activeSidePanelTab = sidePanelTab === 'commander' && !hasCommanders ? null : sidePanelTab
   const chromeLeft = v2 && activeSidePanelTab ? 372 : 0
   const chromeRight = v2 && stackCount > 0 ? (deckOpen ? 372 : 284) : 0
+  useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
         isPodLayout || (v2 && isArenaLayout) ? (

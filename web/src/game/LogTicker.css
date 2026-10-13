@@ -85,7 +85,7 @@
 .board-wrap:has(.arena-board) .log-ticker {
   left: 18px;
   top: auto;
-  bottom: 262px;
+  bottom: var(--overlay-bottom, 262px);
   transform: none;
   width: 270px;
 }

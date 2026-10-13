@@ -1,6 +1,6 @@
 import type { TranslationSchema } from '../i18n/types'
 import RenderedCardsSettings from '../settings/RenderedCardsSettings'
-import GameUiSettings from '../settings/GameUiSettings'
+import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from '../settings/boardLayoutChoice'
 import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
@@ -24,10 +24,11 @@ interface Props {
   onClose: () => void
 }
 
-const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: keyof TranslationSchema['lobby']; descKey: keyof TranslationSchema['lobby']; icon: string }> = [
+const LAYOUTS: Array<{ id: BoardLayoutChoice; labelKey: keyof TranslationSchema['lobby']; descKey: keyof TranslationSchema['lobby']; icon: string }> = [
   { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc', icon: '▭' },
   { id: 'pod', labelKey: 'board_pod', descKey: 'board_pod_desc', icon: '⊞' },
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc', icon: '⬒' },
+  { id: 'table', labelKey: 'board_table', descKey: 'board_table_desc', icon: '◐' },
 ]
 
 const UI_SCALE_DESC_KEYS: Record<string, 'ui_scale_compact' | 'ui_scale_normal' | 'ui_scale_large' | 'ui_scale_xlarge' | 'ui_scale_cjk'> = {
@@ -119,13 +120,13 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
           <p className="appearance-section-hint">{t('lobby', 'appearance_board_hint')}</p>
           <div className="board-layout-grid">
             {LAYOUTS.map((l) => {
-              const isSelected = settings.boardLayout === l.id
+              const isSelected = boardLayoutChoiceOf(settings) === l.id
               return (
                 <button
                   key={l.id}
                   type="button"
                   className={`board-layout-item ${isSelected ? 'selected' : ''}`}
-                  onClick={() => setSetting('boardLayout', l.id)}
+                  onClick={() => chooseBoardLayout(l.id)}
                   data-testid={`board-layout-${l.id}`}
                 >
                   <span className="board-layout-icon">{l.icon}</span>
@@ -156,7 +157,6 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
             title={t('lobby', 'hand_cost_show_hint')}
           />
           <RenderedCardsSettings />
-          <GameUiSettings />
           <div className="board-layout-grid">
             {PT_BADGE_MODES.map((mode) => (
               <Button

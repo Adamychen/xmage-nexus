@@ -96,8 +96,8 @@ export function usePhaseStopToggles() {
 
   const toggleOpponentStop = useCallback((stopKey?: string | string[]) => {
     const keys = Array.isArray(stopKey) ? stopKey : stopKey ? [stopKey] : []
-    if (keys.length === 0) return
-    const cur = keys.some((k) => !!phaseStops?.opponentTurn?.[k])
+    if (keys.length === 0 || !phaseStops) return
+    const cur = keys.some((k) => !!phaseStops.opponentTurn?.[k])
     const opponentTurn = { ...(phaseStops.opponentTurn ?? {}) }
     for (const k of keys) opponentTurn[k] = !cur
     const next = { ...phaseStops, opponentTurn }

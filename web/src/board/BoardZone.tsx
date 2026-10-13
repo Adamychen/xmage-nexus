@@ -495,9 +495,10 @@ export default function BoardZone({
           {effectiveControlled && compactPod && <ResourceBar player={player} side="my" poolOnly />}
           </>
         ) : undefined}
+        handView={portrait && handViewable ? { known: knownHandEntries.length, onOpen: () => setHandViewerOpen(true) } : undefined}
         pool={portrait && effectiveControlled && !compactPod ? <ResourceBar player={player} side="my" poolOnly /> : undefined}
       />
-      {showHand && (!portrait || handViewable || handTargeted || effectiveControlled) && (
+      {showHand && (!portrait || handTargeted || effectiveControlled) && (
         <HandZone
           cards={finalHand}
           onCardClick={onHandCardClick ?? onCardClick}

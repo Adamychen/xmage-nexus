@@ -27,7 +27,7 @@
 .board-wrap:has(.arena-board) .combat-ledger {
   left: 18px;
   top: auto;
-  bottom: 262px;
+  bottom: var(--overlay-bottom, 262px);
   transform: none;
 }
 

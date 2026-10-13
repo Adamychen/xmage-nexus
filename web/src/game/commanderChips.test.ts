@@ -34,10 +34,25 @@ describe('commanderDamageChips', () => {
     expect(commanderDamageChips(game, game.players![2]).map((c) => c.commander.name)).toEqual(['Korvold'])
   })
 
-  it('flags warning from 15 and lethal from 21', () => {
-    expect(commanderChipTone(14)).toBe('normal')
-    expect(commanderChipTone(15)).toBe('warning')
-    expect(commanderChipTone(20)).toBe('warning')
+  it('flags warning from 12 and lethal from 18', () => {
+    expect(commanderChipTone(11)).toBe('normal')
+    expect(commanderChipTone(12)).toBe('warning')
+    expect(commanderChipTone(17)).toBe('warning')
+    expect(commanderChipTone(18)).toBe('lethal')
     expect(commanderChipTone(21)).toBe('lethal')
+  })
+
+  it('merges partner commanders of one seat into a single chip', () => {
+    const game = makeGameView({
+      players: [
+        makePlayer({ playerId: 'a', name: 'Adam', controlled: true }),
+        makePlayer({ playerId: 'k', name: 'Kira', commandList: [commander('k1', 'Thrasios', [[5, 'Adam']]), commander('k2', 'Tymna', [[9, 'Adam']])] }),
+      ],
+    })
+    const chips = commanderDamageChips(game, game.players![0])
+    expect(chips).toHaveLength(1)
+    expect(chips[0].dmgs).toEqual([5, 9])
+    expect(chips[0].dmg).toBe(9)
+    expect(chips[0].commander.name).toBe('Tymna')
   })
 })
