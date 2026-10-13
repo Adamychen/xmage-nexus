@@ -21,6 +21,7 @@ import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, manaSourceSymbols, primaryCardType } from './compactCard'
+import type { PtBadgeMode, SicknessStyle } from './cardOverlays'
 import './CardSlot.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
@@ -47,6 +48,8 @@ interface CardSlotProps {
   showDamage?: boolean
   /** Compact battlefield tile: art crop with the name, type and mana source overlaid. */
   compact?: boolean
+  /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
+  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle }
 }
 
 export default function CardSlot({
@@ -68,14 +71,18 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
   compact = false,
+  demo,
 }: CardSlotProps) {
   const { t } = useTranslation()
-  const { ptBadgeMode, sicknessStyle } = useSettings()
+  const settings = useSettings()
+  const ptBadgeMode = demo?.ptBadgeMode ?? settings.ptBadgeMode
+  const sicknessStyle = demo?.sicknessStyle ?? settings.sicknessStyle
   const sleeve = useSleeveFor(card.controllerId)
-  const imgUrl = useCardImageUrl(card, !faceDown)
+  const resolvedImgUrl = useCardImageUrl(card, !faceDown && !demo)
+  const imgUrl = demo ? demo.artUrl : resolvedImgUrl
   const isFaceDownCard = faceDown || card.faceDown === true
   const showBack = faceDown || (card.faceDown === true && !imgUrl)
-  const cropUrl = compact ? artCropUrl(imgUrl) : null
+  const cropUrl = compact ? (demo ? demo.artUrl : artCropUrl(imgUrl)) : null
   const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

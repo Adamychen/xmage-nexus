@@ -4,6 +4,8 @@ import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
 import CustomSleeveTile from '../appearance/CustomSleeveTile'
 import CustomCardArtManager from '../appearance/CustomCardArtManager'
+import BoardDemo from './BoardDemo'
+import LayoutDemo from './LayoutDemo'
 import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
@@ -127,6 +129,7 @@ export function BoardSection() {
             onClick={() => setSetting('boardLayout', l.id)}
             data-testid={`settings-layout-${l.id}`}
           >
+            <LayoutDemo layout={l.id} />
             <span className="settings-card-label">{t('lobby', l.labelKey as 'board_standard')}</span>
             <span className="settings-card-desc">{t('lobby', l.descKey as 'board_standard_desc')}</span>
             {settings.boardLayout === l.id && <span className="settings-card-check">✓</span>}
@@ -145,6 +148,7 @@ export function BoardSection() {
             aria-pressed={settings.cardStyle === style}
             data-testid={`settings-card-style-${style}`}
           >
+            <BoardDemo spec={{ kind: 'cardStyle', value: style }} />
             <span className="settings-card-label">{t('lobby', `card_style_${style}`)}</span>
             <span className="settings-card-desc">{t('lobby', `card_style_${style}_desc`)}</span>
             {settings.cardStyle === style && <span className="settings-card-check">✓</span>}
@@ -163,6 +167,7 @@ export function BoardSection() {
             aria-pressed={settings.tapStyle === style}
             data-testid={`settings-tap-style-${style}`}
           >
+            <BoardDemo spec={{ kind: 'tapStyle', value: style }} />
             <span className="settings-card-label">{t('lobby', `tap_style_${style}`)}</span>
             <span className="settings-card-desc">{t('lobby', `tap_style_${style}_desc`)}</span>
             {settings.tapStyle === style && <span className="settings-card-check">✓</span>}
@@ -189,6 +194,7 @@ export function BoardSection() {
             aria-pressed={settings.ptBadgeMode === mode}
             data-testid={`settings-pt-badge-${mode}`}
           >
+            <BoardDemo spec={{ kind: 'ptBadge', value: mode }} />
             <span className="settings-card-label">{t('lobby', `pt_badge_${mode}`)}</span>
             <span className="settings-card-desc">{t('lobby', `pt_badge_${mode}_desc`)}</span>
             {settings.ptBadgeMode === mode && <span className="settings-card-check">✓</span>}
@@ -207,6 +213,7 @@ export function BoardSection() {
             aria-pressed={settings.sicknessStyle === style}
             data-testid={`settings-sickness-style-${style}`}
           >
+            <BoardDemo spec={{ kind: 'sickness', value: style }} />
             <span className="settings-card-label">{t('lobby', `sickness_style_${style}`)}</span>
             <span className="settings-card-desc">{t('lobby', `sickness_style_${style}_desc`)}</span>
             {settings.sicknessStyle === style && <span className="settings-card-check">✓</span>}

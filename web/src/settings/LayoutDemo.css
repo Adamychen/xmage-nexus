@@ -1,0 +1,93 @@
+/* Miniature of a board layout (Settings → Board); see settings/LayoutDemo.tsx.
+ * Colours only through tokens so the style-tokens ratchet keeps counting 0. */
+
+.layout-demo {
+  position: relative;
+  display: block;
+  height: 84px;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  isolation: isolate;
+}
+
+.layout-demo-mat {
+  inset: -10%;
+  background: var(--ink-1);
+}
+
+.layout-demo-zones {
+  position: absolute;
+  inset: var(--sp-1);
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.layout-demo[data-layout='standard'] .layout-demo-zones {
+  grid-template-rows: 1fr 1fr;
+}
+
+.layout-demo[data-layout='pod'] .layout-demo-zones {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.layout-demo[data-layout='arena'] .layout-demo-zones {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 2fr 3fr;
+}
+
+.layout-demo[data-layout='arena'] .layout-demo-zone.is-mine {
+  grid-column: 1 / -1;
+}
+
+.layout-demo-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-0h);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-1);
+  background: var(--veil-1);
+}
+
+.layout-demo-zone.is-mine {
+  border-color: rgb(var(--brand-rgb) / 0.6);
+  background: rgb(var(--brand-rgb) / 0.1);
+}
+
+.layout-demo-tile {
+  display: block;
+  height: 72%;
+  max-height: 26px;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--r-2xs);
+  box-shadow: var(--shadow-1);
+}
+
+.layout-demo-tile.is-blank {
+  background: var(--ink-3);
+}
+
+.layout-demo-pills {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-2);
+  display: flex;
+  gap: var(--sp-0h);
+}
+
+.layout-demo-pill {
+  width: 10px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--ink-4);
+}
+
+.layout-demo-pill.is-on {
+  background: rgb(var(--brand-rgb) / 0.9);
+}
