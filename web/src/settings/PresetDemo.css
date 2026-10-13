@@ -1,0 +1,181 @@
+/* Mini preset demos (Settings → Gameplay, setup wizard, first-run). The scenes
+ * are decorative miniature tables; see settings/PresetDemo.tsx. Colours only
+ * through rgb(var(--*-rgb) / …) so the style-tokens ratchet keeps counting 0. */
+
+.preset-demo {
+  position: relative;
+  display: block;
+  height: 64px;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  isolation: isolate;
+}
+
+.preset-demo-mat {
+  inset: -10%;
+  background: var(--ink-1);
+}
+
+.preset-demo-row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1h);
+}
+
+.preset-tile {
+  position: relative;
+  width: 26px;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+  box-shadow: var(--shadow-1);
+  transform-origin: 50% 50%;
+}
+
+.preset-tile-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.preset-tile-blank {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-2) 100%);
+}
+
+/* Tapped lands (tilted, spent) and lifted spells — the "auto" story: the
+ * client pays and casts, the player watches. */
+.preset-demo[data-mode='auto'] .preset-tile.is-land {
+  rotate: 18deg;
+}
+
+.preset-demo[data-mode='auto'] .preset-tile.is-spell {
+  animation: presetDemoCast calc(3.4s / var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+.preset-demo[data-mode='auto'] .preset-tile.is-spell:nth-child(odd) {
+  animation-delay: 1.4s;
+}
+
+/* Manual: flat tiles + click rings, one by one. */
+.preset-demo[data-mode='manual'] .preset-tile::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 1.5px solid rgb(var(--gold-rgb) / 0.8);
+  border-radius: 50%;
+  opacity: 0;
+  animation: presetDemoClick calc(2.6s / var(--fx-speed, 1)) ease-out infinite;
+}
+
+.preset-demo[data-mode='manual'] .preset-tile:nth-child(2n)::after {
+  animation-delay: 0.6s;
+}
+
+.preset-demo[data-mode='manual'] .preset-tile:nth-child(3n)::after {
+  animation-delay: 1.2s;
+}
+
+/* Mana orbs (left): spent = already paid into spells, bright = still open. */
+.preset-demo-orb {
+  position: absolute;
+  left: var(--sp-1h);
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+  z-index: 1;
+}
+
+.preset-orb {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgb(var(--mana-u-rgb) / 0.85);
+  box-shadow: 0 0 6px rgb(var(--mana-u-rgb) / 0.4);
+}
+
+.preset-demo-orb .preset-orb:nth-child(1) {
+  background: rgb(var(--mana-r-rgb) / 0.85);
+  box-shadow: 0 0 6px rgb(var(--mana-r-rgb) / 0.4);
+}
+
+.preset-demo-orb .preset-orb:nth-child(2) {
+  background: rgb(var(--mana-g-rgb) / 0.85);
+  box-shadow: 0 0 6px rgb(var(--mana-g-rgb) / 0.4);
+}
+
+.preset-orb.is-spent {
+  background: var(--ink-4);
+  box-shadow: none;
+}
+
+/* Phase bar with stop dots: smart = stops that keep flowing, solid = hard stop. */
+.preset-demo-phases {
+  position: absolute;
+  left: var(--sp-2);
+  right: var(--sp-1h);
+  bottom: var(--sp-1);
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-4xs);
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+
+.preset-phase {
+  padding: 0 var(--sp-0h);
+  border-radius: var(--r-2xs);
+  background: var(--ink-2);
+}
+
+.preset-phase[data-stop='smart'] {
+  color: var(--fg-1);
+  box-shadow: inset 0 -2px 0 rgb(var(--gold-rgb) / 0.45);
+}
+
+.preset-phase[data-stop='solid'] {
+  color: var(--fg-1);
+  box-shadow: inset 0 -2px 0 rgb(var(--gold-rgb) / 0.9);
+}
+
+@keyframes presetDemoCast {
+  0%,
+  55%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 0 -7px;
+    scale: 1.06;
+  }
+}
+
+@keyframes presetDemoClick {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+    scale: 0.6;
+  }
+  12% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preset-demo * {
+    animation: none !important;
+  }
+}

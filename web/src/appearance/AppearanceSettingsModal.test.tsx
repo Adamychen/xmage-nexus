@@ -18,6 +18,17 @@ describe('AppearanceSettingsModal', () => {
     expect(tile.getAttribute('aria-pressed')).toBe('true')
   })
 
+  it('stages real card art on the playmat tiles (showcase set, local files)', () => {
+    render(<AppearanceSettingsModal onClose={() => {}} />)
+    const ember = screen.getByTestId('playmat-ember')
+    const arts = ember.querySelectorAll('img.playmat-table-card')
+    expect(arts.length).toBe(3)
+    for (const img of Array.from(arts)) {
+      expect(img.getAttribute('src')).toMatch(/showcase\/.+\.jpg$/)
+      expect(img.getAttribute('alt')).toBe('')
+    }
+  })
+
   it('offers a custom tile for sleeves and playmats', () => {
     render(<AppearanceSettingsModal onClose={() => {}} />)
     expect(screen.getByTestId('sleeve-custom')).toBeTruthy()

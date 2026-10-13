@@ -32,7 +32,9 @@
     "gen-server-state:validate": "node ../scripts/server-state-schema.mjs --validate",
     "gen-splash-i18n": "node ../scripts/gen-splash-i18n.mjs",
     "gen-splash-i18n:validate": "node ../scripts/gen-splash-i18n.mjs --validate",
-    "gen": "npm run gen-types && npm run gen-zod && npm run gen-server-state"
+    "gen": "npm run gen-types && npm run gen-zod && npm run gen-server-state",
+    "gen-showcase-art": "node ../scripts/gen-showcase-art.mjs",
+    "gen-showcase-art:validate": "node ../scripts/gen-showcase-art.mjs --validate"
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",

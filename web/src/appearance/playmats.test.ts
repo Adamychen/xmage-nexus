@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { normalizePlaymat, PLAYMATS } from './playmats'
+import { normalizePlaymat, PLAYMAT_DEMO_CARDS, PLAYMATS } from './playmats'
 import { identityColors, playmatVars } from './playmatIdentity'
+import { showcaseArtUrl } from '../cards/showcaseArt'
 import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
 describe('playmats', () => {
@@ -9,6 +10,14 @@ describe('playmats', () => {
     expect(normalizePlaymat('nope')).toBe('classic')
     expect(normalizePlaymat(undefined)).toBe('classic')
     expect(PLAYMATS.filter((m) => m.animated).map((m) => m.id)).toEqual(['aurora', 'identity'])
+  })
+
+  it('stages only cards whose art ships in the showcase set', () => {
+    for (const [mat, cards] of Object.entries(PLAYMAT_DEMO_CARDS)) {
+      for (const card of cards) {
+        expect(showcaseArtUrl(card), `${mat}: ${card}`).not.toBeNull()
+      }
+    }
   })
 
   it('derives colours from basic lands and coloured permanents, most frequent first', () => {

@@ -119,6 +119,36 @@
   aspect-ratio: 16 / 10;
   border-radius: var(--r-md);
   border: 1px solid var(--line-2);
+  overflow: hidden;
+}
+
+/* Picker tiles stage two or three real card arts on the mat so the tile
+ * reads as a table at a glance (see PLAYMAT_DEMO_CARDS). */
+.playmat-table-card {
+  position: absolute;
+  bottom: 12%;
+  width: 21%;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--r-2xs);
+  box-shadow: var(--shadow-1);
+}
+
+.playmat-table-card.pos-0 {
+  left: 14%;
+  rotate: -7deg;
+}
+
+.playmat-table-card.pos-1 {
+  left: 44%;
+  bottom: 24%;
+  rotate: 4deg;
+}
+
+.playmat-table-card.pos-2 {
+  right: 12%;
+  bottom: 10%;
+  rotate: -3deg;
 }
 
 html.fx-off .playmat-layer::before {

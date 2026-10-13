@@ -2,6 +2,7 @@ import { applyGameplayPreset, useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
 import Button from '../ui/Button'
 import { GAMEPLAY_PRESETS } from './gameplayPresets'
+import PresetDemo from './PresetDemo'
 import './SettingsModal.css'
 
 export default function PresetPicker() {
@@ -18,6 +19,8 @@ export default function PresetPicker() {
           onClick={() => applyGameplayPreset(preset.id)}
           data-testid={`settings-preset-${preset.id}`}
         >
+          <PresetDemo preset={preset.id} />
+          <span className="settings-card-label">{t('game', preset.labelKey)}</span>
           <span className="settings-card-label">{t('game', preset.labelKey)}</span>
           <span className="settings-card-desc">{t('game', preset.descKey)}</span>
           {settings.gameplayPreset === preset.id && <span className="settings-card-check">✓</span>}

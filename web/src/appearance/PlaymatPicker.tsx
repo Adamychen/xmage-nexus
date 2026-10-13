@@ -2,7 +2,8 @@ import { useTranslation } from '../i18n'
 import { setSetting } from '../state/actions'
 import { useSettings } from '../state/selectors'
 import Button from '../ui/Button'
-import { CUSTOM_PLAYMAT_ID, DEFAULT_PLAYMAT, PLAYMATS } from './playmats'
+import { showcaseArtUrl } from '../cards/showcaseArt'
+import { CUSTOM_PLAYMAT_ID, DEFAULT_PLAYMAT, PLAYMAT_DEMO_CARDS, PLAYMATS } from './playmats'
 import { customPlaymatStore } from './customPlaymat'
 import CustomImageTile from './CustomImageTile'
 import './playmats.css'
@@ -32,6 +33,12 @@ export default function PlaymatPicker({ testIdPrefix = 'playmat' }: Props) {
             title={label}
           >
             <span className="playmat-layer playmat-swatch" data-playmat={m.id} aria-hidden="true">
+              {(PLAYMAT_DEMO_CARDS[m.id] ?? []).map((name, i) => {
+                const art = showcaseArtUrl(name)
+                return art ? (
+                  <img key={name} className={`playmat-table-card pos-${i}`} src={art} alt="" draggable={false} />
+                ) : null
+              })}
               {isSelected && <span className="sleeve-check">✓</span>}
             </span>
             <span className="sleeve-name">{label}</span>
