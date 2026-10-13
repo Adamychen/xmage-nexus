@@ -165,7 +165,7 @@ OPEN 2026-10-10: no recorded frame carries the any-time top-card peek (`lookedAt
 your library", `LookAtTopCardOfLibraryAnyTimeEffect`: Future Sight, Bolas's Citadel). The slot
 beside the library (`topCardPeek.ts`) is covered by unit tests and the `game:top-card-peek` gallery
 entry only; a `record.mjs` driver that casts Future Sight would pin the real alternation of views.
-=======
+
 RESOLVED 2026-10-10 (two failures that were invisible at the same time):
 
 1. `turn-lane.spec.ts` encoded this machine's font metrics — the walkway's `max-width: 96px` name
@@ -182,7 +182,6 @@ RESOLVED 2026-10-10 (two failures that were invisible at the same time):
    `/ready`, warms the server up, dumps the failing command's output, and `scripts/check-status.mjs`
    (last Pages step, after the deploy) exits non-zero on any red layer — the page publishes the truth
    and the run is red with it.
->>>>>>> bb15ea24084 (docs: record the walkway, nightly-gate, and preset-demo changes)
 
 RESOLVED 2026-09-30: the two real-mode failures flagged here earlier (`skips.spec.ts`,
 `priority-stop-real.spec.ts`) were a mis-targeting artifact, not a code bug. `E2E_BACKEND=real`
