@@ -1202,6 +1202,7 @@ export const de: TranslationSchema = {
     companion_window: 'Gefährte ({name})',
     looked_at_window_plain: 'Angeschaut',
     top_card_peek: 'Oberste Karte deiner Bibliothek: {name} (nur du siehst sie)',
+    top_card_peek_anon: 'Oberste Karte deiner Bibliothek (nur du siehst sie)',
     revealed_window_plain: 'Aufgedeckt',
     companion_window_plain: 'Gefährte',
     spectator_game_changed: 'Das Spiel hat sich geändert: Der Tisch hat ein neues Spiel begonnen.',

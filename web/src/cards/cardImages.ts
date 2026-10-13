@@ -401,6 +401,17 @@ export async function awaitImageUrl(card: CardView): Promise<string | null> {
 }
 
 /**
+ * Metadata already in memory, no network and no wait. For read-only surfaces that
+ * must paint on the same frame they receive a view (the top-card peek): a hit gives
+ * the name instantly, a miss means "paint without a name", never "paint `undefined`".
+ */
+export function peekCardMeta(setCode: string | undefined, cardNumber: string | undefined): ScryfallCardInfo | null {
+  const key = scryfallKey(setCode ?? '', cardNumber ?? '')
+  if (!key) return null
+  return metaMemory.get(key) ?? null
+}
+
+/**
  * Async version: waits for the metadata to be resolved.
  */
 export async function awaitCardMeta(setCode: string, cardNumber: string): Promise<ScryfallCardInfo | null> {

@@ -1202,6 +1202,7 @@ export const ru: TranslationSchema = {
     companion_window: 'Компаньон ({name})',
     looked_at_window_plain: 'Просмотрено',
     top_card_peek: 'Верхняя карта вашей библиотеки: {name} (видите только вы)',
+    top_card_peek_anon: 'Верхняя карта вашей библиотеки (видите только вы)',
     revealed_window_plain: 'Открыто',
     companion_window_plain: 'Компаньон',
     spectator_game_changed: 'Игра изменилась: за столом началась новая игра.',

@@ -118,6 +118,8 @@ type AssertKind =
   | 'hasCompanionPlayable'
   | 'hasOpponentReveal'
   | 'hasLookedAt'
+  | 'hasTopCardPeek'
+  | 'hasTopCardRevealed'
   | 'hasMultikicker'
   | 'hasStrive'
   | 'hasCombatTrick'
@@ -1317,6 +1319,37 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
     case 'hasLookedAt': {
       const views = gv.lookedAt ?? []
       return views.some((v) => Object.keys((v as { cards?: Record<string, unknown> })?.cards ?? {}).length >= 1)
+    }
+    case 'hasTopCardPeek': {
+      // The any-time top-card peek (Sphinx of Jwar Isle). Contract note: this group
+      // is a `LookedAtView`, so its cards are `SimpleCardView` entries (id +
+      // expansionSetCode + cardNumber) with NO name and NO rules text, even though
+      // contract.schema.json points `lookedAt` at `RevealedView` (whose cards are
+      // `CardView`). Anything that renders it has to resolve the card from the set
+      // code, not from fields that are not on the wire.
+      // The frame also pins the case the slot must paint in: our own `topCard` is
+      // null, so ResourceBar's `peekId !== player.topCard?.id` dedupe is not what
+      // hides it here.
+      const group = (gv.lookedAt ?? []).find((g) => String((g as { name?: unknown })?.name ?? '') === 'Top card of your library')
+      const cards = Object.values((group as { cards?: Record<string, unknown> })?.cards ?? {})
+      if (cards.length !== 1) return false
+      const top = cards[0] as { id?: unknown; expansionSetCode?: unknown; cardNumber?: unknown; name?: unknown }
+      if (!top?.id || !top?.expansionSetCode || !top?.cardNumber) return false
+      if (top.name !== undefined) return false
+      if ((me as { topCard?: unknown } | undefined)?.topCard != null) return false
+      return bf.some((c) => /sphinx of jwar isle/i.test(String((c as { name?: unknown })?.name ?? '')))
+    }
+    case 'hasTopCardRevealed': {
+      // The other top-card channel: `PlayerView.topCard`, filled per view while the
+      // player is `topCardRevealed` (Future Sight). It IS a full `CardView` (name +
+      // rules) and it only exists for the player with the reveal — the rival's
+      // `topCard` stays null, so the channel is not global state.
+      const mine = (me as { topCard?: Record<string, unknown> } | undefined)?.topCard
+      if (!mine?.name || !Array.isArray(mine?.rules)) return false
+      const others = (gv.players ?? []).filter((p) => !p?.controlled)
+      if (others.length === 0) return false
+      if (others.some((p) => (p as { topCard?: unknown }).topCard != null)) return false
+      return bf.some((c) => /future sight/i.test(String((c as { name?: unknown })?.name ?? '')))
     }
     case 'hasOpponentReveal': {
       // Issue #1: la búsqueda+reveal del RIVAL (Trinket Mage busca y revela un

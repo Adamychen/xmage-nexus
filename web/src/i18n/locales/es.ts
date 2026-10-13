@@ -1202,6 +1202,7 @@ export const es: TranslationSchema = {
     companion_window: 'Compañero ({name})',
     looked_at_window_plain: 'Miradas',
     top_card_peek: 'Carta superior de tu biblioteca: {name} (solo tú la ves)',
+    top_card_peek_anon: 'Carta superior de tu biblioteca (solo tú la ves)',
     revealed_window_plain: 'Reveladas',
     companion_window_plain: 'Compañero',
     spectator_game_changed: 'La partida cambió: la mesa ha empezado una nueva partida.',

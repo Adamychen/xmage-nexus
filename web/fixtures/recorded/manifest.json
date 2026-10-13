@@ -838,5 +838,19 @@
     "kind": "game",
     "assert": "hasLivingMetalOffTurn",
     "note": "Rama contraria a slicer.json del mismo trigger (BeginningOfUpkeepTriggeredAbility OPPONENT): el driver responde NO al chooseUse, así que el motor convierte Slicer a su cara trasera en vez de cederlo. La cara trasera es \"Slicer, High-Speed Antagonist\", un Vehículo (ARTIFACT/VEHICLE) con metal viviente, y el motor publica el tipo CREATURE de forma CONDICIONAL al turno: `[\"ARTIFACT\"]` en el turno del rival (este frame, turno 3) y `[\"ARTIFACT\",\"CREATURE\"]` en el tuyo (slicer-living-metal.json, turno 4). Fija que `cardTypes` es un valor volátil por turno, no una propiedad estable de la carta: cualquier colocación del tablero que dependa de él mueve la carta de sitio en cada cambio de turno. `attachedTo` es null en ambos: no interviene ningún adjunto."
+  },
+  {
+    "file": "top-card-peek.json",
+    "mechanic": "top-card-peek",
+    "kind": "game",
+    "assert": "hasTopCardPeek",
+    "note": "Any-time top-card peek (Sphinx of Jwar Isle, ZEN 68, {4}{U}{U}) cast for real from hand on turn 1 after a land drop; Sphinx + 5 Islands arrive by cheatSetup (the deck is 60 Islands). Capture: the first view whose GameView.lookedAt carries a group named \"Top card of your library\" — the channel that feeds game/topCardPeek.ts and the slot beside the library. Contract note: that group is a LookedAtView, so its cards are SimpleCardView entries ({id, expansionSetCode, cardNumber, ...}), NOT CardView: no name, no rules text. The engine writes it once when LookAtTopCardOfLibraryAnyTimeEffect applies (PlayerImpl.lookAtCards -> fireUpdatePlayersEvent), guarded by canLookAtNextTopLibraryCard (no new peek while a spell is being paid for). Future Sight is NOT this channel in this fork (it is PlayWithTheTopCardRevealedEffect -> PlayerView.topCard, pinned by top-card-revealed.mjs)."
+  },
+  {
+    "file": "top-card-revealed.json",
+    "mechanic": "top-card-revealed",
+    "kind": "game",
+    "assert": "hasTopCardRevealed",
+    "note": "Revealed top card (Future Sight, MH1 53, {2}{U}{U}{U}) cast for real from hand on turn 1 after a land drop; Future Sight + 4 Islands arrive by cheatSetup (the deck is 60 Islands). Capture: the first view whose controlled PlayerView carries a non-null topCard — PlayerView.java fills it from the CURRENT library top while the player is topCardRevealed, so it is a full CardView (name, rules, P/T), unlike the SimpleCardView payload of GameView.lookedAt. Read by board/crossZone.ts, board/boardShared.ts, board/targetZones.ts and the library chip of game/ResourceBar.tsx (which hides the peek slot when both channels point at the same card id)."
   }
 ]

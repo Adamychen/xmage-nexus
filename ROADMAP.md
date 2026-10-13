@@ -1,7 +1,7 @@
 # Project Roadmap: XMage Nexus
 
 > **A Modern, Web-Based Digital Card Game Client for XMage**  
-> *Last updated: 2026-10-06*
+> *Last updated: 2026-10-13*
 
 ---
 
@@ -163,10 +163,37 @@ Still open, each needing a **design decision, not a bug fix**:
 
 ### 4.4 Test-infrastructure risk
 
-OPEN 2026-10-10: no recorded frame carries the any-time top-card peek (`lookedAt` "Top card of
-your library", `LookAtTopCardOfLibraryAnyTimeEffect`: Future Sight, Bolas's Citadel). The slot
-beside the library (`topCardPeek.ts`) is covered by unit tests and the `game:top-card-peek` gallery
-entry only; a `record.mjs` driver that casts Future Sight would pin the real alternation of views.
+RESOLVED 2026-10-13 (both top-card channels now have real frames, and one of them had never been
+seen by the client):
+
+1. `scripts/drivers/top-card-peek.mjs` + `top-card-revealed.mjs` cast the cards for real against the
+   local server and pin the two channels. The premise above was wrong in one detail worth keeping:
+   in this fork **Future Sight is not the look-any-time channel** — `FutureSight.java` is
+   `PlayWithTheTopCardRevealedEffect` + `PlayFromTopOfLibraryEffect`, i.e. `PlayerView.topCard`, a
+   full `CardView` rebuilt per view from the current library top. The `"Top card of your library"`
+   group comes from `LookAtTopCardOfLibraryAnyTimeEffect` (Sphinx of Jwar Isle, Realmwalker, Ranger
+   Class, Radha…) and on the wire it is a `LookedAtView` → `SimpleCardsView`:
+   `{id, expansionSetCode, cardNumber, …}`, **no name, no rules text**. `contract.schema.json` types
+   `lookedAt` as `RevealedView` and `CardView` declares no `required`, so zod cannot see that
+   difference — the invariant `hasTopCardPeek` (the pointer must have no `name`) is what pins it.
+2. Which is a shape the client had never rendered: `dev/galleryFixtures.ts` built
+   `game:top-card-peek` by cloning a full `CardView` out of the hand, so the unit tests and the
+   gallery were green against a payload the server never sends, and the real frame rendered `?` with
+   a tooltip reading "…: undefined (only you can see it)". `game/topCardPeek.ts` now resolves the
+   name from the printing (sync cache read, then one `awaitCardMeta` per key, never a retry per
+   view) and `game/ResourceBar.tsx` prints a name only when it has one (new
+   `game.top_card_peek_anon`, 9 locales). `e2e/recorded.spec.ts` asserts the slot paints the
+   recorded card and that no `undefined`/`?` reaches the label — verified red with the old one-liner
+   put back, which is the only reason the assertion means anything.
+3. Still open: the *alternation* of those views (group re-added on every effect pass, per
+   `docs/lessons.md`) is not pinned — each driver captures the first view that carries the group, so
+   showing persist/clear/re-add needs a driver that samples several views. Also unverified whether
+   `LookedAt.add` accumulating under one title can leave a stale card in the group.
+4. `e2e/picker-demos.spec.ts` had been red on master since `379e6b281f6`: its first test called
+   `shot(...)` before that helper existed (the fix added it to the *second* test only), so the test
+   died on a `ReferenceError` and its playmat-image assertions never ran. It surfaced on the first
+   full fake run since the 2026-10-10 waves — the reason those waves were called done on 2 802 unit
+   tests + 312 fake e2e without the stack layers. Fixed here.
 
 RESOLVED 2026-10-10 (two failures that were invisible at the same time):
 

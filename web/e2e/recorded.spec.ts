@@ -263,6 +263,42 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         if (entry.assert === 'hasCascade') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Bloodbraid Elf"]')).toBeVisible()
         }
+        if (entry.assert === 'hasTopCardPeek') {
+          // Any-time top-card peek replayed from a real frame. The payload is a
+          // SimpleCardView pointer (id + set + number, no name), so the slot has to
+          // paint from what the wire actually sends — the case the hand-built gallery
+          // fixture hid, because it clones a full CardView.
+          const raw = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', entry.file), 'utf8'),
+          ) as { gameView?: { lookedAt?: Array<{ name?: string; cards?: Record<string, { id?: string; name?: string }> }> } }
+          const group = (raw.gameView?.lookedAt ?? []).find((g) => g?.name === 'Top card of your library')
+          const pointer = Object.values(group?.cards ?? {})[0]
+          expect(pointer?.id, 'the frame carries the peeked card').toBeTruthy()
+          const slot = page.locator('[data-testid="library-peek"]')
+          await expect(slot).toBeVisible()
+          await expect(slot.locator(`[data-card-id="${pointer?.id}"]`)).toBeVisible()
+          // Whatever the label says, it must not be the raw hole in the payload. This
+          // assertion was red the first time: the tooltip interpolated a name the
+          // server never sends and printed "...: undefined (only you can see it)".
+          const title = (await slot.getAttribute('title')) ?? ''
+          expect(title.length, 'the slot has a tooltip').toBeGreaterThan(0)
+          expect(title).not.toContain('undefined')
+          expect(title).not.toContain('?')
+        }
+        if (entry.assert === 'hasTopCardRevealed') {
+          // The other top-card channel, and the reason the two frames are separate:
+          // PlayerView.topCard is a full CardView and the library chip shows its name.
+          const raw = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', entry.file), 'utf8'),
+          ) as { gameView?: { players?: Array<{ controlled?: boolean; topCard?: { name?: string } }> } }
+          const topName = raw.gameView?.players?.find((p) => p?.controlled)?.topCard?.name ?? ''
+          expect(topName, 'the frame carries a revealed top card').not.toBe('')
+          const library = page.locator('.library-stack.has-top-revealed, .library-chip.has-top-revealed').first()
+          await expect(library).toBeVisible()
+          // Both variants of the library control name the revealed card in their
+          // tooltip; the compact one has no room for the card itself.
+          expect((await library.getAttribute('title')) ?? '', 'the tooltip names the revealed top card').toContain(topName)
+        }
       })
     })
   }

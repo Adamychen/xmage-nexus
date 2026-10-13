@@ -64,12 +64,13 @@ export default function ResourceBar({
   const peekedCard = side === 'my' ? visibleTopCardPeek(topCardPeek, player) : null
   const peekId = peekedCard?.id && peekedCard.id !== player.topCard?.id ? peekedCard.id : null
   const peekCard = peekId ? peekedCard : null
+  const peekName = peekCard?.name && peekCard.name !== '?' ? peekCard.name : null
   const peekPlayable = !!peekId && !!onPlayCrossZone && (playableIds ?? []).includes(peekId)
   const peekSlot = peekCard ? (
     <div
       className="library-peek"
       data-testid="library-peek"
-      title={t('game', 'top_card_peek', { name: peekCard.displayName || peekCard.name })}
+      title={peekName ? t('game', 'top_card_peek', { name: peekName }) : t('game', 'top_card_peek_anon')}
     >
       <CardSlot
         cardId={peekId ?? undefined}
