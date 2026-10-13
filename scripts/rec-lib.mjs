@@ -796,6 +796,34 @@ export async function runRecorder(driver) {
       const meDbg = (gv.players ?? []).find((p) => p?.controlled)
       log('captureCheck turn=', gv.turn, 'active=', meDbg?.isActive, 'hand=', meDbg?.handCount)
     }
+    // Secuencias (p. ej. top-card-peek-sequence): tras startWhen se guardan
+    // las vistas consecutivas y findTriple decide cuándo el patrón buscado
+    // ya está en la ventana. Se vuelcan solo las vistas del patrón, no toda
+    // la ventana (cada GAME_UPDATE pesa 200-800 KB).
+    const seq = driver.captureSequence
+    if (seq) {
+      if (!seq._started && seq.startWhen(gv)) {
+        seq._started = true
+        seq._views = []
+        log('SECUENCIA iniciada en', driver.name)
+      }
+      if (seq._started) {
+        seq._views.push(gv)
+        const triple = seq.findTriple(seq._views)
+        if (triple) {
+          recorded = { recordedAt: new Date().toISOString(), gameId: String(gameId), views: triple }
+          log('SECUENCIA capturada', driver.name, '— volcando y saliendo')
+          finish(0)
+          return
+        }
+        if (seq._views.length >= (seq.size ?? 14)) {
+          log('SECUENCIA sin patrón tras', seq._views.length, 'vistas para', driver.name)
+          finish(1)
+          return
+        }
+      }
+      return
+    }
     if (driver.captureWhen(gv)) {
       recorded = { recordedAt: new Date().toISOString(), gameId: String(gameId), gameView: gv }
       log('CAPTURADO', driver.name, '— volcando y saliendo')

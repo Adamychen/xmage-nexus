@@ -852,5 +852,12 @@
     "kind": "game",
     "assert": "hasTopCardRevealed",
     "note": "Revealed top card (Future Sight, MH1 53, {2}{U}{U}{U}) cast for real from hand on turn 1 after a land drop; Future Sight + 4 Islands arrive by cheatSetup (the deck is 60 Islands). Capture: the first view whose controlled PlayerView carries a non-null topCard — PlayerView.java fills it from the CURRENT library top while the player is topCardRevealed, so it is a full CardView (name, rules, P/T), unlike the SimpleCardView payload of GameView.lookedAt. Read by board/crossZone.ts, board/boardShared.ts, board/targetZones.ts and the library chip of game/ResourceBar.tsx (which hides the peek slot when both channels point at the same card id)."
+  },
+  {
+    "file": "top-card-peek-sequence.json",
+    "mechanic": "top-card-peek-sequence",
+    "kind": "sequence",
+    "assert": "hasTopCardPeekSequence",
+    "note": "WITH → WITHOUT → WITH triple of consecutive views around the \"Top card of your library\" lookedAt group (Sphinx of Jwar Isle cast for real, same setup as top-card-peek.json): proves the group alternates with empty views on the wire (effect pass re-adds it, lookAtCards clears it after sending), so the client is right to keep it as persistent library-side state instead of an event. Stale pin: each WITH group holds exactly one SimpleCardView pointer, and the id tracks the library (same libraryCount on both WITH ends → same id, changed library → changed id), so LookedAt.add never accumulates a stale card under the title."
   }
 ]

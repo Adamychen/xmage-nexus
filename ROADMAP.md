@@ -158,7 +158,7 @@ Still open, each needing a **design decision, not a bug fix**:
 
 | Open item | Why it is not a toggle |
 |---|---|
-| See the rules text of every card in hand without hovering | The hand is an absolutely positioned bottom bar (`board/HandBar.css:1-22`); the reporter's "hand on the left, board on the right" is a fourth layout in `board/boardLayout.ts:4`, not a setting |
+| ~~See the rules text of every card in hand without hovering~~ — Closed 2026-10-13 (won't do: the full left/right split stays out of scope; the `HandRail` column is the answer; 2026-10-14: `HandRow` adds the same full cards as a scrollable row in the hand zone, `handRow` setting, mutually exclusive with `handRail`) | Was a fourth layout in `board/boardLayout.ts`, not a setting; `HandRail.tsx`/`HandRow.tsx` + `cardRender` already give full-text hand cards |
 | See the rules text of every permanent in play without hovering | Legible text for 8+ permanents does not fit one screen. Options: bigger cards with band panning (the bands already scroll), a one-line rules strip under compact tiles, or a persistent inspector |
 | ~~Clearer "whose turn is it"~~ | Resolved 2026-10-09, see above. What is left of it is a taste call, not a bug: opponent priority (`--warn` orange) is close in hue to the turn gold, so on the top bar the two channels still read alike at a glance — separating them means moving one hue, not adding a sixth indicator |
 
@@ -186,10 +186,7 @@ seen by the client):
    `game.top_card_peek_anon`, 9 locales). `e2e/recorded.spec.ts` asserts the slot paints the
    recorded card and that no `undefined`/`?` reaches the label — verified red with the old one-liner
    put back, which is the only reason the assertion means anything.
-3. Still open: the *alternation* of those views (group re-added on every effect pass, per
-   `docs/lessons.md`) is not pinned — each driver captures the first view that carries the group, so
-   showing persist/clear/re-add needs a driver that samples several views. Also unverified whether
-   `LookedAt.add` accumulating under one title can leave a stale card in the group.
+3. RESOLVED 2026-10-14 — the *alternation* is pinned: `scripts/drivers/top-card-peek-sequence.mjs` reuses the Sphinx setup, then keeps passing priority and stores every consecutive view until the WITH → WITHOUT → WITH triple appears (only the triple is dumped — a `GAME_UPDATE` is 200-800 KB — as `top-card-peek-sequence.json`, `kind: 'sequence'`, skipped by the FakeServer replay and the gallery like the tournament kinds). The `hasTopCardPeekSequence` invariant (`recorded.test.ts`) validates all 3 views against the contract and asserts the wire rhythm (group with exactly one nameless pointer → no group with Sphinx still out → group again) plus the stale pin (same `libraryCount` → same id, changed library → changed id, so `LookedAt.add` never accumulates under the title). Verified red by giving the middle view the group. First run captured the triple in three back-to-back views of turn 1 (same card id, library 53).
 4. `e2e/picker-demos.spec.ts` had been red on master since `379e6b281f6`: its first test called
    `shot(...)` before that helper existed (the fix added it to the *second* test only), so the test
    died on a `ReferenceError` and its playmat-image assertions never ran. It surfaced on the first

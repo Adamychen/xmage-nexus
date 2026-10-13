@@ -119,6 +119,7 @@ type AssertKind =
   | 'hasOpponentReveal'
   | 'hasLookedAt'
   | 'hasTopCardPeek'
+  | 'hasTopCardPeekSequence'
   | 'hasTopCardRevealed'
   | 'hasMultikicker'
   | 'hasStrive'
@@ -133,7 +134,7 @@ type AssertKind =
   | 'hasConstructPool'
   | 'tournamentFinished'
 
-type ManifestKind = 'game' | 'construct' | 'tournament'
+type ManifestKind = 'game' | 'construct' | 'tournament' | 'sequence'
 
 function getMe(gv: GameView): GameView['players'][number] | undefined {
   return gv.players?.find((p) => p?.controlled)
@@ -1570,6 +1571,7 @@ function runConstructAssert(kind: AssertKind, raw: { construct?: unknown }): boo
 }
 
 function runTournamentAssert(kind: AssertKind, raw: { tournament?: unknown }): boolean {
+
   const t = raw.tournament as {
     tournamentState?: unknown
     tournamentType?: unknown
@@ -1590,6 +1592,56 @@ function runTournamentAssert(kind: AssertKind, raw: { tournament?: unknown }): b
     default:
       return false
   }
+}
+
+function runSequenceAssert(kind: AssertKind, raw: { views?: unknown }): boolean {
+  if (kind !== 'hasTopCardPeekSequence') return false
+  const views = (raw.views ?? []) as GameView[]
+  if (!Array.isArray(views) || views.length !== 3) return false
+  const [first, middle, last] = views
+  // WITH end: the same single-pointer shape hasTopCardPeek pins (SimpleCardView
+  // id + set + number, no name; own topCard null; Sphinx out).
+  const withPointer = (gv: GameView) => {
+    const me = gv.players?.find((p) => p?.controlled)
+    const group = (gv.lookedAt ?? []).find((g) => String((g as { name?: unknown })?.name ?? '') === 'Top card of your library')
+    const cards = Object.values((group as { cards?: Record<string, unknown> })?.cards ?? {})
+    if (cards.length !== 1) return null
+    const top = cards[0] as { id?: unknown; expansionSetCode?: unknown; cardNumber?: unknown; name?: unknown }
+    if (!top?.id || !top?.expansionSetCode || !top?.cardNumber) return null
+    if (top.name !== undefined) return null
+    if ((me as { topCard?: unknown } | undefined)?.topCard != null) return null
+    const sphinx = Object.values(me?.battlefield ?? {}).some((c) =>
+      /sphinx of jwar isle/i.test(String((c as { name?: unknown })?.name ?? '')),
+    )
+    if (!sphinx) return null
+    return String(top.id)
+  }
+  const firstId = withPointer(first)
+  if (firstId == null) return false
+  // WITHOUT middle: no group under the title at all, with Sphinx still out —
+  // so the absence is the engine clearing it after sending, not the effect ending.
+  const meMid = middle.players?.find((p) => p?.controlled)
+  const midGroup = (middle.lookedAt ?? []).find((g) => String((g as { name?: unknown })?.name ?? '') === 'Top card of your library')
+  if (midGroup) return false
+  const sphinxMid = Object.values(meMid?.battlefield ?? {}).some((c) =>
+    /sphinx of jwar isle/i.test(String((c as { name?: unknown })?.name ?? '')),
+  )
+  if (!sphinxMid) return false
+  const lastId = withPointer(last)
+  if (lastId == null) return false
+  // Stale pin: the peeked id tracks the library. Same size on both WITH ends
+  // means no draw happened, so the re-added pointer must be the same card;
+  // a changed size means the top turned over, so it must differ. Either way
+  // LookedAt.add never leaves a stale card under the title.
+  const meFirst = first.players?.find((p) => p?.controlled)
+  const meLast = last.players?.find((p) => p?.controlled)
+  const libFirst = (meFirst as { libraryCount?: unknown } | undefined)?.libraryCount
+  const libLast = (meLast as { libraryCount?: unknown } | undefined)?.libraryCount
+  if (typeof libFirst === 'number' && typeof libLast === 'number') {
+    if (libFirst === libLast && firstId !== lastId) return false
+    if (libFirst !== libLast && firstId === lastId) return false
+  }
+  return true
 }
 
 describe('golden frames grabados del protocolo real (anti-deriva)', () => {
@@ -1613,6 +1665,16 @@ describe('golden frames grabados del protocolo real (anti-deriva)', () => {
         const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { construct: unknown }
         expect(poolSize(raw.construct) >= 40, `pool <40 en ${entry.file}`).toBe(true)
         expect(runConstructAssert(entry.assert, raw), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
+      })
+    } else if (kind === 'sequence') {
+      it(`la secuencia ${entry.file} (${entry.mechanic}) valida sus 3 vistas contra el contrato y cumple su invariante`, () => {
+        const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, entry.file), 'utf8')) as { views?: GameView[] }
+        expect(Array.isArray(raw.views) && raw.views.length === 3, `secuencia sin triple en ${entry.file}`).toBe(true)
+        for (const [n, gv] of raw.views!.entries()) {
+          const res = gameViewFromAndValidate(gv)
+          expect(res.ok, `vista ${n} de ${entry.file} inválida: ${JSON.stringify(res.errors)}`).toBe(true)
+        }
+        expect(runSequenceAssert(entry.assert, raw), `invariante ${entry.assert} no cumple en ${entry.file}`).toBe(true)
       })
     } else {
       it(`el frame ${entry.file} (${entry.mechanic}) trae torneo Finished válido y cumple su invariante`, () => {
