@@ -33,7 +33,9 @@ async function expectAllImagesLoaded(page: import('@playwright/test').Page, sele
 }
 
 test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
-  test('gameplay presets and playmat tiles render with loaded local art', async ({ page }) => {
+  test('gameplay presets and playmat tiles render with loaded local art', async ({ page }, testInfo) => {
+    // Screenshots are diagnostics: Playwright's output dir, never a machine path.
+    const shot = (name: string) => path.join(testInfo.outputPath(), name)
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
