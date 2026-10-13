@@ -120,6 +120,11 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
         <div ref={textRef} className="rc-halves">
           <Half face={layout.halves[0]} />
           <Half face={layout.halves[1]} />
+          {layout.footer.length > 0 && (
+            <div className="rc-fuse">
+              <Rules rules={layout.footer} cardName={layout.name} />
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -138,7 +143,7 @@ export default function RenderedCard({ card, className = '' }: RenderedCardProps
             <div className="rc-counters">
               {counters.map((c) => (
                 <span key={c.name} className="rc-counter">
-                  {c.name} \u00d7{c.count}
+                  {c.name} {'\u00d7'}{c.count}
                 </span>
               ))}
             </div>

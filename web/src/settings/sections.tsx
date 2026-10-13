@@ -138,12 +138,13 @@ export function BoardSection() {
         ))}
       </div>
       <h3 className="settings-section-title">{t('lobby', 'card_style_title')}</h3>
-      <p className="settings-hint">{t('lobby', 'card_style_hint')}</p>
+      <p className="settings-hint">{settings.cardRender === 'rendered' ? t('lobby', 'card_style_rendered_note') : t('lobby', 'card_style_hint')}</p>
       <div className="settings-cards">
         {CARD_STYLES.map((style) => (
           <Button
             key={style}
             variant="ghost"
+            disabled={settings.cardRender === 'rendered'}
             className={`settings-card ${settings.cardStyle === style ? 'selected' : ''}`}
             onClick={() => setSetting('cardStyle', style)}
             aria-pressed={settings.cardStyle === style}

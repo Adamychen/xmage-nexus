@@ -309,3 +309,11 @@
     font-size: 8.4cqw;
   }
 }
+
+.rc-fuse {
+  flex: none;
+  padding: 1cqw 2.4cqw;
+  border-radius: 1.6cqw;
+  background: color-mix(in srgb, var(--fg-1) 90%, var(--rc-frame));
+  font-size: 0.9em;
+}

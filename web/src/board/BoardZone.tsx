@@ -92,10 +92,11 @@ export default function BoardZone({
   const statusSide = effectiveControlled ? 'my' : 'opp'
   const isTop = effectivePosition === 'top'
 
+  const rendered = useStore((s) => s.settings.cardRender) === 'rendered'
   const cardStyle = useStore((s) => s.settings.cardStyle)
-  const compactCards = cardStyle === 'compact'
+  const compactCards = cardStyle === 'compact' && !rendered
   const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
-  const cardAspect = cardAspectFor(cardStyle)
+  const cardAspect = cardAspectFor(compactCards ? 'compact' : 'classic')
   const { cardW, ref: zoneRef } = useZoneScale(cardAspect)
   const creaturesBandRef = useDragScroll<HTMLDivElement>()
   const permanentsBandRef = useDragScroll<HTMLDivElement>()

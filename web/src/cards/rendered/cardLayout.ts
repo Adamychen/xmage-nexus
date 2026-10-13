@@ -13,6 +13,7 @@ export type CardLayoutKind =
   | 'battle'
   | 'saga'
   | 'class'
+  | 'leveler'
   | 'room'
   | 'token'
   | 'standard'
@@ -48,6 +49,7 @@ export interface CardLayout {
   legendary: boolean
   halves: [CardFace, CardFace] | null
   fusion: boolean
+  footer: string[]
   showStats: boolean
 }
 
@@ -125,6 +127,27 @@ export function parseDungeonRows(rules: string[]): RuleRow[] {
   })
 }
 
+const LEVEL_HEAD = /^\s*LEVEL\s+(\d+(?:\s*-\s*\d+|\+)?)\s*$/i
+
+export function parseLevelerRows(rules: string[]): RuleRow[] {
+  const rows: RuleRow[] = []
+  let current: { label: string; parts: string[] } | null = null
+  const flush = () => {
+    if (current) rows.push({ label: `Lv ${current.label.replace(/\s+/g, '')}`, text: current.parts.join(' \u00b7 ') })
+    current = null
+  }
+  for (const rule of rules) {
+    const m = LEVEL_HEAD.exec(rule.replace(/<[^>]+>/g, ''))
+    if (m) {
+      flush()
+      current = { label: m[1], parts: [] }
+    } else if (current) current.parts.push(rule)
+    else rows.push({ label: null, text: rule })
+  }
+  flush()
+  return rows
+}
+
 function isRoomLike(subs: string[]): boolean {
   return subs.includes('ROOM')
 }
@@ -174,6 +197,9 @@ export function cardLayout(card: CardView): CardLayout {
   else if (subs.includes('SAGA')) {
     kind = 'saga'
     rows = parseRows(rules, CHAPTER_ROW)
+  } else if (rules.some((r) => LEVEL_HEAD.test(r.replace(/<[^>]+>/g, '')))) {
+    kind = 'leveler'
+    rows = parseLevelerRows(rules)
   } else if (subs.includes('CLASS')) {
     kind = 'class'
     rows = parseRows(rules, LEVEL_ROW)
@@ -197,11 +223,12 @@ export function cardLayout(card: CardView): CardLayout {
     legendary: upper(card.superTypes).includes('LEGENDARY'),
     halves,
     fusion,
+    footer: fusion ? rules.filter((r) => /^fuse\b/i.test(r.replace(/<[^>]+>/g, '').trim())) : [],
     showStats: (types.includes('CREATURE') || subs.includes('VEHICLE')) && (card.power ?? '') !== '' && kind !== 'planeswalker',
   }
 }
 
-const LOCALIZABLE: readonly CardLayoutKind[] = ['standard', 'planeswalker', 'battle', 'saga', 'class', 'room', 'token']
+const LOCALIZABLE: readonly CardLayoutKind[] = ['standard', 'planeswalker', 'battle', 'saga', 'class', 'leveler', 'room', 'token']
 
 export function localizedLayout(card: CardView, text: { name?: string; typeLine?: string; rules?: string[] } | null | undefined): CardLayout {
   const base = cardLayout(card)

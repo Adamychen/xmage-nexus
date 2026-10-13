@@ -594,6 +594,7 @@ export const es: TranslationSchema = {
     board_standard: 'Estándar',
     card_style_title: 'Estilo de carta',
     card_style_hint: 'Cómo se ven los permanentes en el campo. Pasa el ratón para ver la carta entera.',
+    card_style_rendered_note: 'Las cartas renderizadas siempre usan la forma de carta completa',
     card_style_classic: 'Clásica',
     card_style_classic_desc: 'Carta impresa completa',
     card_style_compact: 'Compacta',

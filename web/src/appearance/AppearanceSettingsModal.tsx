@@ -191,7 +191,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
 
         <section className="appearance-section">
           <h3 className="appearance-section-title">{t('lobby', 'card_style_title')}</h3>
-          <p className="appearance-section-hint">{t('lobby', 'card_style_hint')}</p>
+          <p className="appearance-section-hint">{settings.cardRender === 'rendered' ? t('lobby', 'card_style_rendered_note') : t('lobby', 'card_style_hint')}</p>
           <div className="board-layout-grid">
             {CARD_STYLES.map((style) => {
               const isSelected = settings.cardStyle === style
@@ -199,6 +199,7 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                 <Button
                   key={style}
                   variant="ghost"
+                  disabled={settings.cardRender === 'rendered'}
                   className={`board-layout-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => setSetting('cardStyle', style)}
                   aria-pressed={isSelected}

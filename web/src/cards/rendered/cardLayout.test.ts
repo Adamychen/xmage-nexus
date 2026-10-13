@@ -80,6 +80,26 @@ describe('localizedLayout', () => {
   })
 })
 
+describe('leveler rows', () => {
+  it('groups each LEVEL header with the lines under it', () => {
+    const layout = cardLayout(card({ cardTypes: ['CREATURE'], rules: ['Level up {W}', 'LEVEL 2-6', '3/3', 'First strike', 'LEVEL 7+', '4/4', 'Double strike'] }))
+    expect(layout.kind).toBe('leveler')
+    expect(layout.rows).toEqual([
+      { label: null, text: 'Level up {W}' },
+      { label: 'Lv 2-6', text: '3/3 \u00b7 First strike' },
+      { label: 'Lv 7+', text: '4/4 \u00b7 Double strike' },
+    ])
+  })
+})
+
+describe('fuse footer', () => {
+  it('keeps the fuse line of a split card as a footer', () => {
+    const layout = cardLayout(card({ isSplitCard: true, leftSplitName: 'A', rightSplitName: 'B', rules: ['Fuse <i>(x)</i>'] }))
+    expect(layout.fusion).toBe(true)
+    expect(layout.footer).toEqual(['Fuse <i>(x)</i>'])
+  })
+})
+
 describe('dungeon rows', () => {
   it('turns the room markers into labels instead of leaking them as text', () => {
     const layout = cardLayout(card({ rules: ['<i>(Currently in X)</i>', 'ICON_DUNGEON_ROOM_CURRENTGoblin Lair', 'ICON_DUNGEON_ROOM_NEXTStoreroom', 'Cave'] }))

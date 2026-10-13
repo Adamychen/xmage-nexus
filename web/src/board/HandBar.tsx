@@ -62,7 +62,8 @@ export default function HandBar({
   raised = false,
   promptSlotRef,
 }: HandBarProps) {
-  const { showHandCost } = useSettings()
+  const { showHandCost: showHandCostSetting, cardRender } = useSettings()
+  const showHandCost = showHandCostSetting && cardRender !== 'rendered'
   const serverIds = Object.keys(cards)
   const [order, setOrder] = useState<string[]>(serverIds)
   const orderedIds = reconcileHandOrder(order, serverIds)
