@@ -21,7 +21,6 @@ export default function PresetPicker() {
         >
           <PresetDemo preset={preset.id} />
           <span className="settings-card-label">{t('game', preset.labelKey)}</span>
-          <span className="settings-card-label">{t('game', preset.labelKey)}</span>
           <span className="settings-card-desc">{t('game', preset.descKey)}</span>
           {settings.gameplayPreset === preset.id && <span className="settings-card-check">✓</span>}
         </Button>

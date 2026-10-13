@@ -20,6 +20,13 @@ describe('PresetPicker', () => {
     }
   })
 
+  it('shows each preset name exactly once', () => {
+    render(<PresetPicker />)
+    for (const id of ['simple', 'balanced', 'manual'] as const) {
+      expect(screen.getByTestId(`settings-preset-${id}`).querySelectorAll('.settings-card-label')).toHaveLength(1)
+    }
+  })
+
   it('paints the mini-demo with the local showcase art (never the network)', () => {
     render(<PresetPicker />)
     const arts = Array.from(document.querySelectorAll<HTMLImageElement>('.preset-tile-art'))
