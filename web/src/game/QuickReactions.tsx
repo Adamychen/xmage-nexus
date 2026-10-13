@@ -10,11 +10,13 @@ const REACTIONS = ['👍', '👏', '⏳', '❓', '✔️', '❌', '🎉']
 
 export default function QuickReactions() {
   const { t } = useTranslation()
+  const gameChatId = useStore((s) => s.gameChatId)
   const roomChatId = useStore((s) => s.roomChatId)
+  const chatId = gameChatId || roomChatId
 
   const react = async (emoji: string) => {
-    if (!roomChatId) return
-    await cmds.sendChatMessage(roomChatId, emoji)
+    if (!chatId) return
+    await cmds.sendChatMessage(chatId, emoji)
   }
 
   return (
@@ -24,7 +26,7 @@ export default function QuickReactions() {
           key={emoji}
           type="button"
           className="quick-reaction-btn"
-          disabled={!roomChatId}
+          disabled={!chatId}
           onClick={() => react(emoji)}
           title={t('game', 'send_reaction')}
         >

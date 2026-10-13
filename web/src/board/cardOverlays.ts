@@ -44,3 +44,7 @@ export function normalizeHandRailWidth(value: unknown): number {
   if (!Number.isFinite(n)) return HAND_RAIL_DEFAULT_W
   return Math.min(HAND_RAIL_MAX_W, Math.max(HAND_RAIL_MIN_W, Math.round(n)))
 }
+
+export function normalizeBoardFill(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : true
+}

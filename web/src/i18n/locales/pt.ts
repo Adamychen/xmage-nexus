@@ -550,6 +550,8 @@ export const pt: TranslationSchema = {
     hand_cost_show_hint: 'O custo impresso já está na imagem da carta; isto adiciona uma segunda cópia em balões',
     card_render_show: 'Cartas renderizadas (texto legível)',
     card_render_show_hint: 'Desenha as cartas a partir dos seus dados em vez da imagem impressa, para o texto de regras ficar nítido em qualquer tamanho',
+    board_fill_show: 'Ajustar as cartas do campo ao espaço',
+    board_fill_show_hint: 'Faz as cartas tão grandes quanto o espaço livre permitir: com poucos permanentes ficam grandes, com muitos encolhem',
     hand_rail_show: 'Mão em coluna',
     hand_rail_show_hint: 'Mostra a tua mão como uma coluna à esquerda, com todas as cartas legíveis ao mesmo tempo',
     hand_rail_width: 'Largura da carta',

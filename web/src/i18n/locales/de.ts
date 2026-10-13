@@ -550,6 +550,8 @@ export const de: TranslationSchema = {
     hand_cost_show_hint: 'Die gedruckten Mana-Kosten stehen bereits auf dem Kartenbild; dies fügt eine zweite Kopie als Blasen hinzu',
     card_render_show: 'Gerenderte Karten (lesbarer Text)',
     card_render_show_hint: 'Karten aus ihren Daten statt aus dem gedruckten Bild zeichnen, damit der Regeltext in jeder Größe scharf bleibt',
+    board_fill_show: 'Schlachtfeldkarten an den Platz anpassen',
+    board_fill_show_hint: 'Karten so groß machen, wie der freie Platz erlaubt: wenige Permanents ergeben große Karten, ein volles Feld verkleinert sie',
     hand_rail_show: 'Hand als Spalte',
     hand_rail_show_hint: 'Deine Hand als Spalte links anzeigen, alle Karten gleichzeitig lesbar',
     hand_rail_width: 'Kartenbreite',

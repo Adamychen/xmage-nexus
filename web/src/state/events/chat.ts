@@ -30,7 +30,7 @@ export function handleChatMessage(data: unknown, objectId: string | null, s: Sna
   // señal secundaria para aceptar la vista restaurada (ver sniffRollbackAnnounce).
   if (channel === 'game' && s.gameId) sniffRollbackAnnounce(m.message, s.gameId)
   if (channel === 'chat' && s.gameId) ingestRollbackChat(m.username, m.message, s.gameId)
-  const fromRoom = s.phase === 'game' && !!m.chatId && !!s.roomChatId && m.chatId === s.roomChatId && m.chatId !== s.gameChatId
+  const fromRoom = s.phase === 'game' && !!m.chatId && !!s.roomChatId && !!s.gameChatId && m.chatId === s.roomChatId && m.chatId !== s.gameChatId
   addLog(m.username, m.message, objectId ?? undefined, channel, fromRoom)
 }
 

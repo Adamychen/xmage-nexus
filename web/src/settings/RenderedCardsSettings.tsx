@@ -15,6 +15,12 @@ export default function RenderedCardsSettings() {
         title={t('lobby', 'card_render_show_hint')}
       />
       <Toggle
+        checked={settings.boardFill}
+        onChange={(v) => setSetting('boardFill', v)}
+        label={t('lobby', 'board_fill_show')}
+        title={t('lobby', 'board_fill_show_hint')}
+      />
+      <Toggle
         checked={settings.handRail}
         onChange={(v) => setSetting('handRail', v)}
         label={t('lobby', 'hand_rail_show')}

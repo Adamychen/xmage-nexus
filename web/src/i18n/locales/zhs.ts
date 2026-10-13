@@ -553,6 +553,8 @@ export const zhs: TranslationSchema = {
     hand_cost_show_hint: '印刷费用已在卡牌图像上；此选项再叠加一份符号',
     card_render_show: '渲染卡牌(清晰文字)',
     card_render_show_hint: '根据卡牌数据绘制,而不是使用印刷图像,使规则文字在任何尺寸下都清晰可读',
+    board_fill_show: '让战场卡牌适应可用空间',
+    board_fill_show_hint: '在可用空间允许的范围内放大卡牌:永久物少时卡牌更大,战场拥挤时会缩小',
     hand_rail_show: '手牌竖列',
     hand_rail_show_hint: '将手牌显示为左侧的一列,所有卡牌同时可读',
     hand_rail_width: '卡牌宽度',

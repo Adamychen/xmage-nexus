@@ -548,6 +548,8 @@ export const en = {
     hand_cost_show_hint: 'The printed mana cost is already on the card image; this adds a second copy as bubbles',
     card_render_show: 'Rendered cards (readable text)',
     card_render_show_hint: 'Draw cards from their data instead of the printed image, so the rules text stays sharp at any size',
+    board_fill_show: 'Fit battlefield cards to the space',
+    board_fill_show_hint: 'Make the cards as large as the free space allows: few permanents get big cards, a crowded board shrinks them',
     hand_rail_show: 'Hand as a column',
     hand_rail_show_hint: 'Show your hand as a column on the left with every card readable at once',
     hand_rail_width: 'Card width',

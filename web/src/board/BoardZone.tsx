@@ -21,6 +21,7 @@ import { groupStackables } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
+import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
@@ -52,13 +53,6 @@ export interface BoardZoneProps {
   className?: string
   mirrored?: boolean
   showHand?: boolean
-}
-
-function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
-  const types = perm.cardTypes ?? []
-  if (types.some((t) => t === 'Land' || t.toLowerCase() === 'land')) return 'lands'
-  if (types.some((t) => t === 'Creature' || t.toLowerCase() === 'creature')) return 'creatures'
-  return 'other'
 }
 
 export default function BoardZone({
@@ -97,7 +91,14 @@ export default function BoardZone({
   const compactCards = cardStyle === 'compact' && !rendered
   const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
   const cardAspect = cardAspectFor(compactCards ? 'compact' : 'classic')
-  const { cardW, ref: zoneRef } = useZoneScale(cardAspect)
+  const boardFill = useStore((s) => s.settings.boardFill) && !compactPod
+  const shares = useMemo(
+    () => bandShares(boardFill
+      ? bandFill(player?.battlefield, hasCommandObjects(player, effectiveControlled ? helperEmblems : undefined, statusSide))
+      : { creatures: true, permanents: true }),
+    [boardFill, player, effectiveControlled, helperEmblems, statusSide],
+  )
+  const { cardW, ref: zoneRef } = useZoneScale(cardAspect, shares.tallest)
   const creaturesBandRef = useDragScroll<HTMLDivElement>()
   const permanentsBandRef = useDragScroll<HTMLDivElement>()
   const marqueeRef = useDragScroll<HTMLDivElement>()
@@ -579,7 +580,12 @@ export default function BoardZone({
       data-player-id={player.playerId}
       data-player-name={player.name}
       data-role={isTop ? 'opponent' : 'player'}
-      style={{ '--card-w': `${cardW}px` } as React.CSSProperties}
+      style={{
+        '--card-w': `${cardW}px`,
+        ...(shares.uneven
+          ? { gridTemplateRows: isTop ? `auto ${shares.permanentsFr}fr ${shares.creaturesFr}fr` : `${shares.creaturesFr}fr ${shares.permanentsFr}fr auto` }
+          : null),
+      } as React.CSSProperties}
     >
       {isDefeated && (
         <div className="zone-defeated-overlay">

@@ -59,8 +59,9 @@ export default function GameChat() {
   // Only show real player/user chat messages in the Chat tab (not engine inform
   // lines, lobby join/leave, or game-log lines — those are routed to other channels).
   const chatEntries = useMemo(() => {
-    return log.filter((e) => isGameChatEntry(e) && (showLobby || !e.fromRoom))
-  }, [log, showLobby])
+    const mine = myName?.toLowerCase()
+    return log.filter((e) => isGameChatEntry(e) && (showLobby || !e.fromRoom || (!!mine && e.from?.toLowerCase() === mine)))
+  }, [log, showLobby, myName])
 
   const toggleLobby = (next: boolean) => {
     setShowLobby(next)

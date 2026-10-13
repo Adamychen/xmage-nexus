@@ -550,6 +550,8 @@ export const it: TranslationSchema = {
     hand_cost_show_hint: 'Il costo stampato è già sull’immagine della carta; questo ne aggiunge una seconda copia a bolle',
     card_render_show: 'Carte renderizzate (testo leggibile)',
     card_render_show_hint: 'Disegna le carte dai loro dati invece che dall\'immagine stampata, così il testo resta nitido a qualsiasi dimensione',
+    board_fill_show: 'Adatta le carte del campo allo spazio',
+    board_fill_show_hint: 'Ingrandisce le carte quanto lo spazio libero consente: con pochi permanenti sono grandi, con un campo pieno si riducono',
     hand_rail_show: 'Mano in colonna',
     hand_rail_show_hint: 'Mostra la tua mano come colonna a sinistra, con tutte le carte leggibili insieme',
     hand_rail_width: 'Larghezza carta',

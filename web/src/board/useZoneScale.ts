@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CLASSIC_CARD_ASPECT } from './compactCard'
 
 const MIN_CARD_W = 44
-const MAX_CARD_W = 145
-const MAX_PLAYER_CARD_W = 175
+const MAX_CARD_W = 240
+const MAX_PLAYER_CARD_W = 280
 const MAX_COMPACT_CARD_W = 190
 const MAX_COMPACT_PLAYER_CARD_W = 230
 
@@ -26,7 +26,7 @@ interface ZoneScale {
   ref: React.RefCallback<HTMLDivElement> & React.RefObject<HTMLDivElement | null>
 }
 
-export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT): ZoneScale {
+export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5): ZoneScale {
   const [el, setEl] = useState<HTMLDivElement | null>(null)
   const nodeRef = useRef<HTMLDivElement | null>(null)
   const [cardW, setCardW] = useState(120)
@@ -69,7 +69,8 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT): ZoneScale {
       // are always sized for 2 rows — playing the first land/creature no
       // longer re-scales the whole zone. (zone-empty hides both bands but
       // renders no cards, so the row count is irrelevant there.)
-      const cardRows = 2
+      // (bandShare is the fraction of the card area the taller band owns: 0.5
+      // for the equal split, more when the other band is empty.)
 
       const verticalOverhead = statusH + (isCompactPod ? 6 : 12)
       const availH = rect.height - verticalOverhead
@@ -78,7 +79,7 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT): ZoneScale {
         return
       }
 
-      const rowHeight = availH / cardRows
+      const rowHeight = availH * bandShare
       const safeCardH = Math.max(28, rowHeight - (isCompactPod ? 2 : 4))
       const fromHeight = safeCardH / cardAspect
 
@@ -131,7 +132,7 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT): ZoneScale {
       ro?.disconnect()
       mo?.disconnect()
     }
-  }, [el, cardAspect])
+  }, [el, cardAspect, bandShare])
 
   return { cardW, ref: refCallback }
 }

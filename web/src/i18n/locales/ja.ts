@@ -553,6 +553,8 @@ export const ja: TranslationSchema = {
     hand_cost_show_hint: '印刷されたコストはすでにカード画像にあります。これをpipとして2つ目として重ねて表示します',
     card_render_show: 'レンダリングカード(読みやすいテキスト)',
     card_render_show_hint: '印刷された画像ではなくカードのデータから描画し、どんなサイズでもルールテキストを鮮明に保ちます',
+    board_fill_show: '戦場のカードを空きスペースに合わせる',
+    board_fill_show_hint: '空きスペースの許す限りカードを大きくします。パーマネントが少ないと大きく、多いと小さくなります',
     hand_rail_show: '手札を縦列で表示',
     hand_rail_show_hint: '手札を左側の縦列で表示し、すべてのカードを同時に読めるようにします',
     hand_rail_width: 'カードの幅',
