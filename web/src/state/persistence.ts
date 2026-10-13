@@ -574,7 +574,7 @@ export function saveMusicSettings(settings: MusicSettings) {
 
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
-import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
+import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
 export type ZoomLevel = number
@@ -595,11 +595,12 @@ export interface AppearanceSettings {
   cardRender?: CardRender
   handRail?: boolean
   handRailWidth?: number
+  handRow?: boolean
   boardFill?: boolean
 }
 
 const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, ptBadgeMode: 'always', sicknessStyle: 'badge', cardRender: 'image', handRail: false, handRailWidth: 260, boardFill: true }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, ptBadgeMode: 'always', sicknessStyle: 'badge', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
@@ -614,7 +615,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
     const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
     const transparentDialogs = parsed.transparentDialogs === true
-    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), boardFill: normalizeBoardFill(parsed.boardFill), ...(playmatId ? { playmatId } : null) }
+    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), ...(playmatId ? { playmatId } : null) }
   }
   return { ...DEFAULT_APPEARANCE }
 }

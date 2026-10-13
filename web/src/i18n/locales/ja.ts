@@ -557,6 +557,8 @@ export const ja: TranslationSchema = {
     board_fill_show_hint: '空きスペースの許す限りカードを大きくします。パーマネントが少ないと大きく、多いと小さくなります',
     hand_rail_show: '手札を縦列で表示',
     hand_rail_show_hint: '手札を左側の縦列で表示し、すべてのカードを同時に読めるようにします',
+    hand_row_show: '手札を横列で表示',
+    hand_row_show_hint: '扇形の代わりに、全カードを横スクロールで行表示します',
     hand_rail_width: 'カードの幅',
     pt_badge_title: '戦場でのパワー／タフネス',
     pt_badge_hint: 'カード画像にはすでにP/Tが印刷されています。これは追加の数値バッジの表示方法',

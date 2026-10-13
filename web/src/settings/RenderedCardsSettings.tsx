@@ -26,7 +26,13 @@ export default function RenderedCardsSettings() {
         label={t('lobby', 'hand_rail_show')}
         title={t('lobby', 'hand_rail_show_hint')}
       />
-      {settings.handRail && (
+      <Toggle
+        checked={settings.handRow}
+        onChange={(v) => setSetting('handRow', v)}
+        label={t('lobby', 'hand_row_show')}
+        title={t('lobby', 'hand_row_show_hint')}
+      />
+      {(settings.handRail || settings.handRow) && (
         <label className="hand-rail-width-row">
           <span>{t('lobby', 'hand_rail_width')}</span>
           <input

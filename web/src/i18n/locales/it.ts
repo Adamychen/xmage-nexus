@@ -554,6 +554,8 @@ export const it: TranslationSchema = {
     board_fill_show_hint: 'Ingrandisce le carte quanto lo spazio libero consente: con pochi permanenti sono grandi, con un campo pieno si riducono',
     hand_rail_show: 'Mano in colonna',
     hand_rail_show_hint: 'Mostra la tua mano come colonna a sinistra, con tutte le carte leggibili insieme',
+    hand_row_show: 'Mano in riga',
+    hand_row_show_hint: 'Mostra la tua mano come riga di carte intere con scorrimento orizzontale invece del ventaglio',
     hand_rail_width: 'Larghezza carta',
     pt_badge_title: 'Forza / resistenza in campo',
     pt_badge_hint: 'L’immagine della carta stampa già F/R; questo controlla il badge numerico aggiuntivo',

@@ -337,11 +337,11 @@ export function dismissTurnRecap(key?: string) {
 }
 
 function persistClientSettings(settings: AppState['settings']) {
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle, cardRender, handRail, handRailWidth, boardFill, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle, cardRender, handRail, handRailWidth, handRow, boardFill, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
   saveFxSettings({ effects, animationSpeed })
   saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
   saveMusicSettings({ musicEnabled, musicVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle, cardRender, handRail, handRailWidth, boardFill })
+  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, ptBadgeMode, sicknessStyle, cardRender, handRail, handRailWidth, handRow, boardFill })
   saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
   saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   saveManaPayment({ ...manaPayment })
@@ -355,6 +355,8 @@ function persistClientSettings(settings: AppState['settings']) {
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   const next = { ...getState().settings, [key]: value }
   if (key === 'boardLayout') next.boardLayoutManual = true
+  if (key === 'handRow' && value === true) next.handRail = false
+  if (key === 'handRail' && value === true) next.handRow = false
   if (PRESET_OWNED_KEYS.has(key) && next.gameplayPreset) {
     next.gameplayPreset = null
     saveGameplayPreset(null)

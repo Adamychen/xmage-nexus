@@ -35,7 +35,11 @@ export function normalizeHandRail(value: unknown): boolean {
   return value === true
 }
 
-export const HAND_RAIL_MIN_W = 160
+export function normalizeHandRow(value: unknown): boolean {
+  return value === true
+}
+
+export const HAND_RAIL_MIN_W = 120
 export const HAND_RAIL_MAX_W = 460
 export const HAND_RAIL_DEFAULT_W = 260
 

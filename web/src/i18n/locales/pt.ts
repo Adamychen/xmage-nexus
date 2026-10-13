@@ -554,6 +554,8 @@ export const pt: TranslationSchema = {
     board_fill_show_hint: 'Faz as cartas tão grandes quanto o espaço livre permitir: com poucos permanentes ficam grandes, com muitos encolhem',
     hand_rail_show: 'Mão em coluna',
     hand_rail_show_hint: 'Mostra a tua mão como uma coluna à esquerda, com todas as cartas legíveis ao mesmo tempo',
+    hand_row_show: 'Mão em fila',
+    hand_row_show_hint: 'Mostra a tua mão como cartas inteiras em fila com deslizador horizontal em vez do leque',
     hand_rail_width: 'Largura da carta',
     pt_badge_title: 'Força / resistência no tabuleiro',
     pt_badge_hint: 'A imagem da carta já imprime F/R; isto controla o selo numérico extra',

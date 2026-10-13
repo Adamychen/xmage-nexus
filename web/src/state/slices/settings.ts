@@ -6,7 +6,7 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
@@ -42,6 +42,7 @@ export interface SettingsState {
   cardRender: CardRender
   handRail: boolean
   handRailWidth: number
+  handRow: boolean
   boardFill: boolean
   sicknessStyle: SicknessStyle
   uiScale: ZoomLevel
@@ -83,6 +84,7 @@ export const initialSettings: SettingsSlice = {
     cardRender: normalizeCardRender(loadAppearanceSettings().cardRender),
     handRail: normalizeHandRail(loadAppearanceSettings().handRail),
     handRailWidth: normalizeHandRailWidth(loadAppearanceSettings().handRailWidth),
+    handRow: normalizeHandRow(loadAppearanceSettings().handRow),
     boardFill: normalizeBoardFill(loadAppearanceSettings().boardFill),
     sicknessStyle: normalizeSicknessStyle(loadAppearanceSettings().sicknessStyle),
     ...(storedPreset ? storedPreset.bundle : null),

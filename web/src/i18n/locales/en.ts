@@ -552,6 +552,8 @@ export const en = {
     board_fill_show_hint: 'Make the cards as large as the free space allows: few permanents get big cards, a crowded board shrinks them',
     hand_rail_show: 'Hand as a column',
     hand_rail_show_hint: 'Show your hand as a column on the left with every card readable at once',
+    hand_row_show: 'Hand as a scrollable row',
+    hand_row_show_hint: 'Show your hand as full cards in a row with a horizontal slider instead of the fan',
     hand_rail_width: 'Card width',
     pt_badge_title: 'Power / toughness on the board',
     pt_badge_hint: 'The card image already prints P/T; this controls the extra numeric badge',

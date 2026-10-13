@@ -554,6 +554,8 @@ export const es: TranslationSchema = {
     board_fill_show_hint: 'Hace las cartas tan grandes como permita el espacio libre: con pocos permanentes salen grandes, con muchos se reducen',
     hand_rail_show: 'Mano en columna',
     hand_rail_show_hint: 'Muestra tu mano como una columna a la izquierda con todas las cartas legibles a la vez',
+    hand_row_show: 'Mano en fila',
+    hand_row_show_hint: 'Muestra tu mano como cartas enteras en fila con deslizador horizontal en vez del abanico',
     hand_rail_width: 'Ancho de carta',
     pt_badge_title: 'Fuerza / resistencia en el tablero',
     pt_badge_hint: 'La imagen de la carta ya imprime F/R; esto controla la capa numérica extra',

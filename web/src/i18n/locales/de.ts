@@ -554,6 +554,8 @@ export const de: TranslationSchema = {
     board_fill_show_hint: 'Karten so groß machen, wie der freie Platz erlaubt: wenige Permanents ergeben große Karten, ein volles Feld verkleinert sie',
     hand_rail_show: 'Hand als Spalte',
     hand_rail_show_hint: 'Deine Hand als Spalte links anzeigen, alle Karten gleichzeitig lesbar',
+    hand_row_show: 'Hand als Reihe',
+    hand_row_show_hint: 'Deine Hand als Reihe ganzer Karten mit horizontalem Regler statt Fächer',
     hand_rail_width: 'Kartenbreite',
     pt_badge_title: 'Stärke / Zähigkeit auf dem Feld',
     pt_badge_hint: 'Das Kartenbild druckt S/Z bereits; dies steuert das zusätzliche Zahlenabzeichen',

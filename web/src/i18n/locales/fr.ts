@@ -554,6 +554,8 @@ export const fr: TranslationSchema = {
     board_fill_show_hint: 'Agrandit les cartes autant que l\'espace libre le permet : peu de permanents donnent de grandes cartes, un champ chargé les réduit',
     hand_rail_show: 'Main en colonne',
     hand_rail_show_hint: 'Afficher votre main en colonne à gauche, toutes les cartes lisibles à la fois',
+    hand_row_show: 'Main en rangée',
+    hand_row_show_hint: 'Afficher votre main en rangée de cartes entières avec défilement horizontal plutôt que l’éventail',
     hand_rail_width: 'Largeur des cartes',
     pt_badge_title: 'Force /.endurance sur le champ de bataille',
     pt_badge_hint: 'L’image de la carte imprime déjà F/E ; ceci règle le badge numérique ajouté',

@@ -1,0 +1,42 @@
+.hand-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.hand-row-card {
+  flex: none;
+  width: var(--card-w);
+  border-radius: var(--r-md);
+}
+
+.hand-row-card .hand-card {
+  width: 100%;
+}
+
+.hand-row-card--rendered {
+  cursor: default;
+  position: relative;
+}
+
+.hand-row-card--rendered.playable,
+.hand-row-card--rendered.targetable {
+  cursor: pointer;
+  outline: 2px solid var(--ok, var(--brand));
+  outline-offset: 2px;
+}
+
+.hand-row-card--rendered.targetable {
+  outline-color: var(--brand);
+}
+
+.hand-row-flip {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  z-index: 2;
+}
