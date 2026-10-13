@@ -11,6 +11,8 @@ import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
+import RankBadge from '../lobby/RankBadge'
+import { playerRankRating } from '../lobby/ranking'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -232,11 +234,16 @@ export default function PlayerInfoBar({
   const myConn = useStore((s) => s.conn)
   const game = useStore((s) => s.game)
   const { t } = useTranslation()
-  const rawUserData = player.userData as { avatarId?: number; flagName?: string } | undefined
+  const rawUserData = player.userData as
+    | { avatarId?: number; flagName?: string; constructedRating?: number; limitedRating?: number; generalRating?: number }
+    | undefined
   const avatarId =
     rawUserData?.avatarId ??
     (player.isHuman ? (player.controlled ? (myConn?.avatarId ?? 10) : 10) : 13)
   const flagName = rawUserData?.flagName
+  // Real per-player rating from the wire (userData travels with every PlayerView);
+  // null when absent → no badge (never a fabricated default).
+  const rankElo = player.isHuman ? playerRankRating(rawUserData) : null
 
   const hasPriority = !!player.hasPriority
   // Turno activo (quién juega ahora) ≠ prioridad (quién puede actuar).
@@ -319,6 +326,9 @@ export default function PlayerInfoBar({
           <span className="player-name" data-priority={player.hasPriority || undefined}>
             {player.name}
           </span>
+          {rankElo != null && (
+            <RankBadge elo={rankElo} compact={compact} showElo={!compact} className="player-rank-badge" />
+          )}
           {isDefeated && (
             wasDefeated ? (
               <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>

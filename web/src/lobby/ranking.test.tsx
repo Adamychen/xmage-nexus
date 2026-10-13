@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest'
-import { getRankInfo } from './ranking'
+import { getRankInfo, playerRankRating } from './ranking'
+
+describe('playerRankRating', () => {
+  it('reads the ratings carried in PlayerView.userData', () => {
+    expect(playerRankRating({ constructedRating: 1650, generalRating: 1600, limitedRating: 1500 })).toBe(1650)
+    expect(playerRankRating({ constructedRating: 1650, generalRating: 1600, limitedRating: 1500 }, true)).toBe(1500)
+  })
+
+  it('falls back to generalRating when the primary is absent or zero', () => {
+    expect(playerRankRating({ generalRating: 1450 })).toBe(1450)
+    expect(playerRankRating({ constructedRating: 0, generalRating: 1450 })).toBe(1450)
+  })
+
+  it('returns null without real data (no fabricated 1500 badge)', () => {
+    expect(playerRankRating(undefined)).toBeNull()
+    expect(playerRankRating(null)).toBeNull()
+    expect(playerRankRating({})).toBeNull()
+    expect(playerRankRating({ constructedRating: 0 })).toBeNull()
+    expect(playerRankRating({ generalRating: 0 })).toBeNull()
+  })
+})
 
 describe('ranking.ts — MTG Arena Tier Calculation', () => {
   it('calculates Bronze tier for ELO < 1400', () => {

@@ -175,3 +175,20 @@ export function getRankLabel(rank: RankInfo, t?: (ns: 'lobby', key: string) => s
   const name = getTierName(rank.tier, t)
   return rank.tier === 'MYTHIC' ? name : `${name} ${rank.subTier}`
 }
+
+/**
+ * Rating to display for one in-game player from the `userData` that travels
+ * with every `PlayerView` (the same rule as the staging roster: limited tables
+ * use `limitedRating`, everything else `constructedRating`, falling back to
+ * `generalRating`). `null` means there is no real data, so no badge is drawn —
+ * never a fabricated default 1500 (same rule that removed the lying ping dash).
+ */
+export function playerRankRating(
+  userData: { generalRating?: number; constructedRating?: number; limitedRating?: number } | null | undefined,
+  limited = false,
+): number | null {
+  if (!userData) return null
+  const primary = limited ? userData.limitedRating : userData.constructedRating
+  const value = primary && primary > 0 ? primary : userData.generalRating
+  return value && value > 0 ? value : null
+}

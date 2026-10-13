@@ -23,6 +23,29 @@ describe('PlayerInfoBar', () => {
     expect(container.querySelector('.life-value')?.textContent).toBe('20')
   })
 
+  it('shows the rank badge from the userData ratings the server sends', () => {
+    const withRating: PlayerView = {
+      ...basePlayer,
+      userData: { generalRating: 1620, constructedRating: 1620, limitedRating: 1500 },
+    }
+    const { container } = render(<PlayerInfoBar player={withRating} side="my" />)
+    const badge = container.querySelector('.rank-badge')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toContain('1620')
+  })
+
+  it('draws no rank badge without userData, and none for non-human seats', () => {
+    const { container: plain } = render(<PlayerInfoBar player={basePlayer} side="my" />)
+    expect(plain.querySelector('.rank-badge')).toBeNull()
+    const bot: PlayerView = {
+      ...basePlayer,
+      isHuman: false,
+      userData: { generalRating: 1750, constructedRating: 1750 },
+    }
+    const { container: botBar } = render(<PlayerInfoBar player={bot} side="opp" />)
+    expect(botBar.querySelector('.rank-badge')).toBeNull()
+  })
+
   it('renders Monarch badge and calls onHover with The Monarch token card', () => {
     const onHover = vi.fn()
     const monarchPlayer: PlayerView = {
