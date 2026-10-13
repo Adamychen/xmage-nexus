@@ -278,3 +278,34 @@
   flex: 1 1 0;
   max-height: none;
 }
+
+@container (max-width: 200px) {
+  .rc-art {
+    display: none;
+  }
+
+  .rc-name {
+    font-size: 7.2cqw;
+  }
+
+  .rc-type {
+    font-size: 6.2cqw;
+  }
+
+  .rc-pip {
+    width: 7cqw;
+    height: 7cqw;
+  }
+
+  .rc-text {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    font-size: calc(7.4cqw * var(--rc-fit));
+  }
+
+  .rc-stats,
+  .rc-badge {
+    font-size: 8.4cqw;
+  }
+}

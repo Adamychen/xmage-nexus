@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { CardView, PermanentView } from '../net/types'
 import { cardName, hiddenFaceDownName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
+import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
@@ -82,6 +83,7 @@ export default function CardSlot({
   const imgUrl = demo ? demo.artUrl : resolvedImgUrl
   const isFaceDownCard = faceDown || card.faceDown === true
   const showBack = faceDown || (card.faceDown === true && !imgUrl)
+  const renderedFace = settings.cardRender === 'rendered' && !compact && !demo && !showBack
   const cropUrl = compact ? (demo ? demo.artUrl : artCropUrl(imgUrl)) : null
   const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
@@ -369,6 +371,11 @@ const showPtBadge =
         ) : (
           <img src={sleeve.imageUrl} alt="" className="card-image" draggable={false} data-sleeve-id={sleeve.id} />
         )
+      ) : renderedFace ? (
+        <>
+          <RenderedCard card={card} />
+          <span className="visually-hidden">{card.name || card.alternateName || '?'}</span>
+        </>
       ) : imgUrl ? (
         <>
           <img
@@ -414,7 +421,7 @@ const showPtBadge =
         </>
       )}
 
-      {showPtBadge && (
+      {showPtBadge && !renderedFace && (
         <div
           className="pt-badge"
           data-trend={pt.power !== 'same' || pt.toughness !== 'same' ? 'changed' : undefined}
@@ -424,14 +431,14 @@ const showPtBadge =
         </div>
       )}
 
-      {isPlaneswalker && loyaltyVal > 0 && (
+      {isPlaneswalker && loyaltyVal > 0 && !renderedFace && (
         <div className="loyalty-badge" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
           <span className="loyalty-icon"><Icon name="shield" size={11} /></span>
           <span className="loyalty-val">{perm.loyalty}</span>
         </div>
       )}
 
-      {isBattle && defenseVal > 0 && (
+      {isBattle && defenseVal > 0 && !renderedFace && (
         <div className="defense-badge" title={`${t('game', 'damage')}: ${perm.defense}`}>
           <span className="defense-icon"><Icon name="swords" size={11} /></span>
           <span className="defense-val">{perm.defense}</span>
@@ -444,7 +451,7 @@ const showPtBadge =
         </div>
       )}
 
-      {showCounters && visibleCounters.length > 0 && (
+      {showCounters && visibleCounters.length > 0 && !renderedFace && (
         <div className="card-counters-wrap">
           {visibleCounters.map((c, ci) => {
             const n = c.name.toLowerCase()
