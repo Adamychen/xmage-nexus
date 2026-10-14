@@ -48,6 +48,13 @@
 .dlg-md { width: var(--dlg-width-md); max-height: var(--dlg-max-h); }
 .dlg-lg { width: var(--dlg-width-lg); max-height: var(--dlg-max-h); }
 
+.dlg-sm,
+.dlg-md,
+.dlg-lg {
+  max-width: calc((100vw - 2 * var(--sp-4h)) / var(--ui-zoom, 1));
+  box-sizing: border-box;
+}
+
 @keyframes dialogIn {
   from {
     opacity: 0;

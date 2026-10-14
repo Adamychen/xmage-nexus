@@ -504,3 +504,19 @@
 
 .tourney-tabs { width: 100%; }
 .tourney-tabs .ui-tab { flex: 1; }
+
+@media (max-width: 520px) {
+  .overlay {
+    padding: var(--sp-2);
+  }
+  .wizard-step:not(.active) .wizard-step-text {
+    display: none;
+  }
+  .wizard-step.active .wizard-step-text {
+    white-space: normal;
+    text-align: center;
+  }
+  .create-mode-selector {
+    grid-template-columns: 1fr;
+  }
+}

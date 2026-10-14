@@ -8,6 +8,8 @@ import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
 import RewindBar from './RewindBar'
+import MobileSpectator from './MobileSpectator'
+import { useNarrowScreen } from './useNarrowScreen'
 import { useRewind, viewedSnapshot } from './rewind'
 import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
@@ -103,6 +105,8 @@ export default function GameScreen() {
   const { t } = useTranslation()
   const liveGame = useGame()
   const rewind = useRewind()
+  const narrowScreen = useNarrowScreen()
+  const [fullBoardOnNarrow, setFullBoardOnNarrow] = useState(false)
   const rewindView = viewedSnapshot(rewind)
   const game = rewindView?.game ?? liveGame
   const settings = useSettings()
@@ -439,6 +443,14 @@ export default function GameScreen() {
       }
     />
   )
+
+  if (narrowScreen && isSpectator && !fullBoardOnNarrow) {
+    return (
+      <div className="game game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
+        <MobileSpectator onFullBoard={() => setFullBoardOnNarrow(true)} />
+      </div>
+    )
+  }
 
   return (
     <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
