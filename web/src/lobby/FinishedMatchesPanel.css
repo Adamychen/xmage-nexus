@@ -352,3 +352,16 @@
   font-size: var(--fs-sm);
 }
 
+
+.matches-replay-open {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+}
+
+.matches-replay-error {
+  color: var(--err-strong);
+  font-size: var(--fs-xs);
+}

@@ -15,9 +15,10 @@ export interface RewindState {
   gameId: string | null
   snapshots: RewindSnapshot[]
   viewing: string | null
+  replay: boolean
 }
 
-const EMPTY: RewindState = { gameId: null, snapshots: [], viewing: null }
+const EMPTY: RewindState = { gameId: null, snapshots: [], viewing: null, replay: false }
 
 let state: RewindState = EMPTY
 let counter = 0
@@ -33,6 +34,7 @@ export function getRewind(): RewindState {
 }
 
 export function captureRewind(gameId: string | null, game: GameView | null | undefined): void {
+  if (state.replay) return
   if (!game || typeof game.turn !== 'number') return
   const step = String(game.step ?? '')
   let snapshots = state.gameId === gameId ? state.snapshots : []
@@ -51,7 +53,7 @@ export function captureRewind(gameId: string | null, game: GameView | null | und
   }
   if (snapshots.length > MAX_REWIND_SNAPSHOTS) snapshots = snapshots.slice(snapshots.length - MAX_REWIND_SNAPSHOTS)
   const stillThere = viewing != null && snapshots.some((s) => s.key === viewing)
-  publish({ gameId, snapshots, viewing: viewing == null ? null : stillThere ? viewing : snapshots[0].key })
+  publish({ gameId, snapshots, viewing: viewing == null ? null : stillThere ? viewing : snapshots[0].key, replay: false })
 }
 
 export function viewRewind(key: string | null): void {
@@ -71,6 +73,60 @@ export function stepRewind(delta: number): void {
 export function clearRewind(): void {
   counter = 0
   if (state !== EMPTY) publish(EMPTY)
+}
+
+export const REPLAY_FORMAT = 'nexus-replay'
+export const REPLAY_VERSION = 1
+
+export interface ReplayFile {
+  format: typeof REPLAY_FORMAT
+  version: typeof REPLAY_VERSION
+  savedAt: number
+  gameId: string | null
+  snapshots: RewindSnapshot[]
+}
+
+export function buildReplayFile(): ReplayFile | null {
+  if (state.replay || state.snapshots.length < 2) return null
+  return { format: REPLAY_FORMAT, version: REPLAY_VERSION, savedAt: Date.now(), gameId: state.gameId, snapshots: state.snapshots }
+}
+
+function isSnapshot(value: unknown): value is RewindSnapshot {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  const game = v.game as Record<string, unknown> | null | undefined
+  return (
+    typeof v.key === 'string' &&
+    typeof v.turn === 'number' &&
+    typeof v.step === 'string' &&
+    typeof v.at === 'number' &&
+    typeof game === 'object' &&
+    game !== null &&
+    typeof game.turn === 'number' &&
+    Array.isArray(game.players)
+  )
+}
+
+export function parseReplayFile(raw: unknown): ReplayFile | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const f = raw as Record<string, unknown>
+  if (f.format !== REPLAY_FORMAT || f.version !== REPLAY_VERSION) return null
+  if (!Array.isArray(f.snapshots) || f.snapshots.length < 1 || f.snapshots.length > MAX_REWIND_SNAPSHOTS) return null
+  if (!f.snapshots.every(isSnapshot)) return null
+  const keys = new Set(f.snapshots.map((s) => (s as RewindSnapshot).key))
+  if (keys.size !== f.snapshots.length) return null
+  return {
+    format: REPLAY_FORMAT,
+    version: REPLAY_VERSION,
+    savedAt: typeof f.savedAt === 'number' ? f.savedAt : 0,
+    gameId: typeof f.gameId === 'string' ? f.gameId : null,
+    snapshots: f.snapshots as RewindSnapshot[],
+  }
+}
+
+export function openReplay(file: ReplayFile): void {
+  counter = 0
+  publish({ gameId: 'replay', snapshots: file.snapshots, viewing: file.snapshots[0].key, replay: true })
 }
 
 export function viewedSnapshot(s: RewindState): RewindSnapshot | null {

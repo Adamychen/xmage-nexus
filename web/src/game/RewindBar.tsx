@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import { useTranslation } from '../i18n'
 import { PhaseName } from './PhaseBar'
 import { stepRewind, viewRewind, viewedSnapshot, type RewindState } from './rewind'
+import { leaveReplay, saveReplay } from './replayFile'
 import './RewindBar.css'
 
 export default function RewindBar({ rewind }: { rewind: RewindState }) {
@@ -11,7 +12,7 @@ export default function RewindBar({ rewind }: { rewind: RewindState }) {
   const [open, setOpen] = useState(false)
   const viewed = viewedSnapshot(rewind)
   const count = rewind.snapshots.length
-  const expanded = open || viewed != null
+  const expanded = open || viewed != null || rewind.replay
 
   useEffect(() => {
     if (viewed == null) return
@@ -32,7 +33,7 @@ export default function RewindBar({ rewind }: { rewind: RewindState }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [viewed])
 
-  if (count < 2) return null
+  if (count < 2 && !rewind.replay) return null
 
   const index = viewed ? rewind.snapshots.findIndex((s) => s.key === viewed.key) : count - 1
 
@@ -56,7 +57,7 @@ export default function RewindBar({ rewind }: { rewind: RewindState }) {
       <div className="rewind-status" data-testid="rewind-status" data-viewing={viewed ? 'true' : 'false'} aria-live="polite">
         {viewed ? (
           <>
-            <span className="rewind-badge">{t('game', 'rewind_not_live')}</span>
+            <span className="rewind-badge">{rewind.replay ? t('game', 'replay_badge') : t('game', 'rewind_not_live')}</span>
             <span>{t('game', 'rewind_viewing', { turn: viewed.turn })}</span>
             <PhaseName step={viewed.step} />
           </>
@@ -79,23 +80,34 @@ export default function RewindBar({ rewind }: { rewind: RewindState }) {
           onChange={(e) => {
             const target = rewind.snapshots[Number(e.target.value)]
             if (!target) return
-            viewRewind(target.key === rewind.snapshots[count - 1].key ? null : target.key)
+            viewRewind(target.key === rewind.snapshots[count - 1].key && !rewind.replay ? null : target.key)
           }}
         />
         <Button size="sm" variant="ghost" data-testid="rewind-next" disabled={index >= count - 1} onClick={() => stepRewind(1)}>
           <Icon name="play" size={12} />
         </Button>
-        <Button
-          size="sm"
-          variant={viewed ? 'primary' : 'ghost'}
-          data-testid="rewind-live"
-          onClick={() => {
-            viewRewind(null)
-            setOpen(false)
-          }}
-        >
-          {viewed ? t('game', 'rewind_back_live') : t('common', 'close')}
-        </Button>
+        {!rewind.replay && (
+          <Button size="sm" variant="ghost" data-testid="rewind-save" title={t('game', 'rewind_save_hint')} onClick={() => void saveReplay()}>
+            <Icon name="download" size={12} /> {t('game', 'rewind_save')}
+          </Button>
+        )}
+        {rewind.replay ? (
+          <Button size="sm" variant="primary" data-testid="replay-close" onClick={leaveReplay}>
+            {t('game', 'replay_close')}
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant={viewed ? 'primary' : 'ghost'}
+            data-testid="rewind-live"
+            onClick={() => {
+              viewRewind(null)
+              setOpen(false)
+            }}
+          >
+            {viewed ? t('game', 'rewind_back_live') : t('common', 'close')}
+          </Button>
+        )}
       </div>
     </div>
   )

@@ -71,4 +71,24 @@ describe('RewindBar', () => {
     })
     expect(getRewind().viewing).toBeNull()
   })
+
+  it('in a replay it is always open, says so, and closes the replay instead of returning to live', async () => {
+    const { buildReplayFile, openReplay } = await import('./rewind')
+    captureRewind('g1', view(1, 'UPKEEP'))
+    captureRewind('g1', view(2, 'UPKEEP'))
+    const file = buildReplayFile()!
+    clearRewind()
+    openReplay(file)
+    render(<Harness />)
+
+    expect(screen.getByTestId('rewind-bar')).toBeTruthy()
+    expect(screen.queryByTestId('rewind-open')).toBeNull()
+    expect(screen.queryByTestId('rewind-live')).toBeNull()
+    expect(screen.queryByTestId('rewind-save')).toBeNull()
+    expect(screen.getByTestId('rewind-status').textContent).toContain('Replay')
+
+    fireEvent.change(screen.getByTestId('rewind-slider'), { target: { value: '1' } })
+    expect(viewedSnapshot(getRewind())?.turn).toBe(2)
+    expect(getRewind().replay).toBe(true)
+  })
 })

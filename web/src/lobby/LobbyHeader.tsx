@@ -96,6 +96,7 @@ export default function LobbyHeader({
           className={`top-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
           onClick={() => onTabChange('matches')}
           title={t('lobby.nav_history')}
+          data-testid="top-nav-matches"
         >
           <Icon name="scrollText" size={14} />
           <span>{t('lobby.nav_history')}</span>

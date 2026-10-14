@@ -17,8 +17,13 @@ disables board/dock pointer events plus Space and the skip keys while viewing; a
 attention alerts keep reading the live view, and live updates keep streaming behind it.
 `RewindBar` (slider, arrows, Esc to return) is the only control.
 
-Still open: persist the snapshots as a replay file (needs a per-turn delta, a `GAME_UPDATE`
-is 200-800 KB), play it in the demo, and export a moment as an image.
+Replay file (2026-10-15): **Save replay** in the bar downloads the snapshots as
+`nexus-replay_*.json.gz` (`game/replayFile.ts`); **Open replay file** in Lobby → History loads it
+with no server connection (`startReplay` puts the last snapshot in the store with `gameId: null`,
+`RewindBar` is then always open and its Close button leaves the replay). Files are validated
+(`parseReplayFile`: format, version, at most 40 unique-key snapshots). Still open: a per-turn delta
+to shrink files (a `GAME_UPDATE` is 200-800 KB), loading a replay in the demo, and exporting a
+moment as an image.
 
 ## 2. Draft pick helper
 

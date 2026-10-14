@@ -53,6 +53,7 @@ export default function LobbySidebar({
         className={`sidebar-btn ${activeTab === 'matches' ? 'active' : ''}`}
         onClick={() => onTabChange('matches')}
         title={t('lobby.nav_history')}
+        data-testid="nav-matches"
       >
         <span className="sidebar-btn-icon"><Icon name="scrollText" size={16} /></span>
         <span className="sidebar-btn-label">{t('lobby.nav_history')}</span>
