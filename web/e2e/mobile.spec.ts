@@ -71,4 +71,38 @@ test.describe('narrow screens @lobby', () => {
       await expect(page.getByTestId('mobile-spectator')).toHaveCount(0)
     })
   })
+
+  test('the draft header and its buttons stay inside a phone-width window', async ({ page }) => {
+    await withFakeServer(scenario, async () => {
+      await login(page, 'phone-drafter')
+      await page.evaluate(() => {
+        const store = (globalThis as unknown as { __mageStore: { setState: (s: unknown) => void } }).__mageStore
+        store.setState({
+          draft: {
+            draftId: 'mobile-draft',
+            message: {
+              draftView: { setNames: ['Core Set 2021'], setCodes: ['M21'], boosterNum: 1, cardNum: 2, players: ['a', 'b', 'c', 'd'] },
+              draftPickView: {
+                booster: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Lightning Bolt' } },
+                picks: {},
+                picking: true,
+                timeout: 60,
+              },
+            },
+          },
+          lastDraftMethod: 'DRAFT_PICK',
+          phase: 'game',
+        })
+      })
+      await expect(page.locator('.draft-screen')).toBeVisible()
+      const outside = await page.locator('.draft-header, .draft-header *').evaluateAll((els) => {
+        const vw = document.documentElement.clientWidth
+        return els.filter((el) => {
+          const r = el.getBoundingClientRect()
+          return r.width > 0 && (r.right > vw + 1 || r.left < -1)
+        }).length
+      })
+      expect(outside).toBe(0)
+    })
+  })
 })

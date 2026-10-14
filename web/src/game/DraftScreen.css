@@ -470,3 +470,18 @@
     animation: none;
   }
 }
+
+@media (max-width: 600px) {
+  .draft-header {
+    flex-wrap: wrap;
+    padding: var(--sp-3);
+  }
+  .draft-subtitle {
+    letter-spacing: 0.04em;
+  }
+  .draft-header-right {
+    flex-wrap: wrap;
+    width: 100%;
+    min-width: 0;
+  }
+}
