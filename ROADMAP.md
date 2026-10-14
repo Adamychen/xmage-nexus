@@ -94,7 +94,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 
 | Area | Idea | Impact / effort | State |
 |---|---|---|---|
-| Attract | Draft pick helper (rank picks by colours, curve and synergy with the pool; builds on `DraftScreen`, Scryfall and EDHREC) | High / ~2 d | Not started |
+| Attract | Draft pick helper: pool-aware ranking | Done 2026-10-15 | `game/draftAdvisor.ts` (pure scoring: rarity, colour fit once committed, creature curve, creature count) + `game/DraftHelper.tsx` in `DraftScreen`: top 3 suggestions with reasons and an outline on the first. Never picks for the player, labelled as a guess, hide/show remembered. Open: format-specific card ratings (17Lands-style data) need an external source |
 | Game UI | Board rewind: replay file (export/import of the captured snapshots), shareable moment, GIF | Medium / ~2 d | Rewind itself shipped 2026-10-15: opt-in setting `boardRewind` (Settings → Gameplay), one in-memory snapshot per step (max 40, `game/rewind.ts`), slider/arrows/Esc in `game/RewindBar.tsx`, a read mode that swaps the displayed `GameView` in `GameScreen` and disables input while viewing, live state untouched (`rewind.test.ts`, `RewindBar.test.tsx`, `e2e/rewind.spec.ts`). Open: persist snapshots as a file and replay them in the demo (needs a per-turn delta, a `GAME_UPDATE` is 200-800 KB) |
 
 Dropped on purpose (2026-10-07, data does not reach the client): the response window, the blocked-action explainer and the layer / derived P-T inspector. Reopening any of them needs a fork change that puts the missing data on the wire (a per-player playable list, effect sources). Reasons: `docs/history/roadmap-resolved-2026-10.md` §4.2.

@@ -16,6 +16,9 @@ import Modal from '../ui/Modal'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import { downloadBlob } from '../utils/download'
+import DraftHelper from './DraftHelper'
+import { adviseDraftPick, type AdvisorCard } from './draftAdvisor'
+import { loadDraftHelper, saveDraftHelper } from '../state/persistence'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
@@ -138,6 +141,7 @@ export default function DraftScreen() {
       setRetrying(false)
     }
   }, [retrying])
+  const [helperOn, setHelperOn] = useState(loadDraftHelper)
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
@@ -228,6 +232,30 @@ export default function DraftScreen() {
     if (boosterCards.length === 0 && pickCards.length === 0) return
     fetchMeta([...boosterCards, ...pickCards])
   }, [boosterCards.length, pickCards.length])
+
+  const toAdvisorCard = useCallback((card: SimpleCardView): AdvisorCard | null => {
+    const meta = metaFor(card, metaMap)
+    if (!meta?.typeLine) return null
+    return { id: card.id, cmc: meta.cmc ?? 0, colors: meta.colors ?? [], typeLine: meta.typeLine, rarity: meta.rarity ?? '' }
+  }, [metaMap])
+
+  const advice = useMemo(() => {
+    if (!helperOn || boosterCards.length === 0) return { ranked: [], pending: false, names: {} as Record<string, string> }
+    const boosterKnown = boosterCards.map(toAdvisorCard).filter((c): c is AdvisorCard => c !== null)
+    const picksKnown = pickCards.map(toAdvisorCard).filter((c): c is AdvisorCard => c !== null)
+    const names: Record<string, string> = {}
+    for (const c of boosterCards) names[c.id] = cardLabel(c, metaFor(c, metaMap))
+    return {
+      ranked: adviseDraftPick(boosterKnown, picksKnown),
+      pending: boosterKnown.length < boosterCards.length,
+      names,
+    }
+  }, [helperOn, boosterCards, pickCards, toAdvisorCard, metaMap])
+
+  const toggleHelper = useCallback((on: boolean) => {
+    setHelperOn(on)
+    saveDraftHelper(on)
+  }, [])
 
   const handleHover = useCallback((card: SimpleCardView, rect?: DOMRect) => {
     const meta = metaFor(card, metaMap)
@@ -480,6 +508,15 @@ export default function DraftScreen() {
           </div>
         )}
 
+        {helperOn && boosterCards.length > 0 && advice.ranked.length > 0 && (
+          <DraftHelper advice={advice.ranked} names={advice.names} pending={advice.pending} onHide={() => toggleHelper(false)} />
+        )}
+        {!helperOn && boosterCards.length > 0 && (
+          <Button variant="ghost" size="sm" data-testid="draft-helper-show" onClick={() => toggleHelper(true)}>
+            {t('game', 'draft_helper_show')}
+          </Button>
+        )}
+
         <div className="draft-booster-area">
           <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
           {boosterCards.length === 0 ? (
@@ -500,7 +537,7 @@ export default function DraftScreen() {
                   <button
                     key={key}
                     type="button"
-                    className={`draft-card ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
+                    className={`draft-card ${helperOn && advice.ranked[0]?.id === key ? 'is-advised' : ''} ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
                     disabled={!canPick}
                     onClick={() => void handlePick(key)}
                     onContextMenu={(e) => { e.preventDefault(); void handleMark(key) }}
