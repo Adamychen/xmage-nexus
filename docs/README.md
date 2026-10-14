@@ -26,7 +26,7 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | `docs/lessons.md` | Durable cross-cutting lessons (one line each) | Add a line only when the lesson is reusable; the dated narrative lives in `git log` (no work log) |
 | `web/INTERACTION_COVERAGE.md` | Per-callback and per-mechanic coverage: implemented + tested + test ref + date | Update with every handler/interaction change; enforced by `callbackCoverage.test.ts` |
 | `docs/enhancements.md` | Open client-only feature specs (board rewind, draft pick helper) | Statuses verified against the code; pending items are summarized in `ROADMAP.md` §4.2; the built/dropped catalog is archived in `docs/history/enhancements-catalog.md` |
-| `docs/history/` | The closed plan (`plan4`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`), the archived enhancement catalog (`enhancements-catalog.md`) and MCP overview (`mcp-overview.md`), and QA evidence logs (`qa/`) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
+| `docs/history/` | The closed plan (`plan4`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`), the archived enhancement catalog (`enhancements-catalog.md`), the resolved-work archive of the roadmap (`roadmap-resolved-2026-10.md`) and MCP overview (`mcp-overview.md`), and QA evidence logs (`qa/`) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
 | `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `ROADMAP.md` when phases change |
 
 ## Ports (do not change without updating `AGENTS.md`, `scripts/lib.mjs`, `docs/deployment.md`)
@@ -39,7 +39,7 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | Vite dev | `http://localhost:5173` |
 | FakeServer (fake-mode E2E) | port `8789` (per-test dynamic port in practice: `FakeServer.start(0)`) |
 | Fake-mode E2E Vite | port `5175` (`strictPort`, `reuseExistingServer:false`) |
-| `xmage-status` (ops dashboard, LAN-only, no tunnel) | `http://<host>:8790` — `ops/status/`, see `ROADMAP.md` §4.6 |
+| `xmage-status` (ops dashboard, LAN-only, no tunnel) | `http://<host>:8790` — `ops/status/`, see `ops/status/README.md` |
 
 ## Quick commands
 
