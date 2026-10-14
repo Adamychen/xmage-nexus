@@ -37,6 +37,23 @@ test.describe('Global settings modal', () => {
     })
   })
 
+  test('the panel stays inside a small window at a high UI zoom', async ({ page }) => {
+    await page.setViewportSize({ width: 900, height: 700 })
+    await withFakeServer(lobbyScenario, async () => {
+      await login(page, 'e2e')
+      await page.getByTestId('open-settings').click()
+      await expect(page.getByTestId('settings-modal')).toBeVisible()
+      await page.getByTestId('settings-nav-interface').click()
+      await page.getByTestId('settings-zoom-plus').click()
+      await page.getByTestId('settings-zoom-plus').click()
+      await expect(page.getByTestId('settings-zoom-current')).toHaveText('130%')
+      const box = await page.getByTestId('settings-modal').boundingBox()
+      expect(box).not.toBeNull()
+      expect(box!.x).toBeGreaterThanOrEqual(0)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(900 + 1)
+    })
+  })
+
   test('secciones sonido y tablero conservan su layout (grid + tarjeta fx)', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')

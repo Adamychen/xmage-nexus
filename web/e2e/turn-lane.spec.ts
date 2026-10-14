@@ -220,8 +220,8 @@ test('turn and priority paint at the same time @board', async ({ page }) => {
 
   const both = await channels(page, '.player-info-bar.opp')
   console.log('CHANNEL-BOTH ' + JSON.stringify(both))
-  // the priority ring (orange border) is still there...
-  expect(both?.ring).toContain('245, 165, 36')
+  // the priority ring (rose border, a hue away from the turn gold) is still there...
+  expect(both?.ring).toContain('255, 93, 115')
   // ...and the two turn markers also paint. Before the fix they did not: the
   // turn claimed border-color/box-shadow, so with priority on the same bar the
   // rival's turn was invisible (fill false, accent null).

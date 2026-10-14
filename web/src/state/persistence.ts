@@ -631,6 +631,7 @@ export function applyAppearanceToDocument(s: AppearanceSettings, lang?: string) 
     root.dataset.uiScale = String(s.uiScale)
     root.dataset.dialogBackdrop = s.transparentDialogs ? 'clear' : 'dim'
     root.style.setProperty('zoom', String(s.uiScale))
+    root.style.setProperty('--ui-zoom', String(s.uiScale))
     const isCjk = lang === 'ja' || lang === 'zhs' || lang === 'zh'
     const boost = s.cjkBoost && isCjk ? 1.15 : 1
     root.style.setProperty('--cjk-boost', String(boost))

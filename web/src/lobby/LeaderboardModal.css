@@ -81,7 +81,7 @@
 }
 
 .dlg-panel.leaderboard-dialog {
-  width: min(1180px, 96vw);
+  width: min(1180px, calc(96vw / var(--ui-zoom)));
 }
 
 .leaderboard-table .col-pos {

@@ -1,7 +1,7 @@
 /* User Action Modal Styles */
 .user-action-dialog {
   max-width: 480px;
-  width: 92vw;
+  width: calc(92vw / var(--ui-zoom));
   background: rgb(var(--ink-2-rgb) / 0.96);
   backdrop-filter: blur(20px);
   border: 1px solid var(--veil-4);

@@ -146,7 +146,7 @@ RESOLVED 2026-10-06 (the list from the 2026-09-21 audit):
 
 The style ratchet (`ui/styleTokens.test.ts`) keeps the counts from regressing.
 
-OPEN (measured 2026-10-09): dialog widths are still a fixed `px` capped by `94vw`/`96vw`. The settings modal now uses `min(94vw, clamp(760px, 66vw, 1060px))` — proportional with a floor, so a small window never gets less than it had and a big screen is capped at 1060 px (measured: 900 px window → 760, 1280 → 845, 1600 → 1056, 2560 → 1060). Still open: **`vw` ignores the root `zoom`** (`uiScale` is a CSS `zoom` on `documentElement`), so at a 900 px window with zoom 130 % a 760 px panel measures 988 px and is wider than the window, with `.dlg-backdrop` scrolling only on `overflow-y`. The fix is to divide the `vw` allowance by the scale the way the board already does with `inverseZoom` (`appearance/zoom.ts`), which needs a decision on whether the three `--dlg-width-*` tokens should be zoom-aware in general; `docs/lessons.md` carries the measurement. The settings sound rows (the case that made this visible) are fixed: the row wraps instead of clipping its segmented control, guarded by `e2e/settings.spec.ts`.
+RESOLVED 2026-10-14 — **dialog widths under `uiScale`**: `vw` ignores the root `zoom`, so at 900 px and 130 % a 760 px settings panel measured 988 px. `applyAppearanceToDocument` now publishes `--ui-zoom` next to the zoom, and the `--dlg-width-*` tokens, the settings modal, the leaderboard and the user-action dialog divide their `vw` allowance by it. Guard: `e2e/settings.spec.ts` ("the panel stays inside a small window at a high UI zoom"), verified red with the old `vw` width put back (1014 px in a 900 px window).
 
 ### 4.3b Board legibility (from issue #12, opened 2026-10-08)
 
@@ -160,7 +160,7 @@ Still open, each needing a **design decision, not a bug fix**:
 |---|---|
 | ~~See the rules text of every card in hand without hovering~~ — Closed 2026-10-13 (won't do: the full left/right split stays out of scope; the `HandRail` column is the answer; 2026-10-14: `HandRow` adds the same full cards as a scrollable row in the hand zone, `handRow` setting, mutually exclusive with `handRail`) | Was a fourth layout in `board/boardLayout.ts`, not a setting; `HandRail.tsx`/`HandRow.tsx` + `cardRender` already give full-text hand cards |
 | See the rules text of every permanent in play without hovering | Legible text for 8+ permanents does not fit one screen. Options: bigger cards with band panning (the bands already scroll), a one-line rules strip under compact tiles, or a persistent inspector |
-| ~~Clearer "whose turn is it"~~ | Resolved 2026-10-09, see above. What is left of it is a taste call, not a bug: opponent priority (`--warn` orange) is close in hue to the turn gold, so on the top bar the two channels still read alike at a glance — separating them means moving one hue, not adding a sixth indicator |
+| ~~Clearer "whose turn is it"~~ | Resolved 2026-10-09, see above; the last hue clash closed 2026-10-14: opponent priority on the top bar and avatar ring is now `--err` rose instead of `--warn` orange, so turn = gold fill + bar, my priority = green, opponent priority = rose |
 
 ### 4.4 Test-infrastructure risk
 

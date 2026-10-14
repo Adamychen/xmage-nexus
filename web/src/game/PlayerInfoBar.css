@@ -24,8 +24,8 @@
 }
 
 .player-info-bar.opp.has-priority {
-  border-color: rgb(var(--warn-rgb) / 0.7);
-  box-shadow: 0 0 20px rgb(var(--warn-rgb) / 0.35), 0 8px 24px var(--shade-3);
+  border-color: rgb(var(--err-rgb) / 0.7);
+  box-shadow: 0 0 20px rgb(var(--err-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 
 /* Active turn (who is playing) and priority (who can act) are two channels and
@@ -33,7 +33,7 @@
    properties as priority (`border-color` + `box-shadow`), so only one ever
    reached the screen — and on the top bar `.opp.has-priority` (three classes)
    also beat `.is-turn` (two) on specificity, so during the rival's turn the
-   border stayed the priority orange `rgba(245,165,36,.7)` (measured in real
+   border stayed the priority colour (measured in real
    Chromium). Fill and accent bar are a different property family, so both
    channels show at once. */
 .player-info-bar.is-turn {
@@ -144,7 +144,7 @@
 }
 
 .opp .avatar-priority-ring {
-  border-color: var(--warn);
+  border-color: var(--err);
 }
 
 @keyframes priorityPulse {

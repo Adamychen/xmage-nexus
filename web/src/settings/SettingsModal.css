@@ -5,10 +5,10 @@
      width. The width keeps the 760 px floor the modal always had (a small window
      never gets less) and a 1500 px ceiling so the text lines do not stretch on
      an ultrawide. The panel is a column so the body takes whatever height the
-     header and the footer leave. `vh`/`vw` do not discount the `zoom` that
-     `uiScale` puts on the root, so at a high UI zoom the panel can still outgrow
-     a small window (ROADMAP §4.3). */
-  width: min(94vw, clamp(760px, 78vw, 1500px));
+     header and the footer leave. `vw` does not discount the `zoom` that
+     `uiScale` puts on the root, so the viewport allowance is divided by
+     `--ui-zoom` (set with the zoom) to keep the panel inside the window. */
+  width: min(calc(94vw / var(--ui-zoom)), clamp(760px, calc(78vw / var(--ui-zoom)), 1500px));
   height: 80vh;
   max-height: 80vh;
   display: flex;
