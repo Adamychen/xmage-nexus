@@ -475,6 +475,7 @@ export const ja: TranslationSchema = {
     useraction_unignore_desc: 'メッセージ送信と卓への参加を許可',
     user_status_available: 'ロビーで待機中',
     leaderboard_subtitle: '競技ELOとランキング',
+    demo_sample_data: 'サンプルデータ: ここに表示されるプレイヤー、レーティング、順位はデモ用に作られた架空のものです。',
     leaderboard_no_results: '該当するプレイヤーが見つかりません。',
     leaderboard_inspecting: '{username} のプロフィールを確認中',
     leaderboard_view_own: '自分のプロフィールを見る',

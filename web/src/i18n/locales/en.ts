@@ -470,6 +470,7 @@ export const en = {
     useraction_unignore_desc: 'Allow sending messages and joining your tables',
     user_status_available: 'Available in lobby',
     leaderboard_subtitle: 'Competitive ELO & Leaderboard',
+    demo_sample_data: 'Sample data: these players, ratings and rankings are invented for the demo.',
     leaderboard_no_results: 'No players found matching the search.',
     leaderboard_inspecting: 'You are inspecting the profile of {username}',
     leaderboard_view_own: 'View my own profile',

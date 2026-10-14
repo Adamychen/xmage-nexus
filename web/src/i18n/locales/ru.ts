@@ -472,6 +472,7 @@ export const ru: TranslationSchema = {
     useraction_unignore_desc: 'Разрешить сообщения и вход за ваши столы',
     user_status_available: 'Доступен в лобби',
     leaderboard_subtitle: 'Соревновательный ELO и таблица лидеров',
+    demo_sample_data: 'Демонстрационные данные: эти игроки, рейтинги и позиции выдуманы для демо.',
     leaderboard_no_results: 'Игроки не найдены.',
     leaderboard_inspecting: 'Вы просматриваете профиль {username}',
     leaderboard_view_own: 'Мой профиль',

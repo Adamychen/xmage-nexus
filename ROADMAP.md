@@ -138,7 +138,7 @@ Design: `docs/plans/2026-10-09-report-pipeline-design.md`. Web path shipped.
 |---|---|
 | Tour copy is English only | `DemoTour.tsx` hard-codes its strings; the rest of the client has 9 locales |
 | EDHREC is frozen for one commander | `demoEdhrecPage` only answers `krenko-mob-boss`; card search and EDHREC resolution still call Scryfall live |
-| Roster, ratings and tables are invented | `src/demo/data.ts`; nothing in the UI labels them as sample data |
+| Roster and tables are invented | `src/demo/data.ts`. The ranking carries a "sample data" note since 2026-10-15 (`leaderboard-demo-note`, checked by `verify-demo.mjs`); the lobby table list does not |
 | Not a layer on the status dashboard | `verify-demo.mjs` fails the Pages run but `status.json` has no row for it |
 | Not covered: replay viewer, spectate, chat bots | Needs a scenario that streams frames |
 | Mobile layout unchecked | Verified at 1440×900 only (the client itself has a phone spectator view since 2026-10-15) |

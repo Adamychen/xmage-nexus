@@ -568,3 +568,13 @@
   line-height: 1.4;
 }
 
+
+.leaderboard-demo-note {
+  margin: 0 0 var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--warn-line);
+  background: var(--warn-soft);
+  color: var(--warn-strong);
+  font-size: var(--fs-xs);
+}

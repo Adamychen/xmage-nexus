@@ -178,6 +178,11 @@ export default function LeaderboardModal({
         <div className="leaderboard-body">
           {activeTab === 'room' && (
             <div className="leaderboard-tab-content">
+              {__DEMO__ && (
+                <p className="leaderboard-demo-note" data-testid="leaderboard-demo-note">
+                  {t('lobby', 'demo_sample_data')}
+                </p>
+              )}
               <div className="leaderboard-search-bar">
                 <input
                   type="text"

@@ -472,6 +472,7 @@ export const fr: TranslationSchema = {
     useraction_unignore_desc: 'Autoriser les messages et l’accès à vos tables',
     user_status_available: 'Disponible dans le salon',
     leaderboard_subtitle: 'ELO compétitif et classement',
+    demo_sample_data: 'Données d\'exemple : ces joueurs, cotes et classements sont inventés pour la démo.',
     leaderboard_no_results: 'Aucun joueur ne correspond à la recherche.',
     leaderboard_inspecting: 'Vous inspectez le profil de {username}',
     leaderboard_view_own: 'Voir mon propre profil',

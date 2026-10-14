@@ -472,6 +472,7 @@ export const de: TranslationSchema = {
     useraction_unignore_desc: 'Nachrichten und Beitritt zu deinen Tischen erlauben',
     user_status_available: 'In der Lobby verfügbar',
     leaderboard_subtitle: 'Kompetitives ELO & Rangliste',
+    demo_sample_data: 'Beispieldaten: Diese Spieler, Wertungen und Ranglisten sind für die Demo erfunden.',
     leaderboard_no_results: 'Keine passenden Spieler gefunden.',
     leaderboard_inspecting: 'Du siehst dir das Profil von {username} an',
     leaderboard_view_own: 'Eigenes Profil ansehen',

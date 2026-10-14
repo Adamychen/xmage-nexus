@@ -472,6 +472,7 @@ export const it: TranslationSchema = {
     useraction_unignore_desc: 'Consenti di inviarti messaggi e unirti ai tuoi tavoli',
     user_status_available: 'Disponibile nella lobby',
     leaderboard_subtitle: 'ELO competitivo e classifica',
+    demo_sample_data: 'Dati di esempio: questi giocatori, punteggi e classifiche sono inventati per la demo.',
     leaderboard_no_results: 'Nessun giocatore trovato corrispondente alla ricerca.',
     leaderboard_inspecting: 'Stai esaminando il profilo di {username}',
     leaderboard_view_own: 'Vedi il mio profilo',

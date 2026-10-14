@@ -475,6 +475,7 @@ export const zhs: TranslationSchema = {
     useraction_unignore_desc: '允许发送消息并加入你的桌子',
     user_status_available: '在大厅空闲',
     leaderboard_subtitle: '天梯竞技ELO与排行榜',
+    demo_sample_data: '示例数据：这些玩家、评分和排名均为演示而虚构。',
     leaderboard_no_results: '未找到匹配的玩家。',
     leaderboard_inspecting: '正在查看 {username} 的个人资料',
     leaderboard_view_own: '查看我的个人资料',
