@@ -41,9 +41,12 @@ export interface DraftReport {
   bytes: number
 }
 
-function sizeOf(wire: ReportWire): number {
+const HTML_ESCAPED = /[<>&='\u2028\u2029]/g
+
+export function sizeOf(wire: ReportWire): number {
   try {
-    return JSON.stringify(wire).length
+    const json = JSON.stringify(wire)
+    return json.length + (json.match(HTML_ESCAPED)?.length ?? 0) * 5
   } catch {
     return Number.MAX_SAFE_INTEGER
   }
@@ -140,6 +143,13 @@ export function buildReport(kind: ReportKind, text: string): DraftReport {
     }
   }
 
+  if (sizeOf(wire) > REPORT_LIMITS.MAX_PAYLOAD_BYTES) {
+    wire = { ...wire, bundle: { ...wire.bundle, frames: [], log: wire.bundle.log.slice(-10) } }
+  }
+  if (sizeOf(wire) > REPORT_LIMITS.MAX_PAYLOAD_BYTES) {
+    wire = { ...wire, errors: wire.errors.slice(-3).map((e) => ({ ...e, text: e.text.slice(0, 500) })) }
+  }
+
   const bytes = sizeOf(wire)
   return { kind, text, fingerprint, wire, bytes }
 }
@@ -173,4 +183,29 @@ export function reportToMarkdown(draft: DraftReport): string {
     '',
     `_Fingerprint: \`${draft.fingerprint}\` - payload ${draft.bytes} bytes_`,
   ].join('\n')
+}
+
+const ISSUES_URL = 'https://github.com/Adamychen/xmage-nexus/issues/new'
+const MAX_ISSUE_BODY_CHARS = 5500
+
+export function isLocalProxy(wsUrl: string | null | undefined): boolean {
+  if (!wsUrl) return false
+  try {
+    const host = new URL(wsUrl).hostname.replace(/^\[|\]$/g, '')
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.endsWith('.localhost')
+  } catch {
+    return false
+  }
+}
+
+export function githubIssueUrl(draft: DraftReport): string {
+  const markdown = reportToMarkdown(draft)
+  const body = markdown.length > MAX_ISSUE_BODY_CHARS ? `${markdown.slice(0, MAX_ISSUE_BODY_CHARS)}\n\n...` : markdown
+  const firstLine = draft.text.split('\n')[0].trim().slice(0, 80)
+  const params = new URLSearchParams({
+    template: draft.kind === 'bug' ? 'bug_report.md' : 'feedback.md',
+    title: firstLine,
+    body,
+  })
+  return `${ISSUES_URL}?${params.toString()}`
 }

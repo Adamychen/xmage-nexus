@@ -11,6 +11,7 @@ It never touches the proxy: everything comes from what the host already records.
 | `journalctl -u xmage-proxy` | `[activity]` events (logins, sessions, tables, games), JUL/log4j warnings and errors, systemd start/stop/crash lines |
 | `game_start` / `game_end` activity lines | the "How games end" card: per seated player, `won`/`lost`/`draw`, `quit` (left the match), `conceded` (conceded a multiplayer game that went on), or `unfinished` with the reason the session ended while the game was open; its subtitle is the share that reached a result |
 | `login_fail` with `Wrong client version` | the version alarm: from the first refused login to the configured XMage server with no successful one after it, the header pill and the services row turn red and a banner names both releases |
+| `report` activity lines | the Reports tab: stored reports grouped by fingerprint (count, players, last seen, latest words), plus what the proxy refused (`rate`, `quota`, `duplicate`, `too-large`) |
 | `ws_open` activity lines (real client IP, forwarded by Cloudflare) | public-visitor counts |
 | `systemctl show`, `/proc`, `statfs` | service state, restarts, CPU, memory, disk, load, proxy RSS/CPU |
 | TCP/HTTP probes | connect time to the XMage server and to the local web client |
@@ -44,6 +45,7 @@ Never add `127.0.0.0/8` to `STATUS_ALLOW` on the host (the service logs a warnin
 | `XMAGE_HOST` / `XMAGE_PORT` | `beta.xmage.today` / `17171` |
 | `PROXY_HTTP` | `http://127.0.0.1:8788/` |
 | `STATUS_SAMPLE_SECS` / `STATUS_SAMPLE_RETENTION_DAYS` | `30` / `180` |
+| `REPORTS_DIR` | unset; the proxy's `--reportsDir` (default `reports/` under the proxy working directory). Without it the Reports tab still groups from the journal; with it, clicking a group opens the stored report (client, game, errors, last log lines; frames are not served) |
 | `STATUS_JOURNAL_FILE` | unset; a `journalctl -o json` dump to ingest instead of following the journal (development) |
 
 The service user must be able to read the journal (group `adm` or `systemd-journal`).

@@ -118,3 +118,42 @@ describe('report capture', () => {
     expect(trimmed[0].full).toBeUndefined()
   })
 })
+
+describe('sizeOf', () => {
+  it('counts the characters Gson escapes on the proxy side', async () => {
+    const { sizeOf, buildReport } = await import('./report')
+    const draft = buildReport('bug', '<<<<<>>>>>=====')
+    const plain = JSON.stringify(draft.wire).length
+    expect(sizeOf(draft.wire)).toBeGreaterThan(plain + 14 * 5)
+  })
+
+  it('shrinks a report that only exceeds the cap once escaped', async () => {
+    const { buildReport, REPORT_LIMITS } = await import('./report')
+    const { addLog } = await import('../state/state')
+    for (let i = 0; i < 120; i++) addLog('system', '<'.repeat(900))
+    const draft = buildReport('bug', 'x')
+    expect(draft.bytes).toBeLessThanOrEqual(REPORT_LIMITS.MAX_PAYLOAD_BYTES)
+  })
+})
+
+describe('desktop reports', () => {
+  it('knows a proxy that is on this machine', async () => {
+    const { isLocalProxy } = await import('./report')
+    expect(isLocalProxy('ws://127.0.0.1:8787')).toBe(true)
+    expect(isLocalProxy('ws://localhost:8787')).toBe(true)
+    expect(isLocalProxy('ws://[::1]:8787')).toBe(true)
+    expect(isLocalProxy('wss://something.trycloudflare.com')).toBe(false)
+    expect(isLocalProxy(null)).toBe(false)
+    expect(isLocalProxy('not a url')).toBe(false)
+  })
+
+  it('builds a prefilled GitHub issue that stays within a URL', async () => {
+    const { githubIssueUrl, buildReport } = await import('./report')
+    const draft = buildReport('bug', `First line of the bug\n${'x'.repeat(20000)}`)
+    const url = new URL(githubIssueUrl(draft))
+    expect(url.origin + url.pathname).toBe('https://github.com/Adamychen/xmage-nexus/issues/new')
+    expect(url.searchParams.get('template')).toBe('bug_report.md')
+    expect(url.searchParams.get('title')).toBe('First line of the bug')
+    expect(url.searchParams.get('body')?.length ?? 0).toBeLessThanOrEqual(5510)
+  })
+})
