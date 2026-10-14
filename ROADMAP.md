@@ -164,6 +164,30 @@ Still open, each needing a **design decision, not a bug fix**:
 
 ### 4.4 Test-infrastructure risk
 
+RESOLVED 2026-10-14 (audit of gaps and hardening):
+
+- **Security**: `renderNewsMarkdown` attribute injection (quotes were not escaped), launcher tarball
+  extraction followed symlinks out of the destination, and the proxy CSP allowed inline scripts for one
+  splash script. Fixed with tests that fail without the fix (`news.test.ts`, `extract.rs`,
+  `MainSecurityTest`, `cspCompat.test.ts`); details in `docs/lessons.md`.
+- **Accessibility**: `e2e/a11y.spec.ts` runs axe-core (WCAG A/AA) on the lobby, create-table dialog,
+  every settings section and About; it found an unnamed `select` in the table filter bar.
+  `e2e/keyboard.spec.ts` drives the lobby with the keyboard alone. `npm run test:e2e:a11y`.
+- **Supply chain**: `audit` job in `web-ci.yml` (`npm audit --omit=dev` for web and mcp, `cargo audit`
+  for the launcher) plus Dependabot for npm and cargo; the first run found a high advisory in
+  `@modelcontextprotocol/sdk`, fixed in `mcp/package-lock.json`.
+- **Budgets and gates**: `scripts/check-bundle-size.mjs` (entry 470 KB gzip, CSS 100 KB, locale chunk
+  60 KB) runs after the build; coverage thresholds raised to 79 / 72 / 67 / 76 after new render suites
+  for `GameScreen` (8 % -> 55 %) and `LobbyScreen` (0 % -> 47 %).
+- **Parsers and i18n**: seeded fuzz suites for `parseFeedback` / the feedback record helpers and for the
+  rules-text parsers (designations, commander plays, speed, room doors); a placeholder-parity guard
+  across the nine locales found `pt` dropping `{picksPlural}`.
+- Launcher: 22 Rust tests (truncated / non-gzip / missing archives, symlink escapes, malformed hashes and
+  manifests).
+- Not done: a replay/rewind file format for the demo (depends on the board rewind in §4.2), mobile
+  layout (excluded on purpose).
+
+
 RESOLVED 2026-10-13 (both top-card channels now have real frames, and one of them had never been
 seen by the client):
 

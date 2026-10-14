@@ -67,4 +67,16 @@ class MainSecurityTest {
         // a bare file name has no /assets/ prefix: never immutable on that alone
         assertTrue(!Main.isFingerprinted("index-SpEjMz13.js"));
     }
+
+    @Test
+    void scriptsMayOnlyComeFromTheSameOrigin() {
+        // the web client has no inline script: an injected one (a release note, a deck name)
+        // must not run, so script-src carries neither 'unsafe-inline' nor 'unsafe-eval'
+        String csp = Main.CONTENT_SECURITY_POLICY;
+        String scriptSrc = java.util.Arrays.stream(csp.split(";"))
+                .map(String::trim).filter(d -> d.startsWith("script-src")).findFirst().orElseThrow();
+        assertEquals("script-src 'self'", scriptSrc);
+        assertTrue(csp.contains("default-src 'self'"));
+        assertTrue(!csp.contains("unsafe-eval"));
+    }
 }

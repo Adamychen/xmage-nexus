@@ -1004,7 +1004,7 @@ export const pt: TranslationSchema = {
     draft_download_log: 'Baixar log do draft (.draft)',
     draft_table_title: 'Mesa do draft e direção de passagem',
     draft_pick_long: 'Escolha um card do booster — clique para draftar, clique direito para marcar',
-    draft_status_count: '{booster} card{boosterPlural} no booster · {picks} escolha(s)',
+    draft_status_count: '{booster} card{boosterPlural} no booster · {picks} escolha{picksPlural}',
     draft_pack_of: 'Pacote {pack} de {packs}',
     draft_pick_no: 'Carta {pick}',
     draft_waiting_others: 'Aguardando os outros jogadores…',

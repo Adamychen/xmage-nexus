@@ -22,6 +22,8 @@
     "test:e2e:combat": "playwright test --grep \"@combat\"",
     "test:e2e:fullflow": "playwright test --grep \"@fullflow\"",
     "test:e2e:board": "playwright test --grep \"@board\"",
+    "test:e2e:a11y": "playwright test --grep \"@a11y\"",
+    "check:bundle": "node ../scripts/check-bundle-size.mjs dist/assets",
     "test:e2e:site": "playwright test e2e/site-downloads.spec.ts",
     "test:e2e:visual": "E2E_VISUAL=1 E2E_VIEWPORT=1920x1080 playwright test e2e/gallery.spec.ts",
     "test:e2e:visual:update": "E2E_VISUAL=1 E2E_VIEWPORT=1920x1080 playwright test e2e/gallery.spec.ts --update-snapshots",
@@ -44,6 +46,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^26.5.0",

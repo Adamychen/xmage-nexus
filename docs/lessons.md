@@ -186,3 +186,29 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   (`getPlayerTypes` over the proxy returns `HUMAN, COMPUTER_DRAFT_BOT, COMPUTER_MAD`). Run real-mode
   specs against the local stack with `E2E_BACKEND=real E2E_SERVER_HOST=localhost`; dump the select's
   options before suspecting the product.
+
+- **Validating an archive entry's path is not validating the archive.** `launcher/src/extract.rs`
+  rejected `..` and absolute entry paths but unpacked symlink entries as they came, so a tarball with
+  `jre -> /somewhere` followed by `jre/owned.txt` wrote outside the destination (the two tests that
+  proved it failed before the fix). Links are now checked against where they would resolve
+  (`link_stays_inside`): relative links that stay under the destination are kept, since a JRE has them.
+  The component hashes in the manifest only help if the manifest itself is trusted.
+
+- **An escape that skips quotes is not an escape.** `renderNewsMarkdown` escaped `& < >` and then built
+  `<a href="…">` from a URL pattern that allowed `"`, so `[x](https://a/"onmouseover="…)` injected an
+  attribute into release notes fetched from GitHub. Escape quotes before building any attribute, and
+  assert on the parsed DOM (`getAttributeNames()`), not on a regex over the string: the first version
+  of that test matched `onmouseover=` inside the `href` value and failed for the wrong reason.
+
+- **`script-src 'unsafe-inline'` was there for one inline script.** The proxy's CSP carried it only
+  because `splash.html` had an inline `<script>`; the app proper never did. The script is
+  `public/splash.js` now, the policy is `script-src 'self'` (`Main.CONTENT_SECURITY_POLICY`, pinned by
+  `MainSecurityTest`), and `cspCompat.test.ts` fails if any page under `web/` grows an inline script or
+  an `on*=` handler again. With that, an injected string cannot run even if an escape is missed.
+
+- **Check what is already covered before writing tests for "files without a test".** A sibling-name
+  scan listed `gateway.ts`, `actions.ts` and `submitTable.ts` as untested; coverage said 98 %, 90 %
+  and 85 %, reached through other suites. The real holes were the two screens with no render test
+  (`GameScreen` 8 %, `LobbyScreen` 0 %). Also: `initialState` is exported from `state/state`, not from
+  `state/store`; importing it from the wrong place spreads `undefined` silently and the "reset"
+  between tests resets nothing.

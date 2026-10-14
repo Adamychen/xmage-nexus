@@ -43,13 +43,13 @@ export default defineConfig({
         'src/dev/**',
         'src/i18n/locales/**',
       ],
-      // A few points under the measured totals (79 / 72 / 68 / 76 when the scope was widened),
+      // A few points under the measured totals (82 / 75 / 70 / 79 after the GameScreen and LobbyScreen suites),
       // so a real regression fails the gate instead of hiding in a 20-point margin.
       thresholds: {
-        lines: 75,
-        functions: 68,
-        branches: 64,
-        statements: 72,
+        lines: 79,
+        functions: 72,
+        branches: 67,
+        statements: 76,
       },
     },
   },
