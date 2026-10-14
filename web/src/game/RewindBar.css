@@ -1,0 +1,75 @@
+.rewind-pill {
+  position: absolute;
+  left: 50%;
+  top: var(--sp-2);
+  transform: translateX(-50%);
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.rewind-bar {
+  position: absolute;
+  left: 50%;
+  top: var(--sp-2);
+  transform: translateX(-50%);
+  z-index: 40;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(720px, 94%);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-2);
+  background: var(--surface-raised);
+  color: var(--fg-1);
+  font-size: var(--fs-sm);
+}
+
+.rewind-bar.is-viewing {
+  border-color: var(--warn-line);
+}
+
+.rewind-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.rewind-badge {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  color: var(--warn-strong);
+  font-weight: 700;
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.rewind-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.rewind-slider {
+  width: clamp(120px, 28vw, 280px);
+}
+
+.game--rewind .board-wrap > * {
+  pointer-events: none;
+}
+
+.game--rewind .board-wrap > .rewind-bar {
+  pointer-events: auto;
+}
+
+.game--rewind .game-dock {
+  pointer-events: none;
+}
+
+.game--rewind .board-wrap {
+  filter: saturate(0.85);
+}

@@ -1,4 +1,4 @@
-import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadSmartStops, loadGameplayPreset } from '../persistence'
+import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadSmartStops, loadGameplayPreset } from '../persistence'
 import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { PhaseStops } from '../../net/commands'
 import type { PrioritySoundMode } from '../../audio/prioritySound'
@@ -22,6 +22,7 @@ export interface SettingsState {
   phaseStops: PhaseStops
   gameLogAutoSave: boolean
   browserNotifications: boolean
+  boardRewind: boolean
   boardLayout: 'standard' | 'pod' | 'arena'
   boardLayoutManual: boolean
   effects: boolean
@@ -70,6 +71,7 @@ export const initialSettings: SettingsSlice = {
     phaseStops: loadPhaseStops(),
     gameLogAutoSave: loadGameLogAutoSave(),
     browserNotifications: loadBrowserNotifications(),
+    boardRewind: loadBoardRewind(),
     ...loadFxSettings(),
     ...loadAudioSettings(),
     ...loadMusicSettings(),

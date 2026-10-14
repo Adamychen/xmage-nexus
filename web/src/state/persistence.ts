@@ -466,7 +466,16 @@ export function saveGameplayPreset(id: string | null) {
 }
 
 const BROWSER_NOTIFICATIONS_KEY = 'mage-web-browser-notifications'
+const BOARD_REWIND_KEY = 'mage-web-board-rewind'
 const NOTIFICATION_ASKED_KEY = 'mage-web-notification-asked'
+
+export function loadBoardRewind(): boolean {
+  return readJson<unknown>(BOARD_REWIND_KEY) === true
+}
+
+export function saveBoardRewind(enabled: boolean) {
+  writeJson(BOARD_REWIND_KEY, enabled)
+}
 
 export function loadBrowserNotifications(): boolean {
   const parsed = readJson<unknown>(BROWSER_NOTIFICATIONS_KEY)

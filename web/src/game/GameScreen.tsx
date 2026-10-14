@@ -7,6 +7,8 @@ import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
+import RewindBar from './RewindBar'
+import { useRewind, viewedSnapshot } from './rewind'
 import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
@@ -99,7 +101,10 @@ export function mouseFocusedGameControl(target: EventTarget | null, root: HTMLEl
 
 export default function GameScreen() {
   const { t } = useTranslation()
-  const game = useGame()
+  const liveGame = useGame()
+  const rewind = useRewind()
+  const rewindView = viewedSnapshot(rewind)
+  const game = rewindView?.game ?? liveGame
   const settings = useSettings()
   const gameId = useStore((s) => s.gameId)
   const feedback = useStore((s) => s.feedback)
@@ -125,8 +130,8 @@ export default function GameScreen() {
   }, [stackCount])
 
   useEffect(() => {
-    if (game) maybeAutoPass(game)
-  }, [game])
+    if (liveGame) maybeAutoPass(liveGame)
+  }, [liveGame])
 
   useEffect(() => {
     applyFxRoot()
@@ -178,7 +183,7 @@ export default function GameScreen() {
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
-  useAttentionAlerts(game, gameId, feedback, combat, settings.browserNotifications)
+  useAttentionAlerts(liveGame, gameId, feedback, combat, settings.browserNotifications)
 
   // Anti doble-envío del mismo objetivo mientras no llega el eco: el CardSlot
   // cubre las cartas; este ref cubre el resto de superficies (headers, pila...).
@@ -285,6 +290,7 @@ export default function GameScreen() {
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
         if (rollbackBlocking) return
+        if (gameRootRef.current?.dataset.rewind) return
         if (canPass) void onResolveClick()
       }
     }
@@ -315,6 +321,7 @@ export default function GameScreen() {
       // Sin diálogos modales abiertos (misma guarda que Space)
       if (feedback && feedback.mode !== 'combat') return
       if (rollbackBlocking) return
+      if (gameRootRef.current?.dataset.rewind) return
       const skip = skipForShortcut(e.key)
       void sendSkip(skip ? skip.action : CANCEL_SKIP_ACTION)
     }
@@ -436,7 +443,12 @@ export default function GameScreen() {
   return (
     <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
       <DividerSlotContext.Provider value={setDividerSlot}>
-        <div className="game" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
+        <div
+          className={`game${rewindView ? ' game--rewind' : ''}`}
+          ref={gameRootRef}
+          data-rewind={rewindView ? 'true' : undefined}
+          style={{ zoom: inverseZoom(settings.uiScale) }}
+        >
           {!dividerSlot && <header className="game-top">{strip}</header>}
           {dividerSlot && createPortal(strip, dividerSlot)}
           <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
@@ -451,6 +463,7 @@ export default function GameScreen() {
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
+              {settings.boardRewind && <RewindBar rewind={rewind} />}
               <LowLifeVignette game={game} />
               <TurnRecapStrip />
               <FeedbackOverlay />
